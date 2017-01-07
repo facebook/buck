@@ -40,13 +40,19 @@ class TreeBackedTypeParameterElement extends TreeBackedElement implements TypePa
   public static TypeParameterElement resolveTypeParameter(
       Element enclosingElement,
       TypeParameterTree tree,
-      TreeBackedElements elements) {
-    if (!tree.getBounds().isEmpty()) {
-      throw new UnsupportedOperationException("Bounded type parameters NYI");
+      TreeBackedElements elements,
+      TreeBackedTypes types) {
+    TypeMirror[] bounds;
+    if (tree.getBounds().isEmpty()) {
+      bounds = new TypeMirror[] {
+          Preconditions.checkNotNull(elements.getTypeElement("java.lang.Object")).asType() };
+    } else {
+      bounds = tree.getBounds().stream()
+          .map(boundTree -> types.resolveType(boundTree))
+          .toArray(size -> new TypeMirror[size]);
     }
-    TypeMirror objectType = elements.getTypeElement("java.lang.Object").asType();
 
-    return new TreeBackedTypeParameterElement(tree.getName(), enclosingElement, objectType);
+    return new TreeBackedTypeParameterElement(tree.getName(), enclosingElement, bounds);
   }
 
   private TreeBackedTypeParameterElement(

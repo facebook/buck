@@ -46,6 +46,19 @@ public class TreeBackedTypeParameterElementTest extends CompilerTreeApiParameter
   }
 
   @Test
+  public void testGetSimpleNameWithBoundedParameter() throws IOException {
+    compile("class Foo<T extends java.lang.Runnable> { }");
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    final List<? extends TypeParameterElement> typeParameters = fooElement.getTypeParameters();
+
+    assertSame(1, typeParameters.size());
+    TypeParameterElement typeParam = typeParameters.get(0);
+
+    assertNameEquals("T", typeParam.getSimpleName());
+  }
+
+  @Test
   public void testGetGenericElement() throws IOException {
     compile("class Foo<T> { }");
 
@@ -86,4 +99,64 @@ public class TreeBackedTypeParameterElementTest extends CompilerTreeApiParameter
     assertSame(1, bounds.size());
     assertSameType(objectType, bounds.get(0));
   }
+
+  @Test
+  public void testMultipleTypeParameters() throws IOException {
+    compile("class Foo<T, U extends java.lang.CharSequence> { }");
+
+    TypeMirror objectType = elements.getTypeElement("java.lang.Object").asType();
+    TypeMirror charSequenceType = elements.getTypeElement("java.lang.CharSequence").asType();
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    List<? extends TypeParameterElement> typeParameters = fooElement.getTypeParameters();
+    assertSame(2, typeParameters.size());
+
+    TypeParameterElement tParam = typeParameters.get(0);
+    List<? extends TypeMirror> bounds = tParam.getBounds();
+    assertSame(1, bounds.size());
+    assertSameType(objectType, bounds.get(0));
+
+    TypeParameterElement uParam = typeParameters.get(1);
+    bounds = uParam.getBounds();
+    assertSame(1, bounds.size());
+    assertSameType(charSequenceType, bounds.get(0));
+  }
+
+  @Test
+  public void testSuperclassBoundedTypeParameter() throws IOException {
+    compile("class Foo<T extends java.lang.CharSequence> { }");
+
+    TypeMirror charSequenceType = elements.getTypeElement("java.lang.CharSequence").asType();
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    List<? extends TypeParameterElement> typeParameters = fooElement.getTypeParameters();
+    assertSame(1, typeParameters.size());
+    TypeParameterElement typeParam = typeParameters.get(0);
+    List<? extends TypeMirror> bounds = typeParam.getBounds();
+
+    assertSame(1, bounds.size());
+    assertSameType(charSequenceType, bounds.get(0));
+  }
+
+  @Test
+  public void testMultipleBoundedTypeParameter() throws IOException {
+    compile(
+        "class Foo<T extends java.lang.CharSequence & java.lang.Runnable & java.io.Closeable> { }");
+
+    TypeMirror charSequenceType = elements.getTypeElement("java.lang.CharSequence").asType();
+    TypeMirror runnableType = elements.getTypeElement("java.lang.Runnable").asType();
+    TypeMirror closeableType = elements.getTypeElement("java.io.Closeable").asType();
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    List<? extends TypeParameterElement> typeParameters = fooElement.getTypeParameters();
+    assertSame(1, typeParameters.size());
+    TypeParameterElement typeParam = typeParameters.get(0);
+    List<? extends TypeMirror> bounds = typeParam.getBounds();
+
+    assertSame(3, bounds.size());
+    assertSameType(charSequenceType, bounds.get(0));
+    assertSameType(runnableType, bounds.get(1));
+    assertSameType(closeableType, bounds.get(2));
+  }
+
 }

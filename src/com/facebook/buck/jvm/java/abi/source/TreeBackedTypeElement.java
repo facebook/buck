@@ -54,7 +54,7 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
 
   /* package */ void resolve(TreeBackedElements elements, TreeBackedTypes types) {
     resolveSuperclass(elements, types);
-    resolveTypeParameters(elements);
+    resolveTypeParameters(elements, types);
   }
 
   private void resolveSuperclass(TreeBackedElements elements, TreeBackedTypes types) {
@@ -71,12 +71,12 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
     }
   }
 
-  private void resolveTypeParameters(TreeBackedElements elements) {
+  private void resolveTypeParameters(TreeBackedElements elements, TreeBackedTypes types) {
     typeParameters = Collections.unmodifiableList(
         tree.getTypeParameters()
           .stream()
           .map(typeParamTree -> TreeBackedTypeParameterElement.resolveTypeParameter(
-              this, typeParamTree, elements))
+              this, typeParamTree, elements, types))
           .collect(Collectors.toList())
     );
   }
