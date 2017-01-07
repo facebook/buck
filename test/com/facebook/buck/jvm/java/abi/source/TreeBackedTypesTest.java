@@ -22,6 +22,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.CompilerTreeApiParameterized;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
@@ -30,6 +31,7 @@ import org.junit.runner.RunWith;
 import java.io.IOException;
 
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.TypeKind;
@@ -152,5 +154,31 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
     TypeMirror mapStringStringType = types.getDeclaredType(mapElement, stringType, stringType);
 
     assertNotSameType(mapStringIntType, mapStringStringType);
+  }
+
+  @Test
+  public void testIsSameTypeArrayType() throws IOException {
+    compile("class Foo { }");
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    ArrayType fooArray = types.getArrayType(fooElement.asType());
+    ArrayType fooArray2 = types.getArrayType(fooElement.asType());
+
+    assertSameType(fooArray, fooArray2);
+    assertNotSameType(fooArray, fooElement.asType());
+  }
+
+  @Test
+  public void testIsNotSameTypeArrayType() throws IOException {
+    compile(Joiner.on('\n').join(
+        "class Foo { }",
+        "class Bar { }"));
+
+    TypeMirror fooType = elements.getTypeElement("Foo").asType();
+    TypeMirror barType = elements.getTypeElement("Bar").asType();
+    ArrayType fooArray = types.getArrayType(fooType);
+    ArrayType barArray = types.getArrayType(barType);
+
+    assertNotSameType(fooArray, barArray);
   }
 }

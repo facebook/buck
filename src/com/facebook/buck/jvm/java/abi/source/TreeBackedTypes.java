@@ -62,6 +62,8 @@ class TreeBackedTypes implements Types {
     switch (t1.getKind()) {
       case DECLARED:
         return isSameType((DeclaredType) t1, (DeclaredType) t2);
+      case ARRAY:
+        return isSameType(((ArrayType) t1).getComponentType(), ((ArrayType) t2).getComponentType());
       //$CASES-OMITTED$
       default:
         throw new UnsupportedOperationException(
@@ -156,7 +158,7 @@ class TreeBackedTypes implements Types {
 
   @Override
   public ArrayType getArrayType(TypeMirror componentType) {
-    throw new UnsupportedOperationException();
+    return new StandaloneArrayType(componentType);
   }
 
   @Override
