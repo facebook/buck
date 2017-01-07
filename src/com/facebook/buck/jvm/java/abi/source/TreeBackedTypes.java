@@ -44,7 +44,7 @@ class TreeBackedTypes implements Types {
   @Nullable
   public Element asElement(TypeMirror t) {
     if (t.getKind() == TypeKind.DECLARED) {
-      return ((TreeBackedDeclaredType) t).asElement();
+      return ((DeclaredType) t).asElement();
     } else if (t.getKind() == TypeKind.TYPEVAR) {
       throw new UnsupportedOperationException("Type variables not yet implemented");
     }
@@ -159,9 +159,9 @@ class TreeBackedTypes implements Types {
   }
 
   @Override
-  public TreeBackedDeclaredType getDeclaredType(TypeElement typeElem, TypeMirror... typeArgs) {
+  public DeclaredType getDeclaredType(TypeElement typeElem, TypeMirror... typeArgs) {
     if (typeArgs.length == 0) {
-      return ((TreeBackedTypeElement) typeElem).asType();
+      return new StandaloneDeclaredType(typeElem);
     }
 
     throw new UnsupportedOperationException("Type arguments not yet implemented");

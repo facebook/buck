@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -46,6 +47,7 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
 
     assertEquals(TypeKind.DECLARED, fooTypeMirror.getKind());
     DeclaredType fooDeclaredType = (DeclaredType) fooTypeMirror;
+    assertNotSame(fooElement.asType(), fooDeclaredType);
     assertSame(fooElement, fooDeclaredType.asElement());
     assertEquals(0, fooDeclaredType.getTypeArguments().size());
 
@@ -77,6 +79,27 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
     TypeMirror barType = elements.getTypeElement("Bar").asType();
 
     assertNotSameType(fooType, barType);
+  }
+
+  @Test
+  public void testIsSameTypeJavacTypeTopLevelNoGenerics() throws IOException {
+    initCompiler();
+
+    TypeElement objectElement = elements.getTypeElement("java.lang.Object");
+    TypeMirror objectTypeMirror = types.getDeclaredType(objectElement);
+    TypeMirror objectTypeMirror2 = types.getDeclaredType(objectElement);
+
+    assertSameType(objectTypeMirror, objectTypeMirror2);
+  }
+
+  @Test
+  public void testIsNotSameTypeJavacTypeTopLevelNoGenerics() throws IOException {
+    initCompiler();
+
+    TypeMirror objectType = elements.getTypeElement("java.lang.Object").asType();
+    TypeMirror stringType = elements.getTypeElement("java.lang.String").asType();
+
+    assertNotSameType(objectType, stringType);
   }
 
   private void assertSameType(TypeMirror expected, TypeMirror actual) {

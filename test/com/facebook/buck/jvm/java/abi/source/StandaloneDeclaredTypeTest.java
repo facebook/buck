@@ -29,7 +29,7 @@ import java.io.IOException;
 import javax.lang.model.type.DeclaredType;
 
 @RunWith(CompilerTreeApiParameterized.class)
-public class TreeBackedDeclaredTypeTest extends CompilerTreeApiParameterizedTest {
+public class StandaloneDeclaredTypeTest extends CompilerTreeApiParameterizedTest {
   @Test
   public void testToStringNoGenerics() throws IOException {
     compile(Joiner.on('\n').join(

@@ -48,14 +48,14 @@ import javax.lang.model.type.TypeMirror;
 class TreeBackedTypeElement implements TypeElement {
   private final ClassTree tree;
   private final Name qualifiedName;
-  private TreeBackedDeclaredType typeMirror;
+  private StandaloneDeclaredType typeMirror;
   @Nullable
   private TypeMirror superclass;
 
   TreeBackedTypeElement(ClassTree tree, Name qualifiedName) {
     this.tree = tree;
     this.qualifiedName = qualifiedName;
-    typeMirror = new TreeBackedDeclaredType(this);
+    typeMirror = new StandaloneDeclaredType(this);
   }
 
   /* package */ void resolve(TreeBackedElements elements) {
@@ -98,7 +98,7 @@ class TreeBackedTypeElement implements TypeElement {
   }
 
   @Override
-  public TreeBackedDeclaredType asType() {
+  public StandaloneDeclaredType asType() {
     return typeMirror;
   }
 
@@ -145,10 +145,9 @@ class TreeBackedTypeElement implements TypeElement {
   private TypeMirror resolveType(Tree extendsClause, TreeBackedElements elements) {
     if (extendsClause == null) {
       if (tree.getKind() == Tree.Kind.INTERFACE) {
-        return TreeBackedNoType.KIND_NONE;
+        return StandaloneNoType.KIND_NONE;
       } else {
-        // TODO(jkeljo): This is wrong, but we don't have support for loading java.lang.Object yet
-        return TreeBackedNoType.KIND_NONE;
+        return Preconditions.checkNotNull(elements.getTypeElement("java.lang.Object")).asType();
       }
     }
 
@@ -173,7 +172,8 @@ class TreeBackedTypeElement implements TypeElement {
       @Override
       public TypeMirror visitMemberSelect(MemberSelectTree node, Void aVoid) {
         CharSequence fullyQualifiedName = TreeResolver.expressionToName(node);
-        TypeElement superclassElement = elements.getTypeElement(fullyQualifiedName);
+        TypeElement superclassElement =
+            Preconditions.checkNotNull(elements.getTypeElement(fullyQualifiedName));
 
         return superclassElement.asType();
       }

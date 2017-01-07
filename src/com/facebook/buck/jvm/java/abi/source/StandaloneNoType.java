@@ -21,19 +21,17 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeVisitor;
 
 /**
- * An implementation of {@link NoType} that uses only the information available in one or
- * more {@link javax.lang.model.element.Element} objects. The implementation of the
- * {@link javax.lang.model.element.Element} does not matter; it can be tree-backed or from
- * the compiler.
+ * An implementation of {@link NoType} that does not depend on any particular compiler
+ * implementation.
  */
-class TreeBackedNoType extends TreeBackedTypeMirror implements NoType {
-  public static final TreeBackedNoType KIND_NONE = new TreeBackedNoType(TypeKind.NONE);
-  public static final TreeBackedNoType KIND_PACKAGE = new TreeBackedNoType(TypeKind.PACKAGE);
-  public static final TreeBackedNoType KIND_VOID = new TreeBackedNoType(TypeKind.VOID);
+class StandaloneNoType extends StandaloneTypeMirror implements NoType {
+  public static final StandaloneNoType KIND_NONE = new StandaloneNoType(TypeKind.NONE);
+  public static final StandaloneNoType KIND_PACKAGE = new StandaloneNoType(TypeKind.PACKAGE);
+  public static final StandaloneNoType KIND_VOID = new StandaloneNoType(TypeKind.VOID);
 
   private final TypeKind kind;
 
-  private TreeBackedNoType(TypeKind kind) {
+  private StandaloneNoType(TypeKind kind) {
     this.kind = kind;
   }
 

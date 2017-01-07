@@ -23,12 +23,12 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.TypeMirror;
 
 /**
- * An implementation of {@link TypeMirror} that uses only the information available in one or
- * more {@link javax.lang.model.element.Element} objects. The implementation of the
- * {@link javax.lang.model.element.Element} does not matter; it can be tree-backed or from
- * the compiler.
+ * An implementation of {@link TypeMirror} that is not dependent on any particular compiler
+ * implementation. Subclasses may require {@link javax.lang.model.element.Element}s and/or
+ * {@link javax.lang.model.type.TypeMirror}s, but do not depend on any particular implementation of
+ * them (beyond the spec).
  */
-abstract class TreeBackedTypeMirror implements TypeMirror {
+abstract class StandaloneTypeMirror implements TypeMirror {
   @Override
   public List<? extends AnnotationMirror> getAnnotationMirrors() {
     throw new UnsupportedOperationException();

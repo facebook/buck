@@ -16,6 +16,8 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.util.exportedfiles.Nullable;
+
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,7 +41,7 @@ import javax.lang.model.util.Elements;
  */
 class TreeBackedElements implements Elements {
   private final Elements javacElements;
-  private final Map<Name, TreeBackedTypeElement> types = new HashMap<>();
+  private final Map<Name, TypeElement> types = new HashMap<>();
 
   public TreeBackedElements(Elements javacElements) {
     this.javacElements = javacElements;
@@ -51,17 +53,28 @@ class TreeBackedElements implements Elements {
   }
 
   @Override
-  public TreeBackedTypeElement getTypeElement(CharSequence nameString) {
-    Name qualifiedName = getName(nameString);
-    if (!types.containsKey(qualifiedName)) {
-      // Because we don't have access to the current target's dependencies, we have to assume that
-      // any type name we don't know about exists in one of those. Whatever our caller does with
-      // this information will need to be validated later against the full set of dependencies.
-      throw new UnsupportedOperationException(
-          "TODO: Need to create placeholders for unknown type names.");
+  @Nullable
+  public TypeElement getTypeElement(CharSequence fullyQualifiedCharSequence) {
+    Name fullyQualifiedName = getName(fullyQualifiedCharSequence);
+    if (!types.containsKey(fullyQualifiedName)) {
+      // If none of the types for which we have parse trees matches this fully-qualified name,
+      // ask javac. javac will check the classpath, which will pick up built-ins (like java.lang)
+      // and any types from dependency targets that are already compiled and on the classpath.
+      // Because our tree-backed elements and javac's elements are sharing a name table, we
+      // should be able to mix implementations without causing too much trouble.
+      TypeElement javacElement = javacElements.getTypeElement(fullyQualifiedName);
+      if (javacElement != null) {
+        types.put(fullyQualifiedName, javacElement);
+      } else {
+        // Because we don't have access to the current target's dependencies, we have to assume that
+        // any type name we don't know about exists in one of those. Whatever our caller does with
+        // this information will need to be validated later against the full set of dependencies.
+        throw new UnsupportedOperationException(
+            "TODO: Need to create placeholders for unknown type names.");
+      }
     }
 
-    return types.get(qualifiedName);
+    return types.get(fullyQualifiedName);
   }
 
   /* package */ void enterTypeElement(TreeBackedTypeElement element) {

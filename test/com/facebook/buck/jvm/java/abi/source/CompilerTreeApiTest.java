@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -54,6 +55,10 @@ public abstract class CompilerTreeApiTest {
   protected TreeResolver treeResolver;
   protected TreeBackedElements treesElements;
   protected TreeBackedTypes treesTypes;
+
+  protected final void initCompiler() throws IOException {
+    compile(Collections.emptyMap(), null);
+  }
 
   protected final Iterable<? extends CompilationUnitTree> compile(String source)
       throws IOException {

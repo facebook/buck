@@ -123,6 +123,28 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
   }
 
   @Test
+  public void testGetSuperclassNoSuperclassIsObject() throws IOException {
+    compile("class Foo { }");
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    DeclaredType superclass = (DeclaredType) fooElement.getSuperclass();
+    TypeElement objectElement = elements.getTypeElement("java.lang.Object");
+
+    assertSame(objectElement, superclass.asElement());
+  }
+
+  @Test
+  public void testGetSuperclassObjectSuperclassIsObject() throws IOException {
+    compile("class Foo extends java.lang.Object { }");
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    DeclaredType superclass = (DeclaredType) fooElement.getSuperclass();
+    TypeElement objectElement = elements.getTypeElement("java.lang.Object");
+
+    assertSame(objectElement, superclass.asElement());
+  }
+
+  @Test
   public void testGetSuperclassOfInterfaceIsNoneType() throws IOException {
     compile("interface Foo extends java.lang.Runnable { }");
 
