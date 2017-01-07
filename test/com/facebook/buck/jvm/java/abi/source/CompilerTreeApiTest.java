@@ -99,6 +99,7 @@ public abstract class CompilerTreeApiTest {
 
     final Iterable<? extends CompilationUnitTree> compilationUnits = javacTask.parse();
     compilationUnits.forEach(tree -> treeResolver.enterTree(tree));
+    treeResolver.resolve();
 
     // Make sure we've got elements for things. Technically this is going a little further than
     // the compiler ordinarily would by the time annotation processors get involved, but this

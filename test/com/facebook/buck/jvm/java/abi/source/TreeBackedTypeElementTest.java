@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -119,6 +120,37 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
     TypeMirror enclosingType = fooDeclaredType.getEnclosingType();
     assertEquals(TypeKind.NONE, enclosingType.getKind());
     assertTrue(enclosingType instanceof NoType);
+  }
+
+  @Test
+  public void testGetSuperclassOfInterfaceIsNoneType() throws IOException {
+    compile("interface Foo extends java.lang.Runnable { }");
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+
+    assertSame(TypeKind.NONE, fooElement.getSuperclass().getKind());
+  }
+
+  @Test
+  public void testGetSuperclassOtherSuperclass() throws IOException {
+    compile(ImmutableMap.of(
+        "Foo.java",
+        Joiner.on('\n').join(
+            "package com.facebook.foo;",
+            "public class Foo extends com.facebook.bar.Bar { }"
+        ),
+        "Bar.java",
+        Joiner.on('\n').join(
+            "package com.facebook.bar;",
+            "public class Bar { }"
+        )
+    ));
+
+    TypeElement fooElement = elements.getTypeElement("com.facebook.foo.Foo");
+    TypeElement barElement = elements.getTypeElement("com.facebook.bar.Bar");
+
+    DeclaredType superclass = (DeclaredType) fooElement.getSuperclass();
+    assertSame(barElement, superclass.asElement());
   }
 
   private void assertNameEquals(String expected, Name actual) {

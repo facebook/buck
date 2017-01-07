@@ -16,7 +16,14 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.util.exportedfiles.Nullable;
+import com.facebook.buck.util.exportedfiles.Preconditions;
 import com.sun.source.tree.ClassTree;
+import com.sun.source.tree.IdentifierTree;
+import com.sun.source.tree.MemberSelectTree;
+import com.sun.source.tree.Tree;
+import com.sun.source.tree.TypeParameterTree;
+import com.sun.source.util.SimpleTreeVisitor;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
@@ -42,11 +49,17 @@ class TreeBackedTypeElement implements TypeElement {
   private final ClassTree tree;
   private final Name qualifiedName;
   private TreeBackedDeclaredType typeMirror;
+  @Nullable
+  private TypeMirror superclass;
 
   TreeBackedTypeElement(ClassTree tree, Name qualifiedName) {
     this.tree = tree;
     this.qualifiedName = qualifiedName;
     typeMirror = new TreeBackedDeclaredType(this);
+  }
+
+  /* package */ void resolve(TreeBackedElements elements) {
+    superclass = resolveType(tree.getExtendsClause(), elements);
   }
 
   @Override
@@ -106,7 +119,7 @@ class TreeBackedTypeElement implements TypeElement {
 
   @Override
   public TypeMirror getSuperclass() {
-    throw new UnsupportedOperationException();
+    return Preconditions.checkNotNull(superclass);  // Don't call this before resolving the element
   }
 
   @Override
@@ -128,4 +141,43 @@ class TreeBackedTypeElement implements TypeElement {
   public String toString() {
     return getQualifiedName().toString();
   }
+
+  private TypeMirror resolveType(Tree extendsClause, TreeBackedElements elements) {
+    if (extendsClause == null) {
+      if (tree.getKind() == Tree.Kind.INTERFACE) {
+        return TreeBackedNoType.KIND_NONE;
+      } else {
+        // TODO(jkeljo): This is wrong, but we don't have support for loading java.lang.Object yet
+        return TreeBackedNoType.KIND_NONE;
+      }
+    }
+
+    return extendsClause.accept(new SimpleTreeVisitor<TypeMirror, Void>() {
+      @Override
+      protected TypeMirror defaultAction(Tree node, Void aVoid) {
+        throw new IllegalArgumentException(
+            String.format("Unexpected tree kind: %s", node.getKind()));
+      }
+
+      @Override
+      public TypeMirror visitIdentifier(IdentifierTree node, Void aVoid) {
+        throw new UnsupportedOperationException("Type resolution by simple name NYI");
+      }
+
+      @Override
+      public TypeMirror visitTypeParameter(
+          TypeParameterTree node, Void aVoid) {
+        throw new UnsupportedOperationException("Type resolution for parameterized types NYI");
+      }
+
+      @Override
+      public TypeMirror visitMemberSelect(MemberSelectTree node, Void aVoid) {
+        CharSequence fullyQualifiedName = TreeResolver.expressionToName(node);
+        TypeElement superclassElement = elements.getTypeElement(fullyQualifiedName);
+
+        return superclassElement.asType();
+      }
+    }, null);
+  }
+
 }

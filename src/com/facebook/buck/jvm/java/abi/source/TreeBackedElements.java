@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,6 +71,13 @@ class TreeBackedElements implements Elements {
       throw new AssertionError(String.format("Type collision for %s", name));
     }
     types.put(name, element);
+  }
+
+  /* package */ void resolve() {
+    // Resolving elements can cause us to discover more types. To avoid mutating the same thing
+    // we're iterating, we copy it out first.
+    List<TypeElement> treeBackedElements = new ArrayList<>(types.values());
+    treeBackedElements.forEach(element -> ((TreeBackedTypeElement) element).resolve(this));
   }
 
   @Override

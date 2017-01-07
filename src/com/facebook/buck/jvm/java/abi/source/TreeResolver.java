@@ -111,11 +111,16 @@ class TreeResolver {
     }
   }
 
+  public void resolve() {
+    elements.resolve();
+  }
+
   /**
    * Takes a {@link MemberSelectTree} or {@link IdentifierTree} and returns the name it represents
    * as a {@link CharSequence}.
    */
-  private static CharSequence expressionToName(ExpressionTree expression) {
+  /* package */
+  static CharSequence expressionToName(ExpressionTree expression) {
     if (expression == null) {
       return "";
     }
