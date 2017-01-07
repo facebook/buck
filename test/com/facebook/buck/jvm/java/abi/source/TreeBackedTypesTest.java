@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.testutil.CompilerTreeApiParameterized;
 import com.google.common.collect.ImmutableMap;
@@ -153,17 +152,5 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
     TypeMirror mapStringStringType = types.getDeclaredType(mapElement, stringType, stringType);
 
     assertNotSameType(mapStringIntType, mapStringStringType);
-  }
-
-  private void assertSameType(TypeMirror expected, TypeMirror actual) {
-    if (!types.isSameType(expected, actual)) {
-      fail(String.format("Types are not the same.\nExpected: %s\nActual: %s", expected, actual));
-    }
-  }
-
-  private void assertNotSameType(TypeMirror expected, TypeMirror actual) {
-    if (types.isSameType(expected, actual)) {
-      fail(String.format("Expected different types, but both were: %s", expected));
-    }
   }
 }

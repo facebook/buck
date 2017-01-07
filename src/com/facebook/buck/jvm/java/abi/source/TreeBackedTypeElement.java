@@ -21,6 +21,7 @@ import com.facebook.buck.util.exportedfiles.Preconditions;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.MemberSelectTree;
+import com.sun.source.tree.ParameterizedTypeTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.TypeParameterTree;
 import com.sun.source.util.SimpleTreeVisitor;
@@ -58,8 +59,8 @@ class TreeBackedTypeElement implements TypeElement {
     typeMirror = new StandaloneDeclaredType(this);
   }
 
-  /* package */ void resolve(TreeBackedElements elements) {
-    superclass = resolveType(tree.getExtendsClause(), elements);
+  /* package */ void resolve(TreeBackedElements elements, TreeBackedTypes types) {
+    superclass = resolveType(tree.getExtendsClause(), elements, types);
   }
 
   @Override
@@ -142,7 +143,10 @@ class TreeBackedTypeElement implements TypeElement {
     return getQualifiedName().toString();
   }
 
-  private TypeMirror resolveType(Tree extendsClause, TreeBackedElements elements) {
+  private TypeMirror resolveType(
+      Tree extendsClause,
+      TreeBackedElements elements,
+      TreeBackedTypes types) {
     if (extendsClause == null) {
       if (tree.getKind() == Tree.Kind.INTERFACE) {
         return StandaloneNoType.KIND_NONE;
@@ -171,11 +175,25 @@ class TreeBackedTypeElement implements TypeElement {
 
       @Override
       public TypeMirror visitMemberSelect(MemberSelectTree node, Void aVoid) {
-        CharSequence fullyQualifiedName = TreeResolver.treeToName(node);
-        TypeElement superclassElement =
-            Preconditions.checkNotNull(elements.getTypeElement(fullyQualifiedName));
+        TypeElement superclassElement = treeToTypeElement(node);
 
         return superclassElement.asType();
+      }
+
+      @Override
+      public TypeMirror visitParameterizedType(ParameterizedTypeTree node, Void aVoid) {
+        TypeElement typeElement = treeToTypeElement(node.getType());
+
+        TypeMirror[] typeArgs = node.getTypeArguments()
+            .stream()
+            .map(tree -> tree.accept(this, aVoid))
+            .toArray(size -> new TypeMirror[size]);
+
+        return types.getDeclaredType(typeElement, typeArgs);
+      }
+
+      private TypeElement treeToTypeElement(Tree type) {
+        return Preconditions.checkNotNull(elements.getTypeElement(TreeResolver.treeToName(type)));
       }
     }, null);
   }

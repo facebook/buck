@@ -86,11 +86,11 @@ class TreeBackedElements implements Elements {
     knownTypes.put(name, element);
   }
 
-  /* package */ void resolve() {
+  /* package */ void resolve(TreeBackedTypes types) {
     // Resolving elements can cause us to discover more types. To avoid mutating the same thing
     // we're iterating, we copy it out first.
     List<TypeElement> treeBackedElements = new ArrayList<>(knownTypes.values());
-    treeBackedElements.forEach(element -> ((TreeBackedTypeElement) element).resolve(this));
+    treeBackedElements.forEach(element -> ((TreeBackedTypeElement) element).resolve(this, types));
   }
 
   @Override

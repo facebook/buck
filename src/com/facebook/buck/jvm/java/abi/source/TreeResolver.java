@@ -111,7 +111,7 @@ class TreeResolver {
   }
 
   public void resolve() {
-    elements.resolve();
+    elements.resolve(types);
   }
 
   /**

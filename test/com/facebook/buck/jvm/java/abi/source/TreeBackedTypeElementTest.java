@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -173,6 +174,50 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
 
     DeclaredType superclass = (DeclaredType) fooElement.getSuperclass();
     assertSame(barElement, superclass.asElement());
+  }
+
+  @Test
+  public void testGetParameterizedSuperclass() throws IOException {
+    compile(Joiner.on('\n').join(
+        "abstract class Foo extends java.util.ArrayList<java.lang.String> { }",
+        "abstract class Bar extends java.util.ArrayList<java.lang.String> { }"));
+
+    TypeElement listElement = elements.getTypeElement("java.util.ArrayList");
+    TypeElement stringElement = elements.getTypeElement("java.lang.String");
+    DeclaredType expectedSuperclass = types.getDeclaredType(
+        listElement,
+        stringElement.asType());
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    TypeElement barElement = elements.getTypeElement("Bar");
+    DeclaredType fooSuperclass = (DeclaredType) fooElement.getSuperclass();
+    DeclaredType barSuperclass = (DeclaredType) barElement.getSuperclass();
+
+    assertNotSame(expectedSuperclass, fooSuperclass);
+    assertSameType(expectedSuperclass, fooSuperclass);
+    assertSameType(fooSuperclass, barSuperclass);
+  }
+
+  @Test
+  public void testGetReallyParameterizedSuperclass() throws IOException {
+    compile(Joiner.on('\n').join(
+        "abstract class Foo",
+        "    extends java.util.HashMap<",
+        "        java.util.ArrayList<java.lang.String>, ",
+        "        java.util.HashSet<java.lang.Integer>> { }"));
+
+    TypeElement mapElement = elements.getTypeElement("java.util.HashMap");
+    TypeElement listElement = elements.getTypeElement("java.util.ArrayList");
+    TypeElement setElement = elements.getTypeElement("java.util.HashSet");
+    TypeMirror stringType = elements.getTypeElement("java.lang.String").asType();
+    TypeMirror integerType = elements.getTypeElement("java.lang.Integer").asType();
+    TypeMirror listStringType = types.getDeclaredType(listElement, stringType);
+    TypeMirror setIntType = types.getDeclaredType(setElement, integerType);
+    TypeMirror crazyMapType = types.getDeclaredType(mapElement, listStringType, setIntType);
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+
+    assertSameType(crazyMapType, fooElement.getSuperclass());
   }
 
   private void assertNameEquals(String expected, Name actual) {
