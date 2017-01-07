@@ -250,6 +250,20 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
     assertSameType(expectedSuperclass, fooElement.getSuperclass());
   }
 
+  @Test
+  public void testGetPrimitiveArrayParameterizedSuperclass() throws IOException {
+    compile("abstract class Foo extends java.util.ArrayList<int[]> { }");
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    TypeElement listElement = elements.getTypeElement("java.util.ArrayList");
+    TypeMirror intType = types.getPrimitiveType(TypeKind.INT);
+    ArrayType intArrayType = types.getArrayType(intType);
+
+    DeclaredType expectedSuperclass = types.getDeclaredType(listElement, intArrayType);
+
+    assertSameType(expectedSuperclass, fooElement.getSuperclass());
+  }
+
   private void assertNameEquals(String expected, Name actual) {
     assertEquals(elements.getName(expected), actual);
   }

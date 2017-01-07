@@ -23,6 +23,7 @@ import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.ParameterizedTypeTree;
+import com.sun.source.tree.PrimitiveTypeTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.TypeParameterTree;
 import com.sun.source.util.SimpleTreeVisitor;
@@ -202,6 +203,11 @@ class TreeBackedTypeElement implements TypeElement {
         TypeMirror elementType = resolveType(node.getType(), elements, types);
 
         return types.getArrayType(elementType);
+      }
+
+      @Override
+      public TypeMirror visitPrimitiveType(PrimitiveTypeTree node, Void aVoid) {
+        return types.getPrimitiveType(node.getPrimitiveTypeKind());
       }
 
       private TypeElement treeToTypeElement(Tree type) {

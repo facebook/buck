@@ -34,6 +34,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.NoType;
+import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
@@ -180,5 +181,39 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
     ArrayType barArray = types.getArrayType(barType);
 
     assertNotSameType(fooArray, barArray);
+  }
+
+  @Test
+  public void testIsSameTypePrimitiveType() throws IOException {
+    initCompiler();
+
+    for (TypeKind typeKind : TypeKind.values()) {
+      if (typeKind.isPrimitive()) {
+        PrimitiveType primitiveType = types.getPrimitiveType(typeKind);
+        PrimitiveType primitiveType2 = types.getPrimitiveType(typeKind);
+
+        assertSameType(primitiveType, primitiveType2);
+      }
+    }
+  }
+
+  @Test
+  public void testIsNotSameTypePrimitiveType() throws IOException {
+    initCompiler();
+
+    PrimitiveType intType = types.getPrimitiveType(TypeKind.INT);
+    PrimitiveType longType = types.getPrimitiveType(TypeKind.LONG);
+
+    assertNotSameType(intType, longType);
+  }
+
+  @Test
+  public void testIsNotSameTypeDifferentTypes() throws IOException {
+    initCompiler();
+
+    PrimitiveType intType = types.getPrimitiveType(TypeKind.INT);
+    ArrayType intArrayType = types.getArrayType(intType);
+
+    assertNotSameType(intType, intArrayType);
   }
 }

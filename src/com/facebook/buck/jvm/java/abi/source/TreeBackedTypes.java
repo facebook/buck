@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.exportedfiles.Nullable;
+import com.facebook.buck.util.exportedfiles.Preconditions;
 
 import java.util.Arrays;
 import java.util.List;
@@ -60,6 +61,15 @@ class TreeBackedTypes implements Types {
     }
 
     switch (t1.getKind()) {
+      case BOOLEAN:
+      case BYTE:
+      case CHAR:
+      case SHORT:
+      case INT:
+      case LONG:
+      case FLOAT:
+      case DOUBLE:
+        return true;
       case DECLARED:
         return isSameType((DeclaredType) t1, (DeclaredType) t2);
       case ARRAY:
@@ -143,7 +153,7 @@ class TreeBackedTypes implements Types {
 
   @Override
   public PrimitiveType getPrimitiveType(TypeKind kind) {
-    throw new UnsupportedOperationException();
+    return Preconditions.checkNotNull(StandalonePrimitiveType.INSTANCES.get(kind));
   }
 
   @Override
