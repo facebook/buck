@@ -216,4 +216,11 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
 
     assertNotSameType(intType, intArrayType);
   }
+
+  @Test
+  public void testIsSameTypeNullType() throws IOException {
+    initCompiler();
+
+    assertSameType(types.getNullType(), types.getNullType());
+  }
 }

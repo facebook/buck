@@ -69,6 +69,7 @@ class TreeBackedTypes implements Types {
       case LONG:
       case FLOAT:
       case DOUBLE:
+      case NULL:
         return true;
       case DECLARED:
         return isSameType((DeclaredType) t1, (DeclaredType) t2);
@@ -158,7 +159,7 @@ class TreeBackedTypes implements Types {
 
   @Override
   public NullType getNullType() {
-    throw new UnsupportedOperationException();
+    return StandaloneNullType.INSTANCE;
   }
 
   @Override
