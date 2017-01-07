@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.exportedfiles.Nullable;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.lang.model.element.Element;
@@ -76,11 +77,17 @@ class TreeBackedTypes implements Types {
     List<? extends TypeMirror> args1 = t1.getTypeArguments();
     List<? extends TypeMirror> args2 = t2.getTypeArguments();
     if (args1.size() != args2.size()) {
+      // TODO(jkeljo): This is impossible in code that will compile, but we will eventually need
+      // to gracefully error out on code with some kinds of errors (such as providing the
+      // wrong number of type arguments). Whenever we do that work, the body of this statement
+      // should throw.
       return false;
     }
 
-    if (args1.size() > 0) {
-      throw new UnsupportedOperationException("Generics NYI");
+    for (int i = 0; i < args1.size(); i++) {
+      if (!isSameType(args1.get(i), args2.get(i))) {
+        return false;
+      }
     }
 
     return true;
@@ -160,11 +167,7 @@ class TreeBackedTypes implements Types {
 
   @Override
   public DeclaredType getDeclaredType(TypeElement typeElem, TypeMirror... typeArgs) {
-    if (typeArgs.length == 0) {
-      return new StandaloneDeclaredType(typeElem);
-    }
-
-    throw new UnsupportedOperationException("Type arguments not yet implemented");
+    return new StandaloneDeclaredType(typeElem, Arrays.asList(typeArgs));
   }
 
   @Override

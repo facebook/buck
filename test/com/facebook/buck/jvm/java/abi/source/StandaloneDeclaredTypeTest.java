@@ -26,7 +26,9 @@ import org.junit.runner.RunWith;
 
 import java.io.IOException;
 
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class StandaloneDeclaredTypeTest extends CompilerTreeApiParameterizedTest {
@@ -40,5 +42,19 @@ public class StandaloneDeclaredTypeTest extends CompilerTreeApiParameterizedTest
     DeclaredType fooType = (DeclaredType) elements.getTypeElement("com.facebook.foo.Foo").asType();
 
     assertEquals("com.facebook.foo.Foo", fooType.toString());
+  }
+
+  @Test
+  public void testToStringWithGenerics() throws IOException {
+    initCompiler();
+
+    TypeElement mapElement = elements.getTypeElement("java.util.Map");
+    TypeMirror stringType = elements.getTypeElement("java.lang.String").asType();
+    TypeMirror integerType = elements.getTypeElement("java.lang.Integer").asType();
+    DeclaredType mapStringIntType = types.getDeclaredType(mapElement, stringType, integerType);
+
+    assertEquals(
+        "java.util.Map<java.lang.String,java.lang.Integer>",
+        mapStringIntType.toString());
   }
 }

@@ -35,10 +35,16 @@ import javax.lang.model.type.TypeVisitor;
 class StandaloneDeclaredType extends StandaloneTypeMirror implements DeclaredType {
   private final TypeElement typeElement;
   private final TypeMirror enclosingType = StandaloneNoType.KIND_NONE;
-  private final List<TypeMirror> typeArguments = Collections.unmodifiableList(new ArrayList<>());
+  private final List<TypeMirror> typeArguments;
 
   public StandaloneDeclaredType(TypeElement typeElement) {
+    this(typeElement, Collections.emptyList());
+  }
+
+  public StandaloneDeclaredType(TypeElement typeElement, List<TypeMirror> typeArguments) {
     this.typeElement = typeElement;
+    this.typeArguments =
+        Collections.unmodifiableList(new ArrayList<>(typeArguments));
   }
 
   @Override
@@ -63,7 +69,20 @@ class StandaloneDeclaredType extends StandaloneTypeMirror implements DeclaredTyp
 
   @Override
   public String toString() {
-    return typeElement.toString();
+    StringBuilder builder = new StringBuilder();
+
+    builder.append(typeElement.toString());
+    if (!typeArguments.isEmpty()) {
+      builder.append('<');
+      for (int i = 0; i < typeArguments.size(); i++) {
+        if (i > 0) {
+          builder.append(',');
+        }
+        builder.append(typeArguments.get(i).toString());
+      }
+      builder.append('>');
+    }
+    return builder.toString();
   }
 
   @Override

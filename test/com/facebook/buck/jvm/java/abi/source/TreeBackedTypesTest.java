@@ -102,6 +102,59 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
     assertNotSameType(objectType, stringType);
   }
 
+  @Test
+  public void testIsSameTypeParameterizedType() throws IOException {
+    initCompiler();
+
+    TypeElement listElement = elements.getTypeElement("java.util.List");
+    TypeMirror stringType = elements.getTypeElement("java.lang.String").asType();
+    TypeMirror listStringType1 = types.getDeclaredType(listElement, stringType);
+    TypeMirror listStringType2 = types.getDeclaredType(listElement, stringType);
+
+    assertNotSame(listStringType1, listStringType2);
+    assertSameType(listStringType1, listStringType2);
+  }
+
+  @Test
+  public void testIsSameTypeMultiParameterizedType() throws IOException {
+    initCompiler();
+
+    TypeElement mapElement = elements.getTypeElement("java.util.Map");
+    TypeMirror stringType = elements.getTypeElement("java.lang.String").asType();
+    TypeMirror integerType = elements.getTypeElement("java.lang.Integer").asType();
+    TypeMirror mapStringIntType1 = types.getDeclaredType(mapElement, stringType, integerType);
+    TypeMirror mapStringIntType2 = types.getDeclaredType(mapElement, stringType, integerType);
+
+    assertNotSame(mapStringIntType1, mapStringIntType2);
+    assertSameType(mapStringIntType1, mapStringIntType2);
+  }
+
+  @Test
+  public void testIsNotSameTypeParameterizedType() throws IOException {
+    initCompiler();
+
+    TypeElement listElement = elements.getTypeElement("java.util.List");
+    TypeMirror stringType = elements.getTypeElement("java.lang.String").asType();
+    TypeMirror integerType = elements.getTypeElement("java.lang.Integer").asType();
+    TypeMirror listStringType = types.getDeclaredType(listElement, stringType);
+    TypeMirror listIntType = types.getDeclaredType(listElement, integerType);
+
+    assertNotSameType(listStringType, listIntType);
+  }
+
+  @Test
+  public void testIsNotSameTypeMultiParameterizedType() throws IOException {
+    initCompiler();
+
+    TypeElement mapElement = elements.getTypeElement("java.util.Map");
+    TypeMirror stringType = elements.getTypeElement("java.lang.String").asType();
+    TypeMirror integerType = elements.getTypeElement("java.lang.Integer").asType();
+    TypeMirror mapStringIntType = types.getDeclaredType(mapElement, stringType, integerType);
+    TypeMirror mapStringStringType = types.getDeclaredType(mapElement, stringType, stringType);
+
+    assertNotSameType(mapStringIntType, mapStringStringType);
+  }
+
   private void assertSameType(TypeMirror expected, TypeMirror actual) {
     if (!types.isSameType(expected, actual)) {
       fail(String.format("Types are not the same.\nExpected: %s\nActual: %s", expected, actual));
