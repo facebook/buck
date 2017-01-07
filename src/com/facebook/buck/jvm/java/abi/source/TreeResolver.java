@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java.abi.source;
 import com.facebook.buck.event.api.BuckTracing;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodTree;
@@ -65,7 +64,7 @@ class TreeResolver {
 
         @Override
         public Void visitCompilationUnit(CompilationUnitTree node, Void aVoid) {
-          scope = expressionToName(node.getPackageName());
+          scope = treeToName(node.getPackageName());
 
           return super.visitCompilationUnit(node, aVoid);
         }
@@ -120,12 +119,12 @@ class TreeResolver {
    * as a {@link CharSequence}.
    */
   /* package */
-  static CharSequence expressionToName(ExpressionTree expression) {
-    if (expression == null) {
+  static CharSequence treeToName(Tree tree) {
+    if (tree == null) {
       return "";
     }
 
-    return expression.accept(new SimpleTreeVisitor<CharSequence, Void>() {
+    return tree.accept(new SimpleTreeVisitor<CharSequence, Void>() {
       @Override
       protected CharSequence defaultAction(Tree node, Void aVoid) {
         throw new AssertionError(String.format("Unexpected tree of kind: %s", node.getKind()));

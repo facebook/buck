@@ -171,7 +171,7 @@ class TreeBackedTypeElement implements TypeElement {
 
       @Override
       public TypeMirror visitMemberSelect(MemberSelectTree node, Void aVoid) {
-        CharSequence fullyQualifiedName = TreeResolver.expressionToName(node);
+        CharSequence fullyQualifiedName = TreeResolver.treeToName(node);
         TypeElement superclassElement =
             Preconditions.checkNotNull(elements.getTypeElement(fullyQualifiedName));
 
