@@ -42,6 +42,7 @@ class StandaloneDeclaredType extends StandaloneTypeMirror implements DeclaredTyp
   }
 
   public StandaloneDeclaredType(TypeElement typeElement, List<TypeMirror> typeArguments) {
+    super(TypeKind.DECLARED);
     this.typeElement = typeElement;
     this.typeArguments =
         Collections.unmodifiableList(new ArrayList<>(typeArguments));
@@ -60,11 +61,6 @@ class StandaloneDeclaredType extends StandaloneTypeMirror implements DeclaredTyp
   @Override
   public List<? extends TypeMirror> getTypeArguments() {
     return typeArguments;
-  }
-
-  @Override
-  public TypeKind getKind() {
-    return TypeKind.DECLARED;
   }
 
   @Override

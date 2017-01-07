@@ -29,15 +29,8 @@ class StandaloneNoType extends StandaloneTypeMirror implements NoType {
   public static final StandaloneNoType KIND_PACKAGE = new StandaloneNoType(TypeKind.PACKAGE);
   public static final StandaloneNoType KIND_VOID = new StandaloneNoType(TypeKind.VOID);
 
-  private final TypeKind kind;
-
   private StandaloneNoType(TypeKind kind) {
-    this.kind = kind;
-  }
-
-  @Override
-  public TypeKind getKind() {
-    return kind;
+    super(kind);
   }
 
   @Override

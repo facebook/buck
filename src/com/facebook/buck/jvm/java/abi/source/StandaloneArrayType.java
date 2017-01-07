@@ -30,12 +30,8 @@ class StandaloneArrayType extends StandaloneTypeMirror implements ArrayType {
   private final TypeMirror componentType;
 
   public StandaloneArrayType(TypeMirror componentType) {
+    super(TypeKind.ARRAY);
     this.componentType = componentType;
-  }
-
-  @Override
-  public TypeKind getKind() {
-    return TypeKind.ARRAY;
   }
 
   @Override

@@ -20,6 +20,7 @@ import java.lang.annotation.Annotation;
 import java.util.List;
 
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 /**
@@ -29,6 +30,17 @@ import javax.lang.model.type.TypeMirror;
  * them (beyond the spec).
  */
 abstract class StandaloneTypeMirror implements TypeMirror {
+  private final TypeKind kind;
+
+  protected StandaloneTypeMirror(TypeKind kind) {
+    this.kind = kind;
+  }
+
+  @Override
+  public TypeKind getKind() {
+    return kind;
+  }
+
   @Override
   public List<? extends AnnotationMirror> getAnnotationMirrors() {
     throw new UnsupportedOperationException();
