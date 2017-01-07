@@ -32,6 +32,7 @@ import java.io.IOException;
 
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.TypeKind;
@@ -218,6 +219,35 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
     TypeElement fooElement = elements.getTypeElement("Foo");
 
     assertSameType(crazyMapType, fooElement.getSuperclass());
+  }
+
+  @Test
+  public void testGetArrayParameterizedSuperclass() throws IOException {
+    compile("abstract class Foo extends java.util.ArrayList<java.lang.String[]> { }");
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    TypeElement listElement = elements.getTypeElement("java.util.ArrayList");
+    TypeMirror stringType = elements.getTypeElement("java.lang.String").asType();
+    ArrayType stringArrayType = types.getArrayType(stringType);
+
+    DeclaredType expectedSuperclass = types.getDeclaredType(listElement, stringArrayType);
+
+    assertSameType(expectedSuperclass, fooElement.getSuperclass());
+  }
+
+  @Test
+  public void testGetMultiDimArrayParameterizedSuperclass() throws IOException {
+    compile("abstract class Foo extends java.util.ArrayList<java.lang.String[][]> { }");
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    TypeElement listElement = elements.getTypeElement("java.util.ArrayList");
+    TypeMirror stringType = elements.getTypeElement("java.lang.String").asType();
+    ArrayType stringArrayType = types.getArrayType(stringType);
+    ArrayType stringArrayArrayType = types.getArrayType(stringArrayType);
+
+    DeclaredType expectedSuperclass = types.getDeclaredType(listElement, stringArrayArrayType);
+
+    assertSameType(expectedSuperclass, fooElement.getSuperclass());
   }
 
   private void assertNameEquals(String expected, Name actual) {

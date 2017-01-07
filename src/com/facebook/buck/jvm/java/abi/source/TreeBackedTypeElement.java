@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.exportedfiles.Nullable;
 import com.facebook.buck.util.exportedfiles.Preconditions;
+import com.sun.source.tree.ArrayTypeTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.MemberSelectTree;
@@ -194,6 +195,13 @@ class TreeBackedTypeElement implements TypeElement {
             .toArray(size -> new TypeMirror[size]);
 
         return types.getDeclaredType(typeElement, typeArgs);
+      }
+
+      @Override
+      public TypeMirror visitArrayType(ArrayTypeTree node, Void aVoid) {
+        TypeMirror elementType = resolveType(node.getType(), elements, types);
+
+        return types.getArrayType(elementType);
       }
 
       private TypeElement treeToTypeElement(Tree type) {
