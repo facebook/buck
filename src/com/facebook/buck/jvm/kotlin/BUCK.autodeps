@@ -4,7 +4,8 @@
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/jvm/common:common",
       "//src/com/facebook/buck/maven:util",
-      "//src/com/facebook/buck/util:exceptions"
+      "//src/com/facebook/buck/util:exceptions",
+      "//third-party/java/jsr:jsr305"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/cli:config",
