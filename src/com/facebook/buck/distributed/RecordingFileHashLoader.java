@@ -16,7 +16,6 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.cli.ConfigPathGetter;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
@@ -53,7 +52,7 @@ public class RecordingFileHashLoader implements FileHashLoader {
   private final ProjectFilesystem projectFilesystem;
   @GuardedBy("this")
   private final BuildJobStateFileHashes remoteFileHashes;
-  private ConfigPathGetter buckConfig;
+  private DistBuildConfig distBuildConfig;
   @GuardedBy("this")
   private final Set<Path> seenPaths;
   @GuardedBy("this")
@@ -64,11 +63,11 @@ public class RecordingFileHashLoader implements FileHashLoader {
       FileHashLoader delegate,
       ProjectFilesystem projectFilesystem,
       BuildJobStateFileHashes remoteFileHashes,
-      ConfigPathGetter buckConfig) {
+      DistBuildConfig distBuildConfig) {
     this.delegate = delegate;
     this.projectFilesystem = projectFilesystem;
     this.remoteFileHashes = remoteFileHashes;
-    this.buckConfig = buckConfig;
+    this.distBuildConfig = distBuildConfig;
     this.seenPaths = new HashSet<>();
     this.seenArchives = new HashSet<>();
 
@@ -132,8 +131,8 @@ public class RecordingFileHashLoader implements FileHashLoader {
     }
   }
 
-  // For given symlink, finds the highest level symlink in the path that points outside the project.
-  // This is to avoid collisions/redundant symlink creation during re-materialization.
+  // For given symlink, finds the highest level symlink in the path that points outside the
+  // project. This is to avoid collisions/redundant symlink creation during re-materialization.
   // Example notes:
   // In the below examples, /a is the root of the project, and /e is outside the project.
   // Example 1:
@@ -256,21 +255,30 @@ public class RecordingFileHashLoader implements FileHashLoader {
     }
   }
 
+  private void addAllPresent(Set<Path> pathSet, Optional<ImmutableList<Path>> pathsToAdd) {
+    if (pathsToAdd.isPresent()) {
+      for (Path path : pathsToAdd.get()) {
+        addIfPresent(pathSet, Optional.of(path));
+      }
+    }
+  }
+
   private synchronized void extractBuckConfigFileHashes() {
     // We want to materialize files during pre-loading for .buckconfig entries
     materializeCurrentFileDuringPreloading = true;
 
     Set<Path> paths = new HashSet<>();
 
-    // KnownBuildRuleTypes always loads these paths, if they are defined in a .buckconfig,
-    // regardless of what type of build is taking place.
-    // Unless peforming a Java build, they are not added to the build graph, and as such
-    // Stampede needs to be told about them directly.
+    // TODO(alisdair04,shivanker): KnownBuildRuleTypes always loads java compilers if they are
+    // defined in a .buckconfig, regardless of what type of build is taking place. Unless peforming
+    // a Java build, they are not added to the build graph, and as such Stampede needs to be told
+    // about them directly via the whitelist.
+
     // TODO(alisdair04,ruibm): capture all .buckconfig dependencies automatically.
-    addIfPresent(paths, buckConfig.getPath("tools", "java"));
-    addIfPresent(paths, buckConfig.getPath("tools", "java_for_tests"));
-    addIfPresent(paths, buckConfig.getPath("tools", "javac"));
-    addIfPresent(paths, buckConfig.getPath("tools", "javac_jar"));
+
+    Optional<ImmutableList<Path>> whitelist = distBuildConfig.getOptionalPathWhitelist();
+    LOG.info("Stampede always materialize whitelist: %s", whitelist);
+    addAllPresent(paths, whitelist);
 
     try {
       for (Path path : paths) {

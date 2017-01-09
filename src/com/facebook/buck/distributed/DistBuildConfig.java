@@ -18,7 +18,10 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.slb.SlbBuckConfig;
+import com.google.common.collect.ImmutableList;
 
+import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
@@ -30,6 +33,8 @@ public class DistBuildConfig {
   private static final String FRONTEND_REQUEST_TIMEOUT_MILLIS = "stampede_timeout_millis";
   private static final long DEFAULT_DEFAULT_REQUEST_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(60);
 
+  private static final String ALWAYS_MATERIALIZE_WHITELIST = "always_materialize_whitelist";
+
   private final SlbBuckConfig frontendConfig;
   private final BuckConfig buckConfig;
 
@@ -40,6 +45,14 @@ public class DistBuildConfig {
 
   public SlbBuckConfig getFrontendConfig() {
     return frontendConfig;
+  }
+
+  public BuckConfig getBuckConfig() {
+    return buckConfig;
+  }
+
+  public Optional<ImmutableList<Path>> getOptionalPathWhitelist() {
+    return buckConfig.getOptionalPathList(STAMPEDE_SECTION, ALWAYS_MATERIALIZE_WHITELIST);
   }
 
   public long getFrontendRequestTimeoutMillis() {

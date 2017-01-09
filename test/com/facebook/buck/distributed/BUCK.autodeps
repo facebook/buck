@@ -2,7 +2,6 @@
   "distributed" : {
     "deps" : [
       "//src-gen:thrift",
-      "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/distributed:distributed",
@@ -27,6 +26,7 @@
       "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/android:utils",
+      "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/config:testutil",
       "//test/com/facebook/buck/event:testutil",
       "//test/com/facebook/buck/jvm/java:testutil",

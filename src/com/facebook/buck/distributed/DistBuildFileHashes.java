@@ -16,7 +16,7 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.cli.ConfigPathGetter;
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.hashing.FileHashLoader;
@@ -75,7 +75,7 @@ public class DistBuildFileHashes {
       final Function<? super Path, Integer> cellIndexer,
       ListeningExecutorService executorService,
       final int keySeed,
-      final ConfigPathGetter buckConfig) {
+      final BuckConfig buckConfig) {
 
     this.remoteFileHashes = CacheBuilder.newBuilder().build(
         new CacheLoader<ProjectFilesystem, BuildJobStateFileHashes>() {
@@ -96,7 +96,7 @@ public class DistBuildFileHashes {
                         DefaultFileHashCache.createDefaultFileHashCache(key))),
                 key,
                 remoteFileHashes.get(key),
-                buckConfig);
+                new DistBuildConfig(buckConfig));
           }
         });
     this.ruleKeyFactories =

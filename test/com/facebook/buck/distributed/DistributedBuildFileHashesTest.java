@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.cli.NoOpConfigPathGetter;
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
@@ -450,7 +450,7 @@ public class DistributedBuildFileHashesTest {
           cellIndexer,
           MoreExecutors.newDirectExecutorService(),
           /* keySeed */ 0,
-          new NoOpConfigPathGetter());
+          FakeBuckConfig.builder().build());
     }
 
     public Fixture(TemporaryFolder tempDir) throws Exception {
