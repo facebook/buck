@@ -324,11 +324,36 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
   </ul>
   <h3>About</h3>
   <ul>
-    <li><a href="{ROOT}concept/what_makes_buck_so_fast.html">What Makes Buck so Fast?</a>
-    <li><a href="{ROOT}concept/troubleshooting.html">Troubleshooting</a>
-    <li><a href="{ROOT}about/performance_tuning.html">Performance Tuning</a>
-    <li><a href="{ROOT}concept/faq.html">FAQ</a>
-    <li><a href="{ROOT}presentations/">Learn More (Buck Presentations)</a>
+    {call .navigationLink}
+      {param currentnavid: $navid /}
+      {param folder: 'concept' /}
+      {param page: 'what_makes_buck_so_fast' /}
+      {param text: 'What Makes Buck so Fast?' /}
+    {/call}
+    {call .navigationLink}
+      {param currentnavid: $navid /}
+      {param folder: 'concept' /}
+      {param page: 'troubleshooting' /}
+      {param text: 'Troubleshooting' /}
+    {/call}
+    {call .navigationLink}
+      {param currentnavid: $navid /}
+      {param folder: 'about' /}
+      {param page: 'performance_tuning' /}
+      {param text: 'Performance Tuning' /}
+    {/call}
+    {call .navigationLink}
+      {param currentnavid: $navid /}
+      {param folder: 'concept' /}
+      {param page: 'faq' /}
+      {param text: 'FAQ' /}
+    {/call}
+    {call .navigationLink}
+      {param currentnavid: $navid /}
+      {param folder: 'presentations' /}
+      {param page: 'index' /}
+      {param text: 'Learn More (Buck Presentations)' /}
+    {/call}
   </ul>
   <h3>Concepts</h3>
   <ul>
