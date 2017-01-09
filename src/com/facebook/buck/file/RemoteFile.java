@@ -27,6 +27,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MakeExecutableStep;
+import com.facebook.buck.zip.UnzipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 
@@ -84,7 +85,12 @@ public class RemoteFile extends AbstractBuildRule {
     steps.add(new DownloadStep(getProjectFilesystem(), downloader, uri, sha1, tempFile));
 
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), output.getParent()));
-    steps.add(CopyStep.forFile(getProjectFilesystem(), tempFile, output));
+    if (type == Type.EXPLODED_ZIP) {
+      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), output));
+      steps.add(new UnzipStep(getProjectFilesystem(), tempFile, output));
+    } else {
+      steps.add(CopyStep.forFile(getProjectFilesystem(), tempFile, output));
+    }
     if (type == Type.EXECUTABLE) {
       steps.add(new MakeExecutableStep(getProjectFilesystem(), output));
     }
@@ -100,6 +106,6 @@ public class RemoteFile extends AbstractBuildRule {
   }
 
   enum Type {
-    DATA, EXECUTABLE,
+    DATA, EXECUTABLE, EXPLODED_ZIP,
   }
 }
