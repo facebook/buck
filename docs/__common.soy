@@ -4,14 +4,14 @@
  * @param title
  * @param? subtitle
  * @param content
- * @param? ishome
+ * @param? navid
  * @param? prettify true if https://code.google.com/p/google-code-prettify/
  *     should be used.
  * @param description the content of the og:description meta tag
  */
 {template .page}
   {call .header}
-    {param ishome: $ishome /}
+    {param navid: $navid /}
     {param title: $title /}
     {param subtitle: $subtitle /}
     {param prettify: $prettify /}
@@ -30,7 +30,7 @@
 /**
  * @param title
  * @param? subtitle
- * @param? ishome
+ * @param? navid
  * @param? prettify true if https://code.google.com/p/google-code-prettify/
  *     should be used.
  * @param description the content of the og:description meta tag
@@ -73,11 +73,12 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 
   // TODO(bolinfest): Pass $og_type in as a parameter.
   {let $og_type}
-    {if $ishome}
-      website
-    {else}
-      article
-    {/if}
+    {switch $navid}
+      {case 'home'}
+        website
+      {default}
+        article
+    {/switch}
   {/let}
 
   <meta property="og:locale" content="en_US">
@@ -122,7 +123,7 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
       </ul>
 	</nav></header>
 
-{if $ishome}
+{if $navid == 'home'}
   <header class='hero'><div class='width'>
     <hgroup>
       <h1>
@@ -144,7 +145,7 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 
   <article>
 
-  {if not $ishome}
+  {if $navid != 'home'}
     <h1>{$title}{if $subtitle}:<div class="subtitle">{$subtitle}</div>{/if}</h1>
   {/if}
 
