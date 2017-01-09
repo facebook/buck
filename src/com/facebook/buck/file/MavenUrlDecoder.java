@@ -44,8 +44,9 @@ import java.util.regex.Pattern;
  */
 public class MavenUrlDecoder {
   @VisibleForTesting
-  private static final Pattern URL_PATTERN =
-      Pattern.compile("((.+):)?([^:]+):([^:]+):([^:]+):([^:]+)");
+  private static final Pattern URL_PATTERN =  Pattern.compile(
+      "((?<host>.+):)?(?<group>[^:]+):(?<id>[^:]+):(?<type>[^:]+):(?<version>[^:]+)"
+  );
 
   private MavenUrlDecoder() {
     // Utility class
@@ -70,14 +71,14 @@ public class MavenUrlDecoder {
       throw new HumanReadableException("Unable to parse: " + uri);
     }
 
-    String host = matcher.group(2);
+    String host = matcher.group("host");
     if (Strings.isNullOrEmpty(host)) {
       host = repo;
     }
-    String group = matcher.group(3).replace('.', '/');
-    String artifactId = matcher.group(4);
-    String type = matcher.group(5);
-    String version = matcher.group(6);
+    String group = matcher.group("group").replace('.', '/');
+    String artifactId = matcher.group("id");
+    String type = matcher.group("type");
+    String version = matcher.group("version");
 
     if (!host.endsWith("/")) {
       host += "/";
@@ -85,14 +86,12 @@ public class MavenUrlDecoder {
 
     try {
       String plainUri = String.format(
-          "%s%s/%s/%s/%s-%s%s",
+          "%s%s/%s/%s/%s",
           host,
           group,
           artifactId,
           version,
-          artifactId,
-          version,
-          fileExtensionFor(type));
+          fileNameFor(artifactId, version, type));
       URI generated = new URI(plainUri);
       if ("https".equals(generated.getScheme()) || "http".equals(generated.getScheme())) {
         return generated;
@@ -102,6 +101,10 @@ public class MavenUrlDecoder {
     } catch (URISyntaxException e) {
       throw new HumanReadableException("Unable to parse URL: " + uri);
     }
+  }
+
+  private static String fileNameFor(String artifactId, String version, String type) {
+    return String.format("%s-%s%s", artifactId, version, fileExtensionFor(type));
   }
 
   private static String fileExtensionFor(String type) {
