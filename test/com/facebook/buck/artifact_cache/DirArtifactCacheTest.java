@@ -301,8 +301,8 @@ public class DirArtifactCacheTest {
         .collect(MoreCollectors.toImmutableSet());
 
     for (RuleKey ruleKey : ImmutableSet.of(ruleKeyX, ruleKeyY, ruleKeyZ)) {
-      filenames.contains(ruleKey.toString());
-      filenames.contains(ruleKey.toString() + ".metadata");
+      assertThat(filenames, Matchers.hasItem(ruleKey.toString()));
+      assertThat(filenames, Matchers.hasItem(ruleKey.toString() + ".metadata"));
     }
   }
 
