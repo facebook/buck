@@ -17,9 +17,12 @@
 package com.facebook.buck.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.model.Pair;
 import com.google.common.collect.ImmutableList;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.util.List;
@@ -74,6 +77,19 @@ public class MoreIterablesTest {
     String[] onlyDupsDedupExpected = new String[]{"a"};
     Set<String> onlydupsDedupActual = MoreIterables.dedupKeepLast(onlyDups);
     assertArrayAndSetEqual("onlyDups", onlyDupsDedupExpected, onlydupsDedupActual);
+  }
+
+  @Test
+  public void enumerate() {
+    assertThat(
+        lstI(MoreIterables.enumerate(ImmutableList.of())),
+        Matchers.empty());
+    assertThat(
+        lstI(MoreIterables.enumerate(ImmutableList.of("a"))),
+        Matchers.equalTo(lstV(new Pair<>(0, "a"))));
+    assertThat(
+        lstI(MoreIterables.enumerate(ImmutableList.of("a", "b"))),
+        Matchers.equalTo(lstV(new Pair<>(0, "a"), new Pair<>(1, "b"))));
   }
 
   private static void assertArrayAndSetEqual(String testName, String[] first, Set<String> second) {

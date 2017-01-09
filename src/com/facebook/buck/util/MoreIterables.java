@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.model.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -82,6 +83,30 @@ public class MoreIterables {
     }
 
     return dedupedSet;
+  }
+
+  /**
+   * @return a new {@link Iterable} containing pairs of the original items along with the index of
+   *         the current item.
+   */
+  public static <T> Iterable<Pair<Integer, T>> enumerate(Iterable<T> items) {
+    return () ->
+        new Iterator<Pair<Integer, T>>() {
+
+          private int index = 0;
+          private final Iterator<T> delegate = items.iterator();
+
+          @Override
+          public boolean hasNext() {
+            return delegate.hasNext();
+          }
+
+          @Override
+          public Pair<Integer, T> next() {
+            return new Pair<>(index++, delegate.next());
+          }
+
+        };
   }
 
 }
