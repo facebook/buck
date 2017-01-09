@@ -601,19 +601,6 @@ abstract class AbstractCxxSourceRuleFactory {
     CxxSource.Type sourceType = source.getType();
     CxxToolFlags compilerFlags = computeCompilerFlags(sourceType, source.getFlags());
 
-    // Detect the rule for which we are building this PCH.
-    // That'll be our template: params + target which will be cloned and flavored for new PCH rule.
-    BuildTarget templateTarget;
-    if (headerPath instanceof BuildTargetSourcePath) {
-      // e.g. a library "//foo:foo" has "prefix_header='//bar:header'"; then clone "//bar:header",
-      // flavor it (done below), and then that will become one of "//foo:foo"'s dependencies.
-      templateTarget = ((BuildTargetSourcePath) headerPath).getTarget();
-    } else {
-      // e.g. a library "//baz:baz" has "prefix_header='bazstuff.h'"; then we clone "//baz:baz",
-      // flavor it (done below), and then that will become one of "//baz:baz"'s dependencies.
-      templateTarget = getParams().getBuildTarget();
-    }
-
     // Language needs to be part of the key, PCHs built under a different language are incompatible.
     // (Replace `c++` with `cxx`; avoid default scrubbing which would make it the cryptic `c__`.)
     final String langCode = sourceType.getLanguage().replaceAll("c\\+\\+", "cxx");
@@ -629,7 +616,7 @@ abstract class AbstractCxxSourceRuleFactory {
         compilerFlags,
         headerPath,
         depsBuilder,
-        templateTarget.getUnflavoredBuildTarget(),
+        getParams().getBuildTarget().getUnflavoredBuildTarget(),
         ImmutableSortedSet.of(
             getCxxPlatform().getFlavor(),
             ImmutableFlavor.of(Flavor.replaceInvalidCharacters(pchFullID))));
