@@ -186,21 +186,10 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
     String packageName = AdbHelper.tryToExtractPackageNameFromManifest(apk);
     String testRunner = AdbHelper.tryToExtractInstrumentationTestRunnerFromManifest(apk);
 
-    String ddmlib = new PathSourcePath(
-        this.getProjectFilesystem(),
-        AndroidInstrumentationTest.class + "/ddmlib.jar",
-        new PackagedResource(
-            this.getProjectFilesystem(),
-            AndroidInstrumentationTest.class,
-            "ddmlib.jar")).getRelativePath().toString();
-
-    String kxml2 = new PathSourcePath(
-        this.getProjectFilesystem(),
-        AndroidInstrumentationTest.class + "/kxml2.jar",
-        new PackagedResource(
-            this.getProjectFilesystem(),
-            AndroidInstrumentationTest.class,
-            "kxml2.jar")).getRelativePath().toString();
+    String ddmlib = getPathForResourceJar("ddmlib.jar");
+    String kxml2 = getPathForResourceJar("kxml2.jar");
+    String guava = getPathForResourceJar("guava.jar");
+    String toolsCommon = getPathForResourceJar("android-tools-common.jar");
 
     AndroidInstrumentationTestJVMArgs jvmArgs = AndroidInstrumentationTestJVMArgs.builder()
         .setApkUnderTestPath(apkUnderTestPath)
@@ -214,10 +203,22 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
         .setDdmlibJarPath(ddmlib)
         .setTestFilter(classFilterArg)
         .setKxmlJarPath(kxml2)
+        .setGuavaJarPath(guava)
+        .setAndroidToolsCommonJarPath(toolsCommon)
         .build();
 
     return new InstrumentationStep(
         getProjectFilesystem(), javaRuntimeLauncher, jvmArgs, testRuleTimeoutMs);
+  }
+
+  private String getPathForResourceJar(String jarName) {
+    return new PathSourcePath(
+          this.getProjectFilesystem(),
+          AndroidInstrumentationTest.class + "/" + jarName,
+          new PackagedResource(
+              this.getProjectFilesystem(),
+              AndroidInstrumentationTest.class,
+              jarName)).getRelativePath().toString();
   }
 
   @Override

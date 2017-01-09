@@ -39,6 +39,8 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
   abstract String getTestRunner();
   abstract String getDdmlibJarPath();
   abstract String getKxmlJarPath();
+  abstract String getGuavaJarPath();
+  abstract String getAndroidToolsCommonJarPath();
   abstract Optional<String> getDeviceSerial();
   abstract Optional<Path> getInstrumentationApkPath();
   abstract Optional<Path> getApkUnderTestPath();
@@ -63,7 +65,10 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
         "-classpath",
         getTestRunnerClasspath().toString() + File.pathSeparator +
             this.getDdmlibJarPath() + File.pathSeparator +
-            this.getKxmlJarPath());
+            this.getKxmlJarPath() + File.pathSeparator +
+            this.getGuavaJarPath() + File.pathSeparator +
+            this.getAndroidToolsCommonJarPath()
+    );
     args.add(FileClassPathRunner.class.getName());
     args.add(INSTRUMENTATION_TEST_RUNNER);
 

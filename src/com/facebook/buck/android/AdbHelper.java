@@ -633,11 +633,11 @@ public class AdbHelper {
       getBuckEventBus().post(ConsoleEvent.info("Installing apk on %s.", name));
     }
     try {
-      String reason;
+      String reason = null;
       if (installViaSd) {
         reason = deviceInstallPackageViaSd(device, apk.getAbsolutePath());
       } else {
-        reason = device.installPackage(apk.getAbsolutePath(), true);
+        device.installPackage(apk.getAbsolutePath(), true);
       }
       if (reason != null) {
         console.printBuildFailure(String.format("Failed to install apk on %s: %s.", name, reason));
@@ -733,6 +733,7 @@ public class AdbHelper {
    * Installs apk on device, copying apk to external storage first.
    */
   @SuppressForbidden
+  @Nullable
   private String deviceInstallPackageViaSd(IDevice device, String apk) {
     try {
       // Figure out where the SD card is mounted.
@@ -744,10 +745,10 @@ public class AdbHelper {
       // Copy APK to device
       device.pushFile(apk, remotePackage);
       // Install
-      String reason = device.installRemotePackage(remotePackage, true);
+      device.installRemotePackage(remotePackage, true);
       // Delete temporary file
       device.removeRemotePackage(remotePackage);
-      return reason;
+      return null;
     } catch (Throwable t) {
       return String.valueOf(t.getMessage());
     }

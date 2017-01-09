@@ -29,11 +29,15 @@ import com.android.ddmlib.SyncException;
 import com.android.ddmlib.SyncService;
 import com.android.ddmlib.TimeoutException;
 import com.android.ddmlib.log.LogReceiver;
+import com.android.sdklib.AndroidVersion;
 import com.google.common.collect.Maps;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -167,6 +171,11 @@ public class TestDevice implements IDevice {
   }
 
   @Override
+  public boolean supportsFeature(HardwareFeature feature) {
+    return false;
+  }
+
+  @Override
   public String getMountPoint(String s) {
     throw new UnsupportedOperationException();
   }
@@ -209,6 +218,13 @@ public class TestDevice implements IDevice {
   }
 
   @Override
+  public RawImage getScreenshot(
+      long timeout,
+      TimeUnit unit) throws TimeoutException, AdbCommandRejectedException, IOException {
+    return null;
+  }
+
+  @Override
   public void startScreenRecorder(
       String remoteFilePath,
       ScreenRecorderOptions options,
@@ -248,6 +264,11 @@ public class TestDevice implements IDevice {
       ShellCommandUnresponsiveException,
       IOException {
     throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Future<String> getSystemProperty(String name) {
+    return null;
   }
 
   @Override
@@ -300,8 +321,18 @@ public class TestDevice implements IDevice {
   }
 
   @Override
-  public String installPackage(String s, boolean b, String... strings) throws InstallException {
+  public void installPackage(String s, boolean b, String... strings) throws InstallException {
     throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void installPackages(
+      List<File> apks,
+      boolean reinstall,
+      List<String> installOptions,
+      long timeout,
+      TimeUnit timeoutUnit) throws InstallException {
+
   }
 
   @Override
@@ -311,7 +342,7 @@ public class TestDevice implements IDevice {
   }
 
   @Override
-  public String installRemotePackage(String s, boolean b, String... strings)
+  public void installRemotePackage(String s, boolean b, String... strings)
       throws InstallException {
     throw new UnsupportedOperationException();
   }
@@ -332,6 +363,18 @@ public class TestDevice implements IDevice {
   }
 
   @Override
+  public boolean root() throws TimeoutException, AdbCommandRejectedException, IOException,
+         ShellCommandUnresponsiveException {
+    return false;
+  }
+
+  @Override
+  public boolean isRoot() throws TimeoutException, AdbCommandRejectedException, IOException,
+         ShellCommandUnresponsiveException {
+    return false;
+  }
+
+  @Override
   public Integer getBatteryLevel() throws TimeoutException, AdbCommandRejectedException,
       IOException, ShellCommandUnresponsiveException {
     throw new UnsupportedOperationException();
@@ -341,5 +384,40 @@ public class TestDevice implements IDevice {
   public Integer getBatteryLevel(long l) throws TimeoutException, AdbCommandRejectedException,
       IOException, ShellCommandUnresponsiveException {
     throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Future<Integer> getBattery() {
+    return null;
+  }
+
+  @Override
+  public Future<Integer> getBattery(long freshnessTime, TimeUnit timeUnit) {
+    return null;
+  }
+
+  @Override
+  public List<String> getAbis() {
+    return null;
+  }
+
+  @Override
+  public int getDensity() {
+    return 0;
+  }
+
+  @Override
+  public String getLanguage() {
+    return null;
+  }
+
+  @Override
+  public String getRegion() {
+    return null;
+  }
+
+  @Override
+  public AndroidVersion getVersion() {
+    return null;
   }
 }

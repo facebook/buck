@@ -16,10 +16,9 @@
 
 package com.facebook.buck.android.aapt;
 
-import com.android.ide.common.internal.PngCruncher;
-import com.android.ide.common.internal.PngException;
 import com.android.ide.common.res2.MergedResourceWriter;
 import com.android.ide.common.res2.MergingException;
+import com.android.ide.common.res2.NoOpResourcePreprocessor;
 import com.android.ide.common.res2.ResourceMerger;
 import com.android.ide.common.res2.ResourceSet;
 import com.android.utils.ILogger;
@@ -33,7 +32,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -46,34 +44,38 @@ public class MergeAndroidResourceSourcesStep implements Step {
 
   private final ImmutableList<Path> resPaths;
   private final Path outFolderPath;
+  private final Path tmpFolderPath;
 
   public MergeAndroidResourceSourcesStep(
       ImmutableList<Path> resPaths,
-      Path outFolderPath) {
+      Path outFolderPath,
+      Path tmpFolderPath) {
     this.resPaths = resPaths;
     this.outFolderPath = outFolderPath;
+    this.tmpFolderPath = tmpFolderPath;
     Preconditions.checkArgument(outFolderPath.isAbsolute());
+    Preconditions.checkArgument(tmpFolderPath.isAbsolute());
   }
 
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    ResourceMerger merger = new ResourceMerger();
+    ResourceMerger merger = new ResourceMerger(1);
     try {
       for (Path resPath : resPaths) {
         Preconditions.checkState(resPath.isAbsolute());
-        ResourceSet set = new ResourceSet(resPath.toString());
-        set.setNormalizeResources(false);
+        ResourceSet set = new ResourceSet(resPath.toString(), true);
+        set.setDontNormalizeQualifiers(true);
         set.addSource(resPath.toFile());
         set.loadFromFiles(new ResourcesSetLoadLogger(context.getBuckEventBus()));
         merger.addDataSet(set);
       }
-      MergedResourceWriter writer = new MergedResourceWriter(
+      MergedResourceWriter writer = MergedResourceWriter.createWriterWithoutPngCruncher(
           outFolderPath.toFile(),
-          new NoopPngCruncher(),
-          /* crunchPng */ false,
-          /* crunch9Patch */ false);
-      writer.setInsertSourceMarkers(false);
+          null /*publicFile*/,
+          null /*blameLogFolder*/,
+          new NoOpResourcePreprocessor(),
+          tmpFolderPath.toFile());
       merger.mergeData(writer, /* cleanUp */ false);
     } catch (MergingException e) {
       LOG.error(e, "Failed merging resources.");
@@ -95,28 +97,6 @@ public class MergeAndroidResourceSourcesStep implements Step {
     sb.append(" -> ");
     sb.append(outFolderPath.toString());
     return sb.toString();
-  }
-
-  /**
-   * The {@link MergedResourceWriter} shouldn't call any of these methods if png crunching
-   * is disabled.
-   */
-  private static class NoopPngCruncher implements PngCruncher {
-
-    @Override
-    public int start() {
-      return 0;
-    }
-
-    @Override
-    public void crunchPng(int key, File from, File to) throws PngException {
-      throw new RuntimeException("not implemented");
-    }
-
-    @Override
-    public void end(int key) throws InterruptedException {
-      // NOOP
-    }
   }
 
   private static class ResourcesSetLoadLogger extends BuckEventAndroidLogger implements ILogger {

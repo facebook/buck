@@ -35,6 +35,8 @@ import java.nio.file.Path;
 public class MergeAndroidResourceSources extends AbstractBuildRule {
 
   private final Path destinationDirectory;
+  private final Path tempDirectory;
+
   @AddToRuleKey
   private final ImmutableCollection<SourcePath> originalDirectories;
 
@@ -48,6 +50,10 @@ public class MergeAndroidResourceSources extends AbstractBuildRule {
         getProjectFilesystem(),
         buildRuleParams.getBuildTarget(),
         "__merged_resources_%s__");
+    this.tempDirectory = BuildTargets.getScratchPath(
+        getProjectFilesystem(),
+        buildRuleParams.getBuildTarget(),
+        "__merged_resources_%s_tmp__");
   }
 
   @Override
@@ -61,7 +67,8 @@ public class MergeAndroidResourceSources extends AbstractBuildRule {
             originalDirectories.stream()
                 .map(getResolver()::getAbsolutePath)
                 .collect(MoreCollectors.toImmutableList()),
-            getProjectFilesystem().resolve(destinationDirectory)
+            getProjectFilesystem().resolve(destinationDirectory),
+            getProjectFilesystem().resolve(tempDirectory)
         ));
     buildableContext.recordArtifact(destinationDirectory);
     return steps.build();

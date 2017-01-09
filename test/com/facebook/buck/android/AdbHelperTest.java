@@ -394,9 +394,8 @@ public class AdbHelperTest {
 
     TestDevice device = new TestDevice() {
       @Override
-      public String installPackage(String s, boolean b, String... strings) throws InstallException {
+      public void installPackage(String s, boolean b, String... strings) throws InstallException {
         apkPath.set(s);
-        return null;
       }
     };
     device.setSerialNumber("serial#1");
@@ -413,12 +412,11 @@ public class AdbHelperTest {
 
     TestDevice device = new TestDevice() {
         @Override
-        public String installPackage(
+        public void installPackage(
             String s,
             boolean b,
             String... strings) throws InstallException {
           apkPath.set(s);
-          return null;
         }
       };
     device.setSerialNumber("serial#1");
@@ -471,12 +469,11 @@ public class AdbHelperTest {
 
     TestDevice device = new TestDevice() {
         @Override
-        public String installPackage(
+        public void installPackage(
             String s,
             boolean b,
             String... strings) throws InstallException {
           apkPath.set(s);
-          return null;
         }
       };
     device.setSerialNumber("serial#1");
@@ -575,8 +572,8 @@ public class AdbHelperTest {
     File apk = new File("/some/file.apk");
     TestDevice device = new TestDevice() {
       @Override
-      public String installPackage(String s, boolean b, String... strings) throws InstallException {
-        return "[SOME_REASON]";
+      public void installPackage(String s, boolean b, String... strings) throws InstallException {
+        throw new InstallException("[SOME REASON]");
       }
     };
     device.setSerialNumber("serial#1");
@@ -593,7 +590,7 @@ public class AdbHelperTest {
 
     TestDevice device = new TestDevice() {
       @Override
-      public String installPackage(String s, boolean b, String... strings) throws InstallException {
+      public void installPackage(String s, boolean b, String... strings) throws InstallException {
         throw new InstallException("Failed to install on test device.", null);
       }
     };

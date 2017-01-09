@@ -71,7 +71,7 @@
 
   <fileset dir="${third-party.dir}/java" id="buck.jars">
     <include name="args4j/args4j-2.0.30.jar" />
-    <include name="ddmlib/ddmlib-22.5.3.jar" />
+    <include name="ddmlib/ddmlib-25.2.0.jar" />
     <include name="guava/guava-19.0.jar" />
     <include name="ini4j/ini4j-0.5.2.jar" />
     <include name="jackson/jackson-annotations-2.7.8.jar" />
@@ -80,7 +80,7 @@
     <include name="jackson/jackson-datatype-jdk8-2.7.8.jar" />
     <include name="jackson/jackson-datatype-guava-2.7.8.jar" />
     <include name="jsr/jsr305.jar" />
-    <include name="android/sdklib.jar" />
+    <include name="android/sdklib-25.2.0.jar" />
     <include name="nailgun/nailgun-server-0.9.2-SNAPSHOT.jar" />
     <include name="jna/jna-4.2.0.jar" />
     <include name="jna/jna-platform-4.2.0.jar" />
@@ -88,9 +88,9 @@
 
   <fileset dir="${third-party.dir}/java" id="third-party.jars">
     <include name="ObjCBridge/ObjCBridge.jar" />
-    <include name="android/sdk-common-24.2.3.jar" />
-    <include name="android/common-24.2.3.jar" />
-    <include name="android/layoutlib-api-24.2.3.jar" />
+    <include name="android/sdk-common-25.2.0.jar" />
+    <include name="android/common-25.2.0.jar" />
+    <include name="android/layoutlib-api-25.2.0.jar" />
     <include name="aopalliance/aopalliance.jar" />
     <include name="asm/asm-debug-all-5.0.3.jar" />
     <include name="closure-templates/soy-excluding-deps.jar" />
@@ -180,7 +180,7 @@
     <pathelement location="${third-party.dir}/java/hamcrest/hamcrest-junit-2.0.0.0.jar" />
     <pathelement location="${third-party.dir}/java/hamcrest/java-hamcrest-2.0.0.0.jar" />
     <pathelement location="${third-party.dir}/java/testng/testng-6.8.jar" />
-    <pathelement location="${third-party.dir}/java/ddmlib/ddmlib-22.5.3.jar" />
+    <pathelement location="${third-party.dir}/java/ddmlib/ddmlib-25.2.0.jar" />
   </path>
 
   <target name="clean" description="remove all generated files" depends="clear-successful-build">
@@ -397,10 +397,14 @@
          excludes="BUCK"
          defaultexcludes="no"/>
     <mkdir dir="${classes.dir}/com/facebook/buck/android"/>
-    <copy file="${third-party.dir}/java/ddmlib/ddmlib-22.5.3.jar"
+    <copy file="${third-party.dir}/java/ddmlib/ddmlib-25.2.0.jar"
           tofile="${classes.dir}/com/facebook/buck/android/ddmlib.jar"/>
+    <copy file="${third-party.dir}/java/android/common-25.2.0.jar"
+          tofile="${classes.dir}/com/facebook/buck/android/android-tools-common.jar"/>
     <copy file="${third-party.dir}/java/kxml2/kxml2-2.3.0.jar"
           tofile="${classes.dir}/com/facebook/buck/android/kxml2.jar"/>
+    <copy file="${third-party.dir}/java/guava/guava-19.0.jar"
+          tofile="${classes.dir}/com/facebook/buck/android/guava.jar"/>
 
     <!--
       Copy the buck python parser code into the jar root so it can be imported

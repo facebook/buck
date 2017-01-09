@@ -2,7 +2,8 @@
 
 prebuilt_jar(
   name = 'sdklib',
-  binary_jar = 'sdklib.jar',
+  binary_jar = 'sdklib-25.2.0.jar',
+  source_jar = 'sdklib-25.2.0-sources.jar',
   visibility = [
     '//src/com/facebook/buck/android:steps',
   ]
@@ -25,19 +26,19 @@ java_library(
 
 prebuilt_jar(
   name = 'common',
-  binary_jar = 'common-24.2.3.jar',
-  source_jar = 'common-24.2.3-sources.jar',
+  binary_jar = 'common-25.2.0.jar',
+  source_jar = 'common-25.2.0-sources.jar',
 )
 
 prebuilt_jar(
   name = 'sdk-common',
-  binary_jar = 'sdk-common-24.2.3.jar',
-  source_jar = 'sdk-common-24.2.3-sources.jar',
+  binary_jar = 'sdk-common-25.2.0.jar',
+  source_jar = 'sdk-common-25.2.0-sources.jar',
 )
 
 prebuilt_jar(
   name = 'layoutlib-api',
-  binary_jar = 'layoutlib-api-24.2.3.jar',
-  source_jar = 'layoutlib-api-24.2.3-sources.jar',
+  binary_jar = 'layoutlib-api-25.2.0.jar',
+  source_jar = 'layoutlib-api-25.2.0-sources.jar',
 )
 

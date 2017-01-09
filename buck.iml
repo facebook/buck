@@ -88,7 +88,7 @@
     <orderEntry type="library" name="jacoco" level="project" />
     <orderEntry type="library" name="immutables-annotations" level="project" />
     <orderEntry type="library" name="maven-lib" level="project" />
-    <orderEntry type="library" name="android-tools-24.2.3" level="project" />
+    <orderEntry type="library" name="android-tools-25.2.0" level="project" />
     <orderEntry type="library" name="oracle-jdk-stubs" level="project" />
     <orderEntry type="library" name="junit" level="project" />
     <orderEntry type="library" name="testng" level="project" />

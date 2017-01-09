@@ -198,7 +198,13 @@ public class InstrumentationTestRunner {
           public void testStarted(TestIdentifier test) {}
 
           @Override
-          public void testFailed(TestFailure status, TestIdentifier test, String trace) {}
+          public void testFailed(TestIdentifier test, String trace) {}
+
+          @Override
+          public void testAssumptionFailure(TestIdentifier test, String trace) {}
+
+          @Override
+          public void testIgnored(TestIdentifier test) {}
 
           @Override
           public void testEnded(TestIdentifier test, Map<String, String> testMetrics) {}

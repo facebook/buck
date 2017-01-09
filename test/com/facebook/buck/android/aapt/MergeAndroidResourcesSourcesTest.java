@@ -144,10 +144,12 @@ public class MergeAndroidResourcesSourcesTest {
   public void testStepExecution() throws IOException, InterruptedException {
     Path rootPath = tmp.getRoot().toPath();
     File outFolder = tmp.newFolder("out");
+    File tmpFolder = tmp.newFolder("tmp");
 
     MergeAndroidResourceSourcesStep step = new MergeAndroidResourceSourcesStep(
         ImmutableList.of(rootPath.resolve("res_in_1"), rootPath.resolve("res_in_2")),
-        outFolder.toPath()
+        outFolder.toPath(),
+        tmpFolder.toPath()
     );
     step.execute(context);
     assertThat(
