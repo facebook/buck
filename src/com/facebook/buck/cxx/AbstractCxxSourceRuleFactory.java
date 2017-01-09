@@ -508,8 +508,14 @@ abstract class AbstractCxxSourceRuleFactory {
       depsBuilder.add(precompiledHeader);
       precompiledHeaderReference =
           Optional.of(PrecompiledHeaderReference.of(precompiledHeader));
-      preprocessorDelegate = preprocessorDelegate.withLeadingIncludePaths(
-          precompiledHeader.getCxxIncludePaths());
+      if (getPrecompiledHeader().isPresent()) {
+        // For a precompiled header (and not a prefix header), we may need extra include paths.
+        // The PCH build might have involved some deps that this rule does not have, so we
+        // would need to pull in its include paths to ensure any includes that happen during this
+        // build play out the same way as they did for the PCH.
+        preprocessorDelegate = preprocessorDelegate.withLeadingIncludePaths(
+            precompiledHeader.getCxxIncludePaths());
+      }
     }
 
     // Build the CxxCompile rule and add it to our sorted set of build rules.
