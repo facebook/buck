@@ -74,6 +74,7 @@ public class XctoolRunTestsStepTest {
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
+        Optional.empty(),
         Optional.empty()
         );
     ProcessExecutorParams xctoolParams =
@@ -120,6 +121,7 @@ public class XctoolRunTestsStepTest {
         Optional.empty(),
         Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
         TestSelectorList.EMPTY,
+        Optional.empty(),
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
@@ -180,6 +182,7 @@ public class XctoolRunTestsStepTest {
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
+        Optional.empty(),
         Optional.empty());
 
     ProcessExecutorParams xctoolParams =
@@ -231,6 +234,7 @@ public class XctoolRunTestsStepTest {
         Optional.empty(),
         Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
         TestSelectorList.EMPTY,
+        Optional.empty(),
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
@@ -289,6 +293,7 @@ public class XctoolRunTestsStepTest {
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
+        Optional.empty(),
         Optional.empty());
 
     ProcessExecutorParams xctoolParams =
@@ -341,6 +346,7 @@ public class XctoolRunTestsStepTest {
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
+        Optional.empty(),
         Optional.empty());
 
     ProcessExecutorParams xctoolParams =
@@ -389,6 +395,7 @@ public class XctoolRunTestsStepTest {
         TestSelectorList.builder()
             .addRawSelectors("#.*Magic.*")
             .build(),
+        Optional.empty(),
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
@@ -484,6 +491,7 @@ public class XctoolRunTestsStepTest {
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
+        Optional.empty(),
         Optional.empty());
 
     ProcessExecutorParams xctoolListOnlyParams =
@@ -544,6 +552,7 @@ public class XctoolRunTestsStepTest {
         TestSelectorList.builder()
             .addRawSelectors("Blargh#Xyzzy")
             .build(),
+        Optional.empty(),
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
@@ -610,7 +619,8 @@ public class XctoolRunTestsStepTest {
         Optional.of(Paths.get("/path/to/test-logs")),
         Optional.of("TEST_LOG_LEVEL"),
         Optional.of("verbose"),
-        Optional.empty());
+        Optional.empty(),
+        Optional.of(Paths.get("/path/to/snapshotimages")));
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
             .setCommand(
@@ -629,7 +639,8 @@ public class XctoolRunTestsStepTest {
                 ImmutableMap.of(
                     "DEVELOPER_DIR", "/path/to/developer/dir",
                     "XCTOOL_TEST_ENV_TEST_LOG_PATH", "/path/to/test-logs",
-                    "XCTOOL_TEST_ENV_TEST_LOG_LEVEL", "verbose"))
+                    "XCTOOL_TEST_ENV_TEST_LOG_LEVEL", "verbose",
+                    "XCTOOL_TEST_ENV_FB_REFERENCE_IMAGE_DIR", "/path/to/snapshotimages"))
             .setDirectory(projectFilesystem.getRootPath().toAbsolutePath())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
