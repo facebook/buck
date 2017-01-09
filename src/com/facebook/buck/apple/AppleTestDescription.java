@@ -295,7 +295,8 @@ public class AppleTestDescription implements
         appleConfig.getTestLogLevelEnvironmentVariable(),
         appleConfig.getTestLogLevel(),
         args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs),
-        args.isUiTest());
+        args.isUiTest(),
+        args.snapshotReferenceImagesPath);
   }
 
   private Optional<SourcePath> getXctool(
@@ -468,6 +469,9 @@ public class AppleTestDescription implements
     public Optional<Boolean> runTestSeparately;
     public Optional<Boolean> isUiTest;
     public Optional<BuildTarget> testHostApp;
+
+    // for use with FBSnapshotTestcase, injects the path as FB_REFERENCE_IMAGE_DIR
+    public Optional<SourcePath> snapshotReferenceImagesPath;
 
     // Bundle related fields.
     public SourcePath infoPlist;

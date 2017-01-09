@@ -108,6 +108,9 @@ public class AppleTest
   private final Path testOutputPath;
   private final Path testLogsPath;
 
+  @AddToRuleKey
+  private final Optional<SourcePath> snapshotReferenceImagePath;
+
   private Optional<Long> testRuleTimeoutMs;
 
   private Optional<AppleTestXctoolStdoutReader> xctoolStdoutReader;
@@ -194,7 +197,8 @@ public class AppleTest
       String testLogLevelEnvironmentVariable,
       String testLogLevel,
       Optional<Long> testRuleTimeoutMs,
-      boolean isUiTest) {
+      boolean isUiTest,
+      Optional<SourcePath> snapshotReferenceImagePath) {
     super(params, resolver);
     this.xctool = xctool;
     this.xctoolStutterTimeout = xctoolStutterTimeout;
@@ -219,6 +223,7 @@ public class AppleTest
     this.testLogLevelEnvironmentVariable = testLogLevelEnvironmentVariable;
     this.testLogLevel = testLogLevel;
     this.isUiTest = isUiTest;
+    this.snapshotReferenceImagePath = snapshotReferenceImagePath;
   }
 
   @Override
@@ -316,7 +321,8 @@ public class AppleTest
               Optional.of(resolvedTestLogsPath),
               Optional.of(testLogLevelEnvironmentVariable),
               Optional.of(testLogLevel),
-              testRuleTimeoutMs);
+              testRuleTimeoutMs,
+              this.snapshotReferenceImagePath.map(getResolver()::getAbsolutePath));
       steps.add(xctoolStep);
       externalSpec.setType("xctool-" + (testHostApp.isPresent() ? "application" : "logic"));
       externalSpec.setCommand(xctoolStep.getCommand());
