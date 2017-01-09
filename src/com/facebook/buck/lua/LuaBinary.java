@@ -44,6 +44,7 @@ public class LuaBinary
   private final LuaPackageComponents components;
   private final Tool lua;
   private final SourcePathRuleFinder ruleFinder;
+  private final LuaConfig.PackageStyle packageStyle;
 
   public LuaBinary(
       BuildRuleParams buildRuleParams,
@@ -53,7 +54,8 @@ public class LuaBinary
       Tool wrappedBinary,
       String mainModule,
       LuaPackageComponents components,
-      Tool lua) {
+      Tool lua,
+      LuaConfig.PackageStyle packageStyle) {
     super(buildRuleParams, resolver);
     this.ruleFinder = ruleFinder;
     Preconditions.checkArgument(!output.isAbsolute());
@@ -62,11 +64,17 @@ public class LuaBinary
     this.mainModule = mainModule;
     this.components = components;
     this.lua = lua;
+    this.packageStyle = packageStyle;
   }
 
   @Override
   public Tool getExecutableCommand() {
     return wrappedBinary;
+  }
+
+  @Override
+  public boolean outputFileCanBeCopied() {
+    return packageStyle != LuaConfig.PackageStyle.INPLACE;
   }
 
   @Override
@@ -76,7 +84,7 @@ public class LuaBinary
     return ImmutableList.of();
   }
 
-  protected Path getBinPath() {
+  Path getBinPath() {
     return output;
   }
 
@@ -86,17 +94,17 @@ public class LuaBinary
   }
 
   @VisibleForTesting
-  protected String getMainModule() {
+  String getMainModule() {
     return mainModule;
   }
 
   @VisibleForTesting
-  protected LuaPackageComponents getComponents() {
+  LuaPackageComponents getComponents() {
     return components;
   }
 
   @VisibleForTesting
-  protected Tool getLua() {
+  Tool getLua() {
     return lua;
   }
 

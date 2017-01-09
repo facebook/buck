@@ -805,6 +805,7 @@ public class LuaBinaryDescription implements
             args.mainModule,
             args.packageStyle.orElse(luaConfig.getPackageStyle()),
             params.getDeclaredDeps().get());
+    LuaConfig.PackageStyle packageStyle = args.packageStyle.orElse(luaConfig.getPackageStyle());
     Tool binary =
         getBinary(
             params,
@@ -815,7 +816,7 @@ public class LuaBinaryDescription implements
             args.mainModule,
             components.getStarter(),
             components.getComponents(),
-            args.packageStyle.orElse(luaConfig.getPackageStyle()));
+            packageStyle);
     return new LuaBinary(
         params.appendExtraDeps(binary.getDeps(ruleFinder)),
         pathResolver,
@@ -824,7 +825,8 @@ public class LuaBinaryDescription implements
         binary,
         args.mainModule,
         components.getComponents(),
-        luaConfig.getLua(resolver));
+        luaConfig.getLua(resolver),
+        packageStyle);
   }
 
   @Override
