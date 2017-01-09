@@ -5,6 +5,7 @@
 
 {call buck.header}
   {param title: 'Getting Started' /}
+  {param navid: 'setup_getting_started' /}
   {param description}
     How to setup your project to use Buck.
   {/param}
@@ -311,6 +312,8 @@ line.
 
 </div> // close overview
 
-{call buck.footer /}
+{call buck.footer}
+  {param navid: 'setup_getting_started' /}
+{/call}
 
 {/template}

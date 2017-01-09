@@ -23,6 +23,7 @@
   </div>
 
   {call .footer}
+    {param navid: $navid /}
     {param prettify: $prettify /}
   {/call}
 {/template}
@@ -152,6 +153,26 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 {/template}
 
 /**
+ * @param currentnavid The navigation id of the loaded page
+ * @param page The filename of the target page
+ * @param folder href folder target
+ * @param text Navigation text
+ */
+{template .navigationLink}
+  {let $targetnavid}
+    {$folder}_{$page}
+  {/let}
+  {let $classname}
+    {if $targetnavid == $currentnavid}
+      navActiveItem
+    {/if}
+  {/let}
+  <li{if isNonnull($classname)} class="{$classname}"{/if}>
+    <a href="{ROOT}{$folder}/{$page}.html">{$text}</a>
+  </li>
+{/template}
+
+/**
  * @param platform
  * @param rules
  */
@@ -165,6 +186,7 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 /**
  * Consider passing in the path to the URL of the page that the user
  * is currently on and not hyperlinking that item in the table of contents.
+ * @param navid The navigation id of the loaded page
  */
 {template .tableOfContents}
     {let $platformRulesMap: [
@@ -263,12 +285,42 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
     ] /}
   <h3>Getting Started</h3>
   <ul>
-    <li><a href="{ROOT}about/overview.html">Overview</a>
-    <li><a href="{ROOT}setup/install.html">Downloading and Installing Buck</a>
-    <li><a href="{ROOT}setup/intellij_plugin_install.html">Installing the IntelliJ Plugin</a>
-    <li><a href="{ROOT}setup/getting_started.html">Getting Started</a>
-    <li><a href="{ROOT}article/exopackage.html">Exopackage</a>
-    <li><a href="{ROOT}article/query_cheat_sheet.html">Buck Query Cheat Sheet</a>
+    {call .navigationLink}
+      {param currentnavid: $navid /}
+      {param folder: 'about' /}
+      {param page: 'overview' /}
+      {param text: 'Overview' /}
+    {/call}
+    {call .navigationLink}
+      {param currentnavid: $navid /}
+      {param folder: 'setup' /}
+      {param page: 'install' /}
+      {param text: 'Downloading and Installing Buck' /}
+    {/call}
+    {call .navigationLink}
+      {param currentnavid: $navid /}
+      {param folder: 'setup' /}
+      {param page: 'intellij_plugin_install' /}
+      {param text: 'Installing the IntelliJ Plugin' /}
+    {/call}
+    {call .navigationLink}
+      {param currentnavid: $navid /}
+      {param folder: 'setup' /}
+      {param page: 'getting_started' /}
+      {param text: 'Getting Started' /}
+    {/call}
+    {call .navigationLink}
+      {param currentnavid: $navid /}
+      {param folder: 'article' /}
+      {param page: 'exopackage' /}
+      {param text: 'Exopackage' /}
+    {/call}
+    {call .navigationLink}
+      {param currentnavid: $navid /}
+      {param folder: 'article' /}
+      {param page: 'query_cheat_sheet' /}
+      {param text: 'Buck Query Cheat Sheet' /}
+    {/call}
   </ul>
   <h3>About</h3>
   <ul>
@@ -415,6 +467,7 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 {/template}
 
 /**
+ * @param? navid The current page's navigation id.
  * @param? prettify true if https://code.google.com/p/google-code-prettify/
  *     should be used.
  */
@@ -423,7 +476,9 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 </article>
 
   <nav>
-    {call buck.tableOfContents data="all" /}
+    {call buck.tableOfContents data="all"}
+      {param navid: $navid /}
+    {/call}
   </nav>
 
 

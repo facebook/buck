@@ -269,7 +269,20 @@ section.content nav ul {
    list-style: none;
    margin: 0;
    padding-left: 1em;
+}
 
+section.content nav ul li a {
+  margin-left: 1em;
+}
+
+section.content nav ul li.navActiveItem {
+  background-color: black;
+  border-top-right-radius: 10em;
+  border-bottom-right-radius: 10em;
+  font-weight: bold;
+}
+section.content nav ul li.navActiveItem a {
+  color: white;
 }
 
 footer {
