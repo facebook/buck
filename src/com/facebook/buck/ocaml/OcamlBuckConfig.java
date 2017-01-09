@@ -35,6 +35,8 @@ import java.util.Optional;
 
 public class OcamlBuckConfig {
 
+  private static final String SECTION = "ocaml";
+
   private static final Path DEFAULT_OCAML_COMPILER = Paths.get("ocamlopt.opt");
   private static final Path DEFAULT_OCAML_BYTECODE_COMPILER = Paths.get("ocamlc.opt");
   private static final Path DEFAULT_OCAML_DEP_TOOL = Paths.get("ocamldep.opt");
@@ -55,7 +57,7 @@ public class OcamlBuckConfig {
   }
 
   public Optional<Tool> getOcamlCompiler() {
-    return getTool("ocaml", "ocaml.compiler", DEFAULT_OCAML_COMPILER);
+    return getTool(SECTION, "ocaml.compiler", DEFAULT_OCAML_COMPILER);
   }
 
   public CompilerProvider getCCompiler() {
@@ -67,27 +69,27 @@ public class OcamlBuckConfig {
   }
 
   public Optional<Tool> getOcamlDepTool() {
-    return getTool("ocaml", "dep.tool", DEFAULT_OCAML_DEP_TOOL);
+    return getTool(SECTION, "dep.tool", DEFAULT_OCAML_DEP_TOOL);
   }
 
   public Optional<Tool> getYaccCompiler() {
-    return getTool("ocaml", "yacc.compiler", DEFAULT_OCAML_YACC_COMPILER);
+    return getTool(SECTION, "yacc.compiler", DEFAULT_OCAML_YACC_COMPILER);
   }
 
   public Optional<Tool> getLexCompiler() {
-    return getTool("ocaml", "lex.compiler", DEFAULT_OCAML_LEX_COMPILER);
+    return getTool(SECTION, "lex.compiler", DEFAULT_OCAML_LEX_COMPILER);
   }
 
   public Optional<String> getOcamlInteropIncludesDir() {
-    return delegate.getValue("ocaml", "interop.includes");
+    return delegate.getValue(SECTION, "interop.includes");
   }
 
   public Optional<String> getWarningsFlags() {
-    return delegate.getValue("ocaml", "warnings_flags");
+    return delegate.getValue(SECTION, "warnings_flags");
   }
 
   public Optional<Tool> getOcamlBytecodeCompiler() {
-    return getTool("ocaml", "ocaml.bytecode.compiler", DEFAULT_OCAML_BYTECODE_COMPILER);
+    return getTool(SECTION, "ocaml.bytecode.compiler", DEFAULT_OCAML_BYTECODE_COMPILER);
   }
 
   public CompilerProvider getCxxCompiler() {
@@ -103,7 +105,7 @@ public class OcamlBuckConfig {
   }
 
   public Optional<Tool> getOcamlDebug() {
-    return getTool("ocaml", "debug", DEFAULT_OCAML_DEBUG);
+    return getTool(SECTION, "debug", DEFAULT_OCAML_DEBUG);
   }
 
   public CxxPlatform getCxxPlatform() {
