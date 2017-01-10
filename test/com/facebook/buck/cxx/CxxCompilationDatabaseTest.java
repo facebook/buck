@@ -118,7 +118,6 @@ public class CxxCompilationDatabaseTest {
                         throw new UnsupportedOperationException("should not be called");
                       }
                     },
-                    ImmutableList.of(),
                     Optional.empty(),
                     /* leadingIncludePaths */ Optional.empty()),
                 new CompilerDelegate(

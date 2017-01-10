@@ -48,7 +48,6 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
@@ -99,7 +98,6 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         new DefaultPreprocessor(preprocessorTool),
         PreprocessorFlags.builder().build(),
         defaultFrameworkPathSearchPathFunction,
-        ImmutableList.of(),
         Optional.empty(),
         /* leadingIncludePaths */ Optional.empty());
 

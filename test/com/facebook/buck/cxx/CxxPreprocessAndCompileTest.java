@@ -27,7 +27,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -105,13 +104,6 @@ public class CxxPreprocessAndCompileTest {
   private static final Path DEFAULT_OUTPUT = Paths.get("test.o");
   private static final SourcePath DEFAULT_INPUT = new FakeSourcePath("test.cpp");
   private static final CxxSource.Type DEFAULT_INPUT_TYPE = CxxSource.Type.CXX;
-  private static final ImmutableList<CxxHeaders> DEFAULT_INCLUDES =
-      ImmutableList.of(
-          CxxSymlinkTreeHeaders.builder()
-              .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
-              .setRoot(new BuildTargetSourcePath(BuildTargetFactory.newInstance("//:include")))
-              .putNameToPathMap(Paths.get("test.h"), new FakeSourcePath("foo/test.h"))
-              .build());
   private static final Path DEFAULT_WORKING_DIR = Paths.get(System.getProperty("user.dir"));
   private static final
   RuleKeyAppendableFunction<FrameworkPath, Path> DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION =
@@ -201,7 +193,6 @@ public class CxxPreprocessAndCompileTest {
                     DEFAULT_PREPROCESSOR,
                     PreprocessorFlags.builder().build(),
                     DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
-                    DEFAULT_INCLUDES,
                     Optional.empty(),
                     /* leadingIncludePaths */ Optional.empty()),
                 new CompilerDelegate(
@@ -319,7 +310,6 @@ public class CxxPreprocessAndCompileTest {
                     DEFAULT_PREPROCESSOR,
                     flags,
                     DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
-                    DEFAULT_INCLUDES,
                     Optional.empty(),
                     /* leadingIncludePaths */ Optional.empty()),
                 new CompilerDelegate(
@@ -426,7 +416,6 @@ public class CxxPreprocessAndCompileTest {
                 new DefaultPreprocessor(preprocessorTool),
                 PreprocessorFlags.builder().build(),
                 DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
-                ImmutableList.of(),
                 Optional.empty(),
                 /* leadingIncludePaths */ Optional.empty()),
             new CompilerDelegate(
@@ -536,7 +525,6 @@ public class CxxPreprocessAndCompileTest {
                 PREPROCESSOR_WITH_COLOR_SUPPORT,
                 PreprocessorFlags.builder().build(),
                 DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
-                ImmutableList.of(),
                 Optional.empty(),
                 /* leadingIncludePaths */ Optional.empty()),
             new CompilerDelegate(

@@ -74,7 +74,6 @@ public class CxxPrecompiledHeaderTest {
             CxxDescriptionEnhancer.frameworkPathToSearchPath(
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 sourcePathResolver),
-            ImmutableList.of(),
             Optional.empty(),
             /* leadingIncludePaths */ Optional.empty()),
         new CompilerDelegate(

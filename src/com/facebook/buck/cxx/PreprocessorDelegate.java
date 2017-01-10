@@ -43,18 +43,16 @@ import com.google.common.hash.Hashing;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 /**
  * Helper class for handling preprocessing related tasks of a cxx compilation rule.
  */
-class PreprocessorDelegate implements RuleKeyAppendable {
+final class PreprocessorDelegate implements RuleKeyAppendable {
 
   // Fields that are added to rule key as is.
   private final Preprocessor preprocessor;
-  private final ImmutableList<CxxHeaders> includes;
   private final RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction;
 
   // Fields that added to the rule key with some processing.
@@ -98,7 +96,7 @@ class PreprocessorDelegate implements RuleKeyAppendable {
                   new HeaderPathNormalizer.Builder(
                       resolver,
                       minLengthPathRepresentation);
-              for (CxxHeaders include : includes) {
+              for (CxxHeaders include : preprocessorFlags.getIncludes()) {
                 include.addToHeaderPathNormalizer(builder);
               }
               if (sandbox.isPresent()) {
@@ -111,7 +109,6 @@ class PreprocessorDelegate implements RuleKeyAppendable {
             }
           });
 
-
   public PreprocessorDelegate(
       SourcePathResolver resolver,
       DebugPathSanitizer sanitizer,
@@ -120,11 +117,9 @@ class PreprocessorDelegate implements RuleKeyAppendable {
       Preprocessor preprocessor,
       PreprocessorFlags preprocessorFlags,
       RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction,
-      List<CxxHeaders> includes,
       Optional<SymlinkTree> sandbox,
       Optional<CxxIncludePaths> leadingIncludePaths) {
     this.preprocessor = preprocessor;
-    this.includes = ImmutableList.copyOf(includes);
     this.preprocessorFlags = preprocessorFlags;
     this.sanitizer = sanitizer;
     this.headerVerification = headerVerification;
@@ -145,7 +140,6 @@ class PreprocessorDelegate implements RuleKeyAppendable {
         this.preprocessor,
         this.preprocessorFlags,
         this.frameworkPathSearchPathFunction,
-        this.includes,
         this.sandbox,
         Optional.of(leadingIncludePaths));
   }
@@ -157,7 +151,6 @@ class PreprocessorDelegate implements RuleKeyAppendable {
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink.setReflectively("preprocessor", preprocessor);
-    sink.setReflectively("includes", includes);
     sink.setReflectively("frameworkPathSearchPathFunction", frameworkPathSearchPathFunction);
     sink.setReflectively("headerVerification", headerVerification);
     preprocessorFlags.appendToRuleKey(sink, sanitizer);
@@ -247,7 +240,7 @@ class PreprocessorDelegate implements RuleKeyAppendable {
 
   public void checkForConflictingHeaders() throws ConflictingHeadersException {
     Map<Path, SourcePath> headers = new HashMap<>();
-    for (CxxHeaders cxxHeaders : includes) {
+    for (CxxHeaders cxxHeaders : preprocessorFlags.getIncludes()) {
       if (cxxHeaders instanceof CxxSymlinkTreeHeaders) {
         CxxSymlinkTreeHeaders symlinkTreeHeaders = (CxxSymlinkTreeHeaders) cxxHeaders;
         for (Map.Entry<Path, SourcePath> entry : symlinkTreeHeaders.getNameToPathMap().entrySet()) {

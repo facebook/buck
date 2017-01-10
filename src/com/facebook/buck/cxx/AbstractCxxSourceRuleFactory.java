@@ -987,7 +987,6 @@ abstract class AbstractCxxSourceRuleFactory {
               getIncludes(),
               getFrameworks()),
           CxxDescriptionEnhancer.frameworkPathToSearchPath(getCxxPlatform(), getPathResolver()),
-          getIncludes(),
           getSandboxTree(),
           /* leadingIncludePaths */ Optional.empty());
       return new PreprocessorDelegateCacheValue(delegate);

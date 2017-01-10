@@ -87,6 +87,7 @@ abstract class AbstractPreprocessorFlags {
    */
   public void appendToRuleKey(RuleKeyObjectSink sink, DebugPathSanitizer sanitizer) {
     sink.setReflectively("prefixHeader", getPrefixHeader());
+    sink.setReflectively("includes", getIncludes());
     sink.setReflectively("frameworkRoots", getFrameworkPaths());
 
     // Sanitize any relevant paths in the flags we pass to the preprocessor, to prevent them
