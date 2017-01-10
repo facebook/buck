@@ -43,7 +43,7 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
   @Nullable
   private TypeMirror superclass;
   @Nullable
-  private List<TypeParameterElement> typeParameters;
+  private List<TreeBackedTypeParameterElement> typeParameters;
 
   TreeBackedTypeElement(ClassTree tree, Name qualifiedName) {
     super(tree.getSimpleName(), null);  // TODO(jkeljo): Proper enclosing element
@@ -53,8 +53,9 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
   }
 
   /* package */ void resolve(TreeBackedElements elements, TreeBackedTypes types) {
-    resolveSuperclass(elements, types);
+    // Need to resolve type parameters first, because the superclass definition might reference them
     resolveTypeParameters(elements, types);
+    resolveSuperclass(elements, types);
   }
 
   private void resolveSuperclass(TreeBackedElements elements, TreeBackedTypes types) {
@@ -67,18 +68,20 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
             Preconditions.checkNotNull(elements.getTypeElement("java.lang.Object")).asType();
       }
     } else {
-      superclass = types.resolveType(extendsClause);
+      superclass = types.resolveType(extendsClause, this);
     }
   }
 
   private void resolveTypeParameters(TreeBackedElements elements, TreeBackedTypes types) {
+    // Find them all first.
     typeParameters = Collections.unmodifiableList(
         tree.getTypeParameters()
           .stream()
-          .map(typeParamTree -> TreeBackedTypeParameterElement.resolveTypeParameter(
-              this, typeParamTree, elements, types))
-          .collect(Collectors.toList())
-    );
+          .map(typeParamTree -> new TreeBackedTypeParameterElement(typeParamTree, this))
+          .collect(Collectors.toList()));
+
+    // Then resolve them. This allows type parameters to be defined in terms of one another.
+    typeParameters.forEach(typeParam -> typeParam.resolve(elements, types));
   }
 
   @Override
@@ -107,9 +110,8 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
   }
 
   @Override
-  @Nullable
   public List<? extends TypeParameterElement> getTypeParameters() {
-    return typeParameters;
+    return Preconditions.checkNotNull(typeParameters);
   }
 
   @Override

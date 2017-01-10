@@ -149,6 +149,28 @@ public class TreeBackedTypeParameterElementTest extends CompilerTreeApiParameter
   }
 
   @Test
+  public void testTypeParameterBoundedTypeParameter() throws IOException {
+    compile("class Foo<T, U extends T> { }");
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    TypeParameterElement uElement = fooElement.getTypeParameters().get(1);
+    TypeMirror tType = fooElement.getTypeParameters().get(0).asType();
+
+    assertSameType(tType, uElement.getBounds().get(0));
+  }
+
+  @Test
+  public void testForwardReferenceTypeParameterBoundedTypeParameter() throws IOException {
+    compile("class Foo<T extends U, U> { }");
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    TypeParameterElement tElement = fooElement.getTypeParameters().get(0);
+    TypeMirror uType = fooElement.getTypeParameters().get(1).asType();
+
+    assertSameType(uType, tElement.getBounds().get(0));
+  }
+
+  @Test
   public void testMultipleBoundedTypeParameter() throws IOException {
     compile(
         "class Foo<T extends java.lang.CharSequence & java.lang.Runnable & java.io.Closeable> { }");

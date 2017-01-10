@@ -16,16 +16,15 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.util.exportedfiles.Nullable;
 import com.facebook.buck.util.exportedfiles.Preconditions;
 import com.sun.source.tree.TypeParameterTree;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.lang.model.element.Element;
-import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
@@ -36,35 +35,29 @@ import javax.lang.model.type.TypeVariable;
  * individual methods and {@link com.facebook.buck.jvm.java.abi.source} for more information.
  */
 class TreeBackedTypeParameterElement extends TreeBackedElement implements TypeParameterElement {
-  private final List<TypeMirror> bounds;
+  private final TypeParameterTree tree;
   private final TypeVariable typeVar;
+  @Nullable
+  private List<TypeMirror> bounds;
 
-  public static TypeParameterElement resolveTypeParameter(
-      Element enclosingElement,
-      TypeParameterTree tree,
-      TreeBackedElements elements,
-      TreeBackedTypes types) {
-    TypeMirror[] bounds;
-    if (tree.getBounds().isEmpty()) {
-      bounds = new TypeMirror[] {
-          Preconditions.checkNotNull(elements.getTypeElement("java.lang.Object")).asType() };
-    } else {
-      bounds = tree.getBounds().stream()
-          .map(boundTree -> types.resolveType(boundTree))
-          .toArray(size -> new TypeMirror[size]);
-    }
+  public TreeBackedTypeParameterElement(TypeParameterTree tree, Element enclosingElement) {
+    super(tree.getName(), enclosingElement);
 
-    return new TreeBackedTypeParameterElement(tree.getName(), enclosingElement, bounds);
+    this.tree = tree;
+    typeVar = new StandaloneTypeVariable(this);
   }
 
-  private TreeBackedTypeParameterElement(
-      Name simpleName,
-      Element enclosingElement,
-      TypeMirror... bounds) {
-    super(simpleName, enclosingElement);
-
-    this.bounds = Collections.unmodifiableList(new ArrayList<>(Arrays.asList(bounds)));
-    typeVar = new StandaloneTypeVariable(this);
+  /* package */ void resolve(TreeBackedElements elements, TreeBackedTypes types) {
+    if (tree.getBounds().isEmpty()) {
+      bounds = Collections.singletonList(
+          Preconditions.checkNotNull(elements.getTypeElement("java.lang.Object")).asType());
+    } else {
+      Element enclosingElement = Preconditions.checkNotNull(getEnclosingElement());
+      bounds = Collections.unmodifiableList(
+          tree.getBounds().stream()
+              .map(boundTree -> types.resolveType(boundTree, enclosingElement))
+              .collect(Collectors.toList()));
+    }
   }
 
   @Override
@@ -80,7 +73,7 @@ class TreeBackedTypeParameterElement extends TreeBackedElement implements TypePa
 
   @Override
   public List<? extends TypeMirror> getBounds() {
-    return bounds;
+    return Preconditions.checkNotNull(bounds);
   }
 
   @Override

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.util.exportedfiles.Nullable;
+
 import java.util.List;
 
 import javax.lang.model.element.Element;
@@ -33,19 +35,12 @@ import javax.lang.model.type.TypeVisitor;
 class StandaloneTypeVariable extends StandaloneTypeMirror implements TypeVariable {
 
   private final TypeParameterElement element;
-  private final TypeMirror upperBound;
+  @Nullable
+  private TypeMirror upperBound;
 
   public StandaloneTypeVariable(TypeParameterElement element) {
     super(TypeKind.TYPEVAR);
     this.element = element;
-
-    final List<? extends TypeMirror> bounds = element.getBounds();
-
-    if (bounds.size() == 1) {
-      upperBound = bounds.get(0);
-    } else {
-      upperBound = new StandaloneIntersectionType(bounds);
-    }
   }
 
   @Override
@@ -55,6 +50,15 @@ class StandaloneTypeVariable extends StandaloneTypeMirror implements TypeVariabl
 
   @Override
   public TypeMirror getUpperBound() {
+    if (upperBound == null) {
+      final List<? extends TypeMirror> bounds = element.getBounds();
+
+      if (bounds.size() == 1) {
+        upperBound = bounds.get(0);
+      } else {
+        upperBound = new StandaloneIntersectionType(bounds);
+      }
+    }
     return upperBound;
   }
 

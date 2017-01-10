@@ -32,6 +32,7 @@ import java.util.List;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
@@ -251,7 +252,7 @@ class TreeBackedTypes implements Types {
     throw new UnsupportedOperationException();
   }
 
-  /* package */ TypeMirror resolveType(Tree typeTree) {
+  /* package */ TypeMirror resolveType(Tree typeTree, Element scope) {
     return typeTree.accept(new SimpleTreeVisitor<TypeMirror, Void>() {
       @Override
       protected TypeMirror defaultAction(Tree node, Void aVoid) {
@@ -261,6 +262,15 @@ class TreeBackedTypes implements Types {
 
       @Override
       public TypeMirror visitIdentifier(IdentifierTree node, Void aVoid) {
+        // TODO(jkeljo): This is a quick hack to allow references to type params. We'll need a more
+        // general scoping mechanism.
+        TypeElement type = (TypeElement) scope;
+        for (TypeParameterElement typeParameterElement : type.getTypeParameters()) {
+          if (node.getName().contentEquals(typeParameterElement.getSimpleName())) {
+            return typeParameterElement.asType();
+          }
+        }
+
         throw new UnsupportedOperationException("Type resolution by simple name NYI");
       }
 
@@ -281,7 +291,7 @@ class TreeBackedTypes implements Types {
 
         TypeMirror[] typeArgs = node.getTypeArguments()
             .stream()
-            .map(tree -> resolveType(tree))
+            .map(tree -> resolveType(tree, scope))
             .toArray(size -> new TypeMirror[size]);
 
         return getDeclaredType(typeElement, typeArgs);
@@ -289,7 +299,7 @@ class TreeBackedTypes implements Types {
 
       @Override
       public TypeMirror visitArrayType(ArrayTypeTree node, Void aVoid) {
-        TypeMirror elementType = resolveType(node.getType());
+        TypeMirror elementType = resolveType(node.getType(), scope);
 
         return getArrayType(elementType);
       }
