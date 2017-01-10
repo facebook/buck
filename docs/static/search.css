@@ -80,6 +80,8 @@ input#algolia-doc-search:focus {
 /* Bottom border of each suggestion */
 .algolia-docsearch-suggestion {
   border-bottom-color: #2F0A57;
+  text-transform: none;
+  word-wrap: break-word;
 }
 /* Main category headers */
 .algolia-docsearch-suggestion--category-header {
