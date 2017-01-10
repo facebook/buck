@@ -141,8 +141,11 @@ public class TargetGraphTest {
     expectedException.expectMessage(
         "Required target for rule '//foo:bar#baz' was not found in the target graph.");
     // Force the Iterable to evaluate and throw.
-    ImmutableSet.copyOf(
-        targetGraph.getAll(ImmutableSet.of(BuildTargetFactory.newInstance("//foo:bar#baz"))));
+    Iterable<TargetNode<?, ?>> allNodes =
+        targetGraph.getAll(ImmutableSet.of(BuildTargetFactory.newInstance("//foo:bar#baz")));
+    for (TargetNode<?, ?> node : allNodes) {
+      node.toString();
+    }
   }
 
   private void checkSubgraph(
