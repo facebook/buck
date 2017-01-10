@@ -83,4 +83,15 @@ public class LexerTest {
     thrown.expectMessage("unclosed quotation");
     Lexer.scan(query.toCharArray());
   }
+
+  @Test
+  public void testOctothorpe() throws Exception {
+    String query = "//foo:bar#flavor";
+    List<Lexer.Token> tokens = Lexer.scan(query.toCharArray());
+    List<Lexer.Token> expected = Lists.newArrayList(
+        new Lexer.Token("//foo:bar#flavor"),
+        new Lexer.Token(Lexer.TokenKind.EOF)
+    );
+    assertThat(tokens, is(equalTo(expected)));
+  }
 }
