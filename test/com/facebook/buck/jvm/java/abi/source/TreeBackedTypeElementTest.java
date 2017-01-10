@@ -36,6 +36,7 @@ import java.util.List;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
@@ -138,6 +139,23 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
 
     // Expect no crash. Enum anonymous members don't have qualified names, but at one point during
     // development we would crash trying to make one for them.
+  }
+
+  @Test
+  public void testGetNestingKindTopLevel() throws IOException {
+    compile("public class Foo { }");
+
+    assertSame(NestingKind.TOP_LEVEL, elements.getTypeElement("Foo").getNestingKind());
+  }
+
+  @Test
+  public void testGetNestingKindMember() throws IOException {
+    compile(Joiner.on('\n').join(
+        "public class Foo {",
+        "  class Bar { }",
+        "}"));
+
+    assertSame(NestingKind.MEMBER, elements.getTypeElement("Foo.Bar").getNestingKind());
   }
 
   @Test

@@ -109,7 +109,13 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
 
   @Override
   public NestingKind getNestingKind() {
-    throw new UnsupportedOperationException();
+    // TODO(jkeljo): Change to look for kind PACKAGE once those are supported
+    if (getEnclosingElement() == null) {
+      return NestingKind.TOP_LEVEL;
+    }
+
+    // Note that anonymous and local classes do not appear in tree-backed elements
+    return NestingKind.MEMBER;
   }
 
   @Override
