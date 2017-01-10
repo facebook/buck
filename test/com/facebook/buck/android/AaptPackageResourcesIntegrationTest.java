@@ -17,27 +17,37 @@
 package com.facebook.buck.android;
 
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildInfo;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.sha1.Sha1HashCode;
+import com.facebook.buck.zip.ZipConstants;
 
+import org.apache.commons.compress.archivers.zip.ZipUtil;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Date;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class AaptPackageResourcesIntegrationTest {
   @Rule
   public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
+  private ProjectFilesystem filesystem;
 
   private static final String MAIN_BUILD_TARGET = "//apps/sample:app";
   private static final String PATH_TO_LAYOUT_XML = "res/com/sample/top/res/layout/top_layout.xml";
@@ -47,6 +57,7 @@ public class AaptPackageResourcesIntegrationTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "android_project", tmpFolder);
     workspace.setUp();
+    filesystem = new ProjectFilesystem(workspace.getDestPath());
   }
 
   @Test
@@ -79,5 +90,23 @@ public class AaptPackageResourcesIntegrationTest {
   public void testIgnoredFileIsIgnoredByAapt() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace.runBuckBuild("//apps/sample:app_deps_resource_with_ignored_file").assertSuccess();
+  }
+
+  @Test
+  public void testAaptPackageIsScrubbed() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    workspace.runBuckBuild(MAIN_BUILD_TARGET).assertSuccess();
+    Path aaptOutput = workspace.getPath(
+        BuildTargets.getGenPath(
+            filesystem,
+            BuildTargetFactory.newInstance(MAIN_BUILD_TARGET)
+                .withFlavors(AndroidBinaryGraphEnhancer.AAPT_PACKAGE_FLAVOR),
+            AaptPackageResources.RESOURCE_APK_PATH_FORMAT));
+    Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
+    try (ZipInputStream is = new ZipInputStream(new FileInputStream(aaptOutput.toFile()))) {
+      for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
+        assertThat(entry.getName(), new Date(entry.getTime()), Matchers.equalTo(dosEpoch));
+      }
+    }
   }
 }
