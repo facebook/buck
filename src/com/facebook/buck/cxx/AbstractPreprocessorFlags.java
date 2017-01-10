@@ -65,25 +65,9 @@ abstract class AbstractPreprocessorFlags {
   @Value.Parameter
   public abstract ImmutableSet<FrameworkPath> getFrameworkPaths();
 
-  /**
-   * Directories set via {@code -isystem}.
-   */
-  @Value.Parameter
-  public abstract ImmutableSet<Path> getSystemIncludePaths();
-
-  /**
-   * Directories set via {@code -iquote}.
-   */
-  @Value.Parameter
-  public abstract ImmutableSet<Path> getQuoteIncludePaths();
-
   @Value.Lazy
   public CxxIncludePaths getCxxIncludePaths() {
-    return CxxIncludePaths.of(
-        getIncludes(),
-        getFrameworkPaths(),
-        getSystemIncludePaths(),
-        getQuoteIncludePaths());
+    return CxxIncludePaths.of(getIncludes(), getFrameworkPaths());
   }
 
   public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {

@@ -140,11 +140,6 @@ abstract class AbstractCxxSourceRuleFactory {
         .collect(MoreCollectors.toImmutableList());
   }
 
-  @Value.Lazy
-  protected ImmutableSet<Path> getSystemIncludeRoots() {
-    return ImmutableSet.of();
-  }
-
   private final LoadingCache<CxxSource.Type, ImmutableList<String>> preprocessorFlags =
       CacheBuilder.newBuilder()
           .build(
@@ -990,9 +985,7 @@ abstract class AbstractCxxSourceRuleFactory {
               getPrefixHeader(),
               computePreprocessorFlags(key.getSourceType(), key.getSourceFlags()),
               getIncludes(),
-              getFrameworks(),
-              getSystemIncludeRoots(),
-              /* not using -iquote paths yet */ ImmutableSet.of()),
+              getFrameworks()),
           CxxDescriptionEnhancer.frameworkPathToSearchPath(getCxxPlatform(), getPathResolver()),
           getIncludes(),
           getSandboxTree(),

@@ -83,9 +83,13 @@ public class CxxCompilationDatabaseTest {
         .build();
 
     PreprocessorFlags preprocessorFlags = PreprocessorFlags.builder()
-        .addSystemIncludePaths(
-            filesystem.resolve("foo/bar"),
-            filesystem.resolve("test"))
+        .addIncludes(
+            CxxHeadersDir.of(
+                CxxPreprocessables.IncludeType.SYSTEM,
+                new FakeSourcePath("/foo/bar")),
+            CxxHeadersDir.of(
+                CxxPreprocessables.IncludeType.SYSTEM,
+                new FakeSourcePath("/test")))
         .build();
 
     ImmutableSortedSet.Builder<CxxPreprocessAndCompile> rules = ImmutableSortedSet.naturalOrder();
@@ -179,9 +183,9 @@ public class CxxCompilationDatabaseTest {
                 ImmutableList.of(
                     "compiler",
                     "-isystem",
-                    "foo/bar",
+                    "/foo/bar",
                     "-isystem",
-                    "test",
+                    "/test",
                     "-x",
                     "c++",
                     "-c",

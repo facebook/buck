@@ -16,23 +16,23 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
+
+import org.immutables.value.Value;
+
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
@@ -44,12 +44,6 @@ abstract class AbstractCxxIncludePaths {
   /** Framework paths added with {@code -F} */
   public abstract ImmutableSet<FrameworkPath> getFPaths();
 
-  /** Paths added with {@code -isystem} */
-  public abstract ImmutableSet<Path> getISystemPaths();
-
-  /** Paths added with {@code -iquote} */
-  public abstract ImmutableSet<Path> getIQuotePaths();
-
   /**
    * Merge all the given {@link CxxIncludePaths}.
    *
@@ -58,22 +52,14 @@ abstract class AbstractCxxIncludePaths {
   public static CxxIncludePaths concat(Iterator<CxxIncludePaths> itemIter) {
     ImmutableSet.Builder<CxxHeaders> ipathBuilder = ImmutableSet.<CxxHeaders>builder();
     ImmutableSet.Builder<FrameworkPath> fpathBuilder = ImmutableSet.<FrameworkPath>builder();
-    ImmutableSet.Builder<Path> isystemBuilder = ImmutableSet.<Path>builder();
-    ImmutableSet.Builder<Path> iquoteBuilder = ImmutableSet.<Path>builder();
 
     while (itemIter.hasNext()) {
       CxxIncludePaths item = itemIter.next();
       ipathBuilder.addAll(item.getIPaths());
       fpathBuilder.addAll(item.getFPaths());
-      isystemBuilder.addAll(item.getISystemPaths());
-      iquoteBuilder.addAll(item.getIQuotePaths());
     }
 
-    return CxxIncludePaths.of(
-        ipathBuilder.build(),
-        fpathBuilder.build(),
-        isystemBuilder.build(),
-        iquoteBuilder.build());
+    return CxxIncludePaths.of(ipathBuilder.build(), fpathBuilder.build());
   }
 
   public static CxxIncludePaths empty() {
@@ -101,20 +87,6 @@ abstract class AbstractCxxIncludePaths {
             pathResolver,
             Optional.of(pathShortener),
             preprocessor));
-
-    builder.addAll(
-        CxxPreprocessables.IncludeType.SYSTEM.includeArgs(
-            preprocessor,
-            Iterables.transform(
-                getISystemPaths(),
-                Functions.compose(Object::toString, pathShortener))));
-
-    builder.addAll(
-        CxxPreprocessables.IncludeType.IQUOTE.includeArgs(
-            preprocessor,
-            Iterables.transform(
-                getIQuotePaths(),
-                Functions.compose(Object::toString, pathShortener))));
 
     builder.addAll(
         MoreIterables.zipAndConcat(
@@ -147,12 +119,6 @@ abstract class AbstractCxxIncludePaths {
       Preprocessor preprocessor) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     builder.addAll(CxxHeaders.getArgs(getIPaths(), pathResolver, Optional.empty(), preprocessor));
-    builder.addAll(CxxPreprocessables.IncludeType.SYSTEM.includeArgs(
-        preprocessor,
-        getISystemPaths().stream().map(Object::toString).collect(Collectors.toList())));
-    builder.addAll(CxxPreprocessables.IncludeType.IQUOTE.includeArgs(
-        preprocessor,
-        getIQuotePaths().stream().map(Object::toString).collect(Collectors.toList())));
     // TODO(elsteveogrande) gotta handle framework paths!
     return builder.build();
   }

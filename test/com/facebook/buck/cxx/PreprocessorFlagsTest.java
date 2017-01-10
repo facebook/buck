@@ -72,11 +72,6 @@ public class PreprocessorFlagsTest {
               true,
           },
           {
-              "systemIncludePaths",
-              defaultFlags.withSystemIncludePaths(Paths.get("different")),
-              false,
-          },
-          {
               "frameworkPaths",
               defaultFlags.withFrameworkPaths(
                   FrameworkPath.ofSourcePath(new FakeSourcePath("different"))),
