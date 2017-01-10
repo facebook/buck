@@ -71,6 +71,11 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
   {/if}
   // List buck.css second to override prettify.
   <link type="text/css" rel="stylesheet" href="{ROOT}static/buck.css">
+  <link type="text/css" rel="stylesheet" href="{ROOT}static/search.css">
+  <link
+    type="text/css"
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" />
 
   // TODO(bolinfest): Pass $og_type in as a parameter.
   {let $og_type}
@@ -120,19 +125,6 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
       <li class="algolia-search-wrapper">
         <input id="algolia-doc-search" type="search" placeholder="Search docs..." />
       </li>
-      <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js">
-      </script>
-      <script>
-        // For Algolia search
-        (function() {lb}
-          // Algolia
-          docsearch({lb}
-            apiKey: 'c25b7174e8f6161ce5fdd44bb0b95081',
-            indexName: 'buckbuild',
-            inputSelector: '#algolia-doc-search',
-          {rb});
-        {rb}());
-      </script>
         <li><a href='{ROOT}setup/getting_started.html'>Getting Started</a>
         <li><a href='https://groups.google.com/forum/#!forum/buck-build'>Group</a>
         <li><a href='{ROOT}javadoc/'>API</a>
@@ -633,6 +625,23 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 <footer><div class='width'>
   &copy; Copyright Facebook, 2013 -
 </div></footer>
+
+<!-- Algolia Search Code -->
+<script
+  type="text/javascript"
+  src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js">
+</script>
+<script>
+{literal}
+docsearch({
+  apiKey: 'c25b7174e8f6161ce5fdd44bb0b95081',
+  indexName: 'buckbuild',
+  inputSelector: '#algolia-doc-search',
+  debug: false // Set debug to true if you want to inspect the dropdown
+});
+{/literal}
+</script>
+<!-- End Algolia Search Code -->
 
 {if hasData() and $prettify}
   <script src="{ROOT}google-code-prettify/prettify.js"></script>
