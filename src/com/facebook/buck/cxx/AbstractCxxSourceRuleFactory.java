@@ -73,34 +73,34 @@ abstract class AbstractCxxSourceRuleFactory {
       ImmutableFlavor.of("preprocessor-deps");
 
   @Value.Parameter
-  public abstract BuildRuleParams getParams();
+  protected abstract BuildRuleParams getParams();
   @Value.Parameter
-  public abstract BuildRuleResolver getResolver();
+  protected abstract BuildRuleResolver getResolver();
   @Value.Parameter
-  public abstract SourcePathResolver getPathResolver();
+  protected abstract SourcePathResolver getPathResolver();
   @Value.Parameter
-  public abstract SourcePathRuleFinder getRuleFinder();
+  protected abstract SourcePathRuleFinder getRuleFinder();
   @Value.Parameter
-  public abstract CxxBuckConfig getCxxBuckConfig();
+  protected abstract CxxBuckConfig getCxxBuckConfig();
   @Value.Parameter
-  public abstract CxxPlatform getCxxPlatform();
+  protected abstract CxxPlatform getCxxPlatform();
   @Value.Parameter
-  public abstract ImmutableList<CxxPreprocessorInput> getCxxPreprocessorInput();
+  protected abstract ImmutableList<CxxPreprocessorInput> getCxxPreprocessorInput();
   @Value.Parameter
-  public abstract ImmutableMultimap<CxxSource.Type, String> getCompilerFlags();
+  protected abstract ImmutableMultimap<CxxSource.Type, String> getCompilerFlags();
   /** NOTE: {@code prefix_header} is incompatible with {@code precompiled_header}. */
   @Value.Parameter
-  public abstract Optional<SourcePath> getPrefixHeader();
+  protected abstract Optional<SourcePath> getPrefixHeader();
   /** NOTE: {@code precompiled_header} is incompatible with {@code prefix_header}. */
   @Value.Parameter
-  public abstract Optional<SourcePath> getPrecompiledHeader();
+  protected abstract Optional<SourcePath> getPrecompiledHeader();
   @Value.Parameter
-  public abstract PicType getPicType();
+  protected abstract PicType getPicType();
   @Value.Parameter
-  public abstract Optional<SymlinkTree> getSandboxTree();
+  protected abstract Optional<SymlinkTree> getSandboxTree();
 
   @Value.Check
-  public void checkPrefixAndPrecompiledHeaderArgs() {
+  protected void checkPrefixAndPrecompiledHeaderArgs() {
     if (getPrefixHeader().isPresent() && getPrecompiledHeader().isPresent()) {
       throw new HumanReadableException(
           "Cannot use `prefix_header` and `precompiled_header` in the same rule.");
