@@ -38,6 +38,7 @@ import javax.lang.model.type.NoType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.WildcardType;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
@@ -333,5 +334,18 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
     IntersectionType barType = (IntersectionType) getTypeParameterUpperBound("Bar", 0);
 
     assertNotSameType(fooType, barType);
+  }
+
+  @Test
+  public void testIsSameTypeWildcardType() throws IOException {
+    compile("class Foo { }");
+
+    WildcardType wildcardType = types.getWildcardType(null, null);
+    WildcardType wildcardType2 = types.getWildcardType(null, null);
+
+    // According to the docs, wildcard types are never equal to one another, even if they're
+    // the exact same instance.
+    assertNotSameType(wildcardType, wildcardType);
+    assertNotSameType(wildcardType, wildcardType2);
   }
 }

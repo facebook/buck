@@ -72,6 +72,10 @@ class TreeBackedTypes implements Types {
 
   @Override
   public boolean isSameType(TypeMirror t1, TypeMirror t2) {
+
+    // IMPORTANT: We can't early-out on reference equality, because wildcard types are never
+    // considered the same type as one another.
+
     if (t1.getKind() != t2.getKind()) {
       return false;
     }
@@ -87,6 +91,8 @@ class TreeBackedTypes implements Types {
       case DOUBLE:
       case NULL:
         return true;
+      case WILDCARD:
+        return false;  // Wildcard types are never the same as one another; see docs
       case DECLARED:
         return isSameType((DeclaredType) t1, (DeclaredType) t2);
       case TYPEVAR:
@@ -231,9 +237,8 @@ class TreeBackedTypes implements Types {
   }
 
   @Override
-  public WildcardType getWildcardType(
-      TypeMirror extendsBound, TypeMirror superBound) {
-    throw new UnsupportedOperationException();
+  public WildcardType getWildcardType(TypeMirror extendsBound, TypeMirror superBound) {
+    return new StandaloneWildcardType(extendsBound, superBound);
   }
 
   @Override
