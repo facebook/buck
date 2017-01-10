@@ -35,18 +35,20 @@ import javax.lang.model.element.Name;
  * for individual methods and {@link com.facebook.buck.jvm.java.abi.source} for more information.
  */
 abstract class TreeBackedElement implements Element {
+  private final ElementKind kind;
   private final Name simpleName;
   @Nullable
   private final Element enclosingElement;
 
-  public TreeBackedElement(Name simpleName, @Nullable Element enclosingElement) {
+  public TreeBackedElement(ElementKind kind, Name simpleName, @Nullable Element enclosingElement) {
+    this.kind = kind;
     this.simpleName = simpleName;
     this.enclosingElement = enclosingElement;
   }
 
   @Override
   public ElementKind getKind() {
-    throw new UnsupportedOperationException();
+    return kind;
   }
 
   @Override

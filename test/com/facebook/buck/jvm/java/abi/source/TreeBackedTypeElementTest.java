@@ -30,6 +30,7 @@ import org.junit.runner.RunWith;
 
 import java.io.IOException;
 
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
@@ -66,6 +67,34 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
     TypeElement element = elements.getTypeElement("com.facebook.buck.Foo");
 
     assertNameEquals("com.facebook.buck.Foo", element.getQualifiedName());
+  }
+
+  @Test
+  public void testGetKindAnnotation() throws IOException {
+    compile("@interface Foo { }");
+
+    assertSame(ElementKind.ANNOTATION_TYPE, elements.getTypeElement("Foo").getKind());
+  }
+
+  @Test
+  public void testGetKindClass() throws IOException {
+    compile("class Foo { }");
+
+    assertSame(ElementKind.CLASS, elements.getTypeElement("Foo").getKind());
+  }
+
+  @Test
+  public void testGetKindEnum() throws IOException {
+    compile("enum Foo {  }");
+
+    assertSame(ElementKind.ENUM, elements.getTypeElement("Foo").getKind());
+  }
+
+  @Test
+  public void testGetKindInterface() throws IOException {
+    compile("interface Foo { }");
+
+    assertSame(ElementKind.INTERFACE, elements.getTypeElement("Foo").getKind());
   }
 
   @Test

@@ -27,6 +27,7 @@ import org.junit.runner.RunWith;
 import java.io.IOException;
 import java.util.List;
 
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeMirror;
@@ -57,6 +58,15 @@ public class TreeBackedTypeParameterElementTest extends CompilerTreeApiParameter
     TypeParameterElement typeParam = typeParameters.get(0);
 
     assertNameEquals("T", typeParam.getSimpleName());
+  }
+
+  @Test
+  public void testGetKind() throws IOException {
+    compile("class Foo<T> { }");
+
+    assertSame(
+        ElementKind.TYPE_PARAMETER,
+        elements.getTypeElement("Foo").getTypeParameters().get(0).getKind());
   }
 
   @Test

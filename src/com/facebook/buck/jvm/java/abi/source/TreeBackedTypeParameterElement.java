@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
@@ -41,7 +42,7 @@ class TreeBackedTypeParameterElement extends TreeBackedElement implements TypePa
   private List<TypeMirror> bounds;
 
   public TreeBackedTypeParameterElement(TypeParameterTree tree, Element enclosingElement) {
-    super(tree.getName(), enclosingElement);
+    super(ElementKind.TYPE_PARAMETER, tree.getName(), enclosingElement);
 
     this.tree = tree;
     typeVar = new StandaloneTypeVariable(this);

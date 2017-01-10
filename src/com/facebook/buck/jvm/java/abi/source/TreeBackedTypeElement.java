@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
@@ -46,10 +47,26 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
   private List<TreeBackedTypeParameterElement> typeParameters;
 
   TreeBackedTypeElement(ClassTree tree, Name qualifiedName) {
-    super(tree.getSimpleName(), null);  // TODO(jkeljo): Proper enclosing element
+    super(getElementKind(tree), tree.getSimpleName(), null);  // TODO(jkeljo): Proper enclosing
     this.tree = tree;
     this.qualifiedName = qualifiedName;
     typeMirror = new StandaloneDeclaredType(this);
+  }
+
+  private static ElementKind getElementKind(ClassTree tree) {
+    switch (tree.getKind()) {
+      case ANNOTATION_TYPE:
+        return ElementKind.ANNOTATION_TYPE;
+      case CLASS:
+        return ElementKind.CLASS;
+      case ENUM:
+        return ElementKind.ENUM;
+      case INTERFACE:
+        return ElementKind.INTERFACE;
+      // $CASES-OMITTED$
+      default:
+        throw new IllegalArgumentException(String.format("Unexpected kind: %s", tree.getKind()));
+    }
   }
 
   /* package */ void resolve(TreeBackedElements elements, TreeBackedTypes types) {
