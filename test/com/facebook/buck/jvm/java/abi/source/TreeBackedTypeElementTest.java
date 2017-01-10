@@ -19,17 +19,22 @@ package com.facebook.buck.jvm.java.abi.source;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
@@ -303,5 +308,21 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
 
     DeclaredType expectedSuperclass = types.getDeclaredType(listElement, tType);
     assertSameType(expectedSuperclass, fooElement.getSuperclass());
+  }
+
+  @Test
+  public void testEnclosedClasses() throws IOException {
+    compile(Joiner.on('\n').join(
+        "class Foo {",
+        "  class Bar { }",
+        "}"
+    ));
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    TypeElement barElement = elements.getTypeElement("Foo.Bar");
+
+    List<Element> enclosedElements = new ArrayList<>(fooElement.getEnclosedElements());
+    assertThat(enclosedElements, Matchers.hasItems(barElement));
+    assertSame(fooElement, barElement.getEnclosingElement());
   }
 }

@@ -46,11 +46,17 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
   @Nullable
   private List<TreeBackedTypeParameterElement> typeParameters;
 
-  TreeBackedTypeElement(ClassTree tree, Name qualifiedName) {
-    super(getElementKind(tree), tree.getSimpleName(), null);  // TODO(jkeljo): Proper enclosing
+  TreeBackedTypeElement(
+      @Nullable TreeBackedElement enclosingElement,
+      ClassTree tree,
+      Name qualifiedName) {
+    super(getElementKind(tree), tree.getSimpleName(), enclosingElement);
     this.tree = tree;
     this.qualifiedName = qualifiedName;
     typeMirror = new StandaloneDeclaredType(this);
+    if (enclosingElement != null) {
+      enclosingElement.addEnclosedElement(this);
+    }
   }
 
   private static ElementKind getElementKind(ClassTree tree) {

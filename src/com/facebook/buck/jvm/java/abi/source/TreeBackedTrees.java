@@ -48,7 +48,7 @@ class TreeBackedTrees extends Trees {
   private final Trees javacTrees;
   private final Map<Tree, TreeBackedElement> treeBackedElements = new HashMap<>();
   private final Map<TreeBackedElement, TreePath> elementPaths = new HashMap<>();
-  private final Map<TreeBackedElement, Scope> treeBackedScopes = new HashMap<>();
+  private final Map<Tree, TreeBackedScope> treeBackedScopes = new HashMap<>();
 
   public TreeBackedTrees(Trees javacTrees) {
     this.javacTrees = javacTrees;
@@ -150,28 +150,34 @@ class TreeBackedTrees extends Trees {
 
   @Override
   @Nullable
-  public Scope getScope(TreePath path) {
-    TreeBackedElement element = getElement(path);
-    if (element == null) {
-      return null;
-    }
+  public TreeBackedScope getScope(TreePath path) {
+    TreePath walker = path;
 
-    if (!treeBackedScopes.containsKey(element)) {
-      switch (element.getKind()) {
+    while (walker != null) {
+      final Tree leaf = walker.getLeaf();
+      switch (leaf.getKind()) {
         case ANNOTATION_TYPE:
-        case ENUM:
         case CLASS:
+        case ENUM:
         case INTERFACE:
-          treeBackedScopes.put(element, new TreeBackedClassScope((TreeBackedTypeElement) element));
-          break;
+          if (!treeBackedScopes.containsKey(leaf)) {
+            treeBackedScopes.put(
+                leaf,
+                new TreeBackedClassScope(
+                    getScope(walker.getParentPath()),
+                    (TreeBackedTypeElement) Preconditions.checkNotNull(getElement(walker))));
+          }
+          return treeBackedScopes.get(leaf);
         // $CASES-OMITTED$
         default:
-          throw new UnsupportedOperationException(
-              String.format("NYI for kind: %s", element.getKind()));
+          // Skip over other nodes
+          break;
       }
+
+      walker = walker.getParentPath();
     }
 
-    return treeBackedScopes.get(element);
+    return null;
   }
 
   @Override

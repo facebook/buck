@@ -19,6 +19,8 @@ package com.facebook.buck.jvm.java.abi.source;
 import com.facebook.buck.util.exportedfiles.Nullable;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -39,11 +41,17 @@ abstract class TreeBackedElement implements Element {
   private final Name simpleName;
   @Nullable
   private final Element enclosingElement;
+  private final List<Element> enclosedElements = new ArrayList<>();
 
-  public TreeBackedElement(ElementKind kind, Name simpleName, @Nullable Element enclosingElement) {
+  public TreeBackedElement(
+      ElementKind kind,
+      Name simpleName,
+      @Nullable TreeBackedElement enclosingElement) {
     this.kind = kind;
     this.simpleName = simpleName;
     this.enclosingElement = enclosingElement;
+    // Some element types don't appear as members of enclosingElement.getEnclosedElements, so
+    // it's up to each subtype's constructor to decide whether to add itself or not.
   }
 
   @Override
@@ -69,7 +77,11 @@ abstract class TreeBackedElement implements Element {
 
   @Override
   public List<? extends Element> getEnclosedElements() {
-    throw new UnsupportedOperationException();
+    return Collections.unmodifiableList(enclosedElements);
+  }
+
+  protected void addEnclosedElement(Element element) {
+    enclosedElements.add(element);
   }
 
   @Override

@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.testutil.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.sun.source.tree.Scope;
 
 import org.junit.Test;
@@ -68,6 +69,31 @@ public class TreeBackedScopeTest extends CompilerTreeApiParameterizedTest {
       // TODO(jkeljo): Do we need to for AP support?
       assertScopeContentsExactly(classScope, fooElement.getTypeParameters());
     }
+  }
+
+  @Test
+  public void testInnerClassScopeNestsWithinClassScope() throws IOException {
+    compile(Joiner.on('\n').join(
+        "class Foo<T,U> {",
+        "  class Bar<V> { }",
+        "}"
+    ));
+
+    TypeElement barElement = elements.getTypeElement("Foo.Bar");
+    Scope barScope = trees.getScope(trees.getPath(barElement));
+    assertSame(barElement, barScope.getEnclosingClass());
+    assertNull(barScope.getEnclosingMethod());
+    assertScopeContentsAtLeast(barScope, barElement.getTypeParameters());
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    Scope fooScope = trees.getScope(trees.getPath(fooElement));
+    Scope parentScope = barScope.getEnclosingScope();
+    // fooScope and parentScope are conceptually the same thing, but in the javac implementation
+    // you actually get different objects. Because we can't test that they're the same instance,
+    // we at least test that they behave the same.
+    assertEquals(
+        Lists.newArrayList(fooScope.getLocalElements()),
+        Lists.newArrayList(parentScope.getLocalElements()));
   }
 
   private void assertScopeContentsExactly(Scope scope, Collection<? extends Element> elements) {

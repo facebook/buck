@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.testutil.CompilerTreeApiParameterized;
@@ -199,5 +200,16 @@ public class TreeBackedTypeParameterElementTest extends CompilerTreeApiParameter
     assertSameType(charSequenceType, bounds.get(0));
     assertSameType(runnableType, bounds.get(1));
     assertSameType(closeableType, bounds.get(2));
+  }
+
+  @Test
+  public void testEnclosingElementDoesNotEnclose() throws IOException {
+    compile("class Foo<T> { }");
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    TypeParameterElement tElement = fooElement.getTypeParameters().get(0);
+
+    assertSame(fooElement, tElement.getEnclosingElement());
+    assertFalse(fooElement.getEnclosedElements().contains(tElement));
   }
 }

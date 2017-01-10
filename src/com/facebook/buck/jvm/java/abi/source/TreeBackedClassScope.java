@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.util.exportedfiles.Nullable;
 import com.facebook.buck.util.exportedfiles.Preconditions;
 
 import javax.lang.model.element.Element;
@@ -26,9 +27,10 @@ import javax.lang.model.element.TypeElement;
  * information found in a {@link TypeElement}
  */
 class TreeBackedClassScope extends TreeBackedScope {
-  public TreeBackedClassScope(TreeBackedTypeElement typeElement) {
-    // TODO(jkeljo): There should be an enclosing scope
-    super(null, typeElement);
+  public TreeBackedClassScope(
+      @Nullable TreeBackedScope enclosingScope,
+      TreeBackedTypeElement typeElement) {
+    super(enclosingScope, typeElement);
   }
 
   @Override

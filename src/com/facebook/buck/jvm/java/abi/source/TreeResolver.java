@@ -67,6 +67,7 @@ class TreeResolver {
   void enterTree(CompilationUnitTree compilationUnit) {
     try (BuckTracing.TraceSection t = BUCK_TRACING.traceSection("buck.abi.enterTree")) {
       new TreePathScanner<Void, Void>() {
+        TreeBackedElement enclosingElement;
         CharSequence scope;
 
         @Override
@@ -84,7 +85,7 @@ class TreeResolver {
           }
 
           TreeBackedTypeElement typeElement =
-              new TreeBackedTypeElement(node, qualifiedName);
+              new TreeBackedTypeElement(enclosingElement, node, qualifiedName);
 
           elements.enterTypeElement(typeElement);
 
@@ -93,11 +94,14 @@ class TreeResolver {
           ((TreeBackedTrees) trees).enterElement(getCurrentPath(), typeElement);
 
           CharSequence oldScope = scope;
+          TreeBackedElement oldEnclosingElement = enclosingElement;
           scope = typeElement.getQualifiedName();
+          enclosingElement = typeElement;
           try {
             return super.visitClass(node, aVoid);
           } finally {
             scope = oldScope;
+            enclosingElement = oldEnclosingElement;
           }
         }
 
