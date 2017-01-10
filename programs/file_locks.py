@@ -33,7 +33,7 @@ if os.name == 'posix':
                 return False
             raise
 else:
-    def _fcntl_with_exception_handling(f, lock_type):
+    def _fcntl_with_exception_handling(f, exclusive):
         return True
 
 
