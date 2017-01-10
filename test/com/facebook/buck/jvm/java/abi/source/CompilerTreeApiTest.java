@@ -108,12 +108,6 @@ public abstract class CompilerTreeApiTest {
     compilationUnits.forEach(tree -> treeResolver.enterTree(tree));
     treeResolver.resolve();
 
-    // Make sure we've got elements for things. Technically this is going a little further than
-    // the compiler ordinarily would by the time annotation processors get involved, but this
-    // shouldn't matter for interface-level things. If need be there's a private method we can
-    // reflect to to get more exact behavior.
-    javacTask.analyze();
-
     return compilationUnits;
   }
 }

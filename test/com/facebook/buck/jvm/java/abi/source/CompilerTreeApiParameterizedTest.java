@@ -57,20 +57,29 @@ public abstract class CompilerTreeApiParameterizedTest extends CompilerTreeApiTe
   protected Iterable<? extends CompilationUnitTree> compile(
       Map<String, String> fileNamesToContents,
       TaskListenerFactory taskListenerFactory) throws IOException {
-    final Iterable<? extends CompilationUnitTree> result =
-        super.compile(fileNamesToContents, taskListenerFactory);
+    final Iterable<? extends CompilationUnitTree> result;
 
     switch (implementation) {
       case JAVAC:
+        result = super.compile(fileNamesToContents, taskListenerFactory);
+        // Make sure we've got elements for things. Technically this is going a little further than
+        // the compiler ordinarily would by the time annotation processors get involved, but this
+        // shouldn't matter for interface-level things. If need be there's a private method we can
+        // reflect to to get more exact behavior.
+        javacTask.analyze();
+
         elements = javacElements;
         trees = javacTrees;
         types = javacTypes;
         break;
       case TREES:
+        result = super.compile(fileNamesToContents, taskListenerFactory);
         elements = treesElements;
         trees = treesTrees;
         types = treesTypes;
         break;
+      default:
+        throw new AssertionError();
     }
 
     return result;
