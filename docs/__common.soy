@@ -117,6 +117,22 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
   <header class='topbar'><nav class='width'>
       <a href='http://buckbuild.com/'><h1>Buck</h1></a>
       <ul class='menu'>
+      <li class="algolia-search-wrapper">
+        <input id="algolia-doc-search" type="search" placeholder="Search docs..." />
+      </li>
+      <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js">
+      </script>
+      <script>
+        // For Algolia search
+        (function() {lb}
+          // Algolia
+          docsearch({lb}
+            apiKey: 'c25b7174e8f6161ce5fdd44bb0b95081',
+            indexName: 'buckbuild',
+            inputSelector: '#algolia-doc-search',
+          {rb});
+        {rb}());
+      </script>
         <li><a href='{ROOT}setup/getting_started.html'>Getting Started</a>
         <li><a href='https://groups.google.com/forum/#!forum/buck-build'>Group</a>
         <li><a href='{ROOT}javadoc/'>API</a>
