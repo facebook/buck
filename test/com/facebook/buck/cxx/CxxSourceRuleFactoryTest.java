@@ -753,7 +753,10 @@ public class CxxSourceRuleFactoryTest {
 
       CxxPreprocessorInput cxxPreprocessorInput =
           CxxPreprocessorInput.builder()
-              .addSystemIncludeRoots(Paths.get("/tmp/sys"))
+              .addIncludes(
+                  CxxHeadersDir.of(
+                      CxxPreprocessables.IncludeType.SYSTEM,
+                      new FakeSourcePath("/tmp/sys")))
               .build();
 
       BuckConfig buckConfig = FakeBuckConfig.builder()

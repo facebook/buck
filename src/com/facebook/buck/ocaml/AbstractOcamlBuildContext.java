@@ -331,10 +331,6 @@ abstract class AbstractOcamlBuildContext implements RuleKeyAppendable {
                 Optional.empty(),
                 getCPreprocessor())));
 
-    for (Path includes : cxxPreprocessorInput.getSystemIncludeRoots()) {
-      compileFlags.add("-ccopt", "-isystem" + includes.toString());
-    }
-
     for (String cFlag : cxxPreprocessorInput.getPreprocessorFlags().get(CxxSource.Type.C)) {
       compileFlags.add("-ccopt", cFlag);
     }

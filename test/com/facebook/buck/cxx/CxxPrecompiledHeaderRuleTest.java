@@ -276,7 +276,10 @@ public class CxxPrecompiledHeaderRuleTest {
 
     CxxPreprocessorInput cxxPreprocessorInput =
         CxxPreprocessorInput.builder()
-            .addSystemIncludeRoots(Paths.get("/tmp/sys"))
+            .addIncludes(
+                CxxHeadersDir.of(
+                    CxxPreprocessables.IncludeType.SYSTEM,
+                    new FakeSourcePath("/tmp/sys")))
             .build();
 
     BuildTarget lib1Target = newTarget("//some/other/dir:lib1");

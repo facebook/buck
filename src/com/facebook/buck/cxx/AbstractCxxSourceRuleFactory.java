@@ -142,9 +142,7 @@ abstract class AbstractCxxSourceRuleFactory {
 
   @Value.Lazy
   protected ImmutableSet<Path> getSystemIncludeRoots() {
-    return getCxxPreprocessorInput().stream()
-        .flatMap(input -> input.getSystemIncludeRoots().stream())
-        .collect(MoreCollectors.toImmutableSet());
+    return ImmutableSet.of();
   }
 
   private final LoadingCache<CxxSource.Type, ImmutableList<String>> preprocessorFlags =

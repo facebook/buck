@@ -22,7 +22,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -30,7 +29,6 @@ import com.google.common.collect.Multimap;
 
 import org.immutables.value.Value;
 
-import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -53,20 +51,6 @@ abstract class AbstractCxxPreprocessorInput {
   // The build rules which produce headers found in the includes below.
   @Value.Parameter
   protected abstract ImmutableSet<BuildTarget> getRules();
-
-  // Include directories where system headers.
-  @Value.Parameter
-  public abstract ImmutableSet<Path> getSystemIncludeRoots();
-
-  @Value.Check
-  protected void validateAssumptions() {
-    for (Path root : getSystemIncludeRoots()) {
-      Preconditions.checkState(
-          root.isAbsolute(),
-          "Expected system include root to be absolute: %s",
-          root);
-    }
-  }
 
   public Iterable<BuildRule> getDeps(
       BuildRuleResolver ruleResolver,
@@ -98,22 +82,19 @@ abstract class AbstractCxxPreprocessorInput {
     ImmutableList.Builder<CxxHeaders> headers = ImmutableList.builder();
     ImmutableSet.Builder<FrameworkPath> frameworks = ImmutableSet.builder();
     ImmutableSet.Builder<BuildTarget> rules = ImmutableSet.builder();
-    ImmutableSet.Builder<Path> systemIncludeRoots = ImmutableSet.builder();
 
     for (CxxPreprocessorInput input : inputs) {
       preprocessorFlags.putAll(input.getPreprocessorFlags());
       headers.addAll(input.getIncludes());
       frameworks.addAll(input.getFrameworks());
       rules.addAll(input.getRules());
-      systemIncludeRoots.addAll(input.getSystemIncludeRoots());
     }
 
     return CxxPreprocessorInput.of(
         preprocessorFlags.build(),
         headers.build(),
         frameworks.build(),
-        rules.build(),
-        systemIncludeRoots.build());
+        rules.build());
   }
 
 }

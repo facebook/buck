@@ -175,7 +175,6 @@ public class CxxPreprocessablesTest {
         .addRules(cppDepTarget1)
         .putPreprocessorFlags(CxxSource.Type.C, "-Dtest=yes")
         .putPreprocessorFlags(CxxSource.Type.CXX, "-Dtest=yes")
-        .addSystemIncludeRoots(Paths.get("/usr/include"))
         .build();
     BuildTarget depTarget1 = BuildTargetFactory.newInstance(filesystem, "//:dep1");
     FakeCxxPreprocessorDep dep1 = createFakeCxxPreprocessorDep(depTarget1, pathResolver, input1);
@@ -186,7 +185,6 @@ public class CxxPreprocessablesTest {
         .addRules(cppDepTarget2)
         .putPreprocessorFlags(CxxSource.Type.C, "-DBLAH")
         .putPreprocessorFlags(CxxSource.Type.CXX, "-DBLAH")
-        .addSystemIncludeRoots(filesystem.resolve("test"))
         .build();
     BuildTarget depTarget2 = BuildTargetFactory.newInstance("//:dep2");
     FakeCxxPreprocessorDep dep2 = createFakeCxxPreprocessorDep(depTarget2, pathResolver, input2);

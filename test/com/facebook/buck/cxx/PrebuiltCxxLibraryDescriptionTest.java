@@ -50,7 +50,6 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.versions.Version;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -104,12 +103,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
         CXX_PLATFORM.getSharedLibraryExtension()));
   }
 
-  private static ImmutableList<Path> getIncludeDirs(PrebuiltCxxLibraryDescription.Arg arg) {
-    return arg.includeDirs.stream()
-        .map(TARGET.getBasePath()::resolve)
-        .collect(MoreCollectors.toImmutableList());
-  }
-
   private static ImmutableSet<BuildTarget> getInputRules(BuildRule buildRule) {
     return ImmutableSet.of(
         BuildTarget.builder()
@@ -139,16 +132,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder
         .build(resolver, filesystem, targetGraph);
     PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
-
-    // Verify the preprocessable input is as expected.
-    CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
-        .addAllSystemIncludeRoots(getIncludeDirs(arg))
-        .build();
-    assertThat(
-        lib.getCxxPreprocessorInput(
-            CXX_PLATFORM,
-            HeaderVisibility.PUBLIC),
-        Matchers.equalTo(expectedCxxPreprocessorInput));
 
     // Verify static native linkable input.
     NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
@@ -186,16 +169,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder
         .build(resolver, filesystem, targetGraph);
-    PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
-
-    // Verify the preprocessable input is as expected.
-    CxxPreprocessorInput expectedCxxPreprocessorInput =
-        CxxPreprocessorInput.builder()
-            .addAllSystemIncludeRoots(getIncludeDirs(arg))
-            .build();
-    assertThat(
-        lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC),
-        Matchers.equalTo(expectedCxxPreprocessorInput));
 
     // Verify static native linkable input.
     NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
@@ -228,14 +201,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder
         .build(resolver, filesystem, targetGraph);
     PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
-
-    // Verify the preprocessable input is as expected.
-    CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
-        .addAllSystemIncludeRoots(getIncludeDirs(arg))
-        .build();
-    assertThat(
-        lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC),
-        Matchers.equalTo(expectedCxxPreprocessorInput));
 
     // Verify shared native linkable input.
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
@@ -786,9 +751,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
         rule.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, HeaderVisibility.PUBLIC);
     assertThat(
         getHeaderNames(input.getIncludes()),
-        empty());
-    assertThat(
-        input.getSystemIncludeRoots(),
         empty());
     assertThat(
         ImmutableList.copyOf(input.getDeps(resolver, ruleFinder)),

@@ -1336,9 +1336,6 @@ public class CxxLibraryDescriptionTest {
         getHeaderNames(input.getIncludes()),
         empty());
     assertThat(
-        input.getSystemIncludeRoots(),
-        empty());
-    assertThat(
         ImmutableSortedSet.copyOf(input.getDeps(resolver, ruleFinder)),
         empty());
   }

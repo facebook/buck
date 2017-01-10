@@ -504,7 +504,6 @@ public class CxxGenruleDescription
           CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, sourceType));
       for (CxxPreprocessorInput input : transitivePreprocessorInput) {
         ppFlagsBuilder.addAllIncludes(input.getIncludes());
-        ppFlagsBuilder.addAllSystemIncludePaths(input.getSystemIncludeRoots());
         ppFlagsBuilder.addAllFrameworkPaths(input.getFrameworks());
         toolFlagsBuilder.addAllRuleFlags(input.getPreprocessorFlags().get(sourceType));
       }
