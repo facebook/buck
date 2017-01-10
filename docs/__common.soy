@@ -173,13 +173,22 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 {/template}
 
 /**
+ * @param currentnavid The navigation id of the loaded page
  * @param platform
  * @param rules
  */
 {template .platformBuildRuleLink}
     <li><strong>{$platform}</strong></li>
     {foreach $rule in $rules}
-        <li><a href="{ROOT}rule/{$rule}.html">{$rule}()</a>
+        {let $ruletext}
+          {$rule}()
+        {/let}
+        {call .navigationLink}
+          {param currentnavid: $currentnavid /}
+          {param folder: 'rule' /}
+          {param page: $rule /}
+          {param text: $ruletext /}
+        {/call}
     {/foreach}
 {/template}
 
@@ -429,58 +438,72 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
     // Ugh, closure doesn't have the concept of sorting, so we cannot control the order without
     // listing it ourselves.
     {call .platformBuildRuleLink}
+        {param currentnavid: $navid /}
         {param platform: 'Core' /}
         {param rules: $platformRulesMap['core'] /}
     {/call}
     {call .platformBuildRuleLink}
+        {param currentnavid: $navid /}
         {param platform: 'Android' /}
         {param rules: $platformRulesMap['android'] /}
     {/call}
     {call .platformBuildRuleLink}
+        {param currentnavid: $navid /}
         {param platform: 'CXX' /}
         {param rules: $platformRulesMap['cxx'] /}
     {/call}
     {call .platformBuildRuleLink}
+        {param currentnavid: $navid /}
         {param platform: 'D' /}
         {param rules: $platformRulesMap['d'] /}
     {/call}
     {call .platformBuildRuleLink}
+        {param currentnavid: $navid /}
         {param platform: 'Go' /}
         {param rules: $platformRulesMap['go'] /}
     {/call}
     {call .platformBuildRuleLink}
+        {param currentnavid: $navid /}
         {param platform: 'Groovy' /}
         {param rules: $platformRulesMap['groovy'] /}
     {/call}
     {call .platformBuildRuleLink}
+        {param currentnavid: $navid /}
         {param platform: 'Halide' /}
         {param rules: $platformRulesMap['halide'] /}
     {/call}
     {call .platformBuildRuleLink}
+        {param currentnavid: $navid /}
         {param platform: 'Haskell' /}
         {param rules: $platformRulesMap['haskell'] /}
     {/call}
     {call .platformBuildRuleLink}
+        {param currentnavid: $navid /}
         {param platform: 'iOS' /}
         {param rules: $platformRulesMap['ios'] /}
     {/call}
     {call .platformBuildRuleLink}
+        {param currentnavid: $navid /}
         {param platform: 'Java' /}
         {param rules: $platformRulesMap['java'] /}
     {/call}
     {call .platformBuildRuleLink}
+        {param currentnavid: $navid /}
         {param platform: 'Lua' /}
         {param rules: $platformRulesMap['lua'] /}
     {/call}
     {call .platformBuildRuleLink}
+        {param currentnavid: $navid /}
         {param platform: 'Python' /}
         {param rules: $platformRulesMap['python'] /}
     {/call}
     {call .platformBuildRuleLink}
+        {param currentnavid: $navid /}
         {param platform: 'Rust' /}
         {param rules: $platformRulesMap['rust'] /}
     {/call}
     {call .platformBuildRuleLink}
+        {param currentnavid: $navid /}
         {param platform: '.Net' /}
         {param rules: $platformRulesMap['dotnet'] /}
     {/call}
