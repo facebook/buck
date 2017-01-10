@@ -49,11 +49,12 @@ public abstract class CompilerTreeApiTest {
   @Rule
   public TemporaryFolder tempFolder = new TemporaryFolder();
   protected JavacTask javacTask;
-  protected Trees trees;
   protected Elements javacElements;
+  protected Trees javacTrees;
   protected Types javacTypes;
   protected TreeResolver treeResolver;
   protected TreeBackedElements treesElements;
+  protected Trees treesTrees;
   protected TreeBackedTypes treesTypes;
 
   protected final void initCompiler() throws IOException {
@@ -95,11 +96,12 @@ public abstract class CompilerTreeApiTest {
       javacTask.setTaskListener(taskListenerFactory.newTaskListener(javacTask));
     }
 
-    trees = Trees.instance(javacTask);
+    javacTrees = Trees.instance(javacTask);
     javacElements = javacTask.getElements();
     javacTypes = javacTask.getTypes();
-    treeResolver = new TreeResolver(javacTask.getElements());
+    treeResolver = new TreeResolver(javacTrees, javacTask.getElements());
     treesElements = treeResolver.getElements();
+    treesTrees = treeResolver.getTrees();
     treesTypes = treeResolver.getTypes();
 
     final Iterable<? extends CompilationUnitTree> compilationUnits = javacTask.parse();

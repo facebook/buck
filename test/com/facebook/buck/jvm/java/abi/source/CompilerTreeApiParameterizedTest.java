@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.util.Trees;
 
 import org.junit.runners.Parameterized;
 
@@ -44,6 +45,7 @@ public abstract class CompilerTreeApiParameterizedTest extends CompilerTreeApiTe
   @Parameterized.Parameter
   public String implementation;
   protected Elements elements;
+  protected Trees trees;
   protected Types types;
 
   @Parameterized.Parameters
@@ -61,10 +63,12 @@ public abstract class CompilerTreeApiParameterizedTest extends CompilerTreeApiTe
     switch (implementation) {
       case JAVAC:
         elements = javacElements;
+        trees = javacTrees;
         types = javacTypes;
         break;
       case TREES:
         elements = treesElements;
+        trees = treesTrees;
         types = treesTypes;
         break;
     }

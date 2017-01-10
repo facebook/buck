@@ -26,6 +26,7 @@ import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.source.util.TreeScanner;
+import com.sun.source.util.Trees;
 
 import javax.lang.model.element.Name;
 import javax.lang.model.util.Elements;
@@ -42,15 +43,21 @@ import javax.lang.model.util.Elements;
 class TreeResolver {
   private static final BuckTracing BUCK_TRACING = BuckTracing.getInstance("TreeResolver");
   private final TreeBackedElements elements;
+  private final Trees trees;
   private final TreeBackedTypes types;
 
-  public TreeResolver(Elements javacElements) {
+  public TreeResolver(Trees javacTrees, Elements javacElements) {
     elements = new TreeBackedElements(javacElements);
+    trees = new TreeBackedTrees(javacTrees);
     types = new TreeBackedTypes(elements);
   }
 
   public TreeBackedElements getElements() {
     return elements;
+  }
+
+  public Trees getTrees() {
+    return trees;
   }
 
   public TreeBackedTypes getTypes() {

@@ -54,7 +54,7 @@ public class ValidatingTaskListener
     // We can't do this on construction, because the Task might not be fully initialized yet
     if (trees == null) {
       trees = Trees.instance(javacTask);
-      treeResolver = new TreeResolver(javacTask.getElements());
+      treeResolver = new TreeResolver(trees, javacTask.getElements());
       validator = new ExpressionTreeResolutionValidator(javacTask, treeResolver);
     }
   }
