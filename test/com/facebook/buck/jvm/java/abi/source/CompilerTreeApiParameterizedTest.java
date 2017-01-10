@@ -27,7 +27,9 @@ import java.io.IOException;
 import java.util.Map;
 
 import javax.lang.model.element.Name;
+import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
@@ -68,6 +70,14 @@ public abstract class CompilerTreeApiParameterizedTest extends CompilerTreeApiTe
     }
 
     return result;
+  }
+
+  protected TypeMirror getTypeParameterUpperBound(String typeName, int typeParameterIndex) {
+    TypeParameterElement typeParameter =
+        elements.getTypeElement(typeName).getTypeParameters().get(typeParameterIndex);
+    TypeVariable typeVariable = (TypeVariable) typeParameter.asType();
+
+    return typeVariable.getUpperBound();
   }
 
   protected void assertNameEquals(String expected, Name actual) {

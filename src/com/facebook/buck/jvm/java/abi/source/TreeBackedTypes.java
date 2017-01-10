@@ -35,6 +35,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
+import javax.lang.model.type.IntersectionType;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.NullType;
 import javax.lang.model.type.PrimitiveType;
@@ -89,6 +90,8 @@ class TreeBackedTypes implements Types {
         return isSameType((DeclaredType) t1, (DeclaredType) t2);
       case TYPEVAR:
         return isSameType((TypeVariable) t1, (TypeVariable) t2);
+      case INTERSECTION:
+        return isSameType((IntersectionType) t1, (IntersectionType) t2);
       case ARRAY:
         return isSameType(((ArrayType) t1).getComponentType(), ((ArrayType) t2).getComponentType());
       //$CASES-OMITTED$
@@ -131,6 +134,33 @@ class TreeBackedTypes implements Types {
     // capture conversion, but we don't support capture conversion yet (or maybe ever).
 
     return true;
+  }
+
+  private boolean isSameType(IntersectionType t1, IntersectionType t2) {
+    List<? extends TypeMirror> t1Bounds = t1.getBounds();
+    List<? extends TypeMirror> t2Bounds = t2.getBounds();
+    if (t1Bounds.size() != t2Bounds.size()) {
+      return false;
+    }
+
+    for (TypeMirror t1Bound : t1Bounds) {
+      if (!listContainsType(t2Bounds, t1Bound)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private boolean listContainsType(List<? extends TypeMirror> list, TypeMirror type) {
+    boolean found = false;
+    for (TypeMirror t2Bound : list) {
+      if (isSameType(type, t2Bound)) {
+        found = true;
+        break;
+      }
+    }
+    return found;
   }
 
   @Override

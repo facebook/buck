@@ -25,8 +25,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.type.IntersectionType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
@@ -78,6 +80,54 @@ public class StandaloneTypeVariableTest extends CompilerTreeApiParameterizedTest
   @Test
   public void testToStringUnbounded() throws IOException {
     compile("class Foo<T> { }");
+
+    TypeVariable typeVariable =
+        (TypeVariable) elements.getTypeElement("Foo").getTypeParameters().get(0).asType();
+
+    assertEquals("T", typeVariable.toString());
+  }
+
+  @Test
+  public void testGetUpperBoundMultipleBounds() throws IOException {
+    compile("class Foo<T extends java.lang.CharSequence & java.lang.Runnable> { }");
+
+    TypeMirror charSequenceType = elements.getTypeElement("java.lang.CharSequence").asType();
+    TypeMirror runnableType = elements.getTypeElement("java.lang.Runnable").asType();
+
+    TypeVariable tVar =
+        (TypeVariable) elements.getTypeElement("Foo").getTypeParameters().get(0).asType();
+
+    IntersectionType upperBound = (IntersectionType) tVar.getUpperBound();
+
+    List<? extends TypeMirror> bounds = upperBound.getBounds();
+    assertSame(2, bounds.size());
+    assertSameType(charSequenceType, bounds.get(0));
+    assertSameType(runnableType, bounds.get(1));
+  }
+
+  @Test
+  public void testGetLowerBoundMultipleBounds() throws IOException {
+    compile("class Foo<T extends java.lang.Runnable & java.lang.CharSequence> { }");
+
+    TypeVariable tVar =
+        (TypeVariable) elements.getTypeElement("Foo").getTypeParameters().get(0).asType();
+
+    assertSameType(types.getNullType(), tVar.getLowerBound());
+  }
+
+  @Test
+  public void testToStringBounded() throws IOException {
+    compile("class Foo<T extends java.lang.CharSequence> { }");
+
+    TypeVariable typeVariable =
+        (TypeVariable) elements.getTypeElement("Foo").getTypeParameters().get(0).asType();
+
+    assertEquals("T", typeVariable.toString());
+  }
+
+  @Test
+  public void testToStringMultipleBounds() throws IOException {
+    compile("class Foo<T extends java.lang.CharSequence & java.lang.Runnable> { }");
 
     TypeVariable typeVariable =
         (TypeVariable) elements.getTypeElement("Foo").getTypeParameters().get(0).asType();

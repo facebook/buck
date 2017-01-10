@@ -33,6 +33,7 @@ import java.io.IOException;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.IntersectionType;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
@@ -247,5 +248,92 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
     TypeMirror barT = elements.getTypeElement("Bar").getTypeParameters().get(0).asType();
 
     assertNotSameType(fooT, barT);
+  }
+
+  @Test
+  public void testIsSameTypeBoundedTypeVariable() throws IOException {
+    // TODO(jkeljo): Uncomment this when we support superclasses parameterized by the type var
+    /*compile(Joiner.on('\n').join(
+        "class Foo<T extends java.lang.CharSequence & java.lang.Runnable>",
+        "    extends java.util.ArrayList<T>{ }"));
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    TypeMirror t1 = fooElement.getTypeParameters().get(0).asType();
+    TypeMirror t2 = ((DeclaredType) fooElement.getSuperclass()).getTypeArguments().get(0);
+
+    assertSameType(t1, t2);*/
+  }
+
+  @Test
+  public void testIsSameTypeIntersectionType() throws IOException {
+    compile(Joiner.on('\n').join(
+        "class Foo<T extends java.lang.CharSequence & java.lang.Runnable> { }",
+        "class Bar<T extends java.lang.CharSequence & java.lang.Runnable> { }"
+    ));
+
+    IntersectionType fooType = (IntersectionType) getTypeParameterUpperBound("Foo", 0);
+    IntersectionType barType = (IntersectionType) getTypeParameterUpperBound("Bar", 0);
+
+    assertSameType(fooType, barType);
+  }
+
+  @Test
+  public void testIsNotSameTypeIntersectionTypeDifferentSize() throws IOException {
+    compile(Joiner.on('\n').join(
+        "class Foo<T extends java.lang.CharSequence & java.lang.Runnable> { }",
+        "class Bar<T extends java.lang.CharSequence & java.lang.Runnable & java.io.Closeable> { }"
+    ));
+
+    IntersectionType fooType = (IntersectionType) getTypeParameterUpperBound("Foo", 0);
+    IntersectionType barType = (IntersectionType) getTypeParameterUpperBound("Bar", 0);
+
+    assertNotSameType(fooType, barType);
+  }
+
+  @Test
+  public void testIsNotSameTypeIntersectionTypeDifferentSizeReversed() throws IOException {
+    compile(Joiner.on('\n').join(
+        "class Foo<T extends java.lang.CharSequence & java.lang.Runnable & java.io.Closeable> { }",
+        "class Bar<T extends java.lang.CharSequence & java.lang.Runnable> { }"
+    ));
+
+    IntersectionType fooType = (IntersectionType) getTypeParameterUpperBound("Foo", 0);
+    IntersectionType barType = (IntersectionType) getTypeParameterUpperBound("Bar", 0);
+
+    assertNotSameType(fooType, barType);
+  }
+
+  /**
+   * We're not exactly sure why intersection types with the same bounds but in a different order
+   * are considered the same type; after all, they can have different erasures. However, the javac
+   * implementation behaves that way, so we must as well.
+   *
+   * The relevant JLS8 sections are 4.4 and 4.9, if any future person wants to go see if they
+   * can grok why this behavior is correct.
+   */
+  @Test
+  public void testIsSameTypeIntersectionTypeDifferentOrder() throws IOException {
+    compile(Joiner.on('\n').join(
+        "class Foo<T extends java.lang.CharSequence & java.lang.Runnable> { }",
+        "class Bar<T extends java.lang.Runnable & java.lang.CharSequence> { }"
+    ));
+
+    IntersectionType fooType = (IntersectionType) getTypeParameterUpperBound("Foo", 0);
+    IntersectionType barType = (IntersectionType) getTypeParameterUpperBound("Bar", 0);
+
+    assertSameType(fooType, barType);
+  }
+
+  @Test
+  public void testIsNotSameTypeIntersectionTypeDifferentContents() throws IOException {
+    compile(Joiner.on('\n').join(
+        "class Foo<T extends java.lang.CharSequence & java.lang.Runnable> { }",
+        "class Bar<T extends java.lang.CharSequence & java.io.Closeable> { }"
+    ));
+
+    IntersectionType fooType = (IntersectionType) getTypeParameterUpperBound("Foo", 0);
+    IntersectionType barType = (IntersectionType) getTypeParameterUpperBound("Bar", 0);
+
+    assertNotSameType(fooType, barType);
   }
 }
