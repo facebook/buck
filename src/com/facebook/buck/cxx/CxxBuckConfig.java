@@ -86,6 +86,13 @@ public class CxxBuckConfig {
   }
 
   /**
+   * @return the environment in which {@link BuckConfig} was created.
+   */
+  public ImmutableMap<String, String> getEnvironment() {
+    return delegate.getEnvironment();
+  }
+
+  /**
    * @return the {@link BuildTarget} which represents the gtest library.
    */
   public BuildTarget getGtestDep() {

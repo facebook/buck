@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.apple.clang.HeaderMap;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -38,6 +39,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 import org.junit.Before;
@@ -69,8 +71,7 @@ public class CxxCompilationDatabaseIntegrationTest {
   @Parameterized.Parameter(0)
   public boolean sandboxSources;
 
-  private static final String COMPILER_PATH =
-      Platform.detect() == Platform.MACOS ? "/usr/bin/clang++" : "/usr/bin/g++";
+  private static final String COMPILER_PATH;
   private static final ImmutableList<String> COMPILER_SPECIFIC_FLAGS =
       Platform.detect() == Platform.MACOS ?
           ImmutableList.of(
@@ -90,6 +91,13 @@ public class CxxCompilationDatabaseIntegrationTest {
 
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
+
+  static {
+    String executable = Platform.detect() == Platform.MACOS ? "clang++" : "g++";
+    COMPILER_PATH = new ExecutableFinder()
+        .getOptionalExecutable(Paths.get(executable), ImmutableMap.copyOf(System.getenv()))
+        .orElse(Paths.get("/usr/bin/", executable)).toString();
+  }
 
   @Before
   public void initializeWorkspace() throws IOException {

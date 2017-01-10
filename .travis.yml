@@ -2,8 +2,8 @@ language: java
 jdk:
   - oraclejdk8
 
-# Required to update /usr/bin/gcc symlink
-sudo: required
+# Enable container-based architecture.
+sudo: false
 
 addons:
   apt:
@@ -25,9 +25,10 @@ addons:
       - oracle-java8-installer
 
 before_install:
-  - sudo rm -f /usr/bin/gcc /usr/bin/g++
-  - sudo ln -s /usr/bin/gcc-4.7 /usr/bin/gcc
-  - sudo ln -s /usr/bin/g++-4.7 /usr/bin/g++
+  - mkdir travis-cxx
+  - ln -s /usr/bin/gcc-4.7 travis-cxx/gcc
+  - ln -s /usr/bin/g++-4.7 travis-cxx/g++
+  - export PATH=$(pwd)/travis-cxx:$PATH
   # Limit Ant's and Buck's memory usage to avoid the OOM killer.
   - export ANT_OPTS='-Xmx500m'
   - export BUCK_EXTRA_JAVA_ARGS='-Xmx500m'
