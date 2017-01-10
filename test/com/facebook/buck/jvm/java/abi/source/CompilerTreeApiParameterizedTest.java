@@ -99,4 +99,12 @@ public abstract class CompilerTreeApiParameterizedTest extends CompilerTreeApiTe
       fail(String.format("Expected different types, but both were: %s", expected));
     }
   }
+
+  protected boolean testingJavac() {
+    return implementation == JAVAC;
+  }
+
+  protected boolean testingTrees() {
+    return implementation == TREES;
+  }
 }

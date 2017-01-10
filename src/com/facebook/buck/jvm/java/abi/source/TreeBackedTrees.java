@@ -48,6 +48,7 @@ class TreeBackedTrees extends Trees {
   private final Trees javacTrees;
   private final Map<Tree, TreeBackedElement> treeBackedElements = new HashMap<>();
   private final Map<TreeBackedElement, TreePath> elementPaths = new HashMap<>();
+  private final Map<TreeBackedElement, Scope> treeBackedScopes = new HashMap<>();
 
   public TreeBackedTrees(Trees javacTrees) {
     this.javacTrees = javacTrees;
@@ -138,7 +139,7 @@ class TreeBackedTrees extends Trees {
 
   @Override
   @Nullable
-  public Element getElement(TreePath path) {
+  public TreeBackedElement getElement(TreePath path) {
     return treeBackedElements.get(path.getLeaf());
   }
 
@@ -148,8 +149,29 @@ class TreeBackedTrees extends Trees {
   }
 
   @Override
+  @Nullable
   public Scope getScope(TreePath path) {
-    throw new UnsupportedOperationException();
+    TreeBackedElement element = getElement(path);
+    if (element == null) {
+      return null;
+    }
+
+    if (!treeBackedScopes.containsKey(element)) {
+      switch (element.getKind()) {
+        case ANNOTATION_TYPE:
+        case ENUM:
+        case CLASS:
+        case INTERFACE:
+          treeBackedScopes.put(element, new TreeBackedClassScope((TreeBackedTypeElement) element));
+          break;
+        // $CASES-OMITTED$
+        default:
+          throw new UnsupportedOperationException(
+              String.format("NYI for kind: %s", element.getKind()));
+      }
+    }
+
+    return treeBackedScopes.get(element);
   }
 
   @Override
