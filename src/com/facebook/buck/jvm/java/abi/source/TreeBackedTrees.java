@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.exportedfiles.Nullable;
+import com.facebook.buck.util.exportedfiles.Preconditions;
 import com.sun.source.tree.CatchTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
@@ -26,6 +27,9 @@ import com.sun.source.tree.Tree;
 import com.sun.source.util.SourcePositions;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -42,9 +46,23 @@ import javax.tools.Diagnostic;
  */
 class TreeBackedTrees extends Trees {
   private final Trees javacTrees;
+  private final Map<Tree, TreeBackedElement> treeBackedElements = new HashMap<>();
+  private final Map<TreeBackedElement, TreePath> elementPaths = new HashMap<>();
 
   public TreeBackedTrees(Trees javacTrees) {
     this.javacTrees = javacTrees;
+  }
+
+  /* package */ void enterElement(TreePath path, TreeBackedElement element) {
+    if (treeBackedElements.containsKey(path.getLeaf())) {
+      throw new AssertionError();
+    }
+    treeBackedElements.put(path.getLeaf(), element);
+
+    if (elementPaths.containsKey(element)) {
+      throw new AssertionError();
+    }
+    elementPaths.put(element, path);
   }
 
   @Override
@@ -53,18 +71,25 @@ class TreeBackedTrees extends Trees {
   }
 
   @Override
+  @Nullable
   public Tree getTree(Element element) {
-    throw new UnsupportedOperationException();
+    TreePath path = getPath(element);
+    if (path == null) {
+      return null;
+    }
+    return path.getLeaf();
   }
 
   @Override
+  @Nullable
   public ClassTree getTree(TypeElement element) {
-    throw new UnsupportedOperationException();
+    return (ClassTree) getTree((Element) element);
   }
 
   @Override
+  @Nullable
   public MethodTree getTree(ExecutableElement method) {
-    throw new UnsupportedOperationException();
+    return (MethodTree) getTree((Element) method);
   }
 
   @Override
@@ -83,8 +108,22 @@ class TreeBackedTrees extends Trees {
   }
 
   @Override
+  @Nullable
   public TreePath getPath(Element e) {
-    throw new UnsupportedOperationException();
+    if (e instanceof TreeBackedElement) {
+      return Preconditions.checkNotNull(elementPaths.get(e));
+    }
+
+    TreePath result = javacTrees.getPath(e);
+    if (result != null) {
+      // If we've properly hidden all the javac implementations of things, the only way a caller
+      // should be able to get a non-`TreeBackedElement` is by looking at classes on the classpath.
+      // Those come from .class files, and thus by definition do not have ASTs.
+
+      throw new AssertionError(String.format("Leaked a javac element for: %s", e));
+    }
+
+    return null;
   }
 
   @Override
@@ -98,8 +137,9 @@ class TreeBackedTrees extends Trees {
   }
 
   @Override
+  @Nullable
   public Element getElement(TreePath path) {
-    throw new UnsupportedOperationException();
+    return treeBackedElements.get(path.getLeaf());
   }
 
   @Override

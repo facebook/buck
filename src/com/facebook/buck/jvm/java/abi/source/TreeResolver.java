@@ -25,7 +25,7 @@ import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.SimpleTreeVisitor;
-import com.sun.source.util.TreeScanner;
+import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
 
 import javax.lang.model.element.Name;
@@ -64,9 +64,9 @@ class TreeResolver {
     return types;
   }
 
-  void enterTree(CompilationUnitTree tree) {
+  void enterTree(CompilationUnitTree compilationUnit) {
     try (BuckTracing.TraceSection t = BUCK_TRACING.traceSection("buck.abi.enterTree")) {
-      tree.accept(new TreeScanner<Void, Void>() {
+      new TreePathScanner<Void, Void>() {
         CharSequence scope;
 
         @Override
@@ -83,9 +83,14 @@ class TreeResolver {
             qualifiedName = elements.getName(String.format("%s.%s", scope, qualifiedName));
           }
 
-          TreeBackedTypeElement typeElement = new TreeBackedTypeElement(node, qualifiedName);
+          TreeBackedTypeElement typeElement =
+              new TreeBackedTypeElement(node, qualifiedName);
 
           elements.enterTypeElement(typeElement);
+
+          // We have to cast trees here because typing it properly in the field results in test
+          // failures due to the class loader hackery required to make tests run.
+          ((TreeBackedTrees) trees).enterElement(getCurrentPath(), typeElement);
 
           CharSequence oldScope = scope;
           scope = typeElement.getQualifiedName();
@@ -113,7 +118,7 @@ class TreeResolver {
           // there might be anonymous classes there and those are not part of the ABI
           return null;
         }
-      }, null);
+      }.scan(compilationUnit, null);
     }
   }
 
