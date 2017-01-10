@@ -19,6 +19,7 @@ package com.facebook.buck.js;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.shell.WorkerJobParams;
 import com.facebook.buck.shell.WorkerShellStep;
+import com.facebook.buck.shell.WorkerProcessPoolFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -36,7 +37,6 @@ public class ReactNativeDepsWorkerStep extends WorkerShellStep {
       Path entryFile,
       Path outputFile) {
     super(
-        filesystem,
         Optional.of(
             WorkerJobParams.of(
                 filesystem.resolve(tmpDir),
@@ -55,7 +55,8 @@ public class ReactNativeDepsWorkerStep extends WorkerShellStep {
                 Optional.empty(),
                 Optional.empty())),
         Optional.empty(),
-        Optional.empty());
+        Optional.empty(),
+        new WorkerProcessPoolFactory(filesystem));
   }
 
   @Override

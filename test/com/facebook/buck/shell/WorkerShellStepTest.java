@@ -74,10 +74,10 @@ public class WorkerShellStepTest {
       @Nullable WorkerJobParams bashParams,
       @Nullable WorkerJobParams cmdExeParams) {
     return new WorkerShellStep(
-        new FakeProjectFilesystem(),
         Optional.ofNullable(cmdParams),
         Optional.ofNullable(bashParams),
-        Optional.ofNullable(cmdExeParams));
+        Optional.ofNullable(cmdExeParams),
+        new WorkerProcessPoolFactory(new FakeProjectFilesystem()));
   }
 
   private WorkerJobParams createJobParams() {
@@ -267,7 +267,7 @@ public class WorkerShellStepTest {
 
     WorkerShellStep step = createWorkerShellStep(cmdParams, null, cmdExeParams);
     assertThat(
-        step.getCommand(Platform.LINUX),
+        step.getFactory().getCommand(Platform.LINUX, cmdParams),
         Matchers.equalTo(
             ImmutableList.of(
                 "/bin/bash",
@@ -275,7 +275,7 @@ public class WorkerShellStepTest {
                 "-c",
                 "command --platform unix-like")));
     assertThat(
-        step.getCommand(Platform.WINDOWS),
+        step.getFactory().getCommand(Platform.WINDOWS, cmdExeParams),
         Matchers.equalTo(
             ImmutableList.of(
                 "cmd.exe",
@@ -411,14 +411,15 @@ public class WorkerShellStepTest {
   @Test
   public void testGetEnvironmentForProcess() {
     WorkerShellStep step = new WorkerShellStep(
-        new FakeProjectFilesystem(),
-        Optional.of(createJobParams(
-            ImmutableList.of(),
-            "",
-            ImmutableMap.of("BAK", "chicken"),
-            "$FOO $BAR $BAZ $BAK")),
+        Optional.of(
+            createJobParams(
+                ImmutableList.of(),
+                "",
+                ImmutableMap.of("BAK", "chicken"),
+                "$FOO $BAR $BAZ $BAK")),
         Optional.empty(),
-        Optional.empty()) {
+        Optional.empty(),
+        new WorkerProcessPoolFactory(new FakeProjectFilesystem())) {
 
       @Override
       protected ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
@@ -436,7 +437,10 @@ public class WorkerShellStepTest {
                 "BAZ", "baz_expanded"))
         .build();
 
-    Map<String, String> processEnv = Maps.newHashMap(step.getEnvironmentForProcess(context));
+    Map<String, String> processEnv = Maps.newHashMap(
+        step.getFactory().getEnvironmentForProcess(
+            context,
+            step.getWorkerJobParamsToUse(Platform.UNKNOWN)));
     processEnv.remove("TMP");
     assertThat(
         processEnv,
@@ -463,23 +467,23 @@ public class WorkerShellStepTest {
     class WorkerShellStepWithFakeProcesses extends WorkerShellStep {
       WorkerShellStepWithFakeProcesses(WorkerJobParams jobParams) {
         super(
-            new FakeProjectFilesystem(),
             Optional.ofNullable(jobParams),
             Optional.empty(),
-            Optional.empty());
-      }
-
-      @Override
-      WorkerProcess createWorkerProcess(
-          ProcessExecutorParams processParams,
-          ExecutionContext context,
-          Path tmpDir) throws IOException {
-        try {
-          sleep(5);
-        } catch (InterruptedException e) {
-          throw new RuntimeException(e);
-        }
-        return new FakeWorkerProcess(jobResults);
+            Optional.empty(),
+            new WorkerProcessPoolFactory(new FakeProjectFilesystem()) {
+              @Override
+              WorkerProcess createWorkerProcess(
+                  ProcessExecutorParams processParams,
+                  ExecutionContext context,
+                  Path tmpDir) throws IOException {
+                try {
+                  sleep(5);
+                } catch (InterruptedException e) {
+                  throw new RuntimeException(e);
+                }
+                return new FakeWorkerProcess(jobResults);
+              }
+            });
       }
     }
 

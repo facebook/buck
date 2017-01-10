@@ -40,15 +40,23 @@ java_library(
 )
 
 java_immutables_library(
-  name = 'worker',
+  name = 'worker_job_params',
   srcs = [
     'AbstractWorkerJobParams.java',
-    'DefaultWorkerTool.java',
-    'WorkerShellStep.java',
-    'WorkerToolDescription.java',
   ],
   immutable_types = [
     'WorkerJobParams',
+  ],
+  autodeps = True,
+  visibility = ['PUBLIC'],
+)
+
+java_library(
+  name = 'worker',
+  srcs = [
+    'DefaultWorkerTool.java',
+    'WorkerShellStep.java',
+    'WorkerToolDescription.java',
   ],
   tests = [
     '//test/com/facebook/buck/shell:shell',
@@ -64,6 +72,15 @@ java_library(
   ],
   tests = [
     '//test/com/facebook/buck/shell:shell',
+  ],
+  autodeps = True,
+  visibility = ['PUBLIC'],
+)
+
+java_library(
+  name = 'worker_pool_factory',
+  srcs = [
+    'WorkerProcessPoolFactory.java',
   ],
   autodeps = True,
   visibility = ['PUBLIC'],

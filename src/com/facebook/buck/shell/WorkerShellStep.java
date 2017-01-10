@@ -17,43 +17,31 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-import com.google.common.hash.HashCode;
-import com.google.common.hash.Hashing;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class WorkerShellStep implements Step {
 
-  private ProjectFilesystem filesystem;
   private Optional<WorkerJobParams> cmdParams;
   private Optional<WorkerJobParams> bashParams;
   private Optional<WorkerJobParams> cmdExeParams;
+  private WorkerProcessPoolFactory factory;
 
   /**
    * Creates new shell step that uses worker process to delegate work. If platform-specific params
    * are present they are used in favor of universal params.
-   * @param filesystem File system.
    * @param cmdParams Universal, platform independent params, something that would work for both
    *                  Linux/macOS and Windows platforms.
    * @param bashParams Used in Linux/macOS environment, specifies the arguments that are passed into
@@ -62,14 +50,14 @@ public class WorkerShellStep implements Step {
    *                     cmd.exe (Windows shell).
    */
   public WorkerShellStep(
-      ProjectFilesystem filesystem,
       Optional<WorkerJobParams> cmdParams,
       Optional<WorkerJobParams> bashParams,
-      Optional<WorkerJobParams> cmdExeParams) {
-    this.filesystem = filesystem;
+      Optional<WorkerJobParams> cmdExeParams,
+      WorkerProcessPoolFactory factory) {
     this.cmdParams = cmdParams;
     this.bashParams = bashParams;
     this.cmdExeParams = cmdExeParams;
+    this.factory = factory;
   }
 
   @Override
@@ -78,8 +66,9 @@ public class WorkerShellStep implements Step {
     WorkerProcess process = null;
     try {
       // Use the process's startup command as the key.
-      pool = getWorkerProcessPool(context);
-      process = pool.borrowWorkerProcess(); // blocks until a WorkerProcess becomes available
+      WorkerJobParams paramsToUse = getWorkerJobParamsToUse(context.getPlatform());
+      pool = factory.getWorkerProcessPool(context, paramsToUse);
+      process = pool.borrowWorkerProcess();
       WorkerJobResult result = process.submitAndWaitForJob(getExpandedJobArgs(context));
       Verbosity verbosity = context.getVerbosity();
       if (result.getStdout().isPresent() && !result.getStdout().get().isEmpty() &&
@@ -102,94 +91,6 @@ public class WorkerShellStep implements Step {
         pool.returnWorkerProcess(process);
       }
     }
-  }
-
-  /**
-   * Returns an existing WorkerProcessPool for the given key if one exists, else creates a new one.
-   */
-  private WorkerProcessPool getWorkerProcessPool(final ExecutionContext context) {
-    WorkerJobParams paramsToUse = getWorkerJobParamsToUse(context.getPlatform());
-
-    ConcurrentMap<String, WorkerProcessPool> processPoolMap;
-    final String key;
-    final HashCode workerHash;
-    if (paramsToUse.getPersistentWorkerKey().isPresent() &&
-        context.getPersistentWorkerPools().isPresent()) {
-      processPoolMap = context.getPersistentWorkerPools().get();
-      key = paramsToUse.getPersistentWorkerKey().get();
-      workerHash = paramsToUse.getWorkerHash().get();
-    } else {
-      processPoolMap = context.getWorkerProcessPools();
-      key = Joiner.on(' ').join(getCommand(context.getPlatform()));
-      workerHash = Hashing.sha1().hashString(key, Charsets.UTF_8);
-    }
-
-    // If the worker pool has a different hash, recreate the pool.
-    WorkerProcessPool pool = processPoolMap.get(key);
-    if (pool != null && !pool.getPoolHash().equals(workerHash)) {
-      if (processPoolMap.remove(key, pool)) {
-        pool.close();
-      }
-      pool = processPoolMap.get(key);
-    }
-
-    if (pool == null) {
-      final ProcessExecutorParams processParams = ProcessExecutorParams.builder()
-          .setCommand(getCommand(context.getPlatform()))
-          .setEnvironment(getEnvironmentForProcess(context))
-          .setDirectory(filesystem.getRootPath())
-          .build();
-
-      final Path workerTmpDir = paramsToUse.getTempDir();
-      final AtomicInteger workerNumber = new AtomicInteger(0);
-
-      WorkerProcessPool newPool = new WorkerProcessPool(
-          paramsToUse.getMaxWorkers(), workerHash) {
-        @Override
-        protected WorkerProcess startWorkerProcess() throws IOException {
-          Path tmpDir = workerTmpDir.resolve(Integer.toString(workerNumber.getAndIncrement()));
-          filesystem.mkdirs(tmpDir);
-
-          WorkerProcess process = createWorkerProcess(processParams, context, tmpDir);
-          process.ensureLaunchAndHandshake();
-          return process;
-        }
-      };
-      WorkerProcessPool previousPool = processPoolMap.putIfAbsent(key, newPool);
-      // If putIfAbsent does not return null, then that means another thread beat this thread
-      // into putting an WorkerProcessPool in the map for this key. If that's the case, then we
-      // should ignore newPool and return the existing one.
-      pool = previousPool == null ? newPool : previousPool;
-    }
-
-    int poolCapacity = pool.getCapacity();
-    if (poolCapacity != paramsToUse.getMaxWorkers()) {
-      context.postEvent(ConsoleEvent.warning(
-          "There are two 'worker_tool' targets declared with the same command (%s), but " +
-              "different 'max_worker' settings (%d and %d). Only the first capacity is applied. " +
-              "Consolidate these workers to avoid this warning.",
-          key,
-          poolCapacity,
-          paramsToUse.getMaxWorkers()));
-    }
-
-    return pool;
-  }
-
-  @VisibleForTesting
-  ImmutableList<String> getCommand(Platform platform) {
-    ImmutableList<String> executionArgs = platform == Platform.WINDOWS ?
-        ImmutableList.of("cmd.exe", "/c") :
-        ImmutableList.of("/bin/bash", "-e", "-c");
-
-    WorkerJobParams paramsToUse = this.getWorkerJobParamsToUse(platform);
-    return ImmutableList.<String>builder()
-        .addAll(executionArgs)
-        .add(FluentIterable.from(paramsToUse.getStartupCommand())
-              .transform(Escaper.SHELL_ESCAPER)
-              .append(paramsToUse.getStartupArgs())
-              .join(Joiner.on(' ')))
-        .build();
   }
 
   @VisibleForTesting
@@ -245,38 +146,24 @@ public class WorkerShellStep implements Step {
     return ImmutableMap.of();
   }
 
-  @VisibleForTesting
-  ImmutableMap<String, String> getEnvironmentForProcess(ExecutionContext context) {
-    Path tmpDir = getWorkerJobParamsToUse(context.getPlatform()).getTempDir();
-
-    Map<String, String> envVars = Maps.newHashMap(context.getEnvironment());
-    envVars.put("TMP", filesystem.resolve(tmpDir).toString());
-    envVars.putAll(getWorkerJobParamsToUse(context.getPlatform()).getStartupEnvironment());
-    return ImmutableMap.copyOf(envVars);
-  }
-
-  @VisibleForTesting
-  WorkerProcess createWorkerProcess(
-      ProcessExecutorParams processParams,
-      ExecutionContext context,
-      Path tmpDir) throws IOException {
-    return new WorkerProcess(
-        context.getProcessExecutor(),
-        processParams,
-        filesystem,
-        tmpDir);
-  }
-
   @Override
   public String getShortName() {
     return "worker";
+  }
+
+  @VisibleForTesting
+  WorkerProcessPoolFactory getFactory() {
+    return factory;
   }
 
   @Override
   public final String getDescription(ExecutionContext context) {
     return String.format("Sending job with args \'%s\' to the process started with \'%s\'",
         getExpandedJobArgs(context),
-        FluentIterable.from(getCommand(context.getPlatform()))
+        FluentIterable.from(
+            factory.getCommand(
+                context.getPlatform(),
+                getWorkerJobParamsToUse(context.getPlatform())))
             .transform(Escaper.SHELL_ESCAPER)
             .join(Joiner.on(' ')));
   }

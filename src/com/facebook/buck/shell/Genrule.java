@@ -277,10 +277,10 @@ public class Genrule extends AbstractBuildRule
 
   public WorkerShellStep createWorkerShellStep() {
     return new WorkerShellStep(
-        getProjectFilesystem(),
         convertToWorkerJobParams(cmd),
         convertToWorkerJobParams(bash),
-        convertToWorkerJobParams(cmdExe)) {
+        convertToWorkerJobParams(cmdExe),
+        new WorkerProcessPoolFactory(getProjectFilesystem())) {
       @Override
       protected ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
         ImmutableMap.Builder<String, String> envVarBuilder = ImmutableMap.builder();

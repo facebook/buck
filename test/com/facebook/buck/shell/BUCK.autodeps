@@ -18,6 +18,8 @@
       "//src/com/facebook/buck/shell:rules",
       "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/shell:worker",
+      "//src/com/facebook/buck/shell:worker_job_params",
+      "//src/com/facebook/buck/shell:worker_pool_factory",
       "//src/com/facebook/buck/shell:worker_process",
       "//src/com/facebook/buck/shell:worker_tool",
       "//src/com/facebook/buck/step:step",

@@ -45,6 +45,11 @@ public abstract class WorkerProcessPool {
     this.poolHash = poolHash;
   }
 
+  /**
+   * If there are available workers, returns one. Otherwise blocks until one becomes available and
+   * returns it. You must free worker process by calling {@link #returnWorkerProcess(WorkerProcess)}
+   * method after you finish using it.
+   */
   public WorkerProcess borrowWorkerProcess()
       throws IOException, InterruptedException {
     WorkerProcess workerProcess = availableWorkers.poll(0, TimeUnit.SECONDS);
