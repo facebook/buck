@@ -28,10 +28,12 @@ import org.junit.runner.RunWith;
 import java.io.IOException;
 import java.util.List;
 
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.SimpleElementVisitor8;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class TreeBackedTypeParameterElementTest extends CompilerTreeApiParameterizedTest {
@@ -68,6 +70,29 @@ public class TreeBackedTypeParameterElementTest extends CompilerTreeApiParameter
     assertSame(
         ElementKind.TYPE_PARAMETER,
         elements.getTypeElement("Foo").getTypeParameters().get(0).getKind());
+  }
+
+  @Test
+  public void testAccept() throws IOException {
+    compile("class Foo<T> { }");
+
+    TypeParameterElement expectedTypeParameter =
+        elements.getTypeElement("Foo").getTypeParameters().get(0);
+    Object expectedResult = new Object();
+    Object actualResult = expectedTypeParameter.accept(new SimpleElementVisitor8<Object, Object>() {
+      @Override
+      protected Object defaultAction(Element e, Object o) {
+        return null;
+      }
+
+      @Override
+      public Object visitTypeParameter(TypeParameterElement actualTypeParameter, Object o) {
+        assertSame(expectedTypeParameter, actualTypeParameter);
+        return o;
+      }
+    }, expectedResult);
+
+    assertSame(expectedResult, actualResult);
   }
 
   @Test

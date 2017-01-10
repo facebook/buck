@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
@@ -80,6 +81,11 @@ class TreeBackedTypeParameterElement extends TreeBackedElement implements TypePa
   @Override
   public List<? extends TypeMirror> getBounds() {
     return Preconditions.checkNotNull(bounds);
+  }
+
+  @Override
+  public <R, P> R accept(ElementVisitor<R, P> v, P p) {
+    return v.visitTypeParameter(this, p);
   }
 
   @Override

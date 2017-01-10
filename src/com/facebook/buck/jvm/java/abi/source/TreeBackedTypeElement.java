@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
@@ -141,6 +142,11 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
   @Override
   public List<? extends TypeParameterElement> getTypeParameters() {
     return Preconditions.checkNotNull(typeParameters);
+  }
+
+  @Override
+  public <R, P> R accept(ElementVisitor<R, P> v, P p) {
+    return v.visitType(this, p);
   }
 
   @Override

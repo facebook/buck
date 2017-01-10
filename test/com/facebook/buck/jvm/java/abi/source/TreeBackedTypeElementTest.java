@@ -43,6 +43,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.SimpleElementVisitor8;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest {
@@ -101,6 +102,28 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
     compile("interface Foo { }");
 
     assertSame(ElementKind.INTERFACE, elements.getTypeElement("Foo").getKind());
+  }
+
+  @Test
+  public void testAccept() throws IOException {
+    compile("class Foo { }");
+
+    TypeElement expectedType = elements.getTypeElement("Foo");
+    Object expectedResult = new Object();
+    Object actualResult = expectedType.accept(new SimpleElementVisitor8<Object, Object>() {
+      @Override
+      protected Object defaultAction(Element e, Object o) {
+        return null;
+      }
+
+      @Override
+      public Object visitType(TypeElement actualType, Object o) {
+        assertSame(expectedType, actualType);
+        return o;
+      }
+    }, expectedResult);
+
+    assertSame(expectedResult, actualResult);
   }
 
   @Test
