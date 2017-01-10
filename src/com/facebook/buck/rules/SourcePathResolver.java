@@ -116,13 +116,6 @@ public class SourcePathResolver {
         .collect(MoreCollectors.toImmutableSortedSet());
   }
 
-  public ImmutableSortedSet<Path> getAllRelativePaths(
-      Collection<? extends SourcePath> sourcePaths) {
-    return sourcePaths.stream()
-        .map(this::getRelativePath)
-        .collect(MoreCollectors.toImmutableSortedSet());
-  }
-
   /**
    * @return The {@link Path} the {@code sourcePath} refers to, relative to its owning
    * {@link com.facebook.buck.io.ProjectFilesystem}.

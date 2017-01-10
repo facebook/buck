@@ -44,6 +44,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.base.Suppliers;
@@ -111,7 +112,9 @@ public class AndroidBinaryTest {
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     androidBinary.addProguardCommands(
-        pathResolver.getAllRelativePaths(packageableCollection.getClasspathEntriesToDex()),
+        packageableCollection.getClasspathEntriesToDex().stream()
+            .map(pathResolver::getRelativePath)
+            .collect(MoreCollectors.toImmutableSet()),
         pathResolver.getAllAbsolutePaths(packageableCollection.getProguardConfigs()),
         false,
         commands,
