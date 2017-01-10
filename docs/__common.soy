@@ -538,7 +538,12 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
   </ul>
   <h3>Commands</h3>
   <ul>
-    <li><a href="{ROOT}command/common_parameters.html">Common Parameters</a>
+    {call .navigationLink}
+      {param currentnavid: $navid /}
+      {param folder: 'command' /}
+      {param page: 'common_parameters' /}
+      {param text: 'Common Parameters' /}
+    {/call}
     {foreach $command in [
         'audit',
         'autodeps',
@@ -557,9 +562,22 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
         'test',
         'uninstall',
         ]}
-      <li><a href="{ROOT}command/{$command}.html">buck {$command}</a>
+      {let $commandtext}
+        buck {$command}
+      {/let}
+      {call .navigationLink}
+        {param currentnavid: $navid /}
+        {param folder: 'command' /}
+        {param page: $command /}
+        {param text: $commandtext /}
+      {/call}
     {/foreach}
-    <li><a href="{ROOT}command/buckd.html">buckd</a>
+    {call .navigationLink}
+      {param currentnavid: $navid /}
+      {param folder: 'command' /}
+      {param page: 'buckd' /}
+      {param text: 'buckd' /}
+    {/call}
   </ul>
   <h3>Extending Buck</h3>
   <ul>
