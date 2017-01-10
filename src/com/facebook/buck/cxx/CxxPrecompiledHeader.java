@@ -85,7 +85,6 @@ public class CxxPrecompiledHeader
 
   private final DebugPathSanitizer compilerSanitizer;
   private final DebugPathSanitizer assemblerSanitizer;
-  private final SourcePathResolver pathResolver;
 
   public CxxPrecompiledHeader(
       BuildRuleParams buildRuleParams,
@@ -99,7 +98,6 @@ public class CxxPrecompiledHeader
       DebugPathSanitizer compilerSanitizer,
       DebugPathSanitizer assemblerSanitizer) {
     super(buildRuleParams, pathResolver);
-    this.pathResolver = pathResolver;
     this.preprocessorDelegate = preprocessorDelegate;
     this.compilerDelegate = compilerDelegate;
     this.compilerFlags = compilerFlags;
@@ -204,7 +202,7 @@ public class CxxPrecompiledHeader
                 ImmutableList.copyOf(
                     CxxToolFlags.explicitBuilder()
                         .addAllRuleFlags(getCxxIncludePaths().getFlags(
-                            pathResolver,
+                            resolver,
                             preprocessorDelegate.getPreprocessor()))
                         .addAllRuleFlags(preprocessorDelegate.getArguments(
                             compilerFlags,
