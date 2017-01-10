@@ -28,6 +28,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -49,6 +50,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.annotation.Nullable;
 
 public class ProjectBuildFileParserPoolTest {
 
@@ -254,13 +257,16 @@ public class ProjectBuildFileParserPoolTest {
 
       futures = scheduleWork(cell, parserPool, executorService, 5);
       for (ListenableFuture<?> future : futures) {
-        Futures.transform(
+        Futures.addCallback(
             future,
-            new Function<Object, Object>() {
+            new FutureCallback<Object>() {
               @Override
-              public Object apply(Object input) {
+              public void onSuccess(@Nullable Object result) {
                 postCloseWork.incrementAndGet();
-                return null;
+              }
+
+              @Override
+              public void onFailure(Throwable t) {
               }
             });
       }
