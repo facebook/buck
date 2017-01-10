@@ -986,7 +986,13 @@
     </exec>
   </target>
 
-  <target name="travis" depends="verify-javadoc, lint" />
+  <target name="verify-soydoc"
+          description="verify that soy docs can be generated without errors">
+    <exec executable="${basedir}/docs/soy_syntax_check.py" failonerror="true">
+    </exec>
+  </target>
+
+  <target name="travis" depends="verify-javadoc, verify-soydoc, lint" />
 
   <target name="pre-checkin" depends="clean, default, compile-tests, lint"/>
   <target name="all" depends="jar, test, javadoc" />
