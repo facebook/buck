@@ -581,8 +581,18 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
   </ul>
   <h3>Extending Buck</h3>
   <ul>
-    <li><a href="{ROOT}extending/macros.html">Custom Macros</a>
-    <li><a href="{ROOT}extending/rules.html">Custom Rules</a>
+    {call .navigationLink}
+      {param currentnavid: $navid /}
+      {param folder: 'extending' /}
+      {param page: 'macros' /}
+      {param text: 'Custom Macros' /}
+    {/call}
+    {call .navigationLink}
+      {param currentnavid: $navid /}
+      {param folder: 'extending' /}
+      {param page: 'rules' /}
+      {param text: 'Custom Rules' /}
+    {/call}
   </ul>
 {/template}
 
