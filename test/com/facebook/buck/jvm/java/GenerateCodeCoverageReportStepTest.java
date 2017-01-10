@@ -16,8 +16,10 @@
 
 package com.facebook.buck.jvm.java;
 
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.MorePathsForTests;
@@ -45,7 +47,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
@@ -70,7 +72,7 @@ public class  GenerateCodeCoverageReportStepTest {
   public void setUp() throws Exception {
     filesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
 
-    jarFiles = new HashSet<>();
+    jarFiles = new LinkedHashSet<>();
     File jarFile = new File(tmp.getRoot(), "foo.jar");
     File jar2File = new File(tmp.getRoot(), "foo2.jar");
     try (InputStream jarIn = getClass()
@@ -172,29 +174,35 @@ public class  GenerateCodeCoverageReportStepTest {
       }
     }
 
-    Properties expected = new Properties();
-    expected.setProperty(
-        "jacoco.output.dir",
-        absolutifyPath(Paths.get(OUTPUT_DIRECTORY)));
-    expected.setProperty("jacoco.exec.data.file", "jacoco.exec");
-    expected.setProperty("jacoco.format", "html");
-    expected.setProperty("jacoco.title", "TitleFoo");
-    expected.setProperty(
-        "classes.dir",
-        String.format(
-            "%s:%s",
-            absolutifyPath(Paths.get("foo/bar")),
-            absolutifyPath(Paths.get("foo/bar2"))));
-    expected.setProperty(
-        "src.dir",
-        String.format(
-            "%s:%s",
-            MorePathsForTests.rootRelativePath(
-                "/absolute/path/to/parentDirectory1/src").toString(),
-            MorePathsForTests.rootRelativePath(
-                "/absolute/path/to/parentDirectory2/src").toString()));
+    assertEquals(
+        absolutifyPath(Paths.get(OUTPUT_DIRECTORY)),
+        actual.getProperty("jacoco.output.dir"));
 
-    assertEqual(expected, actual);
+    assertEquals("jacoco.exec", actual.getProperty("jacoco.exec.data.file"));
+    assertEquals("html", actual.getProperty("jacoco.format"));
+    assertEquals("TitleFoo", actual.getProperty("jacoco.title"));
+    assertEquals(String.format(
+                     "%s:%s",
+                     absolutifyPath(Paths.get("foo/bar")),
+                     absolutifyPath(Paths.get("foo/bar2"))),
+                 actual.getProperty("classes.dir"));
+    assertEquals(String.format(
+                     "%s:%s",
+                     absolutifyPath(Paths.get("foo/bar")),
+                     absolutifyPath(Paths.get("foo/bar2"))),
+                 actual.getProperty("classes.dir"));
+
+    assertThat(
+        actual.getProperty("classes.jars"),
+        matchesPattern("^.*foo.jar:.*foo2.jar$"));
+
+    assertEquals(String.format(
+                     "%s:%s",
+                     MorePathsForTests.rootRelativePath(
+                         "/absolute/path/to/parentDirectory1/src").toString(),
+                     MorePathsForTests.rootRelativePath(
+                         "/absolute/path/to/parentDirectory2/src").toString()),
+                 actual.getProperty("src.dir"));
   }
 
   private static String absolutifyPath(Path relativePath) {
@@ -203,16 +211,5 @@ public class  GenerateCodeCoverageReportStepTest {
         new File(".").getAbsoluteFile().toPath().normalize(),
         File.separatorChar,
         relativePath);
-  }
-
-  private static void assertEqual(Properties expected, Properties actual) {
-    final Set<String> actualKeys = actual.stringPropertyNames();
-    final Set<String> expectedKeys = expected.stringPropertyNames();
-
-    assertEquals(expectedKeys, actualKeys);
-
-    for (String key : expectedKeys) {
-      assertEquals(expected.getProperty(key), actual.getProperty(key));
-    }
   }
 }

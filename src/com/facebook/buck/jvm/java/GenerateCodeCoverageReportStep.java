@@ -133,10 +133,10 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
     properties.setProperty("jacoco.title", title);
 
     properties.setProperty(
-        "classes.dir", Joiner.on(":").join(
-            Iterables.transform(
-                extractedClassesDirectories,
-                filesystem::resolve)));
+        "classes.jars", formatPathSet(jarFiles));
+
+    properties.setProperty(
+        "classes.dir", formatPathSet(extractedClassesDirectories));
     properties.setProperty("src.dir", Joiner.on(":").join(sourceDirectories));
 
     if (coverageIncludes.isPresent()) {
@@ -150,6 +150,13 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
     try (Writer writer = new OutputStreamWriter(outputStream, "utf8")) {
       properties.store(writer, "Parameters for Jacoco report generator.");
     }
+  }
+
+  private String formatPathSet(Set<Path> paths) {
+    return Joiner.on(":").join(
+            Iterables.transform(
+                paths,
+                filesystem::resolve));
   }
 
   @Override
