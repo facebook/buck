@@ -16,7 +16,6 @@
 
 package com.facebook.buck.testutil;
 
-import static org.junit.Assert.fail;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -29,9 +28,9 @@ public class MoreAssertsTest {
   private void expectFail(Iterable<?> a, Iterable<?> b) {
     try {
       MoreAsserts.assertIterablesEquals(a, b);
-      fail("Expected failure from: a=" + a + "; b=" + b);
-    } catch (AssertionError e) {
-      // OK
+      // Must throw something other than an AssertionError:
+      throw new RuntimeException("Expected failure from: a=" + a + "; b=" + b);
+    } catch (AssertionError expected) {
     }
   }
 
