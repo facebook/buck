@@ -519,9 +519,22 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
         'read_config',
         'subdir_glob',
         ]}
-      <li><a href="{ROOT}function/{$function}.html">{$function}()</a>
+      {let $functiontext}
+        {$function}()
+      {/let}
+      {call .navigationLink}
+        {param currentnavid: $navid /}
+        {param folder: 'function' /}
+        {param page: $function /}
+        {param text: $functiontext /}
+      {/call}
     {/foreach}
-    <li><a href="{ROOT}function/string_parameter_macros.html">String Parameter Macros</a>
+    {call .navigationLink}
+      {param currentnavid: $navid /}
+      {param folder: 'function' /}
+      {param page: 'string_parameter_macros' /}
+      {param text: 'String Parameter Macros' /}
+    {/call}
   </ul>
   <h3>Commands</h3>
   <ul>
