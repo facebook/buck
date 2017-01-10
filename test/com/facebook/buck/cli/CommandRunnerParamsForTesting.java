@@ -21,6 +21,7 @@ import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
+import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.listener.BroadcastEventListener;
@@ -95,7 +96,7 @@ public class CommandRunnerParamsForTesting {
                 androidDirectoryResolver,
                 new AndroidBuckConfig(FakeBuckConfig.builder().build(), platform),
                 eventBus))
-        .setArtifactCache(artifactCache)
+        .setArtifactCacheFactory(new SingletonArtifactCacheFactory(artifactCache))
         .setBuckEventBus(eventBus)
         .setParser(
             new Parser(

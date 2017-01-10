@@ -64,6 +64,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
   public static final ThriftProtocol PROTOCOL = ThriftProtocol.COMPACT;
 
   private final String hybridThriftEndpoint;
+  private final boolean distributedBuildModeEnabled;
 
   public ThriftArtifactCache(NetworkCacheArgs args) {
     super(args);
@@ -71,6 +72,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         args.getThriftEndpointPath().isPresent(),
         "Hybrid thrift endpoint path is mandatory for the ThriftArtifactCache.");
     this.hybridThriftEndpoint = args.getThriftEndpointPath().orElse("");
+    this.distributedBuildModeEnabled = args.distributedBuildModeEnabled();
   }
 
   @Override
@@ -86,6 +88,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     fetchRequest.setRuleKey(thriftRuleKey);
     fetchRequest.setRepository(repository);
     fetchRequest.setScheduleType(scheduleType);
+    fetchRequest.setDistributedBuildModeEnabled(distributedBuildModeEnabled);
 
     BuckCacheRequest cacheRequest = new BuckCacheRequest();
     cacheRequest.setType(BuckCacheRequestType.FETCH);
@@ -194,7 +197,12 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     };
 
     BuckCacheStoreRequest storeRequest = new BuckCacheStoreRequest();
-    ArtifactMetadata artifactMetadata = infoToMetadata(info, artifact, repository, scheduleType);
+    ArtifactMetadata artifactMetadata = infoToMetadata(
+        info,
+        artifact,
+        repository,
+        scheduleType,
+        distributedBuildModeEnabled);
     storeRequest.setMetadata(artifactMetadata);
     PayloadInfo payloadInfo = new PayloadInfo();
     long artifactSizeBytes = artifact.size();
@@ -254,7 +262,11 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
   }
 
   private static ArtifactMetadata infoToMetadata(
-      ArtifactInfo info, ByteSource file, String repository, String scheduleType)
+      ArtifactInfo info,
+      ByteSource file,
+      String repository,
+      String scheduleType,
+      boolean distributedBuildModeEnabled)
       throws IOException {
     ArtifactMetadata metadata = new ArtifactMetadata();
     if (info.getBuildTarget().isPresent()) {
@@ -276,6 +288,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     metadata.setArtifactPayloadMd5(ThriftArtifactCacheProtocol.computeMd5Hash(file));
     metadata.setRepository(repository);
     metadata.setScheduleType(scheduleType);
+    metadata.setDistributedBuildModeEnabled(distributedBuildModeEnabled);
 
     return metadata;
   }

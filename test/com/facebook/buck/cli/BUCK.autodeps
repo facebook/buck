@@ -19,6 +19,7 @@
       "//src/com/facebook/buck/apple:rules",
       "//src/com/facebook/buck/apple/project_generator:project_generator",
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
+      "//src/com/facebook/buck/artifact_cache:config",
       "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/command:command",
@@ -115,6 +116,7 @@
   "testutil" : {
     "deps" : [
       "//src/com/facebook/buck/android:rules",
+      "//src/com/facebook/buck/artifact_cache:config",
       "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/event/listener:BroadcastEventListener",
       "//src/com/facebook/buck/parser:config",

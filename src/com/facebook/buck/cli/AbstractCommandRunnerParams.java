@@ -16,7 +16,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
-import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
@@ -57,7 +57,7 @@ public interface AbstractCommandRunnerParams {
 
   VersionedTargetGraphCache getVersionedTargetGraphCache();
 
-  ArtifactCache getArtifactCache();
+  ArtifactCacheFactory getArtifactCacheFactory();
 
   Parser getParser();
 

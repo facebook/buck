@@ -690,7 +690,7 @@ public class BuildCommand extends AbstractCommand {
       WeightedListeningExecutorService executor)
       throws IOException, InterruptedException {
 
-    ArtifactCache artifactCache = params.getArtifactCache();
+    ArtifactCache artifactCache = params.getArtifactCacheFactory().newInstance(useDistributedBuild);
     if (isArtifactCacheDisabled()) {
       artifactCache = new NoopArtifactCache();
     }

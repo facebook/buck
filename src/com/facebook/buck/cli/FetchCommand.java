@@ -121,7 +121,7 @@ public class FetchCommand extends BuildCommand {
               actionGraphAndResolver.getResolver(),
               params.getBuckConfig().getKeySeed(),
               cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo()),
-          params.getArtifactCache(),
+          params.getArtifactCacheFactory().newInstance(),
           params.getConsole(),
           params.getBuckEventBus(),
           Optional.empty(),

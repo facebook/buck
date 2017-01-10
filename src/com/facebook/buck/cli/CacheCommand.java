@@ -103,7 +103,7 @@ public class CacheCommand extends AbstractCommand {
       Files.createDirectories(outputPath.get());
     }
 
-    ArtifactCache cache = params.getArtifactCache();
+    ArtifactCache cache = params.getArtifactCacheFactory().newInstance();
 
     List<RuleKey> ruleKeys = new ArrayList<>();
     for (String hash : arguments) {

@@ -37,12 +37,13 @@ public class ArtifactCachesTest {
         "mode = http");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
-    ArtifactCache artifactCache = ArtifactCaches.newInstance(
+    ArtifactCache artifactCache = new ArtifactCaches(
         cacheConfig,
         buckEventBus,
         projectFilesystem,
         Optional.empty(),
-        MoreExecutors.newDirectExecutorService());
+        MoreExecutors.newDirectExecutorService(),
+        Optional.empty()).newInstance();
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(HttpArtifactCache.class));
   }
 
@@ -53,12 +54,13 @@ public class ArtifactCachesTest {
         "mode = dir");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
-    ArtifactCache artifactCache = ArtifactCaches.newInstance(
+    ArtifactCache artifactCache = new ArtifactCaches(
         cacheConfig,
         buckEventBus,
         projectFilesystem,
         Optional.empty(),
-        MoreExecutors.newDirectExecutorService());
+        MoreExecutors.newDirectExecutorService(),
+        Optional.empty()).newInstance();
 
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(DirArtifactCache.class));
   }
@@ -70,12 +72,13 @@ public class ArtifactCachesTest {
         "mode = dir, http");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
-    ArtifactCache artifactCache = ArtifactCaches.newInstance(
+    ArtifactCache artifactCache = new ArtifactCaches(
         cacheConfig,
         buckEventBus,
         projectFilesystem,
         Optional.empty(),
-        MoreExecutors.newDirectExecutorService());
+        MoreExecutors.newDirectExecutorService(),
+        Optional.empty()).newInstance();
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(MultiArtifactCache.class));
   }
 
@@ -87,12 +90,13 @@ public class ArtifactCachesTest {
         "blacklisted_wifi_ssids = weevil, evilwifi");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
-    ArtifactCache artifactCache = ArtifactCaches.newInstance(
+    ArtifactCache artifactCache = new ArtifactCaches(
         cacheConfig,
         buckEventBus,
         projectFilesystem,
         Optional.of("evilwifi"),
-        MoreExecutors.newDirectExecutorService());
+        MoreExecutors.newDirectExecutorService(),
+        Optional.empty()).newInstance();
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(DirArtifactCache.class));
   }
 

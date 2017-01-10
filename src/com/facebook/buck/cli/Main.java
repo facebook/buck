@@ -1106,13 +1106,15 @@ public final class Main {
 
           buildEventBus.register(HANG_MONITOR.getHangMonitor());
 
-          ArtifactCache artifactCache = asyncCloseable.closeAsync(
-              ArtifactCaches.newInstance(
-                  cacheBuckConfig,
-                  buildEventBus,
-                  filesystem,
-                  executionEnvironment.getWifiSsid(),
-                  httpWriteExecutorService));
+
+          ArtifactCaches artifactCacheFactory = new ArtifactCaches(
+              cacheBuckConfig,
+              buildEventBus,
+              filesystem,
+              executionEnvironment.getWifiSsid(),
+              httpWriteExecutorService,
+              Optional.of(asyncCloseable)
+          );
 
           ProgressEstimator progressEstimator =
               new ProgressEstimator(
@@ -1286,7 +1288,7 @@ public final class Main {
                   .setStdIn(stdIn)
                   .setCell(rootCell)
                   .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)
-                  .setArtifactCache(artifactCache)
+                  .setArtifactCacheFactory(artifactCacheFactory)
                   .setBuckEventBus(buildEventBus)
                   .setParser(parser)
                   .setPlatform(platform)

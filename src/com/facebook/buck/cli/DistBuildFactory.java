@@ -75,7 +75,7 @@ public abstract class DistBuildFactory {
             .setBuckEventBus(params.getBuckEventBus())
             .setPlatform(params.getPlatform())
             .setClock(params.getClock())
-            .setArtifactCache(params.getArtifactCache())
+            .setArtifactCache(params.getArtifactCacheFactory().newInstance(true))
             .setState(state)
             .setObjectMapper(params.getObjectMapper())
             .setRootCell(params.getCell())

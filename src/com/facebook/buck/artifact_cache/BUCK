@@ -1,4 +1,5 @@
 PUBLIC_API_SOURCES = [
+  'ArtifactCacheFactory.java',
   'AbstractArtifactInfo.java',
   'AbstractCacheResult.java',
   'AbstractNetworkCacheArgs.java',
@@ -54,13 +55,11 @@ java_immutables_library(
 CONFIG_SOURCES = [
   'ArtifactCacheBuckConfig.java',
   'ArtifactCaches.java',
+  'SingletonArtifactCacheFactory.java',
 ]
 java_immutables_library(
   name = 'config',
-  srcs = [
-    'ArtifactCacheBuckConfig.java',
-    'ArtifactCaches.java',
-  ],
+  srcs = CONFIG_SOURCES,
   immutable_types = [
     'DirCacheEntry',
     'HttpCacheEntry',

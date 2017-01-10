@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
+import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -117,7 +118,7 @@ public class CleanCommandTest extends EasyMockSupport {
         .setStdIn(new ByteArrayInputStream("".getBytes("UTF-8")))
         .setCell(cell)
         .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)
-        .setArtifactCache(new NoopArtifactCache())
+        .setArtifactCacheFactory(new SingletonArtifactCacheFactory(new NoopArtifactCache()))
         .setBuckEventBus(BuckEventBusFactory.newInstance())
         .setParser(createMock(Parser.class))
         .setPlatform(Platform.detect())

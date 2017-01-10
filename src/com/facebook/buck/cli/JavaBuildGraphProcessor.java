@@ -173,7 +173,7 @@ final class JavaBuildGraphProcessor {
               .setEventBus(eventBus)
               .build())
           .setClock(params.getClock())
-          .setArtifactCache(params.getArtifactCache())
+          .setArtifactCache(params.getArtifactCacheFactory().newInstance())
           .setBuildId(eventBus.getBuildId())
           .setObjectMapper(params.getObjectMapper())
           .setEnvironment(executionContext.getEnvironment())

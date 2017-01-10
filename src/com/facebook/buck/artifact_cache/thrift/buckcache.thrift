@@ -28,6 +28,7 @@ struct ArtifactMetadata {
   5: optional string artifactPayloadCrc32;  // DEPRECATED: Will be removed soon.
   6: optional string scheduleType;
   7: optional string artifactPayloadMd5;
+  8: optional bool distributedBuildModeEnabled;
 }
 
 struct BuckCacheStoreRequest {
@@ -45,6 +46,7 @@ struct BuckCacheFetchRequest {
   1: optional RuleKey ruleKey;
   2: optional string repository;
   3: optional string scheduleType;
+  4: optional bool distributedBuildModeEnabled;
 }
 
 struct BuckCacheFetchResponse {
