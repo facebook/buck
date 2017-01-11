@@ -54,8 +54,7 @@ public final class ProjectFilesystemDelegateFactory {
       Path root,
       String hgCmd,
       boolean enableAutosparse,
-      ImmutableList<String> autosparseIgnore,
-      Optional<String> autosparseBaseProfile) {
+      ImmutableList<String> autosparseIgnore) {
     Optional<EdenClient> client = tryToCreateEdenClient();
 
     if (client.isPresent()) {
@@ -88,8 +87,7 @@ public final class ProjectFilesystemDelegateFactory {
       AutoSparseState autoSparseState = AbstractAutoSparseFactory.getAutoSparseState(
           root,
           hgCmdLine,
-          ignoredPaths.build(),
-          autosparseBaseProfile);
+          ignoredPaths.build());
       if (autoSparseState != null) {
         LOG.debug("Autosparse enabled, using AutoSparseProjectFilesystemDelegate");
         return new AutoSparseProjectFilesystemDelegate(autoSparseState, root);

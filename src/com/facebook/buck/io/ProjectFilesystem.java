@@ -154,9 +154,9 @@ public class ProjectFilesystem {
 
   /**
    * This constructor is restricted to {@code protected} because it is generally best to let
-   * {@link ProjectFilesystemDelegateFactory#newInstance(Path, String, boolean, ImmutableList,
-   * Optional)} create an appropriate delegate. Currently, the only case in which we need to
-   * override this behavior is in unit tests.
+   * {@link ProjectFilesystemDelegateFactory#newInstance(Path, String, boolean, ImmutableList)}
+   * create an appropriate delegate. Currently, the only case in which we need to override this
+   * behavior is in unit tests.
    */
   protected ProjectFilesystem(Path root, ProjectFilesystemDelegate delegate) {
     this(
@@ -177,8 +177,7 @@ public class ProjectFilesystem {
             root,
             config.getValue("version_control", "hg_cmd").orElse("hg"),
             config.getBooleanValue("project", "enable_autosparse", false),
-            config.getListWithoutComments("autosparse", "ignore"),
-            config.getValue("autosparse", "baseprofile")
+            config.getListWithoutComments("autosparse", "ignore")
         )
     );
   }

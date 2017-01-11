@@ -29,12 +29,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -59,7 +59,6 @@ import javax.annotation.Nullable;
 public class HgAutoSparseState implements AutoSparseState {
   private static final Logger LOG = Logger.get(AutoSparseState.class);
 
-  private static final String SPARSE_INCLUDE_STATEMENT = "%include {PROFILE_NAME}\n";
   private static final String SPARSE_INCLUDE_HEADER = "[include]\n";
 
   private final Path hgRoot;
@@ -68,21 +67,18 @@ public class HgAutoSparseState implements AutoSparseState {
   private final Set<Path> hgKnownDirectories;
   private final Set<Path> hgDirectParents;
   private final Set<Path> ignoredPaths;
-  private final Optional<String> baseProfile;
 
   private Map<Path, ManifestInfo> hgManifest;
   private boolean hgManifestLoaded;
 
   public HgAutoSparseState(
-      HgCmdLineInterface hgCmdLineInterface, Path scRoot, Set<Path> ignore,
-      Optional<String> baseProfile) {
+      HgCmdLineInterface hgCmdLineInterface, Path scRoot, Set<Path> ignore) {
     this.hgRoot = scRoot;
     this.hgCmdLine = hgCmdLineInterface;
     this.hgSparseSeen = new HashSet<Path>();
     this.hgKnownDirectories = new HashSet<Path>();
     this.hgDirectParents = new HashSet<Path>();
     this.ignoredPaths = ignore;
-    this.baseProfile = baseProfile;
 
     this.hgManifest = ImmutableMap.<Path, ManifestInfo>of();
     this.hgManifestLoaded = false;
@@ -96,30 +92,25 @@ public class HgAutoSparseState implements AutoSparseState {
   @Override
   public void materialiseSparseProfile() {
     if (!hgSparseSeen.isEmpty()) {
-      LOG.debug("Writing %d entries to the sparse profile", hgSparseSeen.size());
+      LOG.debug("Exporting %d entries to the sparse profile", hgSparseSeen.size());
       try {
+        Path exportFile = Files.createTempFile("buck_autosparse_rules", "");
         try (Writer writer =
                  new BufferedWriter(
-                     new FileWriter(
-                         hgRoot.resolve(".hg/sparse").toString()))) {
-          if (baseProfile.isPresent()) {
-            String includeHeader = SPARSE_INCLUDE_STATEMENT.replace(
-                "{PROFILE_NAME}", baseProfile.get());
-            writer.write(includeHeader);
-          }
+                     new FileWriter(exportFile.toFile()))) {
           writer.write(SPARSE_INCLUDE_HEADER);
           for (Path path : hgSparseSeen) {
             writer.write(path.toString() + "\n");
           }
         }
+        try {
+          hgCmdLine.exportHgSparseRules(exportFile);
+        } catch (VersionControlCommandFailedException | InterruptedException e) {
+          LOG.debug("Sparse profile refresh command failed");
+        }
       } catch (IOException e) {
-        LOG.debug("Failed to write out sparse profile");
+        LOG.debug("Failed to write out sparse profile export");
         return;
-      }
-      try {
-        hgCmdLine.refreshHgSparse();
-      } catch (VersionControlCommandFailedException | InterruptedException e) {
-        LOG.debug("Sparse profile refresh command failed");
       }
     }
   }

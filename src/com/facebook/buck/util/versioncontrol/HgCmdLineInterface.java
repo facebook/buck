@@ -96,8 +96,8 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   private static final ImmutableList<String> CHANGED_FILES_COMMAND =
       ImmutableList.of(HG_CMD_TEMPLATE, "status", "-mardu", "-0", "--rev", REVISION_ID_TEMPLATE);
 
-  private static final ImmutableList<String> SPARSE_REFRESH_COMMAND =
-      ImmutableList.of(HG_CMD_TEMPLATE, "sparse", "--refresh");
+  private static final ImmutableList<String> SPARSE_IMPORT_COMMAND =
+      ImmutableList.of(HG_CMD_TEMPLATE, "sparse", "--import-rules", PATH_TEMPLATE, "--traceback");
 
   private static final ImmutableList<String> RAW_MANIFEST_COMMAND =
       ImmutableList.of(HG_CMD_TEMPLATE, "--config",
@@ -306,9 +306,14 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     return hgRoot.get();
   }
 
-  public void refreshHgSparse()
+  public void exportHgSparseRules(Path exportFile)
       throws VersionControlCommandFailedException, InterruptedException {
-    executeCommand(SPARSE_REFRESH_COMMAND);
+    executeCommand(
+        replaceTemplateValue(
+          SPARSE_IMPORT_COMMAND,
+          PATH_TEMPLATE,
+          exportFile.toString()
+    ));
   }
 
   private String executeCommand(Iterable<String> command)

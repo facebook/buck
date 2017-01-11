@@ -43,17 +43,18 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 public class AutoSparseIntegrationTest {
   /*
@@ -117,21 +118,21 @@ public class AutoSparseIntegrationTest {
   @Test
   public void testAutosparseDisabled() {
     ProjectFilesystemDelegate delegate = createDelegate(
-        repoPath, false, ImmutableList.of(), Optional.empty());
+        repoPath, false, ImmutableList.of());
     Assume.assumeFalse(delegate instanceof AutoSparseProjectFilesystemDelegate);
   }
 
   @Test
   public void testAutosparseEnabledHgSubdir() {
     ProjectFilesystemDelegate delegate = createDelegate(
-        repoPath.resolve("not_hidden_subdir"), true, ImmutableList.of(), Optional.empty());
+        repoPath.resolve("not_hidden_subdir"), true, ImmutableList.of());
     Assume.assumeTrue(delegate instanceof AutoSparseProjectFilesystemDelegate);
   }
 
   @Test
   public void testAutosparseEnabledNotHgDir() {
     ProjectFilesystemDelegate delegate = createDelegate(
-        repoPath.getParent(), true, ImmutableList.of(), Optional.empty());
+        repoPath.getParent(), true, ImmutableList.of());
     Assume.assumeFalse(delegate instanceof AutoSparseProjectFilesystemDelegate);
   }
 
@@ -201,8 +202,7 @@ public class AutoSparseIntegrationTest {
   @Test
   public void testMaterialize() throws IOException {
     ProjectFilesystemDelegate delegate = createDelegate(
-        repoPath, true, ImmutableList.of("subdir"), Optional.of("sparse_profile")
-    );
+        repoPath, true, ImmutableList.of("subdir"));
     // Touch various files, these should be part of the profile
     delegate.exists(repoPath.resolve("file1"));
     delegate.exists(repoPath.resolve("file2"));
@@ -217,15 +217,15 @@ public class AutoSparseIntegrationTest {
         repoPath.resolve(".hg/sparse"),
         Charset.forName(System.getProperty("file.encoding", "UTF-8"))
     );
-    // sort to mitigate non-ordered nature of sets
-    Collections.sort(lines);
     List<String> expected = ImmutableList.of(
         "%include sparse_profile",
         "[include]",
         "file1",
         "file2",
         "not_hidden_subdir",
-        "subdir/file_in_subdir"
+        "subdir/file_in_subdir",
+        "[exclude]",
+        ""  // sparse always writes a newline at the end
     );
     Assert.assertEquals(expected, lines);
   }
@@ -239,26 +239,31 @@ public class AutoSparseIntegrationTest {
     // If hg sparse throws an exception, then skip tests.
     Throwable exception = null;
     try {
-      ((HgCmdLineInterface) repoCmdline).refreshHgSparse();
-    } catch (VersionControlCommandFailedException | InterruptedException e) {
+      Path exportFile = Files.createTempFile("buck_autosparse_rules", "");
+      try (Writer writer =
+               new BufferedWriter(
+                   new FileWriter(exportFile.toFile()))) {
+        writer.write("[include]\n");  // deliberately mostly empty
+      }
+      ((HgCmdLineInterface) repoCmdline).exportHgSparseRules(exportFile);
+    } catch (VersionControlCommandFailedException | InterruptedException | IOException e) {
       exception = e;
     }
     Assume.assumeNoException(exception);
   }
 
   private static ProjectFilesystemDelegate createDelegate() {
-    return createDelegate(repoPath, true, ImmutableList.of(), Optional.empty());
+    return createDelegate(repoPath, true, ImmutableList.of());
   }
 
   private static ProjectFilesystemDelegate createDelegate(
       Path root,
       boolean enableAutosparse,
-      ImmutableList<String> autosparseIgnore,
-      Optional<String> autosparseBaseProfile) {
+      ImmutableList<String> autosparseIgnore) {
     String hgCmd = new VersionControlBuckConfig(
         FakeBuckConfig.builder().build()).getHgCmd();
     return ProjectFilesystemDelegateFactory.newInstance(
-        root, hgCmd, enableAutosparse, autosparseIgnore, autosparseBaseProfile);
+        root, hgCmd, enableAutosparse, autosparseIgnore);
   }
 
   private static Path explodeRepoZip() throws IOException {
