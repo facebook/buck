@@ -14,43 +14,26 @@
 <div class="{css overview}">
 
 <div class="toggler">
-  <style>
-    .toggler a {lb}
-      display: inline-block;
-      padding: 10px 5px;
-      margin: 2px;
-      border: 1px solid #05A5D1;
-      border-radius: 3px;
-      text-decoration: none !important;
-    {rb}
-    .display-os-mac .toggler .button-mac,
-    .display-os-linux .toggler .button-linux,
-    .display-os-windows .toggler .button-windows,
-    .display-platform-ios .toggler .button-ios,
-    .display-platform-android .toggler .button-android {lb}
-      background-color: #05A5D1;
-      color: white;
-    {rb}
-    block {lb} display: none; {rb}
-    .display-platform-ios.display-os-mac .ios.mac,
-    .display-platform-ios.display-os-linux .ios.linux,
-    .display-platform-ios.display-os-windows .ios.windows,
-    .display-platform-android.display-os-mac .android.mac,
-    .display-platform-android.display-os-linux .android.linux,
-    .display-platform-android.display-os-windows .android.windows {lb}
-      display: block;
-    {rb}
-  </style>
-  <span>Mobile OS:</span>
+  <table>
+  <tr>
+  <td><span><strong>Mobile OS:</strong></span></td>
+  <td>
   <a href="javascript:void(0);" class="button-ios" onclick="display('platform', 'ios')">iOS</a>
   <a href="javascript:void(0);" class="button-android" onclick="display('platform', 'android')">Android</a>
-  <span>Development OS:</span>
+  </td>
+  </tr>
+  <tr>
+  <td><span><strong>Development OS:</strong></span></td>
+  <td>
   <a href="javascript:void(0);" class="button-mac" onclick="display('os', 'mac')">macOS</a>
   <a href="javascript:void(0);" class="button-linux" onclick="display('os', 'linux')">Linux</a>
   <a href="javascript:void(0);" class="button-windows" onclick="display('os', 'windows')">Windows</a>
+  </td>
+  </tr>
+  </table>
 </div>
 
-<br/>
+<p></p>
 
 <span><block class="linux windows ios" /></span>
 
@@ -67,7 +50,7 @@ This is a quick start guide for getting up and running with Buck. This article i
 
 <span><block class="mac ios android" /></span>
 
-<br/>
+<p></p>
 
 You can find a more detailed explanation about each step in the development process by reading the individual articles on more specific topics.
 
@@ -79,7 +62,7 @@ The commands in this guide are designed to be copy-pasteable, idempotent, and us
 
 <span><block class="windows linux android" /></span>
 
-<br/>
+<p></p>
 
 You can find a more detailed explanation about each step in the development process by reading the individual articles on more specific topics.
 
@@ -96,7 +79,7 @@ Currently, there is no way to download a precompiled binary for Buck.
 </blockquote>
 </p>
 
-<br/>
+<p></p>
 
 <span><block class="mac ios android" /></span>
 
@@ -146,13 +129,15 @@ brew install --HEAD buck
 </pre>
 {/literal}
 
-<br/>
+<p></p>
 
 <h2>Build from Source</h2>
 
 <h3>Prerequisites</h3>
 
+<p>
 To manually build Buck, download and install the following prerequisites:
+</p>
 
 <ul>
   <li>
@@ -193,11 +178,15 @@ brew install ant python git watchman
 
 <h3>Build</h3>
 
+<p>
 Once you have the above tools installed, you can install Buck as follows:
+</p>
 
 {call buck.installationInstructions /}
 
+<p>
 If everything worked correctly, you should see something like:
+</p>
 
 {literal}<pre>
 buck build tool
@@ -230,7 +219,7 @@ options:
   so that you can simply run <code>buck</code> from the command line.
 </p>
 
-<br/>
+<p></p>
 
 <span><block class="linux windows android" /></span>
 
@@ -238,7 +227,9 @@ options:
 
 <h3>Prerequisites</h3>
 
+<p>
 To manually build Buck, download and install the following prerequisites:
+</p>
 
 <ul>
   <li>
@@ -269,16 +260,18 @@ You can use <a href="https://chocolatey.org/">Chocolatey</a> to install many of 
 
 {literal}<pre>
 choco install jdk8 ant python git
-# install watchman as stated in the watchman instructions at https://facebook.github.io/watchman/docs/install.html
+# install watchman as stated in the watchman prerequisite link above
 </pre>{/literal}
 
 <span><block class="linux android" /></span>
 
+<p>
 You can use your distro's package manager (e.g., <code>apt</code>) to install many of the prerequisites on Linux. For example on Ubuntu 16.04, you can run the following:
+</p>
 
 {literal}<pre>
 apt-get install default-jdk ant python git
-# install watchman as stated in the watchman instructions at https://facebook.github.io/watchman/docs/install.html
+# install watchman as stated in the watchman prerequisite link above
 </pre>{/literal}
 
 <span><block class="windows linux android" /></span>
@@ -286,16 +279,28 @@ apt-get install default-jdk ant python git
 <h3>Environment Variables</h3>
 
 <p>
-If you plan to use Buck to build Android code, you will need to tell Buck where to find our SDK nd NDK.  Buck will look at the value of the <code>ANDROID_HOME</code> environment variable to locate the SDK files on your system.  Buck will look at <code>ANDROID_NDK</code> to find a specific version of the NDK, and <code>ANDROID_NDK_REPOSITORY</code> to find an appropriate NDK from a directory containing multiple NDK versions.
+You will need to tell Buck where to find our SDK nd NDK.  Buck will look at the value of the <code>ANDROID_HOME</code> environment variable to locate the SDK files on your system.  Buck will look at <code>ANDROID_NDK</code> to find a specific version of the NDK, and <code>ANDROID_NDK_REPOSITORY</code> to find an appropriate NDK from a directory containing multiple NDK versions.
 </p>
 
 <h3>Build</h3>
 
+<p>
 Once you have the above tools installed, you can install Buck as follows:
+</p>
 
+<span><block class="windows android" /></span>
+{call buck.installationInstructions}
+  {param isWindows: true /}
+{/call}
+
+<span><block class="linux android" /></span>
 {call buck.installationInstructions /}
 
+<span><block class="windows linux android" /></span>
+
+<p>
 If everything worked correctly, you should see something like:
+</p>
 
 {literal}<pre>
 buck build tool
@@ -323,6 +328,13 @@ options:
  --version (-V) : Show version number.
 </pre>{/literal}
 
+<span><block class="windows android" /></span>
+<p>
+  Because you will likely be running <code>.\bin\buck</code> often, you should add it to your path
+  so that you can simply run <code>buck</code> from the command line.
+</p>
+
+<span><block class="linux android" /></span>
 <p>
   Because you will likely be running <code>./bin/buck</code> often, you should add it to your path
   so that you can simply run <code>buck</code> from the command line.
@@ -338,7 +350,9 @@ Now that Buck is installed, it is time use Buck in a sample project.
 
 <h3>Path Setup</h3>
 
+<p>
 Add Buck to your <code>$PATH</code> and set up <code><a href="{ROOT}command/buckd.html"></code>buckd</code></a>:
+</p>
 
 {literal}
 <pre>
@@ -352,6 +366,7 @@ sudo ln -s ${lb}PWD{rb}/bin/buckd /usr/bin/buckd
 
 <p>
 We are going to build a sample Android application. We should start our project in an empty directory, so create a new one and navigate to it:
+</p>
 
 {literal}<pre>
 mkdir -p ~/my-first-buck-project/
@@ -367,13 +382,17 @@ your <code>~/my-first-buck-project</code> directory.</strong>
 
 <h3>Compile Your Code</h3>
 
+<p>
 Android applications are typically written in Java, so the first thing we will do is configure Buck to compile Java code against the Android API. To do so, Buck needs to know where your Android SDK is. Assuming that your Android SDK is installed in <code>~/android-sdk-mac</code>, run the following command to set a <code>ANDROID_NDK</code> environment variable that tells Buck where to find your Android SDK:
+</p>
 
 {literal}<pre>
 export ANDROID_NDK=$HOME/android-sdk-mac
 </pre>{/literal}
 
+<p>
 Now that Buck can locate your Android SDK, it is time to compile some Java code. First, we create a simple <code>Activity</code> at <code>java/com/example/activity/MyFirstActivity.java</code>:
+</p>
 
 {literal}<pre>
 mkdir -p java/com/example/activity/
@@ -391,7 +410,9 @@ public class MyFirstActivity extends Activity {
 }" > java/com/example/activity/MyFirstActivity.java
 </pre>{/literal}
 
+<p>
 Now we need a build file that defines a build rule to compile this Java code, so we create an <code><a href="rule/android_library.html">android_library()</a></code> rule in <code>java/com/example/activity/BUCK</code>:
+</p>
 
 {literal}<pre>
 echo "android_library(
@@ -405,7 +426,9 @@ project_config(
 )" > java/com/example/activity/BUCK
 </pre>{/literal}
 
+<p>
 Now we can compile our Java code using Buck:
+</p>
 
 <pre>buck build{sp}//java/com/example/activity:activity</pre>
 
@@ -417,7 +440,9 @@ Buck generates its output in the <code>buck-out</code> directory, so this is a g
 
 <h3>Package Resources</h3>
 
+<p>
 Android applications frequently contain resources, such as strings and images. For this example, we will create a trivial Android resource bundle that contains a single string:
+</p>
 
 {literal}<pre>
 mkdir -p res/com/example/activity/res/values/
@@ -427,7 +452,9 @@ echo "&lt;?xml version='1.0' encoding='utf-8' ?>
 &lt;/resources>" > res/com/example/activity/res/values/strings.xml
 </pre>{/literal}
 
+<p>
 Buck needs a way to reference this collection of resources, so we need to create a build file that defines an <code><a href="rule/android_resource.html">android_resource()</a></code> rule:
+</p>
 
 {literal}<pre>
 echo "android_resource(
@@ -446,11 +473,15 @@ project_config(
 
 <h3>Create a Keystore</h3>
 
+<p>
 In practice, you will want to be able to test your Android app on a physical Android device, which means that it needs to be signed. We will create app-specific information, such as the key and manifest, in its own directory to keep things tidy:
+</p>
 
 <pre>mkdir -p apps/myapp/</pre>
 
+<p>
 To keep things simple, we will create a self-signed certificate for debugging.
+</p>
 
 <p><blockquote>Unfortunately, this is not a one-liner because there is a number of prompts from the <code>keytool</code> command.</blockquote></p>
 
@@ -459,11 +490,15 @@ keytool -genkey -keystore apps/myapp/debug.keystore -alias my_alias \
     -keyalg RSA -keysize 2048 -validity 10000
 </pre>{/literal}
 
+<p>
 When prompted for a keystore password, just use <code>android</code> (and then type it again to confirm it), and hit <code>Enter</code> to accept the default values for name, organizational unit, etc.
+</p>
 
-<br/>
+<p></p>
 
+<p>
 Then create a <code>.properties</code> file that stores all of this information:
+</p>
 
 {literal}<pre>
 echo "key.alias=my_alias
@@ -473,7 +508,9 @@ key.alias.password=android" > apps/myapp/debug.keystore.properties
 
 <h3>Build an APK</h3>
 
+<p>
 An Android application needs a manifest named <code>AndroidManifest.xml</code>, so we must create such a file:
+</p>
 
 {literal}<pre>
 echo "&lt;?xml version='1.0' encoding='utf-8'?>
@@ -495,7 +532,9 @@ echo "&lt;?xml version='1.0' encoding='utf-8'?>
 &lt;/manifest>" > apps/myapp/AndroidManifest.xml
 </pre>{/literal}
 
+<p>
 Now we define an {call buck.android_binary /} and {call buck.keystore /} rule in our build file:
+</p>
 
 {literal}<pre>
 echo "android_binary(
@@ -520,50 +559,67 @@ project_config(
 )" > apps/myapp/BUCK
 </pre>{/literal}
 
+<p>
 Building an <code>android_binary()</code> rule will produce an APK:
+</p>
 
 <pre>buck build{sp}//apps/myapp:app</pre>
 
+<p>
 Alternatively, if you have an Android device connected to your computer, you can build and install the APK in one step:
+</p>
 
 <pre>buck install{sp}//apps/myapp:app</pre>
 
 <h3>Create an Alias</h3>
 
+<p>
 Typing <code>buck build{sp}//apps/myapp:app</code> every time you want to rebuild your APK can be tedious. Fortunately, Buck makes it possible to define an <em>alias</em> for a build target. An alias can always be used in place of a build target when using Buck's command-line interface.
+</p>
 
-<br/>
+<p></p>
 
+<p>
 Aliases must be defined in a config file in the root of the project:
+</p>
 
 {literal}<pre>
 echo "[alias]
     app = //apps/myapp:app" > .buckconfig
 </pre>{/literal}
 
+<p>
 With this alias in place, the command to build and install the APK is much shorter and easier to remember:
+</p>
 
 <pre>buck install app</pre>
 
 <h3>Create an IntelliJ Project</h3>
 
+<p>
 You likely want to develop your Android app using an IDE. Fortunately, Buck can generate an IntelliJ project from the <code><a href="rule/project_config.html">project_config()</code></a> rules you defined in your build files.
+</p>
 
-<br/>
+<p></p>
 
+<p>
 In order to ensure that IntelliJ recognizes where your Java folders are, you need to specify the following in your <code>.buckconfig</code> file:
+</p>
 
 {literal}<pre>
 echo "[java]
     src_roots = /java/" >> .buckconfig
 </pre>{/literal}
 
-
+<p>
 Now you can create the IntelliJ project by running the following command:
+</p>
 
 <pre>buck project</pre>
 
+<p>
 Note that you will likely want to exclude these generated files from version control, so add the following to your <code>.gitignore</code> file (or <code>.hgignore</code> if you are using Mercurial) along with the files generated by <code>buckd</code>:
+</p>
 
 {literal}<pre>
 echo "/.buckd
@@ -575,90 +631,93 @@ echo "/.buckd
 /.idea/runConfigurations/Debug_Buck_test.xml" > .gitignore
 </pre>{/literal}
 
-Now you can build your Android application from either IntelliJ or the command
-line.
+<p>
+Now you can build your Android application from either IntelliJ or the command line.
+</p>
 
 </div> // close overview
 
+{literal}
 <script>
 // Convert <div>...<span><block /></span>...</div>
 // Into <div>...<block />...</div>
 var blocks = document.getElementsByTagName('block');
-for (var i = 0; i < blocks.length; ++i) {lb}
+for (var i = 0; i < blocks.length; ++i) {
   var block = blocks[i];
   var span = blocks[i].parentNode;
   var container = span.parentNode;
   container.insertBefore(block, span);
   container.removeChild(span);
-{rb}
+}
 // Convert <div>...<block />content<block />...</div>
 // Into <div>...<block>content</block><block />...</div>
 blocks = document.getElementsByTagName('block');
-for (var i = 0; i < blocks.length; ++i) {lb}
+for (var i = 0; i < blocks.length; ++i) {
   var block = blocks[i];
-  while (block.nextSibling && block.nextSibling.tagName !== 'BLOCK') {lb}
+  while (block.nextSibling && block.nextSibling.tagName !== 'BLOCK') {
     block.appendChild(block.nextSibling);
-  {rb}
-{rb}
-function display(type, value) {lb}
+  }
+}
+function display(type, value) {
   var container = document.getElementsByTagName('block')[0].parentNode;
   container.className = 'display-' + type + '-' + value + ' ' +
     container.className.replace(RegExp('display-' + type + '-[a-z]+ ?'), '');
-{rb}
+}
 
 // If we are coming to the page with a hash in it (i.e. from a search, for example), try to get
 // us as close as possible to the correct platform and dev os using the hashtag and block walk up.
 var foundHash = false;
-if (window.location.hash !== '' && window.location.hash !== 'content') {lb} // content is default
+if (window.location.hash !== '' && window.location.hash !== 'content') { // content is default
   var hashLinks = document.querySelectorAll('a.hash-link');
-  for (var i = 0; i < hashLinks.length && !foundHash; ++i) {lb}
-    if (hashLinks[i].hash === window.location.hash) {lb}
+  for (var i = 0; i < hashLinks.length && !foundHash; ++i) {
+    if (hashLinks[i].hash === window.location.hash) {
       var parent = hashLinks[i].parentElement;
-      while (parent) {lb}
-        if (parent.tagName === 'BLOCK') {lb}
+      while (parent) {
+        if (parent.tagName === 'BLOCK') {
           var devOS = null;
           var targetPlatform = null;
           // Could be more than one target os and dev platform, but just choose some sort of order
           // of priority here.
 
           // Dev OS
-          if (parent.className.indexOf('mac') > -1) {lb}
+          if (parent.className.indexOf('mac') > -1) {
             devOS = 'mac';
-          {rb} else if (parent.className.indexOf('linux') > -1) {lb}
+          } else if (parent.className.indexOf('linux') > -1) {
             devOS = 'linux';
-          {rb} else if (parent.className.indexOf('windows') > -1) {lb}
+          } else if (parent.className.indexOf('windows') > -1) {
             devOS = 'windows';
-          {rb} else {lb}
+          } else {
             break; // assume we don't have anything.
-          {rb}
+          }
 
           // Target Platform
-          if (parent.className.indexOf('ios') > -1) {lb}
+          if (parent.className.indexOf('ios') > -1) {
             targetPlatform = 'ios';
-          {rb} else if (parent.className.indexOf('android') > -1) {lb}
+          } else if (parent.className.indexOf('android') > -1) {
             targetPlatform = 'android';
-          {rb} else {lb}
+          } else {
             break; // assume we don't have anything.
-          {rb}
+          }
           // We would have broken out if both targetPlatform and devOS hadn't been filled.
           display('os', devOS);
           display('platform', targetPlatform);
           foundHash = true;
           break;
-        {rb}
+        }
         parent = parent.parentElement;
-      {rb}
-    {rb}
-  {rb}
-{rb}
+      }
+    }
+  }
+}
 // Do the default if there is no matching hash
-if (!foundHash) {lb}
-  var isMac = navigator.platform === 'MacIntel';
-  var isWindows = navigator.platform === 'Win32';
-  display('os', isMac ? 'mac' : (isWindows ? 'windows' : 'linux'));
+if (!foundHash) {
+  var isMac = navigator.platform.toLowerCase().indexOf('mac') !== -1;
+  var isLinux = navigator.platform.toLowerCase().indexOf('linux') !== -1;
+  display('os', isMac ? 'mac' : (isLinux ? 'linux' : 'windows'));
   display('platform', isMac ? 'ios' : 'android');
-{rb}
+}
 </script>
+{/literal}
 
 {call buck.footer}
   {param navid: 'setup_getting_started' /}

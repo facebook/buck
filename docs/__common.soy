@@ -1271,16 +1271,19 @@ docsearch({
 
 /**
  * @param? withAlias
+ * @param? isWindows
  */
 {template .installationInstructions}
 {literal}<pre>
 git clone https://github.com/facebook/buck.git
 cd buck
 ant{/literal}{\n}
-{if $withAlias}
+{if $withAlias and not $isWindows}
 sudo ln -s ${lb}PWD{rb}/bin/buck /usr/bin/buck
-{else}
+{elseif not $isWindows}
 ./bin/buck --help
+{else}
+.\bin\buck --help
 {/if}
 </pre>
 {/template}

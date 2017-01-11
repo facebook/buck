@@ -429,3 +429,39 @@ footer {
   }
 
 }
+
+/* Toggler like on getting started */
+
+.toggler a {
+  display: inline-block;
+  padding: 10px 5px;
+  margin: 2px;
+  border: 1px solid #05A5D1;
+  border-radius: 3px;
+  text-decoration: none !important;
+}
+.toggler table {
+  border-collapse: collapse;
+}
+.toggler table, td, th {
+  border: 0;
+}
+.display-os-mac .toggler .button-mac,
+.display-os-linux .toggler .button-linux,
+.display-os-windows .toggler .button-windows,
+.display-platform-ios .toggler .button-ios,
+.display-platform-android .toggler .button-android {
+  background-color: #05A5D1;
+  color: white;
+}
+block {
+  display: none;
+}
+.display-platform-ios.display-os-mac .ios.mac,
+.display-platform-ios.display-os-linux .ios.linux,
+.display-platform-ios.display-os-windows .ios.windows,
+.display-platform-android.display-os-mac .android.mac,
+.display-platform-android.display-os-linux .android.linux,
+.display-platform-android.display-os-windows .android.windows {
+  display: block;
+}
