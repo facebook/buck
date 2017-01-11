@@ -103,11 +103,7 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
     return "-m" + getName() + "-version-min=";
   }
 
-  @SuppressWarnings("immutables")
-  @Value.Default
-  public Optional<Path> getStubBinaryPath() {
-    return Optional.empty();
-  }
+  public abstract Optional<Path> getStubBinaryPath();
 
   @Value.Default
   public boolean getAppIncludesFrameworks() {

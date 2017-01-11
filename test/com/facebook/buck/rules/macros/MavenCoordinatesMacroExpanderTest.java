@@ -77,7 +77,7 @@ public class MavenCoordinatesMacroExpanderTest {
   public void testNonHasMavenCoordinatesBuildRule()
       throws Exception{
     assumeFalse("Assuming that FakeBuildRule does not have maven coordinates",
-                FakeBuildRule.class.isInstance(HasMavenCoordinates.class));
+                FakeBuildRule.class.isAssignableFrom(HasMavenCoordinates.class));
 
     SourcePathResolver sourcePathResolver =
         new SourcePathResolver(new SourcePathRuleFinder(resolver));
