@@ -370,4 +370,11 @@ public class CxxPrecompiledHeaderRuleTest {
     workspace.runBuckBuild("//:main").assertSuccess();
   }
 
+  @Test
+  public void successfulBuildWithPchHavingDeps() throws Exception {
+    // only platform for which tests definitely run w/ Clang
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    workspace.runBuckBuild("//deps_test:bin").assertSuccess();
+  }
+
 }
