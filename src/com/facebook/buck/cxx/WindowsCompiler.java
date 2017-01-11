@@ -16,7 +16,10 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableList;
+
+import java.io.InputStream;
 
 public class WindowsCompiler extends DefaultCompiler {
 
@@ -62,5 +65,10 @@ public class WindowsCompiler extends DefaultCompiler {
   @Override
   public boolean shouldSanitizeOutputBinary() {
     return false;
+  }
+
+  @Override
+  public InputStream getErrorStream(ProcessExecutor.LaunchedProcess compilerProcess) {
+    return compilerProcess.getInputStream();
   }
 }

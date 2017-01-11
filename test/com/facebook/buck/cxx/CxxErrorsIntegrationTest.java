@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -30,9 +29,12 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
-public class WindowsCxxIntegrationTest {
+/**
+ * Tests that errors and warnings issued by a compiler/linker are visible in buck logs and console.
+ * The subtlety is that on windows cl.exe ouputs errors to stdout, not to stderr.
+ */
+public class CxxErrorsIntegrationTest {
 
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
@@ -41,51 +43,43 @@ public class WindowsCxxIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    assumeTrue(Platform.detect() == Platform.WINDOWS);
-    WindowsUtils.checkAssumptions();
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "win_x64", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "errors", tmp);
     workspace.setUp();
     WindowsUtils.setUpWorkspace(workspace);
+
+    if (Platform.detect() == Platform.WINDOWS) {
+      WindowsUtils.checkAssumptions();
+    }
   }
 
   @Test
-  public void simpleBinary64() throws IOException {
-    ProjectWorkspace.ProcessResult runResult =
-        workspace.runBuckCommand(
-            "run",
-            "//app:hello#windows-x86_64");
-    runResult.assertSuccess();
-    assertThat(
-        runResult.getStdout(),
-        Matchers.containsString("The process is 64bits"));
-    assertThat(
-        runResult.getStdout(),
-        Matchers.not(Matchers.containsString("The process is WOW64")));
-  }
-
-  @Test
-  public void simpleBinaryWithLib() throws IOException {
-    ProjectWorkspace.ProcessResult runResult =
-        workspace.runBuckCommand(
-            "run",
-            "//app_lib:app_lib#windows-x86_64");
-    runResult.assertSuccess();
-    assertThat(
-        runResult.getStdout(),
-        Matchers.containsString("BUCK ON WINDOWS"));
-  }
-
-  @Test
-  public void simpleBinaryIsExecutableByCmd() throws IOException {
+  public void compilerError() throws IOException {
     ProjectWorkspace.ProcessResult runResult =
         workspace.runBuckCommand(
             "build",
-            "//app:log");
-    runResult.assertSuccess();
-    Path outputPath = workspace.resolve("buck-out/gen/app/log/log.txt");
+            "//:not_compilable#static," + CxxPlatforms.getHostFlavor().getName());
+    runResult.assertFailure();
     assertThat(
-        workspace.getFileContents(outputPath),
-        Matchers.containsString("The process is 64bits"));
+        runResult.getStderr(),
+        Matchers.containsString("foo.h"));
+  }
+
+  @Test
+  public void linkError() throws IOException {
+    ProjectWorkspace.ProcessResult staticBuildResult =
+        workspace.runBuckCommand(
+            "build",
+            "//:not_linkable#static," + CxxPlatforms.getHostFlavor().getName());
+    staticBuildResult.assertSuccess();
+
+    ProjectWorkspace.ProcessResult sharedBuildResult =
+        workspace.runBuckCommand(
+            "build",
+            "//:not_linkable#shared," + CxxPlatforms.getHostFlavor().getName());
+    sharedBuildResult.assertFailure();
+    assertThat(
+        sharedBuildResult.getStderr(),
+        Matchers.containsString("unresolvedExternalFunction"));
   }
 
 }

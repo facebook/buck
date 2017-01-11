@@ -253,7 +253,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     try {
       try (LineProcessorRunnable errorProcessor =
                createErrorTransformerFactory(context)
-                   .createTransformerThread(context, process.getErrorStream(), error)) {
+                   .createTransformerThread(context, compiler.getErrorStream(process), error)) {
         errorProcessor.start();
         errorProcessor.waitFor();
       } catch (Throwable thrown) {
