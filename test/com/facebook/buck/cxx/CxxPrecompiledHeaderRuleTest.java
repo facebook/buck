@@ -38,16 +38,22 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
+import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import org.hamcrest.Matchers;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 @SuppressWarnings("all")
@@ -68,6 +74,20 @@ public class CxxPrecompiledHeaderRuleTest {
       CxxPlatformUtils
           .build(CXX_CONFIG_PCH_ENABLED)
           .withCpp(PREPROCESSOR_SUPPORTING_PCH);
+
+  private ProjectWorkspace workspace;
+
+  @Rule
+  public TemporaryPaths tmp = new TemporaryPaths();
+
+  @Before
+  public void setUp() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "cxx_precompiled_header_rule",
+        tmp);
+    workspace.setUp();
+  }
 
   public final TargetNodeToBuildRuleTransformer transformer =
       new DefaultTargetNodeToBuildRuleTransformer();
@@ -333,6 +353,13 @@ public class CxxPrecompiledHeaderRuleTest {
     Iterator iter = lib2Cmd.iterator();
     while (iter.hasNext() && !iter.next().equals("-isystem")) {}
     assertEquals("/tmp/sys", iter.next());
+  }
+
+  @Test
+  public void successfulBuildWithPchHavingNoDeps() throws Exception {
+    // only platform for which tests definitely run w/ Clang
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    workspace.runBuckBuild("//:main").assertSuccess();
   }
 
 }
