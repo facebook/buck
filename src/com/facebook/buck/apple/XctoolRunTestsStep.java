@@ -19,7 +19,6 @@ package com.facebook.buck.apple;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.TeeInputStream;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -97,7 +96,7 @@ class XctoolRunTestsStep implements Step {
   private final Optional<String> logLevelEnvironmentVariable;
   private final Optional<String> logLevel;
   private final Optional<Long> timeoutInMs;
-  private final Optional<Either<Path, String>> snapshotReferenceImagesPath;
+  private final Optional<String> snapshotReferenceImagesPath;
 
   // Helper class to parse the output of `xctool -listTestsOnly` then
   // store it in a multimap of {target: [testDesc1, testDesc2, ...], ... } pairs.
@@ -175,7 +174,7 @@ class XctoolRunTestsStep implements Step {
       Optional<String> logLevelEnvironmentVariable,
       Optional<String> logLevel,
       Optional<Long> timeoutInMs,
-      Optional<Either<Path, String>> snapshotReferenceImagesPath) {
+      Optional<String> snapshotReferenceImagesPath) {
     Preconditions.checkArgument(
         !(logicTestBundlePaths.isEmpty() &&
           appTestBundleToHostAppPaths.isEmpty()),
@@ -233,12 +232,9 @@ class XctoolRunTestsStep implements Step {
           logLevel.get());
     }
     if (snapshotReferenceImagesPath.isPresent()) {
-      String path = snapshotReferenceImagesPath.get().isLeft()
-          ? snapshotReferenceImagesPath.get().getLeft().toString()
-          : snapshotReferenceImagesPath.get().getRight();
       environment.put(
           XCTOOL_ENV_VARIABLE_PREFIX + FB_REFERENCE_IMAGE_DIR,
-          path);
+          snapshotReferenceImagesPath.get());
     }
 
     environment.putAll(this.environmentOverrides);

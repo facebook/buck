@@ -307,15 +307,16 @@ public class AppleTest
         destinationSpecifierArg = defaultDestinationSpecifier;
       }
 
-      Optional<Either<Path, String>> snapshotReferenceImagesPath = Optional.empty();
+      Optional<String> snapshotReferenceImagesPath = Optional.empty();
       if (this.snapshotReferenceImagesPath.isPresent()) {
         if (this.snapshotReferenceImagesPath.get().isLeft()) {
-          snapshotReferenceImagesPath = Optional.of(Either.ofLeft(
-              getResolver().getAbsolutePath(this.snapshotReferenceImagesPath.get().getLeft())));
+          snapshotReferenceImagesPath = Optional.of(
+              getResolver().getAbsolutePath(this.snapshotReferenceImagesPath.get().getLeft())
+                  .toString());
         } else if (this.snapshotReferenceImagesPath.get().isRight()) {
-          snapshotReferenceImagesPath = Optional.of(Either.ofRight(
+          snapshotReferenceImagesPath = Optional.of(
               getProjectFilesystem().getRootPath().getFileSystem().toString() +
-              this.snapshotReferenceImagesPath.get().getRight()));
+              this.snapshotReferenceImagesPath.get().getRight());
         }
       }
 
