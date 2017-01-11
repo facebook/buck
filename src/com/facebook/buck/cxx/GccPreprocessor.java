@@ -31,7 +31,7 @@ public class GccPreprocessor extends AbstractPreprocessor {
 
   @Override
   public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
-    return Optional.empty();
+    return Optional.of(ImmutableList.of("-fdiagnostics-color=always"));
   }
 
   @Override

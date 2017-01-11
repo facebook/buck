@@ -17,6 +17,10 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.Tool;
 
+import com.google.common.collect.ImmutableList;
+
+import java.util.Optional;
+
 public class GccCompiler extends DefaultCompiler {
 
   public GccCompiler(Tool tool) {
@@ -26,6 +30,11 @@ public class GccCompiler extends DefaultCompiler {
   @Override
   public boolean isArgFileSupported() {
     return true;
+  }
+
+  @Override
+  public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
+    return Optional.of(ImmutableList.of("-fdiagnostics-color=always"));
   }
 
 }
