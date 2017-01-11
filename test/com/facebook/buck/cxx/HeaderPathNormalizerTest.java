@@ -98,4 +98,23 @@ public class HeaderPathNormalizerTest {
         Matchers.equalTo(headerDirPath));
   }
 
+  @Test
+  public void managedPrefixHeaderDir() {
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    ));
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path header = filesystem.getRootPath().getFileSystem().getPath("foo/bar.pch");
+    SourcePath headerPath = new PathSourcePath(filesystem, header);
+    HeaderPathNormalizer normalizer =
+        new HeaderPathNormalizer.Builder(pathResolver, Functions.identity())
+            .addPrefixHeader(headerPath)
+            .build();
+    assertThat(
+        normalizer.getAbsolutePathForUnnormalizedPath(pathResolver.getAbsolutePath(headerPath)),
+        Matchers.equalTo(Optional.of(pathResolver.getAbsolutePath(headerPath))));
+    assertThat(
+        normalizer.getSourcePathForAbsolutePath(pathResolver.getAbsolutePath(headerPath)),
+        Matchers.equalTo(headerPath));
+  }
 }

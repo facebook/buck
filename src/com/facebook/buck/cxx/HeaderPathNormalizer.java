@@ -162,6 +162,20 @@ public class HeaderPathNormalizer {
       return addHeader(sourcePath, unnormalizedPaths);
     }
 
+    public Builder addPrefixHeader(SourcePath sourcePath) {
+      // Map the relative path of the header path to the header, as we serialize the source path
+      // using it's relative path.
+      put(headers, pathResolver.getAbsolutePath(sourcePath), sourcePath);
+
+      // Add a normalization mapping for the absolute path to the relative path.
+      // The prefix headers are going to be looked up through their absolute path.
+      put(normalized,
+          pathResolver.getAbsolutePath(sourcePath),
+          sourcePath);
+
+      return this;
+    }
+
     public HeaderPathNormalizer build() {
       return new HeaderPathNormalizer(
           pathResolver,

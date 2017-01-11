@@ -99,6 +99,10 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
               for (CxxHeaders include : preprocessorFlags.getIncludes()) {
                 include.addToHeaderPathNormalizer(builder);
               }
+              if (preprocessorFlags.getPrefixHeader().isPresent()) {
+                SourcePath headerPath = preprocessorFlags.getPrefixHeader().get();
+                builder.addPrefixHeader(headerPath);
+              }
               if (sandbox.isPresent()) {
                 BuildTargetSourcePath root = new BuildTargetSourcePath(
                     sandbox.get().getBuildTarget(),

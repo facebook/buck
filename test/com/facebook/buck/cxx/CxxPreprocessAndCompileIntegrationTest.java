@@ -664,4 +664,14 @@ public class CxxPreprocessAndCompileIntegrationTest {
     return cxxSourceRuleFactory.createCompileBuildTarget(source);
   }
 
+  @Test
+  public void errorVerifyHeadersWithPrefixHeader() throws Exception {
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckBuild(
+            "-c", "cxx.untracked_headers=error",
+            "-c", "cxx.untracked_headers_whitelist=" +
+                "/usr/include/stdc-predef\\.h, untracked_header\\.h",
+            "//:untracked_header_with_prefix_header");
+    result.assertSuccess();
+  }
 }
