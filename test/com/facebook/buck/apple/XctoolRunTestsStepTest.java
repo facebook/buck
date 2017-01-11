@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.model.Either;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.selectors.TestSelectorList;
@@ -620,7 +621,7 @@ public class XctoolRunTestsStepTest {
         Optional.of("TEST_LOG_LEVEL"),
         Optional.of("verbose"),
         Optional.empty(),
-        Optional.of(Paths.get("/path/to/snapshotimages")));
+        Optional.of(Either.ofLeft(Paths.get("/path/to/snapshotimages"))));
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
             .setCommand(
@@ -641,6 +642,63 @@ public class XctoolRunTestsStepTest {
                     "XCTOOL_TEST_ENV_TEST_LOG_PATH", "/path/to/test-logs",
                     "XCTOOL_TEST_ENV_TEST_LOG_LEVEL", "verbose",
                     "XCTOOL_TEST_ENV_FB_REFERENCE_IMAGE_DIR", "/path/to/snapshotimages"))
+            .setDirectory(projectFilesystem.getRootPath().toAbsolutePath())
+            .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
+            .build();
+    FakeProcess fakeXctoolSuccess = new FakeProcess(0, "", "");
+    FakeProcessExecutor processExecutor = new FakeProcessExecutor(
+        ImmutableMap.of(xctoolParams, fakeXctoolSuccess));
+    ExecutionContext executionContext = TestExecutionContext.newBuilder()
+        .setProcessExecutor(processExecutor)
+        .setEnvironment(ImmutableMap.of())
+        .build();
+    assertThat(
+        step.execute(executionContext).getExitCode(),
+        equalTo(0));
+  }
+
+  @Test
+  public void testSnapshotReferenceImagesStringPassedInEnvironment() throws Exception {
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    XctoolRunTestsStep step = new XctoolRunTestsStep(
+        projectFilesystem,
+        Paths.get("/path/to/xctool"),
+        ImmutableMap.of(),
+        Optional.empty(),
+        "iphonesimulator",
+        Optional.empty(),
+        ImmutableSet.of(Paths.get("/path/to/Foo.xctest")),
+        ImmutableMap.of(),
+        Paths.get("/path/to/output.json"),
+        Optional.empty(),
+        Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
+        TestSelectorList.EMPTY,
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.of(Either.ofRight("path/to/snapshotimages")));
+    String snapshotPath = projectFilesystem.getRootPath().getFileSystem().toString() +
+        "path/to/snapshotimages";
+    ProcessExecutorParams xctoolParams =
+        ProcessExecutorParams.builder()
+            .setCommand(
+                ImmutableList.of(
+                    "/path/to/xctool",
+                    "-reporter",
+                    "json-stream",
+                    "-sdk",
+                    "iphonesimulator",
+                    "run-tests",
+                    "-logicTest",
+                    "/path/to/Foo.xctest"))
+            // This is the important part of this test: only if the process is executed
+            // with a matching environment will the test pass.
+            .setEnvironment(
+                ImmutableMap.of(
+                    "DEVELOPER_DIR", "/path/to/developer/dir",
+                    "XCTOOL_TEST_ENV_FB_REFERENCE_IMAGE_DIR", snapshotPath))
             .setDirectory(projectFilesystem.getRootPath().toAbsolutePath())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();

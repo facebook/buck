@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.TeeInputStream;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -96,7 +97,7 @@ class XctoolRunTestsStep implements Step {
   private final Optional<String> logLevelEnvironmentVariable;
   private final Optional<String> logLevel;
   private final Optional<Long> timeoutInMs;
-  private final Optional<Path> snapshotReferenceImagePath;
+  private final Optional<Either<Path, String>> snapshotReferenceImagesPath;
 
   // Helper class to parse the output of `xctool -listTestsOnly` then
   // store it in a multimap of {target: [testDesc1, testDesc2, ...], ... } pairs.
@@ -174,7 +175,7 @@ class XctoolRunTestsStep implements Step {
       Optional<String> logLevelEnvironmentVariable,
       Optional<String> logLevel,
       Optional<Long> timeoutInMs,
-      Optional<Path> snapshotReferenceImagePath) {
+      Optional<Either<Path, String>> snapshotReferenceImagesPath) {
     Preconditions.checkArgument(
         !(logicTestBundlePaths.isEmpty() &&
           appTestBundleToHostAppPaths.isEmpty()),
@@ -201,7 +202,7 @@ class XctoolRunTestsStep implements Step {
     this.logLevelEnvironmentVariable = logLevelEnvironmentVariable;
     this.logLevel = logLevel;
     this.timeoutInMs = timeoutInMs;
-    this.snapshotReferenceImagePath = snapshotReferenceImagePath;
+    this.snapshotReferenceImagesPath = snapshotReferenceImagesPath;
   }
 
   @Override
@@ -231,10 +232,13 @@ class XctoolRunTestsStep implements Step {
           XCTOOL_ENV_VARIABLE_PREFIX + logLevelEnvironmentVariable.get(),
           logLevel.get());
     }
-    if (snapshotReferenceImagePath.isPresent()) {
+    if (snapshotReferenceImagesPath.isPresent()) {
+      String path = snapshotReferenceImagesPath.get().isLeft()
+          ? snapshotReferenceImagesPath.get().getLeft().toString()
+          : snapshotReferenceImagesPath.get().getRight();
       environment.put(
           XCTOOL_ENV_VARIABLE_PREFIX + FB_REFERENCE_IMAGE_DIR,
-          snapshotReferenceImagePath.get().toString());
+          path);
     }
 
     environment.putAll(this.environmentOverrides);
