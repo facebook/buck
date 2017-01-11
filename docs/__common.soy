@@ -300,19 +300,19 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
             'prebuilt_rust_library',
         ],
     ] /}
-  <h3>Getting Started</h3>
+  <h3>The Basics</h3>
   <ul>
+    {call .navigationLink}
+      {param currentnavid: $navid /}
+      {param folder: 'setup' /}
+      {param page: 'getting_started' /}
+      {param text: 'Getting Started' /}
+    {/call}
     {call .navigationLink}
       {param currentnavid: $navid /}
       {param folder: 'about' /}
       {param page: 'overview' /}
-      {param text: 'Overview' /}
-    {/call}
-    {call .navigationLink}
-      {param currentnavid: $navid /}
-      {param folder: 'setup' /}
-      {param page: 'install' /}
-      {param text: 'Downloading and Installing Buck' /}
+      {param text: 'Key Topics' /}
     {/call}
     {call .navigationLink}
       {param currentnavid: $navid /}
@@ -320,12 +320,7 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
       {param page: 'intellij_plugin_install' /}
       {param text: 'Installing the IntelliJ Plugin' /}
     {/call}
-    {call .navigationLink}
-      {param currentnavid: $navid /}
-      {param folder: 'setup' /}
-      {param page: 'getting_started' /}
-      {param text: 'Getting Started' /}
-    {/call}
+
     {call .navigationLink}
       {param currentnavid: $navid /}
       {param folder: 'article' /}
@@ -1276,16 +1271,19 @@ docsearch({
 
 /**
  * @param? withAlias
+ * @param? isWindows
  */
 {template .installationInstructions}
 {literal}<pre>
 git clone https://github.com/facebook/buck.git
 cd buck
 ant{/literal}{\n}
-{if $withAlias}
+{if $withAlias and not $isWindows}
 sudo ln -s ${lb}PWD{rb}/bin/buck /usr/bin/buck
-{else}
+{elseif not $isWindows}
 ./bin/buck --help
+{else}
+.\bin\buck --help
 {/if}
 </pre>
 {/template}
