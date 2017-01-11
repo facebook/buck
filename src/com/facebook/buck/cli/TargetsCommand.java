@@ -892,13 +892,16 @@ public class TargetsCommand extends AbstractCommand {
   private TargetGraphAndTargetNodes computeTargetsAndGraphToShowTargetHash(
       CommandRunnerParams params,
       ListeningExecutorService executor,
-      TargetGraphAndTargetNodes targetGraphAndTargetNodes
-  ) throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
+      TargetGraphAndTargetNodes targetGraphAndTargetNodes)
+      throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
 
     if (isDetectTestChanges()) {
-      ImmutableSet<BuildTarget> explicitTestTargets = TargetGraphAndTargets.getExplicitTestTargets(
-          targetGraphAndTargetNodes,
-          true);
+      ImmutableSet<BuildTarget> explicitTestTargets =
+          TargetGraphAndTargets.getExplicitTestTargets(
+              targetGraphAndTargetNodes
+                  .getTargetGraph()
+                  .getSubgraph(targetGraphAndTargetNodes.getTargetNodes())
+                  .getNodes());
       LOG.debug("Got explicit test targets: %s", explicitTestTargets);
 
       Iterable<BuildTarget> matchingBuildTargetsWithTests =
