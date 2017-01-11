@@ -95,7 +95,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
         CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
         Paths.get("whatever"),
-        new DefaultPreprocessor(preprocessorTool),
+        new GccPreprocessor(preprocessorTool),
         PreprocessorFlags.builder().build(),
         defaultFrameworkPathSearchPathFunction,
         Optional.empty(),

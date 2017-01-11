@@ -105,7 +105,7 @@ public class CxxCompilationDatabaseTest {
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                     CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
                     filesystem.getRootPath(),
-                    new DefaultPreprocessor(new HashedFileTool(Paths.get("preprocessor"))),
+                    new GccPreprocessor(new HashedFileTool(Paths.get("preprocessor"))),
                     preprocessorFlags,
                     new RuleKeyAppendableFunction<FrameworkPath, Path>() {
                       @Override

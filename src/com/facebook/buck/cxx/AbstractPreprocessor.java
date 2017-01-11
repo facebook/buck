@@ -22,74 +22,41 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.util.MoreIterables;
+
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 
-import java.util.Optional;
+public abstract class AbstractPreprocessor implements Preprocessor {
 
-public class DefaultPreprocessor implements Preprocessor {
+  protected final Tool tool;
 
-  private final Tool tool;
-
-  public DefaultPreprocessor(Tool tool) {
+  protected AbstractPreprocessor(Tool tool) {
     this.tool = tool;
   }
 
   @Override
-  public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
-    return Optional.empty();
-  }
-
-  @Override
-  public boolean supportsHeaderMaps() {
-    return false;
-  }
-
-  @Override
-  public boolean supportsPrecompiledHeaders() {
-    return false;
-  }
-
-  @Override
-  public Iterable<String> localIncludeArgs(Iterable<String> includeRoots) {
-    return MoreIterables.zipAndConcat(Iterables.cycle("-I"), includeRoots);
-  }
-
-  @Override
-  public Iterable<String> systemIncludeArgs(Iterable<String> includeRoots) {
-    return MoreIterables.zipAndConcat(Iterables.cycle("-isystem"), includeRoots);
-  }
-
-  @Override
-  public Iterable<String> quoteIncludeArgs(Iterable<String> includeRoots) {
-    return MoreIterables.zipAndConcat(Iterables.cycle("-iquote"), includeRoots);
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+  public final ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     return tool.getDeps(ruleFinder);
   }
 
   @Override
-  public ImmutableCollection<SourcePath> getInputs() {
+  public final ImmutableCollection<SourcePath> getInputs() {
     return tool.getInputs();
   }
 
   @Override
-  public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+  public final ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
     return tool.getCommandPrefix(resolver);
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment() {
+  public final ImmutableMap<String, String> getEnvironment() {
     return tool.getEnvironment();
   }
 
   @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
+  public final void appendToRuleKey(RuleKeyObjectSink sink) {
     sink
         .setReflectively("tool", tool)
         .setReflectively("type", getClass().getSimpleName());

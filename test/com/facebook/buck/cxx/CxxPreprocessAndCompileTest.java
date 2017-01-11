@@ -59,7 +59,7 @@ import java.util.Optional;
 public class CxxPreprocessAndCompileTest {
 
   private static class PreprocessorWithColorSupport
-      extends DefaultPreprocessor {
+      extends GccPreprocessor {
 
     static final String COLOR_FLAG = "-use-color-in-preprocessor";
 
@@ -90,7 +90,7 @@ public class CxxPreprocessAndCompileTest {
   }
 
   private static final Preprocessor DEFAULT_PREPROCESSOR =
-      new DefaultPreprocessor(new HashedFileTool(Paths.get("preprocessor")));
+      new GccPreprocessor(new HashedFileTool(Paths.get("preprocessor")));
   private static final Compiler DEFAULT_COMPILER =
       new GccCompiler(new HashedFileTool(Paths.get("compiler")));
   private static final Preprocessor PREPROCESSOR_WITH_COLOR_SUPPORT =
@@ -413,7 +413,7 @@ public class CxxPreprocessAndCompileTest {
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                 CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
                 DEFAULT_WORKING_DIR,
-                new DefaultPreprocessor(preprocessorTool),
+                new GccPreprocessor(preprocessorTool),
                 PreprocessorFlags.builder().build(),
                 DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                 Optional.empty(),

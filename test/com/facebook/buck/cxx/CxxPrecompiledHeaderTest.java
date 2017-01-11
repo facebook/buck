@@ -50,7 +50,7 @@ public class CxxPrecompiledHeaderTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     Preprocessor preprocessorSupportingPch =
-        new DefaultPreprocessor(CxxPlatformUtils.DEFAULT_PLATFORM.getCpp().resolve(resolver)) {
+        new GccPreprocessor(CxxPlatformUtils.DEFAULT_PLATFORM.getCpp().resolve(resolver)) {
           @Override
           public boolean supportsPrecompiledHeaders() {
             return true;

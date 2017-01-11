@@ -19,29 +19,29 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.MoreIterables;
 
-import com.google.common.collect.Iterables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import java.util.Optional;
 
-public class ClangPreprocessor extends AbstractPreprocessor {
-  public ClangPreprocessor(Tool tool) {
+public class GccPreprocessor extends AbstractPreprocessor {
+  public GccPreprocessor(Tool tool) {
     super(tool);
   }
 
   @Override
   public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
-    return Optional.of(ImmutableList.of("-fcolor-diagnostics"));
+    return Optional.empty();
   }
 
   @Override
   public boolean supportsHeaderMaps() {
-    return true;
+    return false;
   }
 
   @Override
   public boolean supportsPrecompiledHeaders() {
-    return true;
+    return false;
   }
 
   @Override
@@ -58,5 +58,4 @@ public class ClangPreprocessor extends AbstractPreprocessor {
   public final Iterable<String> quoteIncludeArgs(Iterable<String> includeRoots) {
     return MoreIterables.zipAndConcat(Iterables.cycle("-iquote"), includeRoots);
   }
-
 }

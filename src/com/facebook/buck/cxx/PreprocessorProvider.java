@@ -41,13 +41,14 @@ public class PreprocessorProvider extends CxxToolProvider<Preprocessor> {
     switch (type) {
       case CLANG:
         return new ClangPreprocessor(tool);
-      case DEFAULT:
       case GCC:
-        return new DefaultPreprocessor(tool);
+        return new GccPreprocessor(tool);
       case WINDOWS:
         return new WindowsPreprocessor(tool);
+      // $CASES-OMITTED$
+      default:
     }
-    throw new IllegalStateException();
+    throw new IllegalStateException("cannot get preprocessor for type " + type);
   }
 
 }
