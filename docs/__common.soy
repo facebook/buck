@@ -613,14 +613,15 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
  */
 {template .footer}
 
-</article>
-
 {if $navid != 'home'}
+  </article>
   <nav>
     {call buck.tableOfContents data="all"}
       {param navid: $navid /}
     {/call}
   </nav>
+{else}
+  </landing-page>
 {/if}
 
 </div></section>
