@@ -93,7 +93,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     PreprocessorDelegate preprocessorDelegate = new PreprocessorDelegate(
         sourcePathResolver,
         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-        CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
+        CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
         Paths.get("whatever"),
         new DefaultPreprocessor(preprocessorTool),
         PreprocessorFlags.builder().build(),

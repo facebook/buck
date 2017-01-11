@@ -89,6 +89,7 @@ public class CxxPlatformUtils {
           .setObjectFileExtension("o")
           .setCompilerDebugPathSanitizer(DEFAULT_COMPILER_DEBUG_PATH_SANITIZER)
           .setAssemblerDebugPathSanitizer(DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER)
+          .setHeaderVerification(DEFAULT_CONFIG.getHeaderVerification())
           .build();
 
   public static final FlavorDomain<CxxPlatform> DEFAULT_PLATFORMS =

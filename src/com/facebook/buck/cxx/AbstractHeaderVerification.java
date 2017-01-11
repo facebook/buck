@@ -78,6 +78,10 @@ abstract class AbstractHeaderVerification implements RuleKeyAppendable {
     }
   }
 
+  public HeaderVerification withAdditionalWhitelist(Iterable<String> elements) {
+    return HeaderVerification.builder().from(this).addAllWhitelist(elements).build();
+  }
+
   public enum Mode {
 
     /**

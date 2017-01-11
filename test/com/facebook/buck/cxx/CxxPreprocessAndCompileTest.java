@@ -188,7 +188,7 @@ public class CxxPreprocessAndCompileTest {
                 new PreprocessorDelegate(
                     pathResolver,
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                    CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
+                    CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
                     DEFAULT_WORKING_DIR,
                     DEFAULT_PREPROCESSOR,
                     PreprocessorFlags.builder().build(),
@@ -305,7 +305,7 @@ public class CxxPreprocessAndCompileTest {
                 new PreprocessorDelegate(
                     pathResolver,
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                    CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
+                    CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
                     DEFAULT_WORKING_DIR,
                     DEFAULT_PREPROCESSOR,
                     flags,
@@ -411,7 +411,7 @@ public class CxxPreprocessAndCompileTest {
             new PreprocessorDelegate(
                 pathResolver,
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
+                CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
                 DEFAULT_WORKING_DIR,
                 new DefaultPreprocessor(preprocessorTool),
                 PreprocessorFlags.builder().build(),
@@ -520,7 +520,7 @@ public class CxxPreprocessAndCompileTest {
             new PreprocessorDelegate(
                 pathResolver,
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
+                CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
                 DEFAULT_WORKING_DIR,
                 PREPROCESSOR_WITH_COLOR_SUPPORT,
                 PreprocessorFlags.builder().build(),

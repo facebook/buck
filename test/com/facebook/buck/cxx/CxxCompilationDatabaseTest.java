@@ -103,7 +103,7 @@ public class CxxCompilationDatabaseTest {
                 new PreprocessorDelegate(
                     testSourcePathResolver,
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                    CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
+                    CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
                     filesystem.getRootPath(),
                     new DefaultPreprocessor(new HashedFileTool(Paths.get("preprocessor"))),
                     preprocessorFlags,

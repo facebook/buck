@@ -29,6 +29,7 @@ import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.CxxToolProvider;
 import com.facebook.buck.cxx.DebugPathSanitizer;
 import com.facebook.buck.cxx.DefaultLinkerProvider;
+import com.facebook.buck.cxx.HeaderVerification;
 import com.facebook.buck.cxx.LinkerProvider;
 import com.facebook.buck.cxx.Linkers;
 import com.facebook.buck.cxx.MungingDebugPathSanitizer;
@@ -66,6 +67,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -369,6 +371,13 @@ public class AppleCxxPlatforms {
         new CompilerProvider(
             new ConstantToolProvider(clangXxPath),
             CxxToolProvider.Type.CLANG);
+    ImmutableList.Builder<String> whitelistBuilder = ImmutableList.builder();
+    whitelistBuilder.add("^" + Pattern.quote(sdkPaths.getSdkPath().toString()) + "\\/.*");
+    for (Path toolchainPath : sdkPaths.getToolchainPaths()) {
+      whitelistBuilder.add("^" + Pattern.quote(toolchainPath.toString()) + "\\/.*");
+    }
+    HeaderVerification headerVerification =
+        config.getHeaderVerification().withAdditionalWhitelist(whitelistBuilder.build());
 
     CxxPlatform cxxPlatform = CxxPlatforms.build(
         targetFlavor,
@@ -402,7 +411,8 @@ public class AppleCxxPlatforms {
         compilerDebugPathSanitizer,
         assemblerDebugPathSanitizer,
         macros,
-        Optional.empty());
+        Optional.empty(),
+        headerVerification);
 
     ApplePlatform applePlatform = targetSdk.getApplePlatform();
     ImmutableList.Builder<Path> swiftOverrideSearchPathBuilder = ImmutableList.builder();

@@ -627,7 +627,8 @@ public class NdkCxxPlatforms {
                     ElfSharedLibraryInterfaceFactory.of(
                         new ConstantToolProvider(
                             getGccTool(toolchainPaths, "objcopy", version, executableFinder)))) :
-                Optional.empty());
+                Optional.empty())
+        .setHeaderVerification(config.getHeaderVerification());
 
     if (cxxRuntime != CxxRuntime.SYSTEM) {
       cxxPlatformBuilder.putRuntimeLdflags(

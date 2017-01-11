@@ -108,7 +108,7 @@ public class CxxCompileStepIntegrationTest {
             HeaderPathNormalizer.empty(pathResolver),
             sanitizer,
             CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
-            CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
+            CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
             scratchDir,
             true,
             compiler);
@@ -192,7 +192,7 @@ public class CxxCompileStepIntegrationTest {
             HeaderPathNormalizer.empty(pathResolver),
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
             CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
-            CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
+            CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
             scratchDir,
             true,
             compiler);

@@ -248,7 +248,8 @@ public class CxxBuckConfig {
         .setMode(
             delegate.getEnum(cxxSection, "untracked_headers", HeaderVerification.Mode.class).orElse(
                 HeaderVerification.Mode.IGNORE))
-        .addAllWhitelist(delegate.getListWithoutComments(cxxSection, "untracked_headers_whitelist"))
+        .addAllWhitelist(
+            delegate.getListWithoutComments(cxxSection, "untracked_headers_whitelist"))
         .build();
   }
 

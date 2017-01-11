@@ -93,7 +93,8 @@ public class CxxPlatforms {
       DebugPathSanitizer compilerDebugPathSanitizer,
       DebugPathSanitizer assemblerDebugPathSanitizer,
       ImmutableMap<String, String> flagMacros,
-      Optional<String> binaryExtension) {
+      Optional<String> binaryExtension,
+      HeaderVerification headerVerification) {
     // TODO(bhamiltoncx, andrewjcg): Generalize this so we don't need all these setters.
     CxxPlatform.Builder builder = CxxPlatform.builder();
 
@@ -127,7 +128,8 @@ public class CxxPlatforms {
         .setCompilerDebugPathSanitizer(compilerDebugPathSanitizer)
         .setAssemblerDebugPathSanitizer(assemblerDebugPathSanitizer)
         .setFlagMacros(flagMacros)
-        .setBinaryExtension(binaryExtension);
+        .setBinaryExtension(binaryExtension)
+        .setHeaderVerification(headerVerification);
 
 
     builder.setSymbolNameTool(new LazyDelegatingSymbolNameTool(() -> {
@@ -187,7 +189,8 @@ public class CxxPlatforms {
         defaultPlatform.getCompilerDebugPathSanitizer(),
         defaultPlatform.getAssemblerDebugPathSanitizer(),
         defaultPlatform.getFlagMacros(),
-        defaultPlatform.getBinaryExtension());
+        defaultPlatform.getBinaryExtension(),
+        defaultPlatform.getHeaderVerification());
   }
 
   private static Function<Tool, Archiver> getArchiver(final Class<? extends Archiver> arClass,

@@ -92,6 +92,8 @@ interface AbstractCxxPlatform extends FlavorConvertible {
   DebugPathSanitizer getCompilerDebugPathSanitizer();
   DebugPathSanitizer getAssemblerDebugPathSanitizer();
 
+  HeaderVerification getHeaderVerification();
+
   /**
    * @return a map for macro names to their respective expansions, to be used to expand macro
    *     references in user-provided flags.

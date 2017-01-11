@@ -206,7 +206,8 @@ public class DefaultCxxPlatforms {
             Paths.get("."),
             ImmutableBiMap.of()),
         ImmutableMap.of(),
-        binaryExtension);
+        binaryExtension,
+        config.getHeaderVerification());
   }
 
   private static Path getExecutablePath(

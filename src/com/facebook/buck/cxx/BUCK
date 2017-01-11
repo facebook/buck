@@ -1,5 +1,6 @@
 PLATFORM_SRCS = [
   'AbstractCxxPlatform.java',
+  'AbstractHeaderVerification.java',
   'AbstractNativeLinkableInput.java',
   'AbstractNativeLinkTargetMode.java',
   'Archiver.java',

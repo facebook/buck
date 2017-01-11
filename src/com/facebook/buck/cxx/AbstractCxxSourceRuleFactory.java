@@ -978,7 +978,7 @@ abstract class AbstractCxxSourceRuleFactory {
       PreprocessorDelegate delegate = new PreprocessorDelegate(
           getPathResolver(),
           getCxxPlatform().getCompilerDebugPathSanitizer(),
-        getCxxBuckConfig().getHeaderVerification(),
+        getCxxPlatform().getHeaderVerification(),
           getParams().getProjectFilesystem().getRootPath(),
           preprocessor,
           PreprocessorFlags.of(
