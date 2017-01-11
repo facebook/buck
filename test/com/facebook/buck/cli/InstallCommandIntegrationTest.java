@@ -36,7 +36,6 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -45,7 +44,6 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Ignore("Disabled due to timeouts installing into the simulator")
 public class InstallCommandIntegrationTest {
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
