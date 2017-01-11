@@ -21,9 +21,12 @@ import com.facebook.buck.util.exportedfiles.Preconditions;
 import com.sun.source.tree.CatchTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.tree.IdentifierTree;
+import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Scope;
 import com.sun.source.tree.Tree;
+import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.source.util.SourcePositions;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
@@ -210,5 +213,36 @@ class TreeBackedTrees extends Trees {
   @Override
   public TypeMirror getLub(CatchTree tree) {
     throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Takes a {@link MemberSelectTree} or {@link IdentifierTree} and returns the name it represents
+   * as a {@link CharSequence}.
+   */
+  /* package */
+  static CharSequence treeToName(Tree tree) {
+    if (tree == null) {
+      return "";
+    }
+
+    return tree.accept(new SimpleTreeVisitor<CharSequence, Void>() {
+      @Override
+      protected CharSequence defaultAction(Tree node, Void aVoid) {
+        throw new AssertionError(String.format("Unexpected tree of kind: %s", node.getKind()));
+      }
+
+      @Override
+      public CharSequence visitMemberSelect(MemberSelectTree node, Void aVoid) {
+        return String.format(
+            "%s.%s",
+            node.getExpression().accept(this, aVoid),
+            node.getIdentifier());
+      }
+
+      @Override
+      public CharSequence visitIdentifier(IdentifierTree node, Void aVoid) {
+        return node.getName();
+      }
+    }, null);
   }
 }

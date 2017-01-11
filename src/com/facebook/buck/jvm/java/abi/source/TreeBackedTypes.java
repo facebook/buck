@@ -315,7 +315,8 @@ class TreeBackedTypes implements Types {
       }
 
       private TypeElement treeToTypeElement(Tree type) {
-        return Preconditions.checkNotNull(elements.getTypeElement(TreeResolver.treeToName(type)));
+        return Preconditions.checkNotNull(
+            elements.getTypeElement(TreeBackedTrees.treeToName(type)));
       }
     }, null);
   }

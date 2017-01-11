@@ -20,12 +20,8 @@ import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.util.exportedfiles.Nullable;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.IdentifierTree;
-import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodTree;
-import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
-import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
 
@@ -77,7 +73,8 @@ class TreeResolver {
           // Match javac: create a package element only once we know a class exists in it
           if (enclosingElement == null) {
             enclosingElement =
-                elements.getOrCreatePackageElement(treeToName(compilationUnit.getPackageName()));
+                elements.getOrCreatePackageElement(
+                    TreeBackedTrees.treeToName(compilationUnit.getPackageName()));
           }
 
           Name qualifiedName = node.getSimpleName();
@@ -130,36 +127,5 @@ class TreeResolver {
 
   public void resolve() {
     elements.resolve(types);
-  }
-
-  /**
-   * Takes a {@link MemberSelectTree} or {@link IdentifierTree} and returns the name it represents
-   * as a {@link CharSequence}.
-   */
-  /* package */
-  static CharSequence treeToName(Tree tree) {
-    if (tree == null) {
-      return "";
-    }
-
-    return tree.accept(new SimpleTreeVisitor<CharSequence, Void>() {
-      @Override
-      protected CharSequence defaultAction(Tree node, Void aVoid) {
-        throw new AssertionError(String.format("Unexpected tree of kind: %s", node.getKind()));
-      }
-
-      @Override
-      public CharSequence visitMemberSelect(MemberSelectTree node, Void aVoid) {
-        return String.format(
-            "%s.%s",
-            node.getExpression().accept(this, aVoid),
-            node.getIdentifier());
-      }
-
-      @Override
-      public CharSequence visitIdentifier(IdentifierTree node, Void aVoid) {
-        return node.getName();
-      }
-    }, null);
   }
 }
