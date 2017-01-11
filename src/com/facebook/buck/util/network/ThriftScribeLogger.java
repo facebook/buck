@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.network;
 
+import com.android.annotations.VisibleForTesting;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
@@ -24,7 +25,6 @@ import com.facebook.buck.distributed.thrift.LogRequestType;
 import com.facebook.buck.distributed.thrift.ScribeData;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.ThriftService;
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -74,7 +74,7 @@ public class ThriftScribeLogger extends ScribeLogger {
     //Prepare log request.
     ScribeData scribeData = new ScribeData();
     scribeData.setCategory(category);
-    scribeData.setLines(Lists.newLinkedList(lines));
+    copyLinesWithoutNulls(lines, scribeData);
     LogRequest logRequest = new LogRequest();
     logRequest.setType(LogRequestType.SCRIBE_DATA);
     logRequest.setScribeData(scribeData);
@@ -89,6 +89,30 @@ public class ThriftScribeLogger extends ScribeLogger {
     if (!response.isWasSuccessful()) {
       throw new IOException(
           String.format("Log request failed. Error from response: %s", response.getErrorMessage()));
+    }
+  }
+
+  @VisibleForTesting
+  static void copyLinesWithoutNulls(Iterable<String> lines, ScribeData scribeData) {
+    int numberOfNullLines = 0;
+    int totalLines = 0;
+    for (String line : lines) {
+      ++totalLines;
+      if (line != null) {
+        scribeData.addToLines(line);
+      } else {
+        ++numberOfNullLines;
+      }
+    }
+
+    // TODO(ruibm): This way we get some signal where the null lines are coming from and still send
+    // back as much non-corrupted data as we can.
+    if (numberOfNullLines > 0) {
+      LOG.error(String.format(
+          "Out of [%d] log lines, [%d] were null for category [%s].",
+          totalLines,
+          numberOfNullLines,
+          scribeData.getCategory()));
     }
   }
 

@@ -145,6 +145,7 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//test/com/facebook/buck/rules:testutil",
+      "//third-party/java/android:tools-sdk-common",
       "//third-party/java/ddmlib:ddmlib",
       "//third-party/java/guava:guava"
     ]

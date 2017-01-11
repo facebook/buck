@@ -26,6 +26,7 @@ import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
 import com.facebook.buck.distributed.thrift.LogRequestType;
+import com.facebook.buck.distributed.thrift.ScribeData;
 import com.facebook.buck.slb.ThriftException;
 import com.facebook.buck.slb.ThriftService;
 import com.google.common.collect.ImmutableList;
@@ -45,6 +46,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
@@ -63,12 +65,25 @@ public class ThriftScribeLoggerTest {
 
   @Before
   public void setUp() {
+    logger = null;
     executorService = MoreExecutors.newDirectExecutorService();
   }
 
   @After
   public void tearDown() throws Exception {
-    logger.close();
+    if (logger != null) {
+      logger.close();
+      logger = null;
+    }
+  }
+
+  @Test
+  public void testAllNullLinesAreRemoved() {
+    ScribeData data = new ScribeData().setCategory("slicespin");
+    assertEquals(0, data.getLinesSize());
+    List<String> lines = Lists.newArrayList("topspin", null, "down", "the", "lines");
+    ThriftScribeLogger.copyLinesWithoutNulls(lines, data);
+    assertEquals(lines.size() - 1, data.getLinesSize());
   }
 
   @Test
