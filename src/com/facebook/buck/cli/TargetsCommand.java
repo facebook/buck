@@ -476,14 +476,9 @@ public class TargetsCommand extends AbstractCommand {
           VersionException {
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     boolean ignoreBuckAutodepsFiles = false;
-    // Parse the entire action graph, or (if targets are specified),
-    // only the specified targets and their dependencies..
-    //
-    // TODO(k21):
-    // If --detect-test-changes is specified, we need to load the whole graph, because we cannot
-    // know which targets can refer to the specified targets or their dependencies in their
-    // 'source_under_test'. Once we migrate from 'source_under_test' to 'tests', this should no
-    // longer be necessary.
+    // Parse the entire action graph, or (if targets are specified), only the specified targets and
+    // their dependencies. If we're detecting test changes we need the whole graph as tests are not
+    // dependencies.
     TargetGraphAndBuildTargets targetGraphAndBuildTargets;
     if (getArguments().isEmpty() || isDetectTestChanges()) {
       targetGraphAndBuildTargets =
