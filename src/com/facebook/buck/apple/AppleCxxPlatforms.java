@@ -320,23 +320,28 @@ public class AppleCxxPlatforms {
     }
     ImmutableMap<String, String> macros = macrosBuilder.build();
 
-    Optional<String> buildVersion;
+    Optional<String> buildVersion = Optional.empty();
     Path platformVersionPlistPath = sdkPaths.getPlatformPath().resolve("version.plist");
     try (InputStream versionPlist = Files.newInputStream(platformVersionPlistPath)) {
       NSDictionary versionInfo = (NSDictionary) PropertyListParser.parse(versionPlist);
-      try {
-        buildVersion = Optional.of(versionInfo.objectForKey("ProductBuildVersion").toString());
-      } catch (NullPointerException e) {
+      if (versionInfo != null) {
+        NSObject productBuildVersion = versionInfo.objectForKey("ProductBuildVersion");
+        if (productBuildVersion != null) {
+          buildVersion = Optional.of(productBuildVersion.toString());
+        } else {
+          LOG.warn(
+              "In %s, missing ProductBuildVersion. Build version will be unset for this platform.",
+              platformVersionPlistPath);
+        }
+      } else {
         LOG.warn(
-            "In %s, missing ProductBuildVersion. Build version will be unset for this platform.",
+            "Empty version plist in %s. Build version will be unset for this platform.",
             platformVersionPlistPath);
-        buildVersion = Optional.empty();
       }
     } catch (NoSuchFileException e) {
       LOG.warn(
           "%s does not exist. Build version will be unset for this platform.",
           platformVersionPlistPath);
-      buildVersion = Optional.empty();
     } catch (PropertyListFormatException | SAXException | ParserConfigurationException |
         ParseException | IOException e) {
       // Some other error occurred, print the exception since it may contain error details.
@@ -344,7 +349,6 @@ public class AppleCxxPlatforms {
           e,
           "Failed to parse %s. Build version will be unset for this platform.",
           platformVersionPlistPath);
-      buildVersion = Optional.empty();
     }
 
     PreprocessorProvider aspp =
