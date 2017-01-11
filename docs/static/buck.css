@@ -210,40 +210,51 @@ section.content {
   padding: 30px 0;
 }
 
-section.content article img {
+section.content article img,
+section.content landing-page img {
   max-width: 100%;
 }
 
-section.content article h1 {
+section.content article h1,
+section.content landing-page h1 {
   font-weight: bold;
 }
 
-section.content article h2 {
+section.content article h2,
+section.content landing-page h2 {
   color: #888888;
   font-weight: bold;
 }
 
 section.content article ul li,
-section.content article ol li {
+section.content article ol li,
+section.content landing-page ul li,
+section.content landing-page ol li
+ {
   margin: 1em 0;
 }
 
 section.content article ul.tight-list li,
-section.content article ol.tight-list li {
+section.content article ol.tight-list li,
+section.content landing-page ul.tight-list li,
+section.content landing-page ol.tight-list li {
   margin: 0;
 }
 
-section.content article blockquote {
+section.content article blockquote,
+section.content landing-page blockquote {
   padding: 0px 20px;
   margin: 0 0 20px;
   border-left: 5px solid #eee;
 }
 
-section.content article blockquote p {
+section.content article blockquote p,
+section.content landing-page blockquote p {
   font-style: italic;
 }
 
-section.content article blockquote small:before {
+section.content article blockquote small:before,
+section.content landing-page blockquote small:before {
   content: '\2014 \00A0';
 }
 
@@ -285,9 +296,14 @@ section.content nav ul li.navActiveItem a {
   color: white;
 }
 
+
 footer {
-  background: #000;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   padding: 10px 0;
+  background-color: #000;
   color: #fff;
   border-top: 4px solid #fff;
 }
@@ -383,6 +399,11 @@ footer {
 
   section.content article {
     float: right;
+    width: 660px;
+  }
+
+  section.content landing-page {
+    float: left;
     width: 660px;
   }
 
