@@ -172,12 +172,10 @@ public abstract class TargetNodeTranslator {
     }
   }
 
-  private <A> Optional<A> translateConstructorArg(TargetNode<A, ?> node) {
+  public <A> boolean translateConstructorArg(A constructorArg, A newConstructorArg) {
     boolean modified = false;
 
     // Generate the new constructor arg from the original
-    A constructorArg = node.getConstructorArg();
-    A newConstructorArg = node.getDescription().createUnpopulatedConstructorArg();
     for (Field field : constructorArg.getClass().getFields()) {
       try {
         Object val = field.get(constructorArg);
@@ -189,7 +187,24 @@ public abstract class TargetNodeTranslator {
       }
     }
 
-    return modified ? Optional.of(newConstructorArg) : Optional.empty();
+    return modified;
+  }
+
+  @SuppressWarnings("unchecked")
+  private <A> Optional<A> translateConstructorArg(TargetNode<A, ?> node) {
+    A constructorArg = node.getConstructorArg();
+    if (node.getDescription() instanceof TargetTranslatorOverridingDescription) {
+      return ((TargetTranslatorOverridingDescription<A>) node.getDescription())
+          .translateConstructorArg(
+              node.getBuildTarget(),
+              node.getCellNames(),
+              this,
+              constructorArg);
+    } else {
+      A newConstructorArg = node.getDescription().createUnpopulatedConstructorArg();
+      boolean modified = translateConstructorArg(constructorArg, newConstructorArg);
+      return modified ? Optional.of(newConstructorArg) : Optional.empty();
+    }
   }
 
   /**
