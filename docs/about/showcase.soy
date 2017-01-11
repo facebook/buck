@@ -1,0 +1,89 @@
+{namespace buck.showcase}
+
+/**
+ * @param name The name of the project/company that should be displayed.
+ * @param imgSrc The URL for the image that should be displayed.
+ * @param? moreInfo Optional map of titles and a link for more information.
+ */
+{template .item}
+<li class="showcaseItem">
+  <div>
+    <img src={$imgSrc} alt="{$name} Logo" />
+  </div>
+  <div>{$name}</div>
+  {if isNonnull($moreInfo)}
+    <div>
+    {foreach $info in keys($moreInfo)}
+      {if not isFirst($info)}
+        {sp}&middot;{sp}
+      {/if}
+      <a href="{$moreInfo[$info]}" target="_blank">{$info}</a>
+    {/foreach}
+    </div>
+  {/if}
+</li>
+{/template}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'Showcase' /}
+    {param navid: 'about_showcase' /}
+    {param description}
+        Companies and projects using Buck.
+    {/param}
+    {param content}
+<ul id="showcase">
+<!-- Showcase Entries Start Here -->
+
+<!-- Facebook Apps First! -->
+{call .item}
+  {param name: 'Facebook' /}
+  {param imgSrc: 'https://lh3.googleusercontent.com/ZZPdzvlpK9r_Df9C3M7j1rNRi7hhHRvPhlklJ3lfi5jk86Jd1s0Y5wcQ1QgbVaAP5Q=w100' /}
+  {param moreInfo: [
+      'Android':
+        'https://code.facebook.com/posts/204818946346893/buck-how-we-build-android-apps-at-facebook/',
+    ] /}
+{/call}
+
+{call .item}
+  {param name: 'Messenger' /}
+  {param imgSrc: 'https://lh5.ggpht.com/0VYAvZLR9YhosF-thqm8xl8EWsCfrEY_uk2og2f59K8IOx5TfPsXjFVwxaHVnUbuEjc=w100' /}
+{/call}
+
+{call .item}
+  {param name: 'Instagram' /}
+  {param imgSrc: 'https://lh3.googleusercontent.com/aYbdIM1abwyVSUZLDKoE0CDZGRhlkpsaPOg9tNnBktUQYsXflwknnOn2Ge1Yr7rImGk=w100' /}
+{/call}
+<!-- End Facebook Apps -->
+
+{call .item}
+  {param name: 'Airbnb' /}
+  {param imgSrc: 'https://lh3.googleusercontent.com/BQnvuZR500pg2ulvv3FBmRI93ODz3AjNfbz92hCieuJLvmbGY36AKhETMTTfTDgpPQI=w100' /}
+{/call}
+
+{call .item}
+  {param name: 'Lyft' /}
+  {param imgSrc: 'https://lh5.ggpht.com/CfRup8ZMEbNpd4sf8PDUWzbnFIq0QINZpJ96M6V0-8wLmyqKD0ORSqPOq5EKdL1OskE=w100' /}
+{/call}
+
+{call .item}
+  {param name: 'Uber' /}
+  {param imgSrc: 'https://lh3.googleusercontent.com/grsL-sVOds-X3WXwQKYplloxD2wkWLUmpXFYTX2dmbAltKTRskhDX4rsdLwavMv5LHQ=w100' /}
+{/call}
+
+<!-- Showcase Entries End Here -->
+</ul>
+
+<br />
+
+<p style="text-align:center;">
+  Want to be included in this page?  Add yourself by{sp}
+  <a
+    href="https://github.com/facebook/buck/edit/master/docs/about/showcase.soy"
+    target="_blank">
+  submitting a pull request</a>.
+</p>
+    {/param}  // content
+  {/call} // buck.page
+{/template}
