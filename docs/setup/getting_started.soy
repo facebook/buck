@@ -52,7 +52,11 @@
 
 <br/>
 
-<span><block class="linux mac windows ios" /></span>
+<span><block class="linux windows ios" /></span>
+
+<p>Unfortunately, Apple only lets you develop for iOS on a Mac.</p>
+
+<span><block class="mac ios" /></span>
 This is a quick start guide for getting up and running with Buck. This article is light on details, instead focusing on the commands that you need to run to install Buck.
 
 <span><block class="windows android" /></span>
@@ -61,7 +65,7 @@ This is a quick start guide for getting up and running with Buck. This article i
 <span><block class="linux mac android" /></span>
 This is a quick start guide for getting up and running with Buck. This article is light on details, instead focusing on the commands that you need to run to install Buck and build your first application from scratch using Buck.
 
-<span><block class="linux mac windows ios android" /></span>
+<span><block class="mac ios android" /></span>
 
 <br/>
 
@@ -73,6 +77,19 @@ The commands in this guide are designed to be copy-pasteable, idempotent, and us
 </blockquote>
 </p>
 
+<span><block class="windows linux android" /></span>
+
+<br/>
+
+You can find a more detailed explanation about each step in the development process by reading the individual articles on more specific topics.
+
+<p>
+<blockquote>
+The commands in this guide are designed to be copy-pasteable, idempotent, and usable on its representative platform (OS X, Windows, Linux). Sometimes this results in some unusual constructions (such as using <code>echo</code> instead of <code>vi</code> or <code>emacs</code> to create a file). Bear in mind that this is a <em>quick</em> start guide, so few things are quicker than copy-and-paste!
+</blockquote>
+</p>
+
+<span><block class="linux windows android" /></span>
 <p>
 <blockquote>
 Currently, there is no way to download a precompiled binary for Buck.
@@ -80,10 +97,6 @@ Currently, there is no way to download a precompiled binary for Buck.
 </p>
 
 <br/>
-
-<span><block class="linux windows ios" /></span>
-
-<p>Unfortunately, Apple only lets you develop for iOS on a Mac.</p>
 
 <span><block class="mac ios android" /></span>
 
@@ -97,13 +110,14 @@ Buck is available as bottle on <a href="http://brew.sh/">Homebrew</a>.
 
 <ul>
   <li>
-    <a href="https://developer.apple.com/xcode/download/">Xcode<a>
-  </li>
-  <li>
-    <a href="https://developer.apple.com/downloads/">Command Line Tools</a>
+    <a href="https://developer.apple.com/xcode/features/">Command Line Tools</a>
   </li>
 </ul>
 
+{literal}<pre>
+# Install command line tools
+xcode-select --install
+</pre>{/literal}
 <h3>Brew install</h3>
 
 <p>
@@ -142,10 +156,7 @@ To manually build Buck, download and install the following prerequisites:
 
 <ul>
   <li>
-    <a href="https://developer.apple.com/xcode/download/">Xcode<a>
-  </li>
-  <li>
-    <a href="https://developer.apple.com/downloads/">Command Line Tools</a>
+    <a href="https://developer.apple.com/xcode/features/">Command Line Tools</a>
   </li>
   <li>
     <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Oracle Java
@@ -172,7 +183,8 @@ With watchman, Buck will use <a href="{ROOT}command/buckd.html">a daemon</a> whi
 You can use <a href="http://homebrew.sh">Homebrew</a> to install many of the prerequisites on a Mac.
 
 {literal}<pre>
-# Install XCode and Command Line tools first.
+# Install Command Line tools first.
+xcode-select --install
 # Then....
 brew update
 brew cask install java
