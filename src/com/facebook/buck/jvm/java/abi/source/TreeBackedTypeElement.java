@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.Name;
@@ -47,17 +48,12 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
   @Nullable
   private List<TreeBackedTypeParameterElement> typeParameters;
 
-  TreeBackedTypeElement(
-      @Nullable TreeBackedElement enclosingElement,
-      ClassTree tree,
-      Name qualifiedName) {
+  TreeBackedTypeElement(TreeBackedElement enclosingElement, ClassTree tree, Name qualifiedName) {
     super(getElementKind(tree), tree.getSimpleName(), enclosingElement);
     this.tree = tree;
     this.qualifiedName = qualifiedName;
     typeMirror = new StandaloneDeclaredType(this);
-    if (enclosingElement != null) {
-      enclosingElement.addEnclosedElement(this);
-    }
+    enclosingElement.addEnclosedElement(this);
   }
 
   private static ElementKind getElementKind(ClassTree tree) {
@@ -109,9 +105,13 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
   }
 
   @Override
+  public Element getEnclosingElement() {
+    return Preconditions.checkNotNull(super.getEnclosingElement());
+  }
+
+  @Override
   public NestingKind getNestingKind() {
-    // TODO(jkeljo): Change to look for kind PACKAGE once those are supported
-    if (getEnclosingElement() == null) {
+    if (getEnclosingElement().getKind() == ElementKind.PACKAGE) {
       return NestingKind.TOP_LEVEL;
     }
 

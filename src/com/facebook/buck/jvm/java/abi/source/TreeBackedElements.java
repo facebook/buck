@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.exportedfiles.Nullable;
+import com.facebook.buck.util.exportedfiles.Preconditions;
 
 import java.io.Writer;
 import java.util.ArrayList;
@@ -42,14 +43,51 @@ import javax.lang.model.util.Elements;
 class TreeBackedElements implements Elements {
   private final Elements javacElements;
   private final Map<Name, TypeElement> knownTypes = new HashMap<>();
+  private final Map<Name, TreeBackedPackageElement> knownPackages = new HashMap<>();
 
   public TreeBackedElements(Elements javacElements) {
     this.javacElements = javacElements;
   }
 
   @Override
-  public PackageElement getPackageElement(CharSequence name) {
-    throw new UnsupportedOperationException();
+  @Nullable
+  public TreeBackedPackageElement getPackageElement(CharSequence qualifiedNameString) {
+    Name qualifiedName = getName(qualifiedNameString);
+
+    if (!knownPackages.containsKey(qualifiedName)) {
+      PackageElement javacPackageElement = javacElements.getPackageElement(qualifiedName);
+      if (javacPackageElement != null) {
+        // We can lazily discover packages that are known to javac
+        return getOrCreatePackageElement(qualifiedNameString);
+      }
+    }
+
+    return knownPackages.get(qualifiedName);
+  }
+
+  /* package */ TreeBackedPackageElement getOrCreatePackageElement(
+      CharSequence qualifiedNameString) {
+    Name qualifiedName = getName(qualifiedNameString);
+    if (!knownPackages.containsKey(qualifiedName)) {
+      knownPackages.put(
+          qualifiedName,
+          new TreeBackedPackageElement(
+              getSimpleName(qualifiedName),
+              qualifiedName,
+              javacElements.getPackageElement(qualifiedName)));
+    }
+
+    return Preconditions.checkNotNull(knownPackages.get(qualifiedName));
+  }
+
+  private Name getSimpleName(Name qualifiedName) {
+    for (int i = qualifiedName.length() - 1; i >= 0; i--) {
+      if (qualifiedName.charAt(i) == '.') {
+        return javacElements.getName(qualifiedName.subSequence(i, qualifiedName.length()));
+      }
+    }
+
+    return qualifiedName;
   }
 
   @Override

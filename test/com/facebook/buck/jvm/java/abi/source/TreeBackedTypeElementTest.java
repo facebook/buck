@@ -27,6 +27,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matchers;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -37,6 +38,7 @@ import java.util.List;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.NestingKind;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
@@ -365,5 +367,28 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
     List<Element> enclosedElements = new ArrayList<>(fooElement.getEnclosedElements());
     assertThat(enclosedElements, Matchers.hasItems(barElement));
     assertSame(fooElement, barElement.getEnclosingElement());
+  }
+
+  @Test
+  public void testGetEnclosingElementForTopLevelClasses() throws IOException {
+    compile("class Foo { }");
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    PackageElement unnamedPackage = elements.getPackageElement("");
+
+    assertSame(unnamedPackage, fooElement.getEnclosingElement());
+    assertTrue(unnamedPackage.getEnclosedElements().contains(fooElement));
+  }
+
+  @Ignore("TODO(jkeljo): Need to wrap elements coming out of javac to ensure callers always get" +
+      "our PackageElement impl instead of javac's.")
+  @Test
+  public void testGetEnclosingElementForBuiltInTopLevelClasses() throws IOException {
+    initCompiler();
+
+    TypeElement stringElement = elements.getTypeElement("java.lang.String");
+    PackageElement javaLangElement = elements.getPackageElement("java.lang");
+
+    assertSame(javaLangElement, stringElement.getEnclosingElement());
   }
 }

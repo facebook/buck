@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.event.api.BuckTracing;
+import com.facebook.buck.util.exportedfiles.Nullable;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.IdentifierTree;
@@ -29,6 +30,7 @@ import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
 
 import javax.lang.model.element.Name;
+import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.util.Elements;
 
 /**
@@ -67,21 +69,24 @@ class TreeResolver {
   void enterTree(CompilationUnitTree compilationUnit) {
     try (BuckTracing.TraceSection t = BUCK_TRACING.traceSection("buck.abi.enterTree")) {
       new TreePathScanner<Void, Void>() {
+        @Nullable
         TreeBackedElement enclosingElement;
-        CharSequence scope;
-
-        @Override
-        public Void visitCompilationUnit(CompilationUnitTree node, Void aVoid) {
-          scope = treeToName(node.getPackageName());
-
-          return super.visitCompilationUnit(node, aVoid);
-        }
 
         @Override
         public Void visitClass(ClassTree node, Void aVoid) {
+          // Match javac: create a package element only once we know a class exists in it
+          if (enclosingElement == null) {
+            enclosingElement =
+                elements.getOrCreatePackageElement(treeToName(compilationUnit.getPackageName()));
+          }
+
           Name qualifiedName = node.getSimpleName();
-          if (scope.length() > 0) {
-            qualifiedName = elements.getName(String.format("%s.%s", scope, qualifiedName));
+          Name enclosingQualifiedName = ((QualifiedNameable) enclosingElement).getQualifiedName();
+          if (enclosingQualifiedName.length() > 0) {
+            qualifiedName = elements.getName(String.format(
+                "%s.%s",
+                enclosingQualifiedName,
+                qualifiedName));
           }
 
           TreeBackedTypeElement typeElement =
@@ -93,14 +98,11 @@ class TreeResolver {
           // failures due to the class loader hackery required to make tests run.
           ((TreeBackedTrees) trees).enterElement(getCurrentPath(), typeElement);
 
-          CharSequence oldScope = scope;
           TreeBackedElement oldEnclosingElement = enclosingElement;
-          scope = typeElement.getQualifiedName();
           enclosingElement = typeElement;
           try {
             return super.visitClass(node, aVoid);
           } finally {
-            scope = oldScope;
             enclosingElement = oldEnclosingElement;
           }
         }
