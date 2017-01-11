@@ -347,9 +347,7 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
 
   @Override
   public boolean isCacheable() {
-    // There's some non-detemrinism issues with GHC which currently prevent us from the caching
-    // this rule.
-    return false;
+    return haskellVersion.getMajorVersion() >= 8;
   }
 
   @Override
