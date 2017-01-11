@@ -80,7 +80,7 @@ public class DependencyFileRuleKeyFactoryTest {
             hashCache,
             pathResolver,
             ruleFinder)
-            .build(rule, ImmutableList.of()).get().getFirst();
+            .build(rule, ImmutableList.of()).getFirst();
 
     // Now, build a rule key with a different hash for the output for the above rule.
     hashCache = new FakeFileHashCache(
@@ -94,7 +94,7 @@ public class DependencyFileRuleKeyFactoryTest {
             hashCache,
             pathResolver,
             ruleFinder)
-            .build(rule, ImmutableList.of()).get().getFirst();
+            .build(rule, ImmutableList.of()).getFirst();
 
     assertThat(inputKey1, Matchers.equalTo(inputKey2));
   }
@@ -127,7 +127,7 @@ public class DependencyFileRuleKeyFactoryTest {
             hashCache,
             pathResolver,
             ruleFinder)
-            .build(rule, ImmutableList.of()).get().getFirst();
+            .build(rule, ImmutableList.of()).getFirst();
 
     // Now, build a rule key with a different hash for the output for the above rule.
     hashCache = new FakeFileHashCache(
@@ -141,7 +141,7 @@ public class DependencyFileRuleKeyFactoryTest {
             hashCache,
             pathResolver,
             ruleFinder)
-            .build(rule, ImmutableList.of()).get().getFirst();
+            .build(rule, ImmutableList.of()).getFirst();
 
     assertThat(inputKey1, Matchers.equalTo(inputKey2));
   }
@@ -182,7 +182,6 @@ public class DependencyFileRuleKeyFactoryTest {
             pathResolver,
             ruleFinder)
             .buildManifestKey(rule)
-            .get()
             .getFirst();
 
     // Now, build a rule key with a different hash for the output for the above rule.
@@ -198,7 +197,6 @@ public class DependencyFileRuleKeyFactoryTest {
             pathResolver,
             ruleFinder)
             .buildManifestKey(rule)
-            .get()
             .getFirst();
 
     assertThat(manifestKey1, Matchers.equalTo(manifestKey2));
@@ -234,7 +232,6 @@ public class DependencyFileRuleKeyFactoryTest {
             pathResolver,
             ruleFinder)
             .buildManifestKey(rule)
-            .get()
             .getFirst();
 
     // Now, build a rule key with a different hash for the localInput for the above rule.
@@ -250,7 +247,6 @@ public class DependencyFileRuleKeyFactoryTest {
             pathResolver,
             ruleFinder)
             .buildManifestKey(rule)
-            .get()
             .getFirst();
 
     assertThat(manifestKey1, Matchers.not(Matchers.equalTo(manifestKey2)));

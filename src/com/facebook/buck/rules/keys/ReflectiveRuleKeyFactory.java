@@ -89,6 +89,7 @@ public abstract class ReflectiveRuleKeyFactory<
         alterRuleKey.amendKey(builder, buildRule);
       }
     } catch (ExecutionException | RuntimeException e) {
+      propagateIfSizeLimitException(e);
       LOG.warn(e, "Error creating rule key for %s (%s)", buildRule, buildRule.getType());
       throw Throwables.propagate(e);
     }
@@ -101,9 +102,24 @@ public abstract class ReflectiveRuleKeyFactory<
     try {
       return knownRules.getUnchecked(buildRule);
     } catch (RuntimeException e) {
+      propagateIfSizeLimitException(e);
       LOG.warn(e, "When building %s", buildRule);
       throw e;
     }
   }
 
+  private void propagateIfSizeLimitException(Throwable throwable) {
+    // At the moment, it is difficult to make SizeLimitException be a checked exception. Due to how
+    // exceptions are currently handled (e.g. LoadingCache wraps them with ExecutionException),
+    // we need to iterate through the cause chain to check if a SizeLimitException is wrapped.
+    while (throwable != null) {
+      if (throwable instanceof SizeLimiter.SizeLimitException) {
+        throw (SizeLimiter.SizeLimitException) throwable;
+      }
+      if (throwable.getCause() == throwable) {
+        break;
+      }
+      throwable = throwable.getCause();
+    }
+  }
 }

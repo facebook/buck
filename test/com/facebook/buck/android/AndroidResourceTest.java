@@ -234,7 +234,7 @@ public class AndroidResourceTest {
         fileHashCache,
         pathResolver,
         ruleFinder)
-        .build(resource).get();
+        .build(resource);
 
     fileHashCache.invalidateAll();
 
@@ -246,7 +246,7 @@ public class AndroidResourceTest {
         fileHashCache,
         pathResolver,
         ruleFinder)
-        .build(resource).get();
+        .build(resource);
 
     assertThat(original, Matchers.not(Matchers.equalTo(changed)));
   }

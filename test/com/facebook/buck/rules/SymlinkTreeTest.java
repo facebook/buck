@@ -236,11 +236,11 @@ public class SymlinkTreeTest {
 
     // Generate an input-based rule key for the symlink tree.
     RuleKey ruleKey1 =
-        inputBasedRuleKeyFactory.build(symlinkTreeBuildRule).get();
+        inputBasedRuleKeyFactory.build(symlinkTreeBuildRule);
 
     // Change the dep's rule key and re-calculate the input-based rule key.
     RuleKey ruleKey2 =
-        inputBasedRuleKeyFactory.build(symlinkTreeBuildRule).get();
+        inputBasedRuleKeyFactory.build(symlinkTreeBuildRule);
 
     // Verify that the rules keys are the same.
     assertEquals(ruleKey1, ruleKey2);
@@ -282,7 +282,7 @@ public class SymlinkTreeTest {
             pathResolver,
             ruleFinder);
     RuleKey ruleKey1 =
-        inputBasedRuleKeyFactory.build(symlinkTreeBuildRule).get();
+        inputBasedRuleKeyFactory.build(symlinkTreeBuildRule);
 
     // Generate an input-based rule key for the symlink tree with the contents of the link
     // target hashing to a different value: "bbbb".
@@ -295,7 +295,7 @@ public class SymlinkTreeTest {
             pathResolver,
             ruleFinder);
     RuleKey ruleKey2 =
-        inputBasedRuleKeyFactory.build(symlinkTreeBuildRule).get();
+        inputBasedRuleKeyFactory.build(symlinkTreeBuildRule);
 
     // Verify that the rules keys are the same.
     assertEquals(ruleKey1, ruleKey2);
