@@ -285,9 +285,14 @@ section.content nav ul li.navActiveItem a {
   color: white;
 }
 
+
 footer {
-  background: #000;
-  padding: 10px 0;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  background-color: #000;
   color: #fff;
   border-top: 4px solid #fff;
 }
@@ -383,6 +388,11 @@ footer {
 
   section.content article {
     float: right;
+    width: 660px;
+  }
+
+  section.content landing-page {
+    float: left;
     width: 660px;
   }
 

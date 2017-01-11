@@ -152,10 +152,11 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 
 	<section class='content'><div class='width'>
 
-  <article>
-
   {if $navid != 'home'}
+    <article>
     <h1>{$title}{if $subtitle}:<div class="subtitle">{$subtitle}</div>{/if}</h1>
+  {else}
+    <landing-page>
   {/if}
 
 {/template}
@@ -614,12 +615,13 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 
 </article>
 
+{if $navid != 'home'}
   <nav>
     {call buck.tableOfContents data="all"}
       {param navid: $navid /}
     {/call}
   </nav>
-
+{/if}
 
 </div></section>
 
