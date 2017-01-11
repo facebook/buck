@@ -350,6 +350,22 @@ footer {
   text-align: right;
 }
 
+#showcase {
+  text-align: center;
+}
+#showcase .showcaseItem {
+  text-align: center;
+  display: inline-block;
+  width: 175px;
+  margin: 0;
+  padding: 10px;
+  vertical-align: top;
+}
+#showcase .showcaseItem img {
+  width: 100px;
+  border-radius: 20px;
+}
+
 /* tabletish */
 
 @media (min-width: 480px) {
