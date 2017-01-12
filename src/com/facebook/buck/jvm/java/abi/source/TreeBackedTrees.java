@@ -42,6 +42,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 import javax.tools.JavaCompiler;
 
@@ -49,6 +50,7 @@ import javax.tools.JavaCompiler;
  * An implementation of {@link Trees} that uses our tree-backed elements and types when available.
  */
 class TreeBackedTrees extends Trees {
+  private final Elements elements;
   private final Trees javacTrees;
   private final Map<Tree, TreeBackedElement> treeBackedElements = new HashMap<>();
   private final Map<TreeBackedElement, TreePath> elementPaths = new HashMap<>();
@@ -58,8 +60,9 @@ class TreeBackedTrees extends Trees {
     return ((FrontendOnlyJavacTask) task).getTrees();
   }
 
-  /* package */ TreeBackedTrees(Trees javacTrees) {
+  /* package */ TreeBackedTrees(Trees javacTrees, Elements elements) {
     this.javacTrees = javacTrees;
+    this.elements = elements;
   }
 
   /* package */ void enterElement(TreePath path, TreeBackedElement element) {
@@ -157,7 +160,6 @@ class TreeBackedTrees extends Trees {
   }
 
   @Override
-  @Nullable
   public TreeBackedScope getScope(TreePath path) {
     TreePath walker = path;
 
@@ -175,7 +177,14 @@ class TreeBackedTrees extends Trees {
                     getScope(walker.getParentPath()),
                     (TreeBackedTypeElement) Preconditions.checkNotNull(getElement(walker))));
           }
-          return treeBackedScopes.get(leaf);
+          return Preconditions.checkNotNull(treeBackedScopes.get(leaf));
+        case COMPILATION_UNIT:
+          if (!treeBackedScopes.containsKey(leaf)) {
+            treeBackedScopes.put(
+                leaf,
+                new TreeBackedFileScope((CompilationUnitTree) leaf, elements, this));
+          }
+          return Preconditions.checkNotNull(treeBackedScopes.get(leaf));
         // $CASES-OMITTED$
         default:
           // Skip over other nodes
@@ -185,7 +194,7 @@ class TreeBackedTrees extends Trees {
       walker = walker.getParentPath();
     }
 
-    return null;
+    throw new AssertionError("'Unreachable' code");
   }
 
   @Override

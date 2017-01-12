@@ -70,7 +70,7 @@ class FrontendOnlyJavacTask extends JavacTask {
   public FrontendOnlyJavacTask(JavacTask javacTask) {
     this.javacTask = javacTask;
     elements = new TreeBackedElements(javacTask.getElements());
-    trees = new TreeBackedTrees(Trees.instance(javacTask));
+    trees = new TreeBackedTrees(Trees.instance(javacTask), elements);
     types = new TreeBackedTypes(elements);
   }
 

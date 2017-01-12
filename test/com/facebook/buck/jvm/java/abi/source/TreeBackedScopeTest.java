@@ -22,6 +22,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.CompilerTreeApiParameterized;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -34,6 +35,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -96,8 +98,35 @@ public class TreeBackedScopeTest extends CompilerTreeApiParameterizedTest {
         Lists.newArrayList(parentScope.getLocalElements()));
   }
 
+  @Test
+  public void testFileScopeContainsAllImportsAndAllTopLevelClassesInTheFile() throws IOException {
+    compile(Joiner.on('\n').join(
+        "import java.util.List;",
+        "import java.io.InputStream;",
+        "abstract class Foo implements List<InputStream> { }",
+        "class Bar { }"
+    ));
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    Scope classScope = trees.getScope(trees.getPath(fooElement));
+    Scope fileScope = classScope.getEnclosingScope();
+
+    assertNull(fileScope.getEnclosingClass());
+    assertNull(fileScope.getEnclosingMethod());
+
+    assertScopeContentsExactly(fileScope, "java.util.List", "java.io.InputStream", "Foo", "Bar");
+  }
+
   private void assertScopeContentsExactly(Scope scope, Collection<? extends Element> elements) {
     assertScopeContentsExactly(scope, elements.toArray(new Element[elements.size()]));
+  }
+
+  private void assertScopeContentsExactly(Scope scope, String... contents) {
+    List<TypeElement> expected = RichStream.from(Arrays.stream(contents))
+        .map(name -> elements.getTypeElement(name))
+        .toImmutableList();
+
+    assertScopeContentsExactly(scope, expected);
   }
 
   private void assertScopeContentsExactly(Scope scope, Element... expected) {
