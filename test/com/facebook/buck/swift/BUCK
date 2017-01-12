@@ -1,25 +1,27 @@
 # These are separate from the rest of the tests so we can run
 # them separately, avoiding the 20 second timeout in the iOS simulator.
 STANDARD_TEST_SRCS = [
-    '*Test.java',
+  '*Test.java',
 ]
 
 STANDARD_INTEGRATION_TEST_SRCS = [
-    '*IntegrationTest.java',
+  '*IntegrationTest.java',
 ]
 
 java_test(
-    name = 'unit',
-    srcs = glob(STANDARD_TEST_SRCS,
-                excludes=STANDARD_INTEGRATION_TEST_SRCS),
-    autodeps = True,
+  name = 'unit',
+  srcs = glob(
+    STANDARD_TEST_SRCS,
+    excludes = STANDARD_INTEGRATION_TEST_SRCS,
+  ),
+  autodeps = True,
 )
 
 java_test(
-    name = 'integration',
-    run_test_separately = True,
-    srcs = glob(STANDARD_INTEGRATION_TEST_SRCS),
-    autodeps = True,
-    resources = glob(['testdata/**']),
-    labels = ['long_running']
+  name = 'integration',
+  srcs = glob(STANDARD_INTEGRATION_TEST_SRCS),
+  autodeps = True,
+  labels = ['long_running'],
+  resources = glob(['testdata/**']),
+  run_test_separately = True,
 )

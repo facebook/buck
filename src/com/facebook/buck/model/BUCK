@@ -1,4 +1,5 @@
-BUILD_ID_SRCS = [ 'BuildId.java' ]
+BUILD_ID_SRCS = ['BuildId.java']
+
 java_library(
   name = 'build_id',
   srcs = BUILD_ID_SRCS,
@@ -12,17 +13,19 @@ MACRO_SRCS = [
   'MacroReplacer.java',
   'MacroException.java',
 ]
+
 SIMPLE_TYPES_SRCS = [
   'Either.java',
   'Pair.java',
 ]
+
 java_immutables_library(
   name = 'macros',
+  srcs = MACRO_SRCS,
+  autodeps = True,
   immutable_types = [
     'MacroMatchResult',
   ],
-  srcs = MACRO_SRCS,
-  autodeps = True,
   visibility = ['PUBLIC'],
 )
 
@@ -35,7 +38,11 @@ java_library(
 
 java_immutables_library(
   name = 'model',
-  srcs = glob(['*.java'], excludes = BUILD_ID_SRCS + MACRO_SRCS + SIMPLE_TYPES_SRCS),
+  srcs = glob(
+    ['*.java'],
+    excludes = BUILD_ID_SRCS + MACRO_SRCS + SIMPLE_TYPES_SRCS,
+  ),
+  autodeps = True,
   immutable_types = [
     'BuildTarget',
     'UnflavoredBuildTarget',
@@ -43,6 +50,5 @@ java_immutables_library(
   tests = [
     '//test/com/facebook/buck/model:model',
   ],
-  autodeps = True,
   visibility = ['PUBLIC'],
 )

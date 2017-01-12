@@ -1,13 +1,13 @@
 prebuilt_jar(
   name = 'ObjCBridge',
   binary_jar = 'ObjCBridge.jar',
-  deps = [
-    '//third-party/java/jna:jna',
-  ],
   licenses = [
     'LICENSE',
   ],
   visibility = ['PUBLIC'],
+  deps = [
+    '//third-party/java/jna:jna',
+  ],
 )
 
 export_file(

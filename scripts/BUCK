@@ -8,15 +8,15 @@ python_binary(
 
 python_library(
   name = 'diff_rulekeys_lib',
-  base_module = '',
   srcs = [
     'diff_rulekeys.py',
   ],
-  deps = [
-    '//third-party/py/argparse:argparse',
-  ],
+  base_module = '',
   visibility = [
     '//scripts/...',
+  ],
+  deps = [
+    '//third-party/py/argparse:argparse',
   ],
 )
 
@@ -27,5 +27,5 @@ python_test(
   ],
   deps = [
     ':diff_rulekeys_lib',
-  ]
+  ],
 )

@@ -1,5 +1,5 @@
 standard_java_library(
-    immutable_types = [
-        'NumberFormatterCacheKey',
-    ],
+  immutable_types = [
+    'NumberFormatterCacheKey',
+  ],
 )

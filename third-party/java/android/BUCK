@@ -6,21 +6,21 @@ prebuilt_jar(
   source_jar = 'sdklib-25.2.0-sources.jar',
   visibility = [
     '//src/com/facebook/buck/android:steps',
-  ]
+  ],
 )
 
 java_library(
   name = 'tools-sdk-common',
-  deps = [
-    ':sdklib',
-    ':layoutlib-api',
-  ],
   exported_deps = [
     ':common',
     ':sdk-common',
   ],
   visibility = [
-    'PUBLIC'
+    'PUBLIC',
+  ],
+  deps = [
+    ':layoutlib-api',
+    ':sdklib',
   ],
 )
 
@@ -41,4 +41,3 @@ prebuilt_jar(
   binary_jar = 'layoutlib-api-25.2.0.jar',
   source_jar = 'layoutlib-api-25.2.0-sources.jar',
 )
-

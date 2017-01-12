@@ -1,6 +1,6 @@
 java_test(
   name = 'simulator',
   srcs = glob(['*Test.java']),
-  resources = glob(['testdata/**']),
   autodeps = True,
+  resources = glob(['testdata/**']),
 )

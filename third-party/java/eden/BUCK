@@ -8,11 +8,11 @@
 prebuilt_jar(
   name = 'eden-thrift-bindings',
   binary_jar = 'eden.jar',
-  deps = [
-    ':java-thrift',
-  ],
   visibility = [
     '//src/com/facebook/buck/eden/...',
+  ],
+  deps = [
+    ':java-thrift',
   ],
 )
 
@@ -26,10 +26,10 @@ prebuilt_jar(
 prebuilt_jar(
   name = 'java-thrift',
   binary_jar = 'java-thrift-dependencies.jar',
-  deps = [
-    '//third-party/java/slf4j:slf4j-api',
-  ],
   visibility = [
     '//src/com/facebook/buck/eden/...',
+  ],
+  deps = [
+    '//third-party/java/slf4j:slf4j-api',
   ],
 )

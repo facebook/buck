@@ -1,14 +1,14 @@
 java_library(
-    name = 'jackson',
-    deps = [],
-    exported_deps = [
-      ':jackson-annotations',
-      ':jackson-core',
-      ':jackson-databind',
-    ],
-    visibility = [
-      '//test/...',
-    ],
+  name = 'jackson',
+  exported_deps = [
+    ':jackson-annotations',
+    ':jackson-core',
+    ':jackson-databind',
+  ],
+  visibility = [
+    '//test/...',
+  ],
+  deps = [],
 )
 
 prebuilt_jar(
@@ -17,7 +17,7 @@ prebuilt_jar(
   licenses = [
     'LICENSE',
   ],
-  visibility = [ 'PUBLIC' ],
+  visibility = ['PUBLIC'],
 )
 
 prebuilt_jar(
@@ -26,7 +26,7 @@ prebuilt_jar(
   licenses = [
     'LICENSE',
   ],
-  visibility = [ 'PUBLIC' ],
+  visibility = ['PUBLIC'],
 )
 
 prebuilt_jar(
@@ -35,7 +35,7 @@ prebuilt_jar(
   licenses = [
     'LICENSE',
   ],
-  visibility = [ 'PUBLIC' ],
+  visibility = ['PUBLIC'],
 )
 
 prebuilt_jar(
@@ -55,7 +55,7 @@ prebuilt_jar(
   licenses = [
     'LICENSE',
   ],
-  visibility = [ 'PUBLIC' ],
+  visibility = ['PUBLIC'],
 )
 
 java_library(
@@ -66,7 +66,7 @@ java_library(
     ':jackson-core',
     ':jackson-databind-jar',
   ],
-  visibility = [ 'PUBLIC' ],
+  visibility = ['PUBLIC'],
 )
 
 prebuilt_jar(

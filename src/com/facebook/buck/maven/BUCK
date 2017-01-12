@@ -5,11 +5,14 @@ UTIL_SRCS = [
 
 java_library(
   name = 'maven',
-  srcs = glob(['*.java'], excludes = UTIL_SRCS),
+  srcs = glob(
+    ['*.java'],
+    excludes = UTIL_SRCS,
+  ),
+  autodeps = True,
   resources = [
     'build-file.st',
   ],
-  autodeps = True,
   visibility = [
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/jvm/java:rules',

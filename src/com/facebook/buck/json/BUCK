@@ -4,42 +4,47 @@ RULES_SRCS = [
 
 PYTHON_PROD_SRCS = glob(
   ['buck_parser/**/*.py'],
-  excludes=['buck_parser/**/*_test.py'])
+  excludes = ['buck_parser/**/*_test.py'],
+)
 
 java_library(
   name = 'rules',
   srcs = RULES_SRCS,
   autodeps = True,
-  visibility = [ 'PUBLIC' ],
+  visibility = ['PUBLIC'],
 )
 
 STEPS_SRCS = [
   'JsonConcatenateStep.java',
 ]
+
 java_library(
   name = 'steps',
   srcs = STEPS_SRCS,
   autodeps = True,
-  visibility = [ 'PUBLIC' ],
+  visibility = ['PUBLIC'],
 )
 
 java_immutables_library(
   name = 'json',
-  srcs = glob(['*.java'], excludes = RULES_SRCS + STEPS_SRCS),
+  srcs = glob(
+    ['*.java'],
+    excludes = RULES_SRCS + STEPS_SRCS,
+  ),
+  autodeps = True,
   immutable_types = [
     'ProjectBuildFileParserOptions',
     'BuildFileParseExceptionData',
     'BuildFileParseExceptionStackTraceEntry',
     'BuildFileSyntaxError',
   ],
-  tests = [
-    '//test/com/facebook/buck/json:json',
-  ],
+  resources = PYTHON_PROD_SRCS,
   # Place the python package in the JAR root so the jar can be imported by
   # python's built in zip importer.
   resources_root = '.',
-  resources = PYTHON_PROD_SRCS,
-  autodeps = True,
+  tests = [
+    '//test/com/facebook/buck/json:json',
+  ],
   visibility = [
     'PUBLIC',
   ],
@@ -74,5 +79,5 @@ python_binary(
   main_module = 'buck_parser',
   deps = [
     ':buck_parser',
-  ]
+  ],
 )

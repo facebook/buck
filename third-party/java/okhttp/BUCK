@@ -2,13 +2,13 @@ prebuilt_jar(
   name = 'okhttp',
   binary_jar = 'okhttp-3.3.0.jar',
   javadoc_url = 'http://square.github.io/okhttp/javadoc',
-  deps = [
-    '//third-party/java/okio:okio',
-  ],
   licenses = [
     'LICENSE.txt',
   ],
   visibility = [
     'PUBLIC',
+  ],
+  deps = [
+    '//third-party/java/okio:okio',
   ],
 )

@@ -4,38 +4,38 @@ java_library(
     'AppendingZipOutputStream.java',
     'ByteIo.java',
     'CentralDirectory.java',
-    'CustomZipOutputStream.java',
     'CustomZipEntry.java',
+    'CustomZipOutputStream.java',
     'EntryAccounting.java',
     'OverwritingZipOutputStream.java',
     'ZipConstants.java',
     'ZipOutputStreams.java',
     'ZipWriteTest.java',
   ],
+  autodeps = True,
   tests = [
     '//test/com/facebook/buck/zip:zip',
   ],
-  autodeps = True,
   visibility = ['PUBLIC'],
 )
 
 java_library(
   name = 'unzip',
-  srcs = [ 'Unzip.java' ],
+  srcs = ['Unzip.java'],
+  autodeps = True,
   tests = [
     '//test/com/facebook/buck/zip:zip',
   ],
-  autodeps = True,
-  visibility = [ 'PUBLIC' ],
+  visibility = ['PUBLIC'],
 )
 
 java_library(
   name = 'steps',
   srcs = glob(['*Step.java']),
+  autodeps = True,
   tests = [
     '//test/com/facebook/buck/zip:zip',
   ],
-  autodeps = True,
   visibility = [
     '//src/com/facebook/buck/android/...',
     '//src/com/facebook/buck/apple:rules',

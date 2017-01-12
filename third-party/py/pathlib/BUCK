@@ -8,13 +8,13 @@ python_library(
     'LICENSE.txt',
   ],
   visibility = [
-    'PUBLIC'
+    'PUBLIC',
   ],
 )
 
 export_file(
   name = 'pathlib.py',
-  visibility=[
+  visibility = [
     'PUBLIC',
   ],
 )

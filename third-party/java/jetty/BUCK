@@ -5,7 +5,7 @@ prebuilt_jar(
     'license-epl.html',
     'LICENSE-APACHE',
   ],
-#  source_jar = ':jetty-source',
+  #  source_jar = ':jetty-source',
 )
 
 # Uncomment this to get hold of the source jar.
@@ -18,7 +18,6 @@ prebuilt_jar(
 
 java_library(
   name = 'jetty',
-  deps = [],
   exported_deps = [
     ':jetty-all',
     '//third-party/java/servlet-api:servlet-api',
@@ -26,13 +25,14 @@ java_library(
   visibility = [
     '//src/com/facebook/buck/httpserver:',
     '//src/com/facebook/buck/intellij/ideabuck:ideabuck-lib',
-    '//test/com/facebook/buck/file:file',
     '//test/com/facebook/buck/cli:cli',
     '//test/com/facebook/buck/event/listener/integration:integration',
+    '//test/com/facebook/buck/file:file',
     '//test/com/facebook/buck/httpserver:',
     '//test/com/facebook/buck/maven:maven',
     '//test/com/facebook/buck/maven:testutil',
     '//test/com/facebook/buck/rage:',
     '//test/com/facebook/buck/testutil/integration:',
   ],
+  deps = [],
 )

@@ -1,4 +1,5 @@
 LOGGER_FILES = ['Logger.java']
+
 APPENDABLE_LOG_RECORD_FILES = ['AppendableLogRecord.java']
 
 java_library(
@@ -14,6 +15,7 @@ java_library(
 java_library(
   name = 'api',
   srcs = LOGGER_FILES,
+  visibility = ['PUBLIC'],
   deps = [
     # This class is used everywhere. Only depend on
     # appendablelogrecord and third-party, and then only if strictly
@@ -21,12 +23,15 @@ java_library(
     '//third-party/java/jsr:jsr305',
     ':appendablelogrecord',
   ],
-  visibility = [ 'PUBLIC' ],
 )
 
 java_immutables_library(
   name = 'log',
-  srcs = glob(['*.java'], excludes = LOGGER_FILES + APPENDABLE_LOG_RECORD_FILES),
+  srcs = glob(
+    ['*.java'],
+    excludes = LOGGER_FILES + APPENDABLE_LOG_RECORD_FILES,
+  ),
+  autodeps = True,
   immutable_types = [
     'InvocationInfo',
     'LogConfigSetup',
@@ -34,14 +39,13 @@ java_immutables_library(
   tests = [
     '//test/com/facebook/buck/log:log',
   ],
-  autodeps = True,
   visibility = [
     '//src/com/facebook/buck/android:helpers',
     '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/android:steps',
     '//src/com/facebook/buck/cli:cli',
-    '//src/com/facebook/buck/event/listener:listener',
     '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/event/listener:listener',
     '//src/com/facebook/buck/rage:rage',
     '//src/com/facebook/buck/rules:types',
     '//src/com/facebook/buck/slb:slb',

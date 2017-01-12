@@ -1,17 +1,17 @@
 java_library(
   name = 'fat-jar-main',
-  # Maximum compatibility
-  source = '6',
-  target = '6',
   srcs = [
     'FatJar.java',
     'FatJarMain.java',
     '//src/com/facebook/buck/util/exportedfiles:Nullable.java',
     '//src/com/facebook/buck/util/exportedfiles:Preconditions.java',
   ],
+  # Maximum compatibility
+  source = '6',
+  target = '6',
   # Must be empty!  We package these sources and compile them into fat JARs,
   # so it's important that they don't bring along any additional dependencies.
-  deps = []
+  deps = [],
 )
 
 java_library(
@@ -43,9 +43,9 @@ java_library(
 java_immutables_library(
   name = 'support',
   srcs = [
+    'AbstractDirectToJarOutputSettings.java',
     'AbstractJavaOptions.java',
     'AbstractJavacExecutionContext.java',
-    'AbstractDirectToJarOutputSettings.java',
     'AbstractJavacOptions.java',
     'AbstractJavacVersion.java',
     'AnnotationProcessingEvent.java',
@@ -67,29 +67,30 @@ java_immutables_library(
     'HasMavenCoordinates.java',
     'HasSources.java',
     'JarBackedJavac.java',
-    'JavaRuntimeLauncher.java',
+    'JarDirectoryStepHelper.java',
+    'JavaInMemoryFileManager.java',
+    'JavaInMemoryFileObject.java',
     'JavaLibrary.java',
+    'JavaNoOpFileObject.java',
+    'JavaRuntimeLauncher.java',
     'Javac.java',
     'JavacErrorParser.java',
     'JavacEventSinkToBuckEventBusBridge.java',
     'JavacExecutionContextSerializer.java',
-    'Jsr199TracingBridge.java',
-    'JavaInMemoryFileManager.java',
-    'JavaInMemoryFileObject.java',
-    'JavaNoOpFileObject.java',
-    'JarDirectoryStepHelper.java',
     'JdkProvidedInMemoryJavac.java',
     'Jsr199Javac.java',
+    'Jsr199TracingBridge.java',
     'MavenPublishable.java',
     'NoOpClassUsageFileWriter.java',
     'OptionsConsumer.java',
-    'OutOfProcessJsr199Javac.java',
     'OutOfProcessJarBackedJavac.java',
-    'OutOfProcessJdkProvidedInMemoryJavac.java',
     'OutOfProcessJavacConnectionInterface.java',
+    'OutOfProcessJdkProvidedInMemoryJavac.java',
+    'OutOfProcessJsr199Javac.java',
     'StandardJavaFileManagerFactory.java',
     'TracingProcessorWrapper.java',
   ],
+  autodeps = True,
   immutable_types = [
     'JavaOptions',
     'JavacExecutionContext',
@@ -97,14 +98,13 @@ java_immutables_library(
     'JavacOptions',
     'JavacVersion',
   ],
-  tests = [
-    '//test/com/facebook/buck/jvm/java:integration-slow',
-    '//test/com/facebook/buck/jvm/java:java',
-  ],
-  autodeps = True,
   provided_deps = [
     # Event API is loaded by the bootstrapper at runtime; don't need to depend on it strongly
     '//src/com/facebook/buck/event/api:api',
+  ],
+  tests = [
+    '//test/com/facebook/buck/jvm/java:integration-slow',
+    '//test/com/facebook/buck/jvm/java:java',
   ],
   visibility = ['PUBLIC'],
 )
@@ -113,8 +113,8 @@ java_library(
   name = 'packagefinder',
   srcs = [
     'DefaultJavaPackageFinder.java',
-    'ResourcesRootPackageFinder.java',
     'JavaPackageFinderSerializer.java',
+    'ResourcesRootPackageFinder.java',
   ],
   autodeps = True,
   visibility = ['PUBLIC'],
@@ -133,16 +133,16 @@ java_library(
     'JarShape.java',
     'JavaBinary.java',
     'JavaBinaryDescription.java',
-    'JavacOptionsFactory.java',
-    'Javadoc.java',
-    'JvmLibraryArg.java',
-    'JavaLibraryDescription.java',
     'JavaLibraryClasspathProvider.java',
+    'JavaLibraryDescription.java',
     'JavaLibraryRules.java',
     'JavaLibraryWithTests.java',
     'JavaSourceJar.java',
     'JavaTest.java',
     'JavaTestDescription.java',
+    'JavacOptionsFactory.java',
+    'Javadoc.java',
+    'JvmLibraryArg.java',
     'Keystore.java',
     'KeystoreDescription.java',
     'MavenUberJar.java',
@@ -150,17 +150,17 @@ java_library(
     'PrebuiltJarDescription.java',
     'ZipArchiveDependencySupplier.java',
   ],
-  tests = [
-    '//test/com/facebook/buck/jvm/java:integration-slow',
-    '//test/com/facebook/buck/jvm/java:java',
-  ],
+  autodeps = True,
   resources = [
     'FatJar.java',
     'FatJarMain.java',
     '//src/com/facebook/buck/util/exportedfiles:Nullable.java',
     '//src/com/facebook/buck/util/exportedfiles:Preconditions.java',
   ],
-  autodeps = True,
+  tests = [
+    '//test/com/facebook/buck/jvm/java:integration-slow',
+    '//test/com/facebook/buck/jvm/java:java',
+  ],
   visibility = ['PUBLIC'],
 )
 
@@ -175,15 +175,16 @@ java_immutables_library(
     'CompileToJarStepFactory.java',
     'CopyResourcesStep.java',
     'GenerateCodeCoverageReportStep.java',
-    'JavacOptionsAmender.java',
-    'JavacToJarStepFactory.java',
+    'JUnitStep.java',
     'JacocoConstants.java',
     'JarDirectoryStep.java',
     'JavacDirectToJarStep.java',
+    'JavacOptionsAmender.java',
     'JavacStep.java',
-    'JUnitStep.java',
+    'JavacToJarStepFactory.java',
     'TestType.java',
   ],
+  autodeps = True,
   immutable_types = [
     'JUnitJvmArgs',
   ],
@@ -191,16 +192,15 @@ java_immutables_library(
     '//test/com/facebook/buck/jvm/java:integration-slow',
     '//test/com/facebook/buck/jvm/java:java',
   ],
-  autodeps = True,
   visibility = ['PUBLIC'],
 )
 
 java_library(
   name = 'autodeps',
   srcs = [
-    'SrcRootsFinder.java',
     'JavaFileParser.java',
     'JavaSymbolFinder.java',
+    'SrcRootsFinder.java',
   ],
   autodeps = True,
   visibility = [

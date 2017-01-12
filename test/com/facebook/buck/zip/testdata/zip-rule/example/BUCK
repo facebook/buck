@@ -1,6 +1,9 @@
 zip_file(
   name = 'ziptastic',
-  srcs = glob(['**/*'], excludes = ['BUCK']),
+  srcs = glob(
+    ['**/*'],
+    excludes = ['BUCK'],
+  ),
 )
 
 export_file(
@@ -11,5 +14,5 @@ export_file(
 
 zip_file(
   name = 'unrolled',
-  srcs = [ ':source-jar' ],
+  srcs = [':source-jar'],
 )

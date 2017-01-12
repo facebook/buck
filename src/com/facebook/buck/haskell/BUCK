@@ -1,10 +1,10 @@
 java_immutables_library(
   name = 'haskell',
   srcs = glob(['*.java']),
+  autodeps = True,
   immutable_types = [
     'HaskellVersion',
     'HaskellCompileInput',
   ],
-  autodeps = True,
-  visibility=['PUBLIC'],
+  visibility = ['PUBLIC'],
 )

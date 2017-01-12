@@ -1,11 +1,11 @@
 android_library(
   name = 'agent-lib',
   srcs = glob(['*.java']),
+  autodeps = False,  # See below.
   # Because this code gets dx'd, we restrict the source to Java 6 so that
   # trying to use something like try-with-resources is a compile-time error.
   source = '6',
   target = '6',
-  autodeps = False, # See below.
   deps = [
     # Do not add other deps here.  The agent should remain very small.
     '//src/com/facebook/buck/android/agent/util:util',
@@ -24,7 +24,7 @@ java_library(
 
 java_binary(
   name = 'agent-for-host',
-  main_class = "com.facebook.buck.android.agent.AgentMain",
+  main_class = 'com.facebook.buck.android.agent.AgentMain',
   deps = [
     ':agent-lib',
   ],
@@ -32,8 +32,8 @@ java_binary(
 
 android_binary(
   name = 'agent',
-  manifest = 'AndroidManifest.xml',
   keystore = ':debug_keystore',
+  manifest = 'AndroidManifest.xml',
   deps = [
     ':agent-lib',
     '//src/com/facebook/buck/android/agent/native:native',
@@ -42,6 +42,6 @@ android_binary(
 
 keystore(
   name = 'debug_keystore',
-  store = 'debug.keystore',
   properties = 'debug.keystore.properties',
+  store = 'debug.keystore',
 )

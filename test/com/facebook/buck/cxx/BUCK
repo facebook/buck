@@ -1,8 +1,16 @@
 BINARY_INTEGRATION_SRCS = [
   'CxxBinaryIntegrationTest.java',
 ]
-TEST_SRCS = glob(['*Test.java'], excludes = BINARY_INTEGRATION_SRCS)
-UTIL_SRCS = glob(['*.java'], excludes = BINARY_INTEGRATION_SRCS + TEST_SRCS)
+
+TEST_SRCS = glob(
+  ['*Test.java'],
+  excludes = BINARY_INTEGRATION_SRCS,
+)
+
+UTIL_SRCS = glob(
+  ['*.java'],
+  excludes = BINARY_INTEGRATION_SRCS + TEST_SRCS,
+)
 
 java_test(
   name = 'cxx-binary-integration',

@@ -14,21 +14,24 @@ java_immutables_library(
   srcs = EVENT_INTERFACES,
   autodeps = True,
   immutable_types = [
-    'EventKey'
+    'EventKey',
   ],
-  visibility = [ 'PUBLIC' ],
+  visibility = ['PUBLIC'],
 )
 
 standard_java_library(
-  srcs = glob(['*.java'], excludes = EVENT_INTERFACES),
+  srcs = glob(
+    ['*.java'],
+    excludes = EVENT_INTERFACES,
+  ),
   immutable_types = [
     'ScubaData',
-  ],
-  tests = [
-    '//test/com/facebook/buck/event:event',
   ],
   provided_deps = [
     # Event API is loaded by the bootstrapper at runtime; don't need to depend on it strongly
     '//src/com/facebook/buck/event/api:api',
+  ],
+  tests = [
+    '//test/com/facebook/buck/event:event',
   ],
 )

@@ -8,4 +8,3 @@ prebuilt_jar(
     '//third-party/java/easymock:easymock',
   ],
 )
-

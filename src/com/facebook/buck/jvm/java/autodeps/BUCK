@@ -14,7 +14,10 @@ java_library(
 
 java_library(
   name = 'autodeps',
-  srcs = glob(['*.java'], excludes = SYMBOL_EXTRACTOR_SRCS),
+  srcs = glob(
+    ['*.java'],
+    excludes = SYMBOL_EXTRACTOR_SRCS,
+  ),
   autodeps = True,
   tests = [
     # JavaDepsFinder is verified via AutodepsCommandIntegrationTest.

@@ -5,9 +5,7 @@ java_library(
     'JavacPhaseEventLogger.java',
     'TranslatingJavacPhaseTracer.java',
   ],
-  tests = [
-    '//test/com/facebook/buck/jvm/java/tracing:tracing',
-  ],
+  autodeps = True,
   exported_deps = [
     # Have to export this manually. `buck autodeps` does not export it because it is in the
     # provided_deps. This should be fixed in `buck autodeps`.
@@ -17,7 +15,9 @@ java_library(
     # The API module is part of the bootstrapper at runtime; don't need to depend on it directly
     ':api',
   ],
-  autodeps = True,
+  tests = [
+    '//test/com/facebook/buck/jvm/java/tracing:tracing',
+  ],
   visibility = [
     '//src/com/facebook/buck/event/listener:listener',
     '//src/com/facebook/buck/jvm/java:support',
@@ -33,15 +33,7 @@ java_library(
     '//src/com/facebook/buck/util/exportedfiles:Nullable.java',
     '//src/com/facebook/buck/util/exportedfiles:Preconditions.java',
   ],
-  tests = [
-    '//test/com/facebook/buck/jvm/java/tracing:tracing',
-  ],
   autodeps = False,  # see below
-  deps = [
-    # This module is loaded as a plugin into the compiler itself; don't take dependencies on Buck
-    # internals or large libraries like Guava
-    '//src/com/facebook/buck/jvm/java/plugin/adapter:adapter',
-  ],
   provided_deps = [
     # Tools.jar is the compiler itself, and will already be present at runtime;
     # don't need to depend on it strongly.
@@ -50,9 +42,17 @@ java_library(
     # The API module is part of the bootstrapper at runtime; don't need to depend on it directly
     ':api',
   ],
+  tests = [
+    '//test/com/facebook/buck/jvm/java/tracing:tracing',
+  ],
   visibility = [
     '//src/com/facebook/buck/jvm/java/plugin:javac-plugin',
     '//test/com/facebook/buck/jvm/java/tracing:tracing',
+  ],
+  deps = [
+    # This module is loaded as a plugin into the compiler itself; don't take dependencies on Buck
+    # internals or large libraries like Guava
+    '//src/com/facebook/buck/jvm/java/plugin/adapter:adapter',
   ],
 )
 
@@ -64,14 +64,14 @@ java_library(
     '//src/com/facebook/buck/util/exportedfiles:Preconditions.java',
   ],
   autodeps = False,  # see below
-  deps = [
-    # Don't add deps; this is a super-light API that is loaded within javac. It can't access
-    # code outside of Buck's bootstrapper.
-  ],
   visibility = [
     '//src/com/facebook/buck/cli/bootstrapper:bootstrapper_lib',
     '//src/com/facebook/buck/intellij/...',
     '//src/com/facebook/buck/jvm/java:support',
     '//test/com/facebook/buck/jvm/java/tracing:tracing',
+  ],
+  deps = [
+    # Don't add deps; this is a super-light API that is loaded within javac. It can't access
+    # code outside of Buck's bootstrapper.
   ],
 )

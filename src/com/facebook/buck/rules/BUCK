@@ -30,13 +30,13 @@ java_immutables_library(
     'KnownBuildRuleTypes.java',
     'KnownBuildRuleTypesFactory.java',
   ],
+  autodeps = True,
   immutable_types = [
     'CellConstructionDelegateData',
   ],
   tests = [
     '//test/com/facebook/buck/rules:rules',
   ],
-  autodeps = True,
   visibility = [
     'PUBLIC',
   ],
@@ -134,6 +134,7 @@ java_immutables_library(
     'VisibilityPattern.java',
     'VisibilityPatternParser.java',
   ],
+  autodeps = True,
   immutable_types = [
     'AbstractVersionedTool',
     'BuildContext',
@@ -147,10 +148,9 @@ java_immutables_library(
     'BuckPyFunction.stg',
   ],
   tests = [
-    '//test/com/facebook/buck/rules/coercer:coercer',
     '//test/com/facebook/buck/rules:rules',
+    '//test/com/facebook/buck/rules/coercer:coercer',
   ],
-  autodeps = True,
   visibility = [
     'PUBLIC',
   ],
@@ -226,6 +226,14 @@ java_immutables_library(
     'UnskippedRulesTracker.java',
     'WriteStringTemplateRule.java',
   ],
+  autodeps = True,
+  exported_deps = [
+    # For some reason, :build_event is not a PUBLIC rule. As such, we export it
+    # explicitly as part of :rules even though it is not used by any of its
+    # srcs. This is probably for legacy reasons: we can (and should) move
+    # :build_event into its own package and make it a PUBLIC rule.
+    '//src/com/facebook/buck/rules:build_event',
+  ],
   immutable_types = [
     'BuildEngineBuildContext',
     'BuildRuleKeys',
@@ -235,14 +243,6 @@ java_immutables_library(
   tests = [
     '//test/com/facebook/buck/rules:rules',
   ],
-  autodeps = True,
-  exported_deps = [
-    # For some reason, :build_event is not a PUBLIC rule. As such, we export it
-    # explicitly as part of :rules even though it is not used by any of its
-    # srcs. This is probably for legacy reasons: we can (and should) move
-    # :build_event into its own package and make it a PUBLIC rule.
-    '//src/com/facebook/buck/rules:build_event',
-  ],
   visibility = ['PUBLIC'],
 )
 
@@ -251,10 +251,10 @@ java_library(
   srcs = [
     'CommandTool.java',
   ],
+  autodeps = True,
   tests = [
     '//test/com/facebook/buck/rules:rules',
   ],
-  autodeps = True,
   visibility = ['PUBLIC'],
 )
 
@@ -263,10 +263,10 @@ java_library(
   srcs = [
     'ActionGraphCache.java',
   ],
+  autodeps = True,
   tests = [
     '//test/com/facebook/buck/rules:rules',
   ],
-  autodeps = True,
   visibility = ['PUBLIC'],
 )
 

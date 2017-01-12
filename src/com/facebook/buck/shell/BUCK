@@ -12,10 +12,10 @@ java_library(
     'ShTest.java',
     'ShTestDescription.java',
   ],
+  autodeps = True,
   tests = [
     '//test/com/facebook/buck/shell:shell',
   ],
-  autodeps = True,
   visibility = ['PUBLIC'],
 )
 
@@ -26,14 +26,14 @@ java_library(
     'BashStep.java',
     'DefaultShellStep.java',
     'RunShTestAndRecordResultStep.java',
+    'Shell.java',
     'ShellStep.java',
     'SymlinkFilesIntoDirectoryStep.java',
-    'Shell.java',
   ],
+  autodeps = True,
   tests = [
     '//test/com/facebook/buck/shell:shell',
   ],
-  autodeps = True,
   visibility = [
     'PUBLIC',
   ],
@@ -44,10 +44,10 @@ java_immutables_library(
   srcs = [
     'AbstractWorkerJobParams.java',
   ],
+  autodeps = True,
   immutable_types = [
     'WorkerJobParams',
   ],
-  autodeps = True,
   visibility = ['PUBLIC'],
 )
 
@@ -58,10 +58,10 @@ java_library(
     'WorkerShellStep.java',
     'WorkerToolDescription.java',
   ],
+  autodeps = True,
   tests = [
     '//test/com/facebook/buck/shell:shell',
   ],
-  autodeps = True,
   visibility = ['PUBLIC'],
 )
 
@@ -70,10 +70,10 @@ java_library(
   srcs = [
     'WorkerTool.java',
   ],
+  autodeps = True,
   tests = [
     '//test/com/facebook/buck/shell:shell',
   ],
-  autodeps = True,
   visibility = ['PUBLIC'],
 )
 
@@ -89,13 +89,14 @@ java_library(
 java_immutables_library(
   name = 'worker_process',
   srcs = [
-    'AbstractWorkerProcessCommand.java',
     'AbstractWorkerJobResult.java',
+    'AbstractWorkerProcessCommand.java',
     'WorkerProcess.java',
     'WorkerProcessPool.java',
     'WorkerProcessProtocol.java',
     'WorkerProcessProtocolZero.java',
   ],
+  autodeps = True,
   immutable_types = [
     'WorkerProcessCommand',
     'WorkerJobResult',
@@ -103,13 +104,12 @@ java_immutables_library(
   tests = [
     '//test/com/facebook/buck/shell:shell',
   ],
-  autodeps = True,
   visibility = ['PUBLIC'],
 )
 
 export_file(
   name = 'sh_binary_template',
   visibility = [
-    'PUBLIC'
-  ]
+    'PUBLIC',
+  ],
 )

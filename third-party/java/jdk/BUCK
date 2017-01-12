@@ -16,4 +16,3 @@ prebuilt_jar(
     '//test/com/facebook/buck/jvm/java/tracing:tracing',
   ],
 )
-

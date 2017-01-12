@@ -6,10 +6,10 @@ java_immutables_library(
     'LuaBinaryBuilder.java',
     'LuaLibraryBuilder.java',
   ],
+  autodeps = True,
   immutable_types = [
     'FakeLuaConfig',
   ],
-  autodeps = True,
   visibility = [
     '//test/...',
   ],

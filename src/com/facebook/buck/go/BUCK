@@ -3,12 +3,12 @@ standard_java_library(
     'GoLinkable',
     'GoPlatform',
   ],
+  resources = [
+    'LICENSE',
+    'testmaingen.go',
+  ],
   visibility = [
     '//src/com/facebook/buck/rules:types',
     '//test/com/facebook/buck/go/...',
-  ],
-  resources = [
-    'testmaingen.go',
-    'LICENSE',
   ],
 )

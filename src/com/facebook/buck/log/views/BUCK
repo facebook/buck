@@ -2,6 +2,6 @@ java_library(
   name = 'views',
   srcs = [
     'JsonViews.java',
-   ],
-  visibility = [ 'PUBLIC' ],
+  ],
+  visibility = ['PUBLIC'],
 )
