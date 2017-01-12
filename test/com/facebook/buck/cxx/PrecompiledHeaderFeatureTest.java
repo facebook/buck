@@ -17,9 +17,7 @@
 package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
@@ -65,46 +63,73 @@ public class PrecompiledHeaderFeatureTest {
    * Tests that PCH is only used when a preprocessor is declared to use PCH.
    */
   @RunWith(Parameterized.class)
-  public static class OnlyUsePchIfToolchainIsSupported {
+  public static class OnlyPrecompilePrefixHeaderIfToolchainIsSupported {
+
+    @Parameterized.Parameter(0)
+    public CxxToolProvider.Type toolType;
+
+    @Parameterized.Parameter(1)
+    public boolean pchEnabled;
+
+    @Parameterized.Parameter(2)
+    public boolean expectUsingPch;
+
+    private CxxPlatform getPlatform() {
+      return buildPlatform(toolType, pchEnabled);
+    }
+
     @Parameterized.Parameters(name = "{1}")
     public static Collection<Object[]> data() {
-      CxxPlatform platformNotSupportingPch =
-          PLATFORM_NOT_SUPPORTING_PCH.withCpp(
-              new PreprocessorProvider(
-                  Paths.get("foopp"),
-                  Optional.of(CxxToolProvider.Type.GCC)));
-      CxxPlatform platformSupportingPch = PLATFORM_SUPPORTING_PCH;
       return Arrays.asList(new Object[][] {
-          {platformNotSupportingPch, false},
-          {platformSupportingPch, true},
+          // supported
+          {CxxToolProvider.Type.CLANG, true, true},
+          {CxxToolProvider.Type.CLANG, false, false},
+          // not yet supported; expect false in both cases.
+          {CxxToolProvider.Type.GCC, true, false},
+          {CxxToolProvider.Type.GCC, false, false},
+          // TODO(elsteveogrande): add WINDOWS
       });
     }
 
-
-    @Parameterized.Parameter(0)
-    public CxxPlatform platform;
-
-    @Parameterized.Parameter(1)
-    public boolean supportsPch;
-
     @Test
     public void test() {
+      final String headerFilename = "foo.h";
       BuildRuleResolver resolver =
           new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       CxxPreprocessAndCompile rule = preconfiguredSourceRuleFactoryBuilder(resolver)
-          .setCxxPlatform(platform)
-          .setPrefixHeader(new FakeSourcePath(("foo.pch")))
+          .setCxxPlatform(getPlatform())
+          .setCxxBuckConfig(buildConfig(pchEnabled))
+          .setPrefixHeader(new FakeSourcePath(headerFilename))
+          .setPrecompiledHeader(Optional.empty())
           .build()
           .createPreprocessAndCompileBuildRule(
               "foo.c",
               preconfiguredCxxSourceBuilder().build());
-      boolean usesPch = commandLineContainsPchFlag(
-          new SourcePathResolver(new SourcePathRuleFinder(resolver)), rule);
-      if (supportsPch) {
-        assertTrue("should only use PCH if toolchain supports it", usesPch);
-      } else {
-        assertFalse("should only use PCH if toolchain supports it", usesPch);
-      }
+      boolean hasPchFlag = commandLineContainsPchFlag(
+          new SourcePathResolver(new SourcePathRuleFinder(resolver)),
+          rule,
+          toolType,
+          headerFilename);
+      boolean hasPrefixFlag = commandLineContainsPrefixFlag(
+          new SourcePathResolver(new SourcePathRuleFinder(resolver)),
+          rule,
+          toolType,
+          headerFilename);
+      assertNotEquals(
+          "should use either prefix header flag, or precompiled header flag, but never both:" +
+              " toolType:" + toolType +
+              " pchEnabled:" + pchEnabled + ";" +
+              " hasPrefixFlag:" + hasPrefixFlag +
+              " hasPchFlag:" + hasPchFlag,
+          hasPrefixFlag,
+          hasPchFlag);
+      assertEquals(
+          "should precompile prefix header IFF supported and enabled:" +
+              " toolType:" + toolType +
+              " pchEnabled:" + pchEnabled + ";" +
+              " expect:" + expectUsingPch,
+          expectUsingPch,
+          hasPchFlag);
     }
   }
 
@@ -124,6 +149,7 @@ public class PrecompiledHeaderFeatureTest {
                           Paths.get("."),
                           ImmutableBiMap.of(from, Paths.get("melon")))))
               .setPrefixHeader(new FakeSourcePath(("foo.pch")))
+              .setCxxBuckConfig(buildConfig(/* pchEnabled */ true))
               .build();
           BuildRule rule = factory.createPreprocessAndCompileBuildRule(
               "foo.c",
@@ -155,8 +181,10 @@ public class PrecompiledHeaderFeatureTest {
           BuildRuleResolver resolver = new BuildRuleResolver(
               TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
           CxxSourceRuleFactory factory = preconfiguredSourceRuleFactoryBuilder(resolver)
+              .setCxxPlatform(PLATFORM_SUPPORTING_PCH)
+              .setCxxBuckConfig(buildConfig(/* pchEnabled */ true))
               .putAllCompilerFlags(CxxSource.Type.C_CPP_OUTPUT, flags)
-              .setPrefixHeader(new FakeSourcePath(("foo.pch")))
+              .setPrefixHeader(new FakeSourcePath(("foo.h")))
               .build();
           BuildRule rule = factory.createPreprocessAndCompileBuildRule(
               "foo.c",
@@ -184,12 +212,14 @@ public class PrecompiledHeaderFeatureTest {
           BuildRuleResolver resolver = new BuildRuleResolver(
               TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
           CxxSourceRuleFactory factory = preconfiguredSourceRuleFactoryBuilder(resolver)
+              .setCxxPlatform(PLATFORM_SUPPORTING_PCH)
+              .setCxxBuckConfig(buildConfig(/* pchEnabled */ true))
               .setCxxPreprocessorInput(
                   ImmutableList.of(
                       CxxPreprocessorInput.builder()
                           .setPreprocessorFlags(ImmutableMultimap.of(CxxSource.Type.C, flags))
                           .build()))
-              .setPrefixHeader(new FakeSourcePath(("foo.pch")))
+              .setPrefixHeader(new FakeSourcePath(("foo.h")))
               .build();
           BuildRule rule = factory.createPreprocessAndCompileBuildRule(
               "foo.c",
@@ -213,15 +243,86 @@ public class PrecompiledHeaderFeatureTest {
   // Helpers and defaults
 
   /**
-   * Checks if the command line generated for the build rule contains the -include-pch directive.
+   * Checks if the command line generated for the build rule contains the pch-inclusion directive.
    *
    * This serves as an indicator that the file is being compiled with PCH enabled.
    */
   private static boolean commandLineContainsPchFlag(
-      SourcePathResolver resolver, CxxPreprocessAndCompile rule) {
-    return Iterables.tryFind(
-        rule.makeMainStep(resolver, Paths.get("/tmp/unused_scratch_dir"), false).getCommand(),
-        "-include-pch"::equals).isPresent();
+      SourcePathResolver resolver,
+      CxxPreprocessAndCompile rule,
+      CxxToolProvider.Type toolType,
+      String headerFilename) {
+
+    ImmutableList<String> flags =
+        rule.makeMainStep(resolver, Paths.get("/tmp/unused_scratch_dir"), false).getCommand();
+
+    switch (toolType) {
+      case CLANG:
+        // Clang uses "-include-pch somefilename.h.gch"
+        for (int i = 0; i + 1 < flags.size(); i++) {
+          if (flags.get(i).equals("-include-pch") && flags.get(i + 1).endsWith(".h.gch")) {
+            return true;
+          }
+        }
+        break;
+
+      case GCC:
+        // For GCC we'd use: "-include sometargetname#someflavor-cxx-hexdigitsofhash.h",
+        // i.e., it's the "-include" flag like in the prefix header case, but auto-gen-filename.
+        for (int i = 0; i + 1 < flags.size(); i++) {
+          if (flags.get(i).equals("-include") && !flags.get(i + 1).endsWith("/" + headerFilename)) {
+            return true;
+          }
+        }
+        break;
+
+      case WINDOWS:
+        // TODO(elsteveogrande): windows support in the near future.
+        // (This case is not hit; parameters at top of this test class don't include WINDOWS.)
+        throw new IllegalStateException();
+
+      case DEFAULT:
+        // default not used in test.
+        throw new IllegalStateException();
+    }
+
+    return false;
+  }
+
+  private static boolean commandLineContainsPrefixFlag(
+      SourcePathResolver resolver,
+      CxxPreprocessAndCompile rule,
+      CxxToolProvider.Type toolType,
+      String headerFilename) {
+
+    ImmutableList<String> flags =
+        rule.makeMainStep(resolver, Paths.get("/tmp/unused_scratch_dir"), false).getCommand();
+
+    switch (toolType) {
+      case CLANG:
+      case GCC:
+        // Clang and GCC use "-include somefilename.h".
+        // GCC uses "-include" for precompiled headers as well, but in the GCC PCH case, we'll
+        // pass a PCH filename that's auto-generated from a target name + flavors + hash chars
+        // and other weird stuff.  Here we'll be expecting the original header filename.
+        for (int i = 0; i + 1 < flags.size(); i++) {
+          if (flags.get(i).equals("-include") && flags.get(i + 1).endsWith("/" + headerFilename)) {
+            return true;
+          }
+        }
+        break;
+
+      case WINDOWS:
+        // TODO(elsteveogrande): windows support in the near future.
+        // (This case is not hit; parameters at top of this test class don't include WINDOWS.)
+        throw new IllegalStateException();
+
+      case DEFAULT:
+        // default not used in test.
+        throw new IllegalStateException();
+    }
+
+    return false;
   }
 
   /**
@@ -230,7 +331,8 @@ public class PrecompiledHeaderFeatureTest {
    * needs to do that in their various tests.
    */
   private static CxxSourceRuleFactory.Builder preconfiguredSourceRuleFactoryBuilder(
-      String targetPath, BuildRuleResolver ruleResolver) {
+      String targetPath,
+      BuildRuleResolver ruleResolver) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance(targetPath);
@@ -240,9 +342,7 @@ public class PrecompiledHeaderFeatureTest {
         .setResolver(ruleResolver)
         .setPathResolver(pathResolver)
         .setRuleFinder(ruleFinder)
-        .setCxxPlatform(PLATFORM_SUPPORTING_PCH)
-        .setPicType(AbstractCxxSourceRuleFactory.PicType.PDC)
-        .setCxxBuckConfig(CXX_CONFIG_PCH_ENABLED);
+        .setPicType(AbstractCxxSourceRuleFactory.PicType.PDC);
   }
 
   private static CxxSourceRuleFactory.Builder preconfiguredSourceRuleFactoryBuilder(
@@ -257,26 +357,26 @@ public class PrecompiledHeaderFeatureTest {
     return CxxSource.builder().setType(CxxSource.Type.C).setPath(new FakeSourcePath("foo.c"));
   }
 
-  private static final CxxBuckConfig CXX_CONFIG_PCH_DISABLED =
-      new CxxBuckConfig(
-          FakeBuckConfig.builder()
-          .setSections("[cxx]", "pch_enabled=false")
-          .build());
+  private static CxxBuckConfig buildConfig(boolean pchEnabled) {
+    return new CxxBuckConfig(
+        FakeBuckConfig.builder()
+        .setSections("[cxx]", "pch_enabled=" + pchEnabled)
+        .build());
+  }
 
-  private static final CxxPlatform PLATFORM_NOT_SUPPORTING_PCH =
-      CxxPlatformUtils.build(CXX_CONFIG_PCH_DISABLED);
-
-  private static final CxxBuckConfig CXX_CONFIG_PCH_ENABLED =
-      new CxxBuckConfig(
-          FakeBuckConfig.builder()
-          .setSections("[cxx]", "pch_enabled=true")
-          .build());
+  /**
+   * Build a CxxPlatform for given preprocessor type.
+   *
+   * @return CxxPlatform containing a config which enables pch, and a preprocessor which may or may
+   * not support PCH.
+   */
+  private static CxxPlatform buildPlatform(CxxToolProvider.Type type, boolean pchEnabled) {
+    return CxxPlatformUtils
+        .build(buildConfig(pchEnabled))
+        .withCpp(new PreprocessorProvider(Paths.get("/usr/bin/foopp"), Optional.of(type)));
+  }
 
   private static final CxxPlatform PLATFORM_SUPPORTING_PCH =
-      CxxPlatformUtils
-          .build(CXX_CONFIG_PCH_ENABLED)
-          .withCpp(
-              new PreprocessorProvider(
-                  Paths.get("foopp"),
-                  Optional.of(CxxToolProvider.Type.CLANG)));
+      buildPlatform(CxxToolProvider.Type.CLANG, true);
+
 }
