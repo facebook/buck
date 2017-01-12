@@ -29,11 +29,12 @@ import org.junit.runner.RunWith;
 import java.io.IOException;
 
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class TreeBackedTreesTest extends CompilerTreeApiParameterizedTest {
   @Test
-  public void testGetTreeGetPathRoundtrip() throws IOException {
+  public void testGetTreeGetPathRoundtripTypeElement() throws IOException {
     compile("class Foo<T, U> { }");
 
     TypeElement fooElement = elements.getTypeElement("Foo");
@@ -43,6 +44,19 @@ public class TreeBackedTreesTest extends CompilerTreeApiParameterizedTest {
 
     assertSame(fooPath.getLeaf(), fooTree);
     assertSame(fooElement, trees.getElement(fooPath));
+  }
+
+  @Test
+  public void testGetTreeNullGetPathRoundtripTypeParameterElement() throws IOException {
+    compile("class Foo<T, U> { }");
+
+    TypeParameterElement tElement = elements.getTypeElement("Foo").getTypeParameters().get(0);
+
+    Tree tTree = trees.getTree(tElement);
+    TreePath tPath = trees.getPath(tElement);
+
+    assertNull(tTree);  // Odd behavior by javac, but we'll match it
+    assertSame(tElement, trees.getElement(tPath));
   }
 
   @Test

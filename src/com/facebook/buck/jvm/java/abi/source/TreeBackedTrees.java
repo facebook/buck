@@ -37,6 +37,7 @@ import java.util.Map;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -86,6 +87,11 @@ class TreeBackedTrees extends Trees {
   @Override
   @Nullable
   public Tree getTree(Element element) {
+    if (element.getKind() == ElementKind.TYPE_PARAMETER) {
+      // This is a weird javac behavior that we're emulating.
+      return null;
+    }
+
     TreePath path = getPath(element);
     if (path == null) {
       return null;

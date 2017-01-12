@@ -18,10 +18,12 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.util.exportedfiles.Nullable;
+import com.facebook.buck.util.exportedfiles.Preconditions;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.tree.TypeParameterTree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskListener;
@@ -205,6 +207,20 @@ class FrontendOnlyJavacTask extends JavacTask {
           } finally {
             enclosingScope = oldScope;
           }
+        }
+
+        @Override
+        public Void visitTypeParameter(TypeParameterTree node, Void aVoid) {
+          TreeBackedTypeElement enclosingClass =
+              Preconditions.checkNotNull(enclosingScope.getEnclosingClass());
+
+          TreeBackedTypeParameterElement typeParameter = new TreeBackedTypeParameterElement(
+              node,
+              enclosingClass);
+          enclosingClass.addTypeParameter(typeParameter);
+          trees.enterElement(getCurrentPath(), typeParameter);
+
+          return null;
         }
 
         @Override

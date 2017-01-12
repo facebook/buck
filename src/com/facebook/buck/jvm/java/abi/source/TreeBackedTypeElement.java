@@ -21,9 +21,9 @@ import com.facebook.buck.util.exportedfiles.Preconditions;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.Tree;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -43,11 +43,10 @@ import javax.lang.model.util.SimpleElementVisitor8;
 class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
   private final ClassTree tree;
   private final Name qualifiedName;
+  private final List<TreeBackedTypeParameterElement> typeParameters = new ArrayList<>();
   private StandaloneDeclaredType typeMirror;
   @Nullable
   private TypeMirror superclass;
-  @Nullable
-  private List<TreeBackedTypeParameterElement> typeParameters;
 
   TreeBackedTypeElement(TreeBackedElement enclosingElement, ClassTree tree, Name qualifiedName) {
     super(getElementKind(tree), tree.getSimpleName(), enclosingElement);
@@ -55,6 +54,10 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
     this.qualifiedName = qualifiedName;
     typeMirror = new StandaloneDeclaredType(this);
     enclosingElement.addEnclosedElement(this);
+  }
+
+  /* package */ void addTypeParameter(TreeBackedTypeParameterElement typeParameter) {
+    typeParameters.add(typeParameter);
   }
 
   private static ElementKind getElementKind(ClassTree tree) {
@@ -95,14 +98,6 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
   }
 
   private void resolveTypeParameters(TreeBackedElements elements, TreeBackedTypes types) {
-    // Find them all first.
-    typeParameters = Collections.unmodifiableList(
-        tree.getTypeParameters()
-          .stream()
-          .map(typeParamTree -> new TreeBackedTypeParameterElement(typeParamTree, this))
-          .collect(Collectors.toList()));
-
-    // Then resolve them. This allows type parameters to be defined in terms of one another.
     typeParameters.forEach(typeParam -> typeParam.resolve(elements, types));
   }
 
@@ -154,7 +149,7 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
 
   @Override
   public List<? extends TypeParameterElement> getTypeParameters() {
-    return Preconditions.checkNotNull(typeParameters);
+    return Collections.unmodifiableList(typeParameters);
   }
 
   @Override
