@@ -124,13 +124,20 @@ You can find a more detailed explanation about each step in the development proc
 </ul>
 
 {literal}<pre>
-# Install command line tools
+# Install command line tools. NOTE: If you have Xcode installed, these may
+# already be installed.
 xcode-select --install
 # Install Java - this installs the JDK, a superset of the JRE
 brew update
 brew tap caskroom/cask
 brew install java
 </pre>{/literal}
+
+<p>
+<blockquote>
+  If for some reason you do not have Xcode installed and you get an error <code>error: active developer path ("/Applications/Xcode.app/Contents/Developer") does not exist</code>, then run <code>xcode-select --reset</code> to reset the command line tools path to where command line tools is installed.
+</blockquote>
+</p>
 
 <h3>Brew install</h3>
 
@@ -195,7 +202,8 @@ brew install --HEAD buck
 </p>
 
 {literal}<pre>
-# Install Command Line tools first.
+# Install Command Line tools first. NOTE: If you have Xcode installed, these may
+# already be installed.
 xcode-select --install
 # Then the JDK (superset of the JRE)
 brew update
@@ -204,6 +212,12 @@ brew install java
 # Then...
 brew install ant python git watchman
 </pre>{/literal}
+
+<p>
+<blockquote>
+  If for some reason you do not have Xcode installed and you get an error <code>error: active developer path ("/Applications/Xcode.app/Contents/Developer") does not exist</code>, then run <code>xcode-select --reset</code> to reset the command line tools path to where command line tools is installed.
+</blockquote>
+</p>
 
 <h3>Build</h3>
 
@@ -374,6 +388,43 @@ options:
   Because you will likely be running <code>./bin/buck</code> often, you should add it to your path
   so that you can simply run <code>buck</code> from the command line.
 </p>
+
+<span><block class="mac ios" /></span>
+<h2>Trying Buck</h2>
+
+<p>
+  Now that Buck is installed, it is time use Buck in a sample project.
+</p>
+
+<h3>Clone Buck Samples Repo<h3>
+
+Clone the <a href="https://github.com/fbsamples/bucksamples/">Buck Samples repo</a>
+
+{literal}
+<pre>
+git clone git@github.com:fbsamples/bucksamples.git
+cd bucksamples/cross-platform-scale-2015-demo/ios/
+</pre>
+{/literal}
+
+<h3>Build the iOS Sample</h3>
+
+This sample app has all the files necessary to use Buck to build an iOS project:
+
+<ul>
+  <li>
+    iOS Source Code: <code>main.m</code>, views, controllers and associated resources.
+  </li>
+  <li>
+    BUCK: This file is what makes Buck work. It defines all the build rules for your source code.
+  </li>
+  <li>
+    .buckconfig:
+  </li>
+  <li>
+    Test files
+  </li>
+</ul>
 
 <span><block class="linux mac android" /></span>
 
