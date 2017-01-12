@@ -45,6 +45,16 @@ class TreeBackedClassScope extends TreeBackedScope {
   }
 
   @Override
+  public TreeBackedScope getEnclosingScope() {
+    return Preconditions.checkNotNull(super.getEnclosingScope());
+  }
+
+  @Override
+  TreeBackedPackageElement getEnclosingPackage() {
+    return getEnclosingScope().getEnclosingPackage();
+  }
+
+  @Override
   public TreeBackedTypeElement getEnclosingClass() {
     if (enclosingClass == null) {
       enclosingClass = (TreeBackedTypeElement) Preconditions.checkNotNull(trees.getElement(path));

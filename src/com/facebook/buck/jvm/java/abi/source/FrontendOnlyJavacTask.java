@@ -39,10 +39,8 @@ import java.util.stream.StreamSupport;
 
 import javax.annotation.processing.Processor;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleElementVisitor8;
@@ -165,8 +163,9 @@ class FrontendOnlyJavacTask extends JavacTask {
 
     try (BuckTracing.TraceSection t = BUCK_TRACING.traceSection("buck.abi.enterTree")) {
       new TreePathScanner<Void, Void>() {
-        @Nullable
-        TreeBackedElement enclosingElement;
+        TreeBackedScope enclosingScope = trees.getScope(trees.getPath(
+            compilationUnit,
+            compilationUnit));
 
         @Override
         public Void visitCompilationUnit(CompilationUnitTree node, Void aVoid) {
@@ -184,36 +183,27 @@ class FrontendOnlyJavacTask extends JavacTask {
         @Override
         public Void visitClass(ClassTree node, Void aVoid) {
           // Match javac: create a package element only once we know a class exists in it
-          if (enclosingElement == null) {
-            enclosingElement =
-                elements.getOrCreatePackageElement(
-                    TreeBackedTrees.treeToName(compilationUnit.getPackageName()));
-          }
+          elements.getOrCreatePackageElement(
+              TreeBackedTrees.treeToName(compilationUnit.getPackageName()));
 
-          Name qualifiedName = node.getSimpleName();
-          Name enclosingQualifiedName = ((QualifiedNameable) enclosingElement).getQualifiedName();
-          if (enclosingQualifiedName.length() > 0) {
-            qualifiedName = elements.getName(String.format(
-                "%s.%s",
-                enclosingQualifiedName,
-                qualifiedName));
-          }
+          Name qualifiedName = enclosingScope.buildQualifiedName(node.getSimpleName());
 
+          TreeBackedScope classScope = trees.getScope(getCurrentPath());
           TreeBackedTypeElement typeElement =
-              new TreeBackedTypeElement(enclosingElement, node, qualifiedName);
+              new TreeBackedTypeElement(enclosingScope.getEnclosingElement(), node, qualifiedName);
 
-          if (enclosingElement.getKind() == ElementKind.PACKAGE) {
+          if (enclosingScope.getEnclosingClass() == null) {
             topLevelElements.add(typeElement);
           }
           elements.enterTypeElement(typeElement);
           trees.enterElement(getCurrentPath(), typeElement);
 
-          TreeBackedElement oldEnclosingElement = enclosingElement;
-          enclosingElement = typeElement;
+          TreeBackedScope oldScope = enclosingScope;
+          enclosingScope = classScope;
           try {
             return super.visitClass(node, aVoid);
           } finally {
-            enclosingElement = oldEnclosingElement;
+            enclosingScope = oldScope;
           }
         }
 

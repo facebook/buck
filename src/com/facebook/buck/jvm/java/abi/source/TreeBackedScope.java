@@ -17,10 +17,13 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.exportedfiles.Nullable;
+import com.facebook.buck.util.exportedfiles.Preconditions;
 import com.sun.source.tree.Scope;
 import com.sun.source.util.TreePath;
 
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Name;
+import javax.lang.model.element.QualifiedNameable;
 
 /**
  * An implementation of {@link Scope} that uses only the information available from a
@@ -33,6 +36,9 @@ abstract class TreeBackedScope implements Scope {
   @Nullable
   protected final TreeBackedScope enclosingScope;
   protected final TreePath path;
+
+  @Nullable
+  private TreeBackedPackageElement enclosingPackage;
 
   protected TreeBackedScope(
       TreeBackedElements elements,
@@ -51,6 +57,25 @@ abstract class TreeBackedScope implements Scope {
     return enclosingScope;
   }
 
+  /* package */
+  final TreeBackedElement getEnclosingElement() {
+    TreeBackedElement result = getEnclosingClass();
+    if (result == null) {
+      result = getEnclosingPackage();
+    }
+
+    return result;
+  }
+
+  /* package */ TreeBackedPackageElement getEnclosingPackage() {
+    if (enclosingPackage == null) {
+      enclosingPackage = Preconditions.checkNotNull(
+          elements.getPackageElement(
+              TreeBackedTrees.treeToName(path.getCompilationUnit().getPackageName())));
+    }
+    return enclosingPackage;
+  }
+
   @Override
   @Nullable
   public TreeBackedTypeElement getEnclosingClass() {
@@ -62,5 +87,16 @@ abstract class TreeBackedScope implements Scope {
   public ExecutableElement getEnclosingMethod() {
     // TODO(jkeljo): Maybe implement this for annotation processors
     return null;
+  }
+
+  /* package */ Name buildQualifiedName(CharSequence suffix) {
+    QualifiedNameable enclosingElement = (QualifiedNameable) getEnclosingElement();
+    Name enclosingName = enclosingElement.getQualifiedName();
+
+    if (enclosingName.length() == 0) {
+      return elements.getName(suffix);
+    }
+
+    return elements.getName(String.format("%s.%s", enclosingName, suffix));
   }
 }
