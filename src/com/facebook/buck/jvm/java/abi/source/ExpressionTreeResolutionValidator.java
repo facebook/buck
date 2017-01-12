@@ -51,9 +51,11 @@ class ExpressionTreeResolutionValidator {
   private final Trees javacTrees;
   private final Elements treesElements;
 
-  public ExpressionTreeResolutionValidator(JavacTask task, TreeResolver treeResolver) {
+  public ExpressionTreeResolutionValidator(
+      JavacTask task,
+      FrontendOnlyJavacTask frontendTask) {
     javacTrees = Trees.instance(task);
-    treesElements = treeResolver.getElements();
+    treesElements = frontendTask.getElements();
   }
 
 

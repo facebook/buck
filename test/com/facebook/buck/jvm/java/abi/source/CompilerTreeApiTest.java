@@ -46,19 +46,65 @@ public abstract class CompilerTreeApiTest {
     TaskListener newTaskListener(JavacTask task);
   }
 
+  /**
+   * When run outside of IntelliJ, tests don't have the compiler (and thus the Compiler Tree API)
+   * on their classpath. To get around that, we have a special test runner
+   * ({@link com.facebook.buck.testutil.CompilerTreeApiTestRunner}) that reloads each test with
+   * a hacky custom {@link ClassLoader}.
+   *
+   * However, the test class must be able to successfully load using the default
+   * {@link ClassLoader}, which means any accesses to the Compiler Tree API from the test must be
+   * in places that aren't examined during initial class loading. So having a factory interface
+   * is more than a nice abstraction here; it helps ensure that some of the problematic accesses
+   * are far enough away from the initial class load as to not block it.
+   */
+  protected interface CompilerTreeApiFactory {
+    JavacTask newJavacTask(
+        JavaCompiler compiler,
+        StandardJavaFileManager fileManager,
+        Iterable<? extends JavaFileObject> sourceObjects);
+    Trees getTrees(JavacTask task);
+  }
+
   @Rule
   public TemporaryFolder tempFolder = new TemporaryFolder();
   protected JavacTask javacTask;
-  protected Elements javacElements;
-  protected Trees javacTrees;
-  protected Types javacTypes;
-  protected TreeResolver treeResolver;
-  protected TreeBackedElements treesElements;
-  protected Trees treesTrees;
-  protected TreeBackedTypes treesTypes;
+  protected Elements elements;
+  protected Trees trees;
+  protected Types types;
+
+  protected CompilerTreeApiFactory newTreeApiFactory() {
+    return new JavacCompilerTreeApiFactory();
+  }
 
   protected final void initCompiler() throws IOException {
-    compile(Collections.emptyMap(), null);
+    initCompiler(Collections.emptyMap());
+  }
+
+  protected final CompilerTreeApiFactory initCompiler(
+      Map<String, String> fileNamesToContents) throws IOException {
+    CompilerTreeApiFactory treeApiFactory = newTreeApiFactory();
+
+    List<File> sourceFiles = new ArrayList<>(fileNamesToContents.size());
+    for (Map.Entry<String, String> fileNameToContents : fileNamesToContents.entrySet()) {
+      String fileName = fileNameToContents.getKey();
+      String contents = fileNameToContents.getValue();
+      File sourceFile = tempFolder.newFile(fileName);
+      Files.write(contents, sourceFile, StandardCharsets.UTF_8);
+      sourceFiles.add(sourceFile);
+    }
+
+    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+    StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+    Iterable<? extends JavaFileObject> sourceObjects =
+        fileManager.getJavaFileObjectsFromFiles(sourceFiles);
+
+    javacTask = treeApiFactory.newJavacTask(compiler, fileManager, sourceObjects);
+    trees = treeApiFactory.getTrees(javacTask);
+    elements = javacTask.getElements();
+    types = javacTask.getTypes();
+
+    return treeApiFactory;
   }
 
   protected final Iterable<? extends CompilationUnitTree> compile(String source)
@@ -75,39 +121,40 @@ public abstract class CompilerTreeApiTest {
       Map<String, String> fileNamesToContents,
       TaskListenerFactory taskListenerFactory) throws IOException {
 
-    List<File> sourceFiles = new ArrayList<>(fileNamesToContents.size());
-    for (Map.Entry<String, String> fileNameToContents : fileNamesToContents.entrySet()) {
-      String fileName = fileNameToContents.getKey();
-      String contents = fileNameToContents.getValue();
-      File sourceFile = tempFolder.newFile(fileName);
-      Files.write(contents, sourceFile, StandardCharsets.UTF_8);
-      sourceFiles.add(sourceFile);
-    }
-
-    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-    StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
-    Iterable<? extends JavaFileObject> sourceObjects =
-        fileManager.getJavaFileObjectsFromFiles(sourceFiles);
-
-    javacTask =
-        (JavacTask) compiler.getTask(null, fileManager, null, null, null, sourceObjects);
+    initCompiler(fileNamesToContents);
 
     if (taskListenerFactory != null) {
       javacTask.setTaskListener(taskListenerFactory.newTaskListener(javacTask));
     }
 
-    javacTrees = Trees.instance(javacTask);
-    javacElements = javacTask.getElements();
-    javacTypes = javacTask.getTypes();
-    treeResolver = new TreeResolver(javacTrees, javacTask.getElements());
-    treesElements = treeResolver.getElements();
-    treesTrees = treeResolver.getTrees();
-    treesTypes = treeResolver.getTypes();
-
     final Iterable<? extends CompilationUnitTree> compilationUnits = javacTask.parse();
-    compilationUnits.forEach(tree -> treeResolver.enterTree(tree));
-    treeResolver.resolve();
+
+    // Make sure we've got elements for things. Technically this is going a little further than
+    // the compiler ordinarily would by the time annotation processors get involved, but this
+    // shouldn't matter for interface-level things. If need be there's a private method we can
+    // reflect to to get more exact behavior.
+    //
+    // Also, right now the implementation of analyze in the TreeBacked version of javacTask
+    // (FrontendOnlyJavacTask) just does enter. So when these tests are run against one of those
+    // we are actually going exactly as far as the compiler would.
+    javacTask.analyze();
 
     return compilationUnits;
   }
+
+  private static class JavacCompilerTreeApiFactory implements CompilerTreeApiFactory {
+    @Override
+    public JavacTask newJavacTask(
+        JavaCompiler compiler,
+        StandardJavaFileManager fileManager,
+        Iterable<? extends JavaFileObject> sourceObjects) {
+      return (JavacTask) compiler.getTask(null, fileManager, null, null, null, sourceObjects);
+    }
+
+    @Override
+    public Trees getTrees(JavacTask task) {
+      return Trees.instance(task);
+    }
+  }
+
 }

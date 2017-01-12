@@ -43,6 +43,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
+import javax.tools.JavaCompiler;
 
 /**
  * An implementation of {@link Trees} that uses our tree-backed elements and types when available.
@@ -53,7 +54,11 @@ class TreeBackedTrees extends Trees {
   private final Map<TreeBackedElement, TreePath> elementPaths = new HashMap<>();
   private final Map<Tree, TreeBackedScope> treeBackedScopes = new HashMap<>();
 
-  public TreeBackedTrees(Trees javacTrees) {
+  public static TreeBackedTrees instance(JavaCompiler.CompilationTask task) {
+    return ((FrontendOnlyJavacTask) task).getTrees();
+  }
+
+  /* package */ TreeBackedTrees(Trees javacTrees) {
     this.javacTrees = javacTrees;
   }
 

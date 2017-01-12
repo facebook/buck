@@ -41,7 +41,7 @@ public class ValidatingTaskListener
   private final JavacTask javacTask;
   private final List<CompilationUnitTree> compilationUnits = new ArrayList<>();
   private Trees trees;
-  private TreeResolver treeResolver;
+  private FrontendOnlyJavacTask frontendTask;
   private ExpressionTreeResolutionValidator validator;
   private int enterDepth = 0;
 
@@ -53,9 +53,9 @@ public class ValidatingTaskListener
   private void ensureInitialized() {
     // We can't do this on construction, because the Task might not be fully initialized yet
     if (trees == null) {
-      trees = Trees.instance(javacTask);
-      treeResolver = new TreeResolver(trees, javacTask.getElements());
-      validator = new ExpressionTreeResolutionValidator(javacTask, treeResolver);
+      frontendTask = new FrontendOnlyJavacTask(javacTask);
+      trees = frontendTask.getTrees();
+      validator = new ExpressionTreeResolutionValidator(javacTask, frontendTask);
     }
   }
 
@@ -75,7 +75,7 @@ public class ValidatingTaskListener
     final TaskEvent.Kind kind = e.getKind();
     if (kind == TaskEvent.Kind.PARSE) {
       final CompilationUnitTree compilationUnit = e.getCompilationUnit();
-      treeResolver.enterTree(compilationUnit);
+      frontendTask.enterTree(compilationUnit);
       compilationUnits.add(compilationUnit);
     } else if (kind == TaskEvent.Kind.ENTER) {
       // We wait until we've received all enter events so that the validation time shows up

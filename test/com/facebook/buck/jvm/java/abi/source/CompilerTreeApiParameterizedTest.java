@@ -19,20 +19,18 @@ package com.facebook.buck.jvm.java.abi.source;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.util.JavacTask;
 import com.sun.source.util.Trees;
 
 import org.junit.runners.Parameterized;
-
-import java.io.IOException;
-import java.util.Map;
 
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
+import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
+import javax.tools.StandardJavaFileManager;
 
 /**
  * A base class for tests that compare the behavior of javac's implementation of Elements and
@@ -44,9 +42,6 @@ public abstract class CompilerTreeApiParameterizedTest extends CompilerTreeApiTe
 
   @Parameterized.Parameter
   public String implementation;
-  protected Elements elements;
-  protected Trees trees;
-  protected Types types;
 
   @Parameterized.Parameters
   public static Object[] getParameters() {
@@ -54,35 +49,35 @@ public abstract class CompilerTreeApiParameterizedTest extends CompilerTreeApiTe
   }
 
   @Override
-  protected Iterable<? extends CompilationUnitTree> compile(
-      Map<String, String> fileNamesToContents,
-      TaskListenerFactory taskListenerFactory) throws IOException {
-    final Iterable<? extends CompilationUnitTree> result;
-
-    switch (implementation) {
-      case JAVAC:
-        result = super.compile(fileNamesToContents, taskListenerFactory);
-        // Make sure we've got elements for things. Technically this is going a little further than
-        // the compiler ordinarily would by the time annotation processors get involved, but this
-        // shouldn't matter for interface-level things. If need be there's a private method we can
-        // reflect to to get more exact behavior.
-        javacTask.analyze();
-
-        elements = javacElements;
-        trees = javacTrees;
-        types = javacTypes;
-        break;
-      case TREES:
-        result = super.compile(fileNamesToContents, taskListenerFactory);
-        elements = treesElements;
-        trees = treesTrees;
-        types = treesTypes;
-        break;
-      default:
-        throw new AssertionError();
+  protected CompilerTreeApiFactory newTreeApiFactory() {
+    CompilerTreeApiFactory result = super.newTreeApiFactory();
+    if (testingTrees()) {
+      result = new TreesCompilerTreeApiFactory(result);
     }
 
     return result;
+  }
+
+  private static class TreesCompilerTreeApiFactory implements CompilerTreeApiFactory {
+    private final CompilerTreeApiFactory inner;
+
+    public TreesCompilerTreeApiFactory(CompilerTreeApiFactory inner) {
+      this.inner = inner;
+    }
+
+    @Override
+    public JavacTask newJavacTask(
+        JavaCompiler compiler,
+        StandardJavaFileManager fileManager,
+        Iterable<? extends JavaFileObject> sourceObjects) {
+      return new FrontendOnlyJavacTask(
+          inner.newJavacTask(compiler, fileManager, sourceObjects));
+    }
+
+    @Override
+    public Trees getTrees(JavacTask task) {
+      return TreeBackedTrees.instance(task);
+    }
   }
 
   protected TypeMirror getTypeParameterUpperBound(String typeName, int typeParameterIndex) {

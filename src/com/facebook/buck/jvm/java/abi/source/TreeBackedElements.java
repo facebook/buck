@@ -20,7 +20,6 @@ import com.facebook.buck.util.exportedfiles.Nullable;
 import com.facebook.buck.util.exportedfiles.Preconditions;
 
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -122,13 +121,6 @@ class TreeBackedElements implements Elements {
       throw new AssertionError(String.format("Type collision for %s", name));
     }
     knownTypes.put(name, element);
-  }
-
-  /* package */ void resolve(TreeBackedTypes types) {
-    // Resolving elements can cause us to discover more types. To avoid mutating the same thing
-    // we're iterating, we copy it out first.
-    List<TypeElement> treeBackedElements = new ArrayList<>(knownTypes.values());
-    treeBackedElements.forEach(element -> ((TreeBackedTypeElement) element).resolve(this, types));
   }
 
   @Override

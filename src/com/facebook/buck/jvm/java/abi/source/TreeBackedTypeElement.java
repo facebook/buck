@@ -33,6 +33,7 @@ import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.SimpleElementVisitor8;
 
 /**
  * An implementation of {@link TypeElement} that uses only the information available from a
@@ -76,6 +77,7 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
     // Need to resolve type parameters first, because the superclass definition might reference them
     resolveTypeParameters(elements, types);
     resolveSuperclass(elements, types);
+    resolveInnerTypes(elements, types);
   }
 
   private void resolveSuperclass(TreeBackedElements elements, TreeBackedTypes types) {
@@ -102,6 +104,17 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
 
     // Then resolve them. This allows type parameters to be defined in terms of one another.
     typeParameters.forEach(typeParam -> typeParam.resolve(elements, types));
+  }
+
+  private void resolveInnerTypes(TreeBackedElements elements, TreeBackedTypes types) {
+    getEnclosedElements().forEach(
+        element -> element.accept(new SimpleElementVisitor8<Void, Void>() {
+          @Override
+          public Void visitType(TypeElement e, Void aVoid) {
+            ((TreeBackedTypeElement) e).resolve(elements, types);
+            return null;
+          }
+        }, null));
   }
 
   @Override
