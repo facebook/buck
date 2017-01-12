@@ -231,7 +231,7 @@ public class GnuLinker implements Linker {
                   try {
                     symbols.addAll(
                         Files.readAllLines(
-                            getResolver().getAbsolutePath(path),
+                            context.getSourcePathResolver().getAbsolutePath(path),
                             Charsets.UTF_8));
                   } catch (IOException e) {
                     throw new RuntimeException(e);

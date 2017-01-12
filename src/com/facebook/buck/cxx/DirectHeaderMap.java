@@ -67,7 +67,8 @@ public class DirectHeaderMap extends HeaderSymlinkTree {
     Path buckOut =
         getProjectFilesystem().resolve(getProjectFilesystem().getBuckPaths().getBuckOut());
     for (Path key : getLinks().keySet()) {
-      Path path = buckOut.relativize(getResolver().getAbsolutePath(getLinks().get(key)));
+      Path path = buckOut.relativize(
+          context.getSourcePathResolver().getAbsolutePath(getLinks().get(key)));
       LOG.debug("header map %s -> %s", key, path);
       headerMapEntries.put(key, path);
     }

@@ -796,7 +796,7 @@ public class AndroidBinary
       classpathEntriesToDex = addProguardCommands(
           classpathEntriesToDex,
           packageableCollection.getProguardConfigs().stream()
-              .map(getResolver()::getAbsolutePath)
+              .map(resolver::getAbsolutePath)
               .collect(MoreCollectors.toImmutableSet()),
           skipProguard.orElse(false),
           steps,

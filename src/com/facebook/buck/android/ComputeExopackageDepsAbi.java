@@ -96,7 +96,7 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule {
     return ImmutableList.of(
         new AbstractExecutionStep("compute_android_binary_deps_abi") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) {
+          public StepExecutionResult execute(ExecutionContext executionContext) {
             try {
               // TODO(cjhopman): Rather than calculate this hash ourselves, we should be able to
               // just add all these files to the AndroidBinary's rulekey and rely on the input-based
@@ -184,7 +184,7 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule {
                 // and so they may not exist, but we could go and do some path manipulation to
                 // figure out where they are. Since we'll have to do the work anyway, let's just
                 // handle things ourselves.
-                final Path root = getResolver().getAbsolutePath(libDir);
+                final Path root = context.getSourcePathResolver().getAbsolutePath(libDir);
 
                 Files.walkFileTree(
                     root,
@@ -204,7 +204,7 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule {
               // Resources get copied from third-party JARs, so hash them.
               for (SourcePath jar :
                   ImmutableSortedSet.copyOf(packageableCollection.getPathsToThirdPartyJars())) {
-                addToHash(hasher, "third-party jar", jar);
+                addToHash(context.getSourcePathResolver(), hasher, "third-party jar", jar);
               }
 
               String abiHash = hasher.hash().toString();
@@ -214,19 +214,24 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule {
               buildableContext.recordArtifact(abiPath);
               return StepExecutionResult.SUCCESS;
             } catch (IOException e) {
-              context.logError(e, "Error computing ABI hash.");
+              executionContext.logError(e, "Error computing ABI hash.");
               return StepExecutionResult.ERROR;
             }
           }
         });
   }
 
-  private void addToHash(Hasher hasher, String role, SourcePath path) throws IOException {
+  private void addToHash(
+      SourcePathResolver resolver,
+      Hasher hasher,
+      String role,
+      SourcePath path)
+      throws IOException {
     addToHash(
         hasher,
         role,
-        getResolver().getAbsolutePath(path),
-        getResolver().getRelativePath(path));
+        resolver.getAbsolutePath(path),
+        resolver.getRelativePath(path));
   }
 
   private void addToHash(Hasher hasher, String role, Path path) throws IOException {

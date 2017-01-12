@@ -159,7 +159,7 @@ public class DummyRDotJava extends AbstractBuildRule
     } else {
       MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForDummyRDotJava(
           getProjectFilesystem(),
-          getResolver(),
+          context.getSourcePathResolver(),
           androidResourceDeps,
           rDotJavaSrcFolder,
           forceFinalResourceIds,
@@ -173,7 +173,7 @@ public class DummyRDotJava extends AbstractBuildRule
         MergeAndroidResourcesStep mergeFinalRStep =
             MergeAndroidResourcesStep.createStepForDummyRDotJava(
                 getProjectFilesystem(),
-                getResolver(),
+                context.getSourcePathResolver(),
                 androidResourceDeps,
                 rDotJavaSrcFolder,
                 /* forceFinalResourceIds */ true,
@@ -211,7 +211,7 @@ public class DummyRDotJava extends AbstractBuildRule
             rDotJavaClassesFolder,
             javacOptions,
             getBuildTarget(),
-            getResolver(),
+            context.getSourcePathResolver(),
             ruleFinder,
             getProjectFilesystem());
     steps.add(javacStep);

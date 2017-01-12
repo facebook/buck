@@ -79,8 +79,7 @@ public class RobolectricTest extends JavaTest {
   static final String ROBOLECTRIC_MANIFEST =
       "buck.robolectric_manifest";
 
-  private final Function<HasAndroidResourceDeps, Path> resourceDirectoryFunction =
-      input -> getResolver().getRelativePath(input.getRes());
+  private final Function<HasAndroidResourceDeps, Path> resourceDirectoryFunction;
   private final Function<DummyRDotJava, ImmutableSet<BuildRule>> resourceRulesFunction =
       input -> {
         ImmutableSet.Builder<BuildRule> resourceDeps = ImmutableSet.builder();
@@ -139,6 +138,7 @@ public class RobolectricTest extends JavaTest {
     this.optionalDummyRDotJava = optionalDummyRDotJava;
     this.robolectricRuntimeDependency = robolectricRuntimeDependency;
     this.robolectricManifest = robolectricManifest;
+    this.resourceDirectoryFunction = input -> resolver.getRelativePath(input.getRes());
   }
 
   @Override

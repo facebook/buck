@@ -149,14 +149,14 @@ public class AaptPackageResources extends AbstractBuildRule
       steps.add(
           new ReplaceManifestPlaceholdersStep(
               getProjectFilesystem(),
-              getResolver().getAbsolutePath(manifest),
+              context.getSourcePathResolver().getAbsolutePath(manifest),
               getAndroidManifestXml(),
               placeholders.get()));
     } else {
       steps.add(
           CopyStep.forFile(
               getProjectFilesystem(),
-              getResolver().getAbsolutePath(manifest),
+              context.getSourcePathResolver().getAbsolutePath(manifest),
               getAndroidManifestXml()));
     }
 
@@ -178,7 +178,7 @@ public class AaptPackageResources extends AbstractBuildRule
             getProjectFilesystem().getRootPath(),
             getAndroidManifestXml(),
             filteredResourcesProvider.getResDirectories(),
-            getResolver().getAllAbsolutePaths(assetsDirectories),
+            context.getSourcePathResolver().getAllAbsolutePaths(assetsDirectories),
             getResourceApkPath(),
             rDotTxtDir,
             pathToGeneratedProguardConfig,
@@ -201,7 +201,7 @@ public class AaptPackageResources extends AbstractBuildRule
     steps.add(new TouchStep(getProjectFilesystem(), getPathToRDotTxtFile()));
 
     if (hasRDotJava()) {
-      generateRDotJavaFiles(steps, buildableContext);
+      generateRDotJavaFiles(steps, buildableContext, context);
     }
 
     // Record the filtered resources dirs, since when we initialize ourselves from disk, we'll
@@ -235,7 +235,8 @@ public class AaptPackageResources extends AbstractBuildRule
 
   private void generateRDotJavaFiles(
       ImmutableList.Builder<Step> steps,
-      BuildableContext buildableContext) {
+      BuildableContext buildableContext,
+      BuildContext buildContext) {
     // Merge R.txt of HasAndroidRes and generate the resulting R.java files per package.
     Path rDotJavaSrc = getPathToGeneratedRDotJavaSrcFiles();
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), rDotJavaSrc));
@@ -243,7 +244,7 @@ public class AaptPackageResources extends AbstractBuildRule
     Path rDotTxtDir = getPathToRDotTxtDir();
     MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForUberRDotJava(
         getProjectFilesystem(),
-        getResolver(),
+        buildContext.getSourcePathResolver(),
         resourceDeps,
         getPathToRDotTxtFile(),
         rDotJavaSrc,

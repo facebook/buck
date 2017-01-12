@@ -72,6 +72,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   private final BuildRule binary;
   private final Tool executable;
   private final long maxTestOutputSize;
+  private final SourcePathResolver pathResolver;
 
   public CxxGtestTest(
       BuildRuleParams params,
@@ -101,6 +102,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
         runTestSeparately,
         testRuleTimeoutMs);
     this.ruleFinder = ruleFinder;
+    this.pathResolver = resolver;
     this.binary = binary;
     this.executable = executable;
     this.maxTestOutputSize = maxTestOutputSize;
@@ -115,7 +117,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   @Override
   protected ImmutableList<String> getShellCommand(Path output) {
     return ImmutableList.<String>builder()
-        .addAll(executable.getCommandPrefix(getResolver()))
+        .addAll(executable.getCommandPrefix(pathResolver))
         .add("--gtest_color=no")
         .add("--gtest_output=xml:" + getProjectFilesystem().resolve(output).toString())
         .build();
@@ -244,7 +246,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
         .setType("gtest")
-        .addAllCommand(executable.getCommandPrefix(getResolver()))
+        .addAllCommand(executable.getCommandPrefix(pathResolver))
         .addAllCommand(getArgs().get())
         .putAllEnv(getEnv().get())
         .addAllLabels(getLabels())

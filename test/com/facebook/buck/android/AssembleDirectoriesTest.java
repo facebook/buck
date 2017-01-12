@@ -76,16 +76,17 @@ public class AssembleDirectoriesTest {
             .build();
     ImmutableList<SourcePath> directories = ImmutableList.of(
         new FakeSourcePath(filesystem, "folder_a"), new FakeSourcePath(filesystem, "folder_b"));
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
+        new BuildRuleResolver(
+            TargetGraph.EMPTY,
+            new DefaultTargetNodeToBuildRuleTransformer())
+    ));
     AssembleDirectories assembleDirectories = new AssembleDirectories(
         buildRuleParams,
-        new SourcePathResolver(new SourcePathRuleFinder(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        )),
+        pathResolver,
         directories);
     ImmutableList<Step> steps = assembleDirectories.getBuildSteps(
-        FakeBuildContext.NOOP_CONTEXT,
+        FakeBuildContext.withSourcePathResolver(pathResolver),
         new FakeBuildableContext());
     for (Step step : steps) {
       assertEquals(0, step.execute(context).getExitCode());

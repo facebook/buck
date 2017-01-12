@@ -70,9 +70,9 @@ public class StripLinkable extends AbstractBuildRule {
         new StripStep(
             getProjectFilesystem().getRootPath(),
             stripTool.getEnvironment(),
-            stripTool.getCommandPrefix(getResolver()),
+            stripTool.getCommandPrefix(context.getSourcePathResolver()),
             ImmutableList.of("--strip-unneeded"),
-            getResolver().getAbsolutePath(sourcePathToStrip),
+            context.getSourcePathResolver().getAbsolutePath(sourcePathToStrip),
             getPathToOutput()));
 
     buildableContext.recordArtifact(getPathToOutput());

@@ -110,17 +110,18 @@ public class MergeAndroidResourcesSourcesTest {
     ImmutableList<SourcePath> directories = ImmutableList.of(
         new FakeSourcePath(filesystem, "res_in_1"),
         new FakeSourcePath(filesystem, "res_in_2"));
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
+        new BuildRuleResolver(
+            TargetGraph.EMPTY,
+            new DefaultTargetNodeToBuildRuleTransformer())));
     MergeAndroidResourceSources mergeAndroidResourceSourcesStep =
         new MergeAndroidResourceSources(
             buildRuleParams,
-            new SourcePathResolver(new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY,
-                    new DefaultTargetNodeToBuildRuleTransformer()))),
+            pathResolver,
             directories);
 
     ImmutableList<Step> steps = mergeAndroidResourceSourcesStep.getBuildSteps(
-        FakeBuildContext.NOOP_CONTEXT,
+        FakeBuildContext.withSourcePathResolver(pathResolver),
         new FakeBuildableContext());
     assertThat(
         steps,

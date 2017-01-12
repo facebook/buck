@@ -128,7 +128,7 @@ public class PrebuiltAppleFramework
     builder.add(
         CopyStep.forDirectory(
             getProjectFilesystem(),
-            getResolver().getAbsolutePath(frameworkPath),
+            context.getSourcePathResolver().getAbsolutePath(frameworkPath),
             out,
             CopyStep.DirectoryMode.CONTENTS_ONLY));
 

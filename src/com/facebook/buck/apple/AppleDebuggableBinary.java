@@ -59,12 +59,14 @@ public class AppleDebuggableBinary
 
   @AddToRuleKey
   private final SourcePath binarySourcePath;
+  private final SourcePathResolver pathResolver;
 
   public AppleDebuggableBinary(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       BuildRule binaryRule) {
     super(buildRuleParams, resolver);
+    this.pathResolver = resolver;
     this.binaryRule = binaryRule;
     this.binarySourcePath = new BuildTargetSourcePath(binaryRule.getBuildTarget());
     performChecks(buildRuleParams, binaryRule);
@@ -143,7 +145,7 @@ public class AppleDebuggableBinary
   @Nullable
   @Override
   public Path getPathToOutput() {
-    return getResolver().getRelativePath(binarySourcePath);
+    return pathResolver.getRelativePath(binarySourcePath);
   }
 
   @Override

@@ -89,6 +89,7 @@ public class AppleTest
   private final Optional<String> defaultDestinationSpecifier;
   private final Optional<ImmutableMap<String, String>> destinationSpecifier;
 
+  private final SourcePathResolver pathResolver;
   private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey
   private final BuildRule testBundle;
@@ -207,6 +208,7 @@ public class AppleTest
     this.platformName = platformName;
     this.defaultDestinationSpecifier = defaultDestinationSpecifier;
     this.destinationSpecifier = destinationSpecifier;
+    this.pathResolver = resolver;
     this.ruleFinder = ruleFinder;
     this.testBundle = testBundle;
     this.testHostApp = testHostApp;
@@ -306,7 +308,7 @@ public class AppleTest
       XctoolRunTestsStep xctoolStep =
           new XctoolRunTestsStep(
               getProjectFilesystem(),
-              getResolver().getAbsolutePath(xctool.get()),
+              pathResolver.getAbsolutePath(xctool.get()),
               options.getEnvironmentOverrides(),
               xctoolStutterTimeout,
               platformName,
@@ -322,7 +324,7 @@ public class AppleTest
               Optional.of(testLogLevelEnvironmentVariable),
               Optional.of(testLogLevel),
               testRuleTimeoutMs,
-              this.snapshotReferenceImagePath.map(getResolver()::getAbsolutePath));
+              this.snapshotReferenceImagePath.map(pathResolver::getAbsolutePath));
       steps.add(xctoolStep);
       externalSpec.setType("xctool-" + (testHostApp.isPresent() ? "application" : "logic"));
       externalSpec.setCommand(xctoolStep.getCommand());
@@ -340,7 +342,7 @@ public class AppleTest
           new XctestRunTestsStep(
               getProjectFilesystem(),
               ImmutableMap.copyOf(environment),
-              xctest.getCommandPrefix(getResolver()),
+              xctest.getCommandPrefix(pathResolver),
               resolvedTestBundleDirectory,
               resolvedTestOutputPath,
               xctestOutputReader,

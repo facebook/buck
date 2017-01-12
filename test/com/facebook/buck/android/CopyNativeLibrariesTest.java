@@ -110,13 +110,14 @@ public class CopyNativeLibrariesTest {
   @Test
   public void testCopyNativeLibrariesCopiesLibDirsInReverseTopoOrder() {
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
+        new BuildRuleResolver(
+            TargetGraph.EMPTY,
+            new DefaultTargetNodeToBuildRuleTransformer())));
     CopyNativeLibraries copyNativeLibraries =
         new CopyNativeLibraries(
             new FakeBuildRuleParamsBuilder(target).build(),
-            new SourcePathResolver(new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY,
-                    new DefaultTargetNodeToBuildRuleTransformer()))),
+            pathResolver,
             ImmutableSet.of(new FakeSourcePath("lib1"), new FakeSourcePath("lib2")),
             ImmutableSet.of(),
             ImmutableSet.of(),
@@ -125,7 +126,7 @@ public class CopyNativeLibrariesTest {
 
     ImmutableList<Step> steps =
         copyNativeLibraries.getBuildSteps(
-            FakeBuildContext.NOOP_CONTEXT,
+            FakeBuildContext.withSourcePathResolver(pathResolver),
             new FakeBuildableContext());
 
     Iterable<String> descriptions =

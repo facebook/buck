@@ -31,11 +31,15 @@ public class FakeBuildContext {
   private FakeBuildContext() {}
 
   /** A BuildContext which doesn't touch the host filesystem or actually execute steps. */
-  public static final BuildContext NOOP_CONTEXT = BuildContext.builder()
-      .setActionGraph(new ActionGraph(ImmutableList.of()))
-      .setSourcePathResolver(createMock(SourcePathResolver.class))
-      .setJavaPackageFinder(new FakeJavaPackageFinder())
-      .setEventBus(BuckEventBusFactory.newInstance())
-      .build();
+  public static final BuildContext NOOP_CONTEXT =
+      withSourcePathResolver(createMock(SourcePathResolver.class));
 
+  public static BuildContext withSourcePathResolver(SourcePathResolver pathResolver) {
+    return BuildContext.builder()
+        .setActionGraph(new ActionGraph(ImmutableList.of()))
+        .setSourcePathResolver(pathResolver)
+        .setJavaPackageFinder(new FakeJavaPackageFinder())
+        .setEventBus(BuckEventBusFactory.newInstance())
+        .build();
+  }
 }

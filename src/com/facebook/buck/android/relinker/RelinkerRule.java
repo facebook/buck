@@ -77,6 +77,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
 
   private final BuildRuleParams buildRuleParams;
   private final CxxBuckConfig cxxBuckConfig;
+  private final SourcePathResolver pathResolver;
 
   public RelinkerRule(
       BuildRuleParams buildRuleParams,
@@ -91,6 +92,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
       Linker linker,
       ImmutableList<Arg> linkerArgs) {
     super(withDepsFromArgs(buildRuleParams, ruleFinder, linkerArgs), resolver);
+    this.pathResolver = resolver;
     this.cpuType = cpuType;
     this.objdump = objdump;
     this.cxxBuckConfig = cxxBuckConfig;
@@ -163,7 +165,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
               buildRuleParams
                   .withFlavor(ImmutableFlavor.of("cxx-link"))
                   .withoutFlavor(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
-              getResolver(),
+              context.getSourcePathResolver(),
               linker,
               getLibFilePath(),
               args,
@@ -224,7 +226,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
 
 
   private Path getBaseLibPath() {
-    return getResolver().getAbsolutePath(baseLibSourcePath);
+    return pathResolver.getAbsolutePath(baseLibSourcePath);
   }
 
   private Path getScratchDirPath() {
@@ -245,7 +247,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
     return Symbols.getSymbols(
         executor,
         objdump,
-        getResolver(),
+        pathResolver,
         absolutify(path));
   }
 
@@ -285,7 +287,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
     ImmutableSet.Builder<String> symbolsNeeded = ImmutableSet.builder();
     for (SourcePath source : symbolsNeededPaths) {
       symbolsNeeded.addAll(
-          Files.readAllLines(getResolver().getAbsolutePath(source), Charsets.UTF_8));
+          Files.readAllLines(pathResolver.getAbsolutePath(source), Charsets.UTF_8));
     }
     return symbolsNeeded.build();
   }

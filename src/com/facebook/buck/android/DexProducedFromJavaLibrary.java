@@ -126,7 +126,8 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
     final DxStep dx;
 
     if (hasClassesToDx) {
-      Path pathToOutputFile = getResolver().getAbsolutePath(javaLibrarySourcePath);
+      Path pathToOutputFile =
+          context.getSourcePathResolver().getAbsolutePath(javaLibrarySourcePath);
       EstimateDexWeightStep estimate = new EstimateDexWeightStep(
           getProjectFilesystem(),
           pathToOutputFile);

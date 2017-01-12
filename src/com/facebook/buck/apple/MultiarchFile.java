@@ -82,7 +82,7 @@ public class MultiarchFile extends AbstractBuildRule implements ProvidesLinkedBi
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.add(new MkdirStep(getProjectFilesystem(), output.getParent()));
 
-    lipoBinaries(steps);
+    lipoBinaries(context, steps);
     copyLinkMaps(buildableContext, steps);
 
     return steps.build();
@@ -113,12 +113,12 @@ public class MultiarchFile extends AbstractBuildRule implements ProvidesLinkedBi
     }
   }
 
-  private void lipoBinaries(ImmutableList.Builder<Step> steps) {
+  private void lipoBinaries(BuildContext context, ImmutableList.Builder<Step> steps) {
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
-    commandBuilder.addAll(lipo.getCommandPrefix(getResolver()));
+    commandBuilder.addAll(lipo.getCommandPrefix(context.getSourcePathResolver()));
     commandBuilder.add("-create", "-output", getProjectFilesystem().resolve(output).toString());
     for (SourcePath thinBinary : thinBinaries) {
-      commandBuilder.add(getResolver().getAbsolutePath(thinBinary).toString());
+      commandBuilder.add(context.getSourcePathResolver().getAbsolutePath(thinBinary).toString());
     }
     steps.add(
         new DefaultShellStep(

@@ -65,7 +65,7 @@ public class MergeAndroidResourceSources extends AbstractBuildRule {
     steps.add(
         new MergeAndroidResourceSourcesStep(
             originalDirectories.stream()
-                .map(getResolver()::getAbsolutePath)
+                .map(context.getSourcePathResolver()::getAbsolutePath)
                 .collect(MoreCollectors.toImmutableList()),
             getProjectFilesystem().resolve(destinationDirectory),
             getProjectFilesystem().resolve(tempDirectory)

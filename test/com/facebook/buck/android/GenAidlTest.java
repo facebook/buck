@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -73,13 +74,14 @@ public class GenAidlTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target)
         .setProjectFilesystem(stubFilesystem)
         .build();
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
+        new BuildRuleResolver(
+            TargetGraph.EMPTY,
+            new DefaultTargetNodeToBuildRuleTransformer())
+    ));
     GenAidl genAidlRule = new GenAidl(
         params,
-        new SourcePathResolver(new SourcePathRuleFinder(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        )),
+        pathResolver,
         pathToAidl,
         importPath);
 
@@ -89,7 +91,8 @@ public class GenAidlTest {
         Description.getBuildRuleType(description));
     assertTrue(genAidlRule.getProperties().is(ANDROID));
 
-    List<Step> steps = genAidlRule.getBuildSteps(null, new FakeBuildableContext());
+    List<Step> steps = genAidlRule.getBuildSteps(
+        FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
 
     final String pathToAidlExecutable = Paths.get("/usr/local/bin/aidl").toString();
     final String pathToFrameworkAidl = Paths.get(

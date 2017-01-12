@@ -96,7 +96,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
         BuildTargets.getGenPath(filesystem, javaLibraryRule.getBuildTarget(), "%s.jar");
     javaLibraryRule.setOutputFile(jarOutput.toString());
 
-    BuildContext context = FakeBuildContext.NOOP_CONTEXT;
+    BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     replayAll();
