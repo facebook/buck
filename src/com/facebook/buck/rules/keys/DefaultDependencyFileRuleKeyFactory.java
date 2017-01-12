@@ -46,7 +46,7 @@ import javax.annotation.Nullable;
 /**
  * A factory for generating dependency-file {@link RuleKey}s.
  */
-public class DefaultDependencyFileRuleKeyFactory
+public final class DefaultDependencyFileRuleKeyFactory
     extends ReflectiveRuleKeyFactory<DefaultDependencyFileRuleKeyFactory.Builder, RuleKey>
     implements DependencyFileRuleKeyFactory {
 
@@ -83,7 +83,7 @@ public class DefaultDependencyFileRuleKeyFactory
     return new Builder();
   }
 
-  public class Builder extends RuleKeyBuilder<RuleKey> {
+  class Builder extends RuleKeyBuilder<RuleKey> {
 
     private final ImmutableList.Builder<Iterable<SourcePath>> inputs = ImmutableList.builder();
 
@@ -128,11 +128,11 @@ public class DefaultDependencyFileRuleKeyFactory
               rule));
     }
 
-    protected Iterable<SourcePath> getIterableInputsSoFar() {
+    private Iterable<SourcePath> getIterableInputsSoFar() {
       return Iterables.concat(inputs.build());
     }
 
-    protected Result buildResult() {
+    final Result buildResult() {
       return new Result(buildRuleKey(), Iterables.concat(inputs.build()));
     }
 
@@ -142,7 +142,7 @@ public class DefaultDependencyFileRuleKeyFactory
     }
   }
 
-  protected static class Result {
+  private static class Result {
 
     private final RuleKey ruleKey;
     private final Iterable<SourcePath> inputs;
