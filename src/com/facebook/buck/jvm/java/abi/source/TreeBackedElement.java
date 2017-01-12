@@ -40,18 +40,33 @@ abstract class TreeBackedElement implements Element {
   private final ElementKind kind;
   private final Name simpleName;
   @Nullable
-  private final Element enclosingElement;
+  private final TreeBackedElement enclosingElement;
   private final List<Element> enclosedElements = new ArrayList<>();
+  private final TypeResolverFactory resolverFactory;
+
+  @Nullable
+  private TypeResolver resolver;
 
   public TreeBackedElement(
       ElementKind kind,
       Name simpleName,
-      @Nullable TreeBackedElement enclosingElement) {
+      @Nullable TreeBackedElement enclosingElement,
+      TypeResolverFactory resolverFactory) {
     this.kind = kind;
     this.simpleName = simpleName;
     this.enclosingElement = enclosingElement;
     // Some element types don't appear as members of enclosingElement.getEnclosedElements, so
     // it's up to each subtype's constructor to decide whether to add itself or not.
+
+    this.resolverFactory = resolverFactory;
+  }
+
+  protected final TypeResolver getResolver() {
+    if (resolver == null) {
+      resolver = resolverFactory.newInstance(this);
+    }
+
+    return resolver;
   }
 
   @Override
@@ -71,7 +86,7 @@ abstract class TreeBackedElement implements Element {
 
   @Override
   @Nullable
-  public Element getEnclosingElement() {
+  public TreeBackedElement getEnclosingElement() {
     return enclosingElement;
   }
 

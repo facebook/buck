@@ -44,8 +44,15 @@ class TreeBackedElements implements Elements {
   private final Map<Name, TypeElement> knownTypes = new HashMap<>();
   private final Map<Name, TreeBackedPackageElement> knownPackages = new HashMap<>();
 
+  @Nullable
+  private TypeResolverFactory resolverFactory;
+
   public TreeBackedElements(Elements javacElements) {
     this.javacElements = javacElements;
+  }
+
+  /* package */ void setResolverFactory(TypeResolverFactory resolverFactory) {
+    this.resolverFactory = resolverFactory;
   }
 
   @Override
@@ -73,7 +80,8 @@ class TreeBackedElements implements Elements {
           new TreeBackedPackageElement(
               getSimpleName(qualifiedName),
               qualifiedName,
-              javacElements.getPackageElement(qualifiedName)));
+              javacElements.getPackageElement(qualifiedName),
+              Preconditions.checkNotNull(resolverFactory)));
     }
 
     return Preconditions.checkNotNull(knownPackages.get(qualifiedName));

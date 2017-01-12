@@ -45,8 +45,9 @@ class TreeBackedPackageElement extends TreeBackedElement implements PackageEleme
   public TreeBackedPackageElement(
       Name simpleName,
       Name qualifiedName,
-      @Nullable PackageElement javacPackage) {
-    super(ElementKind.PACKAGE, simpleName, null);
+      @Nullable PackageElement javacPackage,
+      TypeResolverFactory resolverFactory) {
+    super(ElementKind.PACKAGE, simpleName, null, resolverFactory);
     this.qualifiedName = qualifiedName;
     this.javacPackage = javacPackage;
   }

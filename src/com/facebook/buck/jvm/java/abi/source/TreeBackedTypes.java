@@ -18,21 +18,12 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.exportedfiles.Nullable;
 import com.facebook.buck.util.exportedfiles.Preconditions;
-import com.sun.source.tree.ArrayTypeTree;
-import com.sun.source.tree.IdentifierTree;
-import com.sun.source.tree.MemberSelectTree;
-import com.sun.source.tree.ParameterizedTypeTree;
-import com.sun.source.tree.PrimitiveTypeTree;
-import com.sun.source.tree.Tree;
-import com.sun.source.tree.TypeParameterTree;
-import com.sun.source.util.SimpleTreeVisitor;
 
 import java.util.Arrays;
 import java.util.List;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
@@ -53,11 +44,6 @@ import javax.lang.model.util.Types;
  * methods and {@link com.facebook.buck.jvm.java.abi.source} for more information.
  */
 class TreeBackedTypes implements Types {
-  private final TreeBackedElements elements;
-
-  public TreeBackedTypes(TreeBackedElements elements) {
-    this.elements = elements;
-  }
   @Override
   @Nullable
   public Element asElement(TypeMirror t) {
@@ -255,69 +241,5 @@ class TreeBackedTypes implements Types {
   @Override
   public TypeMirror asMemberOf(DeclaredType containing, Element element) {
     throw new UnsupportedOperationException();
-  }
-
-  /* package */ TypeMirror resolveType(Tree typeTree, Element scope) {
-    return typeTree.accept(new SimpleTreeVisitor<TypeMirror, Void>() {
-      @Override
-      protected TypeMirror defaultAction(Tree node, Void aVoid) {
-        throw new IllegalArgumentException(
-            String.format("Unexpected tree kind: %s", node.getKind()));
-      }
-
-      @Override
-      public TypeMirror visitIdentifier(IdentifierTree node, Void aVoid) {
-        // TODO(jkeljo): This is a quick hack to allow references to type params. We'll need a more
-        // general scoping mechanism.
-        TypeElement type = (TypeElement) scope;
-        for (TypeParameterElement typeParameterElement : type.getTypeParameters()) {
-          if (node.getName().contentEquals(typeParameterElement.getSimpleName())) {
-            return typeParameterElement.asType();
-          }
-        }
-
-        throw new UnsupportedOperationException("Type resolution by simple name NYI");
-      }
-
-      @Override
-      public TypeMirror visitTypeParameter(
-          TypeParameterTree node, Void aVoid) {
-        throw new UnsupportedOperationException("Type resolution for parameterized types NYI");
-      }
-
-      @Override
-      public TypeMirror visitMemberSelect(MemberSelectTree node, Void aVoid) {
-        return treeToTypeElement(node).asType();
-      }
-
-      @Override
-      public TypeMirror visitParameterizedType(ParameterizedTypeTree node, Void aVoid) {
-        TypeElement typeElement = treeToTypeElement(node.getType());
-
-        TypeMirror[] typeArgs = node.getTypeArguments()
-            .stream()
-            .map(tree -> resolveType(tree, scope))
-            .toArray(size -> new TypeMirror[size]);
-
-        return getDeclaredType(typeElement, typeArgs);
-      }
-
-      @Override
-      public TypeMirror visitArrayType(ArrayTypeTree node, Void aVoid) {
-        TypeMirror elementType = resolveType(node.getType(), scope);
-
-        return getArrayType(elementType);
-      }
-
-      @Override
-      public TypeMirror visitPrimitiveType(PrimitiveTypeTree node, Void aVoid) {
-        return getPrimitiveType(node.getPrimitiveTypeKind());
-      }
-
-      private TypeElement treeToTypeElement(Tree type) {
-        return Preconditions.checkNotNull(
-            elements.getTypeElement(TreeBackedTrees.treeToName(type)));
-      }
-    }, null);
   }
 }

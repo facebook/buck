@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.Name;
@@ -48,8 +47,12 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
   @Nullable
   private TypeMirror superclass;
 
-  TreeBackedTypeElement(TreeBackedElement enclosingElement, ClassTree tree, Name qualifiedName) {
-    super(getElementKind(tree), tree.getSimpleName(), enclosingElement);
+  TreeBackedTypeElement(
+      TreeBackedElement enclosingElement,
+      ClassTree tree,
+      Name qualifiedName,
+      TypeResolverFactory resolverFactory) {
+    super(getElementKind(tree), tree.getSimpleName(), enclosingElement, resolverFactory);
     this.tree = tree;
     this.qualifiedName = qualifiedName;
     typeMirror = new StandaloneDeclaredType(this);
@@ -76,44 +79,44 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
     }
   }
 
-  /* package */ void resolve(TreeBackedElements elements, TreeBackedTypes types) {
+  /* package */ void resolve() {
     // Need to resolve type parameters first, because the superclass definition might reference them
-    resolveTypeParameters(elements, types);
-    resolveSuperclass(elements, types);
-    resolveInnerTypes(elements, types);
+    resolveTypeParameters();
+    resolveSuperclass();
+    resolveInnerTypes();
   }
 
-  private void resolveSuperclass(TreeBackedElements elements, TreeBackedTypes types) {
+  private void resolveSuperclass() {
+    final TypeResolver resolver = getResolver();
     final Tree extendsClause = tree.getExtendsClause();
     if (extendsClause == null) {
       if (tree.getKind() == Tree.Kind.INTERFACE) {
         superclass = StandaloneNoType.KIND_NONE;
       } else {
-        superclass =
-            Preconditions.checkNotNull(elements.getTypeElement("java.lang.Object")).asType();
+        superclass = resolver.getJavaLangObject();
       }
     } else {
-      superclass = types.resolveType(extendsClause, this);
+      superclass = resolver.resolveType(extendsClause);
     }
   }
 
-  private void resolveTypeParameters(TreeBackedElements elements, TreeBackedTypes types) {
-    typeParameters.forEach(typeParam -> typeParam.resolve(elements, types));
+  private void resolveTypeParameters() {
+    typeParameters.forEach(typeParam -> typeParam.resolve());
   }
 
-  private void resolveInnerTypes(TreeBackedElements elements, TreeBackedTypes types) {
+  private void resolveInnerTypes() {
     getEnclosedElements().forEach(
         element -> element.accept(new SimpleElementVisitor8<Void, Void>() {
           @Override
           public Void visitType(TypeElement e, Void aVoid) {
-            ((TreeBackedTypeElement) e).resolve(elements, types);
+            ((TreeBackedTypeElement) e).resolve();
             return null;
           }
         }, null));
   }
 
   @Override
-  public Element getEnclosingElement() {
+  public TreeBackedElement getEnclosingElement() {
     return Preconditions.checkNotNull(super.getEnclosingElement());
   }
 

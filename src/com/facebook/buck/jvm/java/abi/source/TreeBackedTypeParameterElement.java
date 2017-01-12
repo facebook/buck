@@ -44,8 +44,9 @@ class TreeBackedTypeParameterElement extends TreeBackedElement implements TypePa
 
   public TreeBackedTypeParameterElement(
       TypeParameterTree tree,
-      TreeBackedElement enclosingElement) {
-    super(ElementKind.TYPE_PARAMETER, tree.getName(), enclosingElement);
+      TreeBackedElement enclosingElement,
+      TypeResolverFactory resolverFactory) {
+    super(ElementKind.TYPE_PARAMETER, tree.getName(), enclosingElement, resolverFactory);
 
     this.tree = tree;
     typeVar = new StandaloneTypeVariable(this);
@@ -54,15 +55,14 @@ class TreeBackedTypeParameterElement extends TreeBackedElement implements TypePa
     // value of getEnclosedElements
   }
 
-  /* package */ void resolve(TreeBackedElements elements, TreeBackedTypes types) {
+  /* package */ void resolve() {
+    TypeResolver resolver = getResolver();
     if (tree.getBounds().isEmpty()) {
-      bounds = Collections.singletonList(
-          Preconditions.checkNotNull(elements.getTypeElement("java.lang.Object")).asType());
+      bounds = Collections.singletonList(resolver.getJavaLangObject());
     } else {
-      Element enclosingElement = Preconditions.checkNotNull(getEnclosingElement());
       bounds = Collections.unmodifiableList(
           tree.getBounds().stream()
-              .map(boundTree -> types.resolveType(boundTree, enclosingElement))
+              .map(boundTree -> resolver.resolveType(boundTree))
               .collect(Collectors.toList()));
     }
   }

@@ -63,6 +63,7 @@ class FrontendOnlyJavacTask extends JavacTask {
   private final TreeBackedElements elements;
   private final TreeBackedTrees trees;
   private final TreeBackedTypes types;
+  private final TypeResolverFactory resolverFactory;
 
   @Nullable
   private Iterable<? extends CompilationUnitTree> parsedCompilationUnits;
@@ -71,7 +72,9 @@ class FrontendOnlyJavacTask extends JavacTask {
     this.javacTask = javacTask;
     elements = new TreeBackedElements(javacTask.getElements());
     trees = new TreeBackedTrees(Trees.instance(javacTask), elements);
-    types = new TreeBackedTypes(elements);
+    types = new TreeBackedTypes();
+    resolverFactory = new TypeResolverFactory(elements, types, trees);
+    elements.setResolverFactory(resolverFactory);
   }
 
   @Override
@@ -99,7 +102,7 @@ class FrontendOnlyJavacTask extends JavacTask {
     foundElements.forEach(element -> element.accept(new SimpleElementVisitor8<Void, Void>() {
       @Override
       public Void visitType(TypeElement e, Void aVoid) {
-        ((TreeBackedTypeElement) e).resolve(elements, types);
+        ((TreeBackedTypeElement) e).resolve();
         return null;
       }
     }, null));
@@ -192,7 +195,11 @@ class FrontendOnlyJavacTask extends JavacTask {
 
           TreeBackedScope classScope = trees.getScope(getCurrentPath());
           TreeBackedTypeElement typeElement =
-              new TreeBackedTypeElement(enclosingScope.getEnclosingElement(), node, qualifiedName);
+              new TreeBackedTypeElement(
+                  enclosingScope.getEnclosingElement(),
+                  node,
+                  qualifiedName,
+                  resolverFactory);
 
           if (enclosingScope.getEnclosingClass() == null) {
             topLevelElements.add(typeElement);
@@ -216,7 +223,8 @@ class FrontendOnlyJavacTask extends JavacTask {
 
           TreeBackedTypeParameterElement typeParameter = new TreeBackedTypeParameterElement(
               node,
-              enclosingClass);
+              enclosingClass,
+              resolverFactory);
           enclosingClass.addTypeParameter(typeParameter);
           trees.enterElement(getCurrentPath(), typeParameter);
 
