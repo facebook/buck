@@ -667,18 +667,24 @@ docsearch({
  * @param desc Prose description of the argument.
  */
 {template .arg}
-  <li class="{css arg}"><code>{$name}</code>
-
-  {sp}
-  {if isNonnull($default)}
-    (defaults to <code>{$default}</code>)
-  {else}
-    (required)
-  {/if}
-  {sp}
-
-  {$desc|noAutoescape}
-
+<li id="{$name}" class="arg">
+  <h3>
+    <code class="argName">{$name}</code>
+    {sp}
+    <span class="argDefault">
+      {if isNonnull($default)}
+        (defaults to <code>{$default}</code>)
+      {else}
+        (required)
+      {/if}
+    </span>
+    {sp}
+    <a class="inline-link" href="#{$name}">#</a>
+  </h3>
+  <p>
+    {$desc|noAutoescape}
+  </p>
+</li>
 {/template}
 
 
