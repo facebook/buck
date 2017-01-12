@@ -48,10 +48,24 @@
 <p>
   This is a quick start guide for getting up and running with Buck. This article is light on details, instead focusing on the commands that you need to run to install Buck.
 </p>
+<p>
+<blockquote>
+  While not a prerequisite for installing Buck itself, to build Android applications, you will also need at least the <a href="https://developer.android.com/studio/index.html">Android SDK</a>, which can be installed via <a href="https://chocolatey.org/packages/android-sdk">Chocolatey</a> or manually downloaded and installed.
+</blockquote>
+</p>
 
 <span><block class="linux mac android" /></span>
 <p>
   This is a quick start guide for getting up and running with Buck. This article is light on details, instead focusing on the commands that you need to run to install Buck and build your first application from scratch using Buck.
+</p>
+<span><block class="mac android" /></span>
+<blockquote>
+  While not a prerequisite for installing Buck itself, to build Android applications, you will also need at least the <a href="https://developer.android.com/studio/index.html">Android SDK</a>, which can be installed via <a href="http://brewformulas.org/Android-sdk">Homebrew</a> or manually downloaded and installed.
+</blockquote>
+<span><block class="linux android" /></span>
+<blockquote>
+  While not a prerequisite for installing Buck itself, to build Android applications, you will also need at least the <a href="https://developer.android.com/studio/index.html">Android SDK</a>, which can be installed via <code>apt-get</code> (or your distro's package manager)</a> or manually downloaded and installed.
+</blockquote>
 </p>
 
 <span><block class="mac ios android" /></span>
@@ -99,35 +113,39 @@ You can find a more detailed explanation about each step in the development proc
   <li>
     <a href="https://developer.apple.com/xcode/features/">Command Line Tools</a>
   </li>
+  <li>
+    <a href="https://java.com/en/download/">Java Runtime Environment</a>
+  </li>
 </ul>
 
 {literal}<pre>
 # Install command line tools
 xcode-select --install
+# Install Java - this installs the JDK, a superset of the JRE
+brew update
+brew tap caskroom/cask
+brew install java
 </pre>{/literal}
+
 <h3>Brew install</h3>
 
 <p>
-  You have two choices when using Homebrew.  You can choose to get the latest binary <a href="https://github.com/facebook/buck/releases/latest">release</a>, for which you will need a <a href="https://java.com/en/download/">Java Runtime Environment</a>:
+  You have two choices when using Homebrew.  You can choose to get the latest binary <a href="https://github.com/facebook/buck/releases/latest">release</a>:
 </p>
 
 {literal}<pre>
 brew update
-brew tap caskroom/cask
-brew install java
 brew tap facebook/fb
 brew install buck
 </pre>
 {/literal}
 
 <p>
-  Or, you can get the latest and greatest code and build it locally, for which you will need the <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Oracle Java Development Kit</a>:
+  Or, you can get the latest and greatest code and build it locally.:
 </p>
 
 {literal}<pre>
 brew update
-brew tap caskroom/cask
-brew install java
 brew tap facebook/fb
 brew install --HEAD buck
 </pre>
@@ -174,9 +192,11 @@ brew install --HEAD buck
 {literal}<pre>
 # Install Command Line tools first.
 xcode-select --install
-# Then....
+# Then the JDK (superset of the JRE)
 brew update
-brew cask install java
+brew tap caskroom/cask
+brew install java
+# Then...
 brew install ant python git watchman
 </pre>{/literal}
 
@@ -235,8 +255,7 @@ options:
 
 <ul>
   <li>
-    <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Oracle Java
-    Development Kit</a>
+    <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Oracle Java Development Kit</a>
   </li>
   <li>
     <a href="http://ant.apache.org/">Apache Ant 1.9 (or newer)</a>
@@ -274,9 +293,16 @@ choco install jdk8 ant python git
 </p>
 
 {literal}<pre>
+sudo apt-get update
 apt-get install default-jdk ant python git
 # install watchman as stated in the watchman prerequisite link above
 </pre>{/literal}
+
+<p>
+<blockquote>
+For some distros, the default packages may be older than what you would like. In those cases, either build those packages from source, or find third party repositories beyond the default that is used by <code>apt-get</code> via <code>sudo add-apt-repository</code>.
+</blockquote>
+</p>
 
 <span><block class="windows linux android" /></span>
 
