@@ -27,12 +27,19 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import java.util.Optional;
+
 public abstract class AbstractPreprocessor implements Preprocessor {
 
   protected final Tool tool;
 
   protected AbstractPreprocessor(Tool tool) {
     this.tool = tool;
+  }
+
+  @Override
+  public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
+    return Optional.empty();
   }
 
   @Override
