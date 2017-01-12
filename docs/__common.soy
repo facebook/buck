@@ -1293,3 +1293,17 @@ sudo ln -s ${lb}PWD{rb}/bin/buck /usr/bin/buck
 {/if}
 </pre>
 {/template}
+
+/**
+ * @param newURL
+ */
+{template .redirectTo}
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Redirecting...</title>
+<link rel=canonical href="{$newURL}">
+<meta http-equiv=refresh content="0; url={$newURL}">
+<h1>Redirecting...</h1>
+<a href="{$newURL}">Click here if you are not redirected.</a>
+<script>location="{$newURL}"</script>
+{/template}
