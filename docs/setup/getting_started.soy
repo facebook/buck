@@ -133,11 +133,7 @@ brew tap caskroom/cask
 brew install java
 </pre>{/literal}
 
-<p>
-<blockquote>
-  If for some reason you do not have Xcode installed and you get an error <code>error: active developer path ("/Applications/Xcode.app/Contents/Developer") does not exist</code>, then run <code>xcode-select --reset</code> to reset the command line tools path to where command line tools is installed.
-</blockquote>
-</p>
+{call .active_developer_path /}
 
 <h3>Brew install</h3>
 
@@ -213,11 +209,7 @@ brew install java
 brew install ant python git watchman
 </pre>{/literal}
 
-<p>
-<blockquote>
-  If for some reason you do not have Xcode installed and you get an error <code>error: active developer path ("/Applications/Xcode.app/Contents/Developer") does not exist</code>, then run <code>xcode-select --reset</code> to reset the command line tools path to where command line tools is installed.
-</blockquote>
-</p>
+{call .active_developer_path /}
 
 <h3>Build</h3>
 
@@ -413,20 +405,20 @@ cd bucksamples/cross-platform-scale-2015-demo/
 
 <ul>
   <li>
-    <code>ios/main.m</code>: The main iOS file supported by other views, controllers and associated resources.
+    <p><code>ios/main.m</code>: The main iOS file supported by other views, controllers and associated resources.</p>
   </li>
   <li>
-    <code>ios/BUCK</code>: This file is what makes Buck work. It defines all the build rules for your source code.
+    <p><code>ios/BUCK</code>: This file is what makes Buck work. It defines all the build rules for your source code.</p>
   </li>
   <li>
-    <code>.buckconfig</code>: This file allows for various flag and alias settings for any project (even beyond iOS) within the root directory.
+    <p><code>.buckconfig</code>: This file allows for various flag and alias settings for any project (even beyond iOS) within the root directory.</p>
   </li>
 </ul>
 
 <h3>Build the iOS Sample</h3>
 
 <p>
-  In order to build the app, you use the <code>buck build</code> command, specifying your app as the target. The target may be defined as an alias in the <code>.buckconfig</code> file or it would be the name of your iOS project prepended by <code>//ios:</code> (e.g., <code>//ios:BuckDempApp</code>)
+  In order to build the app, you use the {call buck.cmd_build /} command, specifying your app as the target. The target may be defined in the {call buckconfig.alias /} section in the <code>.buckconfig</code> file or it would be the name of your iOS project prepended by <code>//ios:</code> (e.g., <code>//ios:BuckDempApp</code>)
 </p>
 
 {literal}
@@ -861,4 +853,13 @@ if (!foundHash) {
   {param navid: 'setup_getting_started' /}
 {/call}
 
+{/template}
+
+/***/
+{template .active_developer_path}
+<p>
+<blockquote>
+  If for some reason you do not have Xcode installed and you get an error <code>error: active developer path ("/Applications/Xcode.app/Contents/Developer") does not exist</code>, then run <code>xcode-select --reset</code> to reset the command line tools path to where command line tools is installed.
+</blockquote>
+</p>
 {/template}
