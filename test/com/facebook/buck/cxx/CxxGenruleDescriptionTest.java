@@ -68,7 +68,7 @@ public class CxxGenruleDescriptionTest {
               .setOut("out")
               .setCmd(
                   String.format(
-                      "$(ldflags-%s-filter .*//:a.* //:a)",
+                      "$(ldflags-%s-filter //:a //:a)",
                       CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, style.toString())));
       TargetGraph targetGraph =
           TargetGraphFactory.newInstance(

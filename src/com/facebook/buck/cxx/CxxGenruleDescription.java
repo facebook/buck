@@ -671,7 +671,7 @@ public class CxxGenruleDescription
                       BuildRule rule = (BuildRule) input;
                       return filter.get()
                           .matcher(String.format("%s(%s)", rule.getType(), rule.getBuildTarget()))
-                          .matches();
+                          .find();
                     });
         ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
         for (NativeLinkable nativeLinkable : nativeLinkables.values()) {
