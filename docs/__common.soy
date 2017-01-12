@@ -316,6 +316,12 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
     {/call}
     {call .navigationLink}
       {param currentnavid: $navid /}
+      {param folder: 'learning' /}
+      {param page: 'tutorial' /}
+      {param text: 'Tutorial' /}
+    {/call}
+    {call .navigationLink}
+      {param currentnavid: $navid /}
       {param folder: 'setup' /}
       {param page: 'intellij_plugin_install' /}
       {param text: 'Installing the IntelliJ Plugin' /}
@@ -1111,6 +1117,11 @@ docsearch({
 /***/
 {template .cmd_clean}
 {call .cmd_link}{param name : 'clean' /}{/call}
+{/template}
+
+/***/
+{template .cmd_buckd}
+<a href="{ROOT}command/buckd.html"><code>buckd</code></a>
 {/template}
 
 /***/
