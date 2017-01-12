@@ -20,6 +20,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.versions.TargetNodeTranslator;
+import com.facebook.buck.versions.TargetTranslatable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -32,7 +34,7 @@ import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractSourceList {
+abstract class AbstractSourceList implements TargetTranslatable<SourceList> {
 
   public static final SourceList EMPTY =
       SourceList.ofUnnamedSources(ImmutableSortedSet.of());
@@ -121,6 +123,22 @@ abstract class AbstractSourceList {
         break;
     }
     return sources.build();
+  }
+
+  @Override
+  public Optional<SourceList> translateTargets(TargetNodeTranslator translator) {
+    Optional<Optional<ImmutableSortedMap<String, SourcePath>>> namedSources =
+        translator.translate(getNamedSources());
+    Optional<Optional<ImmutableSortedSet<SourcePath>>> unNamedSources =
+        translator.translate(getUnnamedSources());
+    if (!namedSources.isPresent() && !unNamedSources.isPresent()) {
+      return Optional.empty();
+    }
+    SourceList.Builder builder = SourceList.builder();
+    builder.setType(getType());
+    builder.setNamedSources(namedSources.orElse(getNamedSources()));
+    builder.setUnnamedSources(unNamedSources.orElse(getUnnamedSources()));
+    return Optional.of(builder.build());
   }
 
 }

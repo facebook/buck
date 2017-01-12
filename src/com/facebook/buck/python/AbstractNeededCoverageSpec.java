@@ -18,6 +18,8 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.versions.TargetNodeTranslator;
+import com.facebook.buck.versions.TargetTranslatable;
 
 import org.immutables.value.Value;
 
@@ -25,10 +27,23 @@ import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleTuple
-interface AbstractNeededCoverageSpec {
+abstract class AbstractNeededCoverageSpec implements TargetTranslatable<NeededCoverageSpec> {
 
-  float getNeededCoverageRatio();
-  BuildTarget getBuildTarget();
-  Optional<String> getPathName();
+  public abstract float getNeededCoverageRatio();
+  public abstract BuildTarget getBuildTarget();
+  public abstract Optional<String> getPathName();
+
+  @Override
+  public Optional<NeededCoverageSpec> translateTargets(TargetNodeTranslator translator) {
+    Optional<BuildTarget> newBuildTarget = translator.translate(getBuildTarget());
+    if (!newBuildTarget.isPresent()) {
+      return Optional.empty();
+    }
+    return Optional.of(
+        NeededCoverageSpec.of(
+            getNeededCoverageRatio(),
+            newBuildTarget.get(),
+            getPathName()));
+  }
 
 }

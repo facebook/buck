@@ -43,6 +43,7 @@
       "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/environment:platform",
+      "//src/com/facebook/buck/versions:translator",
       "//src/com/facebook/buck/versions:types",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/cxx:testutil",
@@ -57,6 +58,7 @@
       "//test/com/facebook/buck/testutil/integration:util",
       "//test/com/facebook/buck/timing:testutil",
       "//test/com/facebook/buck/util:testutil",
+      "//test/com/facebook/buck/versions:testutil",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/junit:junit"
