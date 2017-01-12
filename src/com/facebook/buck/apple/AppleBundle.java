@@ -663,7 +663,11 @@ public class AppleBundle
     Path dsymSourcePath = bundleRoot.getParent().resolve(dsymPath.getFileName());
     Path dsymDestinationPath = bundleRoot.getParent().resolve(
         bundleRoot.getFileName() + "." + AppleBundleExtension.DSYM.toFileExtension());
-    stepsBuilder.add(new RmStep(getProjectFilesystem(), dsymDestinationPath, true, true));
+    stepsBuilder.add(new RmStep(
+        getProjectFilesystem(),
+        dsymDestinationPath,
+        RmStep.Mode.FORCED,
+        RmStep.Mode.RECURSIVE));
     stepsBuilder.add(new MoveStep(getProjectFilesystem(), dsymSourcePath, dsymDestinationPath));
 
     String dwarfFilename =

@@ -43,8 +43,8 @@ public final class MakeCleanDirectoryStep extends CompositeStep {
         new RmStep(
             filesystem,
             pathRelativeToProjectRoot,
-            /* shouldForceDeletion */ true,
-            /* shouldRecurse */ true),
+            RmStep.Mode.FORCED,
+            RmStep.Mode.RECURSIVE),
         new MkdirStep(filesystem, pathRelativeToProjectRoot)));
     this.pathRelativeToProjectRoot = pathRelativeToProjectRoot;
   }

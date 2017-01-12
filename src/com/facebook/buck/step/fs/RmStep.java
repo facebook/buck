@@ -26,6 +26,9 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.Set;
 
 public class RmStep implements Step {
 
@@ -33,34 +36,30 @@ public class RmStep implements Step {
 
   private final ProjectFilesystem filesystem;
   private final Path toDelete;
-  private final boolean shouldForceDeletion;
-  private final boolean shouldRecurse;
-
-  public RmStep(ProjectFilesystem filesystem, Path toDelete, boolean shouldForceDeletion) {
-    this(filesystem, toDelete, shouldForceDeletion, false /* shouldRecurse */);
-  }
+  private final Set<Mode> modes;
 
   public RmStep(
       ProjectFilesystem filesystem,
       Path toDelete,
-      boolean shouldForceDeletion,
-      boolean shouldRecurse) {
+      Set<Mode> modes) {
     this.filesystem = filesystem;
     this.toDelete = toDelete;
-    this.shouldForceDeletion = shouldForceDeletion;
-    this.shouldRecurse = shouldRecurse;
+    this.modes = modes;
+  }
+
+  public RmStep(ProjectFilesystem filesystem, Path toDelete, Mode... modes) {
+    this(
+        filesystem,
+        toDelete,
+        modes.length > 0 ? EnumSet.copyOf(Arrays.asList(modes)) : EnumSet.noneOf(Mode.class));
   }
 
   public ImmutableList<String> getShellCommand() {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add("rm");
 
-    if (shouldRecurse) {
-      args.add("-r");
-    }
-
-    if (shouldForceDeletion) {
-      args.add("-f");
+    for (Mode mode : modes) {
+      args.add(mode.toShellArgument());
     }
 
     Path absolutePath = filesystem.resolve(toDelete);
@@ -77,16 +76,16 @@ public class RmStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context) {
     try {
-      if (shouldRecurse) {
+      if (shouldRecurse()) {
         // Delete a folder recursively
-        if (shouldForceDeletion) {
+        if (shouldForceDeletion()) {
           filesystem.deleteRecursivelyIfExists(toDelete);
         } else {
           filesystem.deleteRecursively(toDelete);
         }
       } else {
         // Delete a single file
-        if (shouldForceDeletion) {
+        if (shouldForceDeletion()) {
           filesystem.deleteFileAtPathIfExists(toDelete);
         } else {
           filesystem.deleteFileAtPath(toDelete);
@@ -102,5 +101,28 @@ public class RmStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     return Joiner.on(" ").join(getShellCommand());
+  }
+
+  private boolean shouldRecurse() {
+    return modes.contains(Mode.RECURSIVE);
+  }
+
+  private boolean shouldForceDeletion() {
+    return modes.contains(Mode.FORCED);
+  }
+
+  public enum Mode {
+    RECURSIVE("-r"),
+    FORCED("-f"),;
+
+    private final String shellArgument;
+
+    Mode(String shellArgument) {
+      this.shellArgument = shellArgument;
+    }
+
+    String toShellArgument() {
+      return shellArgument;
+    }
   }
 }

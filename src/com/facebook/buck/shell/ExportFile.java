@@ -124,7 +124,11 @@ public class ExportFile extends AbstractBuildRule implements HasOutputName, HasR
     if (mode == ExportFileDescription.Mode.COPY) {
       Path out = getCopiedPath();
       builder.add(new MkdirStep(getProjectFilesystem(), out.getParent()));
-      builder.add(new RmStep(getProjectFilesystem(), out, /* force */ true, /* recurse */ true));
+      builder.add(new RmStep(
+          getProjectFilesystem(),
+          out,
+          RmStep.Mode.FORCED,
+          RmStep.Mode.RECURSIVE));
       if (getResolver().getFilesystem(src).isDirectory(getResolver().getRelativePath(src))) {
         builder.add(
             CopyStep.forDirectory(

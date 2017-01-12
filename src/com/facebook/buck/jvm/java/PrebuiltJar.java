@@ -268,7 +268,7 @@ public class PrebuiltJar extends AbstractBuildRule
 
     // Create a step to compute the ABI key.
     steps.add(new MkdirStep(getProjectFilesystem(), internalAbiJar.getParent()));
-    steps.add(new RmStep(getProjectFilesystem(), internalAbiJar, true));
+    steps.add(new RmStep(getProjectFilesystem(), internalAbiJar, RmStep.Mode.FORCED));
     steps.add(
         new CalculateAbiStep(
             buildableContext,

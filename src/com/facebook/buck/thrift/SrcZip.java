@@ -64,7 +64,7 @@ public class SrcZip extends AbstractBuildRule {
 
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return ImmutableList.of(
-        new RmStep(projectFilesystem, sourceZip, true),
+        new RmStep(projectFilesystem, sourceZip, RmStep.Mode.FORCED),
         new MkdirStep(projectFilesystem, sourceZip.getParent()),
         new ZipStep(
             getProjectFilesystem(),

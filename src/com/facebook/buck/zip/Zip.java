@@ -67,7 +67,7 @@ public class Zip extends AbstractBuildRule implements HasOutputName {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    steps.add(new RmStep(getProjectFilesystem(), output, true));
+    steps.add(new RmStep(getProjectFilesystem(), output, RmStep.Mode.FORCED));
     steps.add(new MkdirStep(getProjectFilesystem(), output.getParent()));
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
 

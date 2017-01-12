@@ -93,7 +93,7 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
     commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), temp));
 
     // Remove the output .aar file
-    commands.add(new RmStep(getProjectFilesystem(), pathToOutputFile, /* force delete */ true));
+    commands.add(new RmStep(getProjectFilesystem(), pathToOutputFile, RmStep.Mode.FORCED));
 
     // put manifest into tmp folder
     commands.add(

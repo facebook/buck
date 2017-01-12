@@ -96,7 +96,7 @@ public class Javadoc extends AbstractBuildRule implements MavenPublishable {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     steps.add(new MkdirStep(getProjectFilesystem(), output.getParent()));
-    steps.add(new RmStep(getProjectFilesystem(), output, /* force deletion */ true));
+    steps.add(new RmStep(getProjectFilesystem(), output, RmStep.Mode.FORCED));
 
     // Fast path: nothing to do so just create an empty zip and return.
     if (sources.isEmpty()) {

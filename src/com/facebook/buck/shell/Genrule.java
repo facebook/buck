@@ -318,8 +318,8 @@ public class Genrule extends AbstractBuildRule
         new RmStep(
             getProjectFilesystem(),
             getPathToOutput(),
-            /* shouldForceDeletion */ true,
-            /* shouldRecurse */ true));
+            RmStep.Mode.FORCED,
+            RmStep.Mode.RECURSIVE));
 
     // Make sure that the directory to contain the output file exists. Rules get output to a
     // directory named after the base path, so we don't want to nuke the entire directory.

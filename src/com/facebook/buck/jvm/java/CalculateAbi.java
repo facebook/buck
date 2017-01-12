@@ -82,7 +82,7 @@ public class CalculateAbi extends AbstractBuildRule implements SupportsInputBase
       BuildableContext buildableContext) {
     return ImmutableList.of(
         new MkdirStep(getProjectFilesystem(), getAbiJarPath().getParent()),
-        new RmStep(getProjectFilesystem(), getAbiJarPath(), /* shouldForceDeletion */ true),
+        new RmStep(getProjectFilesystem(), getAbiJarPath(), RmStep.Mode.FORCED),
         new CalculateAbiStep(
             buildableContext,
             getProjectFilesystem(),
