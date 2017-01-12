@@ -113,6 +113,20 @@ remote_file(
 )
 </pre>{/literal}
 
+<p>
+  Here's an example of a <code>remote_file()</code> using a <code>mvn</code> URI which uses a
+  non-default maven repository host.
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+remote_file(
+  name = 'jetty-source',
+  out = 'jetty-all-9.2.10.v20150310-sources.jar',
+  url = 'mvn:https://maven-repo.com!:org.eclipse.jetty.aggregate:jetty-all:src:9.2.10.v20150310',
+  sha1 = '311da310416d2feb3de227081d7c3f48742d7075',
+)
+</pre>{/literal}
+
 {/param}
 
 {/call} // close buck.rule

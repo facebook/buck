@@ -109,6 +109,40 @@ public class MavenUrlDecoderTest {
     assertEquals(withslash, slashless);
   }
 
+  @Test
+  public void shouldUseClassifierToConstructUrl() throws URISyntaxException {
+    assertEquals(
+        new URI("https://repo1.maven.org/maven2/org/codehaus/groovy/groovy-groovysh/2.4.1/groovy-groovysh-2.4.1-indy.jar"),
+        MavenUrlDecoder.toHttpUrl(
+            Optional.of("https://repo1.maven.org/maven2"),
+            new URI("mvn:org.codehaus.groovy:groovy-groovysh:jar:indy:2.4.1"))
+    );
+  }
+
+  @Test
+  public void shouldUseClassifierWithHostToConstructUrl() throws URISyntaxException {
+    assertEquals(
+        new URI("http://foo.com/org/codehaus/groovy/groovy-groovysh/2.4.1/groovy-groovysh-2.4.1-indy.jar"),
+        MavenUrlDecoder.toHttpUrl(
+            Optional.of("https://repo1.maven.org/maven2"),
+            new URI("mvn:http://foo.com:org.codehaus.groovy:groovy-groovysh:jar:indy:2.4.1"))
+    );
+
+    assertEquals(
+        new URI("https://foo.com/org/codehaus/groovy/groovy-groovysh/2.4.1/groovy-groovysh-2.4.1-indy.jar"),
+        MavenUrlDecoder.toHttpUrl(
+            Optional.of("https://repo1.maven.org/maven2"),
+            new URI("mvn:https://foo.com:org.codehaus.groovy:groovy-groovysh:jar:indy:2.4.1"))
+    );
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void shouldNotAcceptWrongHostSchema() throws URISyntaxException {
+    MavenUrlDecoder.toHttpUrl(
+        Optional.of("https://repo1.maven.org/maven2"),
+        new URI("mvn:ftp://foo.com:org.codehaus.groovy:groovy-groovysh:jar:indy:2.4.1"));
+  }
+
   @Test(expected = IllegalArgumentException.class)
   public void shouldRefuseToParseNonMavenUri() throws URISyntaxException {
     MavenUrlDecoder.toHttpUrl(Optional.empty(), new URI("http://www.example.com/"));

@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
  * </pre>
  * If the {@code optionalServer} is omitted, the default one configured in "download -&gt;
  * maven_repo" in the project's {@code .buckconfig} is used, or an exception is thrown. The
- * optionalServer URL is expected to be a valid {@link java.net.URL}.
+ * optionalServer URL is expected to be a valid http or https {@link java.net.URL}.
  * <p>
  * Examples of valid mvn URLs:
  * <pre>
@@ -45,7 +45,12 @@ import java.util.regex.Pattern;
 public class MavenUrlDecoder {
   @VisibleForTesting
   private static final Pattern URL_PATTERN =  Pattern.compile(
-      "((?<host>.+):)?(?<group>[^:]+):(?<id>[^:]+):(?<type>[^:]+):(?<version>[^:]+)"
+      "((?<host>^https?://.+?):)?" +
+          "(?<group>[^:]+)" +
+          ":(?<id>[^:]+)" +
+          ":(?<type>[^:]+)" +
+          "(:(?<classifier>[^:]+))?" +
+          ":(?<version>[^:]+)$"
   );
 
   private MavenUrlDecoder() {
@@ -79,6 +84,7 @@ public class MavenUrlDecoder {
     String artifactId = matcher.group("id");
     String type = matcher.group("type");
     String version = matcher.group("version");
+    Optional<String> classifier = Optional.ofNullable(matcher.group("classifier"));
 
     if (!host.endsWith("/")) {
       host += "/";
@@ -91,7 +97,7 @@ public class MavenUrlDecoder {
           group,
           artifactId,
           version,
-          fileNameFor(artifactId, version, type));
+          fileNameFor(artifactId, version, type, classifier));
       URI generated = new URI(plainUri);
       if ("https".equals(generated.getScheme()) || "http".equals(generated.getScheme())) {
         return generated;
@@ -103,8 +109,21 @@ public class MavenUrlDecoder {
     }
   }
 
-  private static String fileNameFor(String artifactId, String version, String type) {
-    return String.format("%s-%s%s", artifactId, version, fileExtensionFor(type));
+  private static String fileNameFor(
+      String artifactId,
+      String version,
+      String type,
+      Optional<String> classifier) {
+    StringBuilder sb = new StringBuilder();
+    sb.append(artifactId);
+    sb.append('-');
+    sb.append(version);
+    if (classifier.isPresent()) {
+      sb.append('-');
+      sb.append(classifier.get());
+    }
+    sb.append(fileExtensionFor(type));
+    return sb.toString();
   }
 
   private static String fileExtensionFor(String type) {
