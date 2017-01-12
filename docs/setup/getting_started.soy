@@ -99,18 +99,37 @@ You can find a more detailed explanation about each step in the development proc
   <li>
     <a href="https://developer.apple.com/xcode/features/">Command Line Tools</a>
   </li>
+<span><block class="mac android" /></span>
+<li>
+  <a href="https://developer.android.com/studio/index.html">Android SDK</a>
+</li>
+<span><block class="mac ios android" /></span>
 </ul>
 
 {literal}<pre>
 # Install command line tools
 xcode-select --install
 </pre>{/literal}
+
 <h3>Brew install</h3>
 
 <p>
   You have two choices when using Homebrew.  You can choose to get the latest binary <a href="https://github.com/facebook/buck/releases/latest">release</a>, for which you will need a <a href="https://java.com/en/download/">Java Runtime Environment</a>:
 </p>
 
+<!-- Had to double up here because pre reduces the span to an extra space in the command list. -->
+<span><block class="mac android" /></span>
+{literal}<pre>
+brew update
+brew install android-sdk
+brew tap caskroom/cask
+brew install java
+brew tap facebook/fb
+brew install buck
+</pre>
+{/literal}
+
+<span><block class="mac ios" /></span>
 {literal}<pre>
 brew update
 brew tap caskroom/cask
@@ -120,10 +139,25 @@ brew install buck
 </pre>
 {/literal}
 
+<span><block class="mac ios android" /></span>
+
 <p>
-  Or, you can get the latest and greatest code and build it locally, for which you will need the <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Oracle Java Development Kit</a>:
+  Or, you can get the latest and greatest code and build it locally.:
 </p>
 
+<!-- Had to double up here because pre reduces the span to an extra space in the command list. -->
+<span><block class="mac android" /></span>
+{literal}<pre>
+brew update
+brew install android-sdk
+brew tap caskroom/cask
+brew install java
+brew tap facebook/fb
+brew install --HEAD buck
+</pre>
+{/literal}
+
+<span><block class="mac ios" /></span>
 {literal}<pre>
 brew update
 brew tap caskroom/cask
@@ -132,6 +166,8 @@ brew tap facebook/fb
 brew install --HEAD buck
 </pre>
 {/literal}
+
+<span><block class="mac ios android" /></span>
 
 <h2>Build from Source</h2>
 
@@ -149,6 +185,11 @@ brew install --HEAD buck
     <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Oracle Java
     Development Kit</a>
   </li>
+  <span><block class="mac android" /></span>
+  <li>
+    <a href="https://developer.android.com/studio/index.html">Android SDK</a>
+  </li>
+  <span><block class="mac ios android" /></span>
   <li>
     <a href="http://ant.apache.org/">Apache Ant 1.9 (or newer)</a>
   </li>
@@ -171,6 +212,19 @@ brew install --HEAD buck
   You can use <a href="http://homebrew.sh">Homebrew</a> to install many of the prerequisites on a Mac.
 </p>
 
+<!-- Had to double up here because pre reduces the span to an extra space in the command list. -->
+<span><block class="mac android" /></span>
+{literal}<pre>
+# Install Command Line tools first.
+xcode-select --install
+# Then....
+brew update
+brew install android-sdk
+brew cask install java
+brew install ant python git watchman
+</pre>{/literal}
+
+<span><block class="mac ios" /></span>
 {literal}<pre>
 # Install Command Line tools first.
 xcode-select --install
@@ -179,6 +233,8 @@ brew update
 brew cask install java
 brew install ant python git watchman
 </pre>{/literal}
+
+<span><block class="mac ios android" /></span>
 
 <h3>Build</h3>
 
@@ -235,8 +291,10 @@ options:
 
 <ul>
   <li>
-    <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Oracle Java
-    Development Kit</a>
+    <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Oracle Java Development Kit</a>
+  </li>
+  <li>
+    <a href="https://developer.android.com/studio/index.html">Android SDK</a>
   </li>
   <li>
     <a href="http://ant.apache.org/">Apache Ant 1.9 (or newer)</a>
@@ -263,7 +321,7 @@ options:
 </p>
 
 {literal}<pre>
-choco install jdk8 ant python git
+choco install jdk8 android-sdk ant python git
 # install watchman as stated in the watchman prerequisite link above
 </pre>{/literal}
 
@@ -274,9 +332,16 @@ choco install jdk8 ant python git
 </p>
 
 {literal}<pre>
-apt-get install default-jdk ant python git
+sudo apt-get update
+apt-get install default-jdk android-sdk ant python git
 # install watchman as stated in the watchman prerequisite link above
 </pre>{/literal}
+
+<p>
+<blockquote>
+For some distros, the default packages may be older than what you would like. In those cases, either build those packages from source, or find third party repositories beyond the default that is used by <code>apt-get</code> via <code>sudo add-apt-repository</code>.
+</blockquote>
+</p>
 
 <span><block class="windows linux android" /></span>
 
