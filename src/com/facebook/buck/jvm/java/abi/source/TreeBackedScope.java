@@ -18,9 +18,9 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.exportedfiles.Nullable;
 import com.sun.source.tree.Scope;
+import com.sun.source.util.TreePath;
 
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
 
 /**
  * An implementation of {@link Scope} that uses only the information available from a
@@ -28,28 +28,33 @@ import javax.lang.model.element.TypeElement;
  * for individual methods and {@link com.facebook.buck.jvm.java.abi.source} for more information.
  */
 abstract class TreeBackedScope implements Scope {
+  protected final TreeBackedElements elements;
+  protected final TreeBackedTrees trees;
   @Nullable
-  private final Scope enclosingScope;
-  @Nullable
-  private final TreeBackedTypeElement enclosingClass;
+  protected final TreeBackedScope enclosingScope;
+  protected final TreePath path;
 
   protected TreeBackedScope(
-      @Nullable Scope enclosingScope,
-      @Nullable TreeBackedTypeElement enclosingClass) {
+      TreeBackedElements elements,
+      TreeBackedTrees trees,
+      @Nullable TreeBackedScope enclosingScope,
+      TreePath path) {
+    this.elements = elements;
+    this.trees = trees;
     this.enclosingScope = enclosingScope;
-    this.enclosingClass = enclosingClass;
+    this.path = path;
   }
 
   @Override
   @Nullable
-  public Scope getEnclosingScope() {
+  public TreeBackedScope getEnclosingScope() {
     return enclosingScope;
   }
 
   @Override
   @Nullable
-  public TypeElement getEnclosingClass() {
-    return enclosingClass;
+  public TreeBackedTypeElement getEnclosingClass() {
+    return null;
   }
 
   @Override

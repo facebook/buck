@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.exportedfiles.Nullable;
 import com.facebook.buck.util.exportedfiles.Preconditions;
+import com.sun.source.util.TreePath;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
@@ -27,14 +28,28 @@ import javax.lang.model.element.TypeElement;
  * information found in a {@link TypeElement}
  */
 class TreeBackedClassScope extends TreeBackedScope {
+  @Nullable
+  private TreeBackedTypeElement enclosingClass;
+
   public TreeBackedClassScope(
-      @Nullable TreeBackedScope enclosingScope,
-      TreeBackedTypeElement typeElement) {
-    super(enclosingScope, typeElement);
+      TreeBackedElements elements,
+      TreeBackedTrees trees,
+      TreeBackedScope enclosingScope,
+      TreePath path) {
+    super(elements, trees, enclosingScope, path);
   }
 
   @Override
   public Iterable<? extends Element> getLocalElements() {
     return Preconditions.checkNotNull(getEnclosingClass()).getTypeParameters();
+  }
+
+  @Override
+  public TreeBackedTypeElement getEnclosingClass() {
+    if (enclosingClass == null) {
+      enclosingClass = (TreeBackedTypeElement) Preconditions.checkNotNull(trees.getElement(path));
+    }
+
+    return enclosingClass;
   }
 }

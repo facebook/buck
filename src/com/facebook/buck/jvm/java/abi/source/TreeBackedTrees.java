@@ -42,7 +42,6 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 import javax.tools.JavaCompiler;
 
@@ -50,7 +49,7 @@ import javax.tools.JavaCompiler;
  * An implementation of {@link Trees} that uses our tree-backed elements and types when available.
  */
 class TreeBackedTrees extends Trees {
-  private final Elements elements;
+  private final TreeBackedElements elements;
   private final Trees javacTrees;
   private final Map<Tree, TreeBackedElement> treeBackedElements = new HashMap<>();
   private final Map<TreeBackedElement, TreePath> elementPaths = new HashMap<>();
@@ -60,7 +59,9 @@ class TreeBackedTrees extends Trees {
     return ((FrontendOnlyJavacTask) task).getTrees();
   }
 
-  /* package */ TreeBackedTrees(Trees javacTrees, Elements elements) {
+  /* package */ TreeBackedTrees(
+      Trees javacTrees,
+      TreeBackedElements elements) {
     this.javacTrees = javacTrees;
     this.elements = elements;
   }
@@ -174,15 +175,17 @@ class TreeBackedTrees extends Trees {
             treeBackedScopes.put(
                 leaf,
                 new TreeBackedClassScope(
+                    elements,
+                    this,
                     getScope(walker.getParentPath()),
-                    (TreeBackedTypeElement) Preconditions.checkNotNull(getElement(walker))));
+                    walker));
           }
           return Preconditions.checkNotNull(treeBackedScopes.get(leaf));
         case COMPILATION_UNIT:
           if (!treeBackedScopes.containsKey(leaf)) {
             treeBackedScopes.put(
                 leaf,
-                new TreeBackedFileScope((CompilationUnitTree) leaf, elements, this));
+                new TreeBackedFileScope(elements, this, walker));
           }
           return Preconditions.checkNotNull(treeBackedScopes.get(leaf));
         // $CASES-OMITTED$

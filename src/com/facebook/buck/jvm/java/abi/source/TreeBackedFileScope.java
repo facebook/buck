@@ -23,31 +23,31 @@ import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ImportTree;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
-import com.sun.source.util.Trees;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.lang.model.element.Element;
-import javax.lang.model.util.Elements;
 
 /**
  * An implementation of {@link com.sun.source.tree.Scope} for the file scope, using only the
  * information found in a {@link CompilationUnitTree}.
  */
 class TreeBackedFileScope extends TreeBackedScope {
-  private final CompilationUnitTree file;
-  private final Elements elements;
-  private final Trees trees;
   @Nullable
   private List<Element> localElements;
 
-  public TreeBackedFileScope(CompilationUnitTree file, Elements elements, Trees trees) {
-    super(null, null);
-    this.file = file;
-    this.elements = elements;
-    this.trees = trees;
+  public TreeBackedFileScope(
+      TreeBackedElements elements,
+      TreeBackedTrees trees,
+      TreePath path) {
+    super(
+        elements,
+        trees,
+        null,
+        path);
   }
 
   @Override
@@ -88,7 +88,7 @@ class TreeBackedFileScope extends TreeBackedScope {
         result.add(trees.getElement(getCurrentPath()));
         return null;
       }
-    }.scan(file, null);
+    }.scan(path.getCompilationUnit(), null);
 
     localElements = result;
   }
