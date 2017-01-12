@@ -396,35 +396,90 @@ options:
   Now that Buck is installed, it is time use Buck in a sample project.
 </p>
 
-<h3>Clone Buck Samples Repo<h3>
-
-Clone the <a href="https://github.com/fbsamples/bucksamples/">Buck Samples repo</a>
+<h3>Clone <a href="https://github.com/fbsamples/bucksamples/">Buck Samples Repo</a></h3>
 
 {literal}
 <pre>
 git clone git@github.com:fbsamples/bucksamples.git
-cd bucksamples/cross-platform-scale-2015-demo/ios/
+cd bucksamples/cross-platform-scale-2015-demo/
 </pre>
 {/literal}
 
-<h3>Build the iOS Sample</h3>
+<h3>Key iOS Files</h3>
 
-This sample app has all the files necessary to use Buck to build an iOS project:
+<p>
+  This sample app has all the files necessary to use Buck to build an iOS project. From the root directory, you will find:
+</p>
 
 <ul>
   <li>
-    iOS Source Code: <code>main.m</code>, views, controllers and associated resources.
+    <code>ios/main.m</code>: The main iOS file supported by other views, controllers and associated resources.
   </li>
   <li>
-    BUCK: This file is what makes Buck work. It defines all the build rules for your source code.
+    <code>ios/BUCK</code>: This file is what makes Buck work. It defines all the build rules for your source code.
   </li>
   <li>
-    .buckconfig:
-  </li>
-  <li>
-    Test files
+    <code>.buckconfig</code>: This file allows for various flag and alias settings for any project (even beyond iOS) within the root directory.
   </li>
 </ul>
+
+<h3>Build the iOS Sample</h3>
+
+<p>
+  In order to build the app, you use the <code>buck build</code> command, specifying your app as the target. The target may be defined as an alias in the <code>.buckconfig</code> file or it would be the name of your iOS project prepended by <code>//ios:</code> (e.g., <code>//ios:BuckDempApp</code>)
+</p>
+
+{literal}
+<pre>
+# From the root `cross-platform-scale-2015-demo/` directory
+# demo_app_ios is an alias in .buckconfig for //ios::BuckDemoApp. Either works.
+buck build demo_app_ios
+</pre>
+{/literal}
+
+<p>
+  You should see output similar to:
+</p>
+
+{literal}
+<pre>
+buck build demo_app_ios
+[-] PROCESSING BUCK FILES...FINISHED 0.0s [100%]
+[-] DOWNLOADING... (0.00 B/S AVG, TOTAL: 0.00 B, 0 Artifacts)
+[-] BUILDING...FINISHED 0.7s [100%] (1/1 JOBS, 0 UPDATED, 0 [0.0%] CACHE MISS)
+</pre>
+{/literal}
+
+<p>
+  Buck outputs its results in the <code>buck-out/</code> directory.
+</p>
+
+<h3>Run the Built iOS App</h3>
+
+<p>
+ Now that you know your app has built successfully, you can install and run the app with <code>buck install</code>. This command both compiles and installs the application on the iOS simulator. Using the <code>--run</code> flag will launch the simulator as well.
+</p>
+
+{literal}
+<pre>
+buck install --run demo_app_ios
+Successfully launched demo_app_ios. To debug, run: lldb -p 50240
+[-] PROCESSING BUCK FILES...FINISHED 0.0s [100%]
+[-] DOWNLOADING... (0.00 B/S AVG, TOTAL: 0.00 B, 0 Artifacts)
+[-] BUILDING...FINISHED 0.3s [100%] (1/1 JOBS, 0 UPDATED, 0 [0.0%] CACHE MISS)
+[-] INSTALLING...FINISHED 38.7s
+</pre>
+{/literal}
+
+<h3>Success!</h3>
+
+<p>
+If all goes well, you should see something similar to:
+</p>
+
+<div>
+  <img src="../static/ios-hello-buck.png" alt="iOS Hello Buck" />
+</div>
 
 <span><block class="linux mac android" /></span>
 
