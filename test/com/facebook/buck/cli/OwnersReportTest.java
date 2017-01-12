@@ -16,12 +16,12 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.io.MorePaths.asPaths;
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -41,17 +41,15 @@ import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hashing;
 
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * Reports targets that own a specified list of files.
@@ -79,14 +77,15 @@ public class OwnersReportTest {
     }
   }
 
-  private static TargetNode<?, ?> createTargetNode(
+  private ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+
+  private TargetNode<?, ?> createTargetNode(
       BuildTarget buildTarget,
       ImmutableSet<Path> inputs) {
     Description<FakeRuleDescription.FakeArg> description = new FakeRuleDescription();
     FakeRuleDescription.FakeArg arg = description.createUnpopulatedConstructorArg();
     arg.inputs = inputs;
     try {
-      FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
       return
           new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
               .create(
@@ -103,82 +102,11 @@ public class OwnersReportTest {
     }
   }
 
-  @SuppressWarnings("serial")
-  private static class ExistingDirectoryFile extends File {
-    public ExistingDirectoryFile(Path file, String s) {
-      super(file.toFile(), s);
-    }
-
-    @Override
-    public boolean isFile() {
-      return false;
-    }
-
-    @Override
-    public boolean isDirectory() {
-      return true;
-    }
-
-    @Override
-    public boolean exists() {
-      return true;
-    }
-  }
-
-  @SuppressWarnings("serial")
-  private static class MissingFile extends File {
-    public MissingFile(Path file, String s) {
-      super(file.toFile(), s);
-    }
-
-    @Override
-    public boolean exists() {
-      return false;
-    }
-
-    @Override
-    public boolean isFile() {
-      return true;
-    }
-
-    @Override
-    public boolean isDirectory() {
-      return false;
-    }
-  }
-
-  @SuppressWarnings("serial")
-  private static class ExistingFile extends File {
-    public ExistingFile(Path file, String s) {
-      super(file.toFile(), s);
-    }
-
-    @Override
-    public boolean exists() {
-      return true;
-    }
-
-    @Override
-    public boolean isFile() {
-      return true;
-    }
-
-    @Override
-    public boolean isDirectory() {
-      return false;
-    }
-  }
-
   @Test
   public void verifyPathsThatAreNotFilesAreCorrectlyReported()
       throws CmdLineException, IOException, InterruptedException {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
-      @Override
-      public File getFileForRelativePath(String pathRelativeToProjectRoot) {
-        return new ExistingDirectoryFile(getRootPath(), pathRelativeToProjectRoot);
-      }
-    };
-
+    filesystem.mkdirs(filesystem.getPath("java/somefolder/badfolder"));
+    filesystem.mkdirs(filesystem.getPath("com/test/subtest"));
 
     // Inputs that should be treated as "non-files", i.e. as directories
     ImmutableSet<String> inputs = ImmutableSet.of(
@@ -203,14 +131,6 @@ public class OwnersReportTest {
   @Test
   public void verifyMissingFilesAreCorrectlyReported()
       throws CmdLineException, IOException, InterruptedException {
-    // All files will be directories now
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
-      @Override
-      public File getFileForRelativePath(String pathRelativeToProjectRoot) {
-        return new MissingFile(getRootPath(), pathRelativeToProjectRoot);
-      }
-    };
-
     // Inputs that should be treated as missing files
     ImmutableSet<String> inputs = ImmutableSet.of(
         "java/somefolder/badfolder/somefile.java",
@@ -231,28 +151,25 @@ public class OwnersReportTest {
   @Test
   public void verifyInputsWithoutOwnersAreCorrectlyReported()
       throws CmdLineException, IOException, InterruptedException {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
-      @Override
-      public File getFileForRelativePath(String pathRelativeToProjectRoot) {
-        return new ExistingFile(getRootPath(), pathRelativeToProjectRoot);
-      }
-    };
-
     // Inputs that should be treated as existing files
     ImmutableSet<String> inputs = ImmutableSet.of(
         "java/somefolder/badfolder/somefile.java",
         "java/somefolder/perfect.java",
         "com/test/subtest/random.java");
-    ImmutableSet<Path> inputPaths = asPaths(inputs);
+    ImmutableSet<Path> inputPaths =
+        RichStream.from(inputs).map(filesystem::getPath).toImmutableSet();
+
+    // Write dummy files.
+    for (Path path : inputPaths) {
+      filesystem.mkdirs(path.getParent());
+      filesystem.writeContentsToPath("", path);
+    }
 
     BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?, ?> targetNode = createTargetNode(target, ImmutableSet.of());
 
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
-    OwnersReport report = OwnersReport.generateOwnersReport(
-        cell,
-        targetNode,
-        inputs);
+    OwnersReport report = OwnersReport.generateOwnersReport(cell, targetNode, inputs);
     assertTrue(report.owners.isEmpty());
     assertTrue(report.nonFileInputs.isEmpty());
     assertTrue(report.nonExistentInputs.isEmpty());
@@ -262,23 +179,23 @@ public class OwnersReportTest {
   @Test
   public void verifyInputsAgainstRulesThatListDirectoryInputs()
       throws IOException, InterruptedException {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
-      @Override
-      public File getFileForRelativePath(String pathRelativeToProjectRoot) {
-        return new ExistingFile(getRootPath(), pathRelativeToProjectRoot);
-      }
-    };
-
     // Inputs that should be treated as existing files
     ImmutableSet<String> inputs = ImmutableSet.of(
         "java/somefolder/badfolder/somefile.java",
         "java/somefolder/perfect.java");
-    ImmutableSet<Path> inputPaths = asPaths(inputs);
+    ImmutableSet<Path> inputPaths =
+        RichStream.from(inputs).map(filesystem::getPath).toImmutableSet();
+
+
+    for (Path path : inputPaths) {
+      filesystem.mkdirs(path.getParent());
+      filesystem.writeContentsToPath("", path);
+    }
 
     BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?, ?> targetNode = createTargetNode(
         target,
-        ImmutableSet.of(Paths.get("java/somefolder")));
+        ImmutableSet.of(filesystem.getPath("java/somefolder")));
 
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
     OwnersReport report = OwnersReport.generateOwnersReport(
@@ -299,18 +216,18 @@ public class OwnersReportTest {
   @Test
   public void verifyInputsWithOneOwnerAreCorrectlyReported()
       throws CmdLineException, IOException, InterruptedException {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
-      @Override
-      public File getFileForRelativePath(String pathRelativeToProjectRoot) {
-        return new ExistingFile(getRootPath(), pathRelativeToProjectRoot);
-      }
-    };
 
     ImmutableSet<String> inputs = ImmutableSet.of(
         "java/somefolder/badfolder/somefile.java",
         "java/somefolder/perfect.java",
         "com/test/subtest/random.java");
-    ImmutableSet<Path> inputPaths = asPaths(inputs);
+    ImmutableSet<Path> inputPaths =
+        RichStream.from(inputs).map(filesystem::getPath).toImmutableSet();
+
+    for (Path path : inputPaths) {
+      filesystem.mkdirs(path.getParent());
+      filesystem.writeContentsToPath("", path);
+    }
 
     BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?, ?> targetNode = createTargetNode(target, inputPaths);
@@ -333,18 +250,17 @@ public class OwnersReportTest {
   @Test
   public void verifyInputsWithMultipleOwnersAreCorrectlyReported()
       throws CmdLineException, IOException, InterruptedException {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
-      @Override
-      public File getFileForRelativePath(String pathRelativeToProjectRoot) {
-        return new ExistingFile(getRootPath(), pathRelativeToProjectRoot);
-      }
-    };
-
     ImmutableSet<String> inputs = ImmutableSet.of(
         "java/somefolder/badfolder/somefile.java",
         "java/somefolder/perfect.java",
         "com/test/subtest/random.java");
-    ImmutableSortedSet<Path> inputPaths = asPaths(inputs);
+    ImmutableSet<Path> inputPaths =
+        RichStream.from(inputs).map(filesystem::getPath).toImmutableSet();
+
+    for (Path path : inputPaths) {
+      filesystem.mkdirs(path.getParent());
+      filesystem.writeContentsToPath("", path);
+    }
 
     BuildTarget target1 = BuildTargetFactory.newInstance("//base/name1:name");
     BuildTarget target2 = BuildTargetFactory.newInstance("//base/name2:name");

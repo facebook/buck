@@ -210,7 +210,7 @@ public class Project {
     // Write out the .idea/compiler.xml file (the .idea/ directory is guaranteed to exist).
     CompilerXml compilerXml = new CompilerXml(projectFilesystem, modules);
     final String pathToCompilerXml = ".idea/compiler.xml";
-    File compilerXmlFile = projectFilesystem.getFileForRelativePath(pathToCompilerXml);
+    File compilerXmlFile = projectFilesystem.getPathForRelativePath(pathToCompilerXml).toFile();
     if (compilerXml.write(compilerXmlFile)) {
       modifiedFiles.add(pathToCompilerXml);
     }

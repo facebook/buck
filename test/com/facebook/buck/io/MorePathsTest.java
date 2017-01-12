@@ -22,8 +22,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -64,11 +64,13 @@ public class MorePathsTest {
   @Test
   public void testFilterForSubpaths() {
     Path root = tmp.getRoot();
-    ImmutableSortedSet<Path> paths = MorePaths.asPaths(ImmutableSet.of(
-      ".buckd",
-      "foo/bar",
-      root.toAbsolutePath() + "/buck-cache",
-      Paths.get("/root/not/in/test").toAbsolutePath().toString()));
+    ImmutableSet<Path> paths = RichStream.of(
+        ".buckd",
+        "foo/bar",
+        root.toAbsolutePath() + "/buck-cache",
+        Paths.get("/root/not/in/test").toAbsolutePath().toString())
+        .map(Paths::get)
+        .toImmutableSet();
 
     assertEquals(
         "Set should have been filtered down to paths contained under root.",

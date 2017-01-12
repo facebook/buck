@@ -38,6 +38,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.io.CharStreams;
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
@@ -52,6 +54,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
@@ -677,5 +680,18 @@ public class ProjectFilesystemTest {
         "Two ProjectFilesystems with same glob in ignore should be equal",
         new ProjectFilesystem(rootPath, config),
         equalTo(new ProjectFilesystem(rootPath, config)));
+  }
+
+  @Test
+  public void getPathReturnsPathWithCorrectFilesystem() throws IOException {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    Path root = vfs.getPath("/root");
+    Files.createDirectories(root);
+    assertEquals(
+        vfs,
+        new ProjectFilesystem(root).getPath("bar").getFileSystem());
+    assertEquals(
+        vfs.getPath("bar"),
+        new ProjectFilesystem(root).getPath("bar"));
   }
 }

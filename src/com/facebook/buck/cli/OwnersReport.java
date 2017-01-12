@@ -37,10 +37,9 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -102,13 +101,13 @@ final class OwnersReport {
     Set<String> nonFileInputs = Sets.newHashSet();
 
     for (String filePath : filePaths) {
-      File file = rootCell.getFilesystem().getFileForRelativePath(filePath);
-      if (!file.exists()) {
+      Path file = rootCell.getFilesystem().getPathForRelativePath(filePath);
+      if (!Files.exists(file)) {
         nonExistentInputs.add(filePath);
-      } else if (!file.isFile()) {
+      } else if (!Files.isRegularFile(file)) {
         nonFileInputs.add(filePath);
       } else {
-        inputs.add(Paths.get(filePath));
+        inputs.add(rootCell.getFilesystem().getPath(filePath));
       }
     }
 

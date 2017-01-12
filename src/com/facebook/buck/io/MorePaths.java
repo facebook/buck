@@ -22,7 +22,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.ByteSource;
 
 import java.io.File;
@@ -160,17 +159,6 @@ public class MorePaths {
         pathToDesiredLinkUnderProjectRoot.getParent());
     Files.createSymbolicLink(pathToProjectRoot.resolve(pathToDesiredLinkUnderProjectRoot), target);
     return target;
-  }
-
-  /**
-   * Convert a set of input file paths as strings to {@link Path} objects.
-   */
-  public static ImmutableSortedSet<Path> asPaths(Iterable<String> paths) {
-    ImmutableSortedSet.Builder<Path> builder = ImmutableSortedSet.naturalOrder();
-    for (String path : paths) {
-      builder.add(Paths.get(path));
-    }
-    return builder.build();
   }
 
   /**

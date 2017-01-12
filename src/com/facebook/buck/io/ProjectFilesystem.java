@@ -371,16 +371,6 @@ public class ProjectFilesystem {
     return blackListedDirectories;
   }
 
-  /**
-   * // @deprecated Prefer operating on {@code Path}s directly, replaced by
-   *    {@link #getPathForRelativePath(java.nio.file.Path)}.
-   */
-  public File getFileForRelativePath(String pathRelativeToProjectRoot) {
-    return pathRelativeToProjectRoot.isEmpty()
-        ? projectRoot.toFile()
-        : getPathForRelativePath(pathRelativeToProjectRoot).toFile();
-  }
-
   public Path getPathForRelativePath(Path pathRelativeToProjectRoot) {
     return delegate.getPathForRelativePath(pathRelativeToProjectRoot);
   }
@@ -1176,6 +1166,15 @@ public class ProjectFilesystem {
     } else {
       createNewFile(fileToTouch);
     }
+  }
+
+  /**
+   * Converts a path string (or sequence of strings) to a Path with the same VFS as this instance.
+   *
+   * @see FileSystem#getPath(String, String...)
+   */
+  public Path getPath(String first, String... rest) {
+    return getRootPath().getFileSystem().getPath(first, rest);
   }
 
   /**
