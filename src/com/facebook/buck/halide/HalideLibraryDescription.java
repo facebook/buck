@@ -159,6 +159,7 @@ public class HalideLibraryDescription
             cxxPlatform,
             srcs,
             /* headers */ ImmutableMap.of(),
+            params.getDeps(),
             flavoredStripStyle,
             flavoredLinkerMapMode,
             Linker.LinkableDepType.STATIC,

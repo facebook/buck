@@ -50,6 +50,7 @@ import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -57,7 +58,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -657,6 +657,7 @@ public class CxxDescriptionEnhancer {
         cxxPlatform,
         srcs,
         headers,
+        params.getDeps(),
         stripStyle,
         flavoredLinkerMapMode,
         args.linkStyle.orElse(Linker.LinkableDepType.STATIC),
@@ -684,6 +685,7 @@ public class CxxDescriptionEnhancer {
       CxxPlatform cxxPlatform,
       ImmutableMap<String, CxxSource> srcs,
       ImmutableMap<Path, SourcePath> headers,
+      Iterable<? extends BuildRule> deps,
       Optional<StripStyle> stripStyle,
       Optional<LinkerMapMode> flavoredLinkerMapMode,
       Linker.LinkableDepType linkStyle,
@@ -753,8 +755,9 @@ public class CxxDescriptionEnhancer {
             frameworks,
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 cxxPlatform,
-                FluentIterable.from(params.getDeps())
-                    .filter(CxxPreprocessorDep.class::isInstance)),
+                RichStream.from(deps)
+                    .filter(CxxPreprocessorDep.class::isInstance)
+                    .toImmutableList()),
             includeDirs,
             sandboxTree);
 
@@ -807,7 +810,7 @@ public class CxxDescriptionEnhancer {
               resolver,
               sourcePathResolver,
               cxxPlatform,
-              params.getDeps(),
+              deps,
               NativeLinkable.class::isInstance);
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
@@ -849,6 +852,9 @@ public class CxxDescriptionEnhancer {
         resolver,
         cxxBuckConfig,
         cxxPlatform,
+        RichStream.from(deps)
+            .filter(NativeLinkable.class)
+            .toImmutableList(),
         linkStyle,
         frameworks,
         libraries,
@@ -897,6 +903,7 @@ public class CxxDescriptionEnhancer {
       BuildRuleResolver resolver,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
+      Iterable<? extends NativeLinkable> deps,
       Linker.LinkableDepType linkStyle,
       ImmutableSortedSet<FrameworkPath> frameworks,
       ImmutableSortedSet<FrameworkPath> libraries,
@@ -905,7 +912,8 @@ public class CxxDescriptionEnhancer {
       SourcePathRuleFinder ruleFinder,
       Path linkOutput,
       ImmutableList.Builder<Arg> argsBuilder,
-      BuildTarget linkRuleTarget) throws NoSuchBuildTargetException {
+      BuildTarget linkRuleTarget)
+      throws NoSuchBuildTargetException {
     CxxLink cxxLink;
     Optional<BuildRule> existingCxxLinkRule = resolver.getRuleOptional(linkRuleTarget);
     if (existingCxxLinkRule.isPresent()) {
@@ -927,8 +935,7 @@ public class CxxDescriptionEnhancer {
               Optional.empty(),
               linkOutput,
               linkStyle,
-              FluentIterable.from(params.getDeps())
-                  .filter(NativeLinkable.class),
+              deps,
               cxxRuntimeType,
               Optional.empty(),
               ImmutableSet.of(),
