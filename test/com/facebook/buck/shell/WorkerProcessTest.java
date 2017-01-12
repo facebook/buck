@@ -69,18 +69,23 @@ public class WorkerProcessTest {
     String jobArgs = "my job args";
     int exitCode = 0;
 
-    // simulate the external tool and write the stdout and stderr files
     Optional<String> stdout = Optional.of("my stdout");
     Optional<String> stderr = Optional.of("my stderr");
-    filesystem.writeContentsToPath(stdout.get(), stdoutPath);
-    filesystem.writeContentsToPath(stderr.get(), stderrPath);
 
     WorkerProcess process = new WorkerProcess(
         new FakeProcessExecutor(),
         createDummyParams(),
         filesystem,
         tmpPath);
-    process.setProtocol(new FakeWorkerProcessProtocol());
+    process.setProtocol(new FakeWorkerProcessProtocol() {
+      @Override
+      public int receiveCommandResponse(int messageID) throws IOException {
+        // simulate the external tool and write the stdout and stderr files
+        filesystem.writeContentsToPath(stdout.get(), stdoutPath);
+        filesystem.writeContentsToPath(stderr.get(), stderrPath);
+        return super.receiveCommandResponse(messageID);
+      }
+    });
 
     WorkerJobResult expectedResult = WorkerJobResult.of(exitCode, stdout, stderr);
     assertThat(process.submitAndWaitForJob(jobArgs), Matchers.equalTo(expectedResult));

@@ -124,6 +124,8 @@ public class WorkerProcess {
     Path stderrPath = Paths.get(
         tmpPath.toString(),
         String.format("%d.err", messageID));
+    filesystem.deleteFileAtPathIfExists(stdoutPath);
+    filesystem.deleteFileAtPathIfExists(stderrPath);
     filesystem.writeContentsToPath(jobArgs, argsPath);
 
     LOG.debug("Sending job %d to process %d \n" +
