@@ -45,9 +45,9 @@ As explained in [Downloading and Installing Buck](https://buckbuild.com/setup/in
 Buck's tests use JUnit and are under the test subdirectory. Here are some examples for running them with Buck:
 
 - Running all tests: use `buck test`
-- Running all tests under specific directory: use `buck test --test-selectors RemoteFileTest`
+- Running all tests under specific directory: use `buck test //test/com/facebook/buck/file/...`
 - Test a particular Java class: use `buck test --test-selectors NameOfTest`. Wildcards are also possible, e.g. `buck test --test-selectors 'Cxx.*Test'`.
-- Faster way of running a specific class: use `buck test --test-selectors RemoteFileTest`
+- Faster way of running a specific class: use `buck test --test-selectors RemoteFileTest //test/com/facebook/buck/file:file`
 - Keeping tests' files: to avoid auto-deleting temporary directories generated for JUnit tests, use `BUCK_TEST_KEEP_TEMPORARY_PATHS=1 buck (test options...)`
 
 To find out more about testing options refer to an article about [test](https://buckbuild.com/command/test.html) command.
