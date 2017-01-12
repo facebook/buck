@@ -3,20 +3,23 @@ java_test(
   srcs = glob(['*IntegrationTest.java']),
   autodeps = True,
   env = {
-    "GOROOT": read_config("go", "root", "/usr/local/go"),
-  }
+    'GOROOT': read_config('go', 'root', '/usr/local/go'),
+  },
 )
 
 java_test(
   name = 'unit',
-  srcs = glob(['*Test.java'], excludes = ['*IntegrationTest.java']),
+  srcs = glob(
+    ['*Test.java'],
+    excludes = ['*IntegrationTest.java'],
+  ),
   autodeps = True,
 )
 
 java_library(
   name = 'assumptions',
   srcs = [
-    'GoAssumptions.java'
+    'GoAssumptions.java',
   ],
   autodeps = True,
 )

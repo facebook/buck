@@ -4,11 +4,11 @@ standard_java_library(
   ],
   resources = [
     'build-with-buck.st',
-    'codesign.st',
-    'codesign.py',
-    'rn-package.st',
-    'fix_uuid.py',
     'build_with_buck.py',
+    'codesign.py',
+    'codesign.st',
+    'fix_uuid.py',
+    'rn-package.st',
   ],
   tests = [
     '//test/com/facebook/buck/apple/project_generator:project_generator',
@@ -33,7 +33,7 @@ python_test(
 python_library(
   name = 'build_with_buck',
   srcs = [
-    'build_with_buck.py'
+    'build_with_buck.py',
   ],
   deps = [],
 )

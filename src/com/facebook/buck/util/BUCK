@@ -1,10 +1,11 @@
 CONSTANT_SRCS = [
   'BuckConstant.java',
 ]
+
 java_library(
   name = 'constants',
   srcs = CONSTANT_SRCS,
-  visibility = [ 'PUBLIC' ],
+  visibility = ['PUBLIC'],
   deps = [],
 )
 
@@ -13,16 +14,16 @@ EXCEPTION_SRCS = [
   'HumanReadableException.java',
   'WatchmanWatcherException.java',
 ]
+
 java_library(
   name = 'exceptions',
   srcs = EXCEPTION_SRCS,
+  autodeps = True,
   tests = [
     '//test/com/facebook/buck/util:util',
   ],
-  autodeps = True,
-  visibility = [ 'PUBLIC' ],
+  visibility = ['PUBLIC'],
 )
-
 
 IO_SRCS = [
   'AbstractCharsetProcessListener.java',
@@ -42,16 +43,17 @@ IO_SRCS = [
   'UnixUserIdFetcher.java',
   'UserIdFetcher.java',
 ]
+
 java_immutables_library(
   name = 'io',
   srcs = IO_SRCS,
+  autodeps = True,
   immutable_types = [
     'DirectoryCleanerArgs',
   ],
   tests = [
   ],
-  autodeps = True,
-  visibility = [ 'PUBLIC' ],
+  visibility = ['PUBLIC'],
 )
 
 PROCESS_EXECUTOR_SRCS = [
@@ -79,21 +81,23 @@ PROCESS_EXECUTOR_SRCS = [
   'Threads.java',
   'Verbosity.java',
 ]
+
 java_immutables_library(
   name = 'process_executor',
   srcs = PROCESS_EXECUTOR_SRCS,
+  autodeps = True,
   immutable_types = [
     'ProcessExecutorParams',
   ],
   tests = [
   ],
-  autodeps = True,
-  visibility = [ 'PUBLIC' ],
+  visibility = ['PUBLIC'],
 )
 
 WATCHMAN_WATCHER_SRCS = [
   'WatchmanWatcher.java',
 ]
+
 java_library(
   name = 'watchman',
   srcs = WATCHMAN_WATCHER_SRCS,
@@ -106,8 +110,9 @@ java_library(
 )
 
 OBJECT_MAPPER_SRCS = [
- 'ObjectMappers.java',
+  'ObjectMappers.java',
 ]
+
 java_library(
   name = 'object_mapper',
   srcs = OBJECT_MAPPER_SRCS,
@@ -118,8 +123,9 @@ java_library(
 )
 
 PACKAGED_RESOURCE_SRCS = [
-    'PackagedResource.java',
+  'PackagedResource.java',
 ]
+
 java_library(
   name = 'packaged_resource',
   srcs = PACKAGED_RESOURCE_SRCS,
@@ -132,10 +138,12 @@ java_library(
 java_immutables_library(
   name = 'util',
   srcs = glob(
-    includes = ['*.java'],
     excludes = CONSTANT_SRCS + EXCEPTION_SRCS + IO_SRCS +
                WATCHMAN_WATCHER_SRCS + OBJECT_MAPPER_SRCS +
-               PACKAGED_RESOURCE_SRCS + PROCESS_EXECUTOR_SRCS),
+               PACKAGED_RESOURCE_SRCS + PROCESS_EXECUTOR_SRCS,
+    includes = ['*.java'],
+  ),
+  autodeps = True,
   immutable_types = [
     'SampleRate',
     'PatternAndMessage',
@@ -143,7 +151,6 @@ java_immutables_library(
   tests = [
     '//test/com/facebook/buck/util:util',
   ],
-  autodeps = True,
   visibility = [
     'PUBLIC',
   ],

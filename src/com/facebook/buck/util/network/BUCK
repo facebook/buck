@@ -1,7 +1,7 @@
 standard_java_library(
   tests = [
-    '//test/com/facebook/buck/util/network:network',
     '//test/com/facebook/buck/util:util',
+    '//test/com/facebook/buck/util/network:network',
   ],
   visibility = [
     '//src/com/facebook/buck/cli:cli',
@@ -11,8 +11,8 @@ standard_java_library(
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util/environment:environment',
-    '//test/com/facebook/buck/util:util',
     '//test/com/facebook/buck/event/listener:listener',
+    '//test/com/facebook/buck/util:util',
     '//test/com/facebook/buck/util/network/...',
   ],
 )

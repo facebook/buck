@@ -1,9 +1,9 @@
 python_library(
   name = 'argparse',
-  base_module = '',
   srcs = [
-    'argparse.py'
+    'argparse.py',
   ],
+  base_module = '',
   licenses = [
     'LICENSE.txt',
   ],

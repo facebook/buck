@@ -12,9 +12,11 @@ PUBLIC_API_SOURCES = [
   'CacheResultType.java',
   'NoopArtifactCache.java',
 ]
+
 java_immutables_library(
   name = 'artifact_cache',
   srcs = PUBLIC_API_SOURCES,
+  autodeps = True,
   immutable_types = [
     'ArtifactInfo',
     'CacheResult',
@@ -22,7 +24,6 @@ java_immutables_library(
   tests = [
     '//test/com/facebook/buck/artifact_cache:artifact_cache',
   ],
-  autodeps = True,
   visibility = [
     'PUBLIC',
   ],
@@ -31,9 +32,11 @@ java_immutables_library(
 PROTOCOL_SOURCES = [
   'HttpArtifactCacheBinaryProtocol.java',
 ]
+
 java_immutables_library(
   name = 'binary_protocol',
   srcs = PROTOCOL_SOURCES,
+  autodeps = True,
   immutable_types = [
     'HttpArtifactCacheArgs',
     'FetchResponseReadResult',
@@ -44,7 +47,6 @@ java_immutables_library(
   tests = [
     '//test/com/facebook/buck/artifact_cache:artifact_cache',
   ],
-  autodeps = True,
   visibility = [
     '//src/com/facebook/buck/artifact_cache:generate_hybrid_payloads',
     '//src/com/facebook/buck/httpserver:cache_handler',
@@ -57,9 +59,11 @@ CONFIG_SOURCES = [
   'ArtifactCaches.java',
   'SingletonArtifactCacheFactory.java',
 ]
+
 java_immutables_library(
   name = 'config',
   srcs = CONFIG_SOURCES,
+  autodeps = True,
   immutable_types = [
     'DirCacheEntry',
     'HttpCacheEntry',
@@ -68,28 +72,29 @@ java_immutables_library(
     '//test/com/facebook/buck/artifact_cache:artifact_cache',
     '//test/com/facebook/buck/httpserver:httpserver_cache_integration_test',
   ],
-  autodeps = True,
   visibility = [
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/httpserver:cache_handler',
     '//test/com/facebook/buck/artifact_cache/...',
     '//test/com/facebook/buck/cli/...',
     '//test/com/facebook/buck/httpserver:httpserver_cache_integration_test',
-  ]
+  ],
 )
 
 GENERATOR_SOURCE = [
-  'HybridPayloadGenerator.java'
+  'HybridPayloadGenerator.java',
 ]
 
 java_library(
   name = 'impl',
-  srcs = glob(['*.java'],
-              excludes=PUBLIC_API_SOURCES + CONFIG_SOURCES + PROTOCOL_SOURCES + GENERATOR_SOURCE),
+  srcs = glob(
+    ['*.java'],
+    excludes = PUBLIC_API_SOURCES + CONFIG_SOURCES + PROTOCOL_SOURCES + GENERATOR_SOURCE,
+  ),
+  autodeps = True,
   tests = [
     '//test/com/facebook/buck/artifact_cache:artifact_cache',
   ],
-  autodeps = True,
   visibility = [
     '//test/com/facebook/buck/artifact_cache/...',
   ],
@@ -107,5 +112,5 @@ java_library(
   name = 'lib-generate-hybrid-payloads',
   srcs = GENERATOR_SOURCE,
   autodeps = True,
-  visibility = [ 'PUBLIC' ],
+  visibility = ['PUBLIC'],
 )

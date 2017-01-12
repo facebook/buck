@@ -1,9 +1,8 @@
 java_library(
   name = 'hamcrest',
-  deps = [],
   exported_deps = [
-    ':java-hamcrest',
     ':hamcrest-junit',
+    ':java-hamcrest',
   ],
   licenses = [
     'LICENSE.txt',
@@ -13,6 +12,7 @@ java_library(
     '//test/...',
     '//third-party/java/junit:junit',
   ],
+  deps = [],
 )
 
 prebuilt_jar(
@@ -31,9 +31,6 @@ prebuilt_jar(
 prebuilt_jar(
   name = 'hamcrest-junit',
   binary_jar = 'hamcrest-junit-2.0.0.0.jar',
-  deps = [
-    ':java-hamcrest',
-  ],
   licenses = [
     'LICENSE.txt',
   ],
@@ -41,5 +38,8 @@ prebuilt_jar(
     '//src/com/facebook/buck/intellij/...',
     '//test/...',
     '//third-party/java/junit:junit',
+  ],
+  deps = [
+    ':java-hamcrest',
   ],
 )

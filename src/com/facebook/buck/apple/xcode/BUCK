@@ -3,7 +3,10 @@ standard_java_library(
     'GidGenerator.java',
     'XcodeprojSerializer.java',
     'XCScheme.java',
-  ] + glob(['util/*.java', 'xcodeproj/*.java']),
+  ] + glob([
+    'util/*.java',
+    'xcodeproj/*.java',
+  ]),
   immutable_types = [
     'xcodeproj.CopyFilePhaseDestinationSpec',
     'xcodeproj.ProductType',

@@ -3,5 +3,5 @@
 # of the test run.
 standard_java_test(
   run_test_separately = True,
-  vm_args = [ '-Xmx512m' ],
+  vm_args = ['-Xmx512m'],
 )

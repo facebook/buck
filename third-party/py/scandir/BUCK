@@ -9,13 +9,13 @@ python_library(
     'LICENSE.txt',
   ],
   visibility = [
-    'PUBLIC'
+    'PUBLIC',
   ],
 )
 
 export_file(
   name = 'scandir.py',
-  visibility=[
+  visibility = [
     'PUBLIC',
   ],
 )

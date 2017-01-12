@@ -1,8 +1,8 @@
 standard_java_library(
-  deps = [
-    "//third-party/java/jackson:jackson-annotations",
-  ],
   tests = [
     '//test/com/facebook/buck/message_ipc:message_ipc',
+  ],
+  deps = [
+    '//third-party/java/jackson:jackson-annotations',
   ],
 )

@@ -5,5 +5,5 @@ java_test(
   deps = [
     # Resource-only rule: not picked up by autodeps.
     '//src/com/facebook/buck/android/agent:manifest-as-resource',
-  ]
+  ],
 )

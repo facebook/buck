@@ -1,13 +1,14 @@
 TYPES_SRCS = [
   'AbstractVersion.java',
 ]
+
 java_immutables_library(
   name = 'types',
+  srcs = TYPES_SRCS,
+  autodeps = True,
   immutable_types = [
     'Version',
   ],
-  srcs = TYPES_SRCS,
-  autodeps = True,
   visibility = ['PUBLIC'],
 )
 
@@ -16,6 +17,7 @@ TRANSLATOR_SRCS = [
   'TargetTranslatable.java',
   'TargetTranslatorOverridingDescription.java',
 ]
+
 java_library(
   name = 'translator',
   srcs = TRANSLATOR_SRCS,
@@ -25,6 +27,11 @@ java_library(
 
 java_immutables_library(
   name = 'versions',
+  srcs = glob(
+    ['*.java'],
+    excludes = TYPES_SRCS + TRANSLATOR_SRCS,
+  ),
+  autodeps = True,
   immutable_types = [
     'Constraints',
     'ExactConstraint',
@@ -33,10 +40,8 @@ java_immutables_library(
     'VersionInfo',
     'VersionUniverse',
   ],
-  srcs = glob(['*.java'], excludes=TYPES_SRCS + TRANSLATOR_SRCS),
   tests = [
     '//test/com/facebook/buck/versions:versions',
   ],
-  autodeps = True,
   visibility = ['PUBLIC'],
 )

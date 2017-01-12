@@ -1,7 +1,7 @@
 python_library(
   name = 'pywatchman',
-  base_module = '',
   srcs = glob(['pywatchman/*.py']),
+  base_module = '',
   licenses = [
     'LICENSE',
   ],

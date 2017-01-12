@@ -2,6 +2,7 @@
 PARSER_TEST_SRCS = [
   'ParserTest.java',
 ]
+
 java_test(
   name = 'parser',
   srcs = PARSER_TEST_SRCS,
@@ -13,15 +14,19 @@ java_test(
   name = 'unit',
   srcs = glob(
     ['*Test.java'],
-    excludes=PARSER_TEST_SRCS + ['*IntegrationTest.java']),
+    excludes = PARSER_TEST_SRCS + ['*IntegrationTest.java'],
+  ),
   autodeps = True,
 )
 
 java_test(
   name = 'integration',
   srcs = glob(['*IntegrationTest.java']),
-  resources = glob(['testdata/**'], include_dotfiles=True),
   autodeps = True,
+  resources = glob(
+    ['testdata/**'],
+    include_dotfiles = True,
+  ),
 )
 
 java_test(

@@ -36,63 +36,64 @@ python_binary(
 # same Buck version UID to it's rule key.  But still... gross.
 genrule(
   name = 'gen_buck_package_info',
-  cmd = '$(exe :gen_buck_info) > $OUT',
   out = 'buck_package_info.json',
+  cmd = '$(exe :gen_buck_info) > $OUT',
 )
 
 build_type = read_config('build', 'type', 'LOCAL_PEX')
+
 genrule(
   name = 'gen_build_type_info',
+  out = 'build_type_info.txt',
   bash = 'echo {0} > $OUT'.format(build_type),
   cmd_exe = 'echo {0}> %OUT%'.format(build_type),
-  out = 'build_type_info.txt',
 )
 
 BUCK_CORE_RESOURCES = {
-    'android_agent_path': '//assets/android:agent.apk',
-    'bootstrapper_jar': '//src/com/facebook/buck/cli/bootstrapper:bootstrapper',
-    'buck_package_info': ':gen_buck_package_info',
-    'buck_server': '//src/com/facebook/buck/cli:main-fixed',
-    'buck_build_type_info': ':gen_build_type_info',
-    'dx': '//third-party/java/dx:etc_dx',
-    'jacoco_agent_jar': '//third-party/java/jacoco:agent',
-    # The name of this resource is important, since it needs to have this filename in the PEX.
-    "libjcocoa.dylib": "//third-party/java/ObjCBridge:libjcocoa.dylib",
-    'logging_config_file': '//config:logging.properties',
-    'native_exopackage_fake_path': '//assets/android:native-exopackage-fakes.apk',
-    'path_to_asm_jar': '//third-party/java/asm:asm',
-    'path_to_rawmanifest_py': '//src/com/facebook/buck/util/versioncontrol:rawmanifest',
-    'path_to_intellij_py': '//src/com/facebook/buck/command:intellij.py',
-    'path_to_pathlib_py': '//third-party/py/pathlib:pathlib.py',
-    'path_to_pex': '//src/com/facebook/buck/python:pex',
-    'path_to_pywatchman': '//third-party/py/pywatchman:pywatchman-archive',
-    'path_to_scandir_py': '//third-party/py/scandir:scandir.py',
-    'path_to_sh_binary_template': '//src/com/facebook/buck/shell:sh_binary_template',
-    'report_generator_jar': '//src/com/facebook/buck/jvm/java/coverage:report-generator',
-    'testrunner_classes': '//src/com/facebook/buck/testrunner:testrunner-bin-fixed',
+  'android_agent_path': '//assets/android:agent.apk',
+  'bootstrapper_jar': '//src/com/facebook/buck/cli/bootstrapper:bootstrapper',
+  'buck_package_info': ':gen_buck_package_info',
+  'buck_server': '//src/com/facebook/buck/cli:main-fixed',
+  'buck_build_type_info': ':gen_build_type_info',
+  'dx': '//third-party/java/dx:etc_dx',
+  'jacoco_agent_jar': '//third-party/java/jacoco:agent',
+  # The name of this resource is important, since it needs to have this filename in the PEX.
+  'libjcocoa.dylib': '//third-party/java/ObjCBridge:libjcocoa.dylib',
+  'logging_config_file': '//config:logging.properties',
+  'native_exopackage_fake_path': '//assets/android:native-exopackage-fakes.apk',
+  'path_to_asm_jar': '//third-party/java/asm:asm',
+  'path_to_rawmanifest_py': '//src/com/facebook/buck/util/versioncontrol:rawmanifest',
+  'path_to_intellij_py': '//src/com/facebook/buck/command:intellij.py',
+  'path_to_pathlib_py': '//third-party/py/pathlib:pathlib.py',
+  'path_to_pex': '//src/com/facebook/buck/python:pex',
+  'path_to_pywatchman': '//third-party/py/pywatchman:pywatchman-archive',
+  'path_to_scandir_py': '//third-party/py/scandir:scandir.py',
+  'path_to_sh_binary_template': '//src/com/facebook/buck/shell:sh_binary_template',
+  'report_generator_jar': '//src/com/facebook/buck/jvm/java/coverage:report-generator',
+  'testrunner_classes': '//src/com/facebook/buck/testrunner:testrunner-bin-fixed',
 
-    # TODO(#5448619): We currently don't have a great way of packaging up
-    # entire directories into a PEX file, so for now, we aren't pulling in
-    # the following resources.
-    #':path_to_static_content',
+  # TODO(#5448619): We currently don't have a great way of packaging up
+  # entire directories into a PEX file, so for now, we aren't pulling in
+  # the following resources.
+  #':path_to_static_content',
 }
 
 python_library(
-  name='bucklib',
-  srcs=[
-    'buck_project.py',
-    'buck_tool.py',
-    'buck_repo.py',
+  name = 'bucklib',
+  srcs = [
     'buck_package.py',
+    'buck_project.py',
+    'buck_repo.py',
+    'buck_tool.py',
+    'file_locks.py',
     'timing.py',
     'tracing.py',
-    'file_locks.py',
   ],
-  resources=BUCK_CORE_RESOURCES,
+  resources = BUCK_CORE_RESOURCES,
   deps = [
-    '//third-party/nailgun:ng',
-    ':subprocutils',
     ':buck_version',
+    ':subprocutils',
+    '//third-party/nailgun:ng',
   ],
 )
 
@@ -109,20 +110,20 @@ def interpreter_override_args():
     return []
 
 python_binary(
-  name='buck',
-  main='buck.py',
-  build_args=interpreter_override_args(),
-  deps=[
+  name = 'buck',
+  build_args = interpreter_override_args(),
+  main = 'buck.py',
+  deps = [
     ':bucklib',
     ':subprocutils',
   ],
 )
 
 python_binary(
-  name='buckd',
-  main='buckd.py',
-  build_args=interpreter_override_args(),
-  deps=[
+  name = 'buckd',
+  build_args = interpreter_override_args(),
+  main = 'buckd.py',
+  deps = [
     ':bucklib',
     ':subprocutils',
   ],

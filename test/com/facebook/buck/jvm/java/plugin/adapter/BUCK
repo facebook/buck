@@ -3,8 +3,8 @@ java_test(
   srcs = glob(['*.java']),
   autodeps = True,
   provided_deps = [
-  # Tools.jar is the compiler itself, and will already be present at runtime;
-  # we compile against a stub.
+    # Tools.jar is the compiler itself, and will already be present at runtime;
+    # we compile against a stub.
     '//third-party/java/jdk:compiler-tree-api',
   ],
 )

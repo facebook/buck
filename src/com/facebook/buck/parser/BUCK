@@ -3,10 +3,10 @@ java_immutables_library(
   srcs = [
     'AbstractParserConfig.java',
   ],
+  autodeps = True,
   immutable_types = [
     'ParserConfig',
   ],
-  autodeps = True,
   visibility = [
     'PUBLIC',
   ],
@@ -40,6 +40,7 @@ java_immutables_library(
     'TargetNodeSpec.java',
     'UnexpectedFlavorException.java',
   ],
+  autodeps = True,
   immutable_types = [
     'BuildFileSpec',
     'BuildTargetSpec',
@@ -50,7 +51,6 @@ java_immutables_library(
     '//test/com/facebook/buck/parser:parser',
     '//test/com/facebook/buck/parser:unit',
   ],
-  autodeps = True,
   visibility = [
     'PUBLIC',
   ],
@@ -59,17 +59,17 @@ java_immutables_library(
 java_library(
   name = 'rule_pattern',
   srcs = [
-    'BuildTargetParser.java',
     'BuildTargetParseException.java',
+    'BuildTargetParser.java',
     'BuildTargetPatternParser.java',
     'NoSuchBuildTargetException.java',
   ],
+  autodeps = True,
   tests = [
     '//test/com/facebook/buck/parser:integration',
     '//test/com/facebook/buck/parser:parser',
     '//test/com/facebook/buck/parser:unit',
   ],
-  autodeps = True,
   visibility = [
     'PUBLIC',
   ],

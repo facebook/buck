@@ -10,4 +10,3 @@ prebuilt_jar(
     '//test/com/facebook/buck/util:util',
   ],
 )
-

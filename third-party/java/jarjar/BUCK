@@ -1,11 +1,11 @@
 java_binary(
   name = 'jarjar',
-  deps = [
-    ':jarjar_prebuilt',
-  ],
   main_class = 'com.tonicsystems.jarjar.Main',
   visibility = [
     '//third-party/java/...',
+  ],
+  deps = [
+    ':jarjar_prebuilt',
   ],
 )
 
@@ -16,4 +16,3 @@ prebuilt_jar(
     'LICENSE.txt',
   ],
 )
-

@@ -1,8 +1,8 @@
 java_library(
   name = 'testutil',
   srcs = [
-    'FakeJavac.java',
     'FakeJavaLibrary.java',
+    'FakeJavac.java',
     'FakeStandardJavaFileManager.java',
     'JavaBinaryRuleBuilder.java',
     'JavaLibraryBuilder.java',
@@ -30,7 +30,7 @@ java_library(
 
 java_library(
   name = 'javac-env',
-  srcs = [ 'JavaCompilationConstants.java', ],
+  srcs = ['JavaCompilationConstants.java'],
   autodeps = True,
   visibility = [
     '//test/...',
@@ -44,15 +44,24 @@ SLOW_INTEGRATION_TESTS = [
 java_test(
   name = 'integration-slow',
   srcs = SLOW_INTEGRATION_TESTS,
-  resources = glob(['testdata/**'], include_dotfiles=True),
-  run_test_separately = True,
   autodeps = True,
+  resources = glob(
+    ['testdata/**'],
+    include_dotfiles = True,
+  ),
+  run_test_separately = True,
 )
 
 java_test(
   name = 'java',
-  srcs = glob(['*Test.java'], excludes = SLOW_INTEGRATION_TESTS),
-  resources = glob(['testdata/**'], include_dotfiles=True),
+  srcs = glob(
+    ['*Test.java'],
+    excludes = SLOW_INTEGRATION_TESTS,
+  ),
   autodeps = True,
   labels = ['long_running'],
+  resources = glob(
+    ['testdata/**'],
+    include_dotfiles = True,
+  ),
 )

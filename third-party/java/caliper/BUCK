@@ -14,14 +14,13 @@ genrule(
   srcs = [
     'jarjar-rules.txt',
   ],
-  cmd = '$(exe //third-party/java/jarjar:jarjar) process ' \
-      '$SRCDIR/jarjar-rules.txt $(location :caliper-all) $OUT',
   out = 'caliper_shaded.jar',
+  cmd = '$(exe //third-party/java/jarjar:jarjar) process ' +
+        '$SRCDIR/jarjar-rules.txt $(location :caliper-all) $OUT',
   licenses = [
     'LICENSE.txt',
   ],
 )
-
 
 prebuilt_jar(
   name = 'caliper-all',

@@ -1,14 +1,15 @@
 EXCEPTION_SRCS = [
   'NoAndroidSdkException.java',
 ]
+
 java_library(
   name = 'exceptions',
   srcs = EXCEPTION_SRCS,
-  tests = [
-    '//test/com/facebook/buck/android:unit',
-    '//test/com/facebook/buck/android:integration',
-  ],
   autodeps = True,
+  tests = [
+    '//test/com/facebook/buck/android:integration',
+    '//test/com/facebook/buck/android:unit',
+  ],
   visibility = ['PUBLIC'],
 )
 
@@ -17,21 +18,22 @@ PACKAGEABLE_SRCS = [
   'AndroidPackageable.java',
   'AndroidPackageableCollector.java',
 ]
+
 java_immutables_library(
   name = 'packageable',
   srcs = PACKAGEABLE_SRCS,
+  autodeps = True,
   immutable_types = [
     'AndroidPackageableCollection',
   ],
   tests = [
-    '//test/com/facebook/buck/android:unit',
     '//test/com/facebook/buck/android:aar-integration',
     '//test/com/facebook/buck/android:binary-integration',
     '//test/com/facebook/buck/android:build-config-integration',
     '//test/com/facebook/buck/android:instrumentation-integration',
     '//test/com/facebook/buck/android:integration',
+    '//test/com/facebook/buck/android:unit',
   ],
-  autodeps = True,
   visibility = ['PUBLIC'],
 )
 
@@ -111,26 +113,27 @@ RULES_SRCS = [
   'relinker/NativeRelinker.java',
   'relinker/Symbols.java',
 ]
+
 java_immutables_library(
   name = 'rules',
   srcs = RULES_SRCS,
+  autodeps = True,
   immutable_types = [
     'AndroidGraphEnhancementResult',
     'AndroidInstrumentationTestJVMArgs',
     'StrippedObjectDescription',
   ],
+  resources = [
+    ':ddmlib.jar',
+    ':kxml2.jar',
+  ],
   tests = [
-    '//test/com/facebook/buck/android:unit',
     '//test/com/facebook/buck/android:aar-integration',
     '//test/com/facebook/buck/android:binary-integration',
     '//test/com/facebook/buck/android:build-config-integration',
     '//test/com/facebook/buck/android:instrumentation-integration',
     '//test/com/facebook/buck/android:integration',
-  ],
-  autodeps = True,
-  resources = [
-    ':ddmlib.jar',
-    ':kxml2.jar',
+    '//test/com/facebook/buck/android:unit',
   ],
   visibility = ['PUBLIC'],
 )
@@ -153,13 +156,13 @@ SPLIT_DEX_SRCS = [
 java_library(
   name = 'split_dex',
   srcs = SPLIT_DEX_SRCS,
+  autodeps = True,
   tests = [
-    '//test/com/facebook/buck/android:unit',
     '//test/com/facebook/buck/android:binary-integration',
     '//test/com/facebook/buck/android:instrumentation-integration',
     '//test/com/facebook/buck/android:integration',
+    '//test/com/facebook/buck/android:unit',
   ],
-  autodeps = True,
   visibility = [
     'PUBLIC',
   ],
@@ -173,6 +176,7 @@ APKMODULE_SRCS = [
 java_immutables_library(
   name = 'apkmodule',
   srcs = APKMODULE_SRCS,
+  autodeps = True,
   immutable_types = [
     'APKModule',
   ],
@@ -180,7 +184,6 @@ java_immutables_library(
     '//test/com/facebook/buck/android:integration',
     '//test/com/facebook/buck/android:unit',
   ],
-  autodeps = True,
   visibility = ['PUBLIC'],
 )
 
@@ -192,11 +195,11 @@ HELPERS_SRCS = [
 java_library(
   name = 'helpers',
   srcs = HELPERS_SRCS,
-  tests = [
-    '//test/com/facebook/buck/android:unit',
-    '//test/com/facebook/buck/android:integration',
-  ],
   autodeps = True,
+  tests = [
+    '//test/com/facebook/buck/android:integration',
+    '//test/com/facebook/buck/android:unit',
+  ],
   visibility = ['PUBLIC'],
 )
 
@@ -211,26 +214,28 @@ UTILS_SRCS = [
 java_library(
   name = 'utils',
   srcs = UTILS_SRCS,
-  tests = [
-    '//test/com/facebook/buck/android:unit',
-    '//test/com/facebook/buck/android:integration',
-  ],
   autodeps = True,
+  tests = [
+    '//test/com/facebook/buck/android:integration',
+    '//test/com/facebook/buck/android:unit',
+  ],
   visibility = ['PUBLIC'],
 )
 
 java_immutables_library(
   name = 'steps',
-  srcs = glob(['*.java'],
-              excludes = EXCEPTION_SRCS + PACKAGEABLE_SRCS + RULES_SRCS +
-                  SPLIT_DEX_SRCS + UTILS_SRCS + APKMODULE_SRCS + HELPERS_SRCS),
+  srcs = glob(
+    ['*.java'],
+    excludes = EXCEPTION_SRCS + PACKAGEABLE_SRCS + RULES_SRCS +
+               SPLIT_DEX_SRCS + UTILS_SRCS + APKMODULE_SRCS + HELPERS_SRCS,
+  ),
+  autodeps = True,
   immutable_types = [
     'NdkCxxPlatform',
   ],
   tests = [
-    '//test/com/facebook/buck/android:steps',
     '//test/com/facebook/buck/android:integration',
+    '//test/com/facebook/buck/android:steps',
   ],
-  autodeps = True,
   visibility = ['PUBLIC'],
 )

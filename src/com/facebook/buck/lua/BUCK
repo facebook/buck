@@ -5,11 +5,11 @@ standard_java_library(
     'LuaPackageComponents',
     'LuaScriptStarter',
   ],
-  tests = [
-    '//test/com/facebook/buck/lua:lua',
-  ],
   resources = [
     'native-starter.cpp.in',
     'starter.lua.in',
+  ],
+  tests = [
+    '//test/com/facebook/buck/lua:lua',
   ],
 )

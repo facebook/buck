@@ -4,9 +4,12 @@ CACHE_INTEGRATION_SRCS = [
 
 java_test(
   name = 'httpserver',
-  srcs = glob(['*.java'], excludes=CACHE_INTEGRATION_SRCS),
-  resources = glob(['*.soy']),
+  srcs = glob(
+    ['*.java'],
+    excludes = CACHE_INTEGRATION_SRCS,
+  ),
   autodeps = True,
+  resources = glob(['*.soy']),
 )
 
 java_test(

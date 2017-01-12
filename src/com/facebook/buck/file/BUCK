@@ -2,9 +2,9 @@ java_library(
   name = 'downloader',
   srcs = [
     'AuthAwareDownloader.java',
-    'Downloader.java',
     'DownloadEvent.java',
     'DownloadProgressEvent.java',
+    'Downloader.java',
     'ExplodingDownloader.java',
     'HttpDownloader.java',
     'MavenUrlDecoder.java',
@@ -14,7 +14,7 @@ java_library(
     'StackedDownloader.java',
   ],
   autodeps = True,
-  visibility = [ 'PUBLIC' ],
+  visibility = ['PUBLIC'],
 )
 
 java_library(
@@ -39,5 +39,5 @@ java_library(
     'WriteFile.java',
   ],
   autodeps = True,
-  visibility = [ 'PUBLIC' ],
+  visibility = ['PUBLIC'],
 )
