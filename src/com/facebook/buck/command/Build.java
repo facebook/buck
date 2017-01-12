@@ -341,8 +341,10 @@ public class Build implements Closeable {
 
         if (isKeepGoing) {
           String buildReportText = buildReport.generateForConsole(console);
-          // Remove trailing newline from build report.
-          buildReportText = buildReportText.substring(0, buildReportText.length() - 1);
+          buildReportText = buildReportText.isEmpty() ?
+              "Failure report is empty." :
+              // Remove trailing newline from build report.
+              buildReportText.substring(0, buildReportText.length() - 1);
           eventBus.post(ConsoleEvent.info(buildReportText));
           exitCode = buildExecutionResult.getFailures().isEmpty() ? 0 : 1;
           if (exitCode != 0) {
