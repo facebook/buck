@@ -44,7 +44,7 @@ import java.util.Optional;
 public class CxxPrecompiledHeaderTest {
 
   @Test
-  public void generatesPchStepShouldUseCorrectLang() {
+  public void generatesPchStepShouldUseCorrectLang() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     BuildRuleResolver resolver =

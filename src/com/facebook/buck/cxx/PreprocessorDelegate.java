@@ -107,7 +107,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
       PreprocessorFlags preprocessorFlags,
       RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction,
       Optional<SymlinkTree> sandbox,
-      Optional<CxxIncludePaths> leadingIncludePaths) {
+      Optional<CxxIncludePaths> leadingIncludePaths) throws ConflictingHeadersException {
     this.preprocessor = preprocessor;
     this.preprocessorFlags = preprocessorFlags;
     this.sanitizer = sanitizer;
@@ -118,10 +118,12 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
     this.frameworkPathSearchPathFunction = frameworkPathSearchPathFunction;
     this.sandbox = sandbox;
     this.leadingIncludePaths = leadingIncludePaths;
+
+    checkForConflictingHeaders();
   }
 
   public PreprocessorDelegate withLeadingIncludePaths(
-      CxxIncludePaths leadingIncludePaths) {
+      CxxIncludePaths leadingIncludePaths) throws ConflictingHeadersException {
     return new PreprocessorDelegate(
         this.resolver,
         this.sanitizer,
@@ -228,12 +230,13 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
         preprocessor);
   }
 
-  public void checkForConflictingHeaders() throws ConflictingHeadersException {
+  private void checkForConflictingHeaders() throws ConflictingHeadersException {
     Map<Path, SourcePath> headers = new HashMap<>();
-    for (CxxHeaders cxxHeaders : preprocessorFlags.getIncludes()) {
+    for (CxxHeaders cxxHeaders : this.preprocessorFlags.getIncludes()) {
       if (cxxHeaders instanceof CxxSymlinkTreeHeaders) {
         CxxSymlinkTreeHeaders symlinkTreeHeaders = (CxxSymlinkTreeHeaders) cxxHeaders;
-        for (Map.Entry<Path, SourcePath> entry : symlinkTreeHeaders.getNameToPathMap().entrySet()) {
+        for (Map.Entry<Path, SourcePath> entry :
+            symlinkTreeHeaders.getNameToPathMap().entrySet()) {
           SourcePath original = headers.put(entry.getKey(), entry.getValue());
           if (original != null && !original.equals(entry.getValue())) {
             throw new ConflictingHeadersException(

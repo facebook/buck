@@ -56,7 +56,7 @@ import java.util.Optional;
 public class CxxCompilationDatabaseTest {
 
   @Test
-  public void testCompilationDatabase() {
+  public void testCompilationDatabase() throws Exception {
     BuildTarget testBuildTarget = BuildTarget
         .builder(BuildTargetFactory.newInstance("//foo:baz"))
         .addAllFlavors(

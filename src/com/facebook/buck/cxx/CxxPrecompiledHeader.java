@@ -183,11 +183,6 @@ public class CxxPrecompiledHeader
 
   @VisibleForTesting
   CxxPreprocessAndCompileStep makeMainStep(SourcePathResolver resolver, Path scratchDir) {
-    try {
-      preprocessorDelegate.checkForConflictingHeaders();
-    } catch (PreprocessorDelegate.ConflictingHeadersException e) {
-      throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
-    }
     return new CxxPreprocessAndCompileStep(
         getProjectFilesystem(),
         CxxPreprocessAndCompileStep.Operation.GENERATE_PCH,

@@ -51,7 +51,6 @@ import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -120,7 +119,7 @@ public class CxxPreprocessAndCompileTest {
       };
 
   @Test
-  public void inputChangesCauseRuleKeyChangesForCompilation() {
+  public void inputChangesCauseRuleKeyChangesForCompilation() throws Exception {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
@@ -277,7 +276,8 @@ public class CxxPreprocessAndCompileTest {
   }
 
   @Test
-  public void preprocessorFlagsRuleKeyChangesCauseRuleKeyChangesForPreprocessing() {
+  public void preprocessorFlagsRuleKeyChangesCauseRuleKeyChangesForPreprocessing()
+      throws Exception {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
@@ -297,7 +297,7 @@ public class CxxPreprocessAndCompileTest {
             .build());
 
     class TestData {
-      public RuleKey generate(PreprocessorFlags flags) {
+      public RuleKey generate(PreprocessorFlags flags) throws Exception {
         return new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(
             CxxPreprocessAndCompile.preprocessAndCompile(
                 params,
@@ -383,7 +383,7 @@ public class CxxPreprocessAndCompileTest {
 
   @Test
   public void compilerAndPreprocessorAreAlwaysReturnedFromGetInputsAfterBuildingLocally()
-      throws IOException {
+      throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     SourcePath preprocessor = new PathSourcePath(filesystem, Paths.get("preprocessor"));
@@ -503,7 +503,7 @@ public class CxxPreprocessAndCompileTest {
   }
 
   @Test
-  public void usesColorFlagForPreprocessingWhenRequested() {
+  public void usesColorFlagForPreprocessingWhenRequested() throws Exception {
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     ));

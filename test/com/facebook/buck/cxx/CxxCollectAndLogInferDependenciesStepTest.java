@@ -70,7 +70,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
       SourcePathResolver sourcePathResolver,
       ProjectFilesystem filesystem,
       InferBuckConfig inferBuckConfig
-  ) {
+  ) throws Exception {
     RuleKeyAppendableFunction<FrameworkPath, Path> defaultFrameworkPathSearchPathFunction =
         new RuleKeyAppendableFunction<FrameworkPath, Path>() {
           @Override
@@ -232,7 +232,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
   }
 
   @Test
-  public void testStepWritesTwoCellTokensInFile() throws IOException, InterruptedException {
+  public void testStepWritesTwoCellTokensInFile() throws Exception {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     // filesystem, buildTarget and buildRuleParams for first cell (analysis)
@@ -310,8 +310,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
   }
 
   @Test
-  public void testStepWritesOneCellTokenInFileWhenOneCellIsAbsent()
-      throws IOException, InterruptedException {
+  public void testStepWritesOneCellTokenInFileWhenOneCellIsAbsent() throws Exception {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     // filesystem, buildTarget and buildRuleParams for first, unnamed cell (analysis)

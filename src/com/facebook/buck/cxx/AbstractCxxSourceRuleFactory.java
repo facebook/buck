@@ -506,8 +506,12 @@ abstract class AbstractCxxSourceRuleFactory {
         // The PCH build might have involved some deps that this rule does not have, so we
         // would need to pull in its include paths to ensure any includes that happen during this
         // build play out the same way as they did for the PCH.
-        preprocessorDelegate = preprocessorDelegate.withLeadingIncludePaths(
-            precompiledHeader.getCxxIncludePaths());
+        try {
+          preprocessorDelegate = preprocessorDelegate.withLeadingIncludePaths(
+              precompiledHeader.getCxxIncludePaths());
+        } catch (PreprocessorDelegate.ConflictingHeadersException e) {
+          throw e.getHumanReadableExceptionForBuildTarget(getParams().getBuildTarget());
+        }
       }
     }
 
@@ -970,26 +974,29 @@ abstract class AbstractCxxSourceRuleFactory {
       extends CacheLoader<PreprocessorDelegateCacheKey, PreprocessorDelegateCacheValue> {
 
     @Override
-    public PreprocessorDelegateCacheValue load(@Nonnull PreprocessorDelegateCacheKey key)
-        throws Exception {
+    public PreprocessorDelegateCacheValue load(@Nonnull PreprocessorDelegateCacheKey key) {
       Preprocessor preprocessor =
           CxxSourceTypes.getPreprocessor(getCxxPlatform(), key.getSourceType())
               .resolve(getResolver());
-      PreprocessorDelegate delegate = new PreprocessorDelegate(
-          getPathResolver(),
-          getCxxPlatform().getCompilerDebugPathSanitizer(),
-          getCxxPlatform().getHeaderVerification(),
-          getParams().getProjectFilesystem().getRootPath(),
-          preprocessor,
-          PreprocessorFlags.of(
-              getPrefixHeader(),
-              computePreprocessorFlags(key.getSourceType(), key.getSourceFlags()),
-              getIncludes(),
-              getFrameworks()),
-          CxxDescriptionEnhancer.frameworkPathToSearchPath(getCxxPlatform(), getPathResolver()),
-          getSandboxTree(),
+      try {
+        PreprocessorDelegate delegate = new PreprocessorDelegate(
+            getPathResolver(),
+            getCxxPlatform().getCompilerDebugPathSanitizer(),
+            getCxxPlatform().getHeaderVerification(),
+            getParams().getProjectFilesystem().getRootPath(),
+            preprocessor,
+            PreprocessorFlags.of(
+                getPrefixHeader(),
+                computePreprocessorFlags(key.getSourceType(), key.getSourceFlags()),
+                getIncludes(),
+                getFrameworks()),
+            CxxDescriptionEnhancer.frameworkPathToSearchPath(getCxxPlatform(), getPathResolver()),
+            getSandboxTree(),
           /* leadingIncludePaths */ Optional.empty());
-      return new PreprocessorDelegateCacheValue(delegate);
+        return new PreprocessorDelegateCacheValue(delegate);
+      } catch (PreprocessorDelegate.ConflictingHeadersException e) {
+        throw e.getHumanReadableExceptionForBuildTarget(getParams().getBuildTarget());
+      }
     }
   }
 

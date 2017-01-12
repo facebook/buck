@@ -197,15 +197,6 @@ public class CxxPreprocessAndCompile
   CxxPreprocessAndCompileStep makeMainStep(
       SourcePathResolver resolver, Path scratchDir, boolean useArgfile) {
 
-    // Check for conflicting headers.
-    if (preprocessDelegate.isPresent()) {
-      try {
-        preprocessDelegate.get().checkForConflictingHeaders();
-      } catch (PreprocessorDelegate.ConflictingHeadersException e) {
-        throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
-      }
-    }
-
     // If we're compiling, this will just be empty.
     HeaderPathNormalizer headerPathNormalizer =
         preprocessDelegate.isPresent() ?
