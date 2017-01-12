@@ -321,6 +321,12 @@ footer {
   list-style-type: square;
   margin-bottom: 0.5em;
 }
+.arg code.argName {
+  font-weight: bolder;
+}
+.arg span.argDefault {
+  font-size: smaller;
+}
 
 .build_target_ex {
   font-size: 36px;
