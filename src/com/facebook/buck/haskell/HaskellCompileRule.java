@@ -20,6 +20,7 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.CxxToolFlags;
+import com.facebook.buck.cxx.PathShortener;
 import com.facebook.buck.cxx.Preprocessor;
 import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.model.BuildTarget;
@@ -44,7 +45,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.OptionalCompat;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Functions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -274,7 +274,7 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
     CxxToolFlags cxxToolFlags =
         ppFlags.toToolFlags(
             getResolver(),
-            Functions.identity(),
+            PathShortener.identity(),
             CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, getResolver()),
             preprocessor,
             /* pch */ Optional.empty());

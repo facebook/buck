@@ -76,7 +76,7 @@ abstract class AbstractCxxIncludePaths {
    */
   public ImmutableList<String> getFlags(
       SourcePathResolver pathResolver,
-      Function<Path, Path> pathShortener,
+      PathShortener pathShortener,
       Function<FrameworkPath, Path> frameworkPathTransformer,
       Preprocessor preprocessor) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
@@ -101,7 +101,7 @@ abstract class AbstractCxxIncludePaths {
 
   public CxxToolFlags toToolFlags(
       SourcePathResolver resolver,
-      Function<Path, Path> pathShortener,
+      PathShortener pathShortener,
       Function<FrameworkPath, Path> frameworkPathTransformer,
       Preprocessor preprocessor) {
     return CxxToolFlags.explicitBuilder()

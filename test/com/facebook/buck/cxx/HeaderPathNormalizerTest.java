@@ -27,7 +27,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Functions;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -45,8 +44,7 @@ public class HeaderPathNormalizerTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path header = filesystem.getRootPath().getFileSystem().getPath("foo/bar.h");
     HeaderPathNormalizer normalizer =
-        new HeaderPathNormalizer.Builder(pathResolver, Functions.identity())
-            .build();
+        new HeaderPathNormalizer.Builder(pathResolver, PathShortener.identity()).build();
     assertThat(
         normalizer.getAbsolutePathForUnnormalizedPath(header),
         Matchers.equalTo(Optional.empty()));
@@ -61,7 +59,7 @@ public class HeaderPathNormalizerTest {
     Path header = filesystem.getRootPath().getFileSystem().getPath("foo/bar.h");
     SourcePath headerPath = new PathSourcePath(filesystem, header);
     HeaderPathNormalizer normalizer =
-        new HeaderPathNormalizer.Builder(pathResolver, Functions.identity())
+        new HeaderPathNormalizer.Builder(pathResolver, PathShortener.identity())
             .addHeader(headerPath)
             .build();
     assertThat(
@@ -81,7 +79,7 @@ public class HeaderPathNormalizerTest {
     Path header = filesystem.getRootPath().getFileSystem().getPath("foo/bar.h");
     SourcePath headerDirPath = new PathSourcePath(filesystem, header.getParent());
     HeaderPathNormalizer normalizer =
-        new HeaderPathNormalizer.Builder(pathResolver, Functions.identity())
+        new HeaderPathNormalizer.Builder(pathResolver, PathShortener.identity())
             .addHeaderDir(headerDirPath)
             .build();
     assertThat(
@@ -107,7 +105,7 @@ public class HeaderPathNormalizerTest {
     Path header = filesystem.getRootPath().getFileSystem().getPath("foo/bar.pch");
     SourcePath headerPath = new PathSourcePath(filesystem, header);
     HeaderPathNormalizer normalizer =
-        new HeaderPathNormalizer.Builder(pathResolver, Functions.identity())
+        new HeaderPathNormalizer.Builder(pathResolver, PathShortener.identity())
             .addPrefixHeader(headerPath)
             .build();
     assertThat(

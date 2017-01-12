@@ -19,9 +19,9 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -978,7 +978,7 @@ abstract class AbstractCxxSourceRuleFactory {
       PreprocessorDelegate delegate = new PreprocessorDelegate(
           getPathResolver(),
           getCxxPlatform().getCompilerDebugPathSanitizer(),
-        getCxxPlatform().getHeaderVerification(),
+          getCxxPlatform().getHeaderVerification(),
           getParams().getProjectFilesystem().getRootPath(),
           preprocessor,
           PreprocessorFlags.of(

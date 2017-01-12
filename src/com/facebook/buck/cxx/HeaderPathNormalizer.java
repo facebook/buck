@@ -18,7 +18,6 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
@@ -111,16 +110,16 @@ public class HeaderPathNormalizer {
   public static class Builder {
 
     private final SourcePathResolver pathResolver;
-    private final Function<Path, Path> pathTransformer;
+    private final PathShortener pathShortener;
 
     private final Map<Path, SourcePath> headers = new LinkedHashMap<>();
     private final Map<Path, SourcePath> normalized = new LinkedHashMap<>();
 
     public Builder(
         SourcePathResolver pathResolver,
-        Function<Path, Path> pathTransformer) {
+        PathShortener pathShortener) {
       this.pathResolver = pathResolver;
-      this.pathTransformer = pathTransformer;
+      this.pathShortener = pathShortener;
     }
 
     private <K, V> void put(Map<K, V> map, K key, V value) {
@@ -143,16 +142,11 @@ public class HeaderPathNormalizer {
       put(headers, pathResolver.getAbsolutePath(sourcePath), sourcePath);
 
       // Add a normaliation mapping for the unnormalized absolute path to the relative path.
-      put(normalized,
-          Preconditions.checkNotNull(
-              pathTransformer.apply(pathResolver.getAbsolutePath(sourcePath))),
-          sourcePath);
+      put(normalized, pathShortener.shorten(pathResolver.getAbsolutePath(sourcePath)), sourcePath);
 
       // Add a normalization mapping for any unnormalized paths passed in.
       for (Path unnormalizedPath : unnormalizedPaths) {
-        put(normalized,
-            Preconditions.checkNotNull(pathTransformer.apply(unnormalizedPath)),
-            sourcePath);
+        put(normalized, pathShortener.shorten(unnormalizedPath), sourcePath);
       }
 
       return this;

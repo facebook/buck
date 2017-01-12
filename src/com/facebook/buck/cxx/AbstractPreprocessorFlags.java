@@ -101,7 +101,7 @@ abstract class AbstractPreprocessorFlags {
 
   public CxxToolFlags getIncludePathFlags(
       SourcePathResolver resolver,
-      Function<Path, Path> pathShortener,
+      PathShortener pathShortener,
       Function<FrameworkPath, Path> frameworkPathTransformer,
       Preprocessor preprocessor) {
     return CxxToolFlags.explicitBuilder()
@@ -130,7 +130,7 @@ abstract class AbstractPreprocessorFlags {
 
   public CxxToolFlags toToolFlags(
       SourcePathResolver resolver,
-      Function<Path, Path> pathShortener,
+      PathShortener pathShortener,
       Function<FrameworkPath, Path> frameworkPathTransformer,
       Preprocessor preprocessor,
       Optional<CxxPrecompiledHeader> pch) {

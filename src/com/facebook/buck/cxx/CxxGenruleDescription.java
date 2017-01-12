@@ -49,7 +49,6 @@ import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.CaseFormat;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -528,7 +527,7 @@ public class CxxGenruleDescription
       CxxToolFlags flags =
           ppFlags.toToolFlags(
               pathResolver,
-              Functions.identity(),
+              PathShortener.identity(),
               CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver),
               preprocessor,
               /* pch */ Optional.empty());

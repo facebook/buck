@@ -21,8 +21,6 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -65,13 +63,12 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
    */
   public abstract Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder);
 
-  private static String resolveSourcePath(
+  private static Path resolveSourcePathAndShorten(
       SourcePathResolver resolver,
       SourcePath path,
-      Optional<Function<Path, Path>> pathShortener) {
-    return Preconditions.checkNotNull(
-        pathShortener.orElse(Functions.identity())
-            .apply(resolver.getAbsolutePath(path))).toString();
+      Optional<PathShortener> pathShortener) {
+    Path resolvedPath = resolver.getAbsolutePath(path);
+    return pathShortener.isPresent() ? pathShortener.get().shorten(resolvedPath) : resolvedPath;
   }
 
   /**
@@ -81,7 +78,7 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
   public static Iterable<String> getArgs(
       Iterable<CxxHeaders> cxxHeaderses,
       SourcePathResolver resolver,
-      Optional<Function<Path, Path>> pathShortener,
+      Optional<PathShortener> pathMinimizer,
       Preprocessor preprocessor) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
 
@@ -95,11 +92,12 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
       if (headerMap.isPresent()) {
         headerMaps.put(
             cxxHeaders.getIncludeType(),
-            resolveSourcePath(resolver, headerMap.get(), pathShortener));
+            resolveSourcePathAndShorten(resolver, headerMap.get(), pathMinimizer).toString());
       }
       roots.put(
           cxxHeaders.getIncludeType(),
-          resolveSourcePath(resolver, cxxHeaders.getIncludeRoot(), pathShortener));
+          resolveSourcePathAndShorten(resolver, cxxHeaders.getIncludeRoot(), pathMinimizer)
+              .toString());
     }
 
     // Define the include type ordering.  We always add local ("-I") include paths first so that

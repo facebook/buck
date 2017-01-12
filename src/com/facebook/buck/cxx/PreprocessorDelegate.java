@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyAppendable;
@@ -29,7 +28,6 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -72,20 +70,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
    */
   private final Optional<CxxIncludePaths> leadingIncludePaths;
 
-  private final Function<Path, Path> minLengthPathRepresentation =
-      new Function<Path, Path>() {
-        @Override
-        public Path apply(Path path) {
-          Preconditions.checkState(
-              path.isAbsolute(),
-              "Expected preprocessor suffix to be absolute: %s",
-              path);
-          String absoluteString = path.toString();
-          Path relativePath = MorePaths.relativize(workingDir, path);
-          String relativeString = relativePath.toString();
-          return absoluteString.length() > relativeString.length() ? relativePath : path;
-        }
-      };
+  private final PathShortener minLengthPathRepresentation;
 
   private final Supplier<HeaderPathNormalizer> headerPathNormalizer =
       MoreSuppliers.weakMemoize(
@@ -128,6 +113,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
     this.sanitizer = sanitizer;
     this.headerVerification = headerVerification;
     this.workingDir = workingDir;
+    this.minLengthPathRepresentation = PathShortener.byRelativizingToWorkingDir(workingDir);
     this.resolver = resolver;
     this.frameworkPathSearchPathFunction = frameworkPathSearchPathFunction;
     this.sandbox = sandbox;

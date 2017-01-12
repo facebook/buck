@@ -29,7 +29,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.Ansi;
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
@@ -60,7 +59,7 @@ public class CxxErrorTransformerFactoryTest {
     Path replacement = Paths.get("hello/world.h");
 
     HeaderPathNormalizer.Builder normalizerBuilder =
-        new HeaderPathNormalizer.Builder(pathResolver, Functions.identity());
+        new HeaderPathNormalizer.Builder(pathResolver, PathShortener.identity());
     normalizerBuilder.addHeader(new FakeSourcePath(replacement.toString()), original);
     HeaderPathNormalizer normalizer = normalizerBuilder.build();
 
