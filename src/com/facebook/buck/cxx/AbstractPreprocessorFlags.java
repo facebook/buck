@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -100,24 +99,6 @@ abstract class AbstractPreprocessorFlags {
         sanitizer.sanitizeFlags(getOtherFlags().getRuleFlags()));
   }
 
-  private ImmutableList<String> getPrefixOrPCHFlags(
-      SourcePathResolver resolver,
-      Optional<CxxPrecompiledHeader> pch) {
-    ImmutableList.Builder<String> builder = ImmutableList.<String>builder();
-    if (pch.isPresent()) {
-      builder.add("-include-pch", resolver.getAbsolutePath(
-          new BuildTargetSourcePath(pch.get().getBuildTarget()))
-          .toString());
-      // Force clang to accept pch even if mtime of its input changes, since buck tracks
-      // input contents, this should be safe.
-      builder.add("-Wp,-fno-validate-pch");
-    } else if (getPrefixHeader().isPresent()) {
-      Path absPath = resolver.getAbsolutePath(getPrefixHeader().get());
-      builder.add("-include", absPath.toString());
-    }
-    return builder.build();
-  }
-
   public CxxToolFlags getIncludePathFlags(
       SourcePathResolver resolver,
       Function<Path, Path> pathShortener,
@@ -135,10 +116,15 @@ abstract class AbstractPreprocessorFlags {
 
   public CxxToolFlags getNonIncludePathFlags(
       SourcePathResolver resolver,
-      Optional<CxxPrecompiledHeader> pch) {
+      Optional<CxxPrecompiledHeader> pch,
+      Preprocessor preprocessor) {
     ExplicitCxxToolFlags.Builder builder = CxxToolFlags.explicitBuilder();
     ExplicitCxxToolFlags.addCxxToolFlags(builder, getOtherFlags());
-    builder.addAllRuleFlags(getPrefixOrPCHFlags(resolver, pch));
+    builder.addAllRuleFlags(
+        preprocessor.prefixOrPCHArgs(
+            resolver,
+            getPrefixHeader(),
+            Optional.ofNullable(pch.isPresent() ? pch.get().getPathToOutput() : null)));
     return builder.build();
   }
 
@@ -149,7 +135,7 @@ abstract class AbstractPreprocessorFlags {
       Preprocessor preprocessor,
       Optional<CxxPrecompiledHeader> pch) {
     return CxxToolFlags.concat(
-        getNonIncludePathFlags(resolver, pch),
+        getNonIncludePathFlags(resolver, pch, preprocessor),
         getIncludePathFlags(resolver, pathShortener, frameworkPathTransformer, preprocessor));
   }
 

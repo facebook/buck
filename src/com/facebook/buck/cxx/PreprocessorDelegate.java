@@ -227,7 +227,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
   }
 
   public CxxToolFlags getNonIncludePathFlags(Optional<CxxPrecompiledHeader> pch) {
-    return preprocessorFlags.getNonIncludePathFlags(resolver, pch);
+    return preprocessorFlags.getNonIncludePathFlags(resolver, pch, preprocessor);
   }
 
   /**

@@ -16,15 +16,19 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.MoreIterables;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ImmutableList;
 
+import java.nio.file.Path;
 import java.util.Optional;
 
 public class ClangPreprocessor extends AbstractPreprocessor {
+
   public ClangPreprocessor(Tool tool) {
     super(tool);
   }
@@ -57,6 +61,23 @@ public class ClangPreprocessor extends AbstractPreprocessor {
   @Override
   public final Iterable<String> quoteIncludeArgs(Iterable<String> includeRoots) {
     return MoreIterables.zipAndConcat(Iterables.cycle("-iquote"), includeRoots);
+  }
+
+  @Override
+  public final Iterable<String> prefixHeaderArgs(
+      SourcePathResolver resolver,
+      SourcePath prefixHeader) {
+    return ImmutableList.of("-include", resolver.getAbsolutePath(prefixHeader).toString());
+  }
+
+  @Override
+  public Iterable<String> precompiledHeaderArgs(Path pchOutputPath) {
+    return ImmutableList.of(
+        "-include-pch",
+        pchOutputPath.toString(),
+        // Force clang to accept pch even if mtime of its input changes, since buck tracks
+        // input contents, this should be safe.
+        "-Wp,-fno-validate-pch");
   }
 
 }

@@ -16,15 +16,19 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.MoreIterables;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
+import java.nio.file.Path;
 import java.util.Optional;
 
 public class GccPreprocessor extends AbstractPreprocessor {
+
   public GccPreprocessor(Tool tool) {
     super(tool);
   }
@@ -58,4 +62,17 @@ public class GccPreprocessor extends AbstractPreprocessor {
   public final Iterable<String> quoteIncludeArgs(Iterable<String> includeRoots) {
     return MoreIterables.zipAndConcat(Iterables.cycle("-iquote"), includeRoots);
   }
+
+  @Override
+  public final Iterable<String> prefixHeaderArgs(
+      SourcePathResolver resolver,
+      SourcePath prefixHeader) {
+    return ImmutableList.of("-include", resolver.getAbsolutePath(prefixHeader).toString());
+  }
+
+  @Override
+  public Iterable<String> precompiledHeaderArgs(Path pchOutputPath) {
+    throw new UnsupportedOperationException("precompiled header not supported by " + getClass());
+  }
+
 }
