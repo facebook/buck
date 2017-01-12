@@ -76,6 +76,8 @@ public class JavaBinary extends AbstractBuildRule
   private final ImmutableSet<JavaLibrary> transitiveClasspathDeps;
   private final ImmutableSet<Path> transitiveClasspaths;
 
+  private final boolean cache;
+
   public JavaBinary(
       BuildRuleParams params,
       SourcePathResolver resolver,
@@ -86,7 +88,8 @@ public class JavaBinary extends AbstractBuildRule
       @Nullable Path metaInfDirectory,
       ImmutableSet<Pattern> blacklist,
       ImmutableSet<JavaLibrary> transitiveClasspathDeps,
-      ImmutableSet<Path> transitiveClasspaths) {
+      ImmutableSet<Path> transitiveClasspaths,
+      boolean cache) {
     super(params, resolver);
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.mainClass = mainClass;
@@ -98,6 +101,7 @@ public class JavaBinary extends AbstractBuildRule
     this.blacklist = blacklist;
     this.transitiveClasspathDeps = transitiveClasspathDeps;
     this.transitiveClasspaths = transitiveClasspaths;
+    this.cache = cache;
   }
 
   @Override
@@ -202,5 +206,10 @@ public class JavaBinary extends AbstractBuildRule
         .addArg("-jar")
         .addArg(new SourcePathArg(getResolver(), new BuildTargetSourcePath(getBuildTarget())))
         .build();
+  }
+
+  @Override
+  public boolean isCacheable() {
+    return cache;
   }
 }

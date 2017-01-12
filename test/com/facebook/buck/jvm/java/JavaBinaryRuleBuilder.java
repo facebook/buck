@@ -36,7 +36,8 @@ public class JavaBinaryRuleBuilder
         new JavaBinaryDescription(
             DEFAULT_JAVA_OPTIONS,
             DEFAULT_JAVAC_OPTIONS,
-            CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()))),
+            CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build())),
+            JavaBuckConfig.of(FakeBuckConfig.builder().build())),
         target);
   }
 

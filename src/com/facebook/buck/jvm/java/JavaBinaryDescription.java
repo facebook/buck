@@ -59,14 +59,17 @@ public class JavaBinaryDescription implements
   private final JavacOptions javacOptions;
   private final CxxPlatform cxxPlatform;
   private final JavaOptions javaOptions;
+  private final JavaBuckConfig javaBuckConfig;
 
   public JavaBinaryDescription(
       JavaOptions javaOptions,
       JavacOptions javacOptions,
-      CxxPlatform cxxPlatform) {
+      CxxPlatform cxxPlatform,
+      JavaBuckConfig javaBuckConfig) {
     this.javaOptions = javaOptions;
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.cxxPlatform = Preconditions.checkNotNull(cxxPlatform);
+    this.javaBuckConfig = Preconditions.checkNotNull(javaBuckConfig);
   }
 
   @Override
@@ -111,7 +114,8 @@ public class JavaBinaryDescription implements
         args.metaInfDirectory.orElse(null),
         args.blacklist,
         transitiveClasspathDeps,
-        transitiveClasspaths);
+        transitiveClasspaths,
+        javaBuckConfig.shouldCacheBinaries());
 
     // If we're packaging native libraries, construct the rule to build the fat JAR, which packages
     // up the original binary JAR and any required native libraries.

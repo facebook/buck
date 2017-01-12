@@ -92,7 +92,8 @@ public class JavaBinaryTest {
                 null,
                 /* blacklist */ ImmutableSet.of(),
                 ImmutableSet.of(),
-                ImmutableSet.of()));
+                ImmutableSet.of(),
+                /* cache */ true));
 
     // Strip the trailing "." from the absolute path to the current directory.
     final String basePath = new File(".").getAbsolutePath().replaceFirst("\\.$", "");

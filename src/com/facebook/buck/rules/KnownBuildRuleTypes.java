@@ -729,7 +729,8 @@ public class KnownBuildRuleTypes {
     builder.register(new JavaBinaryDescription(
         defaultJavaOptions,
         defaultJavacOptions,
-        defaultCxxPlatform));
+        defaultCxxPlatform,
+        javaConfig));
     builder.register(new JavaLibraryDescription(defaultJavacOptions));
     builder.register(
         new JavaTestDescription(

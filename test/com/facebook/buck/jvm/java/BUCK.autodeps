@@ -99,7 +99,9 @@
   },
   "testutil" : {
     "deps" : [
+      "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cxx:rules",
+      "//src/com/facebook/buck/jvm/java:config",
       "//src/com/facebook/buck/model:simple_types",
       "//src/com/facebook/buck/util:process_executor",
       "//test/com/facebook/buck/cli:FakeBuckConfig",

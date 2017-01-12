@@ -35,6 +35,8 @@ import java.util.Optional;
  * A java-specific "view" of BuckConfig.
  */
 public class JavaBuckConfig implements ConfigView<BuckConfig> {
+  private static final String SECTION = "java";
+
   private final BuckConfig delegate;
 
   // Interface for reflection-based ConfigView to instantiate this class.
@@ -72,18 +74,18 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   public JavacOptions getDefaultJavacOptions() {
     JavacOptions.Builder builder = JavacOptions.builderForUseInJavaBuckConfig();
 
-    Optional<String> sourceLevel = delegate.getValue("java", "source_level");
+    Optional<String> sourceLevel = delegate.getValue(SECTION, "source_level");
     if (sourceLevel.isPresent()) {
       builder.setSourceLevel(sourceLevel.get());
     }
 
-    Optional<String> targetLevel = delegate.getValue("java", "target_level");
+    Optional<String> targetLevel = delegate.getValue(SECTION, "target_level");
     if (targetLevel.isPresent()) {
       builder.setTargetLevel(targetLevel.get());
     }
 
     Optional<JavacOptions.JavacLocation> location = delegate.getEnum(
-        "java",
+        SECTION,
         "location",
         JavacOptions.JavacLocation.class);
     if (location.isPresent()) {
@@ -91,15 +93,15 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     }
 
     ImmutableList<String> extraArguments = delegate.getListWithoutComments(
-        "java",
+        SECTION,
         "extra_arguments");
 
     ImmutableList<String> safeAnnotationProcessors = delegate.getListWithoutComments(
-        "java",
+        SECTION,
         "safe_annotation_processors");
 
     Optional<AbstractJavacOptions.SpoolMode> spoolMode = delegate
-        .getEnum("java", "jar_spool_mode", AbstractJavacOptions.SpoolMode.class);
+        .getEnum(SECTION, "jar_spool_mode", AbstractJavacOptions.SpoolMode.class);
     if (spoolMode.isPresent()) {
       builder.setSpoolMode(spoolMode.get());
     }
@@ -107,18 +109,18 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     // This is just to make it possible to turn off dep-based rulekeys in case anything goes wrong
     // and can be removed when we're sure class usage tracking and dep-based keys for Java
     // work fine.
-    Optional<Boolean> trackClassUsage = delegate.getBoolean("java", "track_class_usage");
+    Optional<Boolean> trackClassUsage = delegate.getBoolean(SECTION, "track_class_usage");
     if (trackClassUsage.isPresent()) {
       builder.setTrackClassUsageNotDisabled(trackClassUsage.get());
     }
 
     Optional<JavacOptions.AbiGenerationMode> abiGenerationMode =
-        delegate.getEnum("java", "abi_generation_mode", JavacOptions.AbiGenerationMode.class);
+        delegate.getEnum(SECTION, "abi_generation_mode", JavacOptions.AbiGenerationMode.class);
     if (abiGenerationMode.isPresent()) {
       builder.setAbiGenerationMode(abiGenerationMode.get());
     }
 
-    ImmutableMap<String, String> allEntries = delegate.getEntriesForSection("java");
+    ImmutableMap<String, String> allEntries = delegate.getEntriesForSection(SECTION);
     ImmutableMap.Builder<String, String> bootclasspaths = ImmutableMap.builder();
     for (Map.Entry<String, String> entry : allEntries.entrySet()) {
       if (entry.getKey().startsWith("bootclasspath-")) {
@@ -138,7 +140,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   }
 
   public ImmutableSet<String> getSrcRoots() {
-    return ImmutableSet.copyOf(delegate.getListWithoutComments("java", "src_roots"));
+    return ImmutableSet.copyOf(delegate.getListWithoutComments(SECTION, "src_roots"));
   }
 
   public DefaultJavaPackageFinder createDefaultJavaPackageFinder() {
@@ -170,11 +172,15 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     return delegate.getValue("tools", "compiler_class_name");
   }
 
+  public boolean shouldCacheBinaries() {
+    return delegate.getBooleanValue(SECTION, "cache_binaries", true);
+  }
+
   public boolean getSkipCheckingMissingDeps() {
-    return delegate.getBooleanValue("java", "skip_checking_missing_deps", true);
+    return delegate.getBooleanValue(SECTION, "skip_checking_missing_deps", true);
   }
 
   public Optional<Integer> getDxThreadCount() {
-    return delegate.getInteger("java", "dx_threads");
+    return delegate.getInteger(SECTION, "dx_threads");
   }
 }

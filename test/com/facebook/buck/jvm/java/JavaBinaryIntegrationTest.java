@@ -67,6 +67,20 @@ public class JavaBinaryIntegrationTest {
   }
 
   @Test
+  public void disableCachingForBinaries() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "java_binary_with_blacklist", tmp);
+    workspace.setUp();
+    workspace.enableDirCache();
+    workspace.runBuckBuild("-c", "java.cache_binaries=false", "//:bin-no-blacklist")
+        .assertSuccess();
+    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckBuild("-c", "java.cache_binaries=false", "//:bin-no-blacklist")
+        .assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:bin-no-blacklist");
+  }
+
+  @Test
   public void fatJarWithExitCode() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "fat_jar", tmp);
