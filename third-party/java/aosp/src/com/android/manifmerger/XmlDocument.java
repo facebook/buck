@@ -141,7 +141,7 @@ public class XmlDocument {
         getRootNode().mergeWithLowerPriorityNode(
                 lowerPriorityDocument.getRootNode(), mergingReportBuilder);
 
-        addImplicitElements(lowerPriorityDocument, mergingReportBuilder);
+//        addImplicitElements(lowerPriorityDocument, mergingReportBuilder);
 
         // force re-parsing as new nodes may have appeared.
         return mergingReportBuilder.hasErrors()
