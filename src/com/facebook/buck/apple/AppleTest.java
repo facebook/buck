@@ -311,12 +311,12 @@ public class AppleTest
       if (this.snapshotReferenceImagesPath.isPresent()) {
         if (this.snapshotReferenceImagesPath.get().isLeft()) {
           snapshotReferenceImagesPath = Optional.of(
-              getResolver().getAbsolutePath(this.snapshotReferenceImagesPath.get().getLeft())
-                  .toString());
+              getResolver().getAbsolutePath(
+                  this.snapshotReferenceImagesPath.get().getLeft()).toString());
         } else if (this.snapshotReferenceImagesPath.get().isRight()) {
           snapshotReferenceImagesPath = Optional.of(
-              getProjectFilesystem().getRootPath().getFileSystem().toString() +
-              this.snapshotReferenceImagesPath.get().getRight());
+              getProjectFilesystem().getPathForRelativePath(
+                  this.snapshotReferenceImagesPath.get().getRight()).toString());
         }
       }
 
