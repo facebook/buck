@@ -51,8 +51,7 @@ public class DefaultDependencyFileRuleKeyFactory
         seed,
         fileHashLoader,
         pathResolver,
-        ruleFinder,
-        Long.MAX_VALUE);
+        ruleFinder);
     this.pathResolver = pathResolver;
   }
 
