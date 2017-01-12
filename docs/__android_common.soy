@@ -37,3 +37,16 @@
   {/param}
 {/call}
 {/template}
+
+/**
+ * @param type Either a library or a resource
+ */
+{template .manifest_arg}
+{call buck.arg}
+  {param name: 'manifest' /}
+  {param default: 'None' /}
+  {param desc}
+  An optional <a href="http://developer.android.com/guide/topics/manifest/manifest-intro.html">Android Manifest</a> for the {$type} to declare any permissions or intents it may need or want to handle.  May either be a file or a {call buck.android_manifest /} target.
+  {/param}
+{/call}
+{/template}
