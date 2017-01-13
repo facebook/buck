@@ -408,7 +408,7 @@ cd bucksamples/cross-platform-scale-2015-demo/
     <p><code>ios/main.m</code>: The main iOS file supported by other views, controllers and associated resources.</p>
   </li>
   <li>
-    <p><code>ios/BUCK</code>: This file is what makes Buck work. It defines all the build rules for your source code.</p>
+    <p><code>ios/BUCK</code>: The {call buck.build_file /} is what makes Buck work. It defines all the build rules for your source code. It can also include dependencies (via <code>deps</code>), which may also have their own build files.</p>
   </li>
   <li>
     <p><code>.buckconfig</code>: This file allows for various flag and alias settings for any project (even beyond iOS) within the root directory.</p>
@@ -503,10 +503,10 @@ cd bucksamples/cross-platform-scale-2015-demo/
 
 <ul>
   <li>
-    <p><code>android/java/com/facebook/buck/demo/Hello.java</code>: The main Java file supported by other associated resources (resources exist even up to the parent <code>android/</code> directory as well.).</p>
+    <p><code>android/java/com/facebook/buck/demo/Hello.java</code>: The main Java file supported by other associated resources.</p>
   </li>
   <li>
-    <p><code>android/java/com/facebook/buck/demo/BUCK</code>: This file is what makes Buck work. It defines all the build rules for your source code.</p>
+    <p><code>android/BUCK</code>: The {call buck.build_file /} is what makes Buck work. It defines all the build rules for your source code. It can also include dependencies (via <code>deps</code>), which may also have their own build files, as in the case of this app.</p>
   </li>
   <li>
     <p><code>.buckconfig</code>: This file allows for various flag and alias settings for any project (even beyond Android) within the root directory.</p>
