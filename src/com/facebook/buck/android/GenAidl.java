@@ -23,7 +23,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -58,7 +58,7 @@ import java.nio.file.Path;
  * )
  * </pre>
  */
-public class GenAidl extends AbstractBuildRule {
+public class GenAidl extends AbstractBuildRuleWithResolver {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID);
 

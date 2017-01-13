@@ -431,7 +431,7 @@ public class SourcePathResolverTest {
     assertEquals(memberPath, absolutePath.getMemberPath());
   }
 
-  private static class PathReferenceRule extends AbstractBuildRule {
+  private static class PathReferenceRule extends AbstractBuildRuleWithResolver {
 
     private final Path source;
 

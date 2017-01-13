@@ -17,7 +17,7 @@
 package com.facebook.buck.thrift;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -33,7 +33,7 @@ import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 
-public class SrcZip extends AbstractBuildRule {
+public class SrcZip extends AbstractBuildRuleWithResolver {
 
   @AddToRuleKey(stringify = true)
   private final Path sourceZip;

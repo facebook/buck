@@ -25,7 +25,7 @@ import com.facebook.buck.cxx.Preprocessor;
 import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -60,7 +60,7 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppendable {
+public class HaskellCompileRule extends AbstractBuildRuleWithResolver implements RuleKeyAppendable {
 
   @AddToRuleKey
   private final Tool compiler;

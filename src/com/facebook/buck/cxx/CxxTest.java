@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -54,7 +54,7 @@ import java.util.concurrent.Callable;
  * A no-op {@link BuildRule} which houses the logic to run and form the results for C/C++ tests.
  */
 public abstract class CxxTest
-    extends AbstractBuildRule
+    extends AbstractBuildRuleWithResolver
     implements TestRule, HasRuntimeDeps, BinaryBuildRule {
 
   @AddToRuleKey

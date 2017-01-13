@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -47,7 +47,7 @@ import java.nio.file.Path;
  * A {@link com.facebook.buck.rules.BuildRule} which builds an "ar" archive from input files
  * represented as {@link com.facebook.buck.rules.SourcePath}.
  */
-public class Archive extends AbstractBuildRule implements SupportsInputBasedRuleKey {
+public class Archive extends AbstractBuildRuleWithResolver implements SupportsInputBasedRuleKey {
 
   @AddToRuleKey
   private final Archiver archiver;

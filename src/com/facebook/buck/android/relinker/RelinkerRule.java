@@ -23,7 +23,7 @@ import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -58,7 +58,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
+class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideScheduleRule {
 
   @AddToRuleKey
   private final ImmutableSortedSet<SourcePath> symbolsNeededPaths;

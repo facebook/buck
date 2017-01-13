@@ -21,7 +21,7 @@ import com.facebook.buck.jvm.java.JarDirectoryStepHelper;
 import com.facebook.buck.jvm.java.JavacEventSinkToBuckEventBusBridge;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -51,7 +51,7 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
-public class UnzipAar extends AbstractBuildRule
+public class UnzipAar extends AbstractBuildRuleWithResolver
     implements InitializableFromDisk<UnzipAar.BuildOutput> {
 
   private static final String METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE = "R_DOT_JAVA_PACKAGE";

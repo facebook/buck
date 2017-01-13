@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -51,7 +51,7 @@ import java.util.zip.ZipEntry;
 /**
  * Rule for trimming unnecessary ids from R.java files.
  */
-class TrimUberRDotJava extends AbstractBuildRule {
+class TrimUberRDotJava extends AbstractBuildRuleWithResolver {
   private final AaptPackageResources aaptPackageResources;
   private final Collection<DexProducedFromJavaLibrary> allPreDexRules;
   private final Optional<String> keepResourcePattern;

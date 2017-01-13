@@ -17,7 +17,7 @@
 package com.facebook.buck.go;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -34,7 +34,7 @@ import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 
-public class GoTestMain extends AbstractBuildRule {
+public class GoTestMain extends AbstractBuildRuleWithResolver {
   @AddToRuleKey
   private final Tool testMainGen;
   @AddToRuleKey

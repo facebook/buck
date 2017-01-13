@@ -22,7 +22,7 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -57,7 +57,7 @@ import java.util.Optional;
 /**
  * Packages the resources using {@code aapt}.
  */
-public class AaptPackageResources extends AbstractBuildRule
+public class AaptPackageResources extends AbstractBuildRuleWithResolver
     implements InitializableFromDisk<BuildOutput> {
 
   public static final String RESOURCE_PACKAGE_HASH_KEY = "resource_package_hash";

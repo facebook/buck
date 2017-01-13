@@ -17,7 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.model.HasOutputName;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -78,7 +78,8 @@ import java.nio.file.Path;
  * of the file to be saved.
  */
 // TODO(shs96c): Extend to also allow exporting a rule.
-public class ExportFile extends AbstractBuildRule implements HasOutputName, HasRuntimeDeps {
+public class ExportFile extends AbstractBuildRuleWithResolver
+    implements HasOutputName, HasRuntimeDeps {
 
   private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey

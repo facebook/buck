@@ -24,7 +24,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.HasMavenCoordinates;
 import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -191,7 +191,8 @@ public class PomIntegrationTest {
     }
   }
 
-  private static class PublishedViaMaven extends AbstractBuildRule implements MavenPublishable {
+  private static class PublishedViaMaven extends AbstractBuildRuleWithResolver
+      implements MavenPublishable {
     @Nullable
     @AddToRuleKey
     private final Path pomTemplate;

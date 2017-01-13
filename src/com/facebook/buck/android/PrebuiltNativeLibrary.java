@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -45,7 +45,7 @@ import javax.annotation.Nullable;
  * </pre>
  */
 
-public class PrebuiltNativeLibrary extends AbstractBuildRule
+public class PrebuiltNativeLibrary extends AbstractBuildRuleWithResolver
     implements NativeLibraryBuildRule, AndroidPackageable {
 
   @AddToRuleKey

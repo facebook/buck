@@ -44,7 +44,7 @@ import java.util.Map;
 import java.util.logging.Level;
 
 public class SymlinkTree
-    extends AbstractBuildRule
+    extends AbstractBuildRuleWithResolver
     implements SupportsInputBasedRuleKey, RuleKeyAppendable {
 
   private final Path root;

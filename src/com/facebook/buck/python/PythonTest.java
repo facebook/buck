@@ -18,7 +18,7 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -56,7 +56,7 @@ import java.util.concurrent.Callable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class PythonTest
-    extends AbstractBuildRule
+    extends AbstractBuildRuleWithResolver
     implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule, BinaryBuildRule {
 
   @AddToRuleKey

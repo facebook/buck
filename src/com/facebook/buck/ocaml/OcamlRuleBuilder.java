@@ -28,7 +28,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -108,7 +108,7 @@ public class OcamlRuleBuilder {
     return BuildTarget.builder(target).addFlavors(OCAML_LINK_BINARY_FLAVOR).build();
   }
 
-  public static AbstractBuildRule createBuildRule(
+  public static AbstractBuildRuleWithResolver createBuildRule(
       OcamlBuckConfig ocamlBuckConfig,
       final BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -192,7 +192,7 @@ public class OcamlRuleBuilder {
         OcamlLibrary.class::isInstance);
   }
 
-  public static AbstractBuildRule createBulkBuildRule(
+  public static AbstractBuildRuleWithResolver createBulkBuildRule(
       OcamlBuckConfig ocamlBuckConfig,
       final BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -342,7 +342,7 @@ public class OcamlRuleBuilder {
     }
   }
 
-  public static AbstractBuildRule createFineGrainedBuildRule(
+  public static AbstractBuildRuleWithResolver createFineGrainedBuildRule(
       OcamlBuckConfig ocamlBuckConfig,
       final BuildRuleParams params,
       BuildRuleResolver resolver,

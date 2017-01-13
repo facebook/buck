@@ -28,7 +28,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
-public class FakeTestRule extends AbstractBuildRule implements TestRule {
+public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestRule {
 
   private final ImmutableSet<Label> labels;
   private final Optional<Path> pathToTestOutputDirectory;

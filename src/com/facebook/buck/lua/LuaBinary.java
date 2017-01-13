@@ -16,7 +16,7 @@
 
 package com.facebook.buck.lua;
 
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -35,7 +35,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
 public class LuaBinary
-    extends AbstractBuildRule
+    extends AbstractBuildRuleWithResolver
     implements BinaryBuildRule, HasRuntimeDeps {
 
   private final Path output;

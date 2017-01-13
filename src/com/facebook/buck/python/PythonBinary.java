@@ -18,7 +18,7 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
@@ -32,7 +32,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
 public abstract class PythonBinary
-    extends AbstractBuildRule
+    extends AbstractBuildRuleWithResolver
     implements BinaryBuildRule, HasRuntimeDeps {
 
   private final PythonPlatform pythonPlatform;

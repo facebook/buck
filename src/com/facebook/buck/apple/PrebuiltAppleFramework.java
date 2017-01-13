@@ -32,7 +32,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -64,7 +64,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class PrebuiltAppleFramework
-    extends AbstractBuildRule
+    extends AbstractBuildRuleWithResolver
     implements CxxPreprocessorDep, NativeLinkable, HasOutputName {
 
   @AddToRuleKey(stringify = true)

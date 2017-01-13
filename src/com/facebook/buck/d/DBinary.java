@@ -16,7 +16,7 @@
 
 package com.facebook.buck.d;
 
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildContext;
@@ -36,7 +36,7 @@ import java.nio.file.Path;
 /**
  * BinaryBuildRule implementation for D binaries.
  */
-public class DBinary extends AbstractBuildRule implements
+public class DBinary extends AbstractBuildRuleWithResolver implements
     BinaryBuildRule,
     HasRuntimeDeps {
 

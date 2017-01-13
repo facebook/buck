@@ -34,7 +34,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 
-public class WriteStringTemplateRule extends AbstractBuildRule {
+public class WriteStringTemplateRule extends AbstractBuildRuleWithResolver {
 
   @AddToRuleKey(stringify = true)
   private final Path output;

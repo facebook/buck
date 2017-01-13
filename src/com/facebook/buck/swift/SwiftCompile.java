@@ -28,7 +28,7 @@ import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -63,7 +63,7 @@ import java.util.Optional;
  * A build rule which compiles one or more Swift sources into a Swift module.
  */
 class SwiftCompile
-    extends AbstractBuildRule {
+    extends AbstractBuildRuleWithResolver {
 
   private static final String INCLUDE_FLAG = "-I";
 

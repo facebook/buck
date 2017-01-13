@@ -19,7 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -40,7 +40,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
-public class SceneKitAssets extends AbstractBuildRule {
+public class SceneKitAssets extends AbstractBuildRuleWithResolver {
 
   public static final Flavor FLAVOR = ImmutableFlavor.of("scenekit-assets");
 

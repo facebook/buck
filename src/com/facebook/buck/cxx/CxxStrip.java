@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -41,7 +41,7 @@ import javax.annotation.Nullable;
  * Controls how strip tool is invoked. To have better understanding please refer to `man strip`.
  * If you don't want stripping, you should depend on CxxLink directly.
  */
-public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRuleKey {
+public class CxxStrip extends AbstractBuildRuleWithResolver implements SupportsInputBasedRuleKey {
 
   /**
    * Used to identify this rule in the graph. This should be appended ONLY to build target

@@ -31,7 +31,7 @@ import javax.annotation.Nullable;
  * A fake {@link BuildRule} that implements {@link SupportsDependencyFileRuleKey}.
  */
 public class FakeDepFileBuildRule
-    extends AbstractBuildRule
+    extends AbstractBuildRuleWithResolver
     implements SupportsDependencyFileRuleKey {
 
   private Path outputPath;

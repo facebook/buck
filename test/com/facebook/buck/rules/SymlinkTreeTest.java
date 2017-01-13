@@ -148,7 +148,7 @@ public class SymlinkTreeTest {
     // link map.
     Path aFile = tmpDir.newFile();
     Files.write(aFile, "hello world".getBytes(Charsets.UTF_8));
-    AbstractBuildRule modifiedSymlinkTreeBuildRule = new SymlinkTree(
+    AbstractBuildRuleWithResolver modifiedSymlinkTreeBuildRule = new SymlinkTree(
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
         new SourcePathResolver(new SourcePathRuleFinder(
             new BuildRuleResolver(

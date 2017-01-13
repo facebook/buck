@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -48,7 +48,7 @@ import java.util.Optional;
  * A build rule which preprocesses and/or compiles a C/C++ source in a single step.
  */
 public class CxxPreprocessAndCompile
-    extends AbstractBuildRule
+    extends AbstractBuildRuleWithResolver
     implements RuleKeyAppendable, SupportsInputBasedRuleKey, SupportsDependencyFileRuleKey {
 
   @AddToRuleKey

@@ -17,7 +17,7 @@
 package com.facebook.buck.file;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -33,7 +33,7 @@ import com.google.common.io.ByteSource;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
-public class WriteFile extends AbstractBuildRule {
+public class WriteFile extends AbstractBuildRuleWithResolver {
 
   @AddToRuleKey
   private final byte[] fileContents;

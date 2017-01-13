@@ -34,7 +34,7 @@ import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -321,7 +321,7 @@ public class AppleTestDescription implements
                 Suppliers.ofInstance(ImmutableSortedSet.of(xctoolZipBuildRule)),
                 Suppliers.ofInstance(ImmutableSortedSet.of()));
         resolver.addToIndex(
-            new AbstractBuildRule(unzipXctoolParams, sourcePathResolver) {
+            new AbstractBuildRuleWithResolver(unzipXctoolParams, sourcePathResolver) {
               @Override
               public ImmutableList<Step> getBuildSteps(
                   BuildContext context,

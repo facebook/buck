@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -30,7 +30,7 @@ import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
-public class Keystore extends AbstractBuildRule {
+public class Keystore extends AbstractBuildRuleWithResolver {
 
   @AddToRuleKey
   private final SourcePath pathToStore;

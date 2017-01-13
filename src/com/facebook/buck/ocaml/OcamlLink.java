@@ -16,7 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -35,7 +35,7 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class OcamlLink extends AbstractBuildRule {
+public class OcamlLink extends AbstractBuildRuleWithResolver {
 
   @AddToRuleKey
   private final ImmutableList<SourcePath> inputs;

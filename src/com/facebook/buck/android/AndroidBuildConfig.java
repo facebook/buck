@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -129,7 +129,7 @@ import javax.annotation.Nullable;
  * exploit the "final-ness" of the {@code DEBUG} constant in any whole-program optimization that it
  * performs.
  */
-public class AndroidBuildConfig extends AbstractBuildRule {
+public class AndroidBuildConfig extends AbstractBuildRuleWithResolver {
 
   @AddToRuleKey
   private final String javaPackage;

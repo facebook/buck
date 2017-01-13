@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -55,7 +55,7 @@ import javax.annotation.Nullable;
  *   <li>The set of non-english {@code strings.xml} files identified by the resource filter.
  * </ul>
  */
-public class ResourcesFilter extends AbstractBuildRule
+public class ResourcesFilter extends AbstractBuildRuleWithResolver
     implements FilteredResourcesProvider, InitializableFromDisk<ResourcesFilter.BuildOutput> {
 
   private static final String RES_DIRECTORIES_KEY = "res_directories";

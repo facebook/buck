@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -46,7 +46,7 @@ import javax.annotation.Nullable;
  *
  * @see #create
  */
-public class MavenUberJar extends AbstractBuildRule implements MavenPublishable {
+public class MavenUberJar extends AbstractBuildRuleWithResolver implements MavenPublishable {
 
   private final Optional<String> mavenCoords;
   private final Optional<SourcePath> mavenPomTemplate;

@@ -898,7 +898,7 @@ public class CachingBuildEngineTest {
     @Test
     public void testExceptionMessagesAreInformative() throws Exception {
       AtomicReference<RuntimeException> throwable = new AtomicReference<>();
-      BuildRule rule = new AbstractBuildRule(new FakeBuildRuleParamsBuilder("//:rule")
+      BuildRule rule = new AbstractBuildRuleWithResolver(new FakeBuildRuleParamsBuilder("//:rule")
           .setProjectFilesystem(filesystem)
           .build(),
           pathResolver) {
@@ -2650,7 +2650,8 @@ public class CachingBuildEngineTest {
       result2.get();
     }
 
-    private class ControlledRule extends AbstractBuildRule implements OverrideScheduleRule {
+    private class ControlledRule extends AbstractBuildRuleWithResolver
+        implements OverrideScheduleRule {
 
       private final RuleScheduleInfo ruleScheduleInfo;
 
@@ -2985,7 +2986,7 @@ public class CachingBuildEngineTest {
     }
   }
 
-  private static class BuildableAbstractCachingBuildRule extends AbstractBuildRule
+  private static class BuildableAbstractCachingBuildRule extends AbstractBuildRuleWithResolver
       implements HasPostBuildSteps, InitializableFromDisk<Object> {
 
     private final Path pathToOutputFile;
@@ -3112,7 +3113,7 @@ public class CachingBuildEngineTest {
   }
 
   private abstract static class InputRuleKeyBuildRule
-      extends AbstractBuildRule
+      extends AbstractBuildRuleWithResolver
       implements SupportsInputBasedRuleKey {
     public InputRuleKeyBuildRule(
         BuildRuleParams buildRuleParams,
@@ -3122,7 +3123,7 @@ public class CachingBuildEngineTest {
   }
 
   private abstract static class DepFileBuildRule
-      extends AbstractBuildRule
+      extends AbstractBuildRuleWithResolver
       implements SupportsDependencyFileRuleKey {
     public DepFileBuildRule(
         BuildRuleParams buildRuleParams,
@@ -3135,7 +3136,7 @@ public class CachingBuildEngineTest {
     }
   }
 
-  private static class RuleWithSteps extends AbstractBuildRule {
+  private static class RuleWithSteps extends AbstractBuildRuleWithResolver {
 
     private final ImmutableList<Step> steps;
     @Nullable private final Path output;
@@ -3215,7 +3216,7 @@ public class CachingBuildEngineTest {
     }
   }
 
-  private static class EmptyBuildRule extends AbstractBuildRule {
+  private static class EmptyBuildRule extends AbstractBuildRuleWithResolver {
 
     public EmptyBuildRule(
         BuildRuleParams buildRuleParams,

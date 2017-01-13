@@ -25,7 +25,7 @@ import com.facebook.buck.jvm.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -53,7 +53,7 @@ import java.util.Set;
  * generate a corresponding {@code R.class} file. These are called "dummy" {@code R.java} files
  * since these are later merged together into a single {@code R.java} file by {@link AaptStep}.
  */
-public class DummyRDotJava extends AbstractBuildRule
+public class DummyRDotJava extends AbstractBuildRuleWithResolver
     implements SupportsInputBasedRuleKey, HasJavaAbi {
 
   private final SourcePathRuleFinder ruleFinder;

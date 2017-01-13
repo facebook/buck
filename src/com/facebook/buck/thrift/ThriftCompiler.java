@@ -16,7 +16,7 @@
 
 package com.facebook.buck.thrift;
 
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -37,7 +37,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-public class ThriftCompiler extends AbstractBuildRule {
+public class ThriftCompiler extends AbstractBuildRuleWithResolver {
 
   @AddToRuleKey
   private final Tool compiler;

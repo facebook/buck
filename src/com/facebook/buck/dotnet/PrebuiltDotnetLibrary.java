@@ -17,7 +17,7 @@
 package com.facebook.buck.dotnet;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -31,7 +31,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 
-public class PrebuiltDotnetLibrary extends AbstractBuildRule {
+public class PrebuiltDotnetLibrary extends AbstractBuildRuleWithResolver {
 
   private final Path output;
   private final SourcePath assembly;

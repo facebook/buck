@@ -63,6 +63,7 @@ java_immutables_library(
     'AbstractBuildContext.java',
     'AbstractBuildRule.java',
     'AbstractBuildRuleType.java',
+    'AbstractBuildRuleWithResolver.java',
     'AbstractDescriptionArg.java',
     'AbstractExopackageInfo.java',
     'AbstractExternalTestRunnerTestSpec.java',

@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -92,7 +92,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
     return new BuildTargetSourcePath(target);
   }
 
-  private static class UndefinedSymbolsFile extends AbstractBuildRule {
+  private static class UndefinedSymbolsFile extends AbstractBuildRuleWithResolver {
 
     @AddToRuleKey
     private final Tool nm;

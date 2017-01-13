@@ -21,7 +21,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -48,7 +48,7 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.List;
 
-public class CxxCompilationDatabase extends AbstractBuildRule
+public class CxxCompilationDatabase extends AbstractBuildRuleWithResolver
     implements HasPostBuildSteps, HasRuntimeDeps {
   private static final Logger LOG = Logger.get(CxxCompilationDatabase.class);
   public static final Flavor COMPILATION_DATABASE = ImmutableFlavor.of("compilation-database");

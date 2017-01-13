@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
  * operation, namely, that it cannot be cached. This rule must not be cached in order for its
  * dependencies to always be evaluated in different build strategies (in particular, top-down).
  */
-public final class DependencyAggregation extends AbstractBuildRule {
+public final class DependencyAggregation extends AbstractBuildRuleWithResolver {
 
   public DependencyAggregation(
       BuildRuleParams buildRuleParams,

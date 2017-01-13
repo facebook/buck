@@ -16,7 +16,7 @@
 
 package com.facebook.buck.lua;
 
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -41,7 +41,7 @@ import java.util.Optional;
 /**
  * Builds a Lua executable into a standalone package using a given packager tool.
  */
-public class LuaStandaloneBinary extends AbstractBuildRule {
+public class LuaStandaloneBinary extends AbstractBuildRuleWithResolver {
 
   @AddToRuleKey
   private final Tool builder;

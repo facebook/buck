@@ -21,7 +21,7 @@ import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -49,7 +49,7 @@ import java.util.List;
  * Buildable that produces a GWT application as a WAR file, which is a zip of the outputs produced
  * by the GWT compiler.
  */
-public class GwtBinary extends AbstractBuildRule {
+public class GwtBinary extends AbstractBuildRuleWithResolver {
 
   /**
    * Valid values for the GWT Compiler's {@code -style} flag.

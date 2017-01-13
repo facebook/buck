@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.PreDexMerge.BuildOutput;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -81,7 +81,8 @@ import javax.annotation.Nullable;
  * The differences in the splitting logic are too significant to make it
  * worth merging them.
  */
-public class PreDexMerge extends AbstractBuildRule implements InitializableFromDisk<BuildOutput> {
+public class PreDexMerge extends AbstractBuildRuleWithResolver
+    implements InitializableFromDisk<BuildOutput> {
 
   /** Options to use with {@link DxStep} when merging pre-dexed files. */
   private static final EnumSet<DxStep.Option> DX_MERGE_OPTIONS = EnumSet.of(

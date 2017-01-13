@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableSortedSet;
  * and executable tool.
  */
 public abstract class BinaryWrapperRule
-    extends AbstractBuildRule
+    extends AbstractBuildRuleWithResolver
     implements BinaryBuildRule, HasRuntimeDeps {
 
   private final SourcePathRuleFinder ruleFinder;

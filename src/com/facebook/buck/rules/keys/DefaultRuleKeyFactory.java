@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.hashing.FileHashLoader;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
@@ -93,10 +93,10 @@ public class DefaultRuleKeyFactory
   }
 
   private void addDepsToRuleKey(RuleKeyObjectSink sink, BuildRule buildRule) {
-    if (buildRule instanceof AbstractBuildRule) {
+    if (buildRule instanceof AbstractBuildRuleWithResolver) {
       // TODO(marcinkosiba): We really need to get rid of declared/extra deps in rules. Instead
       // rules should explicitly take the needed sub-sets of deps as constructor args.
-      AbstractBuildRule abstractBuildRule = (AbstractBuildRule) buildRule;
+      AbstractBuildRuleWithResolver abstractBuildRule = (AbstractBuildRuleWithResolver) buildRule;
       sink
           .setReflectively("buck.extraDeps", abstractBuildRule.deprecatedGetExtraDeps())
           .setReflectively("buck.declaredDeps", abstractBuildRule.getDeclaredDeps());

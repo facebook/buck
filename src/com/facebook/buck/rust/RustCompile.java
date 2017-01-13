@@ -18,7 +18,7 @@ package com.facebook.buck.rust;
 
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -60,7 +60,7 @@ import java.util.Optional;
  * #include in C/C++). If the crate also has dependencies on other crates, then those .rlib files
  * must also be passed to rustc for the interface details, and to be linked if its a binary crate.
  */
-abstract class RustCompile extends AbstractBuildRule {
+abstract class RustCompile extends AbstractBuildRuleWithResolver {
   @AddToRuleKey
   private final Supplier<Tool> compiler;
   @AddToRuleKey
