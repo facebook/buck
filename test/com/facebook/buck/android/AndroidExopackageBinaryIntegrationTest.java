@@ -30,8 +30,6 @@ import com.facebook.buck.testutil.integration.ZipInspector;
 import com.google.common.collect.Lists;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -51,12 +49,6 @@ public class AndroidExopackageBinaryIntegrationTest {
   private static final String DEX_AND_NATIVE_EXOPACKAGE_TARGET =
       "//apps/multidex:app-dex-native-exo";
 
-  @ClassRule
-  public static TemporaryPaths projectFolderWithPrebuiltTargets =
-      new TemporaryPaths();
-
-  private static ProjectWorkspace workspaceWithPrebuiltTargets;
-
   @Rule
   public TemporaryPaths tmpFolder = new TemporaryPaths();
 
@@ -64,33 +56,25 @@ public class AndroidExopackageBinaryIntegrationTest {
 
   private ProjectFilesystem filesystem;
 
-  @BeforeClass
-  public static void setUpOnce() throws IOException {
+  @Before
+  public void setUp() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
-    workspaceWithPrebuiltTargets = TestDataHelper.createProjectWorkspaceForScenario(
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(
         new AndroidBinaryIntegrationTest(),
         "android_project",
-        projectFolderWithPrebuiltTargets);
-    workspaceWithPrebuiltTargets.setUp();
+        tmpFolder);
+    workspace.setUp();
 
     Properties properties = System.getProperties();
     properties.setProperty("buck.native_exopackage_fake_path",
         Paths.get("assets/android/native-exopackage-fakes.apk").toAbsolutePath().toString());
 
-    workspaceWithPrebuiltTargets.runBuckBuild(
+    workspace.runBuckBuild(
         DEX_EXOPACKAGE_TARGET,
         NATIVE_EXOPACKAGE_TARGET,
         DEX_AND_NATIVE_EXOPACKAGE_TARGET)
         .assertSuccess();
-  }
-
-  @Before
-  public void setUp() throws IOException {
-    workspace = ProjectWorkspace.cloneExistingWorkspaceIntoNewFolder(
-        workspaceWithPrebuiltTargets,
-        tmpFolder);
-    workspace.setUp();
     filesystem = new ProjectFilesystem(workspace.getDestPath());
   }
 

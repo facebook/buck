@@ -62,8 +62,6 @@ import org.hamcrest.Matchers;
 import org.hamcrest.collection.IsIn;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -88,11 +86,6 @@ import java.util.zip.ZipInputStream;
 
 public class AndroidBinaryIntegrationTest {
 
-  @ClassRule
-  public static TemporaryPaths projectFolderWithPrebuiltTargets = new TemporaryPaths();
-
-  private static ProjectWorkspace workspaceWithPrebuiltTargets;
-
   @Rule
   public TemporaryPaths tmpFolder = new TemporaryPaths();
 
@@ -103,24 +96,16 @@ public class AndroidBinaryIntegrationTest {
   private static final String SIMPLE_TARGET = "//apps/multidex:app";
   private static final String RAW_DEX_TARGET = "//apps/multidex:app-art";
 
-  @BeforeClass
-  public static void setUpOnce() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
-    workspaceWithPrebuiltTargets = TestDataHelper.createProjectWorkspaceForScenario(
-        new AndroidBinaryIntegrationTest(),
-        "android_project",
-        projectFolderWithPrebuiltTargets);
-    workspaceWithPrebuiltTargets.setUp();
-    workspaceWithPrebuiltTargets.runBuckBuild(SIMPLE_TARGET).assertSuccess();
-  }
-
   @Before
   public void setUp() throws IOException {
-    workspace = ProjectWorkspace.cloneExistingWorkspaceIntoNewFolder(
-        workspaceWithPrebuiltTargets,
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        new AndroidBinaryIntegrationTest(),
+        "android_project",
         tmpFolder);
     workspace.setUp();
+    workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
     filesystem = new ProjectFilesystem(workspace.getDestPath());
   }
 
