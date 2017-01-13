@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.common.ResourceValidator.validateResources;
 
-import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -36,6 +35,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -46,9 +46,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Optional;
 
 public class JavaLibraryDescription implements
@@ -93,7 +93,7 @@ public class JavaLibraryDescription implements
 
     ImmutableSortedSet<Flavor> flavors = target.getFlavors();
 
-    if (flavors.contains(Javadoc.DOC_JAR)) {
+    if (flavors.contains(Javadoc.DOC_JAR) || flavors.contains(JavaLibrary.SRC_JAR)) {
       BuildTarget unflavored = BuildTarget.of(target.getUnflavoredBuildTarget());
       BuildRule baseLibrary = resolver.requireRule(unflavored);
 
@@ -101,38 +101,63 @@ public class JavaLibraryDescription implements
           JarShape.MAVEN : JarShape.SINGLE;
 
       JarShape.Summary summary = shape.gatherDeps(baseLibrary);
-      ImmutableSet<SourcePath> sources = summary.getPackagedRules().stream()
+
+      ImmutableSortedSet<SourcePath> sources = summary.getPackagedRules().stream()
           .filter(HasSources.class::isInstance)
-          .map(rule -> ((HasSources) rule).getSources())
-          .flatMap(Collection::stream)
-          .collect(MoreCollectors.toImmutableSet());
+          .flatMap(dep -> ((HasSources) dep).getSources().stream())
+          .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
 
-      // In theory, the only deps we need are the ones that contribute to the sourcepaths. However,
-      // javadoc wants to have classes being documented have all their deps be available somewhere.
-      // Ideally, we'd not build everything, but then we're not able to document any classes that
-      // rely on auto-generated classes, such as those created by the Immutables library. Oh well.
-      // Might as well add them as deps. *sigh*
-      ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
-      // Sourcepath deps
-      deps.addAll(ruleFinder.filterBuildRuleInputs(sources));
-      // Classpath deps
-      deps.add(baseLibrary);
-      deps.addAll(
-          summary.getClasspath().stream()
-              .filter(rule -> HasClasspathEntries.class.isAssignableFrom(rule.getClass()))
-              .flatMap(rule -> rule.getTransitiveClasspathDeps().stream())
-              .iterator());
-      BuildRuleParams emptyParams = params.copyWithDeps(
-          Suppliers.ofInstance(deps.build()),
-          Suppliers.ofInstance(ImmutableSortedSet.of()));
+      if (flavors.contains(Javadoc.DOC_JAR)) {
+        // In theory, the only deps we need are the ones that contribute to the sourcepaths.
+        // However, javadoc wants to have classes being documented have all their deps be available
+        // somewhere. Ideally, we'd not build everything, but then we're not able to document any
+        // classes that rely on auto-generated classes, such as those created by the Immutables
+        // library. Oh well. Might as well add them as deps. *sigh*
+        ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
+        // Sourcepath deps
+        deps.addAll(ruleFinder.filterBuildRuleInputs(sources));
+        // Classpath deps
+        deps.add(baseLibrary);
+        deps.addAll(
+            summary.getClasspath().stream()
+                .filter(rule -> HasClasspathEntries.class.isAssignableFrom(rule.getClass()))
+                .flatMap(rule -> rule.getTransitiveClasspathDeps().stream())
+                .iterator());
+        BuildRuleParams emptyParams = params.copyWithDeps(
+            Suppliers.ofInstance(deps.build()),
+            Suppliers.ofInstance(ImmutableSortedSet.of()));
 
-      return new Javadoc(
-          emptyParams,
-          pathResolver,
-          args.mavenCoords,
-          args.mavenPomTemplate,
-          summary.getMavenDeps(),
-          sources);
+        return new Javadoc(
+            emptyParams,
+            pathResolver,
+            args.mavenCoords,
+            args.mavenPomTemplate,
+            summary.getMavenDeps(),
+            sources);
+      } else if (flavors.contains(JavaLibrary.SRC_JAR)) {
+        ImmutableSortedSet<BuildRule> extraDeps;
+        if (args.mavenPomTemplate.isPresent()) {
+          extraDeps = ImmutableSortedSet.copyOf(
+              ruleFinder.filterBuildRuleInputs(args.mavenPomTemplate.get()));
+        } else {
+          extraDeps = ImmutableSortedSet.of();
+        }
+
+        BuildRuleParams emptyParams = params.copyWithDeps(
+            Suppliers.ofInstance(
+                ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(sources))),
+            Suppliers.ofInstance(extraDeps));
+
+        return new JavaSourceJar(
+            emptyParams,
+            pathResolver,
+            args.mavenCoords,
+            args.mavenPomTemplate,
+            summary.getMavenDeps(),
+            sources);
+      } else {
+        throw new HumanReadableException("Someone added a new type to JavaLibrary. %s", flavors);
+      }
     }
 
     if (flavors.contains(CalculateAbi.FLAVOR)) {
@@ -154,27 +179,6 @@ public class JavaLibraryDescription implements
       // without the maven flavor to prevent output-path conflict
       params = params.copyWithBuildTarget(
           params.getBuildTarget().withoutFlavors(ImmutableSet.of(JavaLibrary.MAVEN_JAR)));
-    }
-
-    if (flavors.contains(JavaLibrary.SRC_JAR)) {
-      args.mavenCoords = args.mavenCoords.map(input -> AetherUtil.addClassifier(
-          input,
-          AetherUtil.CLASSIFIER_SOURCES));
-
-      if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
-        return new JavaSourceJar(
-            params,
-            pathResolver,
-            args.srcs,
-            args.mavenCoords);
-      } else {
-        return MavenUberJar.SourceJar.create(
-            Preconditions.checkNotNull(paramsWithMavenFlavor),
-            pathResolver,
-            args.srcs,
-            args.mavenCoords,
-            args.mavenPomTemplate);
-      }
     }
 
     JavacOptions javacOptions = JavacOptionsFactory.create(
