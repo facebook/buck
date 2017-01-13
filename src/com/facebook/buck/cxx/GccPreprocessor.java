@@ -21,6 +21,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.MoreIterables;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
@@ -45,7 +46,7 @@ public class GccPreprocessor extends AbstractPreprocessor {
 
   @Override
   public boolean supportsPrecompiledHeaders() {
-    return false;
+    return true;
   }
 
   @Override
@@ -72,7 +73,13 @@ public class GccPreprocessor extends AbstractPreprocessor {
 
   @Override
   public Iterable<String> precompiledHeaderArgs(Path pchOutputPath) {
-    throw new UnsupportedOperationException("precompiled header not supported by " + getClass());
+    // Tell GCC "-include file.h"; it'll automatically find the already-precompiled "file.h.gch".
+    String pchFilename = pchOutputPath.toString();
+    Preconditions.checkArgument(
+        pchFilename.endsWith(".h.gch"),
+        "Expected a precompiled '.gch' file, got: " + pchFilename);
+    String hFilename = pchFilename.substring(0, pchFilename.length() - 4);
+    return ImmutableList.of("-include", hFilename);
   }
 
 }

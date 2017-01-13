@@ -84,8 +84,8 @@ public class PrecompiledHeaderFeatureTest {
           // supported
           {CxxToolProvider.Type.CLANG, true, true},
           {CxxToolProvider.Type.CLANG, false, false},
-          // not yet supported; expect false in both cases.
-          {CxxToolProvider.Type.GCC, true, false},
+          // supported
+          {CxxToolProvider.Type.GCC, true, true},
           {CxxToolProvider.Type.GCC, false, false},
           // TODO(elsteveogrande): add WINDOWS
       });
