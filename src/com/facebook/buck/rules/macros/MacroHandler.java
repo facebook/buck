@@ -85,7 +85,7 @@ public class MacroHandler {
         target,
         cellNames,
         resolver);
-    return MACRO_FINDER.replace(replacers, blob);
+    return MACRO_FINDER.replace(replacers, blob, true);
   }
 
   public ImmutableMap<String, MacroReplacer> getMacroReplacers(

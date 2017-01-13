@@ -129,7 +129,8 @@ public class PrebuiltCxxLibraryDescription implements
     try {
       return MACRO_FINDER.replace(
           handler.getMacroReplacers(target, cellNames, ruleResolver),
-          arg);
+          arg,
+          true);
     } catch (MacroException e) {
       throw new HumanReadableException("%s: %s", target, e.getMessage());
     }

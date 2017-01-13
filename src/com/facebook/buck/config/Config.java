@@ -112,7 +112,8 @@ public class Config {
               "config", macroReplacer,
               "exe", getMacroPreserver("exe"),
               "location", getMacroPreserver("location")),
-          input);
+          input,
+          true);
     } catch (MacroException e) {
       throw new HumanReadableException(e, e.getMessage());
     }

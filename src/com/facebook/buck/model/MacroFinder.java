@@ -54,7 +54,18 @@ public class MacroFinder {
     return Optional.empty();
   }
 
-  public String replace(ImmutableMap<String, MacroReplacer> replacers, String blob)
+  /**
+   * Expand macros embedded in a string.
+   *
+   * @param replacers a map of macro names to {@link MacroReplacer} objects used to expand them.
+   * @param blob the input string containing macros to be expanded
+   * @param resolveEscaping whether to drop characters used to escape literal uses of `$(...)`
+   * @return a copy of the input string with all macros expanded
+   */
+  public String replace(
+      ImmutableMap<String, MacroReplacer> replacers,
+      String blob,
+      boolean resolveEscaping)
       throws MacroException {
 
     StringBuilder expanded = new StringBuilder();
@@ -69,7 +80,10 @@ public class MacroFinder {
 
       // If the macro is escaped, add the macro text (but omit the escaping backslash)
       if (matchResult.isEscaped()) {
-        expanded.append(blob.substring(matchResult.getStartIndex() + 1, matchResult.getEndIndex()));
+        expanded.append(
+            blob.substring(
+                matchResult.getStartIndex() + (resolveEscaping ? 1 : 0),
+                matchResult.getEndIndex()));
       } else {
         // Call the relevant expander and add the expanded value to the string.
         MacroReplacer replacer = replacers.get(matchResult.getMacroType());

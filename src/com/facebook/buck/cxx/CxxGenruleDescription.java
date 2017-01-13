@@ -22,6 +22,9 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.MacroException;
+import com.facebook.buck.model.MacroFinder;
+import com.facebook.buck.model.MacroReplacer;
+import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -46,7 +49,10 @@ import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.StringExpander;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.util.Escaper;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.versions.TargetNodeTranslator;
+import com.facebook.buck.versions.TargetTranslatorOverridingDescription;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
@@ -69,7 +75,10 @@ public class CxxGenruleDescription
     extends AbstractGenruleDescription<AbstractGenruleDescription.Arg>
     implements
         Flavored,
-        VersionPropagator<AbstractGenruleDescription.Arg> {
+        VersionPropagator<AbstractGenruleDescription.Arg>,
+        TargetTranslatorOverridingDescription<AbstractGenruleDescription.Arg> {
+
+  private static final MacroFinder MACRO_FINDER = new MacroFinder();
 
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
@@ -261,6 +270,88 @@ public class CxxGenruleDescription
         super.findDepsForTargetFromConstructorArgs(buildTarget, cellRoots, constructorArg));
 
     return targets.build();
+  }
+
+  private ImmutableMap<String, MacroReplacer> getMacroReplacersForTargetTranslation(
+      BuildTarget target,
+      CellPathResolver cellNames,
+      TargetNodeTranslator translator) {
+    BuildTargetPatternParser<?> buildTargetPatternParser =
+        BuildTargetPatternParser.forBaseName(target.getBaseName());
+
+    ImmutableMap.Builder<String, MacroReplacer> macros = ImmutableMap.builder();
+
+    ImmutableList.of("exe", "location", "location-platform", "cppflags", "cxxppflags", "solibs")
+        .forEach(name ->
+            macros.put(
+                name,
+                new TargetTranslatorMacroReplacer(
+                    new AsIsMacroReplacer(name),
+                    Filter.NONE,
+                    buildTargetPatternParser,
+                    cellNames,
+                    translator)));
+
+    ImmutableList.of("platform-name", "cc", "cflags", "cxx", "cxxflags", "ld")
+        .forEach(name -> macros.put(name, new AsIsMacroReplacer(name)));
+
+    for (Linker.LinkableDepType style : Linker.LinkableDepType.values()) {
+      for (Filter filter : Filter.values()) {
+        String name =
+            String.format(
+                "ldflags-%s%s",
+                CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, style.toString()),
+                filter == Filter.PARAM ? "-filter" : "");
+        macros.put(
+            name,
+            new TargetTranslatorMacroReplacer(
+                new AsIsMacroReplacer(name),
+                filter,
+                buildTargetPatternParser,
+                cellNames,
+                translator));
+      }
+    }
+    return macros.build();
+  }
+
+  private String translateCmd(
+      BuildTarget root,
+      CellPathResolver cellNames,
+      TargetNodeTranslator translator,
+      String field,
+      String cmd) {
+    try {
+      return MACRO_FINDER.replace(
+          getMacroReplacersForTargetTranslation(root, cellNames, translator),
+          cmd,
+          false);
+    } catch (MacroException e) {
+      throw new HumanReadableException(
+          e,
+          "%s: \"%s\": error expanding macros: %s",
+          root,
+          field,
+          e.getMessage());
+    }
+  }
+
+  @Override
+  public Optional<Arg> translateConstructorArg(
+      BuildTarget target,
+      CellPathResolver cellNames,
+      TargetNodeTranslator translator,
+      Arg constructorArg) {
+    Arg newConstructorArg = createUnpopulatedConstructorArg();
+    translator.translateConstructorArg(constructorArg, newConstructorArg);
+    newConstructorArg.cmd =
+        newConstructorArg.cmd.map(c -> translateCmd(target, cellNames, translator, "cmd", c));
+    newConstructorArg.bash =
+        newConstructorArg.bash.map(c -> translateCmd(target, cellNames, translator, "bash", c));
+    newConstructorArg.cmdExe =
+        newConstructorArg.cmdExe.map(
+            c -> translateCmd(target, cellNames, translator, "cmd_exe", c));
+    return Optional.of(newConstructorArg);
   }
 
   /**
@@ -790,6 +881,67 @@ public class CxxGenruleDescription
         ImmutableList<BuildTarget> targets) {
       this.filter = filter;
       this.targets = targets;
+    }
+
+  }
+
+  private static class AsIsMacroReplacer implements MacroReplacer {
+
+    private final String name;
+
+    private AsIsMacroReplacer(String name) {
+      this.name = name;
+    }
+
+    @Override
+    public String replace(ImmutableList<String> args) throws MacroException {
+      return String.format("$(%s %s)", name, Joiner.on(' ').join(args));
+    }
+
+  }
+
+  private static class TargetTranslatorMacroReplacer implements MacroReplacer {
+
+    private final AsIsMacroReplacer asIsMacroReplacer;
+    private final Filter filter;
+    private final BuildTargetPatternParser<?> buildTargetBuildTargetParser;
+    private final CellPathResolver cellNames;
+    private final TargetNodeTranslator translator;
+
+    private TargetTranslatorMacroReplacer(
+        AsIsMacroReplacer asIsMacroReplacer,
+        Filter filter,
+        BuildTargetPatternParser<?> buildTargetBuildTargetParser,
+        CellPathResolver cellNames, TargetNodeTranslator translator) {
+      this.asIsMacroReplacer = asIsMacroReplacer;
+      this.filter = filter;
+      this.buildTargetBuildTargetParser = buildTargetBuildTargetParser;
+      this.cellNames = cellNames;
+      this.translator = translator;
+    }
+
+    private BuildTarget parse(String input) throws MacroException {
+      try {
+        return BuildTargetParser.INSTANCE.parse(input, buildTargetBuildTargetParser, cellNames);
+      } catch (BuildTargetParseException e) {
+        throw new MacroException(e.getMessage(), e);
+      }
+    }
+
+    @Override
+    public String replace(ImmutableList<String> args) throws MacroException {
+      ImmutableList.Builder<String> strings = ImmutableList.builder();
+
+      if (filter == Filter.PARAM) {
+        strings.add(args.get(0));
+      }
+
+      for (String arg : args.subList(filter == Filter.PARAM ? 1 : 0, args.size())) {
+        BuildTarget target = parse(arg);
+        strings.add(translator.translate(target).orElse(target).getFullyQualifiedName());
+      }
+
+      return asIsMacroReplacer.replace(strings.build());
     }
 
   }
