@@ -11,8 +11,8 @@ class DiagnosticsFileObject(object):
         self.diagnostics = diagnostics
 
     def write(self, value):
-        self.diagnostics.add(Diagnostic(
-            message=value, level='warning', source='mercurial'))
+        self.diagnostics.append(Diagnostic(
+            message=value, level='warning', source='mercurial', exception=None))
 
     def flush(self):
         pass
