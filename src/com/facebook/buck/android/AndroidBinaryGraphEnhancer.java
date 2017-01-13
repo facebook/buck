@@ -347,7 +347,6 @@ public class AndroidBinaryGraphEnhancer {
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         paramsForAaptPackageResources,
-        pathResolver,
         manifest,
         filteredResourcesProvider,
         getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),

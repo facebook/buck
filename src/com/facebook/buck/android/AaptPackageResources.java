@@ -22,7 +22,7 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -32,7 +32,6 @@ import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RecordFileSha1Step;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -57,7 +56,7 @@ import java.util.Optional;
 /**
  * Packages the resources using {@code aapt}.
  */
-public class AaptPackageResources extends AbstractBuildRuleWithResolver
+public class AaptPackageResources extends AbstractBuildRule
     implements InitializableFromDisk<BuildOutput> {
 
   public static final String RESOURCE_PACKAGE_HASH_KEY = "resource_package_hash";
@@ -88,7 +87,6 @@ public class AaptPackageResources extends AbstractBuildRuleWithResolver
 
   AaptPackageResources(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       SourcePath manifest,
       FilteredResourcesProvider filteredResourcesProvider,
       ImmutableList<HasAndroidResourceDeps> resourceDeps,
@@ -100,7 +98,7 @@ public class AaptPackageResources extends AbstractBuildRuleWithResolver
       boolean includesVectorDrawables,
       EnumSet<RType> bannedDuplicateResourceTypes,
       ManifestEntries manifestEntries) {
-    super(params, resolver);
+    super(params);
     this.manifest = manifest;
     this.filteredResourcesProvider = filteredResourcesProvider;
     this.resourceDeps = resourceDeps;

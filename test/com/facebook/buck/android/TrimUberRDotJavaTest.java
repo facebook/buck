@@ -98,7 +98,6 @@ public class TrimUberRDotJavaTest {
         null,
         null,
         null,
-        null,
         false,
         false,
         /* includesVectorDrawables */ false,

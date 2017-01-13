@@ -20,14 +20,9 @@ import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -43,11 +38,6 @@ public class AaptPackageResourcesTest {
 
   @Test
   public void initializeFromDiskDoesNotAccessOutputFromDeps() throws IOException {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
-
     FilteredResourcesProvider resourcesProvider =
         new FilteredResourcesProvider() {
           @Override
@@ -66,7 +56,6 @@ public class AaptPackageResourcesTest {
     AaptPackageResources aaptPackageResources =
         new AaptPackageResources(
             params,
-            pathResolver,
             /* manifest */ new FakeSourcePath("facebook/base/AndroidManifest.xml"),
             resourcesProvider,
             ImmutableList.of(),
