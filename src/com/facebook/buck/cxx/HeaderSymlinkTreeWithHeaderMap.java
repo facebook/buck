@@ -55,8 +55,6 @@ public class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
     return headerMapPath;
   }
 
-  // We generate the symlink tree and the header map using post-build steps for reasons explained in
-  // the superclass.
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
