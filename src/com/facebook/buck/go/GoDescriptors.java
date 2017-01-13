@@ -389,10 +389,10 @@ abstract class GoDescriptors {
 
     params = params.appendExtraDeps(ruleFinder.filterBuildRuleInputs(treeMap.values()));
 
-    Path root = params.getBuildTarget().getCellPath().resolve(BuildTargets.getScratchPath(
+    Path root = BuildTargets.getScratchPath(
         params.getProjectFilesystem(),
         params.getBuildTarget(),
-        "__%s__tree"));
+        "__%s__tree");
 
     return new SymlinkTree(params, pathResolver, root, treeMap);
   }

@@ -224,7 +224,7 @@ public class CxxPreprocessablesTest {
         .setDeclaredDeps(ImmutableSortedSet.of(dep))
         .setProjectFilesystem(filesystem)
         .build();
-    Path root = filesystem.resolve("root");
+    Path root = Paths.get("root");
 
     // Setup a simple genrule we can wrap in a BuildTargetSourcePath to model a input source
     // that is built by another rule.

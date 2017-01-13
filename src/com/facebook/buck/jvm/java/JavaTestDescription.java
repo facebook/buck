@@ -257,7 +257,7 @@ public class JavaTestDescription implements
                   Suppliers.ofInstance(ImmutableSortedSet.of()),
                   Suppliers.ofInstance(ImmutableSortedSet.of())),
               pathResolver,
-              nativeLibsSymlinkTree.getRoot(),
+              nativeLibsSymlinkTree.getPathToOutput(),
               filteredLinks.build());
         }
 

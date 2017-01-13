@@ -171,8 +171,8 @@ public class PythonBinaryDescription implements
 
     BuildTarget linkTreeTarget =
         params.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("link-tree"));
-    Path linkTreeRoot = params.getProjectFilesystem().resolve(
-        BuildTargets.getGenPath(params.getProjectFilesystem(), linkTreeTarget, "%s"));
+    Path linkTreeRoot =
+        BuildTargets.getGenPath(params.getProjectFilesystem(), linkTreeTarget, "%s");
     SymlinkTree linkTree =
         resolver.addToIndex(
             new SymlinkTree(

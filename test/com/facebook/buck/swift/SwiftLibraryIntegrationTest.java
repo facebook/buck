@@ -62,8 +62,8 @@ public class SwiftLibraryIntegrationTest {
     // The output path used by the buildable for the link tree.
     BuildTarget symlinkTarget = BuildTargetFactory.newInstance("//:symlink");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem(tmpDir.getRoot());
-    Path symlinkTreeRoot = projectFilesystem.resolve(
-        BuildTargets.getGenPath(projectFilesystem, symlinkTarget, "%s/symlink-tree-root"));
+    Path symlinkTreeRoot =
+        BuildTargets.getGenPath(projectFilesystem, symlinkTarget, "%s/symlink-tree-root");
 
     // Setup the map representing the link tree.
     ImmutableMap<Path, SourcePath> links = ImmutableMap.of();

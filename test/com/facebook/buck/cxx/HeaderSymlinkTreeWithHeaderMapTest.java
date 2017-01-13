@@ -98,8 +98,8 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
             MorePaths.relativize(tmpDir.getRoot(), file2)));
 
     // The output path used by the buildable for the link tree.
-    symlinkTreeRoot = projectFilesystem.resolve(
-        BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root"));
+    symlinkTreeRoot =
+        BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root");
 
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule = new HeaderSymlinkTreeWithHeaderMap(
@@ -136,11 +136,11 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
                 headerMapPath,
                 ImmutableMap.of(
                     Paths.get("file"),
-                    filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
+                    filesystem.getBuckPaths().getBuckOut()
                         .relativize(symlinkTreeRoot)
                         .resolve("file"),
                     Paths.get("directory/then/file"),
-                    filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
+                    filesystem.getBuckPaths().getBuckOut()
                         .relativize(symlinkTreeRoot)
                         .resolve("directory/then/file"))));
     ImmutableList<Step> actualBuildSteps =

@@ -254,18 +254,16 @@ public class CxxDescriptionEnhancer {
       BuildTarget target,
       Flavor platform,
       HeaderVisibility headerVisibility) {
-    return target.getCellPath().resolve(
-        BuildTargets.getGenPath(
-            filesystem,
-            createHeaderSymlinkTreeTarget(target, platform, headerVisibility),
-            "%s"));
+    return BuildTargets.getGenPath(
+        filesystem,
+        createHeaderSymlinkTreeTarget(target, platform, headerVisibility),
+        "%s");
   }
 
   public static Path getSandboxSymlinkTreePath(
       ProjectFilesystem filesystem,
       BuildTarget target) {
-    return target.getCellPath().resolve(
-        BuildTargets.getGenPath(filesystem, target, "%s"));
+    return BuildTargets.getGenPath(filesystem, target, "%s");
   }
 
   public static Flavor getHeaderSymlinkTreeFlavor(HeaderVisibility headerVisibility) {
@@ -1279,10 +1277,10 @@ public class CxxDescriptionEnhancer {
       ProjectFilesystem filesystem,
       BuildTarget target,
       Flavor platform) {
-    return target.getCellPath().resolve(BuildTargets.getGenPath(
+    return BuildTargets.getGenPath(
         filesystem,
         createSharedLibrarySymlinkTreeTarget(target, platform),
-        "%s"));
+        "%s");
   }
 
   /**

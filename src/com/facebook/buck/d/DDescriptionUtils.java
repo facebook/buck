@@ -190,10 +190,10 @@ abstract class DDescriptionUtils {
             Suppliers.ofInstance(ImmutableSortedSet.of()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver,
-        baseParams.getProjectFilesystem().resolve(
-            BuildTargets.getGenPath(
-                baseParams.getProjectFilesystem(),
-                baseParams.getBuildTarget(), "%s")),
+        BuildTargets.getGenPath(
+            baseParams.getProjectFilesystem(),
+            baseParams.getBuildTarget(),
+            "%s"),
         MoreMaps.transformKeys(
             sources.toNameMap(
                 baseParams.getBuildTarget(),

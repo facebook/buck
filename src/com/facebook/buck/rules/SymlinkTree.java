@@ -58,8 +58,8 @@ public class SymlinkTree
     super(params, resolver);
 
     Preconditions.checkState(
-        root.isAbsolute(),
-        "Expected symlink tree root to be absolute: %s",
+        !root.isAbsolute(),
+        "Expected symlink tree root to be relative: %s",
         root);
 
     this.root = root;
@@ -164,8 +164,6 @@ public class SymlinkTree
     return linksForRuleKeyBuilder.build();
   }
 
-  // Since we produce a directory tree of symlinks, rather than a single file, return
-  // null here.
   @Override
   public Path getPathToOutput() {
     return root;
@@ -205,7 +203,7 @@ public class SymlinkTree
   }
 
   public Path getRoot() {
-    return root;
+    return getProjectFilesystem().resolve(root);
   }
 
   public ImmutableMap<Path, SourcePath> getLinks() {
