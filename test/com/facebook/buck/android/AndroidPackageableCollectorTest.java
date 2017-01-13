@@ -222,10 +222,8 @@ public class AndroidPackageableCollectorTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildRule c = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
-            .setResolver(pathResolver)
             .setRuleFinder(ruleFinder)
             .setBuildTarget(BuildTargetFactory.newInstance("//:c"))
             .setRes(new FakeSourcePath("res_c"))
@@ -234,7 +232,6 @@ public class AndroidPackageableCollectorTest {
 
     BuildRule b = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
-            .setResolver(pathResolver)
             .setRuleFinder(ruleFinder)
             .setBuildTarget(BuildTargetFactory.newInstance("//:b"))
             .setRes(new FakeSourcePath("res_b"))
@@ -244,7 +241,6 @@ public class AndroidPackageableCollectorTest {
 
     BuildRule d = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
-            .setResolver(pathResolver)
             .setRuleFinder(ruleFinder)
             .setBuildTarget(BuildTargetFactory.newInstance("//:d"))
             .setRes(new FakeSourcePath("res_d"))
@@ -254,7 +250,6 @@ public class AndroidPackageableCollectorTest {
 
     AndroidResource a = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
-            .setResolver(pathResolver)
             .setRuleFinder(ruleFinder)
             .setBuildTarget(BuildTargetFactory.newInstance("//:a"))
             .setRes(new FakeSourcePath("res_a"))
@@ -308,11 +303,9 @@ public class AndroidPackageableCollectorTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     FakeSourcePath resPath = new FakeSourcePath("res");
     AndroidResource res1 = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
-            .setResolver(pathResolver)
             .setRuleFinder(ruleFinder)
             .setBuildTarget(BuildTargetFactory.newInstance("//:res1"))
             .setRes(resPath)
@@ -321,7 +314,6 @@ public class AndroidPackageableCollectorTest {
 
     AndroidResource res2 = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
-            .setResolver(pathResolver)
             .setRuleFinder(ruleFinder)
             .setBuildTarget(BuildTargetFactory.newInstance("//:res2"))
             .setRes(resPath)
@@ -331,7 +323,6 @@ public class AndroidPackageableCollectorTest {
     FakeSourcePath resBPath = new FakeSourcePath("res_b");
     BuildRule b = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
-            .setResolver(pathResolver)
             .setRuleFinder(ruleFinder)
             .setBuildTarget(BuildTargetFactory.newInstance("//:b"))
             .setRes(resBPath)
@@ -341,7 +332,6 @@ public class AndroidPackageableCollectorTest {
     FakeSourcePath resAPath = new FakeSourcePath("res_a");
     AndroidResource a = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
-            .setResolver(pathResolver)
             .setRuleFinder(ruleFinder)
             .setBuildTarget(BuildTargetFactory.newInstance("//:a"))
             .setRes(resAPath)

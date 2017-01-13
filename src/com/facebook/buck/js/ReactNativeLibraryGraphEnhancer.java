@@ -114,7 +114,6 @@ public class ReactNativeLibraryGraphEnhancer {
           bundle.getResources());
       BuildRule resource = new AndroidResource(
           paramsForResource,
-          sourcePathResolver,
           ruleFinder,
           /* deps */ ImmutableSortedSet.of(),
           resources,

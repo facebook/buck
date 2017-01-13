@@ -202,7 +202,6 @@ public class AndroidBinaryTest {
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
       BuildRule androidResourceRule = ruleResolver.addToIndex(
           AndroidResourceRuleBuilder.newBuilder()
-              .setResolver(new SourcePathResolver(ruleFinder))
               .setRuleFinder(ruleFinder)
               .setAssets(new FakeSourcePath(assetDirectory))
               .setRes(resDirectory == null ? null : new FakeSourcePath(resDirectory))

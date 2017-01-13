@@ -173,7 +173,6 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
 
     AndroidResource androidResource = new AndroidResource(
         androidResourceParams,
-        pathResolver,
         ruleFinder,
         /* deps */ ImmutableSortedSet.<BuildRule>naturalOrder()
         .add(assembleAssetsDirectories)

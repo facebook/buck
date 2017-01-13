@@ -142,14 +142,12 @@ public class MergeAndroidResourcesStepTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
     MergeAndroidResourcesStep.sortSymbols(
         entriesBuilder.buildFilePathToPackageNameSet(),
         Optional.empty(),
         ImmutableMap.of(
             Paths.get("a-R.txt"),
             (HasAndroidResourceDeps) AndroidResourceRuleBuilder.newBuilder()
-                .setResolver(resolver)
                 .setRuleFinder(ruleFinder)
                 .setBuildTarget(resTarget)
                 .setRes(new FakeSourcePath("a/res"))
@@ -157,7 +155,6 @@ public class MergeAndroidResourcesStepTest {
                 .build(),
             Paths.get("b-R.txt"),
             (HasAndroidResourceDeps) AndroidResourceRuleBuilder.newBuilder()
-                .setResolver(resolver)
                 .setRuleFinder(ruleFinder)
                 .setBuildTarget(resTarget)
                 .setRes(new FakeSourcePath("b/res"))
@@ -165,7 +162,6 @@ public class MergeAndroidResourcesStepTest {
                 .build(),
             Paths.get("c-R.txt"),
             (HasAndroidResourceDeps) AndroidResourceRuleBuilder.newBuilder()
-                .setResolver(resolver)
                 .setRuleFinder(ruleFinder)
                 .setBuildTarget(resTarget)
                 .setRes(new FakeSourcePath("c/res"))
@@ -196,7 +192,6 @@ public class MergeAndroidResourcesStepTest {
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
 
     HasAndroidResourceDeps res = AndroidResourceRuleBuilder.newBuilder()
-        .setResolver(resolver)
         .setRuleFinder(ruleFinder)
         .setBuildTarget(resTarget)
         .setRes(new FakeSourcePath("res"))
@@ -258,7 +253,6 @@ public class MergeAndroidResourcesStepTest {
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
 
     HasAndroidResourceDeps resource = AndroidResourceRuleBuilder.newBuilder()
-        .setResolver(resolver)
         .setRuleFinder(ruleFinder)
         .setBuildTarget(target)
         .setRes(new FakeSourcePath("res"))
@@ -336,7 +330,6 @@ public class MergeAndroidResourcesStepTest {
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
 
     HasAndroidResourceDeps resource = AndroidResourceRuleBuilder.newBuilder()
-        .setResolver(resolver)
         .setRuleFinder(ruleFinder)
         .setBuildTarget(target)
         .setRes(new FakeSourcePath("res"))
@@ -405,7 +398,6 @@ public class MergeAndroidResourcesStepTest {
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
 
     HasAndroidResourceDeps res1 = AndroidResourceRuleBuilder.newBuilder()
-        .setResolver(resolver)
         .setRuleFinder(ruleFinder)
         .setBuildTarget(res1Target)
         .setRes(new FakeSourcePath("res1"))
@@ -413,7 +405,6 @@ public class MergeAndroidResourcesStepTest {
         .build();
 
     HasAndroidResourceDeps res2 = AndroidResourceRuleBuilder.newBuilder()
-        .setResolver(resolver)
         .setRuleFinder(ruleFinder)
         .setBuildTarget(res2Target)
         .setRes(new FakeSourcePath("res2"))
@@ -460,7 +451,6 @@ public class MergeAndroidResourcesStepTest {
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
 
     HasAndroidResourceDeps res1 = AndroidResourceRuleBuilder.newBuilder()
-        .setResolver(resolver)
         .setRuleFinder(ruleFinder)
         .setBuildTarget(res1Target)
         .setRes(new FakeSourcePath("res1"))
@@ -507,7 +497,6 @@ public class MergeAndroidResourcesStepTest {
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
 
     HasAndroidResourceDeps res1 = AndroidResourceRuleBuilder.newBuilder()
-        .setResolver(resolver)
         .setRuleFinder(ruleFinder)
         .setBuildTarget(res1Target)
         .setRes(new FakeSourcePath("res1"))
