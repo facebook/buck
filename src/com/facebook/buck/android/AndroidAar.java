@@ -25,13 +25,12 @@ import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -47,7 +46,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class AndroidAar extends AbstractBuildRuleWithResolver implements HasClasspathEntries {
+public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, PACKAGING);
   public static final String AAR_FORMAT = "%s.aar";
@@ -63,14 +62,13 @@ public class AndroidAar extends AbstractBuildRuleWithResolver implements HasClas
 
   public AndroidAar(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       AndroidManifest manifest,
       AndroidResource androidResource,
       Path assembledResourceDirectory,
       Path assembledAssetsDirectory,
       Optional<Path> assembledNativeLibs,
       ImmutableSet<SourcePath> nativeLibAssetsDirectories) {
-    super(params, resolver);
+    super(params);
     BuildTarget buildTarget = params.getBuildTarget();
     this.pathToOutputFile =
         BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, AAR_FORMAT);

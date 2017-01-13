@@ -224,7 +224,6 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         Suppliers.ofInstance(ImmutableSortedSet.copyOf(aarExtraDepsBuilder.build())));
     return new AndroidAar(
         androidAarParams,
-        pathResolver,
         manifest,
         androidResource,
         assembleResourceDirectories.getPathToOutput(),
