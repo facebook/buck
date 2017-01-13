@@ -16,10 +16,11 @@
 <div class="toggler">
   <table>
   <tr>
-  <td><span><strong>Mobile OS:</strong></span></td>
+  <td><span><strong>Platform:</strong></span></td>
   <td>
   <a href="javascript:void(0);" class="button-ios" onclick="display('platform', 'ios')">iOS</a>
   <a href="javascript:void(0);" class="button-android" onclick="display('platform', 'android')">Android</a>
+  <a href="javascript:void(0);" class="button-other" onclick="display('platform', 'other')">Other</a>
   </td>
   </tr>
   <tr>
@@ -43,20 +44,27 @@
 <p>
   This is a quick start guide for getting up and running with Buck. This article is light on details, instead focusing on the commands that you need to run to install Buck.
 </p>
+<span><block class="mac ios" /></span>
 <p>
 <blockquote>
   While not a prerequisite for installing Buck itself, in order to build iOS applications, you will also need to install <a href="https://itunes.apple.com/us/app/xcode/id497799835">Xcode</a>.
 </blockquote>
 </p>
 
-<span><block class="windows android" /></span>
+<span><block class="windows android other" /></span>
 <p>
   This is a quick start guide for getting up and running with Buck. This article is light on details, instead focusing on the commands that you need to run to install Buck.
 </p>
+<span><block class="windows android" /></span>
 <p>
 <blockquote>
   While not a prerequisite for installing Buck itself, to build Android applications, you will also need at least the <a href="https://developer.android.com/studio/index.html">Android SDK</a>, which can be installed via <a href="https://chocolatey.org/packages/android-sdk">Chocolatey</a> or manually downloaded and installed.
 </blockquote>
+</p>
+
+<span><block class="linux mac other" /></span>
+<p>
+  This is a quick start guide for getting up and running with Buck. This article is light on details, instead focusing on the commands that you need to run to install Buck.
 </p>
 
 <span><block class="linux mac android" /></span>
@@ -73,7 +81,7 @@
 </blockquote>
 </p>
 
-<span><block class="mac ios android" /></span>
+<span><block class="mac ios android other" /></span>
 
 <p>
   You can find a more detailed explanation about each step in the development process by reading the individual articles on more specific topics.
@@ -81,11 +89,11 @@
 
 <p>
 <blockquote>
-  The commands in this guide are designed to be copy-pasteable, idempotent, and usable on its representative platform (OS X, Windows, Linux). Sometimes this results in some unusual constructions (such as using <code>echo</code> instead of <code>vi</code> or <code>emacs</code> to create a file). Bear in mind that this is a <em>quick</em> start guide, so few things are quicker than copy-and-paste!
+  The commands in this guide are designed to be copy-pasteable, idempotent, and usable on its representative operating system (OS X, Windows, Linux). Sometimes this results in some unusual constructions (such as using <code>echo</code> instead of <code>vi</code> or <code>emacs</code> to create a file). Bear in mind that this is a <em>quick</em> start guide, so few things are quicker than copy-and-paste!
 </blockquote>
 </p>
 
-<span><block class="windows linux android" /></span>
+<span><block class="windows linux android other" /></span>
 
 <p>
 You can find a more detailed explanation about each step in the development process by reading the individual articles on more specific topics.
@@ -93,18 +101,18 @@ You can find a more detailed explanation about each step in the development proc
 
 <p>
 <blockquote>
-  The commands in this guide are designed to be copy-pasteable, idempotent, and usable on its representative platform (OS X, Windows, Linux). Sometimes this results in some unusual constructions (such as using <code>echo</code> instead of <code>vi</code> or <code>emacs</code> to create a file). Bear in mind that this is a <em>quick</em> start guide, so few things are quicker than copy-and-paste!
+  The commands in this guide are designed to be copy-pasteable, idempotent, and usable on its representative operating system (OS X, Windows, Linux). Sometimes this results in some unusual constructions (such as using <code>echo</code> instead of <code>vi</code> or <code>emacs</code> to create a file). Bear in mind that this is a <em>quick</em> start guide, so few things are quicker than copy-and-paste!
 </blockquote>
 </p>
 
-<span><block class="linux windows android" /></span>
+<span><block class="linux windows android other" /></span>
 <p>
 <blockquote>
   Currently, there is no way to download a precompiled binary for Buck.
 </blockquote>
 </p>
 
-<span><block class="mac ios android" /></span>
+<span><block class="mac ios android other" /></span>
 
 <h2>Install with Homebrew</h2>
 
@@ -133,7 +141,9 @@ brew tap caskroom/cask
 brew install java
 </pre>{/literal}
 
+<span><block class="mac ios" /></span>
 {call .active_developer_path /}
+<span><block class="mac ios android other" /></span>
 
 <h3>Brew install</h3>
 
@@ -209,7 +219,9 @@ brew install java
 brew install ant python git watchman
 </pre>{/literal}
 
+<span><block class="mac ios" /></span>
 {call .active_developer_path /}
+<span><block class="mac ios android other" /></span>
 
 <h3>Build</h3>
 
@@ -254,7 +266,7 @@ options:
   so that you can simply run <code>buck</code> from the command line.
 </p>
 
-<span><block class="linux windows android" /></span>
+<span><block class="linux windows android other" /></span>
 
 <h2>Build from Source</h2>
 
@@ -286,7 +298,7 @@ options:
   With watchman, Buck will use <a href="{ROOT}command/buckd.html">a daemon</a> which will prevent Buck from parsing all of your {call buck.concept_link}{param page: 'build_file' /}{param name: 'build files' /}{/call} every time and cache some other things as well. It is strongly recommended that you install Watchman.
 </blockquote>
 
-<span><block class="windows android" /></span>
+<span><block class="windows android other" /></span>
 
 <p>
   You can use <a href="https://chocolatey.org/">Chocolatey</a> to install many of the prerequisites on Windows.
@@ -297,7 +309,7 @@ choco install jdk8 ant python git
 # install watchman as stated in the watchman prerequisite link above
 </pre>{/literal}
 
-<span><block class="linux android" /></span>
+<span><block class="linux android other" /></span>
 
 <p>
   You can use your distro's package manager (e.g., <code>apt</code>) to install many of the prerequisites on Linux. For example on Ubuntu 16.04, you can run the following:
@@ -323,21 +335,23 @@ For some distros, the default packages may be older than what you would like. In
   You will need to tell Buck where to find our SDK nd NDK.  Buck will look at the value of the <code>ANDROID_HOME</code> environment variable to locate the SDK files on your system.  Buck will look at <code>ANDROID_NDK</code> to find a specific version of the NDK, and <code>ANDROID_NDK_REPOSITORY</code> to find an appropriate NDK from a directory containing multiple NDK versions.
 </p>
 
+<span><block class="windows linux android other" /></span>
+
 <h3>Build</h3>
 
 <p>
   Once you have the above tools installed, you can install Buck as follows:
 </p>
 
-<span><block class="windows android" /></span>
+<span><block class="windows android other" /></span>
 {call buck.installationInstructions}
   {param isWindows: true /}
 {/call}
 
-<span><block class="linux android" /></span>
+<span><block class="linux android other" /></span>
 {call buck.installationInstructions /}
 
-<span><block class="windows linux android" /></span>
+<span><block class="windows linux android other" /></span>
 
 <p>
   If everything worked correctly, you should see something like:
@@ -369,13 +383,13 @@ options:
  --version (-V) : Show version number.
 </pre>{/literal}
 
-<span><block class="windows android" /></span>
+<span><block class="windows android other" /></span>
 <p>
   Because you will likely be running <code>.\bin\buck</code> often, you should add it to your path
   so that you can simply run <code>buck</code> from the command line.
 </p>
 
-<span><block class="linux android" /></span>
+<span><block class="linux android other" /></span>
 <p>
   Because you will likely be running <code>./bin/buck</code> often, you should add it to your path
   so that you can simply run <code>buck</code> from the command line.
