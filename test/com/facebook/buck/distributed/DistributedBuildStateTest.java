@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
@@ -70,10 +71,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import org.hamcrest.Matchers;
@@ -83,9 +85,11 @@ import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public class DistributedBuildStateTest {
   @Rule
@@ -123,7 +127,8 @@ public class DistributedBuildStateTest {
         new DistBuildCellIndexer(rootCellWhenSaving),
         emptyActionGraph(),
         createDefaultCodec(rootCellWhenSaving, Optional.empty()),
-        createTargetGraph(filesystem));
+        createTargetGraph(filesystem),
+        ImmutableSet.of(BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:dummy")));
 
 
     Cell rootCellWhenLoading = new TestCellBuilder()
@@ -139,7 +144,7 @@ public class DistributedBuildStateTest {
   }
 
   @Test
-  public void canReconstructGraph() throws Exception {
+  public void canReconstructGraphAndTopLevelBuildTargets() throws Exception {
     ProjectWorkspace projectWorkspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "simple_java_target",
@@ -165,7 +170,9 @@ public class DistributedBuildStateTest {
         /* enableProfiling */ false,
         MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
         ImmutableSet.of(
-            BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:lib")));
+            BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:lib1"),
+            BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:lib2"),
+            BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:lib3")));
 
     DistBuildTargetGraphCodec targetGraphCodec =
         createDefaultCodec(cell, Optional.of(parser));
@@ -173,26 +180,40 @@ public class DistributedBuildStateTest {
         new DistBuildCellIndexer(cell),
         emptyActionGraph(),
         targetGraphCodec,
-        targetGraph);
+        targetGraph,
+        ImmutableSet.of(
+            BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:lib1"),
+            BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:lib2")));
 
     Cell rootCellWhenLoading = new TestCellBuilder()
         .setFilesystem(createJavaOnlyFilesystem("/loading"))
         .build();
     DistBuildState distributedBuildState =
         DistBuildState.load(dump, rootCellWhenLoading, knownBuildRuleTypesFactory);
-    TargetGraph reconstructedGraph = distributedBuildState.createTargetGraph(targetGraphCodec);
-    assertThat(reconstructedGraph.getNodes(), Matchers.hasSize(1));
-    TargetNode<JavaLibraryDescription.Arg, ?> reconstructedJavaLibrary =
-        FluentIterable.from(reconstructedGraph.getNodes()).get(0)
-        .castArg(JavaLibraryDescription.Arg.class).get();
+
     ProjectFilesystem reconstructedCellFilesystem =
         distributedBuildState.getCells().get(0).getFilesystem();
-    assertThat(
-        reconstructedJavaLibrary.getConstructorArg().srcs,
-        Matchers.contains(
-            new PathSourcePath(
-                reconstructedCellFilesystem,
-                reconstructedCellFilesystem.getRootPath().getFileSystem().getPath("A.java"))));
+    TargetGraph reconstructedGraph = distributedBuildState.createTargetGraph(targetGraphCodec);
+    assertEquals(
+        reconstructedGraph.getNodes().stream()
+            .map(targetNode -> targetNode.castArg(JavaLibraryDescription.Arg.class).get())
+            .sorted(BuildTarget.BUILD_TARGET_COMPARATOR)
+            .map(targetNode -> targetNode.getConstructorArg().srcs)
+            .collect(Collectors.toList()),
+        Lists.newArrayList("A.java", "B.java", "C.java").stream()
+            .map(f -> reconstructedCellFilesystem.getRootPath().getFileSystem().getPath(f))
+            .map(p -> new PathSourcePath(reconstructedCellFilesystem, p))
+            .map(ImmutableSortedSet::of)
+            .collect(Collectors.toList()));
+
+
+    List<BuildTarget> reconstructedTargets = distributedBuildState.createTopLevelBuildTargets();
+    assertEquals(
+        reconstructedTargets.stream()
+            .map(BuildTarget::getFullyQualifiedName)
+            .collect(Collectors.toList()),
+        Lists.newArrayList("//:lib1", "//:lib2"));
+
   }
 
   @Test
@@ -218,7 +239,8 @@ public class DistributedBuildStateTest {
         new DistBuildCellIndexer(cell),
         emptyActionGraph(),
         createDefaultCodec(cell, Optional.empty()),
-        createTargetGraph(filesystem));
+        createTargetGraph(filesystem),
+        ImmutableSet.of(BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:dummy")));
 
     expectedException.expect(IllegalStateException.class);
     DistBuildState.load(dump, cell, knownBuildRuleTypesFactory);
@@ -256,7 +278,10 @@ public class DistributedBuildStateTest {
         new DistBuildCellIndexer(rootCellWhenSaving),
         emptyActionGraph(),
         createDefaultCodec(rootCellWhenSaving, Optional.empty()),
-        createCrossCellTargetGraph(cell1Filesystem, cell2Filesystem));
+        createCrossCellTargetGraph(cell1Filesystem, cell2Filesystem),
+        ImmutableSet.of(BuildTargetFactory.newInstance(
+            cell1Filesystem.getRootPath(),
+            "//:dummy")));
 
     Cell rootCellWhenLoading = new TestCellBuilder()
         .setFilesystem(createJavaOnlyFilesystem("/loading"))

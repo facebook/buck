@@ -528,7 +528,8 @@ public class BuildCommand extends AbstractCommand {
         cellIndexer,
         distributedBuildFileHashes,
         targetGraphCodec,
-        targetGraphAndBuildTargets.getTargetGraph()
+        targetGraphAndBuildTargets.getTargetGraph(),
+        buildTargets
     );
   }
 
@@ -684,7 +685,7 @@ public class BuildCommand extends AbstractCommand {
                   parseArgumentsAsTargetNodeSpecs(
                       params.getBuckConfig(),
                       getArguments()),
-                      /* ignoreBuckAutodepsFiles */ false,
+                  /* ignoreBuckAutodepsFiles */ false,
                   parserConfig.getDefaultFlavorsMode());
       return params.getBuckConfig().getBuildVersions() ?
           toVersionedTargetGraph(params, targetGraphAndBuildTargets) :

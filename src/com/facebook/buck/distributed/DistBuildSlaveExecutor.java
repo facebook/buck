@@ -40,14 +40,13 @@ import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.util.Map;
@@ -126,14 +125,10 @@ public class DistBuildSlaveExecutor {
         Optional.empty(),
         args.getExecutors())) {
 
-      // TODO(ruibm): We need to pass to the distbuild target via de distributed build
-      //              thrift structs.
-      FluentIterable<BuildTarget> allTargets = FluentIterable.from(
-          Preconditions.checkNotNull(targetGraph).getNodes())
-          .transform(TargetNode::getBuildTarget);
-
+      ImmutableSet<BuildTarget> buildTargets = ImmutableSet.copyOf(
+          args.getState().createTopLevelBuildTargets());
       return build.executeAndPrintFailuresToEventBus(
-          allTargets,
+          buildTargets,
           /* isKeepGoing */ true,
           args.getBuckEventBus(),
           args.getConsole(),
@@ -147,9 +142,7 @@ public class DistBuildSlaveExecutor {
     }
 
     DistBuildTargetGraphCodec codec = createGraphCodec();
-    targetGraph = Preconditions.checkNotNull(codec.createTargetGraph(
-        args.getState().getRemoteState().getTargetGraph(),
-        Functions.forMap(args.getState().getCells())));
+    targetGraph = args.getState().createTargetGraph(codec);
     return targetGraph;
   }
 
