@@ -418,7 +418,7 @@ cd bucksamples/cross-platform-scale-2015-demo/
 <h3>Build the iOS Sample</h3>
 
 <p>
-  In order to build the app, you use the {call buck.cmd_build /} command, specifying your app as the target. The target may be defined in the {call buckconfig.alias /} section in the <code>.buckconfig</code> file or it would be the name of your iOS project prepended by <code>//ios:</code> (e.g., <code>//ios:BuckDempApp</code>)
+  In order to build the app, you use the {call buck.cmd_build /} command, specifying your app as the target. The target may be defined in the {call buckconfig.alias /} section in the <code>.buckconfig</code> file or it would be the name of your iOS project prepended by <code>//[the directory where your project is located]:</code> (e.g., <code>//ios:BuckDempApp</code>).
 </p>
 
 {literal}
@@ -516,13 +516,13 @@ cd bucksamples/cross-platform-scale-2015-demo/
 <h3>Build the Android Sample</h3>
 
 <p>
-  In order to build the app, you use the {call buck.cmd_build /} command, specifying your app as the target. The target may be defined in the {call buckconfig.alias /} section in the <code>.buckconfig</code> file or it would be the name of your Android project prepended by <code>//android:</code> (e.g., <code>//android:demo-app</code>)
+  In order to build the app, you use the {call buck.cmd_build /} command, specifying your app as the target. The target may be defined in the {call buckconfig.alias /} section in the <code>.buckconfig</code> file or it would be the name of your Android project prepended by <code>//[the directory where your project is located]:</code> (e.g., <code>//android:demo-app</code>).
 </p>
 
 {literal}
 <pre>
 # From the root `cross-platform-scale-2015-demo/` directory
-# demo_app_android is an alias in .buckconfig for //android::demo-app. Either works.
+# demo_app_android is an alias in .buckconfig for //android:demo-app. Either works.
 buck build demo_app_android
 </pre>
 {/literal}
@@ -554,7 +554,7 @@ buck build demo_app_android
 <h3>Run the Built Android App</h3>
 
 <p>
- Now that you know your app has built successfully, you can install and run the app with {call buck.cmd_install /}. This command both compiles and installs the application on the Android emulator. Using the <code>--run</code> flag will launch the simulator as well.
+ Now that you know your app has built successfully, you can install and run the app with {call buck.cmd_install /}. This command both compiles and installs the application on the Android emulator. Using the <code>--run</code> flag will launch the emulator as well.
 </p>
 
 {literal}
