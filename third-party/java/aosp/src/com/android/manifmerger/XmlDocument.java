@@ -141,7 +141,7 @@ public class XmlDocument {
         getRootNode().mergeWithLowerPriorityNode(
                 lowerPriorityDocument.getRootNode(), mergingReportBuilder);
 
-//        addImplicitElements(lowerPriorityDocument, mergingReportBuilder);
+        addImplicitElements(lowerPriorityDocument, mergingReportBuilder);
 
         // force re-parsing as new nodes may have appeared.
         return mergingReportBuilder.hasErrors()
@@ -280,9 +280,10 @@ public class XmlDocument {
     /**
      * Returns the minSdk version specified in the uses_sdk element if present or the
      * default value.
+     * @param defaultMinSdkVersion
      */
     @NonNull
-    private String getRawMinSdkVersion() {
+    private String getRawMinSdkVersion(String defaultMinSdkVersion) {
         Optional<XmlElement> usesSdk = getByTypeAndKey(
                 ManifestModel.NodeTypes.USES_SDK, null);
         if (usesSdk.isPresent()) {
@@ -292,7 +293,7 @@ public class XmlDocument {
                 return minSdkVersion.get().getValue();
             }
         }
-        return DEFAULT_SDK_VERSION;
+        return defaultMinSdkVersion;
     }
 
     /**
@@ -300,13 +301,13 @@ public class XmlDocument {
      * build.gradle or can be expressed in the uses_sdk element.
      */
     @NonNull
-    private String getMinSdkVersion() {
+    private String getMinSdkVersion(String defaultMinSdkVersion) {
         // check for system properties.
         String injectedMinSdk = mSystemPropertyResolver.getValue(ManifestSystemProperty.MIN_SDK_VERSION);
         if (injectedMinSdk != null) {
             return injectedMinSdk;
         }
-        return getRawMinSdkVersion();
+        return getRawMinSdkVersion(defaultMinSdkVersion);
     }
 
     /**
@@ -314,7 +315,7 @@ public class XmlDocument {
      * default value.
      */
     @NonNull
-    private String getRawTargetSdkVersion() {
+    private String getRawTargetSdkVersion(String defaultSdkVersion) {
 
         Optional<XmlElement> usesSdk = getByTypeAndKey(
                 ManifestModel.NodeTypes.USES_SDK, null);
@@ -325,7 +326,7 @@ public class XmlDocument {
                 return targetSdkVersion.get().getValue();
             }
         }
-        return getRawMinSdkVersion();
+        return getRawMinSdkVersion(defaultSdkVersion);
     }
 
     /**
@@ -333,7 +334,7 @@ public class XmlDocument {
      * build.gradle or can be expressed in the uses_sdk element.
      */
     @NonNull
-    private String getTargetSdkVersion() {
+    private String getTargetSdkVersion(String defaultSdkVersion) {
 
         // check for system properties.
         String injectedTargetVersion = mSystemPropertyResolver
@@ -341,7 +342,7 @@ public class XmlDocument {
         if (injectedTargetVersion != null) {
             return injectedTargetVersion;
         }
-        return getRawTargetSdkVersion();
+        return getRawTargetSdkVersion(defaultSdkVersion);
     }
 
     /**
@@ -387,27 +388,27 @@ public class XmlDocument {
                 return;
             }
         }
-        int thisTargetSdk = getApiLevelFromAttribute(getTargetSdkVersion());
+        int thisTargetSdk = getApiLevelFromAttribute(getTargetSdkVersion(DEFAULT_SDK_VERSION));
 
         // when we are importing a library, we should never use the build.gradle injected
         // values (only valid for overlay, main manifest) so use the raw versions coming from
         // the AndroidManifest.xml
         int libraryTargetSdk = getApiLevelFromAttribute(
                 lowerPriorityDocument.getFileType() == Type.LIBRARY
-                    ? lowerPriorityDocument.getRawTargetSdkVersion()
-                    : lowerPriorityDocument.getTargetSdkVersion());
+                    ? lowerPriorityDocument.getRawTargetSdkVersion(String.valueOf(thisTargetSdk))
+                    : lowerPriorityDocument.getTargetSdkVersion(String.valueOf(thisTargetSdk)));
 
         // if library is using a code name rather than an API level, make sure this document target
         // sdk version is using the same code name.
-        String libraryTargetSdkVersion = lowerPriorityDocument.getTargetSdkVersion();
+        String libraryTargetSdkVersion = lowerPriorityDocument.getTargetSdkVersion(String.valueOf(thisTargetSdk));
         if (!Character.isDigit(libraryTargetSdkVersion.charAt(0))) {
             // this is a code name, ensure this document uses the same code name.
-            if (!libraryTargetSdkVersion.equals(getTargetSdkVersion())) {
+            if (!libraryTargetSdkVersion.equals(getTargetSdkVersion(DEFAULT_SDK_VERSION))) {
                 mergingReport.addMessage(getSourceFile(), MergingReport.Record.Severity.ERROR,
                         String.format(
                                 "uses-sdk:targetSdkVersion %1$s cannot be different than version "
                                         + "%2$s declared in library %3$s",
-                                getTargetSdkVersion(),
+                                getTargetSdkVersion(DEFAULT_SDK_VERSION),
                                 libraryTargetSdkVersion,
                                 lowerPriorityDocument.getSourceFile().print(false)
                         )
@@ -417,15 +418,15 @@ public class XmlDocument {
         }
         // same for minSdkVersion, if the library is using a code name, the application must
         // also be using the same code name.
-        String libraryMinSdkVersion = lowerPriorityDocument.getRawMinSdkVersion();
+        String libraryMinSdkVersion = lowerPriorityDocument.getRawMinSdkVersion(String.valueOf(thisTargetSdk));
         if (!Character.isDigit(libraryMinSdkVersion.charAt(0))) {
             // this is a code name, ensure this document uses the same code name.
-            if (!libraryMinSdkVersion.equals(getMinSdkVersion())) {
+            if (!libraryMinSdkVersion.equals(getMinSdkVersion(DEFAULT_SDK_VERSION))) {
                 mergingReport.addMessage(getSourceFile(), MergingReport.Record.Severity.ERROR,
                         String.format(
                                 "uses-sdk:minSdkVersion %1$s cannot be different than version "
                                         + "%2$s declared in library %3$s",
-                                getMinSdkVersion(),
+                                getMinSdkVersion(DEFAULT_SDK_VERSION),
                                 libraryMinSdkVersion,
                                 lowerPriorityDocument.getSourceFile().print(false)
                         )
@@ -439,8 +440,8 @@ public class XmlDocument {
                             "uses-sdk:minSdkVersion %1$s cannot be smaller than version "
                                     + "%2$s declared in library %3$s\n"
                                     + "\tSuggestion: use tools:overrideLibrary=\"%4$s\" to force usage",
-                            getMinSdkVersion(),
-                            lowerPriorityDocument.getRawMinSdkVersion(),
+                            getMinSdkVersion(DEFAULT_SDK_VERSION),
+                            libraryMinSdkVersion,
                             lowerPriorityDocument.getSourceFile().print(false),
                             lowerPriorityDocument.getPackageName());
             if (usesSdk.isPresent()) {
@@ -520,9 +521,9 @@ public class XmlDocument {
     private boolean checkUsesSdkMinVersion(@NonNull XmlDocument lowerPriorityDocument,
             MergingReport.Builder mergingReport) {
 
-        int thisMinSdk = getApiLevelFromAttribute(getMinSdkVersion());
+        int thisMinSdk = getApiLevelFromAttribute(getMinSdkVersion(DEFAULT_SDK_VERSION));
         int libraryMinSdk = getApiLevelFromAttribute(
-                lowerPriorityDocument.getRawMinSdkVersion());
+                lowerPriorityDocument.getRawMinSdkVersion(String.valueOf(thisMinSdk)));
 
         // the merged document minSdk cannot be lower than a library
         if (thisMinSdk < libraryMinSdk) {
