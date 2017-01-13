@@ -30,7 +30,7 @@ import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -107,7 +107,7 @@ import javax.annotation.Nullable;
  * </pre>
  */
 public class AndroidBinary
-    extends AbstractBuildRuleWithResolver
+    extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, HasClasspathEntries, HasRuntimeDeps, InstallableApk {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, PACKAGING);
@@ -243,7 +243,6 @@ public class AndroidBinary
 
   AndroidBinary(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       Optional<SourcePath> proguardJarOverride,
       String proguardMaxHeapSize,
@@ -274,7 +273,7 @@ public class AndroidBinary
       Optional<Boolean> compressAssetLibraries,
       ManifestEntries manifestEntries,
       JavaRuntimeLauncher javaRuntimeLauncher) {
-    super(params, resolver);
+    super(params);
     this.ruleFinder = ruleFinder;
     this.proguardJarOverride = proguardJarOverride;
     this.proguardMaxHeapSize = proguardMaxHeapSize;
