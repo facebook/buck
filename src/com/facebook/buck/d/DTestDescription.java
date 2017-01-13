@@ -113,6 +113,7 @@ public class DTestDescription implements
                 .setLinkTree(new BuildTargetSourcePath(sourceTree.getBuildTarget()))
                 .addAllSources(args.srcs.getPaths())
                 .build());
+    buildRuleResolver.addToIndex(binaryRule);
 
     return new DTest(
         params.appendExtraDeps(ImmutableList.of(binaryRule)),

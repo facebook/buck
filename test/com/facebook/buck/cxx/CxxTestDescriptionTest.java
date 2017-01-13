@@ -29,6 +29,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -270,8 +271,8 @@ public class CxxTestDescriptionTest {
     addSandbox(resolver, filesystem, cxxTestBuilder.getTarget());
     CxxTest cxxTest = (CxxTest) cxxTestBuilder.build(resolver, filesystem);
     assertThat(
-        BuildRules.getTransitiveRuntimeDeps(cxxTest),
-        Matchers.hasItem(cxxBinary));
+        BuildRules.getTransitiveRuntimeDeps(cxxTest, new SourcePathRuleFinder(resolver)),
+        Matchers.hasItem(new BuildTargetSourcePath(cxxBinary.getBuildTarget())));
   }
 
   @Test

@@ -233,8 +233,8 @@ public class AppleTestDescription implements
       return library;
     }
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver sourcePathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(resolver));
     String platformName = appleCxxPlatform.getAppleSdk().getApplePlatform().getName();
 
     BuildRule bundle = AppleDescriptions.createAppleBundle(
@@ -269,6 +269,7 @@ public class AppleTestDescription implements
         debugFormat,
         appleConfig.useDryRunCodeSigning(),
         appleConfig.cacheBundlesAndPackages());
+    resolver.addToIndex(bundle);
 
     Optional<SourcePath> xctool = getXctool(params, resolver, sourcePathResolver);
 
@@ -284,7 +285,6 @@ public class AppleTestDescription implements
             Suppliers.ofInstance(ImmutableSortedSet.of(bundle)),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         sourcePathResolver,
-        ruleFinder,
         bundle,
         testHostInfo.map(TestHostInfo::getTestHostApp),
         args.contacts,

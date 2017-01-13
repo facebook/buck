@@ -261,6 +261,7 @@ public class JavaTestDescription implements
               filteredLinks.build());
         }
 
+        resolver.addToIndex(nativeLibsSymlinkTree);
         updatedParams = params.appendExtraDeps(ImmutableList.<BuildRule>builder()
             .add(nativeLibsSymlinkTree)
             // Add all the native libraries as first-order dependencies.

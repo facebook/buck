@@ -33,10 +33,12 @@ import java.util.concurrent.ExecutionException;
  */
 public class RuleDepsCache {
   private final ListeningExecutorService service;
+  private final SourcePathRuleFinder ruleFinder;
   private final Cache<BuildTarget, ListenableFuture<ImmutableSortedSet<BuildRule>>> cache;
 
-  public RuleDepsCache(ListeningExecutorService service) {
+  public RuleDepsCache(ListeningExecutorService service, SourcePathRuleFinder ruleFinder) {
     this.service = service;
+    this.ruleFinder = ruleFinder;
     this.cache = CacheBuilder.newBuilder().build();
   }
 
@@ -48,7 +50,8 @@ public class RuleDepsCache {
             ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
             deps.addAll(rule.getDeps());
             if (rule instanceof HasRuntimeDeps) {
-              deps.addAll(((HasRuntimeDeps) rule).getRuntimeDeps());
+              deps.addAll(
+                  ruleFinder.filterBuildRuleInputs(((HasRuntimeDeps) rule).getRuntimeDeps()));
             }
             return deps.build();
           }));

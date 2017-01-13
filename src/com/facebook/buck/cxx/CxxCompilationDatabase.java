@@ -20,12 +20,14 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.HasRuntimeDeps;
@@ -47,6 +49,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class CxxCompilationDatabase extends AbstractBuildRuleWithResolver
     implements HasPostBuildSteps, HasRuntimeDeps {
@@ -129,7 +132,7 @@ public class CxxCompilationDatabase extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+  public Stream<SourcePath> getRuntimeDeps() {
     // The compilation database contains commands which refer to a
     // particular state of generated header symlink trees/header map
     // files.
@@ -138,7 +141,9 @@ public class CxxCompilationDatabase extends AbstractBuildRuleWithResolver
     // cache hit on the (empty) output of the rule, we still fetch and
     // lay out the headers so the resulting compilation database can
     // be used.
-    return runtimeDeps;
+    return runtimeDeps.stream()
+        .map(HasBuildTarget::getBuildTarget)
+        .map(BuildTargetSourcePath::new);
   }
 
   class GenerateCompilationCommandsJson extends AbstractExecutionStep {

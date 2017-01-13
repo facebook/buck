@@ -20,13 +20,11 @@ import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -35,9 +33,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
 /**
  * Export a file so that it can be easily referenced by other
@@ -81,7 +79,6 @@ import java.nio.file.Path;
 public class ExportFile extends AbstractBuildRuleWithResolver
     implements HasOutputName, HasRuntimeDeps {
 
-  private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey
   private final String name;
   @AddToRuleKey
@@ -92,12 +89,10 @@ public class ExportFile extends AbstractBuildRuleWithResolver
   ExportFile(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
-      SourcePathRuleFinder ruleFinder,
       String name,
       ExportFileDescription.Mode mode,
       SourcePath src) {
     super(buildRuleParams, resolver);
-    this.ruleFinder = ruleFinder;
     this.name = name;
     this.mode = mode;
     this.src = src;
@@ -166,13 +161,10 @@ public class ExportFile extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+  public Stream<SourcePath> getRuntimeDeps() {
     // When using reference mode, we need to make sure that any build rule that builds the source
     // is built when we are, so accomplish this by exporting it as a runtime dep.
-    return ImmutableSortedSet.copyOf(
-        mode == ExportFileDescription.Mode.REFERENCE ?
-            ruleFinder.filterBuildRuleInputs(src) :
-            ImmutableList.of());
+    return mode == ExportFileDescription.Mode.REFERENCE ? Stream.of(src) : Stream.empty();
   }
 
 }

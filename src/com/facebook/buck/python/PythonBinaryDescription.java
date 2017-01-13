@@ -149,7 +149,6 @@ public class PythonBinaryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       String mainModule,
@@ -191,7 +190,6 @@ public class PythonBinaryDescription implements
     return new PythonInPlaceBinary(
         params,
         pathResolver,
-        ruleFinder,
         resolver,
         pythonPlatform,
         cxxPlatform,
@@ -225,7 +223,6 @@ public class PythonBinaryDescription implements
             params,
             resolver,
             pathResolver,
-            ruleFinder,
             pythonPlatform,
             cxxPlatform,
             mainModule,

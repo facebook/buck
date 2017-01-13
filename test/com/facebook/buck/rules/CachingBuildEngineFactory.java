@@ -107,6 +107,7 @@ public class CachingBuildEngineFactory {
 
   public CachingBuildEngine build() {
     if (ruleKeyFactoriesFunction.isPresent()) {
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
       return new CachingBuildEngine(
           cachingBuildEngineDelegate,
           executorService,
@@ -115,7 +116,8 @@ public class CachingBuildEngineFactory {
           depFiles,
           maxDepFileCacheEntries,
           artifactCacheSizeLimit,
-          new SourcePathResolver(new SourcePathRuleFinder(buildRuleResolver)),
+          ruleFinder,
+          new SourcePathResolver(ruleFinder),
           ruleKeyFactoriesFunction.get(),
           resourceAwareSchedulingInfo);
     }

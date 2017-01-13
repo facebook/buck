@@ -48,6 +48,7 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.keys.DefaultDependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
@@ -136,6 +137,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -662,6 +664,7 @@ public class CachingBuildEngineTest {
           .build();
       FakeBuildRule transitiveRuntimeDep =
           new FakeBuildRule(ruleParams, pathResolver);
+      resolver.addToIndex(transitiveRuntimeDep);
       RuleKey transitiveRuntimeDepKey = defaultRuleKeyFactory.build(transitiveRuntimeDep);
       filesystem.writeContentsToPath(
           transitiveRuntimeDepKey.toString(),
@@ -679,6 +682,7 @@ public class CachingBuildEngineTest {
               filesystem,
               pathResolver,
               transitiveRuntimeDep);
+      resolver.addToIndex(runtimeDep);
       RuleKey runtimeDepKey = defaultRuleKeyFactory.build(runtimeDep);
       filesystem.writeContentsToPath(
           runtimeDepKey.toString(),
@@ -777,6 +781,7 @@ public class CachingBuildEngineTest {
           /* buildSteps */ ImmutableList.of(failingStep),
           /* postBuildSteps */ ImmutableList.of(),
           /* pathToOutputFile */ null);
+      resolver.addToIndex(ruleToTest);
 
       FakeBuildRule withRuntimeDep =
           new FakeHasRuntimeDeps(
@@ -815,6 +820,7 @@ public class CachingBuildEngineTest {
           /* buildSteps */ ImmutableList.of(failingStep),
           /* postBuildSteps */ ImmutableList.of(),
           /* pathToOutputFile */ null);
+      resolver.addToIndex(ruleToTest);
 
       FakeBuildRule withRuntimeDep =
           new FakeHasRuntimeDeps(
@@ -3106,8 +3112,10 @@ public class CachingBuildEngineTest {
     }
 
     @Override
-    public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-      return runtimeDeps;
+    public Stream<SourcePath> getRuntimeDeps() {
+      return runtimeDeps.stream()
+          .map(HasBuildTarget::getBuildTarget)
+          .map(BuildTargetSourcePath::new);
     }
 
   }

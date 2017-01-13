@@ -70,7 +70,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -105,6 +104,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -142,24 +142,26 @@ public class CachingBuildEngine implements BuildEngine {
   private final ConcurrentMap<BuildTarget, ListenableFuture<RuleKey>> ruleKeys =
       Maps.newConcurrentMap();
 
-  private final RuleDepsCache ruleDeps;
-  private final Optional<UnskippedRulesTracker> unskippedRulesTracker;
-
   @Nullable
   private volatile Throwable firstFailure = null;
 
   private final CachingBuildEngineDelegate cachingBuildEngineDelegate;
+
   private final WeightedListeningExecutorService service;
   private final StepRunner stepRunner;
   private final BuildMode buildMode;
   private final DepFiles depFiles;
   private final long maxDepFileCacheEntries;
   private final ObjectMapper objectMapper;
+  private final SourcePathRuleFinder ruleFinder;
   private final SourcePathResolver pathResolver;
   private final Optional<Long> artifactCacheSizeLimit;
   private final LoadingCache<ProjectFilesystem, FileHashCache> fileHashCaches;
   private final LoadingCache<ProjectFilesystem, RuleKeyFactories> ruleKeyFactories;
   private final ResourceAwareSchedulingInfo resourceAwareSchedulingInfo;
+
+  private final RuleDepsCache ruleDeps;
+  private final Optional<UnskippedRulesTracker> unskippedRulesTracker;
 
   public CachingBuildEngine(
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
@@ -176,8 +178,6 @@ public class CachingBuildEngine implements BuildEngine {
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo) {
     this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
 
-    this.ruleDeps = new RuleDepsCache(service);
-    this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, service);
 
     this.service = service;
     this.stepRunner = stepRunner;
@@ -186,7 +186,8 @@ public class CachingBuildEngine implements BuildEngine {
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
     this.objectMapper = objectMapper;
-    this.pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    this.ruleFinder = new SourcePathRuleFinder(resolver);
+    this.pathResolver = new SourcePathResolver(ruleFinder);
 
     this.fileHashCaches = cachingBuildEngineDelegate.createFileHashCacheLoader();
     this.ruleKeyFactories = CacheBuilder.newBuilder()
@@ -201,6 +202,10 @@ public class CachingBuildEngine implements BuildEngine {
           }
         });
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
+
+    this.ruleDeps = new RuleDepsCache(service, ruleFinder);
+    this.unskippedRulesTracker =
+        createUnskippedRulesTracker(buildMode, ruleDeps, ruleFinder, service);
   }
 
   /**
@@ -215,13 +220,11 @@ public class CachingBuildEngine implements BuildEngine {
       DepFiles depFiles,
       long maxDepFileCacheEntries,
       Optional<Long> artifactCacheSizeLimit,
+      SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
       final Function<? super ProjectFilesystem, RuleKeyFactories> ruleKeyFactoriesFunction,
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo) {
     this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
-
-    this.ruleDeps = new RuleDepsCache(service);
-    this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, service);
 
     this.service = service;
     this.stepRunner = stepRunner;
@@ -230,6 +233,7 @@ public class CachingBuildEngine implements BuildEngine {
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
     this.objectMapper = ObjectMappers.newDefaultInstance();
+    this.ruleFinder = ruleFinder;
     this.pathResolver = pathResolver;
 
     this.fileHashCaches = cachingBuildEngineDelegate.createFileHashCacheLoader();
@@ -241,6 +245,10 @@ public class CachingBuildEngine implements BuildEngine {
           }
         });
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
+
+    this.ruleDeps = new RuleDepsCache(service, ruleFinder);
+    this.unskippedRulesTracker =
+        createUnskippedRulesTracker(buildMode, ruleDeps, ruleFinder, service);
   }
 
   /**
@@ -259,12 +267,13 @@ public class CachingBuildEngine implements BuildEngine {
   private static Optional<UnskippedRulesTracker> createUnskippedRulesTracker(
       BuildMode buildMode,
       RuleDepsCache ruleDeps,
+      SourcePathRuleFinder ruleFinder,
       ListeningExecutorService service) {
     if (buildMode == BuildMode.DEEP || buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE) {
       // Those modes never skip rules, there is no need to track unskipped rules.
       return Optional.empty();
     }
-    return Optional.of(new UnskippedRulesTracker(ruleDeps, service));
+    return Optional.of(new UnskippedRulesTracker(ruleDeps, ruleFinder, service));
   }
 
   @VisibleForTesting
@@ -1085,9 +1094,9 @@ public class CachingBuildEngine implements BuildEngine {
     }
 
     // Collect any runtime deps we have into a list of futures.
-    ImmutableSortedSet<BuildRule> runtimeDeps = ((HasRuntimeDeps) rule).getRuntimeDeps();
-    List<ListenableFuture<BuildResult>> runtimeDepResults =
-        Lists.newArrayListWithExpectedSize(runtimeDeps.size());
+    Stream<SourcePath> runtimeDepPaths = ((HasRuntimeDeps) rule).getRuntimeDeps();
+    List<ListenableFuture<BuildResult>> runtimeDepResults = Lists.newArrayList();
+    ImmutableSet<BuildRule> runtimeDeps = ruleFinder.filterBuildRuleInputs(runtimeDepPaths);
     for (BuildRule dep : runtimeDeps) {
       runtimeDepResults.add(
           getBuildRuleResultWithRuntimeDepsUnlocked(
@@ -1359,7 +1368,6 @@ public class CachingBuildEngine implements BuildEngine {
       final BuildInfoRecorder buildInfoRecorder) {
     return buildInfoRecorder.fetchArtifactForBuildable(ruleKey, lazyZipPath, artifactCache);
   }
-
 
   /**
    * Execute the commands for this build rule. Requires all dependent rules are already built

@@ -30,6 +30,7 @@ import com.facebook.buck.event.EventKey;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.collect.ImmutableSet;
@@ -44,14 +45,11 @@ import org.junit.Test;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Stream;
 
 public class UnskippedRulesTrackerTest {
 
-  private static final SourcePathResolver sourcePathResolver = new SourcePathResolver(
-      new SourcePathRuleFinder(
-          new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())));
+  private SourcePathResolver sourcePathResolver;
 
   private UnskippedRulesTracker unskippedRulesTracker;
   private BuckEventBus eventBus;
@@ -68,11 +66,15 @@ public class UnskippedRulesTrackerTest {
 
   @Before
   public void setUp() {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    sourcePathResolver = new SourcePathResolver(ruleFinder);
     ListeningExecutorService executor = listeningDecorator(
         MostExecutors.newMultiThreadExecutor(
             "UnskippedRulesTracker", 7));
-    RuleDepsCache depsCache = new RuleDepsCache(executor);
-    unskippedRulesTracker = new UnskippedRulesTracker(depsCache, executor);
+    RuleDepsCache depsCache = new RuleDepsCache(executor, ruleFinder);
+    unskippedRulesTracker = new UnskippedRulesTracker(depsCache, ruleFinder, executor);
     eventBus = new BuckEventBus(new FakeClock(1), new BuildId());
     eventBus.register(new Object() {
       @Subscribe
@@ -80,14 +82,15 @@ public class UnskippedRulesTrackerTest {
         events.add(event);
       }
     });
-    ruleH = createRule("//:h");
-    ruleG = createRule("//:g");
-    ruleF = createRule("//:f");
-    ruleE = createRule("//:e", ImmutableSet.of(ruleG, ruleH));
-    ruleD = createRule("//:d", ImmutableSet.of(ruleG), ImmutableSet.of(ruleF));
-    ruleC = createRule("//:c", ImmutableSet.of(ruleD, ruleE));
-    ruleB = createRule("//:b", ImmutableSet.of(), ImmutableSet.of(ruleD));
-    ruleA = createRule("//:a", ImmutableSet.of(ruleD));
+    ruleH = resolver.addToIndex(createRule("//:h"));
+    ruleG = resolver.addToIndex(createRule("//:g"));
+    ruleF = resolver.addToIndex(createRule("//:f"));
+    ruleE = resolver.addToIndex(createRule("//:e", ImmutableSet.of(ruleG, ruleH)));
+    ruleD =
+        resolver.addToIndex(createRule("//:d", ImmutableSet.of(ruleG), ImmutableSet.of(ruleF)));
+    ruleC = resolver.addToIndex(createRule("//:c", ImmutableSet.of(ruleD, ruleE)));
+    ruleB = resolver.addToIndex(createRule("//:b", ImmutableSet.of(), ImmutableSet.of(ruleD)));
+    ruleA = resolver.addToIndex(createRule("//:a", ImmutableSet.of(ruleD)));
   }
 
   @After
@@ -209,14 +212,14 @@ public class UnskippedRulesTrackerTest {
         is(sameInstance(sentinel)));
   }
 
-  private static BuildRule createRule(String buildTarget) {
+  private BuildRule createRule(String buildTarget) {
     return new FakeBuildRule(
         BuildTargetFactory.newInstance(buildTarget),
         sourcePathResolver,
         ImmutableSortedSet.of());
   }
 
-  private static BuildRule createRule(
+  private BuildRule createRule(
       String buildTarget,
       ImmutableSet<BuildRule> deps) {
     return new FakeBuildRule(
@@ -225,7 +228,7 @@ public class UnskippedRulesTrackerTest {
         ImmutableSortedSet.copyOf(deps));
   }
 
-  private static BuildRule createRule(
+  private BuildRule createRule(
       String buildTarget,
       ImmutableSet<BuildRule> deps,
       ImmutableSet<BuildRule> runtimeDeps) {
@@ -252,8 +255,10 @@ public class UnskippedRulesTrackerTest {
     }
 
     @Override
-    public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-      return runtimeDeps;
+    public Stream<SourcePath> getRuntimeDeps() {
+      return runtimeDeps.stream()
+          .map(HasBuildTarget::getBuildTarget)
+          .map(BuildTargetSourcePath::new);
     }
   }
 

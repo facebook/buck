@@ -64,6 +64,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreStreams;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -1253,8 +1254,9 @@ public class CxxLibraryDescriptionTest {
     cxxBinaryBuilder.build(resolver, filesystem);
     CxxLibrary cxxLibrary = (CxxLibrary) cxxLibraryBuilder.build(resolver, filesystem);
     assertThat(
-        cxxLibrary.getRuntimeDeps().stream()
-            .map(HasBuildTarget::getBuildTarget)
+        cxxLibrary.getRuntimeDeps()
+            .flatMap(MoreStreams.filterCast(BuildTargetSourcePath.class))
+            .map(BuildTargetSourcePath::getTarget)
             .collect(MoreCollectors.toImmutableSet()),
         hasItem(cxxBinaryBuilder.getTarget()));
   }

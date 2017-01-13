@@ -52,6 +52,8 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreStreams;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -521,8 +523,11 @@ public class CxxPythonExtensionDescriptionTest {
             .setDeps(ImmutableSortedSet.of(cxxBinary.getBuildTarget()))
             .build(resolver);
     assertThat(
-        cxxPythonExtension.getRuntimeDeps(),
-        Matchers.hasItem(cxxBinary));
+        cxxPythonExtension.getRuntimeDeps()
+            .flatMap(MoreStreams.filterCast(BuildTargetSourcePath.class))
+            .map(BuildTargetSourcePath::getTarget)
+            .collect(MoreCollectors.toImmutableSet()),
+        Matchers.hasItem(cxxBinary.getBuildTarget()));
   }
 
   @Test

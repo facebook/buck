@@ -67,8 +67,7 @@ public class ExportFileDescription implements
     }
 
     SourcePath src;
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     if (args.src.isPresent()) {
       if (mode == ExportFileDescription.Mode.REFERENCE &&
           !pathResolver.getFilesystem(args.src.get()).equals(params.getProjectFilesystem())) {
@@ -85,7 +84,7 @@ public class ExportFileDescription implements
               target.getBasePath().resolve(target.getShortNameAndFlavorPostfix()));
     }
 
-    return new ExportFile(params, pathResolver, ruleFinder, name, mode, src);
+    return new ExportFile(params, pathResolver, name, mode, src);
   }
 
   /**

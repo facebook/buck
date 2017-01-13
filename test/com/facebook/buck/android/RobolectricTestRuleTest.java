@@ -38,6 +38,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 
 import org.hamcrest.Matchers;
@@ -233,6 +234,8 @@ public class RobolectricTestRuleTest {
     RobolectricTest robolectricTest =
         (RobolectricTest) resolver.requireRule(robolectricBuildTarget);
 
-    assertThat(robolectricTest.getRuntimeDeps(), Matchers.hasItem(genRule));
+    assertThat(
+        robolectricTest.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
+        Matchers.hasItem(new BuildTargetSourcePath(genRule.getBuildTarget())));
   }
 }

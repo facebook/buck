@@ -18,19 +18,20 @@ package com.facebook.buck.shell;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -108,7 +109,11 @@ public class WorkerToolTest {
         workerToolBuilder.findImplicitDeps(),
         Matchers.hasItem(exportFileRule.getBuildTarget()));
     assertThat(workerTool.getDeps(), Matchers.hasItems(shBinaryRule, exportFileRule));
-    assertThat(workerTool.getRuntimeDeps(), Matchers.hasItems(shBinaryRule, exportFileRule));
+    assertThat(
+        workerTool.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
+        Matchers.hasItems(
+            new BuildTargetSourcePath(shBinaryRule.getBuildTarget()),
+            new BuildTargetSourcePath(exportFileRule.getBuildTarget())));
     assertThat(
         workerTool.getArgs(), Matchers.containsString(
             pathResolver.getAbsolutePath(

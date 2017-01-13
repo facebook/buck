@@ -24,6 +24,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
@@ -61,14 +62,19 @@ public class UnskippedRulesTracker {
       this::releaseReferences;
 
   private final RuleDepsCache ruleDepsCache;
+  private final SourcePathRuleFinder ruleFinder;
   private final ListeningExecutorService executor;
   private final AtomicInteger unskippedRules = new AtomicInteger(0);
   private final AtomicBoolean stateChanged = new AtomicBoolean(false);
   private final LoadingCache<BuildTarget, AtomicInteger> ruleReferenceCounts =
       CacheBuilder.newBuilder().build(DEFAULT_REFERENCE_COUNT_LOADER);
 
-  public UnskippedRulesTracker(RuleDepsCache ruleDepsCache, ListeningExecutorService executor) {
+  public UnskippedRulesTracker(
+      RuleDepsCache ruleDepsCache,
+      SourcePathRuleFinder ruleFinder,
+      ListeningExecutorService executor) {
     this.ruleDepsCache = ruleDepsCache;
+    this.ruleFinder = ruleFinder;
     this.executor = executor;
   }
 
@@ -93,7 +99,8 @@ public class UnskippedRulesTracker {
       // Add references to rule's runtime deps since they cannot be skipped now.
       future = MoreFutures.chainExceptions(
           future,
-          acquireReferences(((HasRuntimeDeps) rule).getRuntimeDeps()));
+          acquireReferences(
+              ruleFinder.filterBuildRuleInputs(((HasRuntimeDeps) rule).getRuntimeDeps())));
     }
 
     // Release references from rule's dependencies since this rule will not need them anymore.
@@ -133,7 +140,7 @@ public class UnskippedRulesTracker {
     return Futures.immediateFuture(null);
   }
 
-  private ListenableFuture<Void> acquireReferences(ImmutableSortedSet<BuildRule> rules) {
+  private ListenableFuture<Void> acquireReferences(ImmutableSet<BuildRule> rules) {
     ImmutableList.Builder<ListenableFuture<Void>> futures = ImmutableList.builder();
     for (BuildRule rule : rules) {
       futures.add(acquireReference(rule));

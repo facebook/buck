@@ -23,12 +23,14 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
@@ -78,6 +80,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -625,19 +628,20 @@ public class JavaTest
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.<BuildRule>naturalOrder()
-        // By the end of the build, all the transitive Java library dependencies *must* be available
-        // on disk, so signal this requirement via the {@link HasRuntimeDeps} interface.
-        .addAll(
+  public Stream<SourcePath> getRuntimeDeps() {
+    return Stream
+        .concat(
+            // By the end of the build, all the transitive Java library dependencies *must* be
+            // available on disk, so signal this requirement via the {@link HasRuntimeDeps}
+            // interface.
             compiledTestsLibrary.getTransitiveClasspathDeps().stream()
-                .filter(rule -> !this.equals(rule))
-                .iterator())
-        // It's possible that the user added some tool as a dependency, so make sure we promote
-        // this rules first-order deps to runtime deps, so that these potential tools are available
-        // when this test runs.
-        .addAll(compiledTestsLibrary.getDeps())
-        .build();
+                .filter(rule -> !this.equals(rule)),
+            // It's possible that the user added some tool as a dependency, so make sure we promote
+            // this rules first-order deps to runtime deps, so that these potential tools are
+            // available when this test runs.
+            compiledTestsLibrary.getDeps().stream())
+        .map(HasBuildTarget::getBuildTarget)
+        .map(BuildTargetSourcePath::new);
   }
 
   @Override

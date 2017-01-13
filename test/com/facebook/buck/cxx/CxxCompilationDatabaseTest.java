@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -40,6 +41,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -156,8 +158,10 @@ public class CxxCompilationDatabaseTest {
         ImmutableSortedSet.of(privateSymlinkTree, exportedSymlinkTree));
 
     assertThat(
-        compilationDatabase.getRuntimeDeps(),
-        Matchers.contains(exportedSymlinkTree, privateSymlinkTree));
+        compilationDatabase.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
+        Matchers.contains(
+            new BuildTargetSourcePath(exportedSymlinkTree.getBuildTarget()),
+            new BuildTargetSourcePath(privateSymlinkTree.getBuildTarget())));
 
     assertEquals(
         "getPathToOutput() should be a function of the build target.",

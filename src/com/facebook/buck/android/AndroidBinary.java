@@ -30,11 +30,13 @@ import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExopackageInfo;
@@ -92,6 +94,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
@@ -1295,16 +1298,22 @@ public class AndroidBinary
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
+  public Stream<SourcePath> getRuntimeDeps() {
+    Stream.Builder<Stream<SourcePath>> deps = Stream.builder();
     if (ExopackageMode.enabledForNativeLibraries(exopackageModes) &&
         enhancementResult.getCopyNativeLibraries().isPresent()) {
-      deps.addAll(enhancementResult.getCopyNativeLibraries().get().values());
+      deps.add(
+          enhancementResult.getCopyNativeLibraries().get().values().stream()
+              .map(HasBuildTarget::getBuildTarget)
+              .map(BuildTargetSourcePath::new));
     }
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
-      deps.addAll(OptionalCompat.asSet(enhancementResult.getPreDexMerge()));
+      deps.add(
+          OptionalCompat.asSet(enhancementResult.getPreDexMerge()).stream()
+              .map(HasBuildTarget::getBuildTarget)
+              .map(BuildTargetSourcePath::new));
     }
-    return deps.build();
+    return deps.build().reduce(Stream.empty(), Stream::concat);
   }
 
   /**
