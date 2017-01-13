@@ -1,4 +1,7 @@
-include_defs('//BUILD_DEFS')
+java_library(
+  name = 'lib_c',
+  srcs = [ 'C.java', 'D.java', ],
+)
 
 android_library(
   name = 'lib_a',
@@ -7,7 +10,8 @@ android_library(
 
 android_library(
   name = 'lib_b',
-  srcs = [ 'B.java', ],
+  srcs = [ 'B.java' ],
+  deps = [ ':lib_c', ],
   annotation_processor_params = [
     #annotation_placeholder
   ]
@@ -44,4 +48,11 @@ android_library(
   name = 'has_proc_params',
   deps = [ ':top_level', ],
   deps_query = 'attrfilter(annotation_processor_params, "example.foo=True", deps($declared_deps))',
+)
+
+android_library(
+  name = 'java_libraries',
+  srcs = [ 'UsesC.java', ],
+  deps = [ ':top_level', ],
+  deps_query = 'kind(java_library, deps($declared_deps))',
 )

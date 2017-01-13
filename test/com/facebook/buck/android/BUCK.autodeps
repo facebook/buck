@@ -74,6 +74,7 @@
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/sha1:sha1",
@@ -87,6 +88,7 @@
       "//third-party/java/commons-compress:commons-compress",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/jackson:jackson-databind",
       "//third-party/java/junit:junit"
     ],
     "exported_deps" : [ ]

@@ -1,2 +1,0 @@
-def query_of_libs(format_query, libs):
-    return format_query.format(' '.join(libs))

@@ -109,4 +109,18 @@ public class AndroidLibraryDescriptionIntegrationTest {
     workspace.runBuckCommand("build", "//:has_proc_params").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:has_proc_params");
   }
+
+  @Test
+  public void testDepQueryResultsCanTakeAdvantageOfDepFileRuleKey() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    // Build once to warm cache
+    workspace.runBuckCommand("build", "//:java_libraries").assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:java_libraries");
+
+    // Now, edit lib_c, which is part of the query result, and assert the query is invalidated
+    workspace.replaceFileContents("D.java", "// method", "public static void foo() {}");
+    workspace.runBuckCommand("build", "//:java_libraries").assertSuccess();
+    // But the libs above get a dep file hit
+    workspace.getBuildLog().assertTargetHadMatchingDepfileRuleKey("//:java_libraries");
+  }
 }
