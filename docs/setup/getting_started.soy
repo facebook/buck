@@ -20,6 +20,7 @@
   <td>
   <a href="javascript:void(0);" class="button-ios" onclick="display('platform', 'ios')">iOS</a>
   <a href="javascript:void(0);" class="button-android" onclick="display('platform', 'android')">Android</a>
+  <a href="javascript:void(0);" class="button-java" onclick="display('platform', 'java')">Java</a>
   <a href="javascript:void(0);" class="button-other" onclick="display('platform', 'other')">Other</a>
   </td>
   </tr>
@@ -35,14 +36,13 @@
 </div>
 
 <span><block class="linux windows ios" /></span>
-
 <p>
   Unfortunately, Apple only lets you develop for iOS on a Mac.
 </p>
 
 <span><block class="mac ios" /></span>
 <p>
-  This is a quick start guide for getting up and running with Buck. This article is light on details, instead focusing on the commands that you need to run to install Buck.
+  This is a quick start guide for getting up and running with Buck. This article is light on details, instead focusing on the commands that you need to run to install Buck and build your first application from scratch using Buck.
 </p>
 <span><block class="mac ios" /></span>
 <p>
@@ -67,7 +67,7 @@
   This is a quick start guide for getting up and running with Buck. This article is light on details, instead focusing on the commands that you need to run to install Buck.
 </p>
 
-<span><block class="linux mac android" /></span>
+<span><block class="linux mac android windows java" /></span>
 <p>
   This is a quick start guide for getting up and running with Buck. This article is light on details, instead focusing on the commands that you need to run to install Buck and build your first application from scratch using Buck.
 </p>
@@ -81,8 +81,7 @@
 </blockquote>
 </p>
 
-<span><block class="mac ios android other" /></span>
-
+<span><block class="mac ios android java other" /></span>
 <p>
   You can find a more detailed explanation about each step in the development process by reading the individual articles on more specific topics.
 </p>
@@ -93,8 +92,7 @@
 </blockquote>
 </p>
 
-<span><block class="windows linux android other" /></span>
-
+<span><block class="windows linux android java other" /></span>
 <p>
 You can find a more detailed explanation about each step in the development process by reading the individual articles on more specific topics.
 </p>
@@ -105,14 +103,14 @@ You can find a more detailed explanation about each step in the development proc
 </blockquote>
 </p>
 
-<span><block class="linux windows android other" /></span>
+<span><block class="linux windows android java other" /></span>
 <p>
 <blockquote>
   Currently, there is no way to download a precompiled binary for Buck.
 </blockquote>
 </p>
 
-<span><block class="mac ios android other" /></span>
+<span><block class="mac ios android java other" /></span>
 
 <h2>Install with Homebrew</h2>
 
@@ -143,7 +141,7 @@ brew install java
 
 <span><block class="mac ios" /></span>
 {call .active_developer_path /}
-<span><block class="mac ios android other" /></span>
+<span><block class="mac ios android java other" /></span>
 
 <h3>Brew install</h3>
 
@@ -266,7 +264,7 @@ options:
   so that you can simply run <code>buck</code> from the command line.
 </p>
 
-<span><block class="linux windows android other" /></span>
+<span><block class="linux windows android java other" /></span>
 
 <h2>Build from Source</h2>
 
@@ -298,7 +296,7 @@ options:
   With watchman, Buck will use <a href="{ROOT}command/buckd.html">a daemon</a> which will prevent Buck from parsing all of your {call buck.concept_link}{param page: 'build_file' /}{param name: 'build files' /}{/call} every time and cache some other things as well. It is strongly recommended that you install Watchman.
 </blockquote>
 
-<span><block class="windows android other" /></span>
+<span><block class="windows android java other" /></span>
 
 <p>
   You can use <a href="https://chocolatey.org/">Chocolatey</a> to install many of the prerequisites on Windows.
@@ -309,7 +307,7 @@ choco install jdk8 ant python git
 # install watchman as stated in the watchman prerequisite link above
 </pre>{/literal}
 
-<span><block class="linux android other" /></span>
+<span><block class="linux android java other" /></span>
 
 <p>
   You can use your distro's package manager (e.g., <code>apt</code>) to install many of the prerequisites on Linux. For example on Ubuntu 16.04, you can run the following:
@@ -343,15 +341,15 @@ For some distros, the default packages may be older than what you would like. In
   Once you have the above tools installed, you can install Buck as follows:
 </p>
 
-<span><block class="windows android other" /></span>
+<span><block class="windows android java other" /></span>
 {call buck.installationInstructions}
   {param isWindows: true /}
 {/call}
 
-<span><block class="linux android other" /></span>
+<span><block class="linux android java other" /></span>
 {call buck.installationInstructions /}
 
-<span><block class="windows linux android other" /></span>
+<span><block class="windows linux android java other" /></span>
 
 <p>
   If everything worked correctly, you should see something like:
@@ -383,13 +381,13 @@ options:
  --version (-V) : Show version number.
 </pre>{/literal}
 
-<span><block class="windows android other" /></span>
+<span><block class="windows android java other" /></span>
 <p>
   Because you will likely be running <code>.\bin\buck</code> often, you should add it to your path
   so that you can simply run <code>buck</code> from the command line.
 </p>
 
-<span><block class="linux android other" /></span>
+<span><block class="linux android java other" /></span>
 <p>
   Because you will likely be running <code>./bin/buck</code> often, you should add it to your path
   so that you can simply run <code>buck</code> from the command line.
@@ -601,6 +599,105 @@ If all goes well, you should see something similar to:
   <img src="../static/android-hello-buck.png" alt="iOS Hello Buck" />
 </div>
 
+<span><block class="mac linux windows java" /></span>
+<h2>Trying Buck</h2>
+
+<p>
+  Now that Buck is installed, it is time use Buck in a sample project. In particular, we are going to build a simple Java "Hello Buck" library and application.
+</p>
+
+<h3>Clone <a href="https://github.com/fbsamples/bucksamples/">Buck Samples Repo</a></h3>
+
+{literal}
+<pre>
+git clone git@github.com:fbsamples/bucksamples.git
+cd bucksamples/hello-buck-java/
+</pre>
+{/literal}
+
+<h3>Key Java Files</h3>
+
+<p>
+  We are going to be building a Java application that prints out "Hello Buck". The code to build the application consists of both a library and app component. To build this Java application, the code you cloned has all the files necessary. From the <code>hello-buck-java</code> directory, you will find:
+</p>
+
+<ul>
+  <li>
+    <p><code>com/facebook/buck/demo/HelloBuckJava.java</code>: The main Java application file.</p>
+  </li>
+  <li>
+    <p><code>com/facebook/buck/demo/HelloStringJava.java</code>: A simple Java library with one function that the main app calls.</p>
+  </li>
+  <li>
+    <p><code>com/facebook/buck/demo/BUCK</code>: This {call buck.build_file /} is what makes Buck work and is the trigger for building the application. It defines all the {call buck.build_rule /}s for your source code. The key rules you will see in this file is {call buck.java_binary /} and {call buck.java_library /}. A <code>BUCK</code> file can also include dependencies (via <code>deps</code>), which may also have their own {call buck.build_file /}s.</p>
+  </li>
+  <li>
+    <p><code>.buckconfig</code>: This file allows for various flag and alias settings for any project (even beyond this Java application, if they existed) within the <code>hello-buck-java</code> directory.</p>
+  </li>
+</ul>
+
+<h3>Build the Java Application</h3>
+
+<p>
+  In order to build the library, you use the {call buck.cmd_build /} command, specifying your app as the target. The target may be defined in the {call buckconfig.alias /} section in the <code>.buckconfig</code> file or it would be the name of your Java application prepended by <code>//[the directory where your project is located]:</code> (e.g., <code>//com/facebook/buck/demo:hello-buck-java</code>).
+</p>
+
+{literal}
+<pre>
+# From the root `hello-buck-java/` directory
+# hello-buck-java is an alias in .buckconfig for //com/facebook/buck/demo:hello-buck-java. Either works.
+buck build hello-buck-java
+</pre>
+{/literal}
+
+<p>
+  You should see output similar to:
+</p>
+
+{literal}
+<pre>
+[-] PROCESSING BUCK FILES...FINISHED 0.0s [100%]
+[-] DOWNLOADING... (0.00 B/S AVG, TOTAL: 0.00 B, 0 Artifacts)
+[-] BUILDING...FINISHED 0.8s [100%] (1/1 JOBS, 0 UPDATED, 0 [0.0%] CACHE MISS)
+</pre>
+{/literal}
+
+<p>
+<blockquote>
+  The first time you build, you will most likely see a longer time and cache misses. Subsequent builds should be much faster, with minimal cache misses.
+</blockquote>
+</p>
+
+<p>
+  Buck outputs its results in the <code>buck-out/</code> directory.
+</p>
+
+<h3>Run the Built Java Application</h3>
+
+<p>
+ Now that you know your app has built successfully, you can install and run the app with {call buck.cmd_run /}. This command both compiles and runs the application.
+</p>
+
+{literal}
+<pre>
+buck run hello_buck_java
+[-] PROCESSING BUCK FILES...FINISHED 0.0s [100%]
+[-] DOWNLOADING... (0.00 B/S AVG, TOTAL: 0.00 B, 0 Artifacts)
+[-] BUILDING...FINISHED 0.4s [100%] (1/1 JOBS, 0 UPDATED, 0 [0.0%] CACHE MISS)
+Hello Buck
+</pre>
+{/literal}
+
+<h3>Success!</h3>
+
+<p>
+If all goes well, you should see something similar to:
+</p>
+
+<p>
+  <code>Hello Buck</code>
+</p>
+
 </div> // close overview
 
 {literal}
@@ -661,6 +758,8 @@ if (window.location.hash !== '' && window.location.hash !== 'content') { // cont
             targetPlatform = 'ios';
           } else if (parent.className.indexOf('android') > -1) {
             targetPlatform = 'android';
+          } else if (parent.className.indexOf('java') > -1) {
+            targetPlatform = 'java';
           } else {
             break; // assume we don't have anything.
           }
