@@ -77,14 +77,14 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
   }
 
   @Nullable
-  private TargetNode<?, ?> getInternal(BuildTarget target) {
+  protected TargetNode<?, ?> getInternal(BuildTarget target) {
     TargetNode<?, ?> node = targetsToNodes.get(target);
     if (node == null) {
       node = targetsToNodes.get(BuildTarget.of(target.getUnflavoredBuildTarget()));
       if (node == null) {
         return null;
       }
-      return node.withFlavors(target.getFlavors());
+      return node.copyWithFlavors(target.getFlavors());
     }
     return node;
   }

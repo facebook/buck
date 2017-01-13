@@ -149,11 +149,7 @@ public class VersionedTargetGraphBuilder {
   }
 
   private TargetNode<?, ?> indexPutIfAbsent(TargetNode<?, ?> node) {
-    TargetNode<?, ?> putted = index.putIfAbsent(node.getBuildTarget(), node);
-    if (putted == null) {
-      index.put(node.getBuildTarget().withFlavors(), node);
-    }
-    return putted;
+    return index.putIfAbsent(node.getBuildTarget(), node);
   }
 
   /**
@@ -299,7 +295,7 @@ public class VersionedTargetGraphBuilder {
         index.size(),
         roots.get());
 
-    return new TargetGraph(
+    return new VersionedTargetGraph(
         graph,
         ImmutableMap.copyOf(index),
         ImmutableSet.of());

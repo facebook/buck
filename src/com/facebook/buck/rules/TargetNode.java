@@ -205,8 +205,24 @@ public class TargetNode<T, U extends Description<T>>
     return factory.copyNodeWithDescription(this, description);
   }
 
-  public TargetNode<T, U> withFlavors(ImmutableSet<Flavor> flavors) {
+  public TargetNode<T, U> copyWithFlavors(ImmutableSet<Flavor> flavors) {
     return factory.copyNodeWithFlavors(this, flavors);
+  }
+
+  public TargetNode<T, U> withFlavors(ImmutableSet<Flavor> flavors) {
+    return new TargetNode<>(
+        factory,
+        getRawInputsHashCode(),
+        getDescription(),
+        constructorArg,
+        filesystem,
+        getBuildTarget().withFlavors(flavors),
+        declaredDeps,
+        extraDeps,
+        getVisibilityPatterns(),
+        getInputs(),
+        getCellNames(),
+        getSelectedVersions());
   }
 
   public TargetNode<T, U> withTargetConstructorArgDepsAndSelectedVerisons(
