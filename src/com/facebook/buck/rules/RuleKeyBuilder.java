@@ -143,11 +143,10 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
 
   protected RuleKeyBuilder<RULE_KEY> setSourcePath(SourcePath sourcePath) {
     if (sourcePath instanceof ArchiveMemberSourcePath) {
-      ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) sourcePath;
       try {
         return setArchiveMemberPath(
-            resolver.getAbsoluteArchiveMemberPath(archiveMemberSourcePath),
-            resolver.getRelativeArchiveMemberPath(archiveMemberSourcePath));
+            resolver.getAbsoluteArchiveMemberPath(sourcePath),
+            resolver.getRelativeArchiveMemberPath(sourcePath));
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
@@ -268,6 +267,35 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
         return feed("}");
       }
 
+      if (val instanceof BuildRule) {
+        return setBuildRule((BuildRule) val);
+      }
+      if (val instanceof Path) {
+        throw new HumanReadableException(
+            "It's not possible to reliably disambiguate Paths. They are disallowed from rule keys");
+      }
+      if (val instanceof SourcePath) {
+        return setSourcePath((SourcePath) val);
+      }
+      if (val instanceof NonHashableSourcePathContainer) {
+        SourcePath sourcePath = ((NonHashableSourcePathContainer) val).getSourcePath();
+        return setNonHashingSourcePath(sourcePath);
+      }
+      if (val instanceof SourceWithFlags) {
+        SourceWithFlags source = (SourceWithFlags) val;
+        try (RuleKeyLogger.Scope scope = ruleKeyLogger.pushSourceWithFlags()) {
+          setSourcePath(source.getSourcePath());
+          feed("[");
+          for (String flag : source.getFlags()) {
+            ruleKeyLogger.addValue(flag);
+            feed(flag);
+            feed(",");
+          }
+          feed("]");
+        }
+        return this;
+      }
+
       if (val instanceof Supplier) {
         Object newVal = ((Supplier<?>) val).get();
         return setReflectively(key, newVal);
@@ -345,18 +373,13 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     } else if (val instanceof Number) {
       ruleKeyLogger.addValue((Number) val);
       feed((Number) val);
-    } else if (val instanceof Path) {
-      throw new HumanReadableException(
-          "It's not possible to reliably disambiguate Paths. They are disallowed from rule keys");
     } else if (val instanceof String) {
       ruleKeyLogger.addValue((String) val);
       feed((String) val);
     } else if (val instanceof Pattern) {
       ruleKeyLogger.addValue((Pattern) val);
       feed(val.toString());
-    } else if (val instanceof BuildRule) {                       // Buck types
-      return setBuildRule((BuildRule) val);
-    } else if (val instanceof BuildRuleType) {
+    } else if (val instanceof BuildRuleType) {                       // Buck types
       ruleKeyLogger.addValue((BuildRuleType) val);
       feed(val.toString());
     } else if (val instanceof RuleKey) {
@@ -366,28 +389,10 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
       BuildTarget buildTarget = (BuildTarget) val;
       ruleKeyLogger.addValue(buildTarget);
       feed(buildTarget.getFullyQualifiedName());
-    } else if (val instanceof SourcePath) {
-      return setSourcePath((SourcePath) val);
-    } else if (val instanceof NonHashableSourcePathContainer) {
-      NonHashableSourcePathContainer nonHashableSourcePathContainer =
-          (NonHashableSourcePathContainer) val;
-      return setNonHashingSourcePath(nonHashableSourcePathContainer.getSourcePath());
     } else if (val instanceof SourceRoot) {
       SourceRoot sourceRoot = ((SourceRoot) val);
       ruleKeyLogger.addValue(sourceRoot);
       feed(sourceRoot.getName());
-    } else if (val instanceof SourceWithFlags) {
-      SourceWithFlags source = (SourceWithFlags) val;
-      try (RuleKeyLogger.Scope scope = ruleKeyLogger.pushSourceWithFlags()) {
-        setSourcePath(source.getSourcePath());
-        feed("[");
-        for (String flag : source.getFlags()) {
-          ruleKeyLogger.addValue(flag);
-          feed(flag);
-          feed(",");
-        }
-        feed("]");
-      }
     } else if (val instanceof Sha1HashCode) {
       Sha1HashCode hashCode = (Sha1HashCode) val;
       feed(hashCode);
