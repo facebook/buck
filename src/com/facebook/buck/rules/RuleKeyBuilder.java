@@ -289,13 +289,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
         SourceWithFlags source = (SourceWithFlags) val;
         try (RuleKeyLogger.Scope scope = ruleKeyLogger.pushSourceWithFlags()) {
           setSourcePath(source.getSourcePath());
-          feed("[");
-          for (String flag : source.getFlags()) {
-            ruleKeyLogger.addValue(flag);
-            feed(flag);
-            feed(",");
-          }
-          feed("]");
+          setReflectively(key, source.getFlags());
         }
         return this;
       }
