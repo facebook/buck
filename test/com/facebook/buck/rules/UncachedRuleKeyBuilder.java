@@ -18,6 +18,8 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Supplier;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 
 public class UncachedRuleKeyBuilder extends RuleKeyBuilder<RuleKey> {
 
@@ -30,7 +32,7 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder<RuleKey> {
       FileHashCache hashCache,
       RuleKeyFactory<RuleKey> ruleKeyFactory,
       RuleKeyLogger ruleKeyLogger) {
-    super(ruleFinder, resolver, hashCache, ruleKeyLogger);
+    super(ruleFinder, resolver, hashCache, createHasher(), ruleKeyLogger);
     this.ruleKeyFactory = ruleKeyFactory;
     this.subKeySupplier = createSubKeySupplier(ruleFinder, resolver, hashCache, ruleKeyFactory);
   }
@@ -43,6 +45,10 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder<RuleKey> {
     super(ruleFinder, resolver, hashCache);
     this.ruleKeyFactory = ruleKeyFactory;
     this.subKeySupplier = createSubKeySupplier(ruleFinder, resolver, hashCache, ruleKeyFactory);
+  }
+
+  private static RuleKeyHasher<HashCode> createHasher() {
+    return new GuavaRuleKeyHasher(Hashing.sha1().newHasher());
   }
 
   private static Supplier<UncachedRuleKeyBuilder> createSubKeySupplier(

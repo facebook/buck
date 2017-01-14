@@ -23,11 +23,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.sha1.Sha1HashCode;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
-import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
 import java.io.IOException;
@@ -43,14 +43,12 @@ import javax.annotation.Nullable;
 
 public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
 
-  private static final byte SEPARATOR = '\0';
-
   private static final Logger logger = Logger.get(RuleKeyBuilder.class);
 
   private final SourcePathRuleFinder ruleFinder;
   private final SourcePathResolver resolver;
-  private final Hasher hasher;
   private final FileHashLoader hashLoader;
+  private final RuleKeyHasher<HashCode> hasher;
   private final RuleKeyLogger ruleKeyLogger;
 
   // Some RuleKey implementations may want to ignore some fields. To achieve this, in addition to
@@ -62,17 +60,19 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   // This may potentially be a correctness issue so this should converted to a FIFO behavior.
   private Stack<String> keyStack;
 
-  public RuleKeyBuilder(
+  @VisibleForTesting
+  protected RuleKeyBuilder(
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver resolver,
       FileHashLoader hashLoader,
+      RuleKeyHasher<HashCode> hasher,
       RuleKeyLogger ruleKeyLogger) {
     this.ruleFinder = ruleFinder;
     this.resolver = resolver;
-    this.hasher = Hashing.sha1().newHasher();
     this.hashLoader = hashLoader;
-    this.keyStack = new Stack<>();
+    this.hasher = hasher;
     this.ruleKeyLogger = ruleKeyLogger;
+    this.keyStack = new Stack<>();
   }
 
   public RuleKeyBuilder(
@@ -83,63 +83,98 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
         ruleFinder,
         resolver,
         hashLoader,
+        new GuavaRuleKeyHasher(Hashing.sha1().newHasher()),
         logger.isVerboseEnabled() ?
             new DefaultRuleKeyLogger() :
             new NullRuleKeyLogger());
   }
 
-  private void hashString(String string) {
-    hasher.putUnencodedChars(string);
-  }
+
+  // {@code feed} methods hash the keystack prior to hashing the actual value. Other methods should
+  // never interact with RuleKeyHasher directly, but rather through these methods.
+  // TODO(plamenko): this will soon get refactored to a more sound mechanism.
 
   private void hashKeyStack() {
     while (!keyStack.isEmpty()) {
-      hashString(keyStack.pop());
-      hasher.putByte(SEPARATOR);
+      hasher.putKey(keyStack.pop());
     }
   }
 
-  private RuleKeyBuilder<RULE_KEY> feed(Number val) {
+  private void feedNull() {
     hashKeyStack();
-    if (val instanceof Double) {
-      hasher.putDouble((Double) val);
-    } else if (val instanceof Float) {
-      hasher.putFloat((Float) val);
-    } else if (val instanceof Integer) {
-      hasher.putInt((Integer) val);
-    } else if (val instanceof Long) {
-      hasher.putLong((Long) val);
-    } else if (val instanceof Short) {
-      hasher.putShort((Short) val);
-    } else if (val instanceof Byte) {
-      hasher.putByte((Byte) val);
-    } else {
-      throw new RuntimeException(("Unhandled number type: " + val.getClass()));
-    }
-    hasher.putByte(SEPARATOR);
-    return this;
+    hasher.putNull();
   }
 
-  private RuleKeyBuilder<RULE_KEY> feed(String key) {
+  private void feedBoolean(boolean val) {
     hashKeyStack();
-    hashString(key);
-    hasher.putByte(SEPARATOR);
-    return this;
+    hasher.putBoolean(val);
   }
 
-  private RuleKeyBuilder<RULE_KEY> feed(byte[] bytes) {
+  private void feedNumber(Number val) {
+    hashKeyStack();
+    hasher.putNumber(val);
+  }
+
+  private void feedString(String val) {
+    hashKeyStack();
+    hasher.putString(val);
+  }
+
+  private void feedBytes(byte[] bytes) {
     hashKeyStack();
     hasher.putBytes(bytes);
-    hasher.putByte(SEPARATOR);
-    return this;
   }
 
-  private RuleKeyBuilder<RULE_KEY> feed(Sha1HashCode sha1) {
+  private void feedPattern(Pattern pattern) {
     hashKeyStack();
-    sha1.update(hasher);
-    hasher.putByte(SEPARATOR);
-    return this;
+    hasher.putPattern(pattern);
   }
+
+  private void feedSha1(Sha1HashCode sha1) {
+    hashKeyStack();
+    hasher.putSha1(sha1);
+  }
+
+  private void feedPath(Path path, String hash) {
+    hashKeyStack();
+    hasher.putPath(path, hash);
+  }
+
+  private void feedArchiveMemberPath(ArchiveMemberPath path, String hash) {
+    hashKeyStack();
+    hasher.putArchiveMemberPath(path, hash);
+  }
+
+  private void feedNonHashingPath(String path) {
+    hashKeyStack();
+    hasher.putNonHashingPath(path);
+  }
+
+  private void feedSourceRoot(SourceRoot sourceRoot) {
+    hashKeyStack();
+    hasher.putSourceRoot(sourceRoot);
+  }
+
+  private void feedRuleKey(RuleKey ruleKey) {
+    hashKeyStack();
+    hasher.putRuleKey(ruleKey);
+  }
+
+  private void feedBuildRuleType(BuildRuleType buildRuleType) {
+    hashKeyStack();
+    hasher.putBuildRuleType(buildRuleType);
+  }
+
+  private void feedBuildTarget(BuildTarget buildTarget) {
+    hashKeyStack();
+    hasher.putBuildTarget(buildTarget);
+  }
+
+  private void feedBuildTargetSourcePath(BuildTargetSourcePath buildTargetSourcePath) {
+    hashKeyStack();
+    hasher.putBuildTargetSourcePath(buildTargetSourcePath);
+  }
+
 
   protected RuleKeyBuilder<RULE_KEY> setSourcePath(SourcePath sourcePath) {
     if (sourcePath instanceof ArchiveMemberSourcePath) {
@@ -153,8 +188,9 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     }
 
     if (sourcePath instanceof BuildTargetSourcePath) {
-      BuildRule buildRule = ruleFinder.getRuleOrThrow((BuildTargetSourcePath) sourcePath);
-      feed(sourcePath.toString());
+      BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) sourcePath;
+      BuildRule buildRule = ruleFinder.getRuleOrThrow(buildTargetSourcePath);
+      feedBuildTargetSourcePath(buildTargetSourcePath);
       return setBuildRule(buildRule);
     }
 
@@ -186,7 +222,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     }
 
     ruleKeyLogger.addNonHashingPath(pathForKey);
-    feed(pathForKey);
+    feedNonHashingPath(pathForKey);
     return this;
   }
 
@@ -257,18 +293,19 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
               val);
         }
         try (RuleKeyLogger.Scope mapScope = ruleKeyLogger.pushMap()) {
-          feed("{");
+          feedString("{");
           for (Map.Entry<?, ?> entry : ((Map<?, ?>) val).entrySet()) {
             try (RuleKeyLogger.Scope mapKeyScope = ruleKeyLogger.pushMapKey()) {
               setReflectively(key, entry.getKey());
             }
-            feed(" -> ");
+            feedString(" -> ");
             try (RuleKeyLogger.Scope mapValueScope = ruleKeyLogger.pushMapValue()) {
               setReflectively(key, entry.getValue());
             }
           }
+          feedString("}");
         }
-        return feed("}");
+        return this;
       }
 
       if (val instanceof BuildRule) {
@@ -333,9 +370,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     }
 
     ruleKeyLogger.addPath(addToKey, sha1);
-
-    feed(addToKey.toString());
-    feed(sha1.toString());
+    feedPath(addToKey, sha1.toString());
     return this;
   }
 
@@ -352,52 +387,47 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
 
     ArchiveMemberPath addToKey = relativeArchiveMemberPath;
     ruleKeyLogger.addArchiveMemberPath(addToKey, hash);
-
-    feed(addToKey.toString());
-    feed(hash.toString());
+    feedArchiveMemberPath(addToKey, hash.toString());
     return this;
   }
 
   private RuleKeyBuilder<RULE_KEY> setSingleValue(@Nullable Object val) {
     if (val == null) { // Null value first
       ruleKeyLogger.addNullValue();
-      return feed(new byte[0]);
+      feedNull();
     } else if (val instanceof Boolean) {           // JRE types
       ruleKeyLogger.addValue((boolean) val);
-      feed((boolean) val ? "t" : "f");
+      feedBoolean((boolean) val);
     } else if (val instanceof Enum) {
       ruleKeyLogger.addValue((Enum<?>) val);
-      feed(String.valueOf(val));
+      feedString(String.valueOf(val));
     } else if (val instanceof Number) {
       ruleKeyLogger.addValue((Number) val);
-      feed((Number) val);
+      feedNumber((Number) val);
     } else if (val instanceof String) {
       ruleKeyLogger.addValue((String) val);
-      feed((String) val);
+      feedString((String) val);
     } else if (val instanceof Pattern) {
       ruleKeyLogger.addValue((Pattern) val);
-      feed(val.toString());
-    } else if (val instanceof BuildRuleType) {                       // Buck types
+      feedPattern((Pattern) val);
+    } else if (val instanceof BuildRuleType) {
       ruleKeyLogger.addValue((BuildRuleType) val);
-      feed(val.toString());
+      feedBuildRuleType((BuildRuleType) val);
     } else if (val instanceof RuleKey) {
       ruleKeyLogger.addValue((RuleKey) val);
-      feed(val.toString());
+      feedRuleKey((RuleKey) val);
     } else if (val instanceof BuildTarget) {
-      BuildTarget buildTarget = (BuildTarget) val;
-      ruleKeyLogger.addValue(buildTarget);
-      feed(buildTarget.getFullyQualifiedName());
+      ruleKeyLogger.addValue((BuildTarget) val);
+      feedBuildTarget((BuildTarget) val);
     } else if (val instanceof SourceRoot) {
-      SourceRoot sourceRoot = ((SourceRoot) val);
-      ruleKeyLogger.addValue(sourceRoot);
-      feed(sourceRoot.getName());
+      ruleKeyLogger.addValue((SourceRoot) val);
+      feedSourceRoot((SourceRoot) val);
     } else if (val instanceof Sha1HashCode) {
-      Sha1HashCode hashCode = (Sha1HashCode) val;
-      feed(hashCode);
+      // TODO(plamenko): ruleKeyLogger
+      feedSha1((Sha1HashCode) val);
     } else if (val instanceof byte[]) {
-      byte[] bytes = (byte[]) val;
-      ruleKeyLogger.addValue(bytes);
-      feed(bytes);
+      ruleKeyLogger.addValue((byte[]) val);
+      feedBytes((byte[]) val);
     } else {
       throw new RuntimeException("Unsupported value type: " + val.getClass());
     }
