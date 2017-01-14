@@ -53,21 +53,18 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   private final FileHashLoader hashLoader;
   private final CountingRuleKeyHasher<HashCode> hasher;
   private final RuleKeyScopedHasher<HashCode> scopedHasher;
-  private final RuleKeyLogger ruleKeyLogger;
 
   @VisibleForTesting
   protected RuleKeyBuilder(
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver resolver,
       FileHashLoader hashLoader,
-      RuleKeyHasher<HashCode> hasher,
-      RuleKeyLogger ruleKeyLogger) {
+      RuleKeyHasher<HashCode> hasher) {
     this.ruleFinder = ruleFinder;
     this.resolver = resolver;
     this.hashLoader = hashLoader;
     this.hasher = new CountingRuleKeyHasher<>(hasher);
     this.scopedHasher = new RuleKeyScopedHasher<>(this.hasher);
-    this.ruleKeyLogger = ruleKeyLogger;
   }
 
   // TODO(plamenko): make this package private once RuleKeyBuilder is moved to the keys subpackage.
@@ -84,10 +81,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
         ruleFinder,
         resolver,
         hashLoader,
-        new GuavaRuleKeyHasher(Hashing.sha1().newHasher()),
-        logger.isVerboseEnabled() ?
-            new DefaultRuleKeyLogger() :
-            new NullRuleKeyLogger());
+        LoggingRuleKeyHasher.of(new GuavaRuleKeyHasher(Hashing.sha1().newHasher())));
   }
 
   protected RuleKeyBuilder<RULE_KEY> setSourcePath(SourcePath sourcePath) {
@@ -134,8 +128,6 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     } else {
       pathForKey = resolver.getRelativePath(sourcePath).toString();
     }
-
-    ruleKeyLogger.addNonHashingPath(pathForKey);
     hasher.putNonHashingPath(pathForKey);
     return this;
   }
@@ -166,19 +158,15 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
 
   @Override
   public final RuleKeyBuilder<RULE_KEY> setReflectively(String key, @Nullable Object val) {
-    try (RuleKeyLogger.Scope loggerKeyScope = ruleKeyLogger.pushKey(key)) {
-      try (Scope keyScope = scopedHasher.keyScope(key)) {
-        return setReflectively(val);
-      }
+    try (Scope keyScope = scopedHasher.keyScope(key)) {
+      return setReflectively(val);
     }
   }
 
   @Override
   public final RuleKeyObjectSink setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
-    try (RuleKeyLogger.Scope loggerKeyScope = ruleKeyLogger.pushKey(key)) {
-      try (Scope keyScope = scopedHasher.keyScope(key)) {
-        return setAppendableRuleKey(appendable);
-      }
+    try (Scope keyScope = scopedHasher.keyScope(key)) {
+      return setAppendableRuleKey(appendable);
     }
   }
 
@@ -249,20 +237,17 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
 
     if (val instanceof Map) {
       if (!(val instanceof SortedMap || val instanceof ImmutableMap)) {
-        logger.info(
+        logger.warn(
             "Adding an unsorted map to the rule key. " +
                 "Expect unstable ordering and caches misses: %s",
             val);
       }
-      try (ContainerScope containerScope = scopedHasher.containerScope(Container.MAP);
-           RuleKeyLogger.Scope mapScope = ruleKeyLogger.pushMap()) {
+      try (ContainerScope containerScope = scopedHasher.containerScope(Container.MAP)) {
         for (Map.Entry<?, ?> entry : ((Map<?, ?>) val).entrySet()) {
-          try (Scope elementScope = containerScope.elementScope();
-               RuleKeyLogger.Scope mapKeyScope = ruleKeyLogger.pushMapKey()) {
+          try (Scope elementScope = containerScope.elementScope()) {
             setReflectively(entry.getKey());
           }
-          try (Scope elementScope = containerScope.elementScope();
-               RuleKeyLogger.Scope mapValueScope = ruleKeyLogger.pushMapValue()) {
+          try (Scope elementScope = containerScope.elementScope()) {
             setReflectively(entry.getValue());
           }
         }
@@ -286,10 +271,8 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
 
     if (val instanceof SourceWithFlags) {
       SourceWithFlags source = (SourceWithFlags) val;
-      try (RuleKeyLogger.Scope scope = ruleKeyLogger.pushSourceWithFlags()) {
-        setSourcePath(source.getSourcePath());
-        setReflectively(source.getFlags());
-      }
+      setSourcePath(source.getSourcePath());
+      setReflectively(source.getFlags());
       return this;
     }
 
@@ -321,7 +304,6 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
       addToKey = ideallyRelative;
     }
 
-    ruleKeyLogger.addPath(addToKey, sha1);
     hasher.putPath(addToKey, sha1.toString());
     return this;
   }
@@ -338,47 +320,34 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     }
 
     ArchiveMemberPath addToKey = relativeArchiveMemberPath;
-    ruleKeyLogger.addArchiveMemberPath(addToKey, hash);
     hasher.putArchiveMemberPath(addToKey, hash.toString());
     return this;
   }
 
   private RuleKeyBuilder<RULE_KEY> setSingleValue(@Nullable Object val) {
     if (val == null) { // Null value first
-      ruleKeyLogger.addNullValue();
       hasher.putNull();
     } else if (val instanceof Boolean) {           // JRE types
-      ruleKeyLogger.addValue((boolean) val);
       hasher.putBoolean((boolean) val);
     } else if (val instanceof Enum) {
-      ruleKeyLogger.addValue((Enum<?>) val);
       hasher.putString(String.valueOf(val));
     } else if (val instanceof Number) {
-      ruleKeyLogger.addValue((Number) val);
       hasher.putNumber((Number) val);
     } else if (val instanceof String) {
-      ruleKeyLogger.addValue((String) val);
       hasher.putString((String) val);
     } else if (val instanceof Pattern) {
-      ruleKeyLogger.addValue((Pattern) val);
       hasher.putPattern((Pattern) val);
-    } else if (val instanceof BuildRuleType) {
-      ruleKeyLogger.addValue((BuildRuleType) val);
+    } else if (val instanceof BuildRuleType) {           // Buck types
       hasher.putBuildRuleType((BuildRuleType) val);
     } else if (val instanceof RuleKey) {
-      ruleKeyLogger.addValue((RuleKey) val);
       hasher.putRuleKey((RuleKey) val);
     } else if (val instanceof BuildTarget) {
-      ruleKeyLogger.addValue((BuildTarget) val);
       hasher.putBuildTarget((BuildTarget) val);
     } else if (val instanceof SourceRoot) {
-      ruleKeyLogger.addValue((SourceRoot) val);
       hasher.putSourceRoot((SourceRoot) val);
     } else if (val instanceof Sha1HashCode) {
-      // TODO(plamenko): ruleKeyLogger
       hasher.putSha1((Sha1HashCode) val);
     } else if (val instanceof byte[]) {
-      ruleKeyLogger.addValue((byte[]) val);
       hasher.putBytes((byte[]) val);
     } else {
       throw new RuntimeException("Unsupported value type: " + val.getClass());
@@ -387,9 +356,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   }
 
   protected final RuleKey buildRuleKey() {
-    RuleKey ruleKey = new RuleKey(hasher.hash());
-    ruleKeyLogger.registerRuleKey(ruleKey);
-    return ruleKey;
+    return new RuleKey(hasher.hash());
   }
 
   public abstract RULE_KEY build();

@@ -231,7 +231,6 @@ class RuleKeyStructureInfo(object):
                 last_key = e[4:-1]
             else:
                 appendValue(structure_map, last_key, e)
-                last_key = None
 
         return (top_key, structure_map)
 

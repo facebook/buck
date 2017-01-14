@@ -212,8 +212,7 @@ public class RuleKeyBuilderTest {
         ),
         ImmutableMap.of());
     RuleKeyHasher<HashCode> hasher = new GuavaRuleKeyHasher(Hashing.sha1().newHasher());
-    RuleKeyLogger logger = new NullRuleKeyLogger();
-    return new RuleKeyBuilder<RuleKey>(ruleFinder, pathResolver, hashCache, hasher, logger) {
+    return new RuleKeyBuilder<RuleKey>(ruleFinder, pathResolver, hashCache, hasher) {
       @Override
       protected RuleKeyBuilder<RuleKey> setBuildRule(BuildRule rule) {
         if (rule == IGNORED_RULE) {

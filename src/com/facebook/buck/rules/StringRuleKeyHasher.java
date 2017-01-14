@@ -41,7 +41,7 @@ public class StringRuleKeyHasher implements RuleKeyHasher<String> {
 
   @Override
   public RuleKeyHasher<String> putNull() {
-    parts.add(String.format("null"));
+    parts.add(String.format("null()"));
     return this;
   }
 
@@ -143,6 +143,7 @@ public class StringRuleKeyHasher implements RuleKeyHasher<String> {
 
   @Override
   public String hash() {
+    parts.add(":");
     return Joiner.on(":").join(parts);
   }
 }

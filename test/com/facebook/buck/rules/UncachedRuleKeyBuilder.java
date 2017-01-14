@@ -30,19 +30,17 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder<RuleKey> {
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver resolver,
       FileHashCache hashCache,
-      RuleKeyFactory<RuleKey> ruleKeyFactory,
-      RuleKeyLogger ruleKeyLogger) {
-    super(ruleFinder, resolver, hashCache, createHasher(), ruleKeyLogger);
-    this.ruleKeyFactory = ruleKeyFactory;
-    this.subKeySupplier = createSubKeySupplier(ruleFinder, resolver, hashCache, ruleKeyFactory);
+      RuleKeyFactory<RuleKey> ruleKeyFactory) {
+    this(ruleFinder, resolver, hashCache, createHasher(), ruleKeyFactory);
   }
 
   public UncachedRuleKeyBuilder(
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver resolver,
       FileHashCache hashCache,
+      RuleKeyHasher<HashCode> hasher,
       RuleKeyFactory<RuleKey> ruleKeyFactory) {
-    super(ruleFinder, resolver, hashCache);
+    super(ruleFinder, resolver, hashCache, hasher);
     this.ruleKeyFactory = ruleKeyFactory;
     this.subKeySupplier = createSubKeySupplier(ruleFinder, resolver, hashCache, ruleKeyFactory);
   }
