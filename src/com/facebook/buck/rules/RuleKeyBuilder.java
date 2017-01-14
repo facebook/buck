@@ -192,9 +192,13 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
 
   /**
    * Implementations should ask their factories to compute the rule key for the {@link BuildRule}
-   * and call {@link #setSingleValue(Object)} on it.
+   * and call {@link #setBuildRuleKey(RuleKey)} on it.
    */
   protected abstract RuleKeyBuilder<RULE_KEY> setBuildRule(BuildRule rule);
+
+  protected final RuleKeyBuilder<RULE_KEY> setBuildRuleKey(RuleKey ruleKey) {
+    return setSingleValue(ruleKey);
+  }
 
   protected final RuleKeyBuilder<RULE_KEY> setAppendableRuleKey(String key, RuleKey ruleKey) {
     return setReflectively(key + ".appendableSubKey", ruleKey);
@@ -360,7 +364,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     return this;
   }
 
-  protected final RuleKeyBuilder<RULE_KEY> setSingleValue(@Nullable Object val) {
+  private RuleKeyBuilder<RULE_KEY> setSingleValue(@Nullable Object val) {
     if (val == null) { // Null value first
       ruleKeyLogger.addNullValue();
       return feed(new byte[0]);

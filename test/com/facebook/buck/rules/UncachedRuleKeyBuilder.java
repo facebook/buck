@@ -59,7 +59,7 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder<RuleKey> {
 
   @Override
   protected UncachedRuleKeyBuilder setBuildRule(BuildRule rule) {
-    setSingleValue(ruleKeyFactory.build(rule));
+    setBuildRuleKey(ruleKeyFactory.build(rule));
     return this;
   }
 

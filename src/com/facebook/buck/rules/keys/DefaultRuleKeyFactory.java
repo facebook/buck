@@ -67,7 +67,7 @@ public class DefaultRuleKeyFactory
     return new RuleKeyBuilder<RuleKey>(ruleFinder, pathResolver, hashLoader) {
       @Override
       protected RuleKeyBuilder<RuleKey> setBuildRule(BuildRule rule) {
-        return setSingleValue(DefaultRuleKeyFactory.this.build(rule));
+        return setBuildRuleKey(DefaultRuleKeyFactory.this.build(rule));
       }
 
       @Override

@@ -87,7 +87,7 @@ public class ContentAgnosticRuleKeyFactory
     return new RuleKeyBuilder<RuleKey>(ruleFinder, pathResolver, fileHashLoader) {
       @Override
       protected RuleKeyBuilder<RuleKey> setBuildRule(BuildRule rule) {
-        return setSingleValue(ContentAgnosticRuleKeyFactory.this.build(rule));
+        return setBuildRuleKey(ContentAgnosticRuleKeyFactory.this.build(rule));
       }
 
       @Override
