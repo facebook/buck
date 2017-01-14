@@ -16,11 +16,15 @@
 
 package com.facebook.buck.rules;
 
+import static com.facebook.buck.rules.RuleKeyScopedHasher.Scope;
+import static com.facebook.buck.rules.RuleKeyHasher.Container;
+import static com.facebook.buck.rules.RuleKeyHasher.Wrapper;
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
+import com.facebook.buck.rules.RuleKeyScopedHasher.ContainerScope;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
@@ -36,7 +40,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
-import java.util.Stack;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
@@ -48,17 +51,9 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   private final SourcePathRuleFinder ruleFinder;
   private final SourcePathResolver resolver;
   private final FileHashLoader hashLoader;
-  private final RuleKeyHasher<HashCode> hasher;
+  private final CountingRuleKeyHasher<HashCode> hasher;
+  private final RuleKeyScopedHasher<HashCode> scopedHasher;
   private final RuleKeyLogger ruleKeyLogger;
-
-  // Some RuleKey implementations may want to ignore some fields. To achieve this, in addition to
-  // not hashing values of such fields, we must also not hash the keys (names) of those fields.
-  // This stack is kept of (recursive) keys so that we can delay hashing the keys until we
-  // decide that a value actually needs hashing. Before a value is hashed, we pop through the stack
-  // hashing the keys.
-  // Right now this is implemented as a stack which pops and hashes the keys in the reverse order.
-  // This may potentially be a correctness issue so this should converted to a FIFO behavior.
-  private Stack<String> keyStack;
 
   @VisibleForTesting
   protected RuleKeyBuilder(
@@ -70,9 +65,15 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     this.ruleFinder = ruleFinder;
     this.resolver = resolver;
     this.hashLoader = hashLoader;
-    this.hasher = hasher;
+    this.hasher = new CountingRuleKeyHasher<>(hasher);
+    this.scopedHasher = new RuleKeyScopedHasher<>(this.hasher);
     this.ruleKeyLogger = ruleKeyLogger;
-    this.keyStack = new Stack<>();
+  }
+
+  // TODO(plamenko): make this package private once RuleKeyBuilder is moved to the keys subpackage.
+  @VisibleForTesting
+  public RuleKeyScopedHasher<HashCode> getScopedHasher() {
+    return this.scopedHasher;
   }
 
   public RuleKeyBuilder(
@@ -89,93 +90,6 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
             new NullRuleKeyLogger());
   }
 
-
-  // {@code feed} methods hash the keystack prior to hashing the actual value. Other methods should
-  // never interact with RuleKeyHasher directly, but rather through these methods.
-  // TODO(plamenko): this will soon get refactored to a more sound mechanism.
-
-  private void hashKeyStack() {
-    while (!keyStack.isEmpty()) {
-      hasher.putKey(keyStack.pop());
-    }
-  }
-
-  private void feedNull() {
-    hashKeyStack();
-    hasher.putNull();
-  }
-
-  private void feedBoolean(boolean val) {
-    hashKeyStack();
-    hasher.putBoolean(val);
-  }
-
-  private void feedNumber(Number val) {
-    hashKeyStack();
-    hasher.putNumber(val);
-  }
-
-  private void feedString(String val) {
-    hashKeyStack();
-    hasher.putString(val);
-  }
-
-  private void feedBytes(byte[] bytes) {
-    hashKeyStack();
-    hasher.putBytes(bytes);
-  }
-
-  private void feedPattern(Pattern pattern) {
-    hashKeyStack();
-    hasher.putPattern(pattern);
-  }
-
-  private void feedSha1(Sha1HashCode sha1) {
-    hashKeyStack();
-    hasher.putSha1(sha1);
-  }
-
-  private void feedPath(Path path, String hash) {
-    hashKeyStack();
-    hasher.putPath(path, hash);
-  }
-
-  private void feedArchiveMemberPath(ArchiveMemberPath path, String hash) {
-    hashKeyStack();
-    hasher.putArchiveMemberPath(path, hash);
-  }
-
-  private void feedNonHashingPath(String path) {
-    hashKeyStack();
-    hasher.putNonHashingPath(path);
-  }
-
-  private void feedSourceRoot(SourceRoot sourceRoot) {
-    hashKeyStack();
-    hasher.putSourceRoot(sourceRoot);
-  }
-
-  private void feedRuleKey(RuleKey ruleKey) {
-    hashKeyStack();
-    hasher.putRuleKey(ruleKey);
-  }
-
-  private void feedBuildRuleType(BuildRuleType buildRuleType) {
-    hashKeyStack();
-    hasher.putBuildRuleType(buildRuleType);
-  }
-
-  private void feedBuildTarget(BuildTarget buildTarget) {
-    hashKeyStack();
-    hasher.putBuildTarget(buildTarget);
-  }
-
-  private void feedBuildTargetSourcePath(BuildTargetSourcePath buildTargetSourcePath) {
-    hashKeyStack();
-    hasher.putBuildTargetSourcePath(buildTargetSourcePath);
-  }
-
-
   protected RuleKeyBuilder<RULE_KEY> setSourcePath(SourcePath sourcePath) {
     if (sourcePath instanceof ArchiveMemberSourcePath) {
       try {
@@ -190,7 +104,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     if (sourcePath instanceof BuildTargetSourcePath) {
       BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) sourcePath;
       BuildRule buildRule = ruleFinder.getRuleOrThrow(buildTargetSourcePath);
-      feedBuildTargetSourcePath(buildTargetSourcePath);
+      hasher.putBuildTargetSourcePath(buildTargetSourcePath);
       return setBuildRule(buildRule);
     }
 
@@ -222,7 +136,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     }
 
     ruleKeyLogger.addNonHashingPath(pathForKey);
-    feedNonHashingPath(pathForKey);
+    hasher.putNonHashingPath(pathForKey);
     return this;
   }
 
@@ -233,115 +147,153 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   protected abstract RuleKeyBuilder<RULE_KEY> setBuildRule(BuildRule rule);
 
   protected final RuleKeyBuilder<RULE_KEY> setBuildRuleKey(RuleKey ruleKey) {
-    return setSingleValue(ruleKey);
+    try (Scope wraperScope = scopedHasher.wrapperScope(Wrapper.BUILD_RULE)) {
+      return setSingleValue(ruleKey);
+    }
   }
 
-  protected final RuleKeyBuilder<RULE_KEY> setAppendableRuleKey(String key, RuleKey ruleKey) {
-    return setReflectively(key + ".appendableSubKey", ruleKey);
+  /**
+   * Implementations should ask their factories to compute the rule key for the
+   * {@link RuleKeyAppendable} and call {@link #setAppendableRuleKey(RuleKey)} on it.
+   */
+  protected abstract RuleKeyBuilder<RULE_KEY> setAppendableRuleKey(RuleKeyAppendable appendable);
+
+  protected final RuleKeyBuilder<RULE_KEY> setAppendableRuleKey(RuleKey ruleKey) {
+    try (Scope wraperScope = scopedHasher.wrapperScope(Wrapper.APPENDABLE)){
+      return setSingleValue(ruleKey);
+    }
   }
 
   @Override
-  public RuleKeyBuilder<RULE_KEY> setReflectively(String key, @Nullable Object val) {
+  public final RuleKeyBuilder<RULE_KEY> setReflectively(String key, @Nullable Object val) {
+    try (RuleKeyLogger.Scope loggerKeyScope = ruleKeyLogger.pushKey(key)) {
+      try (Scope keyScope = scopedHasher.keyScope(key)) {
+        return setReflectively(val);
+      }
+    }
+  }
+
+  @Override
+  public final RuleKeyObjectSink setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
+    try (RuleKeyLogger.Scope loggerKeyScope = ruleKeyLogger.pushKey(key)) {
+      try (Scope keyScope = scopedHasher.keyScope(key)) {
+        return setAppendableRuleKey(appendable);
+      }
+    }
+  }
+
+  protected RuleKeyBuilder<RULE_KEY> setReflectively(@Nullable Object val) {
     if (val instanceof RuleKeyAppendable) {
-      setAppendableRuleKey(key, (RuleKeyAppendable) val);
+      setAppendableRuleKey((RuleKeyAppendable) val);
       if (!(val instanceof BuildRule)) {
         return this;
       }
-
       // Explicitly fall through for BuildRule objects so we include
-      // their cache keys (which may include more data than
-      // appendToRuleKey() does).
+      // their cache keys (which may include more data than appendToRuleKey() does).
+    }
+    if (val instanceof BuildRule) {
+      return setBuildRule((BuildRule) val);
     }
 
-    // Optionals and alike types get special handling. Unwrap them if necessary and recurse.
+    if (val instanceof Supplier) {
+      try (Scope containerScope = scopedHasher.wrapperScope(Wrapper.SUPPLIER)) {
+        Object newVal = ((Supplier<?>) val).get();
+        return setReflectively(newVal);
+      }
+    }
+
     if (val instanceof Optional) {
       Object o = ((Optional<?>) val).orElse(null);
-      return setReflectively(key, o);
+      try (Scope wraperScope = scopedHasher.wrapperScope(Wrapper.OPTIONAL)){
+        return setReflectively(o);
+      }
     }
+
     if (val instanceof Either) {
       Either<?, ?> either = (Either<?, ?>) val;
       if (either.isLeft()) {
-        return setReflectively(key, either.getLeft());
+        try (Scope wraperScope = scopedHasher.wrapperScope(Wrapper.EITHER_LEFT)){
+          return setReflectively(either.getLeft());
+        }
       } else {
-        return setReflectively(key, either.getRight());
+        try (Scope wraperScope = scopedHasher.wrapperScope(Wrapper.EITHER_RIGHT)) {
+          return setReflectively(either.getRight());
+        }
       }
     }
 
-    int oldSize = keyStack.size();
-    keyStack.push(key);
-    try (RuleKeyLogger.Scope keyScope = ruleKeyLogger.pushKey(key)) {
-      // Check to see if we're dealing with a collection of some description. Note
-      // java.nio.file.Path implements "Iterable", so we explicitly check for Path.
-      if (val instanceof Iterable && !(val instanceof Path)) {
-        return setReflectively(key, ((Iterable<?>) val).iterator());
-      }
-
-      if (val instanceof Iterator) {
-        Iterator<?> iterator = (Iterator<?>) val;
-        while (iterator.hasNext()) {
-          setReflectively(key, iterator.next());
-        }
-        return this;
-      }
-
-      if (val instanceof Map) {
-        if (!(val instanceof SortedMap || val instanceof ImmutableMap)) {
-          logger.info(
-              "Adding an unsorted map to the rule key (%s). " +
-                  "Expect unstable ordering and caches misses: %s",
-              key,
-              val);
-        }
-        try (RuleKeyLogger.Scope mapScope = ruleKeyLogger.pushMap()) {
-          feedString("{");
-          for (Map.Entry<?, ?> entry : ((Map<?, ?>) val).entrySet()) {
-            try (RuleKeyLogger.Scope mapKeyScope = ruleKeyLogger.pushMapKey()) {
-              setReflectively(key, entry.getKey());
-            }
-            feedString(" -> ");
-            try (RuleKeyLogger.Scope mapValueScope = ruleKeyLogger.pushMapValue()) {
-              setReflectively(key, entry.getValue());
-            }
+    // Check to see if we're dealing with a collection of some description.
+    // Note {@link java.nio.file.Path} implements "Iterable", so we explicitly exclude it here.
+    if (val instanceof Iterable && !(val instanceof Path)) {
+      try (ContainerScope containerScope = scopedHasher.containerScope(Container.LIST)) {
+        for (Object element : (Iterable<?>) val) {
+          try (Scope elementScope = containerScope.elementScope()) {
+            setReflectively(element);
           }
-          feedString("}");
         }
         return this;
-      }
-
-      if (val instanceof BuildRule) {
-        return setBuildRule((BuildRule) val);
-      }
-      if (val instanceof Path) {
-        throw new HumanReadableException(
-            "It's not possible to reliably disambiguate Paths. They are disallowed from rule keys");
-      }
-      if (val instanceof SourcePath) {
-        return setSourcePath((SourcePath) val);
-      }
-      if (val instanceof NonHashableSourcePathContainer) {
-        SourcePath sourcePath = ((NonHashableSourcePathContainer) val).getSourcePath();
-        return setNonHashingSourcePath(sourcePath);
-      }
-      if (val instanceof SourceWithFlags) {
-        SourceWithFlags source = (SourceWithFlags) val;
-        try (RuleKeyLogger.Scope scope = ruleKeyLogger.pushSourceWithFlags()) {
-          setSourcePath(source.getSourcePath());
-          setReflectively(key, source.getFlags());
-        }
-        return this;
-      }
-
-      if (val instanceof Supplier) {
-        Object newVal = ((Supplier<?>) val).get();
-        return setReflectively(key, newVal);
-      }
-
-      return setSingleValue(val);
-    } finally {
-      while (keyStack.size() > oldSize) {
-        keyStack.pop();
       }
     }
+
+    if (val instanceof Iterator) {
+      Iterator<?> iterator = (Iterator<?>) val;
+      try (ContainerScope containerScope = scopedHasher.containerScope(Container.LIST)) {
+        while (iterator.hasNext()) {
+          try (Scope elementScope = containerScope.elementScope()) {
+            setReflectively(iterator.next());
+          }
+        }
+      }
+      return this;
+    }
+
+    if (val instanceof Map) {
+      if (!(val instanceof SortedMap || val instanceof ImmutableMap)) {
+        logger.info(
+            "Adding an unsorted map to the rule key. " +
+                "Expect unstable ordering and caches misses: %s",
+            val);
+      }
+      try (ContainerScope containerScope = scopedHasher.containerScope(Container.MAP);
+           RuleKeyLogger.Scope mapScope = ruleKeyLogger.pushMap()) {
+        for (Map.Entry<?, ?> entry : ((Map<?, ?>) val).entrySet()) {
+          try (Scope elementScope = containerScope.elementScope();
+               RuleKeyLogger.Scope mapKeyScope = ruleKeyLogger.pushMapKey()) {
+            setReflectively(entry.getKey());
+          }
+          try (Scope elementScope = containerScope.elementScope();
+               RuleKeyLogger.Scope mapValueScope = ruleKeyLogger.pushMapValue()) {
+            setReflectively(entry.getValue());
+          }
+        }
+      }
+      return this;
+    }
+
+    if (val instanceof Path) {
+      throw new HumanReadableException(
+          "It's not possible to reliably disambiguate Paths. They are disallowed from rule keys");
+    }
+
+    if (val instanceof SourcePath) {
+      return setSourcePath((SourcePath) val);
+    }
+
+    if (val instanceof NonHashableSourcePathContainer) {
+      SourcePath sourcePath = ((NonHashableSourcePathContainer) val).getSourcePath();
+      return setNonHashingSourcePath(sourcePath);
+    }
+
+    if (val instanceof SourceWithFlags) {
+      SourceWithFlags source = (SourceWithFlags) val;
+      try (RuleKeyLogger.Scope scope = ruleKeyLogger.pushSourceWithFlags()) {
+        setSourcePath(source.getSourcePath());
+        setReflectively(source.getFlags());
+      }
+      return this;
+    }
+
+    return setSingleValue(val);
   }
 
   // Paths get added as a combination of the file name and file hash. If the path is absolute
@@ -370,7 +322,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     }
 
     ruleKeyLogger.addPath(addToKey, sha1);
-    feedPath(addToKey, sha1.toString());
+    hasher.putPath(addToKey, sha1.toString());
     return this;
   }
 
@@ -387,47 +339,47 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
 
     ArchiveMemberPath addToKey = relativeArchiveMemberPath;
     ruleKeyLogger.addArchiveMemberPath(addToKey, hash);
-    feedArchiveMemberPath(addToKey, hash.toString());
+    hasher.putArchiveMemberPath(addToKey, hash.toString());
     return this;
   }
 
   private RuleKeyBuilder<RULE_KEY> setSingleValue(@Nullable Object val) {
     if (val == null) { // Null value first
       ruleKeyLogger.addNullValue();
-      feedNull();
+      hasher.putNull();
     } else if (val instanceof Boolean) {           // JRE types
       ruleKeyLogger.addValue((boolean) val);
-      feedBoolean((boolean) val);
+      hasher.putBoolean((boolean) val);
     } else if (val instanceof Enum) {
       ruleKeyLogger.addValue((Enum<?>) val);
-      feedString(String.valueOf(val));
+      hasher.putString(String.valueOf(val));
     } else if (val instanceof Number) {
       ruleKeyLogger.addValue((Number) val);
-      feedNumber((Number) val);
+      hasher.putNumber((Number) val);
     } else if (val instanceof String) {
       ruleKeyLogger.addValue((String) val);
-      feedString((String) val);
+      hasher.putString((String) val);
     } else if (val instanceof Pattern) {
       ruleKeyLogger.addValue((Pattern) val);
-      feedPattern((Pattern) val);
+      hasher.putPattern((Pattern) val);
     } else if (val instanceof BuildRuleType) {
       ruleKeyLogger.addValue((BuildRuleType) val);
-      feedBuildRuleType((BuildRuleType) val);
+      hasher.putBuildRuleType((BuildRuleType) val);
     } else if (val instanceof RuleKey) {
       ruleKeyLogger.addValue((RuleKey) val);
-      feedRuleKey((RuleKey) val);
+      hasher.putRuleKey((RuleKey) val);
     } else if (val instanceof BuildTarget) {
       ruleKeyLogger.addValue((BuildTarget) val);
-      feedBuildTarget((BuildTarget) val);
+      hasher.putBuildTarget((BuildTarget) val);
     } else if (val instanceof SourceRoot) {
       ruleKeyLogger.addValue((SourceRoot) val);
-      feedSourceRoot((SourceRoot) val);
+      hasher.putSourceRoot((SourceRoot) val);
     } else if (val instanceof Sha1HashCode) {
       // TODO(plamenko): ruleKeyLogger
-      feedSha1((Sha1HashCode) val);
+      hasher.putSha1((Sha1HashCode) val);
     } else if (val instanceof byte[]) {
       ruleKeyLogger.addValue((byte[]) val);
-      feedBytes((byte[]) val);
+      hasher.putBytes((byte[]) val);
     } else {
       throw new RuntimeException("Unsupported value type: " + val.getClass());
     }

@@ -132,10 +132,10 @@ public final class InputBasedRuleKeyFactory
     }
 
     @Override
-    public Builder setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
+    protected Builder setAppendableRuleKey(RuleKeyAppendable appendable) {
       Result result = cache.getUnchecked(appendable);
       deps.add(result.getDeps());
-      setAppendableRuleKey(key, result.getRuleKey());
+      setAppendableRuleKey(result.getRuleKey());
       return this;
     }
 

@@ -71,11 +71,9 @@ public class DefaultRuleKeyFactory
       }
 
       @Override
-      public RuleKeyBuilder<RuleKey> setAppendableRuleKey(
-          String key,
-          RuleKeyAppendable appendable) {
+      protected RuleKeyBuilder<RuleKey> setAppendableRuleKey(RuleKeyAppendable appendable) {
         RuleKey subKey = ruleKeyCache.getUnchecked(appendable);
-        return setAppendableRuleKey(key, subKey);
+        return setAppendableRuleKey(subKey);
       }
 
       @Override

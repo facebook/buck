@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotEquals;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -42,6 +43,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
@@ -51,11 +54,13 @@ public class RuleKeyBuilderTest {
       BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one");
   private static final BuildTarget TARGET_2 =
       BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one#flavor");
+  private static final BuildRule IGNORED_RULE = new EmptyRule(TARGET_1);
   private static final BuildRule RULE_1 = new EmptyRule(TARGET_1);
   private static final BuildRule RULE_2 = new EmptyRule(TARGET_2);
   private static final RuleKey RULE_KEY_1 = new RuleKey("a002b39af204cdfaa5fdb67816b13867c32ac52c");
   private static final RuleKey RULE_KEY_2 = new RuleKey("b67816b13867c32ac52ca002b39af204cdfaa5fd");
 
+  private static final RuleKeyAppendable IGNORED_APPENDABLE = new FakeRuleKeyAppendable("");
   private static final RuleKeyAppendable APPENDABLE_1 = new FakeRuleKeyAppendable("");
   private static final RuleKeyAppendable APPENDABLE_2 = new FakeRuleKeyAppendable("42");
 
@@ -75,11 +80,10 @@ public class RuleKeyBuilderTest {
 
   @Test
   public void testUniqueness() {
-    // TODO(plamenko): at the moment some types collide with each other, uncomment once fixed.
     String[] fieldKeys = new String[] {"key1", "key2"};
     Object[] fieldValues = new Object[] {
         // Java types
-//        null,
+        null,
         true,
         false,
         0,
@@ -88,31 +92,31 @@ public class RuleKeyBuilderTest {
         (long) 42,
         (short) 0,
         (short) 42,
-//        (byte) 0,
-//        (byte) 42,
-//        (float) 0,
-//        (float) 42,
-//        (double) 0,
-//        (double) 42,
+        (byte) 0,
+        (byte) 42,
+        (float) 0,
+        (float) 42,
+        (double) 0,
+        (double) 42,
         "",
         "42",
-//        new byte[0],
+        new byte[0],
         new byte[] {42},
         new byte[] {42, 42},
         DummyEnum.BLACK,
         DummyEnum.WHITE,
-        //Pattern.compile(""),
-        //Pattern.compile("42"),
+        Pattern.compile(""),
+        Pattern.compile("42"),
 
         // Buck simple types
         Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c"),
         Sha1HashCode.of("b67816b13867c32ac52ca002b39af204cdfaa5fd"),
-        //new SourceRoot(""),
-        //new SourceRoot("42"),
-        //RULE_KEY_1,
-        //RULE_KEY_2,
-        //BuildRuleType.of(""),
-        //BuildRuleType.of("42"),
+        new SourceRoot(""),
+        new SourceRoot("42"),
+        RULE_KEY_1,
+        RULE_KEY_2,
+        BuildRuleType.of(""),
+        BuildRuleType.of("42"),
         TARGET_1,
         TARGET_2,
 
@@ -136,9 +140,9 @@ public class RuleKeyBuilderTest {
 
         // Wrappers
         Suppliers.ofInstance(42),
-        //Optional.of(42),
-        //Either.ofLeft(42),
-        //Either.ofRight(42),
+        Optional.of(42),
+        Either.ofLeft(42),
+        Either.ofRight(42),
 
         // Containers & nesting
         ImmutableList.of(42),
@@ -154,8 +158,9 @@ public class RuleKeyBuilderTest {
     desc.add("<empty>");
     for (String key : fieldKeys) {
       for (Object val : fieldValues) {
-        ruleKeys.add(newBuilder().setReflectively(key, val).build());
-        desc.add(String.format("{key=%s, val=%s{%s}}", key, val.getClass().getSimpleName(), val));
+        ruleKeys.add(calcRuleKey(key, val));
+        String clazz = (val != null) ? val.getClass().getSimpleName() : "";
+        desc.add(String.format("{key=%s, val=%s{%s}}", key, clazz, val));
       }
     }
     // all of the rule keys should be different
@@ -172,11 +177,20 @@ public class RuleKeyBuilderTest {
   @Test
   public void testNoOp() {
     RuleKey noop = newBuilder().build();
-    List<String> list = ImmutableList.of();
-    //Map<String, String> map = ImmutableMap.of();
-    assertEquals(noop, newBuilder().setReflectively("key", list).build());
-    assertEquals(noop, newBuilder().setReflectively("key", list.iterator()).build());
-    //assertEquals(noop, newBuilder().setReflectively("key", map).build());
+    assertEquals(noop, calcRuleKey("key", ImmutableList.of()));
+    assertEquals(noop, calcRuleKey("key", ImmutableList.of().iterator()));
+    assertEquals(noop, calcRuleKey("key", ImmutableMap.of()));
+    assertEquals(noop, calcRuleKey("key", ImmutableList.of(IGNORED_RULE)));
+    assertEquals(noop, calcRuleKey("key", Suppliers.ofInstance(IGNORED_RULE)));
+    assertEquals(noop, calcRuleKey("key", Optional.of(IGNORED_RULE)));
+    assertEquals(noop, calcRuleKey("key", Either.ofLeft(IGNORED_RULE)));
+    assertEquals(noop, calcRuleKey("key", Either.ofRight(IGNORED_RULE)));
+    assertEquals(noop, calcRuleKey("key", IGNORED_RULE));
+    assertEquals(noop, calcRuleKey("key", IGNORED_APPENDABLE));
+  }
+
+  private RuleKey calcRuleKey(String key, @Nullable Object val) {
+    return newBuilder().setReflectively(key, val).build();
   }
 
   private RuleKeyBuilder<RuleKey> newBuilder() {
@@ -202,6 +216,9 @@ public class RuleKeyBuilderTest {
     return new RuleKeyBuilder<RuleKey>(ruleFinder, pathResolver, hashCache, hasher, logger) {
       @Override
       protected RuleKeyBuilder<RuleKey> setBuildRule(BuildRule rule) {
+        if (rule == IGNORED_RULE) {
+          return this;
+        }
         return setBuildRuleKey(ruleKeyMap.get(rule));
       }
       @Override
@@ -209,8 +226,11 @@ public class RuleKeyBuilderTest {
         return buildRuleKey();
       }
       @Override
-      public RuleKeyObjectSink setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
-        return setAppendableRuleKey(key, appendableKeys.get(appendable));
+      public RuleKeyBuilder<RuleKey> setAppendableRuleKey(RuleKeyAppendable appendable) {
+        if (appendable == IGNORED_APPENDABLE) {
+          return this;
+        }
+        return setAppendableRuleKey(appendableKeys.get(appendable));
       }
     };
   }

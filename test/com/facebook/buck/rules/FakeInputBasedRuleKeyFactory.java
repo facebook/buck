@@ -65,14 +65,12 @@ public class FakeInputBasedRuleKeyFactory
       }
 
       @Override
-      public RuleKeyBuilder<RuleKey> setReflectively(String key, @Nullable Object val) {
+      protected RuleKeyBuilder<RuleKey> setReflectively(@Nullable Object val) {
         return this;
       }
 
       @Override
-      public RuleKeyBuilder<RuleKey> setAppendableRuleKey(
-          String key,
-          RuleKeyAppendable appendable) {
+      public RuleKeyBuilder<RuleKey> setAppendableRuleKey(RuleKeyAppendable appendable) {
         return this;
       }
 

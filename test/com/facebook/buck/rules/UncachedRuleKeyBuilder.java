@@ -70,11 +70,11 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder<RuleKey> {
   }
 
   @Override
-  public UncachedRuleKeyBuilder setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
+  protected UncachedRuleKeyBuilder setAppendableRuleKey(RuleKeyAppendable appendable) {
     RuleKeyBuilder<RuleKey> subKeyBuilder = subKeySupplier.get();
     appendable.appendToRuleKey(subKeyBuilder);
     RuleKey subKey = subKeyBuilder.build();
-    setAppendableRuleKey(key, subKey);
+    setAppendableRuleKey(subKey);
     return this;
   }
 

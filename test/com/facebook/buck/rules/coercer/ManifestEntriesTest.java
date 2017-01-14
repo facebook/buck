@@ -21,8 +21,7 @@ import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
@@ -50,8 +49,7 @@ public class ManifestEntriesTest {
   @Test
   public void shouldUpdateRuleKey() throws Exception {
 
-    @SuppressWarnings("unchecked")
-    RuleKeyBuilder<RuleKey> ruleKeyBuilder = createMock(RuleKeyBuilder.class);
+    RuleKeyObjectSink ruleKeyBuilder = createMock(RuleKeyObjectSink.class);
 
     expect(ruleKeyBuilder.setReflectively("minSdkVersion", Optional.of(5)))
         .andReturn(ruleKeyBuilder);

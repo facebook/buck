@@ -84,8 +84,7 @@ public class InputCountingRuleKeyFactory extends
       }
 
       @Override
-      public RuleKeyBuilder<InputCountingRuleKeyFactory.Result> setAppendableRuleKey(
-          String key,
+      protected RuleKeyBuilder<InputCountingRuleKeyFactory.Result> setAppendableRuleKey(
           RuleKeyAppendable appendable) {
         InputCountingRuleKeyFactory.Result result = resultCache.getUnchecked(appendable);
         inputsCount += result.getInputsCount();

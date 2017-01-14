@@ -105,6 +105,16 @@ public class StringRuleKeyHasherTest {
     hashes.add(newHasher().putBuildTarget(TARGET_2).hash());
     hashes.add(newHasher().putBuildTargetSourcePath(new BuildTargetSourcePath(TARGET_1)).hash());
     hashes.add(newHasher().putBuildTargetSourcePath(new BuildTargetSourcePath(TARGET_2)).hash());
+    hashes.add(newHasher().putContainer(RuleKeyHasher.Container.LIST, 0).hash());
+    hashes.add(newHasher().putContainer(RuleKeyHasher.Container.LIST, 42).hash());
+    hashes.add(newHasher().putContainer(RuleKeyHasher.Container.MAP, 0).hash());
+    hashes.add(newHasher().putContainer(RuleKeyHasher.Container.MAP, 42).hash());
+    hashes.add(newHasher().putWrapper(RuleKeyHasher.Wrapper.SUPPLIER).hash());
+    hashes.add(newHasher().putWrapper(RuleKeyHasher.Wrapper.OPTIONAL).hash());
+    hashes.add(newHasher().putWrapper(RuleKeyHasher.Wrapper.EITHER_LEFT).hash());
+    hashes.add(newHasher().putWrapper(RuleKeyHasher.Wrapper.EITHER_RIGHT).hash());
+    hashes.add(newHasher().putWrapper(RuleKeyHasher.Wrapper.BUILD_RULE).hash());
+    hashes.add(newHasher().putWrapper(RuleKeyHasher.Wrapper.APPENDABLE).hash());
     // all of the hashes should be different
     for (int i = 0; i < hashes.size(); i++) {
       for (int j = 0; j < i; j++) {

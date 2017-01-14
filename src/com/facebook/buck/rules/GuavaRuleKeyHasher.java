@@ -29,10 +29,34 @@ import java.util.regex.Pattern;
  * An implementation of {@link RuleKeyHasher} that wraps Guava's {@link Hasher}.
  */
 public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
-  // TODO(plamenko): this is the old way of delimiting chunks, which is not the proper way of
-  // doing it. This is currently kept as is to preserve the old behavior, but this should get
-  // converted to length based delimiting.
-  private static final byte SEPARATOR = '\0';
+  // Key
+  private static final byte TYPE_KEY = 'k';
+  // Java types
+  private static final byte TYPE_NULL = '0';
+  private static final byte TYPE_TRUE = 'y';
+  private static final byte TYPE_FALSE = 'n';
+  private static final byte TYPE_BYTE_ARRAY = 'a';
+  private static final byte TYPE_BYTE = 'b';
+  private static final byte TYPE_SHORT = 'h';
+  private static final byte TYPE_INTEGER = 'i';
+  private static final byte TYPE_LONG = 'l';
+  private static final byte TYPE_FLOAT = 'f';
+  private static final byte TYPE_DOUBLE = 'd';
+  private static final byte TYPE_STRING = 's';
+  private static final byte TYPE_PATTERN = 'p';
+  // Buck types
+  private static final byte TYPE_SHA1 = 'H';
+  private static final byte TYPE_PATH = 'P';
+  private static final byte TYPE_ARCHIVE_MEMBER_PATH = 'A';
+  private static final byte TYPE_NON_HASHING_PATH = 'N';
+  private static final byte TYPE_SOURCE_ROOT = 'R';
+  private static final byte TYPE_RULE_KEY = 'K';
+  private static final byte TYPE_RULE_TYPE = 'Y';
+  private static final byte TYPE_TARGET = 'T';
+  private static final byte TYPE_TARGET_SOURCE_PATH = 'S';
+  // Containers
+  private static final byte TYPE_CONTAINER = 'C';
+  private static final byte TYPE_WRAPPER = 'W';
 
   private final Hasher hasher;
 
@@ -40,24 +64,27 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
     this.hasher = hasher;
   }
 
-  @Override
-  public RuleKeyHasher<HashCode> putKey(String val) {
-    this.putString(val);
-    // already delimited
+  private RuleKeyHasher<HashCode> putStringified(byte type, CharSequence val) {
+    hasher.putUnencodedChars(val);
+    hasher.putInt(val.length());
+    hasher.putByte(type);
     return this;
   }
 
   @Override
+  public RuleKeyHasher<HashCode> putKey(String key) {
+    return this.putStringified(TYPE_KEY, key);
+  }
+
+  @Override
   public RuleKeyHasher<HashCode> putNull() {
-    hasher.putBytes(new byte[0]);
-    hasher.putByte(SEPARATOR);
+    hasher.putByte(TYPE_NULL);
     return this;
   }
 
   @Override
   public RuleKeyHasher<HashCode> putBoolean(boolean val) {
-    hasher.putBoolean(val);
-    hasher.putByte(SEPARATOR);
+    hasher.putByte(val ? TYPE_TRUE : TYPE_FALSE);
     return this;
   }
 
@@ -65,106 +92,139 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
   public RuleKeyHasher<HashCode> putNumber(Number val) {
     if (val instanceof Integer) { // most common, so test first
       hasher.putInt((Integer) val);
+      hasher.putByte(TYPE_INTEGER);
     } else if (val instanceof Long) {
       hasher.putLong((Long) val);
+      hasher.putByte(TYPE_LONG);
     } else if (val instanceof Short) {
       hasher.putShort((Short) val);
+      hasher.putByte(TYPE_SHORT);
     } else if (val instanceof Byte) {
       hasher.putByte((Byte) val);
+      hasher.putByte(TYPE_BYTE);
     } else if (val instanceof Float) {
       hasher.putFloat((Float) val);
+      hasher.putByte(TYPE_FLOAT);
     } else if (val instanceof Double) {
       hasher.putDouble((Double) val);
+      hasher.putByte(TYPE_DOUBLE);
     } else {
       throw new UnsupportedOperationException(("Unsupported Number type: " + val.getClass()));
     }
-    hasher.putByte(SEPARATOR);
     return this;
   }
 
   @Override
   public RuleKeyHasher<HashCode> putString(CharSequence val) {
-    hasher.putUnencodedChars(val);
-    hasher.putByte(SEPARATOR);
-    return this;
+    return this.putStringified(TYPE_STRING, val);
   }
 
   @Override
   public RuleKeyHasher<HashCode> putBytes(byte[] bytes) {
     hasher.putBytes(bytes);
-    hasher.putByte(SEPARATOR);
+    hasher.putInt(bytes.length);
+    hasher.putByte(TYPE_BYTE_ARRAY);
     return this;
   }
 
   @Override
   public RuleKeyHasher<HashCode> putPattern(Pattern pattern) {
-    this.putString(pattern.toString());
-    // already delimited
-    return this;
+    return this.putStringified(TYPE_PATTERN, pattern.toString());
   }
 
   @Override
   public RuleKeyHasher<HashCode> putSha1(Sha1HashCode sha1) {
     sha1.update(hasher);
-    hasher.putByte(SEPARATOR);
+    hasher.putByte(TYPE_SHA1);
     return this;
   }
 
   @Override
   public RuleKeyHasher<HashCode> putPath(Path path, String hash) {
-    this.putString(path.toString());
-    this.putString(hash);
-    // already delimited
+    this.putStringified(TYPE_PATH, path.toString());
+    this.putStringified(TYPE_PATH, hash);
     return this;
   }
 
   @Override
   public RuleKeyHasher<HashCode> putArchiveMemberPath(ArchiveMemberPath path, String hash) {
-    this.putString(path.toString());
-    this.putString(hash);
-    // already delimited
+    this.putStringified(TYPE_ARCHIVE_MEMBER_PATH, path.toString());
+    this.putStringified(TYPE_ARCHIVE_MEMBER_PATH, hash);
     return this;
   }
 
   @Override
   public RuleKeyHasher<HashCode> putNonHashingPath(String path) {
-    this.putString(path);
-    // already delimited
-    return this;
+    return this.putStringified(TYPE_NON_HASHING_PATH, path);
   }
 
   @Override
   public RuleKeyHasher<HashCode> putSourceRoot(SourceRoot sourceRoot) {
-    this.putString(sourceRoot.getName());
-    // already delimited
-    return this;
+    return this.putStringified(TYPE_SOURCE_ROOT, sourceRoot.getName());
   }
 
   @Override
   public RuleKeyHasher<HashCode> putRuleKey(RuleKey ruleKey) {
-    this.putString(ruleKey.toString());
-    // already delimited
-    return this;
+    return this.putStringified(TYPE_RULE_KEY, ruleKey.toString());
   }
 
   @Override
   public RuleKeyHasher<HashCode> putBuildRuleType(BuildRuleType buildRuleType) {
-    this.putString(buildRuleType.toString());
-    // already delimited
-    return this;
+    return this.putStringified(TYPE_RULE_TYPE, buildRuleType.toString());
   }
 
   @Override
   public RuleKeyHasher<HashCode> putBuildTarget(BuildTarget buildTarget) {
-    this.putString(buildTarget.getFullyQualifiedName());
-    // already delimited
-    return this;
+    return this.putStringified(TYPE_TARGET, buildTarget.getFullyQualifiedName());
   }
 
   @Override
   public RuleKeyHasher<HashCode> putBuildTargetSourcePath(BuildTargetSourcePath targetSourcePath) {
-    this.putString(targetSourcePath.toString());
-    // already delimited
+    return this.putStringified(TYPE_TARGET_SOURCE_PATH, targetSourcePath.toString());
+  }
+
+  @Override
+  public RuleKeyHasher<HashCode> putContainer(Container container, int length) {
+    switch (container) {
+      case LIST:
+        hasher.putByte((byte) '[');
+        break;
+      case MAP:
+        hasher.putByte((byte) '{');
+        break;
+      default:
+        throw new UnsupportedOperationException("Unrecognized container type: " + container);
+    }
+    hasher.putInt(length);
+    hasher.putByte(TYPE_CONTAINER);
+    return this;
+  }
+
+  @Override
+  public RuleKeyHasher<HashCode> putWrapper(Wrapper wrapper) {
+    switch (wrapper) {
+      case SUPPLIER:
+        hasher.putByte((byte) 'S');
+        break;
+      case OPTIONAL:
+        hasher.putByte((byte) 'O');
+        break;
+      case EITHER_LEFT:
+        hasher.putByte((byte) 'L');
+        break;
+      case EITHER_RIGHT:
+        hasher.putByte((byte) 'R');
+        break;
+      case BUILD_RULE:
+        hasher.putByte((byte) 'B');
+        break;
+      case APPENDABLE:
+        hasher.putByte((byte) 'A');
+        break;
+      default:
+        throw new UnsupportedOperationException("Unrecognized wrapper type: " + wrapper);
+    }
+    hasher.putByte(TYPE_WRAPPER);
     return this;
   }
 

@@ -35,6 +35,8 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyScopedHasher;
+import com.facebook.buck.rules.RuleKeyHasher;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -184,7 +186,12 @@ public class DefaultRuleKeyFactoryTest {
             .build();
 
     RuleKeyBuilder<RuleKey> builder = factory.newInstance(rule);
-    builder.setReflectively("field.appendableSubKey", subKey);
+    try (RuleKeyScopedHasher.Scope keyScope = builder.getScopedHasher().keyScope("field")) {
+      try (RuleKeyScopedHasher.Scope appendableScope =
+               builder.getScopedHasher().wrapperScope(RuleKeyHasher.Wrapper.APPENDABLE)) {
+        builder.getScopedHasher().getHasher().putRuleKey(subKey);
+      }
+    }
     RuleKey expected = builder.build();
 
     class AppendingField extends EmptyRule {
@@ -230,14 +237,23 @@ public class DefaultRuleKeyFactoryTest {
 
     AppendableRule appendableRule = new AppendableRule(depTarget);
 
-    RuleKey subKey =
+    RuleKey appendableSubKey =
         new UncachedRuleKeyBuilder(ruleFinder, pathResolver, fileHashCache, factory)
             .setReflectively("cheese", "brie")
             .build();
+    RuleKey ruleSubKey = factory.build(appendableRule);
 
     RuleKeyBuilder<RuleKey> builder = factory.newInstance(rule);
-    builder.setReflectively("field.appendableSubKey", subKey);
-    builder.setReflectively("field", factory.build(appendableRule));
+    try (RuleKeyScopedHasher.Scope keyScope = builder.getScopedHasher().keyScope("field")) {
+      try (RuleKeyScopedHasher.Scope appendableScope =
+               builder.getScopedHasher().wrapperScope(RuleKeyHasher.Wrapper.APPENDABLE)) {
+        builder.getScopedHasher().getHasher().putRuleKey(appendableSubKey);
+      }
+      try (RuleKeyScopedHasher.Scope appendableScope =
+               builder.getScopedHasher().wrapperScope(RuleKeyHasher.Wrapper.BUILD_RULE)) {
+        builder.getScopedHasher().getHasher().putRuleKey(ruleSubKey);
+      }
+    }
     RuleKey expected = builder.build();
 
     class RuleContainingAppendableRule extends EmptyRule {
@@ -338,7 +354,7 @@ public class DefaultRuleKeyFactoryTest {
     RuleKeyBuilder<RuleKey> builder = factory.newInstance(rule);
 
     builder.setReflectively("exoticCheese", "bavarian smoked");
-    builder.setReflectively("target", topLevelTarget.getFullyQualifiedName());
+    builder.setReflectively("target", topLevelTarget);
     RuleKey expected = builder.build();
 
     class Parent extends EmptyRule {

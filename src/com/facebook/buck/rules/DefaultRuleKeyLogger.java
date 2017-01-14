@@ -44,7 +44,6 @@ public class DefaultRuleKeyLogger implements RuleKeyLogger {
   private List<String> logElms;
   @Nullable
   private String currentKey;
-  private boolean currentKeyHasValue;
 
   public DefaultRuleKeyLogger() {
     this.logElms = new ArrayList<>();
@@ -59,16 +58,10 @@ public class DefaultRuleKeyLogger implements RuleKeyLogger {
   @Override
   public Scope pushKey(String key) {
     final String previousKey = currentKey;
-    final boolean currentKeyHadValue = currentKeyHasValue;
     currentKey = key;
-    currentKeyHasValue = false;
 
     return () -> {
-      if (currentKeyHasValue) {
-        appendLogElement(String.format("key(%s):", currentKey));
-      }
       currentKey = previousKey;
-      currentKeyHasValue = currentKeyHadValue;
     };
   }
 
@@ -165,7 +158,7 @@ public class DefaultRuleKeyLogger implements RuleKeyLogger {
 
   private void appendLogElement(String value) {
     logElms.add(value);
-    currentKeyHasValue = true;
+    logElms.add(String.format("key(%s):", currentKey));
   }
 
   @VisibleForTesting

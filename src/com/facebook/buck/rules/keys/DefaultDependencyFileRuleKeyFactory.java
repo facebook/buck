@@ -97,20 +97,20 @@ public final class DefaultDependencyFileRuleKeyFactory
     }
 
     @Override
-    public Builder setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
+    protected Builder setAppendableRuleKey(RuleKeyAppendable appendable) {
       Result result = cache.getUnchecked(appendable);
       inputs.add(result.getInputs());
-      setAppendableRuleKey(key, result.getRuleKey());
+      setAppendableRuleKey(result.getRuleKey());
       return this;
     }
 
     @Override
-    public Builder setReflectively(String key, @Nullable Object val) {
+    protected Builder setReflectively(@Nullable Object val) {
       if (val instanceof ArchiveDependencySupplier) {
         Object members = ((ArchiveDependencySupplier) val).getArchiveMembers(pathResolver);
-        super.setReflectively(key, members);
+        super.setReflectively(members);
       } else {
-        super.setReflectively(key, val);
+        super.setReflectively(val);
       }
       return this;
     }

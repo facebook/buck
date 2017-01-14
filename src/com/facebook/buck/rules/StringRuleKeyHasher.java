@@ -34,8 +34,8 @@ public class StringRuleKeyHasher implements RuleKeyHasher<String> {
   private final List<String> parts = new ArrayList<>();
 
   @Override
-  public RuleKeyHasher<String> putKey(String val) {
-    parts.add(String.format("key(%s)", val));
+  public RuleKeyHasher<String> putKey(String key) {
+    parts.add(String.format("key(%s)", key));
     return this;
   }
 
@@ -126,6 +126,18 @@ public class StringRuleKeyHasher implements RuleKeyHasher<String> {
   @Override
   public RuleKeyHasher<String> putBuildTargetSourcePath(BuildTargetSourcePath targetSourcePath) {
     parts.add(String.format("targetPath(%s)", targetSourcePath.toString()));
+    return this;
+  }
+
+  @Override
+  public RuleKeyHasher<String> putContainer(Container container, int length) {
+    parts.add(String.format("container(%s,len=%s)", container, length));
+    return this;
+  }
+
+  @Override
+  public RuleKeyHasher<String> putWrapper(Wrapper wrapper) {
+    parts.add(String.format("wrapper(%s)", wrapper));
     return this;
   }
 

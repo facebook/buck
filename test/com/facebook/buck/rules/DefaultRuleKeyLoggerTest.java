@@ -80,7 +80,7 @@ public class DefaultRuleKeyLoggerTest {
         ImmutableList.of(
             Matchers.hasItem("key(stringField):"),
             Matchers.hasItem("key(pathField):"),
-            Matchers.hasItem("key(appendableField.appendableSubKey):"));
+            Matchers.hasItem("key(appendableField):"));
 
     // First check that these fields show up with the expected format when not null.
     Fixture fixture = new Fixture();
@@ -174,7 +174,7 @@ public class DefaultRuleKeyLoggerTest {
         fixture.getLogger().getCurrentLogElements(),
         Matchers.hasItems(
             Matchers.startsWith("ruleKey("),
-            Matchers.equalTo("key(appendableField.appendableSubKey):")));
+            Matchers.equalTo("key(appendableField):")));
   }
 
   private class Fixture {

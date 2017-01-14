@@ -56,7 +56,7 @@ public class FakeRuleKeyFactory
     return new UncachedRuleKeyBuilder(ruleFinder, resolver, fileHashCache, this) {
 
       @Override
-      public RuleKeyBuilder<RuleKey> setReflectively(String key, @Nullable Object val) {
+      protected RuleKeyBuilder<RuleKey> setReflectively(@Nullable Object val) {
         return this;
       }
 

@@ -30,7 +30,6 @@ import org.junit.Test;
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -44,124 +43,13 @@ public class GuavaRuleKeyHasherTest {
       BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one#flavor");
 
   @Test
-  public void testUniquenessKey() {
-    // TODO(plamenko): at the moment this collides with `putString`. After improving the hasher,
-    // move to the main `testUniqueness` method.
+  public void testUniqueness() {
     List<HashCode> hashes = new ArrayList<>();
     hashes.add(newHasher().hash());
     hashes.add(newHasher().putKey("").hash());
     hashes.add(newHasher().putKey("42").hash());
     hashes.add(newHasher().putKey("4").putKey("2").hash());
-    // all of the hashes should be different
-    assertEquals(hashes.size(), (new HashSet<>(hashes)).size());
-  }
-
-  @Test
-  public void testUniquenessNull() {
-    // TODO(plamenko): at the moment this collides with `putBytes`. After improving the hasher,
-    // move to the main `testUniqueness` method.
-    List<HashCode> hashes = new ArrayList<>();
-    hashes.add(newHasher().hash());
     hashes.add(newHasher().putNull().hash());
-    // all of the hashes should be different
-    assertEquals(hashes.size(), (new HashSet<>(hashes)).size());
-  }
-
-  @Test
-  public void testUniquenessPattern() {
-    // TODO(plamenko): at the moment this collides with `putString`. After improving the hasher,
-    // move to the main `testUniqueness` method.
-    List<HashCode> hashes = new ArrayList<>();
-    hashes.add(newHasher().hash());
-    hashes.add(newHasher().putPattern(Pattern.compile("")).hash());
-    hashes.add(newHasher().putPattern(Pattern.compile("42")).hash());
-    hashes.add(
-        newHasher().putPattern(Pattern.compile("4")).putPattern(Pattern.compile("2")).hash());
-    // all of the hashes should be different
-    assertEquals(hashes.size(), (new HashSet<>(hashes)).size());
-  }
-
-  @Test
-  public void testUniquenessPath() {
-    // TODO(plamenko): at the moment this collides with `putString`. After improving the hasher,
-    // move to the main `testUniqueness` method.
-    List<HashCode> hashes = new ArrayList<>();
-    hashes.add(newHasher().hash());
-    hashes.add(newHasher().putPath(Paths.get(""), "").hash());
-    hashes.add(newHasher().putPath(Paths.get(""), "42").hash());
-    hashes.add(newHasher().putPath(Paths.get("42"), "").hash());
-    hashes.add(newHasher().putPath(Paths.get("42"), "42").hash());
-    hashes.add(newHasher().putPath(Paths.get("42/42"), "42").hash());
-    // all of the hashes should be different
-    assertEquals(hashes.size(), (new HashSet<>(hashes)).size());
-  }
-
-  @Test
-  public void testUniquenessArchiveMemberPath() {
-    // TODO(plamenko): at the moment this collides with `putString`. After improving the hasher,
-    // move to the main `testUniqueness` method.
-    List<HashCode> hashes = new ArrayList<>();
-    hashes.add(newHasher().hash());
-    hashes.add(newHasher().putArchiveMemberPath(newArchiveMember("", ""), "").hash());
-    hashes.add(newHasher().putArchiveMemberPath(newArchiveMember("", ""), "42").hash());
-    hashes.add(newHasher().putArchiveMemberPath(newArchiveMember("42", "42"), "").hash());
-    hashes.add(newHasher().putArchiveMemberPath(newArchiveMember("42", "42"), "42").hash());
-    hashes.add(newHasher().putArchiveMemberPath(newArchiveMember("42/42", "42/42"), "42").hash());
-    // all of the hashes should be different
-    assertEquals(hashes.size(), (new HashSet<>(hashes)).size());
-  }
-
-  @Test
-  public void testUniquenessNonHashingPath() {
-    // TODO(plamenko): at the moment this collides with `putString`. After improving the hasher,
-    // move to the main `testUniqueness` method.
-    List<HashCode> hashes = new ArrayList<>();
-    hashes.add(newHasher().hash());
-    hashes.add(newHasher().putNonHashingPath("").hash());
-    hashes.add(newHasher().putNonHashingPath("42").hash());
-    hashes.add(newHasher().putNonHashingPath("4").putNonHashingPath("2").hash());
-    // all of the hashes should be different
-    assertEquals(hashes.size(), (new HashSet<>(hashes)).size());
-  }
-
-  @Test
-  public void testUniquenessSourceRoot() {
-    // TODO(plamenko): at the moment this collides with `putString`. After improving the hasher,
-    // move to the main `testUniqueness` method.
-    List<HashCode> hashes = new ArrayList<>();
-    hashes.add(newHasher().hash());
-    hashes.add(newHasher().putSourceRoot(new SourceRoot("")).hash());
-    hashes.add(newHasher().putSourceRoot(new SourceRoot("42")).hash());
-    hashes.add(
-        newHasher().putSourceRoot(new SourceRoot("4")).putSourceRoot(new SourceRoot("2")).hash());
-    // all of the hashes should be different
-    assertEquals(hashes.size(), (new HashSet<>(hashes)).size());
-  }
-
-  @Test
-  public void testUniquenessRuleType() {
-    // TODO(plamenko): at the moment this collides with `putString`. After improving the hasher,
-    // move to the main `testUniqueness` method.
-    List<HashCode> hashes = new ArrayList<>();
-    hashes.add(newHasher().hash());
-    hashes.add(newHasher().putBuildRuleType(BuildRuleType.of("")).hash());
-    hashes.add(newHasher().putBuildRuleType(BuildRuleType.of("42")).hash());
-    hashes.add(
-        newHasher().putBuildRuleType(BuildRuleType.of("4"))
-            .putBuildRuleType(BuildRuleType.of("2")).hash());
-    // all of the hashes should be different
-    assertEquals(hashes.size(), (new HashSet<>(hashes)).size());
-  }
-
-  @Test
-  public void testUniqueness() {
-    // TODO(plamenko): at the moment some types collide with each other, uncomment once fixed.
-    List<HashCode> hashes = new ArrayList<>();
-    hashes.add(newHasher().hash());
-//    hashes.add(newHasher().putKey("").hash());
-//    hashes.add(newHasher().putKey("42").hash());
-//    hashes.add(newHasher().putKey("4").putKey("2").hash());
-//    hashes.add(newHasher().putNull().hash());
     hashes.add(newHasher().putBoolean(true).hash());
     hashes.add(newHasher().putBoolean(false).hash());
     hashes.add(newHasher().putNumber(0).hash());
@@ -170,54 +58,64 @@ public class GuavaRuleKeyHasherTest {
     hashes.add(newHasher().putNumber((long) 42).hash());
     hashes.add(newHasher().putNumber((short) 0).hash());
     hashes.add(newHasher().putNumber((short) 42).hash());
-//    hashes.add(newHasher().putNumber((byte) 0).hash());
-//    hashes.add(newHasher().putNumber((byte) 42).hash());
-//    hashes.add(newHasher().putNumber((float) 0).hash());
+    hashes.add(newHasher().putNumber((byte) 0).hash());
+    hashes.add(newHasher().putNumber((byte) 42).hash());
+    hashes.add(newHasher().putNumber((float) 0).hash());
     hashes.add(newHasher().putNumber((float) 42).hash());
-//    hashes.add(newHasher().putNumber((double) 0).hash());
+    hashes.add(newHasher().putNumber((double) 0).hash());
     hashes.add(newHasher().putNumber((double) 42).hash());
     hashes.add(newHasher().putString("").hash());
     hashes.add(newHasher().putString("42").hash());
     hashes.add(newHasher().putString("4").putString("2").hash());
-//    hashes.add(newHasher().putBytes(new byte[0]).hash());
+    hashes.add(newHasher().putBytes(new byte[0]).hash());
     hashes.add(newHasher().putBytes(new byte[] {42}).hash());
     hashes.add(newHasher().putBytes(new byte[] {42, 42}).hash());
-//    hashes.add(newHasher().putPattern(Pattern.compile("")).hash());
-//    hashes.add(newHasher().putPattern(Pattern.compile("42")).hash());
-//    hashes.add(
-//        newHasher().putPattern(Pattern.compile("4")).putPattern(Pattern.compile("2")).hash());
+    hashes.add(newHasher().putPattern(Pattern.compile("")).hash());
+    hashes.add(newHasher().putPattern(Pattern.compile("42")).hash());
+    hashes.add(
+        newHasher().putPattern(Pattern.compile("4")).putPattern(Pattern.compile("2")).hash());
     hashes.add(
         newHasher().putSha1(Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c")).hash());
     hashes.add(
         newHasher().putSha1(Sha1HashCode.of("b67816b13867c32ac52ca002b39af204cdfaa5fd")).hash());
-//    hashes.add(newHasher().putPath(Paths.get(""), "").hash());
-//    hashes.add(newHasher().putPath(Paths.get(""), "42").hash());
-//    hashes.add(newHasher().putPath(Paths.get("42"), "").hash());
-//    hashes.add(newHasher().putPath(Paths.get("42"), "42").hash());
-//    hashes.add(newHasher().putPath(Paths.get("42/42"), "42").hash());
-//    hashes.add(newHasher().putArchiveMemberPath(newArchiveMember("", ""), "").hash());
-//    hashes.add(newHasher().putArchiveMemberPath(newArchiveMember("", ""), "42").hash());
-//    hashes.add(newHasher().putArchiveMemberPath(newArchiveMember("42", "42"), "").hash());
-//    hashes.add(newHasher().putArchiveMemberPath(newArchiveMember("42", "42"), "42").hash());
-//    hashes.add(newHasher().putArchiveMemberPath(newArchiveMember("42/42", "42/42"), "42").hash());
-//    hashes.add(newHasher().putNonHashingPath("").hash());
-//    hashes.add(newHasher().putNonHashingPath("42").hash());
-//    hashes.add(newHasher().putNonHashingPath("4").putNonHashingPath("2").hash());
-//    hashes.add(newHasher().putSourceRoot(new SourceRoot("")).hash());
-//    hashes.add(newHasher().putSourceRoot(new SourceRoot("42")).hash());
-//    hashes.add(
-//        newHasher().putSourceRoot(new SourceRoot("4")).putSourceRoot(new SourceRoot("2")).hash());
+    hashes.add(newHasher().putPath(Paths.get(""), "").hash());
+    hashes.add(newHasher().putPath(Paths.get(""), "42").hash());
+    hashes.add(newHasher().putPath(Paths.get("42"), "").hash());
+    hashes.add(newHasher().putPath(Paths.get("42"), "42").hash());
+    hashes.add(newHasher().putPath(Paths.get("42/42"), "42").hash());
+    hashes.add(newHasher().putArchiveMemberPath(newArchiveMember("", ""), "").hash());
+    hashes.add(newHasher().putArchiveMemberPath(newArchiveMember("", ""), "42").hash());
+    hashes.add(newHasher().putArchiveMemberPath(newArchiveMember("42", "42"), "").hash());
+    hashes.add(newHasher().putArchiveMemberPath(newArchiveMember("42", "42"), "42").hash());
+    hashes.add(newHasher().putArchiveMemberPath(newArchiveMember("42/42", "42/42"), "42").hash());
+    hashes.add(newHasher().putNonHashingPath("").hash());
+    hashes.add(newHasher().putNonHashingPath("42").hash());
+    hashes.add(newHasher().putNonHashingPath("4").putNonHashingPath("2").hash());
+    hashes.add(newHasher().putSourceRoot(new SourceRoot("")).hash());
+    hashes.add(newHasher().putSourceRoot(new SourceRoot("42")).hash());
+    hashes.add(
+        newHasher().putSourceRoot(new SourceRoot("4")).putSourceRoot(new SourceRoot("2")).hash());
     hashes.add(newHasher().putRuleKey(RULE_KEY_1).hash());
     hashes.add(newHasher().putRuleKey(RULE_KEY_2).hash());
-//    hashes.add(newHasher().putBuildRuleType(BuildRuleType.of("")).hash());
-//    hashes.add(newHasher().putBuildRuleType(BuildRuleType.of("42")).hash());
-//    hashes.add(
-//        newHasher().putBuildRuleType(BuildRuleType.of("4"))
-//            .putBuildRuleType(BuildRuleType.of("2")).hash());
+    hashes.add(newHasher().putBuildRuleType(BuildRuleType.of("")).hash());
+    hashes.add(newHasher().putBuildRuleType(BuildRuleType.of("42")).hash());
+    hashes.add(
+        newHasher().putBuildRuleType(BuildRuleType.of("4"))
+            .putBuildRuleType(BuildRuleType.of("2")).hash());
     hashes.add(newHasher().putBuildTarget(TARGET_1).hash());
     hashes.add(newHasher().putBuildTarget(TARGET_2).hash());
     hashes.add(newHasher().putBuildTargetSourcePath(new BuildTargetSourcePath(TARGET_1)).hash());
     hashes.add(newHasher().putBuildTargetSourcePath(new BuildTargetSourcePath(TARGET_2)).hash());
+    hashes.add(newHasher().putContainer(RuleKeyHasher.Container.LIST, 0).hash());
+    hashes.add(newHasher().putContainer(RuleKeyHasher.Container.LIST, 42).hash());
+    hashes.add(newHasher().putContainer(RuleKeyHasher.Container.MAP, 0).hash());
+    hashes.add(newHasher().putContainer(RuleKeyHasher.Container.MAP, 42).hash());
+    hashes.add(newHasher().putWrapper(RuleKeyHasher.Wrapper.SUPPLIER).hash());
+    hashes.add(newHasher().putWrapper(RuleKeyHasher.Wrapper.OPTIONAL).hash());
+    hashes.add(newHasher().putWrapper(RuleKeyHasher.Wrapper.EITHER_LEFT).hash());
+    hashes.add(newHasher().putWrapper(RuleKeyHasher.Wrapper.EITHER_RIGHT).hash());
+    hashes.add(newHasher().putWrapper(RuleKeyHasher.Wrapper.BUILD_RULE).hash());
+    hashes.add(newHasher().putWrapper(RuleKeyHasher.Wrapper.APPENDABLE).hash());
     // all of the hashes should be different
     for (int i = 0; i < hashes.size(); i++) {
       for (int j = 0; j < i; j++) {

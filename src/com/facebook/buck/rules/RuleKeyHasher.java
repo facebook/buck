@@ -48,8 +48,21 @@ import java.util.regex.Pattern;
  * {@code putNumber}.
  */
 public interface RuleKeyHasher<HASH> {
+  enum Container {
+    LIST,
+    MAP,
+  }
+  enum Wrapper {
+    SUPPLIER,
+    OPTIONAL,
+    EITHER_LEFT,
+    EITHER_RIGHT,
+    BUILD_RULE,
+    APPENDABLE,
+  }
+
   /** Puts the field's key (i.e. the name of the field) */
-  RuleKeyHasher<HASH> putKey(String val);
+  RuleKeyHasher<HASH> putKey(String key);
 
   /** Puts the field's value, Java types */
   RuleKeyHasher<HASH> putNull();
@@ -69,6 +82,10 @@ public interface RuleKeyHasher<HASH> {
   RuleKeyHasher<HASH> putBuildRuleType(BuildRuleType buildRuleType);
   RuleKeyHasher<HASH> putBuildTarget(BuildTarget buildTarget);
   RuleKeyHasher<HASH> putBuildTargetSourcePath(BuildTargetSourcePath buildTargetSourcePath);
+
+  /** Puts the container signature */
+  RuleKeyHasher<HASH> putContainer(Container container, int length);
+  RuleKeyHasher<HASH> putWrapper(Wrapper wrapper);
 
   /** Computes the final hash. */
   HASH hash();
