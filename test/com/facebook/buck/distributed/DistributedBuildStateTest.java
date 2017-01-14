@@ -201,7 +201,7 @@ public class DistributedBuildStateTest {
             .map(targetNode -> targetNode.getConstructorArg().srcs)
             .collect(Collectors.toList()),
         Lists.newArrayList("A.java", "B.java", "C.java").stream()
-            .map(f -> reconstructedCellFilesystem.getRootPath().getFileSystem().getPath(f))
+            .map(f -> reconstructedCellFilesystem.getPath(f))
             .map(p -> new PathSourcePath(reconstructedCellFilesystem, p))
             .map(ImmutableSortedSet::of)
             .collect(Collectors.toList()));

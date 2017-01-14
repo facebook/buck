@@ -70,7 +70,7 @@ public class CxxCompileStepIntegrationTest {
     Path relativeInput = Paths.get("input.c");
     Path input = filesystem.resolve(relativeInput);
     filesystem.writeContentsToPath("int main() {}", relativeInput);
-    Path scratchDir = filesystem.getRootPath().getFileSystem().getPath("scratchDir");
+    Path scratchDir = filesystem.getPath("scratchDir");
     filesystem.mkdirs(scratchDir);
 
     ImmutableList.Builder<String> preprocessorArguments = ImmutableList.builder();
@@ -160,7 +160,7 @@ public class CxxCompileStepIntegrationTest {
     Path relativeInput = Paths.get("input.c");
     Path input = filesystem.resolve(relativeInput);
     filesystem.writeContentsToPath("int main() {}", relativeInput);
-    Path scratchDir = filesystem.getRootPath().getFileSystem().getPath("scratchDir");
+    Path scratchDir = filesystem.getPath("scratchDir");
     filesystem.mkdirs(scratchDir);
 
     ImmutableList.Builder<String> preprocessorArguments = ImmutableList.builder();

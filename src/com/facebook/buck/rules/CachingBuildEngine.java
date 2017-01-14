@@ -552,7 +552,7 @@ public class CachingBuildEngine implements BuildEngine {
 
     // Verify each path from the recorded path hashes entry matches the actual on-disk version.
     for (Map.Entry<String, String> ent : recordedPathHashes.entrySet()) {
-      Path path = filesystem.getRootPath().getFileSystem().getPath(ent.getKey());
+      Path path = filesystem.getPath(ent.getKey());
       HashCode cachedHashCode = HashCode.fromString(ent.getValue());
       HashCode realHashCode = fileHashCache.get(filesystem.resolve(path));
       if (!realHashCode.equals(cachedHashCode)) {
@@ -769,8 +769,7 @@ public class CachingBuildEngine implements BuildEngine {
               // Seed the cache with the hashes.
               for (Map.Entry<String, String> ent : hashes.get().entrySet()) {
                 Path path =
-                    rule.getProjectFilesystem().getRootPath().getFileSystem()
-                        .getPath(ent.getKey());
+                    rule.getProjectFilesystem().getPath(ent.getKey());
                 HashCode hashCode = HashCode.fromString(ent.getValue());
                 fileHashCache.set(rule.getProjectFilesystem().resolve(path), hashCode);
               }

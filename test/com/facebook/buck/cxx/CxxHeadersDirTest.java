@@ -57,7 +57,7 @@ public class CxxHeadersDirTest {
   @Test
   public void dirContentsAffectsRuleKey() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path headerDir = filesystem.getRootPath().getFileSystem().getPath("foo");
+    Path headerDir = filesystem.getPath("foo");
     filesystem.mkdirs(headerDir);
     CxxHeadersDir cxxHeaders =
         CxxHeadersDir.of(
@@ -73,7 +73,7 @@ public class CxxHeadersDirTest {
   @Test
   public void typeAffectsRuleKey() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path headerDir = filesystem.getRootPath().getFileSystem().getPath("foo");
+    Path headerDir = filesystem.getPath("foo");
     filesystem.mkdirs(headerDir);
     RuleKey ruleKey1 =
         getRuleKey(

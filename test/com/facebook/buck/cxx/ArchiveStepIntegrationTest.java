@@ -69,8 +69,8 @@ public class ArchiveStepIntegrationTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     ));
     Archiver archiver = platform.getAr();
-    Path output = filesystem.getRootPath().getFileSystem().getPath("output.a");
-    Path input = filesystem.getRootPath().getFileSystem().getPath("input.dat");
+    Path output = filesystem.getPath("output.a");
+    Path input = filesystem.getPath("input.dat");
     filesystem.writeContentsToPath("blah", input);
     Preconditions.checkState(filesystem.resolve(input).toFile().setExecutable(true));
 
@@ -122,7 +122,7 @@ public class ArchiveStepIntegrationTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     ));
     Archiver archiver = platform.getAr();
-    Path output = filesystem.getRootPath().getFileSystem().getPath("output.a");
+    Path output = filesystem.getPath("output.a");
 
     // Build an archive step.
     ArchiveStep archiveStep =
@@ -163,8 +163,8 @@ public class ArchiveStepIntegrationTest {
                 TargetGraph.EMPTY,
                 new DefaultTargetNodeToBuildRuleTransformer())));
     Archiver archiver = platform.getAr();
-    Path output = filesystem.getRootPath().getFileSystem().getPath("output.a");
-    Path input = filesystem.getRootPath().getFileSystem().getPath("foo/blah.dat");
+    Path output = filesystem.getPath("output.a");
+    Path input = filesystem.getPath("foo/blah.dat");
     filesystem.mkdirs(input.getParent());
     filesystem.writeContentsToPath("blah", input);
 
@@ -211,11 +211,11 @@ public class ArchiveStepIntegrationTest {
                 new DefaultTargetNodeToBuildRuleTransformer())));
     Archiver archiver = platform.getAr();
 
-    Path output = filesystem.getRootPath().getFileSystem().getPath("foo/libthin.a");
+    Path output = filesystem.getPath("foo/libthin.a");
     filesystem.mkdirs(output.getParent());
 
     // Create a really large input file so it's obvious that the archive is thin.
-    Path input = filesystem.getRootPath().getFileSystem().getPath("bar/blah.dat");
+    Path input = filesystem.getPath("bar/blah.dat");
     filesystem.mkdirs(input.getParent());
     byte[] largeInputFile = new byte[1024 * 1024];
     byte[] fillerToRepeat = "hello\n".getBytes(StandardCharsets.UTF_8);

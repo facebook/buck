@@ -130,12 +130,10 @@ public class GenruleTest {
             ImmutableList.of(
                 new PathSourcePath(
                     filesystem,
-                    filesystem.getRootPath().getFileSystem().getPath(
-                        "src/com/facebook/katana/convert_to_katana.py")),
+                    filesystem.getPath("src/com/facebook/katana/convert_to_katana.py")),
                 new PathSourcePath(
                     filesystem,
-                    filesystem.getRootPath().getFileSystem().getPath(
-                        "src/com/facebook/katana/AndroidManifest.xml"))))
+                    filesystem.getPath("src/com/facebook/katana/AndroidManifest.xml"))))
         .build(ruleResolver, filesystem);
 
     // Verify all of the observers of the Genrule.
@@ -150,10 +148,8 @@ public class GenruleTest {
         ((Genrule) genrule).getAbsoluteOutputFilePath());
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
     ImmutableList<Path> inputsToCompareToOutputs = ImmutableList.of(
-        filesystem.getRootPath().getFileSystem().getPath(
-            "src/com/facebook/katana/convert_to_katana.py"),
-        filesystem.getRootPath().getFileSystem().getPath(
-            "src/com/facebook/katana/AndroidManifest.xml"));
+        filesystem.getPath("src/com/facebook/katana/convert_to_katana.py"),
+        filesystem.getPath("src/com/facebook/katana/AndroidManifest.xml"));
     assertEquals(
         inputsToCompareToOutputs,
         pathResolver.filterInputsToCompareToOutput(((Genrule) genrule).getSrcs()));
@@ -210,20 +206,18 @@ public class GenruleTest {
 
     MkdirAndSymlinkFileStep linkSource1 = (MkdirAndSymlinkFileStep) steps.get(4);
     assertEquals(
-        filesystem.getRootPath().getFileSystem().getPath(
-            "src/com/facebook/katana/convert_to_katana.py"),
+        filesystem.getPath("src/com/facebook/katana/convert_to_katana.py"),
         linkSource1.getSource());
     assertEquals(
-        filesystem.getRootPath().getFileSystem().getPath(pathToSrcDir + "/convert_to_katana.py"),
+        filesystem.getPath(pathToSrcDir + "/convert_to_katana.py"),
         linkSource1.getTarget());
 
     MkdirAndSymlinkFileStep linkSource2 = (MkdirAndSymlinkFileStep) steps.get(5);
     assertEquals(
-        filesystem.getRootPath().getFileSystem().getPath(
-            "src/com/facebook/katana/AndroidManifest.xml"),
+        filesystem.getPath("src/com/facebook/katana/AndroidManifest.xml"),
         linkSource2.getSource());
     assertEquals(
-        filesystem.getRootPath().getFileSystem().getPath(pathToSrcDir + "/AndroidManifest.xml"),
+        filesystem.getPath(pathToSrcDir + "/AndroidManifest.xml"),
         linkSource2.getTarget());
 
     Step sixthStep = steps.get(6);

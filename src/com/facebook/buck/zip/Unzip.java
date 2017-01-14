@@ -89,8 +89,7 @@ public class Unzip {
             if (entry.isUnixSymlink()) {
               filesystem.createSymLink(
                   target,
-                  filesystem.getRootPath().getFileSystem()
-                      .getPath(new String(ByteStreams.toByteArray(is), Charsets.UTF_8)),
+                  filesystem.getPath(new String(ByteStreams.toByteArray(is), Charsets.UTF_8)),
                   /* force */ true);
             } else {
               try (OutputStream out = filesystem.newFileOutputStream(target)) {
@@ -191,7 +190,7 @@ public class Unzip {
     return extractZipFile(
         zipFile,
         filesystem,
-        filesystem.getRootPath().getFileSystem().getPath(""),
+        filesystem.getPath(""),
         existingFileMode);
   }
 

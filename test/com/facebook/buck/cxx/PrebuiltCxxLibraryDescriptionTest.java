@@ -487,7 +487,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     CxxPreprocessorInput input = lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC);
     assertThat(
         getHeaderNames(input.getIncludes()),
-        Matchers.hasItem(filesystem.getRootPath().getFileSystem().getPath("foo.h")));
+        Matchers.hasItem(filesystem.getPath("foo.h")));
     assertThat(
         ImmutableSortedSet.copyOf(input.getDeps(resolver, ruleFinder)),
         Matchers.equalTo(resolver.getAllRules(getInputRules(lib))));
@@ -523,10 +523,10 @@ public class PrebuiltCxxLibraryDescriptionTest {
     CxxPreprocessorInput input = lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC);
     assertThat(
         getHeaderNames(input.getIncludes()),
-        Matchers.hasItem(filesystem.getRootPath().getFileSystem().getPath("foo.h")));
+        Matchers.hasItem(filesystem.getPath("foo.h")));
     assertThat(
         getHeaderNames(input.getIncludes()),
-        Matchers.not(Matchers.hasItem(filesystem.getRootPath().getFileSystem().getPath("bar.h"))));
+        Matchers.not(Matchers.hasItem(filesystem.getPath("bar.h"))));
     assertThat(
         ImmutableSortedSet.copyOf(input.getDeps(resolver, ruleFinder)),
         Matchers.equalTo(resolver.getAllRules(getInputRules(lib))));
@@ -581,7 +581,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     CxxPreprocessorInput input = lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC);
     assertThat(
         getHeaderNames(input.getIncludes()),
-        Matchers.contains(filesystem.getRootPath().getFileSystem().getPath("hello", "foo.h")));
+        Matchers.contains(filesystem.getPath("hello", "foo.h")));
   }
 
   @Test

@@ -856,11 +856,11 @@ public class BuckConfig implements ConfigPathGetter {
    * for those times where we're using (eg) JimFs for our testing.
    */
   private Path getPathFromVfs(String path, String... extra) {
-    return projectFilesystem.getRootPath().getFileSystem().getPath(path, extra);
+    return projectFilesystem.getPath(path, extra);
   }
 
   private Path getPathFromVfs(Path path) {
-    return projectFilesystem.getRootPath().getFileSystem().getPath(path.toString());
+    return projectFilesystem.getPath(path.toString());
   }
 
   private Path convertPathWithError(String pathString, boolean isCellRootRelative, String error) {

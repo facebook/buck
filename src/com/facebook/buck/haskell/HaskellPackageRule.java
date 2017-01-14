@@ -146,7 +146,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithResolver {
     entries.put("exposed", "True");
     entries.put("exposed-modules", Joiner.on(' ').join(modules));
 
-    Path pkgRoot = getProjectFilesystem().getRootPath().getFileSystem().getPath("${pkgroot}");
+    Path pkgRoot = getProjectFilesystem().getPath("${pkgroot}");
 
     if (!modules.isEmpty()) {
       List<String> importDirs = new ArrayList<>();

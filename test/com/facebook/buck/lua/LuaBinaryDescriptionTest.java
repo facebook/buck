@@ -156,7 +156,7 @@ public class LuaBinaryDescriptionTest {
     assertThat(
         tree.getLinks().keySet(),
         Matchers.hasItem(
-            tree.getProjectFilesystem().getRootPath().getFileSystem().getPath("libfoo.so")));
+            tree.getProjectFilesystem().getPath("libfoo.so")));
   }
 
   @Test

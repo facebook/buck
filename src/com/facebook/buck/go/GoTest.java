@@ -130,8 +130,9 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
             ImmutableMap.copyOf(
                 FluentIterable.from(resources)
                 .transform(input -> Maps.immutableEntry(
-                    getProjectFilesystem().getRootPath().getFileSystem().getPath(
-                        getResolver().getSourcePathName(getBuildTarget(), input)),
+                    getProjectFilesystem().getPath(getResolver().getSourcePathName(
+                        getBuildTarget(),
+                        input)),
                     getResolver().getAbsolutePath(input))))),
         new GoTestStep(
             getProjectFilesystem(),

@@ -1231,7 +1231,7 @@ public class CachingBuildEngineTest {
     public void fetchingFromCacheSeedsFileHashCache() throws Throwable {
       // Create a simple rule which just writes something new to the output file.
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-      Path output = filesystem.getRootPath().getFileSystem().getPath("output/path");
+      Path output = filesystem.getPath("output/path");
       BuildRuleParams params =
           new FakeBuildRuleParamsBuilder(target)
               .setProjectFilesystem(filesystem)

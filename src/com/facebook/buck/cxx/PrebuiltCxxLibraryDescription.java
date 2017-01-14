@@ -164,17 +164,16 @@ public class PrebuiltCxxLibraryDescription implements
       deps = ImmutableList.of();
     }
     Path libDirPath =
-        filesystem.getRootPath().getFileSystem().getPath(
-            expandMacros(
-                handler,
-                target,
-                cellRoots,
-                ruleResolver,
-                basePathString));
+        filesystem.getPath(expandMacros(
+            handler,
+            target,
+            cellRoots,
+            ruleResolver,
+            basePathString));
 
     if (versionSubDir.isPresent()) {
       libDirPath =
-          filesystem.getRootPath().getFileSystem().getPath(versionSubDir.get()).resolve(libDirPath);
+          filesystem.getPath(versionSubDir.get()).resolve(libDirPath);
     }
 
     // If there are no deps then this is just referencing a path that should already be there

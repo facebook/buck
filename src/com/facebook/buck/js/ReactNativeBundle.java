@@ -225,7 +225,7 @@ public class ReactNativeBundle
         Maps.uniqueIndex(srcs, getResolver()::getAbsolutePath);
     Path depFile = getPathToDepFile(getBuildTarget(), getProjectFilesystem());
     for (String line : getProjectFilesystem().readLines(depFile)) {
-      Path path = getProjectFilesystem().getRootPath().getFileSystem().getPath(line);
+      Path path = getProjectFilesystem().getPath(line);
       SourcePath sourcePath = pathToSourceMap.get(path);
       if (sourcePath == null) {
         throw new IOException(

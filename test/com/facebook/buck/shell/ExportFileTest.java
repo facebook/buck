@@ -182,7 +182,7 @@ public class ExportFileTest {
             new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
             projectFilesystem);
     assertIterablesEquals(
-        singleton(projectFilesystem.getRootPath().getFileSystem().getPath("example.html")),
+        singleton(projectFilesystem.getPath("example.html")),
         exportFile.getSource());
   }
 

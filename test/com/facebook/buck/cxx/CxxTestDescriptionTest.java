@@ -433,7 +433,7 @@ public class CxxTestDescriptionTest {
   @Test
   public void resourcesAffectRuleKey() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path resource = filesystem.getRootPath().getFileSystem().getPath("resource");
+    Path resource = filesystem.getPath("resource");
     filesystem.touch(resource);
     for (CxxTestType framework : CxxTestType.values()) {
 
@@ -470,7 +470,7 @@ public class CxxTestDescriptionTest {
   @Test
   public void resourcesAreInputs() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path resource = filesystem.getRootPath().getFileSystem().getPath("resource");
+    Path resource = filesystem.getPath("resource");
     filesystem.touch(resource);
     for (CxxTestType framework : CxxTestType.values()) {
       TargetNode<?, ?> cxxTestWithResources =

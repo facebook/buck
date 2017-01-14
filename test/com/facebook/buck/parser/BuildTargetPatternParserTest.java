@@ -117,7 +117,7 @@ public class BuildTargetPatternParserTest {
     assertEquals(
         new SubdirectoryBuildTargetPattern(
             filesystem.getRootPath(),
-            filesystem.getRootPath().getFileSystem().getPath("sub")),
+            filesystem.getPath("sub")),
         buildTargetPatternParser.parse(cellNames, "other//sub/..."));
   }
 

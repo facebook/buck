@@ -42,7 +42,7 @@ public class HeaderPathNormalizerTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     ));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path header = filesystem.getRootPath().getFileSystem().getPath("foo/bar.h");
+    Path header = filesystem.getPath("foo/bar.h");
     HeaderPathNormalizer normalizer =
         new HeaderPathNormalizer.Builder(pathResolver, PathShortener.identity()).build();
     assertThat(
@@ -56,7 +56,7 @@ public class HeaderPathNormalizerTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     ));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path header = filesystem.getRootPath().getFileSystem().getPath("foo/bar.h");
+    Path header = filesystem.getPath("foo/bar.h");
     SourcePath headerPath = new PathSourcePath(filesystem, header);
     HeaderPathNormalizer normalizer =
         new HeaderPathNormalizer.Builder(pathResolver, PathShortener.identity())
@@ -76,7 +76,7 @@ public class HeaderPathNormalizerTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     ));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path header = filesystem.getRootPath().getFileSystem().getPath("foo/bar.h");
+    Path header = filesystem.getPath("foo/bar.h");
     SourcePath headerDirPath = new PathSourcePath(filesystem, header.getParent());
     HeaderPathNormalizer normalizer =
         new HeaderPathNormalizer.Builder(pathResolver, PathShortener.identity())
@@ -102,7 +102,7 @@ public class HeaderPathNormalizerTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     ));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path header = filesystem.getRootPath().getFileSystem().getPath("foo/bar.pch");
+    Path header = filesystem.getPath("foo/bar.pch");
     SourcePath headerPath = new PathSourcePath(filesystem, header);
     HeaderPathNormalizer normalizer =
         new HeaderPathNormalizer.Builder(pathResolver, PathShortener.identity())

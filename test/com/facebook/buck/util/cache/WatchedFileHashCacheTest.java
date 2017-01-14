@@ -145,7 +145,7 @@ public class WatchedFileHashCacheTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     WatchedFileHashCache cache = new WatchedFileHashCache(filesystem);
 
-    Path dir = filesystem.getRootPath().getFileSystem().getPath("dir");
+    Path dir = filesystem.getPath("dir");
     filesystem.mkdirs(dir);
     Path child1 = dir.resolve("child1");
     filesystem.touch(child1);
@@ -169,7 +169,7 @@ public class WatchedFileHashCacheTest {
   public void whenNotifiedOfParentChangeEventCacheEntryIsRemoved() throws IOException {
       ProjectFilesystem filesystem = new FakeProjectFilesystem();
       WatchedFileHashCache cache = new WatchedFileHashCache(filesystem);
-      Path parent = filesystem.getRootPath().getFileSystem().getPath("directory");
+    Path parent = filesystem.getPath("directory");
       Path path = parent.resolve("SomeClass.java");
       HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
       cache.loadingCache.put(path, value);
