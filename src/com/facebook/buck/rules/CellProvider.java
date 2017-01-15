@@ -74,7 +74,7 @@ public final class CellProvider {
             e.getCause());
       }
     } catch (UncheckedExecutionException e) {
-      Throwables.propagateIfPossible(e.getCause());
+      Throwables.throwIfUnchecked(e.getCause());
       throw e;
     }
   }

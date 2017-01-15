@@ -224,11 +224,15 @@ public class Parser {
 
   private RuntimeException propagateRuntimeCause(RuntimeException e)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
-    Throwables.propagateIfInstanceOf(e, HumanReadableException.class);
-    Throwables.propagateIfInstanceOf(e.getCause(), IOException.class);
-    Throwables.propagateIfInstanceOf(e.getCause(), InterruptedException.class);
-    Throwables.propagateIfInstanceOf(e.getCause(), BuildFileParseException.class);
-    Throwables.propagateIfInstanceOf(e.getCause(), BuildTargetException.class);
+    Throwables.throwIfInstanceOf(e, HumanReadableException.class);
+
+    Throwable t = e.getCause();
+    if (t != null) {
+      Throwables.throwIfInstanceOf(t, IOException.class);
+      Throwables.throwIfInstanceOf(t, InterruptedException.class);
+      Throwables.throwIfInstanceOf(t, BuildFileParseException.class);
+      Throwables.throwIfInstanceOf(t, BuildTargetException.class);
+    }
     return e;
   }
 
@@ -587,10 +591,11 @@ public class Parser {
         }
       }
     } catch (ExecutionException e) {
-      Throwables.propagateIfInstanceOf(e.getCause(), BuildFileParseException.class);
-      Throwables.propagateIfInstanceOf(e.getCause(), BuildTargetException.class);
-      Throwables.propagateIfInstanceOf(e.getCause(), IOException.class);
-      throw Throwables.propagate(e.getCause());
+      Throwables.throwIfInstanceOf(e.getCause(), BuildFileParseException.class);
+      Throwables.throwIfInstanceOf(e.getCause(), BuildTargetException.class);
+      Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
+      Throwables.throwIfUnchecked(e.getCause());
+      throw new RuntimeException(e.getCause());
     }
 
     // Finally, pull out the final build target results in input target spec order, and place them

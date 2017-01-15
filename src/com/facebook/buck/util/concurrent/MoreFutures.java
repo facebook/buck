@@ -16,10 +16,10 @@
 
 package com.facebook.buck.util.concurrent;
 
-import static com.google.common.base.Throwables.propagate;
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -184,7 +184,8 @@ public class MoreFutures {
 
   public static <X extends Throwable> void propagateCauseIfInstanceOf(Throwable e, Class<X> type) {
     if (e.getCause() != null && type.isInstance(e)) {
-      propagate(e.getCause());
+      Throwables.throwIfUnchecked(e.getCause());
+      throw new RuntimeException(e.getCause());
     }
   }
 }

@@ -17,7 +17,6 @@
 package com.facebook.buck.log;
 
 import com.facebook.buck.util.BestCompressionGZIPOutputStream;
-import com.google.common.base.Throwables;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -35,8 +34,7 @@ public class CompressingFileHandler extends FileHandler {
     try {
       stream = new BestCompressionGZIPOutputStream(out, true);
     } catch (IOException e) {
-      Throwables.propagate(e);
-      return;
+      throw new RuntimeException(e);
     }
     super.setOutputStream(stream);
   }

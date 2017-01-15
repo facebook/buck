@@ -214,7 +214,7 @@ public class SmartDexingStep implements Step {
       MoreFutures.getAll(executorService, callables);
     } catch (ExecutionException e) {
       Throwable cause = e.getCause();
-      Throwables.propagateIfInstanceOf(cause, StepFailedException.class);
+      Throwables.throwIfInstanceOf(cause, StepFailedException.class);
 
       // Programmer error.  Boo-urns.
       throw new RuntimeException(cause);

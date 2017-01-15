@@ -393,8 +393,8 @@ public class WorkspaceAndProjectGenerator {
     try {
       generationResults = Futures.allAsList(projectGeneratorFutures).get();
     } catch (ExecutionException e) {
-      Throwables.propagateIfInstanceOf(e.getCause(), IOException.class);
-      Throwables.propagateIfPossible(e.getCause());
+      Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
+      Throwables.throwIfUnchecked(e.getCause());
       throw new IllegalStateException("Unexpected exception: ", e);
     }
     for (GenerationResult result : generationResults) {

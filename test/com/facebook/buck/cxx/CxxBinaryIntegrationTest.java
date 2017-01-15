@@ -1353,7 +1353,7 @@ public class CxxBinaryIntegrationTest {
         .toString();
     String out = workspace.getFileContents(specsPathList);
 
-    ImmutableList<Path> paths = FluentIterable.of(out.split("\n")).transform(
+    ImmutableList<Path> paths = FluentIterable.from(out.split("\n")).transform(
         input -> new File(input).toPath()).toList();
 
     assertSame("There must be 2 paths in total", paths.size(), 2);

@@ -248,7 +248,7 @@ public class DaemonIntegrationTest {
         assertEquals("Unexpected exit code.", expectedExitCode, exitCode);
       } catch (IOException e) {
         fail("Should not throw exception.");
-        throw Throwables.propagate(e);
+        Throwables.throwIfUnchecked(e);
       } catch (InterruptedException e) {
         fail("Should not throw exception.");
         Thread.currentThread().interrupt();

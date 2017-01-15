@@ -263,7 +263,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
         CHANGED_FILES_COMMAND,
         REVISION_ID_TEMPLATE,
         fromRevisionId));
-    return FluentIterable.of(hgChangedFilesString.split("\0"))
+    return FluentIterable.from(hgChangedFilesString.split("\0"))
         .filter(input -> !Strings.isNullOrEmpty(input))
         .toSet();
   }

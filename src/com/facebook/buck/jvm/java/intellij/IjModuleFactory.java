@@ -62,7 +62,6 @@ public class IjModuleFactory {
   /**
    * These target types are mapped onto .iml module files.
    */
-  @SuppressWarnings("unchecked")
   public static final ImmutableSet<Class<? extends Description<?>>>
       SUPPORTED_MODULE_DESCRIPTION_CLASSES = ImmutableSet.of(
           AndroidBinaryDescription.class,

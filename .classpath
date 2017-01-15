@@ -28,7 +28,7 @@
 	<classpathentry kind="lib" path="third-party/java/eden/eden.jar"/>
 	<classpathentry kind="lib" path="third-party/java/eden/java-thrift-dependencies.jar"/>
 	<classpathentry kind="lib" path="third-party/java/gson/gson-2.2.4.jar" sourcepath="third-party/java/gson/gson-2.2.4-sources.jar"/>
-	<classpathentry kind="lib" path="third-party/java/guava/guava-19.0.jar" sourcepath="third-party/java/guava/guava-19.0-sources.jar"/>
+	<classpathentry kind="lib" path="third-party/java/guava/guava-20.0.jar" sourcepath="third-party/java/guava/guava-20.0-sources.jar"/>
 	<classpathentry kind="lib" path="third-party/java/guice/guice-3.0.jar"/>
 	<classpathentry kind="lib" path="third-party/java/guice/guice-assistedinject-3.0.jar"/>
 	<classpathentry kind="lib" path="third-party/java/guice/guice-multibindings-3.0.jar"/>

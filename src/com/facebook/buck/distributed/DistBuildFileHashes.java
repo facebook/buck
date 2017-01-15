@@ -175,8 +175,8 @@ public class DistBuildFileHashes {
     try {
       return fileHashes.get();
     } catch (ExecutionException e) {
-      Throwables.propagateIfInstanceOf(e.getCause(), IOException.class);
-      Throwables.propagateIfInstanceOf(e.getCause(), InterruptedException.class);
+      Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
+      Throwables.throwIfInstanceOf(e.getCause(), InterruptedException.class);
       throw new RuntimeException(e.getCause());
     }
   }

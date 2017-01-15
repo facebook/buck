@@ -206,7 +206,8 @@ public class RemoteFileTest {
         try {
           return Arrays.equals(Files.readAllBytes((Path) o), content);
         } catch (IOException e) {
-          throw Throwables.propagate(e);
+          Throwables.throwIfUnchecked(e);
+          throw new RuntimeException(e);
         }
       }
 
