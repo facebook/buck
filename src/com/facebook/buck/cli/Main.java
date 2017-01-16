@@ -868,6 +868,7 @@ public final class Main {
     if (!command.isReadOnly()) {
       commandSemaphoreAcquired = commandSemaphore.tryAcquire();
       if (!commandSemaphoreAcquired) {
+        LOG.warn("Buck server was busy executing a command. Maybe retrying later will help.");
         return BUSY_EXIT_CODE;
       }
     }
