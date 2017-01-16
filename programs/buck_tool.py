@@ -12,6 +12,7 @@ import tempfile
 import textwrap
 import time
 import traceback
+import uuid
 
 from pynailgun import NailgunConnection, NailgunException
 from timing import monotonic_time_nanos
@@ -182,6 +183,7 @@ class BuckTool(object):
                                 env=env,
                                 cwd=self._buck_project.root)
                             if exit_code == 2:
+                                env['BUCK_BUILD_ID'] = str(uuid.uuid4())
                                 now = time.time()
                                 if now - last_diagnostic_time > DAEMON_BUSY_MESSAGE_SECONDS:
                                     print('Daemon is busy, waiting for it to become free...',
