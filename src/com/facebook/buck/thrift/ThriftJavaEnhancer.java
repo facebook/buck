@@ -144,7 +144,6 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
                   sourceZipTarget,
                   Suppliers.ofInstance(ImmutableSortedSet.of(compilerRule)),
                   Suppliers.ofInstance(ImmutableSortedSet.of())),
-              pathResolver,
               sourceZip,
               sourceDirectory));
     }
