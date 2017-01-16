@@ -71,7 +71,7 @@ public class DirectHeaderMap extends HeaderSymlinkTree {
       headerMapEntries.put(key, path);
     }
     return ImmutableList.<Step>builder()
-        .add(getVerifiyStep())
+        .add(getVerifyStep())
         .add(new MakeCleanDirectoryStep(getProjectFilesystem(), super.getPathToOutput()))
         .add(new HeaderMapStep(getProjectFilesystem(), headerMapPath, headerMapEntries.build()))
         .build();

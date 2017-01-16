@@ -28,7 +28,9 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -78,6 +80,23 @@ public class CxxCompilationDatabaseTest {
     SourcePathResolver testSourcePathResolver =
         new SourcePathResolver(new SourcePathRuleFinder(testBuildRuleResolver));
 
+    HeaderSymlinkTree privateSymlinkTree = CxxDescriptionEnhancer.createHeaderSymlinkTree(
+        testBuildRuleParams,
+        testBuildRuleResolver,
+        testSourcePathResolver,
+        CxxPlatformUtils.DEFAULT_PLATFORM,
+        ImmutableMap.of(),
+        HeaderVisibility.PRIVATE,
+        true);
+    HeaderSymlinkTree exportedSymlinkTree = CxxDescriptionEnhancer.createHeaderSymlinkTree(
+        testBuildRuleParams,
+        testBuildRuleResolver,
+        testSourcePathResolver,
+        CxxPlatformUtils.DEFAULT_PLATFORM,
+        ImmutableMap.of(),
+        HeaderVisibility.PUBLIC,
+        true);
+
     BuildTarget compileTarget = BuildTarget
         .builder(testBuildRuleParams.getBuildTarget().getUnflavoredBuildTarget())
         .addFlavors(
@@ -97,6 +116,7 @@ public class CxxCompilationDatabaseTest {
     ImmutableSortedSet.Builder<CxxPreprocessAndCompile> rules = ImmutableSortedSet.naturalOrder();
     BuildRuleParams compileBuildRuleParams = new FakeBuildRuleParamsBuilder(compileTarget)
         .setProjectFilesystem(filesystem)
+        .setDeclaredDeps(ImmutableSortedSet.of(privateSymlinkTree, exportedSymlinkTree))
         .build();
     rules.add(
         CxxPreprocessAndCompile.preprocessAndCompile(
@@ -135,27 +155,10 @@ public class CxxCompilationDatabaseTest {
                 CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
                 Optional.empty()));
 
-    HeaderSymlinkTree privateSymlinkTree = CxxDescriptionEnhancer.createHeaderSymlinkTree(
-        testBuildRuleParams,
-        testBuildRuleResolver,
-        testSourcePathResolver,
-        CxxPlatformUtils.DEFAULT_PLATFORM,
-        ImmutableMap.of(),
-        HeaderVisibility.PRIVATE,
-        true);
-    HeaderSymlinkTree exportedSymlinkTree = CxxDescriptionEnhancer.createHeaderSymlinkTree(
-        testBuildRuleParams,
-        testBuildRuleResolver,
-        testSourcePathResolver,
-        CxxPlatformUtils.DEFAULT_PLATFORM,
-        ImmutableMap.of(),
-        HeaderVisibility.PUBLIC,
-        true);
     CxxCompilationDatabase compilationDatabase = CxxCompilationDatabase.createCompilationDatabase(
         testBuildRuleParams,
         testSourcePathResolver,
-        rules.build(),
-        ImmutableSortedSet.of(privateSymlinkTree, exportedSymlinkTree));
+        rules.build());
 
     assertThat(
         compilationDatabase.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
@@ -168,7 +171,10 @@ public class CxxCompilationDatabaseTest {
         BuildTargets.getGenPath(filesystem, testBuildTarget, "__%s.json"),
         compilationDatabase.getPathToOutput());
 
-    List<Step> buildSteps = compilationDatabase.getPostBuildSteps();
+    List<Step> buildSteps =
+        compilationDatabase.getBuildSteps(
+            FakeBuildContext.NOOP_CONTEXT,
+            new FakeBuildableContext());
     assertEquals(2, buildSteps.size());
     assertTrue(buildSteps.get(0) instanceof MkdirStep);
     assertTrue(buildSteps.get(1) instanceof

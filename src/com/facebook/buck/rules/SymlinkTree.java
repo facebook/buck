@@ -42,10 +42,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.stream.Stream;
 
 public class SymlinkTree
     extends AbstractBuildRuleWithResolver
-    implements SupportsInputBasedRuleKey, RuleKeyAppendable {
+    implements HasRuntimeDeps, RuleKeyAppendable, SupportsInputBasedRuleKey {
 
   private final Path root;
   private final ImmutableSortedMap<Path, SourcePath> links;
@@ -146,7 +147,7 @@ public class SymlinkTree
       BuildContext context,
       BuildableContext buildableContext) {
     return ImmutableList.of(
-        getVerifiyStep(),
+        getVerifyStep(),
         new MakeCleanDirectoryStep(getProjectFilesystem(), root),
         new SymlinkTreeStep(getProjectFilesystem(), root, getResolver().getMappedPaths(links)));
   }
@@ -170,7 +171,7 @@ public class SymlinkTree
   }
 
   @VisibleForTesting
-  protected Step getVerifiyStep() {
+  protected Step getVerifyStep() {
     return new AbstractExecutionStep("verify_symlink_tree") {
         @Override
         public StepExecutionResult execute(ExecutionContext context) throws IOException {
@@ -200,6 +201,11 @@ public class SymlinkTree
   @Override
   public boolean isCacheable() {
     return false;
+  }
+
+  @Override
+  public Stream<SourcePath> getRuntimeDeps() {
+    return links.values().stream();
   }
 
   public Path getRoot() {

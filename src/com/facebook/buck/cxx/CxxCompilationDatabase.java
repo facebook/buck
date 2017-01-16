@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -52,7 +51,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public class CxxCompilationDatabase extends AbstractBuildRuleWithResolver
-    implements HasPostBuildSteps, HasRuntimeDeps {
+    implements HasRuntimeDeps {
   private static final Logger LOG = Logger.get(CxxCompilationDatabase.class);
   public static final Flavor COMPILATION_DATABASE = ImmutableFlavor.of("compilation-database");
   public static final Flavor UBER_COMPILATION_DATABASE =
@@ -68,25 +67,22 @@ public class CxxCompilationDatabase extends AbstractBuildRuleWithResolver
   public static CxxCompilationDatabase createCompilationDatabase(
       BuildRuleParams params,
       SourcePathResolver pathResolver,
-      Iterable<CxxPreprocessAndCompile> compileAndPreprocessRules,
-      Iterable<HeaderSymlinkTree> headerSymlinkTreeRuntimeDeps) {
+      Iterable<CxxPreprocessAndCompile> compileAndPreprocessRules) {
     ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<CxxPreprocessAndCompile> compileRules = ImmutableSortedSet
         .naturalOrder();
     for (CxxPreprocessAndCompile compileRule : compileAndPreprocessRules) {
-      if (CxxSourceRuleFactory.isCompileFlavoredBuildTarget(compileRule.getBuildTarget())) {
-        compileRules.add(compileRule);
-        deps.addAll(compileRule.getDeps());
-      }
+      compileRules.add(compileRule);
+      deps.addAll(compileRule.getDeps());
     }
 
     return new CxxCompilationDatabase(
         params.copyWithDeps(
-            Suppliers.ofInstance(deps.build()),
-            params.getExtraDeps()),
+            Suppliers.ofInstance(ImmutableSortedSet.of()),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver,
         compileRules.build(),
-        ImmutableSortedSet.copyOf(headerSymlinkTreeRuntimeDeps));
+        deps.build());
   }
 
   CxxCompilationDatabase(
@@ -112,18 +108,16 @@ public class CxxCompilationDatabase extends AbstractBuildRuleWithResolver
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    return ImmutableList.of();
-  }
-
-  @Override
-  public ImmutableList<Step> getPostBuildSteps() {
-    // We don't want to cache the output of this rule because it contains absolute paths.
-    // Since the step to generate the commands json output is super fast, it's ok if we always build
-    // this rule locally.
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.add(new MkdirStep(getProjectFilesystem(), outputJsonFile.getParent()));
     steps.add(new GenerateCompilationCommandsJson());
     return steps.build();
+  }
+
+  @Override
+  public boolean isCacheable() {
+    // We don't want to cache the output of this rule because it contains absolute paths.
+    return false;
   }
 
   @Override
