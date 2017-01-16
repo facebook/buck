@@ -88,7 +88,7 @@ public class CxxCompileStepIntegrationTest {
     CxxPreprocessAndCompileStep step =
         new CxxPreprocessAndCompileStep(
             filesystem,
-            CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO,
+            CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE,
             output,
             depFile,
             relativeInput,
@@ -172,7 +172,7 @@ public class CxxCompileStepIntegrationTest {
     CxxPreprocessAndCompileStep step =
         new CxxPreprocessAndCompileStep(
             filesystem,
-            CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO,
+            CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE,
             output,
             depFile,
             relativeInput,

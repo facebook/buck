@@ -88,7 +88,7 @@ public class CxxPreprocessAndCompile
     Preconditions.checkState(operation.isPreprocess() == preprocessDelegate.isPresent());
     if (precompiledHeaderRef.isPresent()) {
       Preconditions.checkState(
-          operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO,
+          operation == CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE,
           "Precompiled headers can only be used for compile operations.");
     }
     this.operation = operation;
@@ -161,7 +161,7 @@ public class CxxPreprocessAndCompile
     return new CxxPreprocessAndCompile(
         params,
         resolver,
-        CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO,
+        CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE,
         Optional.of(preprocessorDelegate),
         compilerDelegate,
         output,
@@ -177,7 +177,7 @@ public class CxxPreprocessAndCompile
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     // If a sanitizer is being used for compilation, we need to record the working directory in
     // the rule key, as changing this changes the generated object file.
-    if (operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO) {
+    if (operation == CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE) {
       sink.setReflectively("compilationDirectory", compilerSanitizer.getCompilationDirectory());
     }
     if (sandboxTree.isPresent()) {
@@ -219,7 +219,7 @@ public class CxxPreprocessAndCompile
     Optional<CxxPreprocessAndCompileStep.ToolCommand> compilerCommand;
     if (operation.isCompile()) {
       ImmutableList<String> arguments;
-      if (operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO) {
+      if (operation == CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE) {
         Optional<CxxPrecompiledHeader> pch;
         if (precompiledHeaderRef.isPresent()) {
           pch = Optional.of(precompiledHeaderRef.get().getPrecompiledHeader());
@@ -300,7 +300,7 @@ public class CxxPreprocessAndCompile
 
   // Used for compdb
   public ImmutableList<String> getCommand() {
-    if (operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO) {
+    if (operation == CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE) {
       return makeMainStep(pathResolver, getScratchPath(), false).getCommand();
     }
 
