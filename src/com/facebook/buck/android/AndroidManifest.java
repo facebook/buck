@@ -18,14 +18,13 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
@@ -59,7 +58,7 @@ import java.util.Set;
  * )
  * </pre>
  */
-public class AndroidManifest extends AbstractBuildRuleWithResolver {
+public class AndroidManifest extends AbstractBuildRule {
 
   @AddToRuleKey
   private final SourcePath skeletonFile;
@@ -72,10 +71,9 @@ public class AndroidManifest extends AbstractBuildRuleWithResolver {
 
   protected AndroidManifest(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       SourcePath skeletonFile,
       Set<SourcePath> manifestFiles) {
-    super(params, resolver);
+    super(params);
     this.skeletonFile = skeletonFile;
     this.manifestFiles = ImmutableSortedSet.copyOf(manifestFiles);
     BuildTarget buildTarget = params.getBuildTarget();
