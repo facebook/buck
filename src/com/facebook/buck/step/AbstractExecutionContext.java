@@ -86,6 +86,10 @@ abstract class AbstractExecutionContext implements Closeable {
   @Value.Parameter
   abstract Optional<AdbOptions> getAdbOptions();
 
+  /**
+   * Worker process pools that are persisted across buck invocations inside buck daemon.
+   * If buck is running without daemon, there will be no persisted pools.
+   */
   @Value.Parameter
   abstract Optional<ConcurrentMap<String, WorkerProcessPool>> getPersistentWorkerPools();
 
@@ -126,6 +130,10 @@ abstract class AbstractExecutionContext implements Closeable {
     return false;
   }
 
+  /**
+   * Worker process pools that you can populate as needed. These will be destroyed as soon as
+   * buck invocation finishes, thus, these pools are not persisted across buck invocations.
+   */
   @Value.Default
   public ConcurrentMap<String, WorkerProcessPool> getWorkerProcessPools() {
     return new ConcurrentHashMap<>();

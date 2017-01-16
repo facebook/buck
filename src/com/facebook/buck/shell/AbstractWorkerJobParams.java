@@ -65,9 +65,13 @@ interface AbstractWorkerJobParams {
   int getMaxWorkers();
 
   /**
-   * If this value is set, it will be used to obtain the instance of the worker process pool.
-   * If the value is absent, then key is computed based on the startup command and startup
-   * arguments.
+   * If this value is set and if the current invocation allows to have persisted worker pools
+   * (buck is running as daemon), it will be used to obtain the instance of the persisted worker
+   * process pool.
+   * If this value is absent, then key will be automatically computed based on the startup command
+   * and startup arguments.
+   *
+   * Note: If you set this value then you must set worker hash value below as well.
    */
   Optional<String> getPersistentWorkerKey();
 
