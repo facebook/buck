@@ -134,7 +134,6 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
       getRuleResolver().addToIndex(
           WriteStringTemplateRule.from(
               getBaseParams(),
-              getPathResolver(),
               getRuleFinder(),
               target,
               output,

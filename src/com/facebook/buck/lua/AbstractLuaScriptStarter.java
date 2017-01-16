@@ -96,7 +96,6 @@ abstract class AbstractLuaScriptStarter implements Starter {
     getRuleResolver().addToIndex(
         WriteStringTemplateRule.from(
             getBaseParams(),
-            getPathResolver(),
             getRuleFinder(),
             getTarget(),
             getOutput(),
