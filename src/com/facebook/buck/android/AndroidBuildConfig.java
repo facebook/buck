@@ -18,14 +18,13 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -129,7 +128,7 @@ import javax.annotation.Nullable;
  * exploit the "final-ness" of the {@code DEBUG} constant in any whole-program optimization that it
  * performs.
  */
-public class AndroidBuildConfig extends AbstractBuildRuleWithResolver {
+public class AndroidBuildConfig extends AbstractBuildRule {
 
   @AddToRuleKey
   private final String javaPackage;
@@ -143,12 +142,11 @@ public class AndroidBuildConfig extends AbstractBuildRuleWithResolver {
 
   protected AndroidBuildConfig(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       String javaPackage,
       BuildConfigFields defaultValues,
       Optional<SourcePath> valuesFile,
       boolean useConstantExpressions) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.javaPackage = javaPackage;
     this.defaultValues = defaultValues;
     this.valuesFile = valuesFile;
