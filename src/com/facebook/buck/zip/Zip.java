@@ -18,13 +18,12 @@ package com.facebook.buck.zip;
 
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasOutputName;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -34,7 +33,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
-public class Zip extends AbstractBuildRuleWithResolver implements HasOutputName {
+public class Zip extends AbstractBuildRule implements HasOutputName {
 
   @AddToRuleKey
   private final String name;
@@ -43,10 +42,9 @@ public class Zip extends AbstractBuildRuleWithResolver implements HasOutputName 
 
   public Zip(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       String outputName,
       ImmutableSortedSet<SourcePath> sources) {
-    super(params, resolver);
+    super(params);
     this.name = outputName;
     this.sources = sources;
   }
@@ -72,7 +70,8 @@ public class Zip extends AbstractBuildRuleWithResolver implements HasOutputName 
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
 
     SrcZipAwareFileBundler bundler = new SrcZipAwareFileBundler(getBuildTarget());
-    bundler.copy(getProjectFilesystem(), getResolver(), steps, scratchDir, sources);
+    bundler.copy(
+        getProjectFilesystem(), context.getSourcePathResolver(), steps, scratchDir, sources);
 
     steps.add(
         new ZipStep(
