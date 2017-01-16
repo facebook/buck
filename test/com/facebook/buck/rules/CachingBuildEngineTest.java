@@ -978,8 +978,7 @@ public class CachingBuildEngineTest {
           new FakeBuildRuleParamsBuilder(target)
               .setProjectFilesystem(filesystem)
               .build();
-      BuildRule rule = new WriteFile(
-          params, pathResolver, "something else", output, /* executable */ false);
+      BuildRule rule = new WriteFile(params, "something else", output, /* executable */ false);
 
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build();
@@ -1207,7 +1206,6 @@ public class CachingBuildEngineTest {
               new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule"))
                   .setProjectFilesystem(filesystem)
                   .build(),
-              pathResolver,
               "data",
               Paths.get("output/path"),
               /* executable */ false);
@@ -1236,8 +1234,7 @@ public class CachingBuildEngineTest {
           new FakeBuildRuleParamsBuilder(target)
               .setProjectFilesystem(filesystem)
               .build();
-      BuildRule rule = new WriteFile(
-          params, pathResolver, "something else", output, /* executable */ false);
+      BuildRule rule = new WriteFile(params, "something else", output, /* executable */ false);
 
       // Run an initial build to seed the cache.
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()

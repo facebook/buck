@@ -272,8 +272,6 @@ abstract class GoDescriptors {
       return ((BinaryBuildRule) generator.get()).getExecutableCommand();
     }
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildTarget generatorSourceTarget =
         sourceParams.getBuildTarget()
             .withAppendedFlavors(ImmutableFlavor.of("test-main-gen-source"));
@@ -284,7 +282,6 @@ abstract class GoDescriptors {
                     generatorSourceTarget,
                     Suppliers.ofInstance(ImmutableSortedSet.of()),
                     Suppliers.ofInstance(ImmutableSortedSet.of())),
-                pathResolver,
                 extractTestMainGenerator(),
                 BuildTargets.getGenPath(
                     sourceParams.getProjectFilesystem(),

@@ -610,7 +610,7 @@ public class LuaBinaryDescription implements
     if (!components.getPythonModules().isEmpty()) {
       // Add in any missing init modules into the python components.
       SourcePath emptyInit =
-          PythonBinaryDescription.createEmptyInitModule(params, resolver, pathResolver);
+          PythonBinaryDescription.createEmptyInitModule(params, resolver);
       extraInputs.add(emptyInit);
       ImmutableMap<String, SourcePath> pythonModules =
           MoreMaps.transformKeys(

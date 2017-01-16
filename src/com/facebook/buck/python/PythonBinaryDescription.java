@@ -99,8 +99,7 @@ public class PythonBinaryDescription implements
 
   public static SourcePath createEmptyInitModule(
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      SourcePathResolver pathResolver) {
+      BuildRuleResolver resolver) {
     BuildTarget emptyInitTarget = getEmptyInitTarget(params.getBuildTarget());
     Path emptyInitPath =
         BuildTargets.getGenPath(
@@ -113,7 +112,6 @@ public class PythonBinaryDescription implements
                 emptyInitTarget,
                 Suppliers.ofInstance(ImmutableSortedSet.of()),
                 Suppliers.ofInstance(ImmutableSortedSet.of())),
-            pathResolver,
             "",
             emptyInitPath,
             /* executable */ false));
@@ -165,7 +163,7 @@ public class PythonBinaryDescription implements
     }
 
     // Add in any missing init modules into the python components.
-    SourcePath emptyInit = createEmptyInitModule(params, resolver, pathResolver);
+    SourcePath emptyInit = createEmptyInitModule(params, resolver);
     components = components.withModules(addMissingInitModules(components.getModules(), emptyInit));
 
     BuildTarget linkTreeTarget =
