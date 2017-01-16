@@ -19,12 +19,12 @@ package com.facebook.buck.thrift;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -93,7 +93,6 @@ public class ThriftCompilerTest {
         .build(
             new ThriftCompiler(
                 params,
-                resolver,
                 DEFAULT_COMPILER,
                 DEFAULT_FLAGS,
                 DEFAULT_OUTPUT_DIR,
@@ -111,7 +110,6 @@ public class ThriftCompilerTest {
         .build(
             new ThriftCompiler(
                 params,
-                resolver,
                 new CommandTool.Builder().addArg(new StringArg("different")).build(),
                 DEFAULT_FLAGS,
                 DEFAULT_OUTPUT_DIR,
@@ -130,7 +128,6 @@ public class ThriftCompilerTest {
         .build(
             new ThriftCompiler(
                 params,
-                resolver,
                 DEFAULT_COMPILER,
                 ImmutableList.of("--different"),
                 DEFAULT_OUTPUT_DIR,
@@ -149,7 +146,6 @@ public class ThriftCompilerTest {
         .build(
             new ThriftCompiler(
                 params,
-                resolver,
                 DEFAULT_COMPILER,
                 DEFAULT_FLAGS,
                 Paths.get("different-dir"),
@@ -168,7 +164,6 @@ public class ThriftCompilerTest {
         .build(
             new ThriftCompiler(
                 params,
-                resolver,
                 DEFAULT_COMPILER,
                 DEFAULT_FLAGS,
                 DEFAULT_OUTPUT_DIR,
@@ -187,7 +182,6 @@ public class ThriftCompilerTest {
         .build(
             new ThriftCompiler(
                 params,
-                resolver,
                 DEFAULT_COMPILER,
                 DEFAULT_FLAGS,
                 DEFAULT_OUTPUT_DIR,
@@ -206,7 +200,6 @@ public class ThriftCompilerTest {
         .build(
             new ThriftCompiler(
                 params,
-                resolver,
                 DEFAULT_COMPILER,
                 DEFAULT_FLAGS,
                 DEFAULT_OUTPUT_DIR,
@@ -226,7 +219,6 @@ public class ThriftCompilerTest {
         .build(
             new ThriftCompiler(
                 params,
-                resolver,
                 DEFAULT_COMPILER,
                 DEFAULT_FLAGS,
                 DEFAULT_OUTPUT_DIR,
@@ -246,7 +238,6 @@ public class ThriftCompilerTest {
         .build(
             new ThriftCompiler(
                 params,
-                resolver,
                 DEFAULT_COMPILER,
                 DEFAULT_FLAGS,
                 DEFAULT_OUTPUT_DIR,
@@ -265,7 +256,6 @@ public class ThriftCompilerTest {
         .build(
             new ThriftCompiler(
                 params,
-                resolver,
                 DEFAULT_COMPILER,
                 DEFAULT_FLAGS,
                 DEFAULT_OUTPUT_DIR,
@@ -286,7 +276,6 @@ public class ThriftCompilerTest {
         new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(
             new ThriftCompiler(
                 params,
-                resolver,
                 DEFAULT_COMPILER,
                 DEFAULT_FLAGS,
                 DEFAULT_OUTPUT_DIR,
@@ -312,7 +301,6 @@ public class ThriftCompilerTest {
 
     ThriftCompiler thriftCompiler = new ThriftCompiler(
         params,
-        pathResolver,
         DEFAULT_COMPILER,
         DEFAULT_FLAGS,
         DEFAULT_OUTPUT_DIR,
@@ -342,7 +330,7 @@ public class ThriftCompilerTest {
                 .addAll(DEFAULT_INCLUDE_ROOTS)
                 .build()));
     ImmutableList<Step> actual = thriftCompiler.getBuildSteps(
-        FakeBuildContext.NOOP_CONTEXT,
+        FakeBuildContext.withSourcePathResolver(pathResolver),
         new FakeBuildableContext());
     assertEquals(expected, actual);
   }

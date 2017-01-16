@@ -77,12 +77,9 @@ public class ThriftJavaEnhancerTest {
             .build(), resolver);
   }
 
-  private static ThriftCompiler createFakeThriftCompiler(
-      String target,
-      SourcePathResolver resolver) {
+  private static ThriftCompiler createFakeThriftCompiler(String target) {
     return new ThriftCompiler(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target)).build(),
-        resolver,
         new CommandTool.Builder()
             .addArg(new StringArg("compiler"))
             .build(),
@@ -155,11 +152,11 @@ public class ThriftJavaEnhancerTest {
     // Setup up some thrift inputs to pass to the createBuildRule method.
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
         "test1.thrift", new ThriftSource(
-            createFakeThriftCompiler("//:thrift_source1", pathResolver),
+            createFakeThriftCompiler("//:thrift_source1"),
             ImmutableList.of(),
             Paths.get("output1")),
         "test2.thrift", new ThriftSource(
-            createFakeThriftCompiler("//:thrift_source2", pathResolver),
+            createFakeThriftCompiler("//:thrift_source2"),
             ImmutableList.of(),
             Paths.get("output2")));
 
@@ -213,7 +210,7 @@ public class ThriftJavaEnhancerTest {
     // Setup up some thrift inputs to pass to the createBuildRule method.
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
         "test.thrift", new ThriftSource(
-            createFakeThriftCompiler("//:thrift_source", pathResolver),
+            createFakeThriftCompiler("//:thrift_source"),
             ImmutableList.of(),
             Paths.get("output")));
 

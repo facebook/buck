@@ -16,13 +16,12 @@
 
 package com.facebook.buck.thrift;
 
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -37,7 +36,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-public class ThriftCompiler extends AbstractBuildRuleWithResolver {
+public class ThriftCompiler extends AbstractBuildRule {
 
   @AddToRuleKey
   private final Tool compiler;
@@ -61,7 +60,6 @@ public class ThriftCompiler extends AbstractBuildRuleWithResolver {
 
   public ThriftCompiler(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       Tool compiler,
       ImmutableList<String> flags,
       Path outputDir,
@@ -72,7 +70,7 @@ public class ThriftCompiler extends AbstractBuildRuleWithResolver {
       ImmutableSet<Path> headerMaps,
       ImmutableMap<Path, SourcePath> includes,
       ImmutableSortedSet<String> generatedSources) {
-    super(params, resolver);
+    super(params);
     this.compiler = compiler;
     this.flags = flags;
     this.outputDir = outputDir;
@@ -111,11 +109,11 @@ public class ThriftCompiler extends AbstractBuildRuleWithResolver {
             getProjectFilesystem().getRootPath(),
             compiler.getEnvironment(),
             ImmutableList.<String>builder()
-                .addAll(compiler.getCommandPrefix(getResolver()))
+                .addAll(compiler.getCommandPrefix(context.getSourcePathResolver()))
                 .addAll(flags)
                 .build(),
             outputDir,
-            getResolver().getAbsolutePath(input),
+            context.getSourcePathResolver().getAbsolutePath(input),
             language,
             options,
             FluentIterable.from(headerMaps)
