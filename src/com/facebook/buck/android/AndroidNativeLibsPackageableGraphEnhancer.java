@@ -277,7 +277,6 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       ImmutableMap<StripLinkable, StrippedObjectDescription> strippedLibsMap =
           generateStripRules(
               buildRuleParams,
-              pathResolver,
               ruleFinder,
               ruleResolver,
               originalBuildTarget,
@@ -286,7 +285,6 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       ImmutableMap<StripLinkable, StrippedObjectDescription> strippedLibsAssetsMap =
           generateStripRules(
               buildRuleParams,
-              pathResolver,
               ruleFinder,
               ruleResolver,
               originalBuildTarget,
@@ -337,7 +335,6 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   // so be careful not to let information about this particular app slip into the definitions.
   private static ImmutableMap<StripLinkable, StrippedObjectDescription> generateStripRules(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       BuildRuleResolver ruleResolver,
       BuildTarget appRuleTarget,
@@ -385,7 +382,6 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
         stripLinkable = new StripLinkable(
             paramsForStripLinkable,
-            pathResolver,
             platform.getCxxPlatform().getStrip(),
             sourcePath,
             sharedLibrarySoName);

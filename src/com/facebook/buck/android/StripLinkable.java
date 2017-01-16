@@ -18,13 +18,12 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.cxx.StripStep;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -32,7 +31,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 
-public class StripLinkable extends AbstractBuildRuleWithResolver {
+public class StripLinkable extends AbstractBuildRule {
 
   @AddToRuleKey
   private final Tool stripTool;
@@ -47,11 +46,10 @@ public class StripLinkable extends AbstractBuildRuleWithResolver {
 
   public StripLinkable(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       Tool stripTool,
       SourcePath sourcePathToStrip,
       String strippedObjectName) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.stripTool = stripTool;
     this.strippedObjectName = strippedObjectName;
     this.sourcePathToStrip = sourcePathToStrip;
