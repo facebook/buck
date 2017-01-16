@@ -19,11 +19,10 @@ package com.facebook.buck.android;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -51,7 +50,7 @@ import java.util.zip.ZipEntry;
 /**
  * Rule for trimming unnecessary ids from R.java files.
  */
-class TrimUberRDotJava extends AbstractBuildRuleWithResolver {
+class TrimUberRDotJava extends AbstractBuildRule {
   private final AaptPackageResources aaptPackageResources;
   private final Collection<DexProducedFromJavaLibrary> allPreDexRules;
   private final Optional<String> keepResourcePattern;
@@ -64,11 +63,10 @@ class TrimUberRDotJava extends AbstractBuildRuleWithResolver {
 
   TrimUberRDotJava(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       AaptPackageResources aaptPackageResources,
       Collection<DexProducedFromJavaLibrary> allPreDexRules,
       Optional<String> keepResourcePattern) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.aaptPackageResources = aaptPackageResources;
     this.allPreDexRules = allPreDexRules;
     this.keepResourcePattern = keepResourcePattern;

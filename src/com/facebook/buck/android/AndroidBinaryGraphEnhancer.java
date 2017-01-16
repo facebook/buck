@@ -424,7 +424,6 @@ public class AndroidBinaryGraphEnhancer {
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
     TrimUberRDotJava trimUberRDotJava = new TrimUberRDotJava(
         paramsForTrimUberRDotJava,
-        pathResolver,
         aaptPackageResources,
         preDexedLibrariesForResourceIdFiltering,
         keepResourcePattern);
