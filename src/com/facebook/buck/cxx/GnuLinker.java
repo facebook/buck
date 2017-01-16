@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.io.FileScrubber;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -151,7 +151,6 @@ public class GnuLinker implements Linker {
                 Suppliers.ofInstance(
                     ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(symbolFiles))),
                 Suppliers.ofInstance(ImmutableSortedSet.of())),
-            pathResolver,
             symbolFiles));
     return ImmutableList.of(
         new SourcePathArg(pathResolver, new BuildTargetSourcePath(target)));
@@ -195,16 +194,15 @@ public class GnuLinker implements Linker {
 
   // Write all symbols to a linker script, using the `EXTERN` command to mark them as undefined
   // symbols.
-  private static class UndefinedSymbolsLinkerScript extends AbstractBuildRuleWithResolver {
+  private static class UndefinedSymbolsLinkerScript extends AbstractBuildRule {
 
     @AddToRuleKey
     private final Iterable<? extends SourcePath> symbolFiles;
 
     public UndefinedSymbolsLinkerScript(
         BuildRuleParams buildRuleParams,
-        SourcePathResolver resolver,
         Iterable<? extends SourcePath> symbolFiles) {
-      super(buildRuleParams, resolver);
+      super(buildRuleParams);
       this.symbolFiles = symbolFiles;
     }
 
