@@ -131,7 +131,6 @@ public class ReactNativeLibraryGraphEnhancer {
 
     return new AndroidReactNativeLibrary(
         params.appendExtraDeps(extraDeps.build()),
-        sourcePathResolver,
         bundle);
   }
 

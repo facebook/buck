@@ -19,11 +19,10 @@ package com.facebook.buck.js;
 
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 
@@ -31,16 +30,14 @@ import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
-public class AndroidReactNativeLibrary extends AbstractBuildRuleWithResolver
-    implements AndroidPackageable {
+public class AndroidReactNativeLibrary extends AbstractBuildRule implements AndroidPackageable {
 
   private final ReactNativeBundle bundle;
 
   protected AndroidReactNativeLibrary(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       ReactNativeBundle bundle) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.bundle = bundle;
   }
 
