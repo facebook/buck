@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.android.ddmlib.IDevice;
 import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -32,7 +32,6 @@ import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -61,7 +60,7 @@ import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class AndroidInstrumentationTest extends AbstractBuildRuleWithResolver
+public class AndroidInstrumentationTest extends AbstractBuildRule
     implements ExternalTestRunnerRule, HasRuntimeDeps, TestRule {
 
   private static final String TEST_RESULT_FILE = "test_result.xml";
@@ -87,13 +86,12 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithResolver
 
   protected AndroidInstrumentationTest(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       InstallableApk apk,
       Set<Label> labels,
       Set<String> contacts,
       JavaRuntimeLauncher javaRuntimeLauncher,
       Optional<Long> testRuleTimeoutMs) {
-    super(params, resolver);
+    super(params);
     this.apk = apk;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.labels = ImmutableSet.copyOf(labels);
