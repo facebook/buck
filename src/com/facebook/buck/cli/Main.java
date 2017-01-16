@@ -888,9 +888,8 @@ public final class Main {
             (filesystem.exists(unconfiguredPaths.getGenDir(), LinkOption.NOFOLLOW_LINKS) &&
                 (filesystem.isSymLink(unconfiguredPaths.getGenDir()) ^
                     buckConfig.getBuckOutCompatLink()))) {
-          // Migrate any version-dependent directories (which might be
-          // huge) to a trash directory so we can delete it
-          // asynchronously after the command is done.
+          // Migrate any version-dependent directories (which might be huge) to a trash directory
+          // so we can delete it asynchronously after the command is done.
           moveToTrash(
               filesystem,
               console,
@@ -1853,7 +1852,7 @@ public final class Main {
       specifiedBuildId = System.getenv().get(BUCK_BUILD_ID_ENV_VAR);
     }
     if (specifiedBuildId == null) {
-      return new BuildId();
+      throw new RuntimeException("Missing build id value.");
     } else {
       return new BuildId(specifiedBuildId);
     }
