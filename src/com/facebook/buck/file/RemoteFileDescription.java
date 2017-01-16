@@ -21,8 +21,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -65,7 +63,6 @@ public class RemoteFileDescription implements Description<RemoteFileDescription.
 
     return new RemoteFile(
         params,
-        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         downloader,
         args.url,
         sha1,
