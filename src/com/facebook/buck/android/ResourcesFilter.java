@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -55,7 +54,7 @@ import javax.annotation.Nullable;
  *   <li>The set of non-english {@code strings.xml} files identified by the resource filter.
  * </ul>
  */
-public class ResourcesFilter extends AbstractBuildRuleWithResolver
+public class ResourcesFilter extends AbstractBuildRule
     implements FilteredResourcesProvider, InitializableFromDisk<ResourcesFilter.BuildOutput> {
 
   private static final String RES_DIRECTORIES_KEY = "res_directories";
@@ -103,13 +102,12 @@ public class ResourcesFilter extends AbstractBuildRuleWithResolver
 
   public ResourcesFilter(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       ImmutableList<SourcePath> resDirectories,
       ImmutableSet<SourcePath> whitelistedStringDirs,
       ImmutableSet<String> locales,
       ResourceCompressionMode resourceCompressionMode,
       FilterResourcesStep.ResourceFilter resourceFilter) {
-    super(params, resolver);
+    super(params);
     this.resDirectories = resDirectories;
     this.whitelistedStringDirs = whitelistedStringDirs;
     this.locales = locales;

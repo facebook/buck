@@ -311,7 +311,6 @@ public class AndroidBinaryGraphEnhancer {
               /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
       ResourcesFilter resourcesFilter = new ResourcesFilter(
           paramsForResourcesFilter,
-          pathResolver,
           resourceDetails.getResourceDirectories(),
           ImmutableSet.copyOf(resourceDetails.getWhitelistedStringDirectories()),
           locales,
