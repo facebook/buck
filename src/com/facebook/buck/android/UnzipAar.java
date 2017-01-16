@@ -21,7 +21,7 @@ import com.facebook.buck.jvm.java.JarDirectoryStepHelper;
 import com.facebook.buck.jvm.java.JavacEventSinkToBuckEventBusBridge;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -31,7 +31,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -51,7 +50,7 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
-public class UnzipAar extends AbstractBuildRuleWithResolver
+public class UnzipAar extends AbstractBuildRule
     implements InitializableFromDisk<UnzipAar.BuildOutput> {
 
   private static final String METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE = "R_DOT_JAVA_PACKAGE";
@@ -67,9 +66,8 @@ public class UnzipAar extends AbstractBuildRuleWithResolver
 
   UnzipAar(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       SourcePath aarFile) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.aarFile = aarFile;
     BuildTarget buildTarget = buildRuleParams.getBuildTarget();
     this.unpackDirectory =

@@ -80,7 +80,6 @@ public class AndroidPrebuiltAarDescription
       BuildRuleResolver buildRuleResolver,
       A args) throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     ImmutableSet<Flavor> flavors = params.getBuildTarget().getFlavors();
     if (flavors.contains(AAR_UNZIP_FLAVOR)) {
@@ -89,7 +88,7 @@ public class AndroidPrebuiltAarDescription
           Suppliers.ofInstance(ImmutableSortedSet.of()),
           Suppliers.ofInstance(ImmutableSortedSet.copyOf(
               ruleFinder.filterBuildRuleInputs(args.aar))));
-      return new UnzipAar(unzipAarParams, pathResolver, args.aar);
+      return new UnzipAar(unzipAarParams, args.aar);
     }
 
     BuildRule unzipAarRule =
@@ -100,6 +99,8 @@ public class AndroidPrebuiltAarDescription
         unzipAarRule.getClass(),
         params.getBuildTarget());
     UnzipAar unzipAar = (UnzipAar) unzipAarRule;
+
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     if (flavors.contains(CalculateAbi.FLAVOR)) {
       return CalculateAbi.of(
