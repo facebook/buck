@@ -16,27 +16,23 @@
 
 package com.facebook.buck.rust;
 
-import static com.facebook.buck.rust.RustLinkables.extendLinkerArgs;
-
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.step.AbstractTestStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
@@ -44,11 +40,8 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Charsets;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -65,60 +58,31 @@ import java.util.regex.Pattern;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class RustTest
-    extends RustCompile
+    extends AbstractBuildRuleWithResolver
     implements BinaryBuildRule, TestRule, ExternalTestRunnerRule {
+
+  private final ImmutableSet<Label> labels;
+  private final ImmutableSet<String> contacts;
+
+  @AddToRuleKey
+  private final BinaryBuildRule testExeBuild;
+
   private static final Pattern TEST_STDOUT_PATTERN = Pattern.compile(
       "^---- (?<name>.+) stdout ----$");
   private static final Pattern FAILURES_LIST_PATTERN = Pattern.compile(
       "^failures:$");
-  private final String crate;
   private final Path testOutputFile;
   private final Path testStdoutFile;
-  private final ImmutableSet<Label> labels;
-  private final ImmutableSet<String> contacts;
 
-  public RustTest(
+  protected RustTest(
       BuildRuleParams params,
-      SourcePathResolver resolver,
-      SourcePathRuleFinder ruleFinder,
-      String crate,
-      Optional<SourcePath> crateRoot,
-      ImmutableSortedSet<SourcePath> srcs,
+      SourcePathResolver pathResolver,
+      BinaryBuildRule testExeBuild,
       ImmutableSet<Label> labels,
-      ImmutableSet<String> contacts,
-      ImmutableSortedSet<String> features,
-      ImmutableList<String> rustcFlags,
-      Supplier<Tool> compiler,
-      Supplier<Tool> linker,
-      ImmutableList<String> linkerArgs,
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType linkStyle) throws NoSuchBuildTargetException {
-    super(
-        RustLinkables.addNativeDependencies(params, ruleFinder, cxxPlatform, linkStyle),
-        resolver,
-        crate,
-        crateRoot,
-        srcs,
-        ImmutableList.<String>builder()
-            .add("--test")
-            .addAll(rustcFlags)
-            .build(),
-        features,
-        RustLinkables.getNativeDirs(params.getDeps(), linkStyle, cxxPlatform),
-        BuildTargets.getGenPath(
-            params.getProjectFilesystem(),
-            params.getBuildTarget(),
-            "%s").resolve(crate),
-        compiler,
-        linker,
-        extendLinkerArgs(
-            linkerArgs,
-            params.getDeps(),
-            linkStyle,
-            cxxPlatform),
-        linkStyle);
+      ImmutableSet<String> contacts) {
+    super(params, pathResolver);
 
-    this.crate = crate;
+    this.testExeBuild = testExeBuild;
     this.labels = labels;
     this.contacts = contacts;
     this.testOutputFile = getProjectFilesystem().resolve(getPathToTestResults());
@@ -137,15 +101,17 @@ public class RustTest
       TestReportingCallback testReportingCallback) {
     Path workingDirectory = getProjectFilesystem().resolve(getPathToTestOutputDirectory());
     return ImmutableList.of(
-        new RustTestStep(
+        new MakeCleanDirectoryStep(getProjectFilesystem(), workingDirectory),
+        new AbstractTestStep(
+            "rust test",
             getProjectFilesystem(),
-            workingDirectory,
+            Optional.of(workingDirectory),
             getTestCommand("--logfile", testOutputFile.toString()),
-            ImmutableMap.of(), // TODO(StanislavGlebik): environment
+            Optional.empty(), // TODO(StanislavGlebik): environment
             workingDirectory.resolve("exitcode"),
             Optional.empty(),
-            this.testStdoutFile
-        )
+            testStdoutFile
+        ) { }
     );
   }
 
@@ -179,11 +145,6 @@ public class RustTest
   }
 
   @Override
-  protected ImmutableSet<String> getDefaultSources() {
-    return ImmutableSet.of("main.rs", "lib.rs");
-  }
-
-  @Override
   public Path getPathToTestOutputDirectory() {
     return BuildTargets.getGenPath(
         getProjectFilesystem(),
@@ -214,9 +175,8 @@ public class RustTest
   }
 
   private ImmutableList<String> getTestCommand(String... additionalArgs) {
-    Path workingDirectory = getProjectFilesystem().resolve(getPathToTestOutputDirectory());
     ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.add(workingDirectory.toAbsolutePath().resolve(crate).toString());
+    args.addAll(testExeBuild.getExecutableCommand().getCommandPrefix(getResolver()));
     args.add(additionalArgs);
     return args.build();
   }
@@ -240,14 +200,18 @@ public class RustTest
           throw new RuntimeException(String.format("Unknown test output format %s", line));
         }
         ResultType result;
-        if (resultAndTestName[0].equals("ok")) {
-          result = ResultType.SUCCESS;
-        } else if (resultAndTestName[0].equals("failed")) {
-          result = ResultType.FAILURE;
-        } else if (resultAndTestName[0].equals("ignored")) {
-          result = ResultType.DISABLED;
-        } else {
-          throw new RuntimeException(String.format("Unknown test status %s", line));
+        switch (resultAndTestName[0]) {
+          case "ok":
+            result = ResultType.SUCCESS;
+            break;
+          case "failed":
+            result = ResultType.FAILURE;
+            break;
+          case "ignored":
+            result = ResultType.DISABLED;
+            break;
+          default:
+            throw new RuntimeException(String.format("Unknown test status %s", line));
         }
         testToResult.put(resultAndTestName[1], result);
       }
@@ -302,8 +266,17 @@ public class RustTest
 
   @Override
   public Tool getExecutableCommand() {
-    return new CommandTool.Builder()
-        .addArg(new SourcePathArg(getResolver(), new BuildTargetSourcePath(getBuildTarget())))
-        .build();
+    return testExeBuild.getExecutableCommand();
+  }
+
+  @Override
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context, BuildableContext buildableContext) {
+    return ImmutableList.of();
+  }
+
+  @Override
+  public Path getPathToOutput() {
+    return testExeBuild.getPathToOutput();
   }
 }

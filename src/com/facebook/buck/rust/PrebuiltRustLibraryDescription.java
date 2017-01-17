@@ -19,6 +19,7 @@ package com.facebook.buck.rust;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -37,15 +38,6 @@ public class PrebuiltRustLibraryDescription implements
     Description<PrebuiltRustLibraryDescription.Arg>,
     VersionPropagator<PrebuiltRustLibraryDescription.Arg> {
 
-  @SuppressWarnings("unused")
-  private final RustBuckConfig rustBuckConfig;
-  private final CxxPlatform cxxPlatform;
-
-  public PrebuiltRustLibraryDescription(RustBuckConfig rustBuckConfig, CxxPlatform cxxPlatform) {
-    this.rustBuckConfig = rustBuckConfig;
-    this.cxxPlatform = cxxPlatform;
-  }
-
   @Override
   public Arg createUnpopulatedConstructorArg() {
     return new Arg();
@@ -56,17 +48,30 @@ public class PrebuiltRustLibraryDescription implements
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    return new PrebuiltRustLibrary(
-        params,
-        pathResolver,
-        ruleFinder,
-        args.rlib,
-        cxxPlatform,
-        args.linkStyle.orElse(Linker.LinkableDepType.STATIC),
-        args.crate);
+      A args) throws NoSuchBuildTargetException {
+    final SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(resolver));
+
+    return new PrebuiltRustLibrary(params, pathResolver) {
+
+      @Override
+      protected SourcePath getRlib() {
+        return args.rlib;
+      }
+
+      @Override
+      public com.facebook.buck.rules.args.Arg getLinkerArg(
+          boolean direct,
+          CxxPlatform cxxPlatform,
+          Linker.LinkableDepType depType) {
+        return new RustLibraryArg(
+            getResolver(),
+            args.crate.orElse(getBuildTarget().getShortName()),
+            args.rlib,
+            direct,
+            getDeps());
+      }
+    };
   }
 
   @SuppressFieldNotInitialized

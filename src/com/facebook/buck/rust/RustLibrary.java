@@ -16,75 +16,17 @@
 
 package com.facebook.buck.rust;
 
-import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.Tool;
-import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
-import java.util.Optional;
+public abstract class RustLibrary
+    extends NoopBuildRule
+    implements RustLinkable {
 
-public class RustLibrary extends RustCompile implements RustLinkable {
-  public RustLibrary(
-      BuildRuleParams params,
-      SourcePathResolver resolver,
-      String crate,
-      Optional<SourcePath> crateRoot,
-      ImmutableSortedSet<SourcePath> srcs,
-      ImmutableSortedSet<String> features,
-      ImmutableList<String> rustcFlags,
-      Supplier<Tool> compiler,
-      Supplier<Tool> linker,
-      ImmutableList<String> linkerArgs,
-      Linker.LinkableDepType linkStyle) {
-    super(
-        params,
-        resolver,
-        crate,
-        crateRoot,
-        srcs,
-        ImmutableList.<String>builder()
-            .add("--crate-type", "rlib")
-            .add("--emit", "link")
-            .addAll(rustcFlags)
-            .build(),
-        features,
-        ImmutableSet.of(),
-        BuildTargets.getGenPath(
-            params.getProjectFilesystem(),
-            params.getBuildTarget(),
-            "%s/lib" + crate + ".rlib"),
-        compiler,
-        linker,
-        linkerArgs,
-        linkStyle);
-  }
-
-  @Override
-  protected ImmutableSet<String> getDefaultSources() {
-    return ImmutableSet.of("lib.rs");
-  }
-
-  @Override
-  public String getLinkTarget() {
-    return getCrateName();
-  }
-
-  @Override
-  public Path getLinkPath() {
-    return getPathToOutput();
-  }
-
-  @Override
-  public ImmutableSortedSet<Path> getDependencyPaths() {
-    return RustLinkables.getDependencyPaths(this);
+  public RustLibrary(BuildRuleParams params, SourcePathResolver resolver) {
+    super(params, resolver);
   }
 
   @Override

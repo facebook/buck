@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 
 public class RustBuckConfig {
@@ -108,6 +109,10 @@ public class RustBuckConfig {
     return builder.build();
   }
 
+  Optional<ToolProvider> getLinker() {
+    return delegate.getToolProvider(SECTION, "linker");
+  }
+
   LinkerProvider getLinkerProvider(
       CxxPlatform cxxPlatform,
       LinkerProvider.Type defaultType) {
@@ -115,7 +120,7 @@ public class RustBuckConfig {
         delegate.getEnum(SECTION, "linker_platform", LinkerProvider.Type.class)
             .orElse(defaultType);
 
-    return delegate.getToolProvider(SECTION, "linker")
+    return getLinker()
             .map(tp -> (LinkerProvider) new DefaultLinkerProvider(type, tp))
             .orElseGet(cxxPlatform::getLd);
   }

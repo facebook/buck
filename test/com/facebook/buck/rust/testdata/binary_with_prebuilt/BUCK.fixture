@@ -45,19 +45,19 @@ genrule(
   name = 'generated_foo',
   srcs = [ 'foo.rs' ],
   out = 'libfoo.rlib',
-  cmd = 'rustc --crate-type=lib --crate-name=foo -o $OUT $SRCS',
+  cmd = 'rustc --crate-type=rlib --crate-name=foo -o $OUT $SRCS',
 )
 
 genrule(
   name = 'generated_foodep',
   srcs = [ 'foodep.rs' ],
   out = 'libfoodep.rlib',
-  cmd = 'rustc --crate-type=lib --crate-name=foodep -o $OUT --extern bar=$(location //otherlib:bar) $SRCS',
+  cmd = 'rustc --crate-type=rlib --crate-name=foodep -o $OUT --extern bar=$(location //otherlib:bar) $SRCS',
 )
 
 genrule(
   name = 'generated_aliasedfoo',
   srcs = [ 'foo.rs' ],
   out = 'libfooalias.rlib',
-  cmd = 'rustc --crate-type=lib --crate-name=foo -o $OUT $SRCS',
+  cmd = 'rustc --crate-type=rlib --crate-name=foo -o $OUT $SRCS',
 )

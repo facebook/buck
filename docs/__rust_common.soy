@@ -2,7 +2,7 @@
 
 /***/
 {template .supported_language_version}
-Note: Buck is currently tested with (and therefore supports) version 1.13.0 of Rust.
+Note: Buck is currently tested with (and therefore supports) version 1.14.0 of Rust.
 {/template}
 
 /***/
@@ -27,8 +27,8 @@ Note: Buck is currently tested with (and therefore supports) version 1.13.0 of R
   </p>
   <p>
     One of the source files is the root module of the crate. By default this is{sp}
-    <code>lib.rs</code> for libraries, <code>main.rs</code> for executables, or{sp}
-    the crate's name with <code>.rs</code> appended. This can be overridden with the
+    <code>lib.rs</code> for libraries, <code>main.rs</code> for executables, or
+    the crate's name with <code>.rs</code> appended. This can be overridden with the{sp}
     <code>crate_root</code> rule parameter.
   </p>
   {/param}
@@ -45,8 +45,8 @@ Note: Buck is currently tested with (and therefore supports) version 1.13.0 of R
     The set of features to be enabled for this rule.
   </p>
   <p>
-    These are passed to <code>rustc</code> with <code>--cfg feature="{lb}feature{rb}"</code>, and
-    can be used in the code with <code>#[cfg(feature = "{lb}feature{rb}")]</code>.
+    These are passed to <code>rustc</code> with <code>--cfg feature="{lb}feature{rb}"</code>,{sp}
+    and can be used in the code with <code>#[cfg(feature = "{lb}feature{rb}")]</code>.
   </p>
   {/param}
 {/call}

@@ -54,7 +54,7 @@ public class RustLibraryIntegrationTest {
             .runBuckBuild(
                 "--config",
                 "rust.rustc_flags=--this-is-a-bad-option",
-                "//messenger:messenger")
+                "//messenger:messenger#rlib")
             .getStderr(),
         Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'."));
   }
@@ -70,7 +70,7 @@ public class RustLibraryIntegrationTest {
             .runBuckBuild(
                 "--config",
                 "rust.rustc_library_flags=--this-is-a-bad-option",
-                "//messenger:messenger")
+                "//messenger:messenger#rlib")
             .getStderr(),
         Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'."));
   }
@@ -101,7 +101,7 @@ public class RustLibraryIntegrationTest {
                 "run",
                 "--config",
                 "rust.rustc_flags=--verbose --this-is-a-bad-option",
-                "//messenger:messenger")
+                "//messenger:messenger#rlib")
             .getStderr(),
         Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'."));
   }
@@ -114,7 +114,7 @@ public class RustLibraryIntegrationTest {
 
     assertThat(
         workspace
-            .runBuckCommand("run", "//messenger:messenger_flags")
+            .runBuckBuild("//messenger:messenger_flags#rlib")
             .getStderr(),
         Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'."));
   }

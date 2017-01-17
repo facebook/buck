@@ -57,7 +57,7 @@ public class RustBinaryIntegrationTest {
     workspace.resetBuildLogFile();
 
     ProcessExecutor.Result result = workspace.runCommand(
-        workspace.resolve("buck-out/gen/xyzzy/xyzzy").toString());
+        workspace.resolve("buck-out/gen/xyzzy#binary,default/xyzzy").toString());
     assertThat(result.getExitCode(), Matchers.equalTo(0));
     assertThat(result.getStdout().get(), Matchers.containsString("Hello, world!"));
     assertThat(result.getStderr().get(), Matchers.blankString());
@@ -69,7 +69,8 @@ public class RustBinaryIntegrationTest {
         this, "simple_binary", tmp);
     workspace.setUp();
 
-    assertThat(workspace.runBuckBuild("//:xyzzy").assertSuccess().getStderr(),
+    assertThat(
+        workspace.runBuckBuild("//:xyzzy").assertSuccess().getStderr(),
         Matchers.allOf(
             Matchers.containsString(
                 "warning: constant item is never used: `foo`, #[warn(dead_code)] on by default"),
@@ -93,7 +94,7 @@ public class RustBinaryIntegrationTest {
     workspace.resetBuildLogFile();
 
     ProcessExecutor.Result result = workspace.runCommand(
-        workspace.resolve("buck-out/gen/xyzzy_aliased/xyzzy").toString());
+        workspace.resolve("buck-out/gen/xyzzy_aliased#binary,default/xyzzy").toString());
     assertThat(result.getExitCode(), Matchers.equalTo(0));
     assertThat(result.getStdout().get(), Matchers.containsString("Hello, world!"));
     assertThat(result.getStderr().get(), Matchers.blankString());
@@ -111,7 +112,8 @@ public class RustBinaryIntegrationTest {
     workspace.resetBuildLogFile();
 
     ProcessExecutor.Result result = workspace.runCommand(
-        workspace.resolve("buck-out/gen/xyzzy_crate_root/xyzzy_crate_root").toString());
+          workspace.resolve("buck-out/gen/xyzzy_crate_root#binary,default/xyzzy_crate_root")
+              .toString());
     assertThat(result.getExitCode(), Matchers.equalTo(0));
     assertThat(result.getStdout().get(), Matchers.containsString("Another top-level source"));
     assertThat(result.getStderr().get(), Matchers.blankString());
@@ -129,9 +131,10 @@ public class RustBinaryIntegrationTest {
     workspace.resetBuildLogFile();
 
     ProcessExecutor.Result result = workspace.runCommand(
-        workspace.resolve("buck-out/gen/thing/thing").toString());
+        workspace.resolve("buck-out/gen/thing#binary,default/thing").toString());
     assertThat(result.getExitCode(), Matchers.equalTo(0));
-    assertThat(result.getStdout().get(),
+    assertThat(
+        result.getStdout().get(),
         Matchers.containsString("info is: this is generated info"));
     assertThat(result.getStderr().get(), Matchers.blankString());
   }
@@ -225,81 +228,6 @@ public class RustBinaryIntegrationTest {
     workspace.writeContentsToPath(
         workspace.getFileContents("main.rs") + "// this is a comment",
         "main.rs");
-  }
-
-  @Test
-  public void simpleTestFailure() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_tests", tmp);
-    workspace.setUp();
-
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:test_failure");
-    result.assertTestFailure();
-    assert(result.getStderr().contains("assertion failed: false"));
-  }
-
-  @Test
-  public void simpleTestSuccess() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_tests", tmp);
-    workspace.setUp();
-
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:test_success");
-    result.assertSuccess();
-  }
-
-  @Test
-  public void simpleTestIgnore() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_tests", tmp);
-    workspace.setUp();
-
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:test_ignore");
-    result.assertSuccess();
-  }
-
-  @Test
-  public void testManyModules() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_tests", tmp);
-    workspace.setUp();
-
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "test", "//:test_many_modules");
-    result.assertTestFailure();
-  }
-
-  @Test
-  public void testSuccessFailure() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_tests", tmp);
-    workspace.setUp();
-
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "test", "//:success_failure");
-    result.assertTestFailure();
-  }
-
-  @Test
-  public void runnableTest() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_tests", tmp);
-    workspace.setUp();
-
-    assertThat(
-        workspace.runBuckCommand("run", "//:test_success").assertSuccess().getStdout(),
-        Matchers.containsString("test test_hello_world ... ok"));
-  }
-
-  @Test
-  public void testWithCrateRoot() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_tests", tmp);
-    workspace.setUp();
-
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "test", "//:with_crate_root");
-    result.assertSuccess();
   }
 
   @Test

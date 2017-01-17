@@ -784,10 +784,10 @@ public class KnownBuildRuleTypes {
             defaultJavacOptions,
             defaultTestRuleTimeoutMs,
             defaultCxxPlatform));
-    builder.register(new RustBinaryDescription(rustBuckConfig, defaultCxxPlatform));
-    builder.register(new RustLibraryDescription(rustBuckConfig, defaultCxxPlatform));
-    builder.register(new RustTestDescription(rustBuckConfig, defaultCxxPlatform));
-    builder.register(new PrebuiltRustLibraryDescription(rustBuckConfig, defaultCxxPlatform));
+    builder.register(new RustBinaryDescription(rustBuckConfig, cxxPlatforms, defaultCxxPlatform));
+    builder.register(new RustLibraryDescription(rustBuckConfig, cxxPlatforms, defaultCxxPlatform));
+    builder.register(new RustTestDescription(rustBuckConfig, cxxPlatforms, defaultCxxPlatform));
+    builder.register(new PrebuiltRustLibraryDescription());
     builder.register(new ScalaLibraryDescription(scalaConfig));
     builder.register(new ScalaTestDescription(
         scalaConfig,

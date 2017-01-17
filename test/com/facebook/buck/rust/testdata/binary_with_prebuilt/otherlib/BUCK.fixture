@@ -13,5 +13,5 @@ genrule(
   name = 'generated_bar',
   srcs = [ 'bar.rs' ],
   out = 'libbar.rlib',
-  cmd = 'rustc --crate-type=lib --crate-name=bar -o $OUT $SRCS',
+  cmd = 'rustc --crate-type=rlib --crate-name=bar -o $OUT $SRCS',
 )

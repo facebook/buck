@@ -16,36 +16,22 @@
 
 package com.facebook.buck.rust;
 
-import com.google.common.collect.ImmutableSortedSet;
-
-import java.nio.file.Path;
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.rules.args.Arg;
 
 /**
- * Get details about a linkable thing - either the actual linkable file, and the set
- * of directories with its dependencies.
+ * Slightly misnamed. Really just a non-source input to the compiler (ie, an already-compiled
+ * Rust crate).
  */
 interface RustLinkable {
   /**
-   * Return the crate name for this linkable (ie, the name used in an "extern crate X;" line,
-   * and in an --extern option to rustc).
+   * Return Arg for dependency.
    *
-   * @return Crate name
+   * @param direct      true for direct dependency, false for transitive
+   * @param cxxPlatform Current platform we're building for.
+   * @param depType     What kind of linkage we want with the dependency.
+   * @return Arg for linking dependency.
    */
-  String getLinkTarget();
-
-  /**
-   * Return full path to the rlib, used as a direct dependency (ie, passed to rustc as
-   * "--extern [crate_name]=path/to/libcrate_name.rlib"
-   *
-   * @return path to rlib file
-   */
-  Path getLinkPath();
-
-  /**
-   * Return the set of paths to find the transitive dependencies for this linkable thing,
-   * passed to rustc as "-L dependency=path/to/dependency".
-   *
-   * @return set of paths
-   */
-  ImmutableSortedSet<Path> getDependencyPaths();
+  Arg getLinkerArg(boolean direct, CxxPlatform cxxPlatform, Linker.LinkableDepType depType);
 }

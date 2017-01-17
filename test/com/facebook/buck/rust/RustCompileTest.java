@@ -18,7 +18,7 @@ package com.facebook.buck.rust;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -31,7 +31,9 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -41,39 +43,46 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class RustCompileTest {
   @Test(expected = HumanReadableException.class)
   public void noCrateRootInSrcs() {
-    RustCompile linkable = new FakeRustCompile("//:donotcare", ImmutableSortedSet.of());
+    RustCompileRule linkable = FakeRustCompileRule.from(
+        "//:donotcare",
+        ImmutableSortedSet.of(),
+        Optional.empty());
     linkable.getCrateRoot();
   }
 
   @Test
   public void crateRootMainInSrcs() {
-    RustCompile linkable = new FakeRustCompile(
+    RustCompileRule linkable = FakeRustCompileRule.from(
         "//:donotcare",
-        ImmutableSortedSet.of(new FakeSourcePath("main.rs")));
+        ImmutableSortedSet.of(new FakeSourcePath("main.rs")),
+        Optional.empty());
     assertThat(linkable.getCrateRoot().toString(), Matchers.endsWith("main.rs"));
   }
 
   @Test
   public void crateRootTargetNameInSrcs() {
-    RustCompile linkable = new FakeRustCompile(
+    RustCompileRule linkable = FakeRustCompileRule.from(
         "//:myname",
-        ImmutableSortedSet.of(new FakeSourcePath("myname.rs")));
+        ImmutableSortedSet.of(new FakeSourcePath("myname.rs")),
+        Optional.empty());
     assertThat(linkable.getCrateRoot().toString(), Matchers.endsWith("myname.rs"));
   }
 
+  // Test that there's only one valid candidate root source file.
   @Test(expected = HumanReadableException.class)
   public void crateRootMainAndTargetNameInSrcs() {
-    RustCompile linkable = new FakeRustCompile(
+    RustCompileRule linkable = FakeRustCompileRule.from(
         "//:myname",
         ImmutableSortedSet.of(
             new FakeSourcePath("main.rs"),
-            new FakeSourcePath("myname.rs")));
+            new FakeSourcePath("myname.rs")),
+        Optional.empty());
     linkable.getCrateRoot();
   }
 
@@ -106,32 +115,52 @@ public class RustCompileTest {
     };
   }
 
-  class FakeRustCompile extends RustCompile {
-    FakeRustCompile(
-        String target,
-        ImmutableSortedSet<SourcePath> srcs) {
+  static class FakeRustCompileRule extends RustCompileRule {
+    private FakeRustCompileRule(
+        SourcePathResolver pathResolver,
+        BuildTarget target,
+        ImmutableSortedSet<SourcePath> srcs,
+        SourcePath rootModule) {
       super(
-          new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target)).build(),
-          new SourcePathResolver(new SourcePathRuleFinder(
-              new BuildRuleResolver(
-                  TargetGraph.EMPTY,
-                  new DefaultTargetNodeToBuildRuleTransformer()))),
-          "myname",
-          /* crateRoot */ Optional.empty(),
+          new FakeBuildRuleParamsBuilder(target).build(),
+          pathResolver,
+          String.format("lib%s.rlib", target),
+          fakeTool(),
+          fakeTool(),
+          Stream.of(
+              "--crate-name", target.getShortName(),
+              "--crate-type", "rlib")
+              .map(StringArg::new)
+              .collect(MoreCollectors.toImmutableList()),
+          /* linkerFlags */ ImmutableList.of(),
           srcs,
-          /* flags */ ImmutableList.of(),
-          /* features */ ImmutableSortedSet.of(),
-          /* nativePaths */ ImmutableSet.of(),
-          Paths.get("somewhere"),
-          () -> fakeTool(),
-          () -> fakeTool(),
-          ImmutableList.<String>of(),
-          Linker.LinkableDepType.STATIC);
+          rootModule);
     }
 
-    @Override
-    protected ImmutableSet<String> getDefaultSources() {
-      return ImmutableSet.of("main.rs");
+    static FakeRustCompileRule from(
+        String target,
+        ImmutableSortedSet<SourcePath> srcs,
+        Optional<SourcePath> rootModule) {
+      BuildTarget buildTarget = BuildTargetFactory.newInstance(target);
+
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
+          new BuildRuleResolver(
+              TargetGraph.EMPTY,
+              new DefaultTargetNodeToBuildRuleTransformer()));
+
+      SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+
+      Optional<SourcePath> root = RustCompileUtils.getCrateRoot(
+          pathResolver,
+          buildTarget.getShortName(),
+          rootModule,
+          ImmutableSet.of("main.rs", "lib.rs"),
+          srcs.stream());
+
+      if (!root.isPresent()) {
+        throw new HumanReadableException("No crate root source identified");
+      }
+      return new FakeRustCompileRule(pathResolver, buildTarget, srcs, root.get());
     }
   }
 }

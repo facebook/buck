@@ -16,14 +16,15 @@
 
 package com.facebook.buck.rust;
 
-import static com.facebook.buck.rust.RustLinkables.ruleToCrateName;
-
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.LinkerProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorConvertible;
+import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
@@ -35,8 +36,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.versions.VersionRoot;
@@ -46,21 +45,29 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 
 
 public class RustBinaryDescription implements
     Description<RustBinaryDescription.Arg>,
     ImplicitDepsInferringDescription<RustBinaryDescription.Arg>,
+    Flavored,
     VersionRoot<RustBinaryDescription.Arg> {
 
+  public static final FlavorDomain<Type> BINARY_TYPE =
+      FlavorDomain.from("Rust Binary Type", Type.class);
+
   private final RustBuckConfig rustBuckConfig;
-  private final CxxPlatform cxxPlatform;
+  private final FlavorDomain<CxxPlatform> cxxPlatforms;
+  private final CxxPlatform defaultCxxPlatform;
 
   public RustBinaryDescription(
       RustBuckConfig rustBuckConfig,
-      CxxPlatform cxxPlatform) {
+      FlavorDomain<CxxPlatform> cxxPlatforms,
+      CxxPlatform defaultCxxPlatform) {
     this.rustBuckConfig = rustBuckConfig;
-    this.cxxPlatform = cxxPlatform;
+    this.cxxPlatforms = cxxPlatforms;
+    this.defaultCxxPlatform = defaultCxxPlatform;
   }
 
   @Override
@@ -74,40 +81,24 @@ public class RustBinaryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
-    LinkerProvider linker =
-        rustBuckConfig.getLinkerProvider(cxxPlatform, cxxPlatform.getLd().getType());
+    Linker.LinkableDepType linkStyle =
+        RustCompileUtils.getLinkStyle(params.getBuildTarget(), args.linkStyle);
 
-    ImmutableList.Builder<String> rustcArgs = ImmutableList.builder();
-
-    rustcArgs.addAll(rustBuckConfig.getRustBinaryFlags());
-    rustcArgs.addAll(args.rustcFlags);
-
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-
-    return new RustBinary(
+    return RustCompileUtils.createBinaryBuildRule(
         params,
-        ruleFinder,
-        pathResolver,
-        args.crate.orElse(ruleToCrateName(params.getBuildTarget().getShortName())),
+        resolver,
+        rustBuckConfig,
+        cxxPlatforms,
+        defaultCxxPlatform,
+        args.crate,
+        args.features,
+        Stream.of(rustBuckConfig.getRustBinaryFlags().stream(), args.rustcFlags.stream())
+            .flatMap(x -> x).iterator(),
+        args.linkerFlags.iterator(),
+        linkStyle,
+        args.srcs,
         args.crateRoot,
-        ImmutableSortedSet.copyOf(args.srcs),
-        ImmutableSortedSet.copyOf(args.features),
-        rustcArgs.build(),
-        () -> rustBuckConfig.getRustCompiler().resolve(resolver),
-        () -> linker.resolve(resolver),
-        getLinkerArgs(args.linkerFlags),
-        cxxPlatform,
-        args.linkStyle.orElse(Linker.LinkableDepType.STATIC));
-  }
-
-  private ImmutableList<String> getLinkerArgs(ImmutableList<String> args) {
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
-
-    builder.addAll(rustBuckConfig.getLinkerArgs(cxxPlatform));
-    builder.addAll(args);
-
-    return builder.build();
+        ImmutableSet.of("main.rs"));
   }
 
   @Override
@@ -120,7 +111,11 @@ public class RustBinaryDescription implements
     ToolProvider compiler = rustBuckConfig.getRustCompiler();
     deps.addAll(compiler.getParseTimeDeps());
 
-    deps.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
+    deps.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms.getValues()));
+    deps.addAll(
+        rustBuckConfig.getLinker()
+            .map(ToolProvider::getParseTimeDeps)
+            .orElse(ImmutableList.of()));
 
     return deps.build();
   }
@@ -130,9 +125,44 @@ public class RustBinaryDescription implements
     return true;
   }
 
+  protected enum Type implements FlavorConvertible {
+
+    SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR, Linker.LinkableDepType.SHARED),
+    STATIC_PIC(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR, Linker.LinkableDepType.STATIC_PIC),
+    STATIC(CxxDescriptionEnhancer.STATIC_FLAVOR, Linker.LinkableDepType.STATIC),
+    ;
+
+    private final Flavor flavor;
+    private final Linker.LinkableDepType linkStyle;
+
+    Type(Flavor flavor, Linker.LinkableDepType linkStyle) {
+      this.flavor = flavor;
+      this.linkStyle = linkStyle;
+    }
+
+    @Override
+    public Flavor getFlavor() {
+      return flavor;
+    }
+
+    public Linker.LinkableDepType getLinkStyle() {
+      return linkStyle;
+    }
+  }
+
+  @Override
+  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+    return cxxPlatforms.containsAnyOf(flavors);
+  }
+
+  @Override
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+    return Optional.of(ImmutableSet.of(cxxPlatforms, BINARY_TYPE));
+  }
+
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg implements HasTests {
-    public ImmutableSortedSet<SourcePath> srcs;
+    public ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
     public ImmutableSortedSet<String> features = ImmutableSortedSet.of();
     public ImmutableList<String> rustcFlags = ImmutableList.of();
     public ImmutableList<String> linkerFlags = ImmutableList.of();
@@ -140,7 +170,8 @@ public class RustBinaryDescription implements
     public Optional<Linker.LinkableDepType> linkStyle;
     public Optional<String> crate;
     public Optional<SourcePath> crateRoot;
-    @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
+    @Hint(isDep = false)
+    public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
 
     @Override
     public ImmutableSortedSet<BuildTarget> getTests() {
