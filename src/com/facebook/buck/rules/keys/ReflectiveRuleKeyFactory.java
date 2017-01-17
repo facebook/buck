@@ -110,14 +110,9 @@ public abstract class ReflectiveRuleKeyFactory<
     // At the moment, it is difficult to make SizeLimitException be a checked exception. Due to how
     // exceptions are currently handled (e.g. LoadingCache wraps them with ExecutionException),
     // we need to iterate through the cause chain to check if a SizeLimitException is wrapped.
-    while (throwable != null) {
-      if (throwable instanceof SizeLimiter.SizeLimitException) {
-        throw (SizeLimiter.SizeLimitException) throwable;
-      }
-      if (throwable.getCause() == throwable) {
-        break;
-      }
-      throwable = throwable.getCause();
-    }
+    Throwables.getCausalChain(throwable).stream()
+        .filter(t -> t instanceof SizeLimiter.SizeLimitException)
+        .findFirst()
+        .ifPresent(Throwables::propagateIfPossible);
   }
 }
