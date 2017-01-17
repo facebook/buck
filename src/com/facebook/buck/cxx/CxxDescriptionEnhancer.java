@@ -1215,7 +1215,8 @@ public class CxxDescriptionEnhancer {
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> deps,
-      Predicate<Object> traverse)
+      Predicate<Object> traverse,
+      Predicate<Object> skip)
       throws NoSuchBuildTargetException {
 
     BuildTarget symlinkTreeTarget =
@@ -1232,7 +1233,8 @@ public class CxxDescriptionEnhancer {
         NativeLinkables.getTransitiveSharedLibraries(
             cxxPlatform,
             deps,
-            traverse);
+            traverse,
+            skip);
 
     ImmutableMap.Builder<Path, SourcePath> links = ImmutableMap.builder();
     for (Map.Entry<String, SourcePath> ent : libraries.entrySet()) {
@@ -1246,6 +1248,22 @@ public class CxxDescriptionEnhancer {
         pathResolver,
         symlinkTreeRoot,
         links.build());
+  }
+
+  public static SymlinkTree createSharedLibrarySymlinkTree(
+      BuildRuleParams params,
+      SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
+      Iterable<? extends BuildRule> deps,
+      Predicate<Object> traverse)
+      throws NoSuchBuildTargetException {
+    return createSharedLibrarySymlinkTree(
+        params,
+        pathResolver,
+        cxxPlatform,
+        deps,
+        traverse,
+        x -> false);
   }
 
   public static SymlinkTree requireSharedLibrarySymlinkTree(
