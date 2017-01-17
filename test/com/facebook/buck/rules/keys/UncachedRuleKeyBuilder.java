@@ -17,14 +17,18 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Supplier;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
+
+import java.io.IOException;
 
 public class UncachedRuleKeyBuilder extends RuleKeyBuilder<RuleKey> {
 
@@ -79,6 +83,15 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder<RuleKey> {
     RuleKey subKey = subKeyBuilder.build();
     setAppendableRuleKey(subKey);
     return this;
+  }
+
+  @Override
+  protected RuleKeyBuilder<RuleKey> setSourcePath(SourcePath sourcePath) throws IOException {
+    if (sourcePath instanceof BuildTargetSourcePath) {
+      return setSourcePathAsRule((BuildTargetSourcePath) sourcePath);
+    } else {
+      return setSourcePathDirectly(sourcePath);
+    }
   }
 
   @Override

@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -78,6 +79,11 @@ public class FakeInputBasedRuleKeyFactory
 
       @Override
       public RuleKeyBuilder<RuleKey> setAppendableRuleKey(RuleKeyAppendable appendable) {
+        return this;
+      }
+
+      @Override
+      protected RuleKeyBuilder<RuleKey> setSourcePath(SourcePath sourcePath) {
         return this;
       }
 

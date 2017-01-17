@@ -19,14 +19,18 @@ package com.facebook.buck.rules.keys;
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+
+import java.io.IOException;
 
 import javax.annotation.Nonnull;
 
@@ -72,6 +76,15 @@ public class DefaultRuleKeyFactory
       protected RuleKeyBuilder<RuleKey> setAppendableRuleKey(RuleKeyAppendable appendable) {
         RuleKey subKey = ruleKeyCache.getUnchecked(appendable);
         return setAppendableRuleKey(subKey);
+      }
+
+      @Override
+      protected RuleKeyBuilder<RuleKey> setSourcePath(SourcePath sourcePath) throws IOException {
+        if (sourcePath instanceof BuildTargetSourcePath) {
+          return setSourcePathAsRule((BuildTargetSourcePath) sourcePath);
+        } else {
+          return setSourcePathDirectly(sourcePath);
+        }
       }
 
       @Override

@@ -19,8 +19,10 @@ package com.facebook.buck.rules.keys;
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.cache.CacheBuilder;
@@ -40,9 +42,9 @@ import javax.annotation.Nonnull;
 public class ContentAgnosticRuleKeyFactory
     extends ReflectiveRuleKeyFactory<RuleKeyBuilder<RuleKey>, RuleKey> {
 
+  private final LoadingCache<RuleKeyAppendable, RuleKey> ruleKeyCache;
   private final FileHashLoader fileHashLoader;
   private final SourcePathResolver pathResolver;
-  private final LoadingCache<RuleKeyAppendable, RuleKey> ruleKeyCache;
   private final SourcePathRuleFinder ruleFinder;
 
   public ContentAgnosticRuleKeyFactory(
@@ -50,9 +52,7 @@ public class ContentAgnosticRuleKeyFactory
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder) {
     super(seed);
-    this.ruleFinder = ruleFinder;
-    // Build the cache around the sub-rule-keys and their dep lists.
-    ruleKeyCache = CacheBuilder.newBuilder().weakKeys().build(
+    this.ruleKeyCache = CacheBuilder.newBuilder().weakKeys().build(
         new CacheLoader<RuleKeyAppendable, RuleKey>() {
           @Override
           public RuleKey load(@Nonnull RuleKeyAppendable appendable) throws Exception {
@@ -63,6 +63,7 @@ public class ContentAgnosticRuleKeyFactory
         });
 
     this.pathResolver = pathResolver;
+    this.ruleFinder = ruleFinder;
     this.fileHashLoader = new FileHashLoader() {
 
       @Override
@@ -93,6 +94,15 @@ public class ContentAgnosticRuleKeyFactory
       protected RuleKeyBuilder<RuleKey> setAppendableRuleKey(RuleKeyAppendable appendable) {
         RuleKey subKey = ruleKeyCache.getUnchecked(appendable);
         return setAppendableRuleKey(subKey);
+      }
+
+      @Override
+      protected RuleKeyBuilder<RuleKey> setSourcePath(SourcePath sourcePath) throws IOException {
+        if (sourcePath instanceof BuildTargetSourcePath) {
+          return setSourcePathAsRule((BuildTargetSourcePath) sourcePath);
+        } else {
+          return setSourcePathDirectly(sourcePath);
+        }
       }
 
       @Override

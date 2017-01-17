@@ -228,7 +228,11 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     }
 
     if (val instanceof SourcePath) {
-      return setSourcePath((SourcePath) val);
+      try {
+        return setSourcePath((SourcePath) val);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
     }
 
     if (val instanceof NonHashableSourcePathContainer) {
@@ -238,7 +242,11 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
 
     if (val instanceof SourceWithFlags) {
       SourceWithFlags source = (SourceWithFlags) val;
-      setSourcePath(source.getSourcePath());
+      try {
+        setSourcePath(source.getSourcePath());
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
       setReflectively(source.getFlags());
       return this;
     }
@@ -272,31 +280,49 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     }
   }
 
-  // TODO(plamenko): make this be abstract. Pretty much all the implementations override this,
-  // none of which call this super method.
-  protected RuleKeyBuilder<RULE_KEY> setSourcePath(SourcePath sourcePath) {
+  /**
+   * Implementations may just forward to {@link #setSourcePathDirectly}. However, they will
+   * typically want to handle {@link BuildTargetSourcePath} explicitly. See also
+   * {@link #setSourcePathAsRule}.
+   */
+  protected abstract RuleKeyBuilder<RULE_KEY> setSourcePath(
+      SourcePath sourcePath) throws IOException;
+
+  /**
+   * To be called from {@link #setSourcePath(SourcePath)}. Note that this implementation handles
+   * {@link BuildTargetSourcePath} same as a {@link PathSourcePath} pointing to the output of that
+   * target. Implementations may change this behavior by handling {@link BuildTargetSourcePath}
+   * explicitly in {@link #setSourcePath(SourcePath)} instead of calling this method. See also
+   * {@link #setSourcePathAsRule}.
+   */
+  protected final RuleKeyBuilder<RULE_KEY> setSourcePathDirectly(
+      SourcePath sourcePath) throws IOException {
     if (sourcePath instanceof BuildTargetSourcePath) {
-      BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) sourcePath;
-      BuildRule buildRule = ruleFinder.getRuleOrThrow(buildTargetSourcePath);
-      hasher.putBuildTargetSourcePath(buildTargetSourcePath);
-      return setBuildRule(buildRule);
+      return setPath(
+          resolver.getAbsolutePath(sourcePath),
+          resolver.getIdeallyRelativePath(sourcePath));
+    } else if (sourcePath instanceof PathSourcePath) {
+      return setPath(
+          resolver.getAbsolutePath(sourcePath),
+          resolver.getIdeallyRelativePath(sourcePath));
+    } else if (sourcePath instanceof ArchiveMemberSourcePath) {
+      return setArchiveMemberPath(
+          resolver.getAbsoluteArchiveMemberPath(sourcePath),
+          resolver.getRelativeArchiveMemberPath(sourcePath));
+    } else {
+      throw new UnsupportedOperationException(
+          "Unrecognized SourcePath implementation: " + sourcePath.getClass());
     }
-    try {
-      if (sourcePath instanceof ArchiveMemberSourcePath) {
-        return setArchiveMemberPath(
-            resolver.getAbsoluteArchiveMemberPath(sourcePath),
-            resolver.getRelativeArchiveMemberPath(sourcePath));
-      } else if (sourcePath instanceof PathSourcePath) {
-        return setPath(
-            resolver.getAbsolutePath(sourcePath),
-            resolver.getIdeallyRelativePath(sourcePath));
-      } else {
-        throw new UnsupportedOperationException(
-            "Unrecognized SourcePath implementation: " + sourcePath.getClass());
-      }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+  }
+
+  /**
+   * To be called from {@link #setSourcePath(SourcePath)} in case {@link BuildTargetSourcePath}
+   * should be handled as a build rule. This method hashes the given {@link BuildTargetSourcePath}
+   * and invokes {@link #setBuildRule(BuildRule)} on the associated rule.
+   */
+  protected final RuleKeyBuilder<RULE_KEY> setSourcePathAsRule(BuildTargetSourcePath sourcePath) {
+    hasher.putBuildTargetSourcePath(sourcePath);
+    return setBuildRule(ruleFinder.getRuleOrThrow(sourcePath));
   }
 
   // Paths get added as a combination of the file name and file hash. If the path is absolute

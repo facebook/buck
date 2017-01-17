@@ -58,6 +58,7 @@ import com.google.common.hash.Hashing;
 
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -241,15 +242,23 @@ public class RuleKeyBuilderTest {
         return setBuildRuleKey(ruleKeyMap.get(rule));
       }
       @Override
-      public RuleKey build() {
-        return buildRuleKey();
-      }
-      @Override
       public RuleKeyBuilder<RuleKey> setAppendableRuleKey(RuleKeyAppendable appendable) {
         if (appendable == IGNORED_APPENDABLE) {
           return this;
         }
         return setAppendableRuleKey(appendableKeys.get(appendable));
+      }
+      @Override
+      protected RuleKeyBuilder<RuleKey> setSourcePath(SourcePath sourcePath) throws IOException {
+        if (sourcePath instanceof BuildTargetSourcePath) {
+          return setSourcePathAsRule((BuildTargetSourcePath) sourcePath);
+        } else {
+          return setSourcePathDirectly(sourcePath);
+        }
+      }
+      @Override
+      public RuleKey build() {
+        return buildRuleKey();
       }
     };
   }

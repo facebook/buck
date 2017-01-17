@@ -204,14 +204,14 @@ public final class DefaultDependencyFileRuleKeyFactory
         // If this path is not a dep file path, then add it to the builder directly.
         // Note that if {@code possibleDepFileSourcePaths} is not present, we treat
         // all the input files as covered by dep file, so we'll never end up here!
-        addSourcePathToRuleKey(builder, input);
+        builder.setSourcePathDirectly(input);
 
       } else {
         // If this input path is covered by the dep paths, check to see if it was declared
         // as a real dependency by the dep file entries
         DependencyFileEntry entry = DependencyFileEntry.fromSourcePath(input, pathResolver);
         if (depFileEntriesSet.contains(entry)) {
-          addSourcePathToRuleKey(builder, input);
+          builder.setSourcePathDirectly(input);
           depFileSourcePathsBuilder.add(input);
           filesAccountedFor.add(entry);
         }
@@ -270,7 +270,7 @@ public final class DefaultDependencyFileRuleKeyFactory
           possibleDepFileSourcePathsUnsorted);
 
       for (SourcePath input : nonDepFileInputs) {
-        addSourcePathToRuleKey(builder, input);
+        builder.setSourcePathDirectly(input);
       }
 
       depFileInputs = ImmutableSet.copyOf(Sets.intersection(
@@ -290,21 +290,6 @@ public final class DefaultDependencyFileRuleKeyFactory
         .collect(MoreCollectors.toImmutableSortedSet());
     builder.setReflectively("buck.dep_file_metadata_list", metadataSourcePaths);
     return new Pair<>(builder.build(), depFileInputs);
-  }
-
-  private void addSourcePathToRuleKey(Builder builder, SourcePath sourcePath) throws IOException {
-    // Add each `SourcePath` using `builder.setPath()`.  We can't use `builder.setSourcePath()`
-    // here since the special `RuleKeyBuilder` sub-class that dep-file rule keys use intentionally
-    // override `builder.setSourcePath()` to be a noop (and just record the inputs).
-    if (sourcePath instanceof ArchiveMemberSourcePath) {
-      builder.setArchiveMemberPath(
-          pathResolver.getAbsoluteArchiveMemberPath(sourcePath),
-          pathResolver.getRelativeArchiveMemberPath(sourcePath));
-    } else {
-      builder.setPath(
-          pathResolver.getAbsolutePath(sourcePath),
-          pathResolver.getRelativePath(sourcePath));
-    }
   }
 
 }
