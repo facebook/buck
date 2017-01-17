@@ -98,7 +98,7 @@ public class RustTestDescription implements
                 .flatMap(x -> x).iterator(),
             args.linkerFlags.iterator(),
             RustCompileUtils.getLinkStyle(params.getBuildTarget(), args.linkStyle),
-            args.srcs,
+            args.rpath, args.srcs,
             args.crateRoot,
             ImmutableSet.of("lib.rs", "main.rs")
         ));
@@ -154,6 +154,7 @@ public class RustTestDescription implements
     public ImmutableList<String> linkerFlags = ImmutableList.of();
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public Optional<Linker.LinkableDepType> linkStyle;
+    public boolean rpath = true;
     public boolean framework = true;
     public Optional<String> crate;
     public Optional<SourcePath> crateRoot;

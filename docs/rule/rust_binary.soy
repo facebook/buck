@@ -48,6 +48,14 @@
 
 {call native_common.link_style /}
 
+{call buck.arg}
+  {param name: 'rpath' /}
+  {param default : 'true' /}
+  {param desc}
+  Set the "rpath" in the executable when using a shared link style.
+  {/param}
+{/call}
+
 {call buck.tests_arg /}
 
 {/param} // close args

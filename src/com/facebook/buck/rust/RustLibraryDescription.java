@@ -18,10 +18,12 @@ package com.facebook.buck.rust;
 
 import static com.facebook.buck.rust.RustCompileUtils.ruleToCrateName;
 
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
+import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
@@ -42,10 +44,13 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.ToolProvider;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -154,6 +159,7 @@ public class RustLibraryDescription implements
 
     // Common case - we're being invoked to satisfy some other rule's dependency.
     return new RustLibrary(params, pathResolver) {
+      // RustLinkable
       @Override
       public com.facebook.buck.rules.args.Arg getLinkerArg(
           boolean direct,
@@ -215,6 +221,98 @@ public class RustLibraryDescription implements
         }
         SourcePath rlib = new BuildTargetSourcePath(rule.getBuildTarget());
         return new RustLibraryArg(pathResolver, crate, rlib, direct, params.getDeps());
+      }
+
+      // NativeLinkable
+      @Override
+      public Iterable<? extends NativeLinkable> getNativeLinkableDeps() {
+        return ImmutableList.of();
+      }
+
+      @Override
+      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
+        return FluentIterable.from(getDeps())
+            .filter(NativeLinkable.class);
+      }
+
+      @Override
+      public NativeLinkableInput getNativeLinkableInput(
+          CxxPlatform cxxPlatform,
+          Linker.LinkableDepType depType)
+          throws NoSuchBuildTargetException {
+        CrateType crateType;
+
+        switch (depType) {
+          case SHARED:
+            crateType = CrateType.CDYLIB;
+            break;
+
+          case STATIC_PIC:
+            crateType = CrateType.STATIC_PIC;
+            break;
+
+          case STATIC:
+          default:
+            crateType = CrateType.STATIC;
+            break;
+        }
+
+        BuildRule rule = RustCompileUtils.requireBuild(
+            crate,
+            params,
+            resolver,
+            getResolver(),
+            ruleFinder,
+            cxxPlatform,
+            rustBuckConfig,
+            rustcArgs.build(),
+              /* linkerArgs */ ImmutableList.of(),
+              /* linkerInputs */ ImmutableList.of(),
+            crateType,
+            depType,
+            args.srcs,
+            rootModule.get());
+
+        SourcePath lib = new BuildTargetSourcePath(rule.getBuildTarget());
+        SourcePathArg arg = new SourcePathArg(getResolver(), lib);
+
+        return NativeLinkableInput.builder().addArgs(arg).build();
+      }
+
+      @Override
+      public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+        return args.preferredLinkage;
+      }
+
+      @Override
+      public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform)
+          throws NoSuchBuildTargetException {
+        ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
+        String sharedLibrarySoname =
+            CxxDescriptionEnhancer.getSharedLibrarySoname(
+                Optional.empty(),
+                getBuildTarget(),
+                cxxPlatform);
+        BuildRule sharedLibraryBuildRule =
+            RustCompileUtils.requireBuild(
+                crate,
+                params,
+                resolver,
+                getResolver(),
+                ruleFinder,
+                cxxPlatform,
+                rustBuckConfig,
+                rustcArgs.build(),
+              /* linkerArgs */ ImmutableList.of(),
+              /* linkerInputs */ ImmutableList.of(),
+                CrateType.CDYLIB,
+                Linker.LinkableDepType.SHARED,
+                args.srcs,
+                rootModule.get());
+        libs.put(
+            sharedLibrarySoname,
+            new BuildTargetSourcePath(sharedLibraryBuildRule.getBuildTarget()));
+        return libs.build();
       }
     };
   }

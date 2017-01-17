@@ -96,6 +96,7 @@ public class RustBinaryDescription implements
             .flatMap(x -> x).iterator(),
         args.linkerFlags.iterator(),
         linkStyle,
+        args.rpath,
         args.srcs,
         args.crateRoot,
         ImmutableSet.of("main.rs"));
@@ -170,6 +171,7 @@ public class RustBinaryDescription implements
     public Optional<Linker.LinkableDepType> linkStyle;
     public Optional<String> crate;
     public Optional<SourcePath> crateRoot;
+    public boolean rpath = true;
     @Hint(isDep = false)
     public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
 

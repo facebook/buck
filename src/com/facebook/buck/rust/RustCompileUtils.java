@@ -92,6 +92,7 @@ public class RustCompileUtils {
       Iterable<Arg> linkerInputs,
       CrateType crateType,
       Linker.LinkableDepType depType,
+      boolean rpath,
       ImmutableSortedSet<SourcePath> sources,
       SourcePath rootModule
   ) throws NoSuchBuildTargetException {
@@ -150,19 +151,19 @@ public class RustCompileUtils {
     // A native crate output is no longer intended for consumption by the Rust toolchain;
     // it's either an executable, or a native library that C/C++ can link with. Rust DYLIBs
     // also need all dependencies available.
-    // TODO(jsgf): make native libraries NativeLinkables.
     if (crateType.needAllDeps()) {
       ImmutableList<Arg> nativeArgs = NativeLinkables.getTransitiveNativeLinkableInput(
           cxxPlatform,
           ruledeps,
           depType,
+          RustLinkable.class::isInstance,
           RustLinkable.class::isInstance)
           .getArgs();
 
       // Add necessary rpaths if we're dynamically linking with things
       // XXX currently breaks on paths containing commas, which all of ours do: see
       // https://github.com/rust-lang/rust/issues/38795
-      if (depType == Linker.LinkableDepType.SHARED) {
+      if (rpath && depType == Linker.LinkableDepType.SHARED) {
         args.add(new StringArg("-Crpath"));
       }
 
@@ -243,6 +244,7 @@ public class RustCompileUtils {
         linkerInputs,
         crateType,
         depType,
+        true,
         sources,
         rootModule
     );
@@ -284,6 +286,7 @@ public class RustCompileUtils {
       Iterator<String> rustcFlags,
       Iterator<String> linkerFlags,
       Linker.LinkableDepType linkStyle,
+      boolean rpath,
       ImmutableSortedSet<SourcePath> srcs,
       Optional<SourcePath> crateRoot,
       ImmutableSet<String> defaultRoots
@@ -342,6 +345,7 @@ public class RustCompileUtils {
                   pathResolver,
                   cxxPlatform,
                   params.getDeps(),
+                  RustLinkable.class::isInstance,
                   RustLinkable.class::isInstance));
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
@@ -379,6 +383,7 @@ public class RustCompileUtils {
         /* linkerInputs */ ImmutableList.of(),
         CrateType.BIN,
         linkStyle,
+        rpath,
         srcs,
         rootModule.get());
 

@@ -419,4 +419,19 @@ public class RustBinaryIntegrationTest {
             Matchers.containsString("this is foo, and here is my friend bar"),
             Matchers.containsString("plain old bar")));
   }
+
+  @Test
+  public void cxxWithRustDependency() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "cxx_with_rust_dep", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:hello").assertSuccess().getStdout(),
+        Matchers.allOf(
+            Matchers.containsString("Calling helloer"),
+            Matchers.containsString("I'm printing hello!"),
+            Matchers.containsString("Helloer called")));
+  }
+
 }

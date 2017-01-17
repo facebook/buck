@@ -8,7 +8,8 @@
       "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util:util"
+      "//src/com/facebook/buck/util:util",
+      "//third-party/java/jsr:jsr305"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/cli:config",
