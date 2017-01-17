@@ -14,7 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.rules.keys;
+
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.RuleKey;
 
 public interface RuleKeyFactory<RULE_KEY> {
 

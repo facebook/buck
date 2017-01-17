@@ -14,10 +14,14 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 
 import java.nio.file.Path;

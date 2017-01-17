@@ -26,7 +26,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.UncachedRuleKeyBuilder;
+import com.facebook.buck.rules.keys.UncachedRuleKeyBuilder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.DefaultFileHashCache;

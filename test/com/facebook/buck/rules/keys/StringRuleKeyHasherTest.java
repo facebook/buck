@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.rules.keys;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -22,9 +22,11 @@ import static org.junit.Assert.assertNotEquals;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
-import com.google.common.hash.HashCode;
-import com.google.common.hash.Hashing;
 
 import org.junit.Test;
 
@@ -33,7 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class GuavaRuleKeyHasherTest {
+public class StringRuleKeyHasherTest {
 
   private static final RuleKey RULE_KEY_1 = new RuleKey("a002b39af204cdfaa5fdb67816b13867c32ac52c");
   private static final RuleKey RULE_KEY_2 = new RuleKey("b67816b13867c32ac52ca002b39af204cdfaa5fd");
@@ -44,7 +46,7 @@ public class GuavaRuleKeyHasherTest {
 
   @Test
   public void testUniqueness() {
-    List<HashCode> hashes = new ArrayList<>();
+    List<String> hashes = new ArrayList<>();
     hashes.add(newHasher().hash());
     hashes.add(newHasher().putKey("").hash());
     hashes.add(newHasher().putKey("42").hash());
@@ -52,18 +54,19 @@ public class GuavaRuleKeyHasherTest {
     hashes.add(newHasher().putNull().hash());
     hashes.add(newHasher().putBoolean(true).hash());
     hashes.add(newHasher().putBoolean(false).hash());
+    // all number types are treated the same by StringRuleKeyHasher
     hashes.add(newHasher().putNumber(0).hash());
     hashes.add(newHasher().putNumber(42).hash());
-    hashes.add(newHasher().putNumber((long) 0).hash());
-    hashes.add(newHasher().putNumber((long) 42).hash());
-    hashes.add(newHasher().putNumber((short) 0).hash());
-    hashes.add(newHasher().putNumber((short) 42).hash());
-    hashes.add(newHasher().putNumber((byte) 0).hash());
-    hashes.add(newHasher().putNumber((byte) 42).hash());
-    hashes.add(newHasher().putNumber((float) 0).hash());
-    hashes.add(newHasher().putNumber((float) 42).hash());
-    hashes.add(newHasher().putNumber((double) 0).hash());
-    hashes.add(newHasher().putNumber((double) 42).hash());
+    hashes.add(newHasher().putNumber((long) 10).hash());
+    hashes.add(newHasher().putNumber((long) 14).hash());
+    hashes.add(newHasher().putNumber((short) 20).hash());
+    hashes.add(newHasher().putNumber((short) 24).hash());
+    hashes.add(newHasher().putNumber((byte) 30).hash());
+    hashes.add(newHasher().putNumber((byte) 34).hash());
+    hashes.add(newHasher().putNumber((float) 40).hash());
+    hashes.add(newHasher().putNumber((float) 44).hash());
+    hashes.add(newHasher().putNumber((double) 50).hash());
+    hashes.add(newHasher().putNumber((double) 54).hash());
     hashes.add(newHasher().putString("").hash());
     hashes.add(newHasher().putString("42").hash());
     hashes.add(newHasher().putString("4").putString("2").hash());
@@ -176,7 +179,7 @@ public class GuavaRuleKeyHasherTest {
     return ArchiveMemberPath.of(Paths.get(archivePath), Paths.get(memberPath));
   }
 
-  private GuavaRuleKeyHasher newHasher() {
-    return new GuavaRuleKeyHasher(Hashing.sha1().newHasher());
+  private StringRuleKeyHasher newHasher() {
+    return new StringRuleKeyHasher();
   }
 }

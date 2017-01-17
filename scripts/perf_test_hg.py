@@ -114,7 +114,6 @@ def buck_clean(args, cwd):
         [args.path_to_buck, 'clean'],
         cwd=cwd)
 
-
 BUILD_RESULT_LOG_LINE = re.compile(
     r'BuildRuleFinished\((?P<rule_name>[\w_\-:#\/,]+)\): (?P<result>[A-Z_]+) '
     r'(?P<cache_result>[A-Z_]+) (?P<success_type>[A-Z_]+) '
@@ -128,7 +127,7 @@ RULEKEY_LINE = re.compile(
 
 BUCK_LOG_RULEKEY_LINE = re.compile(
     r'.*\[[\w ]+\](?:\[command:[0-9a-f-]+\])?\[tid:\d+\]'
-    r'\[com.facebook.buck.rules.RuleKey[\$\.]?Builder\] '
+    r'\[com.facebook.buck.rules.keys.RuleKey[\$\.]?Builder\] '
     r'RuleKey (?P<rule_key>[0-9a-f]+)='
     r'(?P<rule_key_debug>.*)$')
 
@@ -176,6 +175,18 @@ def buck_build_target(args, cwd, targets, log_as_perftest=True):
     tmpFile.seek(0)
     finish = datetime.now()
 
+    (cache_results, rule_key_map) = build_maps(cwd, tmpFile)
+
+    result = BuildResult(finish - start, cache_results, rule_key_map)
+    cache_counts = {}
+    for key, value in result.cache_results.iteritems():
+        cache_counts[key] = len(value)
+    log('Test Build Finished! Elapsed Seconds: %d, Cache Counts: %s' % (
+        timedelta_total_seconds(result.time_delta), repr(cache_counts)))
+    return result
+
+
+def build_maps(cwd, tmpFile):
     java_utils_log_path = os.path.join(
         cwd,
         'buck-out', 'log', 'buck-0.log')
@@ -215,15 +226,7 @@ def buck_build_target(args, cwd, targets, log_as_perftest=True):
                     'rule_key_debug': rule_debug_map[rule_key]
                 })
                 rule_key_map[match.group('rule_name')] = (rule_key, rule_debug_map[rule_key])
-
-    result = BuildResult(finish - start, cache_results, rule_key_map)
-    cache_counts = {}
-    for key, value in result.cache_results.iteritems():
-        cache_counts[key] = len(value)
-    log('Test Build Finished! Elapsed Seconds: %d, Cache Counts: %s' % (
-        timedelta_total_seconds(result.time_delta), repr(cache_counts)))
-    return result
-
+    return (cache_results, rule_key_map)
 
 def set_cache_settings(
         args,

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.RuleKeyBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Strings;

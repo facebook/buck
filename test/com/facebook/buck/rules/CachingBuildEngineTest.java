@@ -54,6 +54,8 @@ import com.facebook.buck.rules.keys.DefaultDependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyFactory;
+import com.facebook.buck.rules.keys.FakeInputBasedRuleKeyFactory;
+import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputCountingRuleKeyFactory;
 import com.facebook.buck.rules.keys.SizeLimiter;

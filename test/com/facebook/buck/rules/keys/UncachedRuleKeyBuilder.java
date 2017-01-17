@@ -14,8 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Supplier;
 import com.google.common.hash.HashCode;

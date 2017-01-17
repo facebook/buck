@@ -43,7 +43,7 @@ public class RuleKey {
 
   private final HashCode hashCode;
 
-  RuleKey(HashCode hashCode) {
+  public RuleKey(HashCode hashCode) {
     this.hashCode = hashCode;
   }
 

@@ -22,7 +22,6 @@ import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;

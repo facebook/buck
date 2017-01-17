@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,37 +14,48 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Pair;
-import com.facebook.buck.rules.keys.DependencyFileEntry;
-import com.facebook.buck.rules.keys.DependencyFileRuleKeyFactory;
-import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import java.io.IOException;
-
 import javax.annotation.Nullable;
 
-public class FakeRuleKeyFactory
-    implements RuleKeyFactory<RuleKey>, DependencyFileRuleKeyFactory {
+public class FakeInputBasedRuleKeyFactory
+    implements RuleKeyFactory<RuleKey> {
 
   private final ImmutableMap<BuildTarget, RuleKey> ruleKeys;
+  private final ImmutableSet<BuildTarget> oversized;
   private final FileHashCache fileHashCache;
 
-  public FakeRuleKeyFactory(
+  public FakeInputBasedRuleKeyFactory(
       ImmutableMap<BuildTarget, RuleKey> ruleKeys,
+      ImmutableSet<BuildTarget> oversized,
       FileHashCache fileHashCache) {
     this.ruleKeys = ruleKeys;
+    this.oversized = oversized;
     this.fileHashCache = fileHashCache;
   }
 
-  public FakeRuleKeyFactory(ImmutableMap<BuildTarget, RuleKey> ruleKeys) {
+  public FakeInputBasedRuleKeyFactory(
+      ImmutableMap<BuildTarget, RuleKey> ruleKeys,
+      FileHashCache fileHashCache) {
+    this(ruleKeys, ImmutableSet.of(), fileHashCache);
+  }
+
+  public FakeInputBasedRuleKeyFactory(
+      ImmutableMap<BuildTarget, RuleKey> ruleKeys) {
     this(ruleKeys, new NullFileHashCache());
   }
 
@@ -53,7 +64,12 @@ public class FakeRuleKeyFactory
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
-    return new UncachedRuleKeyBuilder(ruleFinder, resolver, fileHashCache, this) {
+    return new RuleKeyBuilder<RuleKey>(ruleFinder, resolver, fileHashCache) {
+
+      @Override
+      protected RuleKeyBuilder<RuleKey> setBuildRule(BuildRule rule) {
+        return this;
+      }
 
       @Override
       protected RuleKeyBuilder<RuleKey> setReflectively(@Nullable Object val) {
@@ -61,7 +77,15 @@ public class FakeRuleKeyFactory
       }
 
       @Override
+      public RuleKeyBuilder<RuleKey> setAppendableRuleKey(RuleKeyAppendable appendable) {
+        return this;
+      }
+
+      @Override
       public RuleKey build() {
+        if (oversized.contains(buildRule.getBuildTarget())) {
+          throw new SizeLimiter.SizeLimitException();
+        }
         return ruleKeys.get(buildRule.getBuildTarget());
       }
 
@@ -71,19 +95,6 @@ public class FakeRuleKeyFactory
   @Override
   public RuleKey build(BuildRule buildRule) {
     return newInstance(buildRule).build();
-  }
-
-  @Override
-  public Pair<RuleKey, ImmutableSet<SourcePath>> build(
-      SupportsDependencyFileRuleKey rule,
-      ImmutableList<DependencyFileEntry> inputs) throws IOException {
-    return new Pair<>(build(rule), ImmutableSet.<SourcePath>of());
-  }
-
-  @Override
-  public Pair<RuleKey, ImmutableSet<SourcePath>> buildManifestKey(
-      SupportsDependencyFileRuleKey rule) {
-    return new Pair<>(build(rule), ImmutableSet.<SourcePath>of());
   }
 
 }

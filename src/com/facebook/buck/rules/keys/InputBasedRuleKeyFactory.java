@@ -23,7 +23,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DependencyAggregation;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;

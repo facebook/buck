@@ -22,6 +22,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.log.views.JsonViews;
+import com.facebook.buck.rules.keys.RuleKeyFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.hash.HashCode;

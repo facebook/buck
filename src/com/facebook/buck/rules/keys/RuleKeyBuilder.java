@@ -14,17 +14,32 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.rules.keys;
 
-import static com.facebook.buck.rules.RuleKeyScopedHasher.Scope;
-import static com.facebook.buck.rules.RuleKeyHasher.Container;
-import static com.facebook.buck.rules.RuleKeyHasher.Wrapper;
+import static com.facebook.buck.rules.keys.RuleKeyScopedHasher.ContainerScope;
+import static com.facebook.buck.rules.keys.RuleKeyScopedHasher.Scope;
+import static com.facebook.buck.rules.keys.RuleKeyHasher.Container;
+import static com.facebook.buck.rules.keys.RuleKeyHasher.Wrapper;
+
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.rules.RuleKeyScopedHasher.ContainerScope;
+import com.facebook.buck.rules.ArchiveMemberSourcePath;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.NonHashableSourcePathContainer;
+import com.facebook.buck.rules.ResourceSourcePath;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.SourceRoot;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;

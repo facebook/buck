@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.rules.keys;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static org.junit.Assert.assertEquals;
@@ -24,6 +24,26 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
+import com.facebook.buck.rules.ArchiveMemberSourcePath;
+import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.NonHashableSourcePathContainer;
+import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.SourceRoot;
+import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
