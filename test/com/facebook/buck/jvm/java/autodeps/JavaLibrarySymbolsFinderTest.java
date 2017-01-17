@@ -145,7 +145,7 @@ public class JavaLibrarySymbolsFinderTest {
           }
         })
         .anyTimes();
-    expect(pathResolver.getRelativePath(anyObject(SourcePath.class)))
+    expect(pathResolver.getIdeallyRelativePath(anyObject(SourcePath.class)))
         .andAnswer(() -> {
           SourcePath input = (SourcePath) EasyMock.getCurrentArguments()[0];
           assertTrue(input instanceof PathSourcePath);

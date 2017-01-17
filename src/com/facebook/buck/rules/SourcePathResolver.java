@@ -129,6 +129,17 @@ public class SourcePathResolver {
   }
 
   /**
+   * @return The {@link Path} the {@code sourcePath} refers to, ideally relative to its owning
+   * {@link com.facebook.buck.io.ProjectFilesystem}. Absolute path may get returned however!
+   *
+   * We should make sure that {@link #getPathPrivateImpl} always returns a relative path after
+   * which we should simply call {@link #getRelativePath}. Until then we still need this nonsense.
+   */
+  public Path getIdeallyRelativePath(SourcePath sourcePath) {
+    return getPathPrivateImpl(sourcePath);
+  }
+
+  /**
    * @return the {@link SourcePath} as a {@link Path}, with no guarantee whether the return value is
    *     absolute or relative. This should never be exposed to users.
    */

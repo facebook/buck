@@ -121,7 +121,7 @@ public class PrebuiltJarSymbolsFinderTest {
     expect(ruleFinder.getRule(anyObject(SourcePath.class)))
         .andReturn(Optional.empty())
         .anyTimes();
-    expect(pathResolver.getRelativePath(anyObject(SourcePath.class)))
+    expect(pathResolver.getIdeallyRelativePath(anyObject(SourcePath.class)))
         .andReturn(relativePathToJar)
         .anyTimes();
     expect(pathResolver.getAbsolutePath(anyObject(SourcePath.class)))

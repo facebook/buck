@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.NonHashableSourcePathContainer;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -274,37 +275,25 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   // TODO(plamenko): make this be abstract. Pretty much all the implementations override this,
   // none of which call this super method.
   protected RuleKeyBuilder<RULE_KEY> setSourcePath(SourcePath sourcePath) {
-    if (sourcePath instanceof ArchiveMemberSourcePath) {
-      try {
-        return setArchiveMemberPath(
-            resolver.getAbsoluteArchiveMemberPath(sourcePath),
-            resolver.getRelativeArchiveMemberPath(sourcePath));
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    }
-
     if (sourcePath instanceof BuildTargetSourcePath) {
       BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) sourcePath;
       BuildRule buildRule = ruleFinder.getRuleOrThrow(buildTargetSourcePath);
       hasher.putBuildTargetSourcePath(buildTargetSourcePath);
       return setBuildRule(buildRule);
     }
-
-    // The original version of this expected the path to be relative, however, sometimes the
-    // deprecated method returned an absolute path, which is obviously less than ideal. If we can,
-    // grab the relative path to the output. We also need to hash the contents of the absolute
-    // path no matter what.
-    Path absolutePath = resolver.getAbsolutePath(sourcePath);
-    Path ideallyRelative;
     try {
-      ideallyRelative = resolver.getRelativePath(sourcePath);
-    } catch (IllegalStateException e) {
-      // Expected relative path was absolute. Yay.
-      ideallyRelative = absolutePath;
-    }
-    try {
-      return setPath(absolutePath, ideallyRelative);
+      if (sourcePath instanceof ArchiveMemberSourcePath) {
+        return setArchiveMemberPath(
+            resolver.getAbsoluteArchiveMemberPath(sourcePath),
+            resolver.getRelativeArchiveMemberPath(sourcePath));
+      } else if (sourcePath instanceof PathSourcePath) {
+        return setPath(
+            resolver.getAbsolutePath(sourcePath),
+            resolver.getIdeallyRelativePath(sourcePath));
+      } else {
+        throw new UnsupportedOperationException(
+            "Unrecognized SourcePath implementation: " + sourcePath.getClass());
+      }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -321,21 +310,13 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
       Path ideallyRelative) throws IOException {
     // TODO(shs96c): Enable this precondition once setPath(Path) has been removed.
     // Preconditions.checkState(absolutePath.isAbsolute());
-    HashCode sha1 = hashLoader.get(absolutePath);
-    if (sha1 == null) {
-      throw new RuntimeException("No SHA for " + absolutePath);
-    }
-
-    Path addToKey;
     if (ideallyRelative.isAbsolute()) {
       logger.warn(
           "Attempting to add absolute path to rule key. Only using file name: %s", ideallyRelative);
-      addToKey = ideallyRelative.getFileName();
-    } else {
-      addToKey = ideallyRelative;
+      ideallyRelative = ideallyRelative.getFileName();
     }
 
-    hasher.putPath(addToKey, sha1.toString());
+    hasher.putPath(ideallyRelative, hashLoader.get(absolutePath).toString());
     return this;
   }
 
@@ -344,14 +325,9 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
       ArchiveMemberPath relativeArchiveMemberPath) throws IOException {
     Preconditions.checkState(absoluteArchiveMemberPath.isAbsolute());
     Preconditions.checkState(!relativeArchiveMemberPath.isAbsolute());
-
-    HashCode hash = hashLoader.get(absoluteArchiveMemberPath);
-    if (hash == null) {
-      throw new RuntimeException("No hash for " + absoluteArchiveMemberPath);
-    }
-
-    ArchiveMemberPath addToKey = relativeArchiveMemberPath;
-    hasher.putArchiveMemberPath(addToKey, hash.toString());
+    hasher.putArchiveMemberPath(
+        relativeArchiveMemberPath,
+        hashLoader.get(absoluteArchiveMemberPath).toString());
     return this;
   }
 
