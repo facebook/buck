@@ -63,9 +63,10 @@ public class ExternallyBuiltApplePackage extends Genrule implements RuleKeyAppen
 
   @Override
   protected void addEnvironmentVariables(
+      SourcePathResolver pathResolver,
       ExecutionContext context,
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
-    super.addEnvironmentVariables(context, environmentVariablesBuilder);
+    super.addEnvironmentVariables(pathResolver, context, environmentVariablesBuilder);
     environmentVariablesBuilder.put(
         "SDKROOT",
         packageConfigAndPlatformInfo.getSdkPath().toString());

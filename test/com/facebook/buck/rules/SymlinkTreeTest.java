@@ -97,8 +97,7 @@ public class SymlinkTreeTest {
             MorePaths.relativize(tmpDir.getRoot(), file2)));
 
     // The output path used by the buildable for the link tree.
-    outputPath = projectFilesystem.resolve(
-        BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root"));
+    outputPath = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root");
 
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule = new SymlinkTree(
@@ -148,7 +147,7 @@ public class SymlinkTreeTest {
     // link map.
     Path aFile = tmpDir.newFile();
     Files.write(aFile, "hello world".getBytes(Charsets.UTF_8));
-    AbstractBuildRule modifiedSymlinkTreeBuildRule = new SymlinkTree(
+    AbstractBuildRuleWithResolver modifiedSymlinkTreeBuildRule = new SymlinkTree(
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
         new SourcePathResolver(new SourcePathRuleFinder(
             new BuildRuleResolver(
@@ -316,7 +315,7 @@ public class SymlinkTreeTest {
                 new PathSourcePath(
                     projectFilesystem,
                     MorePaths.relativize(tmpDir.getRoot(), tmpDir.newFile()))));
-    int exitCode = symlinkTree.getVerifiyStep().execute(TestExecutionContext.newInstance())
+    int exitCode = symlinkTree.getVerifyStep().execute(TestExecutionContext.newInstance())
                    .getExitCode();
     assertThat(exitCode, Matchers.not(Matchers.equalTo(0)));
   }

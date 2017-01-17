@@ -29,7 +29,7 @@ import java.nio.file.Paths;
 
 import javax.annotation.Nullable;
 
-public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
+public class FakeBuildRule extends AbstractBuildRuleWithResolver implements BuildRule {
 
 
   @Nullable

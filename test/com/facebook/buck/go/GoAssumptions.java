@@ -42,7 +42,7 @@ abstract class GoAssumptions {
         // This should really act like some kind of readonly bind-mount onto the real filesystem.
         // But this is currently enough to check whether Go seems to be installed, so we'll live...
         FakeProjectFilesystem fs = new FakeProjectFilesystem();
-        fs.mkdirs(fs.getRootPath().getFileSystem().getPath(goRoot));
+        fs.mkdirs(fs.getPath(goRoot));
         baseConfig.setFilesystem(fs);
       }
       new GoBuckConfig(

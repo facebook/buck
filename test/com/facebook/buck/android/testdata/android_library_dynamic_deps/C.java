@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright 2014-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,16 +14,8 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.example;
 
-public interface RuleKeyFactory<RULE_KEY> {
-
-  /**
-   * Creates a new {@code RULE_KEY} for the given {@link BuildRule}. In most cases {@code RULE_KEY}
-   * is going to be {@link RuleKey}, but it can be anything really.
-   *
-   * @param buildRule The build rule to create the key for.
-   * @return A rule key.
-   */
-  RULE_KEY build(BuildRule buildRule);
+public class C {
+  // method
 }

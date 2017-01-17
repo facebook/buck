@@ -60,6 +60,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -308,8 +309,8 @@ public class PythonBinaryDescriptionTest {
               "Transitive runtime deps of %s [%s]",
               pythonBinary,
               packageStyle.toString()),
-          BuildRules.getTransitiveRuntimeDeps(pythonBinary),
-          Matchers.hasItem(cxxBinary));
+          BuildRules.getTransitiveRuntimeDeps(pythonBinary, new SourcePathRuleFinder(resolver)),
+          Matchers.hasItem(new BuildTargetSourcePath(cxxBinary.getBuildTarget())));
     }
   }
 
@@ -935,7 +936,9 @@ public class PythonBinaryDescriptionTest {
             .setMainModule("hello")
             .setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE)
             .build(resolver);
-    assertThat(standaloneBinary.getRuntimeDeps(), Matchers.hasItem(pyTool));
+    assertThat(
+        standaloneBinary.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
+        Matchers.hasItem(new BuildTargetSourcePath(pyTool.getBuildTarget())));
   }
 
 }

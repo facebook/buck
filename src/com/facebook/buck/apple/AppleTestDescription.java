@@ -34,7 +34,7 @@ import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -233,8 +233,8 @@ public class AppleTestDescription implements
       return library;
     }
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver sourcePathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(resolver));
     String platformName = appleCxxPlatform.getAppleSdk().getApplePlatform().getName();
 
     BuildRule bundle = AppleDescriptions.createAppleBundle(
@@ -269,6 +269,7 @@ public class AppleTestDescription implements
         debugFormat,
         appleConfig.useDryRunCodeSigning(),
         appleConfig.cacheBundlesAndPackages());
+    resolver.addToIndex(bundle);
 
     Optional<SourcePath> xctool = getXctool(params, resolver, sourcePathResolver);
 
@@ -284,7 +285,6 @@ public class AppleTestDescription implements
             Suppliers.ofInstance(ImmutableSortedSet.of(bundle)),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         sourcePathResolver,
-        ruleFinder,
         bundle,
         testHostInfo.map(TestHostInfo::getTestHostApp),
         args.contacts,
@@ -321,7 +321,7 @@ public class AppleTestDescription implements
                 Suppliers.ofInstance(ImmutableSortedSet.of(xctoolZipBuildRule)),
                 Suppliers.ofInstance(ImmutableSortedSet.of()));
         resolver.addToIndex(
-            new AbstractBuildRule(unzipXctoolParams, sourcePathResolver) {
+            new AbstractBuildRuleWithResolver(unzipXctoolParams, sourcePathResolver) {
               @Override
               public ImmutableList<Step> getBuildSteps(
                   BuildContext context,

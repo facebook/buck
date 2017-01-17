@@ -161,13 +161,13 @@ public class ApkGenruleTest {
         apkGenrule.getDeps().stream()
             .map(Object::toString)
             .collect(MoreCollectors.toImmutableSet()));
-    BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
+    BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
     Iterable<Path> expectedInputsToCompareToOutputs = ImmutableList.of(
         fileSystem.getPath("src/com/facebook/signer.py"),
         fileSystem.getPath("src/com/facebook/key.properties"));
     MoreAsserts.assertIterablesEquals(
         expectedInputsToCompareToOutputs,
-        apkGenrule.getSrcs());
+        pathResolver.filterInputsToCompareToOutput(apkGenrule.getSrcs()));
 
     // Verify that the shell commands that the genrule produces are correct.
     List<Step> steps = apkGenrule.getBuildSteps(buildContext, new FakeBuildableContext());

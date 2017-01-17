@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -46,7 +46,7 @@ import java.util.Optional;
  * Generate the CFG for a source file
  */
 public class CxxInferCapture
-    extends AbstractBuildRule
+    extends AbstractBuildRuleWithResolver
     implements RuleKeyAppendable, SupportsDependencyFileRuleKey {
 
   @AddToRuleKey

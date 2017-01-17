@@ -22,7 +22,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -61,7 +60,6 @@ public class ThriftCompiler extends AbstractBuildRule {
 
   public ThriftCompiler(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       Tool compiler,
       ImmutableList<String> flags,
       Path outputDir,
@@ -72,7 +70,7 @@ public class ThriftCompiler extends AbstractBuildRule {
       ImmutableSet<Path> headerMaps,
       ImmutableMap<Path, SourcePath> includes,
       ImmutableSortedSet<String> generatedSources) {
-    super(params, resolver);
+    super(params);
     this.compiler = compiler;
     this.flags = flags;
     this.outputDir = outputDir;
@@ -111,11 +109,11 @@ public class ThriftCompiler extends AbstractBuildRule {
             getProjectFilesystem().getRootPath(),
             compiler.getEnvironment(),
             ImmutableList.<String>builder()
-                .addAll(compiler.getCommandPrefix(getResolver()))
+                .addAll(compiler.getCommandPrefix(context.getSourcePathResolver()))
                 .addAll(flags)
                 .build(),
             outputDir,
-            getResolver().getAbsolutePath(input),
+            context.getSourcePathResolver().getAbsolutePath(input),
             language,
             options,
             FluentIterable.from(headerMaps)

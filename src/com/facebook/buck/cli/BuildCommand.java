@@ -41,6 +41,7 @@ import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
@@ -377,7 +378,27 @@ public class BuildCommand extends AbstractCommand {
     if (!additionalTargets.isEmpty()) {
       this.arguments.addAll(additionalTargets);
     }
+    BuildEvent.Started started = postBuildStartedEvent(params);
+    int exitCode;
+    try {
+      Pair<TargetGraphAndBuildTargets, ActionGraphAndResolver> graphs = createGraphs(
+          params,
+          executorService);
+      exitCode = executeBuildAndProcessResult(
+          params,
+          executorService,
+          graphs.getFirst(),
+          graphs.getSecond());
+    } catch (ActionGraphCreationException e) {
+      params.getConsole().printBuildFailure(e.getMessage());
+      exitCode = 1;
+    }
+    params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
 
+    return exitCode;
+  }
+
+  private BuildEvent.Started postBuildStartedEvent(CommandRunnerParams params) {
     // Post the build started event, setting it to the Parser recorded start time if appropriate.
     BuildEvent.Started started = BuildEvent.started(getArguments(), useDistributedBuild);
     if (params.getParser().getParseStartTime().isPresent()) {
@@ -387,75 +408,98 @@ public class BuildCommand extends AbstractCommand {
     } else {
       params.getBuckEventBus().post(started);
     }
+    return started;
+  }
 
-    int exitCode;
-    try {
-      // Parse the build files to create a TargetGraph and ActionGraph.
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets =
-          createTargetGraph(params, executorService);
+  private Pair<TargetGraphAndBuildTargets, ActionGraphAndResolver> createGraphs(
+      CommandRunnerParams params,
+      WeightedListeningExecutorService executorService)
+      throws ActionGraphCreationException, IOException, InterruptedException {
+    TargetGraphAndBuildTargets targetGraphAndBuildTargets =
+        createTargetGraph(params, executorService);
+    checkSingleBuildTargetSpecifiedForOutBuildMode(targetGraphAndBuildTargets);
+    ActionGraphAndResolver actionGraphAndResolver = createActionGraphAndResolver(
+        params,
+        targetGraphAndBuildTargets);
+    return new Pair<>(targetGraphAndBuildTargets, actionGraphAndResolver);
+  }
 
-      // Ideally, we would error out of this before we build the entire graph, but it is possible
-      // that `getArguments().size()` is 1 but `targetGraphAndBuildTargets.getBuildTargets().size()`
-      // is greater than 1 if the lone argument is a wildcard build target that ends in "...".
-      // As such, we have to get the result of createTargetGraph() before we can do this check.
-      if (outputPathForSingleBuildTarget != null &&
-          targetGraphAndBuildTargets.getBuildTargets().size() != 1) {
-        throw new ActionGraphCreationException(String.format(
-            "When using %s you must specify exactly one build target, but you specified %s",
-            OUT_LONG_ARG,
-            targetGraphAndBuildTargets.getBuildTargets()));
-      }
 
-      ActionGraphAndResolver actionGraphAndResolver = createActionGraphAndResolver(
-          params,
-          targetGraphAndBuildTargets);
-
-      if (useDistributedBuild) {
-        exitCode = executeDistributedBuild(
-            params,
-            targetGraphAndBuildTargets,
-            actionGraphAndResolver,
-            executorService);
-      } else {
-        exitCode = executeLocalBuild(params, actionGraphAndResolver, executorService);
-      }
-
-      if (exitCode == 0) {
-        if (showOutput || showFullOutput || showRuleKey) {
-          showOutputs(params, actionGraphAndResolver);
-        }
-        if (outputPathForSingleBuildTarget != null) {
-          BuildTarget loneTarget = Iterables.getOnlyElement(
-              targetGraphAndBuildTargets.getBuildTargets());
-          BuildRule rule = actionGraphAndResolver.getResolver().getRule(loneTarget);
-          if (!rule.outputFileCanBeCopied()) {
-            params.getConsole().printErrorText(String.format(
-                "%s does not have an output that is compatible with `buck build --out`",
-                loneTarget));
-            exitCode = 1;
-          } else {
-            Path output = rule.getPathToOutput();
-            Preconditions.checkNotNull(
-                output,
-                "%s specified a build target that does not have an output file: %s",
-                OUT_LONG_ARG,
-                loneTarget);
-
-            ProjectFilesystem projectFilesystem = rule.getProjectFilesystem();
-            projectFilesystem.copyFile(
-                projectFilesystem.resolve(output),
-                outputPathForSingleBuildTarget);
-          }
-        }
-      }
-    } catch (ActionGraphCreationException e) {
-      params.getConsole().printBuildFailure(e.getMessage());
-      exitCode = 1;
+  private void checkSingleBuildTargetSpecifiedForOutBuildMode(
+      TargetGraphAndBuildTargets targetGraphAndBuildTargets)
+      throws ActionGraphCreationException {
+    // Ideally, we would error out of this before we build the entire graph, but it is possible
+    // that `getArguments().size()` is 1 but `targetGraphAndBuildTargets.getBuildTargets().size()`
+    // is greater than 1 if the lone argument is a wildcard build target that ends in "...".
+    // As such, we have to get the result of createTargetGraph() before we can do this check.
+    if (outputPathForSingleBuildTarget != null &&
+        targetGraphAndBuildTargets.getBuildTargets().size() != 1) {
+      throw new ActionGraphCreationException(String.format(
+          "When using %s you must specify exactly one build target, but you specified %s",
+          OUT_LONG_ARG,
+          targetGraphAndBuildTargets.getBuildTargets()));
     }
-    params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
+  }
 
+  private int executeBuildAndProcessResult(
+      CommandRunnerParams params,
+      WeightedListeningExecutorService executorService,
+      TargetGraphAndBuildTargets targetGraphAndBuildTargets,
+      ActionGraphAndResolver actionGraphAndResolver)
+      throws IOException, InterruptedException {
+    int exitCode;
+    if (useDistributedBuild) {
+      exitCode = executeDistributedBuild(
+          params,
+          targetGraphAndBuildTargets,
+          actionGraphAndResolver,
+          executorService);
+    } else {
+      exitCode = executeLocalBuild(params, actionGraphAndResolver, executorService);
+    }
+    if (exitCode == 0) {
+      exitCode = processSuccessfulBuild(
+          params,
+          targetGraphAndBuildTargets,
+          actionGraphAndResolver);
+    }
     return exitCode;
   }
+
+  private int processSuccessfulBuild(
+      CommandRunnerParams params,
+      TargetGraphAndBuildTargets targetGraphAndBuildTargets,
+      ActionGraphAndResolver actionGraphAndResolver)
+      throws IOException {
+    if (showOutput || showFullOutput || showRuleKey) {
+      showOutputs(params, actionGraphAndResolver);
+    }
+    if (outputPathForSingleBuildTarget != null) {
+      BuildTarget loneTarget = Iterables.getOnlyElement(
+          targetGraphAndBuildTargets.getBuildTargets());
+      BuildRule rule = actionGraphAndResolver.getResolver().getRule(loneTarget);
+      if (!rule.outputFileCanBeCopied()) {
+        params.getConsole().printErrorText(String.format(
+            "%s does not have an output that is compatible with `buck build --out`",
+            loneTarget));
+        return 1;
+      } else {
+        Path output = rule.getPathToOutput();
+        Preconditions.checkNotNull(
+            output,
+            "%s specified a build target that does not have an output file: %s",
+            OUT_LONG_ARG,
+            loneTarget);
+
+        ProjectFilesystem projectFilesystem = rule.getProjectFilesystem();
+        projectFilesystem.copyFile(
+            projectFilesystem.resolve(output),
+            outputPathForSingleBuildTarget);
+      }
+    }
+    return 0;
+  }
+
 
   private BuildJobState computeDistributedBuildJobState(
       DistBuildTargetGraphCodec targetGraphCodec,
@@ -484,7 +528,8 @@ public class BuildCommand extends AbstractCommand {
         cellIndexer,
         distributedBuildFileHashes,
         targetGraphCodec,
-        targetGraphAndBuildTargets.getTargetGraph()
+        targetGraphAndBuildTargets.getTargetGraph(),
+        buildTargets
     );
   }
 
@@ -640,7 +685,7 @@ public class BuildCommand extends AbstractCommand {
                   parseArgumentsAsTargetNodeSpecs(
                       params.getBuckConfig(),
                       getArguments()),
-                      /* ignoreBuckAutodepsFiles */ false,
+                  /* ignoreBuckAutodepsFiles */ false,
                   parserConfig.getDefaultFlavorsMode());
       return params.getBuckConfig().getBuildVersions() ?
           toVersionedTargetGraph(params, targetGraphAndBuildTargets) :

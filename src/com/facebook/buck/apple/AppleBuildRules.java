@@ -37,7 +37,6 @@ import com.google.common.collect.Iterables;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
-import java.util.stream.StreamSupport;
 
 
 /**
@@ -130,7 +129,7 @@ public final class AppleBuildRules {
     LINKING,
   }
 
-  public static Iterable<TargetNode<?, ?>> getRecursiveTargetNodeDependenciesOfTypes(
+  public static ImmutableSet<TargetNode<?, ?>> getRecursiveTargetNodeDependenciesOfTypes(
       final TargetGraph targetGraph,
       final Optional<AppleDependenciesCache> cache,
       final RecursiveDependenciesMode mode,
@@ -245,7 +244,7 @@ public final class AppleBuildRules {
       return deps.iterator();
     };
 
-    final ImmutableList.Builder<TargetNode<?, ?>> filteredRules = ImmutableList.builder();
+    final ImmutableSet.Builder<TargetNode<?, ?>> filteredRules = ImmutableSet.builder();
     AcyclicDepthFirstPostOrderTraversal<TargetNode<?, ?>> traversal =
         new AcyclicDepthFirstPostOrderTraversal<>(graphTraversable);
     try {
@@ -260,7 +259,7 @@ public final class AppleBuildRules {
       // actual load failures and cycle exceptions should have been caught at an earlier stage
       throw new RuntimeException(e);
     }
-    ImmutableList<TargetNode<?, ?>> result = filteredRules.build();
+    ImmutableSet<TargetNode<?, ?>> result = filteredRules.build();
     LOG.verbose(
         "Got recursive dependencies of node %s mode %s types %s: %s\n",
         targetNode,
@@ -308,7 +307,7 @@ public final class AppleBuildRules {
             input -> isXcodeTargetDescription(input.getDescription())));
   }
 
-  public static Function<TargetNode<?, ?>, Iterable<TargetNode<?, ?>>>
+  public static Function<TargetNode<?, ?>, ImmutableSet<TargetNode<?, ?>>>
     newRecursiveRuleDependencyTransformer(
       final TargetGraph targetGraph,
       final Optional<AppleDependenciesCache> cache,
@@ -367,14 +366,14 @@ public final class AppleBuildRules {
     return targetNodes
         .stream()
         .flatMap(
-            targetNode -> StreamSupport.stream(
+            targetNode ->
                 newRecursiveRuleDependencyTransformer(
                     targetGraph,
                     cache,
                     RecursiveDependenciesMode.COPYING,
                     descriptionClasses)
                     .apply(targetNode)
-                    .spliterator(), false))
+                    .stream())
         .map(input -> (T) input.getConstructorArg())
         .collect(MoreCollectors.toImmutableSet());
   }

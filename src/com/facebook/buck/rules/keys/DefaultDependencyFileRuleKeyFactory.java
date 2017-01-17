@@ -22,10 +22,10 @@ import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Joiner;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -33,11 +33,14 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.util.Collections;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 import javax.annotation.Nonnull;
@@ -51,6 +54,7 @@ public final class DefaultDependencyFileRuleKeyFactory
     implements DependencyFileRuleKeyFactory {
 
   private final FileHashLoader fileHashLoader;
+  private static final Path METADATA_DIR = Paths.get("META-INF");
   private final SourcePathResolver pathResolver;
   private final SourcePathRuleFinder ruleFinder;
   private final LoadingCache<RuleKeyAppendable, Result> cache;
@@ -92,20 +96,20 @@ public final class DefaultDependencyFileRuleKeyFactory
     }
 
     @Override
-    public Builder setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
+    protected Builder setAppendableRuleKey(RuleKeyAppendable appendable) {
       Result result = cache.getUnchecked(appendable);
       inputs.add(result.getInputs());
-      setAppendableRuleKey(key, result.getRuleKey());
+      setAppendableRuleKey(result.getRuleKey());
       return this;
     }
 
     @Override
-    public Builder setReflectively(String key, @Nullable Object val) {
+    protected Builder setReflectively(@Nullable Object val) {
       if (val instanceof ArchiveDependencySupplier) {
         Object members = ((ArchiveDependencySupplier) val).getArchiveMembers(pathResolver);
-        super.setReflectively(key, members);
+        super.setReflectively(members);
       } else {
-        super.setReflectively(key, val);
+        super.setReflectively(val);
       }
       return this;
     }
@@ -185,8 +189,10 @@ public final class DefaultDependencyFileRuleKeyFactory
 
     final ImmutableSet.Builder<SourcePath> depFileSourcePathsBuilder = ImmutableSet.builder();
     final ImmutableSet.Builder<DependencyFileEntry> filesAccountedFor = ImmutableSet.builder();
+    final ImmutableSet.Builder<String> metadataFilenamesBuilder =
+        ImmutableSortedSet.naturalOrder();
 
-    // Each input path falls into one of three categories:
+    // Each existing input path falls into one of three categories:
     // 1) It's not covered by dep files, so we need to consider it part of the rule key
     // 2) It's covered by dep files and present in the dep file, so we consider it
     //    part of the rule key
@@ -198,16 +204,20 @@ public final class DefaultDependencyFileRuleKeyFactory
         // If this path is not a dep file path, then add it to the builder directly.
         // Note that if {@code possibleDepFileSourcePaths} is not present, we treat
         // all the input files as covered by dep file, so we'll never end up here!
-        addSourcePathToRuleKey(builder, input);
+        builder.setSourcePathDirectly(input);
 
       } else {
         // If this input path is covered by the dep paths, check to see if it was declared
         // as a real dependency by the dep file entries
         DependencyFileEntry entry = DependencyFileEntry.fromSourcePath(input, pathResolver);
         if (depFileEntriesSet.contains(entry)) {
-          addSourcePathToRuleKey(builder, input);
+          builder.setSourcePathDirectly(input);
           depFileSourcePathsBuilder.add(input);
           filesAccountedFor.add(entry);
+        }
+        Optional<Path> pathWithinArchive = entry.pathWithinArchive();
+        if (pathWithinArchive.isPresent() && pathWithinArchive.get().startsWith(METADATA_DIR)) {
+          metadataFilenamesBuilder.add(input.toString());
         }
       }
     }
@@ -226,6 +236,13 @@ public final class DefaultDependencyFileRuleKeyFactory
               Joiner.on(',').join(filesUnaccountedFor)));
     }
 
+    // Annotation processors might enumerate all files under a certain path and then generate
+    // code based on that list (without actually reading the files), making the list of files
+    // itself a used dependency that must be part of the dependency-based key. We don't
+    // currently have the instrumentation to detect such enumeration perfectly, but annotation
+    // processors are most commonly looking for files under META-INF, so as a stopgap we add
+    // the listing of META-INF to the rule key.
+    builder.setReflectively("buck.dep_file_metadata_list", metadataFilenamesBuilder.build());
     return new Pair<>(builder.build(), depFileSourcePathsBuilder.build());
   }
 
@@ -253,7 +270,7 @@ public final class DefaultDependencyFileRuleKeyFactory
           possibleDepFileSourcePathsUnsorted);
 
       for (SourcePath input : nonDepFileInputs) {
-        addSourcePathToRuleKey(builder, input);
+        builder.setSourcePathDirectly(input);
       }
 
       depFileInputs = ImmutableSet.copyOf(Sets.intersection(
@@ -263,23 +280,16 @@ public final class DefaultDependencyFileRuleKeyFactory
       // If not present, we treat all the input files as covered by dep file.
       depFileInputs = inputs;
     }
-
+    // If an input path representing a metadata file that might be read by an annotation processor
+    // has changed, we cannot use the dep-file based rule key, so we ensure the list of metadata
+    // files are added to the builder directly.
+    ImmutableSortedSet<String> metadataSourcePaths = depFileInputs.stream()
+        .filter(path -> path instanceof ArchiveMemberSourcePath)
+        .filter(path -> ((ArchiveMemberSourcePath) path).getMemberPath().startsWith(METADATA_DIR))
+        .map(SourcePath::toString)
+        .collect(MoreCollectors.toImmutableSortedSet());
+    builder.setReflectively("buck.dep_file_metadata_list", metadataSourcePaths);
     return new Pair<>(builder.build(), depFileInputs);
-  }
-
-  private void addSourcePathToRuleKey(Builder builder, SourcePath sourcePath) throws IOException {
-    // Add each `SourcePath` using `builder.setPath()`.  We can't use `builder.setSourcePath()`
-    // here since the special `RuleKeyBuilder` sub-class that dep-file rule keys use intentionally
-    // override `builder.setSourcePath()` to be a noop (and just record the inputs).
-    if (sourcePath instanceof ArchiveMemberSourcePath) {
-      builder.setArchiveMemberPath(
-          pathResolver.getAbsoluteArchiveMemberPath(sourcePath),
-          pathResolver.getRelativeArchiveMemberPath(sourcePath));
-    } else {
-      builder.setPath(
-          pathResolver.getAbsolutePath(sourcePath),
-          pathResolver.getRelativePath(sourcePath));
-    }
   }
 
 }

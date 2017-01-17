@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java;
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -49,7 +49,7 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 @BuildsAnnotationProcessor
-public class JavaBinary extends AbstractBuildRule
+public class JavaBinary extends AbstractBuildRuleWithResolver
     implements BinaryBuildRule, HasClasspathEntries {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);

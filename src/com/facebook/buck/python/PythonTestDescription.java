@@ -146,7 +146,6 @@ public class PythonTestDescription implements
    */
   private static BuildRule createTestModulesSourceBuildRule(
       BuildRuleParams params,
-      BuildRuleResolver resolver,
       Path outputPath,
       ImmutableSet<String> testModules) {
 
@@ -160,12 +159,8 @@ public class PythonTestDescription implements
 
     String contents = getTestModulesListContents(testModules);
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-
     return new WriteFile(
         newParams,
-        pathResolver,
         contents,
         outputPath,
         /* executable */ false);
@@ -227,7 +222,6 @@ public class PythonTestDescription implements
     // add it to the build.
     BuildRule testModulesBuildRule = createTestModulesSourceBuildRule(
         params,
-        resolver,
         getTestModulesListPath(params.getBuildTarget(), params.getProjectFilesystem()),
         testModules);
     resolver.addToIndex(testModulesBuildRule);

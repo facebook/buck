@@ -19,8 +19,6 @@ package com.facebook.buck.util;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import javax.annotation.Nullable;
-
 /**
  * Utility functions for working with Java 8 streams.
  */
@@ -51,7 +49,6 @@ public final class MoreStreams {
    * an instance.
    */
   @SuppressWarnings("unchecked")
-  @Nullable
   public static <T, R> Function<T, Stream<R>> filterCast(Class<R> cls) {
     return input -> {
       if (cls.isInstance(input)) {

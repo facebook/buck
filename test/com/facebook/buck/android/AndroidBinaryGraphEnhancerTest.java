@@ -170,7 +170,6 @@ public class AndroidBinaryGraphEnhancerTest {
         new FakeBuildRuleParamsBuilder(aaptPackageResourcesTarget).build();
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         aaptPackageResourcesParams,
-        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)),
         /* manifest */ new FakeSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
         createMock(FilteredResourcesProvider.class),
         ImmutableList.of(),
@@ -551,7 +550,6 @@ public class AndroidBinaryGraphEnhancerTest {
             new AndroidResource(
                 new FakeBuildRuleParamsBuilder("//:resources").build()
                     .appendExtraDeps(ImmutableSortedSet.of(resourcesDep)),
-                pathResolver,
                 ruleFinder,
                 ImmutableSortedSet.of(),
                 new BuildTargetSourcePath(resourcesDep.getBuildTarget()),

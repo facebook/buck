@@ -26,8 +26,10 @@ import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
@@ -44,7 +46,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.File;
 import java.io.IOException;
@@ -55,6 +56,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.logging.Level;
+import java.util.stream.Stream;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class RobolectricTest extends JavaTest {
@@ -200,20 +202,24 @@ public class RobolectricTest extends JavaTest {
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.<BuildRule>naturalOrder()
+  public Stream<SourcePath> getRuntimeDeps() {
+    return Stream.concat(
         // Inherit any runtime deps from `JavaTest`.
-        .addAll(super.getRuntimeDeps())
-        // On top of the runtime dependencies of a normal {@link JavaTest}, we need to make the
-        // {@link DummyRDotJava} and any of its resource deps is available locally (if it exists)
-        // to run this test.
-        .addAll(OptionalCompat.asSet(optionalDummyRDotJava))
-        .addAll(optionalDummyRDotJava.map(resourceRulesFunction).orElse(ImmutableSet.of()))
-        // It's possible that the user added some tool as a dependency, so make sure we promote
-        // this rules first-order deps to runtime deps, so that these potential tools are available
-        // when this test runs.
-        .addAll(getDeps())
-        .build();
+        super.getRuntimeDeps(),
+        Stream
+            .of(
+                // On top of the runtime dependencies of a normal {@link JavaTest}, we need to make the
+                // {@link DummyRDotJava} and any of its resource deps is available locally (if it exists)
+                // to run this test.
+                OptionalCompat.asSet(optionalDummyRDotJava).stream(),
+                optionalDummyRDotJava.map(resourceRulesFunction).orElse(ImmutableSet.of()).stream(),
+                // It's possible that the user added some tool as a dependency, so make sure we
+                // promote this rules first-order deps to runtime deps, so that these potential
+                // tools are available when this test runs.
+                getDeps().stream())
+            .reduce(Stream.empty(), Stream::concat)
+            .map(HasBuildTarget::getBuildTarget)
+            .map(BuildTargetSourcePath::new));
   }
 
   public SourcePathRuleFinder getRuleFinder() {

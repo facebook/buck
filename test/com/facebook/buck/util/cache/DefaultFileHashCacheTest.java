@@ -136,7 +136,7 @@ public class DefaultFileHashCacheTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache = new DefaultFileHashCache(filesystem, Optional.empty());
 
-    Path dir = filesystem.getRootPath().getFileSystem().getPath("dir");
+    Path dir = filesystem.getPath("dir");
     filesystem.mkdirs(dir);
     Path child1 = dir.resolve("child1");
     filesystem.touch(child1);
@@ -241,7 +241,7 @@ public class DefaultFileHashCacheTest {
   @Test
   public void getSizeOfMissingPathThrows() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path input = filesystem.getRootPath().getFileSystem().getPath("input");
+    Path input = filesystem.getPath("input");
     DefaultFileHashCache cache = new DefaultFileHashCache(filesystem, Optional.empty());
     expectedException.expect(IOException.class);
     cache.getSize(filesystem.resolve(input));
@@ -250,7 +250,7 @@ public class DefaultFileHashCacheTest {
   @Test
   public void getSizeOfFile() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path input = filesystem.getRootPath().getFileSystem().getPath("input");
+    Path input = filesystem.getPath("input");
     filesystem.writeBytesToPath(new byte[123], input);
     DefaultFileHashCache cache = new DefaultFileHashCache(filesystem, Optional.empty());
     assertThat(
@@ -261,7 +261,7 @@ public class DefaultFileHashCacheTest {
   @Test
   public void getSizeOfDirectory() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path input = filesystem.getRootPath().getFileSystem().getPath("input");
+    Path input = filesystem.getPath("input");
     filesystem.mkdirs(input);
     filesystem.writeBytesToPath(new byte[123], input.resolve("file1"));
     filesystem.writeBytesToPath(new byte[123], input.resolve("file2"));
@@ -274,7 +274,7 @@ public class DefaultFileHashCacheTest {
   @Test
   public void getFileSizeInvalidation() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path input = filesystem.getRootPath().getFileSystem().getPath("input");
+    Path input = filesystem.getPath("input");
     filesystem.writeBytesToPath(new byte[123], input);
     DefaultFileHashCache cache = new DefaultFileHashCache(filesystem, Optional.empty());
     cache.getSize(filesystem.resolve(input));

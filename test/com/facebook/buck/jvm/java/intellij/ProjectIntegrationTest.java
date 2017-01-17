@@ -650,6 +650,11 @@ public class ProjectIntegrationTest {
     runBuckProjectAndVerify("experimental_project_with_generated_sources");
   }
 
+  @Test
+  public void testRobolectricTestRule() throws IOException {
+    runBuckProjectAndVerify("robolectric_test");
+  }
+
   private ProcessResult runBuckProjectAndVerify(
       String folderWithTestData,
       String... commandArgs) throws IOException {

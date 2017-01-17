@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.MacroException;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -47,7 +47,7 @@ import java.util.Map;
  * Rule to write the results of library merging to disk
  * and run a user-supplied code generator on it.
  */
-class GenerateCodeForMergedLibraryMap extends AbstractBuildRule {
+class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithResolver {
   @AddToRuleKey
   private final ImmutableSortedMap<String, String> mergeResult;
   @AddToRuleKey

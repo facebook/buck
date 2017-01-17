@@ -36,18 +36,16 @@ public abstract class AbstractBuildRule implements BuildRule {
   private final Supplier<ImmutableSortedSet<BuildRule>> declaredDeps;
   private final Supplier<ImmutableSortedSet<BuildRule>> extraDeps;
   private final Supplier<ImmutableSortedSet<BuildRule>> deps;
-  private final SourcePathResolver resolver;
   private final ProjectFilesystem projectFilesystem;
 
   private final Supplier<String> typeSupplier = Suppliers.memoize(
       this::getTypeForClass);
 
-  protected AbstractBuildRule(BuildRuleParams buildRuleParams, SourcePathResolver resolver) {
+  protected AbstractBuildRule(BuildRuleParams buildRuleParams) {
     this.buildTarget = buildRuleParams.getBuildTarget();
     this.declaredDeps = buildRuleParams.getDeclaredDeps();
     this.extraDeps = buildRuleParams.getExtraDeps();
     this.deps = buildRuleParams.getTotalDeps();
-    this.resolver = resolver;
     this.projectFilesystem = buildRuleParams.getProjectFilesystem();
   }
 
@@ -93,10 +91,6 @@ public abstract class AbstractBuildRule implements BuildRule {
         .UPPER_CAMEL
         .to(CaseFormat.LOWER_UNDERSCORE, clazz.getSimpleName())
         .intern();
-  }
-
-  public final SourcePathResolver getResolver() {
-    return resolver;
   }
 
   @Override

@@ -17,7 +17,7 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
 /**
  * A build rule which cleans a target's build output folder.
  */
-public class OcamlClean extends AbstractBuildRule {
+public class OcamlClean extends AbstractBuildRuleWithResolver {
 
   @AddToRuleKey
   private final OcamlBuildContext ocamlContext;

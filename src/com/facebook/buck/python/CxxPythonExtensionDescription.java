@@ -42,6 +42,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -74,6 +75,7 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class CxxPythonExtensionDescription implements
     Description<CxxPythonExtensionDescription.Arg>,
@@ -457,8 +459,10 @@ public class CxxPythonExtensionDescription implements
       }
 
       @Override
-      public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-        return getDeclaredDeps();
+      public Stream<SourcePath> getRuntimeDeps() {
+        return getDeclaredDeps().stream()
+            .map(HasBuildTarget::getBuildTarget)
+            .map(BuildTargetSourcePath::new);
       }
 
     };

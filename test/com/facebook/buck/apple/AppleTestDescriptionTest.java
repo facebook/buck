@@ -33,6 +33,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -60,13 +61,14 @@ public class AppleTestDescriptionTest {
     assertThat(
         builder.findImplicitDeps(),
         Matchers.hasItem(dep.getBuildTarget()));
-    BuildRule binary =
-        ((CxxStrip)
-            ((AppleBundle)
-                ((AppleTest) builder.build(resolver, targetGraph))
-                    .getRuntimeDeps().first())
-                .getBinary().get())
-            .getDeps().first();
+    AppleTest test = (AppleTest) builder.build(resolver, targetGraph);
+    CxxStrip strip = (CxxStrip) RichStream.from(test.getDeps())
+        .filter(AppleBundle.class)
+        .findFirst()
+        .get()
+        .getBinary()
+        .get();
+    BuildRule binary = strip.getDeps().first();
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
         Arg.stringify(((CxxLink) binary).getArgs()),

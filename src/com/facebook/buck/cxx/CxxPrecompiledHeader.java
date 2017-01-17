@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -68,7 +68,7 @@ import java.util.Optional;
  * used to compile another file.
  */
 public class CxxPrecompiledHeader
-    extends AbstractBuildRule
+    extends AbstractBuildRuleWithResolver
     implements RuleKeyAppendable, SupportsDependencyFileRuleKey, SupportsInputBasedRuleKey {
 
   private final Path output;

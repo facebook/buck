@@ -20,6 +20,7 @@ import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -51,6 +52,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * An action graph representation of a C/C++ library from the target graph, providing the
@@ -369,15 +372,17 @@ public class CxxLibrary
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+  public Stream<SourcePath> getRuntimeDeps() {
     // We export all declared deps as runtime deps, to setup a transitive runtime dep chain which
     // will pull in runtime deps (e.g. other binaries) or transitive C/C++ libraries.  Since the
     // `CxxLibrary` rules themselves are noop meta rules, they shouldn't add any unnecessary
     // overhead.
-    return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(getDeclaredDeps())
-        .addAll(exportedDeps)
-        .build();
+    return Stream
+        .concat(
+            getDeclaredDeps().stream(),
+            StreamSupport.stream(exportedDeps.spliterator(), false))
+        .map(HasBuildTarget::getBuildTarget)
+        .map(BuildTargetSourcePath::new);
   }
 
   public Iterable<Arg> getExportedLinkerFlags(CxxPlatform cxxPlatform) {

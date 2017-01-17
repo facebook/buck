@@ -311,7 +311,6 @@ public class AndroidBinaryGraphEnhancer {
               /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
       ResourcesFilter resourcesFilter = new ResourcesFilter(
           paramsForResourcesFilter,
-          pathResolver,
           resourceDetails.getResourceDirectories(),
           ImmutableSet.copyOf(resourceDetails.getWhitelistedStringDirectories()),
           locales,
@@ -347,7 +346,6 @@ public class AndroidBinaryGraphEnhancer {
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         paramsForAaptPackageResources,
-        pathResolver,
         manifest,
         filteredResourcesProvider,
         getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
@@ -425,7 +423,6 @@ public class AndroidBinaryGraphEnhancer {
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
     TrimUberRDotJava trimUberRDotJava = new TrimUberRDotJava(
         paramsForTrimUberRDotJava,
-        pathResolver,
         aaptPackageResources,
         preDexedLibrariesForResourceIdFiltering,
         keepResourcePattern);

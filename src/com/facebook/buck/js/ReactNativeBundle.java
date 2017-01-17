@@ -19,7 +19,7 @@ package com.facebook.buck.js;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -47,7 +47,7 @@ import java.util.Optional;
  * bundle along with resources referenced by the javascript code.
  */
 public class ReactNativeBundle
-    extends AbstractBuildRule
+    extends AbstractBuildRuleWithResolver
     implements SupportsInputBasedRuleKey, SupportsDependencyFileRuleKey {
 
   public static final String JS_BUNDLE_OUTPUT_DIR_FORMAT = "__%s_js__/";
@@ -225,7 +225,7 @@ public class ReactNativeBundle
         Maps.uniqueIndex(srcs, getResolver()::getAbsolutePath);
     Path depFile = getPathToDepFile(getBuildTarget(), getProjectFilesystem());
     for (String line : getProjectFilesystem().readLines(depFile)) {
-      Path path = getProjectFilesystem().getRootPath().getFileSystem().getPath(line);
+      Path path = getProjectFilesystem().getPath(line);
       SourcePath sourcePath = pathToSourceMap.get(path);
       if (sourcePath == null) {
         throw new IOException(

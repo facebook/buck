@@ -114,9 +114,10 @@ public class ApkGenrule extends Genrule implements InstallableApk {
 
   @Override
   protected void addEnvironmentVariables(
+      SourcePathResolver pathResolver,
       ExecutionContext context,
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
-    super.addEnvironmentVariables(context, environmentVariablesBuilder);
+    super.addEnvironmentVariables(pathResolver, context, environmentVariablesBuilder);
     // We have to use an absolute path, because genrules are run in a temp directory.
     String apkAbsolutePath = installableApk.getProjectFilesystem()
         .resolve(installableApk.getApkPath())

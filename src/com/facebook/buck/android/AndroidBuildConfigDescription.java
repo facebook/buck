@@ -144,7 +144,6 @@ public class AndroidBuildConfigDescription
                 .build()));
     AndroidBuildConfig androidBuildConfig = new AndroidBuildConfig(
         buildConfigParams,
-        pathResolver,
         javaPackage,
         values,
         valuesFile,

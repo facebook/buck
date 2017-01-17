@@ -20,7 +20,7 @@ import com.facebook.buck.cxx.CxxBinary;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -47,7 +47,8 @@ import java.util.SortedSet;
 /**
  * Puts together multiple thin library/binaries into a multi-arch file.
  */
-public class MultiarchFile extends AbstractBuildRule implements ProvidesLinkedBinaryDeps {
+public class MultiarchFile extends AbstractBuildRuleWithResolver
+    implements ProvidesLinkedBinaryDeps {
 
   private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey

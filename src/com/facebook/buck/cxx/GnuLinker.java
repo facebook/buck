@@ -151,7 +151,6 @@ public class GnuLinker implements Linker {
                 Suppliers.ofInstance(
                     ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(symbolFiles))),
                 Suppliers.ofInstance(ImmutableSortedSet.of())),
-            pathResolver,
             symbolFiles));
     return ImmutableList.of(
         new SourcePathArg(pathResolver, new BuildTargetSourcePath(target)));
@@ -202,9 +201,8 @@ public class GnuLinker implements Linker {
 
     public UndefinedSymbolsLinkerScript(
         BuildRuleParams buildRuleParams,
-        SourcePathResolver resolver,
         Iterable<? extends SourcePath> symbolFiles) {
-      super(buildRuleParams, resolver);
+      super(buildRuleParams);
       this.symbolFiles = symbolFiles;
     }
 

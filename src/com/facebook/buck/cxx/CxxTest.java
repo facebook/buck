@@ -17,12 +17,14 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
@@ -49,12 +51,13 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.stream.Stream;
 
 /**
  * A no-op {@link BuildRule} which houses the logic to run and form the results for C/C++ tests.
  */
 public abstract class CxxTest
-    extends AbstractBuildRule
+    extends AbstractBuildRuleWithResolver
     implements TestRule, HasRuntimeDeps, BinaryBuildRule {
 
   @AddToRuleKey
@@ -216,8 +219,10 @@ public abstract class CxxTest
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return additionalDeps.get();
+  public Stream<SourcePath> getRuntimeDeps() {
+    return additionalDeps.get().stream()
+        .map(HasBuildTarget::getBuildTarget)
+        .map(BuildTargetSourcePath::new);
   }
 
   protected Supplier<ImmutableMap<String, String>> getEnv() {

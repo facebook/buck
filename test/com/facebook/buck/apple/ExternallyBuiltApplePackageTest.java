@@ -76,15 +76,18 @@ public class ExternallyBuiltApplePackageTest {
 
   @Test
   public void sdkrootEnvironmentVariableIsSet() {
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(this.resolver));
     ExternallyBuiltApplePackage rule = new ExternallyBuiltApplePackage(
         params,
-        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
+        pathResolver,
         config,
         new FakeSourcePath(bundleLocation),
         true);
     ShellStep step = Iterables.getOnlyElement(
         Iterables.filter(
-            rule.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext()),
+            rule.getBuildSteps(
+                FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext()),
             AbstractGenruleStep.class));
     assertThat(
         step.getEnvironmentVariables(TestExecutionContext.newInstance()),
@@ -106,15 +109,19 @@ public class ExternallyBuiltApplePackageTest {
 
   @Test
   public void commandContainsCorrectCommand() {
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(this.resolver));
     ExternallyBuiltApplePackage rule = new ExternallyBuiltApplePackage(
         params,
-        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
+        pathResolver,
         config,
         new FakeSourcePath("Fake/Bundle/Location"),
         true);
     AbstractGenruleStep step = Iterables.getOnlyElement(
         Iterables.filter(
-            rule.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext()),
+            rule.getBuildSteps(
+                FakeBuildContext.withSourcePathResolver(pathResolver),
+                new FakeBuildableContext()),
             AbstractGenruleStep.class));
     assertThat(
         step.getScriptFileContents(TestExecutionContext.newInstance()),

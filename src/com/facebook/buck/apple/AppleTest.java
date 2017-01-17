@@ -18,12 +18,14 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
@@ -31,7 +33,6 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
@@ -49,7 +50,6 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.io.BufferedReader;
@@ -64,12 +64,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class AppleTest
-    extends AbstractBuildRule
+    extends AbstractBuildRuleWithResolver
     implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule {
 
   @AddToRuleKey
@@ -91,7 +92,6 @@ public class AppleTest
   private final Optional<ImmutableMap<String, String>> destinationSpecifier;
 
   private final SourcePathResolver pathResolver;
-  private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey
   private final BuildRule testBundle;
 
@@ -188,7 +188,6 @@ public class AppleTest
       Optional<ImmutableMap<String, String>> destinationSpecifier,
       BuildRuleParams params,
       SourcePathResolver resolver,
-      SourcePathRuleFinder ruleFinder,
       BuildRule testBundle,
       Optional<AppleBundle> testHostApp,
       ImmutableSet<String> contacts,
@@ -210,7 +209,6 @@ public class AppleTest
     this.defaultDestinationSpecifier = defaultDestinationSpecifier;
     this.destinationSpecifier = destinationSpecifier;
     this.pathResolver = resolver;
-    this.ruleFinder = ruleFinder;
     this.testBundle = testBundle;
     this.testHostApp = testHostApp;
     this.contacts = contacts;
@@ -455,12 +453,14 @@ public class AppleTest
 
   // This test rule just executes the test bundle, so we need it available locally.
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .add(testBundle)
-        .addAll(ruleFinder.filterBuildRuleInputs(OptionalCompat.asSet(xctool)))
-        .addAll(OptionalCompat.asSet(testHostApp))
-        .build();
+  public Stream<SourcePath> getRuntimeDeps() {
+    return Stream
+        .concat(
+            Stream
+                .concat(Stream.of(testBundle), OptionalCompat.asSet(testHostApp).stream())
+                .map(HasBuildTarget::getBuildTarget)
+                .map(BuildTargetSourcePath::new),
+            OptionalCompat.asSet(xctool).stream());
   }
 
   @Override

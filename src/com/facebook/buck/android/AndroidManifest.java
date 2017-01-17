@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
@@ -72,10 +71,9 @@ public class AndroidManifest extends AbstractBuildRule {
 
   protected AndroidManifest(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       SourcePath skeletonFile,
       Set<SourcePath> manifestFiles) {
-    super(params, resolver);
+    super(params);
     this.skeletonFile = skeletonFile;
     this.manifestFiles = ImmutableSortedSet.copyOf(manifestFiles);
     BuildTarget buildTarget = params.getBuildTarget();

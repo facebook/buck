@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.JsonConcatenate;
 import com.facebook.buck.log.Logger;
@@ -254,18 +253,16 @@ public class CxxDescriptionEnhancer {
       BuildTarget target,
       Flavor platform,
       HeaderVisibility headerVisibility) {
-    return target.getCellPath().resolve(
-        BuildTargets.getGenPath(
-            filesystem,
-            createHeaderSymlinkTreeTarget(target, platform, headerVisibility),
-            "%s"));
+    return BuildTargets.getGenPath(
+        filesystem,
+        createHeaderSymlinkTreeTarget(target, platform, headerVisibility),
+        "%s");
   }
 
   public static Path getSandboxSymlinkTreePath(
       ProjectFilesystem filesystem,
       BuildTarget target) {
-    return target.getCellPath().resolve(
-        BuildTargets.getGenPath(filesystem, target, "%s"));
+    return BuildTargets.getGenPath(filesystem, target, "%s");
   }
 
   public static Flavor getHeaderSymlinkTreeFlavor(HeaderVisibility headerVisibility) {
@@ -982,73 +979,6 @@ public class CxxDescriptionEnhancer {
     }
   }
 
-  public static
-  ImmutableSortedSet<HeaderSymlinkTree> requireTransitiveCompilationDatabaseHeaderSymlinkTreeDeps(
-      BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
-      final CxxPlatform cxxPlatform,
-      CxxConstructorArg arg) {
-    BuildRuleParams paramsWithoutFlavor = params.withoutFlavor(
-        CxxCompilationDatabase.COMPILATION_DATABASE);
-    final ImmutableSortedSet.Builder<HeaderSymlinkTree> resultBuilder =
-        ImmutableSortedSet.naturalOrder();
-    resultBuilder.add(
-        CxxDescriptionEnhancer.requireHeaderSymlinkTree(
-            paramsWithoutFlavor,
-            ruleResolver,
-            pathResolver,
-            cxxPlatform,
-            CxxDescriptionEnhancer.parseHeaders(
-                params.getBuildTarget(),
-                pathResolver,
-                Optional.of(cxxPlatform),
-                arg),
-            HeaderVisibility.PRIVATE,
-            true));
-
-    if (arg instanceof CxxLibraryDescription.Arg) {
-      CxxLibraryDescription.Arg libArg = (CxxLibraryDescription.Arg) arg;
-      resultBuilder.add(
-        CxxDescriptionEnhancer.requireHeaderSymlinkTree(
-            paramsWithoutFlavor,
-            ruleResolver,
-            pathResolver,
-            cxxPlatform,
-            CxxDescriptionEnhancer.parseExportedHeaders(
-                params.getBuildTarget(),
-                pathResolver,
-                Optional.of(cxxPlatform),
-                libArg),
-            HeaderVisibility.PUBLIC,
-            true));
-    }
-
-    // Walk the transitive deps and add any exported headers present as
-    // runtime dependencies.
-    //
-    // TODO(bhamiltoncx): Use BuildRuleResolver.requireMetadata() so we can
-    // cache the result of this walk.
-    AbstractBreadthFirstTraversal<BuildRule> visitor =
-        new AbstractBreadthFirstTraversal<BuildRule>(params.getDeps()) {
-          @Override
-          public ImmutableSet<BuildRule> visit(BuildRule dep) {
-            if (dep instanceof CxxPreprocessorDep) {
-              CxxPreprocessorDep cxxPreprocessorDep = (CxxPreprocessorDep) dep;
-              Optional<HeaderSymlinkTree> exportedHeaderSymlinkTree =
-                  cxxPreprocessorDep.getExportedHeaderSymlinkTree(cxxPlatform);
-              if (exportedHeaderSymlinkTree.isPresent()) {
-                resultBuilder.add(exportedHeaderSymlinkTree.get());
-              }
-            }
-            return dep.getDeps();
-          }
-        };
-    visitor.start();
-
-    return resultBuilder.build();
-  }
-
   /**
    * Create all build rules needed to generate the compilation database.
    *
@@ -1062,9 +992,6 @@ public class CxxDescriptionEnhancer {
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       CxxConstructorArg arg) throws NoSuchBuildTargetException {
-    // Invoking requireObjects has the side-effect of invoking
-    // CxxSourceRuleFactory.requirePreprocessAndCompileRules(), which has the side-effect of
-    // creating CxxPreprocessAndCompile rules and adding them to the ruleResolver.
     BuildRuleParams paramsWithoutFlavor = params.withoutFlavor(
         CxxCompilationDatabase.COMPILATION_DATABASE);
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects = requireObjects(
@@ -1079,13 +1006,7 @@ public class CxxDescriptionEnhancer {
     return CxxCompilationDatabase.createCompilationDatabase(
         params,
         pathResolver,
-        objects.keySet(),
-        requireTransitiveCompilationDatabaseHeaderSymlinkTreeDeps(
-            params,
-            ruleResolver,
-            pathResolver,
-            cxxPlatform,
-            arg));
+        objects.keySet());
   }
 
   public static BuildRule createUberCompilationDatabase(
@@ -1279,10 +1200,10 @@ public class CxxDescriptionEnhancer {
       ProjectFilesystem filesystem,
       BuildTarget target,
       Flavor platform) {
-    return target.getCellPath().resolve(BuildTargets.getGenPath(
+    return BuildTargets.getGenPath(
         filesystem,
         createSharedLibrarySymlinkTreeTarget(target, platform),
-        "%s"));
+        "%s");
   }
 
   /**

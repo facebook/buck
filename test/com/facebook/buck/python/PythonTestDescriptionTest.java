@@ -31,11 +31,13 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -46,6 +48,7 @@ import com.facebook.buck.shell.ShBinaryBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableList;
@@ -291,8 +294,8 @@ public class PythonTestDescriptionTest {
               "Transitive runtime deps of %s [%s]",
               pythonTest,
               packageStyle.toString()),
-          BuildRules.getTransitiveRuntimeDeps(pythonTest),
-          Matchers.hasItem(cxxBinary));
+          BuildRules.getTransitiveRuntimeDeps(pythonTest, new SourcePathRuleFinder(resolver)),
+          Matchers.hasItem(new BuildTargetSourcePath(cxxBinary.getBuildTarget())));
     }
   }
 
@@ -355,8 +358,8 @@ public class PythonTestDescriptionTest {
     ShBinary pexExecutor = (ShBinary) pexExecutorBuilder.build(resolver);
     PythonTest binary = (PythonTest) builder.build(resolver, filesystem, targetGraph);
     assertThat(
-        binary.getRuntimeDeps(),
-        Matchers.hasItem(pexExecutor));
+        binary.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
+        Matchers.hasItem(new BuildTargetSourcePath(pexExecutor.getBuildTarget())));
   }
 
   @Test

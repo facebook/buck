@@ -32,7 +32,6 @@ import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RecordFileSha1Step;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -88,7 +87,6 @@ public class AaptPackageResources extends AbstractBuildRule
 
   AaptPackageResources(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       SourcePath manifest,
       FilteredResourcesProvider filteredResourcesProvider,
       ImmutableList<HasAndroidResourceDeps> resourceDeps,
@@ -100,7 +98,7 @@ public class AaptPackageResources extends AbstractBuildRule
       boolean includesVectorDrawables,
       EnumSet<RType> bannedDuplicateResourceTypes,
       ManifestEntries manifestEntries) {
-    super(params, resolver);
+    super(params);
     this.manifest = manifest;
     this.filteredResourcesProvider = filteredResourcesProvider;
     this.resourceDeps = resourceDeps;

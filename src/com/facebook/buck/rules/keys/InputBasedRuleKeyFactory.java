@@ -17,13 +17,11 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.hashing.FileHashLoader;
-import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DependencyAggregation;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -132,10 +130,10 @@ public final class InputBasedRuleKeyFactory
     }
 
     @Override
-    public Builder setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
+    protected Builder setAppendableRuleKey(RuleKeyAppendable appendable) {
       Result result = cache.getUnchecked(appendable);
       deps.add(result.getDeps());
-      setAppendableRuleKey(key, result.getRuleKey());
+      setAppendableRuleKey(result.getRuleKey());
       return this;
     }
 
@@ -154,24 +152,12 @@ public final class InputBasedRuleKeyFactory
     // disk, and so we can always resolve the `Path` packaged in a `SourcePath`.  We hash this,
     // rather than the rule key from it's `BuildRule`.
     @Override
-    protected Builder setSourcePath(SourcePath sourcePath) {
+    protected Builder setSourcePath(SourcePath sourcePath) throws IOException {
       if (sourcePath instanceof BuildTargetSourcePath) {
         deps.add(ImmutableSet.of(ruleFinder.getRuleOrThrow((BuildTargetSourcePath) sourcePath)));
-        // fall through and call setPath as well
+        // fall through and call setSourcePathDirectly as well
       }
-      try {
-        if (sourcePath instanceof ArchiveMemberSourcePath) {
-          setArchiveMemberPath(
-              pathResolver.getAbsoluteArchiveMemberPath(sourcePath),
-              pathResolver.getRelativeArchiveMemberPath(sourcePath));
-        } else {
-          setPath(
-              pathResolver.getAbsolutePath(sourcePath),
-              pathResolver.getRelativePath(sourcePath));
-        }
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
+      super.setSourcePathDirectly(sourcePath);
       return this;
     }
 

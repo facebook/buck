@@ -31,7 +31,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -67,9 +66,8 @@ public class UnzipAar extends AbstractBuildRule
 
   UnzipAar(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       SourcePath aarFile) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.aarFile = aarFile;
     BuildTarget buildTarget = buildRuleParams.getBuildTarget();
     this.unpackDirectory =

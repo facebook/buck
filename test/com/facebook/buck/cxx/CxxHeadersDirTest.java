@@ -26,7 +26,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.UncachedRuleKeyBuilder;
+import com.facebook.buck.rules.keys.UncachedRuleKeyBuilder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
@@ -57,7 +57,7 @@ public class CxxHeadersDirTest {
   @Test
   public void dirContentsAffectsRuleKey() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path headerDir = filesystem.getRootPath().getFileSystem().getPath("foo");
+    Path headerDir = filesystem.getPath("foo");
     filesystem.mkdirs(headerDir);
     CxxHeadersDir cxxHeaders =
         CxxHeadersDir.of(
@@ -73,7 +73,7 @@ public class CxxHeadersDirTest {
   @Test
   public void typeAffectsRuleKey() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path headerDir = filesystem.getRootPath().getFileSystem().getPath("foo");
+    Path headerDir = filesystem.getPath("foo");
     filesystem.mkdirs(headerDir);
     RuleKey ruleKey1 =
         getRuleKey(

@@ -96,7 +96,7 @@ public class CxxBinaryIntegrationTest {
         this,
         tmp,
         Optional.empty());
-    workspace.enableDirCache(); // enable the cache
+    workspace.enableDirCache();
     workspace.setupCxxSandboxing(sandboxSources);
 
     CxxBuckConfig cxxBuckConfig =
@@ -178,7 +178,7 @@ public class CxxBinaryIntegrationTest {
         this,
         tmp,
         Optional.empty());
-    workspace.enableDirCache(); // enable the cache
+    workspace.enableDirCache();
     workspace.setupCxxSandboxing(sandboxSources);
 
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(workspace.asCell().getBuckConfig());
@@ -763,7 +763,7 @@ public class CxxBinaryIntegrationTest {
         this,
         tmp,
         Optional.empty());
-    workspace.enableDirCache(); // enable the cache
+    workspace.enableDirCache();
     workspace.setupCxxSandboxing(sandboxSources);
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
@@ -858,7 +858,7 @@ public class CxxBinaryIntegrationTest {
         this,
         tmp,
         Optional.empty());
-    workspace.enableDirCache(); // enable the cache
+    workspace.enableDirCache();
     workspace.setupCxxSandboxing(sandboxSources);
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
@@ -931,7 +931,7 @@ public class CxxBinaryIntegrationTest {
         this,
         tmp,
         Optional.empty());
-    workspace.enableDirCache(); // enable the cache
+    workspace.enableDirCache();
     workspace.setupCxxSandboxing(sandboxSources);
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
@@ -1017,7 +1017,7 @@ public class CxxBinaryIntegrationTest {
         this,
         tmp,
         Optional.empty());
-    workspace.enableDirCache(); // enable the cache
+    workspace.enableDirCache();
     workspace.setupCxxSandboxing(sandboxSources);
 
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance(
@@ -1253,7 +1253,7 @@ public class CxxBinaryIntegrationTest {
         this,
         tmp,
         Optional.empty());
-    workspace.enableDirCache(); // enable the cache
+    workspace.enableDirCache();
     workspace.setupCxxSandboxing(sandboxSources);
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
@@ -1370,7 +1370,7 @@ public class CxxBinaryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "simple", tmp);
     workspace.setUp();
-    workspace.enableDirCache(); // enable the cache
+    workspace.enableDirCache();
     workspace.setupCxxSandboxing(sandboxSources);
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:simple");
@@ -1443,7 +1443,7 @@ public class CxxBinaryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "simple", tmp);
     workspace.setUp();
-    workspace.enableDirCache(); // enable the cache
+    workspace.enableDirCache();
     workspace.setupCxxSandboxing(sandboxSources);
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 

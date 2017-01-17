@@ -33,6 +33,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class AndroidPrebuiltAar
     extends AndroidLibrary
@@ -131,8 +132,8 @@ public class AndroidPrebuiltAar
   // use this interface to access the underlying R.java package, so make sure it's available when
   // a dependent is building against us.
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.of(unzipAar);
+  public Stream<SourcePath> getRuntimeDeps() {
+    return Stream.of(new BuildTargetSourcePath(unzipAar.getBuildTarget()));
   }
 
 }

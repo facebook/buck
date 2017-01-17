@@ -73,22 +73,19 @@ public class SourcePathResolver {
    *     {@link com.facebook.buck.io.ProjectFilesystem}.
    */
   public Path getAbsolutePath(SourcePath sourcePath) {
-    if (sourcePath instanceof ResourceSourcePath) {
-      return ((ResourceSourcePath) sourcePath).getAbsolutePath();
+    Path path = getPathPrivateImpl(sourcePath);
+    if (path.isAbsolute()) {
+      return path;
     }
 
-    Path relative = getPathPrivateImpl(sourcePath);
-
-    if (relative.isAbsolute()) {
-      return relative;
+    if (sourcePath instanceof BuildTargetSourcePath) {
+      BuildRule rule = ruleFinder.getRuleOrThrow((BuildTargetSourcePath) sourcePath);
+      return rule.getProjectFilesystem().resolve(path);
+    } else if (sourcePath instanceof PathSourcePath) {
+      return ((PathSourcePath) sourcePath).getFilesystem().resolve(path);
+    } else {
+      throw new UnsupportedOperationException(sourcePath.getClass() + " is not supported here!");
     }
-
-    Optional<BuildRule> rule = ruleFinder.getRule(sourcePath);
-    if (rule.isPresent()) {
-      return rule.get().getProjectFilesystem().resolve(relative);
-    }
-
-    return ((PathSourcePath) sourcePath).getFilesystem().resolve(relative);
   }
 
   public ArchiveMemberPath getAbsoluteArchiveMemberPath(SourcePath sourcePath) {
@@ -121,8 +118,6 @@ public class SourcePathResolver {
    * {@link com.facebook.buck.io.ProjectFilesystem}.
    */
   public Path getRelativePath(SourcePath sourcePath) {
-    Preconditions.checkState(!(sourcePath instanceof ResourceSourcePath));
-
     Path toReturn = getPathPrivateImpl(sourcePath);
 
     Preconditions.checkState(
@@ -135,31 +130,38 @@ public class SourcePathResolver {
   }
 
   /**
+   * @return The {@link Path} the {@code sourcePath} refers to, ideally relative to its owning
+   * {@link com.facebook.buck.io.ProjectFilesystem}. Absolute path may get returned however!
+   *
+   * We should make sure that {@link #getPathPrivateImpl} always returns a relative path after
+   * which we should simply call {@link #getRelativePath}. Until then we still need this nonsense.
+   */
+  public Path getIdeallyRelativePath(SourcePath sourcePath) {
+    return getPathPrivateImpl(sourcePath);
+  }
+
+  /**
    * @return the {@link SourcePath} as a {@link Path}, with no guarantee whether the return value is
    *     absolute or relative. This should never be exposed to users.
    */
   private Path getPathPrivateImpl(SourcePath sourcePath) {
     if (sourcePath instanceof PathSourcePath) {
       return ((PathSourcePath) sourcePath).getRelativePath();
-    }
-
-    Preconditions.checkArgument(sourcePath instanceof BuildTargetSourcePath);
-    BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) sourcePath;
-    Optional<Path> resolvedPath = buildTargetSourcePath.getResolvedPath();
-    Path toReturn;
-    if (resolvedPath.isPresent()) {
-      toReturn = resolvedPath.get();
+    } else if (sourcePath instanceof BuildTargetSourcePath) {
+      BuildTargetSourcePath targetSourcePath = (BuildTargetSourcePath) sourcePath;
+      Optional<Path> resolvedPath = targetSourcePath.getResolvedPath();
+      if (resolvedPath.isPresent()) {
+        return resolvedPath.get();
+      } else {
+        Path path = ruleFinder.getRuleOrThrow(targetSourcePath).getPathToOutput();
+        if (path == null) {
+          throw new HumanReadableException("No known output for: %s", targetSourcePath.getTarget());
+        }
+        return path;
+      }
     } else {
-      toReturn = ruleFinder.getRuleOrThrow(buildTargetSourcePath).getPathToOutput();
+      throw new UnsupportedOperationException(sourcePath.getClass() + " is not supported here!");
     }
-
-    if (toReturn == null) {
-      throw new HumanReadableException(
-          "No known output for: %s",
-          buildTargetSourcePath.getTarget());
-    }
-
-    return toReturn;
   }
 
   /**

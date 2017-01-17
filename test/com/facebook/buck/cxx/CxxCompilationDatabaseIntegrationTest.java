@@ -543,6 +543,62 @@ public class CxxCompilationDatabaseIntegrationTest {
         "dep2/dep2_new.h");
   }
 
+  @Test
+  public void compilationDatabaseWithGeneratedFilesFetchedFromCacheAlsoFetchesGeneratedHeaders()
+      throws Exception {
+    // Create a new temporary path since this test uses a different testdata directory than the
+    // one used in the common setup method.
+    tmp.after();
+    tmp = new TemporaryPaths();
+    tmp.before();
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "compilation_database_with_generated_files", tmp);
+    workspace.setUp();
+    workspace.enableDirCache();
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//:binary_with_dep#default,compilation-database");
+
+    workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
+    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
+
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildTarget headerTarget =
+        BuildTargetFactory.newInstance("//dep1:header");
+    Path header = workspace.getPath(BuildTargets.getGenPath(filesystem, headerTarget, "%s"));
+    assertThat(Files.exists(header), is(true));
+  }
+
+  @Test
+  public void compilationDatabaseWithGeneratedFilesFetchedFromCacheAlsoFetchesGeneratedSources()
+      throws Exception {
+    // Create a new temporary path since this test uses a different testdata directory than the
+    // one used in the common setup method.
+    tmp.after();
+    tmp = new TemporaryPaths();
+    tmp.before();
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "compilation_database_with_generated_files", tmp);
+    workspace.setUp();
+    workspace.enableDirCache();
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//dep1:dep1#default,compilation-database");
+
+    workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
+    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
+
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildTarget sourceTarget =
+        BuildTargetFactory.newInstance("//dep1:source");
+    Path source = workspace.getPath(BuildTargets.getGenPath(filesystem, sourceTarget, "%s"));
+    assertThat(Files.exists(source), is(true));
+  }
+
   private void addLibraryHeaderFiles(ProjectWorkspace workspace) throws IOException {
     // These header files are included in //:library_with_header via a glob
     workspace.writeContentsToPath("// Hello world\n", "baz.h");

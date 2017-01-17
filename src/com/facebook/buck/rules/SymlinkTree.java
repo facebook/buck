@@ -42,10 +42,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.stream.Stream;
 
 public class SymlinkTree
-    extends AbstractBuildRule
-    implements SupportsInputBasedRuleKey, RuleKeyAppendable {
+    extends AbstractBuildRuleWithResolver
+    implements HasRuntimeDeps, RuleKeyAppendable, SupportsInputBasedRuleKey {
 
   private final Path root;
   private final ImmutableSortedMap<Path, SourcePath> links;
@@ -58,8 +59,8 @@ public class SymlinkTree
     super(params, resolver);
 
     Preconditions.checkState(
-        root.isAbsolute(),
-        "Expected symlink tree root to be absolute: %s",
+        !root.isAbsolute(),
+        "Expected symlink tree root to be relative: %s",
         root);
 
     this.root = root;
@@ -146,7 +147,7 @@ public class SymlinkTree
       BuildContext context,
       BuildableContext buildableContext) {
     return ImmutableList.of(
-        getVerifiyStep(),
+        getVerifyStep(),
         new MakeCleanDirectoryStep(getProjectFilesystem(), root),
         new SymlinkTreeStep(getProjectFilesystem(), root, getResolver().getMappedPaths(links)));
   }
@@ -164,15 +165,13 @@ public class SymlinkTree
     return linksForRuleKeyBuilder.build();
   }
 
-  // Since we produce a directory tree of symlinks, rather than a single file, return
-  // null here.
   @Override
   public Path getPathToOutput() {
     return root;
   }
 
   @VisibleForTesting
-  protected Step getVerifiyStep() {
+  protected Step getVerifyStep() {
     return new AbstractExecutionStep("verify_symlink_tree") {
         @Override
         public StepExecutionResult execute(ExecutionContext context) throws IOException {
@@ -204,8 +203,13 @@ public class SymlinkTree
     return false;
   }
 
+  @Override
+  public Stream<SourcePath> getRuntimeDeps() {
+    return links.values().stream();
+  }
+
   public Path getRoot() {
-    return root;
+    return getProjectFilesystem().resolve(root);
   }
 
   public ImmutableMap<Path, SourcePath> getLinks() {

@@ -24,7 +24,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -47,11 +46,10 @@ public class StripLinkable extends AbstractBuildRule {
 
   public StripLinkable(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       Tool stripTool,
       SourcePath sourcePathToStrip,
       String strippedObjectName) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.stripTool = stripTool;
     this.strippedObjectName = strippedObjectName;
     this.sourcePathToStrip = sourcePathToStrip;

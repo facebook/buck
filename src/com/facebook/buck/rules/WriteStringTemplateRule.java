@@ -50,12 +50,11 @@ public class WriteStringTemplateRule extends AbstractBuildRule {
 
   public WriteStringTemplateRule(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       Path output,
       SourcePath template,
       ImmutableMap<String, String> values,
       boolean executable) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.output = output;
     this.template = template;
     this.values = values;
@@ -71,7 +70,7 @@ public class WriteStringTemplateRule extends AbstractBuildRule {
     steps.add(new MkdirStep(getProjectFilesystem(), output.getParent()));
     steps.add(
         new StringTemplateStep(
-            getResolver().getAbsolutePath(template),
+            context.getSourcePathResolver().getAbsolutePath(template),
             getProjectFilesystem(),
             output,
             st -> {
@@ -100,7 +99,6 @@ public class WriteStringTemplateRule extends AbstractBuildRule {
 
   public static WriteStringTemplateRule from(
       BuildRuleParams baseParams,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Path output,
@@ -113,7 +111,6 @@ public class WriteStringTemplateRule extends AbstractBuildRule {
             Suppliers.ofInstance(
                 ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(template))),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
-        pathResolver,
         output,
         template,
         values,

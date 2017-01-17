@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -42,7 +42,7 @@ import java.nio.file.Path;
  * Build a shared library interface from an ELF shared library.
  */
 class ElfSharedLibraryInterface
-    extends AbstractBuildRule
+    extends AbstractBuildRuleWithResolver
     implements SupportsInputBasedRuleKey {
 
   // We only care about sections relevant to dynamic linking.

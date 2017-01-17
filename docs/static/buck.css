@@ -456,7 +456,8 @@ footer {
 .display-os-linux .toggler .button-linux,
 .display-os-windows .toggler .button-windows,
 .display-platform-ios .toggler .button-ios,
-.display-platform-android .toggler .button-android {
+.display-platform-android .toggler .button-android,
+.display-platform-other .toggler .button-other {
   background-color: #05A5D1;
   color: white;
 }
@@ -468,6 +469,9 @@ block {
 .display-platform-ios.display-os-windows .ios.windows,
 .display-platform-android.display-os-mac .android.mac,
 .display-platform-android.display-os-linux .android.linux,
-.display-platform-android.display-os-windows .android.windows {
+.display-platform-android.display-os-windows .android.windows,
+.display-platform-other.display-os-mac .other.mac,
+.display-platform-other.display-os-linux .other.linux,
+.display-platform-other.display-os-windows .other.windows {
   display: block;
 }

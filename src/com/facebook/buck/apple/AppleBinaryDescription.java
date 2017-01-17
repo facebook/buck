@@ -383,7 +383,6 @@ public class AppleBinaryDescription
         return resolver.addToIndex(
             new WriteFile(
                 params,
-                pathResolver,
                 Files.readAllBytes(stubBinaryPath.get()),
                 BuildTargets.getGenPath(
                     params.getProjectFilesystem(),

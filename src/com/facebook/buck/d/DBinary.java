@@ -16,27 +16,28 @@
 
 package com.facebook.buck.d;
 
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.BinaryBuildRule;
-import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
-
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
 /**
  * BinaryBuildRule implementation for D binaries.
  */
-public class DBinary extends AbstractBuildRule implements
+public class DBinary extends AbstractBuildRuleWithResolver implements
     BinaryBuildRule,
     HasRuntimeDeps {
 
@@ -74,11 +75,11 @@ public class DBinary extends AbstractBuildRule implements
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+  public Stream<SourcePath> getRuntimeDeps() {
     // Return the actual executable as a runtime dependency.
     // Without this, the file is not written when we get a cache hit.
-    return ImmutableSortedSet.<BuildRule>naturalOrder()
-      .addAll(executable.getDeps(ruleFinder))
-      .build();
+    return executable.getDeps(ruleFinder).stream()
+        .map(HasBuildTarget::getBuildTarget)
+        .map(BuildTargetSourcePath::new);
   }
 }

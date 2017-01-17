@@ -47,7 +47,6 @@
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:default_cell_path_resolver",
       "//src/com/facebook/buck/rules:rule_key",
-      "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/rules/keys:keys",
       "//src/com/facebook/buck/shell:steps",
@@ -99,7 +98,6 @@
   },
   "testutil" : {
     "deps" : [
-      "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/jvm/java:config",
       "//src/com/facebook/buck/model:simple_types",

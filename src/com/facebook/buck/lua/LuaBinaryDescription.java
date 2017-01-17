@@ -601,17 +601,16 @@ public class LuaBinaryDescription implements
                 resolver,
                 pathResolver,
                 ruleFinder,
-                params.getProjectFilesystem().resolve(
-                    getModulesSymlinkTreeRoot(
-                        params.getBuildTarget(),
-                        params.getProjectFilesystem())),
+                getModulesSymlinkTreeRoot(
+                    params.getBuildTarget(),
+                    params.getProjectFilesystem()),
                 components.getModules()));
 
     final List<SymlinkTree> pythonModulesLinktree = new ArrayList<>();
     if (!components.getPythonModules().isEmpty()) {
       // Add in any missing init modules into the python components.
       SourcePath emptyInit =
-          PythonBinaryDescription.createEmptyInitModule(params, resolver, pathResolver);
+          PythonBinaryDescription.createEmptyInitModule(params, resolver);
       extraInputs.add(emptyInit);
       ImmutableMap<String, SourcePath> pythonModules =
           MoreMaps.transformKeys(
@@ -630,10 +629,9 @@ public class LuaBinaryDescription implements
                   resolver,
                   pathResolver,
                   ruleFinder,
-                  params.getProjectFilesystem().resolve(
-                      getPythonModulesSymlinkTreeRoot(
-                          params.getBuildTarget(),
-                          params.getProjectFilesystem())),
+                  getPythonModulesSymlinkTreeRoot(
+                      params.getBuildTarget(),
+                      params.getProjectFilesystem()),
                   pythonModules));
       pythonModulesLinktree.add(symlinkTree);
     }
@@ -648,10 +646,9 @@ public class LuaBinaryDescription implements
                   resolver,
                   pathResolver,
                   ruleFinder,
-                  params.getProjectFilesystem().resolve(
-                      getNativeLibsSymlinkTreeRoot(
-                          params.getBuildTarget(),
-                          params.getProjectFilesystem())),
+                  getNativeLibsSymlinkTreeRoot(
+                      params.getBuildTarget(),
+                      params.getProjectFilesystem()),
                   addVersionLessLibraries(cxxPlatform, components.getNativeLibraries())));
       nativeLibsLinktree.add(symlinkTree);
     }

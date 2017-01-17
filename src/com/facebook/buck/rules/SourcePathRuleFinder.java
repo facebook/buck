@@ -16,12 +16,15 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreStreams;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public class SourcePathRuleFinder {
 
@@ -31,17 +34,19 @@ public class SourcePathRuleFinder {
     this.ruleResolver = ruleResolver;
   }
 
-  public ImmutableCollection<BuildRule> filterBuildRuleInputs(
-      Iterable<? extends SourcePath> sources) {
-    return FluentIterable.from(sources)
-        .filter(BuildTargetSourcePath.class)
-        .transform(
-            input -> ruleResolver.getRule(input.getTarget()))
-        .toList();
+  public ImmutableSet<BuildRule> filterBuildRuleInputs(Stream<? extends SourcePath> sources) {
+    return sources
+        .flatMap(MoreStreams.filterCast(BuildTargetSourcePath.class))
+        .map(input -> ruleResolver.getRule(input.getTarget()))
+        .collect(MoreCollectors.toImmutableSet());
   }
 
-  public ImmutableCollection<BuildRule> filterBuildRuleInputs(SourcePath... sources) {
-    return filterBuildRuleInputs(Arrays.asList(sources));
+  public ImmutableSet<BuildRule> filterBuildRuleInputs(Iterable<? extends SourcePath> sources) {
+    return filterBuildRuleInputs(StreamSupport.stream(sources.spliterator(), false));
+  }
+
+  public ImmutableSet<BuildRule> filterBuildRuleInputs(SourcePath... sources) {
+    return filterBuildRuleInputs(Arrays.stream(sources));
   }
 
   /**

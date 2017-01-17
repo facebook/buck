@@ -14,13 +14,18 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.rules.keys.DependencyFileEntry;
-import com.facebook.buck.rules.keys.DependencyFileRuleKeyFactory;
-import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.google.common.collect.ImmutableList;
@@ -56,7 +61,7 @@ public class FakeRuleKeyFactory
     return new UncachedRuleKeyBuilder(ruleFinder, resolver, fileHashCache, this) {
 
       @Override
-      public RuleKeyBuilder<RuleKey> setReflectively(String key, @Nullable Object val) {
+      protected RuleKeyBuilder<RuleKey> setReflectively(@Nullable Object val) {
         return this;
       }
 

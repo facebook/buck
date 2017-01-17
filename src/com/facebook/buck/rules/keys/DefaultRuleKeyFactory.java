@@ -17,18 +17,20 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.hashing.FileHashLoader;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
-import com.facebook.buck.rules.RuleKeyFactory;
 import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+
+import java.io.IOException;
 
 import javax.annotation.Nonnull;
 
@@ -67,15 +69,22 @@ public class DefaultRuleKeyFactory
     return new RuleKeyBuilder<RuleKey>(ruleFinder, pathResolver, hashLoader) {
       @Override
       protected RuleKeyBuilder<RuleKey> setBuildRule(BuildRule rule) {
-        return setSingleValue(DefaultRuleKeyFactory.this.build(rule));
+        return setBuildRuleKey(DefaultRuleKeyFactory.this.build(rule));
       }
 
       @Override
-      public RuleKeyBuilder<RuleKey> setAppendableRuleKey(
-          String key,
-          RuleKeyAppendable appendable) {
+      protected RuleKeyBuilder<RuleKey> setAppendableRuleKey(RuleKeyAppendable appendable) {
         RuleKey subKey = ruleKeyCache.getUnchecked(appendable);
-        return setAppendableRuleKey(key, subKey);
+        return setAppendableRuleKey(subKey);
+      }
+
+      @Override
+      protected RuleKeyBuilder<RuleKey> setSourcePath(SourcePath sourcePath) throws IOException {
+        if (sourcePath instanceof BuildTargetSourcePath) {
+          return setSourcePathAsRule((BuildTargetSourcePath) sourcePath);
+        } else {
+          return setSourcePathDirectly(sourcePath);
+        }
       }
 
       @Override
@@ -93,10 +102,10 @@ public class DefaultRuleKeyFactory
   }
 
   private void addDepsToRuleKey(RuleKeyObjectSink sink, BuildRule buildRule) {
-    if (buildRule instanceof AbstractBuildRule) {
+    if (buildRule instanceof AbstractBuildRuleWithResolver) {
       // TODO(marcinkosiba): We really need to get rid of declared/extra deps in rules. Instead
       // rules should explicitly take the needed sub-sets of deps as constructor args.
-      AbstractBuildRule abstractBuildRule = (AbstractBuildRule) buildRule;
+      AbstractBuildRuleWithResolver abstractBuildRule = (AbstractBuildRuleWithResolver) buildRule;
       sink
           .setReflectively("buck.extraDeps", abstractBuildRule.deprecatedGetExtraDeps())
           .setReflectively("buck.declaredDeps", abstractBuildRule.getDeclaredDeps());

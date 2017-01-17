@@ -40,7 +40,7 @@ import javax.annotation.Nullable;
  *       the work is actually done on a depending rule (e.g. Lua).</li>
  * </ol>
  */
-public class NoopBuildRule extends AbstractBuildRule {
+public class NoopBuildRule extends AbstractBuildRuleWithResolver {
 
   public NoopBuildRule(BuildRuleParams params, SourcePathResolver resolver) {
     super(params, resolver);

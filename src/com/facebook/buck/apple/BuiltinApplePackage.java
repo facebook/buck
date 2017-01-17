@@ -19,7 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -40,7 +40,7 @@ import com.google.common.io.ByteSource;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class BuiltinApplePackage extends AbstractBuildRule {
+public class BuiltinApplePackage extends AbstractBuildRuleWithResolver {
 
   private final Path pathToOutputFile;
   private final Path temp;

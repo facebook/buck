@@ -21,7 +21,7 @@ import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -63,7 +63,7 @@ import javax.annotation.Nullable;
  * the shared objects collected and stores this metadata in a text file, to be used later by
  * {@link ExopackageInstaller}.
  */
-public class CopyNativeLibraries extends AbstractBuildRule {
+public class CopyNativeLibraries extends AbstractBuildRuleWithResolver {
 
   private final ImmutableSet<SourcePath> nativeLibDirectories;
   @AddToRuleKey

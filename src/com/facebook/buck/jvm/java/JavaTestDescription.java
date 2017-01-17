@@ -257,10 +257,11 @@ public class JavaTestDescription implements
                   Suppliers.ofInstance(ImmutableSortedSet.of()),
                   Suppliers.ofInstance(ImmutableSortedSet.of())),
               pathResolver,
-              nativeLibsSymlinkTree.getRoot(),
+              nativeLibsSymlinkTree.getPathToOutput(),
               filteredLinks.build());
         }
 
+        resolver.addToIndex(nativeLibsSymlinkTree);
         updatedParams = params.appendExtraDeps(ImmutableList.<BuildRule>builder()
             .add(nativeLibsSymlinkTree)
             // Add all the native libraries as first-order dependencies.

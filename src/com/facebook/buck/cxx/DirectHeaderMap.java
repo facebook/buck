@@ -56,8 +56,6 @@ public class DirectHeaderMap extends HeaderSymlinkTree {
     return headerMapPath;
   }
 
-  // We generate the symlink tree and the header map using post-build steps for reasons explained in
-  // the superclass.
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
@@ -73,8 +71,8 @@ public class DirectHeaderMap extends HeaderSymlinkTree {
       headerMapEntries.put(key, path);
     }
     return ImmutableList.<Step>builder()
-        .add(getVerifiyStep())
-        .add(new MakeCleanDirectoryStep(getProjectFilesystem(), getRoot()))
+        .add(getVerifyStep())
+        .add(new MakeCleanDirectoryStep(getProjectFilesystem(), super.getPathToOutput()))
         .add(new HeaderMapStep(getProjectFilesystem(), headerMapPath, headerMapEntries.build()))
         .build();
   }

@@ -440,7 +440,6 @@ public class AppleDescriptions {
   public static Optional<SceneKitAssets> createBuildRulesForSceneKitAssetsDependencies(
       TargetGraph targetGraph,
       BuildRuleParams params,
-      SourcePathResolver sourcePathResolver,
       AppleCxxPlatform appleCxxPlatform) {
     TargetNode<?, ?> targetNode = targetGraph.get(params.getBuildTarget());
 
@@ -461,7 +460,6 @@ public class AppleDescriptions {
     } else {
       return Optional.of(new SceneKitAssets(
           sceneKitAssetsParams,
-          sourcePathResolver,
           appleCxxPlatform,
           sceneKitAssetsArgs.stream()
               .map(input -> new PathSourcePath(params.getProjectFilesystem(), input.path))
@@ -657,7 +655,6 @@ public class AppleDescriptions {
         createBuildRulesForSceneKitAssetsDependencies(
             targetGraph,
             paramsWithoutBundleSpecificFlavors,
-            sourcePathResolver,
             appleCxxPlatform);
 
     // TODO(bhamiltoncx): Sort through the changes needed to make project generation work with

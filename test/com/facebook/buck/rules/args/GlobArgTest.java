@@ -39,7 +39,7 @@ public class GlobArgTest {
   @Test
   public void emptyDir() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path dir = filesystem.getRootPath().getFileSystem().getPath("foo/bar");
+    Path dir = filesystem.getPath("foo/bar");
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     ));
@@ -53,7 +53,7 @@ public class GlobArgTest {
   @Test
   public void filesInSortedOrder() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path dir = filesystem.getRootPath().getFileSystem().getPath("foo/bar");
+    Path dir = filesystem.getPath("foo/bar");
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     ));

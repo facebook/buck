@@ -83,4 +83,5 @@ struct BuildJobState {
   1: optional map<i32, BuildJobStateCell> cells;
   2: optional list<BuildJobStateFileHashes> fileHashes;
   3: optional BuildJobStateTargetGraph targetGraph;
+  4: optional list<string> topLevelTargets;
 }

@@ -84,7 +84,6 @@ abstract class AbstractLuaScriptStarter implements Starter {
                 templateTarget,
                 Suppliers.ofInstance(ImmutableSortedSet.of()),
                 Suppliers.ofInstance(ImmutableSortedSet.of())),
-            getPathResolver(),
             getPureStarterTemplate(),
             BuildTargets.getGenPath(
                 getBaseParams().getProjectFilesystem(),
@@ -96,7 +95,6 @@ abstract class AbstractLuaScriptStarter implements Starter {
     getRuleResolver().addToIndex(
         WriteStringTemplateRule.from(
             getBaseParams(),
-            getPathResolver(),
             getRuleFinder(),
             getTarget(),
             getOutput(),

@@ -22,12 +22,14 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -113,8 +115,11 @@ public class JavaTestRuleTest {
             .build(resolver);
 
     assertThat(
-        rule.getRuntimeDeps(),
-        Matchers.hasItems(rule.getCompiledTestsLibrary(), firstOrderDep, transitiveDep));
+        rule.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
+        Matchers.hasItems(
+            new BuildTargetSourcePath(rule.getCompiledTestsLibrary().getBuildTarget()),
+            new BuildTargetSourcePath(firstOrderDep.getBuildTarget()),
+            new BuildTargetSourcePath(transitiveDep.getBuildTarget())));
   }
 
   private JavaTest newRule(ImmutableList<String> vmArgs) throws NoSuchBuildTargetException {

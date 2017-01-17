@@ -23,7 +23,6 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -64,11 +63,10 @@ class TrimUberRDotJava extends AbstractBuildRule {
 
   TrimUberRDotJava(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       AaptPackageResources aaptPackageResources,
       Collection<DexProducedFromJavaLibrary> allPreDexRules,
       Optional<String> keepResourcePattern) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.aaptPackageResources = aaptPackageResources;
     this.allPreDexRules = allPreDexRules;
     this.keepResourcePattern = keepResourcePattern;

@@ -42,8 +42,8 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -279,7 +279,6 @@ public class HaskellDescriptionUtils {
         resolver.addToIndex(
             new WriteFile(
                 baseParams.copyWithBuildTarget(emptyModuleTarget),
-                pathResolver,
                 "module Unused where",
                 BuildTargets.getGenPath(
                     baseParams.getProjectFilesystem(),

@@ -13,7 +13,7 @@ import re
 
 RULE_LINE_REGEX = re.compile(r'.*(\[[^\]+]\])*\s+RuleKey\s+(.*)')
 PATH_VALUE_REGEX = re.compile(r'path\(([^:]+):\w+\)')
-LOGGER_NAME = 'com.facebook.buck.rules.RuleKeyBuilder'
+LOGGER_NAME = 'com.facebook.buck.rules.keys.RuleKeyBuilder'
 TAG_NAME = 'RuleKey'
 
 
@@ -231,7 +231,6 @@ class RuleKeyStructureInfo(object):
                 last_key = e[4:-1]
             else:
                 appendValue(structure_map, last_key, e)
-                last_key = None
 
         return (top_key, structure_map)
 

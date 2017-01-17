@@ -22,7 +22,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -52,13 +51,12 @@ public class RemoteFile extends AbstractBuildRule {
 
   public RemoteFile(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       Downloader downloader,
       URI uri,
       HashCode sha1,
       String out,
       Type type) {
-    super(params, resolver);
+    super(params);
 
     this.uri = uri;
     this.sha1 = sha1;

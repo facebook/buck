@@ -23,7 +23,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -45,7 +45,7 @@ import java.nio.file.Path;
  * Creates dSYM bundle for the given _unstripped_ binary.
  */
 public class AppleDsym
-    extends AbstractBuildRule
+    extends AbstractBuildRuleWithResolver
     implements HasPostBuildSteps, SupportsInputBasedRuleKey {
 
   public static final Flavor RULE_FLAVOR = ImmutableFlavor.of("apple-dsym");

@@ -103,7 +103,7 @@ public class ShTestDescriptionTest {
   public void resourcesAffectRuleKey() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path resource = filesystem.getRootPath().getFileSystem().getPath("resource");
+    Path resource = filesystem.getPath("resource");
     filesystem.touch(resource);
 
     // Create a test rule without resources attached.
@@ -131,7 +131,7 @@ public class ShTestDescriptionTest {
   public void resourcesAreInputs() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path resource = filesystem.getRootPath().getFileSystem().getPath("resource");
+    Path resource = filesystem.getPath("resource");
     filesystem.touch(resource);
     TargetNode<?, ?> shTestWithResources =
         new ShTestBuilder(target)

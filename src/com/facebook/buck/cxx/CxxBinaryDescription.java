@@ -162,13 +162,7 @@ public class CxxBinaryDescription implements
       return CxxCompilationDatabase.createCompilationDatabase(
           params,
           pathResolver,
-          cxxLinkAndCompileRules.compileRules,
-          CxxDescriptionEnhancer.requireTransitiveCompilationDatabaseHeaderSymlinkTreeDeps(
-              paramsWithoutFlavor,
-              resolver,
-              pathResolver,
-              cxxPlatform,
-              args));
+          cxxLinkAndCompileRules.compileRules);
     }
 
     if (flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {

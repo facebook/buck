@@ -16,8 +16,10 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
@@ -56,6 +58,7 @@ import java.util.Optional;
 import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
@@ -241,11 +244,12 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   // The C++ test rules just wrap a test binary produced by another rule, so make sure that's
   // always available to run the test.
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(super.getRuntimeDeps())
-        .addAll(executable.getDeps(ruleFinder))
-        .build();
+  public Stream<SourcePath> getRuntimeDeps() {
+    return Stream.concat(
+        super.getRuntimeDeps(),
+        executable.getDeps(ruleFinder).stream()
+            .map(HasBuildTarget::getBuildTarget)
+            .map(BuildTargetSourcePath::new));
   }
 
   @Override

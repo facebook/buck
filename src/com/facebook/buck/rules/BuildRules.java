@@ -19,8 +19,10 @@ package com.facebook.buck.rules;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -79,15 +81,21 @@ public class BuildRules {
     return exportedRules.build();
   }
 
-  public static ImmutableSortedSet<BuildRule> getTransitiveRuntimeDeps(HasRuntimeDeps rule) {
-    final ImmutableSortedSet.Builder<BuildRule> runtimeDeps = ImmutableSortedSet.naturalOrder();
-    AbstractBreadthFirstTraversal<BuildRule> visitor =
-        new AbstractBreadthFirstTraversal<BuildRule>(rule.getRuntimeDeps()) {
+  public static ImmutableSet<SourcePath> getTransitiveRuntimeDeps(
+      HasRuntimeDeps rule,
+      SourcePathRuleFinder ruleFinder) {
+    final ImmutableSet.Builder<SourcePath> runtimeDeps = ImmutableSet.builder();
+    AbstractBreadthFirstTraversal<SourcePath> visitor =
+        new AbstractBreadthFirstTraversal<SourcePath>(
+            rule.getRuntimeDeps().collect(MoreCollectors.toImmutableSet())) {
           @Override
-          public ImmutableSet<BuildRule> visit(BuildRule rule) {
-            runtimeDeps.add(rule);
-            if (rule instanceof HasRuntimeDeps) {
-              return ((HasRuntimeDeps) rule).getRuntimeDeps();
+          public ImmutableCollection<SourcePath> visit(SourcePath runtimeDep) {
+            runtimeDeps.add(runtimeDep);
+            Optional<BuildRule> rule = ruleFinder.getRule(runtimeDep);
+            if (rule.isPresent() && rule.get() instanceof HasRuntimeDeps) {
+              return
+                  ((HasRuntimeDeps) rule.get()).getRuntimeDeps()
+                      .collect(MoreCollectors.toImmutableSet());
             }
             return ImmutableSet.of();
           }

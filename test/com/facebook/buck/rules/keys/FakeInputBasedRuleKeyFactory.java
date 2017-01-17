@@ -14,10 +14,18 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.keys.SizeLimiter;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.google.common.collect.ImmutableMap;
@@ -65,14 +73,17 @@ public class FakeInputBasedRuleKeyFactory
       }
 
       @Override
-      public RuleKeyBuilder<RuleKey> setReflectively(String key, @Nullable Object val) {
+      protected RuleKeyBuilder<RuleKey> setReflectively(@Nullable Object val) {
         return this;
       }
 
       @Override
-      public RuleKeyBuilder<RuleKey> setAppendableRuleKey(
-          String key,
-          RuleKeyAppendable appendable) {
+      public RuleKeyBuilder<RuleKey> setAppendableRuleKey(RuleKeyAppendable appendable) {
+        return this;
+      }
+
+      @Override
+      protected RuleKeyBuilder<RuleKey> setSourcePath(SourcePath sourcePath) {
         return this;
       }
 

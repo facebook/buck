@@ -291,7 +291,7 @@ public class InputBasedRuleKeyFactoryTest {
     final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     FileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
 
-    Path inputFile = filesystem.getRootPath().getFileSystem().getPath("input");
+    Path inputFile = filesystem.getPath("input");
     filesystem.writeBytesToPath(new byte[1024], inputFile);
 
     BuildRuleParams params =
@@ -318,7 +318,7 @@ public class InputBasedRuleKeyFactoryTest {
     FileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
 
     // Create input that passes size limit.
-    Path input = filesystem.getRootPath().getFileSystem().getPath("input");
+    Path input = filesystem.getPath("input");
     filesystem.writeBytesToPath(new byte[1024], input);
 
     // Construct rule which uses input.
@@ -343,9 +343,9 @@ public class InputBasedRuleKeyFactoryTest {
     FileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
 
     // Create inputs that combine to pass size limit.
-    Path input1 = filesystem.getRootPath().getFileSystem().getPath("input1");
+    Path input1 = filesystem.getPath("input1");
     filesystem.writeBytesToPath(new byte[150], input1);
-    Path input2 = filesystem.getRootPath().getFileSystem().getPath("input2");
+    Path input2 = filesystem.getPath("input2");
     filesystem.writeBytesToPath(new byte[150], input2);
 
     // Construct rule which uses inputs.
@@ -373,7 +373,7 @@ public class InputBasedRuleKeyFactoryTest {
     FileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
 
     // Create a directory of files which combine to pass size limit.
-    Path input = filesystem.getRootPath().getFileSystem().getPath("input");
+    Path input = filesystem.getPath("input");
     filesystem.mkdirs(input);
     filesystem.writeBytesToPath(new byte[150], input.resolve("file1"));
     filesystem.writeBytesToPath(new byte[150], input.resolve("file2"));
@@ -405,7 +405,7 @@ public class InputBasedRuleKeyFactoryTest {
     // doesn't create a rule key.
     final int tooLargeRuleSize = 300;
     assertThat(tooLargeRuleSize, Matchers.greaterThan(sizeLimit));
-    Path tooLargeInput = filesystem.getRootPath().getFileSystem().getPath("too_large_input");
+    Path tooLargeInput = filesystem.getPath("too_large_input");
     filesystem.writeBytesToPath(new byte[tooLargeRuleSize], tooLargeInput);
     BuildRule tooLargeRule =
         ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//:large_rule"))
@@ -430,7 +430,7 @@ public class InputBasedRuleKeyFactoryTest {
     // Create a rule that doesn't pass the size limit and verify it creates a rule key.
     final int smallEnoughRuleSize = 100;
     assertThat(smallEnoughRuleSize, Matchers.lessThan(sizeLimit));
-    Path input = filesystem.getRootPath().getFileSystem().getPath("small_enough_input");
+    Path input = filesystem.getPath("small_enough_input");
     filesystem.writeBytesToPath(new byte[smallEnoughRuleSize], input);
     BuildRule smallEnoughRule =
         ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//:small_rule"))

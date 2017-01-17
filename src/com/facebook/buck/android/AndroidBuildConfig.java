@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -143,12 +142,11 @@ public class AndroidBuildConfig extends AbstractBuildRule {
 
   protected AndroidBuildConfig(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       String javaPackage,
       BuildConfigFields defaultValues,
       Optional<SourcePath> valuesFile,
       boolean useConstantExpressions) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.javaPackage = javaPackage;
     this.defaultValues = defaultValues;
     this.valuesFile = valuesFile;

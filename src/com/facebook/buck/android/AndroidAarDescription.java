@@ -173,7 +173,6 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
 
     AndroidResource androidResource = new AndroidResource(
         androidResourceParams,
-        pathResolver,
         ruleFinder,
         /* deps */ ImmutableSortedSet.<BuildRule>naturalOrder()
         .add(assembleAssetsDirectories)
@@ -225,7 +224,6 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         Suppliers.ofInstance(ImmutableSortedSet.copyOf(aarExtraDepsBuilder.build())));
     return new AndroidAar(
         androidAarParams,
-        pathResolver,
         manifest,
         androidResource,
         assembleResourceDirectories.getPathToOutput(),

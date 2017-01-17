@@ -22,7 +22,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasOutputName;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -44,7 +44,6 @@ import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -99,7 +98,7 @@ import java.util.Optional;
  * <p>
  * Note that the <code>SRCDIR</code> is populated by symlinking the sources.
  */
-public class Genrule extends AbstractBuildRule
+public class Genrule extends AbstractBuildRuleWithResolver
     implements HasOutputName, SupportsInputBasedRuleKey {
 
   /**
@@ -171,8 +170,8 @@ public class Genrule extends AbstractBuildRule
   }
 
   @VisibleForTesting
-  public ImmutableCollection<Path> getSrcs() {
-    return getResolver().filterInputsToCompareToOutput(srcs);
+  public ImmutableList<SourcePath> getSrcs() {
+    return srcs;
   }
 
   @Override
@@ -180,13 +179,15 @@ public class Genrule extends AbstractBuildRule
     return pathToOutFile;
   }
 
-  protected void addEnvironmentVariables(ExecutionContext context,
+  protected void addEnvironmentVariables(
+      SourcePathResolver pathResolver,
+      ExecutionContext context,
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
     environmentVariablesBuilder.put(
         "SRCS",
         Joiner.on(' ').join(
             FluentIterable.from(srcs)
-                .transform(getResolver()::getAbsolutePath)
+                .transform(pathResolver::getAbsolutePath)
                 .transform(Object::toString)));
     environmentVariablesBuilder.put("OUT", getAbsoluteOutputFilePath());
 
@@ -253,7 +254,7 @@ public class Genrule extends AbstractBuildRule
     return type;
   }
 
-  public AbstractGenruleStep createGenruleStep() {
+  public AbstractGenruleStep createGenruleStep(BuildContext context) {
     // The user's command (this.cmd) should be run from the directory that contains only the
     // symlinked files. This ensures that the user can reference only the files that were declared
     // as srcs. Without this, a genrule is not guaranteed to be hermetic.
@@ -268,23 +269,28 @@ public class Genrule extends AbstractBuildRule
         absolutePathToSrcDirectory) {
       @Override
       protected void addEnvironmentVariables(
-          ExecutionContext context,
+          ExecutionContext executionContext,
           ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
-        Genrule.this.addEnvironmentVariables(context, environmentVariablesBuilder);
+        Genrule.this.addEnvironmentVariables(
+            context.getSourcePathResolver(),
+            executionContext,
+            environmentVariablesBuilder);
       }
     };
   }
 
-  public WorkerShellStep createWorkerShellStep() {
+  public WorkerShellStep createWorkerShellStep(BuildContext context) {
     return new WorkerShellStep(
         convertToWorkerJobParams(cmd),
         convertToWorkerJobParams(bash),
         convertToWorkerJobParams(cmdExe),
         new WorkerProcessPoolFactory(getProjectFilesystem())) {
       @Override
-      protected ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+      protected ImmutableMap<String, String> getEnvironmentVariables(
+          ExecutionContext executionContext) {
         ImmutableMap.Builder<String, String> envVarBuilder = ImmutableMap.builder();
-        Genrule.this.addEnvironmentVariables(context, envVarBuilder);
+        Genrule.this.addEnvironmentVariables(
+            context.getSourcePathResolver(), executionContext, envVarBuilder);
         return envVarBuilder.build();
       }
     };
@@ -330,13 +336,13 @@ public class Genrule extends AbstractBuildRule
     // Create a directory to hold all the source files.
     commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToSrcDirectory));
 
-    addSymlinkCommands(commands);
+    addSymlinkCommands(context, commands);
 
     // Create a shell command that corresponds to this.cmd.
     if (this.isWorkerGenrule) {
-      commands.add(createWorkerShellStep());
+      commands.add(createWorkerShellStep(context));
     } else {
-      commands.add(createGenruleStep());
+      commands.add(createGenruleStep(context));
     }
 
     if (MorePaths.getFileExtension(getPathToOutput()).equals("zip")) {
@@ -348,13 +354,13 @@ public class Genrule extends AbstractBuildRule
   }
 
   @VisibleForTesting
-  void addSymlinkCommands(ImmutableList.Builder<Step> commands) {
+  void addSymlinkCommands(BuildContext context, ImmutableList.Builder<Step> commands) {
     Path basePath = getBuildTarget().getBasePath();
 
     // Symlink all sources into the temp directory so that they can be used in the genrule.
     for (SourcePath src : srcs) {
-      Path relativePath = getResolver().getRelativePath(src);
-      Path absolutePath = getResolver().getAbsolutePath(src);
+      Path relativePath = context.getSourcePathResolver().getRelativePath(src);
+      Path absolutePath = context.getSourcePathResolver().getAbsolutePath(src);
       Path canonicalPath = absolutePath.normalize();
 
       // By the time we get this far, all source paths (the keys in the map) have been converted

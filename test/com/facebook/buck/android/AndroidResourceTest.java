@@ -66,7 +66,6 @@ public class AndroidResourceTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
 
     AndroidResource androidResource1 = AndroidResourceRuleBuilder.newBuilder()
-        .setResolver(pathResolver)
         .setRuleFinder(ruleFinder)
         .setBuildRuleParams(params)
         .setRes(new FakeSourcePath("java/src/com/facebook/base/res"))
@@ -89,7 +88,6 @@ public class AndroidResourceTest {
         .build();
 
     AndroidResource androidResource2 = AndroidResourceRuleBuilder.newBuilder()
-        .setResolver(pathResolver)
         .setRuleFinder(ruleFinder)
         .setBuildRuleParams(params)
         .setRes(new FakeSourcePath("java/src/com/facebook/base/res"))
@@ -147,7 +145,6 @@ public class AndroidResourceTest {
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
     AndroidResource androidResource = new AndroidResource(
         params,
-        resolver,
         ruleFinder,
         /* deps */ ImmutableSortedSet.of(),
         new FakeSourcePath("foo/res"),
@@ -184,7 +181,6 @@ public class AndroidResourceTest {
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
     AndroidResource androidResource = new AndroidResource(
         params,
-        resolver,
         ruleFinder,
         /* deps */ ImmutableSortedSet.of(),
         new FakeSourcePath("foo/res"),

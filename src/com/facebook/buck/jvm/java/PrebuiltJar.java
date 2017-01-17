@@ -24,7 +24,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -58,7 +58,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 @BuildsAnnotationProcessor
-public class PrebuiltJar extends AbstractBuildRule
+public class PrebuiltJar extends AbstractBuildRuleWithResolver
     implements AndroidPackageable, ExportDependencies, HasClasspathEntries,
     InitializableFromDisk<JavaLibrary.Data>, JavaLibrary, SupportsInputBasedRuleKey {
 

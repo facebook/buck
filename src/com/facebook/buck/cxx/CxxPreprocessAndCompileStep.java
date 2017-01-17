@@ -365,7 +365,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   public ImmutableList<String> getCommandPrefix() {
     switch (operation) {
       case COMPILE:
-      case COMPILE_MUNGE_DEBUGINFO:
+      case PREPROCESS_AND_COMPILE:
         return compilerCommand.get().getCommandPrefix();
       case GENERATE_PCH:
         return preprocessorCommand.get().getCommandPrefix();
@@ -378,7 +378,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   public ImmutableList<String> getArguments(boolean allowColorsInDiagnostics) {
     switch (operation) {
       case COMPILE:
-      case COMPILE_MUNGE_DEBUGINFO:
+      case PREPROCESS_AND_COMPILE:
         return makeCompileArguments(
             input.toString(),
             inputType.getLanguage(),
@@ -413,18 +413,18 @@ public class CxxPreprocessAndCompileStep implements Step {
 
   private boolean shouldSanitizeOutputBinary() {
     return inputType.isAssembly() ||
-        (operation == Operation.COMPILE_MUNGE_DEBUGINFO && compiler.shouldSanitizeOutputBinary());
+        (operation == Operation.PREPROCESS_AND_COMPILE && compiler.shouldSanitizeOutputBinary());
   }
 
   public enum Operation {
     /**
-     * Run the compiler on post-preprocessed source files.
+     * Run only the compiler on source files.
      */
     COMPILE,
     /**
      * Run the preprocessor and compiler on source files.
      */
-    COMPILE_MUNGE_DEBUGINFO,
+    PREPROCESS_AND_COMPILE,
     GENERATE_PCH,
     ;
 
@@ -433,7 +433,7 @@ public class CxxPreprocessAndCompileStep implements Step {
      */
     public boolean isPreprocess() {
       switch (this) {
-        case COMPILE_MUNGE_DEBUGINFO:
+        case PREPROCESS_AND_COMPILE:
         case GENERATE_PCH:
           return true;
         case COMPILE:
@@ -448,7 +448,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     public boolean isCompile() {
       switch (this) {
         case COMPILE:
-        case COMPILE_MUNGE_DEBUGINFO:
+        case PREPROCESS_AND_COMPILE:
           return true;
         case GENERATE_PCH:
           return false;

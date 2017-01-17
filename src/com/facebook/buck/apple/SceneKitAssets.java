@@ -25,11 +25,10 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
@@ -60,10 +59,9 @@ public class SceneKitAssets extends AbstractBuildRule {
 
   SceneKitAssets(
       BuildRuleParams params,
-      final SourcePathResolver resolver,
       AppleCxxPlatform appleCxxPlatform,
       ImmutableSet<SourcePath> sceneKitAssetsPaths) {
-    super(params, resolver);
+    super(params);
     this.sceneKitAssetsPaths = sceneKitAssetsPaths;
     String outputDirString =
         BuildTargets.getGenPath(getProjectFilesystem(), params.getBuildTarget(), "%s")

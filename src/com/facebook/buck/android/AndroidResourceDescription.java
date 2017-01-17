@@ -28,7 +28,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
@@ -89,7 +88,6 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
     }
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     // We don't handle the resources parameter well in `AndroidResource` rules, as instead of
     // hashing the contents of the entire resources directory, we try to filter out anything that
@@ -108,7 +106,6 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
             Suppliers.ofInstance(
                 AndroidResourceHelper.androidResOnly(params.getDeclaredDeps().get())),
             params.getExtraDeps()),
-        pathResolver,
         ruleFinder,
         resolver.getAllRules(args.deps),
         args.res.orElse(null),

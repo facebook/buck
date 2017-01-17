@@ -118,7 +118,6 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                   templateTarget,
                   Suppliers.ofInstance(ImmutableSortedSet.of()),
                   Suppliers.ofInstance(ImmutableSortedSet.of())),
-              getPathResolver(),
               getNativeStarterCxxSourceTemplate(),
               BuildTargets.getGenPath(
                   getBaseParams().getProjectFilesystem(),
@@ -134,7 +133,6 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
       getRuleResolver().addToIndex(
           WriteStringTemplateRule.from(
               getBaseParams(),
-              getPathResolver(),
               getRuleFinder(),
               target,
               output,

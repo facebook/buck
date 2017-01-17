@@ -48,11 +48,14 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.keys.DefaultDependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyFactory;
+import com.facebook.buck.rules.keys.FakeInputBasedRuleKeyFactory;
+import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputCountingRuleKeyFactory;
 import com.facebook.buck.rules.keys.SizeLimiter;
@@ -136,6 +139,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -662,6 +666,7 @@ public class CachingBuildEngineTest {
           .build();
       FakeBuildRule transitiveRuntimeDep =
           new FakeBuildRule(ruleParams, pathResolver);
+      resolver.addToIndex(transitiveRuntimeDep);
       RuleKey transitiveRuntimeDepKey = defaultRuleKeyFactory.build(transitiveRuntimeDep);
       filesystem.writeContentsToPath(
           transitiveRuntimeDepKey.toString(),
@@ -679,6 +684,7 @@ public class CachingBuildEngineTest {
               filesystem,
               pathResolver,
               transitiveRuntimeDep);
+      resolver.addToIndex(runtimeDep);
       RuleKey runtimeDepKey = defaultRuleKeyFactory.build(runtimeDep);
       filesystem.writeContentsToPath(
           runtimeDepKey.toString(),
@@ -777,6 +783,7 @@ public class CachingBuildEngineTest {
           /* buildSteps */ ImmutableList.of(failingStep),
           /* postBuildSteps */ ImmutableList.of(),
           /* pathToOutputFile */ null);
+      resolver.addToIndex(ruleToTest);
 
       FakeBuildRule withRuntimeDep =
           new FakeHasRuntimeDeps(
@@ -815,6 +822,7 @@ public class CachingBuildEngineTest {
           /* buildSteps */ ImmutableList.of(failingStep),
           /* postBuildSteps */ ImmutableList.of(),
           /* pathToOutputFile */ null);
+      resolver.addToIndex(ruleToTest);
 
       FakeBuildRule withRuntimeDep =
           new FakeHasRuntimeDeps(
@@ -898,7 +906,7 @@ public class CachingBuildEngineTest {
     @Test
     public void testExceptionMessagesAreInformative() throws Exception {
       AtomicReference<RuntimeException> throwable = new AtomicReference<>();
-      BuildRule rule = new AbstractBuildRule(new FakeBuildRuleParamsBuilder("//:rule")
+      BuildRule rule = new AbstractBuildRuleWithResolver(new FakeBuildRuleParamsBuilder("//:rule")
           .setProjectFilesystem(filesystem)
           .build(),
           pathResolver) {
@@ -972,8 +980,7 @@ public class CachingBuildEngineTest {
           new FakeBuildRuleParamsBuilder(target)
               .setProjectFilesystem(filesystem)
               .build();
-      BuildRule rule = new WriteFile(
-          params, pathResolver, "something else", output, /* executable */ false);
+      BuildRule rule = new WriteFile(params, "something else", output, /* executable */ false);
 
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build();
@@ -1000,7 +1007,6 @@ public class CachingBuildEngineTest {
               new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dep1"))
                   .setProjectFilesystem(filesystem)
                   .build(),
-              pathResolver,
               ImmutableList.of(new FailingStep()),
               /* output */ null);
       BuildRule dep2 =
@@ -1009,7 +1015,6 @@ public class CachingBuildEngineTest {
                   .setDeclaredDeps(ImmutableSortedSet.of(dep1))
                   .setProjectFilesystem(filesystem)
                   .build(),
-              pathResolver,
               ImmutableList.of(new SleepStep(0)),
               /* output */ null);
 
@@ -1019,7 +1024,6 @@ public class CachingBuildEngineTest {
               new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dep3"))
                   .setProjectFilesystem(filesystem)
                   .build(),
-              pathResolver,
               ImmutableList.of(new SleepStep(300)),
               /* output */ null);
       BuildRule dep4 =
@@ -1028,7 +1032,6 @@ public class CachingBuildEngineTest {
                   .setDeclaredDeps(ImmutableSortedSet.of(dep3))
                   .setProjectFilesystem(filesystem)
                   .build(),
-              pathResolver,
               ImmutableList.of(new SleepStep(300)),
               /* output */ null);
 
@@ -1039,7 +1042,6 @@ public class CachingBuildEngineTest {
                   .setDeclaredDeps(ImmutableSortedSet.of(dep2, dep4))
                   .setProjectFilesystem(filesystem)
                   .build(),
-              pathResolver,
               ImmutableList.of(new SleepStep(1000)),
               /* output */ null);
 
@@ -1087,7 +1089,6 @@ public class CachingBuildEngineTest {
               new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dep1"))
                   .setProjectFilesystem(filesystem)
                   .build(),
-              pathResolver,
               ImmutableList.of(new FailingStep()),
               /* output */ null);
       BuildRule dep2 =
@@ -1096,7 +1097,6 @@ public class CachingBuildEngineTest {
                   .setDeclaredDeps(ImmutableSortedSet.of(dep1))
                   .setProjectFilesystem(filesystem)
                   .build(),
-              pathResolver,
               ImmutableList.of(new SleepStep(0)),
               /* output */ null);
 
@@ -1106,7 +1106,6 @@ public class CachingBuildEngineTest {
               new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dep3"))
                   .setProjectFilesystem(filesystem)
                   .build(),
-              pathResolver,
               ImmutableList.of(new SleepStep(300)),
               /* output */ null);
       BuildRule dep4 =
@@ -1115,7 +1114,6 @@ public class CachingBuildEngineTest {
                   .setDeclaredDeps(ImmutableSortedSet.of(dep3))
                   .setProjectFilesystem(filesystem)
                   .build(),
-              pathResolver,
               ImmutableList.of(new SleepStep(300)),
               /* output */ null);
 
@@ -1126,7 +1124,6 @@ public class CachingBuildEngineTest {
                   .setDeclaredDeps(ImmutableSortedSet.of(dep2, dep4))
                   .setProjectFilesystem(filesystem)
                   .build(),
-              pathResolver,
               ImmutableList.of(new SleepStep(1000)),
               /* output */ null);
 
@@ -1201,7 +1198,6 @@ public class CachingBuildEngineTest {
               new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule"))
                   .setProjectFilesystem(filesystem)
                   .build(),
-              pathResolver,
               "data",
               Paths.get("output/path"),
               /* executable */ false);
@@ -1225,13 +1221,12 @@ public class CachingBuildEngineTest {
     public void fetchingFromCacheSeedsFileHashCache() throws Throwable {
       // Create a simple rule which just writes something new to the output file.
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-      Path output = filesystem.getRootPath().getFileSystem().getPath("output/path");
+      Path output = filesystem.getPath("output/path");
       BuildRuleParams params =
           new FakeBuildRuleParamsBuilder(target)
               .setProjectFilesystem(filesystem)
               .build();
-      BuildRule rule = new WriteFile(
-          params, pathResolver, "something else", output, /* executable */ false);
+      BuildRule rule = new WriteFile(params, "something else", output, /* executable */ false);
 
       // Run an initial build to seed the cache.
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
@@ -2540,7 +2535,6 @@ public class CachingBuildEngineTest {
               .build();
       BuildRule rule = new UncachableRule(
           params,
-          pathResolver,
           ImmutableList.of(),
           Paths.get("foo.out"));
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
@@ -2568,10 +2562,9 @@ public class CachingBuildEngineTest {
         implements SupportsDependencyFileRuleKey {
       public UncachableRule(
           BuildRuleParams buildRuleParams,
-          SourcePathResolver resolver,
           ImmutableList<Step> steps,
           Path output) {
-        super(buildRuleParams, resolver, steps, output);
+        super(buildRuleParams, steps, output);
       }
 
       @Override
@@ -2650,7 +2643,8 @@ public class CachingBuildEngineTest {
       result2.get();
     }
 
-    private class ControlledRule extends AbstractBuildRule implements OverrideScheduleRule {
+    private class ControlledRule extends AbstractBuildRuleWithResolver
+        implements OverrideScheduleRule {
 
       private final RuleScheduleInfo ruleScheduleInfo;
 
@@ -2985,7 +2979,7 @@ public class CachingBuildEngineTest {
     }
   }
 
-  private static class BuildableAbstractCachingBuildRule extends AbstractBuildRule
+  private static class BuildableAbstractCachingBuildRule extends AbstractBuildRuleWithResolver
       implements HasPostBuildSteps, InitializableFromDisk<Object> {
 
     private final Path pathToOutputFile;
@@ -3105,14 +3099,16 @@ public class CachingBuildEngineTest {
     }
 
     @Override
-    public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-      return runtimeDeps;
+    public Stream<SourcePath> getRuntimeDeps() {
+      return runtimeDeps.stream()
+          .map(HasBuildTarget::getBuildTarget)
+          .map(BuildTargetSourcePath::new);
     }
 
   }
 
   private abstract static class InputRuleKeyBuildRule
-      extends AbstractBuildRule
+      extends AbstractBuildRuleWithResolver
       implements SupportsInputBasedRuleKey {
     public InputRuleKeyBuildRule(
         BuildRuleParams buildRuleParams,
@@ -3122,7 +3118,7 @@ public class CachingBuildEngineTest {
   }
 
   private abstract static class DepFileBuildRule
-      extends AbstractBuildRule
+      extends AbstractBuildRuleWithResolver
       implements SupportsDependencyFileRuleKey {
     public DepFileBuildRule(
         BuildRuleParams buildRuleParams,
@@ -3142,10 +3138,9 @@ public class CachingBuildEngineTest {
 
     public RuleWithSteps(
         BuildRuleParams buildRuleParams,
-        SourcePathResolver resolver,
         ImmutableList<Step> steps,
         @Nullable Path output) {
-      super(buildRuleParams, resolver);
+      super(buildRuleParams);
       this.steps = steps;
       this.output = output;
     }
@@ -3215,7 +3210,7 @@ public class CachingBuildEngineTest {
     }
   }
 
-  private static class EmptyBuildRule extends AbstractBuildRule {
+  private static class EmptyBuildRule extends AbstractBuildRuleWithResolver {
 
     public EmptyBuildRule(
         BuildRuleParams buildRuleParams,

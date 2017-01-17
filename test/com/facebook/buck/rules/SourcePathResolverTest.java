@@ -30,9 +30,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.testutil.packaged_resource.PackagedResourceTestUtil;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.PackagedResource;
 import com.google.common.collect.ImmutableList;
 
 import org.hamcrest.Matchers;
@@ -75,41 +73,6 @@ public class SourcePathResolverTest {
     SourcePath sourcePath = new BuildTargetSourcePath(rule.getBuildTarget());
 
     assertEquals(expectedPath, pathResolver.getRelativePath(sourcePath));
-  }
-
-  @Test
-  public void resolveResourceSourceAbsolutePathSuccess() {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-
-    PackagedResource packagedResource =
-        PackagedResourceTestUtil.getPackagedResource(
-            filesystem,
-            "testdata/packaged_resource_one");
-    ResourceSourcePath resourceSourcePathOne =
-        new ResourceSourcePath(
-            packagedResource);
-
-    assertEquals(packagedResource.get(), pathResolver.getAbsolutePath(resourceSourcePathOne));
-  }
-
-  @Test
-  public void resolveResourceSourceRelativePathThrowsIllegalStateException() {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-
-    ResourceSourcePath resourceSourcePathOne =
-        new ResourceSourcePath(
-            PackagedResourceTestUtil.getPackagedResource(
-                filesystem,
-                "testdata/packaged_resource_one"));
-
-    exception.expect(IllegalStateException.class);
-    pathResolver.getRelativePath(resourceSourcePathOne);
   }
 
   @Test
@@ -431,7 +394,7 @@ public class SourcePathResolverTest {
     assertEquals(memberPath, absolutePath.getMemberPath());
   }
 
-  private static class PathReferenceRule extends AbstractBuildRule {
+  private static class PathReferenceRule extends AbstractBuildRuleWithResolver {
 
     private final Path source;
 

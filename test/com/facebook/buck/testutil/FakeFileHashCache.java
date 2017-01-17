@@ -49,7 +49,7 @@ public class FakeFileHashCache implements FileHashCache {
     this(pathsToHashes, new HashMap<ArchiveMemberPath, HashCode>(), new HashMap<Path, Long>());
   }
 
-  private FakeFileHashCache(
+  public FakeFileHashCache(
       Map<Path, HashCode> pathsToHashes,
       Map<ArchiveMemberPath, HashCode> archiveMemberPathsToHashes,
       Map<Path, Long> pathsToSizes) {

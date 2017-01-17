@@ -14,10 +14,21 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Supplier;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
+
+import java.io.IOException;
 
 public class UncachedRuleKeyBuilder extends RuleKeyBuilder<RuleKey> {
 
@@ -28,21 +39,23 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder<RuleKey> {
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver resolver,
       FileHashCache hashCache,
-      RuleKeyFactory<RuleKey> ruleKeyFactory,
-      RuleKeyLogger ruleKeyLogger) {
-    super(ruleFinder, resolver, hashCache, ruleKeyLogger);
-    this.ruleKeyFactory = ruleKeyFactory;
-    this.subKeySupplier = createSubKeySupplier(ruleFinder, resolver, hashCache, ruleKeyFactory);
+      RuleKeyFactory<RuleKey> ruleKeyFactory) {
+    this(ruleFinder, resolver, hashCache, createHasher(), ruleKeyFactory);
   }
 
   public UncachedRuleKeyBuilder(
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver resolver,
       FileHashCache hashCache,
+      RuleKeyHasher<HashCode> hasher,
       RuleKeyFactory<RuleKey> ruleKeyFactory) {
-    super(ruleFinder, resolver, hashCache);
+    super(ruleFinder, resolver, hashCache, hasher);
     this.ruleKeyFactory = ruleKeyFactory;
     this.subKeySupplier = createSubKeySupplier(ruleFinder, resolver, hashCache, ruleKeyFactory);
+  }
+
+  private static RuleKeyHasher<HashCode> createHasher() {
+    return new GuavaRuleKeyHasher(Hashing.sha1().newHasher());
   }
 
   private static Supplier<UncachedRuleKeyBuilder> createSubKeySupplier(
@@ -59,17 +72,26 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder<RuleKey> {
 
   @Override
   protected UncachedRuleKeyBuilder setBuildRule(BuildRule rule) {
-    setSingleValue(ruleKeyFactory.build(rule));
+    setBuildRuleKey(ruleKeyFactory.build(rule));
     return this;
   }
 
   @Override
-  public UncachedRuleKeyBuilder setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
+  protected UncachedRuleKeyBuilder setAppendableRuleKey(RuleKeyAppendable appendable) {
     RuleKeyBuilder<RuleKey> subKeyBuilder = subKeySupplier.get();
     appendable.appendToRuleKey(subKeyBuilder);
     RuleKey subKey = subKeyBuilder.build();
-    setAppendableRuleKey(key, subKey);
+    setAppendableRuleKey(subKey);
     return this;
+  }
+
+  @Override
+  protected RuleKeyBuilder<RuleKey> setSourcePath(SourcePath sourcePath) throws IOException {
+    if (sourcePath instanceof BuildTargetSourcePath) {
+      return setSourcePathAsRule((BuildTargetSourcePath) sourcePath);
+    } else {
+      return setSourcePathDirectly(sourcePath);
+    }
   }
 
   @Override

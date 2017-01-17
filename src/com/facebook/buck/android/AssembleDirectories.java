@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -32,7 +32,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 
-public class AssembleDirectories extends AbstractBuildRule {
+public class AssembleDirectories extends AbstractBuildRuleWithResolver {
 
   private final Path destinationDirectory;
   @AddToRuleKey

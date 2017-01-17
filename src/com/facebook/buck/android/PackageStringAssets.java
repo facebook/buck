@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -53,7 +53,7 @@ import javax.annotation.Nullable;
  * of locales provided. The contents of string_assets.zip is built into the assets of the APK.
  * all_locales_string_assets.zip is used for debugging purposes.
  */
-public class PackageStringAssets extends AbstractBuildRule
+public class PackageStringAssets extends AbstractBuildRuleWithResolver
     implements InitializableFromDisk<PackageStringAssets.BuildOutput> {
 
   private static final String STRING_ASSETS_ZIP_HASH = "STRING_ASSETS_ZIP_HASH";

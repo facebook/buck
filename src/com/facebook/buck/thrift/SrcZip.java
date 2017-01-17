@@ -22,7 +22,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
@@ -42,10 +41,9 @@ public class SrcZip extends AbstractBuildRule {
 
   public SrcZip(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       Path sourceZip,
       Path sourceDirectory) {
-    super(params, resolver);
+    super(params);
     this.sourceZip = sourceZip;
     this.sourceDirectory = sourceDirectory;
   }

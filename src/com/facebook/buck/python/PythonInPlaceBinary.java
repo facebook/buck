@@ -18,17 +18,17 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HasRuntimeDeps;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -41,13 +41,13 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Resources;
 
 import org.stringtemplate.v4.ST;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
 public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps {
 
@@ -68,12 +68,10 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   private final PythonPackageComponents components;
   @AddToRuleKey
   private final Tool python;
-  private final SourcePathRuleFinder ruleFinder;
 
   public PythonInPlaceBinary(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      SourcePathRuleFinder ruleFinder,
       BuildRuleResolver ruleResolver,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
@@ -93,7 +91,6 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
         preloadLibraries,
         pexExtension,
         legacyOutputPath);
-    this.ruleFinder = ruleFinder;
     this.script =
         getScript(
             ruleResolver,
@@ -190,14 +187,17 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .add(linkTree)
-        .addAll(ruleFinder.filterBuildRuleInputs(components.getModules().values()))
-        .addAll(ruleFinder.filterBuildRuleInputs(components.getResources().values()))
-        .addAll(ruleFinder.filterBuildRuleInputs(components.getNativeLibraries().values()))
-        .addAll(getDeclaredDeps())
-        .build();
+  public Stream<SourcePath> getRuntimeDeps() {
+    return Stream
+        .of(
+            Stream
+                .concat(Stream.of(linkTree), getDeclaredDeps().stream())
+                .map(HasBuildTarget::getBuildTarget)
+                .<SourcePath>map(BuildTargetSourcePath::new),
+            components.getModules().values().stream(),
+            components.getResources().values().stream(),
+            components.getNativeLibraries().values().stream())
+        .reduce(Stream.empty(), Stream::concat);
   }
 
 }

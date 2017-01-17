@@ -1355,6 +1355,50 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'cxx' /}
+  {param name: 'gtest_dep' /}
+  {param example_value: '//third-party/gtest:gtest' /}
+  {param description}
+    The {call buck.build_rule /} to compile the <a href="https://github.com/google/googletest" target="_blank">Google Test</a> framework.
+  {/param}
+  {param raw_example}
+    <p>
+      If you had your Google Test code in <code>third-party/gtest/</code>, the {call buck.build_file /} in that directory would look something like this:
+    </p>
+    <pre class="prettyprint lang-py">
+{literal}
+cxx_library(
+  name = 'gtest',
+  srcs = subdir_glob([
+    'googletest/src/gtest-all.cc',
+    'googlemock/src/gmock-all.cc',
+    'googlemock/src/gmock_main.cc',
+  ]),
+  header_namespace = '',
+  exported_headers = subdir_glob([
+    ('googletest/include', '**/*.h'),
+    ('googlemock/include', '**/*.h'),
+  ]),
+  headers = subdir_glob([
+    ('googletest', 'src/*.cc'),
+    ('googletest', 'src/*.h'),
+    ('googlemock', 'src/*.cc'),
+    ('googlemock', 'src/*.h'),
+  ]),
+  platform_linker_flags = [
+    ('android', []),
+    ('', ['-lpthread']),
+  ],
+  visibility = [
+    '//test/...',
+  ],
+)
+{/literal}
+    </pre>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cxx' /}
   {param name: 'untracked_headers' /}
   {param example_value: 'error' /}
   {param description}

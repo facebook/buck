@@ -31,7 +31,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -63,14 +62,13 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
 
   public AndroidAar(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       AndroidManifest manifest,
       AndroidResource androidResource,
       Path assembledResourceDirectory,
       Path assembledAssetsDirectory,
       Optional<Path> assembledNativeLibs,
       ImmutableSet<SourcePath> nativeLibAssetsDirectories) {
-    super(params, resolver);
+    super(params);
     BuildTarget buildTarget = params.getBuildTarget();
     this.pathToOutputFile =
         BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, AAR_FORMAT);

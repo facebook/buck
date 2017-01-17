@@ -15,7 +15,7 @@
 {param status: 'UNFROZEN' /}
 {param overview}
 A cxx_test() rule builds a C/C++ binary against a C/C++ testing framework and runs
-it as part of <code>buck test</code>.
+it as part of {call buck.cmd_test /}.
 {/param}
 
 {param args}
@@ -45,8 +45,12 @@ it as part of <code>buck test</code>.
   {param name: 'framework' /}
   {param default : '"gtest"' /}
   {param desc}
-  The testing framework to build against and run with.
-  We currently support <a href="https://code.google.com/p/googletest/"><code>gtest</code></a> and <a href="http://www.boost.org/doc/libs/1_57_0/libs/test/doc/html/index.html"><code>boost</code></a>.
+  <p>
+    The testing framework to build against and run with.  We currently support <a href="https://github.com/google/googletest"><code>gtest</code></a> and <a href="http://www.boost.org/doc/libs/1_57_0/libs/test/doc/html/index.html"><code>boost</code></a>.
+  </p>
+  <p>
+    When set to <code>gtest</code>, you must also set {call buckconfig.cxx_gtest_dep /}.
+  </p>
   {/param}
 {/call}
 

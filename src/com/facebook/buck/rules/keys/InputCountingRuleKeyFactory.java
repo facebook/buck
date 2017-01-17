@@ -20,7 +20,6 @@ import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -84,8 +83,7 @@ public class InputCountingRuleKeyFactory extends
       }
 
       @Override
-      public RuleKeyBuilder<InputCountingRuleKeyFactory.Result> setAppendableRuleKey(
-          String key,
+      protected RuleKeyBuilder<InputCountingRuleKeyFactory.Result> setAppendableRuleKey(
           RuleKeyAppendable appendable) {
         InputCountingRuleKeyFactory.Result result = resultCache.getUnchecked(appendable);
         inputsCount += result.getInputsCount();

@@ -763,6 +763,7 @@ public class DirArtifactCacheTest {
               new BuildRuleResolver(
                   TargetGraph.EMPTY,
                   new DefaultTargetNodeToBuildRuleTransformer()))));
+      // TODO(15468825) - PathSourcePath should be relative!11!!11!1!!!
       this.file = new PathSourcePath(new FakeProjectFilesystem(), file);
     }
   }

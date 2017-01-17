@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.DefaultShellStep;
@@ -72,7 +71,6 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
   public SourcePath createUndefinedSymbolsFile(
       BuildRuleParams baseParams,
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Iterable<? extends SourcePath> linkerInputs) {
@@ -86,7 +84,6 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
                         .addAll(ruleFinder.filterBuildRuleInputs(linkerInputs))
                         .build()),
                 Suppliers.ofInstance(ImmutableSortedSet.of())),
-            pathResolver,
             nm,
             linkerInputs));
     return new BuildTargetSourcePath(target);
@@ -102,10 +99,9 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
 
     public UndefinedSymbolsFile(
         BuildRuleParams buildRuleParams,
-        SourcePathResolver resolver,
         Tool nm,
         Iterable<? extends SourcePath> inputs) {
-      super(buildRuleParams, resolver);
+      super(buildRuleParams);
       this.nm = nm;
       this.inputs = inputs;
     }

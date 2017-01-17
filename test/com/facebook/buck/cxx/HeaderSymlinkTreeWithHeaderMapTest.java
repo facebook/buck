@@ -24,7 +24,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -98,8 +98,8 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
             MorePaths.relativize(tmpDir.getRoot(), file2)));
 
     // The output path used by the buildable for the link tree.
-    symlinkTreeRoot = projectFilesystem.resolve(
-        BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root"));
+    symlinkTreeRoot =
+        BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root");
 
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule = new HeaderSymlinkTreeWithHeaderMap(
@@ -136,11 +136,11 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
                 headerMapPath,
                 ImmutableMap.of(
                     Paths.get("file"),
-                    filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
+                    filesystem.getBuckPaths().getBuckOut()
                         .relativize(symlinkTreeRoot)
                         .resolve("file"),
                     Paths.get("directory/then/file"),
-                    filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
+                    filesystem.getBuckPaths().getBuckOut()
                         .relativize(symlinkTreeRoot)
                         .resolve("directory/then/file"))));
     ImmutableList<Step> actualBuildSteps =
@@ -154,7 +154,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
   public void testSymlinkTreeRuleKeyChangesIfLinkMapChanges() throws Exception {
     Path aFile = tmpDir.newFile();
     Files.write(aFile, "hello world".getBytes(Charsets.UTF_8));
-    AbstractBuildRule modifiedSymlinkTreeBuildRule = new HeaderSymlinkTreeWithHeaderMap(
+    AbstractBuildRuleWithResolver modifiedSymlinkTreeBuildRule = new HeaderSymlinkTreeWithHeaderMap(
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
         new SourcePathResolver(new SourcePathRuleFinder(
             new BuildRuleResolver(

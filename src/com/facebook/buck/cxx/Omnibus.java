@@ -483,7 +483,6 @@ public class Omnibus {
             .createUndefinedSymbolsFile(
                 params,
                 ruleResolver,
-                pathResolver,
                 ruleFinder,
                 params.getBuildTarget().withAppendedFlavors(
                     ImmutableFlavor.of("omnibus-undefined-symbols-file")),

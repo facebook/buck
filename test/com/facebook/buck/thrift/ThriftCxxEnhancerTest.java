@@ -100,12 +100,9 @@ public class ThriftCxxEnhancerTest {
         resolver);
   }
 
-  private static ThriftCompiler createFakeThriftCompiler(
-      String target,
-      SourcePathResolver resolver) {
+  private static ThriftCompiler createFakeThriftCompiler(String target) {
     return new ThriftCompiler(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target)).build(),
-        resolver,
         new CommandTool.Builder()
             .addArg(new StringArg("compiler"))
             .build(),
@@ -533,9 +530,9 @@ public class ThriftCxxEnhancerTest {
     arg.cpp2Options = ImmutableSet.of();
     arg.cpp2Deps = ImmutableSortedSet.of(argDep.getBuildTarget());
 
-    ThriftCompiler thrift1 = createFakeThriftCompiler("//:thrift_source1", pathResolver);
+    ThriftCompiler thrift1 = createFakeThriftCompiler("//:thrift_source1");
     resolver.addToIndex(thrift1);
-    ThriftCompiler thrift2 = createFakeThriftCompiler("//:thrift_source2", pathResolver);
+    ThriftCompiler thrift2 = createFakeThriftCompiler("//:thrift_source2");
     resolver.addToIndex(thrift2);
 
     // Setup up some thrift inputs to pass to the createBuildRule method.
@@ -574,7 +571,6 @@ public class ThriftCxxEnhancerTest {
   public void cppSrcsAndHeadersArePropagated() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     BuildRuleParams flavoredParams = new FakeBuildRuleParamsBuilder(TARGET).build();
 
     final String cppHeaderNamespace = "foo";
@@ -592,7 +588,7 @@ public class ThriftCxxEnhancerTest {
     arg.cppExportedHeaders = SourceList.ofNamedSources(cppHeaders);
     arg.cppSrcs = SourceWithFlagsList.ofNamedSources(cppSrcs);
 
-    ThriftCompiler thrift = createFakeThriftCompiler("//:thrift_source", pathResolver);
+    ThriftCompiler thrift = createFakeThriftCompiler("//:thrift_source");
     resolver.addToIndex(thrift);
 
     // Setup up some thrift inputs to pass to the createBuildRule method.
@@ -648,7 +644,6 @@ public class ThriftCxxEnhancerTest {
   public void cppCompileFlagsArePropagated() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     BuildRuleParams flavoredParams = new FakeBuildRuleParamsBuilder(TARGET).build();
 
     final ImmutableList<String> compilerFlags = ImmutableList.of("-flag");
@@ -663,7 +658,7 @@ public class ThriftCxxEnhancerTest {
     arg.cppExportedHeaders = SourceList.EMPTY;
     arg.cppSrcs = SourceWithFlagsList.EMPTY;
 
-    ThriftCompiler thrift = createFakeThriftCompiler("//:thrift_source", pathResolver);
+    ThriftCompiler thrift = createFakeThriftCompiler("//:thrift_source");
     resolver.addToIndex(thrift);
 
     // Run the enhancer with a modified C++ description which checks that appropriate args are

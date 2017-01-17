@@ -18,7 +18,7 @@ package com.facebook.buck.haskell;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -50,7 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class HaskellPackageRule extends AbstractBuildRule {
+public class HaskellPackageRule extends AbstractBuildRuleWithResolver {
 
   @AddToRuleKey
   private final Tool ghcPkg;
@@ -146,7 +146,7 @@ public class HaskellPackageRule extends AbstractBuildRule {
     entries.put("exposed", "True");
     entries.put("exposed-modules", Joiner.on(' ').join(modules));
 
-    Path pkgRoot = getProjectFilesystem().getRootPath().getFileSystem().getPath("${pkgroot}");
+    Path pkgRoot = getProjectFilesystem().getPath("${pkgroot}");
 
     if (!modules.isEmpty()) {
       List<String> importDirs = new ArrayList<>();

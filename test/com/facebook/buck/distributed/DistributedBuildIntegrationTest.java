@@ -42,7 +42,7 @@ public class DistributedBuildIntegrationTest {
     sourceWorkspace.setUp();
 
     sourceWorkspace.runBuckBuild(
-        "//:lib",
+        "//:lib1",
         "--distributed",
         "--build-state-file",
         stateFilePath.toString())

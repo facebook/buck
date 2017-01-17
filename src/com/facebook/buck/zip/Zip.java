@@ -24,7 +24,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -43,10 +42,9 @@ public class Zip extends AbstractBuildRule implements HasOutputName {
 
   public Zip(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       String outputName,
       ImmutableSortedSet<SourcePath> sources) {
-    super(params, resolver);
+    super(params);
     this.name = outputName;
     this.sources = sources;
   }
@@ -72,7 +70,8 @@ public class Zip extends AbstractBuildRule implements HasOutputName {
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
 
     SrcZipAwareFileBundler bundler = new SrcZipAwareFileBundler(getBuildTarget());
-    bundler.copy(getProjectFilesystem(), getResolver(), steps, scratchDir, sources);
+    bundler.copy(
+        getProjectFilesystem(), context.getSourcePathResolver(), steps, scratchDir, sources);
 
     steps.add(
         new ZipStep(

@@ -33,13 +33,15 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HasRuntimeDeps;
@@ -78,12 +80,13 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * Creates a bundle: a directory containing files and subdirectories, described by an Info.plist.
  */
 public class AppleBundle
-    extends AbstractBuildRule
+    extends AbstractBuildRuleWithResolver
     implements NativeTestable, BuildRuleWithBinary, HasRuntimeDeps, BinaryBuildRule {
 
   private static final Logger LOG = Logger.get(AppleBundle.class);
@@ -939,19 +942,18 @@ public class AppleBundle
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+  public Stream<SourcePath> getRuntimeDeps() {
     if (binary.get() instanceof ProvidesLinkedBinaryDeps) {
       List<BuildRule> linkDeps = new ArrayList<>();
       linkDeps.addAll(((ProvidesLinkedBinaryDeps) binary.get()).getCompileDeps());
       linkDeps.addAll(((ProvidesLinkedBinaryDeps) binary.get()).getStaticLibraryDeps());
       if (linkDeps.size() > 0) {
-        return ImmutableSortedSet.<BuildRule>naturalOrder()
-            .add(binary.get())
-            .addAll(linkDeps)
-            .build();
+        return Stream.concat(Stream.of(binary.get()), linkDeps.stream())
+            .map(HasBuildTarget::getBuildTarget)
+            .map(BuildTargetSourcePath::new);
       }
     }
-    return ImmutableSortedSet.of();
+    return Stream.empty();
   }
 
   @Override

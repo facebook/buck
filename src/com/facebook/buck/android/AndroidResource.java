@@ -34,7 +34,6 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -158,7 +157,6 @@ public class AndroidResource extends AbstractBuildRule
 
   public AndroidResource(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       final ImmutableSortedSet<BuildRule> deps,
       @Nullable final SourcePath res,
@@ -175,8 +173,7 @@ public class AndroidResource extends AbstractBuildRule
       boolean isGrayscaleImageProcessingEnabled) {
     super(
         buildRuleParams.appendExtraDeps(
-            Suppliers.compose(ruleFinder::filterBuildRuleInputs, symbolFilesFromDeps)),
-        resolver);
+            Suppliers.compose(ruleFinder::filterBuildRuleInputs, symbolFilesFromDeps)));
     if (res != null && rDotJavaPackageArgument == null && manifestFile == null) {
       throw new HumanReadableException(
           "When the 'res' is specified for android_resource() %s, at least one of 'package' or " +
@@ -223,7 +220,6 @@ public class AndroidResource extends AbstractBuildRule
 
   public AndroidResource(
       final BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       final ImmutableSortedSet<BuildRule> deps,
       @Nullable final SourcePath res,
@@ -237,7 +233,6 @@ public class AndroidResource extends AbstractBuildRule
       boolean hasWhitelistedStrings) {
     this(
         buildRuleParams,
-        resolver,
         ruleFinder,
         deps,
         res,
@@ -255,7 +250,6 @@ public class AndroidResource extends AbstractBuildRule
 
   public AndroidResource(
       final BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       final ImmutableSortedSet<BuildRule> deps,
       @Nullable final SourcePath res,
@@ -271,7 +265,6 @@ public class AndroidResource extends AbstractBuildRule
       boolean isGrayscaleImageProcessingEnabled) {
     this(
         buildRuleParams,
-        resolver,
         ruleFinder,
         deps,
         res,

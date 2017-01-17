@@ -21,7 +21,7 @@ import static com.facebook.buck.zip.ZipCompressionLevel.DEFAULT_COMPRESSION_LEVE
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -44,7 +44,8 @@ import java.util.Optional;
 import java.util.Set;
 
 
-public class JavaSourceJar extends AbstractBuildRule implements HasMavenCoordinates, HasSources {
+public class JavaSourceJar extends AbstractBuildRuleWithResolver
+    implements HasMavenCoordinates, HasSources {
 
   @AddToRuleKey
   private final ImmutableSortedSet<SourcePath> sources;

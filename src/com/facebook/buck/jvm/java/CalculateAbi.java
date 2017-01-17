@@ -20,7 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -38,7 +38,8 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
-public class CalculateAbi extends AbstractBuildRule implements SupportsInputBasedRuleKey {
+public class CalculateAbi extends AbstractBuildRuleWithResolver
+    implements SupportsInputBasedRuleKey {
 
   public static final Flavor FLAVOR = ImmutableFlavor.of("abi");
 

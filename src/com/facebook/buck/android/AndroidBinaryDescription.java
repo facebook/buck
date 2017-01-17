@@ -47,7 +47,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
@@ -271,7 +270,6 @@ public class AndroidBinaryDescription
               .toImmutableSortedSet(HasBuildTarget.BUILD_TARGET_COMPARATOR);
 
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-      SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
       return new AndroidBinary(
           params
               .copyWithExtraDeps(Suppliers.ofInstance(result.getFinalDeps()))
@@ -279,7 +277,6 @@ public class AndroidBinaryDescription
                   ruleFinder.filterBuildRuleInputs(
                       result.getPackageableCollection().getProguardConfigs()))
               .appendExtraDeps(rulesToExcludeFromDex),
-          pathResolver,
           ruleFinder,
           proGuardConfig.getProguardJarOverride(),
           proGuardConfig.getProguardMaxHeapSize(),

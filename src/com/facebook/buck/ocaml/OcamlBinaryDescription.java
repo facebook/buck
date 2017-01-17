@@ -19,8 +19,8 @@ package com.facebook.buck.ocaml;
 import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AbstractDescriptionArg;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -50,7 +50,7 @@ public class OcamlBinaryDescription implements
   }
 
   @Override
-  public <A extends Arg> AbstractBuildRule createBuildRule(
+  public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,

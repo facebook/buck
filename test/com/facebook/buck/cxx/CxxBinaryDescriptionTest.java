@@ -284,8 +284,8 @@ public class CxxBinaryDescriptionTest {
     CxxBinary topLevelCxxBinary = (CxxBinary) topLevelCxxBinaryBuilder.build(resolver, filesystem);
 
     assertThat(
-        BuildRules.getTransitiveRuntimeDeps(topLevelCxxBinary),
-        Matchers.hasItem(leafCxxBinary));
+        BuildRules.getTransitiveRuntimeDeps(topLevelCxxBinary, new SourcePathRuleFinder(resolver)),
+        Matchers.hasItem(new BuildTargetSourcePath(leafCxxBinary.getBuildTarget())));
   }
 
   @Test

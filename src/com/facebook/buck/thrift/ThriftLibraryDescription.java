@@ -161,7 +161,6 @@ public class ThriftLibraryDescription
       ImmutableMap<String, ImmutableSortedSet<String>> generatedSources) {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     Tool compiler = thriftBuckConfig.getCompiler(compilerType, resolver);
 
     // Build up the include roots to find thrift file deps and also the build rules that
@@ -210,7 +209,6 @@ public class ThriftLibraryDescription
                           .addAll(includeTreeRules)
                           .build()),
                   Suppliers.ofInstance(ImmutableSortedSet.of())),
-              pathResolver,
               compiler,
               flags,
               outputDir,
@@ -285,9 +283,7 @@ public class ThriftLibraryDescription
       ImmutableMap<Path, SourcePath> includes = includesBuilder.build();
 
       // Create the symlink tree build rule and add it to the resolver.
-      Path includeRoot =
-          params.getProjectFilesystem()
-              .resolve(getIncludeRoot(target, params.getProjectFilesystem()));
+      Path includeRoot = getIncludeRoot(target, params.getProjectFilesystem());
       BuildTarget symlinkTreeTarget = createThriftIncludeSymlinkTreeTarget(target);
       HeaderSymlinkTree symlinkTree =
         new HeaderSymlinkTree(

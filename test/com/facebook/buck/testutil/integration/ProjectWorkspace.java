@@ -74,7 +74,6 @@ import org.hamcrest.Matchers;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -150,29 +149,6 @@ public class ProjectWorkspace {
   ProjectWorkspace(Path templateDir, Path targetFolder) {
     this.templatePath = templateDir;
     this.destPath = targetFolder;
-  }
-
-  /**
-   * Creates a new workspace by copying the contents of existingWorkspace to targetFolder when
-   * {@link #setUp()} is invoked. In general, prefer
-   * {@link TestDataHelper#createProjectWorkspaceForScenario(Object, String, TemporaryPaths)} to
-   * this method.
-   * <p>
-   * A valid reason to use this API is for performance reasons. Specifically, it may be expensive to
-   * put a workspace into a particular state. If you have various scenarios that you want to test
-   * based on that state, then it makes sense to create the initial state once in
-   * {@code @BeforeClass} and then use this method to create a new workspace for the scenario you
-   * are about to test in {@code @Before}.
-   *
-   * @param existingWorkspace The directory that contains the template version of the project.
-   * @param targetFolder The directory where the clone of the template directory should be
-   *     written. By requiring a {@link TemporaryPaths} rather than a {@link File}, we can ensure
-   *     that JUnit will clean up the test correctly.
-   */
-  public static ProjectWorkspace cloneExistingWorkspaceIntoNewFolder(
-      ProjectWorkspace existingWorkspace,
-      TemporaryPaths targetFolder) {
-    return new ProjectWorkspace(existingWorkspace.getDestPath(), targetFolder.getRoot());
   }
 
   /**

@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -54,7 +54,7 @@ import java.util.Optional;
  * A build rule that hashes all of the files that go into an exopackage APK.
  * This is used by AndroidBinaryRule to compute the ABI hash of its deps.
  */
-public class ComputeExopackageDepsAbi extends AbstractBuildRule {
+public class ComputeExopackageDepsAbi extends AbstractBuildRuleWithResolver {
   private static final Logger LOG = Logger.get(ComputeExopackageDepsAbi.class);
 
   private final EnumSet<ExopackageMode> exopackageModes;

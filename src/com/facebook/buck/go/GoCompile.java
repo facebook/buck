@@ -18,7 +18,7 @@ package com.facebook.buck.go;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -41,7 +41,7 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class GoCompile extends AbstractBuildRule {
+public class GoCompile extends AbstractBuildRuleWithResolver {
   @AddToRuleKey
   private final Tool compiler;
   @AddToRuleKey
