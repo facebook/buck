@@ -638,5 +638,15 @@ public class IjModuleFactory {
     public Class<? extends Description<?>> getDescriptionClass() {
       return RobolectricTestDescription.class;
     }
+
+    @Override
+    public void apply(
+        TargetNode<JavaTestDescription.Arg, ?> target, ModuleBuildContext context) {
+      super.apply(target, context);
+
+      context.getOrCreateAndroidFacetBuilder()
+          .setAutogenerateSources(autogenerateAndroidFacetSources)
+          .setAndroidLibrary(true);
+    }
   }
 }
