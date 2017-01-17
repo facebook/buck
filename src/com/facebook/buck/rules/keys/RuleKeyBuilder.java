@@ -16,10 +16,10 @@
 
 package com.facebook.buck.rules.keys;
 
-import static com.facebook.buck.rules.keys.RuleKeyScopedHasher.ContainerScope;
-import static com.facebook.buck.rules.keys.RuleKeyScopedHasher.Scope;
 import static com.facebook.buck.rules.keys.RuleKeyHasher.Container;
 import static com.facebook.buck.rules.keys.RuleKeyHasher.Wrapper;
+import static com.facebook.buck.rules.keys.RuleKeyScopedHasher.ContainerScope;
+import static com.facebook.buck.rules.keys.RuleKeyScopedHasher.Scope;
 
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
@@ -59,6 +59,30 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
+/**
+ * A base implementation for rule key builders.
+ *
+ * {@link RuleKeyFactory} classes create concrete instances of this class and use them to produce
+ * rule keys. Concrete implementations may tweak behavior of the builder, and at the very minimum
+ * should implement {@link #build()}, {@link #setAppendableRuleKey(RuleKeyAppendable)}, and
+ * {@link #setBuildRule(BuildRule)}.
+ *
+ * This class implements {@link RuleKeyObjectSink} interface which is the primary mechanism of how
+ * {@link RuleKeyFactory} and {@link RuleKeyAppendable} classes feed the builder.
+ *
+ * Each element fed to the builder is a (key, value) pair. Keys are always simple strings, typically
+ * the name of a field annotated with {@link AddToRuleKey}. Values on the other hand may be complex
+ * types that are resolved recursively. For instance, a list of elements gets serialized by
+ * serializing each element of the list in order, and finally serializing the list token along with
+ * the length of the list. Similarly for other containers and wrappers.
+ *
+ * There is an exception to the above rule of how containers and wrappers get serialized. Namely,
+ * they only get serialized if at least one of their elements gets serialized. This is to support
+ * concrete rule key builders that ignore some elements, or handle them differently. For example,
+ * several concrete builders handle {@link SourcePath} elements in a special way.
+ *
+ * @param <RULE_KEY> - the actual type that the concrete builder produces (e.g. {@code RuleKey}).
+ */
 public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
 
   private static final Logger logger = Logger.get(RuleKeyBuilder.class);
@@ -82,9 +106,8 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     this.scopedHasher = new RuleKeyScopedHasher<>(this.hasher);
   }
 
-  // TODO(plamenko): make this package private once RuleKeyBuilder is moved to the keys subpackage.
   @VisibleForTesting
-  public RuleKeyScopedHasher<HashCode> getScopedHasher() {
+  RuleKeyScopedHasher<HashCode> getScopedHasher() {
     return this.scopedHasher;
   }
 
@@ -97,78 +120,6 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
         resolver,
         hashLoader,
         LoggingRuleKeyHasher.of(new GuavaRuleKeyHasher(Hashing.sha1().newHasher())));
-  }
-
-  protected RuleKeyBuilder<RULE_KEY> setSourcePath(SourcePath sourcePath) {
-    if (sourcePath instanceof ArchiveMemberSourcePath) {
-      try {
-        return setArchiveMemberPath(
-            resolver.getAbsoluteArchiveMemberPath(sourcePath),
-            resolver.getRelativeArchiveMemberPath(sourcePath));
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    }
-
-    if (sourcePath instanceof BuildTargetSourcePath) {
-      BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) sourcePath;
-      BuildRule buildRule = ruleFinder.getRuleOrThrow(buildTargetSourcePath);
-      hasher.putBuildTargetSourcePath(buildTargetSourcePath);
-      return setBuildRule(buildRule);
-    }
-
-    // The original version of this expected the path to be relative, however, sometimes the
-    // deprecated method returned an absolute path, which is obviously less than ideal. If we can,
-    // grab the relative path to the output. We also need to hash the contents of the absolute
-    // path no matter what.
-    Path absolutePath = resolver.getAbsolutePath(sourcePath);
-    Path ideallyRelative;
-    try {
-      ideallyRelative = resolver.getRelativePath(sourcePath);
-    } catch (IllegalStateException e) {
-      // Expected relative path was absolute. Yay.
-      ideallyRelative = absolutePath;
-    }
-    try {
-      return setPath(absolutePath, ideallyRelative);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  protected RuleKeyBuilder<RULE_KEY> setNonHashingSourcePath(SourcePath sourcePath) {
-    String pathForKey;
-    if (sourcePath instanceof ResourceSourcePath) {
-      pathForKey = ((ResourceSourcePath) sourcePath).getResourceIdentifier();
-    } else {
-      pathForKey = resolver.getRelativePath(sourcePath).toString();
-    }
-    hasher.putNonHashingPath(pathForKey);
-    return this;
-  }
-
-  /**
-   * Implementations should ask their factories to compute the rule key for the {@link BuildRule}
-   * and call {@link #setBuildRuleKey(RuleKey)} on it.
-   */
-  protected abstract RuleKeyBuilder<RULE_KEY> setBuildRule(BuildRule rule);
-
-  protected final RuleKeyBuilder<RULE_KEY> setBuildRuleKey(RuleKey ruleKey) {
-    try (Scope wraperScope = scopedHasher.wrapperScope(Wrapper.BUILD_RULE)) {
-      return setSingleValue(ruleKey);
-    }
-  }
-
-  /**
-   * Implementations should ask their factories to compute the rule key for the
-   * {@link RuleKeyAppendable} and call {@link #setAppendableRuleKey(RuleKey)} on it.
-   */
-  protected abstract RuleKeyBuilder<RULE_KEY> setAppendableRuleKey(RuleKeyAppendable appendable);
-
-  protected final RuleKeyBuilder<RULE_KEY> setAppendableRuleKey(RuleKey ruleKey) {
-    try (Scope wraperScope = scopedHasher.wrapperScope(Wrapper.APPENDABLE)){
-      return setSingleValue(ruleKey);
-    }
   }
 
   @Override
@@ -185,6 +136,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     }
   }
 
+  /** Recursively serializes the value. Serialization of the key is handled outside. */
   protected RuleKeyBuilder<RULE_KEY> setReflectively(@Nullable Object val) {
     if (val instanceof RuleKeyAppendable) {
       setAppendableRuleKey((RuleKeyAppendable) val);
@@ -294,6 +246,71 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     return setSingleValue(val);
   }
 
+  /**
+   * Implementations should ask their factories to compute the rule key for the {@link BuildRule}
+   * and call {@link #setBuildRuleKey(RuleKey)} on it.
+   */
+  protected abstract RuleKeyBuilder<RULE_KEY> setBuildRule(BuildRule rule);
+
+  /** To be called from {@link #setBuildRule(BuildRule)}. */
+  protected final RuleKeyBuilder<RULE_KEY> setBuildRuleKey(RuleKey ruleKey) {
+    try (Scope wraperScope = scopedHasher.wrapperScope(Wrapper.BUILD_RULE)) {
+      return setSingleValue(ruleKey);
+    }
+  }
+
+  /**
+   * Implementations should ask their factories to compute the rule key for the
+   * {@link RuleKeyAppendable} and call {@link #setAppendableRuleKey(RuleKey)} on it.
+   */
+  protected abstract RuleKeyBuilder<RULE_KEY> setAppendableRuleKey(RuleKeyAppendable appendable);
+
+  /** To be called from {@link #setAppendableRuleKey(RuleKeyAppendable)}. */
+  protected final RuleKeyBuilder<RULE_KEY> setAppendableRuleKey(RuleKey ruleKey) {
+    try (Scope wraperScope = scopedHasher.wrapperScope(Wrapper.APPENDABLE)){
+      return setSingleValue(ruleKey);
+    }
+  }
+
+  // TODO(plamenko): make this be abstract. Pretty much all the implementations override this,
+  // none of which call this super method.
+  protected RuleKeyBuilder<RULE_KEY> setSourcePath(SourcePath sourcePath) {
+    if (sourcePath instanceof ArchiveMemberSourcePath) {
+      try {
+        return setArchiveMemberPath(
+            resolver.getAbsoluteArchiveMemberPath(sourcePath),
+            resolver.getRelativeArchiveMemberPath(sourcePath));
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    if (sourcePath instanceof BuildTargetSourcePath) {
+      BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) sourcePath;
+      BuildRule buildRule = ruleFinder.getRuleOrThrow(buildTargetSourcePath);
+      hasher.putBuildTargetSourcePath(buildTargetSourcePath);
+      return setBuildRule(buildRule);
+    }
+
+    // The original version of this expected the path to be relative, however, sometimes the
+    // deprecated method returned an absolute path, which is obviously less than ideal. If we can,
+    // grab the relative path to the output. We also need to hash the contents of the absolute
+    // path no matter what.
+    Path absolutePath = resolver.getAbsolutePath(sourcePath);
+    Path ideallyRelative;
+    try {
+      ideallyRelative = resolver.getRelativePath(sourcePath);
+    } catch (IllegalStateException e) {
+      // Expected relative path was absolute. Yay.
+      ideallyRelative = absolutePath;
+    }
+    try {
+      return setPath(absolutePath, ideallyRelative);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   // Paths get added as a combination of the file name and file hash. If the path is absolute
   // then we only include the file name (assuming that it represents a tool of some kind
   // that's being used for compilation or some such). This does mean that if a user renames a
@@ -339,6 +356,17 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     return this;
   }
 
+  protected RuleKeyBuilder<RULE_KEY> setNonHashingSourcePath(SourcePath sourcePath) {
+    String pathForKey;
+    if (sourcePath instanceof ResourceSourcePath) {
+      pathForKey = ((ResourceSourcePath) sourcePath).getResourceIdentifier();
+    } else {
+      pathForKey = resolver.getRelativePath(sourcePath).toString();
+    }
+    hasher.putNonHashingPath(pathForKey);
+    return this;
+  }
+
   private RuleKeyBuilder<RULE_KEY> setSingleValue(@Nullable Object val) {
     if (val == null) { // Null value first
       hasher.putNull();
@@ -370,6 +398,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     return this;
   }
 
+  /** A convenience method for implementations that build {@link RuleKey}. */
   protected final RuleKey buildRuleKey() {
     return new RuleKey(hasher.hash());
   }
