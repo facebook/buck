@@ -36,7 +36,6 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
-import com.facebook.buck.rules.keys.InputCountingRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFactory;
 import com.facebook.buck.rules.keys.SizeLimiter;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
@@ -84,7 +83,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
-import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -921,8 +919,6 @@ public class CachingBuildEngine implements BuildEngine {
                 // Unblock dependents.
                 result.set(input);
 
-                Optional<Integer> inputsCount = Optional.empty();
-                Optional<Long> inputsSize = Optional.empty();
                 if (input.getStatus() == BuildRuleStatus.SUCCESS) {
                   BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
                   successType = Optional.of(success);
@@ -944,41 +940,16 @@ public class CachingBuildEngine implements BuildEngine {
                   }
 
                   // Calculate the hash of outputs that were built locally and are cacheable.
-                  if (success == BuildRuleSuccessType.BUILT_LOCALLY) {
+                  if (success == BuildRuleSuccessType.BUILT_LOCALLY &&
+                      shouldUploadToCache(rule, outputSize.get())) {
                     try {
-                      InputCountingRuleKeyFactory.Result inputs =
-                          keyFactories.inputCountingRuleKeyFactory.build(rule);
-                      inputsCount = Optional.of(inputs.getInputsCount());
-                      inputsSize = Optional.of(inputs.getInputsSize());
-                    } catch (UncheckedExecutionException e) {
-                      Exception ex = e;
-                      while (!(ex.getCause() instanceof
-                          InputCountingRuleKeyFactory.WrappedIoException)) {
-                        if (!(ex.getCause() instanceof Exception)) {
-                          throw e;
-                        }
-                        ex = (Exception) ex.getCause();
-                      }
-                      LOG.warn(
-                          ex.getCause(),
-                          "Failed to count inputs for rule: '%s'.",
-                          rule.getFullyQualifiedName());
-                    } catch (InputCountingRuleKeyFactory.WrappedIoException e) {
-                      LOG.warn(
-                          e,
-                          "Failed to count inputs for rule: '%s'.",
-                          rule.getFullyQualifiedName());
-                    }
-                    if (shouldUploadToCache(rule, outputSize.get())) {
-                      try {
-                        outputHash = Optional.of(buildInfoRecorder.getOutputHash(fileHashCache));
-                      } catch (IOException e) {
-                        buildContext.getEventBus().post(
-                            ThrowableConsoleEvent.create(
-                                e,
-                                "Error getting output hash for %s.",
-                                rule));
-                      }
+                      outputHash = Optional.of(buildInfoRecorder.getOutputHash(fileHashCache));
+                    } catch (IOException e) {
+                      buildContext.getEventBus().post(
+                          ThrowableConsoleEvent.create(
+                              e,
+                              "Error getting output hash for %s.",
+                              rule));
                     }
                   }
                 }
@@ -1004,9 +975,7 @@ public class CachingBuildEngine implements BuildEngine {
                         input.getCacheResult(),
                         successType,
                         outputHash,
-                        outputSize,
-                        inputsCount,
-                        inputsSize));
+                        outputSize));
               }
 
               @Override
@@ -1839,7 +1808,6 @@ public class CachingBuildEngine implements BuildEngine {
     public final RuleKeyFactory<RuleKey> defaultRuleKeyFactory;
     public final RuleKeyFactory<RuleKey> inputBasedRuleKeyFactory;
     public final DependencyFileRuleKeyFactory depFileRuleKeyFactory;
-    public final InputCountingRuleKeyFactory inputCountingRuleKeyFactory;
 
     public static RuleKeyFactories build(
         int seed,
@@ -1866,11 +1834,6 @@ public class CachingBuildEngine implements BuildEngine {
               seed,
               fileHashCache,
               pathResolver,
-              ruleFinder),
-          new InputCountingRuleKeyFactory(
-              seed,
-              fileHashCache,
-              pathResolver,
               ruleFinder));
     }
 
@@ -1878,12 +1841,10 @@ public class CachingBuildEngine implements BuildEngine {
     RuleKeyFactories(
         RuleKeyFactory<RuleKey> defaultRuleKeyFactory,
         RuleKeyFactory<RuleKey> inputBasedRuleKeyFactory,
-        DependencyFileRuleKeyFactory depFileRuleKeyFactory,
-        InputCountingRuleKeyFactory inputCountingRuleKeyFactory) {
+        DependencyFileRuleKeyFactory depFileRuleKeyFactory) {
       this.defaultRuleKeyFactory = defaultRuleKeyFactory;
       this.inputBasedRuleKeyFactory = inputBasedRuleKeyFactory;
       this.depFileRuleKeyFactory = depFileRuleKeyFactory;
-      this.inputCountingRuleKeyFactory = inputCountingRuleKeyFactory;
     }
   }
 }

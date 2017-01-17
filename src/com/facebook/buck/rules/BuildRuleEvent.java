@@ -63,9 +63,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       CacheResult cacheResult,
       Optional<BuildRuleSuccessType> successType,
       Optional<HashCode> outputHash,
-      Optional<Long> outputSize,
-      Optional<Integer> inputsCount,
-      Optional<Long> inputsSize) {
+      Optional<Long> outputSize) {
     return new Finished(
         rule,
         ruleKeys,
@@ -73,9 +71,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         cacheResult,
         successType,
         outputHash,
-        outputSize,
-        inputsCount,
-        inputsSize);
+        outputSize);
   }
 
   public static Suspended suspended(
@@ -114,8 +110,6 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     private final BuildRuleKeys ruleKeys;
     private final Optional<HashCode> outputHash;
     private final Optional<Long> outputSize;
-    private final Optional<Integer> inputsCount;
-    private final Optional<Long> inputsSize;
 
     protected Finished(
         BuildRule rule,
@@ -124,9 +118,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         CacheResult cacheResult,
         Optional<BuildRuleSuccessType> successType,
         Optional<HashCode> outputHash,
-        Optional<Long> outputSize,
-        Optional<Integer> inputsCount,
-        Optional<Long> inputsSize) {
+        Optional<Long> outputSize) {
       super(rule);
       this.status = status;
       this.cacheResult = cacheResult;
@@ -134,8 +126,6 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       this.ruleKeys = ruleKeys;
       this.outputHash = outputHash;
       this.outputSize = outputSize;
-      this.inputsCount = inputsCount;
-      this.inputsSize = inputsSize;
     }
 
     @JsonView(JsonViews.MachineReadableLog.class)
@@ -166,16 +156,6 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     @JsonIgnore
     public Optional<Long> getOutputSize() {
       return outputSize;
-    }
-
-    @JsonIgnore
-    public Optional<Integer> getInputsCount() {
-      return inputsCount;
-    }
-
-    @JsonIgnore
-    public Optional<Long> getInputsSize() {
-      return inputsSize;
     }
 
     @Override

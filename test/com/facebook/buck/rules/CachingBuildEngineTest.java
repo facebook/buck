@@ -57,7 +57,6 @@ import com.facebook.buck.rules.keys.DependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.FakeInputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
-import com.facebook.buck.rules.keys.InputCountingRuleKeyFactory;
 import com.facebook.buck.rules.keys.SizeLimiter;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
@@ -127,7 +126,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -181,12 +179,6 @@ public class CachingBuildEngineTest {
           new NullFileHashCache(),
           DEFAULT_SOURCE_PATH_RESOLVER,
           DEFAULT_RULE_FINDER);
-  private static final InputCountingRuleKeyFactory NOOP_INPUT_COUNTING_RULE_KEY_FACTORY =
-      new InputCountingRuleKeyFactory(
-          0,
-          new NullFileHashCache(),
-          DEFAULT_SOURCE_PATH_RESOLVER,
-          DEFAULT_RULE_FINDER);
   private static final ObjectMapper MAPPER = ObjectMappers.newDefaultInstance();
 
   public abstract static class CommonFixture extends EasyMockSupport {
@@ -203,7 +195,6 @@ public class CachingBuildEngineTest {
     protected SourcePathResolver pathResolver;
     protected DefaultRuleKeyFactory defaultRuleKeyFactory;
     protected InputBasedRuleKeyFactory inputBasedRuleKeyFactory;
-    protected InputCountingRuleKeyFactory inputCountingRuleKeyFactory;
 
     @Before
     public void setUp() {
@@ -229,8 +220,6 @@ public class CachingBuildEngineTest {
           pathResolver,
           ruleFinder,
           NO_INPUT_FILE_SIZE_LIMIT);
-      inputCountingRuleKeyFactory =
-          new InputCountingRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder);
     }
 
 
@@ -336,8 +325,6 @@ public class CachingBuildEngineTest {
                   CacheResult.miss(),
                   Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                   Optional.empty(),
-                  Optional.empty(),
-                  Optional.empty(),
                   Optional.empty())));
     }
 
@@ -391,8 +378,6 @@ public class CachingBuildEngineTest {
                   BuildRuleStatus.SUCCESS,
                   CacheResult.miss(),
                   Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-                  Optional.empty(),
-                  Optional.empty(),
                   Optional.empty(),
                   Optional.empty())));
     }
@@ -582,8 +567,6 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.empty(),
-                  Optional.empty(),
-                  Optional.empty(),
                   Optional.empty())));
     }
 
@@ -639,8 +622,6 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.empty(),
-                  Optional.empty(),
-                  Optional.empty(),
                   Optional.empty())));
       assertThat(
           events,
@@ -652,8 +633,6 @@ public class CachingBuildEngineTest {
                   BuildRuleStatus.SUCCESS,
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
-                  Optional.empty(),
-                  Optional.empty(),
                   Optional.empty(),
                   Optional.empty())));
     }
@@ -733,8 +712,6 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.empty(),
-                  Optional.empty(),
-                  Optional.empty(),
                   Optional.empty())));
       assertThat(
           events,
@@ -747,8 +724,6 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.empty(),
-                  Optional.empty(),
-                  Optional.empty(),
                   Optional.empty())));
       assertThat(
           events,
@@ -760,8 +735,6 @@ public class CachingBuildEngineTest {
                   BuildRuleStatus.SUCCESS,
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
-                  Optional.empty(),
-                  Optional.empty(),
                   Optional.empty(),
                   Optional.empty())));
     }
@@ -1291,11 +1264,9 @@ public class CachingBuildEngineTest {
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
                       NOOP_RULE_KEY_FACTORY,
-                      new FakeInputBasedRuleKeyFactory(ImmutableMap.of(
-                          rule.getBuildTarget(),
-                          inputRuleKey)),
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
-                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
+                      new FakeInputBasedRuleKeyFactory(
+                          ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
           .build();
 
       // Run the build.
@@ -1347,8 +1318,7 @@ public class CachingBuildEngineTest {
                       defaultRuleKeyFactory,
                       new FakeInputBasedRuleKeyFactory(
                           ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
-                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
           .build();
 
       // Run the build.
@@ -1417,8 +1387,7 @@ public class CachingBuildEngineTest {
                       defaultRuleKeyFactory,
                       new FakeInputBasedRuleKeyFactory(
                           ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
-                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
           .build();
 
       // Run the build.
@@ -1508,8 +1477,7 @@ public class CachingBuildEngineTest {
                           ImmutableMap.of(),
                           ImmutableSet.of(rule.getBuildTarget()),
                           fileHashCache),
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
-                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
           .build();
 
       // Run the build.
@@ -2074,8 +2042,7 @@ public class CachingBuildEngineTest {
                   new CachingBuildEngine.RuleKeyFactories(
                       defaultRuleKeyFactory,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
-                      depFileFactory,
-                      inputCountingRuleKeyFactory)))
+                      depFileFactory)))
           .build();
     }
   }
@@ -2146,8 +2113,7 @@ public class CachingBuildEngineTest {
                       new CachingBuildEngine.RuleKeyFactories(
                           defaultRuleKeyFactory,
                           inputBasedRuleKeyFactory,
-                          depFilefactory,
-                          inputCountingRuleKeyFactory)))
+                          depFilefactory)))
               .build();
 
       // Run the build.
@@ -2251,8 +2217,7 @@ public class CachingBuildEngineTest {
                       new CachingBuildEngine.RuleKeyFactories(
                           defaultRuleKeyFactory,
                           inputBasedRuleKeyFactory,
-                          depFilefactory,
-                          inputCountingRuleKeyFactory)))
+                          depFilefactory)))
               .build();
 
       // Seed the cache with an existing manifest with a dummy entry.
@@ -2370,8 +2335,7 @@ public class CachingBuildEngineTest {
                       new CachingBuildEngine.RuleKeyFactories(
                           defaultRuleKeyFactory,
                           inputBasedRuleKeyFactory,
-                          depFilefactory,
-                          inputCountingRuleKeyFactory)))
+                          depFilefactory)))
               .build();
 
       // Seed the cache with an existing manifest with a dummy entry so that it's already at the max
@@ -2479,8 +2443,7 @@ public class CachingBuildEngineTest {
                       new CachingBuildEngine.RuleKeyFactories(
                           defaultRuleKeyFactory,
                           inputBasedRuleKeyFactory,
-                          depFilefactory,
-                          NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
+                          depFilefactory)))
               .build();
 
       // Seed the cache with the manifest and a referenced artifact.
@@ -2543,8 +2506,7 @@ public class CachingBuildEngineTest {
                   new CachingBuildEngine.RuleKeyFactories(
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
-                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
           .build();
       BuildResult result =
           cachingBuildEngine.build(buildContext, TestExecutionContext.newInstance(), rule).get();
@@ -2625,8 +2587,7 @@ public class CachingBuildEngineTest {
                   new CachingBuildEngine.RuleKeyFactories(
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
-                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
           .build();
       ListenableFuture<BuildResult> result1 =
           cachingBuildEngine.build(buildContext, TestExecutionContext.newInstance(), rule1);
@@ -2727,8 +2688,7 @@ public class CachingBuildEngineTest {
                   new CachingBuildEngine.RuleKeyFactories(
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
-                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
           .build();
 
       // Run the build.
@@ -2768,8 +2728,7 @@ public class CachingBuildEngineTest {
                   new CachingBuildEngine.RuleKeyFactories(
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
-                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
           .build();
 
       // Run the build.
@@ -2808,8 +2767,7 @@ public class CachingBuildEngineTest {
                   new CachingBuildEngine.RuleKeyFactories(
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
-                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
           .build();
 
       // Run the build.
@@ -2837,9 +2795,7 @@ public class CachingBuildEngineTest {
         grouped.get(event.getThreadId()).add(event);
       }
       for (List<BuildRuleEvent> queue : grouped.values()) {
-        Collections.sort(
-            queue,
-            (o1, o2) -> Long.compare(o1.getNanoTime(), o2.getNanoTime()));
+        queue.sort(Comparator.comparingLong(BuildRuleEvent::getNanoTime));
         ImmutableList<String> queueDescription = queue.stream()
             .map(event -> String.format("%s@%s", event, event.getNanoTime()))
             .collect(MoreCollectors.toImmutableList());

@@ -62,13 +62,13 @@ import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.rules.TestSummaryEvent;
+import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
@@ -374,8 +374,6 @@ public class SuperConsoleEventBusListenerTest {
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                 Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
                 Optional.empty()),
             1000L,
             TimeUnit.MILLISECONDS,
@@ -409,8 +407,6 @@ public class SuperConsoleEventBusListenerTest {
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-                Optional.empty(),
-                Optional.empty(),
                 Optional.empty(),
                 Optional.empty()),
             1120L,
@@ -678,8 +674,6 @@ public class SuperConsoleEventBusListenerTest {
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                 Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
                 Optional.empty()),
             1000L,
             TimeUnit.MILLISECONDS,
@@ -713,8 +707,6 @@ public class SuperConsoleEventBusListenerTest {
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-                Optional.empty(),
-                Optional.empty(),
                 Optional.empty(),
                 Optional.empty()),
             1120L,
@@ -1094,8 +1086,6 @@ public class SuperConsoleEventBusListenerTest {
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                 Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
                 Optional.empty()),
             1000L,
             TimeUnit.MILLISECONDS,
@@ -1385,8 +1375,6 @@ public class SuperConsoleEventBusListenerTest {
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-                Optional.empty(),
-                Optional.empty(),
                 Optional.empty(),
                 Optional.empty()),
             1000L,
@@ -1690,8 +1678,6 @@ public class SuperConsoleEventBusListenerTest {
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-                Optional.empty(),
-                Optional.empty(),
                 Optional.empty(),
                 Optional.empty()),
             1000L,
@@ -2036,8 +2022,6 @@ public class SuperConsoleEventBusListenerTest {
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-                Optional.empty(),
-                Optional.empty(),
                 Optional.empty(),
                 Optional.empty()),
             600L,

@@ -171,8 +171,6 @@ public class EventSerializationTest {
             CacheResult.miss(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
             Optional.empty(),
-            Optional.empty(),
-            Optional.empty(),
             Optional.empty());
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = MAPPER.writeValueAsString(event);
