@@ -35,7 +35,6 @@ import com.facebook.buck.rules.keys.RuleKeyFactory;
 import com.facebook.buck.rules.keys.UncachedRuleKeyBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.packaged_resource.PackagedResourceTestUtil;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -333,74 +332,6 @@ public class RuleKeyTest {
             .setReflectively(
                 "different-key",
                 new PathSourcePath(projectFilesystem, Paths.get("something")))
-            .build());
-  }
-
-  @Test
-  public void setDifferentResourceSourcePaths() {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-
-    ResourceSourcePath resourceSourcePathOne =
-        new ResourceSourcePath(
-            PackagedResourceTestUtil.getPackagedResource(
-                filesystem,
-                "testdata/packaged_resource_one"));
-
-    ResourceSourcePath resourceSourcePathTwo =
-        new ResourceSourcePath(
-            PackagedResourceTestUtil.getPackagedResource(
-                filesystem,
-                "testdata/packaged_resource_two"));
-
-    // Changing the file name should change the rule key
-    SourcePathRuleFinder ruleFinder1 = new SourcePathRuleFinder(
-        new BuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-    SourcePathRuleFinder ruleFinder2 = new SourcePathRuleFinder(
-        new BuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-    assertNotEquals(
-        createEmptyRuleKey(
-            new SourcePathResolver(ruleFinder1), ruleFinder1)
-            .setReflectively("key", resourceSourcePathOne)
-            .build(),
-        createEmptyRuleKey(
-            new SourcePathResolver(ruleFinder2), ruleFinder2)
-            .setReflectively("key", resourceSourcePathTwo)
-            .build());
-  }
-
-  @Test
-  public void setDifferentNonHashingResourceSourcePaths() {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-
-    ResourceSourcePath resourceSourcePathOne =
-        new ResourceSourcePath(
-            PackagedResourceTestUtil.getPackagedResource(
-                filesystem,
-                "testdata/packaged_resource_one"));
-
-    ResourceSourcePath resourceSourcePathTwo =
-        new ResourceSourcePath(
-            PackagedResourceTestUtil.getPackagedResource(
-                filesystem,
-                "testdata/packaged_resource_two"));
-
-    // Changing the resource identifier should change the rule key
-    SourcePathRuleFinder ruleFinder1 = new SourcePathRuleFinder(
-        new BuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-    SourcePathRuleFinder ruleFinder2 = new SourcePathRuleFinder(
-        new BuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-    assertNotEquals(
-        createEmptyRuleKey(
-            new SourcePathResolver(ruleFinder1), ruleFinder1)
-            .setReflectively("key", new NonHashableSourcePathContainer(resourceSourcePathOne))
-            .build(),
-        createEmptyRuleKey(
-            new SourcePathResolver(ruleFinder2), ruleFinder2)
-            .setReflectively("key", new NonHashableSourcePathContainer(resourceSourcePathTwo))
             .build());
   }
 

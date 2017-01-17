@@ -31,7 +31,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.NonHashableSourcePathContainer;
-import com.facebook.buck.rules.ResourceSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -357,13 +356,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   }
 
   protected RuleKeyBuilder<RULE_KEY> setNonHashingSourcePath(SourcePath sourcePath) {
-    String pathForKey;
-    if (sourcePath instanceof ResourceSourcePath) {
-      pathForKey = ((ResourceSourcePath) sourcePath).getResourceIdentifier();
-    } else {
-      pathForKey = resolver.getRelativePath(sourcePath).toString();
-    }
-    hasher.putNonHashingPath(pathForKey);
+    hasher.putNonHashingPath(resolver.getRelativePath(sourcePath).toString());
     return this;
   }
 

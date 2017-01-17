@@ -73,10 +73,6 @@ public class SourcePathResolver {
    *     {@link com.facebook.buck.io.ProjectFilesystem}.
    */
   public Path getAbsolutePath(SourcePath sourcePath) {
-    if (sourcePath instanceof ResourceSourcePath) {
-      return ((ResourceSourcePath) sourcePath).getAbsolutePath();
-    }
-
     Path relative = getPathPrivateImpl(sourcePath);
 
     if (relative.isAbsolute()) {
@@ -121,8 +117,6 @@ public class SourcePathResolver {
    * {@link com.facebook.buck.io.ProjectFilesystem}.
    */
   public Path getRelativePath(SourcePath sourcePath) {
-    Preconditions.checkState(!(sourcePath instanceof ResourceSourcePath));
-
     Path toReturn = getPathPrivateImpl(sourcePath);
 
     Preconditions.checkState(
