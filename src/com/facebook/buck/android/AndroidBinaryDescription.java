@@ -200,20 +200,12 @@ public class AndroidBinaryDescription
       ResourceFilter resourceFilter =
         new ResourceFilter(args.resourceFilter);
 
-      Set<RType> bannedDuplicateTypesArgs = args.bannedDuplicateResourceTypes;
-      EnumSet<RType> bannedDuplicateResourceTypes;
-      if (!bannedDuplicateTypesArgs.isEmpty()) {
-        bannedDuplicateResourceTypes = EnumSet.copyOf(bannedDuplicateTypesArgs);
-      } else {
-        bannedDuplicateResourceTypes = EnumSet.noneOf(RType.class);
-      }
-
       AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
           params,
           resolver,
           compressionMode,
           resourceFilter,
-          bannedDuplicateResourceTypes,
+          args.getBannedDuplicateResourceTypes(),
           args.resourceUnionPackage,
           addFallbackLocales(args.locales),
           args.manifest,
@@ -401,7 +393,21 @@ public class AndroidBinaryDescription
     public Set<BuildTarget> applicationModuleTargets = ImmutableSet.of();
     public Optional<Long> linearAllocHardLimit;
     public List<String> resourceFilter = ImmutableList.of();
+
+    // Do not inspect these directly, use getBannedDuplicateResourceTypes.
+    // Ideally these should be private, but Arg-population doesn't allow that.
+    //
+    // If set to ALLOW_BY_DEFAULT, bannedDuplicateResourceTypes is used and setting
+    // allowedDuplicateResourceTypes is an error.
+    //
+    // If set to BAN_BY_DEFAULT, allowedDuplicateResourceTypes is used and setting
+    // bannedDuplicateResourceTypes is an error.
+    // This only exists to enable migration from allowing by default to banning by default.
+    public DuplicateResourceBehaviour duplicateResourceBehavior =
+        DuplicateResourceBehaviour.ALLOW_BY_DEFAULT;
     public Set<RType> bannedDuplicateResourceTypes = ImmutableSet.of();
+    public Set<RType> allowedDuplicateResourceTypes = ImmutableSet.of();
+
     public Optional<Boolean> trimResourceIds;
     public Optional<String> keepResourcePattern;
     public Optional<String> resourceUnionPackage;
@@ -432,5 +438,36 @@ public class AndroidBinaryDescription
       return tests;
     }
 
+    public EnumSet<RType> getBannedDuplicateResourceTypes() {
+      if (duplicateResourceBehavior == Arg.DuplicateResourceBehaviour.ALLOW_BY_DEFAULT) {
+        if (!allowedDuplicateResourceTypes.isEmpty()) {
+          throw new IllegalArgumentException("Cannot set allowed_duplicate_resource_types if " +
+              "duplicate_resource_behaviour is allow_by_default");
+        }
+        if (!bannedDuplicateResourceTypes.isEmpty()) {
+          return EnumSet.copyOf(bannedDuplicateResourceTypes);
+        } else {
+          return EnumSet.noneOf(RType.class);
+        }
+      } else if (duplicateResourceBehavior == Arg.DuplicateResourceBehaviour.BAN_BY_DEFAULT) {
+        if (!bannedDuplicateResourceTypes.isEmpty()) {
+          throw new IllegalArgumentException("Cannot set banned_duplicate_resource_types if " +
+              "duplicate_resource_behaviour is ban_by_default");
+        }
+        if (!allowedDuplicateResourceTypes.isEmpty()) {
+          return EnumSet.complementOf(EnumSet.copyOf(allowedDuplicateResourceTypes));
+        } else {
+          return EnumSet.allOf(RType.class);
+        }
+      } else {
+        throw new IllegalArgumentException(
+            "Unrecognized duplicate_resource_behavior: " + duplicateResourceBehavior);
+      }
+    }
+
+    public enum DuplicateResourceBehaviour {
+      ALLOW_BY_DEFAULT,
+      BAN_BY_DEFAULT
+    }
   }
 }

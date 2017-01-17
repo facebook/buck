@@ -438,4 +438,9 @@ public class MergeAndroidResourcesStep implements Step {
       super(String.format(messageFormat, args));
     }
   }
+
+  @VisibleForTesting
+  public EnumSet<RType> getBannedDuplicateResourceTypes() {
+    return bannedDuplicateResourceTypes;
+  }
 }

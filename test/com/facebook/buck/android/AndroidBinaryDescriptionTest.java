@@ -16,16 +16,18 @@
 
 package com.facebook.buck.android;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.jvm.java.KeystoreBuilder;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.Keystore;
+import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -41,6 +43,7 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Paths;
+import java.util.EnumSet;
 import java.util.Locale;
 
 public class AndroidBinaryDescriptionTest {
@@ -105,5 +108,45 @@ public class AndroidBinaryDescriptionTest {
     } finally {
       Locale.setDefault(originalLocale);
     }
+  }
+
+  @Test
+  public void duplicateResourceBanningDefaultAllow() throws Exception {
+    AndroidBinaryDescription.Arg arg = new AndroidBinaryDescription.Arg();
+    arg.bannedDuplicateResourceTypes = EnumSet.of(RDotTxtEntry.RType.STRING);
+
+    assertEquals(
+        EnumSet.of(RDotTxtEntry.RType.STRING),
+        arg.getBannedDuplicateResourceTypes());
+  }
+
+  @Test
+  public void duplicateResourceBanningDefaultBan() throws Exception {
+    AndroidBinaryDescription.Arg arg = new AndroidBinaryDescription.Arg();
+    arg.duplicateResourceBehavior =
+        AndroidBinaryDescription.Arg.DuplicateResourceBehaviour.BAN_BY_DEFAULT;
+    arg.allowedDuplicateResourceTypes = EnumSet.of(RDotTxtEntry.RType.STRING);
+
+    assertEquals(
+        EnumSet.complementOf(EnumSet.of(RDotTxtEntry.RType.STRING)),
+        arg.getBannedDuplicateResourceTypes());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void duplicateResourceBanningBadCombinationBan() throws Exception {
+    AndroidBinaryDescription.Arg arg = new AndroidBinaryDescription.Arg();
+    arg.duplicateResourceBehavior =
+        AndroidBinaryDescription.Arg.DuplicateResourceBehaviour.BAN_BY_DEFAULT;
+    arg.bannedDuplicateResourceTypes = EnumSet.of(RDotTxtEntry.RType.STRING);
+    arg.getBannedDuplicateResourceTypes();
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void duplicateResourceBanningBadCombinationAllow() throws Exception {
+    AndroidBinaryDescription.Arg arg = new AndroidBinaryDescription.Arg();
+    arg.duplicateResourceBehavior =
+        AndroidBinaryDescription.Arg.DuplicateResourceBehaviour.ALLOW_BY_DEFAULT;
+    arg.allowedDuplicateResourceTypes = EnumSet.of(RDotTxtEntry.RType.STRING);
+    arg.getBannedDuplicateResourceTypes();
   }
 }
