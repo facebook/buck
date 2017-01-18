@@ -314,7 +314,6 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
           module,
           new CopyNativeLibraries(
               paramsForCopyNativeLibraries,
-              pathResolver,
               ImmutableSet.copyOf(packageableCollection.getNativeLibsDirectories().get(module)),
               ImmutableSet.copyOf(strippedLibsMap.values()),
               ImmutableSet.copyOf(strippedLibsAssetsMap.values()),

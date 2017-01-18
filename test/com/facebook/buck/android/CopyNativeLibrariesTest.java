@@ -117,7 +117,6 @@ public class CopyNativeLibrariesTest {
     CopyNativeLibraries copyNativeLibraries =
         new CopyNativeLibraries(
             new FakeBuildRuleParamsBuilder(target).build(),
-            pathResolver,
             ImmutableSet.of(new FakeSourcePath("lib1"), new FakeSourcePath("lib2")),
             ImmutableSet.of(),
             ImmutableSet.of(),
