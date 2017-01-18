@@ -21,6 +21,7 @@ import com.sun.source.util.Trees;
 
 import org.junit.runners.Parameterized;
 
+import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
@@ -62,9 +63,10 @@ public abstract class CompilerTreeApiParameterizedTest extends CompilerTreeApiTe
     public JavacTask newJavacTask(
         JavaCompiler compiler,
         StandardJavaFileManager fileManager,
+        DiagnosticCollector<JavaFileObject> diagnostics,
         Iterable<? extends JavaFileObject> sourceObjects) {
       return new FrontendOnlyJavacTask(
-          inner.newJavacTask(compiler, fileManager, sourceObjects));
+          inner.newJavacTask(compiler, fileManager, diagnostics, sourceObjects));
     }
 
     @Override

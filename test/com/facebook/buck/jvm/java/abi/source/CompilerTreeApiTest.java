@@ -43,6 +43,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
@@ -69,6 +70,7 @@ public abstract class CompilerTreeApiTest {
     JavacTask newJavacTask(
         JavaCompiler compiler,
         StandardJavaFileManager fileManager,
+        DiagnosticCollector<JavaFileObject> diagnostics,
         Iterable<? extends JavaFileObject> sourceObjects);
     Trees getTrees(JavacTask task);
   }
@@ -76,6 +78,7 @@ public abstract class CompilerTreeApiTest {
   @Rule
   public TemporaryFolder tempFolder = new TemporaryFolder();
   protected JavacTask javacTask;
+  protected DiagnosticCollector<JavaFileObject> diagnostics;
   protected Elements elements;
   protected Trees trees;
   protected Types types;
@@ -103,10 +106,11 @@ public abstract class CompilerTreeApiTest {
 
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+    diagnostics = new DiagnosticCollector<>();
     Iterable<? extends JavaFileObject> sourceObjects =
         fileManager.getJavaFileObjectsFromFiles(sourceFiles);
 
-    javacTask = treeApiFactory.newJavacTask(compiler, fileManager, sourceObjects);
+    javacTask = treeApiFactory.newJavacTask(compiler, fileManager, diagnostics, sourceObjects);
     trees = treeApiFactory.getTrees(javacTask);
     elements = javacTask.getElements();
     types = javacTask.getTypes();
@@ -178,8 +182,15 @@ public abstract class CompilerTreeApiTest {
     public JavacTask newJavacTask(
         JavaCompiler compiler,
         StandardJavaFileManager fileManager,
+        DiagnosticCollector<JavaFileObject> diagnostics,
         Iterable<? extends JavaFileObject> sourceObjects) {
-      return (JavacTask) compiler.getTask(null, fileManager, null, null, null, sourceObjects);
+      return (JavacTask) compiler.getTask(
+          null,
+          fileManager,
+          diagnostics,
+          null,
+          null,
+          sourceObjects);
     }
 
     @Override
