@@ -615,7 +615,6 @@ public class AndroidBinaryGraphEnhancer {
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
     PreDexMerge preDexMerge = new PreDexMerge(
         paramsForPreDexMerge,
-        pathResolver,
         primaryDexPath,
         dexSplitMode,
         apkModuleGraph,

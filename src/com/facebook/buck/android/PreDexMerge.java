@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.PreDexMerge.BuildOutput;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RecordFileSha1Step;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -81,7 +80,7 @@ import javax.annotation.Nullable;
  * The differences in the splitting logic are too significant to make it
  * worth merging them.
  */
-public class PreDexMerge extends AbstractBuildRuleWithResolver
+public class PreDexMerge extends AbstractBuildRule
     implements InitializableFromDisk<BuildOutput> {
 
   /** Options to use with {@link DxStep} when merging pre-dexed files. */
@@ -105,7 +104,6 @@ public class PreDexMerge extends AbstractBuildRuleWithResolver
 
   public PreDexMerge(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       Path primaryDexPath,
       DexSplitMode dexSplitMode,
       APKModuleGraph apkModuleGraph,
@@ -113,7 +111,7 @@ public class PreDexMerge extends AbstractBuildRuleWithResolver
       DexProducedFromJavaLibrary dexForUberRDotJava,
       ListeningExecutorService dxExecutorService,
       Optional<Integer> xzCompressionLevel) {
-    super(params, resolver);
+    super(params);
     this.primaryDexPath = primaryDexPath;
     this.dexSplitMode = dexSplitMode;
     this.apkModuleGraph = apkModuleGraph;
