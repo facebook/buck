@@ -19,7 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -40,7 +40,7 @@ import com.google.common.io.ByteSource;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class BuiltinApplePackage extends AbstractBuildRuleWithResolver {
+public class BuiltinApplePackage extends AbstractBuildRule {
 
   private final Path pathToOutputFile;
   private final Path temp;
@@ -48,9 +48,8 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithResolver {
 
   public BuiltinApplePackage(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       BuildRule bundle) {
-    super(params, resolver);
+    super(params);
     BuildTarget buildTarget = params.getBuildTarget();
     // TODO(ryu2): This will be different for Mac apps.
     this.pathToOutputFile = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s.ipa");

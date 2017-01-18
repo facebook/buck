@@ -102,7 +102,6 @@ public class ApplePackageDescription implements
     } else {
       return new BuiltinApplePackage(
           params,
-          sourcePathResolver,
           bundle);
     }
   }
