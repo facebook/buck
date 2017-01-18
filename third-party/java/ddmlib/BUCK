@@ -3,6 +3,7 @@ prebuilt_jar(
   binary_jar = 'ddmlib-25.2.0.jar',
   source_jar = 'ddmlib-25.2.0-sources.jar',
   deps = [
+    '//third-party/java/android:common',
     '//third-party/java/kxml2:kxml2',
   ],
   licenses = [

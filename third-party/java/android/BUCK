@@ -28,6 +28,10 @@ prebuilt_jar(
   name = 'common',
   binary_jar = 'common-25.2.0.jar',
   source_jar = 'common-25.2.0-sources.jar',
+  visibility = [
+    '//src/com/facebook/buck/android:',
+    '//third-party/java/ddmlib:',
+  ],
 )
 
 prebuilt_jar(

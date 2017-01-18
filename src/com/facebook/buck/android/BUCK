@@ -129,15 +129,27 @@ java_immutables_library(
   ],
   autodeps = True,
   resources = [
+    ':android-tools-common.jar',
     ':ddmlib.jar',
+    ':guava.jar',
     ':kxml2.jar',
   ],
   visibility = ['PUBLIC'],
 )
 
 export_file(
+  name = 'android-tools-common.jar',
+  src = '//third-party/java/android:common',
+)
+
+export_file(
   name = 'ddmlib.jar',
   src = '//third-party/java/ddmlib:ddmlib',
+)
+
+export_file(
+  name = 'guava.jar',
+  src = '//third-party/java/guava:guava',
 )
 
 export_file(
