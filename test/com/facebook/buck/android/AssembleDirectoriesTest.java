@@ -19,12 +19,12 @@ package com.facebook.buck.android;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -83,7 +83,6 @@ public class AssembleDirectoriesTest {
     ));
     AssembleDirectories assembleDirectories = new AssembleDirectories(
         buildRuleParams,
-        pathResolver,
         directories);
     ImmutableList<Step> steps = assembleDirectories.getBuildSteps(
         FakeBuildContext.withSourcePathResolver(pathResolver),

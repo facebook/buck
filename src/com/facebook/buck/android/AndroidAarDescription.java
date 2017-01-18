@@ -145,7 +145,6 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         packageableCollection.getAssetsDirectories();
     AssembleDirectories assembleAssetsDirectories = new AssembleDirectories(
         assembleAssetsParams,
-        pathResolver,
         assetsDirectories);
     aarExtraDepsBuilder.add(resolver.addToIndex(assembleAssetsDirectories));
 

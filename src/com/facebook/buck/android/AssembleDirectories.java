@@ -17,13 +17,12 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -32,7 +31,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 
-public class AssembleDirectories extends AbstractBuildRuleWithResolver {
+public class AssembleDirectories extends AbstractBuildRule {
 
   private final Path destinationDirectory;
   @AddToRuleKey
@@ -40,9 +39,8 @@ public class AssembleDirectories extends AbstractBuildRuleWithResolver {
 
   public AssembleDirectories(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       ImmutableCollection<SourcePath> directories) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.originalDirectories = directories;
     this.destinationDirectory = BuildTargets.getGenPath(
         getProjectFilesystem(),
