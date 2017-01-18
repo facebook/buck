@@ -86,7 +86,7 @@ public class JavaSourceJar extends AbstractBuildRuleWithResolver
     // We only want to consider raw source files, since the java package finder doesn't have the
     // smarts to read the "package" line from a source file.
 
-    for (Path source : getResolver().filterInputsToCompareToOutput(sources)) {
+    for (Path source : context.getSourcePathResolver().filterInputsToCompareToOutput(sources)) {
       Path packageFolder = packageFinder.findJavaPackageFolder(source);
       Path packageDir = temp.resolve(packageFolder);
       if (seenPackages.add(packageDir)) {
