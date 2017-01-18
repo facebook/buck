@@ -16,6 +16,9 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import com.sun.source.tree.CompilationUnitTree;
@@ -34,6 +37,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import javax.lang.model.element.Name;
+import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.JavaCompiler;
@@ -140,6 +147,30 @@ public abstract class CompilerTreeApiTest {
     javacTask.analyze();
 
     return compilationUnits;
+  }
+
+  protected TypeMirror getTypeParameterUpperBound(String typeName, int typeParameterIndex) {
+    TypeParameterElement typeParameter =
+        elements.getTypeElement(typeName).getTypeParameters().get(typeParameterIndex);
+    TypeVariable typeVariable = (TypeVariable) typeParameter.asType();
+
+    return typeVariable.getUpperBound();
+  }
+
+  protected void assertNameEquals(String expected, Name actual) {
+    assertEquals(elements.getName(expected), actual);
+  }
+
+  protected void assertSameType(TypeMirror expected, TypeMirror actual) {
+    if (!types.isSameType(expected, actual)) {
+      fail(String.format("Types are not the same.\nExpected: %s\nActual: %s", expected, actual));
+    }
+  }
+
+  protected void assertNotSameType(TypeMirror expected, TypeMirror actual) {
+    if (types.isSameType(expected, actual)) {
+      fail(String.format("Expected different types, but both were: %s", expected));
+    }
   }
 
   private static class JavacCompilerTreeApiFactory implements CompilerTreeApiFactory {

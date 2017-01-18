@@ -16,18 +16,11 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.Trees;
 
 import org.junit.runners.Parameterized;
 
-import javax.lang.model.element.Name;
-import javax.lang.model.element.TypeParameterElement;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.TypeVariable;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
@@ -77,30 +70,6 @@ public abstract class CompilerTreeApiParameterizedTest extends CompilerTreeApiTe
     @Override
     public Trees getTrees(JavacTask task) {
       return TreeBackedTrees.instance(task);
-    }
-  }
-
-  protected TypeMirror getTypeParameterUpperBound(String typeName, int typeParameterIndex) {
-    TypeParameterElement typeParameter =
-        elements.getTypeElement(typeName).getTypeParameters().get(typeParameterIndex);
-    TypeVariable typeVariable = (TypeVariable) typeParameter.asType();
-
-    return typeVariable.getUpperBound();
-  }
-
-  protected void assertNameEquals(String expected, Name actual) {
-    assertEquals(elements.getName(expected), actual);
-  }
-
-  protected void assertSameType(TypeMirror expected, TypeMirror actual) {
-    if (!types.isSameType(expected, actual)) {
-      fail(String.format("Types are not the same.\nExpected: %s\nActual: %s", expected, actual));
-    }
-  }
-
-  protected void assertNotSameType(TypeMirror expected, TypeMirror actual) {
-    if (types.isSameType(expected, actual)) {
-      fail(String.format("Expected different types, but both were: %s", expected));
     }
   }
 
