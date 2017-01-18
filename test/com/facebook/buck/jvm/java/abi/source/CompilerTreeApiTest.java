@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.common.collect.ImmutableMap;
@@ -32,7 +33,9 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -71,12 +74,16 @@ public abstract class CompilerTreeApiTest {
         JavaCompiler compiler,
         StandardJavaFileManager fileManager,
         DiagnosticCollector<JavaFileObject> diagnostics,
+        Iterable<String> options,
         Iterable<? extends JavaFileObject> sourceObjects);
     Trees getTrees(JavacTask task);
   }
 
   @Rule
   public TemporaryFolder tempFolder = new TemporaryFolder();
+  @Rule
+  public TemporaryFolder classpathFolder = new TemporaryFolder();
+  protected StandardJavaFileManager fileManager;
   protected JavacTask javacTask;
   protected DiagnosticCollector<JavaFileObject> diagnostics;
   protected Elements elements;
@@ -95,27 +102,45 @@ public abstract class CompilerTreeApiTest {
       Map<String, String> fileNamesToContents) throws IOException {
     CompilerTreeApiFactory treeApiFactory = newTreeApiFactory();
 
-    List<File> sourceFiles = new ArrayList<>(fileNamesToContents.size());
-    for (Map.Entry<String, String> fileNameToContents : fileNamesToContents.entrySet()) {
-      String fileName = fileNameToContents.getKey();
-      String contents = fileNameToContents.getValue();
-      File sourceFile = tempFolder.newFile(fileName);
-      Files.write(contents, sourceFile, StandardCharsets.UTF_8);
-      sourceFiles.add(sourceFile);
-    }
-
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-    StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+    fileManager = compiler.getStandardFileManager(null, null, null);
     diagnostics = new DiagnosticCollector<>();
+    Iterable<String> options =
+        Arrays.asList(new String[]{"-cp", classpathFolder.getRoot().toString()});
     Iterable<? extends JavaFileObject> sourceObjects =
-        fileManager.getJavaFileObjectsFromFiles(sourceFiles);
+        getJavaFileObjects(fileNamesToContents, tempFolder);
 
-    javacTask = treeApiFactory.newJavacTask(compiler, fileManager, diagnostics, sourceObjects);
+    javacTask = treeApiFactory.newJavacTask(
+        compiler,
+        fileManager,
+        diagnostics,
+        options,
+        sourceObjects);
     trees = treeApiFactory.getTrees(javacTask);
     elements = javacTask.getElements();
     types = javacTask.getTypes();
 
     return treeApiFactory;
+  }
+
+  private Iterable<? extends JavaFileObject> getJavaFileObjects(
+      Map<String, String> fileNamesToContents,
+      TemporaryFolder tempFolder) throws IOException {
+    List<File> sourceFiles = new ArrayList<>(fileNamesToContents.size());
+    for (Map.Entry<String, String> fileNameToContents : fileNamesToContents.entrySet()) {
+      Path filePath = tempFolder.getRoot().toPath().resolve(fileNameToContents.getKey());
+      File parentDir = filePath.getParent().toFile();
+      if (!parentDir.exists()) {
+        assertTrue(parentDir.mkdirs());
+      }
+
+      String contents = fileNameToContents.getValue();
+      File sourceFile = filePath.toFile();
+      Files.write(contents, sourceFile, StandardCharsets.UTF_8);
+      sourceFiles.add(sourceFile);
+    }
+
+    return fileManager.getJavaFileObjectsFromFiles(sourceFiles);
   }
 
   protected final Iterable<? extends CompilationUnitTree> compile(String source)
@@ -183,12 +208,13 @@ public abstract class CompilerTreeApiTest {
         JavaCompiler compiler,
         StandardJavaFileManager fileManager,
         DiagnosticCollector<JavaFileObject> diagnostics,
+        Iterable<String> options,
         Iterable<? extends JavaFileObject> sourceObjects) {
       return (JavacTask) compiler.getTask(
           null,
           fileManager,
           diagnostics,
-          null,
+          options,
           null,
           sourceObjects);
     }

@@ -64,9 +64,10 @@ public abstract class CompilerTreeApiParameterizedTest extends CompilerTreeApiTe
         JavaCompiler compiler,
         StandardJavaFileManager fileManager,
         DiagnosticCollector<JavaFileObject> diagnostics,
+        Iterable<String> options,
         Iterable<? extends JavaFileObject> sourceObjects) {
       return new FrontendOnlyJavacTask(
-          inner.newJavacTask(compiler, fileManager, diagnostics, sourceObjects));
+          inner.newJavacTask(compiler, fileManager, diagnostics, options, sourceObjects));
     }
 
     @Override
