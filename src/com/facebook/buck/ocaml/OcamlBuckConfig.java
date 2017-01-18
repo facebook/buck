@@ -47,13 +47,16 @@ public class OcamlBuckConfig {
   private final BuckConfig delegate;
   private final CxxPlatform cxxPlatform;
 
+  OcamlBuckConfig(BuckConfig delegate, CxxPlatform cxxPlatform) {
+    this.delegate = delegate;
+    this.cxxPlatform = cxxPlatform;
+  }
+
   public OcamlBuckConfig(
       Platform platform,
       ProjectFilesystem filesystem,
       BuckConfig delegate) {
-    this.delegate = delegate;
-    this.cxxPlatform =
-        DefaultCxxPlatforms.build(platform, filesystem, new CxxBuckConfig(delegate));
+    this(delegate, DefaultCxxPlatforms.build(platform, filesystem, new CxxBuckConfig(delegate)));
   }
 
   public Optional<Tool> getOcamlCompiler() {
@@ -96,8 +99,15 @@ public class OcamlBuckConfig {
     return cxxPlatform.getCxx();
   }
 
+  /**
+   * @return all C/C++ platform flags used to preprocess, compiler, and assemble C sources.
+   */
   public ImmutableList<String> getCFlags() {
-    return cxxPlatform.getCppflags();
+    return ImmutableList.<String>builder()
+        .addAll(cxxPlatform.getCppflags())
+        .addAll(cxxPlatform.getCflags())
+        .addAll(cxxPlatform.getAsflags())
+        .build();
   }
 
   public ImmutableList<String> getLdFlags() {
