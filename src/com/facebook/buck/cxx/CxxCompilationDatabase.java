@@ -179,12 +179,10 @@ public class CxxCompilationDatabase extends AbstractBuildRuleWithResolver
     private int writeOutput(
         Iterable<CxxCompilationDatabaseEntry> entries,
         ExecutionContext context) {
-      try {
-        OutputStream outputStream = getProjectFilesystem().newFileOutputStream(
-            getPathToOutput());
+      try (OutputStream outputStream =
+               getProjectFilesystem().newFileOutputStream(getPathToOutput())) {
         ObjectMapper mapper = context.getObjectMapper();
-        outputStream.write(mapper.writeValueAsBytes(entries));
-        outputStream.close();
+        mapper.writeValue(outputStream, entries);
       } catch (IOException e) {
         logError(e, context);
         return 1;
