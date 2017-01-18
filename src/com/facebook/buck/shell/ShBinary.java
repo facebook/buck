@@ -103,7 +103,7 @@ public class ShBinary extends AbstractBuildRuleWithResolver
 
               ImmutableList<String> resourceStrings = FluentIterable
                   .from(resources)
-                  .transform(getResolver()::getRelativePath)
+                  .transform(context.getSourcePathResolver()::getRelativePath)
                   .transform(Object::toString)
                   .transform(Escaper.BASH_ESCAPER)
                   .toList();
@@ -112,7 +112,8 @@ public class ShBinary extends AbstractBuildRuleWithResolver
                   .add("path_back_to_root", pathBackToRoot)
                   .add(
                       "script_to_run",
-                      Escaper.escapeAsBashString(getResolver().getRelativePath(main)))
+                      Escaper.escapeAsBashString(
+                          context.getSourcePathResolver().getRelativePath(main)))
                   .add("resources", resourceStrings);
             }),
         new MakeExecutableStep(getProjectFilesystem(), output));
