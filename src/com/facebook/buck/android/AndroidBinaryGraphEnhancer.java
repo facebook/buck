@@ -501,7 +501,6 @@ public class AndroidBinaryGraphEnhancer {
       computeExopackageDepsAbi = Optional.of(
           new ComputeExopackageDepsAbi(
               paramsForComputeExopackageAbi,
-              pathResolver,
               exopackageModes,
               packageableCollection,
               aaptPackageResources,
