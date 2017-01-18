@@ -16,14 +16,13 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -45,7 +44,7 @@ import javax.annotation.Nullable;
  * </pre>
  */
 
-public class PrebuiltNativeLibrary extends AbstractBuildRuleWithResolver
+public class PrebuiltNativeLibrary extends AbstractBuildRule
     implements NativeLibraryBuildRule, AndroidPackageable {
 
   @AddToRuleKey
@@ -57,11 +56,10 @@ public class PrebuiltNativeLibrary extends AbstractBuildRuleWithResolver
 
   protected PrebuiltNativeLibrary(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       Path nativeLibsDirectory,
       boolean isAsset,
       ImmutableSortedSet<SourcePath> librarySources) {
-    super(params, resolver);
+    super(params);
     this.isAsset = isAsset;
     this.libraryPath = nativeLibsDirectory;
     this.librarySources = librarySources;
