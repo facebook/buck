@@ -169,17 +169,6 @@ public class CxxPreprocessAndCompileStep implements Step {
   }
 
   @VisibleForTesting
-  ImmutableList<String> makePreprocessArguments(boolean allowColorsInDiagnostics) {
-    return ImmutableList.<String>builder()
-        .addAll(preprocessorCommand.get().getArguments(allowColorsInDiagnostics))
-        .addAll(getLanguageArgs(inputType.getLanguage()))
-        .add("-E")
-        .addAll(getDepFileArgs(getDepTemp()))
-        .add(input.toString())
-        .build();
-  }
-
-  @VisibleForTesting
   ImmutableList<String> makeCompileArguments(
       String inputFileName,
       String inputLanguage,
