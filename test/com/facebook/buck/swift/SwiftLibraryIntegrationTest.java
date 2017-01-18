@@ -109,7 +109,7 @@ public class SwiftLibraryIntegrationTest {
     SwiftCompile buildRule = (SwiftCompile) FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION
         .createBuildRule(TargetGraph.EMPTY, params, resolver, args);
 
-    ImmutableList<String> swiftIncludeArgs = buildRule.getSwiftIncludeArgs();
+    ImmutableList<String> swiftIncludeArgs = buildRule.getSwiftIncludeArgs(pathResolver);
 
     assertThat(swiftIncludeArgs.size(), Matchers.equalTo(1));
     assertThat(swiftIncludeArgs.get(0), Matchers.startsWith("-I"));
