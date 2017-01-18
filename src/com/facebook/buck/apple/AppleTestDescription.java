@@ -471,7 +471,7 @@ public class AppleTestDescription implements
     public Optional<BuildTarget> testHostApp;
 
     // for use with FBSnapshotTestcase, injects the path as FB_REFERENCE_IMAGE_DIR
-    public Optional<SourcePath> snapshotReferenceImagesPath;
+    public Optional<Either<SourcePath, String>> snapshotReferenceImagesPath;
 
     // Bundle related fields.
     public SourcePath infoPlist;

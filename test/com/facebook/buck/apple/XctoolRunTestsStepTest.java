@@ -620,7 +620,7 @@ public class XctoolRunTestsStepTest {
         Optional.of("TEST_LOG_LEVEL"),
         Optional.of("verbose"),
         Optional.empty(),
-        Optional.of(Paths.get("/path/to/snapshotimages")));
+        Optional.of("/path/to/snapshotimages"));
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
             .setCommand(

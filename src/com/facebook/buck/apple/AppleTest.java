@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
@@ -110,7 +111,7 @@ public class AppleTest
   private final Path testLogsPath;
 
   @AddToRuleKey
-  private final Optional<SourcePath> snapshotReferenceImagePath;
+  private final Optional<Either<SourcePath, String>> snapshotReferenceImagesPath;
 
   private Optional<Long> testRuleTimeoutMs;
 
@@ -198,7 +199,7 @@ public class AppleTest
       String testLogLevel,
       Optional<Long> testRuleTimeoutMs,
       boolean isUiTest,
-      Optional<SourcePath> snapshotReferenceImagePath) {
+      Optional<Either<SourcePath, String>> snapshotReferenceImagesPath) {
     super(params, resolver);
     this.xctool = xctool;
     this.xctoolStutterTimeout = xctoolStutterTimeout;
@@ -223,7 +224,7 @@ public class AppleTest
     this.testLogLevelEnvironmentVariable = testLogLevelEnvironmentVariable;
     this.testLogLevel = testLogLevel;
     this.isUiTest = isUiTest;
-    this.snapshotReferenceImagePath = snapshotReferenceImagePath;
+    this.snapshotReferenceImagesPath = snapshotReferenceImagesPath;
   }
 
   @Override
@@ -303,6 +304,20 @@ public class AppleTest
       } else {
         destinationSpecifierArg = defaultDestinationSpecifier;
       }
+
+      Optional<String> snapshotReferenceImagesPath = Optional.empty();
+      if (this.snapshotReferenceImagesPath.isPresent()) {
+        if (this.snapshotReferenceImagesPath.get().isLeft()) {
+          snapshotReferenceImagesPath = Optional.of(
+              getResolver().getAbsolutePath(
+                  this.snapshotReferenceImagesPath.get().getLeft()).toString());
+        } else if (this.snapshotReferenceImagesPath.get().isRight()) {
+          snapshotReferenceImagesPath = Optional.of(
+              getProjectFilesystem().getPathForRelativePath(
+                  this.snapshotReferenceImagesPath.get().getRight()).toString());
+        }
+      }
+
       XctoolRunTestsStep xctoolStep =
           new XctoolRunTestsStep(
               getProjectFilesystem(),
@@ -322,7 +337,7 @@ public class AppleTest
               Optional.of(testLogLevelEnvironmentVariable),
               Optional.of(testLogLevel),
               testRuleTimeoutMs,
-              this.snapshotReferenceImagePath.map(pathResolver::getAbsolutePath));
+              snapshotReferenceImagesPath);
       steps.add(xctoolStep);
       externalSpec.setType("xctool-" + (testHostApp.isPresent() ? "application" : "logic"));
       externalSpec.setCommand(xctoolStep.getCommand());
