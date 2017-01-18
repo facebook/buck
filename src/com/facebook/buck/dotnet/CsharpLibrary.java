@@ -19,14 +19,13 @@ package com.facebook.buck.dotnet;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Preconditions;
@@ -38,7 +37,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Map;
 
-public class CsharpLibrary extends AbstractBuildRuleWithResolver {
+public class CsharpLibrary extends AbstractBuildRule {
 
   @AddToRuleKey(stringify = true)
   private final Path output;
@@ -53,13 +52,12 @@ public class CsharpLibrary extends AbstractBuildRuleWithResolver {
 
   protected CsharpLibrary(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       String dllName,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableList<Either<BuildRule, String>> refs,
       ImmutableMap<String, SourcePath> resources,
       FrameworkVersion version) {
-    super(params, resolver);
+    super(params);
 
     Preconditions.checkArgument(dllName.endsWith(".dll"));
 
@@ -80,11 +78,14 @@ public class CsharpLibrary extends AbstractBuildRuleWithResolver {
       BuildableContext buildableContext) {
     ProjectFilesystem filesystem = getProjectFilesystem();
 
-    ImmutableSortedSet<Path> sourceFiles = getResolver().getAllAbsolutePaths(srcs);
+    ImmutableSortedSet<Path> sourceFiles =
+        context.getSourcePathResolver().getAllAbsolutePaths(srcs);
 
     ImmutableListMultimap.Builder<Path, String> resolvedResources = ImmutableListMultimap.builder();
     for (Map.Entry<String, SourcePath> resource : resources.entrySet()) {
-      resolvedResources.put(getResolver().getAbsolutePath(resource.getValue()), resource.getKey());
+      resolvedResources.put(
+          context.getSourcePathResolver().getAbsolutePath(resource.getValue()),
+          resource.getKey());
     }
 
     ImmutableList<Either<Path, String>> references = resolveReferences(refs);
