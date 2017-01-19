@@ -815,7 +815,6 @@ public class LuaBinaryDescription implements
             packageStyle);
     return new LuaBinary(
         params.appendExtraDeps(binary.getDeps(ruleFinder)),
-        pathResolver,
         ruleFinder,
         getOutputPath(params.getBuildTarget(), params.getProjectFilesystem()),
         binary,
