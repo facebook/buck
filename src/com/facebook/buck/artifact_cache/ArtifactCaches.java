@@ -28,6 +28,7 @@ import com.facebook.buck.slb.SingleUriService;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.AsyncCloseable;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -299,8 +300,9 @@ public class ArtifactCaches implements ArtifactCacheFactory {
     storeClientBuilder.networkInterceptors().add(
         chain -> chain.proceed(
             chain.request().newBuilder()
-                .addHeader("X-BuckCache-User", System.getProperty("user.name", "<unknown>"))
-                .addHeader("X-BuckCache-Host", hostToReportToRemote)
+                .addHeader("X-BuckCache-User",
+                    stripNonAscii(System.getProperty("user.name", "<unknown>")))
+                .addHeader("X-BuckCache-Host", stripNonAscii(hostToReportToRemote))
                 .build()));
     int timeoutSeconds = cacheDescription.getTimeoutSeconds();
     setTimeouts(storeClientBuilder, timeoutSeconds);
@@ -388,6 +390,17 @@ public class ArtifactCaches implements ArtifactCacheFactory {
             .setErrorTextTemplate(cacheDescription.getErrorMessageFormat())
             .setDistributedBuildModeEnabled(distributedBuildModeEnabled)
             .build());
+  }
+
+  private static String stripNonAscii(String str) {
+    if (CharMatcher.ASCII.matchesAllOf(str)) {
+      return str;
+    }
+    StringBuilder builder = new StringBuilder();
+    for (char c : str.toCharArray()) {
+      builder.append(CharMatcher.ASCII.matches(c) ? c : '?');
+    }
+    return builder.toString();
   }
 
   private static OkHttpClient.Builder setTimeouts(
