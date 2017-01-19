@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.facebook.buck.jvm.java.abi.source.api.BootClasspathOracle;
 import com.facebook.buck.jvm.java.plugin.PluginLoader;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.HumanReadableException;
@@ -29,6 +30,7 @@ public final class SourceBasedAbiStubber {
   public static Object newValidatingTaskListener(
       ClassLoaderCache classLoaderCache,
       JavaCompiler.CompilationTask task,
+      BootClasspathOracle bootClasspathOracle,
       Diagnostic.Kind messageKind) {
     try {
       final ClassLoader pluginClassLoader =
@@ -40,9 +42,10 @@ public final class SourceBasedAbiStubber {
       final Constructor<?> constructor =
           validatingTaskListenerClass.getConstructor(
               JavaCompiler.CompilationTask.class,
+              BootClasspathOracle.class,
               Diagnostic.Kind.class);
 
-      return constructor.newInstance(task, messageKind);
+      return constructor.newInstance(task, bootClasspathOracle, messageKind);
     } catch (ReflectiveOperationException e) {
       throw new HumanReadableException(
           e,

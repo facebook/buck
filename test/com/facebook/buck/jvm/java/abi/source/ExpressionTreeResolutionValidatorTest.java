@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.jvm.java.abi.source.api.BootClasspathOracle;
 import com.facebook.buck.testutil.CompilerTreeApiTestRunner;
 import com.google.common.collect.ImmutableMap;
 import com.sun.source.tree.CompilationUnitTree;
@@ -47,7 +48,12 @@ public class ExpressionTreeResolutionValidatorTest extends CompilerTreeApiTest {
         new TaskListenerFactory() {
           @Override
           public TaskListener newTaskListener(JavacTask task) {
-            return new ValidatingTaskListener(task, Diagnostic.Kind.ERROR);
+            return new ValidatingTaskListener(task, new BootClasspathOracle() {
+              @Override
+              public boolean isOnBootClasspath(String binaryName) {
+                return false;
+              }
+            }, Diagnostic.Kind.ERROR);
           }
         });
   }

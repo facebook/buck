@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.jvm.java.abi.SourceBasedAbiStubber;
+import com.facebook.buck.jvm.java.abi.source.api.BootClasspathOracle;
 import com.facebook.buck.jvm.java.tracing.TranslatingJavacPhaseTracer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -52,9 +53,13 @@ import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.zip.ZipEntry;
@@ -65,8 +70,10 @@ import javax.annotation.processing.Processor;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
+import javax.tools.StandardLocation;
 
 /**
  * Command used to compile java libraries with a variety of ways to handle dependencies.
@@ -262,6 +269,7 @@ public abstract class Jsr199Javac implements Javac {
       abiValidatingTaskListener = SourceBasedAbiStubber.newValidatingTaskListener(
           context.getClassLoaderCache(),
           compilationTask,
+          new FileManagerBootClasspathOracle(fileManager),
           abiGenerationMode == JavacOptions.AbiGenerationMode.SOURCE ?
               Diagnostic.Kind.ERROR :
               Diagnostic.Kind.MANDATORY_WARNING);
@@ -538,6 +546,51 @@ public abstract class Jsr199Javac implements Javac {
         classLoader.close();
         classLoader = null;
       }
+    }
+  }
+
+  private static class FileManagerBootClasspathOracle implements BootClasspathOracle {
+    private final JavaFileManager fileManager;
+    private final Map<String, Set<String>> packagesContents = new HashMap<>();
+
+    private FileManagerBootClasspathOracle(JavaFileManager fileManager) {
+      this.fileManager = fileManager;
+    }
+
+    @Override
+    public boolean isOnBootClasspath(String binaryName) {
+      String packageName = getPackageName(binaryName);
+      Set<String> packageContents = getPackageContents(packageName);
+      return packageContents.contains(binaryName);
+    }
+
+    private Set<String> getPackageContents(String packageName) {
+      Set<String> packageContents = packagesContents.get(packageName);
+      if (packageContents == null) {
+        packageContents = new HashSet<>();
+
+        try {
+          for (JavaFileObject javaFileObject : this.fileManager.list(
+              StandardLocation.PLATFORM_CLASS_PATH,
+              packageName,
+              EnumSet.of(JavaFileObject.Kind.CLASS),
+              true)) {
+            packageContents.add(
+                fileManager.inferBinaryName(
+                    StandardLocation.PLATFORM_CLASS_PATH,
+                    javaFileObject));
+          }
+        } catch (IOException e) {
+          throw new HumanReadableException(e, "Failed to list boot classpath contents.");
+          // Do nothing
+        }
+        packagesContents.put(packageName, packageContents);
+      }
+      return packageContents;
+    }
+
+    private String getPackageName(String binaryName) {
+      return binaryName.substring(0, binaryName.lastIndexOf('.'));
     }
   }
 }

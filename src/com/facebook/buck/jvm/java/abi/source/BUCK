@@ -19,6 +19,9 @@ java_library(
 
     # The buck tracing API is loaded by the bootstrapper, and will be available at runtime
     '//src/com/facebook/buck/event/api:api',
+
+    # Interface-only api module for communicating back to Buck core, also loaded by the bootstrapper
+    '//src/com/facebook/buck/jvm/java/abi/source/api:api',
   ],
   visibility = [
     '//src/com/facebook/buck/jvm/java/plugin:javac-plugin',

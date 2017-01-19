@@ -16,6 +16,9 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.jvm.java.abi.source.api.BootClasspathOracle;
+import com.facebook.buck.util.exportedfiles.Nullable;
+import com.facebook.buck.util.exportedfiles.Preconditions;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.util.JavacTask;
@@ -37,16 +40,24 @@ import javax.tools.JavaCompiler;
  */
 public class ValidatingTaskListener
     implements TaskListener, ExpressionTreeResolutionValidator.Listener {
-  private final Diagnostic.Kind messageKind;
   private final JavacTask javacTask;
   private final List<CompilationUnitTree> compilationUnits = new ArrayList<>();
+  private final BootClasspathOracle bootClasspathOracle;
+  private final Diagnostic.Kind messageKind;
+  @Nullable
   private Trees trees;
+  @Nullable
   private FrontendOnlyJavacTask frontendTask;
+  @Nullable
   private ExpressionTreeResolutionValidator validator;
   private int enterDepth = 0;
 
-  public ValidatingTaskListener(JavaCompiler.CompilationTask task, Diagnostic.Kind messageKind) {
+  public ValidatingTaskListener(
+      JavaCompiler.CompilationTask task,
+      BootClasspathOracle bootClasspathOracle,
+      Diagnostic.Kind messageKind) {
     this.javacTask = (JavacTask) task;
+    this.bootClasspathOracle = bootClasspathOracle;
     this.messageKind = messageKind;
   }
 
@@ -56,6 +67,9 @@ public class ValidatingTaskListener
       frontendTask = new FrontendOnlyJavacTask(javacTask);
       trees = frontendTask.getTrees();
       validator = new ExpressionTreeResolutionValidator(javacTask, frontendTask);
+
+      // This is just to keep the linter happy; this will be used in the next commit
+      Preconditions.checkNotNull(bootClasspathOracle);
     }
   }
 
@@ -75,14 +89,16 @@ public class ValidatingTaskListener
     final TaskEvent.Kind kind = e.getKind();
     if (kind == TaskEvent.Kind.PARSE) {
       final CompilationUnitTree compilationUnit = e.getCompilationUnit();
-      frontendTask.enterTree(compilationUnit);
+      Preconditions.checkNotNull(frontendTask).enterTree(compilationUnit);
       compilationUnits.add(compilationUnit);
     } else if (kind == TaskEvent.Kind.ENTER) {
       // We wait until we've received all enter events so that the validation time shows up
       // separately from compiler enter time in the traces
       enterDepth -= 1;
       if (enterDepth == 0) {
-        compilationUnits.forEach(compilationUnit -> validator.validate(compilationUnit, this));
+        compilationUnits.forEach(compilationUnit -> Preconditions.checkNotNull(validator).validate(
+            compilationUnit,
+            this));
       }
     }
   }
@@ -96,7 +112,7 @@ public class ValidatingTaskListener
     TypeElement guessedTypeElement = ((TypeElement) guessedType.asElement());
     TypeElement actualTypeElement = ((TypeElement) actualType.asElement());
 
-    trees.printMessage(
+    Preconditions.checkNotNull(trees).printMessage(
         messageKind,
         String.format(
             "Source-based ABI generator could not guess the meaning of this name.\n" +
