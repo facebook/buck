@@ -208,8 +208,13 @@ public class CxxGenruleDescription
         });
     macros.put("cc", new ToolExpander(cxxPlatform.get().getCc().resolve(resolver)));
     macros.put("cxx", new ToolExpander(cxxPlatform.get().getCxx().resolve(resolver)));
-    macros.put("cflags", new StringExpander(shquoteJoin(cxxPlatform.get().getCflags())));
-    macros.put("cxxflags", new StringExpander(shquoteJoin(cxxPlatform.get().getCxxflags())));
+
+    ImmutableList<String> asflags = cxxPlatform.get().getAsflags();
+    ImmutableList<String> cflags = cxxPlatform.get().getCflags();
+    ImmutableList<String> cxxflags = cxxPlatform.get().getCxxflags();
+    macros.put("cflags", new StringExpander(shquoteJoin(Iterables.concat(cflags, asflags))));
+    macros.put("cxxflags", new StringExpander(shquoteJoin(Iterables.concat(cxxflags, asflags))));
+
     macros.put("cppflags", new CxxPreprocessorFlagsExpander(cxxPlatform.get(), CxxSource.Type.C));
     macros.put(
         "cxxppflags",

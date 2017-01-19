@@ -137,6 +137,36 @@ public class CxxGenruleDescriptionTest {
   }
 
   @Test
+  public void cflagsNoArgs() throws Exception {
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.DEFAULT_PLATFORM
+            .withAsflags("-asflag")
+            .withCflags("-cflag")
+            .withCxxflags("-cxxflag");
+    CxxGenruleBuilder builder =
+        new CxxGenruleBuilder(
+            BuildTargetFactory.newInstance("//:rule#" + cxxPlatform.getFlavor()),
+            new FlavorDomain<>(
+                "C/C++ Platform",
+                ImmutableMap.of(cxxPlatform.getFlavor(), cxxPlatform)))
+            .setOut("out")
+            .setCmd("$(cflags) $(cxxflags)");
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            builder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            targetGraph,
+            new DefaultTargetNodeToBuildRuleTransformer());
+    Genrule genrule = (Genrule) builder.build(resolver);
+    for (String expected : ImmutableList.of("-asflag", "-cflag", "-cxxflag")) {
+      assertThat(
+          Joiner.on(' ').join(Arg.stringify(ImmutableList.of(genrule.getCmd().get()))),
+          Matchers.containsString(expected));
+    }
+  }
+
+  @Test
   public void targetTranslateConstructorArg() throws NoSuchBuildTargetException {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
     BuildTarget original = BuildTargetFactory.newInstance("//hello:world");
