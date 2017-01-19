@@ -81,10 +81,8 @@ public class PrecompiledHeaderFeatureTest {
     @Parameterized.Parameters(name = "{1}")
     public static Collection<Object[]> data() {
       return Arrays.asList(new Object[][] {
-          // supported
           {CxxToolProvider.Type.CLANG, true, true},
           {CxxToolProvider.Type.CLANG, false, false},
-          // supported
           {CxxToolProvider.Type.GCC, true, true},
           {CxxToolProvider.Type.GCC, false, false},
           // TODO(elsteveogrande): add WINDOWS
@@ -130,6 +128,50 @@ public class PrecompiledHeaderFeatureTest {
               " expect:" + expectUsingPch,
           expectUsingPch,
           hasPchFlag);
+    }
+  }
+
+  public static class TestSupportConditions {
+    @Test
+    public void rejectPchParameterIfSourceTypeDoesntSupportPch() {
+      BuildRuleResolver resolver = new BuildRuleResolver(
+          TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+      CxxPlatform platform = PLATFORM_SUPPORTING_PCH.withCompilerDebugPathSanitizer(
+          new MungingDebugPathSanitizer(
+              250,
+              File.separatorChar,
+              Paths.get("."),
+              ImmutableBiMap.of()));
+      CxxBuckConfig config = buildConfig(/* pchEnabled */ true);
+      CxxSourceRuleFactory factory = preconfiguredSourceRuleFactoryBuilder(resolver)
+          .setCxxPlatform(platform)
+          .setPrefixHeader(new FakeSourcePath(("foo.pch")))
+          .setCxxBuckConfig(config)
+          .build();
+
+      for (AbstractCxxSource.Type sourceType : AbstractCxxSource.Type.values()) {
+        if (!sourceType.isPreprocessable()) {
+          // Need a preprocessor object if we want to test for PCH'ability.
+          continue;
+        }
+
+        switch (sourceType) {
+          case ASM_WITH_CPP:
+          case ASM:
+          case CUDA:
+            // The default platform we're testing with doesn't include preprocessors for these.
+            continue;
+
+          //$CASES-OMITTED$
+          default:
+            Preprocessor preprocessor =
+                CxxSourceTypes.getPreprocessor(platform, sourceType).resolve(resolver);
+
+            assertEquals(
+                sourceType.getPrecompiledHeaderLanguage().isPresent(),
+                factory.canUsePrecompiledHeaders(config, preprocessor, sourceType));
+        }
+      }
     }
   }
 

@@ -487,14 +487,17 @@ abstract class AbstractCxxSourceRuleFactory {
     Preprocessor preprocessor = preprocessorDelegate.getPreprocessor();
 
     if (getPrecompiledHeader().isPresent() &&
-        !canUsePrecompiledHeaders(getCxxBuckConfig(), preprocessor)) {
+        !canUsePrecompiledHeaders(getCxxBuckConfig(), preprocessor, source.getType())) {
       throw new HumanReadableException(
-          "Precompiled header was requested for this rule, but PCH's are not possible under " +
-          "the current environment (preprocessor/compiler, and/or 'cxx.pch_enabled' option).");
+          "Precompiled header was requested for rule \"" +
+          this.getParams().getBuildTarget().toString() +
+          "\", but PCH's are not possible under " +
+          "the current environment (preprocessor/compiler, source file's language, " +
+          "and/or 'cxx.pch_enabled' option).");
     }
 
     Optional<PrecompiledHeaderReference> precompiledHeaderReference = Optional.empty();
-    if (canUsePrecompiledHeaders(getCxxBuckConfig(), preprocessor) &&
+    if (canUsePrecompiledHeaders(getCxxBuckConfig(), preprocessor, source.getType()) &&
         (getPrefixHeader().isPresent() || getPrecompiledHeader().isPresent())) {
       CxxPrecompiledHeader precompiledHeader =
           requirePrecompiledHeaderBuildRule(preprocessorDelegateValue, source);
@@ -830,12 +833,15 @@ abstract class AbstractCxxSourceRuleFactory {
   /**
    * Can PCH headers be used with the current configuration and type of compiler?
    */
-  private boolean canUsePrecompiledHeaders(
+  @VisibleForTesting
+  boolean canUsePrecompiledHeaders(
       CxxBuckConfig cxxBuckConfig,
-      Preprocessor preprocessor) {
+      Preprocessor preprocessor,
+      CxxSource.Type sourceType) {
     return
         cxxBuckConfig.isPCHEnabled() &&
-        preprocessor.supportsPrecompiledHeaders();
+        preprocessor.supportsPrecompiledHeaders() &&
+        sourceType.getPrecompiledHeaderLanguage().isPresent();
   }
 
   public static ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(
