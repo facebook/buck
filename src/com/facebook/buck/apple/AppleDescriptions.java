@@ -406,7 +406,6 @@ public class AppleDescriptions {
   public static Optional<CoreDataModel> createBuildRulesForCoreDataDependencies(
       TargetGraph targetGraph,
       BuildRuleParams params,
-      SourcePathResolver sourcePathResolver,
       String moduleName,
       AppleCxxPlatform appleCxxPlatform) {
     TargetNode<?, ?> targetNode = targetGraph.get(params.getBuildTarget());
@@ -428,7 +427,6 @@ public class AppleDescriptions {
     } else {
       return Optional.of(new CoreDataModel(
           coreDataModelParams,
-          sourcePathResolver,
           appleCxxPlatform,
           moduleName,
           coreDataModelArgs.stream()
@@ -647,7 +645,6 @@ public class AppleDescriptions {
         createBuildRulesForCoreDataDependencies(
             targetGraph,
             paramsWithoutBundleSpecificFlavors,
-            sourcePathResolver,
             AppleBundle.getBinaryName(params.getBuildTarget(), productName),
             appleCxxPlatform);
 

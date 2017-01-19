@@ -19,13 +19,12 @@ package com.facebook.buck.apple;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.Step;
@@ -40,7 +39,7 @@ import java.nio.file.Paths;
 
 import javax.annotation.Nullable;
 
-public class CoreDataModel extends AbstractBuildRuleWithResolver {
+public class CoreDataModel extends AbstractBuildRule {
 
   public static final Flavor FLAVOR = ImmutableFlavor.of("core-data-model");
 
@@ -64,11 +63,10 @@ public class CoreDataModel extends AbstractBuildRuleWithResolver {
 
   CoreDataModel(
       BuildRuleParams params,
-      final SourcePathResolver resolver,
       AppleCxxPlatform appleCxxPlatform,
       String moduleName,
       ImmutableSet<SourcePath> dataModelPaths) {
-    super(params, resolver);
+    super(params);
     this.moduleName = moduleName;
     this.dataModelPaths = dataModelPaths;
     String outputDirString =
