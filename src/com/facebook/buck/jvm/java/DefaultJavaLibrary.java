@@ -463,7 +463,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     steps.add(
         new CopyResourcesStep(
             getProjectFilesystem(),
-            getResolver(),
+            context.getSourcePathResolver(),
             ruleFinder,
             target,
             resources,
@@ -501,14 +501,14 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       Optional<Path> workingDirectory = Optional.of(scratchDir);
 
       ImmutableSortedSet<Path> javaSrcs = getJavaSrcs().stream()
-          .map(getResolver()::getRelativePath)
+          .map(context.getSourcePathResolver()::getRelativePath)
           .collect(MoreCollectors.toImmutableSortedSet());
 
       compileStepFactory.createCompileToJarStep(
           context,
           javaSrcs,
           target,
-          getResolver(),
+          context.getSourcePathResolver(),
           ruleFinder,
           getProjectFilesystem(),
           declared,
@@ -519,7 +519,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
           postprocessClassesCommands,
           ImmutableSortedSet.of(outputDirectory),
           /* mainClass */ Optional.empty(),
-          manifestFile.map(getResolver()::getAbsolutePath),
+          manifestFile.map(context.getSourcePathResolver()::getAbsolutePath),
           outputJar.get(),
           usedClassesFileWriter,
           /* output params */
@@ -539,7 +539,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
                 output,
                 ImmutableSortedSet.of(outputDirectory),
                 /* mainClass */ null,
-                manifestFile.map(getResolver()::getAbsolutePath).orElse(null),
+                manifestFile.map(context.getSourcePathResolver()::getAbsolutePath).orElse(null),
                 true,
                 classesToRemoveFromJar));
       }

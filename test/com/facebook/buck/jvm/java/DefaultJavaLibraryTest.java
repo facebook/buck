@@ -399,8 +399,8 @@ public class DefaultJavaLibraryTest {
         .addDep(libraryOne.getBuildTarget())
         .build(ruleResolver);
 
-    List<Step> steps =
-        libraryTwo.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext());
+    List<Step> steps = libraryTwo.getBuildSteps(
+        FakeBuildContext.withSourcePathResolver(resolver), new FakeBuildableContext());
 
     ImmutableList<JavacStep> javacSteps = FluentIterable
         .from(steps)
@@ -1197,7 +1197,8 @@ public class DefaultJavaLibraryTest {
         .build(ruleResolver);
     DefaultJavaLibrary buildRule = (DefaultJavaLibrary) rule;
     ImmutableList<Step> steps = buildRule.getBuildSteps(
-        FakeBuildContext.NOOP_CONTEXT,
+        FakeBuildContext.withSourcePathResolver(
+            new SourcePathResolver(new SourcePathRuleFinder(ruleResolver))),
         new FakeBuildableContext());
 
     assertEquals(10, steps.size());
@@ -1225,8 +1226,10 @@ public class DefaultJavaLibraryTest {
     BuildRule rule = ruleResolver.requireRule(libraryOneTarget);
 
     DefaultJavaLibrary buildable = (DefaultJavaLibrary) rule;
-    ImmutableList<Step> steps =
-        buildable.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext());
+    ImmutableList<Step> steps = buildable.getBuildSteps(
+        FakeBuildContext.withSourcePathResolver(
+            new SourcePathResolver(new SourcePathRuleFinder(ruleResolver))),
+        new FakeBuildableContext());
     assertEquals(10, steps.size());
     Javac javacStep = ((JavacStep) steps.get(6)).getJavac();
     assertTrue(javacStep instanceof Jsr199Javac);
