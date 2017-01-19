@@ -205,6 +205,23 @@ class TestRuleKeyDiff(unittest.TestCase):
         ]
         self.assertEqual(result, expected)
 
+    def test_diff_doesnt_know(self):
+        result = diff("//:top",
+                      RuleKeyStructureInfo(MockFile([
+                          makeRuleKeyLine(
+                              name="//:top",
+                              key="aa",
+                          ),
+                      ])),
+                      RuleKeyStructureInfo(MockFile([
+                          makeRuleKeyLine(
+                              name="//:top",
+                              key="bb",
+                          ),
+                      ])),
+                      verbose=False)
+        expected = ["I don't know why RuleKeys for //:top do not match."]
+        self.assertEqual(result, expected)
 
     def test_simple_diff_with_custom_names(self):
         line = ("[v] RuleKey {key}=string(\"//:lib\"):key(name):" +

@@ -405,6 +405,7 @@ def diff(name,
          check_paths=False):
     left_key = left_info.getKeyForName(name)
     right_key = right_info.getKeyForName(name)
+    keys_match = left_key == right_key
     if left_key is None:
         raise Exception('Left log does not contain ' + name + '. Did you ' +
                         'forget to enable logging? (see help).')
@@ -435,6 +436,9 @@ def diff(name,
             queue.append(e)
 
         result += report
+    if not result and not keys_match:
+        result.append("I don't know why RuleKeys for {} do not match.".format(
+            name))
     return result
 
 
