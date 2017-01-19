@@ -722,7 +722,6 @@ public class LuaBinaryDescription implements
                             .addAll(packager.getDeps(ruleFinder))
                             .build()),
                     Suppliers.ofInstance(ImmutableSortedSet.of())),
-                pathResolver,
                 packager,
                 ImmutableList.of(),
                 output,
