@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.GenerateCodeCoverageReportStep;
 import com.facebook.buck.jvm.java.JacocoConstants;
@@ -27,6 +28,7 @@ import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryWithTests;
 import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.jvm.java.JavaTest;
+import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
@@ -429,14 +431,15 @@ public class TestRunning {
     // Generate the code coverage report.
     if (options.isCodeCoverageEnabled() && !rulesUnderTestForCoverage.isEmpty()) {
       try {
+        JavaBuckConfig javaBuckConfig = params.getBuckConfig().getView(JavaBuckConfig.class);
         DefaultJavaPackageFinder defaultJavaPackageFinder =
-            params.getBuckConfig().getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();
+            javaBuckConfig.createDefaultJavaPackageFinder();
         stepRunner.runStepForBuildTarget(
             executionContext,
             getReportCommand(
                 rulesUnderTestForCoverage,
                 defaultJavaPackageFinder,
-                params.getBuckConfig().getView(JavaBuckConfig.class)
+                javaBuckConfig
                     .getDefaultJavaOptions()
                     .getJavaRuntimeLauncher(),
                 params.getCell().getFilesystem(),
@@ -445,6 +448,8 @@ public class TestRunning {
                 JacocoConstants.getJacocoOutputDir(params.getCell().getFilesystem()),
                 options.getCoverageReportFormat(),
                 options.getCoverageReportTitle(),
+                javaBuckConfig.getDefaultJavacOptions().getSpoolMode() ==
+                     JavacOptions.SpoolMode.INTERMEDIATE_TO_DISK,
                 options.getCoverageIncludes(),
                 options.getCoverageExcludes()),
             Optional.empty());
@@ -779,6 +784,7 @@ public class TestRunning {
       Path outputDirectory,
       CoverageReportFormat format,
       String title,
+      boolean useIntermediateClassesDir,
       Optional<String> coverageIncludes,
       Optional<String> coverageExcludes) {
     ImmutableSet.Builder<String> srcDirectories = ImmutableSet.builder();
@@ -791,11 +797,17 @@ public class TestRunning {
       if (!sourceFolderPath.isEmpty()) {
         srcDirectories.addAll(sourceFolderPath);
       }
-      Path jarFile = rule.getPathToOutput();
-      if (jarFile == null) {
+      Path classesItem;
+
+      if (useIntermediateClassesDir) {
+        classesItem = DefaultJavaLibrary.getClassesDir(rule.getBuildTarget(), filesystem);
+      } else {
+        classesItem = rule.getPathToOutput();
+      }
+      if (classesItem == null) {
         continue;
       }
-      pathsToJars.add(jarFile);
+      pathsToJars.add(classesItem);
     }
 
     return new GenerateCodeCoverageReportStep(

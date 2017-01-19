@@ -88,19 +88,25 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
+    Set<Path> tempDirs = new HashSet<>();
     Set<Path> extractedClassesDirectories = new HashSet<>();
     for (Path jarFile : jarFiles) {
-      Path extractClassDir = Files.createTempDirectory("extractedClasses");
-      populateClassesDir(
-          jarFile,
-          extractClassDir);
-      extractedClassesDirectories.add(extractClassDir);
+      if (filesystem.isDirectory(jarFile)) {
+        extractedClassesDirectories.add(jarFile);
+      } else {
+        Path extractClassDir = Files.createTempDirectory("extractedClasses");
+        populateClassesDir(
+            jarFile,
+            extractClassDir);
+        extractedClassesDirectories.add(extractClassDir);
+        tempDirs.add(extractClassDir);
+      }
     }
 
     try {
       return executeInternal(context, extractedClassesDirectories);
     } finally {
-      for (Path tempDir : extractedClassesDirectories) {
+      for (Path tempDir : tempDirs) {
         MoreFiles.deleteRecursively(tempDir);
       }
     }
@@ -176,11 +182,13 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
    * ReportGenerator.java needs a class-directory to work with, so if
    * we instead have a jar file we extract it first.
    */
-  public static void populateClassesDir(
+  private void populateClassesDir(
       Path outputJar,
       Path classesDir) {
     try {
-      Preconditions.checkState(outputJar.toFile().exists());
+      Preconditions.checkState(
+          filesystem.exists(outputJar),
+          String.valueOf(outputJar) + " does not exist");
       Unzip.extractZipFile(
           outputJar,
           classesDir,

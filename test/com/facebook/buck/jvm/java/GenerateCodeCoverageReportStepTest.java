@@ -156,6 +156,35 @@ public class  GenerateCodeCoverageReportStepTest {
     assertFalse(extractedDir[1].exists());
   }
 
+  @Test
+  public void testClassesDirIsUntouched() throws Throwable {
+    final File classesDir = tmp.newFolder("classesDir");
+    jarFiles.clear();
+    jarFiles.add(classesDir.toPath());
+
+    step = new GenerateCodeCoverageReportStep(
+        new ExternalJavaRuntimeLauncher("/baz/qux/java"),
+        filesystem,
+        SOURCE_DIRECTORIES,
+        jarFiles,
+        Paths.get(OUTPUT_DIRECTORY),
+        CoverageReportFormat.HTML,
+        "TitleFoo",
+        Optional.empty(),
+        Optional.empty()) {
+        @Override
+        StepExecutionResult executeInternal(
+            ExecutionContext context,
+            Set<Path> jarFiles) {
+          assertEquals(1, jarFiles.size());
+          assertEquals(classesDir.toPath(), jarFiles.iterator().next());
+          return null;
+        }
+      };
+
+    step.execute(TestExecutionContext.newInstance());
+    assertTrue(classesDir.exists());
+  }
 
   @Test
   public void testSaveParametersToPropertyFile() throws IOException {
