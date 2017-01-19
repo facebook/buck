@@ -399,7 +399,7 @@ public class IjProjectTemplateDataPreparer {
     addAndroidConstants(androidProperties);
 
     addAndroidApkPaths(androidProperties, module, basePath, androidFacet);
-    addAndroidAssetPaths(androidProperties, androidFacet);
+    addAndroidAssetPaths(androidProperties, module, androidFacet);
     addAndroidGenPath(androidProperties, androidFacet, basePath);
     addAndroidManifestPath(androidProperties, basePath, androidFacet);
     addAndroidProguardPath(androidProperties, androidFacet);
@@ -438,14 +438,20 @@ public class IjProjectTemplateDataPreparer {
 
   private void addAndroidAssetPaths(
       Map<String, Object> androidProperties,
+      IjModule module,
       IjModuleAndroidFacet androidFacet) {
     ImmutableSet<Path> assetPaths = androidFacet.getAssetPaths();
     if (assetPaths.isEmpty()) {
       androidProperties.put(ASSETS_FOLDER_TEMPLATE_PARAMETER, "/assets");
     } else {
+      Set<Path> relativeAssetPaths = new HashSet<>(assetPaths.size());
+      Path moduleBase = module.getModuleBasePath();
+      for (Path assetPath : assetPaths) {
+        relativeAssetPaths.add(moduleBase.relativize(assetPath));
+      }
       androidProperties.put(
           ASSETS_FOLDER_TEMPLATE_PARAMETER,
-          "/" + Joiner.on(";/").join(androidFacet.getAssetPaths()));
+          "/" + Joiner.on(";/").join(relativeAssetPaths));
     }
   }
 

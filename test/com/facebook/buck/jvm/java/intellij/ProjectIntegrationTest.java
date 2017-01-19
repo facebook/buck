@@ -641,6 +641,11 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testVersion2BuckProjectWithAssets() throws IOException {
+    runBuckProjectAndVerify("experimental_project_with_assets");
+  }
+
+  @Test
   public void testVersion2BuckProjectWithLanguageLevel() throws IOException {
     runBuckProjectAndVerify("experimental_project_with_language_level");
   }
