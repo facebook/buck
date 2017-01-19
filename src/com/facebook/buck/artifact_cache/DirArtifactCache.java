@@ -278,7 +278,9 @@ public class DirArtifactCache implements ArtifactCache {
 
     Path cacheDirInFs = filesystem.resolve(cacheDir);
     try {
-      newDirectoryCleaner().clean(cacheDirInFs);
+      synchronized (this) {
+        newDirectoryCleaner().clean(cacheDirInFs);
+      }
     } catch (IOException e) {
       LOG.error(e, "Failed to clean path [%s].", cacheDirInFs);
     }
