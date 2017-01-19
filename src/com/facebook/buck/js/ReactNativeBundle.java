@@ -133,7 +133,12 @@ public class ReactNativeBundle
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), sourceMapOutputPath.getParent()));
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), depFile.getParent()));
 
-    appendWorkerSteps(steps, jsOutput, sourceMapOutputPath, depFile);
+    appendWorkerSteps(
+        steps,
+        context.getSourcePathResolver(),
+        jsOutput,
+        sourceMapOutputPath,
+        depFile);
 
     buildableContext.recordArtifact(jsOutputDir);
     buildableContext.recordArtifact(resource);
@@ -143,6 +148,7 @@ public class ReactNativeBundle
 
   private void appendWorkerSteps(
       ImmutableList.Builder<Step> stepBuilder,
+      SourcePathResolver resolver,
       Path outputFile,
       Path sourceMapOutputPath,
       Path depFile) {
@@ -157,12 +163,12 @@ public class ReactNativeBundle
         new ReactNativeBundleWorkerStep(
             getProjectFilesystem(),
             tmpDir,
-            jsPackager.getCommandPrefix(getResolver()),
+            jsPackager.getCommandPrefix(resolver),
             packagerFlags,
             platform,
             isUnbundle,
             isIndexedUnbundle,
-            getProjectFilesystem().resolve(getResolver().getAbsolutePath(entryPath)),
+            getProjectFilesystem().resolve(resolver.getAbsolutePath(entryPath)),
             isDevMode,
             getProjectFilesystem().resolve(outputFile),
             getProjectFilesystem().resolve(resource),
@@ -174,10 +180,10 @@ public class ReactNativeBundle
         new ReactNativeDepsWorkerStep(
             getProjectFilesystem(),
             tmpDir,
-            jsPackager.getCommandPrefix(getResolver()),
+            jsPackager.getCommandPrefix(resolver),
             packagerFlags,
             platform,
-            getProjectFilesystem().resolve(getResolver().getAbsolutePath(entryPath)),
+            getProjectFilesystem().resolve(resolver.getAbsolutePath(entryPath)),
             getProjectFilesystem().resolve(depFile));
     stepBuilder.add(depsWorkerStep);
   }
