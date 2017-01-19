@@ -254,6 +254,7 @@
         <include name="${javac-tracing.src.dir}/JavacPhaseTracer.java" />
         <include name="com/facebook/buck/util/exportedfiles/Nullable.java" />
         <include name="com/facebook/buck/util/exportedfiles/Preconditions.java" />
+        <include name="com/facebook/buck/jvm/java/abi/source/api/*.java" />
       </javac-params>
     </ecj>
     <jar destfile="${bootstrapper.jar}">
@@ -301,7 +302,7 @@
       <javac-params>
         <include name="com/facebook/buck/util/exportedfiles/Nullable.java" />
         <include name="com/facebook/buck/util/exportedfiles/Preconditions.java" />
-        <include name="com/facebook/buck/jvm/java/abi/source/**/*.java" />
+        <include name="com/facebook/buck/jvm/java/abi/source/*.java" />
         <include name="com/facebook/buck/jvm/java/plugin/adapter/**/*.java" />
         <include name="${javac-tracing.src.dir}/TracingTaskListener.java" />
       </javac-params>
