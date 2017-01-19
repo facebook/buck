@@ -59,16 +59,16 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     if (params.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
       return CalculateAbi.of(
           params.getBuildTarget(),
-          pathResolver,
           ruleFinder,
           params,
           args.binaryJar);
     }
+
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 

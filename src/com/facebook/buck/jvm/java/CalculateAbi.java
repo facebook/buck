@@ -20,13 +20,12 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -38,7 +37,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
-public class CalculateAbi extends AbstractBuildRuleWithResolver
+public class CalculateAbi extends AbstractBuildRule
     implements SupportsInputBasedRuleKey {
 
   public static final Flavor FLAVOR = ImmutableFlavor.of("abi");
@@ -49,16 +48,14 @@ public class CalculateAbi extends AbstractBuildRuleWithResolver
 
   public CalculateAbi(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       SourcePath binaryJar) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.binaryJar = binaryJar;
     this.outputPath = getAbiJarPath();
   }
 
   public static CalculateAbi of(
       BuildTarget target,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       BuildRuleParams libraryParams,
       SourcePath library) {
@@ -68,7 +65,6 @@ public class CalculateAbi extends AbstractBuildRuleWithResolver
             Suppliers.ofInstance(
                 ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(library))),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
-        pathResolver,
         library);
   }
 
@@ -87,7 +83,7 @@ public class CalculateAbi extends AbstractBuildRuleWithResolver
         new CalculateAbiStep(
             buildableContext,
             getProjectFilesystem(),
-            getResolver().getAbsolutePath(binaryJar),
+            context.getSourcePathResolver().getAbsolutePath(binaryJar),
             getPathToOutput()));
   }
 

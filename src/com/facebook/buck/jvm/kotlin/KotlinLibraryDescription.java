@@ -88,7 +88,6 @@ public class KotlinLibraryDescription implements
       A args) throws NoSuchBuildTargetException {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildTarget target = params.getBuildTarget();
 
     // We know that the flavour we're being asked to create is valid, since the check is done when
@@ -100,11 +99,12 @@ public class KotlinLibraryDescription implements
       resolver.requireRule(libraryTarget);
       return CalculateAbi.of(
           params.getBuildTarget(),
-          pathResolver,
           ruleFinder,
           params,
           new BuildTargetSourcePath(libraryTarget));
     }
+
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     BuildRuleParams paramsWithMavenFlavor = null;
     if (flavors.contains(JavaLibrary.MAVEN_JAR)) {

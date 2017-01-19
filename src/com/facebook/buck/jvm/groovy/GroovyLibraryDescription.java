@@ -70,18 +70,18 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     if (params.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
       BuildTarget libraryTarget = params.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
       resolver.requireRule(libraryTarget);
       return CalculateAbi.of(
           params.getBuildTarget(),
-          pathResolver,
           ruleFinder,
           params,
           new BuildTargetSourcePath(libraryTarget));
     }
+
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 

@@ -66,7 +66,6 @@ public class CalculateAbiTest {
     CalculateAbi calculateAbi =
         CalculateAbi.of(
             target,
-            pathResolver,
             ruleFinder,
             builder.createBuildRuleParams(resolver, filesystem),
             new BuildTargetSourcePath(javaLibraryTarget));
@@ -139,7 +138,6 @@ public class CalculateAbiTest {
     CalculateAbi calculateAbi =
         CalculateAbi.of(
             target,
-            pathResolver,
             ruleFinder,
             builder.createBuildRuleParams(resolver, filesystem),
             new BuildTargetSourcePath(javaLibraryTarget));

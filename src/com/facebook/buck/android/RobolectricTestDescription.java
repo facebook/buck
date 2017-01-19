@@ -85,7 +85,6 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
@@ -108,13 +107,12 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
     if (params.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
       if (params.getBuildTarget().getFlavors().contains(
           AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR)) {
-        return graphEnhancer.getBuildableForAndroidResourcesAbi(resolver, pathResolver, ruleFinder);
+        return graphEnhancer.getBuildableForAndroidResourcesAbi(resolver, ruleFinder);
       }
       BuildTarget testTarget = params.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
       resolver.requireRule(testTarget);
       return CalculateAbi.of(
           params.getBuildTarget(),
-          pathResolver,
           ruleFinder,
           params,
           new BuildTargetSourcePath(testTarget));
@@ -135,6 +133,8 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
           .build();
       params = params.copyWithExtraDeps(Suppliers.ofInstance(newExtraDeps));
     }
+
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
         new JavaTestDescription.CxxLibraryEnhancement(

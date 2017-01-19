@@ -100,12 +100,9 @@ public class AndroidPrebuiltAarDescription
         params.getBuildTarget());
     UnzipAar unzipAar = (UnzipAar) unzipAarRule;
 
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-
     if (flavors.contains(CalculateAbi.FLAVOR)) {
       return CalculateAbi.of(
           params.getBuildTarget(),
-          pathResolver,
           ruleFinder,
           params,
           new BuildTargetSourcePath(
@@ -124,6 +121,8 @@ public class AndroidPrebuiltAarDescription
             AndroidPrebuiltAar::getPrebuiltJar));
 
     BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
+
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     PrebuiltJar prebuiltJar = buildRuleResolver.addToIndex(
         createPrebuiltJar(

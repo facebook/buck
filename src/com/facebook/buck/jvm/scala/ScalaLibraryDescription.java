@@ -70,18 +70,18 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
       final BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     if (rawParams.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
       BuildTarget libraryTarget = rawParams.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
       resolver.requireRule(libraryTarget);
       return CalculateAbi.of(
           rawParams.getBuildTarget(),
-          pathResolver,
           ruleFinder,
           rawParams,
           new BuildTargetSourcePath(libraryTarget));
     }
+
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     Tool scalac = scalaBuckConfig.getScalac(resolver);
 

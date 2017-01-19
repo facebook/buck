@@ -66,12 +66,10 @@ public class AndroidBuildConfigDescription
       A args) throws NoSuchBuildTargetException {
     if (params.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-      SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
       BuildTarget configTarget = params.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
       resolver.requireRule(configTarget);
       return CalculateAbi.of(
           params.getBuildTarget(),
-          pathResolver,
           ruleFinder,
           params,
           new BuildTargetSourcePath(configTarget));

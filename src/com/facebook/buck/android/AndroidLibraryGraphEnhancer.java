@@ -140,14 +140,12 @@ public class AndroidLibraryGraphEnhancer {
 
   public CalculateAbi getBuildableForAndroidResourcesAbi(
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder) throws NoSuchBuildTargetException {
     Preconditions.checkState(dummyRDotJavaBuildTarget.getFlavors().contains(CalculateAbi.FLAVOR));
     BuildTarget resourcesTarget = dummyRDotJavaBuildTarget.withoutFlavors(CalculateAbi.FLAVOR);
     resolver.requireRule(resourcesTarget);
     return CalculateAbi.of(
         dummyRDotJavaBuildTarget,
-        pathResolver,
         ruleFinder,
         originalBuildRuleParams,
         new BuildTargetSourcePath(resourcesTarget));

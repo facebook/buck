@@ -117,13 +117,12 @@ public class AndroidLibraryDescription
         params.getBuildTarget().getFlavors().contains(DUMMY_R_DOT_JAVA_FLAVOR);
     if (params.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
       if (hasDummyRDotJavaFlavor) {
-        return graphEnhancer.getBuildableForAndroidResourcesAbi(resolver, pathResolver, ruleFinder);
+        return graphEnhancer.getBuildableForAndroidResourcesAbi(resolver, ruleFinder);
       }
       BuildTarget libraryTarget = params.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
       resolver.requireRule(libraryTarget);
       return CalculateAbi.of(
           params.getBuildTarget(),
-          pathResolver,
           ruleFinder,
           params,
           new BuildTargetSourcePath(libraryTarget));

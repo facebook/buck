@@ -140,7 +140,6 @@ public class JavaLibraryDescription implements
       resolver.requireRule(libraryTarget);
       return CalculateAbi.of(
           params.getBuildTarget(),
-          pathResolver,
           ruleFinder,
           params,
           new BuildTargetSourcePath(libraryTarget));
