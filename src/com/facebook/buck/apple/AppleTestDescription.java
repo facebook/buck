@@ -34,7 +34,7 @@ import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -271,7 +271,7 @@ public class AppleTestDescription implements
         appleConfig.cacheBundlesAndPackages());
     resolver.addToIndex(bundle);
 
-    Optional<SourcePath> xctool = getXctool(params, resolver, sourcePathResolver);
+    Optional<SourcePath> xctool = getXctool(params, resolver);
 
     return new AppleTest(
         xctool,
@@ -301,8 +301,7 @@ public class AppleTestDescription implements
 
   private Optional<SourcePath> getXctool(
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      final SourcePathResolver sourcePathResolver) {
+      BuildRuleResolver resolver) {
     // If xctool is specified as a build target in the buck config, it's wrapping ZIP file which
     // we need to unpack to get at the actual binary.  Otherwise, if it's specified as a path, we
     // can use that directly.
@@ -321,7 +320,7 @@ public class AppleTestDescription implements
                 Suppliers.ofInstance(ImmutableSortedSet.of(xctoolZipBuildRule)),
                 Suppliers.ofInstance(ImmutableSortedSet.of()));
         resolver.addToIndex(
-            new AbstractBuildRuleWithResolver(unzipXctoolParams, sourcePathResolver) {
+            new AbstractBuildRule(unzipXctoolParams) {
               @Override
               public ImmutableList<Step> getBuildSteps(
                   BuildContext context,
