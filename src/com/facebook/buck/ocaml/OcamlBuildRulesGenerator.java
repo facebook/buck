@@ -523,7 +523,6 @@ public class OcamlBuildRulesGenerator {
         /* excludeDeps */ false);
     OcamlMLCompile compile = new OcamlMLCompile(
         compileParams,
-        pathResolver,
         new OcamlMLCompileStep.Args(
             params.getProjectFilesystem()::resolve,
             cCompiler.getEnvironment(),
@@ -626,7 +625,6 @@ public class OcamlBuildRulesGenerator {
         /* excludeDeps */ false);
     BuildRule compileBytecode = new OcamlMLCompile(
         compileParams,
-        pathResolver,
         new OcamlMLCompileStep.Args(
             params.getProjectFilesystem()::resolve,
             cCompiler.getEnvironment(),

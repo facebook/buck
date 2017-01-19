@@ -16,27 +16,25 @@
 
 package com.facebook.buck.ocaml;
 
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 
-public class OcamlMLCompile extends AbstractBuildRuleWithResolver {
+public class OcamlMLCompile extends AbstractBuildRule {
   @AddToRuleKey
   private final OcamlMLCompileStep.Args args;
 
   public OcamlMLCompile(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       OcamlMLCompileStep.Args args) {
-    super(params, resolver);
+    super(params);
     this.args = args;
   }
 
@@ -49,7 +47,8 @@ public class OcamlMLCompile extends AbstractBuildRuleWithResolver {
     }
     return ImmutableList.of(
       new MkdirStep(getProjectFilesystem(), args.output.getParent()),
-      new OcamlMLCompileStep(getProjectFilesystem().getRootPath(), getResolver(), args)
+      new OcamlMLCompileStep(
+          getProjectFilesystem().getRootPath(), context.getSourcePathResolver(), args)
     );
   }
 
