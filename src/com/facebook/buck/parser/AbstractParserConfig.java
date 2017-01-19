@@ -100,7 +100,7 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   public Iterable<String> getDefaultIncludes() {
     ImmutableMap<String, String> entries =
         getDelegate().getEntriesForSection(BUILDFILE_SECTION_NAME);
-    String includes = Strings.nullToEmpty(entries.get("includes"));
+    String includes = Strings.nullToEmpty(entries.get(INCLUDES_PROPERTY_NAME));
     return Splitter.on(' ').trimResults().omitEmptyStrings().split(includes);
   }
 
