@@ -228,14 +228,15 @@ public class PythonBinaryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     ImmutableList<String> buildArgs = ImmutableList.of("--some", "--args");
     PythonBinary binary =
         (PythonBinary) PythonBinaryBuilder.create(target)
             .setMainModule("main")
             .setBuildArgs(buildArgs)
             .build(resolver);
-    ImmutableList<Step> buildSteps =
-        binary.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext());
+    ImmutableList<Step> buildSteps = binary.getBuildSteps(
+        FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
     PexStep pexStep = FluentIterable.from(buildSteps)
         .filter(PexStep.class)
         .get(0);

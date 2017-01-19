@@ -37,6 +37,7 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -147,10 +148,11 @@ public class PythonTestDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     PythonTest test = (PythonTest) builder.build(resolver, filesystem, targetGraph);
     PythonBinary binary = test.getBinary();
-    ImmutableList<Step> buildSteps =
-        binary.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext());
+    ImmutableList<Step> buildSteps = binary.getBuildSteps(
+        FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
     PexStep pexStep =
         RichStream.from(buildSteps)
             .filter(PexStep.class)

@@ -137,13 +137,15 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
         "__%s__working_directory");
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), workingDirectory));
 
+    SourcePathResolver resolver = context.getSourcePathResolver();
+
     // Generate and return the PEX build step.
     steps.add(
         new PexStep(
             getProjectFilesystem(),
             builder.getEnvironment(),
             ImmutableList.<String>builder()
-                .addAll(builder.getCommandPrefix(getResolver()))
+                .addAll(builder.getCommandPrefix(resolver))
                 .addAll(buildArgs)
                 .build(),
             pythonEnvironment.getPythonPath(),
@@ -151,11 +153,11 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
             workingDirectory,
             binPath,
             mainModule,
-            getResolver().getMappedPaths(components.getModules()),
-            getResolver().getMappedPaths(components.getResources()),
-            getResolver().getMappedPaths(components.getNativeLibraries()),
+            resolver.getMappedPaths(components.getModules()),
+            resolver.getMappedPaths(components.getResources()),
+            resolver.getMappedPaths(components.getNativeLibraries()),
             ImmutableSet.copyOf(
-                getResolver().getAllAbsolutePaths(components.getPrebuiltLibraries())),
+                resolver.getAllAbsolutePaths(components.getPrebuiltLibraries())),
             preloadLibraries,
             components.isZipSafe().orElse(true)));
 
