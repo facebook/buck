@@ -27,16 +27,15 @@ import java.util.stream.Stream;
  * and executable tool.
  */
 public abstract class BinaryWrapperRule
-    extends AbstractBuildRuleWithResolver
+    extends AbstractBuildRule
     implements BinaryBuildRule, HasRuntimeDeps {
 
   private final SourcePathRuleFinder ruleFinder;
 
   public BinaryWrapperRule(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.ruleFinder = ruleFinder;
   }
 

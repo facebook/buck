@@ -387,7 +387,7 @@ public class RustCompileUtils {
         srcs,
         rootModule.get());
 
-    return new BinaryWrapperRule(params.appendExtraDeps(buildRule), pathResolver, ruleFinder) {
+    return new BinaryWrapperRule(params.appendExtraDeps(buildRule), ruleFinder) {
 
       @Override
       public Tool getExecutableCommand() {

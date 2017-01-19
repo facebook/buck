@@ -1552,7 +1552,7 @@ public class CachingBuildEngineTest {
               .build();
       final Path output = Paths.get("output");
       final DepFileBuildRule rule =
-          new DepFileBuildRule(params, pathResolver) {
+          new DepFileBuildRule(params) {
             @AddToRuleKey
             private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
             @Override
@@ -1632,7 +1632,7 @@ public class CachingBuildEngineTest {
       final Path output = Paths.get("output");
       filesystem.touch(output);
       final BuildRule rule =
-          new DepFileBuildRule(params, pathResolver) {
+          new DepFileBuildRule(params) {
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context,
@@ -1704,7 +1704,7 @@ public class CachingBuildEngineTest {
               .build();
       final Path output = Paths.get("output");
       DepFileBuildRule rule =
-          new DepFileBuildRule(params, pathResolver) {
+          new DepFileBuildRule(params) {
             @AddToRuleKey
             private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
             @Override
@@ -1778,7 +1778,7 @@ public class CachingBuildEngineTest {
       final Path output = Paths.get("output");
       final ImmutableSet<SourcePath> inputsBefore = ImmutableSet.of();
       DepFileBuildRule rule =
-          new DepFileBuildRule(params, pathResolver) {
+          new DepFileBuildRule(params) {
             @AddToRuleKey
             private final SourcePath path = new PathSourcePath(filesystem, inputFile);
             @Override
@@ -1864,7 +1864,7 @@ public class CachingBuildEngineTest {
               .build();
       final Path output = Paths.get("output");
       DepFileBuildRule rule =
-          new DepFileBuildRule(params, pathResolver) {
+          new DepFileBuildRule(params) {
             @AddToRuleKey
             private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
             @Override
@@ -1942,7 +1942,7 @@ public class CachingBuildEngineTest {
               .build();
       final Path output = Paths.get("output");
       DepFileBuildRule rule =
-          new DepFileBuildRule(params, pathResolver) {
+          new DepFileBuildRule(params) {
             @AddToRuleKey
             private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
             @Override
@@ -2078,7 +2078,7 @@ public class CachingBuildEngineTest {
               .build();
       final Path output = Paths.get("output");
       DepFileBuildRule rule =
-          new DepFileBuildRule(params, pathResolver) {
+          new DepFileBuildRule(params) {
             @AddToRuleKey
             private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
             @AddToRuleKey
@@ -2184,7 +2184,7 @@ public class CachingBuildEngineTest {
               .build();
       final Path output = Paths.get("output");
       DepFileBuildRule rule =
-          new DepFileBuildRule(params, pathResolver) {
+          new DepFileBuildRule(params) {
             @AddToRuleKey
             private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
             @Override
@@ -2301,7 +2301,7 @@ public class CachingBuildEngineTest {
               .build();
       final Path output = Paths.get("output");
       DepFileBuildRule rule =
-          new DepFileBuildRule(params, pathResolver) {
+          new DepFileBuildRule(params) {
             @AddToRuleKey
             private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
             @Override
@@ -2410,7 +2410,7 @@ public class CachingBuildEngineTest {
               .build();
       final Path output = Paths.get("output");
       DepFileBuildRule rule =
-          new DepFileBuildRule(params, pathResolver) {
+          new DepFileBuildRule(params) {
             @AddToRuleKey
             private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
             @Override
@@ -3074,12 +3074,11 @@ public class CachingBuildEngineTest {
   }
 
   private abstract static class DepFileBuildRule
-      extends AbstractBuildRuleWithResolver
+      extends AbstractBuildRule
       implements SupportsDependencyFileRuleKey {
     public DepFileBuildRule(
-        BuildRuleParams buildRuleParams,
-        SourcePathResolver resolver) {
-      super(buildRuleParams, resolver);
+        BuildRuleParams buildRuleParams) {
+      super(buildRuleParams);
     }
     @Override
     public boolean useDependencyFileRuleKeys() {

@@ -201,7 +201,7 @@ public class HaskellBinaryDescription implements
                 .filter(NativeLinkable.class),
             depType);
 
-    return new BinaryWrapperRule(params.appendExtraDeps(linkRule), pathResolver, ruleFinder) {
+    return new BinaryWrapperRule(params.appendExtraDeps(linkRule), ruleFinder) {
 
       @Override
       public Tool getExecutableCommand() {
