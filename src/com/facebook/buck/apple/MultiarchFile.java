@@ -20,14 +20,13 @@ import com.facebook.buck.cxx.CxxBinary;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.DefaultShellStep;
@@ -47,7 +46,7 @@ import java.util.SortedSet;
 /**
  * Puts together multiple thin library/binaries into a multi-arch file.
  */
-public class MultiarchFile extends AbstractBuildRuleWithResolver
+public class MultiarchFile extends AbstractBuildRule
     implements ProvidesLinkedBinaryDeps {
 
   private final SourcePathRuleFinder ruleFinder;
@@ -62,12 +61,11 @@ public class MultiarchFile extends AbstractBuildRuleWithResolver
 
   public MultiarchFile(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       Tool lipo,
       SortedSet<SourcePath> thinBinaries,
       Path output) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.ruleFinder = ruleFinder;
     this.lipo = lipo;
     this.thinBinaries = ImmutableSortedSet.copyOf(thinBinaries);
