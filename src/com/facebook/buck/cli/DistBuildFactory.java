@@ -16,10 +16,11 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.distributed.DistBuildConfig;
-import com.facebook.buck.distributed.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.DistBuildExecutorArgs;
 import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.FileContentsProviders;
 import com.facebook.buck.distributed.FrontendService;
@@ -29,8 +30,10 @@ import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.LoadBalancedService;
 import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
+import com.google.common.base.Preconditions;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import okhttp3.OkHttpClient;
 
@@ -66,16 +69,27 @@ public abstract class DistBuildFactory {
       CommandRunnerParams params,
       WeightedListeningExecutorService executorService,
       DistBuildService service) throws IOException {
+
     DistBuildState state = DistBuildState.load(
+        Optional.of(params.getBuckConfig()),
         jobState,
         params.getCell(),
         params.getKnownBuildRuleTypesFactory());
+
+    Preconditions.checkArgument(state.getCells().size() > 0);
+
+    // Create a cache factory which uses a combination of the distributed build config,
+    // overridden with the local buck config (i.e. the build slave).
+    ArtifactCacheFactory distBuildArtifactCacheFactory =
+        params.getArtifactCacheFactory().cloneWith(state.getCells().get(0).getBuckConfig());
+
     DistBuildSlaveExecutor executor = new DistBuildSlaveExecutor(
         DistBuildExecutorArgs.builder()
             .setBuckEventBus(params.getBuckEventBus())
             .setPlatform(params.getPlatform())
             .setClock(params.getClock())
-            .setArtifactCache(params.getArtifactCacheFactory().newInstance(true))
+            .setArtifactCache(
+                distBuildArtifactCacheFactory.newInstance(true))
             .setState(state)
             .setObjectMapper(params.getObjectMapper())
             .setRootCell(params.getCell())

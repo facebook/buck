@@ -1056,4 +1056,8 @@ public class BuckConfig implements ConfigPathGetter {
     return getBooleanValue("targets", "versions", false);
   }
 
+  public Config getConfig() {
+    return config;
+  }
+
 }

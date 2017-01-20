@@ -15,7 +15,10 @@
  */
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.cli.BuckConfig;
+
 public interface ArtifactCacheFactory {
   ArtifactCache newInstance();
   ArtifactCache newInstance(boolean distributedBuildModeEnabled);
+  ArtifactCacheFactory cloneWith(BuckConfig newConfig);
 }

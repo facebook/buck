@@ -15,13 +15,14 @@
  */
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.cli.BuckConfig;
+
 public class SingletonArtifactCacheFactory implements ArtifactCacheFactory {
   private final ArtifactCache artifactCache;
 
   public SingletonArtifactCacheFactory(ArtifactCache artifactCache) {
     this.artifactCache = artifactCache;
   }
-
 
   @Override
   public ArtifactCache newInstance() {
@@ -31,5 +32,10 @@ public class SingletonArtifactCacheFactory implements ArtifactCacheFactory {
   @Override
   public ArtifactCache newInstance(boolean distributedBuildModeEnabled) {
     return artifactCache;
+  }
+
+  @Override
+  public ArtifactCacheFactory cloneWith(BuckConfig newConfig) {
+    return new SingletonArtifactCacheFactory(artifactCache);
   }
 }

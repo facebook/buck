@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -135,7 +136,8 @@ public class DistributedBuildStateTest {
         .setFilesystem(createJavaOnlyFilesystem("/loading"))
         .build();
     DistBuildState distributedBuildState =
-        DistBuildState.load(dump, rootCellWhenLoading, knownBuildRuleTypesFactory);
+        DistBuildState.load(
+            Optional.empty(), dump, rootCellWhenLoading, knownBuildRuleTypesFactory);
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
     assertThat(cells, Matchers.aMapWithSize(1));
     assertThat(
@@ -189,7 +191,8 @@ public class DistributedBuildStateTest {
         .setFilesystem(createJavaOnlyFilesystem("/loading"))
         .build();
     DistBuildState distributedBuildState =
-        DistBuildState.load(dump, rootCellWhenLoading, knownBuildRuleTypesFactory);
+        DistBuildState.load(
+            Optional.empty(), dump, rootCellWhenLoading, knownBuildRuleTypesFactory);
 
     ProjectFilesystem reconstructedCellFilesystem =
         distributedBuildState.getCells().get(0).getFilesystem();
@@ -243,7 +246,7 @@ public class DistributedBuildStateTest {
         ImmutableSet.of(BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:dummy")));
 
     expectedException.expect(IllegalStateException.class);
-    DistBuildState.load(dump, cell, knownBuildRuleTypesFactory);
+    DistBuildState.load(Optional.empty(), dump, cell, knownBuildRuleTypesFactory);
   }
 
   @Test
@@ -257,6 +260,8 @@ public class DistributedBuildStateTest {
     ProjectFilesystem cell2Filesystem = new ProjectFilesystem(cell2Root);
 
     Config config = new Config(ConfigBuilder.rawFromLines(
+        "[cache]",
+        "repository=somerepo",
         "[repositories]",
         "cell2 = " + cell2Root.toString()));
     BuckConfig buckConfig = new BuckConfig(
@@ -286,10 +291,40 @@ public class DistributedBuildStateTest {
     Cell rootCellWhenLoading = new TestCellBuilder()
         .setFilesystem(createJavaOnlyFilesystem("/loading"))
         .build();
+
+    Config localConfig = new Config(ConfigBuilder.rawFromLines(
+        "[cache]",
+        "slb_server_pool=http://someserver:8080"
+    ));
+    BuckConfig localBuckConfig = new BuckConfig(
+        localConfig,
+        cell1Filesystem,
+        Architecture.detect(),
+        Platform.detect(),
+        ImmutableMap.<String, String>builder()
+            .putAll(System.getenv())
+            .put("envKey", "envValue")
+            .build(),
+        new DefaultCellPathResolver(cell1Root, localConfig));
     DistBuildState distributedBuildState =
-        DistBuildState.load(dump, rootCellWhenLoading, knownBuildRuleTypesFactory);
+        DistBuildState.load(
+            Optional.of(localBuckConfig),
+            dump,
+            rootCellWhenLoading,
+            knownBuildRuleTypesFactory);
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
     assertThat(cells, Matchers.aMapWithSize(2));
+
+    BuckConfig rootCellBuckConfig = cells.get(0).getBuckConfig();
+
+    Optional<ImmutableMap<String, String>> cacheSection =
+        rootCellBuckConfig.getSection("cache");
+    assertTrue(cacheSection.isPresent());
+    assertTrue(cacheSection.get().containsKey("repository"));
+    assertThat(cacheSection.get().get("repository"), Matchers.equalTo("somerepo"));
+    assertThat(
+        cacheSection.get().get("slb_server_pool"),
+        Matchers.equalTo("http://someserver:8080"));
   }
 
   private DistBuildFileHashes emptyActionGraph() throws IOException {

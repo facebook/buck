@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.NetworkEvent.BytesReceivedEvent;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -141,6 +142,17 @@ public class ArtifactCaches implements ArtifactCacheFactory {
 
     buckEventBus.post(ArtifactCacheConnectEvent.finished(started));
     return artifactCache;
+  }
+
+  @Override
+  public ArtifactCacheFactory cloneWith(BuckConfig newConfig) {
+    return new ArtifactCaches(
+        new ArtifactCacheBuckConfig(newConfig),
+        buckEventBus,
+        projectFilesystem,
+        wifiSsid,
+        httpWriteExecutorService,
+        asyncCloseable);
   }
 
   /**

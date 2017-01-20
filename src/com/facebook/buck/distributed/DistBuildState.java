@@ -53,6 +53,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 import javax.annotation.Nonnull;
 
@@ -119,6 +120,7 @@ public class DistBuildState {
   }
 
   public static DistBuildState load(
+      Optional<BuckConfig> localBuckConfig, // e.g. the slave's .buckconfig
       BuildJobState jobState,
       Cell rootCell,
       KnownBuildRuleTypesFactory knownBuildRuleTypesFactory) throws IOException {
@@ -141,7 +143,7 @@ public class DistBuildState {
       Path cellRoot = uniqueBuildRoot.resolve(remoteCell.getNameHint());
       Files.createDirectories(cellRoot);
 
-      Config config = createConfig(remoteCell.getConfig());
+      Config config = createConfig(remoteCell.getConfig(), localBuckConfig);
       ProjectFilesystem projectFilesystem = new ProjectFilesystem(cellRoot, config);
       BuckConfig buckConfig = createBuckConfig(config, projectFilesystem, remoteCell.getConfig());
       cellConfigs.put(cellRoot, buckConfig);
@@ -164,7 +166,9 @@ public class DistBuildState {
     return remoteState;
   }
 
-  private static Config createConfig(BuildJobStateBuckConfig remoteBuckConfig) {
+  public static Config createConfig(
+      BuildJobStateBuckConfig remoteBuckConfig,
+      Optional<BuckConfig> overrideConfig) {
     ImmutableMap<String, ImmutableMap<String, String>> rawConfig = ImmutableMap.copyOf(
         Maps.transformValues(
             remoteBuckConfig.getRawBuckConfig(),
@@ -175,7 +179,13 @@ public class DistBuildState {
               }
               return builder.build();
             }));
-    return new Config(RawConfig.of(rawConfig));
+    RawConfig.Builder rawConfigBuilder = RawConfig.builder();
+    rawConfigBuilder.putAll(rawConfig);
+
+    if (overrideConfig.isPresent()) {
+      rawConfigBuilder.putAll(overrideConfig.get().getConfig().getRawConfig());
+    }
+    return new Config(rawConfigBuilder.build());
   }
 
   private static BuckConfig createBuckConfig(
