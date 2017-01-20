@@ -291,7 +291,6 @@ public class OcamlBuildRulesGenerator {
 
     OcamlLink link = new OcamlLink(
         linkParams,
-        pathResolver,
         allInputs,
         cxxCompiler.getEnvironment(),
         cxxCompiler.getCommandPrefix(pathResolver),
@@ -340,7 +339,6 @@ public class OcamlBuildRulesGenerator {
 
     OcamlLink link = new OcamlLink(
         linkParams,
-        pathResolver,
         allInputs,
         cxxCompiler.getEnvironment(),
         cxxCompiler.getCommandPrefix(pathResolver),

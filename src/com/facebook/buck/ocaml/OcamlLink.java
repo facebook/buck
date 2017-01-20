@@ -16,13 +16,12 @@
 
 package com.facebook.buck.ocaml;
 
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.Step;
@@ -35,7 +34,7 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class OcamlLink extends AbstractBuildRuleWithResolver {
+public class OcamlLink extends AbstractBuildRule {
 
   @AddToRuleKey
   private final ImmutableList<SourcePath> inputs;
@@ -62,7 +61,6 @@ public class OcamlLink extends AbstractBuildRuleWithResolver {
 
   public OcamlLink(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       ImmutableList<SourcePath> inputs,
       ImmutableMap<String, String> cxxCompilerEnvironment,
       ImmutableList<String> cxxCompiler,
@@ -74,7 +72,7 @@ public class OcamlLink extends AbstractBuildRuleWithResolver {
       ImmutableList<Arg> cDepInput,
       boolean isLibrary,
       boolean isBytecode) {
-    super(params, resolver);
+    super(params);
 
     this.inputs = inputs;
     this.cxxCompilerEnvironment = cxxCompilerEnvironment;
@@ -103,14 +101,14 @@ public class OcamlLink extends AbstractBuildRuleWithResolver {
             getProjectFilesystem().getRootPath(),
             cxxCompilerEnvironment,
             cxxCompiler,
-            ocamlCompiler.getCommandPrefix(getResolver()),
+            ocamlCompiler.getCommandPrefix(context.getSourcePathResolver()),
             flags,
             stdlib,
             getProjectFilesystem().resolve(outputRelativePath),
             depInput,
             cDepInput,
             inputs.stream()
-                .map(getResolver()::getAbsolutePath)
+                .map(context.getSourcePathResolver()::getAbsolutePath)
                 .collect(MoreCollectors.toImmutableList()),
             isLibrary,
             isBytecode)
