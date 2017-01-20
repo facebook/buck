@@ -18,11 +18,10 @@ package com.facebook.buck.json;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
@@ -33,7 +32,7 @@ import java.nio.file.Path;
 /*
  * Concatenates Json arrays in files
  */
-public class JsonConcatenate extends AbstractBuildRuleWithResolver {
+public class JsonConcatenate extends AbstractBuildRule {
 
   private final String stepShortName;
   private final String stepDescription;
@@ -43,13 +42,12 @@ public class JsonConcatenate extends AbstractBuildRuleWithResolver {
 
   public JsonConcatenate(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver sourcePathResolver,
       ImmutableSortedSet<Path> inputs,
       String stepShortName,
       String stepDescription,
       String outputDirectoryPrefix,
       String outputName) {
-    super(buildRuleParams, sourcePathResolver);
+    super(buildRuleParams);
     this.inputs = inputs;
     this.outputDirectory =
         BuildTargets.getGenPath(

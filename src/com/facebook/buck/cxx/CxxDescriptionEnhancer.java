@@ -1029,7 +1029,6 @@ public class CxxDescriptionEnhancer {
                     ruleFinder.filterBuildRuleInputs(
                         compilationDatabases.get().getSourcePaths()))),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
-        pathResolver,
         pathResolver.getAllAbsolutePaths(compilationDatabases.get().getSourcePaths()),
         "compilation-database-concatenate",
         "Concatenate compilation databases",
