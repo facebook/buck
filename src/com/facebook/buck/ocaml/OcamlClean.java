@@ -17,12 +17,11 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
@@ -35,7 +34,7 @@ import javax.annotation.Nullable;
 /**
  * A build rule which cleans a target's build output folder.
  */
-public class OcamlClean extends AbstractBuildRuleWithResolver {
+public class OcamlClean extends AbstractBuildRule {
 
   @AddToRuleKey
   private final OcamlBuildContext ocamlContext;
@@ -44,9 +43,8 @@ public class OcamlClean extends AbstractBuildRuleWithResolver {
 
   public OcamlClean(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       OcamlBuildContext ocamlContext) {
-    super(params, resolver);
+    super(params);
     this.ocamlContext = ocamlContext;
   }
 

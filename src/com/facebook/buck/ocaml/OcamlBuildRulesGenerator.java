@@ -87,7 +87,7 @@ public class OcamlBuildRulesGenerator {
     this.cCompiler = cCompiler;
     this.cxxCompiler = cxxCompiler;
     this.bytecodeOnly = bytecodeOnly;
-    this.cleanRule = generateCleanBuildRule(params, pathResolver, ocamlContext);
+    this.cleanRule = generateCleanBuildRule(params, ocamlContext);
   }
 
   /**
@@ -216,7 +216,6 @@ public class OcamlBuildRulesGenerator {
 
   private BuildRule generateCleanBuildRule(
       BuildRuleParams params,
-      SourcePathResolver pathResolver,
       OcamlBuildContext ocamlContext) {
     BuildTarget cleanTarget =
       BuildTarget.builder(params.getBuildTarget())
@@ -235,7 +234,7 @@ public class OcamlBuildRulesGenerator {
           .build()),
       params.getExtraDeps());
 
-    BuildRule cleanRule = new OcamlClean(cleanParams, pathResolver, ocamlContext);
+    BuildRule cleanRule = new OcamlClean(cleanParams, ocamlContext);
     resolver.addToIndex(cleanRule);
     return cleanRule;
   }
