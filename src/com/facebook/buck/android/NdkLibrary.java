@@ -20,7 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -63,7 +62,7 @@ import javax.annotation.Nullable;
  * )
  * </pre>
  */
-public class NdkLibrary extends AbstractBuildRuleWithResolver
+public class NdkLibrary extends AbstractBuildRule
     implements NativeLibraryBuildRule, AndroidPackageable {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
@@ -92,7 +91,6 @@ public class NdkLibrary extends AbstractBuildRuleWithResolver
 
   protected NdkLibrary(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       Path makefile,
       String makefileContents,
       Set<SourcePath> sources,
@@ -100,7 +98,7 @@ public class NdkLibrary extends AbstractBuildRuleWithResolver
       boolean isAsset,
       Optional<String> ndkVersion,
       Function<String, String> macroExpander) {
-    super(params, resolver);
+    super(params);
     this.isAsset = isAsset;
 
     BuildTarget buildTarget = params.getBuildTarget();

@@ -342,7 +342,6 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
             ImmutableSortedSet.<BuildRule>naturalOrder()
                 .addAll(makefilePair.getSecond())
                 .build()),
-        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         getGeneratedMakefilePath(params.getBuildTarget(), params.getProjectFilesystem()),
         makefilePair.getFirst(),
         sources,
