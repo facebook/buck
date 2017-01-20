@@ -37,8 +37,8 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
@@ -163,7 +163,6 @@ public class HaskellBinaryDescription implements
             HaskellDescriptionUtils.requireCompileRule(
                 params,
                 resolver,
-                pathResolver,
                 ruleFinder,
                 cxxPlatform,
                 haskellConfig,

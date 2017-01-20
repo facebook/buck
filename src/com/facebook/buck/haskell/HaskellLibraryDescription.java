@@ -116,7 +116,6 @@ public class HaskellLibraryDescription implements
     return HaskellDescriptionUtils.requireCompileRule(
         params,
         resolver,
-        pathResolver,
         ruleFinder,
         cxxPlatform,
         haskellConfig,
