@@ -382,7 +382,6 @@ public class AndroidBinaryGraphEnhancer {
       packageStringAssets = Optional.of(
           new PackageStringAssets(
               paramsForPackageStringAssets,
-              pathResolver,
               locales,
               filteredResourcesProvider,
               aaptPackageResources));

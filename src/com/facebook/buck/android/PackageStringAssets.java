@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RecordFileSha1Step;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreCollectors;
@@ -53,7 +52,7 @@ import javax.annotation.Nullable;
  * of locales provided. The contents of string_assets.zip is built into the assets of the APK.
  * all_locales_string_assets.zip is used for debugging purposes.
  */
-public class PackageStringAssets extends AbstractBuildRuleWithResolver
+public class PackageStringAssets extends AbstractBuildRule
     implements InitializableFromDisk<PackageStringAssets.BuildOutput> {
 
   private static final String STRING_ASSETS_ZIP_HASH = "STRING_ASSETS_ZIP_HASH";
@@ -68,11 +67,10 @@ public class PackageStringAssets extends AbstractBuildRuleWithResolver
 
   public PackageStringAssets(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       ImmutableSet<String> locales,
       FilteredResourcesProvider filteredResourcesProvider,
       AaptPackageResources aaptPackageResources) {
-    super(params, resolver);
+    super(params);
     this.locales = locales;
     this.filteredResourcesProvider = filteredResourcesProvider;
     this.aaptPackageResources = aaptPackageResources;
