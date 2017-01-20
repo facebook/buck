@@ -252,7 +252,6 @@ public class OcamlBuildRulesGenerator {
 
     OcamlDebugLauncher debugLauncher = new OcamlDebugLauncher(
         debugParams,
-        pathResolver,
         new OcamlDebugLauncherStep.Args(
             ocamlContext.getOcamlDebug().get(),
             ocamlContext.getBytecodeOutput(),

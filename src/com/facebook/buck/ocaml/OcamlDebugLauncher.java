@@ -16,12 +16,11 @@
 
 package com.facebook.buck.ocaml;
 
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
@@ -33,15 +32,14 @@ import java.nio.file.Path;
  * the target binary loaded. This works with bytecode and provides limited debugging
  * functionality like stepping, breakpoints, etc.
  */
-public class OcamlDebugLauncher extends AbstractBuildRuleWithResolver {
+public class OcamlDebugLauncher extends AbstractBuildRule {
   @AddToRuleKey
   private final OcamlDebugLauncherStep.Args args;
 
   public OcamlDebugLauncher(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       OcamlDebugLauncherStep.Args args) {
-    super(params, resolver);
+    super(params);
     this.args = args;
   }
 
@@ -52,7 +50,7 @@ public class OcamlDebugLauncher extends AbstractBuildRuleWithResolver {
     buildableContext.recordArtifact(args.getOutput());
     return ImmutableList.of(
       new MkdirStep(getProjectFilesystem(), args.getOutput().getParent()),
-      new OcamlDebugLauncherStep(getProjectFilesystem(), getResolver(), args)
+      new OcamlDebugLauncherStep(getProjectFilesystem(), context.getSourcePathResolver(), args)
     );
   }
 
