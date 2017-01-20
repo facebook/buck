@@ -121,7 +121,7 @@ public class JarFattener extends AbstractBuildRuleWithResolver implements Binary
       steps.add(
           new SymlinkFileStep(
               getProjectFilesystem(),
-              getResolver().getAbsolutePath(entry.getValue()),
+              context.getSourcePathResolver().getAbsolutePath(entry.getValue()),
               fatJarDir.resolve(resource),
               /* useAbsolutePaths */ true));
     }
@@ -150,7 +150,7 @@ public class JarFattener extends AbstractBuildRuleWithResolver implements Binary
     steps.add(
         new SymlinkFileStep(
             getProjectFilesystem(),
-            getResolver().getAbsolutePath(innerJar),
+            context.getSourcePathResolver().getAbsolutePath(innerJar),
             fatJarDir.resolve(FAT_JAR_INNER_JAR),
             /* useAbsolutePaths */ true));
 
@@ -178,7 +178,7 @@ public class JarFattener extends AbstractBuildRuleWithResolver implements Binary
         context,
         ImmutableSortedSet.copyOf(javaSourceFilePaths),
         getBuildTarget(),
-        getResolver(),
+        context.getSourcePathResolver(),
         ruleFinder,
         getProjectFilesystem(),
         /* classpathEntries */ ImmutableSortedSet.of(),
