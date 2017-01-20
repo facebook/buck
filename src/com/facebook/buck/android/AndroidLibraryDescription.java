@@ -44,7 +44,6 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.DepQueryUtils;
 import com.facebook.buck.util.DependencyMode;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
@@ -54,8 +53,6 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 public class AndroidLibraryDescription
     implements Description<AndroidLibraryDescription.Arg>, Flavored,
@@ -228,18 +225,8 @@ public class AndroidLibraryDescription
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       Arg constructorArg) {
-    Iterable<BuildTarget> targets = compilerFactory.getCompiler(
-        constructorArg.language.orElse(JvmLanguage.JAVA))
+    return compilerFactory.getCompiler(constructorArg.language.orElse(JvmLanguage.JAVA))
         .findDepsForTargetFromConstructorArgs(buildTarget, cellRoots, constructorArg);
-    if (constructorArg.depsQuery.isPresent()) {
-      String query = constructorArg.depsQuery.get();
-      return Stream.concat(
-          StreamSupport.stream(targets.spliterator(), false),
-          DepQueryUtils.extractParseTimeTargets(buildTarget, query, cellRoots))
-          .collect(MoreCollectors.toImmutableList());
-    } else {
-      return targets;
-    }
   }
 
   @SuppressFieldNotInitialized
