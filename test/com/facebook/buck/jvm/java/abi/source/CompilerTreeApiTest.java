@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -27,6 +28,7 @@ import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskListener;
 import com.sun.source.util.Trees;
 
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
@@ -176,6 +178,19 @@ public abstract class CompilerTreeApiTest {
     javacTask.analyze();
 
     return compilationUnits;
+  }
+
+  protected void withClasspath(
+      Map<String, String> fileNamesToContents) throws IOException {
+    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+
+    fileManager = compiler.getStandardFileManager(null, null, null);
+    Iterable<? extends JavaFileObject> sourceObjects =
+        getJavaFileObjects(fileNamesToContents, classpathFolder);
+    diagnostics = new DiagnosticCollector<>();
+
+    compiler.getTask(null, fileManager, diagnostics, null, null, sourceObjects).call();
+    assertThat(diagnostics.getDiagnostics(), Matchers.empty());
   }
 
   protected TypeMirror getTypeParameterUpperBound(String typeName, int typeParameterIndex) {
