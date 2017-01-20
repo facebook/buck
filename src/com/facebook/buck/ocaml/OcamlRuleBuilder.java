@@ -296,7 +296,6 @@ public class OcamlRuleBuilder {
 
     final OcamlBuild ocamlLibraryBuild = new OcamlBuild(
         compileParams,
-        pathResolver,
         ocamlContext,
         ocamlBuckConfig.getCCompiler().resolve(resolver),
         ocamlBuckConfig.getCxxCompiler().resolve(resolver),
