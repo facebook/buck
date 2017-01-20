@@ -56,3 +56,9 @@ android_library(
   deps = [ ':top_level', ],
   deps_query = 'kind(java_library, deps($declared_deps))',
 )
+
+android_library(
+  name = 'android_libraries_without_declared_deps',
+  deps = [],
+  deps_query = 'kind(android_library, deps(:top_level))',
+)

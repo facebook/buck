@@ -123,4 +123,14 @@ public class AndroidLibraryDescriptionIntegrationTest {
     // But the libs above get a dep file hit
     workspace.getBuildLog().assertTargetHadMatchingDepfileRuleKey("//:java_libraries");
   }
+
+  @Test
+  public void testQueryDepsCanReferenceDepsOutsideOfDeclared() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    // Build once to warm cache
+    workspace.runBuckCommand("build", "//:android_libraries_without_declared_deps").assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:lib_b");
+  }
+
 }
