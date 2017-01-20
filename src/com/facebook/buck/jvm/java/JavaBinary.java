@@ -132,7 +132,8 @@ public class JavaBinary extends AbstractBuildRuleWithResolver
 
       MkdirAndSymlinkFileStep link = new MkdirAndSymlinkFileStep(
           getProjectFilesystem(),
-          metaInfDirectory != null ? getResolver().getAbsolutePath(metaInfDirectory) : null,
+          metaInfDirectory != null ?
+              context.getSourcePathResolver().getAbsolutePath(metaInfDirectory) : null,
           stagingTarget);
       commands.add(link);
 
@@ -145,7 +146,8 @@ public class JavaBinary extends AbstractBuildRuleWithResolver
     }
 
     Path outputFile = getPathToOutput();
-    Path manifestPath = manifestFile == null ? null : getResolver().getAbsolutePath(manifestFile);
+    Path manifestPath = manifestFile == null ?
+        null : context.getSourcePathResolver().getAbsolutePath(manifestFile);
     Step jar = new JarDirectoryStep(
         getProjectFilesystem(),
         outputFile,
