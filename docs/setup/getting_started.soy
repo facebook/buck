@@ -518,7 +518,7 @@ cd bucksamples/cross-platform-scale-2015-demo/
     <p><code>android/java/com/facebook/buck/demo/Hello.java</code>: The main Java file supported by other associated resources.</p>
   </li>
   <li>
-    <p><code>android/BUCK</code>: The {call buck.build_file /} is what makes Buck work. It defines all the {call buck.build_rule /}s for your source code. A {call buck.build_rule /} can also include dependencies (generally via <code>deps</code>), which may be from other call buck.build_file /}s, as in the case of this app.</p>
+    <p><code>android/BUCK</code>: The {call buck.build_file /} is what makes Buck work. It defines all the {call buck.build_rule /}s for your source code. A {call buck.build_rule /} can also include dependencies (generally via <code>deps</code>), which may be from other {call buck.build_file /}s, as in the case of this app.</p>
   </li>
   <li>
     <p><code>.buckconfig</code>: A {call buck.concept_buckconfig /} file allows for various flag and alias settings for any project (even beyond Android) within the root directory.</p>
