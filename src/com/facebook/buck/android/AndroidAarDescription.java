@@ -157,7 +157,6 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         packageableCollection.getResourceDetails().getResourceDirectories();
     MergeAndroidResourceSources assembleResourceDirectories = new MergeAndroidResourceSources(
         assembleResourceParams,
-        pathResolver,
         resDirectories);
     aarExtraDepsBuilder.add(resolver.addToIndex(assembleResourceDirectories));
 

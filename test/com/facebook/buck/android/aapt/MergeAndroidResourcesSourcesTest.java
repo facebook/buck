@@ -117,7 +117,6 @@ public class MergeAndroidResourcesSourcesTest {
     MergeAndroidResourceSources mergeAndroidResourceSourcesStep =
         new MergeAndroidResourceSources(
             buildRuleParams,
-            pathResolver,
             directories);
 
     ImmutableList<Step> steps = mergeAndroidResourceSourcesStep.getBuildSteps(
