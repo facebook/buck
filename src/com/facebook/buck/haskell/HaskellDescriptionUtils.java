@@ -333,7 +333,6 @@ public class HaskellDescriptionUtils {
                                 .iterator())
                         .build()),
                 Suppliers.ofInstance(ImmutableSortedSet.of())),
-            pathResolver,
             linker,
             name,
             args,
