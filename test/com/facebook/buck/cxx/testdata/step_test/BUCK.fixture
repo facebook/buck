@@ -185,3 +185,15 @@ cxx_library(
   xcode_public_headers_symlinks = False,
   xcode_private_headers_symlinks = False,
 )
+
+apple_test(
+  name = 'with_xctest',
+  srcs = [
+    'apple_test.m',
+  ],
+  info_plist = 'Test.plist',
+  frameworks = [
+    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+    '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework',
+  ],
+)

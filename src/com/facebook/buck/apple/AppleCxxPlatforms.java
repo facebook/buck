@@ -377,6 +377,8 @@ public class AppleCxxPlatforms {
             CxxToolProvider.Type.CLANG);
     ImmutableList.Builder<String> whitelistBuilder = ImmutableList.builder();
     whitelistBuilder.add("^" + Pattern.quote(sdkPaths.getSdkPath().toString()) + "\\/.*");
+    whitelistBuilder.add("^" + Pattern.quote(sdkPaths.getPlatformPath().toString() +
+                         "/Developer/Library/Frameworks") + "\\/.*");
     for (Path toolchainPath : sdkPaths.getToolchainPaths()) {
       whitelistBuilder.add("^" + Pattern.quote(toolchainPath.toString()) + "\\/.*");
     }
