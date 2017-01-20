@@ -119,7 +119,7 @@ public class Javadoc extends AbstractBuildRuleWithResolver implements MavenPubli
         getProjectFilesystem(),
         Joiner.on("\n").join(
             sources.stream()
-                .map(getResolver()::getAbsolutePath)
+                .map(context.getSourcePathResolver()::getAbsolutePath)
                 .map(Path::toString)
                 .iterator()),
         sourcesListFilePath,
