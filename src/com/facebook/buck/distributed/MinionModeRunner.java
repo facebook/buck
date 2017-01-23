@@ -20,10 +20,6 @@ import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.FinishedBuildingResponse;
 import com.facebook.buck.distributed.thrift.GetTargetsToBuildResponse;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -41,14 +37,12 @@ public class MinionModeRunner implements DistBuildModeRunner {
 
   private final String coordinatorAddress;
   private final int coordinatorPort;
-  private final CellPathResolver distBuildCellPathResolver;
   private final LocalBuilder builder;
   private final BuildId stampedeBuildid;
 
   public MinionModeRunner(
       String coordinatorAddress,
       int coordinatorPort,
-      CellPathResolver distBuildCellPathResolver,
       LocalBuilder builder,
       BuildId stampedeBuildid) {
     this.builder = builder;
@@ -58,7 +52,6 @@ public class MinionModeRunner implements DistBuildModeRunner {
         "The coordinator's port needs to be a positive integer.");
     this.coordinatorAddress = coordinatorAddress;
     this.coordinatorPort = coordinatorPort;
-    this.distBuildCellPathResolver = distBuildCellPathResolver;
   }
 
   @Override
@@ -71,8 +64,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
         GetTargetsToBuildResponse response = client.getTargetsToBuild(minionId);
         switch (response.getAction()) {
           case BUILD_TARGETS:
-            List<BuildTarget> targetsToBuild =
-                fullyQualifiedNameToBuildTarget(response.getBuildTargets());
+            List<String> targetsToBuild = Lists.newArrayList(response.getBuildTargets());
             LOG.debug(String.format(
                 "Minion [%s] is about to build [%d] targets: [%s]",
                 minionId,
@@ -124,19 +116,4 @@ public class MinionModeRunner implements DistBuildModeRunner {
 
     return String.format("minion:%s:%d", hostname, new Random().nextInt(Integer.MAX_VALUE));
   }
-
-  private List<BuildTarget> fullyQualifiedNameToBuildTarget(List<String> buildTargets) {
-    List<BuildTarget> targets = Lists.newArrayList();
-    for (String fullyQualifiedBuildTarget : buildTargets) {
-      // TODO(ruibm): Update this to use Shivanker's static method implementation of the same thing.
-      BuildTarget target = BuildTargetParser.INSTANCE.parse(
-          fullyQualifiedBuildTarget,
-          BuildTargetPatternParser.fullyQualified(),
-          distBuildCellPathResolver);
-      targets.add(target);
-    }
-
-    return targets;
-  }
-
 }

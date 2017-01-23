@@ -47,7 +47,7 @@ public class BuildTargetsQueue {
 
   public static BuildTargetsQueue newQueue(
       BuildRuleResolver resolver,
-      ImmutableList<BuildTarget> targetsToBuild) {
+      Iterable<BuildTarget> targetsToBuild) {
     // Build the reverse dependency graph by traversing the action graph Top-Down.
     Map<String, Set<String>> allReverseDeps = Maps.newHashMap();
     Map<String, Integer> numberOfDependencies = Maps.newHashMap();

@@ -39,7 +39,7 @@ public class DistBuildStatusCommand extends AbstractDistBuildCommand {
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    BuildId buildId = getBuildId();
+    BuildId buildId = getStampedeBuildId();
     Console console = params.getConsole();
     ObjectMapper objectMapper = params.getObjectMapper().copy();
     objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
@@ -47,7 +47,7 @@ public class DistBuildStatusCommand extends AbstractDistBuildCommand {
 
     try (DistBuildService service =
              DistBuildFactory.newDistBuildService(params)) {
-      BuildJob buildJob = service.getCurrentBuildJobState(getBuildId());
+      BuildJob buildJob = service.getCurrentBuildJobState(getStampedeBuildId());
       objectMapper.writeValue(console.getStdOut(), buildJob);
       console.getStdOut().println();
       console.printSuccess(String.format(

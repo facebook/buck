@@ -50,9 +50,7 @@ import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.Optional;
 
 import javax.annotation.Nonnull;
@@ -113,7 +111,7 @@ public class DistBuildState {
             distributedBuildCellIndexer));
     jobState.setCells(distributedBuildCellIndexer.getState());
 
-    for (BuildTarget target: topLevelTargets) {
+    for (BuildTarget target : topLevelTargets) {
       jobState.addToTopLevelTargets(target.getFullyQualifiedName());
     }
     return jobState;
@@ -231,13 +229,6 @@ public class DistBuildState {
     return codec.createTargetGraph(
         remoteState.getTargetGraph(),
         Functions.forMap(cells));
-  }
-
-  public List<BuildTarget> createTopLevelBuildTargets() {
-    return getRemoteState().getTopLevelTargets().stream()
-        .map(targetName -> getRootCell().getBuckConfig()
-            .getBuildTargetForFullyQualifiedTarget(targetName))
-        .collect(Collectors.toList());
   }
 
   private FileHashCache loadDirectFileHashCache(ProjectFilesystem filesystem) {

@@ -18,9 +18,6 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.FakeCellPathResolver;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -30,8 +27,6 @@ import java.io.IOException;
 public class CoordinatorAndMinionModeRunnerIntegrationTest {
 
   private static final BuildId BUILD_ID = ThriftCoordinatorServerIntegrationTest.BUILD_ID;
-  private final CellPathResolver cellPathResolver =
-      new FakeCellPathResolver(new FakeProjectFilesystem());
 
   @Test(timeout = 10000L)
   public void testDiamondGraphRun()
@@ -46,7 +41,6 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
     MinionModeRunner minion = new MinionModeRunner(
         "localhost",
         port,
-        cellPathResolver,
         localBuilder,
         BUILD_ID);
     CoordinatorAndMinionModeRunner jointRunner = new CoordinatorAndMinionModeRunner(
@@ -57,6 +51,6 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
     Assert.assertEquals(3, localBuilder.getCallArguments().size());
     Assert.assertEquals(
         BuildTargetsQueueTest.TARGET_NAME,
-        localBuilder.getCallArguments().get(2).iterator().next().getFullyQualifiedName());
+        localBuilder.getCallArguments().get(2).iterator().next());
   }
 }

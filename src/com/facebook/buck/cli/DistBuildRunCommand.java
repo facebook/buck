@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.distributed.BuildJobStateSerializer;
+import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.thrift.BuildId;
@@ -24,6 +25,7 @@ import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.Console;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 
 import org.kohsuke.args4j.Option;
@@ -43,6 +45,16 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
   @Nullable
   @Option(name = BUILD_STATE_FILE_ARG_NAME, usage = BUILD_STATE_FILE_ARG_USAGE)
   private String buildStateFile;
+
+  @Nullable
+  @Option(name = "--coordinator-port",
+      usage = "The local port that the build coordinator thrift server will listen on.")
+  private int coordinatorPort = -1;
+
+  @Nullable
+  @Option(name = "--build-mode",
+      usage = "The mode in which the distributed build is going to run.")
+  private DistBuildMode distBuildMode = DistBuildMode.REMOTE_BUILD;
 
   @Override
   public boolean isReadOnly() {
@@ -76,7 +88,10 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
             jobState,
             params,
             pool.getExecutor(),
-            service);
+            service,
+            Preconditions.checkNotNull(distBuildMode),
+            coordinatorPort,
+            getStampedeBuildIdOptional());
         int returnCode = distBuildExecutor.buildAndReturnExitCode();
         console.printSuccess(String.format(
             "Successfully ran distributed build [%s] in [%d millis].",
@@ -102,7 +117,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
           BuildJobStateSerializer.deserialize(filesystem.newFileInputStream(buildStateFilePath)),
           String.format("LocalFile=[%s]", buildStateFile));
     } else {
-      BuildId buildId = getBuildId();
+      BuildId buildId = getStampedeBuildId();
       console.getStdOut().println(String.format(
           "Retrieving BuildJobState for build [%s].",
           buildId));

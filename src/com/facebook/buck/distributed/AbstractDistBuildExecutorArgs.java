@@ -18,6 +18,7 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraphCache;
@@ -34,6 +35,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import org.immutables.value.Value;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -65,6 +67,16 @@ abstract class AbstractDistBuildExecutorArgs {
   public abstract Map<ExecutorPool, ListeningExecutorService> getExecutors();
 
   public abstract FileContentsProvider getProvider();
+
+  public abstract DistBuildMode getDistBuildMode();
+
+  public abstract Integer getCoordinatorPort();
+
+  public abstract Optional<BuildId> getStampedeBuildId();
+
+  public String getCoordinatorAddress() {
+    return "localhost";
+  }
 
   public BuckConfig getRemoteRootCellConfig() {
     return getState().getRootCell().getBuckConfig();

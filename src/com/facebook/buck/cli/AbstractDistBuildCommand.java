@@ -21,6 +21,8 @@ import com.facebook.buck.util.HumanReadableException;
 
 import org.kohsuke.args4j.Option;
 
+import java.util.Optional;
+
 import javax.annotation.Nullable;
 
 public abstract class AbstractDistBuildCommand extends AbstractCommand {
@@ -29,12 +31,22 @@ public abstract class AbstractDistBuildCommand extends AbstractCommand {
   @Option(name = "--build-id", usage = "Distributed build id.")
   private String buildId;
 
-  public BuildId getBuildId() {
+  public Optional<BuildId> getStampedeBuildIdOptional() {
     if (buildId == null) {
-      throw new HumanReadableException("--build-id argument is missing.");
+      return Optional.empty();
     }
+
     BuildId buildId = new BuildId();
     buildId.setId(this.buildId);
-    return buildId;
+    return Optional.of(buildId);
+  }
+
+  public BuildId getStampedeBuildId() {
+    Optional<BuildId> buildId = getStampedeBuildIdOptional();
+    if (!buildId.isPresent()) {
+      throw new HumanReadableException("--build-id argument is missing.");
+    }
+
+    return buildId.get();
   }
 }

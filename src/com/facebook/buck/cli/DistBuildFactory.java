@@ -19,13 +19,16 @@ package com.facebook.buck.cli;
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildExecutorArgs;
+import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.FileContentsProviders;
 import com.facebook.buck.distributed.FrontendService;
+import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.log.CommandThreadFactory;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.LoadBalancedService;
 import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
@@ -68,8 +71,10 @@ public abstract class DistBuildFactory {
       BuildJobState jobState,
       CommandRunnerParams params,
       WeightedListeningExecutorService executorService,
-      DistBuildService service) throws IOException {
-
+      DistBuildService service,
+      DistBuildMode mode,
+      int coordinatorPort,
+      Optional<BuildId> stampedeBuildId) throws IOException {
     DistBuildState state = DistBuildState.load(
         Optional.of(params.getBuckConfig()),
         jobState,
@@ -80,8 +85,9 @@ public abstract class DistBuildFactory {
 
     // Create a cache factory which uses a combination of the distributed build config,
     // overridden with the local buck config (i.e. the build slave).
+    Cell rootCell = Preconditions.checkNotNull(state.getCells().get(0));
     ArtifactCacheFactory distBuildArtifactCacheFactory =
-        params.getArtifactCacheFactory().cloneWith(state.getCells().get(0).getBuckConfig());
+        params.getArtifactCacheFactory().cloneWith(rootCell.getBuckConfig());
 
     DistBuildSlaveExecutor executor = new DistBuildSlaveExecutor(
         DistBuildExecutorArgs.builder()
@@ -100,6 +106,9 @@ public abstract class DistBuildFactory {
             .setConsole(params.getConsole())
             .setProvider(FileContentsProviders.createDefaultProvider(service))
             .setExecutors(params.getExecutors())
+            .setDistBuildMode(mode)
+            .setCoordinatorPort(coordinatorPort)
+            .setStampedeBuildId(stampedeBuildId.orElse(new BuildId().setId("LOCAL_FILE")))
             .build());
     return executor;
   }

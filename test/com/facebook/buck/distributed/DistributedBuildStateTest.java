@@ -86,7 +86,6 @@ import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executors;
@@ -208,15 +207,6 @@ public class DistributedBuildStateTest {
             .map(p -> new PathSourcePath(reconstructedCellFilesystem, p))
             .map(ImmutableSortedSet::of)
             .collect(Collectors.toList()));
-
-
-    List<BuildTarget> reconstructedTargets = distributedBuildState.createTopLevelBuildTargets();
-    assertEquals(
-        reconstructedTargets.stream()
-            .map(BuildTarget::getFullyQualifiedName)
-            .collect(Collectors.toList()),
-        Lists.newArrayList("//:lib1", "//:lib2"));
-
   }
 
   @Test

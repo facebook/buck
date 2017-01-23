@@ -17,11 +17,7 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildId;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.FakeCellPathResolver;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -34,8 +30,6 @@ import java.util.List;
 public class MinionModeRunnerIntegrationTest {
 
   private static final BuildId BUILD_ID = ThriftCoordinatorServerIntegrationTest.BUILD_ID;
-  private final CellPathResolver cellPathResolver =
-      new FakeCellPathResolver(new FakeProjectFilesystem());
 
   @Test(timeout = 2000L)
   public void testDiamondGraphRun()
@@ -46,15 +40,15 @@ public class MinionModeRunnerIntegrationTest {
       MinionModeRunner minion = new MinionModeRunner(
           "localhost",
           server.getPort(),
-          cellPathResolver,
           localBuilder,
           BUILD_ID);
       int exitCode = minion.runAndReturnExitCode();
       Assert.assertEquals(0, exitCode);
       Assert.assertEquals(3, localBuilder.getCallArguments().size());
+      int lastBuildIndex = localBuilder.getCallArguments().size() - 1;
       Assert.assertEquals(
           BuildTargetsQueueTest.TARGET_NAME,
-          localBuilder.getCallArguments().get(2).iterator().next().getFullyQualifiedName());
+          localBuilder.getCallArguments().get(lastBuildIndex).get(0));
     }
   }
 
@@ -65,20 +59,20 @@ public class MinionModeRunnerIntegrationTest {
 
   public static class LocalBuilderImpl implements LocalBuilder {
 
-    private final List<Iterable<BuildTarget>> callArguments;
+    private final List<List<String>> callArguments;
 
     public LocalBuilderImpl() {
       callArguments = Lists.newArrayList();
     }
 
-    public ImmutableList<Iterable<BuildTarget>> getCallArguments() {
-      return ImmutableList.copyOf(callArguments);
+    public List<List<String>> getCallArguments() {
+      return callArguments;
     }
 
     @Override
-    public int buildLocallyAndReturnExitCode(Iterable<BuildTarget> targetsToBuild)
+    public int buildLocallyAndReturnExitCode(Iterable<String> targetsToBuild)
         throws IOException, InterruptedException {
-      callArguments.add(targetsToBuild);
+      callArguments.add(ImmutableList.copyOf(targetsToBuild));
       return 0;
     }
   }

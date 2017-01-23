@@ -16,11 +16,9 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.model.BuildTarget;
-
 import java.io.IOException;
 
 public interface LocalBuilder {
-  int buildLocallyAndReturnExitCode(Iterable<BuildTarget> targetsToBuild)
+  int buildLocallyAndReturnExitCode(Iterable<String> targetsToBuild)
       throws IOException, InterruptedException;
 }

@@ -16,31 +16,21 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetNode;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
-
 import java.io.IOException;
 
 public class RemoteBuildModeRunner implements DistBuildModeRunner {
-  private final TargetGraph targetGraph;
   private final LocalBuilder localBuilder;
+  private final Iterable<String> topLevelTargetsToBuild;
 
-  public RemoteBuildModeRunner(TargetGraph targetGraph, LocalBuilder localBuilder) {
-    this.targetGraph = targetGraph;
+  public RemoteBuildModeRunner(
+      LocalBuilder localBuilder,
+      Iterable<String> topLevelTargetsToBuild) {
     this.localBuilder = localBuilder;
+    this.topLevelTargetsToBuild = topLevelTargetsToBuild;
   }
 
   @Override
   public int runAndReturnExitCode() throws IOException, InterruptedException {
-
-    // TODO(ruibm): We need to pass to the distbuild target via de distributed build
-    //              thrift structs.
-    FluentIterable<BuildTarget> allTargets = FluentIterable.from(
-        Preconditions.checkNotNull(targetGraph).getNodes())
-        .transform(TargetNode::getBuildTarget);
-    return localBuilder.buildLocallyAndReturnExitCode(allTargets);
+    return localBuilder.buildLocallyAndReturnExitCode(topLevelTargetsToBuild);
   }
 }
