@@ -385,6 +385,16 @@ public class AppleDescriptions {
       return Optional.empty();
     }
 
+    for (SourcePath assetCatalogDir : assetCatalogDirs) {
+      Path baseName = sourcePathResolver.getRelativePath(assetCatalogDir).getFileName();
+      if (!baseName.toString().endsWith(".xcassets")) {
+        throw new HumanReadableException(
+            "Target %s had asset catalog dir %s - asset catalog dirs must end with .xcassets",
+            params.getBuildTarget(),
+            assetCatalogDir);
+      }
+    }
+
     BuildRuleParams assetCatalogParams = params.copyWithChanges(
         params.getBuildTarget().withAppendedFlavors(AppleAssetCatalog.FLAVOR),
         Suppliers.ofInstance(ImmutableSortedSet.of()),
@@ -393,7 +403,6 @@ public class AppleDescriptions {
     return Optional.of(
         new AppleAssetCatalog(
             assetCatalogParams,
-            sourcePathResolver,
             applePlatform.getName(),
             actool,
             assetCatalogDirs,
