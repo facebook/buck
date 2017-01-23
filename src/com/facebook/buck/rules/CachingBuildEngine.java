@@ -125,6 +125,7 @@ public class CachingBuildEngine implements BuildEngine {
 
   private static final String BUILD_RULE_TYPE_CONTEXT_KEY = "build_rule_type";
   private static final String STEP_TYPE_CONTEXT_KEY = "step_type";
+
   private static enum StepType {
     BUILD_STEP,
     POST_BUILD_STEP,
@@ -491,7 +492,6 @@ public class CachingBuildEngine implements BuildEngine {
       cacheResult = tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
           rule,
           defaultRuleKey,
-          buildInfoRecorder,
           buildContext.getArtifactCache(),
           // TODO(shs96c): This should be a shared between all tests, not one per cell
           rule.getProjectFilesystem(),
@@ -1216,7 +1216,6 @@ public class CachingBuildEngine implements BuildEngine {
   private CacheResult tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
       final BuildRule rule,
       final RuleKey ruleKey,
-      final BuildInfoRecorder buildInfoRecorder,
       final ArtifactCache artifactCache,
       final ProjectFilesystem filesystem,
       final BuildEngineBuildContext buildContext) {
@@ -1240,7 +1239,7 @@ public class CachingBuildEngine implements BuildEngine {
     // Then we could download directly from the remote cache into the on-disk cache and unzip it
     // from there.
     CacheResult cacheResult =
-        fetchArtifactForBuildable(ruleKey, lazyZipPath, artifactCache, buildInfoRecorder);
+        fetchArtifactForBuildable(ruleKey, lazyZipPath, artifactCache);
 
     return unzipArtifactFromCacheResult(
                     rule,
@@ -1333,9 +1332,13 @@ public class CachingBuildEngine implements BuildEngine {
   private CacheResult fetchArtifactForBuildable(
       final RuleKey ruleKey,
       final LazyPath lazyZipPath,
-      final ArtifactCache artifactCache,
-      final BuildInfoRecorder buildInfoRecorder) {
-    return buildInfoRecorder.fetchArtifactForBuildable(ruleKey, lazyZipPath, artifactCache);
+      final ArtifactCache artifactCache) {
+    try {
+      return artifactCache.fetch(ruleKey, lazyZipPath);
+    } catch (RuntimeException t) {
+      LOG.error(t, "Buck internal error when downloading from the cache, will build locally.");
+      return CacheResult.error("unknown", t.getMessage());
+    }
   }
 
   /**
@@ -1626,8 +1629,7 @@ public class CachingBuildEngine implements BuildEngine {
     CacheResult manifestResult = fetchArtifactForBuildable(
         manifestKey.getFirst(),
         tempFile,
-        context.getArtifactCache(),
-        buildInfoRecorder);
+        context.getArtifactCache());
 
     if (!manifestResult.getType().isSuccess()) {
       return Optional.empty();
@@ -1670,7 +1672,6 @@ public class CachingBuildEngine implements BuildEngine {
         tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
             rule,
             ruleKey.get(),
-            buildInfoRecorder,
             context.getArtifactCache(),
             // TODO(shs96c): This should be shared between all tests, not one per cell
             rule.getProjectFilesystem(),
@@ -1723,7 +1724,6 @@ public class CachingBuildEngine implements BuildEngine {
       tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
           rule,
           inputRuleKey,
-          buildInfoRecorder,
           context.getArtifactCache(),
           // TODO(shs96c): Share this between all tests, not one per cell.
           rule.getProjectFilesystem(),

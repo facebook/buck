@@ -18,12 +18,10 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactInfo;
-import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BorrowablePath;
-import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -133,7 +131,7 @@ public class BuildInfoRecorder {
     }
   }
 
-  private String formatAdditionalArtifactInfo(Map<String, String> entries) {
+  private static String formatAdditionalArtifactInfo(Map<String, String> entries) {
     StringBuilder builder = new StringBuilder();
     for (Map.Entry<String, String> entry : entries.entrySet()) {
       builder.append(entry.getKey());
@@ -350,22 +348,6 @@ public class BuildInfoRecorder {
             }
           }
         });
-  }
-
-  /**
-   * Fetches the artifact associated with the {@link #buildTarget} for this class and writes it to
-   * the specified {@code outputFile}.
-   */
-  public CacheResult fetchArtifactForBuildable(
-      RuleKey ruleKey,
-      LazyPath outputFile,
-      ArtifactCache artifactCache) {
-    try {
-      return artifactCache.fetch(ruleKey, outputFile);
-    } catch (Throwable t) {
-      LOG.error(t, "Buck internal error when downloading from the cache, will build locally.");
-      return CacheResult.error("unknown", t.getMessage());
-    }
   }
 
   /**
