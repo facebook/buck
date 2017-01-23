@@ -141,7 +141,6 @@ abstract class GoDescriptors {
         params
             .appendExtraDeps(linkableDeps)
             .appendExtraDeps(ImmutableList.of(symlinkTree)),
-        pathResolver,
         symlinkTree,
         packageName,
         getPackageImportMap(goBuckConfig.getVendorPaths(),

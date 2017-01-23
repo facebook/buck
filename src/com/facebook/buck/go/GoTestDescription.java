@@ -140,7 +140,6 @@ public class GoTestDescription implements
     Tool testMainGenerator = GoDescriptors.getTestMainGenerator(goBuckConfig, params, resolver);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver sourceResolver = new SourcePathResolver(ruleFinder);
     GoTestMain generatedTestMain = new GoTestMain(
         params.copyWithChanges(
             params.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("test-main-src")),
@@ -148,7 +147,6 @@ public class GoTestDescription implements
                 testMainGenerator.getDeps(ruleFinder))),
             Suppliers.ofInstance(ImmutableSortedSet.of())
         ),
-        sourceResolver,
         testMainGenerator,
         srcs,
         packageName

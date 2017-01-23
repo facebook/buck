@@ -102,7 +102,7 @@ public class GoBinary extends AbstractBuildRuleWithResolver implements BinaryBui
     ImmutableMap.Builder<String, String> environment = ImmutableMap.builder();
     if (cxxLinker.isPresent()) {
       environment.putAll(cxxLinker.get().getEnvironment());
-      cxxLinkerCommand = cxxLinker.get().getCommandPrefix(getResolver());
+      cxxLinkerCommand = cxxLinker.get().getCommandPrefix(context.getSourcePathResolver());
     }
     environment.putAll(linker.getEnvironment());
     return ImmutableList.of(
@@ -111,7 +111,7 @@ public class GoBinary extends AbstractBuildRuleWithResolver implements BinaryBui
             getProjectFilesystem().getRootPath(),
             environment.build(),
             cxxLinkerCommand,
-            linker.getCommandPrefix(getResolver()),
+            linker.getCommandPrefix(context.getSourcePathResolver()),
             linkerFlags,
             ImmutableList.of(linkTree.getRoot()),
             platform,
