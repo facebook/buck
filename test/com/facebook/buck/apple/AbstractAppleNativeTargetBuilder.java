@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxSource;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.Description;
@@ -160,6 +161,11 @@ public abstract class AbstractAppleNativeTargetBuilder<
 
   public BUILDER setBridgingHeader(Optional<SourcePath> bridgingHeader) {
     arg.bridgingHeader = bridgingHeader;
+    return getThis();
+  }
+
+  public BUILDER setPreferredLinkage(NativeLinkable.Linkage linkage) {
+    arg.preferredLinkage = Optional.of(linkage);
     return getThis();
   }
 

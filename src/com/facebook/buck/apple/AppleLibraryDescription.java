@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import static com.facebook.buck.cxx.NativeLinkable.Linkage;
 import static com.facebook.buck.swift.SwiftLibraryDescription.isSwiftTarget;
 
 import com.facebook.buck.cxx.CxxCompilationDatabase;
@@ -49,6 +50,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -65,6 +67,7 @@ import com.google.common.collect.Sets;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
 
 public class AppleLibraryDescription implements
     Description<AppleLibraryDescription.Arg>,
@@ -493,8 +496,13 @@ public class AppleLibraryDescription implements
             constructorArg);
   }
 
-  public static boolean isSharedLibraryTarget(BuildTarget target) {
-    return target.getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR);
+  public static boolean isSharedLibraryNode(TargetNode<CxxLibraryDescription.Arg, ?> node) {
+    SortedSet<Flavor> flavors = node.getBuildTarget().getFlavors();
+    if (LIBRARY_TYPE.getFlavor(flavors).isPresent()) {
+      return flavors.contains(CxxDescriptionEnhancer.SHARED_FLAVOR);
+    } else {
+      return node.getConstructorArg().preferredLinkage.equals(Optional.of(Linkage.SHARED));
+    }
   }
 
   @SuppressFieldNotInitialized

@@ -17,11 +17,13 @@
 package com.facebook.buck.apple;
 
 import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
+import static com.facebook.buck.apple.AppleResources.APPLE_RESOURCE_DESCRIPTION_CLASSES;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.model.BuildTarget;
@@ -237,6 +239,111 @@ public class AppleBuildRulesTest {
               barFrameworkNode,
               fooFrameworkNode),
           ImmutableSortedSet.copyOf(rules));
+    }
+  }
+
+  @Test
+  public void resourceDepsOfDylibsAreNotIncludedInMainBundle() throws Exception {
+    BuildTarget sharedResourceTarget =
+        BuildTargetFactory.newInstance("//shared:resource");
+    TargetNode<?, ?> sharedResourceNode = AppleResourceBuilder
+        .createBuilder(sharedResourceTarget)
+        .build();
+
+    // no preferredLinkage, shared flavor
+    BuildTarget fooLibTarget =
+        BuildTargetFactory.newInstance("//foo:lib#" + CxxDescriptionEnhancer.SHARED_FLAVOR);
+    TargetNode<?, ?> fooLibNode = AppleLibraryBuilder
+        .createBuilder(fooLibTarget)
+        .setDeps(ImmutableSortedSet.of(sharedResourceTarget))
+        .build();
+
+    // shared preferredLinkage, no flavor
+    BuildTarget foo2LibTarget =
+        BuildTargetFactory.newInstance("//foo2:lib");
+    TargetNode<?, ?> foo2LibNode = AppleLibraryBuilder
+        .createBuilder(foo2LibTarget)
+        .setDeps(ImmutableSortedSet.of(sharedResourceTarget))
+        .setPreferredLinkage(NativeLinkable.Linkage.SHARED)
+        .build();
+
+    BuildTarget fooFrameworkTarget = BuildTargetFactory.newInstance("//foo:framework#default");
+    TargetNode<?, ?> fooFrameworkNode = AppleBundleBuilder
+        .createBuilder(fooFrameworkTarget)
+        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setBinary(fooLibTarget)
+        .build();
+
+    // shared preferredLinkage overriden by static flavor should still propagate dependencies.
+    BuildTarget staticResourceTarget =
+        BuildTargetFactory.newInstance("//static:resource");
+    TargetNode<?, ?> staticResourceNode = AppleResourceBuilder
+        .createBuilder(staticResourceTarget)
+        .build();
+
+    BuildTarget bazLibTarget =
+        BuildTargetFactory.newInstance("//baz:lib#" + CxxDescriptionEnhancer.STATIC_FLAVOR);
+    TargetNode<?, ?> bazLibNode = AppleLibraryBuilder
+        .createBuilder(bazLibTarget)
+        .setDeps(ImmutableSortedSet.of(staticResourceTarget))
+        .setPreferredLinkage(NativeLinkable.Linkage.SHARED)
+        .build();
+
+
+    BuildTarget barBinaryTarget = BuildTargetFactory.newInstance("//bar:binary");
+    TargetNode<?, ?> barBinaryNode = AppleBinaryBuilder
+        .createBuilder(barBinaryTarget)
+        .setDeps(ImmutableSortedSet.of(fooLibTarget, foo2LibTarget, bazLibTarget))
+        .build();
+
+    BuildTarget barAppTarget = BuildTargetFactory.newInstance("//bar:app");
+    TargetNode<?, ?> barAppNode = AppleBundleBuilder
+        .createBuilder(barAppTarget)
+        .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+        .setBinary(barBinaryTarget)
+        .setDeps(ImmutableSortedSet.of(fooFrameworkTarget))
+        .build();
+
+    ImmutableSet<TargetNode<?, ?>> targetNodes =
+        ImmutableSet.<TargetNode<?, ?>>builder()
+            .add(
+                sharedResourceNode,
+                staticResourceNode,
+                fooLibNode,
+                foo2LibNode,
+                bazLibNode,
+                fooFrameworkNode,
+                barBinaryNode,
+                barAppNode)
+            .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(targetNodes);
+    Optional<AppleDependenciesCache> cache =
+        useCache ? Optional.of(new AppleDependenciesCache(targetGraph)) : Optional.empty();
+
+    for (int i = 0; i < (useCache ? 2 : 1); i++) {
+      Iterable<TargetNode<?, ?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+          targetGraph,
+          cache,
+          AppleBuildRules.RecursiveDependenciesMode.COPYING,
+          fooFrameworkNode,
+          Optional.of(APPLE_RESOURCE_DESCRIPTION_CLASSES));
+
+      assertEquals(
+          ImmutableSortedSet.of(sharedResourceNode),
+          ImmutableSortedSet.copyOf(rules));
+
+      rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+          targetGraph,
+          cache,
+          AppleBuildRules.RecursiveDependenciesMode.COPYING,
+          barAppNode,
+          Optional.of(APPLE_RESOURCE_DESCRIPTION_CLASSES));
+
+      assertEquals(
+          ImmutableSortedSet.of(staticResourceNode),
+          ImmutableSortedSet.copyOf(rules));
+
     }
   }
 

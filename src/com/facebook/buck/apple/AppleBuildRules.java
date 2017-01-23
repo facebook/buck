@@ -141,6 +141,7 @@ public final class AppleBuildRules {
         mode,
         descriptionClasses);
 
+    @SuppressWarnings("unchecked")
     GraphTraversable<TargetNode<?, ?>> graphTraversable = node -> {
       if (!isXcodeTargetDescription(node.getDescription()) ||
           SwiftLibraryDescription.isSwiftTarget(node.getBuildTarget())) {
@@ -207,25 +208,19 @@ public final class AppleBuildRules {
       if (node != targetNode) {
         switch (mode) {
           case LINKING:
+          case COPYING:
             boolean nodeIsAppleLibrary =
                 node.getDescription() instanceof AppleLibraryDescription;
             boolean nodeIsCxxLibrary =
                 node.getDescription() instanceof CxxLibraryDescription;
             if (nodeIsAppleLibrary || nodeIsCxxLibrary) {
-              if (AppleLibraryDescription.isSharedLibraryTarget(node.getBuildTarget())) {
+              if (AppleLibraryDescription.isSharedLibraryNode(
+                  (TargetNode<CxxLibraryDescription.Arg, ?>) node)) {
                 deps = exportedDeps;
               } else {
                 deps = defaultDeps;
               }
             } else if (RECURSIVE_DEPENDENCIES_STOP_AT_DESCRIPTION_CLASSES.contains(
-                node.getDescription().getClass())) {
-              deps = exportedDeps;
-            } else {
-              deps = defaultDeps;
-            }
-            break;
-          case COPYING:
-            if (RECURSIVE_DEPENDENCIES_STOP_AT_DESCRIPTION_CLASSES.contains(
                 node.getDescription().getClass())) {
               deps = exportedDeps;
             } else {

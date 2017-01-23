@@ -2311,8 +2311,7 @@ public class ProjectGenerator {
                 Optional<TargetNode<CxxLibraryDescription.Arg, ?>> library =
                     getLibraryNode(targetGraph, input);
                 if (library.isPresent() &&
-                    !AppleLibraryDescription.isSharedLibraryTarget(
-                        library.get().getBuildTarget())) {
+                    !AppleLibraryDescription.isSharedLibraryNode(library.get())) {
                   return Iterables.concat(
                       library.get().getConstructorArg().frameworks,
                       library.get().getConstructorArg().libraries);

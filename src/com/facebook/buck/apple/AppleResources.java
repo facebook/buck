@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
@@ -33,7 +34,8 @@ import java.util.Optional;
 
 public class AppleResources {
 
-  private static final ImmutableSet<Class<? extends Description<?>>>
+  @VisibleForTesting
+  public static final ImmutableSet<Class<? extends Description<?>>>
       APPLE_RESOURCE_DESCRIPTION_CLASSES = ImmutableSet.of(
           AppleResourceDescription.class,
           IosReactNativeLibraryDescription.class);
