@@ -33,4 +33,5 @@ public interface TestSelector {
 
   boolean matches(TestDescription description);
 
+  boolean matchesClassName(String className);
 }

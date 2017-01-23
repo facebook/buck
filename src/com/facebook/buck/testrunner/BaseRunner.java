@@ -202,7 +202,7 @@ public abstract class BaseRunner {
   protected void parseArgs(String... args) {
     File outputDirectory = null;
     long defaultTestTimeoutMillis = Long.MAX_VALUE;
-    TestSelectorList.Builder testSelectorList = TestSelectorList.builder();
+    TestSelectorList.Builder testSelectorListBuilder = TestSelectorList.builder();
     boolean isDryRun = false;
     boolean shouldExplainTestSelectors = false;
 
@@ -215,11 +215,11 @@ public abstract class BaseRunner {
           break;
         case "--test-selectors":
           List<String> rawSelectors = Arrays.asList(args[++i].split("\n"));
-          testSelectorList.addRawSelectors(rawSelectors);
+          testSelectorListBuilder.addRawSelectors(rawSelectors);
           break;
         case "--simple-test-selector":
           try {
-            testSelectorList.addSimpleTestSelector(args[++i]);
+            testSelectorListBuilder.addSimpleTestSelector(args[++i]);
           } catch (IllegalArgumentException e) {
             System.err.printf("--simple-test-selector takes 2 args: [suite] and [method name].");
             System.exit(1);
@@ -227,7 +227,7 @@ public abstract class BaseRunner {
           break;
         case "--b64-test-selector":
           try {
-            testSelectorList.addBase64EncodedTestSelector(args[++i]);
+            testSelectorListBuilder.addBase64EncodedTestSelector(args[++i]);
           } catch (IllegalArgumentException e) {
             System.err.printf("--b64-test-selector takes 2 args: [suite] and [method name].");
             System.exit(1);
@@ -260,7 +260,11 @@ public abstract class BaseRunner {
     this.defaultTestTimeoutMillis = defaultTestTimeoutMillis;
     this.isDryRun = isDryRun;
     this.testClassNames = testClassNames;
-    this.testSelectorList = testSelectorList.build();
+    this.testSelectorList = testSelectorListBuilder.build();
+    if (!testSelectorList.isEmpty() && !shouldExplainTestSelectors) {
+      // Don't bother class-loading any classes that aren't possible, according to test selectors
+      testClassNames.removeIf(name -> !testSelectorList.possiblyIncludesClassName(name));
+    }
     this.shouldExplainTestSelectors = shouldExplainTestSelectors;
   }
 

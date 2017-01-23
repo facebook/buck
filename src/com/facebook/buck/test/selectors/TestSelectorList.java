@@ -73,6 +73,26 @@ public class TestSelectorList {
     return findSelector(description).isInclusive();
   }
 
+  /**
+   * Returns true if it is *possible* for the given classname to include tests.
+   *
+   * Before we go through the hassle of loading a class, confirm that it's possible
+   * for it to run tests.
+   */
+  public boolean possiblyIncludesClassName(String className) {
+    for (TestSelector testSelector : testSelectors) {
+      if (testSelector.matchesClassName(className)) {
+        if (testSelector.isInclusive()) {
+          return true;
+        }
+        if (testSelector.isMatchAnyMethod()) {
+          return false;
+        }
+      }
+    }
+    return defaultSelector().isInclusive();
+  }
+
   public List<String> getExplanation() {
     List<String> lines = new ArrayList<>();
     for (TestSelector testSelector : testSelectors) {

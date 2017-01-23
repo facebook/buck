@@ -16,6 +16,8 @@
 
 package com.facebook.buck.test.selectors;
 
+import java.util.Objects;
+
 /**
  * A {@link TestDescription} will match if this selector's class-part is identical to the
  * TestDescriptions class name (same for the method name).
@@ -61,21 +63,22 @@ public class SimpleTestSelector implements TestSelector {
 
   @Override
   public boolean matches(TestDescription description) {
-    boolean isClassMatch;
-    boolean isMethodMatch;
+    return matchesClassName(description.getClassName()) &&
+        matchesMethodName(description.getMethodName());
+  }
 
+  @Override
+  public boolean matchesClassName(String thatClassName) {
     if (className == null) {
-      isClassMatch = true;
-    } else {
-      isClassMatch = description.getClassName().equals(className);
+      return true;
     }
+    return Objects.equals(this.className, thatClassName);
+  }
 
+  private boolean matchesMethodName(String thatMethodName) {
     if (methodName == null) {
-      isMethodMatch = true;
-    } else {
-      isMethodMatch = description.getMethodName().equals(methodName);
+      return true;
     }
-
-    return isClassMatch && isMethodMatch;
+    return Objects.equals(this.methodName, thatMethodName);
   }
 }

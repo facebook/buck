@@ -171,4 +171,51 @@ public class TestSelectionListTest {
         "The empty list should include everything",
         testSelectorList.isIncluded(description));
   }
+
+  @Test
+  public void possiblyIncludesAnyClassNameWhenListIsEmpty() {
+    TestSelectorList emptyList = TestSelectorList.empty();
+    assertTrue(emptyList.possiblyIncludesClassName("Foo"));
+  }
+
+  @Test
+  public void includesOnlyProvidedClassNameWhenListIsSimpleSelector() {
+    TestSelectorList emptyList = new TestSelectorList.Builder()
+        .addSimpleTestSelector("com.example.Foo,bar")
+        .build();
+    assertTrue(emptyList.possiblyIncludesClassName("com.example.Foo"));
+    assertFalse(emptyList.possiblyIncludesClassName("com.example.Bar"));
+  }
+
+  @Test
+  public void possiblyIncludesClassNameWhenClassMatchesAndIsIncluded() {
+    TestSelectorList emptyList = new TestSelectorList.Builder()
+        .addRawSelectors("!Foo#skipMe", "!#andSkipMe", "Foo", "Bar#baz", "!#")
+        .build();
+    assertTrue(emptyList.possiblyIncludesClassName("Foo"));
+  }
+
+  @Test
+  public void possiblyIncludesClassNameWhenMethodMatchesAndIsIncluded() {
+    TestSelectorList emptyList = new TestSelectorList.Builder()
+        .addRawSelectors("!Foo#skipMe", "!#andSkipMe", "Foo", "Bar#baz", "!#")
+        .build();
+    assertTrue(emptyList.possiblyIncludesClassName("Bar"));
+  }
+
+  @Test
+  public void possiblyIncludesClassNameWhenNothingMatchesAndDefaultIsInclusion() {
+    TestSelectorList emptyList = new TestSelectorList.Builder()
+        .addRawSelectors("!Foo", "!Bar", "#")
+        .build();
+    assertTrue(emptyList.possiblyIncludesClassName("Baz"));
+  }
+
+  @Test
+  public void doesNotPossiblyIncludeClassNameWhenNothingMatchesAndDefaultIsExclusion() {
+    TestSelectorList emptyList = new TestSelectorList.Builder()
+        .addRawSelectors("Foo", "Bar", "!#")
+        .build();
+    assertFalse(emptyList.possiblyIncludesClassName("Baz"));
+  }
 }

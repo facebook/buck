@@ -163,21 +163,21 @@ public class PatternTestSelector implements TestSelector {
 
   @Override
   public boolean matches(TestDescription description) {
-    boolean isClassMatch;
-    boolean isMethodMatch;
+    return matchesClassName(description.getClassName()) &&
+        matchesMethodName(description.getMethodName());
+  }
 
+  @Override
+  public boolean matchesClassName(String className) {
     if (classPattern == null) {
-      isClassMatch = true;
-    } else {
-      isClassMatch = classPattern.matcher(description.getClassName()).find();
+      return true;
     }
-
+    return classPattern.matcher(className).find();
+  }
+  private boolean matchesMethodName(String methodName) {
     if (methodPattern == null) {
-      isMethodMatch = true;
-    } else {
-      isMethodMatch = methodPattern.matcher(description.getMethodName()).find();
+      return true;
     }
-
-    return isClassMatch && isMethodMatch;
+    return methodPattern.matcher(methodName).find();
   }
 }
