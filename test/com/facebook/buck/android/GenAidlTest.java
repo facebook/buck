@@ -81,7 +81,6 @@ public class GenAidlTest {
     ));
     GenAidl genAidlRule = new GenAidl(
         params,
-        pathResolver,
         pathToAidl,
         importPath);
 

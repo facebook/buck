@@ -23,14 +23,13 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -58,7 +57,7 @@ import java.nio.file.Path;
  * )
  * </pre>
  */
-public class GenAidl extends AbstractBuildRuleWithResolver {
+public class GenAidl extends AbstractBuildRule {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID);
 
@@ -73,10 +72,9 @@ public class GenAidl extends AbstractBuildRuleWithResolver {
 
   GenAidl(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       SourcePath aidlFilePath,
       String importPath) {
-    super(params, resolver);
+    super(params);
     this.aidlFilePath = aidlFilePath;
     this.importPath = importPath;
     BuildTarget buildTarget = params.getBuildTarget();
