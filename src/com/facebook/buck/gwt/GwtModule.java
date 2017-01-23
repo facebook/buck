@@ -20,13 +20,12 @@ import com.facebook.buck.jvm.java.CopyResourcesStep;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -40,7 +39,7 @@ import java.nio.file.Path;
  * and resources suitable for a GWT module. (It differs slightly from a source JAR because it
  * contains resources.)
  */
-public class GwtModule extends AbstractBuildRuleWithResolver {
+public class GwtModule extends AbstractBuildRule {
 
   private final Path outputFile;
   @AddToRuleKey
@@ -49,10 +48,9 @@ public class GwtModule extends AbstractBuildRuleWithResolver {
 
   GwtModule(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       ImmutableSortedSet<SourcePath> filesForGwtModule) {
-    super(params, resolver);
+    super(params);
     this.ruleFinder = ruleFinder;
     BuildTarget target = params.getBuildTarget();
     this.outputFile = BuildTargets.getGenPath(
@@ -79,7 +77,7 @@ public class GwtModule extends AbstractBuildRuleWithResolver {
     steps.add(
         new CopyResourcesStep(
             getProjectFilesystem(),
-            getResolver(),
+            context.getSourcePathResolver(),
             ruleFinder,
             getBuildTarget(),
             filesForGwtModule,

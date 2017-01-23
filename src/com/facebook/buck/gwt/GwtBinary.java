@@ -21,13 +21,12 @@ import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -49,7 +48,7 @@ import java.util.List;
  * Buildable that produces a GWT application as a WAR file, which is a zip of the outputs produced
  * by the GWT compiler.
  */
-public class GwtBinary extends AbstractBuildRuleWithResolver {
+public class GwtBinary extends AbstractBuildRule {
 
   /**
    * Valid values for the GWT Compiler's {@code -style} flag.
@@ -92,7 +91,6 @@ public class GwtBinary extends AbstractBuildRuleWithResolver {
    */
   GwtBinary(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       ImmutableSortedSet<String> modules,
       JavaRuntimeLauncher javaRuntimeLauncher,
       List<String> vmArgs,
@@ -103,7 +101,7 @@ public class GwtBinary extends AbstractBuildRuleWithResolver {
       boolean strict,
       List<String> experimentalArgs,
       ImmutableSortedSet<Path> gwtModuleJars) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     BuildTarget buildTarget = buildRuleParams.getBuildTarget();
     this.outputFile = BuildTargets.getGenPath(
         buildRuleParams.getProjectFilesystem(),

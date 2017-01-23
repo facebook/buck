@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -79,7 +78,6 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
       A args) {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     final ImmutableSortedSet.Builder<BuildRule> extraDeps = ImmutableSortedSet.naturalOrder();
 
@@ -119,7 +117,6 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
                       gwtModuleTarget,
                       Suppliers.ofInstance(deps),
                       Suppliers.ofInstance(ImmutableSortedSet.of())),
-                  pathResolver,
                   ruleFinder,
                   filesForGwtModule));
           gwtModule = Optional.of(module);
@@ -140,7 +137,6 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
 
     return new GwtBinary(
         params.copyWithExtraDeps(Suppliers.ofInstance(extraDeps.build())),
-        pathResolver,
         args.modules,
         javaOptions.getJavaRuntimeLauncher(),
         args.vmArgs,
