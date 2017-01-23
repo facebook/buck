@@ -83,7 +83,7 @@ public class BuildTargetsQueueTest {
     Assert.assertEquals(1, zeroDepTargets.size());
     Assert.assertEquals(TARGET_NAME, zeroDepTargets.get(0));
 
-    Assert.assertEquals(0,  queue.dequeueZeroDependencyNodes(zeroDepTargets).size());
+    Assert.assertEquals(0, queue.dequeueZeroDependencyNodes(zeroDepTargets).size());
   }
 
   private static BuildRuleResolver createSimpleResolver() throws NoSuchBuildTargetException {
@@ -98,6 +98,12 @@ public class BuildTargetsQueueTest {
             .build(resolver));
     resolver.addAllToIndex(buildRules);
     return resolver;
+  }
+
+  public static BuildTargetsQueue createDiamondDependencyQueue() throws NoSuchBuildTargetException {
+    return BuildTargetsQueue.newQueue(
+        createDiamondDependencyResolver(),
+        ImmutableList.of(BuildTargetFactory.newInstance(TARGET_NAME)));
   }
 
   public static BuildRuleResolver createDiamondDependencyResolver()
@@ -115,7 +121,7 @@ public class BuildTargetsQueueTest {
         JavaLibraryBuilder.createBuilder(left).addDep(leaf).build(resolver),
         JavaLibraryBuilder.createBuilder(right).addDep(leaf).build(resolver),
         JavaLibraryBuilder.createBuilder(root).addDep(left).addDep(right).build(resolver)
-        );
+    );
     resolver.addAllToIndex(buildRules);
     return resolver;
   }

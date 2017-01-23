@@ -61,4 +61,8 @@ service CoordinatorService {
 
   // Called by Minions to tell the Coordinator they have just finished building their workload.
   FinishedBuildingResponse finishedBuilding(1:FinishedBuildingRequest request);
+
+
+  // TODO(ruibm): Some form of heartbeat protocol needs to exist between Minions and Coordinator to
+  // make sure if some Minion has silently died, the workload is picked up by a different machine.
 }
