@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -147,15 +148,16 @@ public class NdkCxxPlatformIntegrationTest {
 
     ProjectWorkspace workspace = setupWorkspace("ndk_app_platform");
 
-    String target = String.format("//:main#android-%s", arch);
+    BuildTarget target = BuildTargetFactory.newInstance(String.format("//:main#android-%s", arch));
+    BuildTarget linkTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target, Optional.empty());
 
-    workspace.runBuckCommand("build", target).assertSuccess();
-    workspace.getBuildLog().assertTargetBuiltLocally(target);
+    workspace.runBuckCommand("build", target.toString()).assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally(linkTarget.toString());
 
     // Change the app platform and verify that our rulekey has changed.
     workspace.writeContentsToPath("[ndk]\n  app_platform = android-12", ".buckconfig");
-    workspace.runBuckCommand("build", target).assertSuccess();
-    workspace.getBuildLog().assertTargetBuiltLocally(target);
+    workspace.runBuckCommand("build", target.toString()).assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally(linkTarget.toString());
   }
 
   @Test

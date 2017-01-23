@@ -33,6 +33,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -47,7 +48,8 @@ import javax.annotation.Nullable;
 
 public class CxxBinary
     extends AbstractBuildRuleWithResolver
-    implements BinaryBuildRule, NativeTestable, HasRuntimeDeps, ProvidesLinkedBinaryDeps {
+    implements BinaryBuildRule, NativeTestable, HasRuntimeDeps, ProvidesLinkedBinaryDeps,
+               SupportsInputBasedRuleKey {
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;

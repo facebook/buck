@@ -444,9 +444,7 @@ public class OCamlIntegrationTest {
 
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally(target.toString());
     buildLog.assertTargetBuiltLocally(binary.toString());
-    buildLog.assertTargetBuiltLocally(libplus.toString());
     buildLog.assertTargetBuiltLocally(libplusStatic.toString());
     buildLog.assertTargetBuiltLocally(cclibbin.toString());
     buildLog.assertTargetBuiltLocally(ccObj.toString());
@@ -463,9 +461,7 @@ public class OCamlIntegrationTest {
     workspace.replaceFileContents("clib/cc/cc.cpp", "Hi there", "hi there");
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally(target.toString());
     buildLog.assertTargetBuiltLocally(binary.toString());
-    buildLog.assertTargetBuiltLocally(libplus.toString());
     buildLog.assertTargetBuiltLocally(libplusStatic.toString());
     buildLog.assertTargetBuiltLocally(cclibbin.toString());
     buildLog.assertTargetBuiltLocally(ccObj.toString());

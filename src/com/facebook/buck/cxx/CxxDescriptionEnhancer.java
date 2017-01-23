@@ -589,7 +589,7 @@ public class CxxDescriptionEnhancer {
   }
 
   @VisibleForTesting
-  protected static BuildTarget createCxxLinkTarget(
+  public static BuildTarget createCxxLinkTarget(
       BuildTarget target,
       Optional<LinkerMapMode> flavoredLinkerMapMode) {
     if (flavoredLinkerMapMode.isPresent()) {

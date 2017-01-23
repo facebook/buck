@@ -1374,6 +1374,7 @@ public class CxxBinaryIntegrationTest {
     workspace.setupCxxSandboxing(sandboxSources);
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:simple");
+    BuildTarget linkTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target, Optional.empty());
 
     // Get the real location of the compiler executable.
     String executable = Platform.detect() == Platform.MACOS ? "clang++" : "g++";
@@ -1432,7 +1433,7 @@ public class CxxBinaryIntegrationTest {
       target.getFullyQualifiedName()).assertSuccess();
 
     // Make sure the binary change caused a rebuild.
-    workspace.getBuildLog().assertTargetBuiltLocally(target.toString());
+    workspace.getBuildLog().assertTargetBuiltLocally(linkTarget.toString());
   }
 
   @Test
@@ -1554,7 +1555,6 @@ public class CxxBinaryIntegrationTest {
     assertThat(
         buildLog.getLogEntry(binaryTarget).getSuccessType().get(),
         Matchers.not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
-    buildLog.assertTargetBuiltLocally(target.toString());
 
     // Clear for new build.
     workspace.resetBuildLogFile();
@@ -1666,7 +1666,6 @@ public class CxxBinaryIntegrationTest {
     assertThat(
         buildLog.getLogEntry(binaryTarget).getSuccessType().get(),
         Matchers.not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
-    buildLog.assertTargetBuiltLocally(target.toString());
   }
 
   @Test
@@ -1818,7 +1817,6 @@ public class CxxBinaryIntegrationTest {
     assertThat(
         buildLog.getLogEntry(binaryTarget).getSuccessType().get(),
         Matchers.not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
-    buildLog.assertTargetBuiltLocally(target.toString());
 
     // Clear for new build.
     workspace.resetBuildLogFile();
@@ -1853,7 +1851,6 @@ public class CxxBinaryIntegrationTest {
     buildLog.assertTargetHadMatchingRuleKey(depTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(compileTarget.toString());
     buildLog.assertTargetBuiltLocally(binaryTarget.toString());
-    buildLog.assertTargetBuiltLocally(target.toString());
   }
 
   @Test
@@ -2468,7 +2465,7 @@ public class CxxBinaryIntegrationTest {
     workspace.copyFile("bin.c.new", "bin.c");
     workspace.runBuckBuild("//:bin").assertSuccess();
     BuckBuildLog log = workspace.getBuildLog();
-    log.assertTargetBuiltLocally("//:bin");
+    log.assertTargetBuiltLocally("//:bin#binary");
   }
 
   private ImmutableSortedSet<Path> findFiles(Path root, final PathMatcher matcher)
