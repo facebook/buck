@@ -31,7 +31,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class BuildTargetsQueueTest {
-  private static final String TARGET_NAME = "//foo:one";
+  public static final String TARGET_NAME = "//foo:one";
 
   @Test
   public void testEmptyQueue() {
@@ -100,7 +100,7 @@ public class BuildTargetsQueueTest {
     return resolver;
   }
 
-  private static BuildRuleResolver createDiamondDependencyResolver()
+  public static BuildRuleResolver createDiamondDependencyResolver()
       throws NoSuchBuildTargetException {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
