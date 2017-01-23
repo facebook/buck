@@ -110,6 +110,10 @@ public class ThriftCoordinatorServer implements Closeable {
     return this;
   }
 
+  public int getPort() {
+    return port;
+  }
+
   @Override
   public void close() throws IOException {
     if (server != null) {

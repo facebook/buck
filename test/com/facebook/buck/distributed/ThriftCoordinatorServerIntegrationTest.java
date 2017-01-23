@@ -29,8 +29,8 @@ import java.io.IOException;
 import java.net.ServerSocket;
 
 public class ThriftCoordinatorServerIntegrationTest {
+  public static final BuildId BUILD_ID = new BuildId().setId("down the line");
 
-  private static final BuildId BUILD_ID = new BuildId().setId("topspin");
   private static final String MINION_ID = "super cool minion";
 
   @Test(timeout = 2000L)
@@ -52,8 +52,7 @@ public class ThriftCoordinatorServerIntegrationTest {
   public void testThriftServerWithDiamondGraph() throws IOException, NoSuchBuildTargetException {
     int port = findRandomOpenPortOnAllLocalInterfaces();
     BuildTargetsQueue diamondQueue = BuildTargetsQueueTest.createDiamondDependencyQueue();
-    try (ThriftCoordinatorServer server = new ThriftCoordinatorServer(port, diamondQueue,
-        BUILD_ID);
+    try (ThriftCoordinatorServer server = new ThriftCoordinatorServer(port, diamondQueue, BUILD_ID);
          ThriftCoordinatorClient client =
              new ThriftCoordinatorClient("localhost", port, BUILD_ID)) {
       server.start();
@@ -82,5 +81,11 @@ public class ThriftCoordinatorServerIntegrationTest {
     ) {
       return socket.getLocalPort();
     }
+  }
+
+  public static ThriftCoordinatorServer createServerOnRandomPort(BuildTargetsQueue queue)
+      throws IOException {
+    int port = findRandomOpenPortOnAllLocalInterfaces();
+    return new ThriftCoordinatorServer(port, queue, BUILD_ID);
   }
 }
