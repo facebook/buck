@@ -7,6 +7,7 @@
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/step/fs:fs",
+      "//src/com/facebook/buck/test/result/type:type",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:util"
     ],

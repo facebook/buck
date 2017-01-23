@@ -12,7 +12,7 @@
   "testutil" : {
     "deps" : [ ],
     "exported_deps" : [
-      "//src/com/facebook/buck/event/listener:listener",
+      "//src/com/facebook/buck/test/selectors:selectors",
       "//third-party/java/hamcrest:java-hamcrest"
     ]
   }

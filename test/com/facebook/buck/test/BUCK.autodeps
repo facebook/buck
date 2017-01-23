@@ -16,6 +16,7 @@
   "testutil" : {
     "deps" : [
       "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/test/result/type:type",
       "//third-party/java/guava:guava"
     ],
     "exported_deps" : [
