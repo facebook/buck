@@ -38,7 +38,6 @@ import com.facebook.buck.event.StartActivityEvent;
 import com.facebook.buck.event.UninstallEvent;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.rules.ExopackageInfo;
-import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;

@@ -14,7 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.android;
+
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.ExopackageInfo;
 
 import java.nio.file.Path;
 import java.util.Optional;

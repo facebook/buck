@@ -205,7 +205,6 @@ java_immutables_library(
     'ExternalTestRunnerRule.java',
     'IndividualTestEvent.java',
     'InitializableFromDisk.java',
-    'InstallableApk.java',
     'Manifest.java',
     'NoopBuildRule.java',
     'OverrideScheduleRule.java',
