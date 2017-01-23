@@ -88,56 +88,56 @@ public class ParserConfigTest {
 
   @Test
   public void testGetWatchCells() throws IOException {
-    assertFalse(
-        "watch_cells defaults to false",
+    assertTrue(
+        "watch_cells defaults to true",
         FakeBuckConfig.builder().build().getView(ParserConfig.class).getWatchCells());
 
     Reader reader = new StringReader(
         Joiner.on('\n').join(
             "[project]",
-            "watch_cells = true"));
+            "watch_cells = false"));
     ParserConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
         temporaryFolder,
         reader).getView(ParserConfig.class);
-    assertTrue(config.getWatchCells());
+    assertFalse(config.getWatchCells());
 
     reader = new StringReader(
         Joiner.on('\n').join(
             "[project]",
-            "watch_cells = false"));
+            "watch_cells = true"));
     config = BuckConfigTestUtils.createWithDefaultFilesystem(
         temporaryFolder,
         reader).getView(ParserConfig.class);
-    assertFalse(config.getWatchCells());
+    assertTrue(config.getWatchCells());
   }
 
   @Test
   public void testGetWatchmanCursor() throws IOException {
     assertEquals(
-        "watchman_cursor defaults to named",
-        CursorType.NAMED,
+        "watchman_cursor defaults to clock_id",
+        CursorType.CLOCK_ID,
         FakeBuckConfig.builder().build().getView(ParserConfig.class).getWatchmanCursor());
 
     Reader reader = new StringReader(
         Joiner.on('\n').join(
             "[project]",
-            "watchman_cursor = clock_id"));
+            "watchman_cursor = named"));
     ParserConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
         temporaryFolder,
         reader).getView(ParserConfig.class);
     assertEquals(
-        CursorType.CLOCK_ID,
+        CursorType.NAMED,
         config.getWatchmanCursor());
 
     reader = new StringReader(
         Joiner.on('\n').join(
             "[project]",
-            "watchman_cursor = named"));
+            "watchman_cursor = clock_id"));
     config = BuckConfigTestUtils.createWithDefaultFilesystem(
         temporaryFolder,
         reader).getView(ParserConfig.class);
     assertEquals(
-        CursorType.NAMED,
+        CursorType.CLOCK_ID,
         config.getWatchmanCursor());
 
     reader = new StringReader(
@@ -242,27 +242,27 @@ public class ParserConfigTest {
 
   @Test
   public void testGetTrackCellAgnosticTarget() throws IOException {
-    assertFalse(
+    assertTrue(
         FakeBuckConfig.builder().build().getView(ParserConfig.class)
             .getTrackCellAgnosticTarget());
 
     Reader reader = new StringReader(
         Joiner.on('\n').join(
             "[project]",
-            "track_cell_agnostic_target = true"));
+            "track_cell_agnostic_target = false"));
     ParserConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
         temporaryFolder,
         reader).getView(ParserConfig.class);
-    assertTrue(config.getTrackCellAgnosticTarget());
+    assertFalse(config.getTrackCellAgnosticTarget());
 
     reader = new StringReader(
         Joiner.on('\n').join(
             "[project]",
-            "track_cell_agnostic_target = false"));
+            "track_cell_agnostic_target = true"));
     config = BuckConfigTestUtils.createWithDefaultFilesystem(
         temporaryFolder,
         reader).getView(ParserConfig.class);
-    assertFalse(config.getTrackCellAgnosticTarget());
+    assertTrue(config.getTrackCellAgnosticTarget());
   }
 
   @Test

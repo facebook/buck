@@ -165,14 +165,14 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
 
   @Value.Lazy
   public boolean getWatchCells() {
-    return getDelegate().getBooleanValue("project", "watch_cells", false);
+    return getDelegate().getBooleanValue("project", "watch_cells", true);
   }
 
   @Value.Lazy
   public WatchmanWatcher.CursorType getWatchmanCursor() {
     return getDelegate()
       .getEnum("project", "watchman_cursor", WatchmanWatcher.CursorType.class)
-      .orElse(WatchmanWatcher.CursorType.NAMED);
+      .orElse(WatchmanWatcher.CursorType.CLOCK_ID);
   }
 
   @Value.Lazy
@@ -182,7 +182,7 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
 
   @Value.Lazy
   public boolean getTrackCellAgnosticTarget() {
-    return getDelegate().getBooleanValue("project", "track_cell_agnostic_target", false);
+    return getDelegate().getBooleanValue("project", "track_cell_agnostic_target", true);
   }
 
   @Value.Lazy
