@@ -24,7 +24,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSource;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystem;
@@ -286,7 +285,20 @@ public class MorePaths {
     return p;
   }
 
-  public static Path fixPath(String path) {
-    return fixPath(new File(path).toPath());
+  /**
+   * Drop the cache in Path object.
+   *
+   * Path's implementation class {@code UnixPath}, will lazily initialize a String representation
+   * and store it in the object when {@code #toString()} is called for the first time. This doubles
+   * the memory requirement for the Path object.
+   *
+   * This hack constructs a new path, dropping the cached toString value.
+   *
+   * Due to the nature of what this function does, it's very sensitive to the implementation. Any
+   * calls to {@code #toString()} on the returned object would also recreate the cached string
+   * value.
+   */
+  public static Path dropInternalCaches(Path p) {
+    return p.getFileSystem().getPath(p.toString());
   }
 }

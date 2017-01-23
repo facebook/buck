@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Preconditions;
@@ -122,8 +123,12 @@ public class HeaderPathNormalizer {
       this.pathShortener = pathShortener;
     }
 
-    private <K, V> void put(Map<K, V> map, K key, V value) {
-      V previous = map.put(key, value);
+    private <V> void put(Map<Path, V> map, Path key, V value) {
+      // Hack: Using dropInternalCaches here because `toString` is called on caches by
+      // PathShortener, and many Paths are constructed and stored due to HeaderPathNormalizer
+      // containing exported headers of all transitive dependencies of a library. This amounts to
+      // large memory usage. See t15541313. Once that is fixed, this hack can be deleted.
+      V previous = map.put(MorePaths.dropInternalCaches(key), value);
       Preconditions.checkState(previous == null || previous.equals(value),
           "Expected header path to be consistent but key %s mapped to different values: " +
               "(old: %s, new: %s)",
