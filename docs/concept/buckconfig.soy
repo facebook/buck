@@ -71,6 +71,18 @@ interpreted as a list of strings separated by
 spaces, <code>flags=-foo "-bar \u0429"</code> will result in two
 strings: <q>foo</q> and <q>-bar &#1065;</q>.
 
+<p>
+Finally, other fields' values can be interpolated by including <code>$(config &lt;section&gt;.&lt;field&gt;)</code> inside of a value. For example, if you want to use the go vendor path in a custom setting, you can use:
+</p>
+
+<p>
+{literal}<pre class="prettyprint lang-ini">
+[custom_section]
+custom_value = $(config go.vendor_path)
+</pre>
+{/literal}
+</p>
+
 <h2>.buckconfig.local</h2>
 
 The root of your project may also contain a second configuration file
