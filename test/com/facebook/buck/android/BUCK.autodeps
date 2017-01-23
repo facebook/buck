@@ -132,6 +132,7 @@
     "deps" : [
       "//src/com/facebook/buck/android:steps",
       "//src/com/facebook/buck/android:utils",
+      "//src/com/facebook/buck/android/aapt:aapt",
       "//src/com/facebook/buck/cxx:rules",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/cxx:testutil",

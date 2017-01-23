@@ -91,7 +91,7 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-public class DistributedBuildStateTest {
+public class DistBuildStateTest {
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
