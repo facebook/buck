@@ -657,6 +657,15 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'buildfile' /}
+  {param name: 'name' /}
+  {param example_value: 'TARGETS' /}
+  {param description}
+    The name of {call buck.build_file /}s within a project. This defaults to <code>BUCK</code>.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'cache' /}
   {param description}
