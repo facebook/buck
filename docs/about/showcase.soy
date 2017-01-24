@@ -1,9 +1,31 @@
 {namespace buck.showcase}
 
 /**
+ * Useful for companies with multiple applications.
+ * @param name The name of the project/company that should be displayed.
+ * @param items Items to be displayed for the company.
+ * @param? moreInfo Optional map of titles and a link for more information.
+ */
+{template .company}
+<div class="companyShowcase">
+  <h2>{$name}</h2>
+  {if isNonnull($moreInfo)}
+    {foreach $info in keys($moreInfo)}
+      <div>
+        <a href="{$moreInfo[$info]}" target="_blank">{$info}</a>
+      </div>
+    {/foreach}
+  {/if}
+  <ul class="itemShowcase">
+    {$items|noAutoescape}
+  </ul>
+</div>
+{/template}
+
+/**
  * @param name The name of the project/company that should be displayed.
  * @param imgSrc The URL for the image that should be displayed.
- * @param? moreInfo Optional map of titles and a link for more information.
+ * @param? links Optional map of titles and a link to the project/app.
  */
 {template .item}
 <li class="showcaseItem">
@@ -11,13 +33,13 @@
     <img src={$imgSrc} alt="{$name} Logo" />
   </div>
   <div>{$name}</div>
-  {if isNonnull($moreInfo)}
+  {if isNonnull($links)}
     <div>
-    {foreach $info in keys($moreInfo)}
+    {foreach $info in keys($links)}
       {if not isFirst($info)}
         {sp}&middot;{sp}
       {/if}
-      <a href="{$moreInfo[$info]}" target="_blank">{$info}</a>
+      <a href="{$links[$info]}" target="_blank">{$info}</a>
     {/foreach}
     </div>
   {/if}
@@ -33,48 +55,76 @@
         Companies and projects using Buck.
     {/param}
     {param content}
-<ul id="showcase">
 <!-- Showcase Entries Start Here -->
 
 <!-- Facebook Apps First! -->
-{call .item}
+{call .company}
   {param name: 'Facebook' /}
-  {param imgSrc: 'https://lh3.googleusercontent.com/ZZPdzvlpK9r_Df9C3M7j1rNRi7hhHRvPhlklJ3lfi5jk86Jd1s0Y5wcQ1QgbVaAP5Q=w100' /}
   {param moreInfo: [
-      'Android':
+      'How we build Android apps at Facebook':
         'https://code.facebook.com/posts/204818946346893/buck-how-we-build-android-apps-at-facebook/',
-      'iOS': 'https://www.facebook.com/buckbuildtool/posts/869030609833316',
+      'Amazingly Fast iOS Builds':
+        'https://www.facebook.com/buckbuildtool/posts/869030609833316',
     ] /}
+  {param items}
+    {call .item}
+      {param name: 'Facebook' /}
+      {param imgSrc: 'https://lh3.googleusercontent.com/ZZPdzvlpK9r_Df9C3M7j1rNRi7hhHRvPhlklJ3lfi5jk86Jd1s0Y5wcQ1QgbVaAP5Q=w100' /}
+      {param links: [
+          'Android':
+            'https://play.google.com/store/apps/details?id=com.facebook.katana',
+          'iOS':
+            'https://itunes.apple.com/us/app/facebook/id284882215',
+        ] /}
+    {/call}
+    {call .item}
+      {param name: 'Messenger' /}
+      {param imgSrc: 'https://lh5.ggpht.com/0VYAvZLR9YhosF-thqm8xl8EWsCfrEY_uk2og2f59K8IOx5TfPsXjFVwxaHVnUbuEjc=w100' /}
+      {param links: [
+          'Android':
+            'https://play.google.com/store/apps/details?id=com.facebook.orca',
+          'iOS':
+            'https://itunes.apple.com/us/app/messenger/id454638411',
+        ] /}
+    {/call}
+    {call .item}
+      {param name: 'Instagram' /}
+      {param imgSrc: 'https://lh3.googleusercontent.com/aYbdIM1abwyVSUZLDKoE0CDZGRhlkpsaPOg9tNnBktUQYsXflwknnOn2Ge1Yr7rImGk=w100' /}
+      {param links: [
+          'Android':
+            'https://play.google.com/store/apps/details?id=com.instagram.android',
+          'iOS':
+            'https://itunes.apple.com/us/app/instagram/id389801252',
+        ] /}
+    {/call}
+  {/param}
 {/call}
 
-{call .item}
-  {param name: 'Messenger' /}
-  {param imgSrc: 'https://lh5.ggpht.com/0VYAvZLR9YhosF-thqm8xl8EWsCfrEY_uk2og2f59K8IOx5TfPsXjFVwxaHVnUbuEjc=w100' /}
-{/call}
-
-{call .item}
-  {param name: 'Instagram' /}
-  {param imgSrc: 'https://lh3.googleusercontent.com/aYbdIM1abwyVSUZLDKoE0CDZGRhlkpsaPOg9tNnBktUQYsXflwknnOn2Ge1Yr7rImGk=w100' /}
-{/call}
 <!-- End Facebook Apps -->
 
-{call .item}
-  {param name: 'Airbnb' /}
-  {param imgSrc: 'https://lh3.googleusercontent.com/BQnvuZR500pg2ulvv3FBmRI93ODz3AjNfbz92hCieuJLvmbGY36AKhETMTTfTDgpPQI=w100' /}
-{/call}
+{call .company}
+  {param name: 'Others' /}
+  {param items}
+    <!-- Alphabetize these entries, please! -->
 
-{call .item}
-  {param name: 'Lyft' /}
-  {param imgSrc: 'https://lh5.ggpht.com/CfRup8ZMEbNpd4sf8PDUWzbnFIq0QINZpJ96M6V0-8wLmyqKD0ORSqPOq5EKdL1OskE=w100' /}
-{/call}
+    {call .item}
+      {param name: 'Airbnb' /}
+      {param imgSrc: 'https://lh3.googleusercontent.com/BQnvuZR500pg2ulvv3FBmRI93ODz3AjNfbz92hCieuJLvmbGY36AKhETMTTfTDgpPQI=w100' /}
+    {/call}
 
-{call .item}
-  {param name: 'Uber' /}
-  {param imgSrc: 'https://lh3.googleusercontent.com/grsL-sVOds-X3WXwQKYplloxD2wkWLUmpXFYTX2dmbAltKTRskhDX4rsdLwavMv5LHQ=w100' /}
+    {call .item}
+      {param name: 'Lyft' /}
+      {param imgSrc: 'https://lh5.ggpht.com/CfRup8ZMEbNpd4sf8PDUWzbnFIq0QINZpJ96M6V0-8wLmyqKD0ORSqPOq5EKdL1OskE=w100' /}
+    {/call}
+
+    {call .item}
+      {param name: 'Uber' /}
+      {param imgSrc: 'https://lh3.googleusercontent.com/grsL-sVOds-X3WXwQKYplloxD2wkWLUmpXFYTX2dmbAltKTRskhDX4rsdLwavMv5LHQ=w100' /}
+    {/call}
+  {/param}
 {/call}
 
 <!-- Showcase Entries End Here -->
-</ul>
 
 <br />
 
