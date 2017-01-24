@@ -71,6 +71,30 @@ public class HeaderPathNormalizerTest {
   }
 
   @Test
+  public void managedHeaderWithRelativePath() {
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    ));
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path header = filesystem.getPath("foo/bar.h");
+    SourcePath headerPath = new PathSourcePath(filesystem, header);
+    HeaderPathNormalizer normalizer =
+        new HeaderPathNormalizer.Builder(pathResolver,
+                PathShortener.byRelativizingToWorkingDir(filesystem.getRootPath()))
+            .addHeader(headerPath)
+            .build();
+    assertThat(
+        normalizer.getAbsolutePathForUnnormalizedPath(header),
+        Matchers.equalTo(Optional.of(pathResolver.getAbsolutePath(headerPath))));
+    assertThat(
+        normalizer.getAbsolutePathForUnnormalizedPath(pathResolver.getAbsolutePath(headerPath)),
+        Matchers.equalTo(Optional.of(pathResolver.getAbsolutePath(headerPath))));
+    assertThat(
+        normalizer.getSourcePathForAbsolutePath(pathResolver.getAbsolutePath(headerPath)),
+        Matchers.equalTo(headerPath));
+  }
+
+  @Test
   public void managedHeaderDir() {
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())

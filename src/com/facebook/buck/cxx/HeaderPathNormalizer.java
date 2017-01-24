@@ -151,8 +151,13 @@ public class HeaderPathNormalizer {
       // using it's relative path.
       put(headers, pathResolver.getAbsolutePath(sourcePath), sourcePath);
 
-      // Add a normaliation mapping for the unnormalized absolute path to the relative path.
+      // Add a normalization mapping for the unnormalized absolute path to the relative path.
       put(normalized, pathShortener.shorten(pathResolver.getAbsolutePath(sourcePath)), sourcePath);
+
+      // Add a normalization mapping for the absolute path.
+      // We need it for prefix headers and in some rare cases, regular headers will also end up
+      // with an absolute path in the depfile for a reason we ignore.
+      put(normalized, pathResolver.getAbsolutePath(sourcePath), sourcePath);
 
       // Add a normalization mapping for any unnormalized paths passed in.
       for (Path unnormalizedPath : unnormalizedPaths) {
@@ -167,17 +172,7 @@ public class HeaderPathNormalizer {
     }
 
     public Builder addPrefixHeader(SourcePath sourcePath) {
-      // Map the relative path of the header path to the header, as we serialize the source path
-      // using it's relative path.
-      put(headers, pathResolver.getAbsolutePath(sourcePath), sourcePath);
-
-      // Add a normalization mapping for the absolute path to the relative path.
-      // The prefix headers are going to be looked up through their absolute path.
-      put(normalized,
-          pathResolver.getAbsolutePath(sourcePath),
-          sourcePath);
-
-      return this;
+      return addHeader(sourcePath);
     }
 
     public HeaderPathNormalizer build() {
