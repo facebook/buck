@@ -96,6 +96,7 @@ import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.AsyncCloseable;
 import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.BuckIsDyingException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
@@ -734,6 +735,8 @@ public final class Main {
       if (context.isPresent()) {
         context.get().getNGServer().shutdown(true); // Exit process to halt command execution.
       }
+    } catch (BuckIsDyingException e) {
+      LOG.warn(e, "Fallout because buck was already dying");
     } catch (Throwable t) {
       LOG.error(t, "Uncaught exception at top level");
     } finally {

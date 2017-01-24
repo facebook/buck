@@ -83,9 +83,9 @@ public class BgProcessKiller {
 
   private BgProcessKiller() {}
 
-  private static void checkArmedStatus() throws IOException {
+  private static void checkArmedStatus() {
     if (armed) {
-      throw new IOException("process creation blocked due to pending nailgun exit");
+      throw new BuckIsDyingException("process creation blocked due to pending nailgun exit");
     }
   }
 
