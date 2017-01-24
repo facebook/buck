@@ -19,12 +19,11 @@ package com.facebook.buck.halide;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -33,7 +32,7 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class HalideCompile extends AbstractBuildRuleWithResolver {
+public class HalideCompile extends AbstractBuildRule {
 
   @AddToRuleKey
   private final Tool halideCompiler;
@@ -49,12 +48,11 @@ public class HalideCompile extends AbstractBuildRuleWithResolver {
 
   public HalideCompile(
       BuildRuleParams params,
-      SourcePathResolver pathResolver,
       Tool halideCompiler,
       String targetPlatform,
       Optional<ImmutableList<String>> compilerInvocationFlags,
       Optional<String> functionNameOverride) {
-    super(params, pathResolver);
+    super(params);
     this.halideCompiler = halideCompiler;
     this.targetPlatform = targetPlatform;
     this.compilerInvocationFlags = compilerInvocationFlags;
@@ -83,7 +81,7 @@ public class HalideCompile extends AbstractBuildRuleWithResolver {
         new HalideCompilerStep(
             projectFilesystem.getRootPath(),
             halideCompiler.getEnvironment(),
-            halideCompiler.getCommandPrefix(getResolver()),
+            halideCompiler.getCommandPrefix(context.getSourcePathResolver()),
             outputDir,
             fileOutputName(getBuildTarget(), functionNameOverride),
             targetPlatform,

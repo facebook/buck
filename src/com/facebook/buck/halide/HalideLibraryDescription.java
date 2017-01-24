@@ -254,7 +254,6 @@ public class HalideLibraryDescription
   private BuildRule createHalideCompile(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
       CxxPlatform platform,
       Optional<ImmutableList<String>> compilerInvocationFlags,
       Optional<String> functionName) throws NoSuchBuildTargetException {
@@ -264,7 +263,6 @@ public class HalideLibraryDescription
     return new HalideCompile(
         params.copyWithExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(halideCompiler))),
-        pathResolver,
         halideCompiler.getExecutableCommand(),
         halideBuckConfig.getHalideTargetForPlatform(platform),
         expandInvocationFlags(compilerInvocationFlags, platform),
@@ -357,7 +355,6 @@ public class HalideLibraryDescription
               Suppliers.ofInstance(
                   ImmutableSortedSet.of())),
           resolver,
-          pathResolver,
           cxxPlatform,
           Optional.of(args.compilerInvocationFlags),
           args.functionName);
