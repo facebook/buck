@@ -18,7 +18,7 @@ package com.facebook.buck.haskell;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -50,7 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class HaskellPackageRule extends AbstractBuildRuleWithResolver {
+public class HaskellPackageRule extends AbstractBuildRule {
 
   @AddToRuleKey
   private final Tool ghcPkg;
@@ -74,7 +74,6 @@ public class HaskellPackageRule extends AbstractBuildRuleWithResolver {
 
   public HaskellPackageRule(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       Tool ghcPkg,
       HaskellVersion haskellVersion,
       HaskellPackageInfo packageInfo,
@@ -82,7 +81,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithResolver {
       ImmutableSortedSet<String> modules,
       ImmutableSortedSet<SourcePath> libraries,
       ImmutableSortedSet<SourcePath> interfaces) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.ghcPkg = ghcPkg;
     this.haskellVersion = haskellVersion;
     this.packageInfo = packageInfo;
@@ -95,7 +94,6 @@ public class HaskellPackageRule extends AbstractBuildRuleWithResolver {
   public static HaskellPackageRule from(
       BuildTarget target,
       BuildRuleParams baseParams,
-      final SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       final Tool ghcPkg,
       HaskellVersion haskellVersion,
@@ -118,7 +116,6 @@ public class HaskellPackageRule extends AbstractBuildRuleWithResolver {
                         ruleFinder.filterBuildRuleInputs(Iterables.concat(libraries, interfaces)))
                     .build()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
-        resolver,
         ghcPkg,
         haskellVersion,
         packageInfo,
@@ -132,7 +129,10 @@ public class HaskellPackageRule extends AbstractBuildRuleWithResolver {
     return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
   }
 
-  private WriteFileStep getWriteRegistrationFileStep(Path registrationFile, Path packageDb) {
+  private WriteFileStep getWriteRegistrationFileStep(
+      SourcePathResolver resolver,
+      Path registrationFile,
+      Path packageDb) {
     Map<String, String> entries = new LinkedHashMap<>();
 
     entries.put("name", packageInfo.getName());
@@ -153,7 +153,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithResolver {
       for (SourcePath interfaceDir : interfaces) {
         Path relInterfaceDir =
             pkgRoot.resolve(
-                packageDb.getParent().relativize(getResolver().getRelativePath(interfaceDir)));
+                packageDb.getParent().relativize(resolver.getRelativePath(interfaceDir)));
         importDirs.add('"' + relInterfaceDir.toString() + '"');
       }
       entries.put("import-dirs", Joiner.on(", ").join(importDirs));
@@ -163,7 +163,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithResolver {
     List<String> libs = new ArrayList<>();
     for (SourcePath library : libraries) {
       Path relLibPath =
-          pkgRoot.resolve(packageDb.getParent().relativize(getResolver().getRelativePath(library)));
+          pkgRoot.resolve(packageDb.getParent().relativize(resolver.getRelativePath(library)));
       libDirs.add('"' + relLibPath.getParent().toString() + '"');
       libs.add(MorePaths.stripPathPrefixAndExtension(relLibPath.getFileName(), "lib"));
     }
@@ -205,15 +205,21 @@ public class HaskellPackageRule extends AbstractBuildRuleWithResolver {
 
     // Create the registration file.
     Path registrationFile = scratchDir.resolve("registration-file");
-    steps.add(getWriteRegistrationFileStep(registrationFile, packageDb));
+    steps.add(
+        getWriteRegistrationFileStep(
+            context.getSourcePathResolver(),
+            registrationFile,
+            packageDb));
 
     // Build the the package DB.
     steps.add(
         new GhcPkgStep(
+            context.getSourcePathResolver(),
             ImmutableList.of("init", packageDb.toString()),
             ImmutableMap.of()));
     steps.add(
         new GhcPkgStep(
+            context.getSourcePathResolver(),
             ImmutableList.of(
                 "-v0",
                 "register",
@@ -223,8 +229,9 @@ public class HaskellPackageRule extends AbstractBuildRuleWithResolver {
             ImmutableMap.of(
                 "GHC_PACKAGE_PATH",
                 depPackages.values().stream()
-                    .map(input -> getResolver().getAbsolutePath(input.getPackageDb()).toString())
-                .collect(Collectors.joining(":")))));
+                    .map(input -> context.getSourcePathResolver().getAbsolutePath(
+                        input.getPackageDb()).toString())
+                    .collect(Collectors.joining(":")))));
 
     return steps.build();
   }
@@ -245,13 +252,16 @@ public class HaskellPackageRule extends AbstractBuildRuleWithResolver {
 
   private class GhcPkgStep extends ShellStep {
 
+    private final SourcePathResolver resolver;
     private final ImmutableList<String> args;
     private final ImmutableMap<String, String> env;
 
     public GhcPkgStep(
+        SourcePathResolver resolver,
         ImmutableList<String> args,
         ImmutableMap<String, String> env) {
       super(getProjectFilesystem().getRootPath());
+      this.resolver = resolver;
       this.args = args;
       this.env = env;
     }
@@ -259,7 +269,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithResolver {
     @Override
     protected final ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
       return ImmutableList.<String>builder()
-          .addAll(ghcPkg.getCommandPrefix(getResolver()))
+          .addAll(ghcPkg.getCommandPrefix(resolver))
           .addAll(args)
           .build();
     }
