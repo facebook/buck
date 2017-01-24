@@ -43,6 +43,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.ConnectionPool;
+import okhttp3.Dispatcher;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -324,6 +325,12 @@ public class ArtifactCaches implements ArtifactCacheFactory {
             /* keepAliveDurationMs */ config.getThreadPoolKeepAliveDurationMillis(),
             TimeUnit.MILLISECONDS)
     );
+
+    // The artifact cache effectively only connects to a single host at a time. We should allow as
+    // many concurrent connections to that host as we allow threads.
+    Dispatcher dispatcher = new Dispatcher();
+    dispatcher.setMaxRequestsPerHost((int) config.getThreadPoolSize());
+    storeClientBuilder.dispatcher(dispatcher);
 
     final ImmutableMap<String, String> readHeaders = cacheDescription.getReadHeaders();
     final ImmutableMap<String, String> writeHeaders = cacheDescription.getWriteHeaders();
