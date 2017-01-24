@@ -190,7 +190,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
     } catch (NoSuchBuildTargetException e) {
       throw new HumanReadableException(e);
     } catch (ParamInfoException e) {
-      throw new HumanReadableException("%s: %s", target, e.getMessage());
+      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     } catch (IOException e) {
       throw new HumanReadableException(e.getMessage(), e);
     }
