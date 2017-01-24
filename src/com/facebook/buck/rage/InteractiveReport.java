@@ -82,7 +82,7 @@ public class InteractiveReport extends AbstractReport {
     List<BuildLogEntry> interestingBuildLogs = new ArrayList<>();
     buildLogs.forEach(entry -> {
       if (entry.getCommandArgs().isPresent() &&
-          !entry.getCommandArgs().get().matches("rage|doctor")) {
+          !entry.getCommandArgs().get().matches("rage|doctor|server")) {
         interestingBuildLogs.add(entry);
       }
     });

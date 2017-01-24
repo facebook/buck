@@ -90,7 +90,7 @@ public class DoctorReportHelper {
     // Remove commands with unknown args or invocations of buck rage.
     buildLogs.removeIf(
         entry -> !(entry.getCommandArgs().isPresent() &&
-            !entry.getCommandArgs().get().matches("rage|doctor"))
+            !entry.getCommandArgs().get().matches("rage|doctor|server"))
     );
 
     if (buildLogs.isEmpty()) {
