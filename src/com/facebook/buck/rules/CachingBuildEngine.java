@@ -466,8 +466,6 @@ public class CachingBuildEngine implements BuildEngine {
 
     final RuleKeyFactories ruleKeyFactory =
         ruleKeyFactories.getUnchecked(rule.getProjectFilesystem());
-    final CacheResult cacheResult;
-
     try (BuildRuleEvent.Scope scope =
              BuildRuleEvent.resumeSuspendScope(
                  buildContext.getEventBus(),
@@ -489,55 +487,84 @@ public class CachingBuildEngine implements BuildEngine {
       }
 
       // 2. Rule key cache lookup.
-      cacheResult = tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-          rule,
-          defaultRuleKey,
-          buildContext.getArtifactCache(),
-          // TODO(shs96c): This should be a shared between all tests, not one per cell
-          rule.getProjectFilesystem(),
-          buildContext);
-
-      if (cacheResult.getType().isSuccess()) {
-        return Futures.transform(
-            markRuleAsUsed(rule, buildContext.getEventBus()), Functions.constant(
-                BuildResult.success(
-                    rule,
-                    BuildRuleSuccessType.FETCHED_FROM_CACHE,
-                    cacheResult)));
-      }
-
-      // 3. Build deps.
-      ListenableFuture<List<BuildResult>> getDepResults =
-          Futures.transformAsync(
-              getDepResults(rule, buildContext, executionContext, asyncCallbacks),
-              input -> Futures.transform(
-                  markRuleAsUsed(rule, buildContext.getEventBus()),
-                  Functions.constant(input)),
-              serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
-
-      // 4. Return to the current rule and check caches to see if we can avoid building
-      // locally.
-      AsyncFunction<List<BuildResult>, Optional<BuildResult>> checkCachesCallback =
-          checkCaches(rule, buildContext, onDiskBuildInfo, buildInfoRecorder, ruleKeyFactory);
-
-      ListenableFuture<Optional<BuildResult>> checkCachesResult =
-          Futures.transformAsync(
-              getDepResults,
-              ruleAsyncFunction(rule, buildContext.getEventBus(), checkCachesCallback),
-              serviceByAdjustingDefaultWeightsTo(CACHE_CHECK_RESOURCE_AMOUNTS));
-
-      // 5. Build the current rule locally, if we have to.
-      return Futures.transformAsync(
-          checkCachesResult,
-          buildLocally(
+      ListenableFuture<CacheResult> rulekeyCacheResult = Futures.immediateFuture(
+          tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
               rule,
-              buildContext,
-              executionContext,
-              ruleKeyFactory,
-              buildableContext,
-              cacheResult),
-          serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
+              defaultRuleKey,
+              buildContext.getArtifactCache(),
+              // TODO(shs96c): This should be a shared between all tests, not one per cell
+              rule.getProjectFilesystem(),
+              buildContext));
+
+      return Futures.transformAsync(
+          rulekeyCacheResult,
+          ruleAsyncFunction(
+              rule,
+              buildContext.getEventBus(),
+              (cacheResult) -> handleRuleKeyCacheResult(
+                  rule,
+                  buildContext,
+                  executionContext,
+                  onDiskBuildInfo,
+                  buildInfoRecorder,
+                  buildableContext,
+                  asyncCallbacks,
+                  ruleKeyFactory,
+                  cacheResult)),
+          serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS)
+      );
     }
+  }
+
+  private ListenableFuture<BuildResult> handleRuleKeyCacheResult(
+      BuildRule rule,
+      BuildEngineBuildContext buildContext,
+      ExecutionContext executionContext,
+      OnDiskBuildInfo onDiskBuildInfo,
+      BuildInfoRecorder buildInfoRecorder,
+      BuildableContext buildableContext,
+      ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks,
+      RuleKeyFactories ruleKeyFactory, CacheResult cacheResult) {
+    if (cacheResult.getType().isSuccess()) {
+      return Futures.transform(
+          markRuleAsUsed(rule, buildContext.getEventBus()), Functions.constant(
+              BuildResult.success(
+                  rule,
+                  BuildRuleSuccessType.FETCHED_FROM_CACHE,
+                  cacheResult)));
+    }
+
+    // 3. Build deps.
+    ListenableFuture<List<BuildResult>> getDepResults =
+        Futures.transformAsync(
+            getDepResults(rule, buildContext, executionContext, asyncCallbacks),
+            input -> Futures.transform(
+                markRuleAsUsed(rule, buildContext.getEventBus()),
+                Functions.constant(input)),
+            serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
+
+    // 4. Return to the current rule and check caches to see if we can avoid building
+    // locally.
+    AsyncFunction<List<BuildResult>, Optional<BuildResult>> checkCachesCallback =
+        checkCaches(rule, buildContext, onDiskBuildInfo, buildInfoRecorder, ruleKeyFactory);
+
+    ListenableFuture<Optional<BuildResult>> checkCachesResult =
+        Futures.transformAsync(
+            getDepResults,
+            ruleAsyncFunction(rule, buildContext.getEventBus(), checkCachesCallback),
+            serviceByAdjustingDefaultWeightsTo(CACHE_CHECK_RESOURCE_AMOUNTS));
+
+    // 5. Build the current rule locally, if we have to.
+    return Futures.transformAsync(
+        checkCachesResult,
+        buildLocally(
+            rule,
+            buildContext,
+            executionContext,
+            ruleKeyFactory,
+            buildableContext,
+            cacheResult),
+        serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
   }
 
   private boolean verifyRecordedPathHashes(
@@ -1238,16 +1265,15 @@ public class CachingBuildEngine implements BuildEngine {
     // TODO(bolinfest): Change ArtifactCache.fetch() so that it returns a File instead of takes one.
     // Then we could download directly from the remote cache into the on-disk cache and unzip it
     // from there.
-    CacheResult cacheResult =
-        fetchArtifactForBuildable(ruleKey, lazyZipPath, artifactCache);
+    CacheResult cacheResult = fetchArtifactForBuildable(ruleKey, lazyZipPath, artifactCache);
 
     return unzipArtifactFromCacheResult(
-                    rule,
-                    ruleKey,
-                    lazyZipPath,
-                    buildContext,
-                    filesystem,
-                    cacheResult);
+        rule,
+        ruleKey,
+        lazyZipPath,
+        buildContext,
+        filesystem,
+        cacheResult);
   }
 
   private CacheResult unzipArtifactFromCacheResult(
