@@ -20,6 +20,8 @@ import com.facebook.buck.intellij.ideabuck.build.BuckBuildUtil;
 import com.facebook.buck.intellij.ideabuck.lang.BuckFile;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPsiUtils;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.intellij.codeInsight.editorActions.CopyPastePreProcessor;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
@@ -41,6 +43,8 @@ import com.intellij.psi.util.PsiUtilCore;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -81,7 +85,7 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
         BuckTypes.DOUBLE_QUOTED_STRING)) {
       PsiElement property = BuckPsiUtils.findAncestorWithType(element, BuckTypes.PROPERTY);
       if (checkPropertyName(property)) {
-        text = buildBuckDependencyPath(element, project, text);
+        return formatPasteText(text, element, project);
       }
     }
     return text;
@@ -123,26 +127,36 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
    * Example 5
    * //apps/myapp:app -> '//apps/myapp:app',
    */
-  private String buildBuckDependencyPath(PsiElement element, Project project, String path) {
-
-    Matcher matcher = UNSOLVED_DEPENDENCY_PATTERN.matcher(path);
-    if (matcher.matches()) {
-      path = matcher.group(2);
-      return resolveUnsolvedBuckDependency(element, project, path);
-    }
-
-    if (SOLVED_DEPENDENCY_PATTERN.matcher(path).matches()) {
-      if (!(path.startsWith("//") || path.startsWith(":"))) {
-        if (path.startsWith("/")) {
-          path = "/" + path;
-        } else {
-          path = "//" + path;
-        }
+  private String formatPasteText(String text, PsiElement element, Project project) {
+    Iterable<String> paths = Splitter.on('\n').trimResults().omitEmptyStrings().split(text);
+    List<String> results = new ArrayList<>();
+    for (String path : paths) {
+      Matcher matcher = UNSOLVED_DEPENDENCY_PATTERN.matcher(path);
+      if (matcher.matches()) {
+        results.add(resolveUnsolvedBuckDependency(element, project, matcher.group(2)));
+      } else if (SOLVED_DEPENDENCY_PATTERN.matcher(path).matches()) {
+        results.add(buildSolvedBuckDependency(path));
+      } else {
+        // Any non-target results in no formatting
+        return text;
       }
-      path = "'" + path + "',";
     }
+    return Joiner.on('\n').skipNulls().join(results);
+  }
 
-    return path;
+  private String buildSolvedBuckDependency(String path) {
+    StringBuilder stringBuilder = new StringBuilder();
+    stringBuilder.append('\'');
+    if (!(path.startsWith("//") || path.startsWith(":"))) {
+      if (path.startsWith("/")) {
+        stringBuilder.append('/');
+      } else {
+        stringBuilder.append("//");
+      }
+    }
+    return stringBuilder.append(path)
+        .append("',")
+        .toString();
   }
 
   private String resolveUnsolvedBuckDependency(PsiElement element, Project project, String path) {
