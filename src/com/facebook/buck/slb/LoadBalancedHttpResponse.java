@@ -16,18 +16,32 @@
 
 package com.facebook.buck.slb;
 
-import okhttp3.Response;
+import com.google.common.annotations.VisibleForTesting;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+
+import okhttp3.Call;
+import okhttp3.Response;
 
 public class LoadBalancedHttpResponse extends OkHttpResponseWrapper {
   private final HttpLoadBalancer loadBalancer;
   private final URI server;
   private boolean hasConnectionResultBeenReported;
 
-  public LoadBalancedHttpResponse(URI server, HttpLoadBalancer loadBalancer, Response response) {
+  public static LoadBalancedHttpResponse createLoadBalancedResponse(
+      URI server, HttpLoadBalancer loadBalancer, Call call) throws IOException {
+    try {
+      return new LoadBalancedHttpResponse(server, loadBalancer, call.execute());
+    } catch (IOException e) {
+      loadBalancer.reportRequestException(server);
+      throw e;
+    }
+  }
+
+  @VisibleForTesting
+  LoadBalancedHttpResponse(URI server, HttpLoadBalancer loadBalancer, Response response) {
     super(response);
     this.loadBalancer = loadBalancer;
     this.server = server;

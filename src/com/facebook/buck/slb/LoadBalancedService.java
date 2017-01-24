@@ -55,7 +55,8 @@ public class LoadBalancedService implements HttpService {
     LOG.verbose("Making call to %s", fullUrl);
     Call call = client.newCall(request);
     try {
-      HttpResponse response = new LoadBalancedHttpResponse(server, slb, call.execute());
+      HttpResponse response = LoadBalancedHttpResponse.createLoadBalancedResponse(
+          server, slb, call);
       if (response.contentLength() != -1) {
         data.setResponseSizeBytes(response.contentLength());
       }
