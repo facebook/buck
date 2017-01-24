@@ -74,7 +74,8 @@ public class OcamlBinaryDescription implements
          /*isLibrary*/ false,
         args.bytecodeOnly.orElse(false),
         flags.build(),
-        linkerFlags);
+        linkerFlags,
+        /*buildNativePlugin*/ false);
   }
 
   @Override

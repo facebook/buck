@@ -164,6 +164,15 @@ abstract class AbstractOcamlBuildContext implements RuleKeyAppendable {
     return getNativeOutputPath(getBuildTarget(), getProjectFilesystem(), isLibrary());
   }
 
+  public Path getNativePluginOutput() {
+    UnflavoredBuildTarget target = getBuildTarget();
+    return BuildTargets.getGenPath(
+      getProjectFilesystem(),
+      BuildTarget.of(target),
+      "%s/lib" + target.getShortName() + OcamlCompilables.OCAML_CMXS
+    );
+  }
+
   public static Path getNativeOutputPath(
       UnflavoredBuildTarget target,
       ProjectFilesystem filesystem,

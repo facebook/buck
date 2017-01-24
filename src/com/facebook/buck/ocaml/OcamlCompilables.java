@@ -54,6 +54,7 @@ class OcamlCompilables {
   protected static final String OCAML_INCLUDE_FLAG = "-I";
 
   protected static final String OCAML_CMXA = ".cmxa";
+  protected static final String OCAML_CMXS = ".cmxs";
   protected static final String OCAML_CMA = ".cma";
 
   protected static final String OCAML_CMT = ".cmt";

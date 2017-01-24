@@ -66,15 +66,20 @@ public class OcamlLibraryDescription implements
           args.warningsFlags.orElse(""));
     }
     ImmutableList<String> linkerflags = args.linkerFlags;
+
+    boolean bytecodeOnly = args.bytecodeOnly.orElse(false);
+    boolean nativePlugin = !bytecodeOnly && args.nativePlugin.orElse(false);
+
     return OcamlRuleBuilder.createBuildRule(
         ocamlBuckConfig,
         params,
         resolver,
         srcs,
         /*isLibrary*/ true,
-        args.bytecodeOnly.orElse(false),
+        bytecodeOnly,
         flags.build(),
-        linkerflags);
+        linkerflags,
+        nativePlugin);
   }
 
   @Override
@@ -93,6 +98,7 @@ public class OcamlLibraryDescription implements
     public ImmutableList<String> linkerFlags = ImmutableList.of();
     public Optional<String> warningsFlags;
     public Optional<Boolean> bytecodeOnly;
+    public Optional<Boolean> nativePlugin;
   }
 
 }

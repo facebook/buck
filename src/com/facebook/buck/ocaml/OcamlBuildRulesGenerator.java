@@ -63,6 +63,7 @@ public class OcamlBuildRulesGenerator {
   private final Compiler cCompiler;
   private final Compiler cxxCompiler;
   private final boolean bytecodeOnly;
+  private final boolean buildNativePlugin;
 
   private BuildRule cleanRule;
 
@@ -76,7 +77,8 @@ public class OcamlBuildRulesGenerator {
       ImmutableList<SourcePath> cInput,
       Compiler cCompiler,
       Compiler cxxCompiler,
-      boolean bytecodeOnly) {
+      boolean bytecodeOnly,
+      boolean buildNativePlugin) {
     this.params = params;
     this.pathResolver = pathResolver;
     this.ruleFinder = ruleFinder;
@@ -87,6 +89,7 @@ public class OcamlBuildRulesGenerator {
     this.cCompiler = cCompiler;
     this.cxxCompiler = cxxCompiler;
     this.bytecodeOnly = bytecodeOnly;
+    this.buildNativePlugin = buildNativePlugin;
     this.cleanRule = generateCleanBuildRule(params, ocamlContext);
   }
 
@@ -297,10 +300,12 @@ public class OcamlBuildRulesGenerator {
         flags.build(),
         ocamlContext.getOcamlInteropIncludesDir(),
         ocamlContext.getNativeOutput(),
+        ocamlContext.getNativePluginOutput(),
         ocamlContext.getNativeLinkableInput().getArgs(),
         ocamlContext.getCLinkableInput().getArgs(),
         ocamlContext.isLibrary(),
-        /* isBytecode */ false);
+        /* isBytecode */ false,
+        buildNativePlugin);
     resolver.addToIndex(link);
     return link;
   }
@@ -345,10 +350,12 @@ public class OcamlBuildRulesGenerator {
         flags.build(),
         ocamlContext.getOcamlInteropIncludesDir(),
         ocamlContext.getBytecodeOutput(),
+        ocamlContext.getNativePluginOutput(),
         ocamlContext.getBytecodeLinkableInput().getArgs(),
         ocamlContext.getCLinkableInput().getArgs(),
         ocamlContext.isLibrary(),
-        /* isBytecode */ true);
+        /* isBytecode */ true,
+        /* buildNativePlugin */ false);
     resolver.addToIndex(link);
     return link;
   }

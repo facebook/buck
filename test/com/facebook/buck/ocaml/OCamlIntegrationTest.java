@@ -187,6 +187,50 @@ public class OCamlIntegrationTest {
   }
 
   @Test
+  public void testNativePlugin() throws IOException, Exception {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "ocaml", tmp);
+    workspace.setUp();
+
+    // Build the plugin
+    BuildTarget pluginTarget = BuildTargetFactory.newInstance(
+      workspace.getDestPath(),
+      "//ocaml_native_plugin:plugin"
+    );
+    workspace.runBuckCommand("build", pluginTarget.toString()).assertSuccess();
+
+    // Also build a test binary that we'll use to verify that the .cmxs file
+    // works
+    BuildTarget binTarget = BuildTargetFactory.newInstance(
+      workspace.getDestPath(),
+      "//ocaml_native_plugin:tester"
+    );
+    workspace.runBuckCommand("build", binTarget.toString()).assertSuccess();
+
+    Path ocamlNativePluginDir =
+      workspace.getDestPath()
+        .resolve("buck-out")
+        .resolve("gen")
+        .resolve("ocaml_native_plugin");
+
+    Path pluginCmxsFile = ocamlNativePluginDir
+      .resolve("plugin")
+      .resolve("libplugin.cmxs");
+
+    Path testerExecutableFile = ocamlNativePluginDir
+      .resolve("tester")
+      .resolve("tester");
+
+    // Run `./tester /path/to/plugin.cmxs`
+    String out = workspace.runCommand(
+      testerExecutableFile.toString(),
+      pluginCmxsFile.toString()
+    ).getStdout().get();
+
+    assertEquals("it works!\n", out);
+  }
+
+  @Test
   public void testLexAndYaccBuild() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,

@@ -115,7 +115,8 @@ public class OcamlRuleBuilder {
       boolean isLibrary,
       boolean bytecodeOnly,
       ImmutableList<String> argFlags,
-      final ImmutableList<String> linkerFlags) throws NoSuchBuildTargetException {
+      final ImmutableList<String> linkerFlags,
+      boolean buildNativePlugin) throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     boolean noYaccOrLexSources = FluentIterable.from(srcs).transform(OcamlSource::getSource)
         .filter(OcamlUtil.sourcePathExt(
@@ -135,7 +136,8 @@ public class OcamlRuleBuilder {
           isLibrary,
           bytecodeOnly,
           argFlags,
-          linkerFlags);
+          linkerFlags,
+          buildNativePlugin);
     } else {
       return createBulkBuildRule(
           ocamlBuckConfig,
@@ -348,7 +350,8 @@ public class OcamlRuleBuilder {
       boolean isLibrary,
       boolean bytecodeOnly,
       ImmutableList<String> argFlags,
-      final ImmutableList<String> linkerFlags) throws NoSuchBuildTargetException {
+      final ImmutableList<String> linkerFlags,
+      boolean buildNativePlugin) throws NoSuchBuildTargetException {
     CxxPreprocessorInput cxxPreprocessorInputFromDeps =
       CxxPreprocessorInput.concat(
           CxxPreprocessables.getTransitiveCxxPreprocessorInput(
@@ -451,7 +454,8 @@ public class OcamlRuleBuilder {
         cInput,
         ocamlBuckConfig.getCCompiler().resolve(resolver),
         ocamlBuckConfig.getCxxCompiler().resolve(resolver),
-        bytecodeOnly);
+        bytecodeOnly,
+        buildNativePlugin);
 
     OcamlGeneratedBuildRules result = generator.generate();
 
