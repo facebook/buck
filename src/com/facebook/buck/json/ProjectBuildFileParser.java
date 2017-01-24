@@ -22,10 +22,10 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
-import com.facebook.buck.io.WatchmanDiagnosticEvent;
 import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.WatchmanDiagnostic;
+import com.facebook.buck.io.WatchmanDiagnosticEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
@@ -45,6 +45,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 
 import org.immutables.value.Value;
 
@@ -69,6 +70,8 @@ import javax.annotation.Nullable;
  * parsing phase and must be closed afterward to free up resources.
  */
 public class ProjectBuildFileParser implements AutoCloseable {
+
+  private static final String PYTHONPATH_ENV_VAR_NAME = "PYTHONPATH";
 
   private static final Logger LOG = Logger.get(ProjectBuildFileParser.class);
 
@@ -195,10 +198,20 @@ public class ProjectBuildFileParser implements AutoCloseable {
         buckEventBus,
         PerfEventId.of("ParserInit"))) {
 
+
       ImmutableMap.Builder<String, String> pythonEnvironmentBuilder = ImmutableMap.builder();
-      pythonEnvironmentBuilder.putAll(environment);
-      options.getPythonModuleSearchPath().ifPresent(
-          path -> pythonEnvironmentBuilder.put("PYTHONPATH", path));
+      // Strip out PYTHONPATH. buck.py manually sets this to include only nailgun. We don't want
+      // to inject nailgun into the parser's PYTHONPATH, so strip that value out.
+      // If we wanted to pass on some environmental PYTHONPATH, we would have to do some actual
+      // merging of this and the BuckConfig's python module search path.
+      pythonEnvironmentBuilder.putAll(
+          Maps.filterKeys(environment, k -> !PYTHONPATH_ENV_VAR_NAME.equals(k)));
+
+      if (options.getPythonModuleSearchPath().isPresent()) {
+        pythonEnvironmentBuilder.put(
+            PYTHONPATH_ENV_VAR_NAME, options.getPythonModuleSearchPath().get());
+      }
+
       ImmutableMap<String, String> pythonEnvironment = pythonEnvironmentBuilder.build();
 
       ProcessExecutorParams params = ProcessExecutorParams.builder()
