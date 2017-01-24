@@ -241,7 +241,6 @@ public class AndroidBinaryGraphEnhancer {
                   writeMapTarget,
                   /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(generatorRule)),
                   /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of())),
-                  pathResolver,
                   sonameMergeMap.get(),
                   generatorRule);
       ruleResolver.addToIndex(generateCodeForMergedLibraryMap);
