@@ -24,7 +24,6 @@ import java.lang.ref.WeakReference;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -41,7 +40,7 @@ public class AbstractAutoSparseFactory {
 
   @Nullable
   public static synchronized AutoSparseState getAutoSparseState(
-      Path projectPath, HgCmdLineInterface hgCmdLine, Set<Path> ignoredPaths) {
+      Path projectPath, HgCmdLineInterface hgCmdLine, AutoSparseConfig autoSparseConfig) {
     Path hgRoot = hgCmdLine.getHgRoot();
     if (hgRoot == null) {
       LOG.info("Failed to determine a mercurial root for %s", projectPath);
@@ -58,7 +57,7 @@ public class AbstractAutoSparseFactory {
     }
 
     HgAutoSparseState newState = new HgAutoSparseState(
-        hgCmdLine, hgRoot, ignoredPaths);
+        hgCmdLine, hgRoot, autoSparseConfig);
     perSCRoot.put(hgRoot, new WeakReference<AutoSparseState>(newState));
     return newState;
   }

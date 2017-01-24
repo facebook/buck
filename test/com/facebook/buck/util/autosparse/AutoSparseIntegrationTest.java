@@ -263,7 +263,7 @@ public class AutoSparseIntegrationTest {
     String hgCmd = new VersionControlBuckConfig(
         FakeBuckConfig.builder().build()).getHgCmd();
     return ProjectFilesystemDelegateFactory.newInstance(
-        root, hgCmd, enableAutosparse, autosparseIgnore);
+        root, hgCmd, AutoSparseConfig.of(enableAutosparse, autosparseIgnore));
   }
 
   private static Path explodeRepoZip() throws IOException {

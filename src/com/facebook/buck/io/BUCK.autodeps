@@ -42,11 +42,12 @@
       "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util/autosparse:autosparse",
       "//src/com/facebook/buck/util/environment:platform",
-      "//src/com/facebook/buck/util/versioncontrol:versioncontrol_hg"
+      "//src/com/facebook/buck/util/versioncontrol:versioncontrol_hg",
+      "//third-party/java/guava:guava"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/io:ProjectFilesystemDelegate",
-      "//third-party/java/guava:guava"
+      "//src/com/facebook/buck/util/autosparse:autosparse_config"
     ]
   },
   "executable-finder" : {
@@ -67,6 +68,7 @@
       "//src/com/facebook/buck/io:ProjectFilesystemDelegateFactory",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:constants",
+      "//src/com/facebook/buck/util/autosparse:autosparse_config",
       "//src/com/facebook/buck/util/concurrent:concurrent",
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/zip:stream",

@@ -22,18 +22,16 @@ import com.facebook.buck.eden.EdenProjectFilesystemDelegate;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
 import com.facebook.buck.util.autosparse.AbstractAutoSparseFactory;
+import com.facebook.buck.util.autosparse.AutoSparseConfig;
 import com.facebook.buck.util.autosparse.AutoSparseProjectFilesystemDelegate;
 import com.facebook.buck.util.autosparse.AutoSparseState;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.versioncontrol.HgCmdLineInterface;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 
 /**
@@ -53,8 +51,7 @@ public final class ProjectFilesystemDelegateFactory {
   public static ProjectFilesystemDelegate newInstance(
       Path root,
       String hgCmd,
-      boolean enableAutosparse,
-      ImmutableList<String> autosparseIgnore) {
+      AutoSparseConfig autoSparseConfig) {
     Optional<EdenClient> client = tryToCreateEdenClient();
 
     if (client.isPresent()) {
@@ -70,7 +67,7 @@ public final class ProjectFilesystemDelegateFactory {
       }
     }
 
-    if (enableAutosparse) {
+    if (autoSparseConfig.enabled()) {
       // We can't access BuckConfig because that class requires a
       // ProjectFileSystem, which we are in the process of building
       // Access the required info from the Config instead
@@ -80,14 +77,10 @@ public final class ProjectFilesystemDelegateFactory {
           hgCmd,
           ImmutableMap.of()
       );
-      ImmutableSet.Builder<Path> ignoredPaths = ImmutableSet.builder();
-      for (String path: autosparseIgnore) {
-        ignoredPaths.add(Paths.get(path));
-      }
       AutoSparseState autoSparseState = AbstractAutoSparseFactory.getAutoSparseState(
           root,
           hgCmdLine,
-          ignoredPaths.build());
+          autoSparseConfig);
       if (autoSparseState != null) {
         LOG.debug("Autosparse enabled, using AutoSparseProjectFilesystemDelegate");
         return new AutoSparseProjectFilesystemDelegate(autoSparseState, root);

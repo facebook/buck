@@ -19,6 +19,7 @@ package com.facebook.buck.io;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.event.EventBus;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.autosparse.AutoSparseConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.CustomZipEntry;
@@ -154,7 +155,7 @@ public class ProjectFilesystem {
 
   /**
    * This constructor is restricted to {@code protected} because it is generally best to let
-   * {@link ProjectFilesystemDelegateFactory#newInstance(Path, String, boolean, ImmutableList)}
+   * {@link ProjectFilesystemDelegateFactory#newInstance(Path, String, AutoSparseConfig)}
    * create an appropriate delegate. Currently, the only case in which we need to override this
    * behavior is in unit tests.
    */
@@ -176,8 +177,7 @@ public class ProjectFilesystem {
         ProjectFilesystemDelegateFactory.newInstance(
             root,
             config.getValue("version_control", "hg_cmd").orElse("hg"),
-            config.getBooleanValue("project", "enable_autosparse", false),
-            config.getListWithoutComments("autosparse", "ignore")
+            AutoSparseConfig.of(config)
         )
     );
   }

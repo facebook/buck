@@ -72,13 +72,13 @@ public class HgAutoSparseState implements AutoSparseState {
   private boolean hgManifestLoaded;
 
   public HgAutoSparseState(
-      HgCmdLineInterface hgCmdLineInterface, Path scRoot, Set<Path> ignore) {
+      HgCmdLineInterface hgCmdLineInterface, Path scRoot, AutoSparseConfig autoSparseConfig) {
     this.hgRoot = scRoot;
     this.hgCmdLine = hgCmdLineInterface;
     this.hgSparseSeen = new HashSet<Path>();
     this.hgKnownDirectories = new HashSet<Path>();
     this.hgDirectParents = new HashSet<Path>();
-    this.ignoredPaths = ignore;
+    this.ignoredPaths = autoSparseConfig.ignoredPaths();
 
     this.hgManifest = ImmutableMap.<Path, ManifestInfo>of();
     this.hgManifestLoaded = false;

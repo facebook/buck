@@ -9,11 +9,22 @@
     "exported_deps" : [
       "//src/com/facebook/buck/event:interfaces",
       "//src/com/facebook/buck/io:ProjectFilesystemDelegate",
+      "//src/com/facebook/buck/util/autosparse:autosparse_config",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//src/com/facebook/buck/util/sha1:sha1",
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol_hg",
       "//third-party/java/guava:guava",
       "//third-party/java/jsr:jsr305"
+    ]
+  },
+  "autosparse_config" : {
+    "deps" : [
+      "//third-party/java/guava:guava",
+      "//third-party/java/immutables:processor"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/config:config",
+      "//src/com/facebook/buck/util/immutables:immutables"
     ]
   }
 }
