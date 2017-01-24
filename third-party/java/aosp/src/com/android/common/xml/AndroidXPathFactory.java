@@ -32,20 +32,20 @@ import javax.xml.xpath.XPathFactory;
  */
 public class AndroidXPathFactory {
     /** Default prefix for android name space: 'android' */
-    public final static String DEFAULT_NS_PREFIX = "android"; //$NON-NLS-1$
+    public static final String DEFAULT_NS_PREFIX = "android"; //$NON-NLS-1$
 
-    private final static XPathFactory sFactory = XPathFactory.newInstance();
+    private static final XPathFactory sFactory = XPathFactory.newInstance();
 
     /** Name space context for Android resource XML files. */
     private static class AndroidNamespaceContext implements NamespaceContext {
-        private final static AndroidNamespaceContext sThis = new AndroidNamespaceContext(
+        private static final AndroidNamespaceContext sThis = new AndroidNamespaceContext(
                 DEFAULT_NS_PREFIX);
 
         private final String mAndroidPrefix;
         private final List<String> mAndroidPrefixes;
 
         /**
-         * Returns the default {@link com.android.common.xml.AndroidXPathFactory.AndroidNamespaceContext}.
+         * Returns the default {@link AndroidNamespaceContext}.
          */
         private static AndroidNamespaceContext getDefault() {
             return sThis;

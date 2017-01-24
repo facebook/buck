@@ -4,6 +4,10 @@ java_library(
   tests = [
     ':tests',
   ],
+  deps = [
+      '//third-party/java/guava:guava',
+      '//third-party/java/gson:gson',
+  ],
   licenses = [
     'NOTICE',
   ],
@@ -19,20 +23,6 @@ java_library(
   srcs = glob(['tests/src/**/*.java'], excludes = TEST_SRC),
   deps = [
     ':aosp',
-    '//third-party/java/junit:junit',
-  ],
-  licenses = [
-    'NOTICE',
-  ],
-)
-
-java_test(
-  name = 'tests',
-  srcs = glob(TEST_SRC),
-  resources = glob(['tests/src/com/android/manifmerger/data/*']),
-  deps = [
-    ':aosp',
-    ':testutils',
     '//third-party/java/junit:junit',
   ],
   licenses = [

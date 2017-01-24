@@ -16,11 +16,15 @@
 
 package com.android.common.utils;
 
-import com.android.common.annotations.NonNull;
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+
+import java.util.Formatter;
 
 /**
+ * <p>
  * Interface used to display warnings/errors while parsing the SDK content.
- * <p/>
+ * </p>
  * There are a few default implementations available:
  * <ul>
  * <li> {@link NullLogger} is an implementation that does <em>nothing</em> with the log.
@@ -43,15 +47,15 @@ public interface ILogger {
      * @param t is an optional {@link Throwable} or {@link Exception}. If non-null, its
      *          message will be printed out.
      * @param msgFormat is an optional error format. If non-null, it will be printed
-     *          using a {@link java.util.Formatter} with the provided arguments.
+     *          using a {@link Formatter} with the provided arguments.
      * @param args provides the arguments for errorFormat.
      */
-    void error(Throwable t, String msgFormat, Object... args);
+    void error(@Nullable Throwable t, @Nullable String msgFormat, Object... args);
 
     /**
      * Prints a warning message.
      *
-     * @param msgFormat is a string format to be used with a {@link java.util.Formatter}. Cannot be null.
+     * @param msgFormat is a string format to be used with a {@link Formatter}. Cannot be null.
      * @param args provides the arguments for warningFormat.
      */
     void warning(@NonNull String msgFormat, Object... args);
@@ -59,7 +63,7 @@ public interface ILogger {
     /**
      * Prints an information message.
      *
-     * @param msgFormat is a string format to be used with a {@link java.util.Formatter}. Cannot be null.
+     * @param msgFormat is a string format to be used with a {@link Formatter}. Cannot be null.
      * @param args provides the arguments for msgFormat.
      */
     void info(@NonNull String msgFormat, Object... args);
@@ -67,7 +71,7 @@ public interface ILogger {
     /**
      * Prints a verbose message.
      *
-     * @param msgFormat is a string format to be used with a {@link java.util.Formatter}. Cannot be null.
+     * @param msgFormat is a string format to be used with a {@link Formatter}. Cannot be null.
      * @param args provides the arguments for msgFormat.
      */
     void verbose(@NonNull String msgFormat, Object... args);
