@@ -18,9 +18,6 @@ def my_genrule(
 my_genrule(
   name = 'example',
   out = 'baz.txt',
-  visibility = [
-    'PUBLIC',
-  ],
 )
 
 keystore(

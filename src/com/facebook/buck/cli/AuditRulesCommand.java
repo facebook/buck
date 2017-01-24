@@ -34,6 +34,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import org.kohsuke.args4j.Argument;
@@ -43,10 +44,12 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.SortedSet;
 
 import javax.annotation.Nullable;
@@ -72,6 +75,9 @@ public class AuditRulesCommand extends AbstractCommand {
 
   @Option(name = "--json", usage = "Print JSON representation of each rule")
   private boolean json;
+
+  @Option(name = "--include_empty_values", usage = "Whether to include missing or empty values")
+  private boolean includeEmpties;
 
   @Argument
   private List<String> arguments = Lists.newArrayList();
@@ -155,7 +161,7 @@ public class AuditRulesCommand extends AbstractCommand {
       for (Map<String, Object> rawRule : filteredRules) {
         String name = (String) rawRule.get("name");
         Preconditions.checkNotNull(name);
-        rulesKeyedByName.put(name, rawRule);
+        rulesKeyedByName.put(name, Maps.filterValues(rawRule, v -> shouldInclude(v)));
       }
 
       // We create a new JsonGenerator that does not close the stream.
@@ -200,12 +206,24 @@ public class AuditRulesCommand extends AbstractCommand {
 
     // Write out the properties and their corresponding values.
     for (String property : properties) {
-      String displayValue = createDisplayString(INDENT, rawRule.get(property));
+      Object rawValue = rawRule.get(property);
+      if (!shouldInclude(rawValue)) {
+        continue;
+      }
+      String displayValue = createDisplayString(INDENT, rawValue);
       out.printf("%s%s = %s,\n", INDENT, property, displayValue);
     }
 
     // Close the rule definition.
     out.printf(")\n\n");
+  }
+
+  private boolean shouldInclude(Object rawValue) {
+    if (includeEmpties) {
+      return true;
+    }
+    return rawValue != null && rawValue != Optional.empty() &&
+        !(rawValue instanceof Collection && ((Collection<?>) rawValue).isEmpty());
   }
 
   /**
