@@ -42,6 +42,7 @@ import com.google.common.collect.Maps;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -188,10 +189,16 @@ public abstract class AbstractCommand implements Command {
     }
   }
 
+  protected void printUsage(PrintStream stream) {
+    stream.println("Options:");
+    new AdditionalOptionsCmdLineParser(this).printUsage(stream);
+    stream.println();
+  }
+
   @Override
   public final int run(CommandRunnerParams params) throws IOException, InterruptedException {
     if (showHelp()) {
-      new AdditionalOptionsCmdLineParser(this).printUsage(params.getConsole().getStdErr());
+      printUsage(params.getConsole().getStdErr());
       return 1;
     }
     if (params.getConsole().getAnsi().isAnsiTerminal()) {

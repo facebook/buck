@@ -117,11 +117,12 @@ public class MainIntegrationTest {
   private String getUsageString() {
     return Joiner.on('\n').join(
         "buck build tool",
-        "usage:",
-        "  buck [options]",
-        "  buck command --help",
-        "  buck command [command-options]",
-        "available commands:",
+        "Usage:",
+        "  buck [<options>]",
+        "  buck <command> --help",
+        "  buck <command> [<command-options>]",
+        "",
+        "Available commands:",
         "  audit              lists the inputs for the specified target",
         "  autodeps           auto-generates dependencies for build rules, where possible",
         "  build              builds the specified target",
@@ -145,9 +146,11 @@ public class MainIntegrationTest {
         "  test               builds and runs the tests for the specified target",
         "  uninstall          uninstalls an APK",
         "  verify-hash-cache  Verify contents of FileHashCache",
-        "options:",
+        "",
+        "Options:",
         " --help (-h)    : Shows this screen and exits.",
         " --version (-V) : Show version number.",
+        "",
         "");
   }
 }

@@ -67,6 +67,7 @@ import com.google.common.collect.Lists;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.channels.Channels;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -176,7 +177,13 @@ public class TestCommand extends BuildCommand {
   @SuppressFieldNotInitialized
   private TestLabelOptions testLabelOptions;
 
-  @Option(name = "--", handler = ConsumeAllOptionsHandler.class)
+  @Option(
+      name = "--",
+      usage = "When an external test runner is specified to be used (in the .buckconfig file), " +
+          "all options specified after -- get forwarded directly to the external test runner. " +
+          "Available options after -- are specific to that particular test runner and you may " +
+          "also want to consult its help pages.",
+      handler = ConsumeAllOptionsHandler.class)
   private List<String> withDashArguments = Lists.newArrayList();
 
   public boolean isRunAllTests() {
@@ -622,6 +629,29 @@ public class TestCommand extends BuildCommand {
     }
 
     return builder.build();
+  }
+
+  @Override
+  protected void printUsage(PrintStream stream) {
+    stream.println("Usage:");
+    stream.println("  " + "buck test [<targets>] [<options>]");
+    stream.println();
+
+    stream.println("Description:");
+    stream.println("  Builds and runs the tests for one or more specified targets.");
+    stream.println("  You can either directly specify test targets, or any other target which");
+    stream.println("  contains a `tests = ['...']` field to specify its tests. Alternatively,");
+    stream.println("  by specifying no targets all of the tests will be run.");
+    stream.println("  Tests get run by the internal test runner unless an external test runner");
+    stream.println("  is specified in the .buckconfig file. Note that not all of the options");
+    stream.println("  are applicable to all build rule types. Likewise, when an external test");
+    stream.println("  runner is being used, some of the options listed here may not apply, and");
+    stream.println("  you may need to use options specific to that test runner. See -- option.");
+    stream.println();
+
+    stream.println("Options:");
+    new AdditionalOptionsCmdLineParser(this).printUsage(stream);
+    stream.println();
   }
 
   @Override

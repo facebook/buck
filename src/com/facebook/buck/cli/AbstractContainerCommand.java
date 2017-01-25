@@ -45,11 +45,13 @@ public abstract class AbstractContainerCommand implements Command {
 
     stream.println("buck build tool");
 
-    stream.println("usage:");
-    stream.println("  " + prefix + " [options]");
-    stream.println("  " + prefix + " command --help");
-    stream.println("  " + prefix + " command [command-options]");
-    stream.println("available commands:");
+    stream.println("Usage:");
+    stream.println("  " + prefix + " [<options>]");
+    stream.println("  " + prefix + " <command> --help");
+    stream.println("  " + prefix + " <command> [<command-options>]");
+    stream.println();
+
+    stream.println("Available commands:");
 
     SubCommands subCommands;
     try {
@@ -82,9 +84,11 @@ public abstract class AbstractContainerCommand implements Command {
           Strings.repeat(" ", lengthOfLongestCommand - name.length()),
           command.getShortDescription());
     }
+    stream.println();
 
-    stream.println("options:");
+    stream.println("Options:");
     new AdditionalOptionsCmdLineParser(this).printUsage(stream);
+    stream.println();
   }
 
   @Override
