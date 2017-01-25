@@ -356,10 +356,16 @@ footer {
   text-align: right;
 }
 
-#showcase {
+.companyShowcase h2,
+.companyShowcase div {
   text-align: center;
 }
-#showcase .showcaseItem {
+.itemShowcase {
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+.itemShowcase .showcaseItem {
   text-align: center;
   display: inline-block;
   width: 175px;
@@ -367,7 +373,7 @@ footer {
   padding: 10px;
   vertical-align: top;
 }
-#showcase .showcaseItem img {
+.itemShowcase .showcaseItem img {
   width: 100px;
   border-radius: 20px;
 }
