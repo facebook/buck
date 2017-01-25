@@ -1,9 +1,6 @@
 java_library(
   name = 'aosp',
   srcs = glob(['src/**/*.java']),
-  tests = [
-    ':tests',
-  ],
   deps = [
       '//third-party/java/guava:guava',
       '//third-party/java/gson:gson',
@@ -13,19 +10,5 @@ java_library(
   ],
   visibility = [
     'PUBLIC',
-  ],
-)
-
-TEST_SRC = ['tests/src/**/*Test.java'];
-
-java_library(
-  name = 'testutils',
-  srcs = glob(['tests/src/**/*.java'], excludes = TEST_SRC),
-  deps = [
-    ':aosp',
-    '//third-party/java/junit:junit',
-  ],
-  licenses = [
-    'NOTICE',
   ],
 )
