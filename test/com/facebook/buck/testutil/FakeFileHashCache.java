@@ -36,33 +36,37 @@ public class FakeFileHashCache implements FileHashCache {
   private final Map<Path, HashCode> pathsToHashes;
   private final Map<ArchiveMemberPath, HashCode> archiveMemberPathsToHashes;
   private final Map<Path, Long> pathsToSizes;
-
-  public static FakeFileHashCache withArchiveMemberPathHashes(
-      Map<ArchiveMemberPath, HashCode> archiveMemberPathsToHashes) {
-    return new FakeFileHashCache(
-        new HashMap<Path, HashCode>(),
-        archiveMemberPathsToHashes,
-        new HashMap<Path, Long>());
-  }
+  private final boolean usePathsForArchives;
 
   public FakeFileHashCache(Map<Path, HashCode> pathsToHashes) {
-    this(pathsToHashes, new HashMap<ArchiveMemberPath, HashCode>(), new HashMap<Path, Long>());
+    this(pathsToHashes, new HashMap<>(), new HashMap<>());
+  }
+
+  public FakeFileHashCache(
+      Map<Path, HashCode> pathsToHashes,
+      boolean usePathsForArchives,
+      Map<Path, Long> pathsToSizes) {
+    this.pathsToHashes = pathsToHashes;
+    this.archiveMemberPathsToHashes = new HashMap<>();
+    this.pathsToSizes = pathsToSizes;
+    this.usePathsForArchives = usePathsForArchives;
   }
 
   public FakeFileHashCache(
       Map<Path, HashCode> pathsToHashes,
       Map<ArchiveMemberPath, HashCode> archiveMemberPathsToHashes,
       Map<Path, Long> pathsToSizes) {
-    this.archiveMemberPathsToHashes = archiveMemberPathsToHashes;
     this.pathsToHashes = pathsToHashes;
+    this.archiveMemberPathsToHashes = archiveMemberPathsToHashes;
     this.pathsToSizes = pathsToSizes;
+    this.usePathsForArchives = false;
   }
 
   public static FakeFileHashCache createFromStrings(Map<String, String> pathsToHashes) {
     return createFromStrings(new FakeProjectFilesystem(), pathsToHashes);
   }
 
-  public static FakeFileHashCache createFromStrings(
+  private static FakeFileHashCache createFromStrings(
       ProjectFilesystem filesystem,
       Map<String, String> pathsToHashes) {
     Map<Path, HashCode> cachedValues = new HashMap<>();
@@ -118,6 +122,9 @@ public class FakeFileHashCache implements FileHashCache {
 
   @Override
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
+    if (usePathsForArchives) {
+      return get(Paths.get(archiveMemberPath.toString()));
+    }
     HashCode hashCode = archiveMemberPathsToHashes.get(archiveMemberPath);
     if (hashCode == null) {
       throw new NoSuchFileException(archiveMemberPath.toString());

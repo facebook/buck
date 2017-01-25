@@ -16,14 +16,18 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import javax.annotation.Nullable;
 
@@ -31,17 +35,27 @@ import javax.annotation.Nullable;
  * A fake {@link BuildRule} that implements {@link SupportsDependencyFileRuleKey}.
  */
 public class FakeDepFileBuildRule
-    extends AbstractBuildRuleWithResolver
+    extends AbstractBuildRule
     implements SupportsDependencyFileRuleKey {
 
   private Path outputPath;
   private Optional<ImmutableSet<SourcePath>> possibleInputPaths = Optional.empty();
+  private ImmutableSet<SourcePath> interestingInputPaths = ImmutableSet.of();
   private ImmutableList<SourcePath> actualInputPaths = ImmutableList.of();
 
+  public FakeDepFileBuildRule(String fullyQualifiedName) {
+    this(BuildTargetFactory.newInstance(fullyQualifiedName));
+  }
+
+  public FakeDepFileBuildRule(BuildTarget target) {
+    this(new FakeBuildRuleParamsBuilder(target)
+        .setProjectFilesystem(new FakeProjectFilesystem())
+        .build());
+  }
+
   public FakeDepFileBuildRule(
-      BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver) {
-    super(buildRuleParams, resolver);
+      BuildRuleParams buildRuleParams) {
+    super(buildRuleParams);
   }
 
   public FakeDepFileBuildRule setOutputPath(Path outputPath) {
@@ -52,6 +66,11 @@ public class FakeDepFileBuildRule
   public FakeDepFileBuildRule setPossibleInputPaths(
       Optional<ImmutableSet<SourcePath>> possibleInputPaths) {
     this.possibleInputPaths = possibleInputPaths;
+    return this;
+  }
+
+  public FakeDepFileBuildRule setInterestingInputPaths(ImmutableSet<SourcePath> interestingPaths) {
+    this.interestingInputPaths = interestingPaths;
     return this;
   }
 
@@ -75,6 +94,10 @@ public class FakeDepFileBuildRule
   @Override
   public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
     return possibleInputPaths;
+  }
+
+  public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+    return (SourcePath path) -> interestingInputPaths.contains(path);
   }
 
   @Override

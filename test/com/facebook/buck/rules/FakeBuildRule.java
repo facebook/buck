@@ -86,8 +86,9 @@ public class FakeBuildRule extends AbstractBuildRuleWithResolver implements Buil
     return outputFile;
   }
 
-  public void setOutputFile(@Nullable String outputFile) {
+  public FakeBuildRule setOutputFile(@Nullable String outputFile) {
     this.outputFile = outputFile == null ? null : Paths.get(outputFile);
+    return this;
   }
 
   @Override

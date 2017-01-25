@@ -110,6 +110,12 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest {
     workspace.getBuildLog().assertTargetBuiltLocally("//:lib");
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
     expectGenruleOutputContains("//:extract_resulting_config", "res2");
+
+    //Now, add an unrelated file and assert dep files are working
+    workspace.replaceFileContents("BUCK", "#add_file", "");
+    workspace.runBuckCommand("build", "//:top_level").assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:lib");
+    workspace.getBuildLog().assertTargetHadMatchingDepfileRuleKey("//:top_level");
   }
 
   @Test
