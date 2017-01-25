@@ -62,6 +62,9 @@ public class ArtifactCaches implements ArtifactCacheFactory {
 
   private static final Logger LOG = Logger.get(ArtifactCaches.class);
 
+  private static final boolean FIX_HTTP_BOTTLENECK =
+      "true".equals(System.getProperty("buck.fix_http_bottleneck"));
+
   private final ArtifactCacheBuckConfig buckConfig;
   private final BuckEventBus buckEventBus;
   private final ProjectFilesystem projectFilesystem;
@@ -328,9 +331,11 @@ public class ArtifactCaches implements ArtifactCacheFactory {
 
     // The artifact cache effectively only connects to a single host at a time. We should allow as
     // many concurrent connections to that host as we allow threads.
-    Dispatcher dispatcher = new Dispatcher();
-    dispatcher.setMaxRequestsPerHost((int) config.getThreadPoolSize());
-    storeClientBuilder.dispatcher(dispatcher);
+    if (FIX_HTTP_BOTTLENECK) {
+      Dispatcher dispatcher = new Dispatcher();
+      dispatcher.setMaxRequestsPerHost((int) config.getThreadPoolSize());
+      storeClientBuilder.dispatcher(dispatcher);
+    }
 
     final ImmutableMap<String, String> readHeaders = cacheDescription.getReadHeaders();
     final ImmutableMap<String, String> writeHeaders = cacheDescription.getWriteHeaders();

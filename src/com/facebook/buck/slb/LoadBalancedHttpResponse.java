@@ -30,12 +30,17 @@ public class LoadBalancedHttpResponse extends OkHttpResponseWrapper {
   private final URI server;
   private boolean hasConnectionResultBeenReported;
 
+  private static final boolean FIX_HTTP_BOTTLENECK =
+      "true".equals(System.getProperty("buck.fix_http_bottleneck"));
+
   public static LoadBalancedHttpResponse createLoadBalancedResponse(
       URI server, HttpLoadBalancer loadBalancer, Call call) throws IOException {
     try {
       return new LoadBalancedHttpResponse(server, loadBalancer, call.execute());
     } catch (IOException e) {
-      loadBalancer.reportRequestException(server);
+      if (FIX_HTTP_BOTTLENECK) {
+        loadBalancer.reportRequestException(server);
+      }
       throw e;
     }
   }
