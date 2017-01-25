@@ -30,6 +30,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.shell.SymlinkFilesIntoDirectoryStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -48,7 +49,9 @@ import java.util.stream.Stream;
 /**
  * Generate a rustc command line with all appropriate dependencies in place.
  */
-public class RustCompileRule extends AbstractBuildRuleWithResolver {
+public class RustCompileRule
+    extends AbstractBuildRuleWithResolver
+    implements SupportsInputBasedRuleKey {
   @AddToRuleKey
   private final Tool compiler;
 
@@ -188,7 +191,11 @@ public class RustCompileRule extends AbstractBuildRuleWithResolver {
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    buildableContext.recordArtifact(getOutput());
+
+    Path output = getOutput();
+
+    buildableContext.recordArtifact(output);
+
     return ImmutableList.of(
         new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir),
         new SymlinkFilesIntoDirectoryStep(
@@ -219,7 +226,7 @@ public class RustCompileRule extends AbstractBuildRuleWithResolver {
                 .addAll(processLinkerArgs(linkerCmd.subList(1, linkerCmd.size())))
                 .addAll(processLinkerArgs(Arg.stringify(linkerArgs)))
                 .addAll(Arg.stringify(args))
-                .add("-o", getOutput().toString())
+                .add("-o", output.toString())
                 .add(src.toString());
 
             return cmd.build();

@@ -111,7 +111,13 @@ public class RustTestDescription implements
     BuildRuleParams testParams = params.appendExtraDeps(
         testExe.getDeps(ruleFinder));
 
-    return new RustTest(testParams, pathResolver, testExeBuild, args.labels, args.contacts);
+    return new RustTest(
+        testParams,
+        pathResolver,
+        ruleFinder,
+        testExeBuild,
+        args.labels,
+        args.contacts);
   }
 
   @Override

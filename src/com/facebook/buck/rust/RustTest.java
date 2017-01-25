@@ -17,16 +17,21 @@
 package com.facebook.buck.rust;
 
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.AbstractTestStep;
@@ -54,12 +59,13 @@ import java.util.concurrent.Callable;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class RustTest
     extends AbstractBuildRuleWithResolver
-    implements BinaryBuildRule, TestRule, ExternalTestRunnerRule {
+    implements BinaryBuildRule, TestRule, ExternalTestRunnerRule, HasRuntimeDeps {
 
   private final ImmutableSet<Label> labels;
   private final ImmutableSet<String> contacts;
@@ -73,16 +79,19 @@ public class RustTest
       "^failures:$");
   private final Path testOutputFile;
   private final Path testStdoutFile;
+  private final SourcePathRuleFinder ruleFinder;
 
   protected RustTest(
       BuildRuleParams params,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       BinaryBuildRule testExeBuild,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts) {
     super(params, pathResolver);
 
     this.testExeBuild = testExeBuild;
+    this.ruleFinder = ruleFinder;
     this.labels = labels;
     this.contacts = contacts;
     this.testOutputFile = getProjectFilesystem().resolve(getPathToTestResults());
@@ -278,5 +287,13 @@ public class RustTest
   @Override
   public Path getPathToOutput() {
     return testExeBuild.getPathToOutput();
+  }
+
+  @Override
+  public Stream<SourcePath> getRuntimeDeps() {
+    return Stream
+        .concat(getDeclaredDeps().stream(), getExecutableCommand().getDeps(ruleFinder).stream())
+        .map(HasBuildTarget::getBuildTarget)
+        .map(BuildTargetSourcePath::new);
   }
 }
