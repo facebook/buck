@@ -433,7 +433,8 @@ public class WatchmanWatcherTest {
     WatchmanQuery query = WatchmanWatcher.createQuery(
         ProjectWatch.of("path/to/repo", Optional.of("project")),
         ImmutableSet.of(),
-        ImmutableSet.of(Watchman.Capability.DIRNAME));
+        ImmutableSet.of(Watchman.Capability.DIRNAME),
+        Optional.of(new WatchmanCursor(Watchman.NULL_CLOCK)));
 
     assertThat(
         query.toList(""),
@@ -447,20 +448,27 @@ public class WatchmanWatcherTest {
         ImmutableSet.of(
             new PathOrGlobMatcher(Paths.get("foo")),
             new PathOrGlobMatcher(Paths.get("bar/baz"))),
-        ImmutableSet.of(Watchman.Capability.DIRNAME));
+        ImmutableSet.of(Watchman.Capability.DIRNAME),
+        Optional.of(new WatchmanCursor(Watchman.NULL_CLOCK)));
     assertEquals(
         WatchmanQuery.of(
             "/path/to/repo",
             ImmutableMap.of(
                 "expression", ImmutableList.of(
-                    "not",
+                    "allof",
                     ImmutableList.of(
-                        "anyof",
-                        ImmutableList.of("type", "d"),
-                        ImmutableList.of("dirname", "foo"),
+                        "not",
                         ImmutableList.of(
-                            "dirname",
-                            MorePaths.pathWithPlatformSeparators("bar/baz")))),
+                            "anyof",
+                            ImmutableList.of("type", "d"),
+                            ImmutableList.of("dirname", "foo"),
+                            ImmutableList.of(
+                                "dirname",
+                                MorePaths.pathWithPlatformSeparators("bar/baz")))),
+                        ImmutableList.of("not",
+                            ImmutableList.of("allof",
+                                ImmutableList.of("since", "c:0:0", "cclock"),
+                                ImmutableList.of("not", "exists")))),
                 "empty_on_fresh_instance", true,
                 "fields", ImmutableList.of("name", "exists", "new"))),
         query);
@@ -473,24 +481,31 @@ public class WatchmanWatcherTest {
         ImmutableSet.of(
             new PathOrGlobMatcher(Paths.get("foo")),
             new PathOrGlobMatcher(Paths.get("bar/baz"))),
-        ImmutableSet.of());
+        ImmutableSet.of(),
+        Optional.of(new WatchmanCursor(Watchman.NULL_CLOCK)));
     assertEquals(
         WatchmanQuery.of(
             "/path/to/repo",
             ImmutableMap.of(
                 "expression", ImmutableList.of(
-                    "not",
+                    "allof",
                     ImmutableList.of(
-                        "anyof",
-                        ImmutableList.of("type", "d"),
+                        "not",
                         ImmutableList.of(
-                            "match",
-                            "foo" + File.separator + "*",
-                            "wholename"),
-                        ImmutableList.of(
-                            "match",
-                            "bar" + File.separator + "baz" + File.separator + "*",
-                            "wholename"))),
+                            "anyof",
+                            ImmutableList.of("type", "d"),
+                            ImmutableList.of(
+                                "match",
+                                "foo" + File.separator + "*",
+                                "wholename"),
+                            ImmutableList.of(
+                                "match",
+                                "bar" + File.separator + "baz" + File.separator + "*",
+                                "wholename"))),
+                        ImmutableList.of("not",
+                            ImmutableList.of("allof",
+                                ImmutableList.of("since", "c:0:0", "cclock"),
+                                ImmutableList.of("not", "exists")))),
                 "empty_on_fresh_instance", true,
                 "fields", ImmutableList.of("name", "exists", "new"))),
         query);
@@ -504,20 +519,55 @@ public class WatchmanWatcherTest {
         ImmutableSet.of(
             new PathOrGlobMatcher(Paths.get("/path/to/repo/foo").toAbsolutePath()),
             new PathOrGlobMatcher(Paths.get("/path/to/repo/bar/baz").toAbsolutePath())),
-        ImmutableSet.of(Watchman.Capability.DIRNAME));
+        ImmutableSet.of(Watchman.Capability.DIRNAME),
+        Optional.of(new WatchmanCursor(Watchman.NULL_CLOCK)));
     assertEquals(
         WatchmanQuery.of(
             watchRoot,
             ImmutableMap.of(
                 "expression", ImmutableList.of(
-                    "not",
+                    "allof",
                     ImmutableList.of(
-                        "anyof",
-                        ImmutableList.of("type", "d"),
-                        ImmutableList.of("dirname", "foo"),
+                        "not",
                         ImmutableList.of(
-                            "dirname",
-                            MorePaths.pathWithPlatformSeparators("bar/baz")))),
+                            "anyof",
+                            ImmutableList.of("type", "d"),
+                            ImmutableList.of("dirname", "foo"),
+                            ImmutableList.of(
+                                "dirname",
+                                MorePaths.pathWithPlatformSeparators("bar/baz")))),
+                    ImmutableList.of("not",
+                        ImmutableList.of("allof",
+                            ImmutableList.of("since", "c:0:0", "cclock"),
+                            ImmutableList.of("not", "exists")))),
+                    "empty_on_fresh_instance", true,
+                    "fields", ImmutableList.of("name", "exists", "new"))),
+        query);
+  }
+
+  @Test
+  public void watchmanQueryExcludesFileCreatedAndThenDeletedEventPairsSinceLastClock() {
+    String watchRoot = Paths.get("/path/to/repo").toAbsolutePath().toString();
+    WatchmanQuery query = WatchmanWatcher.createQuery(
+        ProjectWatch.of(watchRoot, Optional.empty()),
+        ImmutableSet.of(),
+        ImmutableSet.of(Watchman.Capability.DIRNAME),
+        Optional.of(new WatchmanCursor("c:1234:last_clock")));
+    assertEquals(
+        WatchmanQuery.of(
+            watchRoot,
+            ImmutableMap.of(
+                "expression", ImmutableList.of(
+                    "allof",
+                    ImmutableList.of(
+                        "not",
+                        ImmutableList.of(
+                            "anyof",
+                            ImmutableList.of("type", "d"))),
+                    ImmutableList.of("not",
+                        ImmutableList.of("allof",
+                            ImmutableList.of("since", "c:1234:last_clock", "cclock"),
+                            ImmutableList.of("not", "exists")))),
                 "empty_on_fresh_instance", true,
                 "fields", ImmutableList.of("name", "exists", "new"))),
         query);
@@ -529,21 +579,28 @@ public class WatchmanWatcherTest {
         ProjectWatch.of("/path/to/repo", Optional.empty()),
         ImmutableSet.of(
             new PathOrGlobMatcher("*.pbxproj")),
-        ImmutableSet.of(Watchman.Capability.DIRNAME));
+        ImmutableSet.of(Watchman.Capability.DIRNAME),
+        Optional.of(new WatchmanCursor(Watchman.NULL_CLOCK)));
     assertEquals(
         WatchmanQuery.of(
             "/path/to/repo",
             ImmutableMap.of(
                 "expression", ImmutableList.of(
-                    "not",
+                    "allof",
                     ImmutableList.of(
-                        "anyof",
-                        ImmutableList.of("type", "d"),
+                        "not",
                         ImmutableList.of(
-                            "match",
-                            "*.pbxproj",
-                            "wholename",
-                            ImmutableMap.<String, Object>of("includedotfiles", true)))),
+                            "anyof",
+                            ImmutableList.of("type", "d"),
+                            ImmutableList.of(
+                                "match",
+                                "*.pbxproj",
+                                "wholename",
+                                ImmutableMap.<String, Object>of("includedotfiles", true)))),
+                    ImmutableList.of("not",
+                        ImmutableList.of("allof",
+                            ImmutableList.of("since", "c:0:0", "cclock"),
+                            ImmutableList.of("not", "exists")))),
                 "empty_on_fresh_instance", true,
                 "fields", ImmutableList.of("name", "exists", "new"))),
         query);

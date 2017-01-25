@@ -17,6 +17,13 @@
 package com.facebook.buck.io;
 
 public class WatchmanCursor {
+
+  public enum Type {
+    TIME_T,
+    CLOCK_ID,
+    NAMED_CURSOR,
+  }
+
   private String mWatchmanCursor;
 
   public WatchmanCursor(String initialCursor) {
@@ -34,5 +41,15 @@ public class WatchmanCursor {
   @Override
   public String toString() {
     return mWatchmanCursor;
+  }
+
+  public Type getType() {
+    if (get().startsWith("n:")) {
+      return Type.NAMED_CURSOR;
+    } else if (get().startsWith("c:")) {
+      return Type.CLOCK_ID;
+    } else {
+      return Type.TIME_T;
+    }
   }
 }
