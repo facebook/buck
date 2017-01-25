@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 
@@ -134,6 +135,36 @@ public final class MoreCollectors {
         (builder, elem) -> builder.put(keyMapper.apply(elem), valueMapper.apply(elem)),
         (left, right) -> left.putAll(right.build()),
         ImmutableMap.Builder::build);
+  }
+
+  /**
+   * Returns a {@code Collector} that builds an {@code ImmutableSortedMap}, whose keys and values
+   * are the result of applying mapping functions to the input elements.
+   *
+   * The built map uses the natural ordering for elements.
+   *
+   * This {@code Collector} behaves similar to
+   * {@code Collectors.collectingAndThen(Collectors.toMap(), ImmutableSortedMap::copyOf)} but
+   * does not build an intermediate map.
+   *
+   * @param <T> the type of the input elements
+   * @param <K> the output type of the key mapping function
+   * @param <U> the output type of the value mapping function
+   *
+   * @param keyMapper a mapping function to produce keys
+   * @param valueMapper a mapping function to produce values
+   *
+   * @return a {@code Collector} that builds an {@code ImmutableMap}.
+   */
+  public static <T, K extends Comparable<?>, U> Collector<T, ?, ImmutableSortedMap<K, U>>
+      toImmutableSortedMap(
+          Function<? super T, ? extends K> keyMapper,
+          Function<? super T, ? extends U> valueMapper) {
+    return Collector.<T, ImmutableSortedMap.Builder<K, U>, ImmutableSortedMap<K, U>>of(
+        ImmutableSortedMap::naturalOrder,
+        (builder, elem) -> builder.put(keyMapper.apply(elem), valueMapper.apply(elem)),
+        (left, right) -> left.putAll(right.build()),
+        ImmutableSortedMap.Builder::build);
   }
 
   /**

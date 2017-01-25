@@ -50,6 +50,18 @@ public class MoreMaps {
     return transformedMap.build();
   }
 
+  public static <K1, K2 extends Comparable<?>, V> ImmutableSortedMap<K2, V> transformKeysAndSort(
+      Map<K1, V> map,
+      Function<? super K1, K2> transformer) {
+    ImmutableSortedMap.Builder<K2, V> transformedMap = ImmutableSortedMap.naturalOrder();
+    for (Map.Entry<K1, V> ent : map.entrySet()) {
+      transformedMap.put(
+          Preconditions.checkNotNull(transformer.apply(ent.getKey())),
+          ent.getValue());
+    }
+    return transformedMap.build();
+  }
+
   public static <K, V> ImmutableMap<K, V> merge(Map<K, V> first, Map<K, V> second) {
     Map<K, V> mutableMap = new HashMap<>(first);
     mutableMap.putAll(second);

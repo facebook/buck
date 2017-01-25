@@ -656,6 +656,11 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testBuckProjectWithSubdirGlobResources() throws IOException {
+    runBuckProjectAndVerify("project_with_subdir_glob_resources");
+  }
+
+  @Test
   public void testRobolectricTestRule() throws IOException {
     runBuckProjectAndVerify("robolectric_test");
   }

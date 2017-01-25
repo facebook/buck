@@ -168,17 +168,19 @@ public class IjProject {
           @Override
           public Optional<Path> getAndroidResourcePath(
               TargetNode<AndroidResourceDescription.Arg, ?> targetNode) {
-            return targetNode
-                .getConstructorArg()
-                .res.map(this::getRelativePathAndRecordRule);
+            return AndroidResourceDescription.getResDirectoryForProject(
+                buildRuleResolver,
+                targetNode)
+                .map(this::getRelativePathAndRecordRule);
           }
 
           @Override
           public Optional<Path> getAssetsPath(
               TargetNode<AndroidResourceDescription.Arg, ?> targetNode) {
-            return targetNode
-                .getConstructorArg()
-                .assets.map(this::getRelativePathAndRecordRule);
+            return AndroidResourceDescription.getAssetsDirectoryForProject(
+                buildRuleResolver,
+                targetNode)
+                .map(this::getRelativePathAndRecordRule);
           }
 
           @Override

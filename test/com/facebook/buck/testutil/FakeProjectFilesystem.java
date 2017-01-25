@@ -532,7 +532,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   @Override
-  public Path createNewFile(Path path) throws IOException {
+  public Path createNewFile(Path path) {
     writeBytesToPath(new byte[0], path);
     return path;
   }
@@ -541,7 +541,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   public void writeLinesToPath(
       Iterable<String> lines,
       Path path,
-      FileAttribute<?>... attrs) throws IOException {
+      FileAttribute<?>... attrs) {
     StringBuilder builder = new StringBuilder();
     if (!Iterables.isEmpty(lines)) {
       Joiner.on('\n').appendTo(builder, lines);
@@ -554,7 +554,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   public void writeContentsToPath(
       String contents,
       Path path,
-      FileAttribute<?>... attrs) throws IOException {
+      FileAttribute<?>... attrs) {
     writeBytesToPath(contents.getBytes(Charsets.UTF_8), path, attrs);
   }
 
@@ -562,7 +562,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   public void writeBytesToPath(
       byte[] bytes,
       Path path,
-      FileAttribute<?>... attrs) throws IOException {
+      FileAttribute<?>... attrs) {
     Path normalizedPath = MorePaths.normalize(path);
     fileContents.put(normalizedPath, Preconditions.checkNotNull(bytes));
     fileAttributes.put(normalizedPath, ImmutableSet.copyOf(attrs));

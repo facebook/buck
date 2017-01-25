@@ -30,9 +30,8 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.util.Optional;
 
 public class ReactNativeLibraryGraphEnhancer {
 
@@ -117,12 +116,10 @@ public class ReactNativeLibraryGraphEnhancer {
           ruleFinder,
           /* deps */ ImmutableSortedSet.of(),
           resources,
-          /* resSrcs */ ImmutableSortedSet.of(),
-          Optional.of(resources),
+          /* resSrcs */ ImmutableSortedMap.of(),
           args.rDotJavaPackage.get(),
           /* assets */ null,
-          /* assetsSrcs */ ImmutableSortedSet.of(),
-          Optional.empty(),
+          /* assetsSrcs */ ImmutableSortedMap.of(),
           /* manifest */ null,
           /* hasWhitelistedStrings */ false);
       resolver.addToIndex(resource);

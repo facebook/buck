@@ -16,11 +16,14 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -29,12 +32,18 @@ import java.util.Optional;
 public class AndroidResourceBuilder
     extends AbstractNodeBuilder<AndroidResourceDescription.Arg, AndroidResourceDescription> {
 
-  private AndroidResourceBuilder(BuildTarget target) {
-    super(new AndroidResourceDescription(false), target);
+  private AndroidResourceBuilder(BuildTarget target, ProjectFilesystem filesystem) {
+    super(new AndroidResourceDescription(false), target, filesystem);
   }
 
   public static AndroidResourceBuilder createBuilder(BuildTarget target) {
-    return new AndroidResourceBuilder(target);
+    return new AndroidResourceBuilder(target, new FakeProjectFilesystem());
+  }
+
+  public static AndroidResourceBuilder createBuilder(
+      BuildTarget target,
+      ProjectFilesystem filesystem) {
+    return new AndroidResourceBuilder(target, filesystem);
   }
 
   public AndroidResourceBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
@@ -43,7 +52,7 @@ public class AndroidResourceBuilder
   }
 
   public AndroidResourceBuilder setRes(SourcePath res) {
-    arg.res = Optional.of(res);
+    arg.res = Optional.of(Either.ofLeft(res));
     return this;
   }
 
@@ -52,7 +61,12 @@ public class AndroidResourceBuilder
   }
 
   public AndroidResourceBuilder setAssets(SourcePath assets) {
-    arg.assets = Optional.of(assets);
+    arg.assets = Optional.of(Either.ofLeft(assets));
+    return this;
+  }
+
+  public AndroidResourceBuilder setAssets(ImmutableSortedMap<String, SourcePath> assets) {
+    arg.assets = Optional.of(Either.ofRight(assets));
     return this;
   }
 

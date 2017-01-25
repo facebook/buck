@@ -212,7 +212,7 @@ public class SymlinkTree
     return getProjectFilesystem().resolve(root);
   }
 
-  public ImmutableMap<Path, SourcePath> getLinks() {
+  public ImmutableSortedMap<Path, SourcePath> getLinks() {
     return links;
   }
 

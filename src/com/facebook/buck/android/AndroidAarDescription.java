@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -176,12 +177,10 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         .addAll(originalBuildRuleParams.getDeclaredDeps().get())
         .build(),
         new BuildTargetSourcePath(assembleResourceDirectories.getBuildTarget()),
-        /* resSrcs */ ImmutableSortedSet.of(),
-        Optional.empty(),
+        /* resSrcs */ ImmutableSortedMap.of(),
         /* rDotJavaPackage */ null,
         new BuildTargetSourcePath(assembleAssetsDirectories.getBuildTarget()),
-        /* assetsSrcs */ ImmutableSortedSet.of(),
-        Optional.empty(),
+        /* assetsSrcs */ ImmutableSortedMap.of(),
         new BuildTargetSourcePath(manifest.getBuildTarget()),
         /* hasWhitelistedStrings */ false);
     aarExtraDepsBuilder.add(resolver.addToIndex(androidResource));

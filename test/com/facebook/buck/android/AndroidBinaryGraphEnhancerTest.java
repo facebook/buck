@@ -65,6 +65,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -404,15 +405,19 @@ public class AndroidBinaryGraphEnhancerTest {
 
   @Test
   public void testResourceRulesBecomeDepsOfAaptPackageResources() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-
-    AndroidResource resource =
-        (AndroidResource) AndroidResourceBuilder
+    TargetNode<?, ?> resourceNode =
+        AndroidResourceBuilder
             .createBuilder(BuildTargetFactory.newInstance("//:resource"))
             .setRDotJavaPackage("package")
             .setRes(Paths.get("res"))
-            .build(ruleResolver);
+            .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(resourceNode);
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    AndroidResource resource =
+        (AndroidResource) ruleResolver.requireRule(resourceNode.getBuildTarget());
 
     // set it up.
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
@@ -553,12 +558,10 @@ public class AndroidBinaryGraphEnhancerTest {
                 ruleFinder,
                 ImmutableSortedSet.of(),
                 new BuildTargetSourcePath(resourcesDep.getBuildTarget()),
-                ImmutableSortedSet.of(),
-                Optional.empty(),
+                ImmutableSortedMap.of(),
                 null,
                 null,
-                ImmutableSortedSet.of(),
-                Optional.empty(),
+                ImmutableSortedMap.of(),
                 new FakeSourcePath("manifest"),
                 false));
 
