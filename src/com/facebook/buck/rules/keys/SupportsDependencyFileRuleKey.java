@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 /**
  * Used to tag a rule that supports dependency-file input-based rule keys.
@@ -45,6 +46,23 @@ public interface SupportsDependencyFileRuleKey extends BuildRule {
    * back and figure out how to implement it for C++.
    */
   Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths();
+
+  /**
+   * Returns a predicate that can tell whether the existence of a given path may be of interest to
+   * compiler. If this predicate returns true, the path should be included in the rule key. Note
+   * that we only care about the existence here. The actual content of the file is not relevant.
+   *
+   * The main purpose of this predicate is to support scenarios where compiler decides whether to
+   * use a file or not solely based on its path. Of course, if compiler decides to use the file,
+   * it should list it in the dep-file in which case both the path and the content will be included
+   * in the rule key. However, relying only on presence in the dep-file for such paths is not
+   * sufficient. The problem occurs when a new such file just gets added, in which case it won't
+   * be present in the dep-file produced in the previous build, and yet if we run a local build now
+   * the compiler may decide to use it. For that reason rule key needs to reflect existence of all
+   * such files and change when a such a file gets added or removed.
+   */
+  Predicate<SourcePath> getExistenceOfInterestPredicate();
+
 
   /**
    * Returns a list of source paths that were actually used for the rule. This list comes from the

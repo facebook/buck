@@ -41,6 +41,7 @@ import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 /**
  * Responsible for running the React Native JS packager in order to generate a single {@code .js}
@@ -220,6 +221,11 @@ public class ReactNativeBundle
   @Override
   public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
     return Optional.of(srcs);
+  }
+
+  @Override
+  public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+    return (SourcePath path) -> false;
   }
 
   @Override

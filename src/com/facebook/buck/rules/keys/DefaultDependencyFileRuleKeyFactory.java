@@ -18,14 +18,12 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Joiner;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -33,15 +31,13 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.util.Collections;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -54,7 +50,6 @@ public final class DefaultDependencyFileRuleKeyFactory
     implements DependencyFileRuleKeyFactory {
 
   private final FileHashLoader fileHashLoader;
-  private static final Path METADATA_DIR = Paths.get("META-INF");
   private final SourcePathResolver pathResolver;
   private final SourcePathRuleFinder ruleFinder;
   private final LoadingCache<RuleKeyAppendable, Result> cache;
@@ -174,38 +169,32 @@ public final class DefaultDependencyFileRuleKeyFactory
     // Create a builder which records all `SourcePath`s which are possibly used by the rule.
     Builder builder = newInstance(rule);
 
-    Optional<ImmutableSet<SourcePath>> possibleDepFileSourcePaths =
-        rule.getPossibleInputSourcePaths();
-    // TODO(jkeljo): Make this use possibleDepFileSourcePaths all the time
-    Iterable<SourcePath> inputsSoFar = builder.getIterableInputsSoFar();
-    // Dep file paths come as a sorted set, which does binary search instead of hashing for
-    // lookups, so we re-create it as a hashset.
-    ImmutableSet<SourcePath> fastPossibleSourcePaths =
-        possibleDepFileSourcePaths.isPresent() ?
-            ImmutableSet.copyOf(possibleDepFileSourcePaths.get()) :
-            ImmutableSet.of();
+    // TODO(jkeljo): Make this use possibleDepFileSourcePaths all the time instead of being Optional
+    Optional<ImmutableSet<SourcePath>> possiblePaths =
+        makeHashSet(rule.getPossibleInputSourcePaths());
+    Predicate<SourcePath> interestingPathPredicate = rule.getExistenceOfInterestPredicate();
 
     ImmutableSet<DependencyFileEntry> depFileEntriesSet = ImmutableSet.copyOf(depFileEntries);
 
     final ImmutableSet.Builder<SourcePath> depFileSourcePathsBuilder = ImmutableSet.builder();
     final ImmutableSet.Builder<DependencyFileEntry> filesAccountedFor = ImmutableSet.builder();
-    final ImmutableSet.Builder<String> metadataFilenamesBuilder =
-        ImmutableSortedSet.naturalOrder();
 
-    // Each existing input path falls into one of three categories:
-    // 1) It's not covered by dep files, so we need to consider it part of the rule key
-    // 2) It's covered by dep files and present in the dep file, so we consider it
-    //    part of the rule key
-    // 3) It's covered by dep files but not present in the dep file, so we don't include it in
-    //    the rule key (the benefit of dep file support is that lots of things fall in this
-    //    category, so we can avoid rebuilds that would have happened with input-based rule keys)
+    // Each existing input path falls into one of four categories:
+    // 1) It's not covered by dep files, so we need to consider it part of the rule key.
+    // 2) It's covered by dep files and present in the dep file, so we consider it part of the key.
+    // 3) It's covered by dep files but not present in the dep file, however the existence is of
+    //    interest, so we need to consider its path as part of the rule key.
+    // 4) It's covered by dep files but not present in the dep file nor is existence of interest,
+    //    so we don't include it in the rule key (the benefit of dep file support is based on the
+    //    premise that lots of things fall in this category, so we can avoid rebuilds that would
+    //    have happened with input-based rule keys)
+    Iterable<SourcePath> inputsSoFar = builder.getIterableInputsSoFar();
     for (SourcePath input : inputsSoFar) {
-      if (possibleDepFileSourcePaths.isPresent() && !fastPossibleSourcePaths.contains(input)) {
+      if (possiblePaths.isPresent() && !possiblePaths.get().contains(input)) {
         // If this path is not a dep file path, then add it to the builder directly.
         // Note that if {@code possibleDepFileSourcePaths} is not present, we treat
         // all the input files as covered by dep file, so we'll never end up here!
         builder.setSourcePathDirectly(input);
-
       } else {
         // If this input path is covered by the dep paths, check to see if it was declared
         // as a real dependency by the dep file entries
@@ -214,10 +203,8 @@ public final class DefaultDependencyFileRuleKeyFactory
           builder.setSourcePathDirectly(input);
           depFileSourcePathsBuilder.add(input);
           filesAccountedFor.add(entry);
-        }
-        Optional<Path> pathWithinArchive = entry.pathWithinArchive();
-        if (pathWithinArchive.isPresent() && pathWithinArchive.get().startsWith(METADATA_DIR)) {
-          metadataFilenamesBuilder.add(input.toString());
+        } else if (interestingPathPredicate.test(input)) {
+          builder.setNonHashingSourcePath(input);
         }
       }
     }
@@ -235,14 +222,6 @@ public final class DefaultDependencyFileRuleKeyFactory
               rule.getBuildTarget(),
               Joiner.on(',').join(filesUnaccountedFor)));
     }
-
-    // Annotation processors might enumerate all files under a certain path and then generate
-    // code based on that list (without actually reading the files), making the list of files
-    // itself a used dependency that must be part of the dependency-based key. We don't
-    // currently have the instrumentation to detect such enumeration perfectly, but annotation
-    // processors are most commonly looking for files under META-INF, so as a stopgap we add
-    // the listing of META-INF to the rule key.
-    builder.setReflectively("buck.dep_file_metadata_list", metadataFilenamesBuilder.build());
     return new Pair<>(builder.build(), depFileSourcePathsBuilder.build());
   }
 
@@ -253,43 +232,30 @@ public final class DefaultDependencyFileRuleKeyFactory
     Builder builder = newInstance(rule);
     builder.setReflectively("buck.key_type", "manifest");
 
+    Optional<ImmutableSet<SourcePath>> possiblePaths =
+        makeHashSet(rule.getPossibleInputSourcePaths());
+    Predicate<SourcePath> interestingPathPredicate = rule.getExistenceOfInterestPredicate();
+
     ImmutableSet<SourcePath> inputs = ImmutableSet.copyOf(builder.getIterableInputsSoFar());
-    Optional<ImmutableSet<SourcePath>> possibleDepFileSourcePaths =
-        rule.getPossibleInputSourcePaths();
-
-    final ImmutableSet<SourcePath> depFileInputs;
-    if (possibleDepFileSourcePaths.isPresent()) {
-      // possibleDepFileSourcePaths is an ImmutableSortedSet which implements contains() via
-      // binary search rather than via hashing. Thus taking the intersection/difference
-      // is O(n*log(n)). Here, we make a hash-based copy of the set, so that intersection
-      // will be reduced to O(N).
-      ImmutableSet<SourcePath> possibleDepFileSourcePathsUnsorted =
-          ImmutableSet.copyOf(possibleDepFileSourcePaths.get());
-      Sets.SetView<SourcePath> nonDepFileInputs = Sets.difference(
-          inputs,
-          possibleDepFileSourcePathsUnsorted);
-
-      for (SourcePath input : nonDepFileInputs) {
+    ImmutableSet.Builder<SourcePath> depFileInputs = ImmutableSet.builder();
+    for (SourcePath input : inputs) {
+      if (possiblePaths.isPresent() && !possiblePaths.get().contains(input)) {
         builder.setSourcePathDirectly(input);
+      } else {
+        depFileInputs.add(input);
+        if (interestingPathPredicate.test(input)) {
+          builder.setNonHashingSourcePath(input);
+        }
       }
-
-      depFileInputs = ImmutableSet.copyOf(Sets.intersection(
-          inputs,
-          possibleDepFileSourcePathsUnsorted));
-    } else {
-      // If not present, we treat all the input files as covered by dep file.
-      depFileInputs = inputs;
     }
-    // If an input path representing a metadata file that might be read by an annotation processor
-    // has changed, we cannot use the dep-file based rule key, so we ensure the list of metadata
-    // files are added to the builder directly.
-    ImmutableSortedSet<String> metadataSourcePaths = depFileInputs.stream()
-        .filter(path -> path instanceof ArchiveMemberSourcePath)
-        .filter(path -> ((ArchiveMemberSourcePath) path).getMemberPath().startsWith(METADATA_DIR))
-        .map(SourcePath::toString)
-        .collect(MoreCollectors.toImmutableSortedSet());
-    builder.setReflectively("buck.dep_file_metadata_list", metadataSourcePaths);
-    return new Pair<>(builder.build(), depFileInputs);
+    return new Pair<>(builder.build(), depFileInputs.build());
+  }
+
+  /**
+   * Converts a sorted set to a hash set which allows constant time look-ups (instead of log n).
+   */
+  private static <T> Optional<ImmutableSet<T>> makeHashSet(Optional<ImmutableSet<T>> set) {
+    return set.map(s -> ImmutableSet.copyOf(s));
   }
 
 }

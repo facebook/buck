@@ -42,6 +42,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 /**
  * Rule to generate a precompiled header from an existing header.
@@ -158,6 +159,11 @@ public class CxxPrecompiledHeader
   @Override
   public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
     return preprocessorDelegate.getPossibleInputSourcePaths();
+  }
+
+  @Override
+  public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+    return (SourcePath path) -> false;
   }
 
   @Override

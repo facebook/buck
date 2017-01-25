@@ -96,6 +96,7 @@ public class FakeDepFileBuildRule
     return possibleInputPaths;
   }
 
+  @Override
   public Predicate<SourcePath> getExistenceOfInterestPredicate() {
     return (SourcePath path) -> interestingInputPaths.contains(path);
   }

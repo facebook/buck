@@ -28,6 +28,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
@@ -70,6 +71,7 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
@@ -97,6 +99,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     SupportsInputBasedRuleKey, SupportsDependencyFileRuleKey, JavaLibraryWithTests {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
+  private static final Path METADATA_DIR = Paths.get("META-INF");
 
   @AddToRuleKey
   private final ImmutableSortedSet<SourcePath> srcs;
@@ -616,6 +619,20 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   @Override
   public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
     return Optional.of(abiClasspath.getArchiveMembers(getResolver()));
+  }
+
+  @Override
+  public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+    // Annotation processors might enumerate all files under a certain path and then generate
+    // code based on that list (without actually reading the files), making the list of files
+    // itself a used dependency that must be part of the dependency-based key. We don't
+    // currently have the instrumentation to detect such enumeration perfectly, but annotation
+    // processors are most commonly looking for files under META-INF, so as a stopgap we add
+    // the listing of META-INF to the rule key.
+    return (SourcePath path) ->
+        (path instanceof ArchiveMemberSourcePath) &&
+            getResolver().getRelativeArchiveMemberPath(path)
+                .getMemberPath().startsWith(METADATA_DIR);
   }
 
   @Override

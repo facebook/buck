@@ -137,6 +137,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -1569,6 +1570,11 @@ public class CachingBuildEngineTest {
             }
 
             @Override
+            public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+              return (SourcePath path) -> false;
+            }
+
+            @Override
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
               return ImmutableList.of(new PathSourcePath(filesystem, input));
             }
@@ -1650,6 +1656,10 @@ public class CachingBuildEngineTest {
               return Optional.empty();
             }
             @Override
+            public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+              return (SourcePath path) -> false;
+            }
+            @Override
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
               return ImmutableList.of(new PathSourcePath(filesystem, input));
             }
@@ -1720,6 +1730,10 @@ public class CachingBuildEngineTest {
             @Override
             public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
               return Optional.empty();
+            }
+            @Override
+            public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+              return (SourcePath path) -> false;
             }
             @Override
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
@@ -1794,6 +1808,10 @@ public class CachingBuildEngineTest {
             @Override
             public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
               return Optional.of(inputsBefore);
+            }
+            @Override
+            public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+              return (SourcePath path) -> false;
             }
             @Override
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
@@ -1882,6 +1900,10 @@ public class CachingBuildEngineTest {
               return Optional.empty();
             }
             @Override
+            public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+              return (SourcePath path) -> false;
+            }
+            @Override
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
               return ImmutableList.of();
             }
@@ -1958,6 +1980,10 @@ public class CachingBuildEngineTest {
             @Override
             public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
               return Optional.empty();
+            }
+            @Override
+            public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+              return (SourcePath path) -> false;
             }
             @Override
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
@@ -2095,6 +2121,10 @@ public class CachingBuildEngineTest {
               return Optional.of(ImmutableSet.of(path));
             }
             @Override
+            public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+              return (SourcePath path) -> false;
+            }
+            @Override
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
               return ImmutableList.of(path);
             }
@@ -2197,6 +2227,10 @@ public class CachingBuildEngineTest {
             @Override
             public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
               return Optional.empty();
+            }
+            @Override
+            public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+              return (SourcePath path) -> false;
             }
             @Override
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
@@ -2316,6 +2350,10 @@ public class CachingBuildEngineTest {
               return Optional.empty();
             }
             @Override
+            public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+              return (SourcePath path) -> false;
+            }
+            @Override
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
               return ImmutableList.of(new PathSourcePath(filesystem, input));
             }
@@ -2423,6 +2461,10 @@ public class CachingBuildEngineTest {
             @Override
             public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
               return Optional.empty();
+            }
+            @Override
+            public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+              return (SourcePath path) -> false;
             }
             @Override
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
@@ -2537,6 +2579,11 @@ public class CachingBuildEngineTest {
       @Override
       public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
         return Optional.empty();
+      }
+
+      @Override
+      public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+        return (SourcePath path) -> false;
       }
 
       @Override

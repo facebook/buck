@@ -43,6 +43,7 @@ import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 /**
  * A build rule which preprocesses and/or compiles a C/C++ source in a single step.
@@ -337,8 +338,12 @@ public class CxxPreprocessAndCompile
     if (preprocessDelegate.isPresent()) {
       return preprocessDelegate.get().getPossibleInputSourcePaths();
     }
-
     return Optional.empty();
+  }
+
+  @Override
+  public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+    return (SourcePath path) -> false;
   }
 
   @Override

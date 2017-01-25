@@ -41,6 +41,7 @@ import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 /**
  * Generate the CFG for a source file
@@ -162,6 +163,11 @@ public class CxxInferCapture
   @Override
   public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
     return preprocessorDelegate.getPossibleInputSourcePaths();
+  }
+
+  @Override
+  public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+    return (SourcePath path) -> false;
   }
 
   @Override

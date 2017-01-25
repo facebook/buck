@@ -358,7 +358,16 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   }
 
   protected RuleKeyBuilder<RULE_KEY> setNonHashingSourcePath(SourcePath sourcePath) {
-    hasher.putNonHashingPath(resolver.getRelativePath(sourcePath).toString());
+    if (sourcePath instanceof BuildTargetSourcePath) {
+      hasher.putNonHashingPath(resolver.getRelativePath(sourcePath).toString());
+    } else if (sourcePath instanceof PathSourcePath) {
+      hasher.putNonHashingPath(resolver.getRelativePath(sourcePath).toString());
+    } else if (sourcePath instanceof ArchiveMemberSourcePath) {
+      hasher.putNonHashingPath(resolver.getRelativeArchiveMemberPath(sourcePath).toString());
+    } else {
+      throw new UnsupportedOperationException(
+          "Unrecognized SourcePath implementation: " + sourcePath.getClass());
+    }
     return this;
   }
 
