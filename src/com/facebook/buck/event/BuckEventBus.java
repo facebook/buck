@@ -123,11 +123,6 @@ public class BuckEventBus implements Closeable, com.facebook.buck.event.EventBus
     return clock;
   }
 
-  @VisibleForTesting
-  Supplier<Long> getThreadIdSupplier() {
-    return threadIdSupplier;
-  }
-
   /**
    * An id that every event posted to this event bus will share. For long-running processes, like
    * the daemon, the build id makes it possible to distinguish when events come from different

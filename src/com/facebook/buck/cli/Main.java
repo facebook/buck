@@ -1183,8 +1183,7 @@ public final class Main {
                       new PrintStreamProcessExecutorFactory(),
                       vcBuckConfig,
                       buckConfig.getEnvironment()),
-                  buildEventBus
-              );
+                  buildEventBus);
 
               vcStatsGenerator.generateStatsAsync();
             }
