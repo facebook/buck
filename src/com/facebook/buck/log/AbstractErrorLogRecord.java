@@ -103,7 +103,7 @@ abstract class AbstractErrorLogRecord {
    * present, categorizes on the class + method that threw it. If no exception
    * is found, categorizes on the logger name and the beginning of the message.
    */
-  @Value.Derived
+  @Value.Default
   public String getCategory() {
     String logger = "";
     if (getRecord().getLoggerName() != null) {

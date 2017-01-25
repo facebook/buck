@@ -211,6 +211,40 @@ class BuckTool(object):
             return buck_exit_code
 
 
+    def _truncate_logs_pretty(self, logs):
+        NUMBER_OF_LINES_BEFORE = 100
+        NUMBER_OF_LINES_AFTER = 100
+        if len(logs) <= NUMBER_OF_LINES_BEFORE + NUMBER_OF_LINES_AFTER:
+            return logs
+        new_logs = logs[:NUMBER_OF_LINES_BEFORE]
+        new_logs.append('...<truncated>...')
+        new_logs.extend(logs[-NUMBER_OF_LINES_AFTER:])
+        return new_logs
+
+    def _generate_log_entry(self, exit_code, message, logs_array):
+        import socket
+        import getpass
+        traits = {
+            "severity": "SEVERE",
+            "logger": "com.facebook.buck.python.buck_tool.py",
+            "buckGitCommit": self._get_buck_version_uid(),
+            "os": platform.system(),
+            "osVersion": platform.release(),
+            "user": getpass.getuser(),
+            "hostname": socket.gethostname(),
+            "isSuperConsoleEnabled": "false",
+            "isDaemon": "false",
+        }
+        entry = {
+          "logs": logs_array,
+          "traits": traits,
+          "message": message,
+          "category": message,
+          "time": int(time.time()),
+          "logger": "com.facebook.buck.python.buck_tool.py",
+        }
+        return entry
+
     def launch_buckd(self, buck_version_uid=None):
         with Tracing('BuckTool.launch_buckd'):
             self._setup_watchman_watch()
