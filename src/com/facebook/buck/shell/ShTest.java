@@ -134,7 +134,7 @@ public class ShTest
     Step runTest =
         new RunShTestAndRecordResultStep(
             getProjectFilesystem(),
-            getResolver().getAbsolutePath(test),
+            pathResolver.getAbsolutePath(test),
             Arg.stringify(args),
             Arg.stringify(env),
             testRuleTimeoutMs,
@@ -222,7 +222,7 @@ public class ShTest
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
         .setType("custom")
-        .addCommand(getResolver().getAbsolutePath(test).toString())
+        .addCommand(pathResolver.getAbsolutePath(test).toString())
         .addAllCommand(Arg.stringify(args))
         .setEnv(Arg.stringify(env))
         .addAllLabels(getLabels())
