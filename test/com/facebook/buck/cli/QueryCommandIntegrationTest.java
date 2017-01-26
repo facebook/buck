@@ -25,10 +25,12 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -280,15 +282,18 @@ public class QueryCommandIntegrationTest {
         this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "query",
-        "owner('example/1.txt')",
-        "+",
-        "owner('example/2.txt')");
-
-    result.assertFailure();
-    assertThat(result.getStderr(), containsString("format arguments"));
-    assertThat(result.getStderr(), containsString("%s"));
+    try {
+      workspace.runBuckCommand(
+          "query",
+          "owner('example/1.txt')",
+          "+",
+          "owner('example/2.txt')");
+    } catch (HumanReadableException e) {
+      assertThat(e.getMessage(), containsString("format arguments"));
+      assertThat(e.getMessage(), containsString("%s"));
+      return;
+    }
+    Assert.fail("not reached");
   }
 
   @Test
