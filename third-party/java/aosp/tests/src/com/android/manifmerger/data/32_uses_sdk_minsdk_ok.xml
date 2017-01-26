@@ -1,0 +1,70 @@
+#
+# Test uses-sdk: it's ok for a library to have a smaller minSdkVersion than the main manifest.
+#
+
+@main
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.app1"
+    android:versionCode="100"
+    android:versionName="1.0.0">
+
+    <uses-sdk android:minSdkVersion="14" />
+
+    <application />
+
+</manifest>
+
+
+@lib1
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib1">
+
+    <!-- it's ok for a library to have a smaller minSdkVersion than the main manifest. -->
+    <uses-sdk android:minSdkVersion="4" />
+
+</manifest>
+
+
+@lib2
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib2">
+
+    <uses-sdk android:minSdkVersion="10" />
+
+</manifest>
+
+
+@lib3
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib3">
+
+    <uses-sdk android:minSdkVersion="11" />
+
+</manifest>
+
+
+@result
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.app1"
+    android:versionCode="100"
+    android:versionName="1.0.0">
+
+    <uses-sdk android:minSdkVersion="14" />
+
+    <application />
+
+</manifest>
+
+
+@errors
+

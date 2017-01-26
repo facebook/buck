@@ -17,17 +17,14 @@
 package com.android.common.utils;
 
 import com.android.common.SdkConstants;
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
+import com.android.common.annotations.NonNull;
 
 import java.io.PrintStream;
-import java.util.Formatter;
 
 
 /**
- * <p>
  * An implementation of {@link ILogger} that prints to {@link System#out} and {@link System#err}.
- * </p>
+ * <p/>
  *
  */
 public class StdLogger implements ILogger {
@@ -48,7 +45,7 @@ public class StdLogger implements ILogger {
     }
 
     /**
-     * Creates the {@link StdLogger} with a given log {@link Level}.
+     * Creates the {@link com.android.common.utils.StdLogger} with a given log {@link com.android.common.utils.StdLogger.Level}.
      * @param level the log Level.
      */
     public StdLogger(@NonNull Level level) {
@@ -60,7 +57,7 @@ public class StdLogger implements ILogger {
     }
 
     /**
-     * Returns the logger's log {@link Level}.
+     * Returns the logger's log {@link com.android.common.utils.StdLogger.Level}.
      * @return the log level.
      */
     public Level getLevel() {
@@ -68,26 +65,23 @@ public class StdLogger implements ILogger {
     }
 
     /**
-     * <p>
      * Prints an error message.
-     * </p>
-     * <p>
+     * <p/>
      * The message will be tagged with "Error" on the output so the caller does not
      * need to put such a prefix in the format string.
-     * </p>
-     * <p>
+     * <p/>
      * The output is done on {@link System#err}.
-     * </p>
-     * This is always displayed, independent of the logging {@link Level}.
+     * <p/>
+     * This is always displayed, independent of the logging {@link com.android.common.utils.StdLogger.Level}.
      *
      * @param t is an optional {@link Throwable} or {@link Exception}. If non-null, it's
      *          message will be printed out.
      * @param errorFormat is an optional error format. If non-null, it will be printed
-     *          using a {@link Formatter} with the provided arguments.
+     *          using a {@link java.util.Formatter} with the provided arguments.
      * @param args provides the arguments for errorFormat.
      */
     @Override
-    public void error(@Nullable Throwable t, @Nullable String errorFormat, Object... args) {
+    public void error(Throwable t, String errorFormat, Object... args) {
         if (errorFormat != null) {
             String msg = String.format("Error: " + errorFormat, args);
 
@@ -99,20 +93,16 @@ public class StdLogger implements ILogger {
     }
 
     /**
-     * <p>
      * Prints a warning message.
-     * </p>
-     * <p>
+     * <p/>
      * The message will be tagged with "Warning" on the output so the caller does not
      * need to put such a prefix in the format string.
-     * </p>
-     * <p>
+     * <p/>
      * The output is done on {@link System#out}.
-     * </p>
-     * <p>
-     * This is displayed only if the logging {@link Level} is {@link Level#WARNING} or higher.
+     * <p/>
+     * This is displayed only if the logging {@link com.android.common.utils.StdLogger.Level} is {@link com.android.common.utils.StdLogger.Level#WARNING} or higher.
      *
-     * @param warningFormat is a string format to be used with a {@link Formatter}. Cannot be null.
+     * @param warningFormat is a string format to be used with a {@link java.util.Formatter}. Cannot be null.
      * @param args provides the arguments for warningFormat.
      */
     @Override
@@ -127,16 +117,13 @@ public class StdLogger implements ILogger {
     }
 
     /**
-     * <p>
      * Prints an info message.
-     * </p>
-     * <p>
+     * <p/>
      * The output is done on {@link System#out}.
-     * </p>
-     * <p>
-     * This is displayed only if the logging {@link Level} is {@link Level#INFO} or higher.
+     * <p/>
+     * This is displayed only if the logging {@link com.android.common.utils.StdLogger.Level} is {@link com.android.common.utils.StdLogger.Level#INFO} or higher.
      *
-     * @param msgFormat is a string format to be used with a {@link Formatter}. Cannot be null.
+     * @param msgFormat is a string format to be used with a {@link java.util.Formatter}. Cannot be null.
      * @param args provides the arguments for msgFormat.
      */
     @Override
@@ -151,16 +138,13 @@ public class StdLogger implements ILogger {
     }
 
     /**
-     * <p>
      * Prints a verbose message.
-     * </p>
-     * <p>
+     * <p/>
      * The output is done on {@link System#out}.
-     * </p>
-     * <p>
-     * This is displayed only if the logging {@link Level} is {@link Level#VERBOSE} or higher.
-     * </p>
-     * @param msgFormat is a string format to be used with a {@link Formatter}. Cannot be null.
+     * <p/>
+     * This is displayed only if the logging {@link com.android.common.utils.StdLogger.Level} is {@link com.android.common.utils.StdLogger.Level#VERBOSE} or higher.
+     *
+     * @param msgFormat is a string format to be used with a {@link java.util.Formatter}. Cannot be null.
      * @param args provides the arguments for msgFormat.
      */
     @Override

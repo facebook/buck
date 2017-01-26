@@ -320,8 +320,8 @@
     <mkdir dir="${aosp.classes.dir}" />
     <ecj srcdir="${aosp.src.dir}" destdir="${aosp.classes.dir}" gensrcdir="${aosp.gensrc.dir}">
       <ecj-params>
-        <!-- suppress ManifestMerger2 warnings -->
-        <compilerarg value="-err:-all"/>
+        <!-- ManifestMerger.java has redundant null checks -->
+        <compilerarg value="-err:-null" />
       </ecj-params>
     </ecj>
   </target>

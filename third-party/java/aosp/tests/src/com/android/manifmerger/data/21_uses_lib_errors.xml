@@ -1,0 +1,202 @@
+#
+# Test merge of uses-library:
+# - Merge is OK if destination already has one with the same @name.
+# - required defaults to "true"
+# - when merging, a required=true (explicit or implicit) overwrites a required=false.
+#
+
+@fails
+
+@main
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.app1"
+    android:versionCode="100"
+    android:versionName="1.0.0">
+
+    <application
+        android:label="@string/app_name"
+        android:icon="@drawable/app_icon"
+        android:backupAgent="com.example.app.BackupAgentClass"
+        android:restoreAnyVersion="true"
+        android:allowBackup="true"
+        android:killAfterRestore="true"
+        android:name="com.example.TheApp" >
+
+        <!-- A library that is implicitly marked as required=true -->
+        <uses-library
+            android:name="com.example.SomeLibrary0_DefaultTrue" />
+
+        <!-- A library that is implicitly marked as required=true -->
+        <uses-library
+            android:name="com.example.SomeLibrary1_DefaultTrue" />
+
+        <!-- A library that is explicitly marked as required=true -->
+        <uses-library
+            android:name="com.example.SomeLibrary2_RequiredTrue"
+            android:required="booh!" />
+
+        <!-- A library that is explicitly marked as required=false -->
+        <uses-library
+            android:name="com.example.SomeLibrary3_RequiredFalse"
+            android:required="false" />
+
+        <!-- A library that is explicitly marked as required=false. Duplicated. -->
+        <uses-library
+            android:name="com.example.SomeLibrary3_RequiredFalse"
+            android:required="false" />
+
+        <!-- A library that is explicitly marked as required=false -->
+        <uses-library
+            android:name="com.example.SomeLibrary4_RequiredFalse"
+            android:required="false" />
+
+    </application>
+
+</manifest>
+
+
+@lib1
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib1">
+
+    <application android:label="@string/lib_name1" >
+
+        <!-- Error: android:name attribute is missing. -->
+        <uses-library />
+        <uses-library android:required="false" />
+        <uses-library android:required="true" />
+
+        <!-- Same as 2 from main. Warning/ignore because dest required isn't true/false. -->
+        <uses-library
+            android:name="com.example.SomeLibrary2_RequiredTrue"
+            android:required="true" />
+
+        <!-- Same as 3 from main. Warning because destination as a duplicate. -->
+        <uses-library
+            android:name="com.example.SomeLibrary3_RequiredFalse"
+            android:required="false" />
+
+        <!-- Same as 4 from main. Warning because required isn't true or false. -->
+        <uses-library
+            android:name="com.example.SomeLibrary4_RequiredFalse"
+            android:required="foo" />
+
+        <!-- Add a new lib that is implicitly marked as required=true -->
+        <uses-library
+            android:name="com.example.SomeLibrary5_RequiredTrue"
+            android:required="true" />
+
+        <!-- Add a new lib that is implicitly marked as required=false -->
+        <uses-library
+            android:name="com.example.SomeLibrary6_RequiredFalse"
+            android:required="false" />
+
+    </application>
+</manifest>
+
+
+@lib2
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib2">
+
+    <application android:label="@string/lib_name1" >
+
+        <!-- Overrides 3, changing it from required=false to true -->
+        <uses-library
+            android:name="com.example.SomeLibrary3_RequiredFalse"
+            android:required="true" />
+
+        <!-- Same as 4 from main -->
+        <uses-library
+            android:name="com.example.SomeLibrary4_RequiredFalse"
+            android:required="false" />
+
+        <!-- Overrides 6, but implicitly declaring required=True -->
+        <uses-library
+            android:name="com.example.SomeLibrary6_RequiredFalse"  />
+
+    </application>
+</manifest>
+
+
+
+@result
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.app1"
+    android:versionCode="100"
+    android:versionName="1.0.0">
+
+    <application
+        android:label="@string/app_name"
+        android:icon="@drawable/app_icon"
+        android:backupAgent="com.example.app.BackupAgentClass"
+        android:restoreAnyVersion="true"
+        android:allowBackup="true"
+        android:killAfterRestore="true"
+        android:name="com.example.TheApp" >
+
+        <!-- A library that is implicitly marked as required=true -->
+        <uses-library
+            android:name="com.example.SomeLibrary0_DefaultTrue" />
+
+        <!-- A library that is implicitly marked as required=true -->
+        <uses-library
+            android:name="com.example.SomeLibrary1_DefaultTrue" />
+
+        <!-- A library that is explicitly marked as required=true -->
+        <uses-library
+            android:name="com.example.SomeLibrary2_RequiredTrue"
+            android:required="booh!" />
+
+        <!-- A library that is explicitly marked as required=false -->
+# lib1 keeps it required=false but lib2 makes it switch to required=true
+        <uses-library
+            android:name="com.example.SomeLibrary3_RequiredFalse"
+            android:required="true" />
+
+        <!-- A library that is explicitly marked as required=false. Duplicated. -->
+        <uses-library
+            android:name="com.example.SomeLibrary3_RequiredFalse"
+            android:required="true" />
+
+        <!-- A library that is explicitly marked as required=false -->
+        <uses-library
+            android:name="com.example.SomeLibrary4_RequiredFalse"
+            android:required="false" />
+
+# new from lib1
+        <!-- Add a new lib that is implicitly marked as required=true -->
+        <uses-library
+            android:name="com.example.SomeLibrary5_RequiredTrue"
+            android:required="true" />
+
+# new from lib1, but lib2 makes it switch to required=true
+        <!-- Add a new lib that is implicitly marked as required=false -->
+        <uses-library
+            android:name="com.example.SomeLibrary6_RequiredFalse"
+            android:required="true" />
+
+    </application>
+
+</manifest>
+
+
+@errors
+
+E [ManifestMergerTest1_lib1.xml:6] Undefined 'name' attribute in /manifest/application/uses-library.
+E [ManifestMergerTest1_lib1.xml:7] Undefined 'name' attribute in /manifest/application/uses-library.
+E [ManifestMergerTest1_lib1.xml:8] Undefined 'name' attribute in /manifest/application/uses-library.
+W [ManifestMergerTest0_main.xml:12] Invalid attribute 'required' in /manifest/application/uses-library[@name=com.example.SomeLibrary2_RequiredTrue] element:
+Expected 'true' or 'false' but found 'booh!'.
+W [ManifestMergerTest0_main.xml:15] Manifest has more than one /manifest/application/uses-library[@name=com.example.SomeLibrary3_RequiredFalse] element.
+W [ManifestMergerTest1_lib1.xml:17] Invalid attribute 'required' in /manifest/application/uses-library[@name=com.example.SomeLibrary4_RequiredFalse] element:
+Expected 'true' or 'false' but found 'foo'.
+W [ManifestMergerTest0_main.xml:15] Manifest has more than one /manifest/application/uses-library[@name=com.example.SomeLibrary3_RequiredFalse] element.
