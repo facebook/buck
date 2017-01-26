@@ -64,7 +64,6 @@ public class CxxPreprocessAndCompileStep implements Step {
   private final HeaderPathNormalizer headerPathNormalizer;
   private final DebugPathSanitizer compilerSanitizer;
   private final DebugPathSanitizer assemblerSanitizer;
-  private final HeaderVerification headerVerification;
   private final Compiler compiler;
 
   /**
@@ -88,7 +87,6 @@ public class CxxPreprocessAndCompileStep implements Step {
       HeaderPathNormalizer headerPathNormalizer,
       DebugPathSanitizer compilerSanitizer,
       DebugPathSanitizer assemblerSanitizer,
-      HeaderVerification headerVerification,
       Path scratchDir,
       boolean useArgfile,
       Compiler compiler) {
@@ -106,7 +104,6 @@ public class CxxPreprocessAndCompileStep implements Step {
     this.headerPathNormalizer = headerPathNormalizer;
     this.compilerSanitizer = compilerSanitizer;
     this.assemblerSanitizer = assemblerSanitizer;
-    this.headerVerification = headerVerification;
     this.scratchDir = scratchDir;
     this.useArgfile = useArgfile;
     this.compiler = compiler;
@@ -152,10 +149,6 @@ public class CxxPreprocessAndCompileStep implements Step {
         .setEnvironment(env);
   }
 
-  private Path getDepTemp() {
-    return filesystem.resolve(scratchDir).resolve("dep.tmp");
-  }
-
   private ImmutableList<String> getDepFileArgs(Path depFile) {
     return compiler.outputDependenciesArgs(depFile.toString());
   }
@@ -179,10 +172,7 @@ public class CxxPreprocessAndCompileStep implements Step {
         .addAll(getLanguageArgs(inputLanguage))
         .addAll(getSanitizer().getCompilationFlags())
         .add("-c")
-        .addAll(
-            preprocessable ?
-                getDepFileArgs(getDepTemp()) :
-                ImmutableList.of())
+        .addAll(preprocessable ? getDepFileArgs(depFile) : ImmutableList.of())
         .add(inputFileName)
         .addAll(compiler.outputArgs(output.toString()))
         .build();
@@ -194,7 +184,7 @@ public class CxxPreprocessAndCompileStep implements Step {
         // Using x-header language type directs the compiler to generate a PCH file.
         .addAll(getLanguageArgs(inputType.getPrecompiledHeaderLanguage().get()))
         // PCH file generation can also output dep files.
-        .addAll(getDepFileArgs(getDepTemp()))
+        .addAll(getDepFileArgs(depFile))
         .add(input.toString())
         .add("-o", output.toString())
         .build();
@@ -296,19 +286,6 @@ public class CxxPreprocessAndCompileStep implements Step {
       LOG.debug("%s %s -> %s", operation.toString().toLowerCase(), input, output);
 
       int exitCode = executeCompilation(context);
-
-      if (operation.isPreprocess() && exitCode == 0 && compiler.isDependencyFileSupported()) {
-        exitCode =
-            Depfiles.parseAndWriteBuckCompatibleDepfile(
-                context,
-                filesystem,
-                headerPathNormalizer,
-                headerVerification,
-                getDepTemp(),
-                depFile,
-                input,
-                output);
-      }
 
       // If the compilation completed successfully and we didn't effect debug-info normalization
       // through #line directive modification, perform the in-place update of the compilation per

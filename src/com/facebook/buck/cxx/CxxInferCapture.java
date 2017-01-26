@@ -33,6 +33,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.Escaper;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -122,8 +123,6 @@ public class CxxInferCapture
                 getProjectFilesystem().getRootPath(),
                 frontendCommand,
                 ImmutableMap.of()))
-        .add(new ParseAndWriteBuckCompatibleDepfileStep(
-            getTempDepFilePath(), getDepFilePath(), inputRelativePath))
         .build();
   }
 
@@ -173,10 +172,25 @@ public class CxxInferCapture
   @Override
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context)
       throws IOException {
+
+    ImmutableList<Path> depFileLines;
+    try {
+      depFileLines = Depfiles.parseAndOutputBuckCompatibleDepfile(
+          context.getEventBus(),
+          getProjectFilesystem(),
+          preprocessorDelegate.getHeaderPathNormalizer(),
+          preprocessorDelegate.getHeaderVerification(),
+          getDepFilePath(),
+          context.getSourcePathResolver().getRelativePath(input),
+          output);
+    } catch (Depfiles.HeaderVerificationException e) {
+      throw new HumanReadableException(e);
+    }
+
     ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
 
     // include all inputs coming from the preprocessor tool.
-    inputs.addAll(preprocessorDelegate.getInputsAfterBuildingLocally(readDepFileLines()));
+    inputs.addAll(preprocessorDelegate.getInputsAfterBuildingLocally(depFileLines));
 
     // Add the input.
     inputs.add(input);
@@ -191,54 +205,6 @@ public class CxxInferCapture
 
   private Path getDepFilePath() {
     return output.getFileSystem().getPath(output.toString() + ".dep");
-  }
-
-  private Path getTempDepFilePath() {
-    return output.getFileSystem().getPath(getDepFilePath().toString() + ".tmp.dep");
-  }
-
-  private ImmutableList<String> readDepFileLines() throws IOException {
-    return ImmutableList.copyOf(getProjectFilesystem().readLines(getDepFilePath()));
-  }
-
-
-  private class ParseAndWriteBuckCompatibleDepfileStep implements Step {
-
-    private Path sourceDepfile;
-    private Path destDepfile;
-    private Path inputRelativePath;
-
-    public ParseAndWriteBuckCompatibleDepfileStep(
-        Path sourceDepfile, Path destDepfile, Path inputRelativePath) {
-      this.sourceDepfile = sourceDepfile;
-      this.destDepfile = destDepfile;
-      this.inputRelativePath = inputRelativePath;
-    }
-
-    @Override
-    public StepExecutionResult execute(ExecutionContext context)
-        throws IOException, InterruptedException {
-      Depfiles.parseAndWriteBuckCompatibleDepfile(
-          context,
-          getProjectFilesystem(),
-          preprocessorDelegate.getHeaderPathNormalizer(),
-          preprocessorDelegate.getHeaderVerification(),
-          sourceDepfile,
-          destDepfile,
-          inputRelativePath,
-          output);
-      return StepExecutionResult.SUCCESS;
-    }
-
-    @Override
-    public String getShortName() {
-      return "depfile-parse";
-    }
-
-    @Override
-    public String getDescription(ExecutionContext context) {
-      return "Parse depfiles and write them in a Buck compatible format";
-    }
   }
 
   private class WriteArgFileStep implements Step {
@@ -271,7 +237,7 @@ public class CxxInferCapture
     private ImmutableList<String> getCompilerArgs() {
       ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
       return commandBuilder
-          .add("-MD", "-MF", getTempDepFilePath().toString())
+          .add("-MD", "-MF", getDepFilePath().toString())
           .addAll(
               CxxToolFlags.concat(preprocessorFlags, getSearchPathFlags(), compilerFlags)
                   .getAllFlags())

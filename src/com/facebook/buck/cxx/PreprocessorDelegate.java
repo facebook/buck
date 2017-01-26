@@ -39,7 +39,6 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -252,7 +251,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
   /**
    * @see com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey
    */
-  public ImmutableList<SourcePath> getInputsAfterBuildingLocally(Iterable<String> depFileLines) {
+  public ImmutableList<SourcePath> getInputsAfterBuildingLocally(Iterable<Path> depFileLines) {
     ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
 
     // Add inputs that we always use.
@@ -272,10 +271,9 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
     // coming from different cells).  Favor correctness in this case and just add *all*
     // `SourcePath`s that have relative paths matching those specific in the dep file.
     HeaderPathNormalizer headerPathNormalizer = getHeaderPathNormalizer();
-    for (String line : depFileLines) {
-      Path absolutePath = Paths.get(line);
+    for (Path absolutePath : depFileLines) {
       Preconditions.checkState(absolutePath.isAbsolute());
-      inputs.add(headerPathNormalizer.getSourcePathForAbsolutePath(Paths.get(line)));
+      inputs.add(headerPathNormalizer.getSourcePathForAbsolutePath(absolutePath));
     }
 
     return inputs.build();

@@ -16,15 +16,16 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 
 import org.immutables.value.Value;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 /**
  * Tuple containing a {@link SourcePath} along with a way of retrieving dependencies for that
@@ -47,24 +48,8 @@ abstract class AbstractPrecompiledHeaderReference {
     return new BuildTargetSourcePath(getPrecompiledHeader().getBuildTarget());
   }
 
-  /**
-   * Returns a {@code Supplier} that can be invoked to read the dependency file lines.
-   *
-   * The {@code Supplier} may throw an {@code IOException} wrapped in a {@code RuntimeException} if
-   * the underlying read threw an exception.
-   *
-   * The results are only valid if the referenced rule has already been built.
-   *
-   * @return {@code Supplier} that can be invoked to read the dependency file lines.
-   */
-  @Value.Derived
-  public Supplier<ImmutableList<String>> getDepFileLines() {
-    return () -> {
-      try {
-        return getPrecompiledHeader().readDepFileLines();
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    };
+  public ImmutableList<Path> readDepFileLines(BuildContext buildContext)
+    throws IOException, Depfiles.HeaderVerificationException {
+    return getPrecompiledHeader().readDepFileLines(buildContext);
   }
 }

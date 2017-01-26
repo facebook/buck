@@ -32,6 +32,7 @@ import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -242,33 +243,32 @@ public class CxxPreprocessAndCompile
       compilerCommand = Optional.empty();
     }
 
-    // TODO(10194465): This uses relative paths where possible so as to get relative paths in
-    // the dep file
-    Path inputPath;
-    try {
-      inputPath = resolver.getRelativePath(input);
-    } catch (IllegalStateException e) {
-      inputPath = resolver.getAbsolutePath(input);
-    }
 
     return new CxxPreprocessAndCompileStep(
         getProjectFilesystem(),
         operation,
         output,
         getDepFilePath(),
-        inputPath,
+        getRelativeInputPathIfPossible(resolver),
         inputType,
         preprocessorCommand,
         compilerCommand,
         headerPathNormalizer,
         compilerSanitizer,
         assemblerSanitizer,
-        preprocessDelegate.isPresent() ?
-            preprocessDelegate.get().getHeaderVerification() :
-            HeaderVerification.of(HeaderVerification.Mode.IGNORE),
         scratchDir,
         useArgfile,
         compilerDelegate.getCompiler());
+  }
+
+  public Path getRelativeInputPathIfPossible(SourcePathResolver resolver) {
+    // TODO(10194465): This uses relative paths where possible so as to get relative paths in
+    // the dep file
+    try {
+      return resolver.getRelativePath(input);
+    } catch (IllegalStateException e) {
+      return resolver.getAbsolutePath(input);
+    }
   }
 
   @Override
@@ -353,10 +353,23 @@ public class CxxPreprocessAndCompile
 
     // If present, include all inputs coming from the preprocessor tool.
     if (preprocessDelegate.isPresent()) {
-      Iterable<String> depFileLines = readDepFileLines();
-      if (precompiledHeaderRef.isPresent()) {
-        depFileLines =
-            Iterables.concat(precompiledHeaderRef.get().getDepFileLines().get(), depFileLines);
+      Iterable<Path> depFileLines;
+      try {
+        depFileLines = Depfiles.parseAndOutputBuckCompatibleDepfile(
+            context.getEventBus(),
+            getProjectFilesystem(),
+            preprocessDelegate.get().getHeaderPathNormalizer(),
+            preprocessDelegate.get().getHeaderVerification(),
+            getDepFilePath(),
+            getRelativeInputPathIfPossible(context.getSourcePathResolver()),
+            output);
+        if (precompiledHeaderRef.isPresent()) {
+          depFileLines = Iterables.concat(
+              precompiledHeaderRef.get().readDepFileLines(context),
+              depFileLines);
+        }
+      } catch (Depfiles.HeaderVerificationException e) {
+        throw new HumanReadableException(e);
       }
       inputs.addAll(preprocessDelegate.get().getInputsAfterBuildingLocally(depFileLines));
     }
@@ -371,9 +384,4 @@ public class CxxPreprocessAndCompile
 
     return inputs.build();
   }
-
-  private ImmutableList<String> readDepFileLines() throws IOException {
-    return ImmutableList.copyOf(getProjectFilesystem().readLines(getDepFilePath()));
-  }
-
 }

@@ -31,17 +31,23 @@ import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Throwables;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 
 /**
@@ -83,6 +89,13 @@ public class CxxPrecompiledHeader
   private final SourcePath input;
   @AddToRuleKey
   private final CxxSource.Type inputType;
+
+  /**
+   * Cache the loading and processing of the depfile. This data can always be reloaded from disk, so
+   * only cache it weakly.
+   */
+  private final Cache<BuildContext, ImmutableList<Path>> depFileCache =
+      CacheBuilder.newBuilder().weakKeys().weakValues().build();
 
   private final DebugPathSanitizer compilerSanitizer;
   private final DebugPathSanitizer assemblerSanitizer;
@@ -169,10 +182,14 @@ public class CxxPrecompiledHeader
   @Override
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context)
       throws IOException {
-    return ImmutableList.<SourcePath>builder()
-        .addAll(preprocessorDelegate.getInputsAfterBuildingLocally(readDepFileLines()))
-        .add(input)
-        .build();
+    try {
+      return ImmutableList.<SourcePath>builder()
+          .addAll(preprocessorDelegate.getInputsAfterBuildingLocally(readDepFileLines(context)))
+          .add(input)
+          .build();
+    } catch (Depfiles.HeaderVerificationException e) {
+      throw new HumanReadableException(e);
+    }
   }
 
   @Override
@@ -184,8 +201,28 @@ public class CxxPrecompiledHeader
     return getSuffixedOutput(".dep");
   }
 
-  public ImmutableList<String> readDepFileLines() throws IOException {
-    return ImmutableList.copyOf(getProjectFilesystem().readLines(getDepFilePath()));
+  public ImmutableList<Path> readDepFileLines(BuildContext context)
+      throws IOException, Depfiles.HeaderVerificationException {
+    try {
+      return depFileCache.get(context, () ->
+          Depfiles.parseAndOutputBuckCompatibleDepfile(
+              context.getEventBus(),
+              getProjectFilesystem(),
+              preprocessorDelegate.getHeaderPathNormalizer(),
+              preprocessorDelegate.getHeaderVerification(),
+              getDepFilePath(),
+              // TODO(10194465): This uses relative path so as to get relative paths in the dep file
+              context.getSourcePathResolver().getRelativePath(input),
+              output));
+    } catch (ExecutionException e) {
+      // Unwrap and re-throw the loader's Exception.
+      Throwables.propagateIfInstanceOf(e.getCause(), IOException.class);
+      Throwables.propagateIfInstanceOf(e.getCause(), Depfiles.HeaderVerificationException.class);
+      throw new IllegalStateException("Unexpected cause for ExecutionException: ", e);
+    } catch (UncheckedExecutionException e) {
+      Throwables.propagateIfPossible(e.getCause());
+      throw e;
+    }
   }
 
   @VisibleForTesting
@@ -217,7 +254,6 @@ public class CxxPrecompiledHeader
         preprocessorDelegate.getHeaderPathNormalizer(),
         compilerSanitizer,
         assemblerSanitizer,
-        preprocessorDelegate.getHeaderVerification(),
         scratchDir,
         /* useArgFile*/ true,
         compilerDelegate.getCompiler());

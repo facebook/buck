@@ -200,13 +200,7 @@ public class CxxCompilationDatabaseTest {
                     "-c",
                     "-MD",
                     "-MF",
-                    fakeRoot
-                        .resolve(
-                            BuildTargets.getScratchPath(
-                                filesystem,
-                                testBuildTarget.withFlavors(ImmutableFlavor.of("compile-test.cpp")),
-                                "%s-tmp/dep.tmp"))
-                        .toString(),
+                    "test.o.dep",
                     "test.cpp",
                     "-o",
                     "test.o")));

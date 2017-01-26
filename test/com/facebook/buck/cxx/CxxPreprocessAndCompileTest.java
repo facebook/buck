@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
@@ -373,7 +374,7 @@ public class CxxPreprocessAndCompileTest {
         .add("-c")
         .add("-MD")
         .add("-MF")
-        .add(params.getProjectFilesystem().resolve(scratchDir).resolve("dep.tmp").toString())
+        .add("test.o.dep")
         .add(input.toString())
         .add("-o", output.toString())
         .build();
@@ -385,7 +386,7 @@ public class CxxPreprocessAndCompileTest {
   @Test
   public void compilerAndPreprocessorAreAlwaysReturnedFromGetInputsAfterBuildingLocally()
       throws Exception {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     SourcePath preprocessor = new PathSourcePath(filesystem, Paths.get("preprocessor"));
     Tool preprocessorTool =
@@ -403,7 +404,14 @@ public class CxxPreprocessAndCompileTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     ));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target)
+        .setProjectFilesystem(filesystem)
+        .build();
+    BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
+
+    filesystem.writeContentsToPath(
+        "test.o: " + pathResolver.getRelativePath(DEFAULT_INPUT) + " ",
+        filesystem.getPath("test.o.dep"));
 
     CxxPreprocessAndCompile cxxPreprocess =
         CxxPreprocessAndCompile.preprocessAndCompile(
@@ -432,7 +440,7 @@ public class CxxPreprocessAndCompileTest {
             CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
             Optional.empty());
     assertThat(
-        cxxPreprocess.getInputsAfterBuildingLocally(FakeBuildContext.NOOP_CONTEXT),
+        cxxPreprocess.getInputsAfterBuildingLocally(context),
         hasItem(preprocessor));
 
     CxxPreprocessAndCompile cxxCompile =
@@ -451,7 +459,7 @@ public class CxxPreprocessAndCompileTest {
             CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
             Optional.empty());
     assertThat(
-        cxxCompile.getInputsAfterBuildingLocally(FakeBuildContext.NOOP_CONTEXT),
+        cxxCompile.getInputsAfterBuildingLocally(context),
         hasItem(compiler));
   }
 

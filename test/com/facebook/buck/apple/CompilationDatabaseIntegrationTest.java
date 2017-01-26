@@ -279,6 +279,8 @@ public class CompilationDatabaseIntegrationTest {
       commandArgs.add(sdkRoot + framework);
     }
 
+    String output =
+        BuildTargets.getGenPath(filesystem, outputTarget, "%s").resolve(outputPath).toString();
     commandArgs.add("-Xclang");
     commandArgs.add("-fdebug-compilation-dir");
     commandArgs.add("-Xclang");
@@ -292,13 +294,10 @@ public class CompilationDatabaseIntegrationTest {
     commandArgs.add("-c");
     commandArgs.add("-MD");
     commandArgs.add("-MF");
-    commandArgs.add(
-        tmpRoot.resolve(
-            BuildTargets.getScratchPath(filesystem, outputTarget, "%s-tmp/dep.tmp")).toString());
+    commandArgs.add(output + ".dep");
     commandArgs.add(source);
     commandArgs.add("-o");
-    commandArgs.add(
-        BuildTargets.getGenPath(filesystem, outputTarget, "%s").resolve(outputPath).toString());
+    commandArgs.add(output);
     assertThat(ImmutableList.copyOf(entry.getCommand().split(" ")), equalTo(commandArgs));
   }
 }

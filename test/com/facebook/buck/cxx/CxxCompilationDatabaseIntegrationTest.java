@@ -171,13 +171,10 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-MD")
             .add("-MF")
             .add(
-                rootPath
-                    .resolve(
-                        BuildTargets.getScratchPath(
-                            filesystem,
-                            compilationTarget,
-                            "%s-tmp/dep.tmp"))
-                    .toString())
+                BuildTargets.getGenPath(
+                    filesystem,
+                    compilationTarget,
+                    "%s/foo.cpp.o.dep").toString())
             .add(Paths.get(path).toString())
             .add("-o")
             .add(
@@ -247,13 +244,10 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-MD")
             .add("-MF")
             .add(
-                rootPath
-                    .resolve(
-                        BuildTargets.getScratchPath(
-                            filesystem,
-                            compilationTarget,
-                            "%s-tmp/dep.tmp"))
-                    .toString())
+                BuildTargets.getGenPath(
+                    filesystem,
+                    compilationTarget,
+                    "%s/bar.cpp.o.dep").toString())
             .add(Paths.get(path).toString())
             .add("-o")
             .add(
@@ -309,13 +303,10 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-MD")
             .add("-MF")
             .add(
-                rootPath
-                    .resolve(
-                        BuildTargets.getScratchPath(
-                            filesystem,
-                            compilationTarget,
-                            "%s-tmp/dep.tmp"))
-                    .toString())
+                BuildTargets.getGenPath(
+                    filesystem,
+                    compilationTarget,
+                    "%s/test.cpp.o.dep").toString())
             .add(Paths.get(path).toString())
             .add("-o")
             .add(
@@ -375,13 +366,10 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-MD")
             .add("-MF")
             .add(
-                rootPath
-                    .resolve(
-                        BuildTargets.getScratchPath(
-                            filesystem,
-                            compilationTarget,
-                            "%s-tmp/dep.tmp"))
-                    .toString())
+                BuildTargets.getGenPath(
+                    filesystem,
+                    compilationTarget,
+                    "%s/test.cpp.o.dep").toString())
             .add(Paths.get(path).toString())
             .add("-o")
             .add(
