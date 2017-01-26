@@ -139,13 +139,6 @@ public class HttpArtifactCacheUploadListener implements BuckEventListener {
 
   @Override
   public synchronized void outputTrace(BuildId buildId) {
-    if (!hasCounterBeenSent && artifactCount > 0) {
-      hasCounterBeenSent = true;
-      CounterSnapshot snapshot = generateCounterSnapshot()
-          .putValues("artifact_not_uploaded_count", outstandingUploads)
-          .putTags("build_finished_successfully", Boolean.toString(buildFinishMillis != -1))
-          .build();
-      eventBus.post(new CountersSnapshotEvent(Lists.newArrayList(snapshot)));
-    }
+    // No-op.
   }
 }
