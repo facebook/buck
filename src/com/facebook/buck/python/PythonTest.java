@@ -19,7 +19,7 @@ package com.facebook.buck.python;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -58,7 +58,7 @@ import java.util.stream.Stream;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class PythonTest
-    extends AbstractBuildRuleWithResolver
+    extends AbstractBuildRule
     implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule, BinaryBuildRule {
 
   @AddToRuleKey
@@ -72,7 +72,6 @@ public class PythonTest
 
   public PythonTest(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       final Supplier<ImmutableMap<String, String>> env,
       final PythonBinary binary,
@@ -81,7 +80,7 @@ public class PythonTest
       Optional<Long> testRuleTimeoutMs,
       ImmutableSet<String> contacts) {
 
-    super(params, resolver);
+    super(params);
     this.ruleFinder = ruleFinder;
 
     this.env = Suppliers.memoize(
@@ -121,7 +120,7 @@ public class PythonTest
         new PythonRunTestsStep(
             getProjectFilesystem().getRootPath(),
             getBuildTarget().getFullyQualifiedName(),
-            binary.getExecutableCommand().getCommandPrefix(getResolver()),
+            binary.getExecutableCommand().getCommandPrefix(pathResolver),
             env,
             options.getTestSelectorList(),
             testRuleTimeoutMs,
@@ -222,7 +221,7 @@ public class PythonTest
         .setTarget(getBuildTarget())
         .setType("pyunit")
         .setNeededCoverage(neededCoverage)
-        .addAllCommand(binary.getExecutableCommand().getCommandPrefix(getResolver()))
+        .addAllCommand(binary.getExecutableCommand().getCommandPrefix(pathResolver))
         .putAllEnv(env.get())
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())

@@ -345,7 +345,6 @@ public class PythonTestDescription implements
                     .add(binary)
                     .build()),
             params.getExtraDeps()),
-        pathResolver,
         ruleFinder,
         testEnv,
         binary,
