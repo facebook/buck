@@ -347,7 +347,8 @@ public class CxxPreprocessAndCompile
   }
 
   @Override
-  public ImmutableList<SourcePath> getInputsAfterBuildingLocally() throws IOException {
+  public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context)
+      throws IOException {
     ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
 
     // If present, include all inputs coming from the preprocessor tool.

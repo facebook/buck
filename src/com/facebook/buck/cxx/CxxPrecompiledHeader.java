@@ -167,7 +167,8 @@ public class CxxPrecompiledHeader
   }
 
   @Override
-  public ImmutableList<SourcePath> getInputsAfterBuildingLocally() throws IOException {
+  public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context)
+      throws IOException {
     return ImmutableList.<SourcePath>builder()
         .addAll(preprocessorDelegate.getInputsAfterBuildingLocally(readDepFileLines()))
         .add(input)

@@ -171,7 +171,8 @@ public class CxxInferCapture
   }
 
   @Override
-  public ImmutableList<SourcePath> getInputsAfterBuildingLocally() throws IOException {
+  public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context)
+      throws IOException {
     ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
 
     // include all inputs coming from the preprocessor tool.

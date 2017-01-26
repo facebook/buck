@@ -636,7 +636,8 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public ImmutableList<SourcePath> getInputsAfterBuildingLocally() throws IOException {
+  public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context)
+      throws IOException {
     Preconditions.checkState(useDependencyFileRuleKeys());
     return DefaultClassUsageFileReader.loadFromFile(
         getProjectFilesystem(),

@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
@@ -431,7 +432,7 @@ public class CxxPreprocessAndCompileTest {
             CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
             Optional.empty());
     assertThat(
-        cxxPreprocess.getInputsAfterBuildingLocally(),
+        cxxPreprocess.getInputsAfterBuildingLocally(FakeBuildContext.NOOP_CONTEXT),
         hasItem(preprocessor));
 
     CxxPreprocessAndCompile cxxCompile =
@@ -450,7 +451,7 @@ public class CxxPreprocessAndCompileTest {
             CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
             Optional.empty());
     assertThat(
-        cxxCompile.getInputsAfterBuildingLocally(),
+        cxxCompile.getInputsAfterBuildingLocally(FakeBuildContext.NOOP_CONTEXT),
         hasItem(compiler));
   }
 

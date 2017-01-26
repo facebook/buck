@@ -102,7 +102,8 @@ public class FakeDepFileBuildRule
   }
 
   @Override
-  public ImmutableList<SourcePath> getInputsAfterBuildingLocally() throws IOException {
+  public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context)
+      throws IOException {
     return actualInputPaths;
   }
 

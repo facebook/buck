@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
@@ -34,13 +35,13 @@ public interface SupportsDependencyFileRuleKey extends BuildRule {
 
   /**
    * Returns a set of all possible source paths that may be returned from
-   * {@link #getInputsAfterBuildingLocally()}. I.e. all the paths that are covered by dep file,
-   * regardless of whether they are actually being used for the rule or not. This information is
-   * used by the rule key builder to infer that inputs *not* in this list should be included
-   * unconditionally in the rule key. Inputs that *are* in this list should be included in the rule
-   * key if and only if they are actually being used for the rule. I.e. if they are listed in
-   * {@link #getInputsAfterBuildingLocally()}. If not present, we treat all the input files as
-   * covered by dep file.
+   * {@link #getInputsAfterBuildingLocally(BuildContext)}. I.e. all the paths that are covered by
+   * dep file, regardless of whether they are actually being used for the rule or not. This
+   * information is used by the rule key builder to infer that inputs *not* in this list should be
+   * included unconditionally in the rule key. Inputs that *are* in this list should be included in
+   * the rule key if and only if they are actually being used for the rule. I.e. if they are listed
+   * in {@link #getInputsAfterBuildingLocally(BuildContext)}. If not present, we treat all the input
+   * files as covered by dep file.
    *
    * TODO(jkeljo): This is only optional because I added it for Java and didn't have the time to go
    * back and figure out how to implement it for C++.
@@ -68,6 +69,6 @@ public interface SupportsDependencyFileRuleKey extends BuildRule {
    * Returns a list of source paths that were actually used for the rule. This list comes from the
    * dep file produced by compiler.
    */
-  ImmutableList<SourcePath> getInputsAfterBuildingLocally() throws IOException;
+  ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) throws IOException;
 
 }

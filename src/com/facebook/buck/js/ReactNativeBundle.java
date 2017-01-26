@@ -229,7 +229,8 @@ public class ReactNativeBundle
   }
 
   @Override
-  public ImmutableList<SourcePath> getInputsAfterBuildingLocally() throws IOException {
+  public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context)
+      throws IOException {
     ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
 
     // Use the generated depfile to determinate which sources ended up being used.
