@@ -292,6 +292,7 @@ public class TestRunning {
         List<Step> testSteps = test.runTests(
             executionContext,
             options,
+            sourcePathResolver,
             testReportingCallback);
         if (!testSteps.isEmpty()) {
           stepsBuilder.addAll(testSteps);

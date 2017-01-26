@@ -9,7 +9,6 @@
       "//src-gen:thrift",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/slb:slb",
-      "//third-party/java/dx:dx",
       "//third-party/java/guava:guava",
       "//third-party/java/okhttp:okhttp"
     ]

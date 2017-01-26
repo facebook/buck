@@ -124,6 +124,7 @@ public class ShTest
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,
+      SourcePathResolver pathResolver,
       TestReportingCallback testReportingCallback) {
     Step mkdirClean = new MakeCleanDirectoryStep(
         getProjectFilesystem(),

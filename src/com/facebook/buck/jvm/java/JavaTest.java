@@ -270,6 +270,7 @@ public class JavaTest
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,
+      SourcePathResolver pathResolver,
       TestReportingCallback testReportingCallback) {
 
     // If no classes were generated, then this is probably a java_test() that declares a number of

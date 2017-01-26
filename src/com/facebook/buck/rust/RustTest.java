@@ -107,6 +107,7 @@ public class RustTest
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,
+      SourcePathResolver pathResolver,
       TestReportingCallback testReportingCallback) {
     Path workingDirectory = getProjectFilesystem().resolve(getPathToTestOutputDirectory());
     return ImmutableList.of(

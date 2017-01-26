@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util.network;
 
-import com.android.annotations.VisibleForTesting;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
@@ -25,6 +24,7 @@ import com.facebook.buck.distributed.thrift.LogRequestType;
 import com.facebook.buck.distributed.thrift.ScribeData;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.ThriftService;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;

@@ -31,6 +31,7 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -117,6 +118,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,
+      SourcePathResolver pathResolver,
       TestReportingCallback testReportingCallback) {
     Preconditions.checkArgument(executionContext.getAdbOptions().isPresent());
 

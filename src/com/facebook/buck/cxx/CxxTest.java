@@ -147,6 +147,7 @@ public abstract class CxxTest
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,
+      SourcePathResolver pathResolver,
       TestReportingCallback testReportingCallback) {
     return ImmutableList.of(
         new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToTestOutputDirectory()),

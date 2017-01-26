@@ -109,6 +109,7 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,
+      SourcePathResolver pathResolver,
       TestReportingCallback testReportingCallback) {
     Optional<Long> processTimeoutMs = testRuleTimeoutMs.isPresent() ?
         Optional.of(testRuleTimeoutMs.get() + PROCESS_TIMEOUT_EXTRA_MS) :

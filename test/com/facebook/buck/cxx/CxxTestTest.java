@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import static org.easymock.EasyMock.createMock;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
@@ -131,6 +132,7 @@ public class CxxTestTest {
     ImmutableList<Step> actualSteps = cxxTest.runTests(
         executionContext,
         options,
+        createMock(SourcePathResolver.class),
         FakeTestRule.NOOP_REPORTING_CALLBACK);
 
     CxxTestStep cxxTestStep =

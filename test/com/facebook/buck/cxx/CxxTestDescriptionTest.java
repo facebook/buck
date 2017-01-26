@@ -169,6 +169,7 @@ public class CxxTestDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     addFramework(resolver, filesystem);
     BuildRule someRule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:some_rule"))
@@ -188,6 +189,7 @@ public class CxxTestDescriptionTest {
         cxxTest.runTests(
             TestExecutionContext.newInstance(),
             options,
+            pathResolver,
             TestRule.NOOP_REPORTING_CALLBACK);
     CxxTestStep testStep = (CxxTestStep) Iterables.getLast(steps);
     assertThat(
@@ -204,6 +206,7 @@ public class CxxTestDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     addFramework(resolver, filesystem);
     BuildRule someRule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:some_rule"))
@@ -224,6 +227,7 @@ public class CxxTestDescriptionTest {
         cxxTest.runTests(
             TestExecutionContext.newInstance(),
             testOptions,
+            pathResolver,
             TestRule.NOOP_REPORTING_CALLBACK);
     CxxTestStep testStep = (CxxTestStep) Iterables.getLast(steps);
     assertThat(
