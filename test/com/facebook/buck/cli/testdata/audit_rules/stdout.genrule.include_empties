@@ -14,6 +14,7 @@ genrule(
     "bar.txt",
     "//fake:rule",
   ],
+  tags = None,
   tests = None,
   type = None,
   visibility = [

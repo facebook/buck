@@ -11,6 +11,7 @@
     "name" : "example",
     "out" : "baz.txt",
     "srcs" : [ "foo.txt", "bar.txt", "//fake:rule" ],
+    "tags" : null,
     "tests" : null,
     "type" : null,
     "visibility" : [ ]

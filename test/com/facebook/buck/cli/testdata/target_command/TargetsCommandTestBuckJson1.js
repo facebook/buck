@@ -32,6 +32,7 @@
   "resourcesRoot" : null,
   "source" : "6",
   "srcs" : [],
+  "tags" : null,
   "target" : "6",
   "tests" : null,
   "visibility" : [ "PUBLIC" ]

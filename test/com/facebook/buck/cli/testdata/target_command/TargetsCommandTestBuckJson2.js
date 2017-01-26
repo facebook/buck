@@ -13,6 +13,7 @@
   "name" : "B",
   "out" : "B.txt",
   "srcs" : [":A"],
+  "tags" : null,
   "tests" : null,
   "type" : null,
   "visibility" : null

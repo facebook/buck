@@ -23,4 +23,5 @@ import com.google.common.collect.ImmutableSet;
 @SuppressFieldNotInitialized
 public abstract class AbstractDescriptionArg {
   public ImmutableSet<SourcePath> licenses = ImmutableSet.of();
+  public ImmutableSet<String> tags = ImmutableSet.of();
 }

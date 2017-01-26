@@ -14,6 +14,7 @@
   "name":"another-test",
   "out":"test-output",
   "srcs":null,
+  "tags":null,
   "tests":null,
   "type":null,
   "visibility":null
@@ -33,6 +34,7 @@
   "name":"test",
   "out":"test-output",
   "srcs":null,
+  "tags":null,
   "tests":null,
   "type":null,
   "visibility":null
