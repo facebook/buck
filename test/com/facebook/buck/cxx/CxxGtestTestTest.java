@@ -85,7 +85,6 @@ public class CxxGtestTestTest {
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     CxxGtestTest test = new CxxGtestTest(
         new FakeBuildRuleParamsBuilder(target).setProjectFilesystem(filesystem).build(),
-        pathResolver,
         ruleFinder,
         new CxxLink(
             new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:link")).build(),

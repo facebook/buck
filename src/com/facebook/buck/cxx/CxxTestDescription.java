@@ -221,7 +221,6 @@ public class CxxTestDescription implements
       case GTEST: {
         test = new CxxGtestTest(
             testParams,
-            pathResolver,
             ruleFinder,
             cxxLinkAndCompileRules.getBinaryRule(),
             cxxLinkAndCompileRules.executable,
@@ -241,7 +240,6 @@ public class CxxTestDescription implements
       case BOOST: {
         test = new CxxBoostTest(
             testParams,
-            pathResolver,
             ruleFinder,
             cxxLinkAndCompileRules.getBinaryRule(),
             cxxLinkAndCompileRules.executable,

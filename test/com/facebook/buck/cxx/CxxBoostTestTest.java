@@ -81,7 +81,6 @@ public class CxxBoostTestTest {
             new FakeBuildRuleParamsBuilder(target)
                 .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot()))
                 .build(),
-            pathResolver,
             ruleFinder,
             new CxxLink(
                 new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:link")).build(),

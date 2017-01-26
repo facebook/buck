@@ -77,11 +77,9 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   private final SourcePathRuleFinder ruleFinder;
   private final BuildRule binary;
   private final Tool executable;
-  private final SourcePathResolver pathResolver;
 
   public CxxBoostTest(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       BuildRule binary,
       Tool executable,
@@ -95,7 +93,6 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
       Optional<Long> testRuleTimeoutMs) {
     super(
         params,
-        resolver,
         executable.getEnvironment(),
         env,
         args,
@@ -106,7 +103,6 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
         runTestSeparately,
         testRuleTimeoutMs);
     this.ruleFinder = ruleFinder;
-    this.pathResolver = resolver;
     this.binary = binary;
     this.executable = executable;
   }
@@ -118,7 +114,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   }
 
   @Override
-  protected ImmutableList<String> getShellCommand(Path output) {
+  protected ImmutableList<String> getShellCommand(SourcePathResolver pathResolver, Path output) {
     return ImmutableList.<String>builder()
         .addAll(executable.getCommandPrefix(pathResolver))
         .add("--log_format=hrf")
@@ -260,7 +256,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
         .setType("boost")
-        .addAllCommand(executable.getCommandPrefix(this.pathResolver))
+        .addAllCommand(executable.getCommandPrefix(pathResolver))
         .addAllCommand(getArgs().get())
         .putAllEnv(getEnv().get())
         .addAllLabels(getLabels())

@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -57,7 +57,7 @@ import java.util.stream.Stream;
  * A no-op {@link BuildRule} which houses the logic to run and form the results for C/C++ tests.
  */
 public abstract class CxxTest
-    extends AbstractBuildRuleWithResolver
+    extends AbstractBuildRule
     implements TestRule, HasRuntimeDeps, BinaryBuildRule {
 
   @AddToRuleKey
@@ -75,7 +75,6 @@ public abstract class CxxTest
 
   public CxxTest(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       final ImmutableMap<String, String> toolEnv,
       final Supplier<ImmutableMap<String, String>> env,
       Supplier<ImmutableList<String>> args,
@@ -85,7 +84,7 @@ public abstract class CxxTest
       ImmutableSet<String> contacts,
       boolean runTestSeparately,
       Optional<Long> testRuleTimeoutMs) {
-    super(params, resolver);
+    super(params);
     this.env = Suppliers.memoize(
         () -> {
           ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
@@ -136,7 +135,9 @@ public abstract class CxxTest
   /**
    * @return the shell command used to run the test.
    */
-  protected abstract ImmutableList<String> getShellCommand(Path output);
+  protected abstract ImmutableList<String> getShellCommand(
+      SourcePathResolver pathResolver,
+      Path output);
 
   @Override
   public boolean hasTestResultFiles() {
@@ -155,7 +156,7 @@ public abstract class CxxTest
         new CxxTestStep(
             getProjectFilesystem(),
             ImmutableList.<String>builder()
-                .addAll(getShellCommand(getPathToTestResults()))
+                .addAll(getShellCommand(pathResolver, getPathToTestResults()))
                 .addAll(args.get())
                 .build(),
             env.get(),
