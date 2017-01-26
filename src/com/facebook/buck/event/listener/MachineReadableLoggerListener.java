@@ -105,6 +105,11 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   }
 
   @Subscribe
+  public synchronized void commandInterrupted(CommandEvent.Interrupted event) {
+    exitCode = OptionalInt.of(event.getExitCode());
+  }
+
+  @Subscribe
   public synchronized void watchmanFileCreation(WatchmanStatusEvent.FileCreation event) {
     writeToLog("FileCreate", event);
   }

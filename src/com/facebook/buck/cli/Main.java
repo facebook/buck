@@ -159,6 +159,7 @@ import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.file.AtomicMoveNotSupportedException;
@@ -201,6 +202,11 @@ public final class Main {
    * Trying again later might work.
    */
   public static final int BUSY_EXIT_CODE = 2;
+
+  /**
+   * The command was interrupted
+   */
+  public static final int INTERRUPTED_EXIT_CODE = 130;
 
   private static final Optional<String> BUCKD_LAUNCH_TIME_NANOS =
       Optional.ofNullable(System.getProperty("buck.buckd_launch_time_nanos"));
@@ -1109,7 +1115,6 @@ public final class Main {
 
           buildEventBus.register(HANG_MONITOR.getHangMonitor());
 
-
           ArtifactCaches artifactCacheFactory = new ArtifactCaches(
               cacheBuckConfig,
               buildEventBus,
@@ -1283,35 +1288,40 @@ public final class Main {
               buildEventBus.register(listener);
             }
           }
-
-          exitCode = command.run(
-              CommandRunnerParams.builder()
-                  .setConsole(console)
-                  .setStdIn(stdIn)
-                  .setCell(rootCell)
-                  .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)
-                  .setArtifactCacheFactory(artifactCacheFactory)
-                  .setBuckEventBus(buildEventBus)
-                  .setParser(parser)
-                  .setPlatform(platform)
-                  .setEnvironment(clientEnvironment)
-                  .setJavaPackageFinder(
-                      rootCell.getBuckConfig().getView(JavaBuckConfig.class)
-                          .createDefaultJavaPackageFinder())
-                  .setObjectMapper(objectMapper)
-                  .setClock(clock)
-                  .setProcessManager(processManager)
-                  .setPersistentWorkerPools(persistentWorkerPools)
-                  .setWebServer(webServer)
-                  .setBuckConfig(buckConfig)
-                  .setFileHashCache(fileHashCache)
-                  .setExecutors(executors)
-                  .setBuildEnvironmentDescription(buildEnvironmentDescription)
-                  .setVersionedTargetGraphCache(versionedTargetGraphCache)
-                  .setActionGraphCache(actionGraphCache)
-                  .setKnownBuildRuleTypesFactory(factory)
-                  .build());
-          // We've reserved exitCode 2 for timeouts, and some commands (e.g. run) may violate this
+          try {
+            exitCode = command.run(
+                CommandRunnerParams.builder()
+                    .setConsole(console)
+                    .setStdIn(stdIn)
+                    .setCell(rootCell)
+                    .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)
+                    .setArtifactCacheFactory(artifactCacheFactory)
+                    .setBuckEventBus(buildEventBus)
+                    .setParser(parser)
+                    .setPlatform(platform)
+                    .setEnvironment(clientEnvironment)
+                    .setJavaPackageFinder(
+                        rootCell.getBuckConfig().getView(JavaBuckConfig.class)
+                            .createDefaultJavaPackageFinder())
+                    .setObjectMapper(objectMapper)
+                    .setClock(clock)
+                    .setProcessManager(processManager)
+                    .setPersistentWorkerPools(persistentWorkerPools)
+                    .setWebServer(webServer)
+                    .setBuckConfig(buckConfig)
+                    .setFileHashCache(fileHashCache)
+                    .setExecutors(executors)
+                    .setBuildEnvironmentDescription(buildEnvironmentDescription)
+                    .setVersionedTargetGraphCache(versionedTargetGraphCache)
+                    .setActionGraphCache(actionGraphCache)
+                    .setKnownBuildRuleTypesFactory(factory)
+                    .build());
+          } catch (InterruptedException | ClosedByInterruptException e) {
+            exitCode = INTERRUPTED_EXIT_CODE;
+            buildEventBus.post(CommandEvent.interrupted(startedEvent, INTERRUPTED_EXIT_CODE));
+            throw e;
+          }
+            // We've reserved exitCode 2 for timeouts, and some commands (e.g. run) may violate this
           // Let's avoid an infinite loop
           if (exitCode == BUSY_EXIT_CODE) {
               exitCode = FAIL_EXIT_CODE; // Some loss of info here, but better than looping

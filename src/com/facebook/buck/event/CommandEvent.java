@@ -68,6 +68,10 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
     return new Finished(started, exitCode);
   }
 
+  public static Interrupted interrupted(Started started, int exitCode) {
+    return new Interrupted(started, exitCode);
+  }
+
   public static class Started extends CommandEvent {
     private Started(String commandName, ImmutableList<String> args, boolean isDaemon) {
       super(EventKey.unique(), commandName, args, isDaemon);
@@ -82,8 +86,7 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
   public static class Finished extends CommandEvent {
     private final int exitCode;
 
-    private Finished(Started started,
-        int exitCode) {
+    private Finished(Started started, int exitCode) {
       super(started.getEventKey(), started.getCommandName(), started.getArgs(), started.isDaemon());
       this.exitCode = exitCode;
     }
@@ -95,6 +98,24 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
     @Override
     public String getEventName() {
       return "CommandFinished";
+    }
+  }
+
+  public static class Interrupted extends CommandEvent implements BroadcastEvent{
+    private final int exitCode;
+
+    private Interrupted(Started started, int exitCode) {
+      super(started.getEventKey(), started.getCommandName(), started.getArgs(), started.isDaemon());
+      this.exitCode = exitCode;
+    }
+
+    public int getExitCode() {
+      return exitCode;
+    }
+
+    @Override
+    public String getEventName() {
+      return "CommandInterrupted";
     }
   }
 }
