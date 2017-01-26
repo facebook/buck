@@ -276,7 +276,7 @@ public class JavaTest
     // If no classes were generated, then this is probably a java_test() that declares a number of
     // other java_test() rules as deps, functioning as a test suite. In this case, simply return an
     // empty list of commands.
-    Set<String> testClassNames = getClassNamesForSources();
+    Set<String> testClassNames = getClassNamesForSources(pathResolver);
     LOG.debug("Testing these classes: %s", testClassNames.toString());
     if (testClassNames.isEmpty()) {
       return ImmutableList.of();
@@ -363,7 +363,7 @@ public class JavaTest
   public boolean hasTestResultFiles() {
     // It is possible that this rule was not responsible for running any tests because all tests
     // were run by its deps. In this case, return an empty TestResults.
-    Set<String> testClassNames = getClassNamesForSources();
+    Set<String> testClassNames = getClassNamesForSources(getResolver());
     if (testClassNames.isEmpty()) {
       return true;
     }
@@ -419,7 +419,7 @@ public class JavaTest
     return () -> {
       // It is possible that this rule was not responsible for running any tests because all tests
       // were run by its deps. In this case, return an empty TestResults.
-      Set<String> testClassNames = getClassNamesForSources();
+      Set<String> testClassNames = getClassNamesForSources(getResolver());
       if (testClassNames.isEmpty()) {
         return TestResults.of(
             getBuildTarget(),
@@ -475,9 +475,9 @@ public class JavaTest
     };
   }
 
-  private Set<String> getClassNamesForSources() {
+  private Set<String> getClassNamesForSources(SourcePathResolver pathResolver) {
     if (compiledClassFileFinder == null) {
-      compiledClassFileFinder = new CompiledClassFileFinder(this);
+      compiledClassFileFinder = new CompiledClassFileFinder(this, pathResolver);
     }
     return compiledClassFileFinder.getClassNamesForSources();
   }
@@ -525,7 +525,7 @@ public class JavaTest
 
     private final Set<String> classNamesForSources;
 
-    CompiledClassFileFinder(JavaTest rule) {
+    CompiledClassFileFinder(JavaTest rule, SourcePathResolver pathResolver) {
       Path outputPath;
       Path relativeOutputPath = rule.getPathToOutput();
       if (relativeOutputPath != null) {
@@ -537,7 +537,7 @@ public class JavaTest
           rule.compiledTestsLibrary.getJavaSrcs(),
           outputPath,
           rule.getProjectFilesystem(),
-          rule.getResolver());
+          pathResolver);
     }
 
     public Set<String> getClassNamesForSources() {
@@ -661,7 +661,7 @@ public class JavaTest
             options,
             Optional.empty(),
             Optional.empty(),
-            getClassNamesForSources()
+            getClassNamesForSources(pathResolver)
             );
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
