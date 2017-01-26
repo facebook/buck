@@ -1720,7 +1720,7 @@ public final class Main {
       BuckEventBus buckEventBus,
       ProjectFilesystem projectFilesystem,
       InvocationInfo invocationInfo,
-      BuckConfig config,
+      BuckConfig buckConfig,
       Optional<WebServer> webServer,
       Clock clock,
       Console console,
@@ -1736,15 +1736,15 @@ public final class Main {
             .add(consoleEventBusListener)
             .add(new LoggingBuildListener());
 
-    if (config.isChromeTraceCreationEnabled()) {
+    if (buckConfig.isChromeTraceCreationEnabled()) {
       try {
         eventListenersBuilder.add(new ChromeTraceBuildListener(
             projectFilesystem,
             invocationInfo,
             clock,
             objectMapper,
-            config.getMaxTraces(),
-            config.getCompressTraces()));
+            buckConfig.getMaxTraces(),
+            buckConfig.getCompressTraces()));
       } catch (IOException e) {
         LOG.error("Unable to create ChromeTrace listener!");
       }
@@ -1755,9 +1755,9 @@ public final class Main {
       eventListenersBuilder.add(webServer.get().createListener());
     }
 
-    loadListenersFromBuckConfig(eventListenersBuilder, projectFilesystem, config);
+    loadListenersFromBuckConfig(eventListenersBuilder, projectFilesystem, buckConfig);
 
-    if (config.isRuleKeyLoggerEnabled()) {
+    if (buckConfig.isRuleKeyLoggerEnabled()) {
       eventListenersBuilder.add(new RuleKeyLoggerListener(
           projectFilesystem,
           invocationInfo,
@@ -1765,7 +1765,7 @@ public final class Main {
               new CommandThreadFactory(getClass().getName()))));
     }
 
-    if (config.isMachineReadableLoggerEnabled()) {
+    if (buckConfig.isMachineReadableLoggerEnabled()) {
       try {
         eventListenersBuilder.add(
             new MachineReadableLoggerListener(
@@ -1778,13 +1778,13 @@ public final class Main {
       }
     }
 
-    JavaBuckConfig javaBuckConfig = config.getView(JavaBuckConfig.class);
+    JavaBuckConfig javaBuckConfig = buckConfig.getView(JavaBuckConfig.class);
     if (!javaBuckConfig.getSkipCheckingMissingDeps()) {
       JavacOptions javacOptions = javaBuckConfig.getDefaultJavacOptions();
       eventListenersBuilder.add(MissingSymbolsHandler.createListener(
           projectFilesystem,
           knownBuildRuleTypes.getAllDescriptions(),
-          config,
+          buckConfig,
           buckEventBus,
           console,
           javacOptions,

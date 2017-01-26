@@ -4,6 +4,7 @@
       "//src/com/facebook/buck/io:ProjectFilesystemDelegate",
       "//src/com/facebook/buck/io:ProjectFilesystemDelegateFactory",
       "//src/com/facebook/buck/util/autosparse:autosparse",
+      "//src/com/facebook/buck/util/autosparse:autosparse_config",
       "//src/com/facebook/buck/util/versioncontrol:impl",
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol_config",
