@@ -116,7 +116,7 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
         Optional.empty();
 
     ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.addAll(testMain.getExecutableCommand().getCommandPrefix(getResolver()));
+    args.addAll(testMain.getExecutableCommand().getCommandPrefix(pathResolver));
     args.add("-test.v");
     if (testRuleTimeoutMs.isPresent()) {
       args.add("-test.timeout", testRuleTimeoutMs.get() + "ms");
@@ -131,10 +131,10 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
             ImmutableMap.copyOf(
                 FluentIterable.from(resources)
                 .transform(input -> Maps.immutableEntry(
-                    getProjectFilesystem().getPath(getResolver().getSourcePathName(
+                    getProjectFilesystem().getPath(pathResolver.getSourcePathName(
                         getBuildTarget(),
                         input)),
-                    getResolver().getAbsolutePath(input))))),
+                    pathResolver.getAbsolutePath(input))))),
         new GoTestStep(
             getProjectFilesystem(),
             getPathToTestWorkingDirectory(),
@@ -285,7 +285,7 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
         .setTarget(getBuildTarget())
         .setType("go")
         .putAllEnv(testMain.getExecutableCommand().getEnvironment())
-        .addAllCommand(testMain.getExecutableCommand().getCommandPrefix(getResolver()))
+        .addAllCommand(testMain.getExecutableCommand().getCommandPrefix(pathResolver))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .build();
