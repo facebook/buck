@@ -174,7 +174,9 @@ public class RustTest
 
   @Override
   public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
-      ExecutionContext executionContext, TestRunningOptions testRunningOptions) {
+      ExecutionContext executionContext,
+      TestRunningOptions testRunningOptions,
+      SourcePathResolver pathResolver) {
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
         .setType("rust")

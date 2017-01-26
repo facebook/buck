@@ -25,5 +25,6 @@ import com.facebook.buck.test.TestRunningOptions;
 public interface ExternalTestRunnerRule extends TestRule {
   ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
-      TestRunningOptions testRunningOptions);
+      TestRunningOptions testRunningOptions,
+      SourcePathResolver pathResolver);
 }

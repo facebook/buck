@@ -653,7 +653,8 @@ public class JavaTest
   @Override
   public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
-      TestRunningOptions options) {
+      TestRunningOptions options,
+      SourcePathResolver pathResolver) {
     JUnitStep jUnitStep =
         getJUnitStep(
             executionContext,

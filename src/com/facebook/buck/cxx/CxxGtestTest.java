@@ -246,11 +246,12 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   @Override
   public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
-      TestRunningOptions testRunningOptions) {
+      TestRunningOptions testRunningOptions,
+      SourcePathResolver pathResolver) {
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
         .setType("gtest")
-        .addAllCommand(executable.getCommandPrefix(pathResolver))
+        .addAllCommand(executable.getCommandPrefix(this.pathResolver))
         .addAllCommand(getArgs().get())
         .putAllEnv(getEnv().get())
         .addAllLabels(getLabels())

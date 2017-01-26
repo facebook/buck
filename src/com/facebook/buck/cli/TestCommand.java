@@ -341,7 +341,8 @@ public class TestCommand extends BuildCommand {
       final CommandRunnerParams params,
       Build build,
       Iterable<String> command,
-      Iterable<TestRule> testRules)
+      Iterable<TestRule> testRules,
+      SourcePathResolver pathResolver)
       throws InterruptedException, IOException {
     TestRunningOptions options = getTestRunningOptions(params);
 
@@ -355,7 +356,7 @@ public class TestCommand extends BuildCommand {
         return 1;
       }
       ExternalTestRunnerRule rule = (ExternalTestRunnerRule) testRule;
-      specs.add(rule.getExternalTestRunnerSpec(build.getExecutionContext(), options));
+      specs.add(rule.getExternalTestRunnerSpec(build.getExecutionContext(), options, pathResolver));
     }
 
     // Serialize the specs to a file to pass into the test runner.
@@ -578,11 +579,14 @@ public class TestCommand extends BuildCommand {
         Optional<ImmutableList<String>> externalTestRunner =
             params.getBuckConfig().getExternalTestRunner();
         if (externalTestRunner.isPresent()) {
+          SourcePathResolver pathResolver = new SourcePathResolver(
+              new SourcePathRuleFinder(actionGraphAndResolver.getResolver()));
           return runTestsExternal(
               params,
               build,
               externalTestRunner.get(),
-              testRules);
+              testRules,
+              pathResolver);
         }
         return runTestsInternal(params, cachingBuildEngine, build, testRules);
       }

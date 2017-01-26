@@ -302,7 +302,9 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
 
   @Override
   public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
-      ExecutionContext executionContext, TestRunningOptions testRunningOptions) {
+      ExecutionContext executionContext,
+      TestRunningOptions testRunningOptions,
+      SourcePathResolver pathResolver) {
     Optional<Path> apkUnderTestPath = Optional.empty();
     if (apk instanceof AndroidInstrumentationApk) {
       apkUnderTestPath = Optional.of(toPath(((AndroidInstrumentationApk) apk).getApkUnderTest()));
