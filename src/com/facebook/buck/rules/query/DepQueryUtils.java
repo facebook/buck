@@ -18,6 +18,7 @@
 package com.facebook.buck.rules.query;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
@@ -60,7 +61,7 @@ public final class DepQueryUtils {
         Optional.of(resolver),
         Optional.of(targetGraph),
         params.getCellRoots(),
-        target,
+        BuildTargetPatternParser.forBaseName(target.getBaseName()),
         declaredDeps);
     ListeningExecutorService executorService = MoreExecutors.newDirectExecutorService();
     try {

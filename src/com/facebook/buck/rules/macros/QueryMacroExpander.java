@@ -18,6 +18,7 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.MacroException;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
@@ -66,7 +67,7 @@ public abstract class QueryMacroExpander implements MacroExpander {
         resolver,
         targetGraph,
         cellNames,
-        target,
+        BuildTargetPatternParser.forBaseName(target.getBaseName()),
         ImmutableSet.of());
     try {
       QueryExpression parsedExp = QueryExpression.parse(queryExpression, env);
@@ -99,7 +100,7 @@ public abstract class QueryMacroExpander implements MacroExpander {
             Optional.of(resolver),
             targetGraph,
             cellNames,
-            target,
+            BuildTargetPatternParser.forBaseName(target.getBaseName()),
             ImmutableSet.of());
     try {
       QueryExpression parsedExp = QueryExpression.parse(queryExpression, env);
