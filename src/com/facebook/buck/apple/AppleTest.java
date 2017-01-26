@@ -20,7 +20,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -70,7 +70,7 @@ import javax.annotation.Nullable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class AppleTest
-    extends AbstractBuildRuleWithResolver
+    extends AbstractBuildRule
     implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule {
 
   @AddToRuleKey
@@ -91,7 +91,6 @@ public class AppleTest
   private final Optional<String> defaultDestinationSpecifier;
   private final Optional<ImmutableMap<String, String>> destinationSpecifier;
 
-  private final SourcePathResolver pathResolver;
   @AddToRuleKey
   private final BuildRule testBundle;
 
@@ -187,7 +186,6 @@ public class AppleTest
       Optional<String> defaultDestinationSpecifier,
       Optional<ImmutableMap<String, String>> destinationSpecifier,
       BuildRuleParams params,
-      SourcePathResolver resolver,
       BuildRule testBundle,
       Optional<AppleBundle> testHostApp,
       ImmutableSet<String> contacts,
@@ -200,7 +198,7 @@ public class AppleTest
       Optional<Long> testRuleTimeoutMs,
       boolean isUiTest,
       Optional<Either<SourcePath, String>> snapshotReferenceImagesPath) {
-    super(params, resolver);
+    super(params);
     this.xctool = xctool;
     this.xctoolStutterTimeout = xctoolStutterTimeout;
     this.useXctest = useXctest;
@@ -208,7 +206,6 @@ public class AppleTest
     this.platformName = platformName;
     this.defaultDestinationSpecifier = defaultDestinationSpecifier;
     this.destinationSpecifier = destinationSpecifier;
-    this.pathResolver = resolver;
     this.testBundle = testBundle;
     this.testHostApp = testHostApp;
     this.contacts = contacts;
@@ -245,6 +242,7 @@ public class AppleTest
   public Pair<ImmutableList<Step>, ExternalTestRunnerTestSpec> getTestCommand(
       ExecutionContext context,
       TestRunningOptions options,
+      SourcePathResolver pathResolver,
       TestRule.TestReportingCallback testReportingCallback) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
@@ -309,7 +307,7 @@ public class AppleTest
       if (this.snapshotReferenceImagesPath.isPresent()) {
         if (this.snapshotReferenceImagesPath.get().isLeft()) {
           snapshotReferenceImagesPath = Optional.of(
-              getResolver().getAbsolutePath(
+              pathResolver.getAbsolutePath(
                   this.snapshotReferenceImagesPath.get().getLeft()).toString());
         } else if (this.snapshotReferenceImagesPath.get().isRight()) {
           snapshotReferenceImagesPath = Optional.of(
@@ -378,7 +376,8 @@ public class AppleTest
     if (isUiTest()) {
       return ImmutableList.of();
     } else {
-      return getTestCommand(executionContext, options, testReportingCallback).getFirst();
+      return getTestCommand(executionContext, options, pathResolver, testReportingCallback)
+          .getFirst();
     }
   }
 
@@ -477,6 +476,7 @@ public class AppleTest
     return getTestCommand(
         executionContext,
         testRunningOptions,
+        pathResolver,
         NOOP_REPORTING_CALLBACK)
         .getSecond();
   }
