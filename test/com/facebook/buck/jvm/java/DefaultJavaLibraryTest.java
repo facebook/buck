@@ -194,7 +194,7 @@ public class DefaultJavaLibraryTest {
   @Test
   public void testAddAnnotationProcessorJavaBinary() throws Exception {
     AnnotationProcessingScenario scenario = new AnnotationProcessingScenario();
-    scenario.addAnnotationProcessorTarget(AnnotationProcessorTarget.VALID_JAVA_BINARY);
+    scenario.addAnnotationProcessorTarget(validJavaBinary);
 
     scenario.getAnnotationProcessingParamsBuilder()
         .addAllProcessors(ImmutableList.of("MyProcessor"));
@@ -230,7 +230,7 @@ public class DefaultJavaLibraryTest {
   @Test
   public void testAddAnnotationProcessorPrebuiltJar() throws Exception {
     AnnotationProcessingScenario scenario = new AnnotationProcessingScenario();
-    scenario.addAnnotationProcessorTarget(AnnotationProcessorTarget.VALID_PREBUILT_JAR);
+    scenario.addAnnotationProcessorTarget(validPrebuiltJar);
 
     scenario.getAnnotationProcessingParamsBuilder()
         .addAllProcessors(ImmutableList.of("MyProcessor"));
@@ -250,7 +250,7 @@ public class DefaultJavaLibraryTest {
   @Test
   public void testAddAnnotationProcessorJavaLibrary() throws Exception {
     AnnotationProcessingScenario scenario = new AnnotationProcessingScenario();
-    scenario.addAnnotationProcessorTarget(AnnotationProcessorTarget.VALID_PREBUILT_JAR);
+    scenario.addAnnotationProcessorTarget(validPrebuiltJar);
 
     scenario.getAnnotationProcessingParamsBuilder()
         .addAllProcessors(ImmutableList.of("MyProcessor"));
@@ -270,9 +270,9 @@ public class DefaultJavaLibraryTest {
   @Test
   public void testAddAnnotationProcessorJar() throws Exception {
     AnnotationProcessingScenario scenario = new AnnotationProcessingScenario();
-    scenario.addAnnotationProcessorTarget(AnnotationProcessorTarget.VALID_PREBUILT_JAR);
-    scenario.addAnnotationProcessorTarget(AnnotationProcessorTarget.VALID_JAVA_BINARY);
-    scenario.addAnnotationProcessorTarget(AnnotationProcessorTarget.VALID_JAVA_LIBRARY);
+    scenario.addAnnotationProcessorTarget(validPrebuiltJar);
+    scenario.addAnnotationProcessorTarget(validJavaBinary);
+    scenario.addAnnotationProcessorTarget(validJavaLibrary);
 
     scenario.getAnnotationProcessingParamsBuilder()
         .addAllProcessors(ImmutableList.of("MyProcessor"));
@@ -420,7 +420,7 @@ public class DefaultJavaLibraryTest {
   @Test
   public void testAddAnnotationProcessorWithOptions() throws Exception {
     AnnotationProcessingScenario scenario = new AnnotationProcessingScenario();
-    scenario.addAnnotationProcessorTarget(AnnotationProcessorTarget.VALID_JAVA_BINARY);
+    scenario.addAnnotationProcessorTarget(validJavaBinary);
 
     scenario.getAnnotationProcessingParamsBuilder().addAllProcessors(
         ImmutableList.of("MyProcessor"));
@@ -1277,42 +1277,7 @@ public class DefaultJavaLibraryTest {
         .build();
   }
 
-  private enum AnnotationProcessorTarget {
-    VALID_PREBUILT_JAR("//tools/java/src/com/facebook/library:prebuilt-processors") {
-      @Override
-      public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {
-        return PrebuiltJarBuilder.createBuilder(target)
-            .setBinaryJar(Paths.get("MyJar"))
-            .build(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY,
-                    new DefaultTargetNodeToBuildRuleTransformer()));
-      }
-    },
-    VALID_JAVA_BINARY("//tools/java/src/com/facebook/annotations:custom-processors") {
-      @Override
-      public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {
-       return new JavaBinaryRuleBuilder(target)
-            .setMainClass("com.facebook.Main")
-            .build(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY,
-                    new DefaultTargetNodeToBuildRuleTransformer()));
-      }
-    },
-    VALID_JAVA_LIBRARY("//tools/java/src/com/facebook/somejava:library") {
-      @Override
-      public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {
-        return JavaLibraryBuilder.createBuilder(target)
-            .addSrc(Paths.get("MyClass.java"))
-            .setProguardConfig(Paths.get("MyProguardConfig"))
-            .build(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY,
-                    new DefaultTargetNodeToBuildRuleTransformer()));
-      }
-    };
-
+  private abstract static class AnnotationProcessorTarget {
     private final String targetName;
 
     private AnnotationProcessorTarget(String targetName) {
@@ -1325,6 +1290,37 @@ public class DefaultJavaLibraryTest {
 
     public abstract BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException;
   }
+
+  private AnnotationProcessorTarget validPrebuiltJar =
+      new AnnotationProcessorTarget("//tools/java/src/com/facebook/library:prebuilt-processors") {
+    @Override
+    public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {
+      return PrebuiltJarBuilder.createBuilder(target)
+          .setBinaryJar(Paths.get("MyJar"))
+          .build(ruleResolver);
+    }
+  };
+
+  private AnnotationProcessorTarget validJavaBinary =
+      new AnnotationProcessorTarget("//tools/java/src/com/facebook/annotations:custom-processors") {
+        @Override
+        public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {
+          return new JavaBinaryRuleBuilder(target)
+              .setMainClass("com.facebook.Main")
+              .build(ruleResolver);
+        }
+      };
+
+  private AnnotationProcessorTarget validJavaLibrary =
+      new AnnotationProcessorTarget("//tools/java/src/com/facebook/somejava:library") {
+      @Override
+      public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {
+        return JavaLibraryBuilder.createBuilder(target)
+            .addSrc(Paths.get("MyClass.java"))
+            .setProguardConfig(Paths.get("MyProguardConfig"))
+            .build(ruleResolver);
+      }
+    };
 
   // Captures all the common code between the different annotation processing test scenarios.
   private class AnnotationProcessingScenario {
