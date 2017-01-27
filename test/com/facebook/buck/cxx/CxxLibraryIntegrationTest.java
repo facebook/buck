@@ -232,4 +232,16 @@ public class CxxLibraryIntegrationTest {
     );
     workspace.getBuildLog().assertTargetBuiltLocally(implicitTarget.getFullyQualifiedName());
   }
+
+  @Test
+  public void prebuiltLibraryWithHeaderMapDoesntChangeIncludeTypeOfOtherHeaderMaps()
+      throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "header_map_include_type", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("-v=3", "//:test_prebuilt").assertSuccess();
+    workspace.runBuckBuild("-v=3", "//:test_lib").assertFailure();
+    workspace.runBuckBuild("-v=3", "//:test_both").assertFailure();
+
+  }
 }
