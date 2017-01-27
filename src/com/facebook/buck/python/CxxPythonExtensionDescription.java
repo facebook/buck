@@ -169,7 +169,6 @@ public class CxxPythonExtensionDescription implements
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
             params,
             ruleResolver,
-            pathResolver,
             cxxPlatform,
             headers,
             HeaderVisibility.PRIVATE,

@@ -365,7 +365,6 @@ public final class CxxInferEnhancer {
         CxxLibraryDescription.getTransitiveCxxPreprocessorInput(
             params,
             resolver,
-            pathResolver,
             cxxPlatform,
             CxxFlags.getLanguageFlags(
                 args.exportedPreprocessorFlags,
@@ -415,7 +414,6 @@ public final class CxxInferEnhancer {
     HeaderSymlinkTree headerSymlinkTree = CxxDescriptionEnhancer.requireHeaderSymlinkTree(
         params,
         resolver,
-        pathResolver,
         cxxPlatform,
         headers,
         HeaderVisibility.PRIVATE,

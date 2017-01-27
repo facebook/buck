@@ -243,7 +243,6 @@ public class CxxPreprocessablesTest {
 
     // Build our symlink tree rule using the helper method.
     HeaderSymlinkTree symlinkTree = CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
-        pathResolver,
         target,
         params,
         root,

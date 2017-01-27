@@ -530,7 +530,6 @@ public class LuaBinaryDescription implements
       BuildTarget linkTreeTarget,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       Path root,
       ImmutableMap<String, SourcePath> components) {
@@ -542,7 +541,6 @@ public class LuaBinaryDescription implements
                     ImmutableSortedSet.copyOf(
                         ruleFinder.filterBuildRuleInputs(components.values()))),
                 Suppliers.ofInstance(ImmutableSortedSet.of())),
-            pathResolver,
             root,
             components));
   }
@@ -586,7 +584,6 @@ public class LuaBinaryDescription implements
   private Tool getInPlaceBinary(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      final SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       final SourcePath starter,
@@ -599,7 +596,6 @@ public class LuaBinaryDescription implements
                 getModulesSymlinkTreeTarget(params.getBuildTarget()),
                 params,
                 resolver,
-                pathResolver,
                 ruleFinder,
                 getModulesSymlinkTreeRoot(
                     params.getBuildTarget(),
@@ -627,7 +623,6 @@ public class LuaBinaryDescription implements
                   getPythonModulesSymlinkTreeTarget(params.getBuildTarget()),
                   params,
                   resolver,
-                  pathResolver,
                   ruleFinder,
                   getPythonModulesSymlinkTreeRoot(
                       params.getBuildTarget(),
@@ -644,7 +639,6 @@ public class LuaBinaryDescription implements
                   getNativeLibsSymlinkTreeTarget(params.getBuildTarget()),
                   params,
                   resolver,
-                  pathResolver,
                   ruleFinder,
                   getNativeLibsSymlinkTreeRoot(
                       params.getBuildTarget(),
@@ -760,7 +754,6 @@ public class LuaBinaryDescription implements
         return getInPlaceBinary(
             params,
             resolver,
-            pathResolver,
             ruleFinder,
             cxxPlatform,
             starter,

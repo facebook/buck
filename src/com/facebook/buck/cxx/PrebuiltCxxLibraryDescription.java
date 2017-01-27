@@ -326,7 +326,6 @@ public class PrebuiltCxxLibraryDescription implements
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
         resolver,
-        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         cxxPlatform,
         parseExportedHeaders(params, resolver, cxxPlatform, args),
         HeaderVisibility.PUBLIC,

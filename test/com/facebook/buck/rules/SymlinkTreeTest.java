@@ -102,9 +102,6 @@ public class SymlinkTreeTest {
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule = new SymlinkTree(
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
-        new SourcePathResolver(new SourcePathRuleFinder(
-            new BuildRuleResolver(TargetGraph.EMPTY,
-                new DefaultTargetNodeToBuildRuleTransformer()))),
         outputPath,
         links);
 
@@ -114,15 +111,15 @@ public class SymlinkTreeTest {
   public void testSymlinkTreeBuildSteps() throws IOException {
 
     // Create the fake build contexts.
-    BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
+    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    ));
+    BuildContext buildContext = FakeBuildContext.withSourcePathResolver(resolver);
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     // Verify the build steps are as expected.
-    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    ));
     ImmutableList<Step> expectedBuildSteps =
         ImmutableList.of(
             new MakeCleanDirectoryStep(filesystem, outputPath),
@@ -147,12 +144,8 @@ public class SymlinkTreeTest {
     // link map.
     Path aFile = tmpDir.newFile();
     Files.write(aFile, "hello world".getBytes(Charsets.UTF_8));
-    AbstractBuildRuleWithResolver modifiedSymlinkTreeBuildRule = new SymlinkTree(
+    SymlinkTree modifiedSymlinkTreeBuildRule = new SymlinkTree(
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
-        new SourcePathResolver(new SourcePathRuleFinder(
-            new BuildRuleResolver(
-                TargetGraph.EMPTY,
-                new DefaultTargetNodeToBuildRuleTransformer()))),
         outputPath,
         ImmutableMap.of(
             Paths.get("different/link"),
@@ -226,10 +219,6 @@ public class SymlinkTreeTest {
             new FakeBuildRuleParamsBuilder(buildTarget)
                 .setDeclaredDeps(ImmutableSortedSet.of(dep))
                 .build(),
-            new SourcePathResolver(new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY,
-                    new DefaultTargetNodeToBuildRuleTransformer()))),
             outputPath,
             links);
 
@@ -264,7 +253,6 @@ public class SymlinkTreeTest {
             new FakeBuildRuleParamsBuilder(buildTarget)
                 .setDeclaredDeps(ImmutableSortedSet.of(dep))
                 .build(),
-            pathResolver,
             outputPath,
             ImmutableMap.of(
                 Paths.get("link"),
@@ -302,13 +290,9 @@ public class SymlinkTreeTest {
 
   @Test
   public void verifyStepFailsIfKeyContainsDotDot() throws Exception {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     SymlinkTree symlinkTree =
         new SymlinkTree(
             new FakeBuildRuleParamsBuilder(buildTarget).build(),
-            pathResolver,
             outputPath,
             ImmutableMap.of(
                 Paths.get("../something"),

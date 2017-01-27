@@ -104,7 +104,6 @@ public class CxxDescriptionEnhancer {
   public static HeaderSymlinkTree createHeaderSymlinkTree(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       ImmutableMap<Path, SourcePath> headers,
       HeaderVisibility headerVisibility,
@@ -131,7 +130,6 @@ public class CxxDescriptionEnhancer {
         : CxxPreprocessables.HeaderMode.HEADER_MAP_ONLY);
 
     return CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
-        pathResolver,
         headerSymlinkTreeTarget,
         params,
         headerSymlinkTreeRoot,
@@ -141,7 +139,6 @@ public class CxxDescriptionEnhancer {
 
   public static SymlinkTree createSandboxSymlinkTree(
       BuildRuleParams params,
-      SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       ImmutableMap<Path, SourcePath> map) {
     BuildTarget sandboxSymlinkTreeTarget =
@@ -161,7 +158,6 @@ public class CxxDescriptionEnhancer {
 
     return new SymlinkTree(
         paramsWithoutDeps,
-        pathResolver,
         sandboxSymlinkTreeRoot,
         map);
   }
@@ -169,7 +165,6 @@ public class CxxDescriptionEnhancer {
   public static HeaderSymlinkTree requireHeaderSymlinkTree(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       ImmutableMap<Path, SourcePath> headers,
       HeaderVisibility headerVisibility,
@@ -191,7 +186,6 @@ public class CxxDescriptionEnhancer {
     HeaderSymlinkTree symlinkTree = createHeaderSymlinkTree(
         untypedParams,
         ruleResolver,
-        pathResolver,
         cxxPlatform,
         headers,
         headerVisibility,
@@ -726,7 +720,6 @@ public class CxxDescriptionEnhancer {
     HeaderSymlinkTree headerSymlinkTree = requireHeaderSymlinkTree(
         params,
         resolver,
-        sourcePathResolver,
         cxxPlatform,
         headers,
         HeaderVisibility.PRIVATE,
@@ -805,7 +798,6 @@ public class CxxDescriptionEnhancer {
           requireSharedLibrarySymlinkTree(
               params,
               resolver,
-              sourcePathResolver,
               cxxPlatform,
               deps,
               NativeLinkable.class::isInstance);
@@ -1104,7 +1096,6 @@ public class CxxDescriptionEnhancer {
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
             params,
             ruleResolver,
-            sourcePathResolver,
             cxxPlatform,
             CxxDescriptionEnhancer.parseHeaders(
                 params.getBuildTarget(),
@@ -1137,7 +1128,6 @@ public class CxxDescriptionEnhancer {
             CxxLibraryDescription.getTransitiveCxxPreprocessorInput(
                 params,
                 ruleResolver,
-                sourcePathResolver,
                 cxxPlatform,
                 exportedPreprocessorFlags,
                 exportedHeaders,
@@ -1211,7 +1201,6 @@ public class CxxDescriptionEnhancer {
    */
   public static SymlinkTree createSharedLibrarySymlinkTree(
       BuildRuleParams params,
-      SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> deps,
       Predicate<Object> traverse,
@@ -1244,21 +1233,18 @@ public class CxxDescriptionEnhancer {
             symlinkTreeTarget,
             Suppliers.ofInstance(ImmutableSortedSet.of()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
-        pathResolver,
         symlinkTreeRoot,
         links.build());
   }
 
   public static SymlinkTree createSharedLibrarySymlinkTree(
       BuildRuleParams params,
-      SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> deps,
       Predicate<Object> traverse)
       throws NoSuchBuildTargetException {
     return createSharedLibrarySymlinkTree(
         params,
-        pathResolver,
         cxxPlatform,
         deps,
         traverse,
@@ -1268,7 +1254,6 @@ public class CxxDescriptionEnhancer {
   public static SymlinkTree requireSharedLibrarySymlinkTree(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> deps,
       Predicate<Object> traverse)
@@ -1281,7 +1266,6 @@ public class CxxDescriptionEnhancer {
           resolver.addToIndex(
               createSharedLibrarySymlinkTree(
                   params,
-                  pathResolver,
                   cxxPlatform,
                   deps,
                   traverse));
@@ -1345,7 +1329,6 @@ public class CxxDescriptionEnhancer {
     }
     return createSandboxSymlinkTree(
         params,
-        sourcePathResolver,
         platform,
         ImmutableMap.copyOf(links));
   }

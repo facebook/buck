@@ -177,7 +177,6 @@ public class PythonBinaryDescription implements
                     linkTreeTarget,
                     Suppliers.ofInstance(ImmutableSortedSet.of()),
                     Suppliers.ofInstance(ImmutableSortedSet.of())),
-                pathResolver,
                 linkTreeRoot,
                 ImmutableMap.<Path, SourcePath>builder()
                     .putAll(components.getModules())

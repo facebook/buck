@@ -291,7 +291,6 @@ public class ThriftLibraryDescription
                 symlinkTreeTarget,
                 Suppliers.ofInstance(ImmutableSortedSet.of()),
                 Suppliers.ofInstance(ImmutableSortedSet.of())),
-            pathResolver,
             includeRoot,
             includes);
       resolver.addToIndex(symlinkTree);

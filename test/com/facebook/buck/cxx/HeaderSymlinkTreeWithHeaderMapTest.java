@@ -24,7 +24,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -36,6 +35,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.step.Step;
@@ -104,11 +104,6 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule = new HeaderSymlinkTreeWithHeaderMap(
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
-        new SourcePathResolver(new SourcePathRuleFinder(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        )),
         symlinkTreeRoot,
         links);
 
@@ -117,13 +112,13 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
 
   @Test
   public void testSymlinkTreeBuildSteps() throws IOException {
-    BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
+    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    ));
+    BuildContext buildContext = FakeBuildContext.withSourcePathResolver(resolver);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
-    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     ));
     ImmutableList<Step> expectedBuildSteps =
         ImmutableList.of(
             new MakeCleanDirectoryStep(filesystem, symlinkTreeRoot),
@@ -154,13 +149,8 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
   public void testSymlinkTreeRuleKeyChangesIfLinkMapChanges() throws Exception {
     Path aFile = tmpDir.newFile();
     Files.write(aFile, "hello world".getBytes(Charsets.UTF_8));
-    AbstractBuildRuleWithResolver modifiedSymlinkTreeBuildRule = new HeaderSymlinkTreeWithHeaderMap(
+    SymlinkTree modifiedSymlinkTreeBuildRule = new HeaderSymlinkTreeWithHeaderMap(
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
-        new SourcePathResolver(new SourcePathRuleFinder(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        )),
         symlinkTreeRoot,
         ImmutableMap.of(
             Paths.get("different/link"),

@@ -390,7 +390,7 @@ abstract class GoDescriptors {
         params.getBuildTarget(),
         "__%s__tree");
 
-    return new SymlinkTree(params, pathResolver, root, treeMap);
+    return new SymlinkTree(params, root, treeMap);
   }
 
   /**

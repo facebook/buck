@@ -24,7 +24,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -174,7 +173,6 @@ public class CxxPreprocessables {
    * as these are modeled via {@link CxxPreprocessAndCompile}.
    */
   public static HeaderSymlinkTree createHeaderSymlinkTreeBuildRule(
-      SourcePathResolver resolver,
       BuildTarget target,
       BuildRuleParams params,
       Path root,
@@ -191,20 +189,17 @@ public class CxxPreprocessables {
       case SYMLINK_TREE_WITH_HEADER_MAP:
         return new HeaderSymlinkTreeWithHeaderMap(
             paramsWithoutDeps,
-            resolver,
             root,
             links);
       case HEADER_MAP_ONLY:
         return new DirectHeaderMap(
             paramsWithoutDeps,
-            resolver,
             root,
             links);
       default:
       case SYMLINK_TREE_ONLY:
         return new HeaderSymlinkTree(
             paramsWithoutDeps,
-            resolver,
             root,
             links);
     }

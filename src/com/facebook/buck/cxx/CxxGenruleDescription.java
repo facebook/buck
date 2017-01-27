@@ -697,7 +697,6 @@ public class CxxGenruleDescription
         BuildRuleResolver resolver,
         ImmutableList<BuildRule> rules)
         throws MacroException {
-      SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
       BuildTarget symlinkTreeTarget =
           CxxDescriptionEnhancer.createSharedLibrarySymlinkTreeTarget(
               params.getBuildTarget(),
@@ -710,7 +709,6 @@ public class CxxGenruleDescription
               resolver.addToIndex(
                   CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
                       params,
-                      pathResolver,
                       cxxPlatform,
                       rules,
                       NativeLinkable.class::isInstance));

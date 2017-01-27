@@ -159,7 +159,6 @@ public class CxxLibraryDescription implements
   public static ImmutableCollection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
       ImmutableMap<Path, SourcePath> exportedHeaders,
@@ -194,7 +193,6 @@ public class CxxLibraryDescription implements
           CxxDescriptionEnhancer.requireHeaderSymlinkTree(
               params,
               ruleResolver,
-              pathResolver,
               cxxPlatform,
               exportedHeaders,
               HeaderVisibility.PUBLIC,
@@ -409,7 +407,6 @@ public class CxxLibraryDescription implements
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
         resolver,
-        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         cxxPlatform,
         CxxDescriptionEnhancer.parseHeaders(
             params.getBuildTarget(),
@@ -432,7 +429,6 @@ public class CxxLibraryDescription implements
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
         resolver,
-        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         cxxPlatform,
         CxxDescriptionEnhancer.parseExportedHeaders(
             params.getBuildTarget(),

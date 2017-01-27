@@ -112,7 +112,6 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
             args.useCxxLibraries,
             args.cxxLibraryWhitelist,
             resolver,
-            pathResolver,
             ruleFinder,
             cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;

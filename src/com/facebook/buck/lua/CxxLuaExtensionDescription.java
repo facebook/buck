@@ -139,7 +139,6 @@ public class CxxLuaExtensionDescription implements
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
             params,
             ruleResolver,
-            pathResolver,
             cxxPlatform,
             headers,
             HeaderVisibility.PRIVATE,

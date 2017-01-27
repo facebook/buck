@@ -85,7 +85,6 @@ public class ThriftLibraryDescriptionTest {
 
   private static HeaderSymlinkTree createFakeSymlinkTree(
       BuildTarget target,
-      SourcePathResolver resolver,
       Path root,
       BuildRule... deps) {
     BuildRuleParams params =
@@ -94,7 +93,6 @@ public class ThriftLibraryDescriptionTest {
             .build();
     return new HeaderSymlinkTree(
         params,
-        resolver,
         root,
         ImmutableMap.of());
   }
@@ -251,7 +249,6 @@ public class ThriftLibraryDescriptionTest {
     Path includeRoot = desc.getIncludeRoot(unflavoredTarget, filesystem);
     HeaderSymlinkTree thriftIncludeSymlinkTree = createFakeSymlinkTree(
         desc.createThriftIncludeSymlinkTreeTarget(unflavoredTarget),
-        pathResolver,
         includeRoot);
     ThriftLibrary lib = new ThriftLibrary(
         unflavoredParams,
@@ -376,7 +373,7 @@ public class ThriftLibraryDescriptionTest {
     BuildTarget depTarget = BuildTargetFactory.newInstance("//:dep");
     Path depIncludeRoot = desc.getIncludeRoot(depTarget, filesystem);
     HeaderSymlinkTree depIncludeSymlinkTree =
-        createFakeSymlinkTree(depTarget, pathResolver, depIncludeRoot);
+        createFakeSymlinkTree(depTarget, depIncludeRoot);
     ThriftLibrary dep = new ThriftLibrary(
         new FakeBuildRuleParamsBuilder(depTarget).build(),
         pathResolver,

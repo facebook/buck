@@ -36,7 +36,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
@@ -103,13 +102,10 @@ public class AndroidResourceDescription
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       A args) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-
     if (params.getBuildTarget().getFlavors().contains(RESOURCES_SYMLINK_TREE_FLAVOR)) {
-      return createSymlinkTree(pathResolver, params, args.res, "res");
+      return createSymlinkTree(params, args.res, "res");
     } else if (params.getBuildTarget().getFlavors().contains(ASSETS_SYMLINK_TREE_FLAVOR)) {
-      return createSymlinkTree(pathResolver, params, args.assets, "assets");
+      return createSymlinkTree(params, args.assets, "assets");
     }
 
     // Only allow android resource and library rules as dependencies.
@@ -140,6 +136,8 @@ public class AndroidResourceDescription
             ASSETS_SYMLINK_TREE_FLAVOR,
             args.assets);
 
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+
     params = params.appendExtraDeps(
         Iterables.concat(
             resInputs.getSecond().map(ruleFinder::filterBuildRuleInputs)
@@ -169,7 +167,6 @@ public class AndroidResourceDescription
   }
 
   private SymlinkTree createSymlinkTree(
-      SourcePathResolver pathResolver,
       BuildRuleParams params,
       Optional<Either<SourcePath, ImmutableSortedMap<String, SourcePath>>> symlinkAttribute,
       String outputDirName) {
@@ -201,7 +198,7 @@ public class AndroidResourceDescription
     params = params.copyWithDeps(
         Suppliers.ofInstance(ImmutableSortedSet.of()),
         Suppliers.ofInstance(ImmutableSortedSet.of()));
-    return new SymlinkTree(params, pathResolver, symlinkTreeRoot, links);
+    return new SymlinkTree(params, symlinkTreeRoot, links);
   }
 
   public static Optional<SourcePath> getResDirectoryForProject(

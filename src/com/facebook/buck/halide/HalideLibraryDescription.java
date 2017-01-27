@@ -296,7 +296,6 @@ public class HalideLibraryDescription
       return CxxDescriptionEnhancer.createHeaderSymlinkTree(
           params,
           resolver,
-          pathResolver,
           cxxPlatform,
           headersBuilder.build(),
           HeaderVisibility.PUBLIC,

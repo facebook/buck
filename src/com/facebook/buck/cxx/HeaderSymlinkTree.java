@@ -18,7 +18,6 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.google.common.collect.ImmutableMap;
 
@@ -29,10 +28,9 @@ public class HeaderSymlinkTree extends SymlinkTree {
 
   public HeaderSymlinkTree(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       Path root,
       ImmutableMap<Path, SourcePath> links) {
-    super(params, resolver, root, links);
+    super(params, root, links);
   }
 
   /**

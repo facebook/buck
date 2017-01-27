@@ -70,7 +70,6 @@ public class SwiftLibraryIntegrationTest {
 
     BuildRule symlinkTreeBuildRule = new HeaderSymlinkTreeWithHeaderMap(
         new FakeBuildRuleParamsBuilder(symlinkTarget).build(),
-        pathResolver,
         symlinkTreeRoot,
         links);
     resolver.addToIndex(symlinkTreeBuildRule);

@@ -112,7 +112,6 @@ public class JavaTestDescription implements
         args.useCxxLibraries,
         args.cxxLibraryWhitelist,
         resolver,
-        pathResolver,
         ruleFinder,
         cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
@@ -230,12 +229,11 @@ public class JavaTestDescription implements
         Optional<Boolean> useCxxLibraries,
         final ImmutableSet<BuildTarget> cxxLibraryWhitelist,
         BuildRuleResolver resolver,
-        SourcePathResolver pathResolver,
         SourcePathRuleFinder ruleFinder,
         CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
       if (useCxxLibraries.orElse(false)) {
         SymlinkTree nativeLibsSymlinkTree =
-            buildNativeLibsSymlinkTreeRule(params, pathResolver, cxxPlatform);
+            buildNativeLibsSymlinkTreeRule(params, cxxPlatform);
 
         // If the cxxLibraryWhitelist is present, remove symlinks that were not requested.
         // They could point to old, invalid versions of the library in question.
@@ -256,7 +254,6 @@ public class JavaTestDescription implements
                   nativeLibsSymlinkTree.getBuildTarget(),
                   Suppliers.ofInstance(ImmutableSortedSet.of()),
                   Suppliers.ofInstance(ImmutableSortedSet.of())),
-              pathResolver,
               nativeLibsSymlinkTree.getPathToOutput(),
               filteredLinks.build());
         }
@@ -283,11 +280,9 @@ public class JavaTestDescription implements
 
     public static SymlinkTree buildNativeLibsSymlinkTreeRule(
         BuildRuleParams buildRuleParams,
-        SourcePathResolver pathResolver,
         CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
       return CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
           buildRuleParams,
-          pathResolver,
           cxxPlatform,
           buildRuleParams.getDeps(),
           Predicates.or(

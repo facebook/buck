@@ -189,7 +189,6 @@ abstract class DDescriptionUtils {
             target,
             Suppliers.ofInstance(ImmutableSortedSet.of()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
-        pathResolver,
         BuildTargets.getGenPath(
             baseParams.getProjectFilesystem(),
             baseParams.getBuildTarget(),

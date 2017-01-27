@@ -83,7 +83,6 @@ public class CxxCompilationDatabaseTest {
     HeaderSymlinkTree privateSymlinkTree = CxxDescriptionEnhancer.createHeaderSymlinkTree(
         testBuildRuleParams,
         testBuildRuleResolver,
-        testSourcePathResolver,
         CxxPlatformUtils.DEFAULT_PLATFORM,
         ImmutableMap.of(),
         HeaderVisibility.PRIVATE,
@@ -91,7 +90,6 @@ public class CxxCompilationDatabaseTest {
     HeaderSymlinkTree exportedSymlinkTree = CxxDescriptionEnhancer.createHeaderSymlinkTree(
         testBuildRuleParams,
         testBuildRuleResolver,
-        testSourcePathResolver,
         CxxPlatformUtils.DEFAULT_PLATFORM,
         ImmutableMap.of(),
         HeaderVisibility.PUBLIC,

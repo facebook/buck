@@ -84,7 +84,6 @@ public class CxxBinaryDescription implements
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
         resolver,
-        pathResolver,
         cxxPlatform,
         CxxDescriptionEnhancer.parseHeaders(
             params.getBuildTarget(),

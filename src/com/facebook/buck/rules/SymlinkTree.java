@@ -45,7 +45,7 @@ import java.util.logging.Level;
 import java.util.stream.Stream;
 
 public class SymlinkTree
-    extends AbstractBuildRuleWithResolver
+    extends AbstractBuildRule
     implements HasRuntimeDeps, RuleKeyAppendable, SupportsInputBasedRuleKey {
 
   private final Path root;
@@ -53,10 +53,9 @@ public class SymlinkTree
 
   public SymlinkTree(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       Path root,
       final ImmutableMap<Path, SourcePath> links) {
-    super(params, resolver);
+    super(params);
 
     Preconditions.checkState(
         !root.isAbsolute(),
@@ -69,12 +68,10 @@ public class SymlinkTree
 
   public static SymlinkTree from(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       Path root,
       ImmutableMap<String, SourcePath> links) {
     return new SymlinkTree(
         params,
-        resolver,
         root,
         MoreMaps.transformKeys(links, MorePaths.toPathFn(root.getFileSystem())));
   }
@@ -149,7 +146,10 @@ public class SymlinkTree
     return ImmutableList.of(
         getVerifyStep(),
         new MakeCleanDirectoryStep(getProjectFilesystem(), root),
-        new SymlinkTreeStep(getProjectFilesystem(), root, getResolver().getMappedPaths(links)));
+        new SymlinkTreeStep(
+            getProjectFilesystem(),
+            root,
+            context.getSourcePathResolver().getMappedPaths(links)));
   }
 
   // Put the link map into the rule key, as if it changes at all, we need to
