@@ -26,12 +26,6 @@ public class WatchEvents {
     // Utility class
   }
 
-
-  public static boolean isPathCreateOrDeleteEvent(WatchEvent<?> event) {
-    return event.kind() == StandardWatchEventKinds.ENTRY_CREATE ||
-        event.kind() == StandardWatchEventKinds.ENTRY_DELETE;
-  }
-
   /**
    * @param event The event to be tested.
    * @return true if event is a path change notification.
