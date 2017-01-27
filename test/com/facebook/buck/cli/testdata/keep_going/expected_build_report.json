@@ -1,0 +1,16 @@
+{
+  "success" : false,
+  "results" : {
+    "//:rule_with_output" : {
+      "success" : true,
+      "type" : "BUILT_LOCALLY",
+      "output" : "buck-out/gen/rule_with_output/rule_with_output.txt"
+    },
+    "//:failing_rule" : {
+      "success" : false
+    }
+  },
+  "failures" : {
+    "//:failing_rule" : "//:failing_rule failed with exit code 2:\ngenrule\nstderr: "
+  }
+}

@@ -26,10 +26,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ObjectMappers;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -125,27 +122,9 @@ public class BuildKeepGoingIntegrationTest {
         .assertFailure();
 
     assertTrue(Files.exists(buildReport));
-    String buildReportContents = new String(Files.readAllBytes(buildReport), Charsets.UTF_8);
-    ObjectMapper mapper = ObjectMappers.newDefaultInstance();
-    String expectedReport = Joiner.on(System.lineSeparator()).join(
-        "{",
-        "  \"success\" : false,",
-        "  \"results\" : {",
-        "    \"//:rule_with_output\" : {",
-        "      \"success\" : true,",
-        "      \"type\" : \"BUILT_LOCALLY\",",
-        "      \"output\" : " + mapper.valueToTree(GENRULE_OUTPUT_PATH),
-        "    },",
-        "    \"//:failing_rule\" : {",
-        "      \"success\" : false",
-        "    }",
-        "  },",
-        "  \"failures\" : {",
-        "    \"//:failing_rule\" : \"//:failing_rule failed with exit code 2:\\ngenrule" +
-            "\\nstderr: \"",
-        "  }",
-        "}");
-    assertEquals(expectedReport, buildReportContents);
+    String buildReportContents = new String(Files.readAllBytes(buildReport), Charsets.UTF_8)
+        .replace("\r\n", "\n");
+    assertEquals(workspace.getFileContents("expected_build_report.json"), buildReportContents);
   }
 
   private static ProcessResult buildTwoGoodRulesAndAssertSuccess(ProjectWorkspace workspace)
