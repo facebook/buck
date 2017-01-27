@@ -74,6 +74,7 @@ import org.immutables.value.Value;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -292,13 +293,18 @@ public class Build implements Closeable {
           }
         }
       }
-    } catch (InterruptedException e) {
-      try {
-        buildFuture.cancel(true);
-      } catch (CancellationException ignored) {
-        // Rethrow original InterruptedException instead.
+    } catch (ExecutionException | InterruptedException | RuntimeException e) {
+      Throwable t = Throwables.getRootCause(e);
+      if (e instanceof InterruptedException ||
+          t instanceof InterruptedException ||
+          t instanceof ClosedByInterruptException) {
+        try {
+          buildFuture.cancel(true);
+        } catch (CancellationException ignored) {
+          // Rethrow original InterruptedException instead.
+        }
+        Thread.currentThread().interrupt();
       }
-      Thread.currentThread().interrupt();
       throw e;
     }
 
@@ -366,12 +372,13 @@ public class Build implements Closeable {
             exitCode = 1;
           }
         }
-      } catch (ExecutionException e) {
+      } catch (ExecutionException | RuntimeException e) {
         // This is likely a checked exception that was caught while building a build rule.
         Throwable cause = e.getCause();
         Throwables.propagateIfInstanceOf(cause, IOException.class);
         Throwables.propagateIfInstanceOf(cause, StepFailedException.class);
         Throwables.propagateIfInstanceOf(cause, InterruptedException.class);
+        Throwables.propagateIfInstanceOf(cause, ClosedByInterruptException.class);
         Throwables.propagateIfInstanceOf(cause, HumanReadableException.class);
         if (cause instanceof ExceptionWithHumanReadableMessage) {
           throw new HumanReadableException((ExceptionWithHumanReadableMessage) cause);
