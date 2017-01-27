@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatformUtils;
@@ -58,6 +59,7 @@ import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -262,6 +264,35 @@ public class NdkCxxPlatformTest {
           Matchers.hasSize(1));
     }
 
+  }
+
+  @Test
+  public void headerVerificationWhitelistsNdkRoot() throws IOException {
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    String dir = "android-ndk-r9c";
+    Path root = tmp.newFolder(dir);
+    MoreFiles.writeLinesToFile(ImmutableList.of("r9c"), root.resolve("RELEASE.TXT"));
+    ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> platforms =
+        NdkCxxPlatforms.getPlatforms(
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            filesystem,
+            root,
+            NdkCxxPlatformCompiler.builder()
+                .setType(NdkCxxPlatformCompiler.Type.GCC)
+                .setVersion("gcc-version")
+                .setGccVersion("clang-version")
+                .build(),
+            NdkCxxPlatforms.CxxRuntime.GNUSTL,
+            "target-app-platform",
+            ImmutableSet.of("x86"),
+            Platform.LINUX,
+            new AlwaysFoundExecutableFinder(),
+            /* strictToolchainPaths */ false);
+    for (NdkCxxPlatform ndkCxxPlatform : platforms.values()) {
+      assertTrue(
+          ndkCxxPlatform.getCxxPlatform().getHeaderVerification()
+              .isWhitelisted(root.resolve("test.h").toString()));
+    }
   }
 
 }

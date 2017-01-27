@@ -55,6 +55,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class NdkCxxPlatforms {
 
@@ -627,8 +628,16 @@ public class NdkCxxPlatforms {
                     ElfSharedLibraryInterfaceFactory.of(
                         new ConstantToolProvider(
                             getGccTool(toolchainPaths, "objcopy", version, executableFinder)))) :
-                Optional.empty())
-        .setHeaderVerification(config.getHeaderVerification());
+                Optional.empty());
+
+    // Add the NDK root path to the white-list so that headers from the NDK won't trigger the
+    // verification warnings.  Ideally, long-term, we'd model NDK libs/headers via automatically
+    // generated nodes/descriptions so that they wouldn't need to special case it here.
+    cxxPlatformBuilder.setHeaderVerification(
+        config.getHeaderVerification()
+            .withAdditionalWhitelist(
+                ImmutableList.of(
+                    "^" + Pattern.quote(ndkRoot.toString() + File.separatorChar) + ".*")));
 
     if (cxxRuntime != CxxRuntime.SYSTEM) {
       cxxPlatformBuilder.putRuntimeLdflags(
