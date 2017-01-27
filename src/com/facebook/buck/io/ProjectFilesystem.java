@@ -37,7 +37,6 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -50,7 +49,6 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -86,7 +84,6 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
@@ -1003,18 +1000,6 @@ public class ProjectFilesystem {
    * with the contents and structure that matches that of the specified paths.
    */
   public void createZip(Collection<Path> pathsToIncludeInZip, Path out) throws IOException {
-    createZip(pathsToIncludeInZip, out, ImmutableMap.of());
-  }
-
-  /**
-   * Similar to {@link #createZip(Collection, Path)}, but also takes a list of additional files to
-   * write in the zip, including their contents, as a map. It's assumed only paths that should not
-   * be ignored are passed to this method.
-   */
-  public void createZip(
-      Collection<Path> pathsToIncludeInZip,
-      Path out,
-      ImmutableMap<Path, String> additionalFileContents) throws IOException {
     try (CustomZipOutputStream zip = ZipOutputStreams.newOutputStream(out)) {
       for (Path path : pathsToIncludeInZip) {
         boolean isDirectory = isDirectory(path);
@@ -1030,18 +1015,6 @@ public class ProjectFilesystem {
           try (InputStream input = newFileInputStream(path)) {
             ByteStreams.copy(input, zip);
           }
-        }
-        zip.closeEntry();
-      }
-
-      for (Map.Entry<Path, String> fileContentsEntry : additionalFileContents.entrySet()) {
-        CustomZipEntry entry = new CustomZipEntry(fileContentsEntry.getKey());
-        // We want deterministic ZIPs, so avoid mtimes.
-        entry.setFakeTime();
-        zip.putNextEntry(entry);
-        try (InputStream stream =
-                 new ByteArrayInputStream(fileContentsEntry.getValue().getBytes(Charsets.UTF_8))) {
-          ByteStreams.copy(stream, zip);
         }
         zip.closeEntry();
       }

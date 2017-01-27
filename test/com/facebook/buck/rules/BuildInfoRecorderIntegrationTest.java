@@ -54,8 +54,7 @@ public class BuildInfoRecorderIntegrationTest {
             @Override
             public void createZip(
                 Collection<Path> pathsToIncludeInZip,
-                Path out,
-                ImmutableMap<Path, String> additionalFileContents) throws IOException {
+                Path out) throws IOException {
               // For this test, nothing really cares about the content, so just write out the name.
               writeBytesToPath(out.toString().getBytes(), out);
             }

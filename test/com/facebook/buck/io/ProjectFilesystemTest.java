@@ -33,7 +33,6 @@ import com.facebook.buck.zip.ZipConstants;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
@@ -449,10 +448,7 @@ public class ProjectFilesystemTest {
 
     // Archive it into a zipfile using `ProjectFileSystem.createZip`.
     Path zipFile = tmp.getRoot().resolve("test.zip");
-    filesystem.createZip(
-        ImmutableList.of(exe),
-        zipFile,
-        ImmutableMap.of(Paths.get("additional"), "info"));
+    filesystem.createZip(ImmutableList.of(exe), zipFile);
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
@@ -524,25 +520,6 @@ public class ProjectFilesystemTest {
   }
 
   @Test
-  public void testCreateZipWithAdditionalFiles() throws IOException {
-    tmp.newFolder("foo");
-    tmp.newFile("foo/bar.txt");
-    tmp.newFile("foo/baz.txt");
-
-    Path output = tmp.newFile("out.zip");
-
-    filesystem.createZip(
-        ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")),
-        output,
-        ImmutableMap.of(Paths.get("log/info.txt"), "hello"));
-
-    ZipInspector zipInspector = new ZipInspector(output);
-    assertEquals(
-        ImmutableSet.of("foo/bar.txt", "foo/baz.txt", "log/info.txt"),
-        zipInspector.getZipFileEntries());
-  }
-
-  @Test
   public void testGetZipContents() throws IOException {
     tmp.newFolder("foo");
     tmp.newFile("foo/bar.txt");
@@ -552,15 +529,13 @@ public class ProjectFilesystemTest {
 
     filesystem.createZip(
         ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")),
-        output,
-        ImmutableMap.of(Paths.get("log/info.txt"), "hello"));
+        output);
 
     ImmutableCollection<Path> actualContents = filesystem.getZipMembers(output);
     assertEquals(
         ImmutableList.of(
             Paths.get("foo/bar.txt"),
-            Paths.get("foo/baz.txt"),
-            Paths.get("log/info.txt")),
+            Paths.get("foo/baz.txt")),
         actualContents);
   }
 
