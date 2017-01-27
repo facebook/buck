@@ -16,20 +16,19 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.LineProcessorRunnable;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -42,17 +41,20 @@ import java.util.regex.Pattern;
  */
 class CxxErrorTransformerFactory {
 
-  private final Optional<Function<Path, Path>> absolutifier;
+  private final ProjectFilesystem filesystem;
+  private final boolean shouldAbsolutize;
   private final HeaderPathNormalizer pathNormalizer;
 
   /**
-   * @param absolutifier If set, run paths through the given function that absolutizes the path.
+   * @param shouldAbsolutize whether to transform paths to absolute paths.
    * @param pathNormalizer Path replacements to rewrite symlinked C headers.
    */
   public CxxErrorTransformerFactory(
-      Optional<Function<Path, Path>> absolutifier,
+      ProjectFilesystem filesystem,
+      boolean shouldAbsolutize,
       HeaderPathNormalizer pathNormalizer) {
-    this.absolutifier = absolutifier;
+    this.filesystem = filesystem;
+    this.shouldAbsolutize = shouldAbsolutize;
     this.pathNormalizer = pathNormalizer;
   }
 
@@ -108,17 +110,16 @@ class CxxErrorTransformerFactory {
   }
 
   private String transformPath(String original) {
-    Path path = Paths.get(original);
+    Path path = MorePaths.normalize(filesystem.resolve(original));
 
     // And, of course, we need to fixup any replacement paths.
-    Optional<Path> normalizedPath = pathNormalizer.getRelativePathForUnnormalizedPath(path);
+    Optional<Path> normalizedPath = pathNormalizer.getAbsolutePathForUnnormalizedPath(path);
     if (normalizedPath.isPresent()) {
       path = normalizedPath.get();
     }
 
-    // If an absolutifier is present, use that to generate an absolute path.
-    if (absolutifier.isPresent()) {
-      path = Preconditions.checkNotNull(absolutifier.get().apply(path));
+    if (!shouldAbsolutize) {
+      path = filesystem.getPathRelativeToProjectRoot(path).orElse(path);
     }
 
     return Escaper.escapePathForCIncludeString(path);

@@ -77,9 +77,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
             @Override
             public HeaderPathNormalizer get() {
               HeaderPathNormalizer.Builder builder =
-                  new HeaderPathNormalizer.Builder(
-                      resolver,
-                      minLengthPathRepresentation);
+                  new HeaderPathNormalizer.Builder(resolver);
               for (CxxHeaders include : preprocessorFlags.getIncludes()) {
                 include.addToHeaderPathNormalizer(builder);
               }

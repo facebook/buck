@@ -72,26 +72,13 @@ public class HeaderPathNormalizer {
   }
 
   public Optional<Path> getAbsolutePathForUnnormalizedPath(Path unnormalizedPath) {
+    Preconditions.checkArgument(unnormalizedPath.isAbsolute());
     Optional<Map.Entry<Path, SourcePath>> result = pathLookup(unnormalizedPath, normalized);
     if (!result.isPresent()) {
       return Optional.empty();
     }
     return Optional.of(
         pathResolver.getAbsolutePath(result.get().getValue())
-            .resolve(result.get().getKey().relativize(unnormalizedPath)));
-  }
-
-  /**
-   * @return a normalizer function that can be used to convert paths used by the tooling into paths
-   *    that can cached.
-   */
-  public Optional<Path> getRelativePathForUnnormalizedPath(Path unnormalizedPath) {
-    Optional<Map.Entry<Path, SourcePath>> result = pathLookup(unnormalizedPath, normalized);
-    if (!result.isPresent()) {
-      return Optional.empty();
-    }
-    return Optional.of(
-        pathResolver.getRelativePath(result.get().getValue())
             .resolve(result.get().getKey().relativize(unnormalizedPath)));
   }
 
@@ -111,19 +98,18 @@ public class HeaderPathNormalizer {
   public static class Builder {
 
     private final SourcePathResolver pathResolver;
-    private final PathShortener pathShortener;
 
     private final Map<Path, SourcePath> headers = new LinkedHashMap<>();
     private final Map<Path, SourcePath> normalized = new LinkedHashMap<>();
 
-    public Builder(
-        SourcePathResolver pathResolver,
-        PathShortener pathShortener) {
+    public Builder(SourcePathResolver pathResolver) {
       this.pathResolver = pathResolver;
-      this.pathShortener = pathShortener;
     }
 
     private <V> void put(Map<Path, V> map, Path key, V value) {
+      Preconditions.checkArgument(key.isAbsolute());
+      key = MorePaths.normalize(key);
+
       // Hack: Using dropInternalCaches here because `toString` is called on caches by
       // PathShortener, and many Paths are constructed and stored due to HeaderPathNormalizer
       // containing exported headers of all transitive dependencies of a library. This amounts to
@@ -151,9 +137,6 @@ public class HeaderPathNormalizer {
       // using it's relative path.
       put(headers, pathResolver.getAbsolutePath(sourcePath), sourcePath);
 
-      // Add a normalization mapping for the unnormalized absolute path to the relative path.
-      put(normalized, pathShortener.shorten(pathResolver.getAbsolutePath(sourcePath)), sourcePath);
-
       // Add a normalization mapping for the absolute path.
       // We need it for prefix headers and in some rare cases, regular headers will also end up
       // with an absolute path in the depfile for a reason we ignore.
@@ -161,14 +144,14 @@ public class HeaderPathNormalizer {
 
       // Add a normalization mapping for any unnormalized paths passed in.
       for (Path unnormalizedPath : unnormalizedPaths) {
-        put(normalized, pathShortener.shorten(unnormalizedPath), sourcePath);
+        put(normalized, unnormalizedPath, sourcePath);
       }
 
       return this;
     }
 
-    public Builder addHeaderDir(SourcePath sourcePath, Path... unnormalizedPaths) {
-      return addHeader(sourcePath, unnormalizedPaths);
+    public Builder addHeaderDir(SourcePath sourcePath) {
+      return addHeader(sourcePath);
     }
 
     public Builder addPrefixHeader(SourcePath sourcePath) {

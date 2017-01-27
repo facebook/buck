@@ -233,19 +233,22 @@ public class Depfiles {
       Iterable<String> headers = Iterables.skip(prereqs, inputIndex + 1);
 
       for (String rawHeader : headers) {
-        Path header = filesystem.getPath(rawHeader).normalize();
+        Path header = filesystem.resolve(rawHeader).normalize();
         Optional<Path> absolutePath =
             headerPathNormalizer.getAbsolutePathForUnnormalizedPath(header);
+        Optional<Path> repoRelativePath = filesystem.getPathRelativeToProjectRoot(header);
         if (absolutePath.isPresent()) {
           Preconditions.checkState(absolutePath.get().isAbsolute());
           resultBuilder.add(absolutePath.get());
         } else if (
             headerVerification.getMode() != HeaderVerification.Mode.IGNORE &&
-                !headerVerification.isWhitelisted(header.toString())) {
+                !(headerVerification.isWhitelisted(header.toString()) ||
+                    repoRelativePath.map(path -> headerVerification.isWhitelisted(path.toString()))
+                        .orElse(false))) {
           String errorMessage = String.format(
               "%s: included an untracked header \"%s\"",
               inputPath,
-              header);
+              repoRelativePath.orElse(header));
           eventBus.post(
               ConsoleEvent.create(
                   headerVerification.getMode() == HeaderVerification.Mode.ERROR ?

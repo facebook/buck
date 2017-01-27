@@ -274,9 +274,8 @@ public class CxxPreprocessAndCompileStep implements Step {
 
   private CxxErrorTransformerFactory createErrorTransformerFactory(ExecutionContext context) {
     return new CxxErrorTransformerFactory(
-        context.shouldReportAbsolutePaths() ?
-            Optional.of(filesystem::resolve) :
-            Optional.empty(),
+        filesystem,
+        context.shouldReportAbsolutePaths(),
         headerPathNormalizer);
   }
 
