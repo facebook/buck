@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 
 import static com.facebook.buck.jvm.java.JavacOptions.TARGETED_JAVA_VERSION;
+import static org.easymock.EasyMock.createMock;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
@@ -34,6 +35,7 @@ import com.facebook.buck.cli.BuckConfigTestUtils;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Architecture;
@@ -377,9 +379,14 @@ public class JavaBuckConfigTest {
 
   private OptionAccumulator visitOptions(JavacOptions options) {
     OptionAccumulator optionsConsumer = new OptionAccumulator();
-    options.appendOptionsTo(optionsConsumer, Functions.identity());
+    options.appendOptionsTo(
+        optionsConsumer,
+        createMock(SourcePathResolver.class),
+        Functions.identity());
     return optionsConsumer;
   }
+
+
 
   private JavaBuckConfig createWithDefaultFilesystem(Reader reader)
       throws IOException {

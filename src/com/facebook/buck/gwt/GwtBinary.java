@@ -27,6 +27,8 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -154,7 +156,7 @@ public class GwtBinary extends AbstractBuildRule {
       }
 
       @Override
-      protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+      protected ImmutableList<String> getShellCommandInternal(ExecutionContext executionContext) {
         ImmutableList.Builder<String> javaArgsBuilder = ImmutableList.builder();
         javaArgsBuilder.add(javaRuntimeLauncher.getCommand());
         javaArgsBuilder.add("-Dgwt.normalizeTimestamps=true");
@@ -162,7 +164,7 @@ public class GwtBinary extends AbstractBuildRule {
         javaArgsBuilder.add(
             "-classpath", Joiner.on(File.pathSeparator).join(
                 Iterables.transform(
-                    getClasspathEntries(),
+                    getClasspathEntries(context.getSourcePathResolver()),
                     getProjectFilesystem()::resolve)),
             GWT_COMPILER_CLASS,
             "-war", getProjectFilesystem().resolve(getPathToOutput()).toString(),
@@ -203,7 +205,7 @@ public class GwtBinary extends AbstractBuildRule {
    * specified by {@link #modules}.
    */
   @VisibleForTesting
-  Iterable<Path> getClasspathEntries() {
+  Iterable<Path> getClasspathEntries(SourcePathResolver pathResolver) {
     ImmutableSet.Builder<Path> classpathEntries = ImmutableSet.builder();
     classpathEntries.addAll(gwtModuleJars);
     for (BuildRule dep : getDeclaredDeps()) {
@@ -212,8 +214,8 @@ public class GwtBinary extends AbstractBuildRule {
       }
 
       JavaLibrary javaLibrary = (JavaLibrary) dep;
-      for (Path path : javaLibrary.getOutputClasspaths()) {
-        classpathEntries.add(path);
+      for (SourcePath path : javaLibrary.getOutputClasspaths()) {
+        classpathEntries.add(pathResolver.getAbsolutePath(path));
       }
     }
     return classpathEntries.build();

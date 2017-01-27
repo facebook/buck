@@ -16,9 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableSet;
-
-import java.nio.file.Path;
 
 /**
  * Implemented by build rules where the output has a classpath environment.
@@ -30,7 +29,7 @@ public interface HasClasspathEntries {
    * e.g. If the rule represents a java library, then these entries will be passed to
    * {@code javac}'s {@code -classpath} flag in order to build a jar associated with this rule.
    */
-  ImmutableSet<Path> getTransitiveClasspaths();
+  ImmutableSet<SourcePath> getTransitiveClasspaths();
 
   /**
    * @return A set of rules contributing classpath entries for this rule and its dependencies.
@@ -42,7 +41,7 @@ public interface HasClasspathEntries {
    *
    * Used to generate the value of {@link #getTransitiveClasspaths()}.
    */
-  ImmutableSet<Path> getImmediateClasspaths();
+  ImmutableSet<SourcePath> getImmediateClasspaths();
 
   /**
    * @return Classpath entries that this rule will contribute when it is used as a dependency.
@@ -51,5 +50,5 @@ public interface HasClasspathEntries {
    * This is a superset of {@code getImmediateClasspaths} which also contains the classpath entries
    * of any exported deps.
    */
-  ImmutableSet<Path> getOutputClasspaths();
+  ImmutableSet<SourcePath> getOutputClasspaths();
 }

@@ -496,7 +496,7 @@ public class JavaTest
   }
 
   @Override
-  public ImmutableSet<Path> getTransitiveClasspaths() {
+  public ImmutableSet<SourcePath> getTransitiveClasspaths() {
     return compiledTestsLibrary.getTransitiveClasspaths();
   }
 
@@ -506,12 +506,12 @@ public class JavaTest
   }
 
   @Override
-  public ImmutableSet<Path> getImmediateClasspaths() {
+  public ImmutableSet<SourcePath> getImmediateClasspaths() {
     return compiledTestsLibrary.getImmediateClasspaths();
   }
 
   @Override
-  public ImmutableSet<Path> getOutputClasspaths() {
+  public ImmutableSet<SourcePath> getOutputClasspaths() {
     return compiledTestsLibrary.getOutputClasspaths();
   }
 
@@ -682,7 +682,9 @@ public class JavaTest
               @Override
               public StepExecutionResult execute(ExecutionContext context) throws IOException {
                 ImmutableSet<Path> classpathEntries = ImmutableSet.<Path>builder()
-                    .addAll(compiledTestsLibrary.getTransitiveClasspaths())
+                    .addAll(compiledTestsLibrary.getTransitiveClasspaths().stream()
+                        .map(getResolver()::getAbsolutePath)
+                        .collect(MoreCollectors.toImmutableSet()))
                     .addAll(additionalClasspathEntries)
                     .addAll(getBootClasspathEntries(context))
                     .build();

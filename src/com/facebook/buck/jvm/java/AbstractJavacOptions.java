@@ -21,6 +21,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.MoreCollectors;
@@ -231,6 +232,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
 
   public void appendOptionsTo(
       OptionsConsumer optionsConsumer,
+      SourcePathResolver pathResolver,
       final Function<Path, Path> pathRelativizer) {
 
     // Add some standard options.
@@ -271,6 +273,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
       optionsConsumer.addOptionValue("processorpath",
           Joiner.on(File.pathSeparator).join(
               FluentIterable.from(getAnnotationProcessingParams().getSearchPathElements())
+                  .transform(pathResolver::getAbsolutePath)
                   .transform(pathRelativizer)
                   .transform(Object::toString)));
 

@@ -28,6 +28,8 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
@@ -36,7 +38,6 @@ import com.facebook.buck.util.MoreExceptions;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -163,13 +164,16 @@ public class AuditClasspathCommand extends AbstractCommand {
       ImmutableSet<BuildTarget> targets) throws NoSuchBuildTargetException {
     BuildRuleResolver resolver = Preconditions.checkNotNull(
         ActionGraphCache.getFreshActionGraph(params.getBuckEventBus(), targetGraph)).getResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     SortedSet<Path> classpathEntries = Sets.newTreeSet();
 
     for (BuildTarget target : targets) {
       BuildRule rule = Preconditions.checkNotNull(resolver.requireRule(target));
       HasClasspathEntries hasClasspathEntries = getHasClasspathEntriesFrom(rule);
       if (hasClasspathEntries != null) {
-        classpathEntries.addAll(hasClasspathEntries.getTransitiveClasspaths());
+        classpathEntries.addAll(
+            pathResolver.getAllAbsolutePaths(
+                hasClasspathEntries.getTransitiveClasspaths()));
       } else {
         throw new HumanReadableException(rule.getFullyQualifiedName() + " is not a java-based" +
             " build target");
@@ -191,6 +195,7 @@ public class AuditClasspathCommand extends AbstractCommand {
       throws IOException, NoSuchBuildTargetException {
     BuildRuleResolver resolver = Preconditions.checkNotNull(
         ActionGraphCache.getFreshActionGraph(params.getBuckEventBus(), targetGraph)).getResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     Multimap<String, String> targetClasspaths = LinkedHashMultimap.create();
 
     for (BuildTarget target : targets) {
@@ -201,9 +206,10 @@ public class AuditClasspathCommand extends AbstractCommand {
       }
       targetClasspaths.putAll(
           target.getFullyQualifiedName(),
-          Iterables.transform(
-              hasClasspathEntries.getTransitiveClasspaths(),
-              Object::toString));
+          hasClasspathEntries.getTransitiveClasspaths().stream()
+              .map(pathResolver::getAbsolutePath)
+              .map(Object::toString)
+              .collect(MoreCollectors.toImmutableList()));
     }
 
     // Note: using `asMap` here ensures that the keys are sorted

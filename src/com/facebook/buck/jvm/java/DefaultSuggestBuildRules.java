@@ -21,6 +21,8 @@ import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleDependencyVisitors;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -34,6 +36,7 @@ import java.util.Set;
 final class DefaultSuggestBuildRules implements SuggestBuildRules {
   private final Supplier<ImmutableList<JavaLibrary>> sortedTransitiveNotDeclaredDeps;
   private final JarResolver jarResolver;
+  private final SourcePathResolver pathResolver;
 
   /**
    * @return A function that takes a list of failed imports from a javac invocation and returns a
@@ -41,6 +44,7 @@ final class DefaultSuggestBuildRules implements SuggestBuildRules {
    */
   static SuggestBuildRules createSuggestBuildFunction(
       final JarResolver jarResolver,
+      final SourcePathResolver pathResolver,
       final ImmutableSet<JavaLibrary> declaredDeps,
       final ImmutableSet<JavaLibrary> transitiveDeps,
       final Iterable<BuildRule> buildRules) {
@@ -67,7 +71,7 @@ final class DefaultSuggestBuildRules implements SuggestBuildRules {
               }
             });
 
-    return new DefaultSuggestBuildRules(sortedTransitiveNotDeclaredDeps, jarResolver);
+    return new DefaultSuggestBuildRules(sortedTransitiveNotDeclaredDeps, jarResolver, pathResolver);
   }
 
   @Override
@@ -94,9 +98,11 @@ final class DefaultSuggestBuildRules implements SuggestBuildRules {
 
   private DefaultSuggestBuildRules(
       Supplier<ImmutableList<JavaLibrary>> sortedTransitiveNotDeclaredDeps,
-      JarResolver jarResolver) {
+      JarResolver jarResolver,
+      SourcePathResolver pathResolver) {
     this.sortedTransitiveNotDeclaredDeps = sortedTransitiveNotDeclaredDeps;
     this.jarResolver = jarResolver;
+    this.pathResolver = pathResolver;
   }
 
   /**
@@ -115,8 +121,10 @@ final class DefaultSuggestBuildRules implements SuggestBuildRules {
       return false;
     }
 
-    ImmutableSet<Path> classPaths =
-        ((JavaLibrary) transitiveNotDeclaredRule).getOutputClasspaths();
+    ImmutableSet<Path> classPaths = ((JavaLibrary) transitiveNotDeclaredRule).getOutputClasspaths()
+        .stream()
+        .map(c -> pathResolver.getAbsolutePath(c))
+        .collect(MoreCollectors.toImmutableSet());
     boolean containsMissingBuildRule = false;
     // Open the output jar for every jar contained as the output of transitiveNotDeclaredDep.  With
     // the exception of rules that export their dependencies, this will result in a single

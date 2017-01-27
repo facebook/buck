@@ -70,6 +70,7 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -313,13 +314,16 @@ public class DefaultJavaLibraryTest {
     JavaLibrary libraryOneRule = (JavaLibrary) ruleResolver.requireRule(libraryOneTarget);
     JavaLibrary parentRule = (JavaLibrary) ruleResolver.requireRule(parentTarget);
 
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+
     Path root = libraryOneRule.getProjectFilesystem().getRootPath();
     assertEquals(
         ImmutableSet.of(
             root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryOneTarget, filesystem)),
             root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryTwoTarget, filesystem)),
             root.resolve(DefaultJavaLibrary.getOutputJarPath(parentTarget, filesystem))),
-        parentRule.getTransitiveClasspaths());
+        resolve(parentRule.getTransitiveClasspaths(), pathResolver));
   }
 
   @Test
@@ -374,12 +378,12 @@ public class DefaultJavaLibraryTest {
       }
 
       @Override
-      public ImmutableSet<Path> getOutputClasspaths() {
-        return ImmutableSet.of(Paths.get("java/src/com/libone/bar.jar"));
+      public ImmutableSet<SourcePath> getOutputClasspaths() {
+        return ImmutableSet.of(new FakeSourcePath("java/src/com/libone/bar.jar"));
       }
 
       @Override
-      public ImmutableSet<Path> getTransitiveClasspaths() {
+      public ImmutableSet<SourcePath> getTransitiveClasspaths() {
         return ImmutableSet.of();
       }
 
@@ -508,6 +512,8 @@ public class DefaultJavaLibraryTest {
         parentNode);
     ruleResolver = new BuildRuleResolver(
         targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
 
     BuildRule notIncluded = ruleResolver.requireRule(notIncludedNode.getBuildTarget());
     BuildRule included = ruleResolver.requireRule(includedNode.getBuildTarget());
@@ -521,19 +527,19 @@ public class DefaultJavaLibraryTest {
             "classpath when compiling itself.",
         ImmutableSet.of(
             root.resolve(DefaultJavaLibrary.getOutputJarPath(nonIncludedTarget, filesystem))),
-        getJavaLibrary(notIncluded).getOutputClasspaths());
+        resolve(getJavaLibrary(notIncluded).getOutputClasspaths(), pathResolver));
 
     assertEquals(
         ImmutableSet.of(
             root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem))),
-        getJavaLibrary(included).getOutputClasspaths());
+        resolve(getJavaLibrary(included).getOutputClasspaths(), pathResolver));
 
     assertEquals(
         ImmutableSet.of(
             root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem)),
             root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryOneTarget, filesystem)),
             root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem))),
-        getJavaLibrary(libraryOne).getOutputClasspaths());
+        resolve(getJavaLibrary(libraryOne).getOutputClasspaths(), pathResolver));
 
     assertEquals(
         "//:libtwo exports its deps, so a java_library that depends on //:libtwo should include " +
@@ -544,7 +550,7 @@ public class DefaultJavaLibraryTest {
             root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryOneTarget, filesystem)),
             root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryTwoTarget, filesystem)),
             root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem))),
-        getJavaLibrary(libraryTwo).getOutputClasspaths());
+        resolve(getJavaLibrary(libraryTwo).getOutputClasspaths(), pathResolver));
 
     assertEquals(
         "A java_binary that depends on //:parent should include libone.jar, libtwo.jar and " +
@@ -557,7 +563,7 @@ public class DefaultJavaLibraryTest {
                 root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryTwoTarget, filesystem)),
                 root.resolve(DefaultJavaLibrary.getOutputJarPath(parentTarget, filesystem)))
             .build(),
-        getJavaLibrary(parent).getTransitiveClasspaths());
+        resolve(getJavaLibrary(parent).getTransitiveClasspaths(), pathResolver));
 
     assertThat(
         getJavaLibrary(parent).getTransitiveClasspathDeps(),
@@ -575,7 +581,7 @@ public class DefaultJavaLibraryTest {
             "-classpath when compiling itself.",
         ImmutableSet.of(
             root.resolve(DefaultJavaLibrary.getOutputJarPath(parentTarget, filesystem))),
-        getJavaLibrary(parent).getOutputClasspaths());
+        resolve(getJavaLibrary(parent).getOutputClasspaths(), pathResolver));
   }
 
   /**
@@ -1420,4 +1426,9 @@ public class DefaultJavaLibraryTest {
     }
   }
 
+  private static ImmutableSet<Path> resolve(
+      ImmutableSet<SourcePath> paths,
+      SourcePathResolver resolver) {
+    return paths.stream().map(resolver::getAbsolutePath).collect(MoreCollectors.toImmutableSet());
+  }
 }

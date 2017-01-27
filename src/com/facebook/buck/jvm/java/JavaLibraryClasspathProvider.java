@@ -19,12 +19,10 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
-import java.nio.file.Path;
 import java.util.Optional;
 
 public class JavaLibraryClasspathProvider {
@@ -32,11 +30,10 @@ public class JavaLibraryClasspathProvider {
   private JavaLibraryClasspathProvider() {
   }
 
-  public static ImmutableSet<Path> getOutputClasspathJars(
+  public static ImmutableSet<SourcePath> getOutputClasspathJars(
       JavaLibrary javaLibraryRule,
-      SourcePathResolver resolver,
       Optional<SourcePath> outputJar) {
-    ImmutableSet.Builder<Path> outputClasspathBuilder =
+    ImmutableSet.Builder<SourcePath> outputClasspathBuilder =
         ImmutableSet.builder();
     Iterable<JavaLibrary> javaExportedLibraryDeps;
     if (javaLibraryRule instanceof ExportDependencies) {
@@ -51,7 +48,7 @@ public class JavaLibraryClasspathProvider {
     }
 
     if (outputJar.isPresent()) {
-      outputClasspathBuilder.add(resolver.getAbsolutePath(outputJar.get()));
+      outputClasspathBuilder.add(outputJar.get());
     }
 
     return outputClasspathBuilder.build();
@@ -113,8 +110,9 @@ public class JavaLibraryClasspathProvider {
    *
    * This is used to generate transitive classpaths from library discovered in a previous traversal.
    */
-  public static ImmutableSet<Path> getClasspathsFromLibraries(Iterable<JavaLibrary> libraries) {
-    ImmutableSet.Builder<Path> classpathEntries = ImmutableSet.builder();
+  public static ImmutableSet<SourcePath> getClasspathsFromLibraries(
+      Iterable<JavaLibrary> libraries) {
+    ImmutableSet.Builder<SourcePath> classpathEntries = ImmutableSet.builder();
     for (JavaLibrary library : libraries) {
       classpathEntries.addAll(library.getImmediateClasspaths());
     }

@@ -26,6 +26,8 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -82,6 +84,7 @@ public class DefaultSuggestBuildRulesTest {
     SuggestBuildRules suggestFn =
         DefaultSuggestBuildRules.createSuggestBuildFunction(
             jarResolver,
+            new SourcePathResolver(new SourcePathRuleFinder(resolver)),
             ImmutableSet.of(),
             transitiveClasspathEntries.keySet(),
             ImmutableList.of(libraryTwo, parent, grandparent));
@@ -120,6 +123,7 @@ public class DefaultSuggestBuildRulesTest {
     SuggestBuildRules suggestFn =
         DefaultSuggestBuildRules.createSuggestBuildFunction(
             jarResolver,
+            new SourcePathResolver(new SourcePathRuleFinder(resolver)),
             ImmutableSet.of(),
             transitiveClasspathEntries.keySet(),
             ImmutableList.of(libraryTwo, parent, grandparent));

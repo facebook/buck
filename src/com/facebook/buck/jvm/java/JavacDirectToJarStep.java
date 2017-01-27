@@ -105,6 +105,7 @@ public class JavacDirectToJarStep implements Step {
     ImmutableList<String> javacStepOptions = JavacStep.getOptions(
         buildTimeOptions,
         filesystem,
+        resolver,
         outputDirectory,
         context,
         declaredClasspathEntries);

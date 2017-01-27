@@ -73,7 +73,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
-  public ImmutableSet<Path> getOutputClasspaths() {
+  public ImmutableSet<SourcePath> getOutputClasspaths() {
     return ImmutableSet.of();
   }
 
@@ -83,7 +83,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
-  public ImmutableSet<Path> getTransitiveClasspaths() {
+  public ImmutableSet<SourcePath> getTransitiveClasspaths() {
     return JavaLibraryClasspathProvider.getClasspathsFromLibraries(
         this.getTransitiveClasspathDeps());
   }
@@ -94,10 +94,9 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
-  public ImmutableSet<Path> getImmediateClasspaths() {
+  public ImmutableSet<SourcePath> getImmediateClasspaths() {
     return ImmutableSet.of(
-        getResolver().getAbsolutePath(
-            new BuildTargetSourcePath(getBuildTarget(), getPathToOutput())));
+        new BuildTargetSourcePath(getBuildTarget(), getPathToOutput()));
   }
 
   @Override

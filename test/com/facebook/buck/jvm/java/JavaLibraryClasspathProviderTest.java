@@ -34,6 +34,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -141,8 +142,8 @@ public class JavaLibraryClasspathProviderTest {
         ),
         JavaLibraryClasspathProvider.getOutputClasspathJars(
             aLib,
-            resolver,
             Optional.of(sourcePathFunction.apply(aLib.getPathToOutput())))
+                .stream().map(resolver::getAbsolutePath).collect(MoreCollectors.toImmutableSet())
     );
   }
 
@@ -155,7 +156,8 @@ public class JavaLibraryClasspathProviderTest {
             getFullOutput(e)),
             // b is non-java so b and d do not appear
         JavaLibraryClasspathProvider.getClasspathsFromLibraries(
-            JavaLibraryClasspathProvider.getClasspathDeps(ImmutableSet.of(a))));
+            JavaLibraryClasspathProvider.getClasspathDeps(ImmutableSet.of(a)))
+                .stream().map(resolver::getAbsolutePath).collect(MoreCollectors.toImmutableSet()));
 
     assertEquals(
         ImmutableSet.of(
@@ -164,7 +166,8 @@ public class JavaLibraryClasspathProviderTest {
             getFullOutput(d)
         ),
         JavaLibraryClasspathProvider.getClasspathsFromLibraries(
-            JavaLibraryClasspathProvider.getClasspathDeps(ImmutableSet.of(c, d))));
+            JavaLibraryClasspathProvider.getClasspathDeps(ImmutableSet.of(c, d)))
+                .stream().map(resolver::getAbsolutePath).collect(MoreCollectors.toImmutableSet()));
   }
 
   @Test
@@ -194,7 +197,9 @@ public class JavaLibraryClasspathProviderTest {
             .add(getFullOutput(e))  // c exports e
             // b is non-java so b and d do not appear
             .build(),
-        aLib.getTransitiveClasspaths());
+        aLib.getTransitiveClasspaths().stream()
+            .map(resolver::getAbsolutePath)
+            .collect(MoreCollectors.toImmutableSet()));
   }
 
   @Test

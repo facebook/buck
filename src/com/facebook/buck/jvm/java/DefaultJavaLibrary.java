@@ -120,9 +120,9 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   private final ImmutableSortedSet<BuildRule> providedDeps;
   // Some classes need to override this when enhancing deps (see AndroidLibrary).
   private final ImmutableSet<Path> additionalClasspathEntries;
-  private final Supplier<ImmutableSet<Path>>
+  private final Supplier<ImmutableSet<SourcePath>>
       outputClasspathEntriesSupplier;
-  private final Supplier<ImmutableSet<Path>>
+  private final Supplier<ImmutableSet<SourcePath>>
       transitiveClasspathsSupplier;
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
 
@@ -285,7 +285,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     this.outputClasspathEntriesSupplier =
         Suppliers.memoize(() -> JavaLibraryClasspathProvider.getOutputClasspathJars(
             DefaultJavaLibrary.this,
-            getResolver(),
             sourcePathForOutputJar()));
 
     this.transitiveClasspathsSupplier =
@@ -360,7 +359,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public ImmutableSet<Path> getTransitiveClasspaths() {
+  public ImmutableSet<SourcePath> getTransitiveClasspaths() {
     return transitiveClasspathsSupplier.get();
   }
 
@@ -370,8 +369,8 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public ImmutableSet<Path> getImmediateClasspaths() {
-    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
+  public ImmutableSet<SourcePath> getImmediateClasspaths() {
+    ImmutableSet.Builder<SourcePath> builder = ImmutableSet.builder();
 
     // Add any exported deps.
     for (BuildRule exported : getExportedDeps()) {
@@ -383,14 +382,14 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     // Add ourselves to the classpath if there's a jar to be built.
     Optional<SourcePath> sourcePathForOutputJar = sourcePathForOutputJar();
     if (sourcePathForOutputJar.isPresent()) {
-      builder.add(getResolver().getAbsolutePath(sourcePathForOutputJar.get()));
+      builder.add(sourcePathForOutputJar.get());
     }
 
     return builder.build();
   }
 
   @Override
-  public ImmutableSet<Path> getOutputClasspaths() {
+  public ImmutableSet<SourcePath> getOutputClasspaths() {
     return outputClasspathEntriesSupplier.get();
   }
 
@@ -427,6 +426,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     SuggestBuildRules suggestBuildRule =
         DefaultSuggestBuildRules.createSuggestBuildFunction(
             JAR_RESOLVER,
+            context.getSourcePathResolver(),
             declaredClasspathDeps.toSet(),
             ImmutableSet.<JavaLibrary>builder()
                 .addAll(getTransitiveClasspathDeps())
@@ -439,12 +439,13 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     Collection<Path> provided = JavaLibraryClasspathProvider.getJavaLibraryDeps(providedDeps)
         .transformAndConcat(JavaLibrary::getOutputClasspaths)
         .filter(Objects::nonNull)
+        .transform(context.getSourcePathResolver()::getAbsolutePath)
         .toSet();
 
     ProjectFilesystem projectFilesystem = getProjectFilesystem(); // NOPMD confused by lambda
     Iterable<Path> declaredClasspaths = declaredClasspathDeps
         .transformAndConcat(JavaLibrary::getOutputClasspaths)
-        .transform(projectFilesystem::resolve);
+        .transform(context.getSourcePathResolver()::getAbsolutePath);
     // Only override the bootclasspath if this rule is supposed to compile Android code.
     ImmutableSortedSet<Path> declared = ImmutableSortedSet.<Path>naturalOrder()
         .addAll(declaredClasspaths)

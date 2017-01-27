@@ -102,7 +102,7 @@ public class JavaBinaryDescription implements
     // Construct the build rule to build the binary JAR.
     ImmutableSet<JavaLibrary> transitiveClasspathDeps =
         JavaLibraryClasspathProvider.getClasspathDeps(binaryParams.getDeps());
-    ImmutableSet<Path> transitiveClasspaths =
+    ImmutableSet<SourcePath> transitiveClasspaths =
         JavaLibraryClasspathProvider.getClasspathsFromLibraries(transitiveClasspathDeps);
     BuildRule rule = new JavaBinary(
         binaryParams.appendExtraDeps(transitiveClasspathDeps),

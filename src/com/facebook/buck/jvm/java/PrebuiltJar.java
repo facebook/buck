@@ -80,7 +80,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
   @AddToRuleKey
   private final boolean provided;
   private final Path internalAbiJar;
-  private final Supplier<ImmutableSet<Path>> transitiveClasspathsSupplier;
+  private final Supplier<ImmutableSet<SourcePath>> transitiveClasspathsSupplier;
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
 
   private final BuildOutputInitializer<Data> buildOutputInitializer;
@@ -179,7 +179,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public ImmutableSet<Path> getTransitiveClasspaths() {
+  public ImmutableSet<SourcePath> getTransitiveClasspaths() {
     return transitiveClasspathsSupplier.get();
   }
 
@@ -189,17 +189,17 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public ImmutableSet<Path> getImmediateClasspaths() {
+  public ImmutableSet<SourcePath> getImmediateClasspaths() {
     if (!provided) {
-      return ImmutableSet.of(getResolver().getAbsolutePath(getBinaryJar()));
+      return ImmutableSet.of(getBinaryJar());
     } else {
       return ImmutableSet.of();
     }
   }
 
   @Override
-  public ImmutableSet<Path> getOutputClasspaths() {
-    return ImmutableSet.of(getResolver().getAbsolutePath(getBinaryJar()));
+  public ImmutableSet<SourcePath> getOutputClasspaths() {
+    return ImmutableSet.of(getBinaryJar());
   }
 
   @Override

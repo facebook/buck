@@ -74,7 +74,7 @@ public class JavaBinary extends AbstractBuildRuleWithResolver
   private final ImmutableSet<Pattern> blacklist;
 
   private final ImmutableSet<JavaLibrary> transitiveClasspathDeps;
-  private final ImmutableSet<Path> transitiveClasspaths;
+  private final ImmutableSet<SourcePath> transitiveClasspaths;
 
   private final boolean cache;
 
@@ -88,7 +88,7 @@ public class JavaBinary extends AbstractBuildRuleWithResolver
       @Nullable Path metaInfDirectory,
       ImmutableSet<Pattern> blacklist,
       ImmutableSet<JavaLibrary> transitiveClasspathDeps,
-      ImmutableSet<Path> transitiveClasspaths,
+      ImmutableSet<SourcePath> transitiveClasspaths,
       boolean cache) {
     super(params, resolver);
     this.javaRuntimeLauncher = javaRuntimeLauncher;
@@ -139,10 +139,10 @@ public class JavaBinary extends AbstractBuildRuleWithResolver
 
       includePaths = ImmutableSortedSet.<Path>naturalOrder()
           .add(stagingRoot)
-          .addAll(getTransitiveClasspaths())
+          .addAll(context.getSourcePathResolver().getAllAbsolutePaths(getTransitiveClasspaths()))
           .build();
     } else {
-      includePaths = ImmutableSortedSet.copyOf(getTransitiveClasspaths());
+      includePaths = context.getSourcePathResolver().getAllAbsolutePaths(getTransitiveClasspaths());
     }
 
     Path outputFile = getPathToOutput();
@@ -163,7 +163,7 @@ public class JavaBinary extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public ImmutableSet<Path> getTransitiveClasspaths() {
+  public ImmutableSet<SourcePath> getTransitiveClasspaths() {
     return transitiveClasspaths;
   }
 
@@ -173,12 +173,12 @@ public class JavaBinary extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public ImmutableSet<Path> getImmediateClasspaths() {
+  public ImmutableSet<SourcePath> getImmediateClasspaths() {
     return ImmutableSet.of();
   }
 
   @Override
-  public ImmutableSet<Path> getOutputClasspaths() {
+  public ImmutableSet<SourcePath> getOutputClasspaths() {
     // A binary has no exported deps or classpath contributions of its own
     return ImmutableSet.of();
   }

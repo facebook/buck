@@ -291,7 +291,8 @@ public class JavacStep implements Step {
           com.google.common.base.Optional.fromNullable(
               ruleFinder.getRule(input).orElse(null));
       if (rule instanceof JavaLibrary) {
-        return ((JavaLibrary) rule).getTransitiveClasspaths().stream();
+        return ((JavaLibrary) rule).getTransitiveClasspaths().stream()
+            .map(resolver::getAbsolutePath);
       } else {
         return ImmutableSet.of(resolver.getAbsolutePath(input)).stream();
       }
@@ -349,6 +350,7 @@ public class JavacStep implements Step {
     return getOptions(
         javacOptions,
         filesystem,
+        resolver,
         outputDirectory,
         context,
         buildClasspathEntries);
@@ -357,27 +359,31 @@ public class JavacStep implements Step {
   public static ImmutableList<String> getOptions(
       JavacOptions javacOptions,
       ProjectFilesystem filesystem,
+      SourcePathResolver pathResolver,
       Path outputDirectory,
       ExecutionContext context,
       ImmutableSortedSet<Path> buildClasspathEntries) {
     final ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    javacOptions.appendOptionsTo(new OptionsConsumer() {
-      @Override
-      public void addOptionValue(String option, String value) {
-        builder.add("-" + option).add(value);
-      }
+    javacOptions.appendOptionsTo(
+        new OptionsConsumer() {
+            @Override
+            public void addOptionValue(String option, String value) {
+              builder.add("-" + option).add(value);
+            }
 
-      @Override
-      public void addFlag(String flagName) {
-        builder.add("-" + flagName);
-      }
+            @Override
+            public void addFlag(String flagName) {
+              builder.add("-" + flagName);
+            }
 
-      @Override
-      public void addExtras(Collection<String> extras) {
-        builder.addAll(extras);
-      }
-    }, filesystem::resolve);
+            @Override
+            public void addExtras(Collection<String> extras) {
+              builder.addAll(extras);
+            }
+          },
+          pathResolver,
+          filesystem::resolve);
 
     // verbose flag, if appropriate.
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {

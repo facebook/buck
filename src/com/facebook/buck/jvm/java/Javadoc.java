@@ -133,6 +133,7 @@ public class Javadoc extends AbstractBuildRuleWithResolver implements MavenPubli
         getDeps().stream()
             .filter(HasClasspathEntries.class::isInstance)
             .flatMap(rule -> ((HasClasspathEntries) rule).getTransitiveClasspaths().stream())
+            .map(context.getSourcePathResolver()::getAbsolutePath)
             .map(Object::toString)
             .iterator());
     steps.add(new WriteFileStep(

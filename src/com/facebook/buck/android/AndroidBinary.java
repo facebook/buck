@@ -947,7 +947,11 @@ public class AndroidBinary
     ImmutableSet.Builder<Path> additionalLibraryJarsForProguardBuilder = ImmutableSet.builder();
 
     for (JavaLibrary buildRule : rulesToExcludeFromDex) {
-      additionalLibraryJarsForProguardBuilder.addAll(buildRule.getImmediateClasspaths());
+      additionalLibraryJarsForProguardBuilder.addAll(
+          buildRule.getImmediateClasspaths().stream()
+              .map(resolver::getAbsolutePath)
+              .collect(MoreCollectors.toImmutableSet())
+      );
     }
 
     // Create list of proguard Configs for the app project and its dependencies
@@ -1274,7 +1278,7 @@ public class AndroidBinary
   }
 
   @Override
-  public ImmutableSet<Path> getTransitiveClasspaths() {
+  public ImmutableSet<SourcePath> getTransitiveClasspaths() {
     // This is used primarily for buck audit classpath.
     return JavaLibraryClasspathProvider.getClasspathsFromLibraries(getTransitiveClasspathDeps());
   }
@@ -1286,12 +1290,12 @@ public class AndroidBinary
   }
 
   @Override
-  public ImmutableSet<Path> getImmediateClasspaths() {
+  public ImmutableSet<SourcePath> getImmediateClasspaths() {
     return ImmutableSet.of();
   }
 
   @Override
-  public ImmutableSet<Path> getOutputClasspaths() {
+  public ImmutableSet<SourcePath> getOutputClasspaths() {
     // The apk has no exported deps or classpath contributions of its own
     return ImmutableSet.of();
   }
