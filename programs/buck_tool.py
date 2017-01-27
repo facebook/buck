@@ -99,6 +99,7 @@ class BuckToolException(Exception):
 class BuckTool(object):
 
     def __init__(self, buck_project):
+        self._init_timestamp = int(round(time.time() * 1000))
         self._command_line = CommandLineArgs(sys.argv)
         self._buck_project = buck_project
         self._tmp_dir = self._platform_path(buck_project.tmp_dir)
@@ -177,6 +178,8 @@ class BuckTool(object):
                     while exit_code == 2:
                         with NailgunConnection('local:.buckd/sock',
                                                cwd=self._buck_project.root) as c:
+                            now = int(round(time.time() * 1000))
+                            env['BUCK_PYTHON_SPACE_INIT_TIME'] = str(now - self._init_timestamp)
                             exit_code = c.send_command(
                                 'com.facebook.buck.cli.Main',
                                 sys.argv[1:],
@@ -202,6 +205,8 @@ class BuckTool(object):
             command.append("com.facebook.buck.cli.Main")
             command.extend(sys.argv[1:])
 
+            now = int(round(time.time() * 1000))
+            env['BUCK_PYTHON_SPACE_INIT_TIME'] = str(now - self._init_timestamp)
             if True:
                 with Tracing('buck', args={'command': command}):
                     buck_exit_code = subprocess.call(command,
