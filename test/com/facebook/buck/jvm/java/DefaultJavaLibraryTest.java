@@ -82,7 +82,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.hash.Hashing;
 
@@ -101,7 +100,6 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.zip.ZipOutputStream;
@@ -1325,13 +1323,9 @@ public class DefaultJavaLibraryTest {
   // Captures all the common code between the different annotation processing test scenarios.
   private class AnnotationProcessingScenario {
     private final AnnotationProcessingParams.Builder annotationProcessingParamsBuilder;
-    private final Map<BuildTarget, BuildRule> buildRuleIndex;
-    private ExecutionContext executionContext;
-    private BuildContext buildContext;
 
     public AnnotationProcessingScenario() throws IOException {
       annotationProcessingParamsBuilder = new AnnotationProcessingParams.Builder();
-      buildRuleIndex = Maps.newHashMap();
     }
 
     public AnnotationProcessingParams.Builder getAnnotationProcessingParamsBuilder() {
@@ -1344,18 +1338,17 @@ public class DefaultJavaLibraryTest {
       BuildRule rule = processor.createRule(target);
 
       annotationProcessingParamsBuilder.addProcessorBuildTarget(rule);
-      buildRuleIndex.put(target, rule);
     }
 
     public ImmutableList<String> buildAndGetCompileParameters() throws IOException {
       ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
       BuildRule javaLibrary = createJavaLibraryRule(projectFilesystem);
-      buildContext = createBuildContext(javaLibrary, /* bootclasspath */ null);
+      BuildContext buildContext = createBuildContext(javaLibrary, /* bootclasspath */ null);
       List<Step> steps = javaLibrary.getBuildSteps(
           buildContext, new FakeBuildableContext());
       JavacStep javacCommand = lastJavacCommand(steps);
 
-      executionContext = TestExecutionContext.newBuilder()
+      ExecutionContext executionContext = TestExecutionContext.newBuilder()
           .setConsole(new Console(Verbosity.SILENT, System.out, System.err, Ansi.withoutTty()))
           .setDebugEnabled(true)
           .build();
