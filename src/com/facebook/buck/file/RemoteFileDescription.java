@@ -21,6 +21,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -61,13 +63,13 @@ public class RemoteFileDescription implements Description<RemoteFileDescription.
 
     String out = args.out.orElse(params.getBuildTarget().getShortNameAndFlavorPostfix());
 
-    return new RemoteFile(
-        params,
-        downloader,
-        args.url,
-        sha1,
-        out,
-        args.type.orElse(RemoteFile.Type.DATA));
+    RemoteFile.Type type = args.type.orElse(RemoteFile.Type.DATA);
+    if (type == RemoteFile.Type.EXECUTABLE) {
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+      SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+      return new RemoteFileBinary(params, downloader, args.url, sha1, out, type, pathResolver);
+    }
+    return new RemoteFile(params, downloader, args.url, sha1, out, type);
   }
 
   @SuppressFieldNotInitialized

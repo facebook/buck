@@ -22,6 +22,7 @@ java_library(
   srcs = [
     'DownloadStep.java',
     'RemoteFile.java',
+    'RemoteFileBinary.java',
     'RemoteFileDescription.java',
   ],
   autodeps = True,
