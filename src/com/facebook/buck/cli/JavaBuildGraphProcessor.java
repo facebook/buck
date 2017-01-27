@@ -134,6 +134,7 @@ final class JavaBuildGraphProcessor {
       BuildEngine buildEngine = new CachingBuildEngine(
           new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
           executorService,
+          executorService,
           new DefaultStepRunner(),
           CachingBuildEngine.BuildMode.SHALLOW,
           cachingBuildEngineBuckConfig.getBuildDepFiles(),

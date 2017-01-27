@@ -119,6 +119,7 @@ public class CachingBuildEngine implements BuildEngine {
 
   private static final Logger LOG = Logger.get(CachingBuildEngine.class);
   public static final ResourceAmounts CACHE_CHECK_RESOURCE_AMOUNTS = ResourceAmounts.of(0, 0, 1, 1);
+
   public static final ResourceAmounts RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS = ResourceAmounts.of(
       0, 0, 1, 0);
   public static final ResourceAmounts SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS = ResourceAmounts.ZERO;
@@ -148,6 +149,7 @@ public class CachingBuildEngine implements BuildEngine {
   private final CachingBuildEngineDelegate cachingBuildEngineDelegate;
 
   private final WeightedListeningExecutorService service;
+  private final WeightedListeningExecutorService cacheActivityService;
   private final StepRunner stepRunner;
   private final BuildMode buildMode;
   private final DepFiles depFiles;
@@ -166,6 +168,7 @@ public class CachingBuildEngine implements BuildEngine {
   public CachingBuildEngine(
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
       WeightedListeningExecutorService service,
+      WeightedListeningExecutorService artifactFetchService,
       StepRunner stepRunner,
       BuildMode buildMode,
       DepFiles depFiles,
@@ -178,8 +181,8 @@ public class CachingBuildEngine implements BuildEngine {
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo) {
     this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
 
-
     this.service = service;
+    this.cacheActivityService = artifactFetchService;
     this.stepRunner = stepRunner;
     this.buildMode = buildMode;
     this.depFiles = depFiles;
@@ -227,6 +230,7 @@ public class CachingBuildEngine implements BuildEngine {
     this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
 
     this.service = service;
+    this.cacheActivityService = service;
     this.stepRunner = stepRunner;
     this.buildMode = buildMode;
     this.depFiles = depFiles;
@@ -487,14 +491,16 @@ public class CachingBuildEngine implements BuildEngine {
       }
 
       // 2. Rule key cache lookup.
-      ListenableFuture<CacheResult> rulekeyCacheResult = Futures.immediateFuture(
-          tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-              rule,
-              defaultRuleKey,
-              buildContext.getArtifactCache(),
-              // TODO(shs96c): This should be a shared between all tests, not one per cell
-              rule.getProjectFilesystem(),
-              buildContext));
+      ListenableFuture<CacheResult> rulekeyCacheResult =
+          cacheActivityService.submit(
+              () -> tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+                  rule,
+                  defaultRuleKey,
+                  buildContext.getArtifactCache(),
+                  // TODO(shs96c): This should be a shared between all tests, not one per cell
+                  rule.getProjectFilesystem(),
+                  buildContext),
+              CACHE_CHECK_RESOURCE_AMOUNTS);
 
       return Futures.transformAsync(
           rulekeyCacheResult,

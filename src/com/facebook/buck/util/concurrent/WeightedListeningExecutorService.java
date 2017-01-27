@@ -37,7 +37,6 @@ import javax.annotation.Nullable;
  * scheduled than expected.
  */
 public class WeightedListeningExecutorService extends AbstractListeningExecutorService {
-
   private final ListeningMultiSemaphore semaphore;
   private final ResourceAmounts defaultValues;
   private final ListeningExecutorService delegate;
@@ -49,6 +48,11 @@ public class WeightedListeningExecutorService extends AbstractListeningExecutorS
     this.semaphore = semaphore;
     this.defaultValues = defaultValues;
     this.delegate = delegate;
+  }
+
+
+  public ListeningMultiSemaphore getSemaphore() {
+    return semaphore;
   }
 
   /**

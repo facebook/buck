@@ -77,8 +77,9 @@ public class CommandThreadManager implements AutoCloseable {
                             new CommandThreadFactory(
                                 r -> new Thread(threadGroup, r)))
                         .build(),
-                    new LinkedBlockingStack<Runnable>(),
-                    concurrencyLimit)));
+                    new LinkedBlockingStack<>(),
+                    concurrencyLimit.managedThreadCount,
+                    concurrencyLimit.loadLimit)));
     this.shutdownTimeout = shutdownTimeout;
     this.shutdownTimeoutUnit = shutdownTimeoutUnit;
   }

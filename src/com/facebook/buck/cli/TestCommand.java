@@ -523,6 +523,7 @@ public class TestCommand extends BuildCommand {
           new CachingBuildEngine(
               new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
               pool.getExecutor(),
+              getArtifactFetchService(params, pool.getExecutor()),
               new DefaultStepRunner(),
               getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
               cachingBuildEngineBuckConfig.getBuildDepFiles(),

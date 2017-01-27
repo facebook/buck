@@ -49,15 +49,16 @@ public class LimitedThreadPoolExecutor extends ThreadPoolExecutor {
   public LimitedThreadPoolExecutor(
       ThreadFactory threadFactory,
       BlockingQueue<Runnable> workQueue,
-      ConcurrencyLimit concurrencyLimit) {
+      int threadCount,
+      double loadLimit) {
     super(
-        /* corePoolSize */ concurrencyLimit.managedThreadCount,
-        /* maximumPoolSize */ concurrencyLimit.managedThreadCount,
+        /* corePoolSize */ threadCount,
+        /* maximumPoolSize */ threadCount,
         /* keepAliveTime */ 0L, TimeUnit.MILLISECONDS,
         /* workQueue */ workQueue,
         /* threadFactory */ threadFactory,
         /* handler */ new ThreadPoolExecutor.DiscardPolicy());
-    loadLimit = concurrencyLimit.loadLimit;
+    this.loadLimit = loadLimit;
   }
 
   private void waitForLimitation() {

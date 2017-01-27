@@ -275,15 +275,14 @@ public abstract class AbstractCommand implements Command {
         .build();
   }
 
-  public ConcurrencyLimit getConcurrencyLimit(BuckConfig buckConfig) {
-    Double loadLimit = this.loadLimit;
-    if (loadLimit == null) {
-      loadLimit = (double) buckConfig.getLoadLimit();
-    }
+  public double getLoadLimit(BuckConfig buckConfig) {
+    return this.loadLimit == null ? buckConfig.getLoadLimit() : this.loadLimit;
+  }
 
+  public ConcurrencyLimit getConcurrencyLimit(BuckConfig buckConfig) {
     return new ConcurrencyLimit(
         buckConfig.getNumThreads(),
-        loadLimit,
+        getLoadLimit(buckConfig),
         buckConfig.getResourceAllocationFairness(),
         buckConfig.getManagedThreadCount(),
         buckConfig.getDefaultResourceAmounts(),

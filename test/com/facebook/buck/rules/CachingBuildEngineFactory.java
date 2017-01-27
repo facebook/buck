@@ -125,6 +125,7 @@ public class CachingBuildEngineFactory {
     return new CachingBuildEngine(
         cachingBuildEngineDelegate,
         executorService,
+        executorService,
         new DefaultStepRunner(),
         buildMode,
         depFiles,

@@ -78,7 +78,9 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.concurrent.LimitedThreadPoolExecutor;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.versions.VersionException;
@@ -94,6 +96,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -106,10 +110,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.annotation.Nullable;
 
 public class BuildCommand extends AbstractCommand {
+  private static final boolean FIX_HTTP_BOTTLENECK =
+      "true".equals(System.getProperty("buck.fix_http_bottleneck"));
 
   private static final String KEEP_GOING_LONG_ARG = "--keep-going";
   private static final String BUILD_REPORT_LONG_ARG = "--build-report";
@@ -769,6 +776,7 @@ public class BuildCommand extends AbstractCommand {
         new CachingBuildEngine(
             cachingBuildEngineDelegate,
             executor,
+            getArtifactFetchService(params, executor),
             new DefaultStepRunner(),
             getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
             cachingBuildEngineBuckConfig.getBuildDepFiles(),
@@ -799,6 +807,26 @@ public class BuildCommand extends AbstractCommand {
           params.getConsole(),
           getPathToBuildReport(rootCellBuckConfig));
     }
+  }
+
+  protected WeightedListeningExecutorService getArtifactFetchService(
+      CommandRunnerParams params,
+      WeightedListeningExecutorService executor) {
+    if (!FIX_HTTP_BOTTLENECK) {
+      return executor;
+    }
+    ListeningExecutorService artifactFetchExecutor = MoreExecutors.listeningDecorator(
+        new LimitedThreadPoolExecutor(
+            new ThreadFactoryBuilder()
+                .setNameFormat("cache-fetch-%d")
+                .build(),
+            new LinkedBlockingQueue<>(),
+            params.getBuckConfig().getMaximumResourceAmounts().getNetworkIO(),
+            getLoadLimit(params.getBuckConfig())));
+    return new WeightedListeningExecutorService(
+        executor.getSemaphore(),
+        ResourceAmounts.ZERO,
+        artifactFetchExecutor);
   }
 
   @Override
