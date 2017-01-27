@@ -282,4 +282,19 @@ public class DefaultFileHashCacheTest {
     assertNull(cache.sizeCache.getIfPresent(filesystem.resolve(input)));
   }
 
+  @Test
+  public void thatBuckoutCacheWillGetIsCorrect() throws IOException {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path buckOut = Paths.get("buck-out");
+    filesystem.mkdirs(buckOut);
+    Path buckOutFile = buckOut.resolve("file.txt");
+    Path otherFile = Paths.get("file.txt");
+    filesystem.writeContentsToPath("data", buckOutFile);
+    filesystem.writeContentsToPath("other data", otherFile);
+    DefaultFileHashCache cache = new DefaultFileHashCache(
+        filesystem,
+        Optional.of(Paths.get("buck-out")));
+    assertTrue(cache.willGet(filesystem.getPathForRelativePath("buck-out/file.txt")));
+    assertFalse(cache.willGet(filesystem.getPathForRelativePath("file.txt")));
+  }
 }

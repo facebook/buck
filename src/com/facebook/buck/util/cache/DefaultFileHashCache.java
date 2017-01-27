@@ -141,13 +141,12 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
       return false;
     }
     return loadingCache.getIfPresent(relativePath.get()) != null ||
-        (projectFilesystem.exists(relativePath.get()) &&
-        !isIgnored(relativePath.get()));
+        (projectFilesystem.exists(relativePath.get()) && !isIgnored(relativePath.get()));
   }
 
   private boolean isIgnored(Path path) {
     if (buckOutPath.isPresent()) {
-      return path.startsWith(buckOutPath.get());
+      return !path.startsWith(buckOutPath.get());
     }
     return projectFilesystem.isIgnored(path);
   }
