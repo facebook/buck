@@ -57,6 +57,7 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.LinkedHashMultimap;
@@ -444,8 +445,8 @@ public class BuckConfig implements ConfigPathGetter {
     return ImmutableMap.copyOf(basePathToAlias);
   }
 
-  public ImmutableSet<String> getAliases() {
-    return this.aliasToBuildTargetMap.keySet();
+  public ImmutableMultimap<String, BuildTarget> getAliases() {
+    return this.aliasToBuildTargetMap;
   }
 
   public long getDefaultTestTimeoutMillis() {

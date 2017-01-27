@@ -17,10 +17,12 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.model.BuildTarget;
 
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
+import java.util.Map;
 
 public class AuditAliasCommand extends AbstractCommand {
 
@@ -29,19 +31,23 @@ public class AuditAliasCommand extends AbstractCommand {
       usage = "List known build target aliases.")
   private boolean listAliases = false;
 
-  boolean isListAliases() {
-    return listAliases;
-  }
-
-  Iterable<String> getAliases(BuckConfig buckConfig) {
-    return buckConfig.getAliases();
-  }
+  @Option(
+      name = "--list-map",
+      usage = "List known build target aliases with their mappings to build targets.")
+  private boolean listAliasesMap = false;
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    if (isListAliases()) {
-      for (String alias : getAliases(params.getBuckConfig())) {
-        params.getConsole().getStdOut().println(alias);
+    if (listAliasesMap) {
+      for (Map.Entry<String, BuildTarget> entry : params.getBuckConfig().getAliases().entries()) {
+        params.getConsole().getStdOut().println(
+            entry.getKey() + " = " + entry.getValue().getFullyQualifiedName());
+      }
+      return 0;
+    }
+    if (listAliases) {
+      for (Map.Entry<String, BuildTarget> entry : params.getBuckConfig().getAliases().entries()) {
+        params.getConsole().getStdOut().println(entry.getKey());
       }
       return 0;
     }

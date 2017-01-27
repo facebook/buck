@@ -60,4 +60,28 @@ public class AuditAliasCommandIntegrationTest {
         ImmutableSet.of("foo", "bar", "bar_ex"),
         ImmutableSet.copyOf(aliases));
   }
+
+  @Test
+  public void testBuckAliasListMap() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "alias", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("audit", "alias", "--list-map");
+    result.assertSuccess();
+
+    // Remove trailing newline from stdout before passing to Splitter.
+    String stdout = result.getStdout();
+    assertTrue(stdout.endsWith("\n"));
+    stdout = stdout.substring(0, stdout.length() - 1);
+
+    List<String> aliases = Splitter.on('\n').splitToList(stdout);
+    assertEquals(
+        "Aliases that appear in both .buckconfig and .buckconfig.local should appear only once.",
+        3,
+        aliases.size());
+    assertEquals(
+        ImmutableSet.of("foo = //:bar_example", "bar = //:bar_example", "bar_ex = //:bar_example"),
+        ImmutableSet.copyOf(aliases));
+  }
 }
