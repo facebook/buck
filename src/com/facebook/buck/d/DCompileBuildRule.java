@@ -17,14 +17,13 @@
 package com.facebook.buck.d;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -37,7 +36,7 @@ import java.nio.file.Path;
 /**
  * A build rule for invoking the D compiler.
  */
-public class DCompileBuildRule extends AbstractBuildRuleWithResolver {
+public class DCompileBuildRule extends AbstractBuildRule {
 
   @AddToRuleKey
   private final Tool compiler;
@@ -56,13 +55,12 @@ public class DCompileBuildRule extends AbstractBuildRuleWithResolver {
 
   public DCompileBuildRule(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       Tool compiler,
       ImmutableList<String> compilerFlags,
       String name,
       ImmutableSortedSet<SourcePath> sources,
       ImmutableList<DIncludes> includes) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.compiler = compiler;
     this.compilerFlags = compilerFlags;
     this.name = name;
@@ -85,7 +83,8 @@ public class DCompileBuildRule extends AbstractBuildRuleWithResolver {
     ImmutableList.Builder<String> flagsBuilder = ImmutableList.builder();
     flagsBuilder.addAll(compilerFlags);
     for (DIncludes include : includes) {
-      flagsBuilder.add("-I" + getResolver().getAbsolutePath(include.getLinkTree()));
+      flagsBuilder.add(
+          "-I" + context.getSourcePathResolver().getAbsolutePath(include.getLinkTree()));
     }
     ImmutableList<String> flags = flagsBuilder.build();
 
@@ -93,10 +92,10 @@ public class DCompileBuildRule extends AbstractBuildRuleWithResolver {
         new DCompileStep(
             getProjectFilesystem().getRootPath(),
             compiler.getEnvironment(),
-            compiler.getCommandPrefix(getResolver()),
+            compiler.getCommandPrefix(context.getSourcePathResolver()),
             flags,
             getPathToOutput(),
-            getResolver().getAllAbsolutePaths(sources)));
+            context.getSourcePathResolver().getAllAbsolutePaths(sources)));
     return steps.build();
   }
 

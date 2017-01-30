@@ -117,7 +117,6 @@ public class DTestDescription implements
 
     return new DTest(
         params.appendExtraDeps(ImmutableList.of(binaryRule)),
-        pathResolver,
         binaryRule,
         args.contacts,
         args.labels,

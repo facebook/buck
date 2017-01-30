@@ -18,7 +18,7 @@ package com.facebook.buck.d;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -57,7 +57,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class DTest extends AbstractBuildRuleWithResolver implements
+public class DTest extends AbstractBuildRule implements
     ExternalTestRunnerRule,
     HasRuntimeDeps,
     TestRule {
@@ -68,12 +68,11 @@ public class DTest extends AbstractBuildRuleWithResolver implements
 
   public DTest(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       BuildRule testBinaryBuildRule,
       ImmutableSortedSet<String> contacts,
       ImmutableSortedSet<Label> labels,
       Optional<Long> testRuleTimeoutMs) {
-    super(params, resolver);
+    super(params);
     this.contacts = contacts;
     this.labels = labels;
     this.testRuleTimeoutMs = testRuleTimeoutMs;

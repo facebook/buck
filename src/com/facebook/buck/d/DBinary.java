@@ -17,7 +17,7 @@
 package com.facebook.buck.d;
 
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
@@ -37,7 +36,7 @@ import java.util.stream.Stream;
 /**
  * BinaryBuildRule implementation for D binaries.
  */
-public class DBinary extends AbstractBuildRuleWithResolver implements
+public class DBinary extends AbstractBuildRule implements
     BinaryBuildRule,
     HasRuntimeDeps {
 
@@ -47,11 +46,10 @@ public class DBinary extends AbstractBuildRuleWithResolver implements
 
   public DBinary(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       Tool executable,
       Path output) {
-    super(params, resolver);
+    super(params);
     this.ruleFinder = ruleFinder;
     this.executable = executable;
     this.output = output;

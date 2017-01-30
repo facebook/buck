@@ -222,7 +222,6 @@ abstract class DDescriptionUtils {
    * if neccesary.
    * @param baseParams build parameters for the rule
    * @param buildRuleResolver BuildRuleResolver the rule should be in
-   * @param sourcePathResolver used to resolve source paths
    * @param src the source file to be compiled
    * @param compilerFlags flags to pass to the compiler
    * @param compileTarget the target the rule should be for
@@ -233,7 +232,6 @@ abstract class DDescriptionUtils {
       BuildTarget compileTarget,
       BuildRuleParams baseParams,
       BuildRuleResolver buildRuleResolver,
-      SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
       DBuckConfig dBuckConfig,
       ImmutableList<String> compilerFlags,
@@ -268,7 +266,6 @@ abstract class DDescriptionUtils {
                   compileTarget,
                   Suppliers.ofInstance(deps),
                   Suppliers.ofInstance(ImmutableSortedSet.of())),
-              sourcePathResolver,
               compiler,
               ImmutableList.<String>builder()
                   .addAll(dBuckConfig.getBaseCompilerFlags())
@@ -315,7 +312,6 @@ abstract class DDescriptionUtils {
           compileTarget,
           baseParams,
           buildRuleResolver,
-          sourcePathResolver,
           ruleFinder,
           dBuckConfig,
           compilerFlags,

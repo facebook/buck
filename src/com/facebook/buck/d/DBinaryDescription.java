@@ -121,7 +121,6 @@ public class DBinaryDescription implements
     return new DBinary(
         params.copyWithExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(nativeLinkable))),
-        pathResolver,
         ruleFinder,
         executableBuilder.build(),
         nativeLinkable.getPathToOutput());
