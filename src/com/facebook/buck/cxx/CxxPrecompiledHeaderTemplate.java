@@ -39,7 +39,6 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRule implements Nativ
 
   public final BuildRuleParams params;
   public final BuildRuleResolver ruleResolver;
-  public final SourcePathResolver pathResolver;
   public final SourcePath sourcePath;
 
   /**
@@ -53,7 +52,6 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRule implements Nativ
     super(buildRuleParams, pathResolver);
     this.params = buildRuleParams;
     this.ruleResolver = ruleResolver;
-    this.pathResolver = pathResolver;
     this.sourcePath = sourcePath;
   }
 
