@@ -25,13 +25,12 @@ import com.facebook.buck.jvm.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -53,7 +52,7 @@ import java.util.Set;
  * generate a corresponding {@code R.class} file. These are called "dummy" {@code R.java} files
  * since these are later merged together into a single {@code R.java} file by {@link AaptStep}.
  */
-public class DummyRDotJava extends AbstractBuildRuleWithResolver
+public class DummyRDotJava extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, HasJavaAbi {
 
   private final SourcePathRuleFinder ruleFinder;
@@ -74,7 +73,6 @@ public class DummyRDotJava extends AbstractBuildRuleWithResolver
 
   public DummyRDotJava(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       Set<HasAndroidResourceDeps> androidResourceDeps,
       BuildTarget abiJar,
@@ -84,7 +82,6 @@ public class DummyRDotJava extends AbstractBuildRuleWithResolver
       Optional<String> finalRName) {
     this(
         params,
-        resolver,
         ruleFinder,
         androidResourceDeps,
         abiJar,
@@ -97,7 +94,6 @@ public class DummyRDotJava extends AbstractBuildRuleWithResolver
 
   private DummyRDotJava(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       Set<HasAndroidResourceDeps> androidResourceDeps,
       BuildTarget abiJar,
@@ -106,9 +102,7 @@ public class DummyRDotJava extends AbstractBuildRuleWithResolver
       Optional<String> unionPackage,
       Optional<String> finalRName,
       ImmutableList<SourcePath> abiInputs) {
-    super(
-        params.appendExtraDeps(() -> ruleFinder.filterBuildRuleInputs(abiInputs)),
-        resolver);
+    super(params.appendExtraDeps(() -> ruleFinder.filterBuildRuleInputs(abiInputs)));
     this.ruleFinder = ruleFinder;
     // Sort the input so that we get a stable ABI for the same set of resources.
     this.androidResourceDeps = FluentIterable.from(androidResourceDeps)

@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.DependencyMode;
 import com.google.common.base.Preconditions;
@@ -110,7 +109,6 @@ public class AndroidLibraryGraphEnhancer {
     }
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     BuildRuleParams dummyRDotJavaParams = originalBuildRuleParams.copyWithChanges(
         dummyRDotJavaBuildTarget,
@@ -125,7 +123,6 @@ public class AndroidLibraryGraphEnhancer {
 
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
         dummyRDotJavaParams,
-        pathResolver,
         ruleFinder,
         androidResourceDeps,
         abiJarTarget,

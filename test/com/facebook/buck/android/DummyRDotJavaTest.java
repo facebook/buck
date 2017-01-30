@@ -81,7 +81,6 @@ public class DummyRDotJavaTest {
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//java/base:rule"))
             .setProjectFilesystem(filesystem)
             .build(),
-        pathResolver,
         ruleFinder,
         ImmutableSet.of(
             (HasAndroidResourceDeps) resourceRule1,
@@ -164,11 +163,9 @@ public class DummyRDotJavaTest {
         new BuildRuleResolver(
             TargetGraph.EMPTY,
             new DefaultTargetNodeToBuildRuleTransformer()));
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//java/com/example:library"))
             .build(),
-        pathResolver,
         ruleFinder,
         ImmutableSet.of(),
         BuildTargetFactory.newInstance("//:abi"),
