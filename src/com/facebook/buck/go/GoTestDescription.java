@@ -32,7 +32,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
@@ -355,7 +354,6 @@ public class GoTestDescription implements
     public List<String> linkerFlags = ImmutableList.of();
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public ImmutableSet<String> contacts = ImmutableSet.of();
-    public ImmutableSet<Label> labels = ImmutableSet.of();
     public Optional<Long> testRuleTimeoutMs;
     public Optional<Boolean> runTestSeparately;
     public ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();

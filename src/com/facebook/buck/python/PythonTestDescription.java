@@ -34,7 +34,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -384,7 +383,6 @@ public class PythonTestDescription implements
   public static class Arg extends PythonLibraryDescription.Arg {
     public Optional<String> mainModule;
     public ImmutableSet<String> contacts = ImmutableSet.of();
-    public ImmutableSet<Label> labels = ImmutableSet.of();
     public Optional<String> platform;
     public Optional<String> extension;
     public Optional<PythonBuckConfig.PackageStyle> packageStyle;

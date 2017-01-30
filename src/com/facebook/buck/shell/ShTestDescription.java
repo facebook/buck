@@ -24,7 +24,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -143,7 +142,6 @@ public class ShTestDescription implements
     public SourcePath test;
     public ImmutableList<String> args = ImmutableList.of();
     public ImmutableSet<String> contacts = ImmutableSet.of();
-    public ImmutableSortedSet<Label> labels = ImmutableSortedSet.of();
     public Optional<Long> testRuleTimeoutMs;
     public Optional<Boolean> runTestSeparately;
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();

@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -379,7 +378,6 @@ public class CxxTestDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends CxxBinaryDescription.Arg {
     public ImmutableSet<String> contacts = ImmutableSet.of();
-    public ImmutableSet<Label> labels = ImmutableSet.of();
     public Optional<CxxTestType> framework;
     public ImmutableMap<String, String> env = ImmutableMap.of();
     public ImmutableList<String> args = ImmutableList.of();

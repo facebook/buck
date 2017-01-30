@@ -44,7 +44,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
@@ -459,7 +458,6 @@ public class AppleTestDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends AppleNativeTargetDescriptionArg implements HasAppleBundleFields {
     public ImmutableSortedSet<String> contacts = ImmutableSortedSet.of();
-    public ImmutableSortedSet<Label> labels = ImmutableSortedSet.of();
     public Optional<Boolean> runTestSeparately;
     public Optional<Boolean> isUiTest;
     public Optional<BuildTarget> testHostApp;

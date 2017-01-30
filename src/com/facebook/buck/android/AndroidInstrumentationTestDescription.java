@@ -24,7 +24,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -80,7 +79,6 @@ public class AndroidInstrumentationTestDescription
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public BuildTarget apk;
-    public ImmutableSortedSet<Label> labels = ImmutableSortedSet.of();
     public ImmutableSortedSet<String> contacts = ImmutableSortedSet.of();
     public Optional<Long> testRuleTimeoutMs;
   }

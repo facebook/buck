@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
@@ -140,7 +139,6 @@ public class DTestDescription implements
   public static class Arg extends AbstractDescriptionArg {
     public SourceList srcs;
     public ImmutableSortedSet<String> contacts = ImmutableSortedSet.of();
-    public ImmutableSortedSet<Label> labels = ImmutableSortedSet.of();
     public Optional<Long> testRuleTimeoutMs;
     public ImmutableSortedSet<BuildTarget> deps;
     public ImmutableList<String> linkerFlags = ImmutableList.of();

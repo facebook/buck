@@ -33,7 +33,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -153,7 +152,6 @@ public class RustTestDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
-    public ImmutableSet<Label> labels = ImmutableSet.of();
     public ImmutableSet<String> contacts = ImmutableSet.of();
     public ImmutableSortedSet<String> features = ImmutableSortedSet.of();
     public ImmutableList<String> rustcFlags = ImmutableList.of();

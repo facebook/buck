@@ -35,7 +35,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -172,7 +171,6 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
   @SuppressFieldNotInitialized
   public static class Arg extends GroovyLibraryDescription.Arg {
     public ImmutableSortedSet<String> contacts = ImmutableSortedSet.of();
-    public ImmutableSortedSet<Label> labels = ImmutableSortedSet.of();
     public ImmutableList<String> vmArgs = ImmutableList.of();
     public Optional<TestType> testType;
     public Optional<Boolean> runTestSeparately;

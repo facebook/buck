@@ -31,7 +31,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -199,7 +198,6 @@ public class JavaTestDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends JavaLibraryDescription.Arg {
     public ImmutableSortedSet<String> contacts = ImmutableSortedSet.of();
-    public ImmutableSortedSet<Label> labels = ImmutableSortedSet.of();
     public ImmutableList<String> vmArgs = ImmutableList.of();
     public Optional<TestType> testType;
     public Optional<Boolean> runTestSeparately;
