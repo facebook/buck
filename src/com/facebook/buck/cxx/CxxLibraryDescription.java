@@ -641,7 +641,6 @@ public class CxxLibraryDescription implements
       return CxxInferEnhancer.requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
           params,
           resolver,
-          new SourcePathResolver(new SourcePathRuleFinder(resolver)),
           cxxBuckConfig,
           platform.orElse(defaultCxxPlatform),
           args,

@@ -135,7 +135,6 @@ public final class CxxInferEnhancer {
   public static CxxInferComputeReport requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       CxxConstructorArg args,
@@ -163,7 +162,6 @@ public final class CxxInferEnhancer {
     return createInferReportRule(
         paramsWithInferFlavor,
         resolver,
-        pathResolver,
         analysisRule);
   }
 
@@ -504,7 +502,6 @@ public final class CxxInferEnhancer {
   private static CxxInferComputeReport createInferReportRule(
       BuildRuleParams buildRuleParams,
       BuildRuleResolver buildRuleResolver,
-      SourcePathResolver sourcePathResolver,
       CxxInferAnalyze analysisToReport) {
     return buildRuleResolver.addToIndex(
         new CxxInferComputeReport(
@@ -515,7 +512,6 @@ public final class CxxInferEnhancer {
                         .add(analysisToReport)
                         .build()),
                 buildRuleParams.getExtraDeps()),
-            sourcePathResolver,
             analysisToReport));
   }
 }

@@ -19,12 +19,11 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.JsonConcatenateStep;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasPostBuildSteps;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.FluentIterable;
@@ -38,7 +37,7 @@ import java.nio.file.Path;
  * Merge all the json reports together into one and emit a list of results dirs of each
  * capture and analysis target involved for the analysis itself.
  */
-public class CxxInferComputeReport extends AbstractBuildRuleWithResolver
+public class CxxInferComputeReport extends AbstractBuildRule
     implements HasPostBuildSteps {
 
   private CxxInferAnalyze analysisToReport;
@@ -48,9 +47,8 @@ public class CxxInferComputeReport extends AbstractBuildRuleWithResolver
 
   public CxxInferComputeReport(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver sourcePathResolver,
       CxxInferAnalyze analysisToReport) {
-    super(buildRuleParams, sourcePathResolver);
+    super(buildRuleParams);
     this.analysisToReport = analysisToReport;
     this.outputDirectory =
         BuildTargets.getGenPath(getProjectFilesystem(), this.getBuildTarget(), "infer-%s");
