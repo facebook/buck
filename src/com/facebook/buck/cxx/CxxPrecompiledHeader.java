@@ -33,13 +33,11 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import java.io.IOException;
@@ -170,8 +168,8 @@ public class CxxPrecompiledHeader
   }
 
   @Override
-  public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-    return preprocessorDelegate.getPossibleInputSourcePaths();
+  public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+    return preprocessorDelegate.getCoveredByDepFilePredicate();
   }
 
   @Override

@@ -37,7 +37,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
@@ -334,11 +333,11 @@ public class CxxPreprocessAndCompile
   }
 
   @Override
-  public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
+  public Predicate<SourcePath> getCoveredByDepFilePredicate() {
     if (preprocessDelegate.isPresent()) {
-      return preprocessDelegate.get().getPossibleInputSourcePaths();
+      return preprocessDelegate.get().getCoveredByDepFilePredicate();
     }
-    return Optional.empty();
+    return (SourcePath path) -> true;
   }
 
   @Override

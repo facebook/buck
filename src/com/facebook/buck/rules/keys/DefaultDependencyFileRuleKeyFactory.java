@@ -36,7 +36,6 @@ import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.function.Predicate;
 
 import javax.annotation.Nonnull;
@@ -169,9 +168,7 @@ public final class DefaultDependencyFileRuleKeyFactory
     // Create a builder which records all `SourcePath`s which are possibly used by the rule.
     Builder builder = newInstance(rule);
 
-    // TODO(jkeljo): Make this use possibleDepFileSourcePaths all the time instead of being Optional
-    Optional<ImmutableSet<SourcePath>> possiblePaths =
-        makeHashSet(rule.getPossibleInputSourcePaths());
+    Predicate<SourcePath> coveredPathPredicate = rule.getCoveredByDepFilePredicate();
     Predicate<SourcePath> interestingPathPredicate = rule.getExistenceOfInterestPredicate();
 
     ImmutableSet<DependencyFileEntry> depFileEntriesSet = ImmutableSet.copyOf(depFileEntries);
@@ -180,30 +177,29 @@ public final class DefaultDependencyFileRuleKeyFactory
     final ImmutableSet.Builder<DependencyFileEntry> filesAccountedFor = ImmutableSet.builder();
 
     // Each existing input path falls into one of four categories:
-    // 1) It's not covered by dep files, so we need to consider it part of the rule key.
-    // 2) It's covered by dep files and present in the dep file, so we consider it part of the key.
-    // 3) It's covered by dep files but not present in the dep file, however the existence is of
+    // 1) It's not covered by dep-files, so we need to consider it part of the rule key.
+    // 2) It's covered by dep-files and present in the dep-file, so we consider it part of the key.
+    // 3) It's covered by dep-files but not present in the dep-file, however the existence is of
     //    interest, so we need to consider its path as part of the rule key.
-    // 4) It's covered by dep files but not present in the dep file nor is existence of interest,
-    //    so we don't include it in the rule key (the benefit of dep file support is based on the
+    // 4) It's covered by dep-files but not present in the dep-file nor is existence of interest,
+    //    so we don't include it in the rule key (the benefit of dep-file support is based on the
     //    premise that lots of things fall in this category, so we can avoid rebuilds that would
-    //    have happened with input-based rule keys)
+    //    have happened with input-based rule keys).
     Iterable<SourcePath> inputsSoFar = builder.getIterableInputsSoFar();
     for (SourcePath input : inputsSoFar) {
-      if (possiblePaths.isPresent() && !possiblePaths.get().contains(input)) {
-        // If this path is not a dep file path, then add it to the builder directly.
-        // Note that if {@code possibleDepFileSourcePaths} is not present, we treat
-        // all the input files as covered by dep file, so we'll never end up here!
+      if (!coveredPathPredicate.test(input)) {
+        // 1: If this path is not covered by dep-file, then add it to the builder directly.
         builder.setSourcePathDirectly(input);
       } else {
-        // If this input path is covered by the dep paths, check to see if it was declared
-        // as a real dependency by the dep file entries
+        // 2,3,4: This input path is covered by the dep-file
         DependencyFileEntry entry = DependencyFileEntry.fromSourcePath(input, pathResolver);
         if (depFileEntriesSet.contains(entry)) {
+          // 2: input was declared as a real dependency by the dep-file entries so add to key
           builder.setSourcePathDirectly(input);
           depFileSourcePathsBuilder.add(input);
           filesAccountedFor.add(entry);
         } else if (interestingPathPredicate.test(input)) {
+          // 3: path not present in the dep-file, however the existence is of interest so add to key
           builder.setNonHashingSourcePath(input);
         }
       }
@@ -232,14 +228,15 @@ public final class DefaultDependencyFileRuleKeyFactory
     Builder builder = newInstance(rule);
     builder.setReflectively("buck.key_type", "manifest");
 
-    Optional<ImmutableSet<SourcePath>> possiblePaths =
-        makeHashSet(rule.getPossibleInputSourcePaths());
+    Predicate<SourcePath> coveredPathPredicate = rule.getCoveredByDepFilePredicate();
     Predicate<SourcePath> interestingPathPredicate = rule.getExistenceOfInterestPredicate();
 
+    // Comparing to dep-file keys, manifest keys gets constructed as if no covered input is used,
+    // but we return the list of all such covered inputs for further inspection.
     ImmutableSet<SourcePath> inputs = ImmutableSet.copyOf(builder.getIterableInputsSoFar());
     ImmutableSet.Builder<SourcePath> depFileInputs = ImmutableSet.builder();
     for (SourcePath input : inputs) {
-      if (possiblePaths.isPresent() && !possiblePaths.get().contains(input)) {
+      if (!coveredPathPredicate.test(input)) {
         builder.setSourcePathDirectly(input);
       } else {
         depFileInputs.add(input);
@@ -249,13 +246,6 @@ public final class DefaultDependencyFileRuleKeyFactory
       }
     }
     return new Pair<>(builder.build(), depFileInputs.build());
-  }
-
-  /**
-   * Converts a sorted set to a hash set which allows constant time look-ups (instead of log n).
-   */
-  private static <T> Optional<ImmutableSet<T>> makeHashSet(Optional<ImmutableSet<T>> set) {
-    return set.map(s -> ImmutableSet.copyOf(s));
   }
 
 }

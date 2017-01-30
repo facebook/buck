@@ -219,8 +219,9 @@ public class ReactNativeBundle
   }
 
   @Override
-  public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-    return Optional.of(srcs);
+  public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+    // note, sorted set is intentionally converted to a hash set to achieve constant time look-up
+    return ImmutableSet.copyOf(srcs)::contains;
   }
 
   @Override

@@ -1565,8 +1565,8 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-              return Optional.empty();
+            public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+              return (SourcePath path) -> true;
             }
 
             @Override
@@ -1652,8 +1652,8 @@ public class CachingBuildEngineTest {
                   });
             }
             @Override
-            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-              return Optional.empty();
+            public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+              return (SourcePath path) -> true;
             }
             @Override
             public Predicate<SourcePath> getExistenceOfInterestPredicate() {
@@ -1728,8 +1728,8 @@ public class CachingBuildEngineTest {
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
             @Override
-            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-              return Optional.empty();
+            public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+              return (SourcePath path) -> true;
             }
             @Override
             public Predicate<SourcePath> getExistenceOfInterestPredicate() {
@@ -1806,8 +1806,8 @@ public class CachingBuildEngineTest {
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
             @Override
-            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-              return Optional.of(inputsBefore);
+            public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+              return inputsBefore::contains;
             }
             @Override
             public Predicate<SourcePath> getExistenceOfInterestPredicate() {
@@ -1896,8 +1896,8 @@ public class CachingBuildEngineTest {
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
             @Override
-            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-              return Optional.empty();
+            public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+              return (SourcePath path) -> true;
             }
             @Override
             public Predicate<SourcePath> getExistenceOfInterestPredicate() {
@@ -1978,8 +1978,8 @@ public class CachingBuildEngineTest {
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
             @Override
-            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-              return Optional.empty();
+            public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+              return (SourcePath path) -> true;
             }
             @Override
             public Predicate<SourcePath> getExistenceOfInterestPredicate() {
@@ -2117,8 +2117,8 @@ public class CachingBuildEngineTest {
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
             @Override
-            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-              return Optional.of(ImmutableSet.of(path));
+            public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+              return ImmutableSet.of(path)::contains;
             }
             @Override
             public Predicate<SourcePath> getExistenceOfInterestPredicate() {
@@ -2225,8 +2225,8 @@ public class CachingBuildEngineTest {
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
             @Override
-            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-              return Optional.empty();
+            public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+              return (SourcePath path) -> true;
             }
             @Override
             public Predicate<SourcePath> getExistenceOfInterestPredicate() {
@@ -2346,8 +2346,8 @@ public class CachingBuildEngineTest {
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
             @Override
-            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-              return Optional.empty();
+            public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+              return (SourcePath path) -> true;
             }
             @Override
             public Predicate<SourcePath> getExistenceOfInterestPredicate() {
@@ -2459,8 +2459,8 @@ public class CachingBuildEngineTest {
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
             @Override
-            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-              return Optional.empty();
+            public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+              return (SourcePath path) -> true;
             }
             @Override
             public Predicate<SourcePath> getExistenceOfInterestPredicate() {
@@ -2577,8 +2577,8 @@ public class CachingBuildEngineTest {
       }
 
       @Override
-      public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-        return Optional.empty();
+      public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+        return (SourcePath path) -> true;
       }
 
       @Override

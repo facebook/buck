@@ -36,7 +36,6 @@ import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import java.io.IOException;
@@ -160,8 +159,8 @@ public class CxxInferCapture
   }
 
   @Override
-  public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-    return preprocessorDelegate.getPossibleInputSourcePaths();
+  public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+    return preprocessorDelegate.getCoveredByDepFilePredicate();
   }
 
   @Override

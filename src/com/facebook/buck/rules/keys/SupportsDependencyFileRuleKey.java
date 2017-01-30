@@ -20,10 +20,8 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
-import java.util.Optional;
 import java.util.function.Predicate;
 
 /**
@@ -34,19 +32,18 @@ public interface SupportsDependencyFileRuleKey extends BuildRule {
   boolean useDependencyFileRuleKeys();
 
   /**
-   * Returns a set of all possible source paths that may be returned from
-   * {@link #getInputsAfterBuildingLocally(BuildContext)}. I.e. all the paths that are covered by
-   * dep file, regardless of whether they are actually being used for the rule or not. This
-   * information is used by the rule key builder to infer that inputs *not* in this list should be
-   * included unconditionally in the rule key. Inputs that *are* in this list should be included in
-   * the rule key if and only if they are actually being used for the rule. I.e. if they are listed
-   * in {@link #getInputsAfterBuildingLocally(BuildContext)}. If not present, we treat all the input
-   * files as covered by dep file.
+   * Returns a predicate that can tell whether a given path is covered by dep-file or not.
+   * Note that being covered by dep-file doesn't necessarily mean being present in the dep-file.
+   * A covered path will only be present if actually used and that's the core idea of dep-file keys.
    *
-   * TODO(jkeljo): This is only optional because I added it for Java and didn't have the time to go
-   * back and figure out how to implement it for C++.
+   * I.e. this predicate should return true only for source paths that *may* be returned from
+   * {@link #getInputsAfterBuildingLocally(BuildContext)}. This information is used by the rule key
+   * builder to infer that inputs *not* in this list should be included unconditionally in the rule
+   * key. Inputs that *are* in this list should be included in the rule key if and only if they are
+   * actually being used for the rule. I.e. if they are present in the dep-file listed by
+   * {@link #getInputsAfterBuildingLocally(BuildContext)}.
    */
-  Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths();
+  Predicate<SourcePath> getCoveredByDepFilePredicate();
 
   /**
    * Returns a predicate that can tell whether the existence of a given path may be of interest to
@@ -67,7 +64,7 @@ public interface SupportsDependencyFileRuleKey extends BuildRule {
 
   /**
    * Returns a list of source paths that were actually used for the rule. This list comes from the
-   * dep file produced by compiler.
+   * dep-file produced by compiler.
    */
   ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) throws IOException;
 

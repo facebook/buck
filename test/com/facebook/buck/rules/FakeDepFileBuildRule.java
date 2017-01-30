@@ -24,9 +24,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.function.Predicate;
 
 import javax.annotation.Nullable;
@@ -39,8 +37,8 @@ public class FakeDepFileBuildRule
     implements SupportsDependencyFileRuleKey {
 
   private Path outputPath;
-  private Optional<ImmutableSet<SourcePath>> possibleInputPaths = Optional.empty();
-  private ImmutableSet<SourcePath> interestingInputPaths = ImmutableSet.of();
+  private Predicate<SourcePath> coveredPredicate = (SourcePath path) -> true;
+  private Predicate<SourcePath> interestingPredicate = (SourcePath path) -> false;
   private ImmutableList<SourcePath> actualInputPaths = ImmutableList.of();
 
   public FakeDepFileBuildRule(String fullyQualifiedName) {
@@ -63,24 +61,29 @@ public class FakeDepFileBuildRule
     return this;
   }
 
-  public FakeDepFileBuildRule setPossibleInputPaths(
-      Optional<ImmutableSet<SourcePath>> possibleInputPaths) {
-    this.possibleInputPaths = possibleInputPaths;
+  public FakeDepFileBuildRule setCoveredByDepFilePredicate(
+      ImmutableSet<SourcePath> coveredPaths) {
+    return setCoveredByDepFilePredicate(coveredPaths::contains);
+  }
+
+  public FakeDepFileBuildRule setCoveredByDepFilePredicate(
+      Predicate<SourcePath> coveredPredicate) {
+    this.coveredPredicate = coveredPredicate;
     return this;
   }
 
-  public FakeDepFileBuildRule setInterestingInputPaths(ImmutableSet<SourcePath> interestingPaths) {
-    this.interestingInputPaths = interestingPaths;
+  public FakeDepFileBuildRule setExistenceOfInterestPredicate(
+      ImmutableSet<SourcePath> interestingPaths) {
+    return setExistenceOfInterestPredicate(interestingPaths::contains);
+  }
+
+  public FakeDepFileBuildRule setExistenceOfInterestPredicate(
+      Predicate<SourcePath> interestingPredicate) {
+    this.interestingPredicate = interestingPredicate;
     return this;
   }
 
-  public FakeDepFileBuildRule setPossibleInputPaths(
-      ImmutableSet<SourcePath> possibleInputPaths) {
-    this.possibleInputPaths = Optional.of(possibleInputPaths);
-    return this;
-  }
-
-  public FakeDepFileBuildRule setActualInputPaths(
+  public FakeDepFileBuildRule setInputsAfterBuildingLocally(
       ImmutableList<SourcePath> actualInputPaths) {
     this.actualInputPaths = actualInputPaths;
     return this;
@@ -92,18 +95,17 @@ public class FakeDepFileBuildRule
   }
 
   @Override
-  public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-    return possibleInputPaths;
+  public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+    return coveredPredicate;
   }
 
   @Override
   public Predicate<SourcePath> getExistenceOfInterestPredicate() {
-    return (SourcePath path) -> interestingInputPaths.contains(path);
+    return interestingPredicate;
   }
 
   @Override
-  public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context)
-      throws IOException {
+  public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
     return actualInputPaths;
   }
 
