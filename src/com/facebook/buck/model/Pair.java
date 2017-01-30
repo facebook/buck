@@ -19,6 +19,8 @@ package com.facebook.buck.model;
 import java.lang.ref.WeakReference;
 import java.util.Objects;
 
+import javax.annotation.Nullable;
+
 /**
  * Simple type representing a pair of differently typed values.
  *
@@ -28,7 +30,10 @@ public class Pair<FIRST, SECOND> {
 
   private FIRST first;
   private SECOND second;
+
+  @Nullable
   private WeakReference<Integer> hashCache = null;
+  @Nullable
   private WeakReference<String> stringCache = null;
 
   public Pair(FIRST first, SECOND second) {
