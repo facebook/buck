@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidBinaryBuilder;
 import com.facebook.buck.android.AndroidLibraryBuilder;
+import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
@@ -33,8 +34,10 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.versions.VersionedAliasBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -261,4 +264,129 @@ public class AuditClasspathCommandTest {
 
     assertEquals("", console.getTextWrittenToStdErr());
   }
+
+  @Test
+  public void testClassPathWithVersions() throws Exception {
+
+    // Build the test target graph.
+    TargetNode<?, ?> javaLibrary =
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:test-java-library"))
+            .addSrc(Paths.get("src/com/facebook/TestJavaLibrary.java"))
+            .build();
+    TargetNode<?, ?> androidLibrary =
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:test-android-library"))
+            .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
+            .addDep(javaLibrary.getBuildTarget())
+            .build();
+    TargetNode<?, ?> version =
+        new VersionedAliasBuilder(BuildTargetFactory.newInstance("//:version"))
+            .setVersions("1.0", "//:test-android-library")
+            .build();
+    TargetNode<?, ?> binary =
+        new JavaBinaryRuleBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setDeps(ImmutableSortedSet.of(version.getBuildTarget()))
+            .build();
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(javaLibrary, androidLibrary, version, binary);
+
+    // Run the command.
+    auditClasspathCommand.printClasspath(
+        params.withBuckConfig(
+            FakeBuckConfig.builder()
+                .setSections(ImmutableMap.of("build", ImmutableMap.of("versions", "true")))
+                .build()),
+        targetGraph,
+        ImmutableSet.of(androidLibrary.getBuildTarget(), javaLibrary.getBuildTarget()));
+
+    // Verify output.
+    Path root = javaLibrary.getBuildTarget().getUnflavoredBuildTarget().getCellPath();
+    ImmutableSortedSet<String> expectedPaths =
+        ImmutableSortedSet.of(
+            root.resolve(
+                BuildTargets
+                    .getGenPath(
+                        params.getCell().getFilesystem(),
+                        androidLibrary.getBuildTarget(),
+                        "lib__%s__output")
+                    .resolve(androidLibrary.getBuildTarget().getShortName() + ".jar"))
+                .toString(),
+            root.resolve(
+                BuildTargets
+                    .getGenPath(
+                        params.getCell().getFilesystem(),
+                        javaLibrary.getBuildTarget(),
+                        "lib__%s__output")
+                    .resolve(javaLibrary.getBuildTarget().getShortName() + ".jar"))
+                .toString());
+    String expectedClasspath = Joiner.on("\n").join(expectedPaths) + "\n";
+    assertEquals(expectedClasspath, console.getTextWrittenToStdOut());
+    assertEquals("", console.getTextWrittenToStdErr());
+  }
+
+  @Test
+  public void testJsonClassPathWithVersions() throws Exception {
+
+    // Build the test target graph.
+    TargetNode<?, ?> javaLibrary =
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:test-java-library"))
+            .addSrc(Paths.get("src/com/facebook/TestJavaLibrary.java"))
+            .build();
+    TargetNode<?, ?> androidLibrary =
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:test-android-library"))
+            .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
+            .addDep(javaLibrary.getBuildTarget())
+            .build();
+    TargetNode<?, ?> version =
+        new VersionedAliasBuilder(BuildTargetFactory.newInstance("//:version"))
+            .setVersions("1.0", "//:test-android-library")
+            .build();
+    TargetNode<?, ?> binary =
+        new JavaBinaryRuleBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setDeps(ImmutableSortedSet.of(version.getBuildTarget()))
+            .build();
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(javaLibrary, androidLibrary, version, binary);
+
+    // Run the command.
+    auditClasspathCommand.printJsonClasspath(
+        params.withBuckConfig(
+            FakeBuckConfig.builder()
+                .setSections(ImmutableMap.of("build", ImmutableMap.of("versions", "true")))
+                .build()),
+        targetGraph,
+        ImmutableSet.of(androidLibrary.getBuildTarget(), javaLibrary.getBuildTarget()));
+
+    // Verify output.
+    Path root = javaLibrary.getBuildTarget().getCellPath();
+    ObjectMapper mapper = ObjectMappers.newDefaultInstance();
+    String expected =
+        String.format(
+            EXPECTED_JSON,
+            mapper.valueToTree(
+                root.resolve(
+                    BuildTargets
+                        .getGenPath(
+                            params.getCell().getFilesystem(),
+                            javaLibrary.getBuildTarget(),
+                            "lib__%s__output")
+                        .resolve(javaLibrary.getBuildTarget().getShortName() + ".jar"))),
+            mapper.valueToTree(
+                root.resolve(
+                    BuildTargets
+                        .getGenPath(
+                            params.getCell().getFilesystem(),
+                            androidLibrary.getBuildTarget(),
+                            "lib__%s__output")
+                        .resolve(androidLibrary.getBuildTarget().getShortName() + ".jar"))),
+            mapper.valueToTree(root.resolve(
+                BuildTargets
+                    .getGenPath(
+                        params.getCell().getFilesystem(),
+                        javaLibrary.getBuildTarget(),
+                        "lib__%s__output")
+                    .resolve(javaLibrary.getBuildTarget().getShortName() + ".jar"))));
+    assertEquals(expected, console.getTextWrittenToStdOut());
+    assertEquals("", console.getTextWrittenToStdErr());
+  }
+
 }

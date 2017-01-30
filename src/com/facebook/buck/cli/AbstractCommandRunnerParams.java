@@ -47,7 +47,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 
-@Value.Immutable(copy = false)
+@Value.Immutable()
 @BuckStyleImmutable
 public interface AbstractCommandRunnerParams {
   Console getConsole();

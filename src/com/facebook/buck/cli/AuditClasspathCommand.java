@@ -31,10 +31,12 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.versions.VersionException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -132,8 +134,8 @@ public class AuditClasspathCommand extends AbstractCommand {
       } else {
         return printClasspath(params, targetGraph, targets);
       }
-    } catch (NoSuchBuildTargetException e) {
-      throw new HumanReadableException(e.getHumanReadableErrorMessage());
+    } catch (NoSuchBuildTargetException | VersionException e) {
+      throw new HumanReadableException(e, MoreExceptions.getHumanReadableOrLocalizedMessage(e));
     }
   }
 
@@ -161,7 +163,15 @@ public class AuditClasspathCommand extends AbstractCommand {
   int printClasspath(
       CommandRunnerParams params,
       TargetGraph targetGraph,
-      ImmutableSet<BuildTarget> targets) throws NoSuchBuildTargetException {
+      ImmutableSet<BuildTarget> targets)
+      throws NoSuchBuildTargetException, InterruptedException, VersionException {
+
+    if (params.getBuckConfig().getBuildVersions()) {
+      targetGraph =
+          toVersionedTargetGraph(params, TargetGraphAndBuildTargets.of(targetGraph, targets))
+              .getTargetGraph();
+    }
+
     BuildRuleResolver resolver = Preconditions.checkNotNull(
         ActionGraphCache.getFreshActionGraph(params.getBuckEventBus(), targetGraph)).getResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
@@ -192,7 +202,14 @@ public class AuditClasspathCommand extends AbstractCommand {
       CommandRunnerParams params,
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> targets)
-      throws IOException, NoSuchBuildTargetException {
+      throws IOException, NoSuchBuildTargetException, InterruptedException, VersionException {
+
+    if (params.getBuckConfig().getBuildVersions()) {
+      targetGraph =
+          toVersionedTargetGraph(params, TargetGraphAndBuildTargets.of(targetGraph, targets))
+              .getTargetGraph();
+    }
+
     BuildRuleResolver resolver = Preconditions.checkNotNull(
         ActionGraphCache.getFreshActionGraph(params.getBuckEventBus(), targetGraph)).getResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
