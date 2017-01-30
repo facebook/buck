@@ -35,12 +35,10 @@ import javax.annotation.Nullable;
  * operation, namely, that it cannot be cached. This rule must not be cached in order for its
  * dependencies to always be evaluated in different build strategies (in particular, top-down).
  */
-public final class DependencyAggregation extends AbstractBuildRuleWithResolver {
+public final class DependencyAggregation extends AbstractBuildRule {
 
-  public DependencyAggregation(
-      BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver) {
-    super(buildRuleParams, resolver);
+  public DependencyAggregation(BuildRuleParams buildRuleParams) {
+    super(buildRuleParams);
   }
 
   @Override

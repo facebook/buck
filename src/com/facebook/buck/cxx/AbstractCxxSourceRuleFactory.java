@@ -176,7 +176,7 @@ abstract class AbstractCxxSourceRuleFactory {
           target,
           Suppliers.ofInstance(getPreprocessDeps()),
           Suppliers.ofInstance(ImmutableSortedSet.of()));
-      DependencyAggregation rule = new DependencyAggregation(params, getPathResolver());
+      DependencyAggregation rule = new DependencyAggregation(params);
       getResolver().addToIndex(rule);
       return rule;
     }
