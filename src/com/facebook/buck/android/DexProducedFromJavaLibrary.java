@@ -21,7 +21,7 @@ import com.facebook.buck.dalvik.EstimateDexWeightStep;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -32,7 +32,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -77,7 +76,7 @@ import javax.annotation.Nullable;
  * until runtime. Unfortunately, because there is no such thing as an empty {@code .dex} file, we
  * cannot write a meaningful "dummy .dex" if there are no class files to pass to {@code dx}.
  */
-public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithResolver
+public class DexProducedFromJavaLibrary extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, HasBuildTarget, InitializableFromDisk<BuildOutput> {
 
   private static final ObjectMapper MAPPER = ObjectMappers.newDefaultInstance();
@@ -94,12 +93,10 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithResolver
   private final JavaLibrary javaLibrary;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
-  @VisibleForTesting
   DexProducedFromJavaLibrary(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       JavaLibrary javaLibrary) {
-    super(params, resolver);
+    super(params);
     this.javaLibrary = javaLibrary;
     this.javaLibrarySourcePath = new BuildTargetSourcePath(javaLibrary.getBuildTarget());
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);

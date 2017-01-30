@@ -44,7 +44,6 @@ import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.FakeSourcePathResolver;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
@@ -116,7 +115,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
         .setProjectFilesystem(filesystem)
         .build();
     DexProducedFromJavaLibrary preDex =
-        new DexProducedFromJavaLibrary(params, pathResolver, javaLibraryRule);
+        new DexProducedFromJavaLibrary(params, javaLibraryRule);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
     verifyAll();
@@ -197,10 +196,6 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     DexProducedFromJavaLibrary preDex =
         new DexProducedFromJavaLibrary(
             params,
-            new SourcePathResolver(new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY,
-                    new DefaultTargetNodeToBuildRuleTransformer()))),
             javaLibrary);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
@@ -252,10 +247,6 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     DexProducedFromJavaLibrary preDexWithClasses =
         new DexProducedFromJavaLibrary(
             params,
-            new SourcePathResolver(new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY,
-                    new DefaultTargetNodeToBuildRuleTransformer()))),
             accumulateClassNames);
     assertNull(preDexWithClasses.getPathToOutput());
     assertEquals(
@@ -278,8 +269,6 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
   public void getOutputDoesNotAccessWrappedJavaLibrary() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
 
     JavaLibrary javaLibrary =
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
@@ -289,7 +278,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:target"))
             .build();
     DexProducedFromJavaLibrary dexProducedFromJavaLibrary =
-        new DexProducedFromJavaLibrary(params, pathResolver, javaLibrary);
+        new DexProducedFromJavaLibrary(params, javaLibrary);
 
     ObjectMapper mapper = ObjectMappers.newDefaultInstance();
     FakeOnDiskBuildInfo onDiskBuildInfo =

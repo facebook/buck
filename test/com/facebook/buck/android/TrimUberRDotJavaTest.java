@@ -114,7 +114,6 @@ public class TrimUberRDotJavaTest {
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dex"))
             .setProjectFilesystem(filesystem)
             .build(),
-        null,
         new FakeJavaLibrary(BuildTargetFactory.newInstance("//:lib"), null));
     dexProducedFromJavaLibrary.getBuildOutputInitializer().setBuildOutput(
         dexProducedFromJavaLibrary.initializeFromDisk(new FakeOnDiskBuildInfo()
