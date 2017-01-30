@@ -184,7 +184,6 @@ public class HalideLibraryDescription
     CxxBinary cxxBinary = new CxxBinary(
         params.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder)),
         ruleResolver,
-        pathResolver,
         ruleFinder,
         cxxLinkAndCompileRules.getBinaryRule(),
         cxxLinkAndCompileRules.executable,

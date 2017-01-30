@@ -253,7 +253,6 @@ public class CxxBinaryDescription implements
     CxxBinary cxxBinary = new CxxBinary(
         params.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder)),
         resolver,
-        pathResolver,
         ruleFinder,
         cxxLinkAndCompileRules.getBinaryRule(),
         cxxLinkAndCompileRules.executable,

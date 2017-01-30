@@ -66,7 +66,6 @@ public class CxxBinaryTest {
             new CxxBinary(
                 params.appendExtraDeps(ImmutableSortedSet.<BuildRule>of(cxxLink)),
                 ruleResolver,
-                pathResolver,
                 ruleFinder,
                 cxxLink,
                 new CommandTool.Builder()
