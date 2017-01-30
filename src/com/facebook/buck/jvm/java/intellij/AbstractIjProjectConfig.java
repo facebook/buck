@@ -19,6 +19,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
 
@@ -45,6 +46,10 @@ abstract class AbstractIjProjectConfig {
   public abstract Optional<String> getAndroidModuleSdkName();
 
   public abstract Optional<String> getAndroidModuleSdkType();
+
+  public abstract Optional<String> getIntellijModuleSdkName();
+
+  public abstract ImmutableSet<String> getIntellijSdkTargets();
 
   public abstract Optional<String> getJavaModuleSdkName();
 

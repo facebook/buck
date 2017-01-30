@@ -254,6 +254,7 @@ public class IjProjectDataPreparerTest {
                         Paths.get("java/com/example/base"),
                         true,
                         ImmutableSortedSet.of(baseTargetSrcFilePath)))
+                .setModuleType(IjModuleType.JAVA_MODULE)
                 .setSdkType("JavaSDK")
                 .build(),
             IjModule.builder()

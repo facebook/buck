@@ -33,6 +33,7 @@ import java.util.Optional;
  * Holds all of the mutable state required during {@link IjModule} creation.
  */
 class ModuleBuildContext {
+
   private final ImmutableSet<BuildTarget> circularDependencyInducingTargets;
 
   private Optional<IjModuleAndroidFacet.Builder> androidFacetBuilder;
@@ -42,6 +43,8 @@ class ModuleBuildContext {
   // See comment in getDependencies for these two member variables.
   private Map<BuildTarget, DependencyType> dependencyTypeMap;
   private Multimap<Path, BuildTarget> dependencyOriginMap;
+  private Optional<IjModuleType> moduleType;
+  private Optional<Path> metaInfDirectory;
 
   public ModuleBuildContext(ImmutableSet<BuildTarget> circularDependencyInducingTargets) {
     this.circularDependencyInducingTargets = circularDependencyInducingTargets;
@@ -51,6 +54,8 @@ class ModuleBuildContext {
     this.sourceFoldersMergeMap = new HashMap<>();
     this.dependencyTypeMap = new HashMap<>();
     this.dependencyOriginMap = HashMultimap.create();
+    this.moduleType = Optional.empty();
+    this.metaInfDirectory = Optional.empty();
   }
 
   public void ensureAndroidFacetBuilder() {
@@ -90,6 +95,32 @@ class ModuleBuildContext {
 
   public ImmutableSet<IjFolder> getGeneratedSourceCodeFolders() {
     return generatedSourceCodeFoldersBuilder.build();
+  }
+
+  public Optional<IjModuleType> getModuleType() {
+    return moduleType;
+  }
+
+  public void setModuleType(IjModuleType moduleType) {
+    this.moduleType = Optional.of(moduleType);
+  }
+
+  public Optional<Path> getMetaInfDirectory() {
+    return metaInfDirectory;
+  }
+
+  public void setMetaInfDirectory(Path metaInfDirectory) {
+    this.metaInfDirectory = Optional.of(metaInfDirectory);
+  }
+
+  /**
+   * Mark this module as one that can be run as an IntelliJ plugin.
+   *
+   * @param metaInfDirectory directory where the plugin's plugin.xml descriptor lives
+   */
+  public void setIsIntellijPlugin(Path metaInfDirectory) {
+    setModuleType(IjModuleType.PLUGIN_MODULE);
+    setMetaInfDirectory(metaInfDirectory);
   }
 
   /**

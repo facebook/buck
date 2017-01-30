@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module type="JAVA_MODULE" version="4">
+<module type="%moduleType%" version="4">
+%if(metaInfDirectory)%
+  <component name="DevKit.ModuleBuildProperties" url="file://$MODULE_DIR$/%metaInfDirectory%/plugin.xml" />
+%endif%
 %if(androidFacet.enabled)%
   <component name="FacetManager">
     <facet type="android" name="Android">

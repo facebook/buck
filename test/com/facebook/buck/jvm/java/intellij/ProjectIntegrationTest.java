@@ -614,6 +614,11 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testBuckProjectWithIntellijSdk() throws IOException {
+    runBuckProjectAndVerify("project_with_intellij_sdk");
+  }
+
+  @Test
   public void testVersion2BuckProjectWithProjectSettings() throws IOException {
     runBuckProjectAndVerify("experimental_project_with_project_settings");
   }

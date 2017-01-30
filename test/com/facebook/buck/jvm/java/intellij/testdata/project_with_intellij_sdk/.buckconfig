@@ -1,0 +1,12 @@
+[color]
+  ui = false
+[alias]
+  root=//:root_repo
+[project]
+  ignore = buck-out
+  ide = intellij
+  disable_r_java_idea_generator = true
+[intellij]
+  intellij_module_sdk_name = IDEA SDK
+  intellij_sdk_targets = //lib:openapi, //lib:idea
+

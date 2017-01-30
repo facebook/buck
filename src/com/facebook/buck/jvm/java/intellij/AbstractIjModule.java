@@ -86,6 +86,10 @@ abstract class AbstractIjModule implements IjProjectElement {
 
   public abstract Optional<String> getLanguageLevel();
 
+  public abstract Optional<IjModuleType> getModuleType();
+
+  public abstract Optional<Path> getMetaInfDirectory();
+
   /**
    * @return path where the XML describing the module to IntelliJ will be written to.
    */

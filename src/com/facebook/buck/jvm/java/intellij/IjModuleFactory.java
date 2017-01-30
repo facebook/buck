@@ -24,6 +24,7 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
 import com.facebook.buck.jvm.groovy.GroovyTestDescription;
+import com.facebook.buck.jvm.java.JavaBinaryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -68,6 +69,7 @@ public class IjModuleFactory {
           AndroidLibraryDescription.class,
           AndroidResourceDescription.class,
           CxxLibraryDescription.class,
+          JavaBinaryDescription.class,
           JavaLibraryDescription.class,
           JavaTestDescription.class,
           RobolectricTestDescription.class,
@@ -85,8 +87,14 @@ public class IjModuleFactory {
     void apply(TargetNode<T, ?> targetNode, ModuleBuildContext context);
   }
 
+  // From constructor of com.intellij.openapi.projectRoots.impl.JavaSdkImpl
   private static final String SDK_TYPE_JAVA = "JavaSDK";
+
+  // From constructor of org.jetbrains.android.sdk.AndroidSdkType
   private static final String SDK_TYPE_ANDROID = "Android SDK";
+
+  // From constructor of org.jetbrains.idea.devkit.projectRoots.IdeaJdk
+  private static final String SDK_TYPE_IDEA = "IDEA JDK";
 
   private final ProjectFilesystem projectFilesystem;
   private final Map<Class<? extends Description<?>>, IjModuleRule<?>> moduleRuleIndex =
@@ -113,6 +121,7 @@ public class IjModuleFactory {
     addToIndex(new AndroidLibraryModuleRule());
     addToIndex(new AndroidResourceModuleRule());
     addToIndex(new CxxLibraryModuleRule());
+    addToIndex(new JavaBinaryModuleRule());
     addToIndex(new JavaLibraryModuleRule());
     addToIndex(new JavaTestModuleRule());
     addToIndex(new RobolectricTestModuleRule());
@@ -161,8 +170,14 @@ public class IjModuleFactory {
     Optional<String> sourceLevel = getSourceLevel(targetNodes);
     String sdkType;
     Optional<String> sdkName;
+    IjModuleType moduleType = context.getModuleType().orElse(IjModuleType.DEFAULT);
+    Optional<Path> metaInfDirectory = Optional.empty();
 
-    if (context.isAndroidFacetBuilderPresent()) {
+    if (moduleType == IjModuleType.PLUGIN_MODULE) {
+      sdkType = SDK_TYPE_IDEA;
+      sdkName = projectConfig.getIntellijModuleSdkName();
+      metaInfDirectory = context.getMetaInfDirectory();
+    } else if (context.isAndroidFacetBuilderPresent()) {
       context.getOrCreateAndroidFacetBuilder().setGeneratedSourcePath(
           createAndroidGenPath(moduleBasePath));
 
@@ -184,6 +199,8 @@ public class IjModuleFactory {
         .setSdkName(sdkName)
         .setSdkType(sdkType)
         .setLanguageLevel(sourceLevel)
+        .setModuleType(moduleType)
+        .setMetaInfDirectory(metaInfDirectory)
         .build();
   }
 
@@ -558,6 +575,36 @@ public class IjModuleFactory {
           false /* wantsPackagePrefix */,
           context);
     }
+  }
+
+  private class JavaBinaryModuleRule
+      implements IjModuleRule<JavaBinaryDescription.Args> {
+
+    @Override
+    public Class<? extends Description<?>> getDescriptionClass() {
+      return JavaBinaryDescription.class;
+    }
+
+    @Override
+    public void apply(
+        TargetNode<JavaBinaryDescription.Args, ?> target,
+        ModuleBuildContext context) {
+      context.addDeps(target.getDeps(), DependencyType.PROD);
+      // If this is a binary based on an intellij provided library *and*
+      // it has a meta_inf_directory, then it's almost certainly an IntelliJ
+      // plugin, so mark the module as such.  This will allow users to create
+      // a "plugin" runtime configurations for that module in IntelliJ.
+      Set<String> intellijLibraries = projectConfig.getIntellijSdkTargets();
+      for (BuildTarget dep : target.getDeps()) {
+        Optional<Path> metaInfDirectory = target.getConstructorArg().metaInfDirectory;
+        if (metaInfDirectory.isPresent() &&
+            intellijLibraries.contains(dep.getFullyQualifiedName())) {
+          context.setIsIntellijPlugin(metaInfDirectory.get());
+          break;
+        }
+      }
+    }
+
   }
 
   private class JavaLibraryModuleRule implements IjModuleRule<JavaLibraryDescription.Arg> {
