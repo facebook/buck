@@ -32,6 +32,8 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -77,6 +79,9 @@ public class PomIntegrationTest {
   private final BuildRuleResolver ruleResolver = new BuildRuleResolver(
       TargetGraph.EMPTY,
       new DefaultTargetNodeToBuildRuleTransformer());
+  private final SourcePathResolver pathResolver =
+      new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+
   private final ProjectFilesystem filesystem = FakeProjectFilesystem.createRealTempFilesystem();
 
   @Test
@@ -97,7 +102,7 @@ public class PomIntegrationTest {
     assertFalse(Files.exists(pomPath));
 
     // Basic case
-    Pom.generatePomFile(item, pomPath);
+    Pom.generatePomFile(pathResolver, item, pomPath);
 
     Model pomModel = parse(pomPath);
     assertEquals("com.example", pomModel.getGroupId());
@@ -113,14 +118,14 @@ public class PomIntegrationTest {
     // Corrupt dependency data and ensure buck restores that
     removeDependencies(pomModel, pomPath);
 
-    Pom.generatePomFile(item, pomPath);
+    Pom.generatePomFile(pathResolver, item, pomPath);
     pomModel = parse(pomPath);
 
     // Add extra pom data and ensure buck preserves that
     pomModel.setUrl(URL);
     serializePom(pomModel, pomPath);
 
-    Pom.generatePomFile(item, pomPath);
+    Pom.generatePomFile(pathResolver, item, pomPath);
 
     pomModel = parse(pomPath);
     assertEquals(URL, pomModel.getUrl());
@@ -132,13 +137,15 @@ public class PomIntegrationTest {
         "//example:no-template",
         "example.com:project:1.0.0",
         null);
-    Model noTemplate = parse(Pom.generatePomFile(withoutTemplate));
+    Model noTemplate = parse(Pom.generatePomFile(pathResolver, withoutTemplate));
 
     MavenPublishable withTemplate = createMavenPublishable(
         "//example:template",
         "example.com:project:1.0.0",
-        TestDataHelper.getTestDataDirectory(getClass()).resolve("poms/template-pom.xml"));
-    Model templated = parse(Pom.generatePomFile(withTemplate));
+        new FakeSourcePath(
+            TestDataHelper.getTestDataDirectory(getClass())
+                .resolve("poms/template-pom.xml").toString()));
+    Model templated = parse(Pom.generatePomFile(pathResolver, withTemplate));
 
     // Template sets developers and an example dep. Check that these aren't in the non-templated
     // version
@@ -160,11 +167,12 @@ public class PomIntegrationTest {
   private MavenPublishable createMavenPublishable(
       String target,
       String mavenCoords,
-      @Nullable Path pomTemplate,
+      @Nullable SourcePath pomTemplate,
       BuildRule... deps) {
     return ruleResolver.addToIndex(
         new PublishedViaMaven(
-            target, filesystem,
+            target,
+            filesystem,
             ruleResolver,
             mavenCoords,
             pomTemplate,
@@ -195,7 +203,7 @@ public class PomIntegrationTest {
       implements MavenPublishable {
     @Nullable
     @AddToRuleKey
-    private final Path pomTemplate;
+    private final SourcePath pomTemplate;
     @AddToRuleKey
     private final String coords;
 
@@ -204,7 +212,7 @@ public class PomIntegrationTest {
         ProjectFilesystem filesystem,
         BuildRuleResolver ruleResolver,
         String coords,
-        @Nullable Path pomTemplate,
+        @Nullable SourcePath pomTemplate,
         BuildRule... deps) {
       super(
           new FakeBuildRuleParamsBuilder(target)
@@ -227,7 +235,7 @@ public class PomIntegrationTest {
     }
 
     @Override
-    public Optional<Path> getPomTemplate() {
+    public Optional<SourcePath> getPomTemplate() {
       return Optional.ofNullable(pomTemplate);
     }
 

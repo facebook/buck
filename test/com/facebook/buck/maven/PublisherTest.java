@@ -25,6 +25,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -95,6 +97,7 @@ public class PublisherTest {
         TargetGraphFactory.newInstance(depNode, publishableANode, publishableBNode);
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
 
     MavenPublishable publishableA = (MavenPublishable) resolver.requireRule(publishableTargetA);
     MavenPublishable publishableB = (MavenPublishable) resolver.requireRule(publishableTargetB);
@@ -113,7 +116,7 @@ public class PublisherTest {
             .getUnflavoredBuildTarget()
             .getFullyQualifiedName()));
 
-    publisher.publish(ImmutableSet.of(publishableA, publishableB));
+    publisher.publish(pathResolver, ImmutableSet.of(publishableA, publishableB));
   }
 
   @Test
@@ -159,6 +162,7 @@ public class PublisherTest {
         publishableBNode);
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
 
     MavenPublishable publishableA = (MavenPublishable) resolver.requireRule(publishableTargetA);
     MavenPublishable publishableB = (MavenPublishable) resolver.requireRule(publishableTargetB);
@@ -177,7 +181,7 @@ public class PublisherTest {
             .getUnflavoredBuildTarget()
             .getFullyQualifiedName()));
 
-    publisher.publish(ImmutableSet.of(publishableA, publishableB));  }
+    publisher.publish(pathResolver, ImmutableSet.of(publishableA, publishableB));  }
 
   @Test
   public void errorRaisedForDuplicateTransitiveDeps()
@@ -228,6 +232,7 @@ public class PublisherTest {
         publishableBNode);
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
 
     MavenPublishable publishableA = (MavenPublishable) resolver.requireRule(publishableTargetA);
     MavenPublishable publishableB = (MavenPublishable) resolver.requireRule(publishableTargetB);
@@ -246,5 +251,5 @@ public class PublisherTest {
             .getUnflavoredBuildTarget()
             .getFullyQualifiedName()));
 
-    publisher.publish(ImmutableSet.of(publishableA, publishableB));  }
+    publisher.publish(pathResolver, ImmutableSet.of(publishableA, publishableB));  }
 }

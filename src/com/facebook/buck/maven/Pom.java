@@ -20,6 +20,7 @@ import com.facebook.buck.jvm.java.HasMavenCoordinates;
 import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -82,19 +83,22 @@ public class Pom {
 
   private final Model model;
   private final MavenPublishable publishable;
+  private final SourcePathResolver pathResolver;
   private final Path path;
 
-  public Pom(Path path, MavenPublishable buildRule) {
+  public Pom(SourcePathResolver pathResolver, Path path, MavenPublishable buildRule) {
+    this.pathResolver = pathResolver;
     this.path = path;
     this.publishable = buildRule;
     this.model = constructModel();
     applyBuildRule();
   }
 
-  public static Path generatePomFile(MavenPublishable rule) throws IOException {
+  public static Path generatePomFile(SourcePathResolver pathResolver, MavenPublishable rule)
+      throws IOException {
     Path pom = getPomPath(rule);
     Files.deleteIfExists(pom);
-    generatePomFile(rule, pom);
+    generatePomFile(pathResolver, rule, pom);
     return pom;
   }
 
@@ -108,9 +112,10 @@ public class Pom {
 
   @VisibleForTesting
   static void generatePomFile(
+      SourcePathResolver pathResolver,
       MavenPublishable rule,
       Path optionallyExistingPom) throws IOException {
-    new Pom(optionallyExistingPom, rule).flushToFile();
+    new Pom(pathResolver, optionallyExistingPom, rule).flushToFile();
   }
 
   private void applyBuildRule() {
@@ -151,7 +156,9 @@ public class Pom {
     model.setModelVersion(POM_MODEL_VERSION);
 
     if (publishable.getPomTemplate().isPresent()) {
-      model = constructModel(publishable.getPomTemplate().get().toFile(), model);
+      model = constructModel(
+          pathResolver.getAbsolutePath(publishable.getPomTemplate().get()).toFile(),
+          model);
     }
 
     if (file.isFile()) {

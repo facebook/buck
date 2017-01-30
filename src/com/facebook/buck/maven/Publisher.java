@@ -21,6 +21,7 @@ import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.StandardSystemProperty;
@@ -104,6 +105,7 @@ public class Publisher {
   }
 
   public ImmutableSet<DeployResult> publish(
+      SourcePathResolver pathResolver,
       ImmutableSet<MavenPublishable> publishables) throws DeploymentException {
     ImmutableListMultimap<UnflavoredBuildTarget, UnflavoredBuildTarget> duplicateBuiltinBuileRules =
         checkForDuplicatePackagedDeps(publishables);
@@ -151,7 +153,7 @@ public class Publisher {
       try {
         // If this is the "main" artifact (denoted by lack of classifier) generate and publish
         // pom alongside
-        File pom = Pom.generatePomFile(publishable).toFile();
+        File pom = Pom.generatePomFile(pathResolver, publishable).toFile();
         deployResultBuilder.add(publish(coords, ImmutableList.of(mainItem, pom)));
       } catch (IOException e) {
         throw new RuntimeException(e);

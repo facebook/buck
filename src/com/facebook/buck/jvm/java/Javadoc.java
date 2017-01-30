@@ -194,7 +194,7 @@ public class Javadoc extends AbstractBuildRuleWithResolver implements MavenPubli
   }
 
   @Override
-  public Optional<Path> getPomTemplate() {
-    return mavenPomTemplate.map(getResolver()::getAbsolutePath);
+  public Optional<SourcePath> getPomTemplate() {
+    return mavenPomTemplate;
   }
 }

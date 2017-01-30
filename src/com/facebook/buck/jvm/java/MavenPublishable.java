@@ -17,8 +17,8 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.SourcePath;
 
-import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -42,5 +42,5 @@ public interface MavenPublishable extends HasMavenCoordinates {
   /**
    * @return A template for the pom.xml to be generated when publishing this artifact.
    */
-  Optional<Path> getPomTemplate();
+  Optional<SourcePath> getPomTemplate();
 }

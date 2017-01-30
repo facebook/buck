@@ -25,6 +25,8 @@ import com.facebook.buck.parser.BuildTargetSpec;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -151,7 +153,9 @@ public class PublishCommand extends BuildCommand {
         dryRun);
 
     try {
-      ImmutableSet<DeployResult> deployResults = publisher.publish(publishables.build());
+      ImmutableSet<DeployResult> deployResults = publisher.publish(
+          new SourcePathResolver(new SourcePathRuleFinder(getBuild().getRuleResolver())),
+          publishables.build());
       for (DeployResult deployResult : deployResults) {
         printArtifactsInformation(params, deployResult);
       }

@@ -137,8 +137,8 @@ public class MavenUberJar extends AbstractBuildRuleWithResolver implements Maven
   }
 
   @Override
-  public Optional<Path> getPomTemplate() {
-    return mavenPomTemplate.map(getResolver()::getAbsolutePath);
+  public Optional<SourcePath> getPomTemplate() {
+    return mavenPomTemplate;
   }
 
   @Override
@@ -201,8 +201,8 @@ public class MavenUberJar extends AbstractBuildRuleWithResolver implements Maven
     }
 
     @Override
-    public Optional<Path> getPomTemplate() {
-      return mavenPomTemplate.map(getResolver()::getAbsolutePath);
+    public Optional<SourcePath> getPomTemplate() {
+      return mavenPomTemplate;
     }
 
     @Override
