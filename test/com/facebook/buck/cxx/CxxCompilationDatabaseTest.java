@@ -119,7 +119,6 @@ public class CxxCompilationDatabaseTest {
     rules.add(
         CxxPreprocessAndCompile.preprocessAndCompile(
             compileBuildRuleParams,
-                testSourcePathResolver,
                 new PreprocessorDelegate(
                     testSourcePathResolver,
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,

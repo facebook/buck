@@ -169,7 +169,7 @@ public class CxxCompilationDatabase extends AbstractBuildRuleWithResolver
       String fileToCompile = inputFilesystem
           .resolve(pathResolver.getAbsolutePath(inputSourcePath))
           .toString();
-      ImmutableList<String> arguments = compileRule.getCommand();
+      ImmutableList<String> arguments = compileRule.getCommand(pathResolver);
       return CxxCompilationDatabaseEntry.of(
           inputFilesystem.getRootPath().toString(),
           fileToCompile,

@@ -146,7 +146,6 @@ public class CxxPreprocessAndCompileTest {
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(
             CxxPreprocessAndCompile.compile(
                 params,
-                pathResolver,
                 new CompilerDelegate(
                     pathResolver,
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
@@ -165,7 +164,6 @@ public class CxxPreprocessAndCompileTest {
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(
             CxxPreprocessAndCompile.compile(
                 params,
-                pathResolver,
                 new CompilerDelegate(
                     pathResolver,
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
@@ -185,7 +183,6 @@ public class CxxPreprocessAndCompileTest {
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(
             CxxPreprocessAndCompile.preprocessAndCompile(
                 params,
-                pathResolver,
                 new PreprocessorDelegate(
                     pathResolver,
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
@@ -216,7 +213,6 @@ public class CxxPreprocessAndCompileTest {
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(
             CxxPreprocessAndCompile.compile(
                 params,
-                pathResolver,
                 new CompilerDelegate(
                     pathResolver,
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
@@ -239,7 +235,6 @@ public class CxxPreprocessAndCompileTest {
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(
             CxxPreprocessAndCompile.compile(
                 params,
-                pathResolver,
                 new CompilerDelegate(
                     pathResolver,
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
@@ -262,7 +257,6 @@ public class CxxPreprocessAndCompileTest {
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(
             CxxPreprocessAndCompile.compile(
                 params,
-                pathResolver,
                 new CompilerDelegate(
                     pathResolver,
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
@@ -303,7 +297,6 @@ public class CxxPreprocessAndCompileTest {
         return new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(
             CxxPreprocessAndCompile.preprocessAndCompile(
                 params,
-                pathResolver,
                 new PreprocessorDelegate(
                     pathResolver,
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
@@ -356,7 +349,6 @@ public class CxxPreprocessAndCompileTest {
     CxxPreprocessAndCompile buildRule =
         CxxPreprocessAndCompile.compile(
             params,
-            pathResolver,
             new CompilerDelegate(pathResolver,
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER, DEFAULT_COMPILER, flags),
             output,
@@ -416,7 +408,6 @@ public class CxxPreprocessAndCompileTest {
     CxxPreprocessAndCompile cxxPreprocess =
         CxxPreprocessAndCompile.preprocessAndCompile(
             params,
-            pathResolver,
             new PreprocessorDelegate(
                 pathResolver,
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
@@ -446,7 +437,6 @@ public class CxxPreprocessAndCompileTest {
     CxxPreprocessAndCompile cxxCompile =
         CxxPreprocessAndCompile.compile(
             params,
-            pathResolver,
             new CompilerDelegate(
                 pathResolver,
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
@@ -483,7 +473,6 @@ public class CxxPreprocessAndCompileTest {
     CxxPreprocessAndCompile buildRule =
         CxxPreprocessAndCompile.compile(
             params,
-            pathResolver,
             compilerDelegate,
             output,
             new FakeSourcePath(input.toString()),
@@ -525,7 +514,6 @@ public class CxxPreprocessAndCompileTest {
     CxxPreprocessAndCompile buildRule =
         CxxPreprocessAndCompile.preprocessAndCompile(
             params,
-            pathResolver,
             new PreprocessorDelegate(
                 pathResolver,
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,

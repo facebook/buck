@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -49,7 +49,7 @@ import java.util.function.Predicate;
  * A build rule which preprocesses and/or compiles a C/C++ source in a single step.
  */
 public class CxxPreprocessAndCompile
-    extends AbstractBuildRuleWithResolver
+    extends AbstractBuildRule
     implements RuleKeyAppendable, SupportsInputBasedRuleKey, SupportsDependencyFileRuleKey {
 
   @AddToRuleKey
@@ -66,13 +66,11 @@ public class CxxPreprocessAndCompile
   private final CxxSource.Type inputType;
   private final DebugPathSanitizer compilerSanitizer;
   private final DebugPathSanitizer assemblerSanitizer;
-  private final SourcePathResolver pathResolver;
   private final Optional<SymlinkTree> sandboxTree;
 
   @VisibleForTesting
   public CxxPreprocessAndCompile(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       CxxPreprocessAndCompileStep.Operation operation,
       Optional<PreprocessorDelegate> preprocessDelegate,
       CompilerDelegate compilerDelegate,
@@ -83,8 +81,7 @@ public class CxxPreprocessAndCompile
       DebugPathSanitizer compilerSanitizer,
       DebugPathSanitizer assemblerSanitizer,
       Optional<SymlinkTree> sandboxTree) {
-    super(params, resolver);
-    this.pathResolver = resolver;
+    super(params);
     this.sandboxTree = sandboxTree;
     Preconditions.checkState(operation.isPreprocess() == preprocessDelegate.isPresent());
     if (precompiledHeaderRef.isPresent()) {
@@ -121,7 +118,6 @@ public class CxxPreprocessAndCompile
    */
   public static CxxPreprocessAndCompile compile(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       CompilerDelegate compilerDelegate,
       Path output,
       SourcePath input,
@@ -131,7 +127,6 @@ public class CxxPreprocessAndCompile
       Optional<SymlinkTree> sandboxTree) {
     return new CxxPreprocessAndCompile(
         params,
-        resolver,
         CxxPreprocessAndCompileStep.Operation.COMPILE,
         Optional.empty(),
         compilerDelegate,
@@ -149,7 +144,6 @@ public class CxxPreprocessAndCompile
    */
   public static CxxPreprocessAndCompile preprocessAndCompile(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       PreprocessorDelegate preprocessorDelegate,
       CompilerDelegate compilerDelegate,
       Path output,
@@ -161,7 +155,6 @@ public class CxxPreprocessAndCompile
       Optional<SymlinkTree> sandboxTree) {
     return new CxxPreprocessAndCompile(
         params,
-        resolver,
         CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE,
         Optional.of(preprocessorDelegate),
         compilerDelegate,
@@ -299,7 +292,7 @@ public class CxxPreprocessAndCompile
   }
 
   // Used for compdb
-  public ImmutableList<String> getCommand() {
+  public ImmutableList<String> getCommand(SourcePathResolver pathResolver) {
     if (operation == CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE) {
       return makeMainStep(pathResolver, getScratchPath(), false).getCommand();
     }
