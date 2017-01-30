@@ -1,0 +1,18 @@
+The junit/testng directories should be kept in sync with each other.
+
+Regenerating the testng subdirectory from the junit subdirectory can
+be done from the root of the buck repo as follows:
+
+    TESTDATA=test/com/facebook/buck/testrunner/testdata/consistency
+    rm -r $TESTDATA/testng
+    cp -r $TESTDATA/{junit,testng}
+
+    sed -i '' 's/junit/testng/' $TESTDATA/testng/BUCK.fixture
+    for f in $TESTDATA/testng/*.java ; do
+      # Replace JUnit @Test with TestNG @Test
+      sed -i '' 's/org.junit.Test/org.testng.annotations.Test/' $f
+      # Remove import of JUnit @Ignore
+      sed -i '' '/org.junit.Ignore/d' $f
+      # Replace JUnit's @Ignore with TestNG @Test(enabled = false)
+      sed -i '' 's/@Test @Ignore/@Test(enabled = false)/' $f
+    done

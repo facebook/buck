@@ -1,0 +1,35 @@
+# These files have only passing and ignored-failing tests (or no tests).
+java_test(
+  name = 'passing',
+  srcs = [
+    'AbstractClassPassing.java',
+    'AbstractTest.java',
+    'HasPassingInnerTests.java',
+    'InterfaceTest.java',
+    'NotATestClass.java',
+    'PartiallyIgnoredPassingTest.java',
+    'TotallyIgnoredTest.java',
+  ],
+  test_type = 'junit',
+  source = '8',
+  target = '8',
+  deps = [
+    '//lib:junit',
+  ],
+)
+
+# These files have (non-ignored) failing tests.
+java_test(
+  name = 'failing',
+  srcs = [
+    'AbstractClassFailing.java',
+    'HasFailingInnerTests.java',
+    'PartiallyIgnoredFailingTest.java',
+  ],
+  test_type = 'junit',
+  source = '8',
+  target = '8',
+  deps = [
+    '//lib:junit',
+  ]
+)
