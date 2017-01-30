@@ -725,6 +725,7 @@ docsearch({
   {$args|noAutoescape}
   {call buck.visibility_arg /}
   {call buck.licenses_arg /}
+  {call buck.labels_arg /}
 </ul>
 
 {if $flavors}
@@ -1182,6 +1183,18 @@ docsearch({
   {param desc}
   Set of license files for this library.  To get the list of license files for a given{sp}
   {call buck.build_rule /} and all of its dependencies, you can use {call buck.cmd_query /}.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .labels_arg}
+{call buck.arg}
+  {param name: 'labels' /}
+  {param default: '[]' /}
+  {param desc}
+  Set of arbitrary strings which allow you to annotate a {call buck.build_rule /} with tags
+  that can be searched for over an entire dependency tree using {call buckquery.attrfilter /}.
   {/param}
 {/call}
 {/template}

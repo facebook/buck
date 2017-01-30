@@ -1,0 +1,15 @@
+{namespace buckquery}
+
+/**
+ * @param section The section the entry is in.
+ */
+{template .section_link}
+<a href="{ROOT}command/query.html#{$section}"><code>buck query {$section}</code></a>
+{/template}
+
+/***/
+{template .attrfilter}
+{call .section_link}
+  {param section: 'attrfilter' /}
+{/call}
+{/template}
