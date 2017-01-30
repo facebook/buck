@@ -312,7 +312,6 @@ public class AppleLibraryDescription implements
         params,
         resolver,
         flavoredStripStyle.orElse(StripStyle.NON_GLOBAL_SYMBOLS),
-        pathResolver,
         unstrippedBinaryRule,
         representativePlatform);
 

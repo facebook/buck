@@ -865,7 +865,6 @@ public class CxxDescriptionEnhancer {
           cxxParams,
           resolver,
           stripStyle.get(),
-          sourcePathResolver,
           cxxLink,
           cxxPlatform);
       cxxStrip = Optional.of(stripRule);
@@ -942,7 +941,6 @@ public class CxxDescriptionEnhancer {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       StripStyle stripStyle,
-      SourcePathResolver sourcePathResolver,
       BuildRule unstrippedBinaryRule,
       CxxPlatform cxxPlatform) {
     BuildRuleParams stripRuleParams = params
@@ -958,7 +956,6 @@ public class CxxDescriptionEnhancer {
     } else {
       CxxStrip cxxStrip = new CxxStrip(
           stripRuleParams,
-          sourcePathResolver,
           stripStyle,
           new BuildTargetSourcePath(unstrippedBinaryRule.getBuildTarget()),
           cxxPlatform.getStrip(),

@@ -18,13 +18,12 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -41,7 +40,7 @@ import javax.annotation.Nullable;
  * Controls how strip tool is invoked. To have better understanding please refer to `man strip`.
  * If you don't want stripping, you should depend on CxxLink directly.
  */
-public class CxxStrip extends AbstractBuildRuleWithResolver implements SupportsInputBasedRuleKey {
+public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRuleKey {
 
   /**
    * Used to identify this rule in the graph. This should be appended ONLY to build target
@@ -62,12 +61,11 @@ public class CxxStrip extends AbstractBuildRuleWithResolver implements SupportsI
 
   public CxxStrip(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       StripStyle stripStyle,
       SourcePath cxxLinkSourcePath,
       Tool strip,
       Path output) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.stripStyle = stripStyle;
     this.cxxLinkSourcePath = cxxLinkSourcePath;
     this.strip = strip;
