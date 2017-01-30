@@ -92,7 +92,7 @@ public class CxxInferComputeReport extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public ImmutableList<Step> getPostBuildSteps() {
+  public ImmutableList<Step> getPostBuildSteps(BuildContext context) {
     return ImmutableList.<Step>builder()
         .add(new MkdirStep(projectFilesystem, outputDirectory))
         .add(

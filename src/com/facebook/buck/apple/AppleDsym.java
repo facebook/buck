@@ -23,14 +23,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -45,7 +44,7 @@ import java.nio.file.Path;
  * Creates dSYM bundle for the given _unstripped_ binary.
  */
 public class AppleDsym
-    extends AbstractBuildRuleWithResolver
+    extends AbstractBuildRule
     implements HasPostBuildSteps, SupportsInputBasedRuleKey {
 
   public static final Flavor RULE_FLAVOR = ImmutableFlavor.of("apple-dsym");
@@ -54,7 +53,6 @@ public class AppleDsym
   @AddToRuleKey
   private final Tool lldb;
 
-  private final SourcePathResolver resolver;
   @AddToRuleKey
   private final Tool dsymutil;
 
@@ -66,13 +64,11 @@ public class AppleDsym
 
   public AppleDsym(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       Tool dsymutil,
       Tool lldb,
       SourcePath unstrippedBinarySourcePath,
       Path dsymOutputPath) {
-    super(params, resolver);
-    this.resolver = resolver;
+    super(params);
     this.dsymutil = dsymutil;
     this.lldb = lldb;
     this.unstrippedBinarySourcePath = unstrippedBinarySourcePath;
@@ -148,12 +144,12 @@ public class AppleDsym
   }
 
   @Override
-  public ImmutableList<Step> getPostBuildSteps() {
+  public ImmutableList<Step> getPostBuildSteps(BuildContext context) {
     return ImmutableList.of(
         new RegisterDebugSymbolsStep(
             unstrippedBinarySourcePath,
             lldb,
-            resolver,
+            context.getSourcePathResolver(),
             dsymOutputPath));
   }
 }

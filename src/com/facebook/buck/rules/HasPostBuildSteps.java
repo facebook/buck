@@ -29,6 +29,6 @@ public interface HasPostBuildSteps extends BuildRule {
    * @return a list of {@link Step}s that run after the build regardless of whether this build rule
    *     actually ran or hit in the cache.
    */
-  ImmutableList<Step> getPostBuildSteps();
+  ImmutableList<Step> getPostBuildSteps(BuildContext context);
 
 }

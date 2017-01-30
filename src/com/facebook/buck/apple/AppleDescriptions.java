@@ -569,7 +569,6 @@ public class AppleDescriptions {
                     .addAll(unstrippedBinaryBuildRule.getStaticLibraryDeps())
                     .build()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
-        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         appleCxxPlatform.getDsymutil(),
         appleCxxPlatform.getLldb(),
         new BuildTargetSourcePath(unstrippedBinaryBuildRule.getBuildTarget()),

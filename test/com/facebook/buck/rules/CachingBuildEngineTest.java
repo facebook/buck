@@ -3024,7 +3024,7 @@ public class CachingBuildEngineTest {
     }
 
     @Override
-    public ImmutableList<Step> getPostBuildSteps() {
+    public ImmutableList<Step> getPostBuildSteps(BuildContext context) {
       return postBuildSteps;
     }
 
