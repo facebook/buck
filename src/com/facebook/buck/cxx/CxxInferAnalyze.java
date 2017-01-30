@@ -17,14 +17,13 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -44,7 +43,7 @@ import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class CxxInferAnalyze extends AbstractBuildRuleWithResolver {
+public class CxxInferAnalyze extends AbstractBuildRule {
 
   private CxxInferCaptureAndAggregatingRules<CxxInferAnalyze>
       captureAndAnalyzeRules;
@@ -59,10 +58,9 @@ public class CxxInferAnalyze extends AbstractBuildRuleWithResolver {
 
   CxxInferAnalyze(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver pathResolver,
       InferBuckConfig inferConfig,
       CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> captureAndAnalyzeRules) {
-    super(buildRuleParams, pathResolver);
+    super(buildRuleParams);
     this.captureAndAnalyzeRules = captureAndAnalyzeRules;
     this.resultsDir = BuildTargets.getGenPath(
         getProjectFilesystem(),

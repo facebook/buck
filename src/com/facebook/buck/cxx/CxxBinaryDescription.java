@@ -188,7 +188,6 @@ public class CxxBinaryDescription implements
       return CxxInferEnhancer.requireInferAnalyzeBuildRuleForCxxDescriptionArg(
           params,
           resolver,
-          pathResolver,
           cxxBuckConfig,
           cxxPlatform,
           args,
