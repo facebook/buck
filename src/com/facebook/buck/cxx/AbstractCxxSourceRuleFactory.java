@@ -740,7 +740,6 @@ abstract class AbstractCxxSourceRuleFactory {
 
     CxxPrecompiledHeader rule = new CxxPrecompiledHeader(
         params,
-        getPathResolver(),
         output,
         preprocessorDelegate,
         compilerDelegate,

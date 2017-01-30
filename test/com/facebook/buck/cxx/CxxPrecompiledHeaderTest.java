@@ -62,7 +62,6 @@ public class CxxPrecompiledHeaderTest {
         new SourcePathResolver(new SourcePathRuleFinder(resolver));
     CxxPrecompiledHeader precompiledHeader = new CxxPrecompiledHeader(
         params,
-        sourcePathResolver,
         Paths.get("foo.hash1.hash2.gch"),
         new PreprocessorDelegate(
             sourcePathResolver,
