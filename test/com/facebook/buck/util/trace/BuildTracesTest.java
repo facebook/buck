@@ -14,12 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.httpserver;
+package com.facebook.buck.util.trace;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.facebook.buck.httpserver.TracesHelper.TraceAttributes;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.model.BuildId;
@@ -28,6 +27,7 @@ import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.trace.BuildTraces.TraceAttributes;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
@@ -38,7 +38,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-public class TracesHelperTest {
+public class BuildTracesTest {
 
   @Test
   public void testGetTraceAttributesForId() throws IOException {
@@ -69,10 +69,10 @@ public class TracesHelperTest {
             "]",
         projectFilesystem.getBuckPaths().getBuckOut().resolve("build.a.trace"));
 
-    TracesHelper helper = new TracesHelper(projectFilesystem);
+    BuildTraces helper = new BuildTraces(projectFilesystem);
     TraceAttributes traceAttributes = helper.getTraceAttributesFor("a");
     assertEquals(
-        "TracesHelper should be able to extract the command.",
+        "BuildTraces should be able to extract the command.",
         Optional.of("buck build buck"),
         traceAttributes.getCommand());
     assertEquals(1000L, traceAttributes.getLastModifiedTime());
@@ -99,10 +99,10 @@ public class TracesHelperTest {
             "]",
         BuckConstant.getBuckTraceDir().resolve("build.b.trace"));
 
-    TracesHelper helper = new TracesHelper(projectFilesystem);
+    BuildTraces helper = new BuildTraces(projectFilesystem);
     TraceAttributes traceAttributes = helper.getTraceAttributesFor("b");
     assertEquals(
-        "TracesHelper should not be able to extract the command because there is no name " +
+        "BuildTraces should not be able to extract the command because there is no name " +
             "attribute.",
         Optional.empty(),
         traceAttributes.getCommand());
@@ -125,10 +125,10 @@ public class TracesHelperTest {
             "]",
         BuckConstant.getBuckTraceDir().resolve("build.c.trace"));
 
-    TracesHelper helper = new TracesHelper(projectFilesystem);
+    BuildTraces helper = new BuildTraces(projectFilesystem);
     TraceAttributes traceAttributes = helper.getTraceAttributesFor("c");
     assertEquals(
-        "TracesHelper should not be able to extract the command because there is no " +
+        "BuildTraces should not be able to extract the command because there is no " +
             "command_args attribute.",
         Optional.empty(),
         traceAttributes.getCommand());
@@ -151,7 +151,7 @@ public class TracesHelperTest {
     projectFilesystem.touch(BuckConstant.getBuckTraceDir().resolve("build.3.trace"));
     projectFilesystem.touch(BuckConstant.getBuckTraceDir().resolve("build.3b.trace"));
 
-    TracesHelper helper = new TracesHelper(projectFilesystem);
+    BuildTraces helper = new BuildTraces(projectFilesystem);
     assertEquals(
         ImmutableList.of(
             BuckConstant.getBuckTraceDir().resolve("build.5.trace"),
@@ -168,7 +168,7 @@ public class TracesHelperTest {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
         new FakeClock(TimeUnit.MILLISECONDS.toNanos(2000L)));
     projectFilesystem.mkdirs(BuckConstant.getBuckTraceDir());
-    TracesHelper helper = new TracesHelper(projectFilesystem);
+    BuildTraces helper = new BuildTraces(projectFilesystem);
     helper.getInputsForTraces("nonexistent");
   }
 
@@ -177,7 +177,7 @@ public class TracesHelperTest {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
         new FakeClock(TimeUnit.MILLISECONDS.toNanos(2000L)));
     projectFilesystem.mkdirs(BuckConstant.getBuckTraceDir());
-    TracesHelper helper = new TracesHelper(projectFilesystem);
+    BuildTraces helper = new BuildTraces(projectFilesystem);
     helper.getTraceAttributesFor("nonexistent");
   }
 
@@ -192,7 +192,7 @@ public class TracesHelperTest {
     fs.touch(getNewTraceFilePath(fs, "test", "3", 3));
     fs.touch(getNewTraceFilePath(fs, "test", "3b", 3));
 
-    TracesHelper helper = new TracesHelper(fs);
+    BuildTraces helper = new BuildTraces(fs);
     assertEquals(
         ImmutableList.of(
             fs.getBuckPaths().getLogDir().resolve("1970-01-01_00h00m05s_targets_5/build.5.trace"),

@@ -21,7 +21,8 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.httpserver.TracesHelper.TraceAttributes;
+import com.facebook.buck.util.trace.BuildTraces;
+import com.facebook.buck.util.trace.BuildTraces.TraceAttributes;
 
 import org.easymock.EasyMockSupport;
 import org.eclipse.jetty.server.Handler;
@@ -54,10 +55,10 @@ public class TraceHandlerDelegateTest extends EasyMockSupport {
     expect(response.getWriter()).andReturn(printWriter);
     response.flushBuffer();
 
-    TracesHelper tracesHelper = createMock(TracesHelper.class);
-    expect(tracesHelper.getTraceAttributesFor("abcdef")).andReturn(
+    BuildTraces buildTraces = createMock(BuildTraces.class);
+    expect(buildTraces.getTraceAttributesFor("abcdef")).andReturn(
         new TraceAttributes(Optional.of("buck build buck"), 2000L));
-    Handler traceHandler = new TemplateHandler(new TraceHandlerDelegate(tracesHelper));
+    Handler traceHandler = new TemplateHandler(new TraceHandlerDelegate(buildTraces));
 
     replayAll();
     traceHandler.handle("/trace/abcdef",
@@ -78,11 +79,11 @@ public class TraceHandlerDelegateTest extends EasyMockSupport {
     expect(baseRequest.getPathInfo()).andReturn("/..upADirectory");
 
     // Nothing on the helper should be invoked because the handler will error-out first.
-    TracesHelper tracesHelper = createMock(TracesHelper.class);
+    BuildTraces buildTraces = createMock(BuildTraces.class);
 
     replayAll();
 
-    TraceHandlerDelegate traceHandler = new TraceHandlerDelegate(tracesHelper);
+    TraceHandlerDelegate traceHandler = new TraceHandlerDelegate(buildTraces);
     assertNull(traceHandler.getDataForRequest(baseRequest));
 
     verifyAll();

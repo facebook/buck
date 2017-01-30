@@ -19,7 +19,8 @@ package com.facebook.buck.httpserver;
 import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.httpserver.TracesHelper.TraceAttributes;
+import com.facebook.buck.util.trace.BuildTraces;
+import com.facebook.buck.util.trace.BuildTraces.TraceAttributes;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.collect.ImmutableList;
 
@@ -34,22 +35,22 @@ public class TracesHandlerTest extends EasyMockSupport {
 
   @Test
   public void testHandleGet() throws IOException {
-    TracesHelper tracesHelper = createMock(TracesHelper.class);
-    expect(tracesHelper.getTraceAttributesFor(BuckConstant.getBuckTraceDir().resolve(
+    BuildTraces buildTraces = createMock(BuildTraces.class);
+    expect(buildTraces.getTraceAttributesFor(BuckConstant.getBuckTraceDir().resolve(
         "build.a.trace")))
         .andReturn(new TraceAttributes(Optional.of("buck build buck"), 1000L));
-    expect(tracesHelper.getTraceAttributesFor(BuckConstant.getBuckTraceDir().resolve(
+    expect(buildTraces.getTraceAttributesFor(BuckConstant.getBuckTraceDir().resolve(
         "build.b.trace")))
         .andReturn(new TraceAttributes(Optional.of("buck test --all --code-coverage"), 4000L));
-    expect(tracesHelper.getTraceAttributesFor(BuckConstant.getBuckTraceDir().resolve(
+    expect(buildTraces.getTraceAttributesFor(BuckConstant.getBuckTraceDir().resolve(
         "build.c.trace")))
         .andReturn(new TraceAttributes(Optional.empty(), 2000L));
-    expect(tracesHelper.getTraceAttributesFor(BuckConstant.getBuckTraceDir().resolve(
+    expect(buildTraces.getTraceAttributesFor(BuckConstant.getBuckTraceDir().resolve(
         "build.d.trace")))
         .andReturn(
             new TraceAttributes(Optional.of("buck test //test/com/facebook/buck/cli:cli"), 3000L));
 
-    expect(tracesHelper.listTraceFilesByLastModified()).andReturn(
+    expect(buildTraces.listTraceFilesByLastModified()).andReturn(
         ImmutableList.of(
             BuckConstant.getBuckTraceDir().resolve("build.b.trace"),
             BuckConstant.getBuckTraceDir().resolve("build.d.trace"),
@@ -60,7 +61,7 @@ public class TracesHandlerTest extends EasyMockSupport {
 
     replayAll();
 
-    TracesHandlerDelegate delegate = new TracesHandlerDelegate(tracesHelper);
+    TracesHandlerDelegate delegate = new TracesHandlerDelegate(buildTraces);
     TemplateHandler tracesHandler = new TemplateHandler(delegate);
     String html = tracesHandler.createHtmlForResponse(baseRequest);
 

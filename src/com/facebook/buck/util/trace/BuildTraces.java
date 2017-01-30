@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.httpserver;
+package com.facebook.buck.util.trace;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -50,19 +50,27 @@ import java.util.regex.Pattern;
 /**
  * Utility to help with reading data from build trace files.
  */
-public class TracesHelper {
+public class BuildTraces {
 
-  private static final Logger logger = Logger.get(TracesHelper.class);
+  /**
+   * Regex pattern that can be used as a parameter to {@link Pattern#compile(String)} to match a
+   * valid trace id.
+   */
+  private static final String TRACE_ID_PATTERN_TEXT = "([0-9a-zA-Z-]+)";
+
+  public static final Pattern TRACE_ID_PATTERN = Pattern.compile(TRACE_ID_PATTERN_TEXT);
+
+  private static final Logger logger = Logger.get(BuildTraces.class);
 
   private static final Pattern TRACES_FILE_PATTERN = Pattern.compile("build.*.trace$");
 
   private final ProjectFilesystem projectFilesystem;
 
-  TracesHelper(ProjectFilesystem projectFilesystem) {
+  public BuildTraces(ProjectFilesystem projectFilesystem) {
     this.projectFilesystem = projectFilesystem;
   }
 
-  static class TraceAttributes {
+  public static class TraceAttributes {
     private static final ThreadLocal<DateFormat> DATE_FORMAT = new ThreadLocal<DateFormat>() {
       @Override
       protected DateFormat initialValue() {
@@ -73,7 +81,7 @@ public class TracesHelper {
     private final Optional<String> command;
     private final long lastModifiedTime;
 
-    TraceAttributes(Optional<String> command, long lastModifiedTime) {
+    public TraceAttributes(Optional<String> command, long lastModifiedTime) {
       this.command = command;
       this.lastModifiedTime = lastModifiedTime;
     }
@@ -95,7 +103,7 @@ public class TracesHelper {
     }
   }
 
-  Iterable<InputStream> getInputsForTraces(String id) throws IOException {
+  public Iterable<InputStream> getInputsForTraces(String id) throws IOException {
     ImmutableList.Builder<InputStream> tracesBuilder = ImmutableList.builder();
     for (Path p : getPathsToTraces(id)) {
       tracesBuilder.add(projectFilesystem.getInputStreamForRelativePath(p));
@@ -103,7 +111,7 @@ public class TracesHelper {
     return tracesBuilder.build();
   }
 
-  TraceAttributes getTraceAttributesFor(String id) throws IOException {
+  public TraceAttributes getTraceAttributesFor(String id) throws IOException {
     for (Path p : getPathsToTraces(id)) {
       if (isTraceForBuild(p, id)) {
         return getTraceAttributesFor(p);
@@ -118,7 +126,7 @@ public class TracesHelper {
    * This method tries to be reasonably tolerant of changes to the .trace file schema, returning
    * {@link Optional#empty()} if it does not find the fields in the JSON that it expects.
    */
-  TraceAttributes getTraceAttributesFor(Path pathToTrace) throws IOException {
+  public TraceAttributes getTraceAttributesFor(Path pathToTrace) throws IOException {
     long lastModifiedTime = projectFilesystem.getLastModifiedTime(pathToTrace);
     Optional<String> command = parseCommandFrom(pathToTrace);
     return new TraceAttributes(command, lastModifiedTime);
@@ -182,7 +190,7 @@ public class TracesHelper {
     return name.startsWith(testPrefix) && name.endsWith(testSuffix);
   }
 
-  Collection<Path> listTraceFilesByLastModified() throws IOException {
+  public Collection<Path> listTraceFilesByLastModified() throws IOException {
     final List<Path> allTraces = Lists.newArrayList();
 
     projectFilesystem.walkFileTree(
@@ -230,7 +238,7 @@ public class TracesHelper {
    * the buck.py launcher has its own trace file).
    */
   private Collection<Path> getPathsToTraces(final String id) throws IOException {
-    Preconditions.checkArgument(TracesHandlerDelegate.TRACE_ID_PATTERN.matcher(id).matches());
+    Preconditions.checkArgument(TRACE_ID_PATTERN.matcher(id).matches());
 
     Collection<Path> traces = FluentIterable.from(listTraceFilesByLastModified())
         .filter(input -> input.getFileName().toString().contains(id))

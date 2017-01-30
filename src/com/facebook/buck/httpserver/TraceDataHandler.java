@@ -16,6 +16,7 @@
 
 package com.facebook.buck.httpserver;
 
+import com.facebook.buck.util.trace.BuildTraces;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.CharStreams;
 import com.google.common.net.MediaType;
@@ -45,10 +46,10 @@ class TraceDataHandler extends AbstractHandler {
   @VisibleForTesting
   static final Pattern CALLBACK_PATTERN = Pattern.compile("[\\w\\.]+");
 
-  private final TracesHelper tracesHelper;
+  private final BuildTraces buildTraces;
 
-  TraceDataHandler(TracesHelper tracesHelper) {
-    this.tracesHelper = tracesHelper;
+  TraceDataHandler(BuildTraces buildTraces) {
+    this.buildTraces = buildTraces;
   }
 
   @Override
@@ -92,7 +93,7 @@ class TraceDataHandler extends AbstractHandler {
 
     responseWriter.write("[");
 
-    Iterator<InputStream> traceStreams = tracesHelper.getInputsForTraces(id).iterator();
+    Iterator<InputStream> traceStreams = buildTraces.getInputsForTraces(id).iterator();
     boolean isFirst = true;
 
     while (traceStreams.hasNext()) {

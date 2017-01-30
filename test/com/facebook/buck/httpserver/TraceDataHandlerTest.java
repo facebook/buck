@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.util.trace.BuildTraces;
 import com.google.common.base.Charsets;
 
 import org.easymock.EasyMockSupport;
@@ -73,12 +74,12 @@ public class TraceDataHandlerTest extends EasyMockSupport {
     expect(response.getWriter()).andReturn(printWriter);
     response.flushBuffer();
 
-    TracesHelper tracesHelper = createMock(TracesHelper.class);
+    BuildTraces buildTraces = createMock(BuildTraces.class);
     Iterable<InputStream> traces = Arrays.asList(
         new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(Charsets.UTF_8))
     );
-    expect(tracesHelper.getInputsForTraces("abcdef")).andReturn(traces);
-    TraceDataHandler traceDataHandler = new TraceDataHandler(tracesHelper);
+    expect(buildTraces.getInputsForTraces("abcdef")).andReturn(traces);
+    TraceDataHandler traceDataHandler = new TraceDataHandler(buildTraces);
 
     replayAll();
     traceDataHandler.handle("/trace/abcdef",
@@ -107,13 +108,13 @@ public class TraceDataHandlerTest extends EasyMockSupport {
     expect(response.getWriter()).andReturn(printWriter);
     response.flushBuffer();
 
-    TracesHelper tracesHelper = createMock(TracesHelper.class);
+    BuildTraces buildTraces = createMock(BuildTraces.class);
     Iterable<InputStream> traces = Arrays.asList(
         new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(Charsets.UTF_8)),
         new ByteArrayInputStream("{\"baz\":\"blech\"}".getBytes(Charsets.UTF_8)));
-    expect(tracesHelper.getInputsForTraces("abcdef")).andReturn(traces);
+    expect(buildTraces.getInputsForTraces("abcdef")).andReturn(traces);
 
-    TraceDataHandler traceDataHandler = new TraceDataHandler(tracesHelper);
+    TraceDataHandler traceDataHandler = new TraceDataHandler(buildTraces);
 
     replayAll();
     traceDataHandler.handle("/trace/abcdef",
@@ -144,12 +145,12 @@ public class TraceDataHandlerTest extends EasyMockSupport {
     expect(response.getWriter()).andReturn(printWriter);
     response.flushBuffer();
 
-    TracesHelper tracesHelper = createMock(TracesHelper.class);
+    BuildTraces buildTraces = createMock(BuildTraces.class);
     Iterable<InputStream> traces = Arrays.asList(
         new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(Charsets.UTF_8))
     );
-    expect(tracesHelper.getInputsForTraces("abcdef")).andReturn(traces);
-    TraceDataHandler traceDataHandler = new TraceDataHandler(tracesHelper);
+    expect(buildTraces.getInputsForTraces("abcdef")).andReturn(traces);
+    TraceDataHandler traceDataHandler = new TraceDataHandler(buildTraces);
 
     replayAll();
     traceDataHandler.handle("/trace/abcdef?callback=my.callback",
@@ -178,13 +179,13 @@ public class TraceDataHandlerTest extends EasyMockSupport {
     expect(response.getWriter()).andReturn(printWriter);
     response.flushBuffer();
 
-    TracesHelper tracesHelper = createMock(TracesHelper.class);
+    BuildTraces buildTraces = createMock(BuildTraces.class);
     Iterable<InputStream> traces = Arrays.asList(
         new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(Charsets.UTF_8)),
         new ByteArrayInputStream("{\"baz\":\"blech\"}".getBytes(Charsets.UTF_8)));
-    expect(tracesHelper.getInputsForTraces("abcdef")).andReturn(traces);
+    expect(buildTraces.getInputsForTraces("abcdef")).andReturn(traces);
 
-    TraceDataHandler traceDataHandler = new TraceDataHandler(tracesHelper);
+    TraceDataHandler traceDataHandler = new TraceDataHandler(buildTraces);
 
     replayAll();
     traceDataHandler.handle("/trace/abcdef?callback=my.callback",

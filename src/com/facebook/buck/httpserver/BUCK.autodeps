@@ -17,11 +17,8 @@
       "//src/com/facebook/buck/event/listener:CacheRateStatsKeeper",
       "//src/com/facebook/buck/httpserver:cache_handler",
       "//src/com/facebook/buck/httpserver:util",
-      "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/parser:parser",
-      "//src/com/facebook/buck/rules:rules",
-      "//src/com/facebook/buck/util:exceptions",
-      "//third-party/java/gson:gson"
+      "//src/com/facebook/buck/rules:rules"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
@@ -30,6 +27,7 @@
       "//src/com/facebook/buck/event/external:external_lib",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:build_id",
+      "//src/com/facebook/buck/util/trace:trace",
       "//third-party/java/closure-templates:closure-templates",
       "//third-party/java/guava:guava",
       "//third-party/java/jackson:jackson-databind",

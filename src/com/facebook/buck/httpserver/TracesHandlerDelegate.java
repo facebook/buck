@@ -16,7 +16,8 @@
 
 package com.facebook.buck.httpserver;
 
-import com.facebook.buck.httpserver.TracesHelper.TraceAttributes;
+import com.facebook.buck.util.trace.BuildTraces;
+import com.facebook.buck.util.trace.BuildTraces.TraceAttributes;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.template.soy.data.SoyListData;
@@ -32,22 +33,14 @@ import java.util.regex.Pattern;
 
 public class TracesHandlerDelegate extends AbstractTemplateHandlerDelegate {
 
-  /**
-   * Regex pattern that can be used as a parameter to {@link Pattern#compile(String)} to match a
-   * valid trace id.
-   */
-  private static final String TRACE_ID_PATTERN_TEXT = "([0-9a-zA-Z-]+)";
-
-  static final Pattern TRACE_ID_PATTERN = Pattern.compile(TRACE_ID_PATTERN_TEXT);
-
   private static final Pattern TRACE_FILE_NAME_PATTERN = Pattern.compile(
-      "build\\.(?:[\\d\\-\\.]+\\.)?" + TRACE_ID_PATTERN + "\\.trace");
+      "build\\.(?:[\\d\\-\\.]+\\.)?" + BuildTraces.TRACE_ID_PATTERN + "\\.trace");
 
-  private final TracesHelper tracesHelper;
+  private final BuildTraces buildTraces;
 
-  TracesHandlerDelegate(TracesHelper tracesHelper) {
+  TracesHandlerDelegate(BuildTraces buildTraces) {
     super(ImmutableSet.of("traces.soy"));
-    this.tracesHelper = tracesHelper;
+    this.buildTraces = buildTraces;
   }
 
   @Override
@@ -62,7 +55,7 @@ public class TracesHandlerDelegate extends AbstractTemplateHandlerDelegate {
 
   @VisibleForTesting
   SoyListData getTraces() throws IOException {
-    Collection<Path> traceFiles = tracesHelper.listTraceFilesByLastModified();
+    Collection<Path> traceFiles = buildTraces.listTraceFilesByLastModified();
     SoyListData traces = new SoyListData();
     for (Path path : traceFiles) {
       String name = path.getFileName().toString();
@@ -76,7 +69,7 @@ public class TracesHandlerDelegate extends AbstractTemplateHandlerDelegate {
       trace.put("name", name);
       trace.put("id", matcher.group(1));
 
-      TraceAttributes traceAttributes = tracesHelper.getTraceAttributesFor(path);
+      TraceAttributes traceAttributes = buildTraces.getTraceAttributesFor(path);
       trace.put("dateTime", traceAttributes.getFormattedDateTime());
       if (traceAttributes.getCommand().isPresent()) {
         trace.put("command", traceAttributes.getCommand().get());
