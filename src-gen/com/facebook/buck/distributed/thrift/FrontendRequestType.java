@@ -24,7 +24,9 @@ public enum FrontendRequestType implements org.apache.thrift.TEnum {
   FETCH_BUILD_GRAPH(11),
   SET_BUCK_VERSION(12),
   ANNOUNCEMENT(13),
-  SET_DOTFILE_PATHS(14);
+  SET_DOTFILE_PATHS(14),
+  GET_BUILD_SLAVE_LOG_DIR(15),
+  GET_BUILD_SLAVE_REAL_TIME_LOGS(16);
 
   private final int value;
 
@@ -71,6 +73,10 @@ public enum FrontendRequestType implements org.apache.thrift.TEnum {
         return ANNOUNCEMENT;
       case 14:
         return SET_DOTFILE_PATHS;
+      case 15:
+        return GET_BUILD_SLAVE_LOG_DIR;
+      case 16:
+        return GET_BUILD_SLAVE_REAL_TIME_LOGS;
       default:
         return null;
     }

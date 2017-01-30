@@ -833,12 +833,12 @@ public final class Main {
         clientEnvironment,
         cellPathResolver);
     ImmutableSet<Path> projectWatchList = ImmutableSet.<Path>builder()
-      .add(canonicalRootPath)
-      .addAll(
-          buckConfig.getView(ParserConfig.class).getWatchCells() ?
-              cellPathResolver.getTransitivePathMapping().values() :
-              ImmutableList.of())
-      .build();
+        .add(canonicalRootPath)
+        .addAll(
+            buckConfig.getView(ParserConfig.class).getWatchCells() ?
+                cellPathResolver.getTransitivePathMapping().values() :
+                ImmutableList.of())
+        .build();
     Optional<ImmutableList<String>> allowedJavaSpecificiationVersions =
         buckConfig.getAllowedJavaSpecificationVersions();
     if (allowedJavaSpecificiationVersions.isPresent()) {
@@ -1315,19 +1315,20 @@ public final class Main {
                     .setVersionedTargetGraphCache(versionedTargetGraphCache)
                     .setActionGraphCache(actionGraphCache)
                     .setKnownBuildRuleTypesFactory(factory)
+                    .setInvocationInfo(Optional.of(invocationInfo))
                     .build());
           } catch (InterruptedException | ClosedByInterruptException e) {
             exitCode = INTERRUPTED_EXIT_CODE;
             buildEventBus.post(CommandEvent.interrupted(startedEvent, INTERRUPTED_EXIT_CODE));
             throw e;
           }
-            // We've reserved exitCode 2 for timeouts, and some commands (e.g. run) may violate this
+          // We've reserved exitCode 2 for timeouts, and some commands (e.g. run) may violate this
           // Let's avoid an infinite loop
           if (exitCode == BUSY_EXIT_CODE) {
-              exitCode = FAIL_EXIT_CODE; // Some loss of info here, but better than looping
-              LOG.error("Buck return with exit code %d which we use to indicate busy status. " +
-                  "This is probably propagating an exit code from a sub process or tool. " +
-                  "Coercing to %d to avoid retries.", BUSY_EXIT_CODE, FAIL_EXIT_CODE);
+            exitCode = FAIL_EXIT_CODE; // Some loss of info here, but better than looping
+            LOG.error("Buck return with exit code %d which we use to indicate busy status. " +
+                "This is probably propagating an exit code from a sub process or tool. " +
+                "Coercing to %d to avoid retries.", BUSY_EXIT_CODE, FAIL_EXIT_CODE);
           }
           // Wait for HTTP writes to complete.
           closeHttpExecutorService(
@@ -1444,7 +1445,7 @@ public final class Main {
 
       LOG.debug(
           "Watchman capabilities: %s Project watches: %s Glob handler config: %s " +
-          "Query timeout ms config: %s",
+              "Query timeout ms config: %s",
           watchman.getCapabilities(),
           watchman.getProjectWatches(),
           parserConfig.getGlobHandler(),

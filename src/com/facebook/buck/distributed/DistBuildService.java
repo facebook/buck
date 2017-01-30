@@ -32,7 +32,13 @@ import com.facebook.buck.distributed.thrift.FileInfo;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
+import com.facebook.buck.distributed.thrift.LogLineBatchRequest;
+import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveLogDirRequest;
+import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveLogDirResponse;
+import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveRealTimeLogsRequest;
+import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveRealTimeLogsResponse;
 import com.facebook.buck.distributed.thrift.PathInfo;
+import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.SetBuckDotFilePathsRequest;
 import com.facebook.buck.distributed.thrift.SetBuckVersionRequest;
 import com.facebook.buck.distributed.thrift.StartBuildRequest;
@@ -75,6 +81,38 @@ public class DistBuildService implements Closeable {
   public DistBuildService(
       FrontendService service) {
     this.service = service;
+  }
+
+  public MultiGetBuildSlaveRealTimeLogsResponse fetchSlaveLogLines(
+      final BuildId buildId,
+      final List<LogLineBatchRequest> logLineRequests) throws IOException {
+
+    MultiGetBuildSlaveRealTimeLogsRequest getLogLinesRequest =
+        new MultiGetBuildSlaveRealTimeLogsRequest();
+    getLogLinesRequest.setBuildId(buildId);
+    getLogLinesRequest.setBatches(logLineRequests);
+
+    FrontendRequest request = new FrontendRequest();
+    request.setType(FrontendRequestType.GET_BUILD_SLAVE_REAL_TIME_LOGS);
+    request.setMultiGetBuildSlaveRealTimeLogsRequest(getLogLinesRequest);
+    FrontendResponse response = makeRequestChecked(request);
+    return response.getMultiGetBuildSlaveRealTimeLogsResponse();
+  }
+
+  public MultiGetBuildSlaveLogDirResponse fetchBuildSlaveLogDir(
+      final BuildId buildId,
+      final List<RunId> runIds) throws IOException {
+
+    MultiGetBuildSlaveLogDirRequest getBuildSlaveLogDirRequest =
+        new MultiGetBuildSlaveLogDirRequest();
+    getBuildSlaveLogDirRequest.setBuildId(buildId);
+    getBuildSlaveLogDirRequest.setRunIds(runIds);
+
+    FrontendRequest request = new FrontendRequest();
+    request.setType(FrontendRequestType.GET_BUILD_SLAVE_LOG_DIR);
+    request.setMultiGetBuildSlaveLogDirRequest(getBuildSlaveLogDirRequest);
+    FrontendResponse response = makeRequestChecked(request);
+    return response.getMultiGetBuildSlaveLogDirResponse();
   }
 
   public ListenableFuture<Void> uploadTargetGraph(
@@ -236,7 +274,8 @@ public class DistBuildService implements Closeable {
 
     Preconditions.checkState(response.isSetFetchBuildGraphResponse());
     Preconditions.checkState(response.getFetchBuildGraphResponse().isSetBuildGraph());
-    Preconditions.checkState(response.getFetchBuildGraphResponse().getBuildGraph().length > 0);
+    Preconditions.checkState(
+        response.getFetchBuildGraphResponse().getBuildGraph().length > 0);
 
     return BuildJobStateSerializer.deserialize(
         response.getFetchBuildGraphResponse().getBuildGraph());
@@ -314,14 +353,15 @@ public class DistBuildService implements Closeable {
           @Override
           public Pair<List<FileInfo>, List<PathInfo>> call() throws IOException {
 
-            Path[] buckDotFilesExceptConfig = Arrays.stream(filesystem.listFiles(Paths.get(".")))
-                .filter(f -> !f.isDirectory())
-                .filter(f -> !Files.isSymbolicLink(f.toPath()))
-                .filter(f -> f.getName().startsWith("."))
-                .filter(f -> f.getName().contains("buck"))
-                .filter(f -> !f.getName().startsWith(".buckconfig"))
-                .map(f -> f.toPath())
-                .toArray(Path[]::new);
+            Path[] buckDotFilesExceptConfig =
+                Arrays.stream(filesystem.listFiles(Paths.get(".")))
+                    .filter(f -> !f.isDirectory())
+                    .filter(f -> !Files.isSymbolicLink(f.toPath()))
+                    .filter(f -> f.getName().startsWith("."))
+                    .filter(f -> f.getName().contains("buck"))
+                    .filter(f -> !f.getName().startsWith(".buckconfig"))
+                    .map(f -> f.toPath())
+                    .toArray(Path[]::new);
 
             List<FileInfo> fileEntriesToUpload = new LinkedList<>();
             List<PathInfo> pathEntriesToUpload = new LinkedList<>();

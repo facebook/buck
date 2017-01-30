@@ -25,6 +25,7 @@ import com.facebook.buck.distributed.BuildJobStateSerializer;
 import com.facebook.buck.distributed.DistBuildCellIndexer;
 import com.facebook.buck.distributed.DistBuildClientExecutor;
 import com.facebook.buck.distributed.DistBuildFileHashes;
+import com.facebook.buck.distributed.DistBuildLogStateTracker;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
@@ -32,12 +33,9 @@ import com.facebook.buck.distributed.DistBuildTypeCoercerFactory;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventListener;
-import com.facebook.buck.event.listener.DistBuildLoggerListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.HasBuildTarget;
@@ -79,7 +77,6 @@ import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.LimitedThreadPoolExecutor;
-import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
@@ -591,10 +588,16 @@ public class BuildCommand extends AbstractCommand {
 
     } else {
       BuckVersion buckVersion = getBuckVersion();
-      try (DistBuildService service = DistBuildFactory.newDistBuildService(params)) {
+      Preconditions.checkArgument(params.getInvocationInfo().isPresent());
+      try (DistBuildService service = DistBuildFactory.newDistBuildService(params);
+           DistBuildLogStateTracker distBuildLogStateTracker =
+               DistBuildFactory.newDistBuildLogStateTracker(
+                   params.getInvocationInfo().get().getLogDirectoryPath(),
+                   filesystem)) {
         DistBuildClientExecutor build = new DistBuildClientExecutor(
             jobState,
             service,
+            distBuildLogStateTracker,
             1000 /* millisBetweenStatusPoll */,
             buckVersion);
         int exitCode = build.executeAndPrintFailuresToEventBus(
@@ -874,24 +877,6 @@ public class BuildCommand extends AbstractCommand {
     }
     return builder.build();
   }
-
-  @Override
-  public Iterable<BuckEventListener> getEventListeners(
-      Path logDirectoryPath,
-      ProjectFilesystem filesystem) {
-    if (!useDistributedBuild) {
-      return ImmutableList.of();
-    }
-
-    return ImmutableList.<BuckEventListener>builder()
-        .add(
-            new DistBuildLoggerListener(
-                logDirectoryPath,
-                filesystem,
-                MostExecutors.newSingleThreadExecutor(
-                    new CommandThreadFactory("DistBuildLoggerListener"))))
-        .build();
-    }
 
   public static class ActionGraphCreationException extends Exception {
     public ActionGraphCreationException(String message) {

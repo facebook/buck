@@ -20,9 +20,11 @@ import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildJobState;
-import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
 import com.facebook.buck.distributed.thrift.BuildStatus;
+import com.facebook.buck.distributed.thrift.LogLineBatchRequest;
 import com.facebook.buck.distributed.thrift.LogRecord;
+import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveLogDirResponse;
+import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveRealTimeLogsResponse;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -38,7 +40,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -50,6 +51,7 @@ public class DistBuildClientExecutor {
   private static final int MAX_BUILD_DURATION_MILLIS = 10000; // hack. remove.
 
   private final DistBuildService distBuildService;
+  private final DistBuildLogStateTracker distBuildLogStateTracker;
   private final BuildJobState buildJobState;
   private final BuckVersion buckVersion;
   private int millisBetweenStatusPoll;
@@ -57,10 +59,12 @@ public class DistBuildClientExecutor {
   public DistBuildClientExecutor(
       BuildJobState buildJobState,
       DistBuildService distBuildService,
+      DistBuildLogStateTracker distBuildLogStateTracker,
       int millisBetweenStatusPoll,
       BuckVersion buckVersion) {
     this.buildJobState = buildJobState;
     this.distBuildService = distBuildService;
+    this.distBuildLogStateTracker = distBuildLogStateTracker;
     this.millisBetweenStatusPoll = millisBetweenStatusPoll;
     this.buckVersion = buckVersion;
   }
@@ -117,6 +121,13 @@ public class DistBuildClientExecutor {
               .build();
       eventBus.post(new DistBuildStatusEvent(distBuildStatus));
 
+      List<LogLineBatchRequest> newLogLineRequests =
+          distBuildLogStateTracker.createRealtimeLogRequests(job.getSlaveInfoByRunId().values());
+      MultiGetBuildSlaveRealTimeLogsResponse slaveLogsResponse =
+          distBuildService.fetchSlaveLogLines(job.buildId, newLogLineRequests);
+
+      distBuildLogStateTracker.processStreamLogs(slaveLogsResponse.getMultiStreamLogs());
+
       try {
         // TODO(shivanker): Get rid of sleeps in methods which we want to unit test
         Thread.sleep(millisBetweenStatusPoll);
@@ -125,6 +136,15 @@ public class DistBuildClientExecutor {
       }
     } while (!(job.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY) ||
         job.getStatus().equals(BuildStatus.FAILED)));
+
+    try {
+      MultiGetBuildSlaveLogDirResponse logDirsResponse = distBuildService.fetchBuildSlaveLogDir(
+          job.buildId,
+          distBuildLogStateTracker.runIdsToMaterializeLogDirsFor(job.slaveInfoByRunId.values()));
+      distBuildLogStateTracker.materializeLogDirs(logDirsResponse.getLogDirs());
+    } catch (IOException ex) {
+      LOG.error(ex);
+    }
 
     LOG.info("Build was " +
         (job.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY) ? "" : "not ") +
@@ -140,10 +160,6 @@ public class DistBuildClientExecutor {
   private DistBuildStatus.Builder prepareStatusFromJob(BuildJob job) {
     Optional<List<LogRecord>> logBook = Optional.empty();
 
-    Optional<Map<String, BuildSlaveInfo>> slaveInfoByRunId =
-        job.isSetSlaveInfoByRunId() ? Optional.of(
-            job.getSlaveInfoByRunId()) :
-            Optional.empty();
     Optional<String> lastLine = Optional.empty();
     if (job.isSetDebug() && job.getDebug().isSetLogBook()) {
       logBook = Optional.of(job.getDebug().getLogBook());
@@ -155,7 +171,6 @@ public class DistBuildClientExecutor {
     return DistBuildStatus.builder()
         .setStatus(job.getStatus())
         .setMessage(lastLine)
-        .setSlaveInfoByRunId(slaveInfoByRunId)
         .setLogBook(logBook);
   }
 

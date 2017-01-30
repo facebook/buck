@@ -119,6 +119,7 @@ public class CommandRunnerParamsForTesting {
                 MoreExecutors.newDirectExecutorService()))
         .setBuildEnvironmentDescription(BUILD_ENVIRONMENT_DESCRIPTION)
         .setVersionedTargetGraphCache(new VersionedTargetGraphCache())
+        .setInvocationInfo(Optional.empty())
         .setActionGraphCache(new ActionGraphCache(new BroadcastEventListener()))
         .setKnownBuildRuleTypesFactory(
             new KnownBuildRuleTypesFactory(new FakeProcessExecutor(), androidDirectoryResolver))

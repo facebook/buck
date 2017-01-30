@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildExecutorArgs;
+import com.facebook.buck.distributed.DistBuildLogStateTracker;
 import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildSlaveExecutor;
@@ -27,6 +28,7 @@ import com.facebook.buck.distributed.FileContentsProviders;
 import com.facebook.buck.distributed.FrontendService;
 import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.BuildJobState;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.slb.ClientSideSlb;
@@ -36,6 +38,7 @@ import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.base.Preconditions;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 
 import okhttp3.OkHttpClient;
@@ -50,6 +53,12 @@ public abstract class DistBuildFactory {
   public static DistBuildService newDistBuildService(CommandRunnerParams params) {
     return new DistBuildService(newFrontendService(params));
   }
+
+  public static DistBuildLogStateTracker newDistBuildLogStateTracker(
+      Path logDir, ProjectFilesystem fileSystem) {
+    return new DistBuildLogStateTracker(logDir, fileSystem);
+  }
+
 
   public static FrontendService newFrontendService(
       CommandRunnerParams params) {
