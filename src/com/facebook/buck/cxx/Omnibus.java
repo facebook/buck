@@ -237,7 +237,6 @@ public class Omnibus {
   private static SourcePath createDummyOmnibus(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
@@ -251,7 +250,6 @@ public class Omnibus {
             cxxPlatform,
             params,
             ruleResolver,
-            pathResolver,
             ruleFinder,
             dummyOmnibusTarget,
             BuildTargets.getGenPath(params.getProjectFilesystem(), dummyOmnibusTarget, "%s")
@@ -363,7 +361,6 @@ public class Omnibus {
                 cxxPlatform,
                 params,
                 ruleResolver,
-                pathResolver,
                 ruleFinder,
                 rootTarget,
                 output.orElse(BuildTargets.getGenPath(
@@ -388,7 +385,6 @@ public class Omnibus {
                 cxxPlatform,
                 params,
                 ruleResolver,
-                pathResolver,
                 ruleFinder,
                 rootTarget,
                 output.orElse(BuildTargets.getGenPath(
@@ -594,7 +590,6 @@ public class Omnibus {
             cxxPlatform,
             params,
             ruleResolver,
-            pathResolver,
             ruleFinder,
             omnibusTarget,
             BuildTargets.getGenPath(params.getProjectFilesystem(), omnibusTarget, "%s")
@@ -640,7 +635,6 @@ public class Omnibus {
         createDummyOmnibus(
             params,
             ruleResolver,
-            pathResolver,
             ruleFinder,
             cxxBuckConfig,
             cxxPlatform,

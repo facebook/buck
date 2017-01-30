@@ -165,7 +165,6 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
               buildRuleParams
                   .withFlavor(ImmutableFlavor.of("cxx-link"))
                   .withoutFlavor(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
-              context.getSourcePathResolver(),
               linker,
               getLibFilePath(),
               args,

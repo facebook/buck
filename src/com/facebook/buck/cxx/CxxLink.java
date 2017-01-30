@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.OverrideScheduleRule;
 import com.facebook.buck.rules.RuleScheduleInfo;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -42,7 +41,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 public class CxxLink
-    extends AbstractBuildRuleWithResolver
+    extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, ProvidesLinkedBinaryDeps, OverrideScheduleRule {
 
   @AddToRuleKey
@@ -56,13 +55,12 @@ public class CxxLink
 
   public CxxLink(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       Linker linker,
       Path output,
       ImmutableList<Arg> args,
       Optional<RuleScheduleInfo> ruleScheduleInfo,
       boolean cacheable) {
-    super(params, resolver);
+    super(params);
     this.linker = linker;
     this.output = output;
     this.args = args;

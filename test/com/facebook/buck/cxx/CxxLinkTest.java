@@ -90,7 +90,6 @@ public class CxxLinkTest {
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(
             new CxxLink(
                 params,
-                pathResolver,
                 DEFAULT_LINKER,
                 DEFAULT_OUTPUT,
                 DEFAULT_ARGS,
@@ -103,7 +102,6 @@ public class CxxLinkTest {
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(
             new CxxLink(
                 params,
-                pathResolver,
                 new GnuLinker(new HashedFileTool(Paths.get("different"))),
                 DEFAULT_OUTPUT,
                 DEFAULT_ARGS,
@@ -117,7 +115,6 @@ public class CxxLinkTest {
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(
             new CxxLink(
                 params,
-                pathResolver,
                 DEFAULT_LINKER,
                 Paths.get("different"),
                 DEFAULT_ARGS,
@@ -131,7 +128,6 @@ public class CxxLinkTest {
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(
             new CxxLink(
                 params,
-                pathResolver,
                 DEFAULT_LINKER,
                 DEFAULT_OUTPUT,
                 ImmutableList.of(
@@ -189,7 +185,6 @@ public class CxxLinkTest {
     RuleKey ruleKey1 = ruleKeyFactory.build(
         new CxxLink(
             params,
-            pathResolver,
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
             args1,
@@ -207,7 +202,6 @@ public class CxxLinkTest {
     RuleKey ruleKey2 = ruleKeyFactory.build(
         new CxxLink(
             params,
-            pathResolver,
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
             args2,

@@ -54,7 +54,6 @@ public class CxxBinaryTest {
         ruleResolver.addToIndex(
             new CxxLink(
                 linkParams,
-                pathResolver,
                 CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(ruleResolver),
                 bin,
                 ImmutableList.of(),
