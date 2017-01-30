@@ -558,7 +558,8 @@ public class NdkCxxPlatforms {
         Paths.get("."),
         sanitizePaths,
         filesystem.getRootPath().toAbsolutePath(),
-        type);
+        type,
+        filesystem);
     MungingDebugPathSanitizer assemblerDebugPathSanitizer = new MungingDebugPathSanitizer(
         config.getDebugPathSanitizerLimit(),
         File.separatorChar,

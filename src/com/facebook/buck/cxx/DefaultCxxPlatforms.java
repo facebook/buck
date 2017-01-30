@@ -84,7 +84,8 @@ public class DefaultCxxPlatforms {
             Paths.get("."),
             ImmutableBiMap.of(),
             filesystem.getRootPath().toAbsolutePath(),
-            CxxToolProvider.Type.GCC);
+            CxxToolProvider.Type.GCC,
+            filesystem);
         binaryExtension = Optional.empty();
         break;
       case MACOS:
@@ -102,7 +103,8 @@ public class DefaultCxxPlatforms {
             Paths.get("."),
             ImmutableBiMap.of(),
             filesystem.getRootPath().toAbsolutePath(),
-            CxxToolProvider.Type.CLANG);
+            CxxToolProvider.Type.CLANG,
+            filesystem);
         binaryExtension = Optional.empty();
         break;
       case WINDOWS:
@@ -121,7 +123,8 @@ public class DefaultCxxPlatforms {
             Paths.get("."),
             ImmutableBiMap.of(),
             filesystem.getRootPath().toAbsolutePath(),
-            CxxToolProvider.Type.GCC);
+            CxxToolProvider.Type.GCC,
+            filesystem);
         binaryExtension = Optional.of("exe");
         break;
       case FREEBSD:
@@ -139,7 +142,8 @@ public class DefaultCxxPlatforms {
             Paths.get("."),
             ImmutableBiMap.of(),
             filesystem.getRootPath().toAbsolutePath(),
-            CxxToolProvider.Type.GCC);
+            CxxToolProvider.Type.GCC,
+            filesystem);
         binaryExtension = Optional.empty();
         break;
       //$CASES-OMITTED$

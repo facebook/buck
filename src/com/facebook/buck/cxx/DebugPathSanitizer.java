@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -109,4 +110,13 @@ public abstract class DebugPathSanitizer {
   // Construct the replacer, giving the expanded current directory and the desired directory.
   // We use ASCII, since all the relevant debug standards we care about (e.g. DWARF) use it.
   abstract void restoreCompilationDirectory(Path path, Path workingDir) throws IOException;
+
+  /**
+   * Defensive check for cross-cell builds: asserts that this sanitizer can safely run
+   * in the provided ProjectFilesystem.
+   */
+  @SuppressWarnings("unused")
+  public void assertInProjectFilesystem(Object ruleName, ProjectFilesystem projectFilesystem) {
+    // Do nothing by default.  Only one subclass is able to check this for now.
+  }
 }
