@@ -128,7 +128,6 @@ public final class CxxInferEnhancer {
                         .addAll(captureRules)
                         .build()),
                 params.getExtraDeps()),
-            new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)),
             captureRules));
   }
 

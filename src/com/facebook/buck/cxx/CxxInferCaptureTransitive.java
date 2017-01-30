@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
@@ -35,7 +34,7 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-public class CxxInferCaptureTransitive extends AbstractBuildRuleWithResolver
+public class CxxInferCaptureTransitive extends AbstractBuildRule
     implements HasRuntimeDeps, HasPostBuildSteps {
 
   private ImmutableSet<CxxInferCapture> captureRules;
@@ -43,9 +42,8 @@ public class CxxInferCaptureTransitive extends AbstractBuildRuleWithResolver
 
   public CxxInferCaptureTransitive(
       BuildRuleParams params,
-      SourcePathResolver pathResolver,
       ImmutableSet<CxxInferCapture> captureRules) {
-    super(params, pathResolver);
+    super(params);
     this.captureRules = captureRules;
     this.outputDirectory =
         BuildTargets.getGenPath(getProjectFilesystem(), this.getBuildTarget(), "infer-%s");
