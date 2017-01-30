@@ -18,6 +18,7 @@ package com.facebook.buck.util;
 
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectWatch;
@@ -362,7 +363,15 @@ public class WatchmanWatcher {
           postWatchEvent(builder.build());
         }
 
+        if (files.isEmpty() && freshInstanceAction != FreshInstanceAction.NONE) {
+          buckEventBus.post(WatchmanStatusEvent.zeroFileChanges());
+        }
+
         LOG.debug("Posted %d Watchman events.", files.size());
+      } else {
+        if (freshInstanceAction != FreshInstanceAction.NONE) {
+          buckEventBus.post(WatchmanStatusEvent.zeroFileChanges());
+        }
       }
     } catch (InterruptedException e) {
       String message = "Watchman communication interrupted";

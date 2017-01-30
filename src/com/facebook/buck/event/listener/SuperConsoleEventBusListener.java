@@ -104,6 +104,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @VisibleForTesting
   static final String EMOJI_WHALE = "\uD83D\uDC33";
   @VisibleForTesting
+  static final String EMOJI_BEACH = "\uD83C\uDFD6";
+  @VisibleForTesting
   static final Optional<String> NEW_DAEMON_INSTANCE_MSG =
       createParsingMessage(EMOJI_WHALE, "New buck daemon");
 
@@ -148,7 +150,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private final DateFormat dateFormat;
   private int lastNumLinesPrinted;
 
-  protected Optional<String> parsingStatus = Optional.empty();
+  private Optional<String> parsingStatus = Optional.empty();
+  // Save if Watchman reported zero file changes in case we receive an ActionGraphCache hit. This
+  // way the user can know that their changes, if they made any, were not picked up from Watchman.
+  private boolean isZeroFileChanges = false;
 
   public SuperConsoleEventBusListener(
       SuperConsoleConfig config,
@@ -827,7 +832,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @Subscribe
   @SuppressWarnings("unused")
   public void actionGraphCacheHit(ActionGraphEvent.Cache.Hit event) {
-    parsingStatus = createParsingMessage(EMOJI_BUNNY, "");
+    parsingStatus = isZeroFileChanges
+        ? createParsingMessage(EMOJI_BEACH, "(Watchman reported no changes)")
+        : createParsingMessage(EMOJI_BUNNY, "");
   }
 
   @Subscribe
@@ -845,6 +852,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @SuppressWarnings("unused")
   public void watchmanFileDeletion(WatchmanStatusEvent.FileDeletion event) {
     parsingStatus = createParsingMessage(EMOJI_SNAIL, "File removed");
+  }
+
+  @Subscribe
+  @SuppressWarnings("unused")
+  public void watchmanZeroFileChanges(WatchmanStatusEvent.ZeroFileChanges event) {
+    isZeroFileChanges = true;
+    parsingStatus = createParsingMessage(EMOJI_BEACH, "Watchman reported no changes");
   }
 
   @Subscribe

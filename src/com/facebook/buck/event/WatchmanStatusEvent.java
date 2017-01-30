@@ -49,6 +49,10 @@ public abstract class WatchmanStatusEvent extends AbstractBuckEvent implements B
     return new FileDeletion(filename);
   }
 
+  public static ZeroFileChanges zeroFileChanges() {
+    return new ZeroFileChanges();
+  }
+
   public static class Overflow extends WatchmanStatusEvent {
     @JsonView(JsonViews.MachineReadableLog.class)
     private String reason;
@@ -88,6 +92,15 @@ public abstract class WatchmanStatusEvent extends AbstractBuckEvent implements B
 
     public String getFilename() {
       return this.filename;
+    }
+  }
+
+  /**
+   * This event is to be posted when Watchman does not report any altered files.
+   */
+  public static class ZeroFileChanges extends WatchmanStatusEvent {
+    public ZeroFileChanges() {
+      super(EventKey.unique(), "WatchmanZeroFileChanges");
     }
   }
 
