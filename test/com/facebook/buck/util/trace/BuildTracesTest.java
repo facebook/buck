@@ -67,7 +67,7 @@ public class BuildTracesTest {
             "\"args\":{\"command_args\":\"buck\"}" +
             "}" +
             "]",
-        projectFilesystem.getBuckPaths().getBuckOut().resolve("build.a.trace"));
+        projectFilesystem.getBuckPaths().getLogDir().resolve("build.a.trace"));
 
     BuildTraces helper = new BuildTraces(projectFilesystem);
     TraceAttributes traceAttributes = helper.getTraceAttributesFor("a");
@@ -204,7 +204,7 @@ public class BuildTracesTest {
         helper.listTraceFilesByLastModified());
   }
 
-  public Path getNewTraceFilePath(
+  private static Path getNewTraceFilePath(
       ProjectFilesystem fs,
       String commandName,
       String buildId,

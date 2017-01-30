@@ -27,7 +27,7 @@ import org.eclipse.jetty.server.Request;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -55,7 +55,7 @@ public class TracesHandlerDelegate extends AbstractTemplateHandlerDelegate {
 
   @VisibleForTesting
   SoyListData getTraces() throws IOException {
-    Collection<Path> traceFiles = buildTraces.listTraceFilesByLastModified();
+    List<Path> traceFiles = buildTraces.listTraceFilesByLastModified();
     SoyListData traces = new SoyListData();
     for (Path path : traceFiles) {
       String name = path.getFileName().toString();
