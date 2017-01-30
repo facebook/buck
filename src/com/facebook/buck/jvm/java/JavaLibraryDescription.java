@@ -85,7 +85,6 @@ public class JavaLibraryDescription implements
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildTarget target = params.getBuildTarget();
 
     // We know that the flavour we're being asked to create is valid, since the check is done when
@@ -128,7 +127,6 @@ public class JavaLibraryDescription implements
 
       return new Javadoc(
           emptyParams,
-          pathResolver,
           args.mavenCoords,
           args.mavenPomTemplate,
           summary.getMavenDeps(),
@@ -163,13 +161,11 @@ public class JavaLibraryDescription implements
       if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
         return new JavaSourceJar(
             params,
-            pathResolver,
             args.srcs,
             args.mavenCoords);
       } else {
         return MavenUberJar.SourceJar.create(
             Preconditions.checkNotNull(paramsWithMavenFlavor),
-            pathResolver,
             args.srcs,
             args.mavenCoords,
             args.mavenPomTemplate);
@@ -182,6 +178,8 @@ public class JavaLibraryDescription implements
         resolver,
         ruleFinder,
         args);
+
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 
@@ -229,7 +227,6 @@ public class JavaLibraryDescription implements
       return MavenUberJar.create(
           defaultJavaLibrary,
           Preconditions.checkNotNull(paramsWithMavenFlavor),
-          pathResolver,
           args.mavenCoords,
           args.mavenPomTemplate);
     }

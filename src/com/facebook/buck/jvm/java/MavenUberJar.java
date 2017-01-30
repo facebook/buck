@@ -16,13 +16,12 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Function;
@@ -46,7 +45,7 @@ import javax.annotation.Nullable;
  *
  * @see #create
  */
-public class MavenUberJar extends AbstractBuildRuleWithResolver implements MavenPublishable {
+public class MavenUberJar extends AbstractBuildRule implements MavenPublishable {
 
   private final Optional<String> mavenCoords;
   private final Optional<SourcePath> mavenPomTemplate;
@@ -55,10 +54,9 @@ public class MavenUberJar extends AbstractBuildRuleWithResolver implements Maven
   private MavenUberJar(
       TraversedDeps traversedDeps,
       BuildRuleParams params,
-      SourcePathResolver resolver,
       Optional<String> mavenCoords,
       Optional<SourcePath> mavenPomTemplate) {
-    super(params, resolver);
+    super(params);
     this.traversedDeps = traversedDeps;
     this.mavenCoords = mavenCoords;
     this.mavenPomTemplate = mavenPomTemplate;
@@ -81,14 +79,12 @@ public class MavenUberJar extends AbstractBuildRuleWithResolver implements Maven
   public static MavenUberJar create(
       JavaLibrary rootRule,
       BuildRuleParams params,
-      SourcePathResolver resolver,
       Optional<String> mavenCoords,
       Optional<SourcePath> mavenPomTemplate) {
     TraversedDeps traversedDeps = TraversedDeps.traverse(ImmutableSet.of(rootRule));
     return new MavenUberJar(
         traversedDeps,
         adjustParams(params, traversedDeps),
-        resolver,
         mavenCoords,
         mavenPomTemplate);
   }
@@ -158,19 +154,17 @@ public class MavenUberJar extends AbstractBuildRuleWithResolver implements Maven
 
     public SourceJar(
         BuildRuleParams params,
-        SourcePathResolver resolver,
         ImmutableSortedSet<SourcePath> srcs,
         Optional<String> mavenCoords,
         Optional<SourcePath> mavenPomTemplate,
         TraversedDeps traversedDeps) {
-      super(params, resolver, srcs, mavenCoords);
+      super(params, srcs, mavenCoords);
       this.traversedDeps = traversedDeps;
       this.mavenPomTemplate = mavenPomTemplate;
     }
 
     public static SourceJar create(
         BuildRuleParams params,
-        final SourcePathResolver resolver,
         ImmutableSortedSet<SourcePath> topLevelSrcs,
         Optional<String> mavenCoords,
         Optional<SourcePath> mavenPomTemplate) {
@@ -193,7 +187,6 @@ public class MavenUberJar extends AbstractBuildRuleWithResolver implements Maven
               .toSortedSet(Ordering.natural());
       return new SourceJar(
           params,
-          resolver,
           sourcePaths,
           mavenCoords,
           mavenPomTemplate,

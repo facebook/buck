@@ -89,11 +89,11 @@ public class AndroidLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     if (params.getBuildTarget().getFlavors().contains(JavaLibrary.SRC_JAR)) {
-      return new JavaSourceJar(params, pathResolver, args.srcs, args.mavenCoords);
+      return new JavaSourceJar(params, args.srcs, args.mavenCoords);
     }
+
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
     JavacOptions javacOptions = JavacOptionsFactory.create(
         defaultOptions,
@@ -182,6 +182,8 @@ public class AndroidLibraryDescription
               .addAll(ruleFinder.filterBuildRuleInputs(javacOptions.getInputs(ruleFinder)))
               .addAll(compiler.getExtraDeps(args, resolver))
               .build();
+
+      SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
       BuildRuleParams androidLibraryParams =
           params.copyWithDeps(

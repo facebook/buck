@@ -21,13 +21,12 @@ import static com.facebook.buck.zip.ZipCompressionLevel.DEFAULT_COMPRESSION_LEVE
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -44,7 +43,7 @@ import java.util.Optional;
 import java.util.Set;
 
 
-public class JavaSourceJar extends AbstractBuildRuleWithResolver
+public class JavaSourceJar extends AbstractBuildRule
     implements HasMavenCoordinates, HasSources {
 
   @AddToRuleKey
@@ -55,10 +54,9 @@ public class JavaSourceJar extends AbstractBuildRuleWithResolver
 
   public JavaSourceJar(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       ImmutableSortedSet<SourcePath> sources,
       Optional<String> mavenCoords) {
-    super(params, resolver);
+    super(params);
     this.sources = sources;
     BuildTarget target = params.getBuildTarget();
     this.output =

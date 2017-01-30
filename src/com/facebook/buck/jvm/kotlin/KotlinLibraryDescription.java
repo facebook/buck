@@ -104,8 +104,6 @@ public class KotlinLibraryDescription implements
           new BuildTargetSourcePath(libraryTarget));
     }
 
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-
     BuildRuleParams paramsWithMavenFlavor = null;
     if (flavors.contains(JavaLibrary.MAVEN_JAR)) {
       paramsWithMavenFlavor = params;
@@ -124,13 +122,11 @@ public class KotlinLibraryDescription implements
       if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
         return new JavaSourceJar(
             params,
-            pathResolver,
             args.srcs,
             args.mavenCoords);
       } else {
         return MavenUberJar.SourceJar.create(
             Preconditions.checkNotNull(paramsWithMavenFlavor),
-            pathResolver,
             args.srcs,
             args.mavenCoords,
             args.mavenPomTemplate);
@@ -143,6 +139,8 @@ public class KotlinLibraryDescription implements
         resolver,
         ruleFinder,
         args);
+
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 
@@ -191,7 +189,6 @@ public class KotlinLibraryDescription implements
       return MavenUberJar.create(
           defaultKotlinLibrary,
           Preconditions.checkNotNull(paramsWithMavenFlavor),
-          pathResolver,
           args.mavenCoords,
           args.mavenPomTemplate);
     }

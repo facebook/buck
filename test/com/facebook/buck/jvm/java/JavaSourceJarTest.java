@@ -57,11 +57,6 @@ public class JavaSourceJarTest {
   public void outputNameShouldIndicateThatTheOutputIsASrcJar() {
     JavaSourceJar rule = new JavaSourceJar(
         new FakeBuildRuleParamsBuilder("//example:target").build(),
-        new SourcePathResolver(new SourcePathRuleFinder(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        )),
         ImmutableSortedSet.of(),
         Optional.empty());
 
@@ -90,7 +85,6 @@ public class JavaSourceJarTest {
 
     JavaSourceJar rule = new JavaSourceJar(
         new FakeBuildRuleParamsBuilder("//example:target").build(),
-        pathResolver,
         ImmutableSortedSet.of(fileBased, ruleBased),
         Optional.empty());
 
