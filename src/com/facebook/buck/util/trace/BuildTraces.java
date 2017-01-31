@@ -19,17 +19,13 @@ package com.facebook.buck.util.trace;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.trace.ChromeTraceParser.ChromeTraceEventMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
+import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
@@ -41,7 +37,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -133,53 +131,19 @@ public class BuildTraces {
   }
 
   private Optional<String> parseCommandFrom(Path pathToTrace) {
-    try (
-        InputStream input = projectFilesystem.newFileInputStream(pathToTrace);
-        JsonReader jsonReader = new JsonReader(new InputStreamReader(input))) {
-      jsonReader.beginArray();
-      Gson gson = new Gson();
+    Set<ChromeTraceParser.ChromeTraceEventMatcher<?>> matchers = ImmutableSet.of(
+        ChromeTraceParser.COMMAND);
+    ChromeTraceParser parser = new ChromeTraceParser(projectFilesystem);
 
-      // Look through the first few elements to see if one matches the schema for an event that
-      // contains the command that the user ran.
-      for (int i = 0; i < 4; i++) {
-        // If END_ARRAY is the next token, then there are no more elements in the array.
-        if (jsonReader.peek().equals(JsonToken.END_ARRAY)) {
-          break;
-        }
-
-        JsonObject json = gson.fromJson(jsonReader, JsonObject.class);
-        Optional<String> command = tryToFindCommand(json);
-        if (command.isPresent()) {
-          return command;
-        }
-      }
+    Map<ChromeTraceEventMatcher<?>, Object> results;
+    try {
+      results = parser.parse(pathToTrace, matchers);
     } catch (IOException e) {
       logger.error(e);
-    }
-
-    // Oh well, we tried.
-    return Optional.empty();
-  }
-
-  private static Optional<String> tryToFindCommand(JsonObject json) {
-    JsonElement nameEl = json.get("name");
-    if (nameEl == null || !nameEl.isJsonPrimitive()) {
       return Optional.empty();
     }
 
-    JsonElement argsEl = json.get("args");
-    if (argsEl == null ||
-        !argsEl.isJsonObject() ||
-        argsEl.getAsJsonObject().get("command_args") == null ||
-        !argsEl.getAsJsonObject().get("command_args").isJsonPrimitive()) {
-      return Optional.empty();
-    }
-
-    String name = nameEl.getAsString();
-    String commandArgs = argsEl.getAsJsonObject().get("command_args").getAsString();
-    String command = "buck " + name + " " + commandArgs;
-
-    return Optional.of(command);
+    return ChromeTraceParser.COMMAND.extractFromResults(results);
   }
 
   private boolean isTraceForBuild(Path path, String id) {
