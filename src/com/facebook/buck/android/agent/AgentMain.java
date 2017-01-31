@@ -171,7 +171,7 @@ public class AgentMain {
     }
     StringBuilder keyBuilder = new StringBuilder();
     for (byte b : binaryKey) {
-      keyBuilder.append(String.format((Locale) null, "%02x", b));
+      keyBuilder.append(String.format((Locale) null, "%02X", b));
     }
     byte[] secretKey = keyBuilder.toString().getBytes();
     if (secretKey.length != AgentUtil.TEXT_SECRET_KEY_SIZE) {
@@ -180,6 +180,7 @@ public class AgentMain {
 
     // Send the key over stdout so only the host can read it.
     System.out.write(secretKey);
+    System.out.write('\n');
     System.out.flush();
 
     return secretKey;
