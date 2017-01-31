@@ -23,6 +23,7 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -41,7 +42,7 @@ interface AbstractNdkCxxPlatform {
   Tool getObjdump();
 
   /**
-   * @return the {@link Path} to the C/C++ runtime library.
+   * @return the {@link Path} to the C/C++ runtime library, if one is required.
    */
-  Path getCxxSharedRuntimePath();
+  Optional<Path> getCxxSharedRuntimePath();
 }

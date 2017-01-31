@@ -230,7 +230,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                     cxxRuntime.getSoname()),
                 new PathSourcePath(
                     buildRuleParams.getProjectFilesystem(),
-                    platform.getCxxSharedRuntimePath()));
+                    platform.getCxxSharedRuntimePath().get()));
           }
         }
       }
