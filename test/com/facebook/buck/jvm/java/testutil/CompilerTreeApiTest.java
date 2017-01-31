@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.jvm.java.abi.source;
+package com.facebook.buck.jvm.java.testutil;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -54,6 +54,7 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
+/** Base class for tests that want to use the Compiler Tree API exposed by javac. */
 public abstract class CompilerTreeApiTest {
   protected interface TaskListenerFactory {
     TaskListener newTaskListener(JavacTask task);
@@ -62,7 +63,7 @@ public abstract class CompilerTreeApiTest {
   /**
    * When run outside of IntelliJ, tests don't have the compiler (and thus the Compiler Tree API)
    * on their classpath. To get around that, we have a special test runner
-   * ({@link com.facebook.buck.testutil.CompilerTreeApiTestRunner}) that reloads each test with
+   * ({@link CompilerTreeApiTestRunner}) that reloads each test with
    * a hacky custom {@link ClassLoader}.
    *
    * However, the test class must be able to successfully load using the default

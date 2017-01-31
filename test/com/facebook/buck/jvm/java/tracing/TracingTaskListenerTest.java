@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java.tracing;
 
 import static org.easymock.EasyMock.createMock;
 
-import com.facebook.buck.testutil.CompilerTreeApiTestRunner;
+import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTestRunner;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 

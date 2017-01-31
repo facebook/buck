@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java.abi.source;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
-import com.facebook.buck.testutil.CompilerTreeApiParameterized;
+import com.facebook.buck.jvm.java.testutil.CompilerTreeApiParameterized;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
 

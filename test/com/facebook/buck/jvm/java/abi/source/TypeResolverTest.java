@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import static org.junit.Assert.assertNotSame;
 
-import com.facebook.buck.testutil.CompilerTreeApiParameterized;
+import com.facebook.buck.jvm.java.testutil.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
 
 import org.junit.Test;

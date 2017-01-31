@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTest;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.Trees;
 

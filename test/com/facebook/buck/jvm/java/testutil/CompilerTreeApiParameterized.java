@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.testutil;
+package com.facebook.buck.jvm.java.testutil;
 
 import org.junit.runners.Parameterized;
 import org.junit.runners.model.InitializationError;

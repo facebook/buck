@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.plugin.adapter;
 
-import com.facebook.buck.testutil.CompilerTreeApiTestRunner;
+import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTestRunner;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 

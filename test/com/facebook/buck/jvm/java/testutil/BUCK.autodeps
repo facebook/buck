@@ -1,0 +1,11 @@
+{
+  "testutil" : {
+    "deps" : [
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest"
+    ],
+    "exported_deps" : [
+      "//third-party/java/junit:junit"
+    ]
+  }
+}
