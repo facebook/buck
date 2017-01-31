@@ -272,7 +272,7 @@ public abstract class Jsr199Javac implements Javac {
           new FileManagerBootClasspathOracle(fileManager),
           abiGenerationMode == JavacOptions.AbiGenerationMode.SOURCE ?
               Diagnostic.Kind.ERROR :
-              Diagnostic.Kind.MANDATORY_WARNING);
+              Diagnostic.Kind.WARNING);
     }
 
     try {
