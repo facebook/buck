@@ -37,6 +37,8 @@ cat >.buckconfig <<EOF
 [java]
   source_level = 7
   target_level = 7
+[ndk]
+  cxx_runtime = system
 EOF
 export NO_BUCKD=1
 
