@@ -22,7 +22,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -50,8 +50,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class CxxCompilationDatabase extends AbstractBuildRuleWithResolver
-    implements HasRuntimeDeps {
+public class CxxCompilationDatabase extends AbstractBuildRule implements HasRuntimeDeps {
   private static final Logger LOG = Logger.get(CxxCompilationDatabase.class);
   public static final Flavor COMPILATION_DATABASE = ImmutableFlavor.of("compilation-database");
   public static final Flavor UBER_COMPILATION_DATABASE =
@@ -62,11 +61,9 @@ public class CxxCompilationDatabase extends AbstractBuildRuleWithResolver
   @AddToRuleKey(stringify = true)
   private final Path outputJsonFile;
   private final ImmutableSortedSet<BuildRule> runtimeDeps;
-  private final SourcePathResolver pathResolver;
 
   public static CxxCompilationDatabase createCompilationDatabase(
       BuildRuleParams params,
-      SourcePathResolver pathResolver,
       Iterable<CxxPreprocessAndCompile> compileAndPreprocessRules) {
     ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<CxxPreprocessAndCompile> compileRules = ImmutableSortedSet
@@ -80,18 +77,15 @@ public class CxxCompilationDatabase extends AbstractBuildRuleWithResolver
         params.copyWithDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
-        pathResolver,
         compileRules.build(),
         deps.build());
   }
 
   CxxCompilationDatabase(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver pathResolver,
       ImmutableSortedSet<CxxPreprocessAndCompile> compileRules,
       ImmutableSortedSet<BuildRule> runtimeDeps) {
-    super(buildRuleParams, pathResolver);
-    this.pathResolver = pathResolver;
+    super(buildRuleParams);
     LOG.debug(
         "Creating compilation database %s with runtime deps %s",
         buildRuleParams.getBuildTarget(),
@@ -110,7 +104,7 @@ public class CxxCompilationDatabase extends AbstractBuildRuleWithResolver
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.add(new MkdirStep(getProjectFilesystem(), outputJsonFile.getParent()));
-    steps.add(new GenerateCompilationCommandsJson());
+    steps.add(new GenerateCompilationCommandsJson(context.getSourcePathResolver()));
     return steps.build();
   }
 
@@ -142,8 +136,11 @@ public class CxxCompilationDatabase extends AbstractBuildRuleWithResolver
 
   class GenerateCompilationCommandsJson extends AbstractExecutionStep {
 
-    public GenerateCompilationCommandsJson() {
+    private final SourcePathResolver pathResolver;
+
+    public GenerateCompilationCommandsJson(SourcePathResolver pathResolver) {
       super("generate compile_commands.json");
+      this.pathResolver = pathResolver;
     }
 
     @Override

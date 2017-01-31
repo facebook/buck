@@ -994,7 +994,6 @@ public class CxxDescriptionEnhancer {
         arg);
     return CxxCompilationDatabase.createCompilationDatabase(
         params,
-        pathResolver,
         objects.keySet());
   }
 

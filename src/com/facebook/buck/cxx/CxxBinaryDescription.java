@@ -160,7 +160,6 @@ public class CxxBinaryDescription implements
               flavoredLinkerMapMode);
       return CxxCompilationDatabase.createCompilationDatabase(
           params,
-          pathResolver,
           cxxLinkAndCompileRules.compileRules);
     }
 

@@ -154,7 +154,6 @@ public class CxxCompilationDatabaseTest {
 
     CxxCompilationDatabase compilationDatabase = CxxCompilationDatabase.createCompilationDatabase(
         testBuildRuleParams,
-        testSourcePathResolver,
         rules.build());
 
     assertThat(
@@ -170,7 +169,7 @@ public class CxxCompilationDatabaseTest {
 
     List<Step> buildSteps =
         compilationDatabase.getBuildSteps(
-            FakeBuildContext.NOOP_CONTEXT,
+            FakeBuildContext.withSourcePathResolver(testSourcePathResolver),
             new FakeBuildableContext());
     assertEquals(2, buildSteps.size());
     assertTrue(buildSteps.get(0) instanceof MkdirStep);
