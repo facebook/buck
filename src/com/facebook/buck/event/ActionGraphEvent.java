@@ -112,6 +112,10 @@ public abstract class ActionGraphEvent
       return new Miss(cacheWasEmpty);
     }
 
+    public static MissWithTargetGraphHashMatch missWithTargetGraphHashMatch() {
+      return new MissWithTargetGraphHashMatch();
+    }
+
     public static class Hit extends Cache {
       public Hit() {
         super("ActionGraphCacheHit");
@@ -123,6 +127,12 @@ public abstract class ActionGraphEvent
       public Miss(boolean cacheWasEmpty) {
         super("ActionGraphCacheMiss");
         this.cacheWasEmpty = cacheWasEmpty;
+      }
+    }
+
+    public static class MissWithTargetGraphHashMatch extends Cache {
+      public MissWithTargetGraphHashMatch() {
+        super("ActionGraphCacheMissWithTargetGraphHashMatch");
       }
     }
 

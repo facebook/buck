@@ -89,14 +89,9 @@ public class ActionGraphCacheTest {
 
     eventBus.register(new Object() {
      @Subscribe
-     public void actionGraphCacheHit(ActionGraphEvent.Cache.Hit event) {
+     public void actionGraphCacheEvent(ActionGraphEvent.Cache event) {
        trackedEvents.add(event);
     }
-
-     @Subscribe
-     public void actionGraphCacheMiss(ActionGraphEvent.Cache.Miss event) {
-       trackedEvents.add(event);
-     }
    });
   }
 
@@ -165,6 +160,22 @@ public class ActionGraphCacheTest {
     assertThat(resultRun1RuleKeys, Matchers.not(Matchers.equalTo(resultRun2RuleKeys)));
     // Run1 and Run3 should match.
     assertThat(resultRun1RuleKeys, Matchers.equalTo(resultRun3RuleKeys));
+  }
+
+  @Test
+  public void missWithTargetGraphHashMatch() {
+    ActionGraphCache cache = new ActionGraphCache(broadcastEventListener);
+    cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph, 0);
+    assertEquals(1, countEventsOf(ActionGraphEvent.Cache.Miss.class));
+
+    cache.getActionGraph(
+        eventBus,
+        CHECK_GRAPHS,
+        TargetGraphFactory.newInstance(nodeA, createTargetNode("B")),
+        0);
+
+    assertEquals(1, countEventsOf(ActionGraphEvent.Cache.MissWithTargetGraphHashMatch.class));
+    assertEquals(2, countEventsOf(ActionGraphEvent.Cache.Miss.class));
   }
 
   // If this breaks it probably means the ActionGraphCache checking also breaks.

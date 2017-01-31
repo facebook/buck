@@ -29,14 +29,20 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
@@ -50,6 +56,10 @@ public class ActionGraphCache {
 
   @Nullable
   private Pair<TargetGraph, ActionGraphAndResolver> lastActionGraph;
+
+  @Nullable
+  private HashCode lastTargetGraphHash;
+
   private BroadcastEventListener broadcastEventListener;
 
   public ActionGraphCache(BroadcastEventListener broadcastEventListener) {
@@ -80,11 +90,17 @@ public class ActionGraphCache {
         }
       } else {
         eventBus.post(ActionGraphEvent.Cache.miss(lastActionGraph == null));
+        LOG.debug("Computing TargetGraph HashCode...");
+        HashCode targetGraphHash = getTargetGraphHash(targetGraph);
         if (lastActionGraph == null) {
           LOG.info("ActionGraph cache miss. Cache was empty.");
+        } else if (Objects.equals(lastTargetGraphHash, targetGraphHash)) {
+          LOG.info("ActionGraph cache miss. TargetGraphs mismatched but hashes are the same.");
+          eventBus.post(ActionGraphEvent.Cache.missWithTargetGraphHashMatch());
         } else {
           LOG.info("ActionGraph cache miss. TargetGraphs mismatched.");
         }
+        lastTargetGraphHash = targetGraphHash;
         lastActionGraph = new Pair<TargetGraph, ActionGraphAndResolver>(
             targetGraph,
             createActionGraph(
@@ -164,6 +180,15 @@ public class ActionGraphCache {
         .setActionGraph(new ActionGraph(resolver.getBuildRules()))
         .setResolver(resolver)
         .build();
+  }
+
+  private static HashCode getTargetGraphHash(TargetGraph targetGraph) {
+    Hasher hasher = Hashing.sha1().newHasher();
+    ImmutableSet<TargetNode<?, ?>> nodes = targetGraph.getNodes();
+    for (TargetNode<?, ?> targetNode : ImmutableSortedSet.copyOf(nodes)) {
+      hasher.putBytes(targetNode.getRawInputsHashCode().asBytes());
+    }
+    return hasher.hash();
   }
 
   private static Map<BuildRule, RuleKey> getRuleKeysFromBuildRules(
@@ -259,6 +284,7 @@ public class ActionGraphCache {
 
   private void invalidateCache() {
     lastActionGraph = null;
+    lastTargetGraphHash = null;
   }
 
   @VisibleForTesting
