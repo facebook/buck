@@ -64,7 +64,7 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
 
-public class MirrorTest {
+public class StubJarTest {
 
   private static final ImmutableSortedSet<Path> EMPTY_CLASSPATH = ImmutableSortedSet.of();
 
