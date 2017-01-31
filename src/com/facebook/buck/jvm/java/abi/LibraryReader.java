@@ -22,6 +22,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
+
 /**
  * An interface for reading and listing resources and classes in a library.
  * @param <UnstubbedClass> the type used to work with the unstubbed class
@@ -33,6 +36,10 @@ interface LibraryReader<UnstubbedClass> extends AutoCloseable {
     } else {
       return new JarReader(path);
     }
+  }
+
+  static LibraryReader<TypeElement> of(Elements elements, Iterable<TypeElement> topLevelTypes) {
+    return new TypeElementsReader(elements, topLevelTypes);
   }
 
   List<Path> getRelativePaths() throws IOException;

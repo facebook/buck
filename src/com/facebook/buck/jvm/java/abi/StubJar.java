@@ -27,12 +27,22 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
+
 public class StubJar {
   private final Supplier<LibraryReader<ClassMirror>> libraryReaderSupplier;
 
   public StubJar(Path toMirror) {
     libraryReaderSupplier = () ->
         new StubbingLibraryReader(LibraryReader.of(toMirror), BytecodeStubber::createStub);
+  }
+
+  public StubJar(Elements elements, Iterable<TypeElement> topLevelTypes) {
+    ClassVisitorDriverFromElement driver = new ClassVisitorDriverFromElement();
+    libraryReaderSupplier = () -> new StubbingLibraryReader(
+        LibraryReader.of(elements, topLevelTypes),
+        driver::driveVisitor);
   }
 
   public void writeTo(ProjectFilesystem filesystem, Path path) throws IOException {
