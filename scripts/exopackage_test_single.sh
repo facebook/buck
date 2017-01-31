@@ -33,7 +33,11 @@ cd $TMP_DIR
 for BUCKFILE in `find . -name BUCK.fixture` ; do
   mv $BUCKFILE ${BUCKFILE%%.fixture}
 done
-touch .buckconfig
+cat >.buckconfig <<EOF
+[java]
+  source_level = 7
+  target_level = 7
+EOF
 export NO_BUCKD=1
 
 # Clear out the phone.
