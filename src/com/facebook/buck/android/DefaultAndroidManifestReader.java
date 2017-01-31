@@ -28,6 +28,7 @@ import org.xml.sax.SAXException;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
@@ -172,7 +173,7 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader {
    */
   public static AndroidManifestReader forPath(Path path, ProjectFilesystem projectFilesystem)
       throws IOException {
-    try (Reader reader = projectFilesystem.getReaderIfFileExists(path).get()) {
+    try (Reader reader = Files.newBufferedReader(projectFilesystem.resolve(path))) {
       return forReader(reader);
     }
   }

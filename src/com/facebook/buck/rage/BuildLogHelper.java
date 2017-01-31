@@ -32,7 +32,6 @@ import org.immutables.value.Value;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.Reader;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
@@ -112,10 +111,9 @@ public class BuildLogHelper {
 
   private Optional<InvocationInfo.ParsedLog> extractFirstMatchingLine(Path logPath)
       throws IOException {
-    try (Reader reader = projectFilesystem.getReaderIfFileExists(logPath).get();
-         BufferedReader bufferedReader = new BufferedReader(reader)) {
+    try (BufferedReader reader = Files.newBufferedReader(projectFilesystem.resolve(logPath))) {
       for (int i = 0; i < MAX_LINES_TO_SCAN_FOR_LOG_HEADER; ++i) {
-        String line = bufferedReader.readLine();
+        String line = reader.readLine();
         if (line == null) { // EOF.
           break;
         }

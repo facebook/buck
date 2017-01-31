@@ -47,8 +47,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.Reader;
-import java.io.StringReader;
 import java.math.BigInteger;
 import java.nio.file.CopyOption;
 import java.nio.file.FileAlreadyExistsException;
@@ -632,18 +630,6 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
       return Optional.empty();
     }
     return Optional.of(new String(getFileBytes(path), Charsets.UTF_8));
-  }
-
-  /**
-   * Does not support symlinks.
-   */
-  @Override
-  public Optional<Reader> getReaderIfFileExists(Path path) {
-    Optional<String> content = readFileIfItExists(path);
-    if (!content.isPresent()) {
-      return Optional.empty();
-    }
-    return Optional.of((Reader) new StringReader(content.get()));
   }
 
   /**

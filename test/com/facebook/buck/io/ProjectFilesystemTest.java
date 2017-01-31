@@ -36,7 +36,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-import com.google.common.io.CharStreams;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 
@@ -165,20 +164,6 @@ public class ProjectFilesystemTest {
     Path multiLineFile = tmp.newFile("foo.txt");
     Files.write(multiLineFile, "foo\nbar\nbaz\n".getBytes(UTF_8));
     assertEquals(Optional.of("foo"), filesystem.readFirstLine("foo.txt"));
-  }
-
-  @Test
-  public void getReaderIfFileExists() throws IOException {
-    Path file = tmp.newFile("foo.txt");
-    Files.write(file, "fooooo\nbar\nbaz\n".getBytes(UTF_8));
-    assertEquals(
-        "fooooo\nbar\nbaz\n",
-        CharStreams.toString(filesystem.getReaderIfFileExists(Paths.get("foo.txt")).get()));
-  }
-
-  @Test
-  public void getReaderIfFileExistsNoFile() throws IOException {
-    assertEquals(Optional.empty(), filesystem.getReaderIfFileExists(Paths.get("foo.txt")));
   }
 
   @Test

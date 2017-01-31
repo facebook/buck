@@ -56,7 +56,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.Reader;
 import java.io.Writer;
 import java.nio.channels.Channels;
 import java.nio.file.CopyOption;
@@ -829,25 +828,6 @@ public class ProjectFilesystem {
         throw new RuntimeException("Error reading " + pathRelativeToProjectRoot, e);
       }
       return Optional.of(contents);
-    } else {
-      return Optional.empty();
-    }
-  }
-
-  /**
-   * Attempts to open the file for future read access. Returns {@link Optional#empty()} if the file
-   * does not exist.
-   */
-  public Optional<Reader> getReaderIfFileExists(Path pathRelativeToProjectRoot) {
-    Path fileToRead = getPathForRelativePath(pathRelativeToProjectRoot);
-    if (Files.isRegularFile(fileToRead)) {
-      try {
-        return Optional.of(
-            (Reader) new BufferedReader(
-                new InputStreamReader(newFileInputStream(pathRelativeToProjectRoot))));
-      } catch (Exception e) {
-        throw new RuntimeException("Error reading " + pathRelativeToProjectRoot, e);
-      }
     } else {
       return Optional.empty();
     }
