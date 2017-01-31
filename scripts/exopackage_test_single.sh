@@ -30,6 +30,9 @@ trap "rm -rf $TMP_DIR" EXIT HUP INT TERM
 cp -r test/com/facebook/buck/android/testdata/exopackage-device/* $TMP_DIR
 buck build --out $TMP_DIR/buck-android-support.jar buck-android-support
 cd $TMP_DIR
+for BUCKFILE in `find . -name BUCK.fixture` ; do
+  mv $BUCKFILE ${BUCKFILE%%.fixture}
+done
 touch .buckconfig
 export NO_BUCKD=1
 
