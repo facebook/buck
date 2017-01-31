@@ -534,6 +534,7 @@ public class ProjectWorkspace {
           sanizitedEnv,
           CommandMode.TEST,
           WatchmanWatcher.FreshInstanceAction.NONE,
+          System.nanoTime(),
           args);
     } catch (InterruptedException e) {
       e.printStackTrace(stderr);

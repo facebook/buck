@@ -243,6 +243,7 @@ public class DaemonIntegrationTest {
             ImmutableMap.copyOf(System.getenv()),
             CommandMode.TEST,
             WatchmanWatcher.FreshInstanceAction.NONE,
+            System.nanoTime(),
             args);
         assertEquals("Unexpected exit code.", expectedExitCode, exitCode);
       } catch (IOException e) {

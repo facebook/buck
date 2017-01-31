@@ -34,6 +34,7 @@ import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.CounterRegistryImpl;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.BuckInitializationDurationEvent;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.DaemonEvent;
@@ -690,7 +691,10 @@ public final class Main {
   }
 
   /* Define all error handling surrounding main command */
-  private void runMainThenExit(String[] args, Optional<NGContext> context) {
+  private void runMainThenExit(
+      String[] args,
+      Optional<NGContext> context,
+      final long initTimestamp) {
     installUncaughtExceptionHandler(context);
 
     Path projectRoot = Paths.get(".");
@@ -716,6 +720,7 @@ public final class Main {
           clientEnvironment,
           commandMode,
           watchmanFreshInstanceAction,
+          initTimestamp,
           args);
     } catch (IOException e) {
       if (e.getMessage().startsWith("No space left on device")) {
@@ -760,7 +765,8 @@ public final class Main {
   /**
    * @param buildId an identifier for this command execution.
    * @param context an optional NGContext that is present if running inside a Nailgun server.
-   * @param args    command line arguments
+   * @param initTimestamp Value of System.nanoTime() when process got main()/nailMain() invoked.
+   * @param args command line arguments
    * @return an exit code or {@code null} if this is a process that should not exit
    */
   @SuppressWarnings("PMD.PrematureDeclaration")
@@ -771,6 +777,7 @@ public final class Main {
       ImmutableMap<String, String> clientEnvironment,
       CommandMode commandMode,
       WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction,
+      final long initTimestamp,
       String... args)
       throws IOException, InterruptedException {
 
@@ -1288,6 +1295,12 @@ public final class Main {
               buildEventBus.register(listener);
             }
           }
+
+          buildEventBus.post(
+              new BuckInitializationDurationEvent(
+                  TimeUnit.NANOSECONDS.toMillis(
+                      System.nanoTime() - initTimestamp)));
+
           try {
             exitCode = command.run(
                 CommandRunnerParams.builder()
@@ -1892,7 +1905,8 @@ public final class Main {
   }
 
   public static void main(String[] args) {
-    new Main(System.out, System.err, System.in).runMainThenExit(args, Optional.empty());
+    new Main(System.out, System.err, System.in)
+        .runMainThenExit(args, Optional.empty(), System.nanoTime());
   }
 
   private static void markFdCloseOnExec(int fd) {
@@ -2076,7 +2090,7 @@ public final class Main {
     try (IdleKiller.CommandExecutionScope ignored =
              DaemonBootstrap.getDaemonKillers().newCommandExecutionScope()) {
       new Main(context.out, context.err, context.in)
-          .runMainThenExit(context.getArgs(), Optional.of(context));
+          .runMainThenExit(context.getArgs(), Optional.of(context), System.nanoTime());
     }
   }
 }
