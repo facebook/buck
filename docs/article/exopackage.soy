@@ -486,19 +486,18 @@ from your checkout of Buck as follows:
 
 <pre>{literal}
 <strong># Run this from the root of your checkout of Buck, not from AntennaPod.</strong>
-buck build buck-android-support
+buck build --out buck-android-support.jar buck-android-support
 {/literal}</pre>
 
 <p>
 
-Once you have built it, copy it over to AntennaPod's <code>libs</code> directory,
+Once you have built it, move it over to AntennaPod's <code>libs</code> directory,
 just like the other third party JAR files:
 
 <p>
 
 <pre>{literal}
-cp `buck targets --show-output buck-android-support | awk '{print $2}'` \
-    path/to/AntennaPod/libs
+mv buck-android-support.jar path/to/AntennaPod/libs
 {/literal}</pre>
 
 <h2 id="use-exopackage">Step 6: Modify AntennaPod to use exopackage</h2>
