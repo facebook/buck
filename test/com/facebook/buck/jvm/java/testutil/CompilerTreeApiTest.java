@@ -103,7 +103,7 @@ public abstract class CompilerTreeApiTest {
     initCompiler(Collections.emptyMap());
   }
 
-  protected final CompilerTreeApiFactory initCompiler(
+  protected CompilerTreeApiFactory initCompiler(
       Map<String, String> fileNamesToContents) throws IOException {
     CompilerTreeApiFactory treeApiFactory = newTreeApiFactory();
 
@@ -158,7 +158,7 @@ public abstract class CompilerTreeApiTest {
     return compile(sources, null);
   }
 
-  protected Iterable<? extends CompilationUnitTree> compile(
+  protected final Iterable<? extends CompilationUnitTree> compile(
       Map<String, String> fileNamesToContents,
       TaskListenerFactory taskListenerFactory) throws IOException {
 
