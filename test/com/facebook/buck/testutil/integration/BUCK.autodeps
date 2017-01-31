@@ -29,6 +29,7 @@
       "//src/com/facebook/buck/util/environment:env-filter",
       "//src/com/facebook/buck/util/environment:environment",
       "//src/com/facebook/buck/util/environment:platform",
+      "//src/com/facebook/buck/util/trace:trace",
       "//test/com/facebook/buck/jvm/java:javac-env",
       "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/testutil:testutil",

@@ -58,6 +58,8 @@ import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.CommandMode;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.trace.ChromeTraceParser;
+import com.facebook.buck.util.trace.ChromeTraceParser.ChromeTraceEventMatcher;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
@@ -96,6 +98,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -542,6 +545,20 @@ public class ProjectWorkspace {
         exitCode,
         stdout.getContentsAsString(Charsets.UTF_8),
         stderr.getContentsAsString(Charsets.UTF_8));
+  }
+
+  /**
+   * Runs an event-driven parser on {@code buck-out/log/build.trace}, which is a symlink to the
+   * trace of the most recent invocation of Buck (which may not have been a {@code buck build}).
+   * @see ChromeTraceParser#parse(Path, Set)
+   */
+  public Map<ChromeTraceEventMatcher<?>, Object> parseTraceFromMostRecentBuckInvocation(
+      Set<ChromeTraceEventMatcher<?>> matchers) throws IOException {
+    ProjectFilesystem projectFilesystem = projectFilesystemAndConfig.get().projectFilesystem;
+    ChromeTraceParser parser = new ChromeTraceParser(projectFilesystem);
+    return parser.parse(
+        projectFilesystem.getBuckPaths().getLogDir().resolve("build.trace"),
+        matchers);
   }
 
   public Path getDestPath() {
