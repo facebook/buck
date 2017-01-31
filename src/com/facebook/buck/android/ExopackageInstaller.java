@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.io.Closer;
 
 import java.io.File;
 import java.io.IOException;
@@ -594,30 +595,42 @@ public class ExopackageInstaller {
         Path pathRelativeToDataRoot,
         final Path relativeSource) throws Exception {
       final Path source = projectFilesystem.resolve(relativeSource);
+      Closer closer = Closer.create();
       CollectingOutputReceiver receiver = new CollectingOutputReceiver() {
 
-        private boolean sentPayload = false;
+        private boolean startedPayload = false;
+        private boolean wrotePayload = false;
+        @Nullable
+        private OutputStream outToDevice;
 
         @Override
         public void addOutput(byte[] data, int offset, int length) {
           super.addOutput(data, offset, length);
-          if (!sentPayload && getOutput().length() >= AgentUtil.TEXT_SECRET_KEY_SIZE) {
-            LOG.verbose("Got key: %s", getOutput().trim());
-
-            sentPayload = true;
-            try (Socket clientSocket = new Socket("localhost", port)) {
+          try {
+            if (!startedPayload && getOutput().length() >= AgentUtil.TEXT_SECRET_KEY_SIZE) {
+              LOG.verbose("Got key: %s", getOutput().split("[\\r\\n]", 1)[0]);
+              startedPayload = true;
+              Socket clientSocket = new Socket("localhost", port);
+              closer.register(clientSocket);
               LOG.verbose("Connected");
-              OutputStream outToDevice = clientSocket.getOutputStream();
+              outToDevice = clientSocket.getOutputStream();
+              closer.register(outToDevice);
+              // Need to wait for client to acknowledge that we've connected.
+            }
+            if (!wrotePayload && getOutput().contains("z1")) {
+              LOG.verbose("Got z1");
+              wrotePayload = true;
               outToDevice.write(
                   getOutput().substring(
                       0,
                       AgentUtil.TEXT_SECRET_KEY_SIZE).getBytes());
               LOG.verbose("Wrote key");
               com.google.common.io.Files.asByteSource(source.toFile()).copyTo(outToDevice);
+              outToDevice.flush();
               LOG.verbose("Wrote file");
-            } catch (IOException e) {
-              throw new RuntimeException(e);
             }
+          } catch (IOException e) {
+            throw new RuntimeException(e);
           }
         }
       };
@@ -640,6 +653,9 @@ public class ExopackageInstaller {
       } catch (Exception e) {
         shellException = e;
       }
+
+      // Close the client socket, if we opened it.
+      closer.close();
 
       try {
         AdbHelper.checkReceiverOutput(command, receiver);

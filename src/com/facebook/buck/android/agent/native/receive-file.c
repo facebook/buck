@@ -229,7 +229,15 @@ static int raw_receive_file(const char* path, int expected_size, int sock) {
     // TODO: enforce global timeout
     const int buffer_size = 128 * 1024;
     uint8_t buffer[buffer_size];
-    ssize_t got = read(sock, buffer, buffer_size);
+    int remaining = expected_size - total_size;
+    if (remaining == 0) {
+      break;
+    }
+    int want = buffer_size;
+    if (want > remaining) {
+      want = remaining;
+    }
+    ssize_t got = read(sock, buffer, want);
     if (got < 0) {
       perror("read(file)");
       goto error;
@@ -287,6 +295,9 @@ int do_receive_file(int num_args, char** args) {
   if (create_and_send_session_key(secret_key) != 0) {
     goto fail1;
   }
+
+  printf("z1\n");
+  fflush(stdout);
 
   if (get_client(listen_socket, &client_socket) != 0) {
     goto fail1;
