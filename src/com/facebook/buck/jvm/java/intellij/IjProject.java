@@ -39,6 +39,8 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.RichStream;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
@@ -166,21 +168,35 @@ public class IjProject {
           }
 
           @Override
-          public Optional<Path> getAndroidResourcePath(
+          public Optional<ImmutableList<Path>> getAndroidResourcePaths(
               TargetNode<AndroidResourceDescription.Arg, ?> targetNode) {
-            return AndroidResourceDescription.getResDirectoryForProject(
-                buildRuleResolver,
-                targetNode)
-                .map(this::getRelativePathAndRecordRule);
+            Optional<ImmutableList<? extends SourcePath>> paths =
+                AndroidResourceDescription.getResDirectoriesForProject(
+                    buildRuleResolver,
+                    targetNode);
+            if (paths.isPresent()) {
+              return Optional.of(RichStream.from(paths.get().iterator())
+                  .map(this::getRelativePathAndRecordRule)
+                  .toImmutableList());
+            } else {
+              return Optional.empty();
+            }
           }
 
           @Override
-          public Optional<Path> getAssetsPath(
+          public Optional<ImmutableList<Path>> getAssetsPaths(
               TargetNode<AndroidResourceDescription.Arg, ?> targetNode) {
-            return AndroidResourceDescription.getAssetsDirectoryForProject(
-                buildRuleResolver,
-                targetNode)
-                .map(this::getRelativePathAndRecordRule);
+            Optional<ImmutableList<? extends SourcePath>> paths =
+                AndroidResourceDescription.getAssetsDirectoriesForProject(
+                    buildRuleResolver,
+                    targetNode);
+            if (paths.isPresent()) {
+              return Optional.of(RichStream.from(paths.get().iterator())
+                  .map(this::getRelativePathAndRecordRule)
+                  .toImmutableList());
+            } else {
+              return Optional.empty();
+            }
           }
 
           @Override

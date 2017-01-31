@@ -37,6 +37,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -503,15 +504,15 @@ public class IjModuleFactory {
           .setAutogenerateSources(autogenerateAndroidFacetSources)
           .setAndroidLibrary(true);
 
-      Optional<Path> assets = moduleFactoryResolver.getAssetsPath(target);
+      Optional<ImmutableList<Path>> assets = moduleFactoryResolver.getAssetsPaths(target);
       if (assets.isPresent()) {
-        androidFacetBuilder.addAssetPaths(assets.get());
+        assets.get().forEach(androidFacetBuilder::addAssetPaths);
       }
 
-      Optional<Path> resources = moduleFactoryResolver.getAndroidResourcePath(target);
+      Optional<ImmutableList<Path>> resources = moduleFactoryResolver.getAndroidResourcePaths(target);
       ImmutableSet<Path> resourceFolders;
       if (resources.isPresent()) {
-        resourceFolders = ImmutableSet.of(resources.get());
+        resourceFolders = ImmutableSet.copyOf(resources.get());
 
         androidFacetBuilder.addAllResourcePaths(resourceFolders);
 

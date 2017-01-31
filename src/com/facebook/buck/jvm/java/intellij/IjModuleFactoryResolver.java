@@ -21,6 +21,7 @@ import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.rules.TargetNode;
+import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 import java.util.Optional;
@@ -60,13 +61,13 @@ public interface IjModuleFactoryResolver {
    * @param targetNode node describing the Android resources to get the path of.
    * @return path on disk to the resources folder.
    */
-  Optional<Path> getAndroidResourcePath(TargetNode<AndroidResourceDescription.Arg, ?> targetNode);
+  Optional<ImmutableList<Path>> getAndroidResourcePaths(TargetNode<AndroidResourceDescription.Arg, ?> targetNode);
 
   /**
    * @param targetNode node describing the Android assets to get the path of.
    * @return path on disk to the assets folder.
    */
-  Optional<Path> getAssetsPath(TargetNode<AndroidResourceDescription.Arg, ?> targetNode);
+  Optional<ImmutableList<Path>> getAssetsPaths(TargetNode<AndroidResourceDescription.Arg, ?> targetNode);
 
   /**
    * @param targetNode node which may use annotation processors.
