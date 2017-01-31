@@ -56,7 +56,6 @@
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util:watchman",
-      "//src/com/facebook/buck/util/environment:env-filter",
       "//src/com/facebook/buck/util/network:network",
       "//src/com/facebook/buck/util/network/offline:offline",
       "//src/com/facebook/buck/util/perf:perf",
@@ -133,7 +132,6 @@
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:io",
-      "//src/com/facebook/buck/util/environment:env-filter",
       "//src/com/facebook/buck/util/network/hostname:hostname"
     ],
     "exported_deps" : [

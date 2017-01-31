@@ -20,7 +20,6 @@ import static java.io.File.pathSeparator;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
@@ -84,8 +83,6 @@ public class ExecutableFinder {
   public Optional<Path> getOptionalExecutable(
       Path suggestedExecutable,
       ImmutableMap<String, String> env) {
-    env = EnvironmentFilter.filteredEnvironment(env, platform);
-
     return getOptionalExecutable(suggestedExecutable, getPaths(env), getExecutableSuffixes(env));
   }
 

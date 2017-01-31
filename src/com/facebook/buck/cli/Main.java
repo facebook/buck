@@ -120,7 +120,6 @@ import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.CommandMode;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
-import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.network.RemoteLogBuckConfig;
@@ -1616,13 +1615,11 @@ public final class Main {
    */
   @SuppressWarnings({"unchecked", "rawtypes"}) // Safe as Property is a Map<String, String>.
   private static ImmutableMap<String, String> getClientEnvironment(Optional<NGContext> context) {
-    ImmutableMap<String, String> env;
     if (context.isPresent()) {
-      env = ImmutableMap.<String, String>copyOf((Map) context.get().getEnv());
+      return ImmutableMap.<String, String>copyOf((Map) context.get().getEnv());
     } else {
-      env = ImmutableMap.copyOf(System.getenv());
+      return ImmutableMap.copyOf(System.getenv());
     }
-    return EnvironmentFilter.filteredEnvironment(env, Platform.detect());
   }
 
   private Parser getParserFromDaemon(

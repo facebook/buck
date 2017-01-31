@@ -15,22 +15,9 @@ java_library(
   ],
 )
 
-FILTER_SRCS = [
-  'EnvironmentFilter.java',
-]
-
-java_library(
-  name = 'env-filter',
-  srcs = FILTER_SRCS,
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
-)
-
 java_immutables_library(
   name = 'environment',
-  srcs = glob(['*.java'], excludes = FILTER_SRCS + PLATFORM_SRCS),
+  srcs = glob(['*.java'], excludes = PLATFORM_SRCS),
   immutable_types = [
     'BuildEnvironmentDescription',
   ],

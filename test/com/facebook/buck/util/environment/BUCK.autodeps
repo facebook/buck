@@ -1,9 +1,7 @@
 {
   "environment" : {
     "deps" : [
-      "//src/com/facebook/buck/util/environment:env-filter",
       "//src/com/facebook/buck/util/environment:environment",
-      "//src/com/facebook/buck/util/environment:platform",
       "//third-party/java/guava:guava",
       "//third-party/java/junit:junit"
     ],

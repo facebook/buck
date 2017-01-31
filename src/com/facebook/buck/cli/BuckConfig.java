@@ -47,7 +47,6 @@ import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
 import com.facebook.buck.util.environment.Architecture;
-import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.annotations.VisibleForTesting;
@@ -120,7 +119,6 @@ public class BuckConfig implements ConfigPathGetter {
   private final Platform platform;
 
   private final ImmutableMap<String, String> environment;
-  private final ImmutableMap<String, String> filteredEnvironment;
 
   private final ConfigViewCache<BuckConfig> viewCache = new ConfigViewCache<>(this);
 
@@ -143,8 +141,6 @@ public class BuckConfig implements ConfigPathGetter {
 
     this.platform = platform;
     this.environment = environment;
-    this.filteredEnvironment = ImmutableMap.copyOf(
-        Maps.filterKeys(environment, EnvironmentFilter.NOT_IGNORED_ENV_PREDICATE));
   }
 
   /**
@@ -679,10 +675,6 @@ public class BuckConfig implements ConfigPathGetter {
 
   public ImmutableMap<String, String> getEnvironment() {
     return environment;
-  }
-
-  public ImmutableMap<String, String> getFilteredEnvironment() {
-    return filteredEnvironment;
   }
 
   public String[] getEnv(String propertyName, String separator) {

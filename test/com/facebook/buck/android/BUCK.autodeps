@@ -135,6 +135,7 @@
       "//src/com/facebook/buck/android:utils",
       "//src/com/facebook/buck/android/aapt:aapt",
       "//src/com/facebook/buck/cxx:rules",
+      "//src/com/facebook/buck/model:simple_types",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/cxx:testutil",
       "//test/com/facebook/buck/jvm/java:javac-env",

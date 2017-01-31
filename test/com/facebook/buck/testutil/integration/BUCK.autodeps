@@ -26,7 +26,6 @@
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util:watchman",
-      "//src/com/facebook/buck/util/environment:env-filter",
       "//src/com/facebook/buck/util/environment:environment",
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/util/trace:trace",
