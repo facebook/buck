@@ -40,6 +40,9 @@ cat >.buckconfig <<EOF
 [ndk]
   cxx_runtime = system
 EOF
+cat >.bucklogging.properties <<EOF
+com.facebook.buck.android.ExopackageInstaller.level=FINER
+EOF
 export NO_BUCKD=1
 
 # Clear out the phone.
