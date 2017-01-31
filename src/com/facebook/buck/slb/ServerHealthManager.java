@@ -22,6 +22,9 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.timing.Clock;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -32,10 +35,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public class ServerHealthManager {
   private static final Logger LOG = Logger.get(ServerHealthManager.class);
+  public static final int CACHE_TIME_MS = 1000;
 
   private static final Comparator<Pair<URI, Long>> LATENCY_COMPARATOR =
       (o1, o2) -> (int) (o1.getSecond() - o2.getSecond());
@@ -47,6 +54,7 @@ public class ServerHealthManager {
   private final float maxErrorPercentage;
   private final int errorCheckTimeRangeMillis;
   private final BuckEventBus eventBus;
+  private final LoadingCache<Object, Optional<URI>> getBestServerCache;
 
   private final Clock clock;
 
@@ -69,16 +77,29 @@ public class ServerHealthManager {
       this.servers.put(server, new ServerHealthState(server));
     }
     this.eventBus = eventBus;
+    this.getBestServerCache = CacheBuilder.newBuilder()
+        .expireAfterWrite(CACHE_TIME_MS, TimeUnit.MILLISECONDS)
+        .build(new CacheLoader<Object, Optional<URI>>() {
+          @Override
+          public Optional<URI> load(Object key) throws Exception {
+            return calculateBestServer();
+          }
+        });
   }
 
   public void reportPingLatency(URI server, long latencyMillis) {
     Preconditions.checkState(servers.containsKey(server), "Unknown server [%s]", server);
     servers.get(server).reportPingLatency(clock.currentTimeMillis(), latencyMillis);
+    if (latencyMillis > maxAcceptableLatencyMillis) {
+      getBestServerCache.refresh(this);
+    }
   }
 
   public void reportRequestError(URI server) {
     Preconditions.checkState(servers.containsKey(server), "Unknown server [%s]", server);
+    // Invalidate the best server on any error.
     servers.get(server).reportRequestError(clock.currentTimeMillis());
+    getBestServerCache.refresh(this);
   }
 
   public void reportRequestSuccess(URI server) {
@@ -87,12 +108,25 @@ public class ServerHealthManager {
   }
 
   public URI getBestServer() throws NoHealthyServersException {
+    try {
+      Optional<URI> server = getBestServerCache.get(this);
+      if (server.isPresent()) {
+        return server.get();
+      }
+      throw new NoHealthyServersException(String.format(
+          "No servers available. Too many errors reported by all servers in the pool: [%s]",
+          Joiner.on(", ").join(FluentIterable.from(servers.keySet()).transform(
+              Object::toString))));
+    }  catch (ExecutionException e) {
+      throw new RuntimeException(e);
+    }
+
+  }
+
+  private Optional<URI> calculateBestServer() throws NoHealthyServersException {
     ServerHealthManagerEventData.Builder data = ServerHealthManagerEventData.builder();
     Map<URI, PerServerData.Builder> allPerServerData = Maps.newHashMap();
     try {
-      // TODO(ruibm): Computations in this method could be cached and only refreshed
-      // every 10 seconds to avoid call bursts causing unnecessary CPU consumption.
-
       long epochMillis = clock.currentTimeMillis();
       List<Pair<URI, Long>> serverLatencies = Lists.newArrayList();
       for (ServerHealthState state : servers.values()) {
@@ -111,16 +145,13 @@ public class ServerHealthManager {
 
       if (serverLatencies.size() == 0) {
         data.setNoHealthyServersAvailable(true);
-        throw new NoHealthyServersException(String.format(
-            "No servers available. Too many errors reported by all servers in the pool: [%s]",
-            Joiner.on(", ").join(FluentIterable.from(servers.keySet()).transform(
-                Object::toString))));
+        return Optional.empty();
       }
 
       Collections.sort(serverLatencies, LATENCY_COMPARATOR);
       URI bestServer = serverLatencies.get(0).getFirst();
       Preconditions.checkNotNull(allPerServerData.get(bestServer)).setBestServer(true);
-      return bestServer;
+      return Optional.of(bestServer);
     } finally {
       for (PerServerData.Builder builder : allPerServerData.values()) {
         data.addPerServerData(builder.build());
