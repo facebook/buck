@@ -55,6 +55,11 @@ class TreeBackedElements implements Elements {
     this.resolverFactory = resolverFactory;
   }
 
+  /**
+   * Gets the package element with the given name. If a package with the given name is referenced
+   * in the code or exists in the classpath, returns the corresponding element. Otherwise returns
+   * null.
+   */
   @Override
   @Nullable
   public TreeBackedPackageElement getPackageElement(CharSequence qualifiedNameString) {
@@ -97,6 +102,11 @@ class TreeBackedElements implements Elements {
     return qualifiedName;
   }
 
+  /**
+   * Gets the type element with the given name. If a class with the given name is referenced in
+   * the code or exists in the classpath, returns the corresponding element. Otherwise returns
+   * null.
+   */
   @Override
   @Nullable
   public TypeElement getTypeElement(CharSequence fullyQualifiedCharSequence) {
@@ -110,12 +120,6 @@ class TreeBackedElements implements Elements {
       TypeElement javacElement = javacElements.getTypeElement(fullyQualifiedName);
       if (javacElement != null) {
         knownTypes.put(fullyQualifiedName, javacElement);
-      } else {
-        // Because we don't have access to the current target's dependencies, we have to assume that
-        // any type name we don't know about exists in one of those. Whatever our caller does with
-        // this information will need to be validated later against the full set of dependencies.
-        throw new UnsupportedOperationException(
-            "TODO: Need to create placeholders for unknown type names.");
       }
     }
 

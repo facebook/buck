@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.util.exportedfiles.Nullable;
 import com.facebook.buck.util.exportedfiles.Preconditions;
 import com.sun.source.tree.ArrayTypeTree;
 import com.sun.source.tree.IdentifierTree;
@@ -50,7 +51,7 @@ class TypeResolver {
   }
 
   /* package */ TypeMirror resolveType(Tree typeTree) {
-    return typeTree.accept(new SimpleTreeVisitor<TypeMirror, Void>() {
+    TypeMirror result = typeTree.accept(new SimpleTreeVisitor<TypeMirror, Void>() {
       @Override
       protected TypeMirror defaultAction(Tree node, Void aVoid) {
         throw new IllegalArgumentException(
@@ -80,13 +81,23 @@ class TypeResolver {
       }
 
       @Override
+      @Nullable
       public TypeMirror visitMemberSelect(MemberSelectTree node, Void aVoid) {
-        return treeToTypeElement(node).asType();
+        TypeElement typeElement = treeToTypeElement(node);
+        if (typeElement == null) {
+          return null;
+        }
+
+        return typeElement.asType();
       }
 
       @Override
+      @Nullable
       public TypeMirror visitParameterizedType(ParameterizedTypeTree node, Void aVoid) {
         TypeElement typeElement = treeToTypeElement(node.getType());
+        if (typeElement == null) {
+          return null;
+        }
 
         TypeMirror[] typeArgs = node.getTypeArguments()
             .stream()
@@ -108,11 +119,21 @@ class TypeResolver {
         return types.getPrimitiveType(node.getPrimitiveTypeKind());
       }
 
+      @Nullable
       private TypeElement treeToTypeElement(Tree type) {
-        return Preconditions.checkNotNull(
-            elements.getTypeElement(TreeBackedTrees.treeToName(type)));
+        return elements.getTypeElement(TreeBackedTrees.treeToName(type));
       }
     }, null);
+
+    if (result == null) {
+      // Because we don't have access to the current target's dependencies, we have to assume that
+      // any type name we don't know about exists in one of those. Whatever our caller does with
+      // this information will need to be validated later against the full set of dependencies.
+      throw new UnsupportedOperationException(
+          "TODO: Need to create placeholders for unknown type names.");
+    }
+
+    return result;
   }
 
   /* package */ TypeMirror getJavaLangObject() {
