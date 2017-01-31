@@ -1425,19 +1425,20 @@ def main():
             client_args['transport'] = 'local'
         watchman_client = pywatchman.client(**client_args)
     elif options.use_mercurial_glob:
-        # warn early if the mercurial libraries can't be loaded
+        # exit early if the mercurial libraries can't be loaded
         try:
             from mercurial import ui, hg
             use_mercurial_glob = True
         except ImportError:
             d = Diagnostic(
-                message=format_exception_info(sys.exc_info()),
-                level='warning',
+                message='Mercurial not available for glob_handler = mercurial, aborting.',
+                level='fatal',
                 source='mercurial',
-                exception=None
+                exception=sys.exc_info()
             )
             to_parent.write(encode_result([], [d], None))
             to_parent.flush()
+            raise
 
     configs = {}
     if options.config is not None:
