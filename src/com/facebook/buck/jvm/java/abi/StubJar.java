@@ -16,16 +16,12 @@
 
 package com.facebook.buck.jvm.java.abi;
 
-import static org.objectweb.asm.ClassReader.SKIP_CODE;
-import static org.objectweb.asm.ClassReader.SKIP_DEBUG;
-import static org.objectweb.asm.ClassReader.SKIP_FRAMES;
 
 import com.facebook.buck.io.HashingDeterministicJarWriter;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 
-import org.objectweb.asm.ClassReader;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,9 +31,11 @@ import java.util.jar.JarOutputStream;
 public class StubJar {
 
   private final Path toMirror;
+  private final StubDriver stubDriver;
 
   public StubJar(Path toMirror) {
     this.toMirror = Preconditions.checkNotNull(toMirror);
+    stubDriver = BytecodeStubber::createStub;
   }
 
   public void writeTo(ProjectFilesystem filesystem, Path path) throws IOException {
@@ -57,7 +55,7 @@ public class StubJar {
     }
   }
 
-  private static class CreateStubAction implements FileAction {
+  private class CreateStubAction implements FileAction {
     private final HashingDeterministicJarWriter writer;
 
     public CreateStubAction(HashingDeterministicJarWriter writer) {
@@ -78,10 +76,13 @@ public class StubJar {
 
     private InputStream getStubClassBytes(InputStream stream,
         String fileName) throws IOException {
-      ClassReader classReader = new ClassReader(stream);
       ClassMirror visitor = new ClassMirror(fileName);
-      classReader.accept(visitor, SKIP_CODE | SKIP_DEBUG | SKIP_FRAMES);
+      stubDriver.accept(stream, visitor);
       return visitor.getStubClassBytes().openStream();
     }
+  }
+
+  interface StubDriver {
+    void accept(InputStream input, ClassMirror output) throws IOException;
   }
 }
