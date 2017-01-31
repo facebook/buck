@@ -782,7 +782,7 @@ public class AdbHelper {
     Path pathToManifest = installableApk.getProjectFilesystem().resolve(
         installableApk.getManifestPath());
     AndroidManifestReader reader = DefaultAndroidManifestReader.forPath(
-        pathToManifest, installableApk.getProjectFilesystem());
+        installableApk.getProjectFilesystem().resolve(pathToManifest));
 
     if (activity == null) {
       // Get list of activities that show up in the launcher.
@@ -997,7 +997,7 @@ public class AdbHelper {
 
     try {
       return DefaultAndroidManifestReader
-          .forPath(pathToManifest, androidBinaryRule.getProjectFilesystem())
+          .forPath(androidBinaryRule.getProjectFilesystem().resolve(pathToManifest))
           .getPackage();
     } catch (IOException e) {
       throw new HumanReadableException("Could not extract package name from %s", pathToManifest);
@@ -1017,7 +1017,7 @@ public class AdbHelper {
 
     try {
       return DefaultAndroidManifestReader
-          .forPath(pathToManifest, androidBinaryRule.getProjectFilesystem())
+          .forPath(androidBinaryRule.getProjectFilesystem().resolve(pathToManifest))
           .getInstrumentationTestRunner();
     } catch (IOException e) {
       throw new HumanReadableException("Could not extract package name from %s", pathToManifest);

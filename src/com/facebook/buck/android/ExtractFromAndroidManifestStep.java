@@ -51,7 +51,7 @@ public class ExtractFromAndroidManifestStep extends AbstractExecutionStep {
   public StepExecutionResult execute(ExecutionContext context) throws IOException {
     AndroidManifestReader androidManifestReader;
     try {
-      androidManifestReader = DefaultAndroidManifestReader.forPath(manifest, filesystem);
+      androidManifestReader = DefaultAndroidManifestReader.forPath(filesystem.resolve(manifest));
     } catch (IOException e) {
       context.logError(e, "Failed to create AndroidManifestReader for %s.", manifest);
       return StepExecutionResult.ERROR;
