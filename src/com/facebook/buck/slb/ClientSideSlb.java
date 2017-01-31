@@ -85,7 +85,8 @@ public class ClientSideSlb implements HttpLoadBalancer {
         config.getMaxErrorPercentage(),
         config.getLatencyCheckTimeRangeMillis(),
         config.getMaxAcceptableLatencyMillis(),
-        config.getEventBus());
+        config.getEventBus(),
+        this.clock);
     this.pingClient = pingClient;
     this.schedulerService = config.getSchedulerService();
     backgroundHealthChecker = this.schedulerService.scheduleWithFixedDelay(
@@ -97,17 +98,17 @@ public class ClientSideSlb implements HttpLoadBalancer {
 
   @Override
   public URI getBestServer() throws NoHealthyServersException {
-    return healthManager.getBestServer(clock.currentTimeMillis());
+    return healthManager.getBestServer();
   }
 
   @Override
   public void reportRequestSuccess(URI server) {
-    healthManager.reportRequestSuccess(server, clock.currentTimeMillis());
+    healthManager.reportRequestSuccess(server);
   }
 
   @Override
   public void reportRequestException(URI server) {
-    healthManager.reportRequestError(server, clock.currentTimeMillis());
+    healthManager.reportRequestError(server);
   }
 
   @Override
@@ -175,10 +176,10 @@ public class ClientSideSlb implements HttpLoadBalancer {
         }
         long requestLatencyMillis = response.receivedResponseAtMillis() - sentRequestMillis;
         perServerData.setPingRequestLatencyMillis(requestLatencyMillis);
-        healthManager.reportPingLatency(serverUri, sentRequestMillis, requestLatencyMillis);
-        healthManager.reportRequestSuccess(serverUri, sentRequestMillis);
+        healthManager.reportPingLatency(serverUri, requestLatencyMillis);
+        healthManager.reportRequestSuccess(serverUri);
       } else {
-        healthManager.reportRequestError(serverUri, sentRequestMillis);
+        healthManager.reportRequestError(serverUri);
       }
       future.set(perServerData.build());
     }
@@ -188,7 +189,7 @@ public class ClientSideSlb implements HttpLoadBalancer {
      */
     @Override
     public void onFailure(Call call, IOException e) {
-      healthManager.reportRequestError(serverUri, clock.currentTimeMillis());
+      healthManager.reportRequestError(serverUri);
       PerServerPingData.Builder perServerData = PerServerPingData.builder().setServer(serverUri);
       perServerData.setException(e);
       future.set(perServerData.build());

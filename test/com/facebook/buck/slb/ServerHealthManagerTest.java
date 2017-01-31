@@ -17,6 +17,7 @@
 package com.facebook.buck.slb;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 
 import org.easymock.EasyMock;
@@ -49,7 +50,7 @@ public class ServerHealthManagerTest {
   @Test
   public void testGetBestServerWithoutInformation() throws IOException {
     ServerHealthManager manager = newServerHealthManager();
-    URI server = manager.getBestServer(NOW_MILLIS);
+    URI server = manager.getBestServer();
     Assert.assertNotNull(server);
   }
 
@@ -57,7 +58,7 @@ public class ServerHealthManagerTest {
   public void testExceptionThrownIfServersAreUnhealthy() throws IOException {
     ServerHealthManager manager = newServerHealthManager();
     reportErrorToAll(manager, 1);
-    manager.getBestServer(NOW_MILLIS);
+    manager.getBestServer();
     Assert.fail("All servers have errors so an exception was expected.");
   }
 
@@ -65,7 +66,7 @@ public class ServerHealthManagerTest {
   public void testExceptionThrownIfServersAreTooSlow() throws IOException {
     ServerHealthManager manager = newServerHealthManager();
     reportLatencyToAll(manager, MAX_ACCEPTABLE_LATENCY_MILLIS + 1);
-    manager.getBestServer(NOW_MILLIS);
+    manager.getBestServer();
     Assert.fail("All servers have high latency so an exception was expected.");
   }
 
@@ -73,16 +74,16 @@ public class ServerHealthManagerTest {
   public void testFastestServerIsAlwaysReturned() throws IOException {
     ServerHealthManager manager = newServerHealthManager();
     for (int i = 0; i < SERVERS.size(); ++i) {
-      manager.reportPingLatency(SERVERS.get(i), NOW_MILLIS, i);
+      manager.reportPingLatency(SERVERS.get(i), i);
     }
 
-    URI server = manager.getBestServer(NOW_MILLIS);
+    URI server = manager.getBestServer();
     Assert.assertEquals(SERVERS.get(0), server);
   }
 
   private void reportLatencyToAll(ServerHealthManager manager, int latencyMillis) {
     for (URI server : SERVERS) {
-      manager.reportPingLatency(server, NOW_MILLIS, latencyMillis);
+      manager.reportPingLatency(server, latencyMillis);
     }
   }
 
@@ -93,13 +94,14 @@ public class ServerHealthManagerTest {
         MAX_ERROR_PERCENTAGE,
         RANGE_MILLIS,
         MAX_ACCEPTABLE_LATENCY_MILLIS,
-        eventBus);
+        eventBus,
+        new FakeClock(NOW_MILLIS));
   }
 
   private static void reportErrorToAll(ServerHealthManager manager, int numberOfErrors) {
     for (int i = 0; i < numberOfErrors; ++i) {
       for (URI server : SERVERS) {
-        manager.reportRequestError(server, NOW_MILLIS);
+        manager.reportRequestError(server);
       }
     }
   }
