@@ -45,7 +45,7 @@ buck install //:exotest | cat
 adb logcat -c
 adb shell am start -n buck.exotest/exotest.LogActivity
 sleep 1
-adb logcat -d adb logcat '*:S' EXOPACKAGE_TEST:V > out1.txt
+adb logcat -d '*:S' EXOPACKAGE_TEST:V > out1.txt
 
 # Check for values in the logs.
 grep 'VALUE=1a' out1.txt
@@ -59,7 +59,7 @@ buck install //:exotest | cat
 adb logcat -c
 adb shell am start -n buck.exotest/exotest.LogActivity
 sleep 1
-adb logcat -d adb logcat '*:S' EXOPACKAGE_TEST:V > out2.txt
+adb logcat -d '*:S' EXOPACKAGE_TEST:V > out2.txt
 
 # Check for the new values in the logs.
 grep 'VALUE=2b' out2.txt
@@ -71,7 +71,7 @@ buck install //:exotest | cat
 adb logcat -c
 adb shell am start -n buck.exotest/exotest.LogActivity
 sleep 1
-adb logcat -d adb logcat '*:S' EXOPACKAGE_TEST:V > out3.txt
+adb logcat -d '*:S' EXOPACKAGE_TEST:V > out3.txt
 
 # Check for the new values in the logs.
 grep 'NATIVE_ONE=one_3c' out3.txt
@@ -85,7 +85,7 @@ buck install //:exotest | cat
 adb logcat -c
 adb shell am start -n buck.exotest/exotest.LogActivity
 sleep 1
-adb logcat -d adb logcat '*:S' EXOPACKAGE_TEST:V > out4.txt
+adb logcat -d '*:S' EXOPACKAGE_TEST:V > out4.txt
 
 # Check for the new values in the logs.
 grep 'VALUE=4d' out4.txt
@@ -100,7 +100,7 @@ buck install //:exotest-noexo | cat
 adb logcat -c
 adb shell am start -n buck.exotest/exotest.LogActivity
 sleep 1
-adb logcat -d adb logcat '*:S' EXOPACKAGE_TEST:V > out5.txt
+adb logcat -d '*:S' EXOPACKAGE_TEST:V > out5.txt
 
 # Check for the new values in the logs.
 grep 'VALUE=5e' out5.txt
