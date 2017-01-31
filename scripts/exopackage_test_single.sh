@@ -28,7 +28,7 @@ cd `git rev-parse --show-cdup`
 TMP_DIR=`mktemp -d /tmp/exopackage-text.XXXXXX`
 trap "rm -rf $TMP_DIR" EXIT HUP INT TERM
 cp -r test/com/facebook/buck/android/testdata/exopackage-device/* $TMP_DIR
-cp buck-out/gen/src/com/facebook/buck/android/support/buck-android-support.jar $TMP_DIR
+buck build --out $TMP_DIR/buck-android-support.jar buck-android-support
 cd $TMP_DIR
 touch .buckconfig
 export NO_BUCKD=1
