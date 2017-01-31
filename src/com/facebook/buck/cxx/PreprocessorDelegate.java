@@ -51,6 +51,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
   // Fields that are added to rule key as is.
   private final Preprocessor preprocessor;
   private final RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction;
+  private final HeaderVerification headerVerification;
 
   // Fields that added to the rule key with some processing.
   private final PreprocessorFlags preprocessorFlags;
@@ -59,7 +60,6 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
   private final DebugPathSanitizer sanitizer;
   private final Path workingDir;
   private final SourcePathResolver resolver;
-  private final HeaderVerification headerVerification;
   private final Optional<SymlinkTree> sandbox;
 
   /**
