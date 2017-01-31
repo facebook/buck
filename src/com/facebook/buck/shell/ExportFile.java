@@ -31,7 +31,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -99,8 +98,8 @@ public class ExportFile extends AbstractBuildRuleWithResolver
   }
 
   @VisibleForTesting
-  ImmutableCollection<Path> getSource() {
-    return getResolver().filterInputsToCompareToOutput(src);
+  SourcePath getSource() {
+    return src;
   }
 
   private Path getCopiedPath() {
@@ -113,6 +112,7 @@ public class ExportFile extends AbstractBuildRuleWithResolver
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
+    SourcePathResolver resolver = context.getSourcePathResolver();
 
     // This file is copied rather than symlinked so that when it is included in an archive zip and
     // unpacked on another machine, it is an ordinary file in both scenarios.
@@ -125,18 +125,18 @@ public class ExportFile extends AbstractBuildRuleWithResolver
           out,
           RmStep.Mode.FORCED,
           RmStep.Mode.RECURSIVE));
-      if (getResolver().getFilesystem(src).isDirectory(getResolver().getRelativePath(src))) {
+      if (resolver.getFilesystem(src).isDirectory(resolver.getRelativePath(src))) {
         builder.add(
             CopyStep.forDirectory(
                 getProjectFilesystem(),
-                getResolver().getAbsolutePath(src),
+                resolver.getAbsolutePath(src),
                 out,
                 CopyStep.DirectoryMode.CONTENTS_ONLY));
       } else {
         builder.add(
             CopyStep.forFile(
                 getProjectFilesystem(),
-                getResolver().getAbsolutePath(src),
+                resolver.getAbsolutePath(src),
                 out));
       }
       buildableContext.recordArtifact(out);

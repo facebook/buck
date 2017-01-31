@@ -20,12 +20,10 @@ import static java.util.Collections.singleton;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -48,7 +46,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -64,7 +61,6 @@ import java.util.List;
 public class ExportFileTest {
 
   private ProjectFilesystem projectFilesystem;
-  private BuildContext context;
   private BuildTarget target;
 
   @Rule
@@ -74,17 +70,22 @@ public class ExportFileTest {
   public void createFixtures() {
     projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     target = BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:example.html");
-    context = FakeBuildContext.NOOP_CONTEXT;
   }
 
   @Test
   public void shouldSetSrcAndOutToNameParameterIfNeitherAreSet() throws Exception {
+    BuildRuleResolver resolver = new BuildRuleResolver(
+        TargetGraph.EMPTY,
+        new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     ExportFile exportFile = (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
         .build(
-            new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
+            resolver,
             projectFilesystem);
 
-    List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
+    List<Step> steps = exportFile.getBuildSteps(
+        FakeBuildContext.withSourcePathResolver(pathResolver),
+        new FakeBuildableContext());
 
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
@@ -102,13 +103,17 @@ public class ExportFileTest {
 
   @Test
   public void shouldSetOutToNameParamValueIfSrcIsSet() throws Exception {
+    BuildRuleResolver resolver = new BuildRuleResolver(
+        TargetGraph.EMPTY,
+        new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     ExportFile exportFile = (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
         .setOut("fish")
-        .build(
-            new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
-            projectFilesystem);
+        .build(resolver, projectFilesystem);
 
-    List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
+    List<Step> steps = exportFile.getBuildSteps(
+        FakeBuildContext.withSourcePathResolver(pathResolver),
+        new FakeBuildableContext());
 
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
@@ -126,14 +131,20 @@ public class ExportFileTest {
 
   @Test
   public void shouldSetOutAndSrcAndNameParametersSeparately() throws Exception {
+    BuildRuleResolver resolver = new BuildRuleResolver(
+        TargetGraph.EMPTY,
+        new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     ExportFile exportFile = (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
         .setSrc(new PathSourcePath(projectFilesystem, Paths.get("chips")))
         .setOut("fish")
         .build(
-            new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
+            resolver,
             projectFilesystem);
 
-    List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
+    List<Step> steps = exportFile.getBuildSteps(
+        FakeBuildContext.withSourcePathResolver(pathResolver),
+        new FakeBuildableContext());
 
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
@@ -155,35 +166,50 @@ public class ExportFileTest {
         .setSrc(new FakeSourcePath("chips"))
         .setOut("cake");
 
+    BuildRuleResolver resolver = new BuildRuleResolver(
+        TargetGraph.EMPTY,
+        new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+
     ExportFile exportFile = (ExportFile) builder
         .build(
-            new BuildRuleResolver(
-                TargetGraph.EMPTY,
-                new DefaultTargetNodeToBuildRuleTransformer()),
+            resolver,
             projectFilesystem);
 
-    assertIterablesEquals(singleton(Paths.get("chips")), exportFile.getSource());
+    assertIterablesEquals(
+        singleton(Paths.get("chips")),
+        pathResolver.filterInputsToCompareToOutput(exportFile.getSource()));
 
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    resolver = new BuildRuleResolver(
+        TargetGraph.EMPTY,
+        new DefaultTargetNodeToBuildRuleTransformer());
+    pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+
     FakeBuildRule rule =
-        ruleResolver.addToIndex(
+        resolver.addToIndex(
             new FakeBuildRule(
                 BuildTargetFactory.newInstance("//example:one"),
-                new SourcePathResolver(new SourcePathRuleFinder(ruleResolver))));
+                pathResolver));
 
     builder.setSrc(new BuildTargetSourcePath(rule.getBuildTarget()));
-    exportFile = (ExportFile) builder.build(ruleResolver, projectFilesystem);
-    assertTrue(Iterables.isEmpty(exportFile.getSource()));
+    exportFile = (ExportFile) builder.build(resolver, projectFilesystem);
+    assertThat(
+        pathResolver.filterInputsToCompareToOutput(exportFile.getSource()),
+        Matchers.empty());
+
+    resolver = new BuildRuleResolver(
+        TargetGraph.EMPTY,
+        new DefaultTargetNodeToBuildRuleTransformer());
+    pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
 
     builder.setSrc(null);
     exportFile =
         (ExportFile) builder.build(
-            new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
+            resolver,
             projectFilesystem);
     assertIterablesEquals(
         singleton(projectFilesystem.getPath("example.html")),
-        exportFile.getSource());
+        pathResolver.filterInputsToCompareToOutput(exportFile.getSource()));
   }
 
   @Test
