@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -36,13 +37,18 @@ import java.nio.file.Path;
 
 public class GenerateManifestStepTest {
 
+  private static final String CREATE_MANIFEST = "create_manifest";
+
   private Path skeletonPath;
   private Path manifestPath;
+  private ProjectFilesystem filesystem;
+
 
   @Before
   public void setUp() {
     manifestPath = testDataPath("AndroidManifest.xml");
     skeletonPath = testDataPath("AndroidManifestSkeleton.xml");
+    filesystem = testFileSystem();
   }
 
   @After
@@ -63,8 +69,9 @@ public class GenerateManifestStepTest {
 
     ExecutionContext context = TestExecutionContext.newInstance();
 
+
     GenerateManifestStep manifestCommand = new GenerateManifestStep(
-        new FakeProjectFilesystem(),
+        filesystem,
         skeletonPath,
         libraryManifestFiles.build(),
         manifestPath);
@@ -73,14 +80,19 @@ public class GenerateManifestStepTest {
     assertEquals(0, result);
 
     String expected = Files.toString(new File(expectedOutputPath), Charsets.UTF_8);
-    String output = Files.toString(manifestPath.toFile(), Charsets.UTF_8);
+    String output = filesystem.readFileIfItExists(manifestPath).get();
 
     assertEquals(expected.replace("\r\n", "\n"), output.replace("\r\n", "\n"));
   }
 
   private Path testDataPath(String fileName) {
-    Path testData = TestDataHelper.getTestDataDirectory(this).resolve("create_manifest");
+    Path testData = TestDataHelper.getTestDataDirectory(this).resolve(CREATE_MANIFEST);
 
     return testData.resolve(fileName);
+  }
+
+  private FakeProjectFilesystem testFileSystem() {
+    return new FakeProjectFilesystem(TestDataHelper.getTestDataDirectory(this).resolve(
+        CREATE_MANIFEST));
   }
 }

@@ -1,23 +1,49 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="1" android:versionName="1.0" package="com.sample.android">
-    <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="10"/>
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.sample.android"
+    android:versionCode="1"
+    android:versionName="1.0" >
 
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-sdk
+        android:minSdkVersion="8"
+        android:targetSdkVersion="10" />
 
-    <application android:hardwareAccelerated="true" android:icon="@drawable/ic_launcher" android:label="@string/app_name" android:name="com.sample.android.SampleApplication" android:theme="@android:style/Theme.NoTitleBar">
-        <provider android:authorities="com.sample.provider.SamplePrefsProvider" android:name="com.sample.prefs.SamplePreferencesContentProvider"/>
-        <service android:name="com.sample.util.service.SampleService"/>
-        <activity android:name="com.sample.home.prefs.SampleRendererSettingsActivity"/>
-        <service android:name="com.sample.home.service.SampleHomeService"/>
-        <activity android:name="com.sample.simple.activity.SimpleActivity">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+    <application
+        android:name="com.sample.android.SampleApplication"
+        android:hardwareAccelerated="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@android:style/Theme.NoTitleBar" >
+        <provider
+            android:name="com.sample.prefs.SamplePreferencesContentProvider"
+            android:authorities="com.sample.provider.SamplePrefsProvider" />
+
+        <activity
+            android:name="com.sample.simple.activity.SimpleActivity"
+            android:label="Simple" >
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:configChanges="keyboard|keyboardHidden|screenLayout|orientation" android:launchMode="singleTop" android:name="com.sample.simple.activity.SimpleFragmentActivity" android:windowSoftInputMode="adjustResize"/>
-        <activity android:name="com.sample.simple.activity.AlertActivity"/>
+
+        <service android:name="com.sample.util.service.SampleService" />
+
+        <activity android:name="com.sample.home.prefs.SampleRendererSettingsActivity" />
+
+        <service android:name="com.sample.home.service.SampleHomeService" />
+
+        <activity
+            android:name="com.sample.simple.activity.SimpleFragmentActivity"
+            android:configChanges="keyboard|keyboardHidden|screenLayout|orientation"
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="adjustResize" />
+        <activity android:name="com.sample.simple.activity.AlertActivity" />
     </application>
 
 </manifest>
