@@ -26,8 +26,8 @@
  * coding style.
  * </p>
  * <p>
- * NOTE: This feature is a work in progress. As implementation proceeds, information about the
- * various assumptions being made will be added here.
+ * See {@link com.facebook.buck.jvm.java.abi.source.InterfaceValidator} for more information
+ * on the restrictions.
  * </p>
  */
 package com.facebook.buck.jvm.java.abi.source;

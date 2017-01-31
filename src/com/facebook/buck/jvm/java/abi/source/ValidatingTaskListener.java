@@ -20,17 +20,13 @@ import com.facebook.buck.jvm.java.abi.source.api.BootClasspathOracle;
 import com.facebook.buck.util.exportedfiles.Nullable;
 import com.facebook.buck.util.exportedfiles.Preconditions;
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.ExpressionTree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
-import com.sun.source.util.Trees;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
 import javax.tools.Diagnostic;
 import javax.tools.JavaCompiler;
 
@@ -39,18 +35,16 @@ import javax.tools.JavaCompiler;
  * source-based ABI generation.
  */
 public class ValidatingTaskListener
-    implements TaskListener, ExpressionTreeResolutionValidator.Listener {
+    implements TaskListener {
   private final JavacTask javacTask;
   private final List<CompilationUnitTree> compilationUnits = new ArrayList<>();
   private final BootClasspathOracle bootClasspathOracle;
   private final Diagnostic.Kind messageKind;
+
   @Nullable
-  private Trees trees;
-  @Nullable
-  private FrontendOnlyJavacTask frontendTask;
-  @Nullable
-  private ExpressionTreeResolutionValidator validator;
+  private InterfaceValidator validator;
   private int enterDepth = 0;
+  private boolean annotationProcessing = false;
 
   public ValidatingTaskListener(
       JavaCompiler.CompilationTask task,
@@ -61,16 +55,13 @@ public class ValidatingTaskListener
     this.messageKind = messageKind;
   }
 
-  private void ensureInitialized() {
+  private InterfaceValidator getValidator() {
     // We can't do this on construction, because the Task might not be fully initialized yet
-    if (trees == null) {
-      frontendTask = new FrontendOnlyJavacTask(javacTask);
-      trees = frontendTask.getTrees();
-      validator = new ExpressionTreeResolutionValidator(javacTask, frontendTask);
-
-      // This is just to keep the linter happy; this will be used in the next commit
-      Preconditions.checkNotNull(bootClasspathOracle);
+    if (validator == null) {
+      validator = new InterfaceValidator(messageKind, javacTask, bootClasspathOracle);
     }
+
+    return Preconditions.checkNotNull(validator);
   }
 
   @Override
@@ -79,49 +70,27 @@ public class ValidatingTaskListener
 
     if (kind == TaskEvent.Kind.ENTER) {
       enterDepth += 1;
+    } else if (kind == TaskEvent.Kind.ANNOTATION_PROCESSING) {
+      annotationProcessing = true;
     }
   }
 
   @Override
   public void finished(TaskEvent e) {
-    ensureInitialized();
-
     final TaskEvent.Kind kind = e.getKind();
     if (kind == TaskEvent.Kind.PARSE) {
       final CompilationUnitTree compilationUnit = e.getCompilationUnit();
-      Preconditions.checkNotNull(frontendTask).enterTree(compilationUnit);
       compilationUnits.add(compilationUnit);
     } else if (kind == TaskEvent.Kind.ENTER) {
-      // We wait until we've received all enter events so that the validation time shows up
-      // separately from compiler enter time in the traces
       enterDepth -= 1;
-      if (enterDepth == 0) {
-        compilationUnits.forEach(compilationUnit -> Preconditions.checkNotNull(validator).validate(
-            compilationUnit,
-            this));
+      // We wait until we've received all enter events so that the validation time shows up
+      // separately from compiler enter time in the traces. We wait until after annotation
+      // processing so we catch all the types.
+      if (!annotationProcessing && enterDepth == 0) {
+        getValidator().validate(compilationUnits);
       }
+    } else if (kind == TaskEvent.Kind.ANNOTATION_PROCESSING) {
+      annotationProcessing = false;
     }
-  }
-
-  @Override
-  public void onIncorrectTypeResolution(
-      CompilationUnitTree file,
-      ExpressionTree tree,
-      DeclaredType guessedType,
-      DeclaredType actualType) {
-    TypeElement guessedTypeElement = ((TypeElement) guessedType.asElement());
-    TypeElement actualTypeElement = ((TypeElement) actualType.asElement());
-
-    Preconditions.checkNotNull(trees).printMessage(
-        messageKind,
-        String.format(
-            "Source-based ABI generator could not guess the meaning of this name.\n" +
-                "   ABI generator guessed: %s\n" +
-                "   But the correct answer was: %s\n" +
-                "Please qualify the name so that the ABI generator can guess correctly.\n",
-            guessedTypeElement.getQualifiedName(),
-            actualTypeElement.getQualifiedName()),
-        tree,
-        file);
   }
 }
