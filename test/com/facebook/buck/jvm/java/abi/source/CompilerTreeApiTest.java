@@ -84,7 +84,9 @@ public abstract class CompilerTreeApiTest {
   @Rule
   public TemporaryFolder tempFolder = new TemporaryFolder();
   @Rule
-  public TemporaryFolder classpathFolder = new TemporaryFolder();
+  public TemporaryFolder classpathSourceFolder = new TemporaryFolder();
+  @Rule
+  public TemporaryFolder classpathClassFolder = new TemporaryFolder();
   protected StandardJavaFileManager fileManager;
   protected JavacTask javacTask;
   protected DiagnosticCollector<JavaFileObject> diagnostics;
@@ -108,7 +110,7 @@ public abstract class CompilerTreeApiTest {
     fileManager = compiler.getStandardFileManager(null, null, null);
     diagnostics = new DiagnosticCollector<>();
     Iterable<String> options =
-        Arrays.asList(new String[]{"-cp", classpathFolder.getRoot().toString()});
+        Arrays.asList(new String[]{"-cp", classpathClassFolder.getRoot().toString()});
     Iterable<? extends JavaFileObject> sourceObjects =
         getJavaFileObjects(fileNamesToContents, tempFolder);
 
@@ -185,11 +187,13 @@ public abstract class CompilerTreeApiTest {
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
     fileManager = compiler.getStandardFileManager(null, null, null);
+    Iterable<String> options =
+        Arrays.asList(new String[]{"-d", classpathClassFolder.getRoot().toString()});
     Iterable<? extends JavaFileObject> sourceObjects =
-        getJavaFileObjects(fileNamesToContents, classpathFolder);
+        getJavaFileObjects(fileNamesToContents, classpathSourceFolder);
     diagnostics = new DiagnosticCollector<>();
 
-    compiler.getTask(null, fileManager, diagnostics, null, null, sourceObjects).call();
+    compiler.getTask(null, fileManager, diagnostics, options, null, sourceObjects).call();
     assertThat(diagnostics.getDiagnostics(), Matchers.empty());
   }
 
