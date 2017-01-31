@@ -5,6 +5,7 @@
     source_level = 8
     target_level = 8
     jar_spool_mode = direct_to_jar
+    abi_generation_mode = migrating_to_source
 [alias]
     buck = //programs:buck
     buck-android-support = //src/com/facebook/buck/android/support:buck-android-support
