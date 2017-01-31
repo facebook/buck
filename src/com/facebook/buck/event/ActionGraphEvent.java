@@ -108,8 +108,8 @@ public abstract class ActionGraphEvent
       return new Hit();
     }
 
-    public static Miss miss() {
-      return new Miss();
+    public static Miss miss(boolean cacheWasEmpty) {
+      return new Miss(cacheWasEmpty);
     }
 
     public static class Hit extends Cache {
@@ -119,8 +119,10 @@ public abstract class ActionGraphEvent
     }
 
     public static class Miss extends Cache {
-      public Miss() {
+      public final boolean cacheWasEmpty;
+      public Miss(boolean cacheWasEmpty) {
         super("ActionGraphCacheMiss");
+        this.cacheWasEmpty = cacheWasEmpty;
       }
     }
 

@@ -460,6 +460,26 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   }
 
   @Subscribe
+  public void actionGraphCacheHit(ActionGraphEvent.Cache.Hit hit) {
+    writeChromeTraceEvent(
+        "buck",
+        "action_graph_cache",
+        ChromeTraceEvent.Phase.IMMEDIATE,
+        ImmutableMap.of("hit", "true"),
+        hit);
+  }
+
+  @Subscribe
+  public void actionGraphCacheMiss(ActionGraphEvent.Cache.Miss miss) {
+    writeChromeTraceEvent(
+        "buck",
+        "action_graph_cache",
+        ChromeTraceEvent.Phase.IMMEDIATE,
+        ImmutableMap.of("hit", "false", "cacheWasEmpty", String.valueOf(miss.cacheWasEmpty)),
+        miss);
+  }
+
+  @Subscribe
   public void installStarted(InstallEvent.Started started) {
     writeChromeTraceEvent("buck",
         "install",

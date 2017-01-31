@@ -2063,7 +2063,7 @@ public class SuperConsoleEventBusListenerTest {
     // new daemon instance & action graph cache miss
     eventBus.post(DaemonEvent.newDaemonInstance());
     assertEquals(NEW_DAEMON_INSTANCE_MSG, listener.getParsingStatus());
-    eventBus.post(ActionGraphEvent.Cache.miss());
+    eventBus.post(ActionGraphEvent.Cache.miss(/* cacheWasEmpty */ true));
     assertEquals(NEW_DAEMON_INSTANCE_MSG, listener.getParsingStatus());
 
     // overflow scenario

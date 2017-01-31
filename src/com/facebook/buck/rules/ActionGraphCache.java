@@ -79,7 +79,7 @@ public class ActionGraphCache {
           compareActionGraphs(eventBus, lastActionGraph.getSecond(), targetGraph, keySeed);
         }
       } else {
-        eventBus.post(ActionGraphEvent.Cache.miss());
+        eventBus.post(ActionGraphEvent.Cache.miss(lastActionGraph == null));
         if (lastActionGraph == null) {
           LOG.info("ActionGraph cache miss. Cache was empty.");
         } else {

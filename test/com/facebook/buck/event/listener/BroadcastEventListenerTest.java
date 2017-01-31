@@ -74,7 +74,7 @@ public class BroadcastEventListenerTest {
     listener.addEventBus(bus1);
     listener.addEventBus(bus2);
     listener.broadcast(ActionGraphEvent.Cache.hit());
-    listener.broadcast(ActionGraphEvent.Cache.miss());
+    listener.broadcast(ActionGraphEvent.Cache.miss(/* cacheWasEmpty */ false));
 
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 2);
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 1);
