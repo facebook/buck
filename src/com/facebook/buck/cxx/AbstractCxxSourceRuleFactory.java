@@ -436,7 +436,6 @@ abstract class AbstractCxxSourceRuleFactory {
             target,
             Suppliers.ofInstance(depsBuilder.build()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
-        getPathResolver(),
         ppFlags,
         cFlags,
         source.getPath(),

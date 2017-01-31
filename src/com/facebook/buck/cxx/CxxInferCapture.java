@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -47,7 +46,7 @@ import java.util.function.Predicate;
  * Generate the CFG for a source file
  */
 public class CxxInferCapture
-    extends AbstractBuildRuleWithResolver
+    extends AbstractBuildRule
     implements RuleKeyAppendable, SupportsDependencyFileRuleKey {
 
   @AddToRuleKey
@@ -67,7 +66,6 @@ public class CxxInferCapture
 
   CxxInferCapture(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver pathResolver,
       CxxToolFlags preprocessorFlags,
       CxxToolFlags compilerFlags,
       SourcePath input,
@@ -76,7 +74,7 @@ public class CxxInferCapture
       PreprocessorDelegate preprocessorDelegate,
       InferBuckConfig inferConfig,
       DebugPathSanitizer sanitizer) {
-    super(buildRuleParams, pathResolver);
+    super(buildRuleParams);
     this.preprocessorFlags = preprocessorFlags;
     this.compilerFlags = compilerFlags;
     this.input = input;

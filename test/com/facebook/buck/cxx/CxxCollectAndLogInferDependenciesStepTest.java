@@ -103,7 +103,6 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     return new CxxInferCapture(
         buildRuleParams,
-        sourcePathResolver,
         CxxToolFlags.of(),
         CxxToolFlags.of(),
         new FakeSourcePath("src.c"),
