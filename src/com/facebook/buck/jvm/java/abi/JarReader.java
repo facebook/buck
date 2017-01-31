@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
 /**
  * A {@link LibraryReader} that reads from a jar file.
  */
-class JarReader implements LibraryReader {
+class JarReader implements LibraryReader<InputStream> {
   private final Path jarPath;
   @Nullable
   FileSystem fileSystem;

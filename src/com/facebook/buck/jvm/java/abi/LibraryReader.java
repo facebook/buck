@@ -24,9 +24,10 @@ import java.util.List;
 
 /**
  * An interface for reading and listing resources and classes in a library.
+ * @param <UnstubbedClass> the type used to work with the unstubbed class
  */
-interface LibraryReader extends AutoCloseable {
-  static LibraryReader of(Path path) {
+interface LibraryReader<UnstubbedClass> extends AutoCloseable {
+  static LibraryReader<InputStream> of(Path path) {
     if (Files.isDirectory(path)) {
       return new DirectoryReader(path);
     } else {
@@ -38,7 +39,7 @@ interface LibraryReader extends AutoCloseable {
 
   InputStream openResourceFile(Path relativePath) throws IOException;
 
-  InputStream openClass(Path relativePath) throws IOException;
+  UnstubbedClass openClass(Path relativePath) throws IOException;
 
   @Override
   void close() throws IOException;

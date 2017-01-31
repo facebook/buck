@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 /**
  * A {@link LibraryReader} that reads from a directory (recursively).
  */
-class DirectoryReader implements LibraryReader {
+class DirectoryReader implements LibraryReader<InputStream> {
   private final Path root;
 
   public DirectoryReader(Path root) {
