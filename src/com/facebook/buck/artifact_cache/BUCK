@@ -22,6 +22,10 @@ java_immutables_library(
   tests = [
     '//test/com/facebook/buck/artifact_cache:artifact_cache',
   ],
+  deps = [
+      "//third-party/java/okhttp:okhttp",
+      "//third-party/java/okio:okio"
+  ],
   autodeps = True,
   visibility = [
     'PUBLIC',
