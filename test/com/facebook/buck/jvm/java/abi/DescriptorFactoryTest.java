@@ -27,10 +27,6 @@ import org.junit.runner.RunWith;
 
 import java.io.IOException;
 
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 
 @RunWith(CompilerTreeApiTestRunner.class)
@@ -183,18 +179,5 @@ public class DescriptorFactoryTest extends CompilerTreeApiTest {
     assertEquals(
         "Ljava/lang/CharSequence;",
         descriptorFactory.getDescriptor(elements.getTypeElement("Foo").getTypeParameters().get(0)));
-  }
-
-  private ExecutableElement findMethod(String name, TypeElement typeElement) {
-    for (Element element : typeElement.getEnclosedElements()) {
-      if (element.getKind() == ElementKind.METHOD && element.getSimpleName().contentEquals(name)) {
-        return (ExecutableElement) element;
-      }
-    }
-
-    throw new IllegalArgumentException(String.format(
-        "No such method in %s: %s",
-        typeElement.getQualifiedName(),
-        name));
   }
 }

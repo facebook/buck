@@ -42,8 +42,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.Elements;
@@ -204,6 +209,32 @@ public abstract class CompilerTreeApiTest {
     TypeVariable typeVariable = (TypeVariable) typeParameter.asType();
 
     return typeVariable.getUpperBound();
+  }
+
+  protected ExecutableElement findMethod(String name, TypeElement typeElement) {
+    for (Element element : typeElement.getEnclosedElements()) {
+      if (element.getKind() == ElementKind.METHOD && element.getSimpleName().contentEquals(name)) {
+        return (ExecutableElement) element;
+      }
+    }
+
+    throw new IllegalArgumentException(String.format(
+        "No such method in %s: %s",
+        typeElement.getQualifiedName(),
+        name));
+  }
+
+  protected VariableElement findField(String name, TypeElement typeElement) {
+    for (Element element : typeElement.getEnclosedElements()) {
+      if (element.getKind().isField() && element.getSimpleName().contentEquals(name)) {
+        return (VariableElement) element;
+      }
+    }
+
+    throw new IllegalArgumentException(String.format(
+        "No such field in %s: %s",
+        typeElement.getQualifiedName(),
+        name));
   }
 
   protected void assertNameEquals(String expected, Name actual) {
