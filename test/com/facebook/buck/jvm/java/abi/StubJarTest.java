@@ -564,8 +564,6 @@ public class StubJarTest {
 
   @Test
   public void preservesAnnotationPrimitiveDefaultValues() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createAnnotationFullAndStubJars();
 
     AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/Foo.class");
@@ -576,8 +574,6 @@ public class StubJarTest {
 
   @Test
   public void preservesAnnotationArrayDefaultValues() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createAnnotationFullAndStubJars();
 
     AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/Foo.class");
@@ -588,8 +584,6 @@ public class StubJarTest {
 
   @Test
   public void preservesAnnotationAnnotationDefaultValues() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createAnnotationFullAndStubJars();
 
     AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/Foo.class");
@@ -608,8 +602,6 @@ public class StubJarTest {
 
   @Test
   public void preservesAnnotationEnumDefaultValues() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createAnnotationFullAndStubJars();
 
     AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/Foo.class");

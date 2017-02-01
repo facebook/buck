@@ -98,6 +98,7 @@ class ClassVisitorDriverFromElement {
               exceptions);
 
           visitParameters(e.getParameters(), methodVisitor);
+          visitDefaultValue(e, methodVisitor);
           visitAnnotations(e.getAnnotationMirrors(), methodVisitor::visitAnnotation);
           methodVisitor.visitEnd();
 
@@ -124,6 +125,17 @@ class ClassVisitorDriverFromElement {
                       isRuntimeVisible(annotationMirror)));
             }
           }
+        }
+
+        private void visitDefaultValue(ExecutableElement e, MethodVisitor methodVisitor) {
+          AnnotationValue defaultValue = e.getDefaultValue();
+          if (defaultValue == null) {
+            return;
+          }
+
+          AnnotationVisitor annotationVisitor = methodVisitor.visitAnnotationDefault();
+          visitAnnotationValue(null, defaultValue.getValue(), annotationVisitor);
+          annotationVisitor.visitEnd();
         }
 
         @Override
