@@ -186,8 +186,6 @@ public class StubJarTest {
 
   @Test
   public void shouldIgnorePrivateMethods() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",

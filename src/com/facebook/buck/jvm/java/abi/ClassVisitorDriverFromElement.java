@@ -26,6 +26,7 @@ import java.io.IOException;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.ElementScanner8;
@@ -65,7 +66,9 @@ class ClassVisitorDriverFromElement {
 
         @Override
         public Void visitExecutable(ExecutableElement e, ClassVisitor visitor) {
-          // TODO(jkeljo): Skip privates for efficiency (ClassMirror already skips them too)
+          if (e.getModifiers().contains(Modifier.PRIVATE)) {
+            return null;
+          }
 
           String[] exceptions = null;  // TODO(jkeljo): Handle throws
 
@@ -87,7 +90,9 @@ class ClassVisitorDriverFromElement {
 
         @Override
         public Void visitVariable(VariableElement e, ClassVisitor classVisitor) {
-          // TODO(jkeljo): Skip privates for efficiency (ClassMirror already skips them too)
+          if (e.getModifiers().contains(Modifier.PRIVATE)) {
+            return null;
+          }
 
           FieldVisitor fieldVisitor = classVisitor.visitField(
               AccessFlags.getAccessFlags(e),
