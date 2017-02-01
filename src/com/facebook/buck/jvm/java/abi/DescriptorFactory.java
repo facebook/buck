@@ -89,7 +89,7 @@ class DescriptorFactory {
     }, null));
   }
 
-  private Type getType(TypeMirror typeMirror) {
+  public Type getType(TypeMirror typeMirror) {
     return Preconditions.checkNotNull(typeMirror.accept(new SimpleTypeVisitor8<Type, Void>() {
       @Override
       protected Type defaultAction(TypeMirror t, Void aVoid) {

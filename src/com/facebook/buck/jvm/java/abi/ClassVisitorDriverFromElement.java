@@ -39,6 +39,8 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementScanner8;
 import javax.lang.model.util.Elements;
 
@@ -46,6 +48,7 @@ class ClassVisitorDriverFromElement {
   private final DescriptorFactory descriptorFactory;
   private final SignatureFactory signatureFactory;
   private final SourceVersion targetVersion;
+  private final Elements elements;
 
   private final ElementVisitor<Void, ClassVisitor> elementVisitorAdapter =
       new ElementScanner8<Void, ClassVisitor>() {
@@ -56,12 +59,16 @@ class ClassVisitorDriverFromElement {
           // TODO(jkeljo): Skip anonymous and local
           // TODO(jkeljo): inner class
 
+          TypeMirror superclass = e.getSuperclass();
+          if (superclass.getKind() == TypeKind.NONE) {
+            superclass = elements.getTypeElement("java.lang.Object").asType();
+          }
           visitor.visit(
               sourceVersionToClassFileVersion(targetVersion),
               AccessFlags.getAccessFlags(e),
               descriptorFactory.getInternalName(e),
               signatureFactory.getSignature(e),
-              descriptorFactory.getInternalName(e.getSuperclass()),
+              descriptorFactory.getInternalName(superclass),
               e.getInterfaces().stream()
                   .map(descriptorFactory::getInternalName)
                   .toArray(size -> new String[size]));
@@ -126,10 +133,104 @@ class ClassVisitorDriverFromElement {
           AnnotationVisitor annotationVisitor = visitor.visitAnnotation(
               descriptorFactory.getDescriptor(annotation.getAnnotationType()),
               isRuntimeVisible(annotation));
-
-          // TODO(jkeljo): Values
-
+          visitAnnotationValues(annotation, annotationVisitor);
           annotationVisitor.visitEnd();
+        }
+
+        private void visitAnnotationValues(
+            AnnotationMirror annotation,
+            AnnotationVisitor annotationVisitor) {
+          visitAnnotationValues(annotation.getElementValues(), annotationVisitor);
+        }
+
+        private void visitAnnotationValues(
+            Map<? extends ExecutableElement, ? extends AnnotationValue> elementValues,
+            AnnotationVisitor visitor) {
+          elementValues.entrySet().forEach(entry -> visitAnnotationValue(
+              entry.getKey().getSimpleName().toString(),
+              entry.getValue().getValue(),
+              visitor));
+        }
+
+        private void visitAnnotationValue(
+            String name,
+            Object value,
+            AnnotationVisitor visitor) {
+
+          if (value instanceof Boolean ||
+              value instanceof Byte ||
+              value instanceof Character ||
+              value instanceof Short ||
+              value instanceof Integer ||
+              value instanceof Long ||
+              value instanceof Float ||
+              value instanceof Double ||
+              value instanceof String) {
+            visitAnnotationPrimitiveValue(name, value, visitor);
+          } else if (value instanceof TypeMirror) {
+            visitAnnotationTypeValue(name, (TypeMirror) value, visitor);
+          } else if (value instanceof VariableElement) {
+            visitAnnotationEnumValue(name, (VariableElement) value, visitor);
+          } else if (value instanceof AnnotationMirror) {
+            visitAnnotationAnnotationValue(name, (AnnotationMirror) value, visitor);
+          } else if (value instanceof List) {
+            @SuppressWarnings("unchecked")  // See docs for AnnotationValue
+            List<? extends AnnotationValue> listValue = (List<? extends AnnotationValue>) value;
+            visitAnnotationArrayValue(name, listValue, visitor);
+          } else {
+            throw new IllegalArgumentException(String.format(
+                "Unexpected annotaiton value type: %s",
+                value.getClass()));
+          }
+        }
+
+        private void visitAnnotationPrimitiveValue(
+            String name,
+            Object value,
+            AnnotationVisitor visitor) {
+          visitor.visit(name, value);
+        }
+
+        private void visitAnnotationTypeValue(
+            String name,
+            TypeMirror value,
+            AnnotationVisitor visitor) {
+          visitor.visit(name, descriptorFactory.getType(value));
+        }
+
+        private void visitAnnotationEnumValue(
+            String name,
+            VariableElement value,
+            AnnotationVisitor visitor) {
+          visitor.visitEnum(
+              name,
+              descriptorFactory.getDescriptor(value.getEnclosingElement()),
+              value.getSimpleName().toString());
+        }
+
+        private void visitAnnotationAnnotationValue(
+            String name,
+            AnnotationMirror value,
+            AnnotationVisitor visitor) {
+          AnnotationVisitor annotationValueVisitor = visitor.visitAnnotation(
+              name,
+              descriptorFactory.getDescriptor(value.getAnnotationType()));
+          visitAnnotationValues(
+              value,
+              annotationValueVisitor);
+          annotationValueVisitor.visitEnd();
+        }
+
+        private void visitAnnotationArrayValue(
+            String name,
+            List<? extends AnnotationValue> value,
+            AnnotationVisitor visitor) {
+          AnnotationVisitor arrayMemberVisitor = visitor.visitArray(name);
+          value.forEach(annotationValue -> visitAnnotationValue(
+              null,
+              annotationValue.getValue(),
+              arrayMemberVisitor));
+          arrayMemberVisitor.visitEnd();
         }
       };
 
@@ -139,6 +240,7 @@ class ClassVisitorDriverFromElement {
    */
   ClassVisitorDriverFromElement(SourceVersion targetVersion, Elements elements) {
     this.targetVersion = targetVersion;
+    this.elements = elements;
     descriptorFactory = new DescriptorFactory(elements);
     signatureFactory = new SignatureFactory(descriptorFactory);
   }

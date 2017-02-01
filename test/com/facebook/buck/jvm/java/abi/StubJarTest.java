@@ -379,7 +379,7 @@ public class StubJarTest {
 
   @Test
   public void preservesAnnotationsWithPrimitiveValues() throws IOException {
-    notYetImplementedForSource();
+    notYetImplementedForMissingClasspath();
 
     Path annotations = createAnnotationFullJar();
     JarPaths paths = createFullAndStubJars(
@@ -404,7 +404,7 @@ public class StubJarTest {
 
   @Test
   public void preservesAnnotationsWithStringArrayValues() throws IOException {
-    notYetImplementedForSource();
+    notYetImplementedForMissingClasspath();
 
     Path annotations = createAnnotationFullJar();
     JarPaths paths = createFullAndStubJars(
@@ -429,8 +429,6 @@ public class StubJarTest {
 
   @Test
   public void preservesAnnotationsWithEnumValues() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
@@ -459,8 +457,6 @@ public class StubJarTest {
 
   @Test
   public void preservesAnnotationsWithEnumArrayValues() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
@@ -490,7 +486,7 @@ public class StubJarTest {
 
   @Test
   public void preservesAnnotationsWithAnnotationValues() throws IOException {
-    notYetImplementedForSource();
+    notYetImplementedForMissingClasspath();
 
     Path annotations = createAnnotationFullJar();
     JarPaths paths = createFullAndStubJars(
@@ -527,7 +523,7 @@ public class StubJarTest {
 
   @Test
   public void preservesAnnotationsWithAnnotationArrayValues() throws IOException {
-    notYetImplementedForSource();
+    notYetImplementedForMissingClasspath();
 
     Path annotations = createAnnotationFullJar();
     JarPaths paths = createFullAndStubJars(
