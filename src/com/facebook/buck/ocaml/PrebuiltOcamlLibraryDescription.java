@@ -27,6 +27,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -37,8 +38,9 @@ import java.util.Optional;
 /**
  * Prebuilt OCaml library
  */
-public class PrebuiltOcamlLibraryDescription
-    implements Description<PrebuiltOcamlLibraryDescription.Arg> {
+public class PrebuiltOcamlLibraryDescription implements
+    Description<PrebuiltOcamlLibraryDescription.Arg>,
+    VersionPropagator<PrebuiltOcamlLibraryDescription.Arg> {
 
   @Override
   public Arg createUnpopulatedConstructorArg() {

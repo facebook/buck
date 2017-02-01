@@ -28,6 +28,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.OcamlSource;
+import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -36,7 +37,8 @@ import java.util.Optional;
 
 public class OcamlLibraryDescription implements
     Description<OcamlLibraryDescription.Arg>,
-    ImplicitDepsInferringDescription<OcamlLibraryDescription.Arg> {
+    ImplicitDepsInferringDescription<OcamlLibraryDescription.Arg>,
+    VersionPropagator<OcamlLibraryDescription.Arg> {
 
   private final OcamlBuckConfig ocamlBuckConfig;
 
