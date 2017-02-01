@@ -29,6 +29,11 @@ import org.junit.runner.RunWith;
 import java.io.IOException;
 import java.util.Map;
 
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+
 @RunWith(CompilerTreeApiTestRunner.class)
 public class SignatureFactoryTest extends CompilerTreeApiTest {
   private SignatureFactory signatureFactory;
@@ -221,11 +226,112 @@ public class SignatureFactoryTest extends CompilerTreeApiTest {
         signatureFactory.getSignature(elements.getTypeElement("com.facebook.foo.Foo.Baz")));
   }
 
+  @Test
+  public void testSignatureOfNonGenericMethodIsNull() throws IOException {
+    compile(Joiner.on('\n').join(
+        "package com.facebook.foo;",
+        "class Foo {",
+        "  void method(int i) throws Exception { }",
+        "}"));
+
+    assertNull(signatureFactory.getSignature(getMethod(
+        "method",
+        elements.getTypeElement("com.facebook.foo.Foo"))));
+  }
+
+  @Test
+  public void testSignatureOfBasicGenericMethod() throws IOException {
+    compile(Joiner.on('\n').join(
+        "package com.facebook.foo;",
+        "class Foo {",
+        "  <T> void method() { }",
+        "}"));
+
+    assertEquals(
+        "<T:Ljava/lang/Object;>()V",
+        signatureFactory.getSignature(getMethod(
+            "method",
+            elements.getTypeElement("com.facebook.foo.Foo"))));
+  }
+
+  @Test
+  public void testSignatureOfTypeVarThrowingMethod() throws IOException {
+    compile(Joiner.on('\n').join(
+        "package com.facebook.foo;",
+        "class Foo<T extends Exception> {",
+        "  void method() throws T, Exception { }",
+        "}"));
+
+    assertEquals(
+        "()V^TT;^Ljava/lang/Exception;",
+        signatureFactory.getSignature(getMethod(
+            "method",
+            elements.getTypeElement("com.facebook.foo.Foo"))));
+  }
+
+  @Test
+  public void testSignatureOfGenericMethodWithNonTypevarThrows() throws IOException {
+    compile(Joiner.on('\n').join(
+        "package com.facebook.foo;",
+        "class Foo {",
+        "  <T extends Exception> void method() throws Exception { }",
+        "}"));
+
+    // JVMS8 4.7.9.1 says that such signatures can omit the throws
+    assertEquals(
+        "<T:Ljava/lang/Exception;>()V",
+        signatureFactory.getSignature(getMethod(
+            "method",
+            elements.getTypeElement("com.facebook.foo.Foo"))));
+  }
+
+  @Test
+  public void testSignatureOfGenericReturningMethod() throws IOException {
+    compile(Joiner.on('\n').join(
+        "package com.facebook.foo;",
+        "import java.util.List;",
+        "class Foo {",
+        "  List<String> method() { return null; }",
+        "}"));
+
+    assertEquals(
+        "()Ljava/util/List<Ljava/lang/String;>;",
+        signatureFactory.getSignature(getMethod(
+            "method",
+            elements.getTypeElement("com.facebook.foo.Foo"))));
+  }
+
+  @Test
+  public void testSignatureOfGenericMethodWithParams() throws IOException {
+    compile(Joiner.on('\n').join(
+        "package com.facebook.foo;",
+        "import java.util.List;",
+        "class Foo {",
+        "  void method(List<String> a, int b) { }",
+        "}"));
+
+    assertEquals(
+        "(Ljava/util/List<Ljava/lang/String;>;I)V",
+        signatureFactory.getSignature(getMethod(
+            "method",
+            elements.getTypeElement("com.facebook.foo.Foo"))));
+  }
+
   @Override
   protected CompilerTreeApiFactory initCompiler(
       Map<String, String> fileNamesToContents) throws IOException {
     CompilerTreeApiFactory result = super.initCompiler(fileNamesToContents);
     signatureFactory = new SignatureFactory(new DescriptorFactory(elements));
     return result;
+  }
+
+  private ExecutableElement getMethod(String name, TypeElement type) {
+    for (Element element : type.getEnclosedElements()) {
+      if (element.getKind() == ElementKind.METHOD && element.getSimpleName().contentEquals(name)) {
+        return (ExecutableElement) element;
+      }
+    }
+
+    throw new IllegalArgumentException(String.format("No such method in %s: %s", type, name));
   }
 }

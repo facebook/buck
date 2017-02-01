@@ -26,8 +26,10 @@ import java.util.List;
 import javax.annotation.Nullable;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementVisitor;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.NoType;
@@ -112,6 +114,31 @@ class SignatureFactory {
           DeclaredType declaredType = (DeclaredType) type;
           return declaredType.asElement().getKind().isClass();
         }
+
+        @Override
+        public Void visitExecutable(ExecutableElement element, SignatureVisitor visitor) {
+          if (!signatureRequired(element)) {
+            return null;
+          }
+
+          for (TypeParameterElement typeParameterElement : element.getTypeParameters()) {
+            typeParameterElement.accept(this, visitor);
+          }
+
+          for (VariableElement parameter : element.getParameters()) {
+            parameter.asType().accept(typeVisitorAdapter, visitor.visitParameterType());
+          }
+
+          element.getReturnType().accept(typeVisitorAdapter, visitor.visitReturnType());
+
+          if (throwsATypeVar(element)) {
+            for (TypeMirror thrownType : element.getThrownTypes()) {
+              thrownType.accept(typeVisitorAdapter, visitor.visitExceptionType());
+            }
+          }
+
+          return null;
+        }
       };
 
   /**
@@ -124,6 +151,16 @@ class SignatureFactory {
             TypeMirror e, SignatureVisitor signatureVisitor) {
           throw new IllegalArgumentException(
               String.format("Unexpected type kind: %s", e.getKind()));
+        }
+
+        @Override
+        public Void visitNoType(NoType t, SignatureVisitor visitor) {
+          if (t.getKind() == TypeKind.VOID) {
+            visitor.visitBaseType(descriptorFactory.getDescriptor(t).charAt(0));
+            return null;
+          }
+
+          return defaultAction(t, visitor);
         }
 
         @Override
@@ -246,6 +283,41 @@ class SignatureFactory {
       }
     }
 
+    return false;
+  }
+
+  /**
+   * Returns true if the JVM spec requires a signature to be emitted for this method.
+   * See JVMS8 4.7.9.1
+   */
+  private static boolean signatureRequired(ExecutableElement element) {
+    if (!element.getTypeParameters().isEmpty()) {
+      return true;
+    }
+
+    if (usesGenerics(element.getReturnType())) {
+      return true;
+    }
+
+    for (VariableElement parameter : element.getParameters()) {
+      if (usesGenerics(parameter.asType())) {
+        return true;
+      }
+    }
+
+    if (throwsATypeVar(element)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  private static boolean throwsATypeVar(ExecutableElement element) {
+    for (TypeMirror thrownType : element.getThrownTypes()) {
+      if (thrownType.getKind() == TypeKind.TYPEVAR) {
+        return true;
+      }
+    }
     return false;
   }
 
