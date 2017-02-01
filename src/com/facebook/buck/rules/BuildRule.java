@@ -70,6 +70,15 @@ public interface BuildRule extends Comparable<BuildRule>, HasBuildTarget {
   @Nullable
   Path getPathToOutput();
 
+  @Nullable
+  default SourcePath getSourcePathToOutput() {
+    Path output = getPathToOutput();
+    if (output == null) {
+      return null;
+    }
+    return new BuildTargetSourcePath(getBuildTarget());
+  }
+
   /**
    * @return true if the output of this build rule is compatible with {@code buck build --out}.
    *     To be compatible, that means (1) {@link #getPathToOutput()} cannot return {@code null},
