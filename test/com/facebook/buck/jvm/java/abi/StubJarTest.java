@@ -65,6 +65,7 @@ import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 
 import javax.annotation.processing.Processor;
+import javax.lang.model.SourceVersion;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
@@ -106,8 +107,6 @@ public class StubJarTest {
 
   @Test
   public void emptyClass() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
@@ -138,8 +137,6 @@ public class StubJarTest {
 
   @Test
   public void classWithTwoMethods() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
@@ -160,8 +157,6 @@ public class StubJarTest {
 
   @Test
   public void genericClassSignaturesShouldBePreserved() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
@@ -236,8 +231,6 @@ public class StubJarTest {
 
   @Test
   public void shouldIgnorePrivateFields() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
@@ -278,8 +271,6 @@ public class StubJarTest {
 
   @Test
   public void shouldPreserveGenericTypesOnMethods() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
@@ -756,8 +747,6 @@ public class StubJarTest {
 
   @Test
   public void shouldPreserveSynchronizedKeywordOnMethods() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
@@ -797,8 +786,6 @@ public class StubJarTest {
 
   @Test
   public void stubJarIsEquallyAtHomeWalkingADirectoryOfClassFiles() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
@@ -857,7 +844,10 @@ public class StubJarTest {
     StubJarGeneratingProcessor stubJarGenerator = null;
     if (testingMode != MODE_TEST_BEHAVIOR) {
       stubJarGenerator =
-          new StubJarGeneratingProcessor(filesystem, outputDir.toPath().resolve("sourceStub.jar"));
+          new StubJarGeneratingProcessor(
+              filesystem,
+              outputDir.toPath().resolve("sourceStub.jar"),
+              SourceVersion.RELEASE_8);
       processors = Collections.singletonList(stubJarGenerator);
     }
 

@@ -45,10 +45,19 @@ class StubJarGeneratingProcessor extends AbstractProcessor {
   private final ProjectFilesystem filesystem;
   private final Path stubJarPath;
   private final Set<Name> topLevelTypeNames = new LinkedHashSet<>();
+  private final SourceVersion classFileVersion;
 
-  public StubJarGeneratingProcessor(ProjectFilesystem filesystem, Path stubJarPath) {
+  /**
+   * @param classFileVersion the class file version to output, expressed as the corresponding Java
+   *                         source version
+   */
+  public StubJarGeneratingProcessor(
+      ProjectFilesystem filesystem,
+      Path stubJarPath,
+      SourceVersion classFileVersion) {
     this.filesystem = filesystem;
     this.stubJarPath = stubJarPath;
+    this.classFileVersion = classFileVersion;
   }
 
   @Override
@@ -69,6 +78,7 @@ class StubJarGeneratingProcessor extends AbstractProcessor {
     try {
       Elements elementUtils = processingEnv.getElementUtils();
       StubJar stubJar = new StubJar(
+          classFileVersion,
           elementUtils,
           topLevelTypeNames.stream()
               .map(elementUtils::getTypeElement)

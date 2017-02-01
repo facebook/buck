@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 
@@ -38,8 +39,16 @@ public class StubJar {
         new StubbingLibraryReader(LibraryReader.of(toMirror), BytecodeStubber::createStub);
   }
 
-  public StubJar(Elements elements, Iterable<TypeElement> topLevelTypes) {
-    ClassVisitorDriverFromElement driver = new ClassVisitorDriverFromElement();
+  /**
+   * @param targetVersion the class file version to output, expressed as the corresponding Java
+   *                      source version
+   */
+  public StubJar(
+      SourceVersion targetVersion,
+      Elements elements,
+      Iterable<TypeElement> topLevelTypes) {
+    ClassVisitorDriverFromElement driver =
+        new ClassVisitorDriverFromElement(targetVersion, elements);
     libraryReaderSupplier = () -> new StubbingLibraryReader(
         LibraryReader.of(elements, topLevelTypes),
         driver::driveVisitor);
