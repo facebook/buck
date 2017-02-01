@@ -22,13 +22,14 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.MergeAndroidResourcesStep.DuplicateResourceException;
+import com.facebook.buck.android.aapt.FakeRDotTxtEntryWithID;
 import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -52,6 +53,7 @@ import org.junit.rules.ExpectedException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
@@ -110,6 +112,101 @@ public class MergeAndroidResourcesStepTest {
     assertEquals(6, uniqueEntries.size());
 
     // All good, no need to further test whether we can write the Java file correctly...
+  }
+
+  @Test
+  public void testGenerateRDotJavaForWithStyleables()
+      throws IOException, DuplicateResourceException {
+    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
+
+    // Merge everything into the same package space.
+    String sharedPackageName = "com.facebook.abc";
+    entriesBuilder.add(new RDotTxtFile(sharedPackageName, "a-R.txt",
+        ImmutableList.of(
+            "int id a1 0x7f010001",
+            "int id a2 0x7f010002",
+            "int attr android_layout_gravity 0x7f078008",
+            "int attr background 0x7f078009",
+            "int attr backgroundSplit 0x7f078008",
+            "int attr backgroundStacked 0x7f078010",
+            "int attr layout_heightPercent 0x7f078012",
+            "int[] styleable ActionBar {  }",
+            "int styleable ActionBar_background 10",
+            "int styleable ActionBar_backgroundSplit 12",
+            "int styleable ActionBar_backgroundStacked 11",
+            "int[] styleable ActionBarLayout { 0x7f060008 }",
+            "int styleable ActionBarLayout_android_layout 0",
+            "int styleable ActionBarLayout_android_layout_gravity 1",
+            "int[] styleable PercentLayout_Layout {  }",
+            "int styleable PercentLayout_Layout_layout_aspectRatio 9",
+            "int styleable PercentLayout_Layout_layout_heightPercent 1"
+        )));
+
+    SortedSetMultimap<String, RDotTxtEntry> packageNameToResources =
+        MergeAndroidResourcesStep.sortSymbols(
+            entriesBuilder.buildFilePathToPackageNameSet(),
+            Optional.empty(),
+            ImmutableMap.of(),
+            /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
+            entriesBuilder.getProjectFilesystem());
+
+    assertEquals(17, packageNameToResources.size());
+
+    ArrayList<RDotTxtEntry> resources = new ArrayList<>(
+        packageNameToResources.get(sharedPackageName)
+    );
+    assertEquals(17, resources.size());
+
+    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.ATTR,
+            "android_layout_gravity", "0x07f01003"),
+        resources.get(0));
+    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.ATTR,
+            "background", "0x07f01004"),
+        resources.get(1));
+    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.ATTR,
+            "backgroundSplit", "0x07f01005"),
+        resources.get(2));
+    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.ATTR,
+            "backgroundStacked", "0x07f01006"),
+        resources.get(3));
+    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.ATTR,
+            "layout_heightPercent", "0x07f01007"),
+        resources.get(4));
+    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.ID,
+            "a1", "0x07f01001"),
+        resources.get(5));
+    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.ID,
+            "a2", "0x07f01002"),
+        resources.get(6));
+    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT_ARRAY, RType.STYLEABLE,
+            "ActionBar", "{ 0x07f01004,0x07f01005,0x07f01006 }"),
+        resources.get(7));
+    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.STYLEABLE,
+            "ActionBar_background", "0"),
+        resources.get(8));
+    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.STYLEABLE,
+            "ActionBar_backgroundSplit", "1"),
+        resources.get(9));
+    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.STYLEABLE,
+            "ActionBar_backgroundStacked", "2"),
+        resources.get(10));
+    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT_ARRAY, RType.STYLEABLE,
+            "ActionBarLayout", "{ 0,0x07f01003 }"),
+        resources.get(11));
+    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.STYLEABLE,
+            "ActionBarLayout_android_layout", "0"),
+        resources.get(12));
+    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.STYLEABLE,
+            "ActionBarLayout_android_layout_gravity", "1"), resources.get(13));
+    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT_ARRAY, RType.STYLEABLE,
+            "PercentLayout_Layout", "{ 0,0x07f01007 }"),
+        resources.get(14));
+    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.STYLEABLE,
+            "PercentLayout_Layout_layout_aspectRatio", "0"),
+        resources.get(15));
+    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.STYLEABLE,
+            "PercentLayout_Layout_layout_heightPercent", "1"),
+        resources.get(16));
   }
 
   @Test
