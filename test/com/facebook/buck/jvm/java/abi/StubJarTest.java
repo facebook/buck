@@ -138,8 +138,6 @@ public class StubJarTest {
 
   @Test
   public void emptyClassWithAnnotation() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
@@ -311,7 +309,7 @@ public class StubJarTest {
 
   @Test
   public void preservesAnnotationsOnMethods() throws IOException {
-    notYetImplementedForSource();
+    notYetImplementedForMissingClasspath();
 
     Path annotations = createAnnotationFullJar();
     JarPaths paths = createFullAndStubJars(
@@ -335,7 +333,7 @@ public class StubJarTest {
 
   @Test
   public void preservesAnnotationsOnFields() throws IOException {
-    notYetImplementedForSource();
+    notYetImplementedForMissingClasspath();
 
     Path annotations = createAnnotationFullJar();
     JarPaths paths = createFullAndStubJars(
@@ -976,6 +974,10 @@ public class StubJarTest {
 
   private void notYetImplementedForSource() {
     assumeThat(testingMode, Matchers.equalTo(MODE_TEST_BEHAVIOR));
+  }
+
+  private void notYetImplementedForMissingClasspath() {
+    assumeThat(testingMode, Matchers.not(Matchers.equalTo(MODE_COMPARE_CONTENTS_NO_DEPS)));
   }
 
   private static class JarPaths {
