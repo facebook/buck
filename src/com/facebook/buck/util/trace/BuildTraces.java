@@ -143,7 +143,7 @@ public class BuildTraces {
       return Optional.empty();
     }
 
-    return ChromeTraceParser.COMMAND.extractFromResults(results);
+    return ChromeTraceParser.getResultForMatcher(ChromeTraceParser.COMMAND, results);
   }
 
   private boolean isTraceForBuild(Path path, String id) {

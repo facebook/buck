@@ -74,7 +74,9 @@ public class ChromeTraceParserIntegrationTest {
         matchers);
     String expectedQuery = "buck query deps(fb4a, 1)";
     assertEquals(ImmutableMap.of(ChromeTraceParser.COMMAND, expectedQuery), results);
-    assertEquals(Optional.of(expectedQuery), ChromeTraceParser.COMMAND.extractFromResults(results));
+    assertEquals(Optional.of(expectedQuery), ChromeTraceParser.getResultForMatcher(
+        ChromeTraceParser.COMMAND,
+        results));
   }
 
   @Test

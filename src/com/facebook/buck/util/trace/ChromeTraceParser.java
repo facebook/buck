@@ -36,7 +36,9 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Event-driven parser for Chrome traces.
+ * Event-driven parser for
+ * <a href="https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/preview">
+ * Chrome traces</a>.
  */
 public class ChromeTraceParser {
 
@@ -50,15 +52,6 @@ public class ChromeTraceParser {
      * not, then it should return {@link Optional#empty()}.
      */
     Optional<T> test(JsonObject event, String name);
-
-    /**
-     * Designed for use with the result of {@link ChromeTraceParser#parse(Path, Set)}.
-     */
-    @SuppressWarnings("unchecked")
-    default Optional<T> extractFromResults(Map<ChromeTraceEventMatcher<?>, Object> results) {
-      T result = (T) results.get(this);
-      return Optional.ofNullable(result);
-    }
   }
 
   /**
@@ -144,7 +137,19 @@ public class ChromeTraceParser {
       }
     }
 
-    // We could throw if unmatchedMatchers.isEmpty(), but that might be overbearing.
+    // We could throw if !unmatchedMatchers.isEmpty(), but that might be overbearing.
     return results;
+  }
+
+  /**
+   * Designed for use with the result of {@link ChromeTraceParser#parse(Path, Set)}.
+   * Helper function to avoid some distasteful casting logic.
+   */
+  @SuppressWarnings("unchecked")
+  public static <T> Optional<T> getResultForMatcher(
+      ChromeTraceEventMatcher<T> matcher,
+      Map<ChromeTraceEventMatcher<?>, Object> results) {
+    T result = (T) results.get(matcher);
+    return Optional.ofNullable(result);
   }
 }
