@@ -25,7 +25,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
-import com.facebook.buck.util.MoreMaps;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultiset;
@@ -64,16 +63,6 @@ public class SymlinkTree
 
     this.root = root;
     this.links = ImmutableSortedMap.copyOf(links);
-  }
-
-  public static SymlinkTree from(
-      BuildRuleParams params,
-      Path root,
-      ImmutableMap<String, SourcePath> links) {
-    return new SymlinkTree(
-        params,
-        root,
-        MoreMaps.transformKeys(links, MorePaths.toPathFn(root.getFileSystem())));
   }
 
   @Override

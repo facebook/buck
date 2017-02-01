@@ -534,7 +534,7 @@ public class LuaBinaryDescription implements
       Path root,
       ImmutableMap<String, SourcePath> components) {
     return resolver.addToIndex(
-        SymlinkTree.from(
+        new SymlinkTree(
             params.copyWithChanges(
                 linkTreeTarget,
                 Suppliers.ofInstance(
@@ -542,7 +542,7 @@ public class LuaBinaryDescription implements
                         ruleFinder.filterBuildRuleInputs(components.values()))),
                 Suppliers.ofInstance(ImmutableSortedSet.of())),
             root,
-            components));
+            MoreMaps.transformKeys(components, MorePaths.toPathFn(root.getFileSystem()))));
   }
 
   /**
