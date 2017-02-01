@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AdbHelper;
+import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
@@ -24,7 +25,6 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.android.InstallableApk;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
@@ -139,14 +139,14 @@ public class UninstallCommand extends AbstractCommand {
     } catch (NoSuchBuildTargetException e) {
       throw new HumanReadableException(e.getHumanReadableErrorMessage());
     }
-    if (!(buildRule instanceof InstallableApk)) {
+    if (!(buildRule instanceof HasInstallableApk)) {
       params.getBuckEventBus().post(ConsoleEvent.severe(String.format(
           "Specified rule %s must be of type android_binary() or apk_genrule() but was %s().\n",
           buildRule.getFullyQualifiedName(),
           buildRule.getType())));
       return 1;
     }
-    InstallableApk installableApk = (InstallableApk) buildRule;
+    HasInstallableApk hasInstallableApk = (HasInstallableApk) buildRule;
 
     // We need this in case adb isn't already running.
     try (ExecutionContext context = createExecutionContext(params)) {
@@ -159,7 +159,7 @@ public class UninstallCommand extends AbstractCommand {
           params.getBuckConfig().getRestartAdbOnFailure());
 
       // Find application package name from manifest and uninstall from matching devices.
-      String appId = AdbHelper.tryToExtractPackageNameFromManifest(installableApk);
+      String appId = AdbHelper.tryToExtractPackageNameFromManifest(hasInstallableApk);
       return adbHelper.uninstallApp(
           appId,
           uninstallOptions().shouldKeepUserData()

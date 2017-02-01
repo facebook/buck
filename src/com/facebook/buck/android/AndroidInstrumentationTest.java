@@ -80,13 +80,13 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
 
   private final ImmutableSet<String> contacts;
 
-  private final InstallableApk apk;
+  private final HasInstallableApk apk;
 
   private final Optional<Long> testRuleTimeoutMs;
 
   protected AndroidInstrumentationTest(
       BuildRuleParams params,
-      InstallableApk apk,
+      HasInstallableApk apk,
       Set<Label> labels,
       Set<String> contacts,
       JavaRuntimeLauncher javaRuntimeLauncher,
@@ -307,7 +307,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
       SourcePathResolver pathResolver) {
     Optional<Path> apkUnderTestPath = Optional.empty();
     if (apk instanceof AndroidInstrumentationApk) {
-      apkUnderTestPath = Optional.of(toPath(((AndroidInstrumentationApk) apk).getApkUnderTest()));
+      apkUnderTestPath = Optional.of(
+          toPath(((AndroidInstrumentationApk) apk).getApkUnderTest()));
     }
     InstrumentationStep step = getInstrumentationStep(
         executionContext.getPathToAdbExecutable(),
@@ -326,9 +327,9 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
         .build();
   }
 
-  private static Path toPath(InstallableApk apk) {
+  private static Path toPath(HasInstallableApk apk) {
     return apk.getProjectFilesystem().resolve(
-        apk.getApkPath());
+        apk.getApkInfo().getApkPath());
   }
 
   @Override

@@ -85,14 +85,14 @@ public class AndroidInstrumentationApkDescription
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
     BuildRule installableApk = resolver.getRule(args.apk);
-    if (!(installableApk instanceof InstallableApk)) {
+    if (!(installableApk instanceof HasInstallableApk)) {
       throw new HumanReadableException(
           "In %s, apk='%s' must be an android_binary() or apk_genrule() but was %s().",
           params.getBuildTarget(),
           installableApk.getFullyQualifiedName(),
           installableApk.getType());
     }
-    AndroidBinary apkUnderTest = getUnderlyingApk((InstallableApk) installableApk);
+    AndroidBinary apkUnderTest = getUnderlyingApk((HasInstallableApk) installableApk);
 
     ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex = ImmutableSortedSet.copyOf(
         HasBuildTarget.BUILD_TARGET_COMPARATOR,
@@ -172,7 +172,7 @@ public class AndroidInstrumentationApkDescription
 
   }
 
-  private static AndroidBinary getUnderlyingApk(InstallableApk installable) {
+  private static AndroidBinary getUnderlyingApk(HasInstallableApk installable) {
     if (installable instanceof AndroidBinary) {
       return (AndroidBinary) installable;
     } else if (installable instanceof ApkGenrule) {

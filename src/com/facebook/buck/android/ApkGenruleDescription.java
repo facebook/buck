@@ -49,7 +49,7 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
       Optional<com.facebook.buck.rules.args.Arg> cmdExe) {
 
     final BuildRule installableApk = resolver.getRule(args.apk);
-    if (!(installableApk instanceof InstallableApk)) {
+    if (!(installableApk instanceof HasInstallableApk)) {
       throw new HumanReadableException("The 'apk' argument of %s, %s, must correspond to an " +
           "installable rule, such as android_binary() or apk_genrule().",
           params.getBuildTarget(),

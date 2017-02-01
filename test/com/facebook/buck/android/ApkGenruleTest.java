@@ -34,7 +34,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -255,25 +254,18 @@ public class ApkGenruleTest {
         .build();
   }
 
-  private static class FakeInstallable extends FakeBuildRule implements InstallableApk {
+  private static class FakeInstallable extends FakeBuildRule implements HasInstallableApk {
 
     public FakeInstallable(BuildTarget buildTarget, SourcePathResolver resolver) {
       super(buildTarget, resolver);
     }
 
     @Override
-    public Path getManifestPath() {
-      return Paths.get("spoof");
-    }
-
-    @Override
-    public Path getApkPath() {
-      return Paths.get("buck-out/gen/fb4a.apk");
-    }
-
-    @Override
-    public Optional<ExopackageInfo> getExopackageInfo() {
-      return Optional.empty();
+    public ApkInfo getApkInfo() {
+      return ApkInfo.builder()
+          .setApkPath(Paths.get("buck-out/gen/fb4a.apk"))
+          .setManifestPath(Paths.get("spoof"))
+          .build();
     }
   }
 }

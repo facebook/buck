@@ -563,24 +563,24 @@ public class AdbHelper {
    */
   @SuppressForbidden
   public boolean installApk(
-      final InstallableApk installableApk,
+      final HasInstallableApk hasInstallableApk,
       final boolean installViaSd,
       final boolean quiet) throws InterruptedException {
-    Optional<ExopackageInfo> exopackageInfo = installableApk.getExopackageInfo();
+    Optional<ExopackageInfo> exopackageInfo = hasInstallableApk.getApkInfo().getExopackageInfo();
     if (exopackageInfo.isPresent()) {
       return new ExopackageInstaller(
           context,
           this,
-          installableApk)
+          hasInstallableApk)
           .install(quiet);
     }
-    InstallEvent.Started started = InstallEvent.started(installableApk.getBuildTarget());
+    InstallEvent.Started started = InstallEvent.started(hasInstallableApk.getBuildTarget());
     if (!quiet) {
       getBuckEventBus().post(started);
     }
 
-    final File apk = installableApk.getProjectFilesystem().resolve(
-        installableApk.getApkPath()).toFile();
+    final File apk = hasInstallableApk.getProjectFilesystem().resolve(
+        hasInstallableApk.getApkInfo().getApkPath()).toFile();
     boolean success = adbCall(
         new AdbHelper.AdbCallable() {
           @Override
@@ -591,17 +591,17 @@ public class AdbHelper {
           @Override
           @SuppressForbidden
           public String toString() {
-            return String.format("install apk %s", installableApk.getBuildTarget().toString());
+            return String.format("install apk %s", hasInstallableApk.getBuildTarget().toString());
           }
         },
         quiet);
     if (!quiet) {
-      AdbHelper.tryToExtractPackageNameFromManifest(installableApk);
+      AdbHelper.tryToExtractPackageNameFromManifest(hasInstallableApk);
       getBuckEventBus().post(InstallEvent.finished(
               started,
               success,
               Optional.empty(),
-              Optional.of(AdbHelper.tryToExtractPackageNameFromManifest(installableApk))));
+              Optional.of(AdbHelper.tryToExtractPackageNameFromManifest(hasInstallableApk))));
     }
 
     return success;
@@ -774,15 +774,15 @@ public class AdbHelper {
 
   @SuppressForbidden
   public int startActivity(
-      InstallableApk installableApk,
+      HasInstallableApk hasInstallableApk,
       @Nullable String activity,
       boolean waitForDebugger) throws IOException, InterruptedException {
 
     // Might need the package name and activities from the AndroidManifest.
-    Path pathToManifest = installableApk.getProjectFilesystem().resolve(
-        installableApk.getManifestPath());
+    Path pathToManifest = hasInstallableApk.getProjectFilesystem().resolve(
+        hasInstallableApk.getApkInfo().getManifestPath());
     AndroidManifestReader reader = DefaultAndroidManifestReader.forPath(
-        installableApk.getProjectFilesystem().resolve(pathToManifest));
+        hasInstallableApk.getProjectFilesystem().resolve(pathToManifest));
 
     if (activity == null) {
       // Get list of activities that show up in the launcher.
@@ -810,7 +810,7 @@ public class AdbHelper {
     stdOut.println(String.format("Starting activity %s...", activityToRun));
 
     StartActivityEvent.Started started = StartActivityEvent.started(
-        installableApk.getBuildTarget(),
+        hasInstallableApk.getBuildTarget(),
         activityToRun);
     getBuckEventBus().post(started);
     boolean success = adbCall(
@@ -875,7 +875,7 @@ public class AdbHelper {
   /**
    * Uninstall apk from all matching devices.
    *
-   * @see #installApk(InstallableApk, boolean, boolean)
+   * @see #installApk(HasInstallableApk, boolean, boolean)
    */
   public boolean uninstallApp(
       final String packageName,
@@ -983,9 +983,9 @@ public class AdbHelper {
     }
   }
 
-  public static String tryToExtractPackageNameFromManifest(InstallableApk androidBinaryRule) {
+  public static String tryToExtractPackageNameFromManifest(HasInstallableApk androidBinaryRule) {
     Path pathToManifest = androidBinaryRule.getProjectFilesystem().resolve(
-        androidBinaryRule.getManifestPath());
+        androidBinaryRule.getApkInfo().getManifestPath());
 
     // Note that the file may not exist if AndroidManifest.xml is a generated file
     // and the rule has not been built yet.
@@ -1005,9 +1005,9 @@ public class AdbHelper {
   }
 
   public static String tryToExtractInstrumentationTestRunnerFromManifest(
-      InstallableApk androidBinaryRule) {
+      HasInstallableApk androidBinaryRule) {
     Path pathToManifest = androidBinaryRule.getProjectFilesystem().resolve(
-        androidBinaryRule.getManifestPath());
+        androidBinaryRule.getApkInfo().getManifestPath());
 
     if (!Files.isRegularFile(pathToManifest)) {
       throw new HumanReadableException(

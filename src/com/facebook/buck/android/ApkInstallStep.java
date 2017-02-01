@@ -24,11 +24,11 @@ import com.android.ddmlib.IDevice;
 
 public class ApkInstallStep implements Step {
 
-  private final InstallableApk installableApk;
+  private final HasInstallableApk hasInstallableApk;
 
   public ApkInstallStep(
-      InstallableApk apk) {
-    this.installableApk = apk;
+      HasInstallableApk apk) {
+    this.hasInstallableApk = apk;
   }
 
   @Override
@@ -38,7 +38,7 @@ public class ApkInstallStep implements Step {
       return StepExecutionResult.SUCCESS;
     }
 
-    if (!adbHelper.installApk(installableApk, false, true)) {
+    if (!adbHelper.installApk(hasInstallableApk, false, true)) {
       return StepExecutionResult.ERROR;
     }
     return StepExecutionResult.SUCCESS;
@@ -62,7 +62,7 @@ public class ApkInstallStep implements Step {
         builder.append("adb -s ");
         builder.append(device.getSerialNumber());
         builder.append(" install ");
-        builder.append(installableApk.getApkPath().toString());
+        builder.append(hasInstallableApk.getApkInfo().getApkPath().toString());
       }
     } catch (InterruptedException e) {
     }

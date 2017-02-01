@@ -199,12 +199,15 @@ java_immutables_library(
 HELPERS_SRCS = [
   'AdbHelper.java',
   'ExopackageInstaller.java',
-  'InstallableApk.java',
+  'HasInstallableApk.java',
 ]
 
-java_library(
+java_immutables_library(
   name = 'helpers',
   srcs = HELPERS_SRCS,
+  immutable_types = [
+    'ApkInfo',
+  ],
   tests = [
     '//test/com/facebook/buck/android:unit',
     '//test/com/facebook/buck/android:integration',

@@ -241,7 +241,7 @@ public class AndroidBinaryTest {
             ruleInRootDirectory.getProjectFilesystem(),
             targetInRootDirectory,
             "%s.apk"),
-        ruleInRootDirectory.getApkPath());
+        ruleInRootDirectory.getApkInfo().getApkPath());
 
     BuildTarget targetInNonRootDirectory =
         BuildTargetFactory.newInstance("//java/com/example:fb4a");
@@ -255,7 +255,7 @@ public class AndroidBinaryTest {
             ruleInNonRootDirectory.getProjectFilesystem(),
             targetInNonRootDirectory,
             "%s.apk"),
-        ruleInNonRootDirectory.getApkPath());
+        ruleInNonRootDirectory.getApkInfo().getApkPath());
   }
 
   @Test

@@ -110,7 +110,7 @@ import javax.annotation.Nullable;
  */
 public class AndroidBinary
     extends AbstractBuildRule
-    implements SupportsInputBasedRuleKey, HasClasspathEntries, HasRuntimeDeps, InstallableApk {
+    implements SupportsInputBasedRuleKey, HasClasspathEntries, HasRuntimeDeps, HasInstallableApk {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, PACKAGING);
 
@@ -403,7 +403,15 @@ public class AndroidBinary
 
   /** The APK at this path is the final one that points to an APK that a user should install. */
   @Override
-  public Path getApkPath() {
+  public ApkInfo getApkInfo() {
+    return ApkInfo.builder()
+        .setApkPath(getApkPath())
+        .setManifestPath(getManifestPath())
+        .setExopackageInfo(getExopackageInfo())
+        .build();
+  }
+
+  private Path getApkPath() {
     return Paths.get(getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".apk"));
   }
 
@@ -425,7 +433,7 @@ public class AndroidBinary
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    // The `InstallableApk` interface needs access to the manifest, so make sure we create our
+    // The `HasInstallableApk` interface needs access to the manifest, so make sure we create our
     // own copy of this so that we don't have a runtime dep on the `AaptPackageResources` step.
     steps.add(new MkdirStep(getProjectFilesystem(), getManifestPath().getParent()));
     steps.add(
@@ -1225,8 +1233,7 @@ public class AndroidBinary
     }
   }
 
-  @Override
-  public Path getManifestPath() {
+  private Path getManifestPath() {
     return BuildTargets.getGenPath(
         getProjectFilesystem(),
         getBuildTarget(),
@@ -1237,8 +1244,7 @@ public class AndroidBinary
     return dexSplitMode.isShouldSplitDex();
   }
 
-  @Override
-  public Optional<ExopackageInfo> getExopackageInfo() {
+  private Optional<ExopackageInfo> getExopackageInfo() {
     boolean shouldInstall = false;
 
     ExopackageInfo.Builder builder = ExopackageInfo.builder();

@@ -442,7 +442,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         .transform(context.getSourcePathResolver()::getAbsolutePath)
         .toSet();
 
-    ProjectFilesystem projectFilesystem = getProjectFilesystem(); // NOPMD confused by lambda
     Iterable<Path> declaredClasspaths = declaredClasspathDeps
         .transformAndConcat(JavaLibrary::getOutputClasspaths)
         .transform(context.getSourcePathResolver()::getAbsolutePath);

@@ -44,7 +44,7 @@ import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.android.InstallableApk;
+import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
@@ -231,7 +231,7 @@ public class InstallCommand extends BuildCommand {
 
       BuildRule buildRule = build.getRuleResolver().requireRule(buildTarget);
 
-      if (buildRule instanceof InstallableApk) {
+      if (buildRule instanceof HasInstallableApk) {
         ExecutionContext executionContext = ExecutionContext.builder()
             .from(build.getExecutionContext())
             .setAdbOptions(Optional.of(adbOptions(params.getBuckConfig())))
@@ -239,7 +239,7 @@ public class InstallCommand extends BuildCommand {
             .setExecutors(params.getExecutors())
             .setCellPathResolver(params.getCell().getCellPathResolver())
             .build();
-        exitCode = installApk(params, (InstallableApk) buildRule, executionContext);
+        exitCode = installApk(params, (HasInstallableApk) buildRule, executionContext);
         if (exitCode != 0) {
           return exitCode;
         }
@@ -337,7 +337,7 @@ public class InstallCommand extends BuildCommand {
 
   private int installApk(
       CommandRunnerParams params,
-      InstallableApk installableApk,
+      HasInstallableApk hasInstallableApk,
       ExecutionContext executionContext) throws IOException, InterruptedException {
     final AdbHelper adbHelper = AdbHelper.get(
         executionContext,
@@ -345,19 +345,22 @@ public class InstallCommand extends BuildCommand {
 
     // Uninstall the app first, if requested.
     if (shouldUninstallFirst()) {
-      String packageName = AdbHelper.tryToExtractPackageNameFromManifest(installableApk);
+      String packageName = AdbHelper.tryToExtractPackageNameFromManifest(hasInstallableApk);
       adbHelper.uninstallApp(packageName, uninstallOptions().shouldKeepUserData());
       // Perhaps the app wasn't installed to begin with, shouldn't stop us.
     }
 
-    if (!adbHelper.installApk(installableApk, shouldInstallViaSd(), false)) {
+    if (!adbHelper.installApk(hasInstallableApk, shouldInstallViaSd(), false)) {
       return 1;
     }
 
     // We've installed the application successfully.
     // Is either of --activity or --run present?
     if (shouldStartActivity()) {
-      int exitCode = adbHelper.startActivity(installableApk, getActivityToStart(), waitForDebugger);
+      int exitCode = adbHelper.startActivity(
+          hasInstallableApk,
+          getActivityToStart(),
+          waitForDebugger);
       if (exitCode != 0) {
         return exitCode;
       }

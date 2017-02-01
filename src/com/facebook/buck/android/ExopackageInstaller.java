@@ -104,7 +104,7 @@ public class ExopackageInstaller {
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus eventBus;
   private final AdbHelper adbHelper;
-  private final InstallableApk apkRule;
+  private final HasInstallableApk apkRule;
   private final String packageName;
   private final Path dataRoot;
 
@@ -132,7 +132,7 @@ public class ExopackageInstaller {
   public ExopackageInstaller(
       ExecutionContext context,
       AdbHelper adbHelper,
-      InstallableApk apkRule) {
+      HasInstallableApk apkRule) {
     this.adbHelper = adbHelper;
     this.projectFilesystem = apkRule.getProjectFilesystem();
     this.eventBus = context.getBuckEventBus();
@@ -142,7 +142,7 @@ public class ExopackageInstaller {
 
     Preconditions.checkArgument(AdbHelper.PACKAGE_NAME_PATTERN.matcher(packageName).matches());
 
-    Optional<ExopackageInfo> exopackageInfo = apkRule.getExopackageInfo();
+    Optional<ExopackageInfo> exopackageInfo = apkRule.getApkInfo().getExopackageInfo();
     Preconditions.checkArgument(exopackageInfo.isPresent());
     this.exopackageInfo = exopackageInfo.get();
   }
@@ -225,7 +225,7 @@ public class ExopackageInstaller {
       determineBestAgent();
 
       final File apk = apkRule.getProjectFilesystem().resolve(
-          apkRule.getApkPath()).toFile();
+          apkRule.getApkInfo().getApkPath()).toFile();
       // TODO(dreiss): Support SD installation.
       final boolean installViaSd = false;
 
@@ -458,7 +458,7 @@ public class ExopackageInstaller {
       LOG.debug("App path: %s", appPackageInfo.get().apkPath);
       String installedAppSignature = getInstalledAppSignature(appPackageInfo.get().apkPath);
       String localAppSignature = AgentUtil.getJarSignature(apkRule.getProjectFilesystem().resolve(
-              apkRule.getApkPath()).toString());
+              apkRule.getApkInfo().getApkPath()).toString());
       LOG.debug("Local app signature: %s", localAppSignature);
       LOG.debug("Remote app signature: %s", installedAppSignature);
 
