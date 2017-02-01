@@ -69,6 +69,12 @@ public class NoOpCmdLineInterface implements VersionControlCmdLineInterface {
   }
 
   @Override
+  public Optional<String> diffBetweenRevisionsOrAbsent(String baseRevision, String tipRevision)
+      throws InterruptedException {
+    return Optional.empty();
+  }
+
+  @Override
   public long timestampSeconds(String revisionId)
       throws VersionControlCommandFailedException, InterruptedException {
     return 0;

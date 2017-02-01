@@ -79,7 +79,6 @@ public interface VersionControlCmdLineInterface {
       throws InterruptedException;
 
   /**
-   *
    * @param baseRevision
    * @param tipRevision
    * @return the produced diff between two revisions
@@ -88,6 +87,15 @@ public interface VersionControlCmdLineInterface {
    */
   String diffBetweenRevisions(String baseRevision, String tipRevision)
       throws VersionControlCommandFailedException, InterruptedException;
+
+  /**
+   * @param baseRevision
+   * @param tipRevision
+   * @return the produced diff between two revisions or {@link Optional#empty}
+   * @throws InterruptedException
+   */
+  Optional<String> diffBetweenRevisionsOrAbsent(String baseRevision, String tipRevision)
+      throws InterruptedException;
 
   /**
    *

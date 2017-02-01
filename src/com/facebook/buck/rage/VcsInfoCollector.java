@@ -57,7 +57,6 @@ public class VcsInfoCollector {
     String baseRevisionId = vcCmdLineInterface.commonAncestor(
         currentRevisionId,
         bookmarksRevisionIds.get("remote/master"));
-    ImmutableSet<String> changedFiles = vcCmdLineInterface.changedFiles(baseRevisionId);
 
     ImmutableSet.Builder<String> baseBookmarks = ImmutableSet.builder();
     for (Map.Entry<String, String> bookmark : bookmarksRevisionIds.entrySet()) {
@@ -66,15 +65,12 @@ public class VcsInfoCollector {
       }
     }
 
-    Optional<String> diff = Optional.of(
-        vcCmdLineInterface.diffBetweenRevisions(baseRevisionId, currentRevisionId));
-
     return SourceControlInfo.builder()
         .setCurrentRevisionId(currentRevisionId)
         .setRevisionIdOffTracked(baseRevisionId)
         .setBasedOffWhichTracked(baseBookmarks.build())
-        .setDiff(diff)
-        .setDirtyFiles(changedFiles)
+        .setDiff(vcCmdLineInterface.diffBetweenRevisionsOrAbsent(baseRevisionId, currentRevisionId))
+        .setDirtyFiles(vcCmdLineInterface.changedFiles(baseRevisionId))
         .build();
   }
 
