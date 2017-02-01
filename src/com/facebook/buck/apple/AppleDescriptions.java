@@ -648,6 +648,7 @@ public class AppleDescriptions {
             sourcePathResolver,
             appleCxxPlatform.getAppleSdk().getApplePlatform(),
             appleCxxPlatform.getActool());
+    addToIndex(resolver, assetCatalog);
 
     Optional<CoreDataModel> coreDataModel =
         createBuildRulesForCoreDataDependencies(
@@ -655,12 +656,14 @@ public class AppleDescriptions {
             paramsWithoutBundleSpecificFlavors,
             AppleBundle.getBinaryName(params.getBuildTarget(), productName),
             appleCxxPlatform);
+    addToIndex(resolver, coreDataModel);
 
     Optional<SceneKitAssets> sceneKitAssets =
         createBuildRulesForSceneKitAssetsDependencies(
             targetGraph,
             paramsWithoutBundleSpecificFlavors,
             appleCxxPlatform);
+    addToIndex(resolver, sceneKitAssets);
 
     // TODO(bhamiltoncx): Sort through the changes needed to make project generation work with
     // binary being optional.
@@ -766,6 +769,12 @@ public class AppleDescriptions {
         provisioningProfileStore,
         dryRunCodeSigning,
         cacheable);
+  }
+
+  private static void addToIndex(BuildRuleResolver resolver, Optional<? extends BuildRule> rule) {
+    if (rule.isPresent()) {
+      resolver.addToIndex(rule.get());
+    }
   }
 
   private static BuildRule getBinaryFromBuildRuleWithBinary(BuildRule rule) {
