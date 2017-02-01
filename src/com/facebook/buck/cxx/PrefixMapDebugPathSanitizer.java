@@ -131,7 +131,8 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
 
   @Override
   public void assertInProjectFilesystem(Object ruleName, ProjectFilesystem projectFilesystem) {
-    Preconditions.checkState(projectFilesystem == this.projectFilesystem,
+    Preconditions.checkState(
+        this.projectFilesystem.getRootPath().equals(projectFilesystem.getRootPath()),
         "When processing %s, tried to use DebugPathSanitizer for " +
             "ProjectFilesystem rooted at %s for rule rooted at %s",
         ruleName,
