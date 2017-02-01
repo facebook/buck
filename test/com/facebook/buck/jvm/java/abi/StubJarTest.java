@@ -84,6 +84,21 @@ public class StubJarTest {
   // jar-generated one (then test behavior)
   private static final String MODE_COMPARE_CONTENTS_NO_DEPS = "COMPARE_CONTENTS_NO_DEPS";
 
+  private static final String ANNOTATION_SOURCE = Joiner.on("\n").join(ImmutableList.of(
+      "package com.example.buck;",
+      "import java.lang.annotation.*;",
+      "import static java.lang.annotation.ElementType.*;",
+      "@Retention(RetentionPolicy.RUNTIME)",
+      "@Target(value={CONSTRUCTOR, FIELD, METHOD, PARAMETER, TYPE})",
+      "public @interface Foo {",
+      "  int primitiveValue() default 0;",
+      "  String[] stringArrayValue() default {\"Hello\"};",
+      "  Retention annotationValue() default @Retention(RetentionPolicy.SOURCE);",
+      "  Retention[] annotationArrayValue() default {};",
+      "  RetentionPolicy enumValue () default RetentionPolicy.CLASS;",
+      "}"
+  ));
+
   @Parameterized.Parameter
   public String testingMode;
 
@@ -298,7 +313,7 @@ public class StubJarTest {
   public void preservesAnnotationsOnMethods() throws IOException {
     notYetImplementedForSource();
 
-    Path annotations = createAnnotationFullAndStubJars().fullJar;
+    Path annotations = createAnnotationFullJar();
     JarPaths paths = createFullAndStubJars(
         ImmutableSortedSet.of(annotations),
         "A.java",
@@ -322,7 +337,7 @@ public class StubJarTest {
   public void preservesAnnotationsOnFields() throws IOException {
     notYetImplementedForSource();
 
-    Path annotations = createAnnotationFullAndStubJars().fullJar;
+    Path annotations = createAnnotationFullJar();
     JarPaths paths = createFullAndStubJars(
         ImmutableSortedSet.of(annotations),
         "A.java",
@@ -346,7 +361,7 @@ public class StubJarTest {
   public void preservesAnnotationsOnParameters() throws IOException {
     notYetImplementedForSource();
 
-    Path annotations = createAnnotationFullAndStubJars().fullJar;
+    Path annotations = createAnnotationFullJar();
     JarPaths paths = createFullAndStubJars(
         ImmutableSortedSet.of(annotations),
         "A.java",
@@ -368,7 +383,7 @@ public class StubJarTest {
   public void preservesAnnotationsWithPrimitiveValues() throws IOException {
     notYetImplementedForSource();
 
-    Path annotations = createAnnotationFullAndStubJars().fullJar;
+    Path annotations = createAnnotationFullJar();
     JarPaths paths = createFullAndStubJars(
         ImmutableSortedSet.of(annotations),
         "A.java",
@@ -393,7 +408,7 @@ public class StubJarTest {
   public void preservesAnnotationsWithStringArrayValues() throws IOException {
     notYetImplementedForSource();
 
-    Path annotations = createAnnotationFullAndStubJars().fullJar;
+    Path annotations = createAnnotationFullJar();
     JarPaths paths = createFullAndStubJars(
         ImmutableSortedSet.of(annotations),
         "A.java",
@@ -479,7 +494,7 @@ public class StubJarTest {
   public void preservesAnnotationsWithAnnotationValues() throws IOException {
     notYetImplementedForSource();
 
-    Path annotations = createAnnotationFullAndStubJars().fullJar;
+    Path annotations = createAnnotationFullJar();
     JarPaths paths = createFullAndStubJars(
         ImmutableSortedSet.of(annotations),
         "A.java",
@@ -516,7 +531,7 @@ public class StubJarTest {
   public void preservesAnnotationsWithAnnotationArrayValues() throws IOException {
     notYetImplementedForSource();
 
-    Path annotations = createAnnotationFullAndStubJars().fullJar;
+    Path annotations = createAnnotationFullJar();
     JarPaths paths = createFullAndStubJars(
         ImmutableSortedSet.of(annotations),
         "A.java",
@@ -850,9 +865,7 @@ public class StubJarTest {
         source,
         outputDir);
 
-    Path stubJar = fullJar.getParent().resolve("stub.jar");
-
-    new StubJar(fullJar).writeTo(filesystem, stubJar);
+    Path stubJar = createStubJar(fullJar);
 
     if (stubJarGenerator != null) {
       Path sourceStubJar = stubJarGenerator.getStubJarPath();
@@ -860,6 +873,12 @@ public class StubJarTest {
     }
 
     return new JarPaths(fullJar, stubJar);
+  }
+
+  private Path createStubJar(Path fullJar) throws IOException {
+    Path stubJar = fullJar.getParent().resolve("stub.jar");
+    new StubJar(fullJar).writeTo(filesystem, stubJar);
+    return stubJar;
   }
 
   private Path compileToJar(
@@ -931,20 +950,16 @@ public class StubJarTest {
     return createFullAndStubJars(
         EMPTY_CLASSPATH,
         "Foo.java",
-        Joiner.on("\n").join(ImmutableList.of(
-            "package com.example.buck;",
-            "import java.lang.annotation.*;",
-            "import static java.lang.annotation.ElementType.*;",
-            "@Retention(RetentionPolicy.RUNTIME)",
-            "@Target(value={CONSTRUCTOR, FIELD, METHOD, PARAMETER, TYPE})",
-            "public @interface Foo {",
-            "  int primitiveValue() default 0;",
-            "  String[] stringArrayValue() default {\"Hello\"};",
-            "  Retention annotationValue() default @Retention(RetentionPolicy.SOURCE);",
-            "  Retention[] annotationArrayValue() default {};",
-            "  RetentionPolicy enumValue () default RetentionPolicy.CLASS;",
-            "}"
-            )));
+        ANNOTATION_SOURCE);
+  }
+
+  private Path createAnnotationFullJar() throws IOException {
+    return compileToJar(
+        EMPTY_CLASSPATH,
+        Collections.emptyList(),
+        "Foo.java",
+        ANNOTATION_SOURCE,
+        temp.newFolder());
   }
 
   private void assertMethodEquals(MethodNode expected, MethodNode seen) {
