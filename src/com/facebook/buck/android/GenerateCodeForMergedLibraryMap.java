@@ -128,7 +128,7 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRule {
       return String.format(
           "%s > %s",
           getShortName(),
-          getPathToOutput());
+          getMappingPath());
     }
   }
 
