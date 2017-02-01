@@ -283,8 +283,6 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         })));
 
     metadata.setMetadata(info.getMetadata());
-    // TODO(ruibm): Keep this temporarily for backwards compatibility.
-    metadata.setArtifactPayloadCrc32(ThriftArtifactCacheProtocol.computeCrc32Hash(file));
     metadata.setArtifactPayloadMd5(ThriftArtifactCacheProtocol.computeMd5Hash(file));
     metadata.setRepository(repository);
     metadata.setScheduleType(scheduleType);

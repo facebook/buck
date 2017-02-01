@@ -49,7 +49,6 @@ public class ThriftArtifactCacheProtocol {
   private static final Logger LOG = Logger.get(ThriftArtifactCacheProtocol.class);
 
   private static final HashFunction MD5_HASH_FUNCTION = Hashing.md5();
-  private static final HashFunction CRC32_HASH_FUNCTION = Hashing.crc32();
 
   private ThriftArtifactCacheProtocol() {
     // Not instantiable.
@@ -70,10 +69,6 @@ public class ThriftArtifactCacheProtocol {
 
   public static String computeMd5Hash(ByteSource source) throws IOException {
     return computeHash(source, MD5_HASH_FUNCTION);
-  }
-
-  public static String computeCrc32Hash(ByteSource source) throws IOException {
-    return computeHash(source, CRC32_HASH_FUNCTION);
   }
 
   private static String computeHash(ByteSource source, HashFunction hashFunction)
