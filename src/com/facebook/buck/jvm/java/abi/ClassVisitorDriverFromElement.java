@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi;
 
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
@@ -26,6 +27,7 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.ElementScanner8;
 import javax.lang.model.util.Elements;
 
@@ -83,8 +85,23 @@ class ClassVisitorDriverFromElement {
           return null;
         }
 
-        // TODO(jkeljo): fields
+        @Override
+        public Void visitVariable(VariableElement e, ClassVisitor classVisitor) {
+          // TODO(jkeljo): Skip privates for efficiency (ClassMirror already skips them too)
 
+          FieldVisitor fieldVisitor = classVisitor.visitField(
+              AccessFlags.getAccessFlags(e),
+              e.getSimpleName().toString(),
+              descriptorFactory.getDescriptor(e),
+              signatureFactory.getSignature(e),
+              e.getConstantValue());
+
+          // TODO(jkeljo): Annotations
+
+          fieldVisitor.visitEnd();
+
+          return null;
+        }
       };
 
   /**

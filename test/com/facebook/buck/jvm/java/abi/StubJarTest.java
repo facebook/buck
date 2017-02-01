@@ -210,8 +210,6 @@ public class StubJarTest {
 
   @Test
   public void shouldPreserveAField() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
@@ -231,6 +229,8 @@ public class StubJarTest {
 
   @Test
   public void shouldIgnorePrivateFields() throws IOException {
+    notYetImplementedForSource();
+
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
@@ -248,8 +248,6 @@ public class StubJarTest {
 
   @Test
   public void shouldPreserveGenericTypesOnFields() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
@@ -657,8 +655,6 @@ public class StubJarTest {
 
   @Test
   public void abiSafeChangesResultInTheSameOutputJar() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
@@ -694,8 +690,6 @@ public class StubJarTest {
 
   @Test
   public void shouldIncludeStaticFields() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
