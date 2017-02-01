@@ -450,6 +450,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     ImmutableSortedSet<Path> declared = ImmutableSortedSet.<Path>naturalOrder()
         .addAll(declaredClasspaths)
         .addAll(additionalClasspathEntries)
+        .add(Paths.get(System.getProperty("java.home")).resolve("lib").resolve("rt.jar"))
         .addAll(provided)
         .build();
 
