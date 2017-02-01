@@ -54,6 +54,8 @@ class ClassVisitorDriverFromElement {
       new ElementScanner8<Void, ClassVisitor>() {
         //boolean classVisitorStarted = false;
 
+        // TODO(jkeljo): Type annotations
+
         @Override
         public Void visitType(TypeElement e, ClassVisitor visitor) {
           // TODO(jkeljo): Skip anonymous and local
@@ -95,13 +97,33 @@ class ClassVisitorDriverFromElement {
               signatureFactory.getSignature(e),
               exceptions);
 
-          // TODO(jkeljo): parameters
-          // TODO(jkeljo): type parameters
-
+          visitParameters(e.getParameters(), methodVisitor);
           visitAnnotations(e.getAnnotationMirrors(), methodVisitor::visitAnnotation);
           methodVisitor.visitEnd();
 
           return null;
+        }
+
+        private void visitParameters(
+            List<? extends VariableElement> parameters,
+            MethodVisitor methodVisitor) {
+          for (VariableElement parameter : parameters) {
+            methodVisitor.visitParameter(
+                parameter.getSimpleName().toString(),
+                AccessFlags.getAccessFlags(parameter));
+          }
+
+          for (int i = 0; i < parameters.size(); i++) {
+            VariableElement parameter = parameters.get(i);
+            for (AnnotationMirror annotationMirror : parameter.getAnnotationMirrors()) {
+              visitAnnotationValues(
+                  annotationMirror,
+                  methodVisitor.visitParameterAnnotation(
+                      i,
+                      descriptorFactory.getDescriptor(annotationMirror.getAnnotationType()),
+                      isRuntimeVisible(annotationMirror)));
+            }
+          }
         }
 
         @Override

@@ -357,7 +357,7 @@ public class StubJarTest {
 
   @Test
   public void preservesAnnotationsOnParameters() throws IOException {
-    notYetImplementedForSource();
+    notYetImplementedForMissingClasspath();
 
     Path annotations = createAnnotationFullJar();
     JarPaths paths = createFullAndStubJars(
