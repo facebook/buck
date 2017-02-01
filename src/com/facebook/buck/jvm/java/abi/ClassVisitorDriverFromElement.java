@@ -33,7 +33,6 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -50,224 +49,6 @@ class ClassVisitorDriverFromElement {
   private final SourceVersion targetVersion;
   private final Elements elements;
 
-  private final ElementVisitor<Void, ClassVisitor> elementVisitorAdapter =
-      new ElementScanner8<Void, ClassVisitor>() {
-        //boolean classVisitorStarted = false;
-
-        // TODO(jkeljo): Type annotations
-
-        @Override
-        public Void visitType(TypeElement e, ClassVisitor visitor) {
-          // TODO(jkeljo): Skip anonymous and local
-          // TODO(jkeljo): inner class
-
-          TypeMirror superclass = e.getSuperclass();
-          if (superclass.getKind() == TypeKind.NONE) {
-            superclass = elements.getTypeElement("java.lang.Object").asType();
-          }
-          visitor.visit(
-              sourceVersionToClassFileVersion(targetVersion),
-              AccessFlags.getAccessFlags(e),
-              descriptorFactory.getInternalName(e),
-              signatureFactory.getSignature(e),
-              descriptorFactory.getInternalName(superclass),
-              e.getInterfaces().stream()
-                  .map(descriptorFactory::getInternalName)
-                  .toArray(size -> new String[size]));
-
-          // TODO(jkeljo): outer class
-          visitAnnotations(e.getAnnotationMirrors(), visitor::visitAnnotation);
-          super.visitType(e, visitor);
-
-          return null;
-        }
-
-        @Override
-        public Void visitExecutable(ExecutableElement e, ClassVisitor visitor) {
-          if (e.getModifiers().contains(Modifier.PRIVATE)) {
-            return null;
-          }
-
-          String[] exceptions = null;  // TODO(jkeljo): Handle throws
-
-          MethodVisitor methodVisitor = visitor.visitMethod(
-              AccessFlags.getAccessFlags(e),
-              e.getSimpleName().toString(),
-              descriptorFactory.getDescriptor(e),
-              signatureFactory.getSignature(e),
-              exceptions);
-
-          visitParameters(e.getParameters(), methodVisitor);
-          visitDefaultValue(e, methodVisitor);
-          visitAnnotations(e.getAnnotationMirrors(), methodVisitor::visitAnnotation);
-          methodVisitor.visitEnd();
-
-          return null;
-        }
-
-        private void visitParameters(
-            List<? extends VariableElement> parameters,
-            MethodVisitor methodVisitor) {
-          for (VariableElement parameter : parameters) {
-            methodVisitor.visitParameter(
-                parameter.getSimpleName().toString(),
-                AccessFlags.getAccessFlags(parameter));
-          }
-
-          for (int i = 0; i < parameters.size(); i++) {
-            VariableElement parameter = parameters.get(i);
-            for (AnnotationMirror annotationMirror : parameter.getAnnotationMirrors()) {
-              visitAnnotationValues(
-                  annotationMirror,
-                  methodVisitor.visitParameterAnnotation(
-                      i,
-                      descriptorFactory.getDescriptor(annotationMirror.getAnnotationType()),
-                      isRuntimeVisible(annotationMirror)));
-            }
-          }
-        }
-
-        private void visitDefaultValue(ExecutableElement e, MethodVisitor methodVisitor) {
-          AnnotationValue defaultValue = e.getDefaultValue();
-          if (defaultValue == null) {
-            return;
-          }
-
-          AnnotationVisitor annotationVisitor = methodVisitor.visitAnnotationDefault();
-          visitAnnotationValue(null, defaultValue.getValue(), annotationVisitor);
-          annotationVisitor.visitEnd();
-        }
-
-        @Override
-        public Void visitVariable(VariableElement e, ClassVisitor classVisitor) {
-          if (e.getModifiers().contains(Modifier.PRIVATE)) {
-            return null;
-          }
-
-          FieldVisitor fieldVisitor = classVisitor.visitField(
-              AccessFlags.getAccessFlags(e),
-              e.getSimpleName().toString(),
-              descriptorFactory.getDescriptor(e),
-              signatureFactory.getSignature(e),
-              e.getConstantValue());
-          visitAnnotations(e.getAnnotationMirrors(), fieldVisitor::visitAnnotation);
-
-          fieldVisitor.visitEnd();
-
-          return null;
-        }
-
-        private void visitAnnotations(
-            List<? extends AnnotationMirror> annotations,
-            VisitorWithAnnotations visitor) {
-          annotations.forEach(annotation -> visitAnnotation(annotation, visitor));
-        }
-
-        private void visitAnnotation(AnnotationMirror annotation, VisitorWithAnnotations visitor) {
-          AnnotationVisitor annotationVisitor = visitor.visitAnnotation(
-              descriptorFactory.getDescriptor(annotation.getAnnotationType()),
-              isRuntimeVisible(annotation));
-          visitAnnotationValues(annotation, annotationVisitor);
-          annotationVisitor.visitEnd();
-        }
-
-        private void visitAnnotationValues(
-            AnnotationMirror annotation,
-            AnnotationVisitor annotationVisitor) {
-          visitAnnotationValues(annotation.getElementValues(), annotationVisitor);
-        }
-
-        private void visitAnnotationValues(
-            Map<? extends ExecutableElement, ? extends AnnotationValue> elementValues,
-            AnnotationVisitor visitor) {
-          elementValues.entrySet().forEach(entry -> visitAnnotationValue(
-              entry.getKey().getSimpleName().toString(),
-              entry.getValue().getValue(),
-              visitor));
-        }
-
-        private void visitAnnotationValue(
-            String name,
-            Object value,
-            AnnotationVisitor visitor) {
-
-          if (value instanceof Boolean ||
-              value instanceof Byte ||
-              value instanceof Character ||
-              value instanceof Short ||
-              value instanceof Integer ||
-              value instanceof Long ||
-              value instanceof Float ||
-              value instanceof Double ||
-              value instanceof String) {
-            visitAnnotationPrimitiveValue(name, value, visitor);
-          } else if (value instanceof TypeMirror) {
-            visitAnnotationTypeValue(name, (TypeMirror) value, visitor);
-          } else if (value instanceof VariableElement) {
-            visitAnnotationEnumValue(name, (VariableElement) value, visitor);
-          } else if (value instanceof AnnotationMirror) {
-            visitAnnotationAnnotationValue(name, (AnnotationMirror) value, visitor);
-          } else if (value instanceof List) {
-            @SuppressWarnings("unchecked")  // See docs for AnnotationValue
-            List<? extends AnnotationValue> listValue = (List<? extends AnnotationValue>) value;
-            visitAnnotationArrayValue(name, listValue, visitor);
-          } else {
-            throw new IllegalArgumentException(String.format(
-                "Unexpected annotaiton value type: %s",
-                value.getClass()));
-          }
-        }
-
-        private void visitAnnotationPrimitiveValue(
-            String name,
-            Object value,
-            AnnotationVisitor visitor) {
-          visitor.visit(name, value);
-        }
-
-        private void visitAnnotationTypeValue(
-            String name,
-            TypeMirror value,
-            AnnotationVisitor visitor) {
-          visitor.visit(name, descriptorFactory.getType(value));
-        }
-
-        private void visitAnnotationEnumValue(
-            String name,
-            VariableElement value,
-            AnnotationVisitor visitor) {
-          visitor.visitEnum(
-              name,
-              descriptorFactory.getDescriptor(value.getEnclosingElement()),
-              value.getSimpleName().toString());
-        }
-
-        private void visitAnnotationAnnotationValue(
-            String name,
-            AnnotationMirror value,
-            AnnotationVisitor visitor) {
-          AnnotationVisitor annotationValueVisitor = visitor.visitAnnotation(
-              name,
-              descriptorFactory.getDescriptor(value.getAnnotationType()));
-          visitAnnotationValues(
-              value,
-              annotationValueVisitor);
-          annotationValueVisitor.visitEnd();
-        }
-
-        private void visitAnnotationArrayValue(
-            String name,
-            List<? extends AnnotationValue> value,
-            AnnotationVisitor visitor) {
-          AnnotationVisitor arrayMemberVisitor = visitor.visitArray(name);
-          value.forEach(annotationValue -> visitAnnotationValue(
-              null,
-              annotationValue.getValue(),
-              arrayMemberVisitor));
-          arrayMemberVisitor.visitEnd();
-        }
-      };
-
   /**
    * @param targetVersion the class file version to target, expressed as the corresponding Java
    *                      source version
@@ -280,7 +61,7 @@ class ClassVisitorDriverFromElement {
   }
 
   public void driveVisitor(TypeElement fullClass, ClassVisitor visitor) throws IOException {
-    fullClass.accept(elementVisitorAdapter, visitor);
+    fullClass.accept(new ElementVisitorAdapter(), visitor);
     visitor.visitEnd();
   }
 
@@ -359,5 +140,228 @@ class ClassVisitorDriverFromElement {
 
   private interface VisitorWithAnnotations {
     AnnotationVisitor visitAnnotation(String desc, boolean visible);
+  }
+
+  private class ElementVisitorAdapter extends ElementScanner8<Void, ClassVisitor> {
+    //boolean classVisitorStarted = false;
+
+    // TODO(jkeljo): Type annotations
+
+    @Override
+    public Void visitType(TypeElement e, ClassVisitor visitor) {
+      // TODO(jkeljo): Skip anonymous and local
+      // TODO(jkeljo): inner class
+      // TODO(jkeljo): Synthetic enclosing instance field for inner class
+
+      TypeMirror superclass = e.getSuperclass();
+      if (superclass.getKind() == TypeKind.NONE) {
+        superclass = elements.getTypeElement("java.lang.Object").asType();
+      }
+      visitor.visit(
+          sourceVersionToClassFileVersion(targetVersion),
+          AccessFlags.getAccessFlags(e),
+          descriptorFactory.getInternalName(e),
+          signatureFactory.getSignature(e),
+          descriptorFactory.getInternalName(superclass),
+          e.getInterfaces().stream()
+              .map(descriptorFactory::getInternalName)
+              .toArray(size -> new String[size]));
+
+      // TODO(jkeljo): outer class
+      visitAnnotations(e.getAnnotationMirrors(), visitor::visitAnnotation);
+      super.visitType(e, visitor);
+
+      return null;
+    }
+
+    @Override
+    public Void visitExecutable(ExecutableElement e, ClassVisitor visitor) {
+      if (e.getModifiers().contains(Modifier.PRIVATE)) {
+        return null;
+      }
+
+      // TODO(jkeljo): Bridge methods: Look at superclasses, then interfaces, checking whether
+      // method types change in the new class
+
+      // TODO(jkeljo): Inner class constructors: need more tests for different kinds of
+      // enclosing instance situations (e.g. superclasses)
+
+      String[] exceptions = null;  // TODO(jkeljo): Handle throws
+
+      MethodVisitor methodVisitor = visitor.visitMethod(
+          AccessFlags.getAccessFlags(e),
+          e.getSimpleName().toString(),
+          descriptorFactory.getDescriptor(e),
+          signatureFactory.getSignature(e),
+          exceptions);
+
+      visitParameters(e.getParameters(), methodVisitor);
+      visitDefaultValue(e, methodVisitor);
+      visitAnnotations(e.getAnnotationMirrors(), methodVisitor::visitAnnotation);
+      methodVisitor.visitEnd();
+
+      return null;
+    }
+
+    private void visitParameters(
+        List<? extends VariableElement> parameters,
+        MethodVisitor methodVisitor) {
+      for (VariableElement parameter : parameters) {
+        methodVisitor.visitParameter(
+            parameter.getSimpleName().toString(),
+            AccessFlags.getAccessFlags(parameter));
+      }
+
+      for (int i = 0; i < parameters.size(); i++) {
+        VariableElement parameter = parameters.get(i);
+        for (AnnotationMirror annotationMirror : parameter.getAnnotationMirrors()) {
+          visitAnnotationValues(
+              annotationMirror,
+              methodVisitor.visitParameterAnnotation(
+                  i,
+                  descriptorFactory.getDescriptor(annotationMirror.getAnnotationType()),
+                  isRuntimeVisible(annotationMirror)));
+        }
+      }
+    }
+
+    private void visitDefaultValue(ExecutableElement e, MethodVisitor methodVisitor) {
+      AnnotationValue defaultValue = e.getDefaultValue();
+      if (defaultValue == null) {
+        return;
+      }
+
+      AnnotationVisitor annotationVisitor = methodVisitor.visitAnnotationDefault();
+      visitAnnotationValue(null, defaultValue.getValue(), annotationVisitor);
+      annotationVisitor.visitEnd();
+    }
+
+    @Override
+    public Void visitVariable(VariableElement e, ClassVisitor classVisitor) {
+      if (e.getModifiers().contains(Modifier.PRIVATE)) {
+        return null;
+      }
+
+      FieldVisitor fieldVisitor = classVisitor.visitField(
+          AccessFlags.getAccessFlags(e),
+          e.getSimpleName().toString(),
+          descriptorFactory.getDescriptor(e),
+          signatureFactory.getSignature(e),
+          e.getConstantValue());
+      visitAnnotations(e.getAnnotationMirrors(), fieldVisitor::visitAnnotation);
+      fieldVisitor.visitEnd();
+
+      return null;
+    }
+
+    private void visitAnnotations(
+        List<? extends AnnotationMirror> annotations,
+        VisitorWithAnnotations visitor) {
+      annotations.forEach(annotation -> visitAnnotation(annotation, visitor));
+    }
+
+    private void visitAnnotation(AnnotationMirror annotation, VisitorWithAnnotations visitor) {
+      AnnotationVisitor annotationVisitor = visitor.visitAnnotation(
+          descriptorFactory.getDescriptor(annotation.getAnnotationType()),
+          isRuntimeVisible(annotation));
+      visitAnnotationValues(annotation, annotationVisitor);
+      annotationVisitor.visitEnd();
+    }
+
+    private void visitAnnotationValues(
+        AnnotationMirror annotation,
+        AnnotationVisitor annotationVisitor) {
+      visitAnnotationValues(annotation.getElementValues(), annotationVisitor);
+    }
+
+    private void visitAnnotationValues(
+        Map<? extends ExecutableElement, ? extends AnnotationValue> elementValues,
+        AnnotationVisitor visitor) {
+      elementValues.entrySet().forEach(entry -> visitAnnotationValue(
+          entry.getKey().getSimpleName().toString(),
+          entry.getValue().getValue(),
+          visitor));
+    }
+
+    private void visitAnnotationValue(
+        String name,
+        Object value,
+        AnnotationVisitor visitor) {
+
+      if (value instanceof Boolean ||
+          value instanceof Byte ||
+          value instanceof Character ||
+          value instanceof Short ||
+          value instanceof Integer ||
+          value instanceof Long ||
+          value instanceof Float ||
+          value instanceof Double ||
+          value instanceof String) {
+        visitAnnotationPrimitiveValue(name, value, visitor);
+      } else if (value instanceof TypeMirror) {
+        visitAnnotationTypeValue(name, (TypeMirror) value, visitor);
+      } else if (value instanceof VariableElement) {
+        visitAnnotationEnumValue(name, (VariableElement) value, visitor);
+      } else if (value instanceof AnnotationMirror) {
+        visitAnnotationAnnotationValue(name, (AnnotationMirror) value, visitor);
+      } else if (value instanceof List) {
+        @SuppressWarnings("unchecked")  // See docs for AnnotationValue
+        List<? extends AnnotationValue> listValue = (List<? extends AnnotationValue>) value;
+        visitAnnotationArrayValue(name, listValue, visitor);
+      } else {
+        throw new IllegalArgumentException(String.format(
+            "Unexpected annotaiton value type: %s",
+            value.getClass()));
+      }
+    }
+
+    private void visitAnnotationPrimitiveValue(
+        String name,
+        Object value,
+        AnnotationVisitor visitor) {
+      visitor.visit(name, value);
+    }
+
+    private void visitAnnotationTypeValue(
+        String name,
+        TypeMirror value,
+        AnnotationVisitor visitor) {
+      visitor.visit(name, descriptorFactory.getType(value));
+    }
+
+    private void visitAnnotationEnumValue(
+        String name,
+        VariableElement value,
+        AnnotationVisitor visitor) {
+      visitor.visitEnum(
+          name,
+          descriptorFactory.getDescriptor(value.getEnclosingElement()),
+          value.getSimpleName().toString());
+    }
+
+    private void visitAnnotationAnnotationValue(
+        String name,
+        AnnotationMirror value,
+        AnnotationVisitor visitor) {
+      AnnotationVisitor annotationValueVisitor = visitor.visitAnnotation(
+          name,
+          descriptorFactory.getDescriptor(value.getAnnotationType()));
+      visitAnnotationValues(
+          value,
+          annotationValueVisitor);
+      annotationValueVisitor.visitEnd();
+    }
+
+    private void visitAnnotationArrayValue(
+        String name,
+        List<? extends AnnotationValue> value,
+        AnnotationVisitor visitor) {
+      AnnotationVisitor arrayMemberVisitor = visitor.visitArray(name);
+      value.forEach(annotationValue -> visitAnnotationValue(
+          null,
+          annotationValue.getValue(),
+          arrayMemberVisitor));
+      arrayMemberVisitor.visitEnd();
+    }
   }
 }
