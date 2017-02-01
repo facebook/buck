@@ -139,6 +139,16 @@ class SignatureFactory {
 
           return null;
         }
+
+        @Override
+        public Void visitVariable(VariableElement element, SignatureVisitor visitor) {
+          if (!signatureRequired(element)) {
+            return null;
+          }
+
+          element.asType().accept(typeVisitorAdapter, visitor);
+          return null;
+        }
       };
 
   /**
@@ -319,6 +329,14 @@ class SignatureFactory {
       }
     }
     return false;
+  }
+
+  /**
+   * Returns true if the JVM spec requires a signature to be emitted for this field.
+   * See JVMS8 4.7.9.1
+   */
+  private static boolean signatureRequired(VariableElement element) {
+    return usesGenerics(element.asType());
   }
 
   private static boolean usesGenerics(TypeMirror type) {

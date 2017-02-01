@@ -33,6 +33,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 
 @RunWith(CompilerTreeApiTestRunner.class)
 public class SignatureFactoryTest extends CompilerTreeApiTest {
@@ -168,6 +169,21 @@ public class SignatureFactoryTest extends CompilerTreeApiTest {
     assertEquals(
         "Ljava/util/ArrayList<[I>;",
         signatureFactory.getSignature(elements.getTypeElement("com.facebook.foo.Foo")));
+  }
+
+  @Test
+  public void testSignatureOfGenericArrayType() throws IOException {
+    compile(Joiner.on('\n').join(
+        "package com.facebook.foo;",
+        "class Foo {",
+        "  java.util.List<String>[] field;",
+        "}"));
+
+    assertEquals(
+        "[Ljava/util/List<Ljava/lang/String;>;",
+        signatureFactory.getSignature(getField(
+            "field",
+            elements.getTypeElement("com.facebook.foo.Foo"))));
   }
 
   @Test
@@ -317,6 +333,34 @@ public class SignatureFactoryTest extends CompilerTreeApiTest {
             elements.getTypeElement("com.facebook.foo.Foo"))));
   }
 
+  @Test
+  public void testSignatureOfNonGenericFieldIsNull() throws IOException {
+    compile(Joiner.on('\n').join(
+        "package com.facebook.foo;",
+        "class Foo {",
+        "  int field;",
+        "}"));
+
+    assertNull(signatureFactory.getSignature(getField(
+        "field",
+        elements.getTypeElement("com.facebook.foo.Foo"))));
+  }
+
+  @Test
+  public void testSignatureOfGenericField() throws IOException {
+    compile(Joiner.on('\n').join(
+        "package com.facebook.foo;",
+        "class Foo {",
+        "  java.util.List<String> field;",
+        "}"));
+
+    assertEquals(
+        "Ljava/util/List<Ljava/lang/String;>;",
+        signatureFactory.getSignature(getField(
+            "field",
+            elements.getTypeElement("com.facebook.foo.Foo"))));
+  }
+
   @Override
   protected CompilerTreeApiFactory initCompiler(
       Map<String, String> fileNamesToContents) throws IOException {
@@ -333,5 +377,15 @@ public class SignatureFactoryTest extends CompilerTreeApiTest {
     }
 
     throw new IllegalArgumentException(String.format("No such method in %s: %s", type, name));
+  }
+
+  private VariableElement getField(String name, TypeElement type) {
+    for (Element element : type.getEnclosedElements()) {
+      if (element.getKind() == ElementKind.FIELD && element.getSimpleName().contentEquals(name)) {
+        return (VariableElement) element;
+      }
+    }
+
+    throw new IllegalArgumentException(String.format("No such field in %s: %s", type, name));
   }
 }
