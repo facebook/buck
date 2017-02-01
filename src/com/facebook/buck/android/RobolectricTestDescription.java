@@ -196,7 +196,6 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
         params.copyWithDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
-        pathResolver,
         ruleFinder,
         testsLibrary,
         additionalClasspathEntries,

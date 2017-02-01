@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import static org.easymock.EasyMock.createMock;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -47,7 +48,10 @@ public class JavaTestRuleTest {
     ImmutableList<String> vmArgs = ImmutableList.of("--one", "--two", "--three");
     JavaTest rule = newRule(vmArgs);
 
-    ImmutableList<String> amended = rule.amendVmArgs(vmArgs, Optional.empty());
+    ImmutableList<String> amended = rule.amendVmArgs(
+        vmArgs,
+        createMock(SourcePathResolver.class),
+        Optional.empty());
 
     MoreAsserts.assertListEquals(vmArgs, amended);
   }
@@ -58,7 +62,10 @@ public class JavaTestRuleTest {
     JavaTest rule = newRule(vmArgs);
 
     TargetDevice device = new TargetDevice(TargetDevice.Type.EMULATOR, null);
-    ImmutableList<String> amended = rule.amendVmArgs(vmArgs, Optional.of(device));
+    ImmutableList<String> amended = rule.amendVmArgs(
+        vmArgs,
+        createMock(SourcePathResolver.class),
+        Optional.of(device));
 
     ImmutableList<String> expected = ImmutableList.of("--one", "-Dbuck.device=emulator");
     assertEquals(expected, amended);
@@ -70,7 +77,10 @@ public class JavaTestRuleTest {
     JavaTest rule = newRule(vmArgs);
 
     TargetDevice device = new TargetDevice(TargetDevice.Type.REAL_DEVICE, null);
-    ImmutableList<String> amended = rule.amendVmArgs(vmArgs, Optional.of(device));
+    ImmutableList<String> amended = rule.amendVmArgs(
+        vmArgs,
+        createMock(SourcePathResolver.class),
+        Optional.of(device));
 
     ImmutableList<String> expected = ImmutableList.of("--one", "-Dbuck.device=device");
     assertEquals(expected, amended);
@@ -82,7 +92,10 @@ public class JavaTestRuleTest {
     JavaTest rule = newRule(vmArgs);
 
     TargetDevice device = new TargetDevice(TargetDevice.Type.EMULATOR, "123");
-    List<String> amended = rule.amendVmArgs(vmArgs, Optional.of(device));
+    List<String> amended = rule.amendVmArgs(
+        vmArgs,
+        createMock(SourcePathResolver.class),
+        Optional.of(device));
 
     List<String> expected = ImmutableList.of(
         "--one", "-Dbuck.device=emulator", "-Dbuck.device.id=123");

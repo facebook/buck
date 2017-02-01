@@ -32,6 +32,8 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -116,11 +118,12 @@ public class RobolectricTestRuleTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(robolectricTestNode);
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
 
     RobolectricTest robolectricTest =
         (RobolectricTest) resolver.requireRule(robolectricBuildTarget);
 
-    String result = robolectricTest.getRobolectricResourceDirectories(resDeps);
+    String result = robolectricTest.getRobolectricResourceDirectories(pathResolver, resDeps);
     for (HasAndroidResourceDeps dep : resDeps) {
       // Every value should be a PathSourcePath
       assertTrue(
@@ -162,11 +165,13 @@ public class RobolectricTestRuleTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(robolectricTestNode);
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
 
     RobolectricTest robolectricTest =
         (RobolectricTest) resolver.requireRule(robolectricBuildTarget);
 
     String result = robolectricTest.getRobolectricResourceDirectories(
+        pathResolver,
         ImmutableList.of(
             new ResourceRule(new PathSourcePath(filesystem, resDep1)),
             new ResourceRule(new PathSourcePath(filesystem, resDep2)),
@@ -189,12 +194,14 @@ public class RobolectricTestRuleTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(robolectricTestNode);
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
 
     RobolectricTest robolectricTest =
         (RobolectricTest) resolver.requireRule(robolectricBuildTarget);
 
     try {
       robolectricTest.getRobolectricResourceDirectories(
+          pathResolver,
           ImmutableList.of(
               new ResourceRule(new PathSourcePath(filesystem, Paths.get("not_there")))));
       fail("Expected FileNotFoundException");

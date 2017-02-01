@@ -23,7 +23,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -54,7 +54,6 @@ import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.MoreCollectors;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -82,7 +81,7 @@ import javax.annotation.Nullable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class JavaTest
-    extends AbstractBuildRuleWithResolver
+    extends AbstractBuildRule
     implements TestRule, HasClasspathEntries, HasRuntimeDeps, HasPostBuildSteps,
         ExternalTestRunnerRule, ExportDependencies {
 
@@ -143,7 +142,6 @@ public class JavaTest
 
   public JavaTest(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       JavaLibrary compiledTestsLibrary,
       ImmutableSet<Path> additionalClasspathEntries,
       Set<Label> labels,
@@ -159,7 +157,7 @@ public class JavaTest
       ForkMode forkMode,
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel) {
-    super(params, resolver);
+    super(params);
     this.compiledTestsLibrary = compiledTestsLibrary;
     this.additionalClasspathEntries = additionalClasspathEntries;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
@@ -201,6 +199,7 @@ public class JavaTest
 
   private JUnitStep getJUnitStep(
       ExecutionContext executionContext,
+      SourcePathResolver pathResolver,
       TestRunningOptions options,
       Optional<Path> outDir,
       Optional<Path> robolectricLogPath,
@@ -211,6 +210,7 @@ public class JavaTest
 
     ImmutableList<String> properVmArgs = amendVmArgs(
         this.vmArgs,
+        pathResolver,
         executionContext.getTargetDevice());
 
     BuckEventBus buckEventBus = executionContext.getBuckEventBus();
@@ -282,6 +282,7 @@ public class JavaTest
         junitsBuilder.add(
           getJUnitStep(
               executionContext,
+              pathResolver,
               options,
               Optional.of(pathToTestOutput),
               Optional.of(pathToTestLogs),
@@ -293,6 +294,7 @@ public class JavaTest
       junits = ImmutableList.of(
           getJUnitStep(
             executionContext,
+            pathResolver,
             options,
             Optional.of(pathToTestOutput),
             Optional.of(pathToTestLogs),
@@ -319,13 +321,13 @@ public class JavaTest
     return reorderedClassNames;
   }
 
-  @VisibleForTesting
   ImmutableList<String> amendVmArgs(
       ImmutableList<String> existingVmArgs,
+      SourcePathResolver pathResolver,
       Optional<TargetDevice> targetDevice) {
     ImmutableList.Builder<String> vmArgs = ImmutableList.builder();
     vmArgs.addAll(existingVmArgs);
-    onAmendVmArgs(vmArgs, targetDevice);
+    onAmendVmArgs(vmArgs, pathResolver, targetDevice);
     return vmArgs.build();
   }
 
@@ -333,8 +335,10 @@ public class JavaTest
    * Override this method if you need to amend vm args. Subclasses are required
    * to call super.onAmendVmArgs(...).
    */
-  protected void onAmendVmArgs(ImmutableList.Builder<String> vmArgsBuilder,
-                               Optional<TargetDevice> targetDevice) {
+  protected void onAmendVmArgs(
+      ImmutableList.Builder<String> vmArgsBuilder,
+      @SuppressWarnings("unused") SourcePathResolver pathResolver,
+      Optional<TargetDevice> targetDevice) {
     if (!targetDevice.isPresent()) {
       return;
     }
@@ -556,6 +560,7 @@ public class JavaTest
     JUnitStep jUnitStep =
         getJUnitStep(
             executionContext,
+            pathResolver,
             options,
             Optional.empty(),
             Optional.empty(),
@@ -572,7 +577,7 @@ public class JavaTest
   }
 
   @Override
-  public ImmutableList<Step> getPostBuildSteps(BuildContext context) {
+  public ImmutableList<Step> getPostBuildSteps(BuildContext buildContext) {
     return ImmutableList.<Step>builder()
         .add(new MkdirStep(getProjectFilesystem(), getClassPathFile().getParent()))
         .add(
@@ -581,7 +586,7 @@ public class JavaTest
               public StepExecutionResult execute(ExecutionContext context) throws IOException {
                 ImmutableSet<Path> classpathEntries = ImmutableSet.<Path>builder()
                     .addAll(compiledTestsLibrary.getTransitiveClasspaths().stream()
-                        .map(getResolver()::getAbsolutePath)
+                        .map(buildContext.getSourcePathResolver()::getAbsolutePath)
                         .collect(MoreCollectors.toImmutableSet()))
                     .addAll(additionalClasspathEntries)
                     .addAll(getBootClasspathEntries(context))

@@ -165,7 +165,6 @@ public class JavaTestDescription implements
         params.copyWithDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
-        pathResolver,
         testsLibrary,
         /* additionalClasspathEntries */ ImmutableSet.of(),
         args.labels,

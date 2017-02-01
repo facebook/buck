@@ -30,7 +30,6 @@ import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -39,7 +38,6 @@ public class KotlinTest extends JavaTest {
 
   public KotlinTest(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       JavaLibrary compiledTestsLibrary,
       ImmutableSet<Path> additionalClasspathEntries,
       Set<Label> labels,
@@ -58,7 +56,6 @@ public class KotlinTest extends JavaTest {
 
     super(
         params,
-        resolver,
         compiledTestsLibrary,
         additionalClasspathEntries,
         labels,
