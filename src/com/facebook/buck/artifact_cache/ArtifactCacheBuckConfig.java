@@ -89,7 +89,7 @@ public class ArtifactCacheBuckConfig {
   private static final String LOAD_BALANCING_TYPE = "load_balancing_type";
   private static final LoadBalancingType DEFAULT_LOAD_BALANCING_TYPE =
       LoadBalancingType.SINGLE_SERVER;
-  private static final long DEFAULT_HTTP_THREAD_POOL_SIZE = 200;
+  private static final long DEFAULT_HTTP_THREAD_POOL_SIZE = 5;
   private static final long DEFAULT_HTTP_THREAD_POOL_KEEP_ALIVE_DURATION_MILLIS =
       TimeUnit.MINUTES.toMillis(1);
 
