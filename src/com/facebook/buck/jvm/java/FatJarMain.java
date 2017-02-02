@@ -23,7 +23,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.util.exportedfiles.Preconditions;
+import com.facebook.buck.util.liteinfersupport.Preconditions;
 
 import java.io.File;
 import java.io.IOException;

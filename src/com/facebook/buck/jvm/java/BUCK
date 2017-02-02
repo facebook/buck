@@ -6,12 +6,14 @@ java_library(
   srcs = [
     'FatJar.java',
     'FatJarMain.java',
-    '//src/com/facebook/buck/util/exportedfiles:Nullable.java',
-    '//src/com/facebook/buck/util/exportedfiles:Preconditions.java',
   ],
-  # Must be empty!  We package these sources and compile them into fat JARs,
-  # so it's important that they don't bring along any additional dependencies.
-  deps = []
+  autodeps = False, # See deps
+  deps = [
+    # Don't add more dependencies beyond what we need for Infer! We package these sources and
+    # compile them into fat JARs, so it's important that they don't bring along any additional
+    # dependencies.
+    '//src/com/facebook/buck/util/liteinfersupport:liteinfersupport',
+  ]
 )
 
 java_library(
@@ -157,8 +159,8 @@ java_library(
   resources = [
     'FatJar.java',
     'FatJarMain.java',
-    '//src/com/facebook/buck/util/exportedfiles:Nullable.java',
-    '//src/com/facebook/buck/util/exportedfiles:Preconditions.java',
+    '//src/com/facebook/buck/util/liteinfersupport:Nullable.java',
+    '//src/com/facebook/buck/util/liteinfersupport:Preconditions.java',
   ],
   autodeps = True,
   visibility = ['PUBLIC'],

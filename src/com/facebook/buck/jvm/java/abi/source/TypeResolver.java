@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
-import com.facebook.buck.util.exportedfiles.Nullable;
-import com.facebook.buck.util.exportedfiles.Preconditions;
+import com.facebook.buck.util.liteinfersupport.Nullable;
+import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.ArrayTypeTree;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.MemberSelectTree;

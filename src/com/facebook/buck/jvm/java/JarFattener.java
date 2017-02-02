@@ -67,8 +67,8 @@ public class JarFattener extends AbstractBuildRuleWithResolver implements Binary
   public static final ImmutableList<String> FAT_JAR_SRC_RESOURCES =
       ImmutableList.of(
           "com/facebook/buck/jvm/java/FatJar.java",
-          "com/facebook/buck/util/exportedfiles/Nullable.java",
-          "com/facebook/buck/util/exportedfiles/Preconditions.java"
+          "com/facebook/buck/util/liteinfersupport/Nullable.java",
+          "com/facebook/buck/util/liteinfersupport/Preconditions.java"
       );
   public static final String FAT_JAR_MAIN_SRC_RESOURCE =
       "com/facebook/buck/jvm/java/FatJarMain.java";

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
-import com.facebook.buck.util.exportedfiles.Preconditions;
+import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.BlockTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;

@@ -1,0 +1,31 @@
+# Includes stripped-down versions of types that Infer recognizes, so that we can use Infer on
+# code that must be very light on dependencies.
+java_library(
+  name = 'liteinfersupport',
+  srcs = glob(['*.java']),
+  autodeps = False,  # see below
+  deps = [
+    # This module is intended for use in dependency-constrained environments. Don't take deps.
+  ],
+  visibility = [
+    '//src/com/facebook/buck/jvm/java:java',
+    '//src/com/facebook/buck/jvm/java:fat-jar-main',
+    '//src/com/facebook/buck/jvm/java/abi/source:source',
+    '//src/com/facebook/buck/jvm/java/tracing:api',
+    '//src/com/facebook/buck/jvm/java/tracing:compiler-plugin',
+  ]
+)
+
+export_file(
+  name = 'Preconditions.java',
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+export_file(
+  name = 'Nullable.java',
+  visibility = [
+    'PUBLIC',
+  ],
+)

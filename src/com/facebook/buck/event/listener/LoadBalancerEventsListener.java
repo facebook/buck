@@ -29,7 +29,7 @@ import com.facebook.buck.slb.PerServerData;
 import com.facebook.buck.slb.PerServerPingData;
 import com.facebook.buck.slb.ServerHealthManagerEvent;
 import com.facebook.buck.slb.ServerHealthManagerEventData;
-import com.facebook.buck.util.exportedfiles.Preconditions;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;

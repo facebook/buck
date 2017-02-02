@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
-import com.facebook.buck.util.exportedfiles.Nullable;
+import com.facebook.buck.util.liteinfersupport.Nullable;
 
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;

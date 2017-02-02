@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util.exportedfiles;
+package com.facebook.buck.util.liteinfersupport;
 
 /**
  * Some projects like FatJar is going to be embedded in many targets, it cannot have external

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.tracing;
 
-import com.facebook.buck.util.exportedfiles.Nullable;
+import com.facebook.buck.util.liteinfersupport.Nullable;
 
 import java.util.List;
 

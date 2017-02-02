@@ -17,8 +17,8 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.jvm.java.abi.source.api.BootClasspathOracle;
-import com.facebook.buck.util.exportedfiles.Nullable;
-import com.facebook.buck.util.exportedfiles.Preconditions;
+import com.facebook.buck.util.liteinfersupport.Nullable;
+import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskEvent;

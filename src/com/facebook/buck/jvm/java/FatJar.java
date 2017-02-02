@@ -23,8 +23,8 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.util.exportedfiles.Nullable;
-import com.facebook.buck.util.exportedfiles.Preconditions;
+import com.facebook.buck.util.liteinfersupport.Nullable;
+import com.facebook.buck.util.liteinfersupport.Preconditions;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;

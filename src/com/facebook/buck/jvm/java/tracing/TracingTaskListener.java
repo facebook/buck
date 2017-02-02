@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java.tracing;
 
 import com.facebook.buck.jvm.java.plugin.adapter.TaskListenerWrapper;
-import com.facebook.buck.util.exportedfiles.Nullable;
+import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
