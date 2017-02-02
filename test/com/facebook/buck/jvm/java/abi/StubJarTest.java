@@ -624,8 +624,6 @@ public class StubJarTest {
 
   @Test
   public void stubsInnerClasses() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
@@ -710,8 +708,6 @@ public class StubJarTest {
 
   @Test
   public void innerClassesInStubsCanBeCompiledAgainst() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "Outer.java",

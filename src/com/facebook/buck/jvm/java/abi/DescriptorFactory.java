@@ -20,6 +20,8 @@ import com.google.common.base.Preconditions;
 
 import org.objectweb.asm.Type;
 
+import java.util.stream.Stream;
+
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -70,9 +72,18 @@ class DescriptorFactory {
 
       @Override
       public Type visitExecutable(ExecutableElement e, Void aVoid) {
+        Stream<TypeMirror> parameterTypeStream = e.getParameters().stream()
+            .map(Element::asType);
+
+        if (MoreElements.isInnerClassConstructor(e)) {
+          parameterTypeStream = Stream.concat(
+              Stream.of(MoreElements.getOuterClass(e).asType()),
+              parameterTypeStream);
+        }
+
         return Type.getMethodType(
             getType(e.getReturnType()),
-            e.getParameters().stream()
+            parameterTypeStream
                 .map(DescriptorFactory.this::getType)
                 .toArray(size -> new Type[size]));
       }

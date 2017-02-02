@@ -31,6 +31,7 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
@@ -93,15 +94,17 @@ class ClassVisitorDriverFromElement {
   }
 
   private class ElementVisitorAdapter extends ElementScanner8<Void, ClassVisitor> {
-    //boolean classVisitorStarted = false;
+    boolean classVisitorStarted = false;
 
     // TODO(jkeljo): Type annotations
 
     @Override
     public Void visitType(TypeElement e, ClassVisitor visitor) {
+      if (classVisitorStarted) {
+        visitMemberClass(e, visitor);
+        return null;
+      }
       // TODO(jkeljo): Skip anonymous and local
-      // TODO(jkeljo): inner class
-      // TODO(jkeljo): Synthetic enclosing instance field for inner class
 
       TypeMirror superclass = e.getSuperclass();
       if (superclass.getKind() == TypeKind.NONE) {
@@ -116,12 +119,41 @@ class ClassVisitorDriverFromElement {
           e.getInterfaces().stream()
               .map(descriptorFactory::getInternalName)
               .toArray(size -> new String[size]));
+      classVisitorStarted = true;
 
-      // TODO(jkeljo): outer class
+      if (e.getNestingKind() == NestingKind.MEMBER) {
+        visitMemberClass(e, visitor);
+      }
+
       visitAnnotations(e.getAnnotationMirrors(), visitor::visitAnnotation);
+
+      if (MoreElements.isInnerClass(e)) {
+        visitOuterThisField(e, visitor);
+      }
       super.visitType(e, visitor);
 
       return null;
+    }
+
+    private void visitMemberClass(TypeElement e, ClassVisitor visitor) {
+      visitor.visitInnerClass(
+          descriptorFactory.getInternalName(e),
+          descriptorFactory.getInternalName((TypeElement) e.getEnclosingElement()),
+          e.getSimpleName().toString(),
+          AccessFlags.getAccessFlags(e) & ~Opcodes.ACC_SUPER);
+      // We remove ACC_SUPER above because javac does as well for InnerClasses entries.
+    }
+
+    private void visitOuterThisField(TypeElement e, ClassVisitor visitor) {
+      TypeElement enclosingClass = (TypeElement) e.getEnclosingElement();
+
+      visitor.visitField(
+          Opcodes.ACC_FINAL | Opcodes.ACC_SYNTHETIC,
+          "this$0",  // TODO(jkeljo): Need tests for greater nesting
+          descriptorFactory.getDescriptor(enclosingClass.asType()),
+          null,  // TODO(jkeljo): What if generics are involved?
+          null)
+          .visitEnd();
     }
 
     @Override
@@ -132,9 +164,6 @@ class ClassVisitorDriverFromElement {
 
       // TODO(jkeljo): Bridge methods: Look at superclasses, then interfaces, checking whether
       // method types change in the new class
-
-      // TODO(jkeljo): Inner class constructors: need more tests for different kinds of
-      // enclosing instance situations (e.g. superclasses)
 
       String[] exceptions = null;  // TODO(jkeljo): Handle throws
 
