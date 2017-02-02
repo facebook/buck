@@ -34,7 +34,6 @@ import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.versions.VersionPropagator;
@@ -205,8 +204,7 @@ public class JavaLibraryDescription implements
                 params.getProjectFilesystem(),
                 args.resources),
             javacOptions.getGeneratedSourceFolderName(),
-            args.proguardConfig.map(
-                SourcePaths.toSourcePath(params.getProjectFilesystem())::apply),
+            args.proguardConfig,
             args.postprocessClassesCommands,
             exportedDeps,
             resolver.getAllRules(args.providedDeps),
@@ -237,7 +235,7 @@ public class JavaLibraryDescription implements
     public ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
     public ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
 
-    public Optional<Path> proguardConfig;
+    public Optional<SourcePath> proguardConfig;
     public ImmutableList<String> postprocessClassesCommands = ImmutableList.of();
 
     @Hint(isInput = false)

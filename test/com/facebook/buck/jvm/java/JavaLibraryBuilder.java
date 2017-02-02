@@ -111,7 +111,7 @@ public class JavaLibraryBuilder
     return addSrc(new BuildTargetSourcePath(target));
   }
 
-  public JavaLibraryBuilder setProguardConfig(Path proguardConfig) {
+  public JavaLibraryBuilder setProguardConfig(SourcePath proguardConfig) {
     arg.proguardConfig = Optional.of(proguardConfig);
     return this;
   }

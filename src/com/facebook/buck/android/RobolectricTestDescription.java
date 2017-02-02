@@ -42,7 +42,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -177,8 +176,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                     params.getProjectFilesystem(),
                     args.resources),
                 javacOptions.getGeneratedSourceFolderName(),
-                args.proguardConfig.map(
-                    SourcePaths.toSourcePath(params.getProjectFilesystem())::apply),
+                args.proguardConfig,
                 /* postprocessClassesCommands */ ImmutableList.of(),
                 /* exportDeps */ ImmutableSortedSet.of(),
                 /* providedDeps */ ImmutableSortedSet.of(),

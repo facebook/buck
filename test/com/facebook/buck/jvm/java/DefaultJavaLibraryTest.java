@@ -1321,7 +1321,7 @@ public class DefaultJavaLibraryTest {
       public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {
         return JavaLibraryBuilder.createBuilder(target)
             .addSrc(Paths.get("MyClass.java"))
-            .setProguardConfig(Paths.get("MyProguardConfig"))
+            .setProguardConfig(new FakeSourcePath("MyProguardConfig"))
             .build(ruleResolver);
       }
     };

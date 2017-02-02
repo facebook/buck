@@ -95,7 +95,7 @@ public class AndroidPackageableCollectorTest {
         BuildTargetFactory.newInstance("//java/src/com/facebook:example");
     TargetNode<?, ?> library = JavaLibraryBuilder
         .createBuilder(libraryRuleTarget)
-        .setProguardConfig(Paths.get("debug.pro"))
+        .setProguardConfig(new FakeSourcePath("debug.pro"))
         .addSrc(Paths.get("Example.java"))
         .addDep(guavaTarget)
         .addDep(jsr305Target)

@@ -41,7 +41,6 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.DepQueryUtils;
 import com.facebook.buck.util.DependencyMode;
@@ -199,8 +198,7 @@ public class AndroidLibraryDescription
           ResourceValidator.validateResources(
               pathResolver,
               params.getProjectFilesystem(), args.resources),
-          args.proguardConfig.map(
-              SourcePaths.toSourcePath(params.getProjectFilesystem())::apply),
+          args.proguardConfig,
           args.postprocessClassesCommands,
           exportedDeps,
           resolver.getAllRules(args.providedDeps),
