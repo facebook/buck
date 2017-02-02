@@ -55,14 +55,14 @@ public class PrecompiledHeaderIntegrationTest {
 
   @Test
   public void compilesWithPrecompiledHeaders() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
     workspace.runBuckBuild("//:some_library#default,static").assertSuccess();
     findPchTarget();
   }
 
   @Test
   public void pchDepFileHasReferencedHeaders() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
     workspace.runBuckBuild("//:some_library#default,static").assertSuccess();
     BuildTarget target = findPchTarget();
     String depFileContents = workspace.getFileContents(
@@ -72,7 +72,7 @@ public class PrecompiledHeaderIntegrationTest {
 
   @Test
   public void changingPrefixHeaderCausesRecompile() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     workspace.resetBuildLogFile();
     workspace.writeContentsToPath(
@@ -96,7 +96,7 @@ public class PrecompiledHeaderIntegrationTest {
 
   @Test
   public void changingPchReferencedHeaderFromSameTargetCausesLibraryToRecompile() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     workspace.resetBuildLogFile();
     workspace.writeContentsToPath(
@@ -116,7 +116,7 @@ public class PrecompiledHeaderIntegrationTest {
 
   @Test
   public void changingPchReferencedHeaderFromDependencyCausesLibraryToRecompile() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     workspace.resetBuildLogFile();
     workspace.writeContentsToPath(
@@ -136,7 +136,7 @@ public class PrecompiledHeaderIntegrationTest {
 
   @Test
   public void touchingPchReferencedHeaderShouldNotCauseClangToRejectPch() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     workspace.resetBuildLogFile();
     // Change this file (not in the pch) to trigger recompile.
@@ -163,7 +163,7 @@ public class PrecompiledHeaderIntegrationTest {
 
   @Test
   public void changingCodeUsingPchWhenPchIsCachedButNotBuiltShouldBuildPch() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
     workspace.enableDirCache();
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     workspace.runBuckCommand("clean");
