@@ -187,6 +187,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
@@ -336,7 +337,7 @@ public final class Main {
 
     private final Cell cell;
     private final Parser parser;
-    private final DefaultFileHashCache hashCache;
+    private final FileHashCache hashCache;
     private final FileHashCache buckOutHashCache;
     private final EventBus fileEventBus;
     private final Optional<WebServer> webServer;
@@ -352,12 +353,24 @@ public final class Main {
         ObjectMapper objectMapper,
         Optional<WebServer> webServerToReuse) {
       this.cell = cell;
-      this.hashCache = new WatchedFileHashCache(cell.getFilesystem());
-      this.buckOutHashCache =
-          DefaultFileHashCache.createBuckOutFileHashCache(
-              createProjectFilesystem(cell.getFilesystem().getRootPath()),
-              cell.getFilesystem().getBuckPaths().getBuckOut());
       this.fileEventBus = new EventBus("file-change-events");
+
+      ImmutableList.Builder<FileHashCache> hashCaches = ImmutableList.builder();
+
+      Consumer<Cell> appendToCaches = (Cell subCell) -> {
+        WatchedFileHashCache watchedCache = new WatchedFileHashCache(subCell.getFilesystem());
+        fileEventBus.register(watchedCache);
+        hashCaches.add(watchedCache);
+      };
+      appendToCaches.accept(cell);
+      cell.getCellPathResolver().getCellPaths().values()
+          .stream()
+          .map(cell::getCell)
+          .forEach(appendToCaches);
+      this.hashCache = new StackedFileHashCache(hashCaches.build());
+      this.buckOutHashCache = DefaultFileHashCache.createBuckOutFileHashCache(
+          cell.getFilesystem().replaceBlacklistedPaths(ImmutableSet.of()),
+          cell.getFilesystem().getBuckPaths().getBuckOut());
 
       this.broadcastEventListener = new BroadcastEventListener();
       this.actionGraphCache = new ActionGraphCache(broadcastEventListener);
@@ -371,7 +384,7 @@ public final class Main {
           new ConstructorArgMarshaller(typeCoercerFactory));
       fileEventBus.register(parser);
       fileEventBus.register(actionGraphCache);
-      fileEventBus.register(hashCache);
+
 
       if (webServerToReuse.isPresent()) {
         webServer = webServerToReuse;
