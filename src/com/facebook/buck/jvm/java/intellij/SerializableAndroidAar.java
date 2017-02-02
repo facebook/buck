@@ -21,8 +21,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.nio.file.Path;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -35,13 +33,13 @@ public class SerializableAndroidAar {
 
   @Nullable
   private final SourcePath assets;
-  private final Path jar;
+  private final SourcePath jar;
 
   public SerializableAndroidAar(
       String name,
       @Nullable SourcePath res,
       @Nullable SourcePath assets,
-      Path jar) {
+      SourcePath jar) {
     this.name = name;
     this.res = res;
     this.assets = assets;
@@ -53,7 +51,7 @@ public class SerializableAndroidAar {
       AndroidPrebuiltAar preBuiltAar) {
     SourcePath res = preBuiltAar.getRes();
     SourcePath assets = preBuiltAar.getAssets();
-    Path jar = preBuiltAar.getBinaryJar();
+    SourcePath jar = preBuiltAar.getBinaryJar();
     return new SerializableAndroidAar(aarName, res, assets, jar);
   }
 
@@ -77,7 +75,7 @@ public class SerializableAndroidAar {
 
   @JsonProperty
   @Nonnull
-  public Path getJar() {
+  public SourcePath getJar() {
     return jar;
   }
 }

@@ -31,7 +31,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -124,8 +123,8 @@ public class AndroidPrebuiltAar
     return prebuiltJar;
   }
 
-  public Path getBinaryJar() {
-    return prebuiltJar.getPathToOutput();
+  public SourcePath getBinaryJar() {
+    return prebuiltJar.getSourcePathToOutput();
   }
 
   // This class is basically a wrapper around its android resource rule, since dependents will

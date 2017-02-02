@@ -37,6 +37,7 @@ import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -424,7 +425,7 @@ public class IjModuleGraphTest {
             productGenruleTarget,
             libraryJavaTarget,
             productTarget),
-        ImmutableMap.of(productTarget, Paths.get("buck-out/product.jar")),
+        ImmutableMap.of(productTarget, new FakeSourcePath("buck-out/product.jar")),
         Functions.constant(Optional.empty()));
 
     IjModule libraryModule = getModuleForTarget(moduleGraph, libraryJavaTarget);
@@ -448,7 +449,7 @@ public class IjModuleGraphTest {
 
     IjModuleGraph moduleGraph = createModuleGraph(
         ImmutableSet.of(productTarget),
-        ImmutableMap.of(productTarget, Paths.get("buck-out/product.jar")),
+        ImmutableMap.of(productTarget, new FakeSourcePath("buck-out/product.jar")),
         input -> {
           if (input == productTarget) {
             return Optional.of(rDotJavaClassPath);
@@ -778,7 +779,7 @@ public class IjModuleGraphTest {
 
   public static IjModuleGraph createModuleGraph(
       ImmutableSet<TargetNode<?, ?>> targets,
-      final ImmutableMap<TargetNode<?, ?>, Path> javaLibraryPaths,
+      final ImmutableMap<TargetNode<?, ?>, SourcePath> javaLibraryPaths,
       Function<? super TargetNode<?, ?>, Optional<Path>> rDotJavaClassPathResolver) {
     return createModuleGraph(targets,
         javaLibraryPaths,
@@ -788,7 +789,7 @@ public class IjModuleGraphTest {
 
   public static IjModuleGraph createModuleGraph(
       ImmutableSet<TargetNode<?, ?>> targets,
-      final ImmutableMap<TargetNode<?, ?>, Path> javaLibraryPaths,
+      final ImmutableMap<TargetNode<?, ?>, SourcePath> javaLibraryPaths,
       final Function<? super TargetNode<?, ?>, Optional<Path>> rDotJavaClassPathResolver,
       AggregationMode aggregationMode) {
     final SourcePathResolver sourcePathResolver = new SourcePathResolver(new SourcePathRuleFinder(
@@ -802,7 +803,7 @@ public class IjModuleGraphTest {
           }
 
           @Override
-          public Optional<Path> getPathIfJavaLibrary(TargetNode<?, ?> targetNode) {
+          public Optional<SourcePath> getPathIfJavaLibrary(TargetNode<?, ?> targetNode) {
             return Optional.ofNullable(javaLibraryPaths.get(targetNode));
           }
         };

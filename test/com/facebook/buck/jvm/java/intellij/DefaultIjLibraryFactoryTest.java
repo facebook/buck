@@ -24,6 +24,7 @@ import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -45,12 +46,12 @@ public class DefaultIjLibraryFactoryTest {
   private TargetNode<?, ?> guava;
   private IjLibrary guavaLibrary;
   private TargetNode<?, ?> androidSupport;
-  private Path androidSupportBinaryPath;
+  private FakeSourcePath androidSupportBinaryPath;
   private IjLibrary androidSupportLibrary;
   private IjLibrary baseLibrary;
   private TargetNode<?, ?> base;
-  private Path androidSupportBinaryJarPath;
-  private Path baseOutputPath;
+  private FakeSourcePath androidSupportBinaryJarPath;
+  private FakeSourcePath baseOutputPath;
   private IjLibraryFactoryResolver libraryFactoryResolver;
   private IjLibraryFactory factory;
 
@@ -65,7 +66,7 @@ public class DefaultIjLibraryFactoryTest {
         .setBinaryJar(guavaJarPath)
         .build();
 
-    androidSupportBinaryPath = Paths.get("third_party/java/support/support.aar");
+    androidSupportBinaryPath = new FakeSourcePath("third_party/java/support/support.aar");
     androidSupport = AndroidPrebuiltAarBuilder
         .createBuilder(BuildTargetFactory.newInstance("//third_party/java/support:support"))
         .setBinaryAar(androidSupportBinaryPath)
@@ -76,8 +77,8 @@ public class DefaultIjLibraryFactoryTest {
         .addDep(guava.getBuildTarget())
         .build();
 
-    androidSupportBinaryJarPath = Paths.get("buck_out/support.aar/classes.jar");
-    baseOutputPath = Paths.get("buck-out/base.jar");
+    androidSupportBinaryJarPath = new FakeSourcePath("buck_out/support.aar/classes.jar");
+    baseOutputPath = new FakeSourcePath("buck-out/base.jar");
 
     libraryFactoryResolver = new IjLibraryFactoryResolver() {
       @Override
@@ -86,7 +87,7 @@ public class DefaultIjLibraryFactoryTest {
       }
 
       @Override
-      public Optional<Path> getPathIfJavaLibrary(TargetNode<?, ?> targetNode) {
+      public Optional<SourcePath> getPathIfJavaLibrary(TargetNode<?, ?> targetNode) {
         if (targetNode.equals(base)) {
           return Optional.of(baseOutputPath);
         }
@@ -114,14 +115,16 @@ public class DefaultIjLibraryFactoryTest {
   @Test
   public void testPrebuiltAar() {
     assertEquals("library_third_party_java_support_support", androidSupportLibrary.getName());
-    assertEquals(Optional.of(androidSupportBinaryJarPath), androidSupportLibrary.getBinaryJar());
+    assertEquals(
+        Optional.of(androidSupportBinaryJarPath.getRelativePath()),
+        androidSupportLibrary.getBinaryJar());
     assertEquals(ImmutableSet.of(androidSupport), androidSupportLibrary.getTargets());
   }
 
   @Test
   public void testLibraryFromOtherTargets() {
     assertEquals("library_java_com_example_base_base", baseLibrary.getName());
-    assertEquals(Optional.of(baseOutputPath), baseLibrary.getBinaryJar());
+    assertEquals(Optional.of(baseOutputPath.getRelativePath()), baseLibrary.getBinaryJar());
     assertEquals(ImmutableSet.of(base), baseLibrary.getTargets());
   }
 }

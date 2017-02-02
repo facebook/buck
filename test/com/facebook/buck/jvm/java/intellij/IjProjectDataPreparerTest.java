@@ -31,6 +31,7 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -153,7 +154,7 @@ public class IjProjectDataPreparerTest {
             baseInlineTestsTargetNode,
             baseTestsTargetNode),
         ImmutableMap.of(
-            baseInlineTestsTargetNode, Paths.get("buck-out/baseInlineTests.jar")),
+            baseInlineTestsTargetNode, new FakeSourcePath("buck-out/baseInlineTests.jar")),
         Functions.constant(Optional.empty()));
     IjLibrary hamcrestLibrary =
         IjModuleGraphTest.getLibraryForTarget(moduleGraph, hamcrestTargetNode);

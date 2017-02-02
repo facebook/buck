@@ -92,6 +92,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
     IjLibraryRule rule = libraryRuleIndex.get(targetNode.getDescription().getClass());
     if (rule == null) {
       rule = libraryFactoryResolver.getPathIfJavaLibrary(targetNode)
+          .map(libraryFactoryResolver::getPath)
           .map(JavaLibraryRule::new)
           .orElse(null);
     }
@@ -139,7 +140,8 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
     @Override
     public void apply(
         TargetNode<AndroidPrebuiltAarDescription.Arg, ?> targetNode, IjLibrary.Builder library) {
-      library.setBinaryJar(libraryFactoryResolver.getPathIfJavaLibrary(targetNode));
+      library.setBinaryJar(libraryFactoryResolver.getPathIfJavaLibrary(targetNode)
+          .map(libraryFactoryResolver::getPath));
 
       AndroidPrebuiltAarDescription.Arg arg = targetNode.getConstructorArg();
       library.setSourceJar(

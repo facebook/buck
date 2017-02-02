@@ -32,5 +32,5 @@ public interface IjLibraryFactoryResolver {
    * @param targetNode node to look up.
    * @return path to the output of target but only if that path points to a .jar.
    */
-  Optional<Path> getPathIfJavaLibrary(TargetNode<?, ?> targetNode);
+  Optional<SourcePath> getPathIfJavaLibrary(TargetNode<?, ?> targetNode);
 }

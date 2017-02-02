@@ -533,7 +533,8 @@ public class IjModuleFactoryTest {
 
   @Test
   public void testAndroidPrebuiltAar() {
-    final Path androidSupportBinaryPath = Paths.get("third_party/java/support/support.aar");
+    final SourcePath androidSupportBinaryPath =
+        new FakeSourcePath("third_party/java/support/support.aar");
     final Path androidSupportSourcesPath =
         Paths.get("third_party/java/support/support-sources.jar");
     final String androidSupportJavadocUrl = "file:///support/docs";
@@ -557,7 +558,7 @@ public class IjModuleFactoryTest {
           }
 
           @Override
-          public Optional<Path> getPathIfJavaLibrary(TargetNode<?, ?> targetNode) {
+          public Optional<SourcePath> getPathIfJavaLibrary(TargetNode<?, ?> targetNode) {
             if (targetNode.equals(androidPrebuiltAar)) {
               return Optional.of(androidSupportBinaryPath);
             }
@@ -568,7 +569,9 @@ public class IjModuleFactoryTest {
     Optional<IjLibrary> library = new DefaultIjLibraryFactory(ijLibraryFactoryResolver)
         .getLibrary(androidPrebuiltAar);
     assertTrue(library.isPresent());
-    assertEquals(library.get().getBinaryJar(), Optional.of(androidSupportBinaryPath));
+    assertEquals(
+        library.get().getBinaryJar(),
+        Optional.of(sourcePathResolver.getRelativePath(androidSupportBinaryPath)));
     assertEquals(library.get().getSourceJar(), Optional.of(androidSupportSourcesPath));
     assertEquals(library.get().getJavadocUrl(), Optional.of(androidSupportJavadocUrl));
   }

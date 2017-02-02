@@ -110,7 +110,7 @@ public class IjProject {
           }
 
           @Override
-          public Optional<Path> getPathIfJavaLibrary(TargetNode<?, ?> targetNode) {
+          public Optional<SourcePath> getPathIfJavaLibrary(TargetNode<?, ?> targetNode) {
             BuildRule rule = buildRuleResolver.getRule(targetNode.getBuildTarget());
             if (!(rule instanceof JavaLibrary)) {
               return Optional.empty();
@@ -120,7 +120,7 @@ public class IjProject {
               return Optional.ofNullable(aarRule.getBinaryJar());
             }
             requiredBuildTargets.add(rule.getBuildTarget());
-            return Optional.ofNullable(rule.getPathToOutput());
+            return Optional.ofNullable(rule.getSourcePathToOutput());
           }
         });
     IjModuleFactoryResolver moduleFactoryResolver =
