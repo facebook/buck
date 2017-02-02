@@ -16,6 +16,18 @@
 
 package com.facebook.buck.jvm.kotlin;
 
+import com.facebook.buck.jvm.java.ForkMode;
+import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
+import com.facebook.buck.jvm.java.JavaTest;
+import com.facebook.buck.jvm.java.TestType;
+import com.facebook.buck.model.Either;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePath;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -23,23 +35,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 
-import com.facebook.buck.jvm.java.ForkMode;
-import com.facebook.buck.jvm.java.JavaLibrary;
-import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
-import com.facebook.buck.jvm.java.JavaTest;
-import com.facebook.buck.jvm.java.TestType;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Label;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class KotlinTest extends JavaTest {
 
   public KotlinTest(
       BuildRuleParams params,
       JavaLibrary compiledTestsLibrary,
-      ImmutableSet<Path> additionalClasspathEntries,
+      ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries,
       Set<Label> labels,
       Set<String> contacts,
       TestType testType,

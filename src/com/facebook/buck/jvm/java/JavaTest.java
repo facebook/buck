@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -97,7 +98,7 @@ public class JavaTest
 
   private final JavaLibrary compiledTestsLibrary;
 
-  private final ImmutableSet<Path> additionalClasspathEntries;
+  private final ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries;
   @AddToRuleKey
   private final JavaRuntimeLauncher javaRuntimeLauncher;
 
@@ -143,7 +144,7 @@ public class JavaTest
   public JavaTest(
       BuildRuleParams params,
       JavaLibrary compiledTestsLibrary,
-      ImmutableSet<Path> additionalClasspathEntries,
+      ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries,
       Set<Label> labels,
       Set<String> contacts,
       TestType testType,
@@ -159,6 +160,16 @@ public class JavaTest
       Optional<Level> stdErrLogLevel) {
     super(params);
     this.compiledTestsLibrary = compiledTestsLibrary;
+
+    for (Either<SourcePath, Path> path : additionalClasspathEntries) {
+      if (path.isRight()) {
+        Preconditions.checkState(
+            path.getRight().isAbsolute(),
+            "Additional classpath entries must be absolute but got %s",
+            path.getRight());
+      }
+    }
+
     this.additionalClasspathEntries = additionalClasspathEntries;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.vmArgs = ImmutableList.copyOf(vmArgs);
@@ -588,7 +599,11 @@ public class JavaTest
                     .addAll(compiledTestsLibrary.getTransitiveClasspaths().stream()
                         .map(buildContext.getSourcePathResolver()::getAbsolutePath)
                         .collect(MoreCollectors.toImmutableSet()))
-                    .addAll(additionalClasspathEntries)
+                    .addAll(additionalClasspathEntries.stream()
+                        .map(e -> e.isLeft() ?
+                            buildContext.getSourcePathResolver().getAbsolutePath(e.getLeft())
+                            : e.getRight())
+                        .collect(MoreCollectors.toImmutableSet()))
                     .addAll(getBootClasspathEntries(context))
                     .build();
                 getProjectFilesystem().writeLinesToPath(

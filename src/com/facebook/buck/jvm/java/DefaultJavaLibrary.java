@@ -26,6 +26,7 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
@@ -119,7 +120,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   private final ImmutableSortedSet<BuildRule> exportedDeps;
   private final ImmutableSortedSet<BuildRule> providedDeps;
   // Some classes need to override this when enhancing deps (see AndroidLibrary).
-  private final ImmutableSet<Path> additionalClasspathEntries;
+  private final ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries;
   private final Supplier<ImmutableSet<SourcePath>>
       outputClasspathEntriesSupplier;
   private final Supplier<ImmutableSet<SourcePath>>
@@ -188,7 +189,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       BuildTarget abiJar,
       ImmutableSortedSet<SourcePath> abiInputs,
       boolean trackClassUsage,
-      ImmutableSet<Path> additionalClasspathEntries,
+      ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries,
       CompileToJarStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
       Optional<SourcePath> manifestFile,
@@ -234,7 +235,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       BuildTarget abiJar,
       boolean trackClassUsage,
       final JarArchiveDependencySupplier abiClasspath,
-      ImmutableSet<Path> additionalClasspathEntries,
+      ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries,
       CompileToJarStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
       Optional<SourcePath> manifestFile,
@@ -264,9 +265,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     this.postprocessClassesCommands = postprocessClassesCommands;
     this.exportedDeps = exportedDeps;
     this.providedDeps = providedDeps;
-    this.additionalClasspathEntries = additionalClasspathEntries.stream()
-        .map(getProjectFilesystem()::resolve)
-        .collect(MoreCollectors.toImmutableSet());
+    this.additionalClasspathEntries = additionalClasspathEntries;
     this.resourcesRoot = resourcesRoot;
     this.manifestFile = manifestFile;
     this.mavenCoords = mavenCoords;
@@ -448,7 +447,11 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     // Only override the bootclasspath if this rule is supposed to compile Android code.
     ImmutableSortedSet<Path> declared = ImmutableSortedSet.<Path>naturalOrder()
         .addAll(declaredClasspaths)
-        .addAll(additionalClasspathEntries)
+        .addAll(additionalClasspathEntries.stream()
+            .map(e -> e.isLeft() ?
+                context.getSourcePathResolver().getAbsolutePath(e.getLeft())
+                : checkIsAbsolute(e.getRight()))
+            .collect(MoreCollectors.toImmutableSet()))
         .addAll(provided)
         .build();
 
@@ -552,6 +555,11 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     JavaLibraryRules.addAccumulateClassNamesStep(this, buildableContext, steps);
 
     return steps.build();
+  }
+
+  private Path checkIsAbsolute(Path path) {
+    Preconditions.checkArgument(path.isAbsolute(), "Need absolute path but got %s", path);
+    return path;
   }
 
   /**

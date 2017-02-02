@@ -31,6 +31,7 @@ import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -124,9 +125,10 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
         resolver,
         /* createBuildableIfEmpty */ true);
 
-    ImmutableSet<Path> additionalClasspathEntries = ImmutableSet.of();
+    ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries = ImmutableSet.of();
     if (dummyRDotJava.isPresent()) {
-      additionalClasspathEntries = ImmutableSet.of(dummyRDotJava.get().getPathToOutput());
+      additionalClasspathEntries = ImmutableSet.of(
+          Either.ofLeft(dummyRDotJava.get().getSourcePathToOutput()));
       ImmutableSortedSet<BuildRule> newExtraDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
           .addAll(params.getExtraDeps().get())
           .add(dummyRDotJava.get())

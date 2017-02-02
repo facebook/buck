@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.kotlin;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
@@ -49,7 +50,7 @@ public class DefaultKotlinLibrary extends DefaultJavaLibrary {
       BuildTarget abiJar,
       ImmutableSortedSet<SourcePath> abiInputs,
       final boolean trackClassUsage,
-      ImmutableSet<Path> additionalClasspathEntries,
+      ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries,
       CompileToJarStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
       Optional<SourcePath> manifestFile,

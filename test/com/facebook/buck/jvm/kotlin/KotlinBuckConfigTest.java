@@ -22,20 +22,21 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
 
-import java.io.IOException;
-import java.nio.file.Path;
-
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.nio.file.Path;
 
 public class KotlinBuckConfigTest {
 
@@ -139,7 +140,7 @@ public class KotlinBuckConfigTest {
       .build();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
-    Path runtimeJar = kotlinBuckConfig.getPathToRuntimeJar();
+    Path runtimeJar = kotlinBuckConfig.getPathToRuntimeJar().getRight();
     Assert.assertThat(runtimeJar.toString(),
                       Matchers.containsString(workspace.getPath(".").normalize().toString()));
   }
@@ -159,15 +160,13 @@ public class KotlinBuckConfigTest {
         .build();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
-    Path runtimeJar = kotlinBuckConfig.getPathToRuntimeJar();
+    Path runtimeJar = kotlinBuckConfig.getPathToRuntimeJar().getRight();
     assertEquals(runtimeJar.toString(), kotlinRuntime.toString());
   }
 
   @Test
   public void testFindsKotlinRuntimeInConfigWithRelativePath()
       throws HumanReadableException, IOException {
-
-    Path kotlinRuntime = workspace.resolve("lib").resolve("kotlin-runtime.jar");
 
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.resolve("."));
     BuckConfig buckConfig = FakeBuckConfig.builder()
@@ -180,7 +179,7 @@ public class KotlinBuckConfigTest {
         .build();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
-    Path runtimeJar = kotlinBuckConfig.getPathToRuntimeJar();
-    assertEquals(runtimeJar.toString(), kotlinRuntime.toString());
+    PathSourcePath runtimeJar = (PathSourcePath) kotlinBuckConfig.getPathToRuntimeJar().getLeft();
+    assertEquals(runtimeJar.getRelativePath().toString(), "lib/kotlin-runtime.jar");
   }
 }

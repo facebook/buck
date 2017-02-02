@@ -26,6 +26,7 @@ import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -100,7 +101,7 @@ public class RobolectricTest extends JavaTest {
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       JavaLibrary compiledTestsLibrary,
-      ImmutableSet<Path> additionalClasspathEntries,
+      ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries,
       Set<Label> labels,
       Set<String> contacts,
       TestType testType,

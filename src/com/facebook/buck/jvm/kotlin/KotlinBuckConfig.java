@@ -18,7 +18,9 @@ package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.HashedFileTool;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Supplier;
@@ -65,23 +67,26 @@ public class KotlinBuckConfig {
    * Get the path to the Kotlin runtime jar.
    * @return the Kotlin runtime jar path
    */
-  public Path getPathToRuntimeJar() {
+  public Either<SourcePath, Path> getPathToRuntimeJar() {
     Optional<String> value = delegate.getValue(SECTION, "runtime_jar");
-    boolean isAbsolute = (value.isPresent() && Paths.get(value.get()).isAbsolute());
 
-    Path runtime = delegate.getPath(SECTION, "runtime_jar", !isAbsolute).orElse(null);
-    if (runtime != null) {
-      return runtime.normalize();
+    if (value.isPresent()) {
+      boolean isAbsolute = Paths.get(value.get()).isAbsolute();
+      if (isAbsolute) {
+        return Either.ofRight(delegate.getPath(SECTION, "runtime_jar", false).get().normalize());
+      } else {
+        return Either.ofLeft(delegate.getSourcePath(SECTION, "runtime_jar").get());
+      }
     }
 
-    runtime = getKotlinHome().resolve("kotlin-runtime.jar");
+    Path runtime = getKotlinHome().resolve("kotlin-runtime.jar");
     if (Files.isRegularFile(runtime)) {
-      return runtime.normalize();
+      return Either.ofRight(runtime.toAbsolutePath().normalize());
     }
 
     runtime = getKotlinHome().resolve(Paths.get("lib", "kotlin-runtime.jar"));
     if (Files.isRegularFile(runtime)) {
-      return runtime.normalize();
+      return Either.ofRight(runtime.toAbsolutePath().normalize());
     }
 
     throw new HumanReadableException("Could not resolve kotlin runtime JAR location.");

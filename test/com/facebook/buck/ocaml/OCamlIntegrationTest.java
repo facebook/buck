@@ -20,6 +20,7 @@ import static com.facebook.buck.ocaml.OcamlRuleBuilder.createOcamlLinkTarget;
 import static com.facebook.buck.ocaml.OcamlRuleBuilder.createStaticLibraryBuildTarget;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -49,6 +50,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -564,7 +566,7 @@ public class OCamlIntegrationTest {
     // Points somewhere with no stdlib in it, so fails to find Pervasives
     workspace.runBuckCommand("build", target.toString()).assertFailure();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    assertTrue(buildLog.getAllTargets().containsAll(targets));
+    assertThat(buildLog.getAllTargets(), Matchers.hasItems(targets.toArray(new BuildTarget[0])));
     buildLog.assertTargetCanceled(target.toString());
     buildLog.assertTargetCanceled(binary.toString());
 

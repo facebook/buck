@@ -25,6 +25,7 @@ import com.facebook.buck.jvm.java.JavaSourceJar;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -134,9 +135,10 @@ public class AndroidLibraryDescription
     if (hasDummyRDotJavaFlavor) {
       return dummyRDotJava.get();
     } else {
-      ImmutableSet<Path> additionalClasspathEntries = ImmutableSet.of();
+      ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries = ImmutableSet.of();
       if (dummyRDotJava.isPresent()) {
-        additionalClasspathEntries = ImmutableSet.of(dummyRDotJava.get().getPathToOutput());
+        additionalClasspathEntries = ImmutableSet.of(
+            Either.ofLeft(dummyRDotJava.get().getSourcePathToOutput()));
         ImmutableSortedSet<BuildRule> newDeclaredDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
             .addAll(params.getDeclaredDeps().get())
             .add(dummyRDotJava.get())
