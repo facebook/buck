@@ -68,26 +68,54 @@ public class Dot<T> {
       final String graphName,
       final ImmutableSet<T> nodesToFilter,
       final Function<T, String> nodeToName,
-      final Appendable output)
+      final Appendable output,
+      final boolean bfsSorted)
       throws IOException {
     // Sorting the edges to have deterministic output and be able to test this.
-    final ImmutableSortedSet.Builder<String> builder = ImmutableSortedSet.naturalOrder();
+    final ImmutableSet.Builder<String> builder = ImmutableSet.builder();
     output.append("digraph " + graphName + " {\n");
 
-    new AbstractBottomUpTraversal<T, RuntimeException>(graph) {
+    if (bfsSorted) {
+      for (T root : ImmutableSortedSet.copyOf(graph.getNodesWithNoIncomingEdges())) {
+        new AbstractBreadthFirstTraversal<T>(root) {
 
-      @Override
-      public void visit(T node) {
-        if (!nodesToFilter.contains(node)) {
-          return;
-        }
-        String source = nodeToName.apply(node);
-        for (T sink : Sets.filter(graph.getOutgoingNodesFor(node), nodesToFilter::contains)) {
-          String sinkName = nodeToName.apply(sink);
-          builder.add(String.format("  %s -> %s;\n", source, sinkName));
-        }
+          @Override
+          public Iterable<T> visit(T node) {
+            if (!nodesToFilter.contains(node)) {
+              return ImmutableSet.<T>of();
+            }
+            String source = nodeToName.apply(node);
+            ImmutableSortedSet<T> nodes = ImmutableSortedSet.copyOf(
+                Sets.filter(
+                    graph.getOutgoingNodesFor(node),
+                    nodesToFilter::contains));
+            for (T sink : nodes) {
+              String sinkName = nodeToName.apply(sink);
+              builder.add(String.format("  %s -> %s;\n", source, sinkName));
+            }
+            return nodes;
+          }
+        }.start();
       }
-    }.traverse();
+    } else {
+      final ImmutableSortedSet.Builder<String> sortedSetBuilder = ImmutableSortedSet.naturalOrder();
+      new AbstractBottomUpTraversal<T, RuntimeException>(graph) {
+
+        @Override
+        public void visit(T node) {
+          if (!nodesToFilter.contains(node)) {
+            return;
+          }
+          String source = nodeToName.apply(node);
+          for (T sink : Sets.filter(graph.getOutgoingNodesFor(node), nodesToFilter::contains)) {
+            String sinkName = nodeToName.apply(sink);
+            sortedSetBuilder.add(String.format("  %s -> %s;\n", source, sinkName));
+          }
+        }
+      }.traverse();
+
+      builder.addAll(sortedSetBuilder.build());
+    }
 
     for (String line : builder.build()) {
       output.append(line);

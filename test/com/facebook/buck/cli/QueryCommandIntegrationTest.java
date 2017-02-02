@@ -606,6 +606,34 @@ public class QueryCommandIntegrationTest {
   }
 
   @Test
+  public void testDotOutputForDeps() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "--dot",
+        "deps(//example:one)");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(equalToIgnoringPlatformNewlines(workspace.getFileContents(
+                    "stdout-deps-one.dot"))));
+
+    result = workspace.runBuckCommand(
+        "query",
+        "--dot",
+        "--bfs",
+        "deps(//example:one)");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(equalToIgnoringPlatformNewlines(workspace.getFileContents(
+                    "stdout-bfs-deps-one.dot"))));
+  }
+
+  @Test
   public void testFilterAttrTests() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "query_command", tmp);

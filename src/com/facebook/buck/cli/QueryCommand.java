@@ -66,6 +66,10 @@ public class QueryCommand extends AbstractCommand {
       usage = "Print result as Dot graph")
   private boolean generateDotOutput;
 
+  @Option(name = "--bfs",
+      usage = "Sort the dot output in bfs order")
+  private boolean generateBFSOutput;
+
   @Option(name = "--json",
       usage = "Output in JSON format")
   private boolean generateJsonOutput;
@@ -84,6 +88,10 @@ public class QueryCommand extends AbstractCommand {
 
   public boolean shouldGenerateDotOutput() {
     return generateDotOutput;
+  }
+
+  public boolean shouldGenerateBFSOutput() {
+    return generateBFSOutput;
   }
 
   public boolean shouldOutputAttributes() {
@@ -251,7 +259,8 @@ public class QueryCommand extends AbstractCommand {
         "result_graph",
         env.getNodesFromQueryTargets(queryResult),
         targetNode -> "\"" + targetNode.getBuildTarget().getFullyQualifiedName() + "\"",
-        params.getConsole().getStdOut());
+        params.getConsole().getStdOut(),
+        shouldGenerateBFSOutput());
   }
 
   private void collectAndPrintAttributes(
