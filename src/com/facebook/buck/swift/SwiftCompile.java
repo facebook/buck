@@ -20,6 +20,7 @@ import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_MAIN_FILENAME;
 import static com.facebook.buck.swift.SwiftUtil.normalizeSwiftModuleName;
 import static com.facebook.buck.swift.SwiftUtil.toSwiftHeaderName;
 
+import com.facebook.buck.apple.PrebuiltAppleFramework;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxPlatform;
@@ -31,6 +32,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
@@ -58,6 +60,7 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.LinkedHashSet;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * A build rule which compiles one or more Swift sources into a Swift module.
@@ -153,9 +156,14 @@ class SwiftCompile
     final Function<FrameworkPath, Path> frameworkPathToSearchPath =
         CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
 
+    Stream<Path> prebuildFrameworkPaths = getDeps().stream()
+        .filter(PrebuiltAppleFramework.class::isInstance)
+        .map(BuildRule::getPathToOutput)
+        .map(Path::getParent); // folder containing *.framework
+    Stream<Path> frameworkPaths = frameworks.stream()
+        .map(frameworkPathToSearchPath::apply);
     compilerCommand.addAll(
-        frameworks.stream()
-            .map(frameworkPathToSearchPath::apply)
+        Stream.concat(frameworkPaths, prebuildFrameworkPaths)
             .flatMap(searchPath -> ImmutableSet.of("-F", searchPath.toString()).stream())
             .iterator());
 
