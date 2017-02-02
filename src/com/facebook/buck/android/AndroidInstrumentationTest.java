@@ -131,10 +131,11 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
 
     Path pathToTestOutput = getPathToTestOutputDirectory();
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToTestOutput));
-    steps.add(new ApkInstallStep(apk));
+    steps.add(new ApkInstallStep(pathResolver, apk));
     if (apk instanceof AndroidInstrumentationApk) {
       steps.add(new ApkInstallStep(
-              ((AndroidInstrumentationApk) apk).getApkUnderTest()));
+          pathResolver,
+          ((AndroidInstrumentationApk) apk).getApkUnderTest()));
     }
 
     AdbHelper adb = AdbHelper.get(executionContext, true);
@@ -147,6 +148,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
 
     steps.add(
         getInstrumentationStep(
+            pathResolver,
             executionContext.getPathToAdbExecutable(),
             Optional.of(getProjectFilesystem().resolve(pathToTestOutput)),
             Optional.of(device.getSerialNumber()),
@@ -177,14 +179,17 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
   }
 
   private InstrumentationStep getInstrumentationStep(
+      SourcePathResolver pathResolver,
       String pathToAdbExecutable,
       Optional<Path> directoryForTestResults,
       Optional<String> deviceSerial,
       Optional<Path> instrumentationApkPath,
       Optional<String> classFilterArg,
       Optional<Path> apkUnderTestPath) {
-    String packageName = AdbHelper.tryToExtractPackageNameFromManifest(apk);
-    String testRunner = AdbHelper.tryToExtractInstrumentationTestRunnerFromManifest(apk);
+    String packageName =
+        AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, apk.getApkInfo());
+    String testRunner =
+        AdbHelper.tryToExtractInstrumentationTestRunnerFromManifest(pathResolver, apk.getApkInfo());
 
     String ddmlib = getPathForResourceJar("ddmlib.jar");
     String kxml2 = getPathForResourceJar("kxml2.jar");
@@ -308,13 +313,15 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
     Optional<Path> apkUnderTestPath = Optional.empty();
     if (apk instanceof AndroidInstrumentationApk) {
       apkUnderTestPath = Optional.of(
-          toPath(((AndroidInstrumentationApk) apk).getApkUnderTest()));
+          pathResolver.getAbsolutePath(
+              ((AndroidInstrumentationApk) apk).getApkUnderTest().getApkInfo().getApkPath()));
     }
     InstrumentationStep step = getInstrumentationStep(
+        pathResolver,
         executionContext.getPathToAdbExecutable(),
         Optional.empty(),
         Optional.empty(),
-        Optional.of(toPath(apk)),
+        Optional.of(pathResolver.getAbsolutePath(apk.getApkInfo().getApkPath())),
         Optional.empty(),
         apkUnderTestPath);
 
@@ -325,11 +332,6 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
         .setLabels(getLabels())
         .setContacts(getContacts())
         .build();
-  }
-
-  private static Path toPath(HasInstallableApk apk) {
-    return apk.getProjectFilesystem().resolve(
-        apk.getApkInfo().getApkPath());
   }
 
   @Override

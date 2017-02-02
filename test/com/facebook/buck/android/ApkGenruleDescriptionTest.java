@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.FakeTargetNodeBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -90,8 +91,8 @@ public class ApkGenruleDescriptionTest {
     @Override
     public ApkInfo getApkInfo() {
       return ApkInfo.builder()
-          .setApkPath(Paths.get("buck-out/app.apk"))
-          .setManifestPath(Paths.get("nothing"))
+          .setApkPath(new FakeSourcePath("buck-out/app.apk"))
+          .setManifestPath(new FakeSourcePath("nothing"))
           .build();
     }
   }

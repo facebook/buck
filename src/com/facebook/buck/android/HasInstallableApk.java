@@ -18,11 +18,11 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ExopackageInfo;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
 import org.immutables.value.Value;
 
-import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -32,7 +32,7 @@ import java.util.Optional;
  */
 public interface HasInstallableApk extends BuildRule {
 
-  AbstractApkInfo getApkInfo();
+  ApkInfo getApkInfo();
 
   @Value.Immutable
   @BuckStyleImmutable
@@ -41,14 +41,14 @@ public interface HasInstallableApk extends BuildRule {
      * @return the path to the AndroidManifest.xml. Note that this file might be a symlink,
      * and might not exist at all before this rule has been built.
      */
-    abstract Path getManifestPath();
+    public abstract SourcePath getManifestPath();
 
     /**
      * @return The APK at this path is the final one that points to an APK that a user should
      * install.
      */
-    abstract Path getApkPath();
+    public abstract SourcePath getApkPath();
 
-    abstract Optional<ExopackageInfo> getExopackageInfo();
+    public abstract Optional<ExopackageInfo> getExopackageInfo();
   }
 }

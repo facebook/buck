@@ -263,8 +263,8 @@ public class ApkGenruleTest {
     @Override
     public ApkInfo getApkInfo() {
       return ApkInfo.builder()
-          .setApkPath(Paths.get("buck-out/gen/fb4a.apk"))
-          .setManifestPath(Paths.get("spoof"))
+          .setApkPath(new FakeSourcePath("buck-out/gen/fb4a.apk"))
+          .setManifestPath(new FakeSourcePath("spoof"))
           .build();
     }
   }

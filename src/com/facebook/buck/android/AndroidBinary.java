@@ -405,14 +405,10 @@ public class AndroidBinary
   @Override
   public ApkInfo getApkInfo() {
     return ApkInfo.builder()
-        .setApkPath(getApkPath())
+        .setApkPath(getSourcePathToOutput())
         .setManifestPath(getManifestPath())
         .setExopackageInfo(getExopackageInfo())
         .build();
-  }
-
-  private Path getApkPath() {
-    return Paths.get(getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".apk"));
   }
 
   @Override
@@ -422,7 +418,7 @@ public class AndroidBinary
 
   @Override
   public Path getPathToOutput() {
-    return getApkPath();
+    return Paths.get(getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".apk"));
   }
 
   @SuppressWarnings("PMD.PrematureDeclaration")
@@ -435,13 +431,14 @@ public class AndroidBinary
 
     // The `HasInstallableApk` interface needs access to the manifest, so make sure we create our
     // own copy of this so that we don't have a runtime dep on the `AaptPackageResources` step.
-    steps.add(new MkdirStep(getProjectFilesystem(), getManifestPath().getParent()));
+    Path manifestPath = context.getSourcePathResolver().getRelativePath(getManifestPath());
+    steps.add(new MkdirStep(getProjectFilesystem(), manifestPath.getParent()));
     steps.add(
         CopyStep.forFile(
             getProjectFilesystem(),
             enhancementResult.getAaptPackageResources().getAndroidManifestXml(),
-            getManifestPath()));
-    buildableContext.recordArtifact(getManifestPath());
+            manifestPath));
+    buildableContext.recordArtifact(manifestPath);
 
     // Create the .dex files if we aren't doing pre-dexing.
     Path signedApkPath = getSignedApkPath();
@@ -567,14 +564,14 @@ public class AndroidBinary
       apkToAlign = signedApkPath;
     }
 
-    Path apkPath = getApkPath();
+    Path apkPath = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
     ZipalignStep zipalign = new ZipalignStep(
         getProjectFilesystem().getRootPath(),
         apkToAlign,
         apkPath);
     steps.add(zipalign);
 
-    buildableContext.recordArtifact(getApkPath());
+    buildableContext.recordArtifact(apkPath);
     return steps.build();
   }
 
@@ -1233,11 +1230,13 @@ public class AndroidBinary
     }
   }
 
-  private Path getManifestPath() {
-    return BuildTargets.getGenPath(
-        getProjectFilesystem(),
+  private SourcePath getManifestPath() {
+    return new BuildTargetSourcePath(
         getBuildTarget(),
-        "%s/AndroidManifest.xml");
+        BuildTargets.getGenPath(
+            getProjectFilesystem(),
+            getBuildTarget(),
+            "%s/AndroidManifest.xml"));
   }
 
   boolean shouldSplitDex() {

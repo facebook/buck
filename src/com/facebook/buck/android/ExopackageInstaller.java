@@ -29,6 +29,7 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.ExopackageInfo;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.NamedTemporaryFile;
 import com.google.common.annotations.VisibleForTesting;
@@ -103,6 +104,7 @@ public class ExopackageInstaller {
 
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus eventBus;
+  private final SourcePathResolver pathResolver;
   private final AdbHelper adbHelper;
   private final HasInstallableApk apkRule;
   private final String packageName;
@@ -130,14 +132,18 @@ public class ExopackageInstaller {
   }
 
   public ExopackageInstaller(
+      SourcePathResolver pathResolver,
       ExecutionContext context,
       AdbHelper adbHelper,
       HasInstallableApk apkRule) {
+    this.pathResolver = pathResolver;
     this.adbHelper = adbHelper;
     this.projectFilesystem = apkRule.getProjectFilesystem();
     this.eventBus = context.getBuckEventBus();
     this.apkRule = apkRule;
-    this.packageName = AdbHelper.tryToExtractPackageNameFromManifest(apkRule);
+    this.packageName = AdbHelper.tryToExtractPackageNameFromManifest(
+        pathResolver,
+        apkRule.getApkInfo());
     this.dataRoot = Paths.get("/data/local/tmp/exopackage/").resolve(packageName);
 
     Preconditions.checkArgument(AdbHelper.PACKAGE_NAME_PATTERN.matcher(packageName).matches());
@@ -178,7 +184,9 @@ public class ExopackageInstaller {
             started,
             success,
             Optional.empty(),
-            Optional.of(AdbHelper.tryToExtractPackageNameFromManifest(apkRule))));
+            Optional.of(AdbHelper.tryToExtractPackageNameFromManifest(
+                pathResolver,
+                apkRule.getApkInfo()))));
     return success;
   }
 
@@ -224,8 +232,7 @@ public class ExopackageInstaller {
       nativeAgentPath = agentInfo.get().nativeLibPath;
       determineBestAgent();
 
-      final File apk = apkRule.getProjectFilesystem().resolve(
-          apkRule.getApkInfo().getApkPath()).toFile();
+      final File apk = pathResolver.getAbsolutePath(apkRule.getApkInfo().getApkPath()).toFile();
       // TODO(dreiss): Support SD installation.
       final boolean installViaSd = false;
 
@@ -457,8 +464,8 @@ public class ExopackageInstaller {
 
       LOG.debug("App path: %s", appPackageInfo.get().apkPath);
       String installedAppSignature = getInstalledAppSignature(appPackageInfo.get().apkPath);
-      String localAppSignature = AgentUtil.getJarSignature(apkRule.getProjectFilesystem().resolve(
-              apkRule.getApkInfo().getApkPath()).toString());
+      String localAppSignature = AgentUtil.getJarSignature(
+          pathResolver.getAbsolutePath(apkRule.getApkInfo().getApkPath()).toString());
       LOG.debug("Local app signature: %s", localAppSignature);
       LOG.debug("Remote app signature: %s", installedAppSignature);
 

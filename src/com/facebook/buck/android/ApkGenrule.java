@@ -98,7 +98,7 @@ public class ApkGenrule extends Genrule implements HasInstallableApk {
   public ApkInfo getApkInfo() {
     return ApkInfo.builder()
         .from(hasInstallableApk.getApkInfo())
-        .setApkPath(getPathToOutput())
+        .setApkPath(getSourcePathToOutput())
         .build();
   }
 
@@ -109,9 +109,8 @@ public class ApkGenrule extends Genrule implements HasInstallableApk {
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
     super.addEnvironmentVariables(pathResolver, context, environmentVariablesBuilder);
     // We have to use an absolute path, because genrules are run in a temp directory.
-    String apkAbsolutePath = hasInstallableApk.getProjectFilesystem()
-        .resolve(hasInstallableApk.getApkInfo().getApkPath())
-        .toString();
+    String apkAbsolutePath =
+        pathResolver.getAbsolutePath(hasInstallableApk.getApkInfo().getApkPath()).toString();
     environmentVariablesBuilder.put("APK", apkAbsolutePath);
   }
 }

@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AdbHelper;
+import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.apple.AppleBundle;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
@@ -44,7 +45,8 @@ import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.android.HasInstallableApk;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
@@ -230,6 +232,8 @@ public class InstallCommand extends BuildCommand {
     for (BuildTarget buildTarget : getBuildTargets()) {
 
       BuildRule buildRule = build.getRuleResolver().requireRule(buildTarget);
+      SourcePathResolver pathResolver =
+          new SourcePathResolver(new SourcePathRuleFinder(build.getRuleResolver()));
 
       if (buildRule instanceof HasInstallableApk) {
         ExecutionContext executionContext = ExecutionContext.builder()
@@ -239,7 +243,8 @@ public class InstallCommand extends BuildCommand {
             .setExecutors(params.getExecutors())
             .setCellPathResolver(params.getCell().getCellPathResolver())
             .build();
-        exitCode = installApk(params, (HasInstallableApk) buildRule, executionContext);
+        exitCode =
+            installApk(params, (HasInstallableApk) buildRule, executionContext, pathResolver);
         if (exitCode != 0) {
           return exitCode;
         }
@@ -338,19 +343,22 @@ public class InstallCommand extends BuildCommand {
   private int installApk(
       CommandRunnerParams params,
       HasInstallableApk hasInstallableApk,
-      ExecutionContext executionContext) throws IOException, InterruptedException {
+      ExecutionContext executionContext,
+      SourcePathResolver pathResolver) throws IOException, InterruptedException {
     final AdbHelper adbHelper = AdbHelper.get(
         executionContext,
         params.getBuckConfig().getRestartAdbOnFailure());
 
     // Uninstall the app first, if requested.
     if (shouldUninstallFirst()) {
-      String packageName = AdbHelper.tryToExtractPackageNameFromManifest(hasInstallableApk);
+      String packageName = AdbHelper.tryToExtractPackageNameFromManifest(
+          pathResolver,
+          hasInstallableApk.getApkInfo());
       adbHelper.uninstallApp(packageName, uninstallOptions().shouldKeepUserData());
       // Perhaps the app wasn't installed to begin with, shouldn't stop us.
     }
 
-    if (!adbHelper.installApk(hasInstallableApk, shouldInstallViaSd(), false)) {
+    if (!adbHelper.installApk(pathResolver, hasInstallableApk, shouldInstallViaSd(), false)) {
       return 1;
     }
 
@@ -358,6 +366,7 @@ public class InstallCommand extends BuildCommand {
     // Is either of --activity or --run present?
     if (shouldStartActivity()) {
       int exitCode = adbHelper.startActivity(
+          pathResolver,
           hasInstallableApk,
           getActivityToStart(),
           waitForDebugger);

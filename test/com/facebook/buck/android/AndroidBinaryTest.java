@@ -228,6 +228,8 @@ public class AndroidBinaryTest {
   public void testGetUnsignedApkPath() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
     Keystore keystore = addKeystoreRule(ruleResolver);
 
     BuildTarget targetInRootDirectory = BuildTargetFactory.newInstance("//:fb4a");
@@ -241,7 +243,7 @@ public class AndroidBinaryTest {
             ruleInRootDirectory.getProjectFilesystem(),
             targetInRootDirectory,
             "%s.apk"),
-        ruleInRootDirectory.getApkInfo().getApkPath());
+        pathResolver.getRelativePath(ruleInRootDirectory.getApkInfo().getApkPath()));
 
     BuildTarget targetInNonRootDirectory =
         BuildTargetFactory.newInstance("//java/com/example:fb4a");
@@ -255,7 +257,7 @@ public class AndroidBinaryTest {
             ruleInNonRootDirectory.getProjectFilesystem(),
             targetInNonRootDirectory,
             "%s.apk"),
-        ruleInNonRootDirectory.getApkInfo().getApkPath());
+        pathResolver.getRelativePath(ruleInNonRootDirectory.getApkInfo().getApkPath()));
   }
 
   @Test
