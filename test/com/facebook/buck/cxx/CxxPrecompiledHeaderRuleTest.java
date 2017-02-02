@@ -471,4 +471,62 @@ public class CxxPrecompiledHeaderRuleTest {
     assertEquals(43, runBuiltBinary("//recompile_after_header_changed:main#default"));
   }
 
+  @Test
+  public void changingHeaderIncludedByPCHPrefixHeaderCausesRecompile() throws Exception {
+    assumeTrue(platformOkForPCHTests());
+
+    BuckBuildLog buildLog;
+
+    workspace.writeContentsToPath(
+        "#define TESTVALUE 50\n",
+        "recompile_after_include_changed/included_by_pch.h");
+    workspace.runBuckBuild("//recompile_after_include_changed:main#default").assertSuccess();
+    buildLog = workspace.getBuildLog();
+    assertThat(
+        buildLog,
+        reportedTargetSuccessType(findPchTarget(), BuildRuleSuccessType.BUILT_LOCALLY));
+    assertThat(
+        buildLog,
+        reportedTargetSuccessType(
+            workspace.newBuildTarget("//recompile_after_include_changed:main#binary,default"),
+            BuildRuleSuccessType.BUILT_LOCALLY));
+    assertEquals(
+        workspace.runCommand(
+            workspace.resolve(
+                BuildTargets.getGenPath(
+                    filesystem,
+                    workspace.newBuildTarget("//recompile_after_include_changed:main#default"),
+                    "%s"))
+            .toString())
+        .getExitCode(),
+        50);
+
+    workspace.resetBuildLogFile();
+
+    workspace.writeContentsToPath(
+        "#define TESTVALUE 51\n",
+        "recompile_after_include_changed/included_by_pch.h");
+    workspace.runBuckBuild("//recompile_after_include_changed:main#default").assertSuccess();
+    buildLog = workspace.getBuildLog();
+
+    assertThat(
+        buildLog,
+        reportedTargetSuccessType(findPchTarget(), BuildRuleSuccessType.BUILT_LOCALLY));
+    assertThat(
+        buildLog,
+        reportedTargetSuccessType(
+            workspace.newBuildTarget("//recompile_after_include_changed:main#binary,default"),
+            BuildRuleSuccessType.BUILT_LOCALLY));
+    assertEquals(
+        workspace.runCommand(
+            workspace.resolve(
+                BuildTargets.getGenPath(
+                    filesystem,
+                    workspace.newBuildTarget("//recompile_after_include_changed:main#default"),
+                    "%s"))
+            .toString())
+        .getExitCode(),
+        51);
+  }
+
 }
