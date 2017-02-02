@@ -59,6 +59,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.stream.IntStream;
+
+import static com.facebook.buck.android.aapt.RDotTxtEntry.IdType.INT;
+import static com.facebook.buck.android.aapt.RDotTxtEntry.IdType.INT_ARRAY;
+import static com.facebook.buck.android.aapt.RDotTxtEntry.RType.ATTR;
+import static com.facebook.buck.android.aapt.RDotTxtEntry.RType.ID;
+import static com.facebook.buck.android.aapt.RDotTxtEntry.RType.STYLEABLE;
+
 
 public class MergeAndroidResourcesStepTest {
   @Rule
@@ -124,6 +132,15 @@ public class MergeAndroidResourcesStepTest {
     String sharedPackageName = "com.facebook.abc";
     entriesBuilder.add(new RDotTxtFile(sharedPackageName, "a-R.txt",
         ImmutableList.of(
+            "int attr buttonPanelSideLayout 0x7f01003a",
+            "int attr listLayout 0x7f01003b",
+            "int[] styleable AlertDialog { 0x7f01003a, 0x7f01003b, 0x010100f2 }",
+            "int styleable AlertDialog_android_layout 2",
+            "int styleable AlertDialog_buttonPanelSideLayout 0",
+            "int styleable AlertDialog_multiChoiceItemLayout 1"
+        )));
+    entriesBuilder.add(new RDotTxtFile(sharedPackageName, "b-R.txt",
+        ImmutableList.of(
             "int id a1 0x7f010001",
             "int id a2 0x7f010002",
             "int attr android_layout_gravity 0x7f078008",
@@ -138,7 +155,7 @@ public class MergeAndroidResourcesStepTest {
             "int[] styleable ActionBarLayout { 0x7f060008 }",
             "int styleable ActionBarLayout_android_layout 0",
             "int styleable ActionBarLayout_android_layout_gravity 1",
-            "int[] styleable PercentLayout_Layout {  }",
+            "int[] styleable PercentLayout_Layout { }",
             "int styleable PercentLayout_Layout_layout_aspectRatio 9",
             "int styleable PercentLayout_Layout_layout_heightPercent 1"
         )));
@@ -152,63 +169,70 @@ public class MergeAndroidResourcesStepTest {
             entriesBuilder.getProjectFilesystem(),
             false);
 
-    assertEquals(17, packageNameToResources.size());
+    assertEquals(23, packageNameToResources.size());
 
     ArrayList<RDotTxtEntry> resources = new ArrayList<>(
         packageNameToResources.get(sharedPackageName)
     );
-    assertEquals(17, resources.size());
+    assertEquals(23, resources.size());
 
-    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.ATTR,
-            "android_layout_gravity", "0x07f01003"),
-        resources.get(0));
-    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.ATTR,
-            "background", "0x07f01004"),
-        resources.get(1));
-    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.ATTR,
-            "backgroundSplit", "0x07f01005"),
-        resources.get(2));
-    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.ATTR,
-            "backgroundStacked", "0x07f01006"),
-        resources.get(3));
-    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.ATTR,
-            "layout_heightPercent", "0x07f01007"),
-        resources.get(4));
-    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.ID,
-            "a1", "0x07f01001"),
-        resources.get(5));
-    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.ID,
-            "a2", "0x07f01002"),
-        resources.get(6));
-    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT_ARRAY, RType.STYLEABLE,
-            "ActionBar", "{ 0x07f01004,0x07f01005,0x07f01006 }"),
-        resources.get(7));
-    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.STYLEABLE,
-            "ActionBar_background", "0"),
-        resources.get(8));
-    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.STYLEABLE,
-            "ActionBar_backgroundSplit", "1"),
-        resources.get(9));
-    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.STYLEABLE,
-            "ActionBar_backgroundStacked", "2"),
-        resources.get(10));
-    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT_ARRAY, RType.STYLEABLE,
-            "ActionBarLayout", "{ 0,0x07f01003 }"),
-        resources.get(11));
-    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.STYLEABLE,
-            "ActionBarLayout_android_layout", "0"),
-        resources.get(12));
-    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.STYLEABLE,
-            "ActionBarLayout_android_layout_gravity", "1"), resources.get(13));
-    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT_ARRAY, RType.STYLEABLE,
-            "PercentLayout_Layout", "{ 0,0x07f01007 }"),
-        resources.get(14));
-    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.STYLEABLE,
-            "PercentLayout_Layout_layout_aspectRatio", "0"),
-        resources.get(15));
-    assertEquals(new FakeRDotTxtEntryWithID(RDotTxtEntry.IdType.INT, RType.STYLEABLE,
-            "PercentLayout_Layout_layout_heightPercent", "1"),
-        resources.get(16));
+    System.out.println(resources);
+
+    ImmutableList<FakeRDotTxtEntryWithID> fakeRDotTxtEntryWithIDS =
+        ImmutableList.of(
+            new FakeRDotTxtEntryWithID(
+                INT, ATTR, "android_layout_gravity", "0x07f01005"),
+            new FakeRDotTxtEntryWithID(
+                INT, ATTR, "background", "0x07f01006"),
+            new FakeRDotTxtEntryWithID(
+                INT, ATTR, "backgroundSplit", "0x07f01007"),
+            new FakeRDotTxtEntryWithID(
+                INT, ATTR, "backgroundStacked", "0x07f01008"),
+            new FakeRDotTxtEntryWithID(
+                INT, ATTR, "buttonPanelSideLayout", "0x07f01001"),
+            new FakeRDotTxtEntryWithID(
+                INT, ATTR, "layout_heightPercent", "0x07f01009"),
+            new FakeRDotTxtEntryWithID(
+                INT, ATTR, "listLayout", "0x07f01002"),
+            new FakeRDotTxtEntryWithID(
+                INT, ID, "a1", "0x07f01003"),
+            new FakeRDotTxtEntryWithID(
+                INT, ID, "a2", "0x07f01004"),
+            new FakeRDotTxtEntryWithID(
+                INT_ARRAY, STYLEABLE, "ActionBar", "{ 0x07f01006,0x07f01007,0x07f01008 }"),
+            new FakeRDotTxtEntryWithID(
+                INT, STYLEABLE, "ActionBar_background", "0"),
+            new FakeRDotTxtEntryWithID(
+                INT, STYLEABLE, "ActionBar_backgroundSplit", "1"),
+            new FakeRDotTxtEntryWithID(
+                INT, STYLEABLE, "ActionBar_backgroundStacked", "2"),
+            new FakeRDotTxtEntryWithID(
+                INT_ARRAY, STYLEABLE, "ActionBarLayout", "{ 0x010100f2,0x07f01005 }"),
+            new FakeRDotTxtEntryWithID(
+                INT, STYLEABLE, "ActionBarLayout_android_layout", "0"),
+            new FakeRDotTxtEntryWithID(
+                INT, STYLEABLE, "ActionBarLayout_android_layout_gravity", "1"),
+            new FakeRDotTxtEntryWithID(
+                INT_ARRAY, STYLEABLE, "AlertDialog", "{ 0x010100f2,0x07f01001,0x7f01003b }"),
+            new FakeRDotTxtEntryWithID(
+                INT, STYLEABLE, "AlertDialog_android_layout", "0"),
+            new FakeRDotTxtEntryWithID(
+                INT, STYLEABLE, "AlertDialog_buttonPanelSideLayout", "1"),
+            new FakeRDotTxtEntryWithID(
+                INT, STYLEABLE, "AlertDialog_multiChoiceItemLayout", "2"),
+            new FakeRDotTxtEntryWithID(
+                INT_ARRAY, STYLEABLE, "PercentLayout_Layout", "{ 0,0x07f01009 }"),
+            new FakeRDotTxtEntryWithID(
+                INT, STYLEABLE, "PercentLayout_Layout_layout_aspectRatio", "0"),
+            new FakeRDotTxtEntryWithID(
+                INT, STYLEABLE, "PercentLayout_Layout_layout_heightPercent", "1")
+        );
+
+    IntStream
+        .range(0, resources.size())
+        .forEach(action -> {
+          assertEquals(fakeRDotTxtEntryWithIDS.get(action), resources.get(action));
+        });
   }
 
   @Test
