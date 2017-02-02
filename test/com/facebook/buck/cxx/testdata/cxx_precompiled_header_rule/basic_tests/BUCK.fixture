@@ -2,7 +2,7 @@ cxx_precompiled_header (
     name = "pch",
     src = "header.h",
     deps = [
-        "//base_lib:base_lib",
+        "//some_lib:some_lib",
     ],
 )
 

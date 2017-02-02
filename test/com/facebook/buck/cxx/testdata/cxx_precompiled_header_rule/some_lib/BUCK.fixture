@@ -2,12 +2,12 @@
 # for the pch library (in the parent dir) get inherited by rules using the pch.
 # Putting this in a different directory will induce such a change in include paths.
 cxx_library (
-    name = "base_lib",
+    name = "some_lib",
     visibility = ["PUBLIC"],
     exported_headers = [
-        "base_lib.h",
+        "some_lib.h",
     ],
     srcs = [
-        "base_lib.cpp",
+        "some_lib.cpp",
     ],
 )

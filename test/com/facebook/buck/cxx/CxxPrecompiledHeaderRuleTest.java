@@ -22,14 +22,19 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -39,6 +44,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
+import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -52,11 +58,14 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import org.hamcrest.CustomTypeSafeMatcher;
+import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+@SuppressWarnings("all")
 public class CxxPrecompiledHeaderRuleTest {
 
   private static final CxxBuckConfig CXX_CONFIG_PCH_ENABLED =
@@ -75,6 +84,8 @@ public class CxxPrecompiledHeaderRuleTest {
           .build(CXX_CONFIG_PCH_ENABLED)
           .withCpp(PREPROCESSOR_SUPPORTING_PCH);
 
+  private ProjectFilesystem filesystem;
+
   private ProjectWorkspace workspace;
 
   @Rule
@@ -82,6 +93,7 @@ public class CxxPrecompiledHeaderRuleTest {
 
   @Before
   public void setUp() throws IOException {
+    filesystem = new ProjectFilesystem(tmp.getRoot());
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "cxx_precompiled_header_rule",
@@ -178,9 +190,54 @@ public class CxxPrecompiledHeaderRuleTest {
     return list.subList(i, list.size());
   }
 
+  private boolean platformOkForPCHTests() {
+    return Platform.detect() != Platform.WINDOWS;
+  }
+
+  /**
+   * @return exit code from that process
+   */
+  private int runBuiltBinary(String binaryTarget) throws Exception {
+    return workspace.runCommand(
+            workspace.resolve(
+                BuildTargets.getGenPath(
+                    filesystem,
+                    workspace.newBuildTarget(binaryTarget),
+                    "%s"))
+            .toString())
+        .getExitCode();
+  }
+
+  /** Stolen from {@link PrecompiledHeaderIntegrationTest} */
+  private static Matcher<BuckBuildLog> reportedTargetSuccessType(
+      final BuildTarget target,
+      final BuildRuleSuccessType successType) {
+    return new CustomTypeSafeMatcher<BuckBuildLog>(
+        "target: " + target.toString() + " with result: " + successType) {
+
+      @Override
+      protected boolean matchesSafely(BuckBuildLog buckBuildLog) {
+        return buckBuildLog.getLogEntry(target).getSuccessType().equals(Optional.of(successType));
+      }
+    };
+  }
+
+  /** Stolen from {@link PrecompiledHeaderIntegrationTest} */
+  private BuildTarget findPchTarget() throws IOException {
+    for (BuildTarget target : workspace.getBuildLog().getAllTargets()) {
+      for (Flavor flavor : target.getFlavors()) {
+        if (flavor.getName().startsWith("pch-")) {
+          return target;
+        }
+      }
+    }
+    fail("should have generated a pch target");
+    return null;
+  }
+
   @Test
   public void samePchIffSameFlags() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    assumeTrue(platformOkForPCHTests());
 
     BuildTarget pchTarget = newTarget("//test:pch");
     CxxPrecompiledHeaderTemplate pch = newPCH(pchTarget);
@@ -248,7 +305,7 @@ public class CxxPrecompiledHeaderRuleTest {
 
   @Test
   public void userRuleChangesDependencyPCHRuleFlags() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    assumeTrue(platformOkForPCHTests());
 
     BuildTarget pchTarget = newTarget("//test:pch");
     CxxPrecompiledHeaderTemplate pch = newPCH(pchTarget);
@@ -292,7 +349,7 @@ public class CxxPrecompiledHeaderRuleTest {
 
   @Test
   public void userRuleIncludePathsChangedByPCH() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    assumeTrue(platformOkForPCHTests());
 
     CxxPreprocessorInput cxxPreprocessorInput =
         CxxPreprocessorInput.builder()
@@ -365,16 +422,53 @@ public class CxxPrecompiledHeaderRuleTest {
 
   @Test
   public void successfulBuildWithPchHavingNoDeps() throws Exception {
-    // only platform for which tests definitely run w/ Clang
-    assumeTrue(Platform.detect() == Platform.MACOS);
-    workspace.runBuckBuild("//:main").assertSuccess();
+    assumeTrue(platformOkForPCHTests());
+    workspace.runBuckBuild("//basic_tests:main").assertSuccess();
   }
 
   @Test
   public void successfulBuildWithPchHavingDeps() throws Exception {
-    // only platform for which tests definitely run w/ Clang
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(platformOkForPCHTests());
     workspace.runBuckBuild("//deps_test:bin").assertSuccess();
+  }
+
+  @Test
+  public void changingPrecompilableHeaderCausesRecompile() throws Exception {
+    assumeTrue(platformOkForPCHTests());
+
+    BuckBuildLog buildLog;
+
+    workspace.writeContentsToPath(
+        "#define TESTVALUE 42\n",
+        "recompile_after_header_changed/header.h");
+    workspace.runBuckBuild("//recompile_after_header_changed:main#default").assertSuccess();
+    buildLog = workspace.getBuildLog();
+    assertThat(
+        buildLog,
+        reportedTargetSuccessType(findPchTarget(), BuildRuleSuccessType.BUILT_LOCALLY));
+    assertThat(
+        buildLog,
+        reportedTargetSuccessType(
+            workspace.newBuildTarget("//recompile_after_header_changed:main#binary,default"),
+            BuildRuleSuccessType.BUILT_LOCALLY));
+    assertEquals(42, runBuiltBinary("//recompile_after_header_changed:main#default"));
+
+    workspace.resetBuildLogFile();
+
+    workspace.writeContentsToPath(
+        "#define TESTVALUE 43\n",
+        "recompile_after_header_changed/header.h");
+    workspace.runBuckBuild("//recompile_after_header_changed:main#default").assertSuccess();
+    buildLog = workspace.getBuildLog();
+    assertThat(
+        buildLog,
+        reportedTargetSuccessType(findPchTarget(), BuildRuleSuccessType.BUILT_LOCALLY));
+    assertThat(
+        buildLog,
+        reportedTargetSuccessType(
+            workspace.newBuildTarget("//recompile_after_header_changed:main#binary,default"),
+            BuildRuleSuccessType.BUILT_LOCALLY));
+    assertEquals(43, runBuiltBinary("//recompile_after_header_changed:main#default"));
   }
 
 }
