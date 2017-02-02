@@ -83,18 +83,6 @@ final class TestResult {
     );
   }
 
-  public static TestResult forFailureAtInitialization(String testClassName, Throwable cause) {
-    return new TestResult(
-        testClassName,
-        "<init>",
-        0,
-        ResultType.FAILURE,
-        cause,
-        null,
-        null
-    );
-  }
-
   public boolean isSuccess() {
     return type == ResultType.SUCCESS;
   }

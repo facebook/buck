@@ -86,35 +86,23 @@ public final class JUnitRunner extends BaseRunner {
       stdErrLogLevel = Level.parse(unparsedStdErrLogLevel);
     }
 
+
     for (String className : testClassNames) {
+      final Class<?> testClass = Class.forName(className);
+
       List<TestResult> results = new ArrayList<>();
-      Class<?> testClass = null;
-      boolean shouldRunAsTestClass;
-      try {
-        testClass = Class.forName(className);
-        shouldRunAsTestClass = mightBeATestClass(testClass);
-      } catch (ClassNotFoundException | LinkageError t) {
-        // If the class has "Test" somewhere in the last part of its name, complain.
-        int indexForLastPartOfName = Math.max(
-            className.lastIndexOf('.'),
-            className.lastIndexOf('$')) + 1;
-        if (className.indexOf("Test", indexForLastPartOfName) != -1) {
-          results.add(TestResult.forFailureAtInitialization(className, t));
-        }
-        shouldRunAsTestClass = false;
-      }
-      if (shouldRunAsTestClass) {
-        RecordingFilter filter = new RecordingFilter();
+      RecordingFilter filter = new RecordingFilter();
+      if (mightBeATestClass(testClass)) {
         JUnitCore jUnitCore = new JUnitCore();
         Runner suite = new Computer().getSuite(createRunnerBuilder(), new Class<?>[]{testClass});
         Request request = Request.runner(suite);
         request = request.filterWith(filter);
         jUnitCore.addListener(new TestListener(results, stdOutLogLevel, stdErrLogLevel));
         jUnitCore.run(request);
-        results = combineResults(results, filter.filteredOut);
       }
       // Combine the results with the tests we filtered out
-      writeResult(className, results);
+      List<TestResult> actualResults = combineResults(results, filter.filteredOut);
+      writeResult(className, actualResults);
     }
   }
 
