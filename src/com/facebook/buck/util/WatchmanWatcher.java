@@ -96,8 +96,7 @@ public class WatchmanWatcher {
         createQueries(
             projectWatch,
             ignorePaths,
-            watchman.getCapabilities(),
-            cursors),
+            watchman.getCapabilities()),
         cursors);
   }
 
@@ -118,18 +117,12 @@ public class WatchmanWatcher {
   static ImmutableMap<Path, WatchmanQuery> createQueries(
       ImmutableMap<Path, ProjectWatch> projectWatches,
       ImmutableSet<PathOrGlobMatcher> ignorePaths,
-      Set<Capability> watchmanCapabilities,
-      Map<Path, WatchmanCursor> cursors) {
+      Set<Capability> watchmanCapabilities) {
     ImmutableMap.Builder<Path, WatchmanQuery> watchmanQueryBuilder = ImmutableMap.builder();
     for (Map.Entry<Path, ProjectWatch> entry : projectWatches.entrySet()) {
-      WatchmanCursor cursor = cursors.get(entry.getKey());
       watchmanQueryBuilder.put(
           entry.getKey(),
-          createQuery(
-              entry.getValue(),
-              ignorePaths,
-              watchmanCapabilities,
-              Optional.ofNullable(cursor)));
+          createQuery(entry.getValue(), ignorePaths, watchmanCapabilities));
     }
     return watchmanQueryBuilder.build();
   }
@@ -138,8 +131,7 @@ public class WatchmanWatcher {
   static WatchmanQuery createQuery(
       ProjectWatch projectWatch,
       ImmutableSet<PathOrGlobMatcher> ignorePaths,
-      Set<Capability> watchmanCapabilities,
-      Optional<WatchmanCursor> cursor) {
+      Set<Capability> watchmanCapabilities) {
     String watchRoot = projectWatch.getWatchRoot();
     Optional<String> watchPrefix = projectWatch.getProjectPrefix();
 
@@ -198,54 +190,15 @@ public class WatchmanWatcher {
     Map<String, Object> sinceParams = new LinkedHashMap<>();
     sinceParams.put(
         "expression",
-        createSinceExpression(cursor, excludeAnyOf));
+        Lists.newArrayList(
+            "not",
+            excludeAnyOf));
     sinceParams.put("empty_on_fresh_instance", true);
     sinceParams.put("fields", Lists.newArrayList("name", "exists", "new"));
-    watchPrefix.ifPresent(s -> sinceParams.put("relative_root", s));
-    return WatchmanQuery.of(watchRoot, sinceParams);
-  }
-
-  private static ImmutableList<Object> createSinceExpression(
-      Optional<WatchmanCursor> cursor,
-      List<Object> excludeAnyOf) {
-    ImmutableList.Builder<Object> builder = ImmutableList.builder();
-    builder.add("allof");
-    builder.add(Lists.newArrayList("not", excludeAnyOf));
-    if (cursor.isPresent() && cursor.get().getType() == WatchmanCursor.Type.CLOCK_ID) {
-      builder.add(getExpressionToExcludeCreatedAndDeletedFiles(cursor.get()));
+    if (watchPrefix.isPresent()) {
+      sinceParams.put("relative_root", watchPrefix.get());
     }
-    return builder.build();
-  }
-
-  /**
-   * This method creates an expression that filters out watchman events when some file has been
-   * created and then deleted between two Buck invocations. Typical case:
-   *
-   * - user calls `buck build`.
-   * - user edits some source code using editor that creates a temporary file on disk.
-   *   E.g. vim does this.
-   * - user Saves his changes in the editor, so editor deletes its temporary file.
-   * - user calls `buck build` again.
-   *
-   * As you can see, temporary file has been created and then deleted between two buck invocations.
-   * This fact does not affect the buck output at all. Without the expression that this method
-   * generates, buck will receive a pair of events: FileCreated and FileDeleted. They will
-   * likely invalidate our parser/action graph caches, slowing down the following rebuild.
-   *
-   * With this part of Watchman expression, we will filter the created-and-then-deleted-file
-   * events.
-   *
-   * @param cursor Watchman clock since when the created and deleted events should be filtered
-   * @return Part of the expression, which usually should be combined using `allof()` with another
-   * expression.
-   */
-  private static List<Object> getExpressionToExcludeCreatedAndDeletedFiles(WatchmanCursor cursor) {
-    return Lists.newArrayList(
-        "not",
-        Lists.newArrayList(
-            "allof",
-            Lists.newArrayList("since", cursor.get(), "cclock"),
-            Lists.newArrayList("not", "exists")));
+    return WatchmanQuery.of(watchRoot, sinceParams);
   }
 
   @VisibleForTesting
