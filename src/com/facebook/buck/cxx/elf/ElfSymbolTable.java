@@ -128,7 +128,7 @@ public class ElfSymbolTable {
 
       public static Info parse(ByteBuffer buffer) {
         int st_info = buffer.get();
-        return new Info(Bind.valueOf(st_info >> 4), Type.valueOf(st_info & 0xF));
+        return new Info(Bind.ofIntValue(st_info >> 4), Type.ofIntValue(st_info & 0xF));
       }
 
       public void write(ByteBuffer buffer) {
@@ -148,7 +148,7 @@ public class ElfSymbolTable {
           this.value = value;
         }
 
-        public static Bind valueOf(int val) {
+        public static Bind ofIntValue(int val) {
           for (Bind bind : values()) {
             if (bind.value == val) {
               return bind;
@@ -176,7 +176,7 @@ public class ElfSymbolTable {
           this.value = value;
         }
 
-        public static Type valueOf(int val) {
+        public static Type ofIntValue(int val) {
           for (Type type : values()) {
             if (type.value == val) {
               return type;
