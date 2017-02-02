@@ -19,18 +19,18 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
+import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
-import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
@@ -39,14 +39,13 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Iterator;
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
+import java.util.Iterator;
+import java.util.Optional;
 
 /**
  * Rule to generate a precompiled header from an existing header.
@@ -278,6 +277,9 @@ public class CxxPrecompiledHeader
       ImmutableList.Builder<String> iDirsBuilder,
       ImmutableList.Builder<String> iSystemDirsBuilder,
       ImmutableList.Builder<String> nonIncludeFlagsBuilder) {
+
+    // TODO(elsteveogrande): unused?
+
     Iterator<String> it = flags.iterator();
     while (it.hasNext()) {
       String flag = it.next();

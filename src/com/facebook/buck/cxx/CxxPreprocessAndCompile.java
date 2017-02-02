@@ -21,6 +21,7 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -38,7 +39,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -62,7 +62,7 @@ public class CxxPreprocessAndCompile
   private final Path output;
   @AddToRuleKey
   private final SourcePath input;
-  private final Optional<PrecompiledHeaderReference> precompiledHeaderRef;
+  private final Optional<CxxPrecompiledHeader> precompiledHeaderRule;
   private final CxxSource.Type inputType;
   private final DebugPathSanitizer compilerSanitizer;
   private final DebugPathSanitizer assemblerSanitizer;
@@ -77,14 +77,14 @@ public class CxxPreprocessAndCompile
       Path output,
       SourcePath input,
       CxxSource.Type inputType,
-      Optional<PrecompiledHeaderReference> precompiledHeaderRef,
+      Optional<CxxPrecompiledHeader> precompiledHeaderRule,
       DebugPathSanitizer compilerSanitizer,
       DebugPathSanitizer assemblerSanitizer,
       Optional<SymlinkTree> sandboxTree) {
     super(params);
     this.sandboxTree = sandboxTree;
     Preconditions.checkState(operation.isPreprocess() == preprocessDelegate.isPresent());
-    if (precompiledHeaderRef.isPresent()) {
+    if (precompiledHeaderRule.isPresent()) {
       Preconditions.checkState(
           operation == CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE,
           "Precompiled headers can only be used for compile operations.");
@@ -95,7 +95,7 @@ public class CxxPreprocessAndCompile
     this.output = output;
     this.input = input;
     this.inputType = inputType;
-    this.precompiledHeaderRef = precompiledHeaderRef;
+    this.precompiledHeaderRule = precompiledHeaderRule;
     this.compilerSanitizer = compilerSanitizer;
     this.assemblerSanitizer = assemblerSanitizer;
     performChecks(params);
@@ -149,7 +149,7 @@ public class CxxPreprocessAndCompile
       Path output,
       SourcePath input,
       CxxSource.Type inputType,
-      Optional<PrecompiledHeaderReference> precompiledHeaderRef,
+      Optional<CxxPrecompiledHeader> precompiledHeaderRule,
       DebugPathSanitizer compilerSanitizer,
       DebugPathSanitizer assemblerSanitizer,
       Optional<SymlinkTree> sandboxTree) {
@@ -161,7 +161,7 @@ public class CxxPreprocessAndCompile
         output,
         input,
         inputType,
-        precompiledHeaderRef,
+        precompiledHeaderRule,
         compilerSanitizer,
         assemblerSanitizer,
         sandboxTree);
@@ -180,6 +180,11 @@ public class CxxPreprocessAndCompile
         SourcePath source = links.get(path);
         sink.setReflectively("sandbox(" + path.toString() + ")", source);
       }
+    }
+    if (precompiledHeaderRule.isPresent()) {
+      sink.setReflectively(
+          "precompiledHeaderRuleInput",
+          new BuildTargetSourcePath(precompiledHeaderRule.get().getBuildTarget()));
     }
   }
 
@@ -214,14 +219,9 @@ public class CxxPreprocessAndCompile
     if (operation.isCompile()) {
       ImmutableList<String> arguments;
       if (operation == CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE) {
-        Optional<CxxPrecompiledHeader> pch;
-        if (precompiledHeaderRef.isPresent()) {
-          pch = Optional.of(precompiledHeaderRef.get().getPrecompiledHeader());
-        } else {
-          pch = Optional.empty();
-        }
         arguments =
-            compilerDelegate.getArguments(preprocessDelegate.get().getFlagsWithSearchPaths(pch));
+            compilerDelegate.getArguments(
+                preprocessDelegate.get().getFlagsWithSearchPaths(precompiledHeaderRule));
       } else {
         arguments = compilerDelegate.getArguments(CxxToolFlags.of());
       }
@@ -234,7 +234,6 @@ public class CxxPreprocessAndCompile
     } else {
       compilerCommand = Optional.empty();
     }
-
 
     return new CxxPreprocessAndCompileStep(
         getProjectFilesystem(),
@@ -355,20 +354,20 @@ public class CxxPreprocessAndCompile
             getDepFilePath(),
             getRelativeInputPathIfPossible(context.getSourcePathResolver()),
             output);
-        if (precompiledHeaderRef.isPresent()) {
-          depFileLines = Iterables.concat(
-              precompiledHeaderRef.get().readDepFileLines(context),
-              depFileLines);
-        }
       } catch (Depfiles.HeaderVerificationException e) {
         throw new HumanReadableException(e);
       }
+
       inputs.addAll(preprocessDelegate.get().getInputsAfterBuildingLocally(depFileLines));
     }
 
     // If present, include all inputs coming from the compiler tool.
     if (operation.isCompile()) {
       inputs.addAll(compilerDelegate.getInputsAfterBuildingLocally());
+    }
+
+    if (precompiledHeaderRule.isPresent()) {
+      inputs.add(new BuildTargetSourcePath(precompiledHeaderRule.get().getBuildTarget()));
     }
 
     // Add the input.
