@@ -62,7 +62,7 @@ public class JavaLibraryClasspathProvider {
             javaLibrary.getDepsForTransitiveClasspathEntries()));
 
     // Only add ourselves to the classpath if there's a jar to be built or if we're a maven dep.
-    if (javaLibrary.getPathToOutput() != null || javaLibrary.getMavenCoords().isPresent()) {
+    if (javaLibrary.getSourcePathToOutput() != null || javaLibrary.getMavenCoords().isPresent()) {
       classpathDeps.add(javaLibrary);
     }
 

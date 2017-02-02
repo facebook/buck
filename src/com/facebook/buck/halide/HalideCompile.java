@@ -63,7 +63,7 @@ public class HalideCompile extends AbstractBuildRule {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    Path outputDir = getPathToOutput();
+    Path outputDir = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
     buildableContext.recordArtifact(objectOutputPath(
         getBuildTarget(),
         getProjectFilesystem(),

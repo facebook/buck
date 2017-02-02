@@ -145,7 +145,7 @@ public class JavaBinary extends AbstractBuildRuleWithResolver
       includePaths = context.getSourcePathResolver().getAllAbsolutePaths(getTransitiveClasspaths());
     }
 
-    Path outputFile = getPathToOutput();
+    Path outputFile = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
     Path manifestPath = manifestFile == null ?
         null : context.getSourcePathResolver().getAbsolutePath(manifestFile);
     Step jar = new JarDirectoryStep(

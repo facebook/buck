@@ -37,7 +37,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
 import java.util.Optional;
 
 public class GwtBinaryDescription implements Description<GwtBinaryDescription.Arg> {
@@ -82,7 +81,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
     final ImmutableSortedSet.Builder<BuildRule> extraDeps = ImmutableSortedSet.naturalOrder();
 
     // Find all of the reachable JavaLibrary rules and grab their associated GwtModules.
-    final ImmutableSortedSet.Builder<Path> gwtModuleJarsBuilder =
+    final ImmutableSortedSet.Builder<SourcePath> gwtModuleJarsBuilder =
         ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet<BuildRule> moduleDependencies = resolver.getAllRules(args.moduleDeps);
     new AbstractBreadthFirstTraversal<BuildRule>(moduleDependencies) {
@@ -94,7 +93,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
 
         // If the java library doesn't generate any output, it doesn't contribute a GwtModule
         JavaLibrary javaLibrary = (JavaLibrary) rule;
-        if (javaLibrary.getPathToOutput() == null) {
+        if (javaLibrary.getSourcePathToOutput() == null) {
           return rule.getDeps();
         }
 
@@ -102,7 +101,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
             javaLibrary.getBuildTarget().checkUnflavored(),
             JavaLibrary.GWT_MODULE_FLAVOR);
         Optional<BuildRule> gwtModule = resolver.getRuleOptional(gwtModuleTarget);
-        if (!gwtModule.isPresent() && javaLibrary.getPathToOutput() != null) {
+        if (!gwtModule.isPresent() && javaLibrary.getSourcePathToOutput() != null) {
           ImmutableSortedSet<SourcePath> filesForGwtModule =
               ImmutableSortedSet.<SourcePath>naturalOrder()
                   .addAll(javaLibrary.getSources())
@@ -127,7 +126,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
         if (gwtModule.isPresent()) {
           extraDeps.add(gwtModule.get());
           gwtModuleJarsBuilder.add(
-              Preconditions.checkNotNull(gwtModule.get().getPathToOutput()));
+              Preconditions.checkNotNull(gwtModule.get().getSourcePathToOutput()));
         }
 
         // Traverse all of the deps of this rule.

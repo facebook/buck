@@ -121,7 +121,8 @@ public class SceneKitAssets extends AbstractBuildRule {
                 CopyStep.DirectoryMode.CONTENTS_ONLY));
       }
     }
-    buildableContext.recordArtifact(getPathToOutput());
+    buildableContext.recordArtifact(
+        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
     return stepsBuilder.build();
   }
 

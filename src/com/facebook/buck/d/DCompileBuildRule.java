@@ -72,13 +72,12 @@ public class DCompileBuildRule extends AbstractBuildRule {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    buildableContext.recordArtifact(getPathToOutput());
+    Path output = Preconditions.checkNotNull(
+        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
+    buildableContext.recordArtifact(output);
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.add(
-        new MkdirStep(
-            getProjectFilesystem(),
-            Preconditions.checkNotNull(getPathToOutput()).getParent()));
+    steps.add(new MkdirStep(getProjectFilesystem(), output.getParent()));
 
     ImmutableList.Builder<String> flagsBuilder = ImmutableList.builder();
     flagsBuilder.addAll(compilerFlags);

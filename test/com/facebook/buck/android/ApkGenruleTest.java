@@ -152,7 +152,7 @@ public class ApkGenruleTest {
             projectFilesystem.getBuckPaths().getGenDir().toString() +
              "/src/com/facebook/sign_fb4a/sign_fb4a.apk").toString();
     assertEquals(expectedApkOutput,
-        apkGenrule.getAbsoluteOutputFilePath());
+        apkGenrule.getAbsoluteOutputFilePath(pathResolver));
     assertEquals(
         "The apk that this rule is modifying must have the apk in its deps.",
         ImmutableSet.of(apkTarget.toString()),

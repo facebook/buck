@@ -16,7 +16,6 @@
 
 package com.facebook.buck.d;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -91,9 +90,8 @@ public class DTest extends AbstractBuildRule implements
     return contacts;
   }
 
-  public ImmutableList<String> getExecutableCommand(ProjectFilesystem projectFilesystem) {
-    return ImmutableList.of(
-        projectFilesystem.resolve(getPathToOutput()).toString());
+  private ImmutableList<String> getExecutableCommand(SourcePathResolver pathResolver) {
+    return ImmutableList.of(pathResolver.getAbsolutePath(getSourcePathToOutput()).toString());
   }
 
   @Override
@@ -128,8 +126,8 @@ public class DTest extends AbstractBuildRule implements
     return new BuildableProperties(BuildableProperties.Kind.TEST);
   }
 
-  private ImmutableList<String> getShellCommand() {
-    return getExecutableCommand(getProjectFilesystem());
+  private ImmutableList<String> getShellCommand(SourcePathResolver pathResolver) {
+    return getExecutableCommand(pathResolver);
   }
 
   @Override
@@ -214,7 +212,7 @@ public class DTest extends AbstractBuildRule implements
         new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToTestOutputDirectory()),
         new DTestStep(
             getProjectFilesystem(),
-            getShellCommand(),
+            getShellCommand(pathResolver),
             getPathToTestExitCode(),
             testRuleTimeoutMs,
             getPathToTestOutput()));
@@ -238,7 +236,7 @@ public class DTest extends AbstractBuildRule implements
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
         .setType("dunit")
-        .setCommand(getShellCommand())
+        .setCommand(getShellCommand(pathResolver))
         .setLabels(getLabels())
         .setContacts(getContacts())
         .build();

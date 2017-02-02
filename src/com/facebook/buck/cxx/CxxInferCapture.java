@@ -108,7 +108,8 @@ public class CxxInferCapture
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList<String> frontendCommand = getFrontendCommand();
 
-    buildableContext.recordArtifact(this.getPathToOutput());
+    buildableContext.recordArtifact(
+        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
 
     Path inputRelativePath = context.getSourcePathResolver().getRelativePath(input);
     return ImmutableList.<Step>builder()

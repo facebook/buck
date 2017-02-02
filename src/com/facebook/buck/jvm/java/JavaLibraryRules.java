@@ -49,7 +49,7 @@ import java.util.Optional;
 public class JavaLibraryRules {
 
   /** Utility class: do not instantiate. */
-  private JavaLibraryRules() {}
+    private JavaLibraryRules() {}
 
   static void addAccumulateClassNamesStep(
       JavaLibrary javaLibrary,

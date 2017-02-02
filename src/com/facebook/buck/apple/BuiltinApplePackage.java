@@ -95,7 +95,8 @@ public class BuiltinApplePackage extends AbstractBuildRule {
             ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
             temp));
 
-    buildableContext.recordArtifact(getPathToOutput());
+    buildableContext.recordArtifact(
+        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
 
     return commands.build();
   }

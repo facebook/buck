@@ -284,6 +284,7 @@ public class CxxTestDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     Genrule dep =
         (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
@@ -304,7 +305,8 @@ public class CxxTestDescriptionTest {
                 Optional.<LinkerMapMode>empty()));
     assertThat(
         Arg.stringify(binary.getArgs()),
-        Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
+        Matchers.hasItem(
+            String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
     assertThat(
         binary.getDeps(),
         Matchers.hasItem(dep));
@@ -318,6 +320,7 @@ public class CxxTestDescriptionTest {
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(gtest),
             new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     new CxxLibraryBuilder(gtestTarget).build(resolver);
     Genrule dep =
         (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
@@ -350,7 +353,8 @@ public class CxxTestDescriptionTest {
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
         Arg.stringify(binary.getArgs()),
-        Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
+        Matchers.hasItem(
+            String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
     assertThat(
         binary.getDeps(),
         Matchers.hasItem(dep));
@@ -373,6 +377,7 @@ public class CxxTestDescriptionTest {
         new BuildRuleResolver(
             TargetGraph.EMPTY,
             new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     Genrule dep =
         (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
@@ -390,7 +395,8 @@ public class CxxTestDescriptionTest {
                 Optional.<LinkerMapMode>empty()));
     assertThat(
         Arg.stringify(binary.getArgs()),
-        Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
+        Matchers.hasItem(
+            String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
     assertThat(
         binary.getDeps(),
         Matchers.hasItem(dep));
@@ -401,6 +407,7 @@ public class CxxTestDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     Genrule dep =
         (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
@@ -428,7 +435,7 @@ public class CxxTestDescriptionTest {
         Arg.stringify(binary.getArgs()),
         Matchers.not(
             Matchers.hasItem(
-                String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath()))));
+                String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver)))));
     assertThat(
         binary.getDeps(),
         Matchers.not(Matchers.hasItem(dep)));

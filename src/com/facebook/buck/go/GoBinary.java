@@ -115,7 +115,7 @@ public class GoBinary extends AbstractBuildRuleWithResolver implements BinaryBui
             linkerFlags,
             ImmutableList.of(linkTree.getRoot()),
             platform,
-            mainObject.getPathToOutput(),
+            context.getSourcePathResolver().getRelativePath(mainObject.getSourcePathToOutput()),
             GoLinkStep.LinkMode.EXECUTABLE,
             output)
         );

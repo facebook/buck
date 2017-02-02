@@ -63,6 +63,7 @@ public class DirectHeaderMapTest {
   private ProjectFilesystem projectFilesystem;
   private BuildTarget buildTarget;
   private DirectHeaderMap buildRule;
+  private BuildRuleResolver ruleResolver;
   private SourcePathResolver pathResolver;
   private ImmutableMap<Path, SourcePath> links;
   private Path symlinkTreeRoot;
@@ -103,15 +104,16 @@ public class DirectHeaderMapTest {
         BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root");
 
     // Setup the symlink tree buildable.
-    pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
-        new BuildRuleResolver(
-            TargetGraph.EMPTY,
-            new DefaultTargetNodeToBuildRuleTransformer())
-    ));
+    ruleResolver = new BuildRuleResolver(
+        TargetGraph.EMPTY,
+        new DefaultTargetNodeToBuildRuleTransformer());
+
+    pathResolver = new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
     buildRule = new DirectHeaderMap(
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
         symlinkTreeRoot,
         links);
+    ruleResolver.addToIndex(buildRule);
 
     headerMapPath = buildRule.getPathToOutput();
   }

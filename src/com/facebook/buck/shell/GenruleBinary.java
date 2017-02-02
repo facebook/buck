@@ -18,7 +18,6 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -48,10 +47,7 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
   @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder()
-        .addArg(
-            new SourcePathArg(
-                getResolver(),
-                new BuildTargetSourcePath(getBuildTarget(), getPathToOutput())))
+        .addArg(new SourcePathArg(getResolver(), getSourcePathToOutput()))
         .build();
   }
 

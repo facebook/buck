@@ -18,7 +18,6 @@ package com.facebook.buck.file;
 
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
@@ -49,10 +48,7 @@ public class RemoteFileBinary extends RemoteFile implements BinaryBuildRule {
   @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder()
-        .addArg(
-            new SourcePathArg(
-                resolver,
-                new BuildTargetSourcePath(getBuildTarget(), getPathToOutput())))
+        .addArg(new SourcePathArg(resolver, getSourcePathToOutput()))
         .build();
   }
 }

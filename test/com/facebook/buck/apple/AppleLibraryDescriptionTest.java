@@ -29,6 +29,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.Genrule;
@@ -54,6 +56,7 @@ public class AppleLibraryDescriptionTest {
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(new AppleLibraryBuilder(sandboxTarget).build()),
             new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     BuildTarget target = BuildTargetFactory.newInstance("//:rule")
         .withFlavors(
             DefaultCxxPlatforms.FLAVOR,
@@ -75,7 +78,8 @@ public class AppleLibraryDescriptionTest {
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
         Arg.stringify(((CxxLink) binary).getArgs()),
-        Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
+        Matchers.hasItem(
+            String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
     assertThat(
         binary.getDeps(),
         Matchers.hasItem(dep));

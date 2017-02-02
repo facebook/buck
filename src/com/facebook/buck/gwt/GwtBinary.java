@@ -86,7 +86,7 @@ public class GwtBinary extends AbstractBuildRule {
   @AddToRuleKey
   private final ImmutableList<String> experimentalArgs;
   // Deliberately not added to rule key
-  private final ImmutableSortedSet<Path> gwtModuleJars;
+  private final ImmutableSortedSet<SourcePath> gwtModuleJars;
 
   /**
    * @param modules The GWT modules to build with the GWT compiler.
@@ -102,7 +102,7 @@ public class GwtBinary extends AbstractBuildRule {
       int localWorkers,
       boolean strict,
       List<String> experimentalArgs,
-      ImmutableSortedSet<Path> gwtModuleJars) {
+      ImmutableSortedSet<SourcePath> gwtModuleJars) {
     super(buildRuleParams);
     BuildTarget buildTarget = buildRuleParams.getBuildTarget();
     this.outputFile = BuildTargets.getGenPath(
@@ -141,7 +141,8 @@ public class GwtBinary extends AbstractBuildRule {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     // Create a clean directory where the .zip file will be written.
-    Path workingDirectory = getPathToOutput().getParent();
+    Path workingDirectory =
+        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()).getParent();
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     steps.add(new MakeCleanDirectoryStep(projectFilesystem, workingDirectory));
 
@@ -167,7 +168,8 @@ public class GwtBinary extends AbstractBuildRule {
                     getClasspathEntries(context.getSourcePathResolver()),
                     getProjectFilesystem()::resolve)),
             GWT_COMPILER_CLASS,
-            "-war", getProjectFilesystem().resolve(getPathToOutput()).toString(),
+            "-war",
+                context.getSourcePathResolver().getAbsolutePath(getSourcePathToOutput()).toString(),
             "-style", style.name(),
             "-optimize", String.valueOf(optimize),
             "-localWorkers", String.valueOf(localWorkers),
@@ -187,7 +189,8 @@ public class GwtBinary extends AbstractBuildRule {
     };
     steps.add(javaStep);
 
-    buildableContext.recordArtifact(getPathToOutput());
+    buildableContext.recordArtifact(
+        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
 
     return steps.build();
   }
@@ -207,7 +210,7 @@ public class GwtBinary extends AbstractBuildRule {
   @VisibleForTesting
   Iterable<Path> getClasspathEntries(SourcePathResolver pathResolver) {
     ImmutableSet.Builder<Path> classpathEntries = ImmutableSet.builder();
-    classpathEntries.addAll(gwtModuleJars);
+    classpathEntries.addAll(pathResolver.getAllAbsolutePaths(gwtModuleJars));
     for (BuildRule dep : getDeclaredDeps()) {
       if (!(dep instanceof JavaLibrary)) {
         continue;

@@ -165,8 +165,9 @@ public class Genrule extends AbstractBuildRuleWithResolver
   }
 
   /** @return the absolute path to the output file */
-  public String getAbsoluteOutputFilePath() {
-    return getProjectFilesystem().resolve(getPathToOutput()).toString();
+  @VisibleForTesting
+  public String getAbsoluteOutputFilePath(SourcePathResolver pathResolver) {
+    return pathResolver.getAbsolutePath(getSourcePathToOutput()).toString();
   }
 
   @VisibleForTesting
@@ -189,7 +190,7 @@ public class Genrule extends AbstractBuildRuleWithResolver
             FluentIterable.from(srcs)
                 .transform(pathResolver::getAbsolutePath)
                 .transform(Object::toString)));
-    environmentVariablesBuilder.put("OUT", getAbsoluteOutputFilePath());
+    environmentVariablesBuilder.put("OUT", getAbsoluteOutputFilePath(pathResolver));
 
     environmentVariablesBuilder.put(
         "GEN_DIR",
@@ -323,7 +324,7 @@ public class Genrule extends AbstractBuildRuleWithResolver
     commands.add(
         new RmStep(
             getProjectFilesystem(),
-            getPathToOutput(),
+            context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()),
             RmStep.Mode.FORCED,
             RmStep.Mode.RECURSIVE));
 

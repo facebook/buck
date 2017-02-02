@@ -85,9 +85,9 @@ public class BuildTargets {
   }
 
   /**
-   * Return a path to a file in the buck-out/gen/ directory. {@code format} will be prepended with
-   * the {@link BuckPaths#getGenDir()} and the target base path, then formatted with the target
-   * short name.
+   * Return a relative path to a file in the buck-out/gen/ directory. {@code format} will be
+   * prepended with the {@link BuckPaths#getGenDir()} and the target base path, then formatted with
+   * the target short name.
    *
    * @param target The {@link BuildTarget} to scope this path to.
    * @param format {@link String#format} string for the path name.  It should contain one "%s",

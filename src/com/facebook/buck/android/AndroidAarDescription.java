@@ -221,8 +221,8 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         androidAarParams,
         manifest,
         androidResource,
-        assembleResourceDirectories.getPathToOutput(),
-        assembleAssetsDirectories.getPathToOutput(),
+        assembleResourceDirectories.getSourcePathToOutput(),
+        assembleAssetsDirectories.getSourcePathToOutput(),
         assembledNativeLibsDir,
         ImmutableSet.copyOf(packageableCollection.getNativeLibAssetsDirectories().values()));
   }

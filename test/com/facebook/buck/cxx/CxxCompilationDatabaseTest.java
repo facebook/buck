@@ -87,6 +87,7 @@ public class CxxCompilationDatabaseTest {
         ImmutableMap.of(),
         HeaderVisibility.PRIVATE,
         true);
+    testBuildRuleResolver.addToIndex(privateSymlinkTree);
     HeaderSymlinkTree exportedSymlinkTree = CxxDescriptionEnhancer.createHeaderSymlinkTree(
         testBuildRuleParams,
         testBuildRuleResolver,
@@ -94,6 +95,7 @@ public class CxxCompilationDatabaseTest {
         ImmutableMap.of(),
         HeaderVisibility.PUBLIC,
         true);
+    testBuildRuleResolver.addToIndex(exportedSymlinkTree);
 
     BuildTarget compileTarget = BuildTarget
         .builder(testBuildRuleParams.getBuildTarget().getUnflavoredBuildTarget())
@@ -116,7 +118,7 @@ public class CxxCompilationDatabaseTest {
         .setProjectFilesystem(filesystem)
         .setDeclaredDeps(ImmutableSortedSet.of(privateSymlinkTree, exportedSymlinkTree))
         .build();
-    rules.add(
+    rules.add(testBuildRuleResolver.addToIndex(
         CxxPreprocessAndCompile.preprocessAndCompile(
             compileBuildRuleParams,
                 new PreprocessorDelegate(
@@ -150,11 +152,12 @@ public class CxxCompilationDatabaseTest {
                 Optional.empty(),
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                 CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
-                Optional.empty()));
+                Optional.empty())));
 
     CxxCompilationDatabase compilationDatabase = CxxCompilationDatabase.createCompilationDatabase(
         testBuildRuleParams,
         rules.build());
+    testBuildRuleResolver.addToIndex(compilationDatabase);
 
     assertThat(
         compilationDatabase.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),

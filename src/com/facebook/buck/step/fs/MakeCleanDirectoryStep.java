@@ -67,4 +67,9 @@ public final class MakeCleanDirectoryStep extends CompositeStep {
   public int hashCode() {
     return Objects.hashCode(pathRelativeToProjectRoot);
   }
+
+  @Override
+  public String toString() {
+    return "MakeCleanDirectoryStep: " + getPath();
+  }
 }

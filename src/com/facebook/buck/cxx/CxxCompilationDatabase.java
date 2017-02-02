@@ -104,7 +104,9 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.add(new MkdirStep(getProjectFilesystem(), outputJsonFile.getParent()));
-    steps.add(new GenerateCompilationCommandsJson(context.getSourcePathResolver()));
+    steps.add(new GenerateCompilationCommandsJson(
+        context.getSourcePathResolver(),
+        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput())));
     return steps.build();
   }
 
@@ -137,10 +139,14 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
   class GenerateCompilationCommandsJson extends AbstractExecutionStep {
 
     private final SourcePathResolver pathResolver;
+    private final Path outputRelativePath;
 
-    public GenerateCompilationCommandsJson(SourcePathResolver pathResolver) {
+    public GenerateCompilationCommandsJson(
+        SourcePathResolver pathResolver,
+        Path outputRelativePath) {
       super("generate compile_commands.json");
       this.pathResolver = pathResolver;
+      this.outputRelativePath = outputRelativePath;
     }
 
     @Override
@@ -177,7 +183,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
         Iterable<CxxCompilationDatabaseEntry> entries,
         ExecutionContext context) {
       try (OutputStream outputStream =
-               getProjectFilesystem().newFileOutputStream(getPathToOutput())) {
+               getProjectFilesystem().newFileOutputStream(outputRelativePath)) {
         ObjectMapper mapper = context.getObjectMapper();
         mapper.writeValue(outputStream, entries);
       } catch (IOException e) {
@@ -192,7 +198,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
       context.logError(
           throwable,
           "Failed writing to %s in %s.",
-          getPathToOutput(),
+          outputRelativePath,
           getBuildTarget());
     }
   }

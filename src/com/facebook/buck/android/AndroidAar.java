@@ -54,8 +54,8 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
   private final Path temp;
   private final AndroidManifest manifest;
   private final AndroidResource androidResource;
-  private final Path assembledResourceDirectory;
-  private final Path assembledAssetsDirectory;
+  private final SourcePath assembledResourceDirectory;
+  private final SourcePath assembledAssetsDirectory;
   private final Optional<Path> assembledNativeLibs;
   private final ImmutableSet<SourcePath> nativeLibAssetsDirectories;
 
@@ -63,8 +63,8 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
       BuildRuleParams params,
       AndroidManifest manifest,
       AndroidResource androidResource,
-      Path assembledResourceDirectory,
-      Path assembledAssetsDirectory,
+      SourcePath assembledResourceDirectory,
+      SourcePath assembledAssetsDirectory,
       Optional<Path> assembledNativeLibs,
       ImmutableSet<SourcePath> nativeLibAssetsDirectories) {
     super(params);
@@ -96,7 +96,7 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
     commands.add(
         CopyStep.forFile(
             getProjectFilesystem(),
-            manifest.getPathToOutput(),
+            context.getSourcePathResolver().getRelativePath(manifest.getSourcePathToOutput()),
             temp.resolve("AndroidManifest.xml")));
 
     // put R.txt into tmp folder
@@ -110,12 +110,12 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
     // put res/ and assets/ into tmp folder
     commands.add(CopyStep.forDirectory(
             getProjectFilesystem(),
-            assembledResourceDirectory,
+            context.getSourcePathResolver().getRelativePath(assembledResourceDirectory),
             temp.resolve("res"),
             CopyStep.DirectoryMode.CONTENTS_ONLY));
     commands.add(CopyStep.forDirectory(
             getProjectFilesystem(),
-            assembledAssetsDirectory,
+            context.getSourcePathResolver().getRelativePath(assembledAssetsDirectory),
             temp.resolve("assets"),
             CopyStep.DirectoryMode.CONTENTS_ONLY));
 

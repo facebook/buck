@@ -341,7 +341,8 @@ public class AppleBundle
       stepsBuilder.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
-              sceneKitAssets.get().getPathToOutput(),
+              context.getSourcePathResolver().getRelativePath(
+                  sceneKitAssets.get().getSourcePathToOutput()),
               resourcesDestinationPath,
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
@@ -596,7 +597,8 @@ public class AppleBundle
     }
 
     // Ensure the bundle directory is archived so we can fetch it later.
-    buildableContext.recordArtifact(getPathToOutput());
+    buildableContext.recordArtifact(
+        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
 
     return stepsBuilder.build();
   }

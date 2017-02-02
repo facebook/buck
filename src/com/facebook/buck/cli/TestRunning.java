@@ -803,7 +803,7 @@ public class TestRunning {
       if (useIntermediateClassesDir) {
         classesItem = DefaultJavaLibrary.getClassesDir(rule.getBuildTarget(), filesystem);
       } else {
-        classesItem = rule.getPathToOutput();
+        classesItem = sourcePathResolver.getRelativePath(rule.getSourcePathToOutput());
       }
       if (classesItem == null) {
         continue;

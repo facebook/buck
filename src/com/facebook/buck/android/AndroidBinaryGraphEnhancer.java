@@ -255,10 +255,7 @@ public class AndroidBinaryGraphEnhancer {
           paramsForCompileGenCode,
           pathResolver,
           ruleFinder,
-          ImmutableSet.of(
-              new BuildTargetSourcePath(
-                  generateCodeForMergedLibraryMap.getBuildTarget(),
-                  generateCodeForMergedLibraryMap.getPathToOutput())),
+          ImmutableSet.of(generateCodeForMergedLibraryMap.getSourcePathToOutput()),
           /* resources */ ImmutableSet.of(),
           javacOptions.getGeneratedSourceFolderName(),
           /* proguardConfig */ Optional.empty(),
@@ -437,10 +434,7 @@ public class AndroidBinaryGraphEnhancer {
         paramsForCompileUberRDotJava,
         pathResolver,
         ruleFinder,
-        ImmutableSet.of(
-            new BuildTargetSourcePath(
-                trimUberRDotJava.getBuildTarget(),
-                trimUberRDotJava.getPathToOutput())),
+        ImmutableSet.of(trimUberRDotJava.getSourcePathToOutput()),
         /* resources */ ImmutableSet.of(),
         javacOptions.getGeneratedSourceFolderName(),
         /* proguardConfig */ Optional.empty(),
@@ -583,9 +577,8 @@ public class AndroidBinaryGraphEnhancer {
       ruleResolver.addToIndex(buildConfigJavaLibrary);
 
       enhancedDeps.add(buildConfigJavaLibrary);
-      Path buildConfigJar = buildConfigJavaLibrary.getPathToOutput();
       Preconditions.checkNotNull(
-          buildConfigJar,
+          buildConfigJavaLibrary.getSourcePathToOutput(),
           "%s must have an output file.",
           buildConfigJavaLibrary);
       compilationRulesBuilder.add(buildConfigJavaLibrary);
@@ -648,7 +641,7 @@ public class AndroidBinaryGraphEnhancer {
 
       // If the rule has no output file (which happens when a java_library has no srcs or
       // resources, but export_deps is true), then there will not be anything to dx.
-      if (javaLibrary.getPathToOutput() == null) {
+      if (javaLibrary.getSourcePathToOutput() == null) {
         continue;
       }
 

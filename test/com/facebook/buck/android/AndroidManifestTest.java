@@ -34,6 +34,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -74,15 +75,18 @@ public class AndroidManifestTest {
     // Mock out a BuildContext whose DependencyGraph will be traversed.
     BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
 
-    expect(
-        buildContext.getSourcePathResolver().getAbsolutePath(
-            new PathSourcePath(filesystem, skeletonPath)))
+    SourcePathResolver pathResolver = buildContext.getSourcePathResolver();
+    expect(pathResolver.getAbsolutePath(new PathSourcePath(filesystem, skeletonPath)))
         .andStubReturn(filesystem.resolve(skeletonPath));
 
-    expect(buildContext.getSourcePathResolver().getAllAbsolutePaths(ImmutableSortedSet.of()))
+    expect(pathResolver.getAllAbsolutePaths(ImmutableSortedSet.of()))
         .andStubReturn(ImmutableSortedSet.of());
 
-    replay(buildContext.getSourcePathResolver());
+    Path outPath = Paths.get("foo/bar");
+    expect(pathResolver.getRelativePath(androidManifest.getSourcePathToOutput()))
+        .andStubReturn(outPath);
+
+    replay(pathResolver);
 
     List<Step> steps = androidManifest.getBuildSteps(buildContext, new FakeBuildableContext());
     Step generateManifestStep = steps.get(2);
@@ -92,10 +96,7 @@ public class AndroidManifestTest {
             filesystem,
             filesystem.resolve(skeletonPath),
             /* libraryManifestPaths */ ImmutableSet.of(),
-            BuildTargets.getGenPath(
-                filesystem,
-                BuildTargetFactory.newInstance(MANIFEST_TARGET),
-                "AndroidManifest__%s__.xml")),
+            outPath),
         generateManifestStep);
   }
 

@@ -92,7 +92,7 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    Path pathToOutput = getPathToOutput();
+    Path pathToOutput = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
     MkdirStep mkOutputDirStep = new MkdirStep(getProjectFilesystem(), pathToOutput.getParent());
     JarDirectoryStep mergeOutputsStep = new JarDirectoryStep(
         getProjectFilesystem(),

@@ -19,7 +19,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
@@ -188,10 +187,8 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
 
       for (BuildRule rule : this.rules) {
         if (rule.getClass().isAnnotationPresent(BuildsAnnotationProcessor.class)) {
-          Path pathToOutput = rule.getPathToOutput();
-          if (pathToOutput != null) {
-            BuildTargetSourcePath outputSourcePath =
-                new BuildTargetSourcePath(rule.getBuildTarget());
+          SourcePath outputSourcePath = rule.getSourcePathToOutput();
+          if (outputSourcePath != null) {
             inputs.add(outputSourcePath);
             searchPathElements.add(outputSourcePath);
           }
@@ -201,8 +198,8 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
           for (JavaLibrary entry : entries) {
             // Libraries may merely re-export other libraries' class paths, instead of having one
             // itself. In such cases do not add the library itself, and just move on.
-            if (entry.getPathToOutput() != null) {
-              inputs.add(new BuildTargetSourcePath(entry.getBuildTarget()));
+            if (entry.getSourcePathToOutput() != null) {
+              inputs.add(entry.getSourcePathToOutput());
             }
           }
           searchPathElements.addAll(hasClasspathEntries.getTransitiveClasspaths());

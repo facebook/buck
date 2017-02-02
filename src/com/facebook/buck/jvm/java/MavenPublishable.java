@@ -22,7 +22,7 @@ import com.facebook.buck.rules.SourcePath;
 import java.util.Optional;
 
 /**
- * A {@link BuildRule} that can have its output({@link #getPathToOutput}) published to a
+ * A {@link BuildRule} that can have its output({@link #getSourcePathToOutput}) published to a
  * maven repository under the maven coordinates provided by {@link #getMavenCoords}
  */
 public interface MavenPublishable extends HasMavenCoordinates {

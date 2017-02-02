@@ -114,14 +114,16 @@ public class CxxInferAnalyze extends AbstractBuildRule {
       BuildContext context,
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(specsDir);
-    buildableContext.recordArtifact(this.getPathToOutput());
+    buildableContext.recordArtifact(
+        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
     return ImmutableList.<Step>builder()
         .add(new MkdirStep(getProjectFilesystem(), specsDir))
         .add(
             new SymCopyStep(
                 getProjectFilesystem(),
                 captureAndAnalyzeRules.captureRules.stream()
-                    .map(CxxInferCapture::getPathToOutput)
+                    .map(CxxInferCapture::getSourcePathToOutput)
+                    .map(context.getSourcePathResolver()::getRelativePath)
                     .collect(MoreCollectors.toImmutableList()),
                 resultsDir))
         .add(

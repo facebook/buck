@@ -84,6 +84,7 @@ public class ExternallyBuiltApplePackageTest {
         config,
         new FakeSourcePath(bundleLocation),
         true);
+    resolver.addToIndex(rule);
     ShellStep step = Iterables.getOnlyElement(
         Iterables.filter(
             rule.getBuildSteps(
@@ -117,6 +118,7 @@ public class ExternallyBuiltApplePackageTest {
         config,
         new FakeSourcePath("Fake/Bundle/Location"),
         true);
+    resolver.addToIndex(rule);
     AbstractGenruleStep step = Iterables.getOnlyElement(
         Iterables.filter(
             rule.getBuildSteps(

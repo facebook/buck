@@ -124,7 +124,7 @@ abstract class AbstractPreprocessorFlags {
         preprocessor.prefixOrPCHArgs(
             resolver,
             getPrefixHeader(),
-            Optional.ofNullable(pch.isPresent() ? pch.get().getPathToOutput() : null)));
+            pch.map(CxxPrecompiledHeader::getSourcePathToOutput).map(resolver::getRelativePath)));
     return builder.build();
   }
 

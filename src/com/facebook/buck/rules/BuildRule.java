@@ -81,9 +81,9 @@ public interface BuildRule extends Comparable<BuildRule>, HasBuildTarget {
 
   /**
    * @return true if the output of this build rule is compatible with {@code buck build --out}.
-   *     To be compatible, that means (1) {@link #getPathToOutput()} cannot return {@code null},
-   *     and (2) the output file works as intended when copied to an arbitrary path (i.e., does not
-   *     have any dependencies on relative symlinks).
+   *     To be compatible, that means (1) {@link #getSourcePathToOutput()} cannot return
+   *     {@code null}, and (2) the output file works as intended when copied to an arbitrary path
+   *     (i.e., does not have any dependencies on relative symlinks).
    */
   default boolean outputFileCanBeCopied() {
     return getPathToOutput() != null;

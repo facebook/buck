@@ -251,8 +251,8 @@ public class AppleTest
         .setLabels(getLabels())
         .setContacts(getContacts());
 
-    Path resolvedTestBundleDirectory = getProjectFilesystem().resolve(
-        Preconditions.checkNotNull(testBundle.getPathToOutput()));
+    Path resolvedTestBundleDirectory = pathResolver.getAbsolutePath(
+        Preconditions.checkNotNull(testBundle.getSourcePathToOutput()));
 
     Path pathToTestOutput = getProjectFilesystem().resolve(
         getPathToTestOutputDirectory());
@@ -266,8 +266,8 @@ public class AppleTest
 
     Optional<Path> testHostAppPath = Optional.empty();
     if (testHostApp.isPresent()) {
-      Path resolvedTestHostAppDirectory = getProjectFilesystem().resolve(
-          Preconditions.checkNotNull(testHostApp.get().getPathToOutput()));
+      Path resolvedTestHostAppDirectory = pathResolver.getAbsolutePath(
+          Preconditions.checkNotNull(testHostApp.get().getSourcePathToOutput()));
       testHostAppPath = Optional.of(
           resolvedTestHostAppDirectory.resolve(
               testHostApp.get().getUnzippedOutputFilePathToBinary()));

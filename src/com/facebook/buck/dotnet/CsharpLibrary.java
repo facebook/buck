@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Preconditions;
@@ -88,7 +89,8 @@ public class CsharpLibrary extends AbstractBuildRule {
           resource.getKey());
     }
 
-    ImmutableList<Either<Path, String>> references = resolveReferences(refs);
+    ImmutableList<Either<Path, String>> references =
+        resolveReferences(context.getSourcePathResolver(), refs);
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
@@ -105,6 +107,7 @@ public class CsharpLibrary extends AbstractBuildRule {
   }
 
   private ImmutableList<Either<Path, String>> resolveReferences(
+      SourcePathResolver pathResolver,
       ImmutableList<Either<BuildRule, String>> refs) {
     ImmutableList.Builder<Either<Path, String>> resolved = ImmutableList.builder();
 
@@ -116,8 +119,8 @@ public class CsharpLibrary extends AbstractBuildRule {
             rule instanceof CsharpLibrary ||
             rule instanceof PrebuiltDotnetLibrary);
 
-        Path outputPath = Preconditions.checkNotNull(rule.getPathToOutput());
-        resolved.add(Either.ofLeft(rule.getProjectFilesystem().resolve(outputPath)));
+        SourcePath outputPath = Preconditions.checkNotNull(rule.getSourcePathToOutput());
+        resolved.add(Either.ofLeft(pathResolver.getAbsolutePath(outputPath)));
       } else {
         resolved.add(Either.ofRight(ref.getRight()));
       }

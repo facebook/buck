@@ -145,7 +145,7 @@ public class GenruleTest {
         filesystem.resolve(filesystem.getBuckPaths().getGenDir().resolve(
             "src/com/facebook/katana/katana_manifest/AndroidManifest.xml"))
             .toString(),
-        ((Genrule) genrule).getAbsoluteOutputFilePath());
+        ((Genrule) genrule).getAbsoluteOutputFilePath(pathResolver));
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
     ImmutableList<Path> inputsToCompareToOutputs = ImmutableList.of(
         filesystem.getPath("src/com/facebook/katana/convert_to_katana.py"),

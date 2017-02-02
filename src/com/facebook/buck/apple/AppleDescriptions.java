@@ -885,13 +885,10 @@ public class AppleDescriptions {
     for (BuildRule rule : deps) {
       if (rule instanceof AppleBundle) {
         AppleBundle appleBundle = (AppleBundle) rule;
-        Path outputPath = Preconditions.checkNotNull(
-            appleBundle.getPathToOutput(),
+        SourcePath sourcePath = Preconditions.checkNotNull(
+            appleBundle.getSourcePathToOutput(),
             "Path cannot be null for AppleBundle [%s].",
             appleBundle);
-        SourcePath sourcePath = new BuildTargetSourcePath(
-            appleBundle.getBuildTarget(),
-            outputPath);
 
         if (AppleBundleExtension.APPEX.toFileExtension().equals(appleBundle.getExtension()) ||
             AppleBundleExtension.APP.toFileExtension().equals(appleBundle.getExtension())) {

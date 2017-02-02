@@ -84,7 +84,7 @@ public class CalculateAbi extends AbstractBuildRule
             buildableContext,
             getProjectFilesystem(),
             context.getSourcePathResolver().getAbsolutePath(binaryJar),
-            getPathToOutput()));
+            context.getSourcePathResolver().getRelativePath(getSourcePathToOutput())));
   }
 
   @Override
