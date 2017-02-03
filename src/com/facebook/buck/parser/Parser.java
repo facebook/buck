@@ -362,7 +362,7 @@ public class Parser {
               return group;
             });
         if (!replacements.isEmpty()) {
-          // TODO(csarbora): Stop duplicating target lists
+          // TODO(tophyr): Stop duplicating target lists
           groups.put(groupTarget, groups.get(groupTarget).withReplacedTargets(replacements));
         }
       }

@@ -157,7 +157,7 @@ public class DistBuildTargetGraphCodec {
       }
     }
 
-    // TODO(csarbora): make this work with TargetGroups
+    // TODO(tophyr): make this work with TargetGroups
     return new TargetGraph(mutableTargetGraph, targetNodeIndex, ImmutableSet.of());
   }
 }

@@ -49,7 +49,7 @@ public class VisibilityPatternParser {
       this.viewerPattern = viewerPattern;
     }
 
-    // TODO(csarbora) let this account for specifying groups as targets in visibility too
+    // TODO(tophyr) let this account for specifying groups as targets in visibility too
     @Override
     public boolean checkVisibility(
         TargetGraph graphContext,
@@ -81,7 +81,7 @@ public class VisibilityPatternParser {
     }
   }
 
-  // TODO(csarbora): warn if GROUP and not actually in a group
+  // TODO(tophyr): warn if GROUP and not actually in a group
   private static class GroupVisibilityPattern implements VisibilityPattern {
     public static final GroupVisibilityPattern INSTANCE = new GroupVisibilityPattern();
 
