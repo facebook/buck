@@ -1,5 +1,5 @@
 prebuilt_jar(
-  name = 'processor',
+  name = 'immutables',
   binary_jar = 'value-2.3.8.jar',
   licenses = [
     'COPYING',

@@ -1,7 +1,7 @@
 {
   "config" : {
     "deps" : [
-      "//third-party/java/immutables:processor"
+      "//third-party/java/immutables:immutables"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/cli:config",
@@ -12,7 +12,7 @@
     "deps" : [
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:util",
-      "//third-party/java/immutables:processor"
+      "//third-party/java/immutables:immutables"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/event:interfaces",

@@ -1,7 +1,7 @@
 {
   "i18n" : {
     "deps" : [
-      "//third-party/java/immutables:processor"
+      "//third-party/java/immutables:immutables"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/util/immutables:immutables",

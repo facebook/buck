@@ -3,7 +3,7 @@
     "deps" : [
       "//src/com/facebook/buck/model:build_id",
       "//test/com/facebook/buck/testutil:testutil",
-      "//third-party/java/immutables:processor"
+      "//third-party/java/immutables:immutables"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/log:log",

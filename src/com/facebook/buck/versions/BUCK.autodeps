@@ -12,7 +12,7 @@
   },
   "types" : {
     "deps" : [
-      "//third-party/java/immutables:processor"
+      "//third-party/java/immutables:immutables"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/util/immutables:immutables"
@@ -24,7 +24,7 @@
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/versions:translator",
-      "//third-party/java/immutables:processor"
+      "//third-party/java/immutables:immutables"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/cli:config",

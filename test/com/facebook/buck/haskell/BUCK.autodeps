@@ -30,7 +30,7 @@
       "//src/com/facebook/buck/rules:command_tool",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/cxx:testutil",
-      "//third-party/java/immutables:processor",
+      "//third-party/java/immutables:immutables",
       "//third-party/java/junit:junit"
     ],
     "exported_deps" : [

@@ -2,7 +2,7 @@
   "artifact_cache" : {
     "deps" : [
       "//src/com/facebook/buck/log/views:views",
-      "//third-party/java/immutables:processor"
+      "//third-party/java/immutables:immutables"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/cli:config",
@@ -21,7 +21,7 @@
   "binary_protocol" : {
     "deps" : [
       "//src/com/facebook/buck/util/hash:hash",
-      "//third-party/java/immutables:processor"
+      "//third-party/java/immutables:immutables"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
@@ -37,7 +37,7 @@
       "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util/unit:unit",
-      "//third-party/java/immutables:processor"
+      "//third-party/java/immutables:immutables"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/artifact_cache:artifact_cache",

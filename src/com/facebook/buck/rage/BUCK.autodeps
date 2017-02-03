@@ -2,7 +2,7 @@
   "config" : {
     "deps" : [
       "//src/com/facebook/buck/util/unit:unit",
-      "//third-party/java/immutables:processor"
+      "//third-party/java/immutables:immutables"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/cli:config",
@@ -26,7 +26,7 @@
       "//src/com/facebook/buck/util/unit:unit",
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol_generator",
       "//src/com/facebook/buck/zip:stream",
-      "//third-party/java/immutables:processor",
+      "//third-party/java/immutables:immutables",
       "//third-party/java/jackson:jackson-core"
     ],
     "exported_deps" : [

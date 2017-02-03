@@ -1,7 +1,7 @@
 {
   "apkmodule" : {
     "deps" : [
-      "//third-party/java/immutables:processor"
+      "//third-party/java/immutables:immutables"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/graph:graph",
@@ -47,7 +47,7 @@
     "deps" : [
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:util",
-      "//third-party/java/immutables:processor"
+      "//third-party/java/immutables:immutables"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/android:apkmodule",
@@ -83,7 +83,7 @@
       "//src/com/facebook/buck/zip:stream",
       "//third-party/java/aosp:aosp",
       "//third-party/java/ddmlib:ddmlib",
-      "//third-party/java/immutables:processor",
+      "//third-party/java/immutables:immutables",
       "//third-party/java/jackson:jackson-core",
       "//third-party/java/jackson:jackson-databind"
     ],
@@ -157,7 +157,7 @@
       "//src/com/facebook/buck/zip:stream",
       "//third-party/java/android:sdklib",
       "//third-party/java/dx:dx",
-      "//third-party/java/immutables:processor",
+      "//third-party/java/immutables:immutables",
       "//third-party/java/infer-annotations:infer-annotations",
       "//third-party/java/jackson:jackson-databind"
     ],

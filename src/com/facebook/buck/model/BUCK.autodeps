@@ -9,7 +9,7 @@
   },
   "macros" : {
     "deps" : [
-      "//third-party/java/immutables:processor",
+      "//third-party/java/immutables:immutables",
       "//third-party/java/jsr:jsr305"
     ],
     "exported_deps" : [
@@ -25,7 +25,7 @@
       "//src/com/facebook/buck/log/views:views",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:util",
-      "//third-party/java/immutables:processor",
+      "//third-party/java/immutables:immutables",
       "//third-party/java/jsr:jsr305"
     ],
     "exported_deps" : [

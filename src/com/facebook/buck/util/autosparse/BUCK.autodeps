@@ -4,7 +4,7 @@
       "//src/com/facebook/buck/io:DefaultProjectFilesystemDelegate",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
-      "//third-party/java/immutables:processor"
+      "//third-party/java/immutables:immutables"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/event:interfaces",
@@ -20,7 +20,7 @@
   "autosparse_config" : {
     "deps" : [
       "//third-party/java/guava:guava",
-      "//third-party/java/immutables:processor"
+      "//third-party/java/immutables:immutables"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/config:config",

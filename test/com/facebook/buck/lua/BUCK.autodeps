@@ -43,7 +43,7 @@
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/python:testutil",
-      "//third-party/java/immutables:processor"
+      "//third-party/java/immutables:immutables"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/cxx:platform",

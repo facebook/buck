@@ -16,7 +16,7 @@
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/zip:unzip",
-      "//third-party/java/immutables:processor",
+      "//third-party/java/immutables:immutables",
       "//third-party/java/jackson:jackson-core"
     ],
     "exported_deps" : [

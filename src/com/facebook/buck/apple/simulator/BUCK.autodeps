@@ -3,7 +3,7 @@
     "deps" : [
       "//src/com/facebook/buck/log:api",
       "//third-party/java/dd-plist:dd-plist",
-      "//third-party/java/immutables:processor"
+      "//third-party/java/immutables:immutables"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/util:io",

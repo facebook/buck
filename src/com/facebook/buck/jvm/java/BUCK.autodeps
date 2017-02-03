@@ -122,7 +122,7 @@
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/zip:unzip",
-      "//third-party/java/immutables:processor",
+      "//third-party/java/immutables:immutables",
       "//third-party/java/jsr:jsr305"
     ],
     "exported_deps" : [
@@ -155,7 +155,7 @@
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/zip:unzip",
-      "//third-party/java/immutables:processor",
+      "//third-party/java/immutables:immutables",
       "//third-party/java/infer-annotations:infer-annotations",
       "//third-party/java/jackson:jackson-core"
     ],

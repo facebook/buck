@@ -3,7 +3,7 @@
     "deps" : [
       "//src/com/facebook/buck/counters:counters",
       "//src/com/facebook/buck/log:api",
-      "//third-party/java/immutables:processor",
+      "//third-party/java/immutables:immutables",
       "//third-party/java/jackson:jackson-core",
       "//third-party/java/jsr:jsr305"
     ],

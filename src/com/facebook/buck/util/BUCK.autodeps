@@ -9,7 +9,7 @@
     "deps" : [
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:exceptions",
-      "//third-party/java/immutables:processor",
+      "//third-party/java/immutables:immutables",
       "//third-party/java/jsr:jsr305",
       "//third-party/java/nuprocess:nuprocess"
     ],
@@ -45,7 +45,7 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/environment:platform",
-      "//third-party/java/immutables:processor",
+      "//third-party/java/immutables:immutables",
       "//third-party/java/jna:jna-platform"
     ],
     "exported_deps" : [
@@ -62,7 +62,7 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util/environment:platform",
-      "//third-party/java/immutables:processor",
+      "//third-party/java/immutables:immutables",
       "//third-party/java/jackson:jackson-core"
     ],
     "exported_deps" : [

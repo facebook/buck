@@ -30,7 +30,7 @@
       "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/log/views:views",
       "//src/com/facebook/buck/util:util",
-      "//third-party/java/immutables:processor",
+      "//third-party/java/immutables:immutables",
       "//third-party/java/stringtemplate:stringtemplate"
     ],
     "exported_deps" : [
@@ -107,7 +107,7 @@
   },
   "relative_cell_name" : {
     "deps" : [
-      "//third-party/java/immutables:processor"
+      "//third-party/java/immutables:immutables"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/util/immutables:immutables",
@@ -137,7 +137,7 @@
       "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/zip:unzip",
-      "//third-party/java/immutables:processor",
+      "//third-party/java/immutables:immutables",
       "//third-party/java/jackson:jackson-core"
     ],
     "exported_deps" : [
