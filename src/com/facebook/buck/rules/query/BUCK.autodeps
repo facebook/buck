@@ -10,7 +10,16 @@
       "//src/com/facebook/buck/query:query",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:interfaces",
+      "//src/com/facebook/buck/rules/query:types",
       "//third-party/java/guava:guava"
+    ]
+  },
+  "types" : {
+    "deps" : [
+      "//third-party/java/immutables:immutables"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/util/immutables:immutables"
     ]
   }
 }

@@ -42,6 +42,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.query.DepQuery;
 import com.facebook.buck.rules.query.DepQueryUtils;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -237,7 +238,7 @@ public class AndroidLibraryDescription
     public Optional<String> resourceUnionPackage;
     public Optional<String> finalRName;
     public Optional<JvmLanguage> language;
-    public Optional<String> depsQuery;
+    public Optional<DepQuery> depsQuery;
   }
 }
 

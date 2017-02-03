@@ -48,7 +48,7 @@ public final class DepQueryUtils {
 
   public static Stream<BuildRule> resolveDepQuery(
       BuildRuleParams params,
-      String query,
+      DepQuery query,
       BuildRuleResolver resolver,
       TargetGraph targetGraph) {
     BuildTarget target = params.getBuildTarget();
@@ -65,7 +65,7 @@ public final class DepQueryUtils {
         declaredDeps);
     ListeningExecutorService executorService = MoreExecutors.newDirectExecutorService();
     try {
-      QueryExpression parsedExp = QueryExpression.parse(query, env);
+      QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env);
       Set<QueryTarget> queryTargets = parsedExp.eval(env, executorService);
       return queryTargets.stream()
           .map(queryTarget -> {

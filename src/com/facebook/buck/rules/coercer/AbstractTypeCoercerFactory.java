@@ -139,6 +139,7 @@ public class AbstractTypeCoercerFactory implements TypeCoercerFactory {
         neededCoverageSpecTypeCoercer,
         new ConstraintTypeCoercer(),
         new VersionTypeCoercer(),
+        new DepQueryCoercer(),
     };
   }
 
