@@ -25,11 +25,13 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class CxxPrecompiledHeaderDescription implements
-    Description<CxxPrecompiledHeaderDescription.Arg> {
+    Description<CxxPrecompiledHeaderDescription.Arg>,
+    VersionPropagator<CxxPrecompiledHeaderDescription.Arg> {
 
   @Override
   public Arg createUnpopulatedConstructorArg() {
