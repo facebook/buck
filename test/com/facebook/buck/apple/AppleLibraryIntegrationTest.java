@@ -686,6 +686,22 @@ public class AppleLibraryIntegrationTest {
         containsString("libswiftCore.dylib"));
   }
 
+  @Test
+  public void testBuildAppleLibraryUsingBridingHeaderAndSwiftDotH() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "import_current_module_via_bridging_header",
+        tmp);
+    workspace.setUp();
+    BuildTarget target = workspace.newBuildTarget("//:Greeter");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        target.getFullyQualifiedName());
+    result.assertSuccess();
+  }
+
   private static void assertIsSymbolicLink(
       Path link,
       Path target) throws IOException {

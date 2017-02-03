@@ -25,8 +25,10 @@ import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -248,6 +250,18 @@ class SwiftCompile
           headerMaps.add(resolver.getAbsolutePath(headerMap.get()).toString());
         }
         roots.add(resolver.getAbsolutePath(cxxHeaders.getIncludeRoot()).toString());
+      }
+    }
+
+    if (bridgingHeader.isPresent()) {
+      for (HeaderVisibility headerVisibility : HeaderVisibility.values()) {
+        Path headerPath = CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+            getProjectFilesystem(),
+            BuildTarget.builder(getBuildTarget().getUnflavoredBuildTarget()).build(),
+            cxxPlatform.getFlavor(),
+            headerVisibility);
+
+        headerMaps.add(headerPath.toString());
       }
     }
 
