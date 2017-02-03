@@ -384,7 +384,7 @@ public class AppleCxxPlatforms {
       whitelistBuilder.add("^" + Pattern.quote(toolchainPath.toString()) + "\\/.*");
     }
     HeaderVerification headerVerification =
-        config.getHeaderVerification().withAdditionalWhitelist(whitelistBuilder.build());
+        config.getHeaderVerification().withPlatformWhitelist(whitelistBuilder.build());
 
     CxxPlatform cxxPlatform = CxxPlatforms.build(
         targetFlavor,

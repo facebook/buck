@@ -69,7 +69,8 @@ public class HeaderVerificationTest {
             getRuleKey(
                 HeaderVerification.of(
                     HeaderVerification.Mode.IGNORE,
-                    ImmutableSortedSet.of(".*")))));
+                    ImmutableSortedSet.of(".*"),
+                    ImmutableSortedSet.of()))));
   }
 
   @Test
@@ -80,6 +81,7 @@ public class HeaderVerificationTest {
             getRuleKey(
                 HeaderVerification.of(
                     HeaderVerification.Mode.ERROR,
-                    ImmutableSortedSet.of(".*"))))));
+                    ImmutableSortedSet.of(".*"),
+                    ImmutableSortedSet.of())))));
   }
 }

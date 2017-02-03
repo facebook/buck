@@ -637,7 +637,7 @@ public class NdkCxxPlatforms {
     // generated nodes/descriptions so that they wouldn't need to special case it here.
     cxxPlatformBuilder.setHeaderVerification(
         config.getHeaderVerification()
-            .withAdditionalWhitelist(
+            .withPlatformWhitelist(
                 ImmutableList.of(
                     "^" + Pattern.quote(ndkRoot.toString() + File.separatorChar) + ".*")));
 
