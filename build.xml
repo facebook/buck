@@ -372,9 +372,7 @@
         <compilerarg value="-Xlint:serial" />
         <compilerarg value="-time" />
         <compilerclasspath>
-          <pathelement location="${eclipse.dir}/ecj-4.6M7.jar" />
-          <pathelement location="${eclipse.dir}/org.eclipse.jdt.core_3.12.0.v20160426-1326.jar" />
-          <pathelement location="${eclipse.dir}/jdtCompilerAdapter.jar" />
+          <pathelement location="${eclipse.dir}/ecj-4.6.2.jar" />
         </compilerclasspath>
         <compilerarg value="-processorpath" />
         <compilerarg value="${immutables-value-standalone.jar}" />
