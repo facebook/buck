@@ -26,11 +26,14 @@ import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -79,4 +82,37 @@ public final class DepQueryUtils {
       throw new RuntimeException("Error executing query from deps for " + target, e);
     }
   }
+
+  public static Stream<BuildTarget> extractParseTimeTargets(
+      BuildTarget target,
+      CellPathResolver cellNames,
+      DepQuery query) {
+    GraphEnhancementQueryEnvironment env = new GraphEnhancementQueryEnvironment(
+        Optional.empty(),
+        Optional.empty(),
+        cellNames,
+        BuildTargetPatternParser.forBaseName(target.getBaseName()),
+        ImmutableSet.of());
+    ListeningExecutorService executorService = MoreExecutors.newDirectExecutorService();
+    try {
+      QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env);
+      HashSet<String> targetLiterals = new HashSet<>();
+      parsedExp.collectTargetPatterns(targetLiterals);
+      return targetLiterals.stream()
+          .flatMap(pattern -> {
+            try {
+              return env.getTargetsMatchingPattern(pattern, executorService).stream();
+            } catch (Exception e) {
+              throw new RuntimeException("Error parsing target expression", e);
+            }
+          })
+          .map(queryTarget -> {
+            Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
+            return ((QueryBuildTarget) queryTarget).getBuildTarget();
+          });
+    } catch (QueryException e) {
+      throw new RuntimeException("Error parsing/executing query from deps for " + target, e);
+    }
+  }
+
 }

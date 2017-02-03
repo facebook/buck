@@ -11,6 +11,7 @@
       "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules/macros:macros",
       "//src/com/facebook/buck/rules/query:query",
+      "//src/com/facebook/buck/rules/query:types",
       "//test/com/facebook/buck/jvm/java:testutil",
       "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/rules:testutil",
