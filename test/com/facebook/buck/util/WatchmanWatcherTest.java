@@ -637,11 +637,51 @@ public class WatchmanWatcherTest {
 
     watcher.postEvents(
         BuckEventBusFactory.newInstance(new FakeClock(0)),
-        WatchmanWatcher.FreshInstanceAction.NONE);
+        WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT);
 
     assertThat(
       watcher.getWatchmanQuery(FAKE_ROOT),
       hasItem(hasEntry("since", "c:0:1")));
+  }
+
+  @Test
+  public void watcherOverflowUpdatesClockId() throws IOException, InterruptedException {
+    ImmutableMap<String, Object> watchmanOutput = ImmutableMap.<String, Object>of(
+        "clock", "c:1:0",
+        "is_fresh_instance", true);
+    final Set<WatchEvent<?>> events = Sets.newHashSet();
+    EventBus eventBus = new EventBus("watchman test");
+    eventBus.register(
+        new Object() {
+          @Subscribe
+          public void listen(WatchEvent<?> event) {
+            events.add(event);
+          }
+        });
+    WatchmanWatcher watcher = createWatcher(
+        eventBus,
+        new FakeWatchmanClient(
+            0 /* queryElapsedTimeNanos */,
+            ImmutableMap.of(FAKE_CLOCK_QUERY, watchmanOutput)),
+        10000 /* timeout */,
+        "c:0:0" /* sinceParam */);
+    assertThat(
+      watcher.getWatchmanQuery(FAKE_ROOT),
+      hasItem(hasEntry("since", "c:0:0")));
+
+    watcher.postEvents(
+        BuckEventBusFactory.newInstance(new FakeClock(0)),
+        WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT);
+
+    assertThat(
+      watcher.getWatchmanQuery(FAKE_ROOT),
+      hasItem(hasEntry("since", "c:1:0")));
+
+    boolean overflowSeen = false;
+    for (WatchEvent<?> event : events) {
+      overflowSeen |= event.kind().equals(StandardWatchEventKinds.OVERFLOW);
+    }
+    assertTrue(overflowSeen);
   }
 
   private WatchmanWatcher createWatcher(

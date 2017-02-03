@@ -264,6 +264,15 @@ public class WatchmanWatcher {
         throw e;
       }
 
+      if (cursor.get().startsWith("c:")) {
+        // Update the clockId
+        String newCursor = Optional
+          .ofNullable((String) response.get("clock"))
+          .orElse(Watchman.NULL_CLOCK);
+        LOG.debug("Updating Watchman Cursor from %s to %s", cursor.get(), newCursor);
+        cursor.set(newCursor);
+      }
+
       String warning = (String) response.get("warning");
       if (warning != null) {
         buckEventBus.post(
@@ -284,14 +293,6 @@ public class WatchmanWatcher {
             break;
         }
         return;
-      }
-      if (cursor.get().startsWith("c:")) {
-        // Update the clockId
-        String newCursor = Optional
-          .ofNullable((String) response.get("clock"))
-          .orElse(Watchman.NULL_CLOCK);
-        LOG.debug("Updating Watchman Cursor from %s to %s", cursor.get(), newCursor);
-        cursor.set(newCursor);
       }
 
       List<Map<String, Object>> files = (List<Map<String, Object>>) response.get("files");
