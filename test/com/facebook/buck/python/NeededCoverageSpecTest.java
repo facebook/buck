@@ -20,6 +20,11 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.FakeCellPathResolver;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.versions.FixedTargetNodeTranslator;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.google.common.collect.ImmutableMap;
@@ -31,6 +36,11 @@ import java.util.Optional;
 
 public class NeededCoverageSpecTest {
 
+  private static final CellPathResolver CELL_PATH_RESOLVER =
+      new FakeCellPathResolver(new FakeProjectFilesystem());
+  private static final BuildTargetPatternParser<BuildTargetPattern> PATTERN =
+      BuildTargetPatternParser.fullyQualified();
+
   @Test
   public void translatedTargets() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -39,7 +49,7 @@ public class NeededCoverageSpecTest {
         new FixedTargetNodeTranslator(ImmutableMap.of(target, newTarget));
     NeededCoverageSpec spec = NeededCoverageSpec.of(1.0f, target, Optional.empty());
     assertThat(
-        translator.translate(spec),
+        translator.translate(CELL_PATH_RESOLVER, PATTERN, spec),
         Matchers.equalTo(Optional.of(spec.withBuildTarget(newTarget))));
   }
 
@@ -49,7 +59,7 @@ public class NeededCoverageSpecTest {
     TargetNodeTranslator translator = new FixedTargetNodeTranslator(ImmutableMap.of());
     NeededCoverageSpec spec = NeededCoverageSpec.of(1.0f, target, Optional.empty());
     assertThat(
-        translator.translate(spec),
+        translator.translate(CELL_PATH_RESOLVER, PATTERN, spec),
         Matchers.equalTo(Optional.empty()));
   }
 

@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
@@ -281,7 +282,7 @@ public class CxxGenruleDescription
       BuildTarget target,
       CellPathResolver cellNames,
       TargetNodeTranslator translator) {
-    BuildTargetPatternParser<?> buildTargetPatternParser =
+    BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
         BuildTargetPatternParser.forBaseName(target.getBaseName());
 
     ImmutableMap.Builder<String, MacroReplacer> macros = ImmutableMap.builder();
@@ -348,7 +349,11 @@ public class CxxGenruleDescription
       TargetNodeTranslator translator,
       Arg constructorArg) {
     Arg newConstructorArg = createUnpopulatedConstructorArg();
-    translator.translateConstructorArg(constructorArg, newConstructorArg);
+    translator.translateConstructorArg(
+        cellNames,
+        BuildTargetPatternParser.forBaseName(target.getBaseName()),
+        constructorArg,
+        newConstructorArg);
     newConstructorArg.cmd =
         newConstructorArg.cmd.map(c -> translateCmd(target, cellNames, translator, "cmd", c));
     newConstructorArg.bash =
@@ -907,14 +912,14 @@ public class CxxGenruleDescription
 
     private final AsIsMacroReplacer asIsMacroReplacer;
     private final Filter filter;
-    private final BuildTargetPatternParser<?> buildTargetBuildTargetParser;
+    private final BuildTargetPatternParser<BuildTargetPattern> buildTargetBuildTargetParser;
     private final CellPathResolver cellNames;
     private final TargetNodeTranslator translator;
 
     private TargetTranslatorMacroReplacer(
         AsIsMacroReplacer asIsMacroReplacer,
         Filter filter,
-        BuildTargetPatternParser<?> buildTargetBuildTargetParser,
+        BuildTargetPatternParser<BuildTargetPattern> buildTargetBuildTargetParser,
         CellPathResolver cellNames, TargetNodeTranslator translator) {
       this.asIsMacroReplacer = asIsMacroReplacer;
       this.filter = filter;
@@ -941,7 +946,9 @@ public class CxxGenruleDescription
 
       for (String arg : args.subList(filter == Filter.PARAM ? 1 : 0, args.size())) {
         BuildTarget target = parse(arg);
-        strings.add(translator.translate(target).orElse(target).getFullyQualifiedName());
+        strings.add(
+            translator.translate(cellNames, buildTargetBuildTargetParser, target).orElse(target)
+                .getFullyQualifiedName());
       }
 
       return asIsMacroReplacer.replace(strings.build());

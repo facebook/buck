@@ -2,7 +2,6 @@
   "coercer" : {
     "deps" : [
       "//src/com/facebook/buck/io:MorePaths.java",
-      "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:util",
       "//third-party/java/immutables:immutables"
@@ -12,6 +11,7 @@
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/model:simple_types",
+      "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/python:support",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:interfaces",

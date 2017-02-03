@@ -17,6 +17,9 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -126,11 +129,14 @@ abstract class AbstractSourceList implements TargetTranslatable<SourceList> {
   }
 
   @Override
-  public Optional<SourceList> translateTargets(TargetNodeTranslator translator) {
+  public Optional<SourceList> translateTargets(
+      CellPathResolver cellPathResolver,
+      BuildTargetPatternParser<BuildTargetPattern> pattern,
+      TargetNodeTranslator translator) {
     Optional<Optional<ImmutableSortedMap<String, SourcePath>>> namedSources =
-        translator.translate(getNamedSources());
+        translator.translate(cellPathResolver, pattern, getNamedSources());
     Optional<Optional<ImmutableSortedSet<SourcePath>>> unNamedSources =
-        translator.translate(getUnnamedSources());
+        translator.translate(cellPathResolver, pattern, getUnnamedSources());
     if (!namedSources.isPresent() && !unNamedSources.isPresent()) {
       return Optional.empty();
     }

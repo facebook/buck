@@ -20,6 +20,11 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.FakeCellPathResolver;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.versions.FixedTargetNodeTranslator;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.google.common.collect.ImmutableList;
@@ -33,6 +38,11 @@ import java.util.regex.Pattern;
 
 public class PatternMatchedCollectionTest {
 
+  private static final CellPathResolver CELL_PATH_RESOLVER =
+      new FakeCellPathResolver(new FakeProjectFilesystem());
+  private static final BuildTargetPatternParser<BuildTargetPattern> PATTERN =
+      BuildTargetPatternParser.fullyQualified();
+
   @Test
   public void translatedTargets() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -44,7 +54,8 @@ public class PatternMatchedCollectionTest {
             .add(Pattern.compile("something"), target)
             .build();
     assertThat(
-        translator.translate(collection).map(PatternMatchedCollection::getValues),
+        translator.translate(CELL_PATH_RESOLVER, PATTERN, collection)
+            .map(PatternMatchedCollection::getValues),
         Matchers.equalTo(Optional.of(ImmutableList.of(newTarget))));
   }
 
@@ -57,7 +68,7 @@ public class PatternMatchedCollectionTest {
             .add(Pattern.compile("something"), target)
             .build();
     assertThat(
-        translator.translate(collection),
+        translator.translate(CELL_PATH_RESOLVER, PATTERN, collection),
         Matchers.equalTo(Optional.empty()));
   }
 

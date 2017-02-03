@@ -16,6 +16,10 @@
 
 package com.facebook.buck.versions;
 
+import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.rules.CellPathResolver;
+
 import java.util.Optional;
 
 /**
@@ -27,6 +31,9 @@ public interface TargetTranslatable<T> {
   /**
    * @return if any changes are required, return the translated object.
    */
-  Optional<T> translateTargets(TargetNodeTranslator translator);
+  Optional<T> translateTargets(
+      CellPathResolver cellPathResolver,
+      BuildTargetPatternParser<BuildTargetPattern> pattern,
+      TargetNodeTranslator translator);
 
 }
