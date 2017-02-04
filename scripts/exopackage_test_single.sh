@@ -56,6 +56,10 @@ function installAndLaunch() {
   buck install ${1:-//:exotest} | cat
   adb logcat -c
   adb shell am start -n buck.exotest/exotest.LogActivity
+  SECONDARY_DEX_INSTALLED=$(cat buck-out/log/build.trace | \
+    jq -r '[ .[] | select(.name == "install_secondary_dex") | select(.ph == "B") ] | length')
+  NATIVE_LIBS_INSTALLED=$(cat buck-out/log/build.trace | \
+    jq -r '[ .[] | select(.name == "install_native_library") | select(.ph == "B") ] | length')
   sleep 1
   adb logcat -d '*:S' EXOPACKAGE_TEST:V > out.txt
   cp out.txt out$((++OUT_COUNT)).txt
@@ -66,6 +70,9 @@ echo '1a' > value.txt
 
 installAndLaunch
 
+# Check for full install.
+test "$SECONDARY_DEX_INSTALLED" = 1
+test "$NATIVE_LIBS_INSTALLED" = 2
 # Check for values in the logs.
 grep 'VALUE=1a' out.txt
 grep 'NATIVE_ONE=one_1a' out.txt
@@ -76,6 +83,9 @@ grep 'NATIVE_TWO=two_1a' out.txt
 echo '2b' > value.txt
 installAndLaunch
 
+# Check for incremental java install.
+test "$SECONDARY_DEX_INSTALLED" = 1
+test "$NATIVE_LIBS_INSTALLED" = 0
 # Check for the new values in the logs.
 grep 'VALUE=2b' out.txt
 
@@ -84,6 +94,9 @@ grep 'VALUE=2b' out.txt
 sedInPlace s/one_1a/one_3c/ jni/one/one.c
 installAndLaunch
 
+# Check for incremental native install.
+test "$SECONDARY_DEX_INSTALLED" = 0
+test "$NATIVE_LIBS_INSTALLED" = 1
 # Check for the new values in the logs.
 grep 'NATIVE_ONE=one_3c' out.txt
 grep 'NATIVE_TWO=two_1a' out.txt
@@ -94,6 +107,9 @@ echo '4d' > value.txt
 sedInPlace s/two_1a/two_4d/ jni/two/two.c
 installAndLaunch
 
+# Check for incremental java and native install.
+test "$SECONDARY_DEX_INSTALLED" = 1
+test "$NATIVE_LIBS_INSTALLED" = 1
 # Check for the new values in the logs.
 grep 'VALUE=4d' out.txt
 grep 'NATIVE_ONE=one_3c' out.txt
@@ -105,6 +121,9 @@ echo '5e' > value.txt
 sedInPlace s/two_4d/two_5e/ jni/two/two.c
 installAndLaunch //:exotest-noexo
 
+# Check for no exo install.
+test "$SECONDARY_DEX_INSTALLED" = 0
+test "$NATIVE_LIBS_INSTALLED" = 0
 # Check for the new values in the logs.
 grep 'VALUE=5e' out.txt
 grep 'NATIVE_ONE=one_3c' out.txt
