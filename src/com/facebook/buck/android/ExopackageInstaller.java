@@ -526,7 +526,9 @@ public class ExopackageInstaller {
         String dirPath = dataRoot.resolve(dirname).toString();
         mkDirP(dirPath);
 
-        String output = AdbHelper.executeCommandWithErrorChecking(device, "ls " + dirPath);
+        String output = AdbHelper.executeCommandWithErrorChecking(
+            device,
+            "ls " + dirPath + " | cat");
 
         ImmutableSet.Builder<String> foundHashes = ImmutableSet.builder();
         ImmutableSet.Builder<String> filesToDelete = ImmutableSet.builder();
