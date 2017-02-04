@@ -15,6 +15,7 @@
       "//src/com/facebook/buck/query:query",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:interfaces",
+      "//src/com/facebook/buck/rules/macros:types",
       "//src/com/facebook/buck/util/environment:platform",
       "//third-party/java/guava:guava"
     ]

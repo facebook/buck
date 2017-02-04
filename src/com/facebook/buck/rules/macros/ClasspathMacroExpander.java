@@ -37,8 +37,17 @@ import java.util.stream.Collectors;
  * that target, expanding all paths to be absolute.
  */
 public class ClasspathMacroExpander
-    extends BuildTargetMacroExpander
+    extends BuildTargetMacroExpander<ClasspathMacro>
     implements MacroExpanderWithCustomFileOutput {
+
+  @Override
+  protected ClasspathMacro parse(
+      BuildTarget target,
+      CellPathResolver cellNames,
+      ImmutableList<String> input)
+      throws MacroException {
+    return ClasspathMacro.of(parseBuildTarget(target, cellNames, input));
+  }
 
   private HasClasspathEntries getHasClasspathEntries(BuildRule rule)
       throws MacroException {
@@ -56,7 +65,7 @@ public class ClasspathMacroExpander
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      BuildTarget input)
+      ClasspathMacro input)
       throws MacroException {
     return ImmutableList.copyOf(
         getHasClasspathEntries(resolve(resolver, input)).getTransitiveClasspathDeps());
@@ -94,7 +103,7 @@ public class ClasspathMacroExpander
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      BuildTarget input)
+      ClasspathMacro input)
       throws MacroException {
     return ImmutableSortedSet.copyOf(getHasClasspathEntries(resolve(resolver, input))
         .getTransitiveClasspathDeps()

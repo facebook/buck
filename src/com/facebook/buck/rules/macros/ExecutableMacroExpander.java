@@ -33,7 +33,7 @@ import com.google.common.collect.Iterables;
 /**
  * Resolves to the executable command for a build target referencing a {@link BinaryBuildRule}.
  */
-public class ExecutableMacroExpander extends BuildTargetMacroExpander {
+public class ExecutableMacroExpander extends BuildTargetMacroExpander<ExecutableMacro> {
 
   protected Tool getTool(BuildRule rule) throws MacroException {
     if (!(rule instanceof BinaryBuildRule)) {
@@ -43,6 +43,15 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander {
               rule.getBuildTarget()));
     }
     return ((BinaryBuildRule) rule).getExecutableCommand();
+  }
+
+  @Override
+  protected ExecutableMacro parse(
+      BuildTarget target,
+      CellPathResolver cellNames,
+      ImmutableList<String> input)
+      throws MacroException {
+    return ExecutableMacro.of(parseBuildTarget(target, cellNames, input));
   }
 
   @Override
@@ -68,7 +77,7 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      BuildTarget input)
+      ExecutableMacro input)
       throws MacroException {
     return getTool(resolve(resolver, input));
   }

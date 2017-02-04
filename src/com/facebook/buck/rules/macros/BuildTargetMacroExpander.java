@@ -37,24 +37,24 @@ import java.util.Optional;
  * Matches either a relative or fully-qualified build target wrapped in <tt>$()</tt>, unless the
  * <code>$</code> is preceded by a backslash.
  */
-public abstract class BuildTargetMacroExpander extends AbstractMacroExpander<BuildTarget> {
+public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
+    extends AbstractMacroExpander<M> {
 
   protected abstract String expand(
       SourcePathResolver resolver,
       BuildRule rule)
       throws MacroException;
 
-  protected BuildRule resolve(BuildRuleResolver resolver, BuildTarget input)
+  protected BuildRule resolve(BuildRuleResolver resolver, M input)
       throws MacroException {
-    Optional<BuildRule> rule = resolver.getRuleOptional(input);
+    Optional<BuildRule> rule = resolver.getRuleOptional(input.getTarget());
     if (!rule.isPresent()) {
-      throw new MacroException(String.format("no rule %s", input));
+      throw new MacroException(String.format("no rule %s", input.getTarget()));
     }
     return rule.get();
   }
 
-  @Override
-  protected BuildTarget parse(
+  BuildTarget parseBuildTarget(
       BuildTarget target,
       CellPathResolver cellNames,
       ImmutableList<String> input)
@@ -80,7 +80,7 @@ public abstract class BuildTargetMacroExpander extends AbstractMacroExpander<Bui
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      BuildTarget input)
+      M input)
       throws MacroException {
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     return expand(pathResolver, resolve(resolver, input));
@@ -98,7 +98,7 @@ public abstract class BuildTargetMacroExpander extends AbstractMacroExpander<Bui
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      BuildTarget input)
+      M input)
       throws MacroException {
     return extractBuildTimeDeps(resolver, resolve(resolver, input));
   }
@@ -107,8 +107,8 @@ public abstract class BuildTargetMacroExpander extends AbstractMacroExpander<Bui
   public ImmutableList<BuildTarget> extractParseTimeDepsFrom(
       BuildTarget target,
       CellPathResolver cellNames,
-      BuildTarget input) {
-    return ImmutableList.of(input);
+      M input) {
+    return ImmutableList.of(input.getTarget());
   }
 
   @Override
@@ -116,7 +116,7 @@ public abstract class BuildTargetMacroExpander extends AbstractMacroExpander<Bui
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      BuildTarget input)
+      M input)
       throws MacroException {
     return new BuildTargetSourcePath(resolve(resolver, input).getBuildTarget());
   }

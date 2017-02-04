@@ -44,6 +44,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.macros.AbstractMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
+import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
@@ -198,10 +199,11 @@ public class CxxGenruleDescription
         "location-platform",
         new LocationMacroExpander() {
           @Override
-          protected BuildRule resolve(BuildRuleResolver resolver, BuildTarget input)
+          protected BuildRule resolve(BuildRuleResolver resolver, LocationMacro input)
               throws MacroException {
             try {
-              return resolver.requireRule(input.withAppendedFlavors(cxxPlatform.get().getFlavor()));
+              return resolver.requireRule(
+                  input.getTarget().withAppendedFlavors(cxxPlatform.get().getFlavor()));
             } catch (NoSuchBuildTargetException e) {
               throw new MacroException(e.getHumanReadableErrorMessage());
             }

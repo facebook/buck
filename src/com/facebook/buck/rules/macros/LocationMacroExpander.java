@@ -16,15 +16,26 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Expands to the path of a build rules output.
  */
-public class LocationMacroExpander extends BuildTargetMacroExpander {
+public class LocationMacroExpander extends BuildTargetMacroExpander<LocationMacro> {
+
+  @Override
+  protected LocationMacro parse(
+      BuildTarget target,
+      CellPathResolver cellNames,
+      ImmutableList<String> input) throws MacroException {
+    return LocationMacro.of(parseBuildTarget(target, cellNames, input));
+  }
 
   @Override
   public String expand(SourcePathResolver resolver, BuildRule rule)

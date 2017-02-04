@@ -54,19 +54,18 @@ public class BuildTargetMacroExpanderTest {
     FakeBuildRule rule = new FakeBuildRule("//something:manifest", sourcePathResolver);
     resolver.addToIndex(rule);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    MacroHandler handler = new MacroHandler(
-        ImmutableMap.of(
-            "exe",
-            new BuildTargetMacroExpander() {
-              @Override
-              public String expand(
-                  SourcePathResolver resolver,
-                  BuildRule rule)
-                  throws MacroException {
-                found.add(rule.getBuildTarget());
-                return "";
-              }
-            }));
+    BuildTargetMacroExpander<?> macroExpander =
+        new ExecutableMacroExpander() {
+          @Override
+          public String expand(
+              SourcePathResolver resolver,
+              BuildRule rule)
+              throws MacroException {
+            found.add(rule.getBuildTarget());
+            return "";
+          }
+        };
+    MacroHandler handler = new MacroHandler(ImmutableMap.of("exe", macroExpander));
     handler.expand(rule.getBuildTarget(), createCellRoots(filesystem), resolver, blob);
     return Optional.ofNullable(Iterables.getFirst(found, null));
   }

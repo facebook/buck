@@ -17,16 +17,19 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.jvm.java.HasMavenCoordinates;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.google.common.collect.ImmutableList;
 
 import java.util.Optional;
 
 /**
  * Resolves to the maven coordinates for a build target referencing a {@link HasMavenCoordinates}.
  */
-public class MavenCoordinatesMacroExpander extends BuildTargetMacroExpander {
+public class MavenCoordinatesMacroExpander extends BuildTargetMacroExpander<MavenCoordinatesMacro> {
 
   protected String getMavenCoordinates(BuildRule rule) throws MacroException {
     if (!(rule instanceof HasMavenCoordinates)) {
@@ -43,6 +46,15 @@ public class MavenCoordinatesMacroExpander extends BuildTargetMacroExpander {
               rule.getBuildTarget()));
     }
     return coordinates.get();
+  }
+
+  @Override
+  protected MavenCoordinatesMacro parse(
+      BuildTarget target,
+      CellPathResolver cellNames,
+      ImmutableList<String> input)
+      throws MacroException {
+    return MavenCoordinatesMacro.of(parseBuildTarget(target, cellNames, input));
   }
 
   @Override
