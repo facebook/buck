@@ -4,6 +4,7 @@
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/shell:worker_tool",
       "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util:util",
       "//third-party/java/immutables:immutables"
     ],
     "exported_deps" : [
@@ -12,6 +13,7 @@
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules/macros:macros",
+      "//src/com/facebook/buck/rules/macros:types",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava"
     ]
