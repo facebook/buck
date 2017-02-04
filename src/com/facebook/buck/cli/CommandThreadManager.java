@@ -24,6 +24,7 @@ import com.facebook.buck.util.concurrent.LimitedThreadPoolExecutor;
 import com.facebook.buck.util.concurrent.LinkedBlockingStack;
 import com.facebook.buck.util.concurrent.ListeningMultiSemaphore;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -59,16 +60,21 @@ public class CommandThreadManager implements AutoCloseable {
 
   public CommandThreadManager(
       String name,
-      ConcurrencyLimit concurrencyLimit,
+      ListeningMultiSemaphore semaphore,
+      ResourceAmounts defaultAmounts,
+      int managedThreadCount,
+      double loadLimit,
       long shutdownTimeout,
       TimeUnit shutdownTimeoutUnit) {
     this.threadGroup = new ThreadGroup(name);
+
+    // TODO(cjhopman): This should probably take a Function<ThreadGroup, ListeningExecutorService>
+    // so that all that this class is really in charge of is properly shutting it down and providing
+    // useful information when that fails.
     this.executor =
         new WeightedListeningExecutorService(
-            new ListeningMultiSemaphore(
-                concurrencyLimit.maximumAmounts,
-                concurrencyLimit.resourceAllocationFairness),
-            /* defaultPermits */ concurrencyLimit.defaultAmounts,
+            semaphore,
+            defaultAmounts,
             listeningDecorator(
                 new LimitedThreadPoolExecutor(
                     new ThreadFactoryBuilder()
@@ -78,10 +84,45 @@ public class CommandThreadManager implements AutoCloseable {
                                 r -> new Thread(threadGroup, r)))
                         .build(),
                     new LinkedBlockingStack<>(),
-                    concurrencyLimit.managedThreadCount,
-                    concurrencyLimit.loadLimit)));
+                    managedThreadCount,
+                    loadLimit)));
     this.shutdownTimeout = shutdownTimeout;
     this.shutdownTimeoutUnit = shutdownTimeoutUnit;
+  }
+
+  public CommandThreadManager(
+      String name,
+      ListeningMultiSemaphore semaphore,
+      ResourceAmounts defaultAmounts,
+      int managedThreadCount,
+      double loadLimit) {
+    this(
+        name,
+        semaphore,
+        defaultAmounts,
+        managedThreadCount,
+        loadLimit,
+        DEFAULT_SHUTDOWN_TIMEOUT,
+        DEFAULT_SHUTDOWN_TIMEOUT_UNIT
+    );
+  }
+
+
+  public CommandThreadManager(
+      String name,
+      ConcurrencyLimit concurrencyLimit,
+      long shutdownTimeout,
+      TimeUnit shutdownTimeoutUnit) {
+    this(
+        name,
+        new ListeningMultiSemaphore(
+            concurrencyLimit.maximumAmounts,
+            concurrencyLimit.resourceAllocationFairness),
+        concurrencyLimit.defaultAmounts,
+        concurrencyLimit.managedThreadCount,
+        concurrencyLimit.loadLimit,
+        shutdownTimeout,
+        shutdownTimeoutUnit);
   }
 
   public CommandThreadManager(

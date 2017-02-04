@@ -76,7 +76,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.concurrent.LimitedThreadPoolExecutor;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
@@ -93,8 +92,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -107,7 +104,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.annotation.Nullable;
 
@@ -770,66 +766,63 @@ public class BuildCommand extends AbstractCommand {
       Iterable<? extends HasBuildTarget> targetsToBuild) throws IOException, InterruptedException {
     CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
         rootCellBuckConfig.getView(CachingBuildEngineBuckConfig.class);
-    try (Build build = createBuild(
-        rootCellBuckConfig,
-        actionGraphAndResolver.getActionGraph(),
-        actionGraphAndResolver.getResolver(),
-        params.getCell(),
-        params.getAndroidPlatformTargetSupplier(),
-        new CachingBuildEngine(
-            cachingBuildEngineDelegate,
-            executor,
-            getArtifactFetchService(params, executor),
-            new DefaultStepRunner(),
-            getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
-            cachingBuildEngineBuckConfig.getBuildDepFiles(),
-            cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
-            cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
-            cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
-            params.getObjectMapper(),
-            actionGraphAndResolver.getResolver(),
-            rootCellBuckConfig.getKeySeed(),
-            cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo()),
-        artifactCache,
-        params.getConsole(),
-        params.getBuckEventBus(),
-        Optional.empty(),
-        params.getPersistentWorkerPools(),
-        rootCellBuckConfig.getPlatform(),
-        rootCellBuckConfig.getEnvironment(),
-        params.getObjectMapper(),
-        params.getClock(),
-        Optional.empty(),
-        Optional.empty(),
-        params.getExecutors())) {
-      lastBuild = build;
-      return build.executeAndPrintFailuresToEventBus(
-          targetsToBuild,
-          isKeepGoing(),
-          params.getBuckEventBus(),
+    try (CommandThreadManager artifactFetchService = getArtifactFetchService(params, executor)) {
+      try (Build build = createBuild(
+          rootCellBuckConfig,
+          actionGraphAndResolver.getActionGraph(),
+          actionGraphAndResolver.getResolver(),
+          params.getCell(),
+          params.getAndroidPlatformTargetSupplier(),
+          new CachingBuildEngine(
+              cachingBuildEngineDelegate,
+              executor,
+              artifactFetchService == null ? executor : artifactFetchService.getExecutor(),
+              new DefaultStepRunner(),
+              getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
+              cachingBuildEngineBuckConfig.getBuildDepFiles(),
+              cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
+              cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
+              cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
+              params.getObjectMapper(),
+              actionGraphAndResolver.getResolver(),
+              rootCellBuckConfig.getKeySeed(),
+              cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo()),
+          artifactCache,
           params.getConsole(),
-          getPathToBuildReport(rootCellBuckConfig));
+          params.getBuckEventBus(),
+          Optional.empty(),
+          params.getPersistentWorkerPools(),
+          rootCellBuckConfig.getPlatform(),
+          rootCellBuckConfig.getEnvironment(),
+          params.getObjectMapper(),
+          params.getClock(),
+          Optional.empty(),
+          Optional.empty(),
+          params.getExecutors())) {
+        lastBuild = build;
+        return build.executeAndPrintFailuresToEventBus(
+            targetsToBuild,
+            isKeepGoing(),
+            params.getBuckEventBus(),
+            params.getConsole(),
+            getPathToBuildReport(rootCellBuckConfig));
+      }
     }
   }
 
-  protected WeightedListeningExecutorService getArtifactFetchService(
+  @Nullable
+  protected CommandThreadManager getArtifactFetchService(
       CommandRunnerParams params,
       WeightedListeningExecutorService executor) {
     if (!FIX_HTTP_BOTTLENECK) {
-      return executor;
+      return null;
     }
-    ListeningExecutorService artifactFetchExecutor = MoreExecutors.listeningDecorator(
-        new LimitedThreadPoolExecutor(
-            new ThreadFactoryBuilder()
-                .setNameFormat("cache-fetch-%d")
-                .build(),
-            new LinkedBlockingQueue<>(),
-            params.getBuckConfig().getMaximumResourceAmounts().getNetworkIO(),
-            getLoadLimit(params.getBuckConfig())));
-    return new WeightedListeningExecutorService(
+    return new CommandThreadManager(
+        "cache-fetch",
         executor.getSemaphore(),
         ResourceAmounts.ZERO,
-        artifactFetchExecutor);
+        params.getBuckConfig().getMaximumResourceAmounts().getNetworkIO(),
+        getLoadLimit(params.getBuckConfig()));
   }
 
   @Override
