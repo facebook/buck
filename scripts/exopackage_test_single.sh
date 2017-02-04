@@ -49,7 +49,7 @@ export NO_BUCKD=1
 # Clear out the phone.
 adb uninstall com.facebook.buck.android.agent
 adb uninstall buck.exotest
-adb shell rm -r /data/local/tmp/exopackage/buck.exotest
+adb shell 'rm -r /data/local/tmp/exopackage/buck.exotest || rm -f -r /data/local/tmp/exopackage/buck.exotest'
 
 # Build and do a clean install of the app.  Launch it and capture logs.
 echo '1a' > value.txt
