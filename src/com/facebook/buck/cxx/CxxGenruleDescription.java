@@ -377,6 +377,11 @@ public class CxxGenruleDescription
     }
 
     @Override
+    public Class<FilterAndTargets> getInputClass() {
+      return FilterAndTargets.class;
+    }
+
+    @Override
     protected String expand(
         BuildRuleResolver resolver,
         ImmutableList<BuildRule> rule,
@@ -567,6 +572,11 @@ public class CxxGenruleDescription
       this.sourceType = sourceType;
     }
 
+    @Override
+    public Class<FilterAndTargets> getInputClass() {
+      return FilterAndTargets.class;
+    }
+
     /**
      * Make sure all resolved targets are instances of {@link CxxPreprocessorDep}.
      */
@@ -694,6 +704,11 @@ public class CxxGenruleDescription
       this.cxxPlatform = cxxPlatform;
       this.depType = depType;
       this.out = out;
+    }
+
+    @Override
+    public Class<FilterAndTargets> getInputClass() {
+      return FilterAndTargets.class;
     }
 
     /**

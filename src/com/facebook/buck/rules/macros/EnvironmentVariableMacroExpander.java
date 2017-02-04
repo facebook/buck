@@ -36,6 +36,11 @@ public class EnvironmentVariableMacroExpander extends AbstractMacroExpander<Stri
   }
 
   @Override
+  public Class<String> getInputClass() {
+    return String.class;
+  }
+
+  @Override
   protected String parse(
       BuildTarget target,
       CellPathResolver cellNames,

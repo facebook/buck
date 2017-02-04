@@ -27,6 +27,11 @@ import java.util.Optional;
 public abstract class AbstractMacroExpander<T> implements MacroExpander {
 
   /**
+   * @return the class for the parsed input type.
+   */
+  public abstract Class<T> getInputClass();
+
+  /**
    * @return parse the input arguments into a type that will be used on the interfaces below.
    */
   protected abstract T parse(

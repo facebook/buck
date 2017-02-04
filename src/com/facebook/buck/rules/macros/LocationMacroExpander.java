@@ -30,6 +30,11 @@ import com.google.common.collect.ImmutableList;
 public class LocationMacroExpander extends BuildTargetMacroExpander<LocationMacro> {
 
   @Override
+  public Class<LocationMacro> getInputClass() {
+    return LocationMacro.class;
+  }
+
+  @Override
   protected LocationMacro parse(
       BuildTarget target,
       CellPathResolver cellNames,

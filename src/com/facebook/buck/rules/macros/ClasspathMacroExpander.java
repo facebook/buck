@@ -41,6 +41,11 @@ public class ClasspathMacroExpander
     implements MacroExpanderWithCustomFileOutput {
 
   @Override
+  public Class<ClasspathMacro> getInputClass() {
+    return ClasspathMacro.class;
+  }
+
+  @Override
   protected ClasspathMacro parse(
       BuildTarget target,
       CellPathResolver cellNames,

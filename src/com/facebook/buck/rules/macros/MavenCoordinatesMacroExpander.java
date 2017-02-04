@@ -31,6 +31,11 @@ import java.util.Optional;
  */
 public class MavenCoordinatesMacroExpander extends BuildTargetMacroExpander<MavenCoordinatesMacro> {
 
+  @Override
+  public Class<MavenCoordinatesMacro> getInputClass() {
+    return MavenCoordinatesMacro.class;
+  }
+
   protected String getMavenCoordinates(BuildRule rule) throws MacroException {
     if (!(rule instanceof HasMavenCoordinates)) {
       throw new MacroException(

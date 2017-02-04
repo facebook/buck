@@ -35,6 +35,11 @@ import com.google.common.collect.Iterables;
  */
 public class ExecutableMacroExpander extends BuildTargetMacroExpander<ExecutableMacro> {
 
+  @Override
+  public Class<ExecutableMacro> getInputClass() {
+    return ExecutableMacro.class;
+  }
+
   protected Tool getTool(BuildRule rule) throws MacroException {
     if (!(rule instanceof BinaryBuildRule)) {
       throw new MacroException(
