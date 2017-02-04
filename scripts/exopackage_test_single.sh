@@ -51,14 +51,20 @@ adb uninstall com.facebook.buck.android.agent
 adb uninstall buck.exotest
 adb shell 'rm -r /data/local/tmp/exopackage/buck.exotest || rm -f -r /data/local/tmp/exopackage/buck.exotest'
 
+OUT_COUNT=0
+function installAndLaunch() {
+  buck install ${1:-//:exotest} | cat
+  adb logcat -c
+  adb shell am start -n buck.exotest/exotest.LogActivity
+  sleep 1
+  adb logcat -d '*:S' EXOPACKAGE_TEST:V > out.txt
+  cp out.txt out$((++OUT_COUNT)).txt
+}
+
 # Build and do a clean install of the app.  Launch it and capture logs.
 echo '1a' > value.txt
 
-buck install //:exotest | cat
-adb logcat -c
-adb shell am start -n buck.exotest/exotest.LogActivity
-sleep 1
-adb logcat -d '*:S' EXOPACKAGE_TEST:V > out1.txt
+installAndLaunch
 
 # Check for values in the logs.
 grep 'VALUE=1a' out1.txt
@@ -68,11 +74,7 @@ grep 'NATIVE_TWO=two_1a' out1.txt
 
 # Change java code and do an incremental install of the app.  Launch it and capture logs.
 echo '2b' > value.txt
-buck install //:exotest | cat
-adb logcat -c
-adb shell am start -n buck.exotest/exotest.LogActivity
-sleep 1
-adb logcat -d '*:S' EXOPACKAGE_TEST:V > out2.txt
+installAndLaunch
 
 # Check for the new values in the logs.
 grep 'VALUE=2b' out2.txt
@@ -80,11 +82,7 @@ grep 'VALUE=2b' out2.txt
 
 # Change one of the native libraries, do an incremental install and capture logs.
 sedInPlace s/one_1a/one_3c/ jni/one/one.c
-buck install //:exotest | cat
-adb logcat -c
-adb shell am start -n buck.exotest/exotest.LogActivity
-sleep 1
-adb logcat -d '*:S' EXOPACKAGE_TEST:V > out3.txt
+installAndLaunch
 
 # Check for the new values in the logs.
 grep 'NATIVE_ONE=one_3c' out3.txt
@@ -94,11 +92,7 @@ grep 'NATIVE_TWO=two_1a' out3.txt
 # Change both native and java code and do an incremental build.
 echo '4d' > value.txt
 sedInPlace s/two_1a/two_4d/ jni/two/two.c
-buck install //:exotest | cat
-adb logcat -c
-adb shell am start -n buck.exotest/exotest.LogActivity
-sleep 1
-adb logcat -d '*:S' EXOPACKAGE_TEST:V > out4.txt
+installAndLaunch
 
 # Check for the new values in the logs.
 grep 'VALUE=4d' out4.txt
@@ -109,11 +103,7 @@ grep 'NATIVE_TWO=two_4d' out4.txt
 # Change both native and java code and do a no-exopackage incremental build.
 echo '5e' > value.txt
 sedInPlace s/two_4d/two_5e/ jni/two/two.c
-buck install //:exotest-noexo | cat
-adb logcat -c
-adb shell am start -n buck.exotest/exotest.LogActivity
-sleep 1
-adb logcat -d '*:S' EXOPACKAGE_TEST:V > out5.txt
+installAndLaunch //:exotest-noexo
 
 # Check for the new values in the logs.
 grep 'VALUE=5e' out5.txt
