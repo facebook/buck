@@ -1,5 +1,8 @@
 TYPES_SRCS = [
+  'AbstractClasspathMacro.java',
+  'AbstractExecutableMacro.java',
   'AbstractLocationMacro.java',
+  'AbstractMavenCoordinatesMacro.java',
   'AbstractStringWithMacros.java',
   'BuildTargetMacro.java',
   'Macro.java',
@@ -7,7 +10,10 @@ TYPES_SRCS = [
 java_immutables_library(
   name = 'types',
   immutable_types = [
+    'ClasspathMacro',
+    'ExecutableMacro',
     'LocationMacro',
+    'MavenCoordinatesMacro',
     'StringWithMacros',
   ],
   srcs = TYPES_SRCS,
