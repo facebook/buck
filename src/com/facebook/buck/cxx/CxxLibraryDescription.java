@@ -519,13 +519,13 @@ public class CxxLibraryDescription implements
     ImmutableList.Builder<String> linkerFlags = ImmutableList.builder();
 
     linkerFlags.addAll(
-        CxxFlags.getFlags(
+        CxxFlags.getFlagsWithPlatformMacroExpansion(
             args.linkerFlags,
             args.platformLinkerFlags,
             cxxPlatform));
 
     linkerFlags.addAll(
-        CxxFlags.getFlags(
+        CxxFlags.getFlagsWithPlatformMacroExpansion(
             args.exportedLinkerFlags,
             args.exportedPlatformLinkerFlags,
             cxxPlatform));
@@ -784,7 +784,7 @@ public class CxxLibraryDescription implements
             args.exportedLangPreprocessorFlags,
             input),
         input -> {
-          ImmutableList<String> flags = CxxFlags.getFlags(
+          ImmutableList<String> flags = CxxFlags.getFlagsWithPlatformMacroExpansion(
               args.exportedLinkerFlags,
               args.exportedPlatformLinkerFlags,
               input);
@@ -806,11 +806,11 @@ public class CxxLibraryDescription implements
                 cxxBuckConfig,
                 cxxPlatform,
                 args,
-                CxxFlags.getFlags(
+                CxxFlags.getFlagsWithPlatformMacroExpansion(
                     args.linkerFlags,
                     args.platformLinkerFlags,
                     cxxPlatform),
-                CxxFlags.getFlags(
+                CxxFlags.getFlagsWithPlatformMacroExpansion(
                     args.exportedLinkerFlags,
                     args.exportedPlatformLinkerFlags,
                     cxxPlatform),

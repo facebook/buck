@@ -106,9 +106,9 @@ public class CxxFlagsTest {
   @Test
   public void macroExpansionsInFlags() {
 
-    // Test that platform macros are expanded via `getFlags`.
+    // Test that platform macros are expanded via `getFlagsWithPlatformMacroExpansion`.
     assertThat(
-        CxxFlags.getFlags(
+        CxxFlags.getFlagsWithPlatformMacroExpansion(
             ImmutableList.of("-I$MACRO"),
             new PatternMatchedCollection.Builder<ImmutableList<String>>()
                 .add(Pattern.compile(".*"), ImmutableList.of("-F$MACRO"))

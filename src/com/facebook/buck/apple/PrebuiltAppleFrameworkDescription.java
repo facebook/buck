@@ -64,7 +64,7 @@ public class PrebuiltAppleFrameworkDescription implements
         args.preferredLinkage,
         args.frameworks,
         args.supportedPlatformsRegex,
-        input -> CxxFlags.getFlags(
+        input -> CxxFlags.getFlagsWithPlatformMacroExpansion(
             args.exportedLinkerFlags,
             args.exportedPlatformLinkerFlags,
             input)

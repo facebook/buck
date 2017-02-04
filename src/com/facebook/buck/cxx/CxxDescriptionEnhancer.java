@@ -777,7 +777,7 @@ public class CxxDescriptionEnhancer {
 
     // Build up the linker flags, which support macro expansion.
     ImmutableList<String> resolvedLinkerFlags =
-        CxxFlags.getFlags(
+        CxxFlags.getFlagsWithPlatformMacroExpansion(
             linkerFlags,
             platformLinkerFlags,
             cxxPlatform);

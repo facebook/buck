@@ -450,7 +450,7 @@ public class PrebuiltCxxLibraryDescription implements
         NativeLinkableInput.builder()
             .addAllArgs(
                 StringArg.from(
-                    CxxFlags.getFlags(
+                    CxxFlags.getFlagsWithPlatformMacroExpansion(
                         args.exportedLinkerFlags,
                         args.exportedPlatformLinkerFlags,
                         cxxPlatform)))
@@ -664,7 +664,7 @@ public class PrebuiltCxxLibraryDescription implements
 
       @Override
       public ImmutableList<String> getExportedLinkerFlags(CxxPlatform cxxPlatform) {
-        return CxxFlags.getFlags(
+        return CxxFlags.getFlagsWithPlatformMacroExpansion(
             args.exportedLinkerFlags,
             args.exportedPlatformLinkerFlags,
             cxxPlatform);

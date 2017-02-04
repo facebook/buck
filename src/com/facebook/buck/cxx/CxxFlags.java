@@ -64,7 +64,7 @@ public class CxxFlags {
     };
   }
 
-  public static ImmutableList<String> getFlags(
+  public static ImmutableList<String> getFlagsWithPlatformMacroExpansion(
       ImmutableList<String> flags,
       PatternMatchedCollection<ImmutableList<String>> platformFlags,
       CxxPlatform platform) {
@@ -99,7 +99,8 @@ public class CxxFlags {
     ImmutableListMultimap.Builder<CxxSource.Type, String> langFlags =
         ImmutableListMultimap.builder();
 
-    langFlags.putAll(toLanguageFlags(getFlags(flags, platformFlags, platform)));
+    langFlags.putAll(
+        toLanguageFlags(getFlagsWithPlatformMacroExpansion(flags, platformFlags, platform)));
 
     for (ImmutableMap.Entry<CxxSource.Type, ImmutableList<String>> entry :
          languageFlags.entrySet()) {

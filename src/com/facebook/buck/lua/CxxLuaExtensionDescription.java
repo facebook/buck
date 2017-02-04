@@ -192,7 +192,7 @@ public class CxxLuaExtensionDescription implements
     ImmutableList.Builder<com.facebook.buck.rules.args.Arg> argsBuilder = ImmutableList.builder();
     argsBuilder.addAll(
         StringArg.from(
-            CxxFlags.getFlags(
+            CxxFlags.getFlagsWithPlatformMacroExpansion(
                 args.linkerFlags,
                 args.platformLinkerFlags,
                 cxxPlatform)));
