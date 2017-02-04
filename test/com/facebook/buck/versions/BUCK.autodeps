@@ -26,6 +26,7 @@
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules/coercer:coercer",
+      "//src/com/facebook/buck/rules/query:types",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/versions:translator",
       "//src/com/facebook/buck/versions:types",
