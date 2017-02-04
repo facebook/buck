@@ -520,7 +520,7 @@ public class TestCommand extends BuildCommand {
       CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
           params.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
       try (CommandThreadManager artifactFetchService = getArtifactFetchService(
-          params, pool.getExecutor())) {
+          params.getBuckConfig(), pool.getExecutor())) {
         CachingBuildEngine cachingBuildEngine =
             new CachingBuildEngine(
                 new LocalCachingBuildEngineDelegate(params.getFileHashCache()),

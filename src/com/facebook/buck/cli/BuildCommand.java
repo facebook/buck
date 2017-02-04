@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.distributed.BuckVersionUtil;
@@ -108,9 +109,6 @@ import java.util.concurrent.ConcurrentMap;
 import javax.annotation.Nullable;
 
 public class BuildCommand extends AbstractCommand {
-  private static final boolean FIX_HTTP_BOTTLENECK =
-      "true".equals(System.getProperty("buck.fix_http_bottleneck"));
-
   private static final String KEEP_GOING_LONG_ARG = "--keep-going";
   private static final String BUILD_REPORT_LONG_ARG = "--build-report";
   private static final String JUST_BUILD_LONG_ARG = "--just-build";
@@ -766,7 +764,8 @@ public class BuildCommand extends AbstractCommand {
       Iterable<? extends HasBuildTarget> targetsToBuild) throws IOException, InterruptedException {
     CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
         rootCellBuckConfig.getView(CachingBuildEngineBuckConfig.class);
-    try (CommandThreadManager artifactFetchService = getArtifactFetchService(params, executor)) {
+    try (CommandThreadManager artifactFetchService =
+             getArtifactFetchService(params.getBuckConfig(), executor)) {
       try (Build build = createBuild(
           rootCellBuckConfig,
           actionGraphAndResolver.getActionGraph(),
@@ -776,7 +775,7 @@ public class BuildCommand extends AbstractCommand {
           new CachingBuildEngine(
               cachingBuildEngineDelegate,
               executor,
-              artifactFetchService == null ? executor : artifactFetchService.getExecutor(),
+              artifactFetchService.getExecutor(),
               new DefaultStepRunner(),
               getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
               cachingBuildEngineBuckConfig.getBuildDepFiles(),
@@ -810,19 +809,17 @@ public class BuildCommand extends AbstractCommand {
     }
   }
 
-  @Nullable
   protected CommandThreadManager getArtifactFetchService(
-      CommandRunnerParams params,
+      BuckConfig config,
       WeightedListeningExecutorService executor) {
-    if (!FIX_HTTP_BOTTLENECK) {
-      return null;
-    }
     return new CommandThreadManager(
         "cache-fetch",
         executor.getSemaphore(),
         ResourceAmounts.ZERO,
-        params.getBuckConfig().getMaximumResourceAmounts().getNetworkIO(),
-        getLoadLimit(params.getBuckConfig()));
+        Math.min(
+            config.getMaximumResourceAmounts().getNetworkIO(),
+            (int) new ArtifactCacheBuckConfig(config).getThreadPoolSize()),
+        getLoadLimit(config));
   }
 
   @Override
