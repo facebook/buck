@@ -23,6 +23,9 @@ import static org.hamcrest.Matchers.everyItem;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -119,6 +122,29 @@ public class CxxFlagsTest {
             "-Iexpansion",
             "-Fexpansion"));
 
+    // Test that platform macros are expanded via `getFlagsWithPlatformMacroExpansion`.
+    ImmutableList<StringWithMacros> flags =
+        CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+            ImmutableList.of(StringWithMacrosUtils.format("-I$MACRO")),
+            new PatternMatchedCollection.Builder<ImmutableList<StringWithMacros>>()
+                .add(
+                    Pattern.compile(".*"),
+                    ImmutableList.of(StringWithMacrosUtils.format("-F$MACRO")))
+                .build(),
+            CxxPlatformUtils.DEFAULT_PLATFORM
+                .withFlagMacros(ImmutableMap.of("MACRO", "expansion")));
+    assertThat(
+        RichStream.from(flags)
+            .map(
+                s -> s.format(
+                    m -> {
+                      throw new IllegalStateException();
+                    }))
+            .toImmutableList(),
+        containsInAnyOrder(
+            "-Iexpansion",
+            "-Fexpansion"));
+
     // Test that platform macros are expanded via `getLanguageFlags`.
     assertThat(
         CxxFlags.getLanguageFlags(
@@ -135,6 +161,24 @@ public class CxxFlagsTest {
             "-Iexpansion",
             "-isystemexpansion",
             "-Fexpansion"));
+  }
+
+  @Test
+  public void getFlagsWithMacrosWithPlatformMacroExpansion() {
+    assertThat(
+        CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+            ImmutableList.of(StringWithMacrosUtils.format("-I$MACRO")),
+            new PatternMatchedCollection.Builder<ImmutableList<StringWithMacros>>()
+                .add(
+                    Pattern.compile(".*"),
+                    ImmutableList.of(StringWithMacrosUtils.format("-F$MACRO")))
+                .build(),
+            CxxPlatformUtils.DEFAULT_PLATFORM
+                .withFlagMacros(ImmutableMap.of("MACRO", "expansion"))),
+        equalTo(
+            ImmutableList.of(
+                StringWithMacrosUtils.format("-Iexpansion"),
+                StringWithMacrosUtils.format("-Fexpansion"))));
   }
 
 }
