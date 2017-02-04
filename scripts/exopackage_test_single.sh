@@ -39,6 +39,7 @@ cat >.buckconfig <<EOF
   target_level = 7
 [ndk]
   cxx_runtime = system
+  cpu_abis = armv7, x86
 EOF
 cat >.bucklogging.properties <<EOF
 com.facebook.buck.android.ExopackageInstaller.level=FINER
