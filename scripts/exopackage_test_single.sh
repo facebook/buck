@@ -25,7 +25,7 @@ cd `dirname $0`
 cd `git rev-parse --show-cdup`
 
 # Copy the test project into a temp dir, then cd into it and make it a buck project.
-TMP_DIR=`mktemp -d /tmp/exopackage-text.XXXXXX`
+TMP_DIR=`mktemp -d /tmp/exopackage-test.XXXXXX`
 trap "rm -rf $TMP_DIR" EXIT HUP INT TERM
 cp -r test/com/facebook/buck/android/testdata/exopackage-device/* $TMP_DIR
 buck build --out $TMP_DIR/buck-android-support.jar buck-android-support
