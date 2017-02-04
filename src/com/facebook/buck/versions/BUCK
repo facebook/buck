@@ -1,9 +1,12 @@
 TYPES_SRCS = [
+  'AbstractExactConstraint.java',
   'AbstractVersion.java',
+  'Constraint.java',
 ]
 java_immutables_library(
   name = 'types',
   immutable_types = [
+    'ExactConstraint',
     'Version',
   ],
   srcs = TYPES_SRCS,
@@ -14,6 +17,7 @@ java_immutables_library(
 TRANSLATOR_SRCS = [
   'TargetNodeTranslator.java',
   'TargetTranslatable.java',
+  'TargetTranslator.java',
   'TargetTranslatorOverridingDescription.java',
 ]
 java_library(
@@ -27,7 +31,6 @@ java_immutables_library(
   name = 'versions',
   immutable_types = [
     'Constraints',
-    'ExactConstraint',
     'Implication',
     'VersionedAlias',
     'VersionInfo',

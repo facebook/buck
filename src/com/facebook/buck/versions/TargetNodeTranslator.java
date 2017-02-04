@@ -42,6 +42,13 @@ import java.util.Optional;
  */
 public abstract class TargetNodeTranslator {
 
+  // Translators registered for various types.
+  private final ImmutableList<TargetTranslator<?>> translators;
+
+  public TargetNodeTranslator(ImmutableList<TargetTranslator<?>> translators) {
+    this.translators = translators;
+  }
+
   public abstract Optional<BuildTarget> translateBuildTarget(BuildTarget target);
 
   public abstract Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions(
@@ -168,10 +175,41 @@ public abstract class TargetNodeTranslator {
   }
 
   @SuppressWarnings("unchecked")
+  private <A, T> Optional<Optional<T>> tryTranslate(
+      CellPathResolver cellPathResolver,
+      BuildTargetPatternParser<BuildTargetPattern> pattern,
+      TargetTranslator<A> translator,
+      T object) {
+    Class<A> clazz = translator.getTranslatableClass();
+    if (!clazz.isAssignableFrom(object.getClass())) {
+      return Optional.empty();
+    }
+    return Optional.of(
+        (Optional<T>) translator.translateTargets(cellPathResolver, pattern, this, (A) object));
+  }
+
+  @SuppressWarnings("unchecked")
   public <A> Optional<A> translate(
       CellPathResolver cellPathResolver,
       BuildTargetPatternParser<BuildTargetPattern> pattern,
       A object) {
+
+    // `null`s require no translating.
+    if (object == null) {
+      return Optional.empty();
+    }
+
+    // First try all registered translators.
+    for (TargetTranslator<?> translator : translators) {
+      if (translator.getTranslatableClass().isAssignableFrom(object.getClass())) {
+        Optional<Optional<A>> translated =
+            tryTranslate(cellPathResolver, pattern, translator, object);
+        if (translated.isPresent()) {
+          return translated.get();
+        }
+      }
+    }
+
     if (object instanceof Optional) {
       return (Optional<A>) translateOptional(cellPathResolver, pattern, (Optional<?>) object);
     } else if (object instanceof ImmutableList) {

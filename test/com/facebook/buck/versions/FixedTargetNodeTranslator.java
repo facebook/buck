@@ -17,6 +17,7 @@
 package com.facebook.buck.versions;
 
 import com.facebook.buck.model.BuildTarget;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.util.Optional;
@@ -25,8 +26,15 @@ public class FixedTargetNodeTranslator extends TargetNodeTranslator {
 
   private final ImmutableMap<BuildTarget, BuildTarget> translations;
 
-  public FixedTargetNodeTranslator(ImmutableMap<BuildTarget, BuildTarget> translations) {
+  public FixedTargetNodeTranslator(
+      ImmutableList<TargetTranslator<?>> translators,
+      ImmutableMap<BuildTarget, BuildTarget> translations) {
+    super(translators);
     this.translations = translations;
+  }
+
+  public FixedTargetNodeTranslator(ImmutableMap<BuildTarget, BuildTarget> translations) {
+    this(ImmutableList.of(), translations);
   }
 
   @Override

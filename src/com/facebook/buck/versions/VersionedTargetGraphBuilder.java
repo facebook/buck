@@ -496,8 +496,9 @@ public class VersionedTargetGraphBuilder {
               versionInfo.getVersionDomain());
 
       // Build a target translator object to translate build targets.
+      ImmutableList<TargetTranslator<?>> translators = ImmutableList.of();
       TargetNodeTranslator targetTranslator =
-          new TargetNodeTranslator() {
+          new TargetNodeTranslator(translators) {
 
             private final LoadingCache<BuildTarget, Optional<BuildTarget>> cache =
                 CacheBuilder.newBuilder()

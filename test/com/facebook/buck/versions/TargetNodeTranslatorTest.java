@@ -61,7 +61,7 @@ public class TargetNodeTranslatorTest {
             .setExportedDeps(ImmutableSortedSet.of(c))
             .build();
     TargetNodeTranslator translator =
-        new TargetNodeTranslator() {
+        new TargetNodeTranslator(ImmutableList.of()) {
           @Override
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.of(d);
@@ -101,7 +101,7 @@ public class TargetNodeTranslatorTest {
             .setExportedDeps(ImmutableSortedSet.of(c))
             .build();
     TargetNodeTranslator translator =
-        new TargetNodeTranslator() {
+        new TargetNodeTranslator(ImmutableList.of()) {
           @Override
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.empty();
@@ -126,7 +126,7 @@ public class TargetNodeTranslatorTest {
             BuildTargetFactory.newInstance("//:b"),
             Version.of("1.0"));
     TargetNodeTranslator translator =
-        new TargetNodeTranslator() {
+        new TargetNodeTranslator(ImmutableList.of()) {
           @Override
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.empty();
@@ -150,7 +150,7 @@ public class TargetNodeTranslatorTest {
     BuildTarget a = BuildTargetFactory.newInstance("//:a");
     BuildTarget b = BuildTargetFactory.newInstance("//:b");
     TargetNodeTranslator translator =
-        new TargetNodeTranslator() {
+        new TargetNodeTranslator(ImmutableList.of()) {
           @Override
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.of(b);
@@ -171,7 +171,7 @@ public class TargetNodeTranslatorTest {
     BuildTarget a = BuildTargetFactory.newInstance("//:a");
     BuildTarget b = BuildTargetFactory.newInstance("//:b");
     TargetNodeTranslator translator =
-        new TargetNodeTranslator() {
+        new TargetNodeTranslator(ImmutableList.of()) {
           @Override
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.of(b);
@@ -195,7 +195,7 @@ public class TargetNodeTranslatorTest {
     BuildTarget a = BuildTargetFactory.newInstance("//:a");
     BuildTarget b = BuildTargetFactory.newInstance("//:b");
     TargetNodeTranslator translator =
-        new TargetNodeTranslator() {
+        new TargetNodeTranslator(ImmutableList.of()) {
           @Override
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.of(b);
@@ -214,6 +214,33 @@ public class TargetNodeTranslatorTest {
         Matchers.equalTo(
             Optional.of(
                 SourceWithFlags.of(new BuildTargetSourcePath(b), ImmutableList.of("-flag")))));
+  }
+
+
+  @Test
+  public void translateTargetTranslator() {
+    TargetTranslator<Integer> integerTranslator =
+        new TargetTranslator<Integer>() {
+          @Override
+          public Class<Integer> getTranslatableClass() {
+            return Integer.class;
+          }
+          @Override
+          public Optional<Integer> translateTargets(
+              CellPathResolver cellPathResolver,
+              BuildTargetPatternParser<BuildTargetPattern> pattern,
+              TargetNodeTranslator translator,
+              Integer val) {
+            return Optional.of(0);
+          }
+        };
+    TargetNodeTranslator translator =
+        new FixedTargetNodeTranslator(
+            ImmutableList.of(integerTranslator),
+            ImmutableMap.of());
+    assertThat(
+        translator.translate(CELL_PATH_RESOLVER, PATTERN, 12),
+        Matchers.equalTo(Optional.of(0)));
   }
 
 }
