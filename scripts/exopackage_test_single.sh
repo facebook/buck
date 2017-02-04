@@ -67,9 +67,9 @@ echo '1a' > value.txt
 installAndLaunch
 
 # Check for values in the logs.
-grep 'VALUE=1a' out1.txt
-grep 'NATIVE_ONE=one_1a' out1.txt
-grep 'NATIVE_TWO=two_1a' out1.txt
+grep 'VALUE=1a' out.txt
+grep 'NATIVE_ONE=one_1a' out.txt
+grep 'NATIVE_TWO=two_1a' out.txt
 
 
 # Change java code and do an incremental install of the app.  Launch it and capture logs.
@@ -77,7 +77,7 @@ echo '2b' > value.txt
 installAndLaunch
 
 # Check for the new values in the logs.
-grep 'VALUE=2b' out2.txt
+grep 'VALUE=2b' out.txt
 
 
 # Change one of the native libraries, do an incremental install and capture logs.
@@ -85,8 +85,8 @@ sedInPlace s/one_1a/one_3c/ jni/one/one.c
 installAndLaunch
 
 # Check for the new values in the logs.
-grep 'NATIVE_ONE=one_3c' out3.txt
-grep 'NATIVE_TWO=two_1a' out3.txt
+grep 'NATIVE_ONE=one_3c' out.txt
+grep 'NATIVE_TWO=two_1a' out.txt
 
 
 # Change both native and java code and do an incremental build.
@@ -95,9 +95,9 @@ sedInPlace s/two_1a/two_4d/ jni/two/two.c
 installAndLaunch
 
 # Check for the new values in the logs.
-grep 'VALUE=4d' out4.txt
-grep 'NATIVE_ONE=one_3c' out4.txt
-grep 'NATIVE_TWO=two_4d' out4.txt
+grep 'VALUE=4d' out.txt
+grep 'NATIVE_ONE=one_3c' out.txt
+grep 'NATIVE_TWO=two_4d' out.txt
 
 
 # Change both native and java code and do a no-exopackage incremental build.
@@ -106,9 +106,9 @@ sedInPlace s/two_4d/two_5e/ jni/two/two.c
 installAndLaunch //:exotest-noexo
 
 # Check for the new values in the logs.
-grep 'VALUE=5e' out5.txt
-grep 'NATIVE_ONE=one_3c' out5.txt
-grep 'NATIVE_TWO=two_5e' out5.txt
+grep 'VALUE=5e' out.txt
+grep 'NATIVE_ONE=one_3c' out.txt
+grep 'NATIVE_TWO=two_5e' out.txt
 
 
 # Clean up after ourselves.
