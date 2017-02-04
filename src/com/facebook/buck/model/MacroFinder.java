@@ -178,7 +178,7 @@ public class MacroFinder {
    * Not shown: transitions back from "IN_ESCAPE_SEQUENCE" and "IN_ESCAPE_ARG_SEQUENCE", as they
    * return to the previous state
    */
-  private static class MacroFinderAutomaton extends UnmodifiableIterator<MacroMatchResult> {
+  public static class MacroFinderAutomaton extends UnmodifiableIterator<MacroMatchResult> {
 
     private enum State {
       // Looking for the start of a macro
@@ -214,7 +214,7 @@ public class MacroFinder {
     @Nullable
     private MacroMatchResult next;
 
-    MacroFinderAutomaton(String blob) {
+    public MacroFinderAutomaton(String blob) {
       this.blob = blob;
       this.parenthesesDepth = 0;
       this.state = State.SEARCHING;

@@ -28,6 +28,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.rules.macros.LocationMacro;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
@@ -140,6 +141,11 @@ public class AbstractTypeCoercerFactory implements TypeCoercerFactory {
         new ConstraintTypeCoercer(),
         new VersionTypeCoercer(),
         new DepQueryCoercer(),
+        StringWithMacrosTypeCoercer.from(
+            ImmutableMap.of(
+                "location", LocationMacro.class),
+            ImmutableList.of(
+                new LocationMacroTypeCoercer(buildTargetTypeCoercer))),
     };
   }
 
