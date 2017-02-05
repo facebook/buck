@@ -45,7 +45,7 @@ import java.util.stream.Stream;
 
 public class SymlinkTree
     extends AbstractBuildRule
-    implements HasRuntimeDeps, RuleKeyAppendable, SupportsInputBasedRuleKey {
+    implements HasRuntimeDeps, SupportsInputBasedRuleKey {
 
   private final Path root;
   private final ImmutableSortedMap<Path, SourcePath> links;

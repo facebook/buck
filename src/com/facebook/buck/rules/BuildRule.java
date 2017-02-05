@@ -104,4 +104,11 @@ public interface BuildRule extends Comparable<BuildRule>, HasBuildTarget {
   @JsonIgnore
   boolean isCacheable();
 
+  /**
+   * Add additional details when calculating this rule's {@link RuleKey} which isn't available via
+   * reflection.
+   */
+  @SuppressWarnings("unused")
+  default void appendToRuleKey(RuleKeyObjectSink sink) {}
+
 }

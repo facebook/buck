@@ -797,8 +797,7 @@ public class RuleKeyTest {
     }
   }
 
-  private static class TestRuleKeyAppendableBuildRule extends NoopBuildRule
-      implements RuleKeyAppendable {
+  private static class TestRuleKeyAppendableBuildRule extends NoopBuildRule {
     private final String foo;
 
     @SuppressWarnings("PMD.UnusedPrivateField")

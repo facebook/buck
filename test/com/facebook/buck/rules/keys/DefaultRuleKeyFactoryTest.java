@@ -219,7 +219,7 @@ public class DefaultRuleKeyFactoryTest {
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder);
 
-    class AppendableRule extends EmptyRule implements RuleKeyAppendable {
+    class AppendableRule extends EmptyRule {
       public AppendableRule(BuildTarget target) {
         super(target);
       }
@@ -241,10 +241,6 @@ public class DefaultRuleKeyFactoryTest {
 
     RuleKeyBuilder<RuleKey> builder = factory.newInstance(rule);
     try (RuleKeyScopedHasher.Scope keyScope = builder.getScopedHasher().keyScope("field")) {
-      try (RuleKeyScopedHasher.Scope appendableScope =
-               builder.getScopedHasher().wrapperScope(RuleKeyHasher.Wrapper.APPENDABLE)) {
-        builder.getScopedHasher().getHasher().putRuleKey(appendableSubKey);
-      }
       try (RuleKeyScopedHasher.Scope appendableScope =
                builder.getScopedHasher().wrapperScope(RuleKeyHasher.Wrapper.BUILD_RULE)) {
         builder.getScopedHasher().getHasher().putRuleKey(ruleSubKey);

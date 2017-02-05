@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -37,7 +36,7 @@ import java.util.Optional;
 /**
  * Rule for generating an apple package via external script.
  */
-public class ExternallyBuiltApplePackage extends Genrule implements RuleKeyAppendable {
+public class ExternallyBuiltApplePackage extends Genrule {
   private ApplePackageConfigAndPlatformInfo packageConfigAndPlatformInfo;
   private boolean cacheable;
 

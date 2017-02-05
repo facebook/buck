@@ -139,13 +139,9 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   /** Recursively serializes the value. Serialization of the key is handled outside. */
   protected RuleKeyBuilder<RULE_KEY> setReflectively(@Nullable Object val) {
     if (val instanceof RuleKeyAppendable) {
-      setAppendableRuleKey((RuleKeyAppendable) val);
-      if (!(val instanceof BuildRule)) {
-        return this;
-      }
-      // Explicitly fall through for BuildRule objects so we include
-      // their cache keys (which may include more data than appendToRuleKey() does).
+      return setAppendableRuleKey((RuleKeyAppendable) val);
     }
+
     if (val instanceof BuildRule) {
       return setBuildRule((BuildRule) val);
     }

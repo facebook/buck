@@ -24,7 +24,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
-import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -73,7 +72,7 @@ import java.util.Optional;
  */
 public class CxxPrecompiledHeader
     extends AbstractBuildRule
-    implements RuleKeyAppendable, SupportsDependencyFileRuleKey, SupportsInputBasedRuleKey {
+    implements SupportsDependencyFileRuleKey, SupportsInputBasedRuleKey {
 
   private final Path output;
 

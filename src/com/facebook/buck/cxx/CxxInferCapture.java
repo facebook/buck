@@ -22,7 +22,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
@@ -47,7 +46,7 @@ import java.util.function.Predicate;
  */
 public class CxxInferCapture
     extends AbstractBuildRule
-    implements RuleKeyAppendable, SupportsDependencyFileRuleKey {
+    implements SupportsDependencyFileRuleKey {
 
   @AddToRuleKey
   private final InferBuckConfig inferConfig;

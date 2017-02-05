@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -73,14 +74,13 @@ public abstract class ReflectiveRuleKeyFactory<
         "buckOut",
         buildRule.getProjectFilesystem().getBuckPaths().getConfiguredBuckOut().toString());
 
-    if (buildRule instanceof RuleKeyAppendable) {
-      // We call `setAppendableRuleKey` explicitly, since using `setReflectively` will try to add
-      // the rule key of the `BuildRule`, which is what we're trying to calculate now.
-      //
-      // "." is not a valid first character for a field name, and so will never be seen in the
-      // reflective rule key setting.
-      builder.setAppendableRuleKey(".buck", (RuleKeyAppendable) buildRule);
-    }
+    // Add in any extra details to the rule key via the rule's `appendToRuleKey` method.
+    buildRule.appendToRuleKey(builder);
+
+    // We used to require build rules to piggyback on the `RuleKeyAppendable` type to add in
+    // additional details, but have since switched to using a method in the build rule class, so
+    // error out if we see the `RuleKeyAppendable` being used improperly.
+    Preconditions.checkArgument(!(builder instanceof RuleKeyAppendable));
 
     try {
       for (AlterRuleKey alterRuleKey : knownFields.get(buildRule.getClass())) {
