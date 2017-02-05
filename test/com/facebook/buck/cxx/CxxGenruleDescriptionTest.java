@@ -27,6 +27,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.testutil.OptionalMatchers;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -74,11 +75,13 @@ public class CxxGenruleDescriptionTest {
     for (Linker.LinkableDepType style : Linker.LinkableDepType.values()) {
       CxxLibraryBuilder bBuilder =
           new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:b"))
-              .setExportedLinkerFlags(ImmutableList.of("-b"));
+              .setExportedLinkerFlags(
+                  ImmutableList.of(StringWithMacrosUtils.format("-b")));
       CxxLibraryBuilder aBuilder =
           new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:a"))
               .setExportedDeps(ImmutableSortedSet.of(bBuilder.getTarget()))
-              .setExportedLinkerFlags(ImmutableList.of("-a"));
+              .setExportedLinkerFlags(
+                  ImmutableList.of(StringWithMacrosUtils.format("-a")));
       CxxGenruleBuilder builder =
           new CxxGenruleBuilder(
               BuildTargetFactory.newInstance(

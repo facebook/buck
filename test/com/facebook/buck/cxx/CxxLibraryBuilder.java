@@ -22,6 +22,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -81,13 +82,14 @@ public class CxxLibraryBuilder
     return this;
   }
 
-  public CxxLibraryBuilder setExportedLinkerFlags(ImmutableList<String> exportedLinkerFlags) {
+  public CxxLibraryBuilder setExportedLinkerFlags(
+      ImmutableList<StringWithMacros> exportedLinkerFlags) {
     arg.exportedLinkerFlags = exportedLinkerFlags;
     return this;
   }
 
   public CxxLibraryBuilder setExportedPlatformLinkerFlags(
-      PatternMatchedCollection<ImmutableList<String>> exportedPlatformLinkerFlags) {
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> exportedPlatformLinkerFlags) {
     arg.exportedPlatformLinkerFlags = exportedPlatformLinkerFlags;
     return this;
   }

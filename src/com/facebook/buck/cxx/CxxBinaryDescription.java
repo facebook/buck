@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.MacroException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -36,14 +35,11 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.DepQuery;
 import com.facebook.buck.rules.query.DepQueryUtils;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.versions.VersionRoot;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import java.util.Optional;
@@ -273,12 +269,7 @@ public class CxxBinaryDescription implements
       Arg constructorArg) {
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
 
-    deps.addAll(
-        findDepsForTargetFromConstructorArgs(
-            buildTarget,
-            cellRoots,
-            constructorArg.linkerFlags,
-            constructorArg.platformLinkerFlags.getValues()));
+    deps.addAll(findDepsForTargetFromConstructorArgs(buildTarget));
 
     constructorArg.depsQuery.ifPresent(
         depsQuery ->
@@ -288,11 +279,7 @@ public class CxxBinaryDescription implements
     return deps.build();
   }
 
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
-      BuildTarget buildTarget,
-      CellPathResolver cellRoots,
-      ImmutableList<String> linkerFlags,
-      ImmutableList<ImmutableList<String>> platformLinkerFlags) {
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(BuildTarget buildTarget) {
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
 
     // Get any parse time deps from the C/C++ platforms.
@@ -300,23 +287,6 @@ public class CxxBinaryDescription implements
         CxxPlatforms.getParseTimeDeps(
             cxxPlatforms
                 .getValue(buildTarget.getFlavors()).orElse(defaultCxxPlatform)));
-
-    ImmutableList<ImmutableList<String>> macroStrings =
-        ImmutableList.<ImmutableList<String>>builder()
-            .add(linkerFlags)
-            .addAll(platformLinkerFlags)
-            .build();
-    for (String macroString : Iterables.concat(macroStrings)) {
-      try {
-        deps.addAll(
-            CxxDescriptionEnhancer.MACRO_HANDLER.extractParseTimeDeps(
-                buildTarget,
-                cellRoots,
-                macroString));
-      } catch (MacroException e) {
-        throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
-      }
-    }
 
     return deps.build();
   }

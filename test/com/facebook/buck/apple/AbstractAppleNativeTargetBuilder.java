@@ -26,6 +26,7 @@ import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -78,12 +79,12 @@ public abstract class AbstractAppleNativeTargetBuilder<
     return getThis();
   }
 
-  public BUILDER setLinkerFlags(ImmutableList<String> linkerFlags) {
+  public BUILDER setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
     arg.linkerFlags = linkerFlags;
     return getThis();
   }
 
-  public BUILDER setExportedLinkerFlags(ImmutableList<String> exportedLinkerFlags) {
+  public BUILDER setExportedLinkerFlags(ImmutableList<StringWithMacros> exportedLinkerFlags) {
     arg.exportedLinkerFlags = exportedLinkerFlags;
     return getThis();
   }

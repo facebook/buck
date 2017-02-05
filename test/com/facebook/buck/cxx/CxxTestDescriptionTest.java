@@ -41,6 +41,9 @@ import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
@@ -291,18 +294,22 @@ public class CxxTestDescriptionTest {
             .build(resolver);
     CxxTestBuilder builder =
         createTestBuilder()
-            .setLinkerFlags(ImmutableList.of("--linker-script=$(location //:dep)"));
+            .setLinkerFlags(
+                ImmutableList.of(
+                    StringWithMacrosUtils.format(
+                        "--linker-script=%s",
+                        LocationMacro.of(dep.getBuildTarget()))));
     addFramework(resolver, filesystem);
     addSandbox(resolver, filesystem, builder.getTarget());
     assertThat(
-        builder.findImplicitDeps(),
+        builder.build().getExtraDeps(),
         Matchers.hasItem(dep.getBuildTarget()));
     CxxTest test = (CxxTest) builder.build(resolver);
     CxxLink binary =
         (CxxLink) resolver.getRule(
             CxxDescriptionEnhancer.createCxxLinkTarget(
                 test.getBuildTarget(),
-                Optional.<LinkerMapMode>empty()));
+                Optional.empty()));
     assertThat(
         Arg.stringify(binary.getArgs()),
         Matchers.hasItem(
@@ -337,9 +344,13 @@ public class CxxTestDescriptionTest {
             .build());
     CxxTestBuilder builder =
         new CxxTestBuilder(BuildTargetFactory.newInstance("//:rule"), config)
-            .setLinkerFlags(ImmutableList.of("--linker-script=$(location //:dep)"));
+            .setLinkerFlags(
+                ImmutableList.of(
+                    StringWithMacrosUtils.format(
+                        "--linker-script=%s",
+                        LocationMacro.of(dep.getBuildTarget()))));
     assertThat(
-        builder.findImplicitDeps(),
+        builder.build().getExtraDeps(),
         Matchers.hasItem(dep.getBuildTarget()));
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     addFramework(resolver, filesystem);
@@ -349,7 +360,7 @@ public class CxxTestDescriptionTest {
         (CxxLink) resolver.getRule(
             CxxDescriptionEnhancer.createCxxLinkTarget(
                 test.getBuildTarget(),
-                Optional.<LinkerMapMode>empty()));
+                Optional.empty()));
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
         Arg.stringify(binary.getArgs()),
@@ -362,17 +373,7 @@ public class CxxTestDescriptionTest {
 
   @Test
   public void platformLinkerFlagsLocationMacroWithMatch() throws Exception {
-    CxxTestBuilder builder =
-        createTestBuilder()
-            .setPlatformLinkerFlags(
-                new PatternMatchedCollection.Builder<ImmutableList<String>>()
-                    .add(
-                        Pattern.compile(
-                            Pattern.quote(
-                                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor().toString())),
-                        ImmutableList.of("--linker-script=$(location //:dep)"))
-                    .build());
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(
             TargetGraph.EMPTY,
@@ -382,17 +383,30 @@ public class CxxTestDescriptionTest {
         (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
             .build(resolver);
+    CxxTestBuilder builder =
+        createTestBuilder()
+            .setPlatformLinkerFlags(
+                new PatternMatchedCollection.Builder<ImmutableList<StringWithMacros>>()
+                    .add(
+                        Pattern.compile(
+                            Pattern.quote(
+                                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor().toString())),
+                        ImmutableList.of(
+                            StringWithMacrosUtils.format(
+                                "--linker-script=%s",
+                                LocationMacro.of(dep.getBuildTarget()))))
+                    .build());
     addFramework(resolver, filesystem);
     addSandbox(resolver, filesystem, builder.getTarget());
     assertThat(
-        builder.findImplicitDeps(),
+        builder.build().getExtraDeps(),
         Matchers.hasItem(dep.getBuildTarget()));
     CxxTest test = (CxxTest) builder.build(resolver);
     CxxLink binary =
         (CxxLink) resolver.getRule(
             CxxDescriptionEnhancer.createCxxLinkTarget(
                 test.getBuildTarget(),
-                Optional.<LinkerMapMode>empty()));
+                Optional.empty()));
     assertThat(
         Arg.stringify(binary.getArgs()),
         Matchers.hasItem(
@@ -416,13 +430,16 @@ public class CxxTestDescriptionTest {
     CxxTestBuilder builder =
         createTestBuilder()
             .setPlatformLinkerFlags(
-                new PatternMatchedCollection.Builder<ImmutableList<String>>()
+                new PatternMatchedCollection.Builder<ImmutableList<StringWithMacros>>()
                     .add(
                         Pattern.compile("nothing matches this string"),
-                        ImmutableList.of("--linker-script=$(location //:dep)"))
+                        ImmutableList.of(
+                            StringWithMacrosUtils.format(
+                                "--linker-script=%s",
+                                LocationMacro.of(dep.getBuildTarget()))))
                     .build());
     assertThat(
-        builder.findImplicitDeps(),
+        builder.build().getExtraDeps(),
         Matchers.hasItem(dep.getBuildTarget()));
     addSandbox(resolver, filesystem, builder.getTarget());
     CxxTest test = (CxxTest) builder.build(resolver);
@@ -430,7 +447,7 @@ public class CxxTestDescriptionTest {
         (CxxLink) resolver.getRule(
             CxxDescriptionEnhancer.createCxxLinkTarget(
                 test.getBuildTarget(),
-                Optional.<LinkerMapMode>empty()));
+                Optional.empty()));
     assertThat(
         Arg.stringify(binary.getArgs()),
         Matchers.not(

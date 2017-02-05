@@ -27,6 +27,7 @@ import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -55,8 +56,8 @@ public class CxxConstructorArg extends AbstractDescriptionArg
       PatternMatchedCollection.of();
   public ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags =
       ImmutableMap.of();
-  public ImmutableList<String> linkerFlags = ImmutableList.of();
-  public PatternMatchedCollection<ImmutableList<String>> platformLinkerFlags =
+  public ImmutableList<StringWithMacros> linkerFlags = ImmutableList.of();
+  public PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags =
       PatternMatchedCollection.of();
   public ImmutableSortedSet<FrameworkPath> frameworks = ImmutableSortedSet.of();
   public ImmutableSortedSet<FrameworkPath> libraries = ImmutableSortedSet.of();

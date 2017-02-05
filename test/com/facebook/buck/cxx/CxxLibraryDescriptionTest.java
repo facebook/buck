@@ -58,6 +58,9 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.shell.ExportFile;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.Genrule;
@@ -793,15 +796,16 @@ public class CxxLibraryDescriptionTest {
         (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
             .build(resolver);
-
     CxxLibraryBuilder builder =
         new CxxLibraryBuilder(target, cxxBuckConfig)
-            .setLinkerFlags(ImmutableList.of("--linker-script=$(location //:dep)"))
-            .setSrcs(
-                ImmutableSortedSet.of(
-                    SourceWithFlags.of(new FakeSourcePath("foo.c"))));
+            .setLinkerFlags(
+                ImmutableList.of(
+                    StringWithMacrosUtils.format(
+                        "--linker-script=%s",
+                        LocationMacro.of(dep.getBuildTarget()))))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.c"))));
     assertThat(
-        builder.findImplicitDeps(),
+        builder.build().getExtraDeps(),
         hasItem(dep.getBuildTarget()));
     BuildRule binary = builder.build(resolver);
     assertThat(binary, instanceOf(CxxLink.class));
@@ -832,7 +836,11 @@ public class CxxLibraryDescriptionTest {
     libBuilder.setSrcs(
         ImmutableSortedSet.of(
             SourceWithFlags.of(new PathSourcePath(filesystem, Paths.get("test.cpp")))));
-    libBuilder.setLinkerFlags(ImmutableList.of("-Wl,--version-script=$(location //:loc)"));
+    libBuilder.setLinkerFlags(
+        ImmutableList.of(
+            StringWithMacrosUtils.format(
+                "-Wl,--version-script=%s",
+                LocationMacro.of(location.getBuildTarget()))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(
         libBuilder.build(),
         locBuilder.build());
@@ -874,10 +882,13 @@ public class CxxLibraryDescriptionTest {
         ImmutableSortedSet.of(
             SourceWithFlags.of(new PathSourcePath(filesystem, Paths.get("test.cpp")))));
     libBuilder.setPlatformLinkerFlags(
-        PatternMatchedCollection.<ImmutableList<String>>builder()
+        PatternMatchedCollection.<ImmutableList<StringWithMacros>>builder()
             .add(
                 Pattern.compile(CxxLibraryBuilder.createDefaultPlatform().getFlavor().toString()),
-                ImmutableList.of("-Wl,--version-script=$(location //:loc)"))
+                ImmutableList.of(
+                    StringWithMacrosUtils.format(
+                        "-Wl,--version-script=%s",
+                        LocationMacro.of(location.getBuildTarget()))))
             .build());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(
         libBuilder.build(),
@@ -925,10 +936,13 @@ public class CxxLibraryDescriptionTest {
         ImmutableSortedSet.of(
             SourceWithFlags.of(new PathSourcePath(filesystem, Paths.get("test.cpp")))));
     libBuilder.setPlatformLinkerFlags(
-        PatternMatchedCollection.<ImmutableList<String>>builder()
+        PatternMatchedCollection.<ImmutableList<StringWithMacros>>builder()
             .add(
                 Pattern.compile("notarealplatform"),
-                ImmutableList.of("-Wl,--version-script=$(location //:loc)"))
+                ImmutableList.of(
+                    StringWithMacrosUtils.format(
+                        "-Wl,--version-script=%s",
+                        LocationMacro.of(location.getBuildTarget()))))
             .build());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(
         libBuilder.build(),
@@ -964,7 +978,11 @@ public class CxxLibraryDescriptionTest {
     libBuilder.setSrcs(
         ImmutableSortedSet.of(
             SourceWithFlags.of(new PathSourcePath(filesystem, Paths.get("test.cpp")))));
-    libBuilder.setExportedLinkerFlags(ImmutableList.of("-Wl,--version-script=$(location //:loc)"));
+    libBuilder.setExportedLinkerFlags(
+        ImmutableList.of(
+            StringWithMacrosUtils.format(
+                "-Wl,--version-script=%s",
+                LocationMacro.of(location.getBuildTarget()))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(
         libBuilder.build(),
         locBuilder.build());
@@ -1010,10 +1028,13 @@ public class CxxLibraryDescriptionTest {
         ImmutableSortedSet.of(
             SourceWithFlags.of(new PathSourcePath(filesystem, Paths.get("test.cpp")))));
     libBuilder.setExportedPlatformLinkerFlags(
-        PatternMatchedCollection.<ImmutableList<String>>builder()
+        PatternMatchedCollection.<ImmutableList<StringWithMacros>>builder()
             .add(
                 Pattern.compile(CxxLibraryBuilder.createDefaultPlatform().getFlavor().toString()),
-                ImmutableList.of("-Wl,--version-script=$(location //:loc)"))
+                ImmutableList.of(
+                    StringWithMacrosUtils.format(
+                        "-Wl,--version-script=%s",
+                        LocationMacro.of(location.getBuildTarget()))))
             .build());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(
         libBuilder.build(),
@@ -1063,10 +1084,13 @@ public class CxxLibraryDescriptionTest {
         ImmutableSortedSet.of(
             SourceWithFlags.of(new PathSourcePath(filesystem, Paths.get("test.cpp")))));
     libBuilder.setExportedPlatformLinkerFlags(
-        PatternMatchedCollection.<ImmutableList<String>>builder()
+        PatternMatchedCollection.<ImmutableList<StringWithMacros>>builder()
             .add(
                 Pattern.compile("notarealplatform"),
-                ImmutableList.of("-Wl,--version-script=$(location //:loc)"))
+                ImmutableList.of(
+                    StringWithMacrosUtils.format(
+                        "-Wl,--version-script=%s",
+                        LocationMacro.of(location.getBuildTarget()))))
             .build());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(
         libBuilder.build(),
@@ -1227,8 +1251,9 @@ public class CxxLibraryDescriptionTest {
   public void nativeLinkTargetInput() throws Exception {
     CxxLibraryBuilder ruleBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"), cxxBuckConfig)
-            .setLinkerFlags(ImmutableList.of("--flag"))
-            .setExportedLinkerFlags(ImmutableList.of("--exported-flag"));
+            .setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("--flag")))
+            .setExportedLinkerFlags(
+                ImmutableList.of(StringWithMacrosUtils.format("--exported-flag")));
     BuildRuleResolver resolver =
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(ruleBuilder.build()),

@@ -23,8 +23,6 @@ import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.model.MacroException;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -41,13 +39,11 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -81,11 +77,6 @@ public class CxxLibraryDescription implements
     VersionPropagator<CxxLibraryDescription.Arg> {
 
   private static final Logger LOG = Logger.get(CxxLibraryDescription.class);
-
-  private static final MacroHandler MACRO_HANDLER =
-      new MacroHandler(
-          ImmutableMap.of(
-              "location", new LocationMacroExpander()));
 
   public enum Type implements FlavorConvertible {
     HEADERS(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
@@ -222,8 +213,8 @@ public class CxxLibraryDescription implements
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       Arg arg,
-      ImmutableList<String> linkerFlags,
-      ImmutableList<String> exportedLinkerFlags,
+      ImmutableList<StringWithMacros> linkerFlags,
+      ImmutableList<StringWithMacros> exportedLinkerFlags,
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries)
       throws NoSuchBuildTargetException {
@@ -242,15 +233,11 @@ public class CxxLibraryDescription implements
 
     return NativeLinkableInput.builder()
         .addAllArgs(
-            FluentIterable
-                .from(linkerFlags)
-                .append(exportedLinkerFlags)
-                .transform(
-                    MacroArg.toMacroArgFunction(
-                        MACRO_HANDLER,
-                        params.getBuildTarget(),
-                        params.getCellRoots(),
-                        ruleResolver)))
+            CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                params.getBuildTarget(),
+                params.getCellRoots(),
+                ruleResolver,
+                Iterables.concat(linkerFlags, exportedLinkerFlags)))
         .addAllArgs(SourcePathArg.from(pathResolver, objects.values()))
         .setFrameworks(frameworks)
         .setLibraries(libraries)
@@ -270,7 +257,7 @@ public class CxxLibraryDescription implements
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       CxxLibraryDescription.Arg args,
-      ImmutableList<String> linkerFlags,
+      ImmutableList<StringWithMacros> linkerFlags,
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
       Optional<String> soname,
@@ -312,9 +299,9 @@ public class CxxLibraryDescription implements
         params.getProjectFilesystem(),
         sharedTarget,
         sharedLibrarySoname);
-    ImmutableList.Builder<String> extraLdFlagsBuilder = ImmutableList.builder();
+    ImmutableList.Builder<StringWithMacros> extraLdFlagsBuilder = ImmutableList.builder();
     extraLdFlagsBuilder.addAll(linkerFlags);
-    ImmutableList<String> extraLdFlags = extraLdFlagsBuilder.build();
+    ImmutableList<StringWithMacros> extraLdFlags = extraLdFlagsBuilder.build();
 
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
@@ -334,13 +321,11 @@ public class CxxLibraryDescription implements
         blacklist,
         NativeLinkableInput.builder()
             .addAllArgs(
-                FluentIterable.from(extraLdFlags)
-                    .transform(
-                        MacroArg.toMacroArgFunction(
-                            MACRO_HANDLER,
-                            params.getBuildTarget(),
-                            params.getCellRoots(),
-                            ruleResolver)))
+                CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                    params.getBuildTarget(),
+                    params.getCellRoots(),
+                    ruleResolver,
+                    extraLdFlags))
             .addAllArgs(SourcePathArg.from(pathResolver, objects.values()))
             .setFrameworks(frameworks)
             .setLibraries(libraries)
@@ -516,16 +501,16 @@ public class CxxLibraryDescription implements
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist)
       throws NoSuchBuildTargetException {
-    ImmutableList.Builder<String> linkerFlags = ImmutableList.builder();
+    ImmutableList.Builder<StringWithMacros> linkerFlags = ImmutableList.builder();
 
     linkerFlags.addAll(
-        CxxFlags.getFlagsWithPlatformMacroExpansion(
+        CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
             args.linkerFlags,
             args.platformLinkerFlags,
             cxxPlatform));
 
     linkerFlags.addAll(
-        CxxFlags.getFlagsWithPlatformMacroExpansion(
+        CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
             args.exportedLinkerFlags,
             args.exportedPlatformLinkerFlags,
             cxxPlatform));
@@ -784,17 +769,16 @@ public class CxxLibraryDescription implements
             args.exportedLangPreprocessorFlags,
             input),
         input -> {
-          ImmutableList<String> flags = CxxFlags.getFlagsWithPlatformMacroExpansion(
-              args.exportedLinkerFlags,
-              args.exportedPlatformLinkerFlags,
-              input);
-          return Iterables.transform(
-              flags,
-              MacroArg.toMacroArgFunction(
-                  MACRO_HANDLER,
-                  params.getBuildTarget(),
-                  params.getCellRoots(),
-                  resolver));
+          ImmutableList<StringWithMacros> flags =
+              CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+                  args.exportedLinkerFlags,
+                  args.exportedPlatformLinkerFlags,
+                  input);
+          return CxxDescriptionEnhancer.toStringWithMacrosArgs(
+              params.getBuildTarget(),
+              params.getCellRoots(),
+              resolver,
+              flags);
         },
         cxxPlatform -> {
           try {
@@ -806,11 +790,11 @@ public class CxxLibraryDescription implements
                 cxxBuckConfig,
                 cxxPlatform,
                 args,
-                CxxFlags.getFlagsWithPlatformMacroExpansion(
+                CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
                     args.linkerFlags,
                     args.platformLinkerFlags,
                     cxxPlatform),
-                CxxFlags.getFlagsWithPlatformMacroExpansion(
+                CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
                     args.exportedLinkerFlags,
                     args.exportedPlatformLinkerFlags,
                     cxxPlatform),
@@ -862,27 +846,6 @@ public class CxxLibraryDescription implements
 
     // Get any parse time deps from the C/C++ platforms.
     deps.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms.getValues()));
-
-    try {
-      for (String val : Iterables.concat(
-          constructorArg.linkerFlags,
-          constructorArg.exportedLinkerFlags)) {
-        deps.addAll(MACRO_HANDLER.extractParseTimeDeps(buildTarget, cellRoots, val));
-      }
-      for (PatternMatchedCollection<ImmutableList<String>> values :
-          ImmutableList.of(
-                  constructorArg.platformLinkerFlags,
-                  constructorArg.exportedPlatformLinkerFlags)) {
-        for (Pair<Pattern, ImmutableList<String>> pav : values.getPatternsAndValues()) {
-          for (String val : pav.getSecond()) {
-            deps.addAll(
-                MACRO_HANDLER.extractParseTimeDeps(buildTarget, cellRoots, val));
-          }
-        }
-      }
-    } catch (MacroException e) {
-      throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
-    }
 
     return deps.build();
   }
@@ -961,8 +924,8 @@ public class CxxLibraryDescription implements
         exportedPlatformPreprocessorFlags = PatternMatchedCollection.of();
     public ImmutableMap<CxxSource.Type, ImmutableList<String>>
         exportedLangPreprocessorFlags = ImmutableMap.of();
-    public ImmutableList<String> exportedLinkerFlags = ImmutableList.of();
-    public PatternMatchedCollection<ImmutableList<String>> exportedPlatformLinkerFlags =
+    public ImmutableList<StringWithMacros> exportedLinkerFlags = ImmutableList.of();
+    public PatternMatchedCollection<ImmutableList<StringWithMacros>> exportedPlatformLinkerFlags =
         PatternMatchedCollection.of();
     public ImmutableSortedSet<BuildTarget> exportedDeps = ImmutableSortedSet.of();
     public Optional<Pattern> supportedPlatformsRegex;

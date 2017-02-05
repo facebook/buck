@@ -23,6 +23,7 @@ import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -66,7 +67,7 @@ public abstract class AbstractCxxSourceBuilder<
     return getThis();
   }
 
-  public V setLinkerFlags(ImmutableList<String> linkerFlags) {
+  public V setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
     arg.linkerFlags = linkerFlags;
     return getThis();
   }
@@ -84,7 +85,7 @@ public abstract class AbstractCxxSourceBuilder<
   }
 
   public V setPlatformLinkerFlags(
-      PatternMatchedCollection<ImmutableList<String>> platformLinkerFlags) {
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags) {
     arg.platformLinkerFlags = platformLinkerFlags;
     return getThis();
   }

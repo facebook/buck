@@ -484,18 +484,10 @@ public class AppleBinaryDescription
       return Iterables.concat(
           Iterables.transform(
               thinFlavorSets,
-              input -> delegate.findDepsForTargetFromConstructorArgs(
-                  buildTarget.withFlavors(input),
-                  cellRoots,
-                  constructorArg.linkerFlags,
-                  constructorArg.platformLinkerFlags.getValues()))
-      );
+              input ->
+                  delegate.findDepsForTargetFromConstructorArgs(buildTarget.withFlavors(input))));
     } else {
-      return delegate.findDepsForTargetFromConstructorArgs(
-          buildTarget,
-          cellRoots,
-          constructorArg.linkerFlags,
-          constructorArg.platformLinkerFlags.getValues());
+      return delegate.findDepsForTargetFromConstructorArgs(buildTarget);
     }
   }
 

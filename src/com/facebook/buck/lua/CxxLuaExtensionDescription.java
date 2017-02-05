@@ -54,7 +54,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -191,8 +190,11 @@ public class CxxLuaExtensionDescription implements
 
     ImmutableList.Builder<com.facebook.buck.rules.args.Arg> argsBuilder = ImmutableList.builder();
     argsBuilder.addAll(
-        StringArg.from(
-            CxxFlags.getFlagsWithPlatformMacroExpansion(
+        CxxDescriptionEnhancer.toStringWithMacrosArgs(
+            params.getBuildTarget(),
+            params.getCellRoots(),
+            ruleResolver,
+            CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
                 args.linkerFlags,
                 args.platformLinkerFlags,
                 cxxPlatform)));

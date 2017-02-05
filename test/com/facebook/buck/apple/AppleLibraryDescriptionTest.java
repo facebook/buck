@@ -33,6 +33,8 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -67,12 +69,14 @@ public class AppleLibraryDescriptionTest {
             .build(resolver);
     AppleLibraryBuilder builder =
         new AppleLibraryBuilder(target)
-            .setLinkerFlags(ImmutableList.of("--linker-script=$(location //:dep)"))
-            .setSrcs(
-                ImmutableSortedSet.of(
-                    SourceWithFlags.of(new FakeSourcePath("foo.c"))));
+            .setLinkerFlags(
+                ImmutableList.of(
+                    StringWithMacrosUtils.format(
+                        "--linker-script=%s",
+                        LocationMacro.of(dep.getBuildTarget()))))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.c"))));
     assertThat(
-        builder.findImplicitDeps(),
+        builder.build().getExtraDeps(),
         Matchers.hasItem(dep.getBuildTarget()));
     BuildRule binary = builder.build(resolver);
     assertThat(binary, Matchers.instanceOf(CxxLink.class));

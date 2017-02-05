@@ -102,6 +102,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.Escaper;
@@ -109,6 +110,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.PackagedResource;
+import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -161,6 +163,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
@@ -234,7 +237,7 @@ public class ProjectGenerator {
 
   public static final Function<
       TargetNode<CxxLibraryDescription.Arg, ?>,
-      Iterable<String>> GET_EXPORTED_LINKER_FLAGS =
+      ImmutableList<StringWithMacros>> GET_EXPORTED_LINKER_FLAGS =
       input -> input.getConstructorArg().exportedLinkerFlags;
 
   public static final Function<
@@ -244,7 +247,7 @@ public class ProjectGenerator {
 
   public static final Function<
       TargetNode<CxxLibraryDescription.Arg, ?>,
-      Iterable<Pair<Pattern, ImmutableList<String>>>> GET_EXPORTED_PLATFORM_LINKER_FLAGS =
+      Iterable<Pair<Pattern, ImmutableList<StringWithMacros>>>> GET_EXPORTED_PLATFORM_LINKER_FLAGS =
       input -> input.getConstructorArg().exportedPlatformLinkerFlags.getPatternsAndValues();
 
   public static final Function<
@@ -1070,6 +1073,23 @@ public class ProjectGenerator {
     return target;
   }
 
+  /**
+   * @return a function to convert {@link StringWithMacros}s into {@link String}s, throwing an error
+   *         if we see an macros, which aren't supported in project generation.
+   */
+  private java.util.function.Function<StringWithMacros, String> convertFlagWithoutMacrosFn(
+      String source) {
+    return flag ->
+      flag.format(
+          macro -> {
+            throw new IllegalArgumentException(
+                String.format(
+                    "%s: unsupported macro \"%s\"",
+                    source,
+                    macro.getClass()));
+          });
+  }
+
   private PBXNativeTarget generateBinaryTarget(
       PBXProject project,
       Optional<? extends TargetNode<? extends HasAppleBundleFields, ?>> bundle,
@@ -1356,10 +1376,17 @@ public class ProjectGenerator {
               ImmutableList.of(targetNode)),
           targetNode.getConstructorArg().compilerFlags,
           targetNode.getConstructorArg().preprocessorFlags);
-      Iterable<String> otherLdFlags = Iterables.concat(
-          targetNode.getConstructorArg().linkerFlags,
-          collectRecursiveExportedLinkerFlags(
-               ImmutableList.of(targetNode)));
+      ImmutableList<String> otherLdFlags =
+          ImmutableList.<String>builder()
+              .addAll(
+                  Stream.concat(
+                      targetNode.getConstructorArg().linkerFlags.stream(),
+                      collectRecursiveExportedLinkerFlags(ImmutableList.of(targetNode)).stream())
+                      .map(
+                          convertFlagWithoutMacrosFn(
+                              String.format("%s: `linker_flags`", targetNode.getBuildTarget())))
+                      .collect(Collectors.toList()))
+              .build();
 
       appendConfigsBuilder
           .put(
@@ -1405,14 +1432,18 @@ public class ProjectGenerator {
 
       ImmutableMultimap.Builder<String, ImmutableList<String>> platformLinkerFlagsBuilder =
           ImmutableMultimap.builder();
-      for (Pair<Pattern, ImmutableList<String>> flags :
-             Iterables.concat(
-                 targetNode.getConstructorArg().platformLinkerFlags
-                     .getPatternsAndValues(),
-                 collectRecursiveExportedPlatformLinkerFlags(
-                     ImmutableList.of(targetNode)))) {
+      for (Pair<Pattern, ImmutableList<StringWithMacros>> flags :
+          Iterables.concat(
+              targetNode.getConstructorArg().platformLinkerFlags.getPatternsAndValues(),
+              collectRecursiveExportedPlatformLinkerFlags(ImmutableList.of(targetNode)))) {
         String sdk = flags.getFirst().pattern().replaceAll("[*.]", "");
-        platformLinkerFlagsBuilder.put(sdk, flags.getSecond());
+        platformLinkerFlagsBuilder.put(
+            sdk,
+            RichStream.from(flags.getSecond())
+                .map(
+                    convertFlagWithoutMacrosFn(
+                        String.format("%s: `platform_linker_flags`", targetNode.getBuildTarget())))
+                .toImmutableList());
       }
       ImmutableMultimap<String, ImmutableList<String>> platformLinkerFlags =
           platformLinkerFlagsBuilder.build();
@@ -2392,7 +2423,7 @@ public class ProjectGenerator {
             });
   }
 
-  private <T> Iterable<String> collectRecursiveExportedLinkerFlags(
+  private <T> ImmutableList<StringWithMacros> collectRecursiveExportedLinkerFlags(
       Iterable<TargetNode<T, ?>> targetNodes) {
     return FluentIterable
         .from(targetNodes)
@@ -2407,17 +2438,14 @@ public class ProjectGenerator {
                     HalideLibraryDescription.class)))
         .append(targetNodes)
         .transformAndConcat(
-            new Function<TargetNode<?, ?>, Iterable<? extends String>>() {
-              @Override
-              public Iterable<String> apply(TargetNode<?, ?> input) {
-                return input.castArg(CxxLibraryDescription.Arg.class)
+            input ->
+                input.castArg(CxxLibraryDescription.Arg.class)
                     .map(GET_EXPORTED_LINKER_FLAGS::apply)
-                    .orElse(ImmutableSet.of());
-              }
-            });
+                    .orElse(ImmutableList.of()))
+        .toList();
   }
 
-  private <T> Iterable<Pair<Pattern, ImmutableList<String>>>
+  private <T> Iterable<Pair<Pattern, ImmutableList<StringWithMacros>>>
       collectRecursiveExportedPlatformLinkerFlags(Iterable<TargetNode<T, ?>> targetNodes) {
     return FluentIterable
         .from(targetNodes)
@@ -2432,13 +2460,10 @@ public class ProjectGenerator {
                     HalideLibraryDescription.class)))
         .append(targetNodes)
         .transformAndConcat(
-            new Function<TargetNode<?, ?>, Iterable<Pair<Pattern, ImmutableList<String>>>>() {
-              @Override
-              public Iterable<Pair<Pattern, ImmutableList<String>>> apply(TargetNode<?, ?> input) {
-                return input.castArg(CxxLibraryDescription.Arg.class)
-                    .map(GET_EXPORTED_PLATFORM_LINKER_FLAGS::apply).orElse(ImmutableSet.of());
-              }
-            });
+            input ->
+                input.castArg(CxxLibraryDescription.Arg.class)
+                    .map(GET_EXPORTED_PLATFORM_LINKER_FLAGS::apply)
+                    .orElse(ImmutableSet.of()));
   }
 
   private <T> ImmutableSet<PBXFileReference>

@@ -109,6 +109,8 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.swift.SwiftBuckConfig;
@@ -1441,7 +1443,10 @@ public class ProjectGeneratorTest {
             ImmutableSortedMap.of(
                 "Debug",
                 ImmutableMap.of()))
-        .setLinkerFlags(ImmutableList.of("-Xlinker", "-lhello"))
+        .setLinkerFlags(
+            ImmutableList.of(
+                StringWithMacrosUtils.format("-Xlinker"),
+                StringWithMacrosUtils.format("-lhello")))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1467,7 +1472,7 @@ public class ProjectGeneratorTest {
             ImmutableSortedMap.of(
                 "Debug",
                 ImmutableMap.of()))
-        .setLinkerFlags(ImmutableList.of("-lhello"))
+        .setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-lhello")))
         .build();
 
     BuildTarget dependentBuildTarget = BuildTarget.builder(rootPath, "//foo", "bin").build();
@@ -1503,7 +1508,10 @@ public class ProjectGeneratorTest {
             ImmutableSortedMap.of(
                 "Debug",
                 ImmutableMap.of()))
-        .setExportedLinkerFlags(ImmutableList.of("-Xlinker", "-lhello"))
+        .setExportedLinkerFlags(
+            ImmutableList.of(
+                StringWithMacrosUtils.format("-Xlinker"),
+                StringWithMacrosUtils.format("-lhello")))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1529,7 +1537,10 @@ public class ProjectGeneratorTest {
             ImmutableSortedMap.of(
                 "Debug",
                 ImmutableMap.of()))
-        .setExportedLinkerFlags(ImmutableList.of("-Xlinker", "-lhello"))
+        .setExportedLinkerFlags(
+            ImmutableList.of(
+                StringWithMacrosUtils.format("-Xlinker"),
+                StringWithMacrosUtils.format("-lhello")))
         .build();
 
     BuildTarget dependentBuildTarget = BuildTarget.builder(rootPath, "//foo", "bin").build();
@@ -1562,7 +1573,7 @@ public class ProjectGeneratorTest {
     TargetNode<?, ?> node = new CxxLibraryBuilder(buildTarget)
         .setCompilerFlags(ImmutableList.of("-ffoo"))
         .setPreprocessorFlags(ImmutableList.of("-fbar"))
-        .setLinkerFlags(ImmutableList.of("-lbaz"))
+        .setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-lbaz")))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1611,10 +1622,16 @@ public class ProjectGeneratorTest {
                 .build())
         .setPlatformLinkerFlags(
             PatternMatchedCollection
-                .<ImmutableList<String>>builder()
-                .add(Pattern.compile("android.*"), ImmutableList.of("-lbaz-android"))
-                .add(Pattern.compile("iphone.*"), ImmutableList.of("-lbaz-iphone"))
-                .add(Pattern.compile("macosx.*"), ImmutableList.of("-lbaz-macosx"))
+                .<ImmutableList<StringWithMacros>>builder()
+                .add(
+                    Pattern.compile("android.*"),
+                    ImmutableList.of(StringWithMacrosUtils.format("-lbaz-android")))
+                .add(
+                    Pattern.compile("iphone.*"),
+                    ImmutableList.of(StringWithMacrosUtils.format("-lbaz-iphone")))
+                .add(
+                    Pattern.compile("macosx.*"),
+                    ImmutableList.of(StringWithMacrosUtils.format("-lbaz-macosx")))
                 .build())
         .build();
 
@@ -1723,9 +1740,10 @@ public class ProjectGeneratorTest {
                 .add(Pattern.compile("iphone.*"), ImmutableList.of("-fbar-iphone"))
                 .build())
         .setExportedPlatformLinkerFlags(
-            PatternMatchedCollection
-                .<ImmutableList<String>>builder()
-                .add(Pattern.compile("macosx.*"), ImmutableList.of("-lbaz-macosx"))
+            PatternMatchedCollection.<ImmutableList<StringWithMacros>>builder()
+                .add(
+                    Pattern.compile("macosx.*"),
+                    ImmutableList.of(StringWithMacrosUtils.format("-lbaz-macosx")))
                 .build())
         .build();
 

@@ -52,6 +52,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Suppliers;
@@ -121,8 +122,8 @@ public class HalideLibraryDescription
       ImmutableList<String> compilerFlags,
       PatternMatchedCollection<ImmutableList<String>> platformCompilerFlags,
       ImmutableMap<CxxSource.Type, ImmutableList<String>> langCompilerFlags,
-      ImmutableList<String> linkerFlags,
-      PatternMatchedCollection<ImmutableList<String>> platformLinkerFlags,
+      ImmutableList<StringWithMacros> linkerFlags,
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags,
       ImmutableList<String> includeDirs)
       throws NoSuchBuildTargetException {
 

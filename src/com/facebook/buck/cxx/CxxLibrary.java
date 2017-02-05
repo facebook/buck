@@ -71,7 +71,7 @@ public class CxxLibrary
   private final Predicate<CxxPlatform> headerOnly;
   private final Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
       exportedPreprocessorFlags;
-  private final Function<? super CxxPlatform, Iterable<Arg>> exportedLinkerFlags;
+  private final Function<? super CxxPlatform, Iterable<? extends Arg>> exportedLinkerFlags;
   private final Function<? super CxxPlatform, NativeLinkableInput> linkTargetInput;
   private final Optional<Pattern> supportedPlatformsRegex;
   private final ImmutableSet<FrameworkPath> frameworks;
@@ -100,7 +100,7 @@ public class CxxLibrary
       Predicate<CxxPlatform> headerOnly,
       Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
           exportedPreprocessorFlags,
-      Function<? super CxxPlatform, Iterable<Arg>> exportedLinkerFlags,
+      Function<? super CxxPlatform, Iterable<? extends Arg>> exportedLinkerFlags,
       Function<? super CxxPlatform, NativeLinkableInput> linkTargetInput,
       Optional<Pattern> supportedPlatformsRegex,
       ImmutableSet<FrameworkPath> frameworks,
@@ -388,7 +388,7 @@ public class CxxLibrary
         .map(BuildTargetSourcePath::new);
   }
 
-  public Iterable<Arg> getExportedLinkerFlags(CxxPlatform cxxPlatform) {
+  public Iterable<? extends Arg> getExportedLinkerFlags(CxxPlatform cxxPlatform) {
     return exportedLinkerFlags.apply(cxxPlatform);
   }
 }

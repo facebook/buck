@@ -222,8 +222,11 @@ public class CxxPythonExtensionDescription implements
 
     ImmutableList.Builder<com.facebook.buck.rules.args.Arg> argsBuilder = ImmutableList.builder();
     argsBuilder.addAll(
-        StringArg.from(
-            CxxFlags.getFlagsWithPlatformMacroExpansion(
+        CxxDescriptionEnhancer.toStringWithMacrosArgs(
+            params.getBuildTarget(),
+            params.getCellRoots(),
+            ruleResolver,
+            CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
                 args.linkerFlags,
                 args.platformLinkerFlags,
                 cxxPlatform)));

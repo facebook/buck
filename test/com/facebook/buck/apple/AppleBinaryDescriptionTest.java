@@ -30,6 +30,8 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -44,7 +46,6 @@ public class AppleBinaryDescriptionTest {
   @Test
   public void linkerFlagsLocationMacro() throws Exception {
     assumeThat(Platform.detect(), is(Platform.MACOS));
-
     BuildTarget sandboxTarget = BuildTargetFactory.newInstance(
         "//:rule#sandbox," + FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_I386_PLATFORM.getFlavor());
     BuildRuleResolver resolver =
@@ -58,9 +59,13 @@ public class AppleBinaryDescriptionTest {
             .build(resolver);
     AppleBinaryBuilder builder =
         new AppleBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
-            .setLinkerFlags(ImmutableList.of("--linker-script=$(location //:dep)"));
+            .setLinkerFlags(
+                ImmutableList.of(
+                    StringWithMacrosUtils.format(
+                        "--linker-script=%s",
+                        LocationMacro.of(dep.getBuildTarget()))));
     assertThat(
-        builder.findImplicitDeps(),
+        builder.build().getExtraDeps(),
         Matchers.hasItem(dep.getBuildTarget()));
     BuildRule binary = ((CxxBinary) builder.build(resolver)).getLinkRule();
     assertThat(binary, Matchers.instanceOf(CxxLink.class));

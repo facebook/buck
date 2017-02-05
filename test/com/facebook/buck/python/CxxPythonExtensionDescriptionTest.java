@@ -50,6 +50,7 @@ import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.MoreCollectors;
@@ -391,7 +392,7 @@ public class CxxPythonExtensionDescriptionTest {
             FlavorDomain.of("Python Platform", PY2, PY3),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
             CxxTestBuilder.createDefaultPlatforms());
-    builder.setLinkerFlags(ImmutableList.of("--flag"));
+    builder.setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("--flag")));
     BuildRuleResolver resolver =
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(builder.build()),

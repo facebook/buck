@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
@@ -39,15 +40,16 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
-import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.args.StringWithMacrosArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.query.DepQueryUtils;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -705,8 +707,8 @@ public class CxxDescriptionEnhancer {
       PatternMatchedCollection<ImmutableList<String>> platformCompilerFlags,
       Optional<SourcePath> prefixHeader,
       Optional<SourcePath> precompiledHeader,
-      ImmutableList<String> linkerFlags,
-      PatternMatchedCollection<ImmutableList<String>> platformLinkerFlags,
+      ImmutableList<StringWithMacros> linkerFlags,
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       ImmutableList<String> includeDirs,
       Optional<Boolean> xcodePrivateHeadersSymlinks)
@@ -791,19 +793,15 @@ public class CxxDescriptionEnhancer {
             sandboxTree);
 
     // Build up the linker flags, which support macro expansion.
-    ImmutableList<String> resolvedLinkerFlags =
-        CxxFlags.getFlagsWithPlatformMacroExpansion(
-            linkerFlags,
-            platformLinkerFlags,
-            cxxPlatform);
     argsBuilder.addAll(
-        resolvedLinkerFlags.stream()
-            .map(MacroArg.toMacroArgFunction(
-                MACRO_HANDLER,
-                params.getBuildTarget(),
-                params.getCellRoots(),
-                resolver)::apply)
-            .iterator());
+        toStringWithMacrosArgs(
+            target,
+            params.getCellRoots(),
+            resolver,
+            CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+                linkerFlags,
+                platformLinkerFlags,
+                cxxPlatform)));
 
     // Special handling for dynamically linked binaries.
     if (linkStyle == Linker.LinkableDepType.SHARED) {
@@ -1374,4 +1372,23 @@ public class CxxDescriptionEnhancer {
 
     return cxxSources.build();
   }
+
+  public static ImmutableList<StringWithMacrosArg> toStringWithMacrosArgs(
+      BuildTarget target,
+      CellPathResolver cellPathResolver,
+      BuildRuleResolver resolver,
+      Iterable<StringWithMacros> flags) {
+    ImmutableList.Builder<StringWithMacrosArg> args = ImmutableList.builder();
+    for (StringWithMacros flag : flags) {
+      args.add(
+          StringWithMacrosArg.of(
+              flag,
+              ImmutableList.of(new LocationMacroExpander()),
+              target,
+              cellPathResolver,
+              resolver));
+    }
+    return args.build();
+  }
+
 }

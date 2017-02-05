@@ -45,6 +45,9 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.rules.query.DepQuery;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -303,9 +306,13 @@ public class CxxBinaryDescriptionTest {
             .build(resolver);
     CxxBinaryBuilder builder =
         new CxxBinaryBuilder(target, cxxBuckConfig)
-            .setLinkerFlags(ImmutableList.of("--linker-script=$(location //:dep)"));
+            .setLinkerFlags(
+                ImmutableList.of(
+                    StringWithMacrosUtils.format(
+                        "--linker-script=%s",
+                        LocationMacro.of(dep.getBuildTarget()))));
     assertThat(
-        builder.findImplicitDeps(),
+        builder.build().getExtraDeps(),
         Matchers.hasItem(dep.getBuildTarget()));
     BuildRule binary = ((CxxBinary) builder.build(resolver)).getLinkRule();
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
@@ -320,7 +327,6 @@ public class CxxBinaryDescriptionTest {
 
   @Test
   public void platformLinkerFlagsLocationMacroWithMatch() throws Exception {
-
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildRuleResolver resolver =
         new BuildRuleResolver(
@@ -334,15 +340,18 @@ public class CxxBinaryDescriptionTest {
     CxxBinaryBuilder builder =
         new CxxBinaryBuilder(target, cxxBuckConfig)
             .setPlatformLinkerFlags(
-                new PatternMatchedCollection.Builder<ImmutableList<String>>()
+                new PatternMatchedCollection.Builder<ImmutableList<StringWithMacros>>()
                     .add(
                         Pattern.compile(
                             Pattern.quote(
                                 CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor().toString())),
-                        ImmutableList.of("--linker-script=$(location //:dep)"))
+                        ImmutableList.of(
+                            StringWithMacrosUtils.format(
+                                "--linker-script=%s",
+                                LocationMacro.of(dep.getBuildTarget()))))
                     .build());
     assertThat(
-        builder.findImplicitDeps(),
+        builder.build().getExtraDeps(),
         Matchers.hasItem(dep.getBuildTarget()));
     BuildRule binary = ((CxxBinary) builder.build(resolver)).getLinkRule();
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
@@ -370,13 +379,16 @@ public class CxxBinaryDescriptionTest {
     CxxBinaryBuilder builder =
         new CxxBinaryBuilder(target, cxxBuckConfig)
             .setPlatformLinkerFlags(
-                new PatternMatchedCollection.Builder<ImmutableList<String>>()
+                new PatternMatchedCollection.Builder<ImmutableList<StringWithMacros>>()
                     .add(
                         Pattern.compile("nothing matches this string"),
-                        ImmutableList.of("--linker-script=$(location //:dep)"))
+                        ImmutableList.of(
+                            StringWithMacrosUtils.format(
+                                "--linker-script=%s",
+                                LocationMacro.of(dep.getBuildTarget()))))
                     .build());
     assertThat(
-        builder.findImplicitDeps(),
+        builder.build().getExtraDeps(),
         Matchers.hasItem(dep.getBuildTarget()));
     BuildRule binary = ((CxxBinary) builder.build(resolver)).getLinkRule();
     assertThat(binary, Matchers.instanceOf(CxxLink.class));

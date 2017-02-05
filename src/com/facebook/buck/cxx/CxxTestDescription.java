@@ -284,8 +284,6 @@ public class CxxTestDescription implements
     // Extract parse time deps from flags, args, and environment parameters.
     Iterable<Iterable<String>> macroStrings =
         ImmutableList.<Iterable<String>>builder()
-            .add(constructorArg.linkerFlags)
-            .addAll(constructorArg.platformLinkerFlags.getValues())
             .add(constructorArg.args)
             .add(constructorArg.env.values())
             .build();

@@ -32,6 +32,8 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -48,21 +50,24 @@ public class AppleTestDescriptionTest {
   @Test
   public void linkerFlagsLocationMacro() throws Exception {
     assumeThat(Platform.detect(), is(Platform.MACOS));
-    AppleTestBuilder builder =
-        new AppleTestBuilder(BuildTargetFactory.newInstance("//:rule#macosx-x86_64"))
-            .setLinkerFlags(ImmutableList.of("--linker-script=$(location //:dep)"))
-            .setSrcs(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.c"))));
     GenruleBuilder depBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out");
+    AppleTestBuilder builder =
+        new AppleTestBuilder(BuildTargetFactory.newInstance("//:rule#macosx-x86_64"))
+            .setLinkerFlags(
+                ImmutableList.of(
+                    StringWithMacrosUtils.format(
+                        "--linker-script=%s",
+                        LocationMacro.of(depBuilder.getTarget()))))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.c"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build(), depBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     Genrule dep = (Genrule) depBuilder.build(resolver, targetGraph);
     assertThat(
-        builder.findImplicitDeps(),
+        builder.build().getExtraDeps(),
         Matchers.hasItem(dep.getBuildTarget()));
     AppleTest test = (AppleTest) builder.build(resolver, targetGraph);
     CxxStrip strip = (CxxStrip) RichStream.from(test.getDeps())
