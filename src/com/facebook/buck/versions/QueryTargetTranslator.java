@@ -22,8 +22,8 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.query.DepQuery;
-import com.facebook.buck.rules.query.DepQueryUtils;
+import com.facebook.buck.rules.query.Query;
+import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 
@@ -32,25 +32,25 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class DepQueryTargetTranslator implements TargetTranslator<DepQuery> {
+public class QueryTargetTranslator implements TargetTranslator<Query> {
 
   @Override
-  public Class<DepQuery> getTranslatableClass() {
-    return DepQuery.class;
+  public Class<Query> getTranslatableClass() {
+    return Query.class;
   }
 
   @Override
-  public Optional<DepQuery> translateTargets(
+  public Optional<Query> translateTargets(
       CellPathResolver cellPathResolver,
       BuildTargetPatternParser<BuildTargetPattern> pattern,
       TargetNodeTranslator translator,
-      DepQuery query) {
+      Query query) {
 
     // Extract all build targets from the original query string.
     ImmutableList<BuildTarget> targets;
     try {
       targets =
-          DepQueryUtils.extractBuildTargets(cellPathResolver, pattern, query)
+          QueryUtils.extractBuildTargets(cellPathResolver, pattern, query)
               .collect(MoreCollectors.toImmutableList());
     } catch (QueryException e) {
       throw new RuntimeException("Error parsing/executing query from deps", e);
@@ -80,7 +80,7 @@ public class DepQueryTargetTranslator implements TargetTranslator<DepQuery> {
     builder.append(queryString.substring(lastEnd, queryString.length()));
     String newQuery = builder.toString();
 
-    return queryString.equals(newQuery) ? Optional.empty() : Optional.of(DepQuery.of(newQuery));
+    return queryString.equals(newQuery) ? Optional.empty() : Optional.of(Query.of(newQuery));
   }
 
 }

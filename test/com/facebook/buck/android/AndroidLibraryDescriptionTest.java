@@ -41,7 +41,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.query.DepQuery;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -130,7 +130,7 @@ public class AndroidLibraryDescriptionTest {
 
     BuildRule javaLibrary = AndroidLibraryBuilder.createBuilder(target)
         .addDep(libNode.getBuildTarget())
-        .setDepsQuery(DepQuery.of("filter('.*lib', deps($declared_deps))"))
+        .setDepsQuery(Query.of("filter('.*lib', deps($declared_deps))"))
         .build(resolver, targetGraph);
 
     assertThat(

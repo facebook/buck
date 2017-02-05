@@ -24,7 +24,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.FakeCellPathResolver;
-import com.facebook.buck.rules.query.DepQuery;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 
@@ -33,7 +33,7 @@ import org.junit.Test;
 
 import java.util.Optional;
 
-public class DepQueryTargetTranslatorTest {
+public class QueryTargetTranslatorTest {
 
   private static final CellPathResolver CELL_PATH_RESOLVER =
       new FakeCellPathResolver(new FakeProjectFilesystem());
@@ -45,14 +45,14 @@ public class DepQueryTargetTranslatorTest {
     BuildTarget a = BuildTargetFactory.newInstance("//:a");
     BuildTarget b = BuildTargetFactory.newInstance("//:b");
     FixedTargetNodeTranslator translator = new FixedTargetNodeTranslator(ImmutableMap.of(a, b));
-    DepQueryTargetTranslator depQueryTranslator = new DepQueryTargetTranslator();
+    QueryTargetTranslator queryTranslator = new QueryTargetTranslator();
     assertThat(
-        depQueryTranslator.translateTargets(
+        queryTranslator.translateTargets(
             CELL_PATH_RESOLVER,
             PATTERN,
             translator,
-            DepQuery.of("deps(//:a)")),
-        Matchers.equalTo(Optional.of(DepQuery.of("deps(//:b)"))));
+            Query.of("deps(//:a)")),
+        Matchers.equalTo(Optional.of(Query.of("deps(//:b)"))));
   }
 
 }

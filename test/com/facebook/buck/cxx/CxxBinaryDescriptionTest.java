@@ -48,7 +48,7 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
-import com.facebook.buck.rules.query.DepQuery;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -469,7 +469,7 @@ public class CxxBinaryDescriptionTest {
             .setDeps(ImmutableSortedSet.of(transitiveDepBuilder.getTarget()));
     CxxBinaryBuilder builder =
         new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
-            .setDepQuery(DepQuery.of("filter(transitive, deps(//:dep))"));
+            .setDepQuery(Query.of("filter(transitive, deps(//:dep))"));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             transitiveDepBuilder.build(),

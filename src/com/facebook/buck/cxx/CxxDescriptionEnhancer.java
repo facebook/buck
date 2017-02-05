@@ -50,7 +50,7 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.rules.query.DepQueryUtils;
+import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
@@ -654,7 +654,7 @@ public class CxxDescriptionEnhancer {
     // Add in deps found via deps query.
     args.depsQuery.ifPresent(
         depsQuery ->
-            DepQueryUtils.resolveDepQuery(params, depsQuery, resolver, targetGraph)
+            QueryUtils.resolveDepQuery(params, depsQuery, resolver, targetGraph)
                 .forEach(depsBuilder::add));
     ImmutableSortedSet<BuildRule> deps = depsBuilder.build();
 

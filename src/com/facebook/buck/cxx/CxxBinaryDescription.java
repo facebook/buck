@@ -33,8 +33,8 @@ import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.query.DepQuery;
-import com.facebook.buck.rules.query.DepQueryUtils;
+import com.facebook.buck.rules.query.Query;
+import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.versions.VersionRoot;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableMap;
@@ -273,7 +273,7 @@ public class CxxBinaryDescription implements
 
     constructorArg.depsQuery.ifPresent(
         depsQuery ->
-            DepQueryUtils.extractParseTimeTargets(buildTarget, cellRoots, depsQuery)
+            QueryUtils.extractParseTimeTargets(buildTarget, cellRoots, depsQuery)
                 .forEach(deps::add));
 
     return deps.build();
@@ -393,7 +393,7 @@ public class CxxBinaryDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg extends LinkableCxxConstructorArg {
-    public Optional<DepQuery> depsQuery = Optional.empty();
+    public Optional<Query> depsQuery = Optional.empty();
   }
 
 }

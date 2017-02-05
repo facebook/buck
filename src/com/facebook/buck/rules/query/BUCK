@@ -1,10 +1,10 @@
 TYPES_SRCS = [
-  'AbstractDepQuery.java',
+  'AbstractQuery.java',
 ]
 java_immutables_library(
   name = 'types',
   immutable_types = [
-    'DepQuery',
+    'Query',
   ],
   srcs = TYPES_SRCS,
   autodeps = True,

@@ -18,25 +18,25 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.query.DepQuery;
+import com.facebook.buck.rules.query.Query;
 
 import java.nio.file.Path;
 
-public class DepQueryCoercer extends LeafTypeCoercer<DepQuery> {
+public class QueryCoercer extends LeafTypeCoercer<Query> {
 
   @Override
-  public Class<DepQuery> getOutputClass() {
-    return DepQuery.class;
+  public Class<Query> getOutputClass() {
+    return Query.class;
   }
 
   @Override
-  public DepQuery coerce(
+  public Query coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {
     if (object instanceof String) {
-      return DepQuery.of((String) object);
+      return Query.of((String) object);
     }
     throw CoerceFailedException.simple(object, getOutputClass());
   }

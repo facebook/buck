@@ -22,7 +22,7 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractDepQuery {
+abstract class AbstractQuery {
 
   abstract String getQuery();
 

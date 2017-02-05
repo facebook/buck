@@ -29,7 +29,7 @@ import org.junit.Test;
 
 import java.util.stream.Collectors;
 
-public class DepQueryUtilsTest {
+public class QueryUtilsTest {
 
   private static final BuildTarget TARGET = BuildTargetFactory.newInstance("//:rule");
   private static final CellPathResolver CELL_NAMES =
@@ -38,7 +38,7 @@ public class DepQueryUtilsTest {
   @Test
   public void extractParseTimeTargets() {
     assertThat(
-        DepQueryUtils.extractParseTimeTargets(TARGET, CELL_NAMES, DepQuery.of("deps(//some:rule)"))
+        QueryUtils.extractParseTimeTargets(TARGET, CELL_NAMES, Query.of("deps(//some:rule)"))
             .collect(Collectors.toList()),
         Matchers.contains(BuildTargetFactory.newInstance("//some:rule")));
   }

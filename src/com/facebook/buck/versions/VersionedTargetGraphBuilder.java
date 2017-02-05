@@ -498,7 +498,7 @@ public class VersionedTargetGraphBuilder {
       // Build a target translator object to translate build targets.
       ImmutableList<TargetTranslator<?>> translators =
           ImmutableList.of(
-              new DepQueryTargetTranslator());
+              new QueryTargetTranslator());
       TargetNodeTranslator targetTranslator =
           new TargetNodeTranslator(translators) {
 

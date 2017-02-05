@@ -42,8 +42,8 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.query.DepQuery;
-import com.facebook.buck.rules.query.DepQueryUtils;
+import com.facebook.buck.rules.query.Query;
+import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Suppliers;
@@ -163,7 +163,7 @@ public class AndroidLibraryDescription
       // Resolve the dependencies query, if present and add to declared deps
       if (args.depsQuery.isPresent()) {
         declaredDepsBuilder.addAll(
-            DepQueryUtils.resolveDepQuery(
+            QueryUtils.resolveDepQuery(
                 params,
                 args.depsQuery.get(),
                 resolver,
@@ -238,7 +238,7 @@ public class AndroidLibraryDescription
     public Optional<String> resourceUnionPackage;
     public Optional<String> finalRName;
     public Optional<JvmLanguage> language;
-    public Optional<DepQuery> depsQuery;
+    public Optional<Query> depsQuery;
   }
 }
 

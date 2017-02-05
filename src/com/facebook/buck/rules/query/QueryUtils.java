@@ -45,15 +45,15 @@ import java.util.stream.Stream;
  * Mixin class to allow dynamic dependency resolution at graph enhancement time.
  * New and unstable. Will almost certainly change in interface and implementation.
  */
-public final class DepQueryUtils {
+public final class QueryUtils {
 
-  private DepQueryUtils() {
+  private QueryUtils() {
     // This class cannot be instantiated
   }
 
   public static Stream<BuildRule> resolveDepQuery(
       BuildRuleParams params,
-      DepQuery query,
+      Query query,
       BuildRuleResolver resolver,
       TargetGraph targetGraph) {
     BuildTarget target = params.getBuildTarget();
@@ -88,7 +88,7 @@ public final class DepQueryUtils {
   public static Stream<BuildTarget> extractBuildTargets(
       CellPathResolver cellPathResolver,
       BuildTargetPatternParser<BuildTargetPattern> parserPattern,
-      DepQuery query)
+      Query query)
       throws QueryException {
     GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(
@@ -120,7 +120,7 @@ public final class DepQueryUtils {
   public static Stream<BuildTarget> extractParseTimeTargets(
       BuildTarget target,
       CellPathResolver cellNames,
-      DepQuery query) {
+      Query query) {
     try {
       return extractBuildTargets(
           cellNames,

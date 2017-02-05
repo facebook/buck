@@ -33,7 +33,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.query.DepQueryUtils;
+import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.versions.VersionRoot;
@@ -320,7 +320,7 @@ public class CxxTestDescription implements
 
     constructorArg.depsQuery.ifPresent(
         depsQuery ->
-            DepQueryUtils.extractParseTimeTargets(buildTarget, cellRoots, depsQuery)
+            QueryUtils.extractParseTimeTargets(buildTarget, cellRoots, depsQuery)
                 .forEach(deps::add));
 
     return deps.build();
