@@ -36,6 +36,7 @@ import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.keys.RuleKeyFactoryManager;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
@@ -131,8 +132,10 @@ final class JavaBuildGraphProcessor {
           new DefaultTargetNodeToBuildRuleTransformer());
       CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
           params.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
+      LocalCachingBuildEngineDelegate cachingBuildEngineDelegate =
+          new LocalCachingBuildEngineDelegate(params.getFileHashCache());
       BuildEngine buildEngine = new CachingBuildEngine(
-          new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
+          cachingBuildEngineDelegate,
           executorService,
           executorService,
           new DefaultStepRunner(),
@@ -140,11 +143,14 @@ final class JavaBuildGraphProcessor {
           cachingBuildEngineBuckConfig.getBuildDepFiles(),
           cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
           cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
-          cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
           params.getObjectMapper(),
           buildRuleResolver,
-          params.getBuckConfig().getKeySeed(),
-          cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo());
+          cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
+          new RuleKeyFactoryManager(
+              params.getBuckConfig().getKeySeed(),
+              cachingBuildEngineDelegate.createFileHashCacheLoader()::getUnchecked,
+              buildRuleResolver,
+              cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit()));
 
       // Create a BuildEngine because we store symbol information as build artifacts.
       BuckEventBus eventBus = params.getBuckEventBus();

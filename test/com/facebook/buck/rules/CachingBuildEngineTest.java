@@ -57,6 +57,7 @@ import com.facebook.buck.rules.keys.DependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.FakeInputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
+import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.SizeLimiter;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
@@ -1263,7 +1264,7 @@ public class CachingBuildEngineTest {
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
           .setRuleKeyFactoriesFunction(
               Functions.constant(
-                  new CachingBuildEngine.RuleKeyFactories(
+                  RuleKeyFactories.of(
                       NOOP_RULE_KEY_FACTORY,
                       new FakeInputBasedRuleKeyFactory(
                           ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
@@ -1315,7 +1316,7 @@ public class CachingBuildEngineTest {
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
           .setRuleKeyFactoriesFunction(
               Functions.constant(
-                  new CachingBuildEngine.RuleKeyFactories(
+                  RuleKeyFactories.of(
                       defaultRuleKeyFactory,
                       new FakeInputBasedRuleKeyFactory(
                           ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
@@ -1384,7 +1385,7 @@ public class CachingBuildEngineTest {
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
           .setRuleKeyFactoriesFunction(
               Functions.constant(
-                  new CachingBuildEngine.RuleKeyFactories(
+                  RuleKeyFactories.of(
                       defaultRuleKeyFactory,
                       new FakeInputBasedRuleKeyFactory(
                           ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
@@ -1472,7 +1473,7 @@ public class CachingBuildEngineTest {
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
           .setRuleKeyFactoriesFunction(
               Functions.constant(
-                  new CachingBuildEngine.RuleKeyFactories(
+                  RuleKeyFactories.of(
                       defaultRuleKeyFactory,
                       new FakeInputBasedRuleKeyFactory(
                           ImmutableMap.of(),
@@ -2065,7 +2066,7 @@ public class CachingBuildEngineTest {
       return cachingBuildEngineFactory()
           .setRuleKeyFactoriesFunction(
               Functions.constant(
-                  new CachingBuildEngine.RuleKeyFactories(
+                  RuleKeyFactories.of(
                       defaultRuleKeyFactory,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
                       depFileFactory)))
@@ -2140,7 +2141,7 @@ public class CachingBuildEngineTest {
               .setDepFiles(CachingBuildEngine.DepFiles.CACHE)
               .setRuleKeyFactoriesFunction(
                    Functions.constant(
-                      new CachingBuildEngine.RuleKeyFactories(
+                      RuleKeyFactories.of(
                           defaultRuleKeyFactory,
                           inputBasedRuleKeyFactory,
                           depFilefactory)))
@@ -2248,7 +2249,7 @@ public class CachingBuildEngineTest {
               .setDepFiles(CachingBuildEngine.DepFiles.CACHE)
               .setRuleKeyFactoriesFunction(
                   Functions.constant(
-                      new CachingBuildEngine.RuleKeyFactories(
+                      RuleKeyFactories.of(
                           defaultRuleKeyFactory,
                           inputBasedRuleKeyFactory,
                           depFilefactory)))
@@ -2370,7 +2371,7 @@ public class CachingBuildEngineTest {
               .setMaxDepFileCacheEntries(1L)
               .setRuleKeyFactoriesFunction(
                   Functions.constant(
-                      new CachingBuildEngine.RuleKeyFactories(
+                      RuleKeyFactories.of(
                           defaultRuleKeyFactory,
                           inputBasedRuleKeyFactory,
                           depFilefactory)))
@@ -2482,7 +2483,7 @@ public class CachingBuildEngineTest {
               .setDepFiles(CachingBuildEngine.DepFiles.CACHE)
               .setRuleKeyFactoriesFunction(
                   Functions.constant(
-                      new CachingBuildEngine.RuleKeyFactories(
+                      RuleKeyFactories.of(
                           defaultRuleKeyFactory,
                           inputBasedRuleKeyFactory,
                           depFilefactory)))
@@ -2545,7 +2546,7 @@ public class CachingBuildEngineTest {
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
           .setRuleKeyFactoriesFunction(
               Functions.constant(
-                  new CachingBuildEngine.RuleKeyFactories(
+                  RuleKeyFactories.of(
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
                       NOOP_DEP_FILE_RULE_KEY_FACTORY)))
@@ -2632,7 +2633,7 @@ public class CachingBuildEngineTest {
                   listeningDecorator(Executors.newCachedThreadPool())))
           .setRuleKeyFactoriesFunction(
               Functions.constant(
-                  new CachingBuildEngine.RuleKeyFactories(
+                  RuleKeyFactories.of(
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
                       NOOP_DEP_FILE_RULE_KEY_FACTORY)))
@@ -2733,7 +2734,7 @@ public class CachingBuildEngineTest {
           .setExecutorService(SERVICE)
           .setRuleKeyFactoriesFunction(
               Functions.constant(
-                  new CachingBuildEngine.RuleKeyFactories(
+                  RuleKeyFactories.of(
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
                       NOOP_DEP_FILE_RULE_KEY_FACTORY)))
@@ -2773,7 +2774,7 @@ public class CachingBuildEngineTest {
           .setExecutorService(SERVICE)
           .setRuleKeyFactoriesFunction(
               Functions.constant(
-                  new CachingBuildEngine.RuleKeyFactories(
+                  RuleKeyFactories.of(
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
                       NOOP_DEP_FILE_RULE_KEY_FACTORY)))
@@ -2812,7 +2813,7 @@ public class CachingBuildEngineTest {
           .setExecutorService(SERVICE)
           .setRuleKeyFactoriesFunction(
               Functions.constant(
-                  new CachingBuildEngine.RuleKeyFactories(
+                  RuleKeyFactories.of(
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
                       NOOP_DEP_FILE_RULE_KEY_FACTORY)))

@@ -17,6 +17,8 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.keys.RuleKeyFactories;
+import com.facebook.buck.rules.keys.RuleKeyFactoryManager;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.NullFileHashCache;
@@ -42,7 +44,7 @@ public class CachingBuildEngineFactory {
   private Optional<Long> artifactCacheSizeLimit = Optional.empty();
   private long inputFileSizeLimit = Long.MAX_VALUE;
   private ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-  private Optional<Function<? super ProjectFilesystem, CachingBuildEngine.RuleKeyFactories>>
+  private Optional<Function<? super ProjectFilesystem, RuleKeyFactories>>
       ruleKeyFactoriesFunction = Optional.empty();
   private CachingBuildEngineDelegate cachingBuildEngineDelegate;
   private WeightedListeningExecutorService executorService;
@@ -97,8 +99,7 @@ public class CachingBuildEngineFactory {
   }
 
   public CachingBuildEngineFactory setRuleKeyFactoriesFunction(
-      Function<? super ProjectFilesystem, CachingBuildEngine.RuleKeyFactories>
-          ruleKeyFactoriesFunction) {
+      Function<? super ProjectFilesystem, RuleKeyFactories> ruleKeyFactoriesFunction) {
     this.ruleKeyFactoriesFunction =
         Optional.of(
             ruleKeyFactoriesFunction);
@@ -131,11 +132,14 @@ public class CachingBuildEngineFactory {
         depFiles,
         maxDepFileCacheEntries,
         artifactCacheSizeLimit,
-        inputFileSizeLimit,
         objectMapper,
         buildRuleResolver,
-        0,
-        resourceAwareSchedulingInfo);
+        resourceAwareSchedulingInfo,
+        new RuleKeyFactoryManager(
+            0,
+            cachingBuildEngineDelegate.createFileHashCacheLoader()::getUnchecked,
+            buildRuleResolver,
+            inputFileSizeLimit));
   }
 
   private static WeightedListeningExecutorService toWeighted(ListeningExecutorService service) {

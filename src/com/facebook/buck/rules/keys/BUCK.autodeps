@@ -12,6 +12,7 @@
       "//src/com/facebook/buck/model:simple_types",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:rule_key",
+      "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//src/com/facebook/buck/util/sha1:sha1",
       "//third-party/java/guava:guava",

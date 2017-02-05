@@ -65,6 +65,7 @@ import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.RuleKeyFactoryManager;
 import com.facebook.buck.shell.WorkerProcessPool;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.DefaultStepRunner;
@@ -781,11 +782,14 @@ public class BuildCommand extends AbstractCommand {
               cachingBuildEngineBuckConfig.getBuildDepFiles(),
               cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
               cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
-              cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
               params.getObjectMapper(),
               actionGraphAndResolver.getResolver(),
-              rootCellBuckConfig.getKeySeed(),
-              cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo()),
+              cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
+              new RuleKeyFactoryManager(
+                  rootCellBuckConfig.getKeySeed(),
+                  cachingBuildEngineDelegate.createFileHashCacheLoader()::getUnchecked,
+                  actionGraphAndResolver.getResolver(),
+                  cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit())),
           artifactCache,
           params.getConsole(),
           params.getBuckEventBus(),
