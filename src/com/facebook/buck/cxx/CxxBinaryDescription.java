@@ -34,6 +34,8 @@ import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.query.DepQuery;
+import com.facebook.buck.rules.query.DepQueryUtils;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.versions.VersionRoot;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -151,6 +153,7 @@ public class CxxBinaryDescription implements
           params.withoutFlavor(CxxCompilationDatabase.COMPILATION_DATABASE);
       CxxLinkAndCompileRules cxxLinkAndCompileRules = CxxDescriptionEnhancer
           .createBuildRulesForCxxBinaryDescriptionArg(
+              targetGraph,
               paramsWithoutFlavor,
               resolver,
               cxxBuckConfig,
@@ -226,6 +229,7 @@ public class CxxBinaryDescription implements
 
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
+            targetGraph,
             params,
             resolver,
             cxxBuckConfig,
@@ -248,7 +252,9 @@ public class CxxBinaryDescription implements
     params = CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle);
     params = LinkerMapMode.restoreLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode);
     CxxBinary cxxBinary = new CxxBinary(
-        params.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder)),
+        params
+            .copyWithDeps(() -> cxxLinkAndCompileRules.deps, params.getExtraDeps())
+            .appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder)),
         resolver,
         ruleFinder,
         cxxLinkAndCompileRules.getBinaryRule(),
@@ -265,11 +271,21 @@ public class CxxBinaryDescription implements
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       Arg constructorArg) {
-    return findDepsForTargetFromConstructorArgs(
-        buildTarget,
-        cellRoots,
-        constructorArg.linkerFlags,
-        constructorArg.platformLinkerFlags.getValues());
+    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
+
+    deps.addAll(
+        findDepsForTargetFromConstructorArgs(
+            buildTarget,
+            cellRoots,
+            constructorArg.linkerFlags,
+            constructorArg.platformLinkerFlags.getValues()));
+
+    constructorArg.depsQuery.ifPresent(
+        depsQuery ->
+            DepQueryUtils.extractParseTimeTargets(buildTarget, cellRoots, depsQuery)
+                .forEach(deps::add));
+
+    return deps.build();
   }
 
   public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
@@ -407,6 +423,7 @@ public class CxxBinaryDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg extends LinkableCxxConstructorArg {
+    public Optional<DepQuery> depsQuery = Optional.empty();
   }
 
 }

@@ -36,6 +36,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.MacroArg;
@@ -47,6 +48,7 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.rules.query.DepQueryUtils;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
@@ -621,6 +623,7 @@ public class CxxDescriptionEnhancer {
   }
 
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinaryDescriptionArg(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxBuckConfig cxxBuckConfig,
@@ -629,11 +632,11 @@ public class CxxDescriptionEnhancer {
       Optional<StripStyle> stripStyle,
       Optional<LinkerMapMode> flavoredLinkerMapMode) throws NoSuchBuildTargetException {
 
-    SourcePathResolver sourcePathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     ImmutableMap<String, CxxSource> srcs = parseCxxSources(
         params.getBuildTarget(),
-        sourcePathResolver,
+        pathResolver,
         cxxPlatform,
         args);
     ImmutableMap<Path, SourcePath> headers = parseHeaders(
@@ -641,6 +644,18 @@ public class CxxDescriptionEnhancer {
         new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         Optional.of(cxxPlatform),
         args);
+
+    // Build the binary deps.
+    ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
+    // Add original declared and extra deps.
+    depsBuilder.addAll(params.getDeps());
+    // Add in deps found via deps query.
+    args.depsQuery.ifPresent(
+        depsQuery ->
+            DepQueryUtils.resolveDepQuery(params, depsQuery, resolver, targetGraph)
+                .forEach(depsBuilder::add));
+    ImmutableSortedSet<BuildRule> deps = depsBuilder.build();
+
     return createBuildRulesForCxxBinary(
         params,
         resolver,
@@ -648,7 +663,7 @@ public class CxxDescriptionEnhancer {
         cxxPlatform,
         srcs,
         headers,
-        params.getDeps(),
+        deps,
         stripStyle,
         flavoredLinkerMapMode,
         args.linkStyle.orElse(Linker.LinkableDepType.STATIC),
@@ -676,7 +691,7 @@ public class CxxDescriptionEnhancer {
       CxxPlatform cxxPlatform,
       ImmutableMap<String, CxxSource> srcs,
       ImmutableMap<Path, SourcePath> headers,
-      Iterable<? extends BuildRule> deps,
+      ImmutableSortedSet<BuildRule> deps,
       Optional<StripStyle> stripStyle,
       Optional<LinkerMapMode> flavoredLinkerMapMode,
       Linker.LinkableDepType linkStyle,
@@ -883,7 +898,8 @@ public class CxxDescriptionEnhancer {
         cxxLink,
         cxxStrip,
         ImmutableSortedSet.copyOf(objects.keySet()),
-        executableBuilder.build());
+        executableBuilder.build(),
+        deps);
   }
 
   private static CxxLink createCxxLinkRule(

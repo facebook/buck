@@ -45,6 +45,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.query.DepQuery;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -446,4 +447,33 @@ public class CxxBinaryDescriptionTest {
     CxxStrip strip = (CxxStrip) ((CxxBinary) resultRule).getLinkRule();
     assertThat(strip.getStripStyle(), equalTo(StripStyle.ALL_SYMBOLS));
   }
+
+  @Test
+  public void depQuery() throws Exception {
+    CxxLibraryBuilder transitiveDepBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:transitive_dep"));
+    CxxLibraryBuilder depBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setDeps(ImmutableSortedSet.of(transitiveDepBuilder.getTarget()));
+    CxxBinaryBuilder builder =
+        new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setDepQuery(DepQuery.of("filter(transitive, deps(//:dep))"));
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            transitiveDepBuilder.build(),
+            depBuilder.build(),
+            builder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            targetGraph,
+            new DefaultTargetNodeToBuildRuleTransformer());
+    CxxLibrary transitiveDep = (CxxLibrary) transitiveDepBuilder.build(resolver, targetGraph);
+    depBuilder.build(resolver, targetGraph);
+    CxxBinary binary = (CxxBinary) builder.build(resolver, targetGraph);
+    // TODO(andrewjcg): should also test that `:dep` does *not* get included.
+    assertThat(
+        binary.getDeps(),
+        Matchers.hasItem(transitiveDep));
+  }
+
 }
