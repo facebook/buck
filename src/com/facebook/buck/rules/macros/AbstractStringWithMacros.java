@@ -16,13 +16,19 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.Either;
+import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.versions.TargetNodeTranslator;
+import com.facebook.buck.versions.TargetTranslatable;
 import com.google.common.collect.ImmutableList;
 
 import org.immutables.value.Value;
 
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -31,7 +37,7 @@ import java.util.stream.Collectors;
  */
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractStringWithMacros {
+abstract class AbstractStringWithMacros implements TargetTranslatable<StringWithMacros> {
 
   // The components of the macro string.  Each part is either a plain string or a macro.
   abstract ImmutableList<Either<String, Macro>> getParts();
@@ -72,6 +78,30 @@ abstract class AbstractStringWithMacros {
         RichStream.from(getParts())
             .map(e -> e.isRight() ? e : Either.<String, Macro>ofLeft(mapper.apply(e.getLeft())))
             .toImmutableList());
+  }
+
+  @Override
+  public Optional<StringWithMacros> translateTargets(
+      CellPathResolver cellPathResolver,
+      BuildTargetPatternParser<BuildTargetPattern> pattern,
+      TargetNodeTranslator translator) {
+    boolean modified = false;
+    ImmutableList.Builder<Either<String, Macro>> parts = ImmutableList.builder();
+    for (Either<String, Macro> part : getParts()) {
+      if (part.isLeft()) {
+        parts.add(part);
+      } else {
+        Optional<Macro> translated =
+            translator.translate(cellPathResolver, pattern, part.getRight());
+        if (translated.isPresent()) {
+          parts.add(Either.ofRight(translated.get()));
+          modified = true;
+        } else {
+          parts.add(part);
+        }
+      }
+    }
+    return modified ? Optional.of(StringWithMacros.of(parts.build())) : Optional.empty();
   }
 
 }

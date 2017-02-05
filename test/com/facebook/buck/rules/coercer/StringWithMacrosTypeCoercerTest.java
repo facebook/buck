@@ -19,11 +19,14 @@ package com.facebook.buck.rules.coercer;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.FakeCellPathResolver;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.versions.TargetNodeTranslator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -32,6 +35,7 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class StringWithMacrosTypeCoercerTest {
 
@@ -126,6 +130,14 @@ public class StringWithMacrosTypeCoercerTest {
     @Override
     public int hashCode() {
       return args.hashCode();
+    }
+
+    @Override
+    public Optional<Macro> translateTargets(
+        CellPathResolver cellPathResolver,
+        BuildTargetPatternParser<BuildTargetPattern> pattern,
+        TargetNodeTranslator translator) {
+      return Optional.empty();
     }
 
   }
