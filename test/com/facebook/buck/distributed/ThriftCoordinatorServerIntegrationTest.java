@@ -23,7 +23,6 @@ import com.facebook.buck.distributed.thrift.GetTargetsToBuildResponse;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -34,8 +33,7 @@ public class ThriftCoordinatorServerIntegrationTest {
 
   private static final String MINION_ID = "super cool minion";
 
-  @Ignore
-  @Test(timeout = 2000L)
+  @Test
   public void testMakingSimpleRequest() throws IOException {
     int port = findRandomOpenPortOnAllLocalInterfaces();
     try (ThriftCoordinatorServer server =
@@ -50,8 +48,7 @@ public class ThriftCoordinatorServerIntegrationTest {
     }
   }
 
-  @Ignore
-  @Test(timeout = 2000L)
+  @Test
   public void testThriftServerWithDiamondGraph() throws IOException, NoSuchBuildTargetException {
     int port = findRandomOpenPortOnAllLocalInterfaces();
     BuildTargetsQueue diamondQueue = BuildTargetsQueueTest.createDiamondDependencyQueue();

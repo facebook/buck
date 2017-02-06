@@ -17,12 +17,15 @@
 package com.facebook.buck.testrunner;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Platform;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -57,6 +60,7 @@ public class RunWithDefaultTimeoutIntegrationTest {
    */
   @Test
   public void testRunWithHonorsDefaultTimeoutOnTestThatRunsLong() throws IOException {
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "run_with_timeout", temporaryFolder);
     workspace.setUp();
@@ -68,6 +72,7 @@ public class RunWithDefaultTimeoutIntegrationTest {
 
   @Test
   public void testRunWithHonorsDefaultTimeoutOnTestThatRunsForever() throws IOException {
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "run_with_timeout", temporaryFolder);
     workspace.setUp();
@@ -79,6 +84,7 @@ public class RunWithDefaultTimeoutIntegrationTest {
 
   @Test
   public void testRunWithLetsTimeoutAnnotationOverrideDefaultTimeout() throws IOException {
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "run_with_timeout", temporaryFolder);
     workspace.setUp();
@@ -90,6 +96,7 @@ public class RunWithDefaultTimeoutIntegrationTest {
 
   @Test
   public void testRunWithLetsTimeoutRuleOverrideDefaultTimeout() throws IOException {
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "run_with_timeout", temporaryFolder);
     workspace.setUp();
@@ -101,6 +108,7 @@ public class RunWithDefaultTimeoutIntegrationTest {
 
   @Test
   public void testAllTestsForRunWithAreRunOnTheSameThread() throws IOException {
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "run_with_timeout", temporaryFolder);
     workspace.setUp();

@@ -120,6 +120,7 @@ public class RobolectricTest extends JavaTest {
       Optional<SourcePath> robolectricManifest) {
     super(
         buildRuleParams,
+        new SourcePathResolver(ruleFinder),
         compiledTestsLibrary,
         additionalClasspathEntries,
         labels,

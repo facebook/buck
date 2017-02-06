@@ -25,6 +25,7 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -40,6 +41,7 @@ public class KotlinTest extends JavaTest {
 
   public KotlinTest(
       BuildRuleParams params,
+      SourcePathResolver pathResolver,
       JavaLibrary compiledTestsLibrary,
       ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries,
       Set<Label> labels,
@@ -58,6 +60,7 @@ public class KotlinTest extends JavaTest {
 
     super(
         params,
+        pathResolver,
         compiledTestsLibrary,
         additionalClasspathEntries,
         labels,

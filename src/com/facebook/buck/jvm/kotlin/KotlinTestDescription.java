@@ -156,6 +156,7 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
         params.copyWithDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
+        pathResolver,
         testsLibrary,
         ImmutableSet.<Either<SourcePath, Path>>of(kotlinBuckConfig.getPathToRuntimeJar()),
         args.labels,

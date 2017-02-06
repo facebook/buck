@@ -31,7 +31,7 @@ public class MinionModeRunnerIntegrationTest {
 
   private static final BuildId BUILD_ID = ThriftCoordinatorServerIntegrationTest.BUILD_ID;
 
-  @Test(timeout = 2000L)
+  @Test
   public void testDiamondGraphRun()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
     try (ThriftCoordinatorServer server = createServer()) {
