@@ -40,7 +40,6 @@ import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
@@ -106,6 +105,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -380,14 +380,13 @@ public class BuildCommand extends AbstractCommand {
     BuildEvent.Started started = postBuildStartedEvent(params);
     int exitCode;
     try {
-      Pair<TargetGraphAndBuildTargets, ActionGraphAndResolver> graphs = createGraphs(
+      ActionAndTargetGraphs graphs = createGraphs(
           params,
           executorService);
       exitCode = executeBuildAndProcessResult(
           params,
           executorService,
-          graphs.getFirst(),
-          graphs.getSecond());
+          graphs);
     } catch (ActionGraphCreationException e) {
       params.getConsole().printBuildFailure(e.getMessage());
       exitCode = 1;
@@ -410,19 +409,29 @@ public class BuildCommand extends AbstractCommand {
     return started;
   }
 
-  private Pair<TargetGraphAndBuildTargets, ActionGraphAndResolver> createGraphs(
+  private ActionAndTargetGraphs createGraphs(
       CommandRunnerParams params,
       WeightedListeningExecutorService executorService)
       throws ActionGraphCreationException, IOException, InterruptedException {
-    TargetGraphAndBuildTargets targetGraphAndBuildTargets =
-        createTargetGraph(params, executorService);
-    checkSingleBuildTargetSpecifiedForOutBuildMode(targetGraphAndBuildTargets);
-    ActionGraphAndResolver actionGraphAndResolver = createActionGraphAndResolver(
-        params,
-        targetGraphAndBuildTargets);
-    return new Pair<>(targetGraphAndBuildTargets, actionGraphAndResolver);
-  }
+    TargetGraphAndBuildTargets unversionedTargetGraph =
+        createUnversionedTargetGraph(params, executorService);
 
+    Optional<TargetGraphAndBuildTargets> versionedTargetGraph = Optional.empty();
+    try {
+      if (params.getBuckConfig().getBuildVersions()) {
+        versionedTargetGraph = Optional.of(toVersionedTargetGraph(params, unversionedTargetGraph));
+      }
+    } catch (VersionException e) {
+      throw new ActionGraphCreationException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));
+    }
+
+    TargetGraphAndBuildTargets targetGraphForLocalBuild =
+        getTargetGraphForLocalBuild(unversionedTargetGraph, versionedTargetGraph);
+    checkSingleBuildTargetSpecifiedForOutBuildMode(targetGraphForLocalBuild);
+    ActionGraphAndResolver actionGraph = createActionGraphAndResolver(
+        params, targetGraphForLocalBuild);
+    return new ActionAndTargetGraphs(unversionedTargetGraph, versionedTargetGraph, actionGraph);
+  }
 
   private void checkSingleBuildTargetSpecifiedForOutBuildMode(
       TargetGraphAndBuildTargets targetGraphAndBuildTargets)
@@ -443,40 +452,36 @@ public class BuildCommand extends AbstractCommand {
   private int executeBuildAndProcessResult(
       CommandRunnerParams params,
       WeightedListeningExecutorService executorService,
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets,
-      ActionGraphAndResolver actionGraphAndResolver)
+      ActionAndTargetGraphs graphs)
       throws IOException, InterruptedException {
     int exitCode;
     if (useDistributedBuild) {
       exitCode = executeDistributedBuild(
           params,
-          targetGraphAndBuildTargets,
-          actionGraphAndResolver,
+          graphs,
           executorService);
     } else {
-      exitCode = executeLocalBuild(params, actionGraphAndResolver, executorService);
+      exitCode = executeLocalBuild(params, graphs.actionGraph, executorService);
     }
     if (exitCode == 0) {
       exitCode = processSuccessfulBuild(
           params,
-          targetGraphAndBuildTargets,
-          actionGraphAndResolver);
+          graphs);
     }
     return exitCode;
   }
 
   private int processSuccessfulBuild(
       CommandRunnerParams params,
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets,
-      ActionGraphAndResolver actionGraphAndResolver)
+      ActionAndTargetGraphs graphs)
       throws IOException {
     if (showOutput || showFullOutput || showRuleKey) {
-      showOutputs(params, actionGraphAndResolver);
+      showOutputs(params, graphs.actionGraph);
     }
     if (outputPathForSingleBuildTarget != null) {
       BuildTarget loneTarget = Iterables.getOnlyElement(
-          targetGraphAndBuildTargets.getBuildTargets());
-      BuildRule rule = actionGraphAndResolver.getResolver().getRule(loneTarget);
+          graphs.getTargetGraphForLocalBuild().getBuildTargets());
+      BuildRule rule = graphs.actionGraph.getResolver().getRule(loneTarget);
       if (!rule.outputFileCanBeCopied()) {
         params.getConsole().printErrorText(String.format(
             "%s does not have an output that is compatible with `buck build --out`",
@@ -534,10 +539,13 @@ public class BuildCommand extends AbstractCommand {
 
   private int executeDistributedBuild(
       final CommandRunnerParams params,
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets,
-      ActionGraphAndResolver actionGraphAndResolver,
+      ActionAndTargetGraphs graphs,
       final WeightedListeningExecutorService executorService)
       throws IOException, InterruptedException {
+    // Distributed builds serialize and send the unversioned target graph,
+    // and then deserialize and version remotely.
+    TargetGraphAndBuildTargets targetGraphAndBuildTargets = graphs.unversionedTargetGraph;
+
     ProjectFilesystem filesystem = params.getCell().getFilesystem();
     FileHashCache fileHashCache = params.getFileHashCache();
 
@@ -565,13 +573,15 @@ public class BuildCommand extends AbstractCommand {
               throw new RuntimeException(e);
             }
           }
-        });
+        },
+        targetGraphAndBuildTargets.getBuildTargets().stream().map(
+            t -> t.getFullyQualifiedName()).collect(Collectors.toSet()));
 
     BuildJobState jobState = computeDistributedBuildJobState(
         targetGraphCodec,
         params,
         targetGraphAndBuildTargets,
-        actionGraphAndResolver,
+        graphs.actionGraph,
         executorService);
 
     if (distributedBuildStateFile != null) {
@@ -604,7 +614,7 @@ public class BuildCommand extends AbstractCommand {
         // After dist-build is complete, start build locally and we'll find everything in the cache.
         // TODO(shivanker): Add a flag to disable building, and only fetch from the cache.
         if (exitCode == 0) {
-          exitCode = executeLocalBuild(params, actionGraphAndResolver, executorService);
+          exitCode = executeLocalBuild(params, graphs.actionGraph, executorService);
         }
         return exitCode;
       }
@@ -673,14 +683,14 @@ public class BuildCommand extends AbstractCommand {
     }
   }
 
-  private TargetGraphAndBuildTargets createTargetGraph(
+  private TargetGraphAndBuildTargets createUnversionedTargetGraph(
       CommandRunnerParams params,
       ListeningExecutorService executor)
       throws IOException, InterruptedException, ActionGraphCreationException {
     // Parse the build files to create a ActionGraph.
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     try {
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets =
+      return
           params.getParser()
               .buildTargetGraphForTargetNodeSpecs(
                   params.getBuckEventBus(),
@@ -692,10 +702,7 @@ public class BuildCommand extends AbstractCommand {
                       getArguments()),
                   /* ignoreBuckAutodepsFiles */ false,
                   parserConfig.getDefaultFlavorsMode());
-      return params.getBuckConfig().getBuildVersions() ?
-          toVersionedTargetGraph(params, targetGraphAndBuildTargets) :
-          targetGraphAndBuildTargets;
-    } catch (BuildTargetException | BuildFileParseException | VersionException e) {
+    } catch (BuildTargetException | BuildFileParseException e) {
       throw new ActionGraphCreationException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));
     }
   }
@@ -872,9 +879,39 @@ public class BuildCommand extends AbstractCommand {
     return builder.build();
   }
 
+  protected static TargetGraphAndBuildTargets getTargetGraphForLocalBuild(
+      TargetGraphAndBuildTargets unversionedTargetGraph,
+      Optional<TargetGraphAndBuildTargets> versionedTargetGraph) {
+    // If a versioned target graph was produced then we always use this for the local build,
+    // otherwise the unversioned graph is used.
+    return versionedTargetGraph.isPresent() ?
+        versionedTargetGraph.get() : unversionedTargetGraph;
+  }
+
   public static class ActionGraphCreationException extends Exception {
     public ActionGraphCreationException(String message) {
       super(message);
+    }
+  }
+
+  protected static class ActionAndTargetGraphs {
+    final TargetGraphAndBuildTargets unversionedTargetGraph;
+    final Optional<TargetGraphAndBuildTargets> versionedTargetGraph;
+    final ActionGraphAndResolver actionGraph;
+
+    protected ActionAndTargetGraphs(
+        TargetGraphAndBuildTargets unversionedTargetGraph,
+        Optional<TargetGraphAndBuildTargets> versionedTargetGraph,
+        ActionGraphAndResolver actionGraph) {
+      this.unversionedTargetGraph = unversionedTargetGraph;
+      this.versionedTargetGraph = versionedTargetGraph;
+      this.actionGraph = actionGraph;
+    }
+
+    protected TargetGraphAndBuildTargets getTargetGraphForLocalBuild() {
+      // If a versioned target graph was produced then we always use this for the local build,
+      // otherwise the unversioned graph is used.
+      return BuildCommand.getTargetGraphForLocalBuild(unversionedTargetGraph, versionedTargetGraph);
     }
   }
 }

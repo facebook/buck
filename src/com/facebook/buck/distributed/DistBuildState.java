@@ -31,6 +31,7 @@ import com.facebook.buck.rules.CellProvider;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
@@ -225,7 +226,8 @@ public class DistBuildState {
     return Preconditions.checkNotNull(cells.get(DistBuildCellIndexer.ROOT_CELL_INDEX));
   }
 
-  public TargetGraph createTargetGraph(DistBuildTargetGraphCodec codec) throws IOException {
+  public TargetGraphAndBuildTargets createTargetGraph(DistBuildTargetGraphCodec codec)
+      throws IOException {
     return codec.createTargetGraph(
         remoteState.getTargetGraph(),
         Functions.forMap(cells));

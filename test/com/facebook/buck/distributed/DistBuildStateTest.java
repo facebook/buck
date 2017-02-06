@@ -195,7 +195,8 @@ public class DistBuildStateTest {
 
     ProjectFilesystem reconstructedCellFilesystem =
         distributedBuildState.getCells().get(0).getFilesystem();
-    TargetGraph reconstructedGraph = distributedBuildState.createTargetGraph(targetGraphCodec);
+    TargetGraph reconstructedGraph =
+        distributedBuildState.createTargetGraph(targetGraphCodec).getTargetGraph();
     assertEquals(
         reconstructedGraph.getNodes().stream()
             .map(targetNode -> targetNode.castArg(JavaLibraryDescription.Arg.class).get())
@@ -369,7 +370,8 @@ public class DistBuildStateTest {
     return new DistBuildTargetGraphCodec(
         objectMapper,
         parserTargetNodeFactory,
-        nodeToRawNode);
+        nodeToRawNode,
+        ImmutableSet.of());
   }
 
   private static TargetGraph createTargetGraph(ProjectFilesystem filesystem) {

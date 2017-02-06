@@ -39,11 +39,13 @@ import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.keys.RuleKeyFactoryManager;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
+import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
@@ -55,6 +57,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -133,19 +136,36 @@ public class DistBuildSlaveExecutor {
         getStampedeBuildIdForCoordinator());
   }
 
-  private TargetGraph createTargetGraph() throws IOException {
+  private TargetGraph createTargetGraph() throws IOException, InterruptedException {
     if (targetGraph != null) {
       return targetGraph;
     }
 
     DistBuildTargetGraphCodec codec = createGraphCodec();
-    targetGraph = Preconditions.checkNotNull(codec.createTargetGraph(
-        args.getState().getRemoteState().getTargetGraph(),
-        Functions.forMap(args.getState().getCells())));
+    TargetGraphAndBuildTargets targetGraphAndBuildTargets =
+        Preconditions.checkNotNull(codec.createTargetGraph(
+            args.getState().getRemoteState().getTargetGraph(),
+            Functions.forMap(args.getState().getCells())));
+
+    try {
+      if (args.getRemoteRootCellConfig().getBuildVersions()) {
+        targetGraph = args.getVersionedTargetGraphCache().toVersionedTargetGraph(
+            args.getBuckEventBus(),
+            args.getRemoteRootCellConfig(),
+            targetGraphAndBuildTargets
+        ).getTargetGraph();
+      } else {
+        targetGraph = targetGraphAndBuildTargets.getTargetGraph();
+      }
+    } catch (VersionException e) {
+      throw new RuntimeException(e);
+    }
+
     return targetGraph;
   }
 
-  private ActionGraphAndResolver createActionGraphAndResolver() throws IOException {
+  private ActionGraphAndResolver createActionGraphAndResolver()
+      throws IOException, InterruptedException {
     if (actionGraphAndResolver != null) {
       return actionGraphAndResolver;
     }
@@ -160,7 +180,8 @@ public class DistBuildSlaveExecutor {
     return actionGraphAndResolver;
   }
 
-  private DistBuildCachingEngineDelegate createBuildEngineDelegate() throws IOException {
+  private DistBuildCachingEngineDelegate createBuildEngineDelegate()
+      throws IOException, InterruptedException {
     if (cachingBuildEngineDelegate != null) {
       return cachingBuildEngineDelegate;
     }
@@ -242,7 +263,8 @@ public class DistBuildSlaveExecutor {
               throw new RuntimeException(e);
             }
           }
-        });
+        },
+        new HashSet<>(args.getState().getRemoteState().getTopLevelTargets()));
 
     return targetGraphCodec;
   }

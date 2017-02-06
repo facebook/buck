@@ -16,6 +16,7 @@
 
 package com.facebook.buck.versions;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
@@ -99,6 +100,19 @@ public class VersionedTargetGraphCache {
     } finally {
       eventBus.post(VersionedTargetGraphEvent.finished(started));
     }
+  }
+
+  public TargetGraphAndBuildTargets toVersionedTargetGraph(
+      BuckEventBus eventBus,
+      BuckConfig buckConfig,
+      TargetGraphAndBuildTargets targetGraphAndBuildTargets)
+      throws VersionException, InterruptedException {
+    return getVersionedTargetGraph(
+        eventBus,
+        targetGraphAndBuildTargets,
+        new VersionBuckConfig(buckConfig).getVersionUniverses(),
+        new ForkJoinPool(buckConfig.getNumThreads()))
+        .getTargetGraphAndBuildTargets();
   }
 
   /**

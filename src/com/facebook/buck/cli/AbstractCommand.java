@@ -32,7 +32,6 @@ import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
-import com.facebook.buck.versions.VersionBuckConfig;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -48,7 +47,6 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ForkJoinPool;
 
 import javax.annotation.Nullable;
 
@@ -325,12 +323,11 @@ public abstract class AbstractCommand implements Command {
       CommandRunnerParams params,
       TargetGraphAndBuildTargets targetGraphAndBuildTargets)
       throws VersionException, InterruptedException {
-    return params.getVersionedTargetGraphCache().getVersionedTargetGraph(
+    return params.getVersionedTargetGraphCache().toVersionedTargetGraph(
         params.getBuckEventBus(),
-        targetGraphAndBuildTargets,
-        new VersionBuckConfig(params.getBuckConfig()).getVersionUniverses(),
-        new ForkJoinPool(params.getBuckConfig().getNumThreads()))
-        .getTargetGraphAndBuildTargets();
+        params.getBuckConfig(),
+        targetGraphAndBuildTargets
+    );
   }
 
   @Override

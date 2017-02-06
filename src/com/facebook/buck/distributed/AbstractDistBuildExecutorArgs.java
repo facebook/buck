@@ -29,6 +29,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -81,4 +82,6 @@ abstract class AbstractDistBuildExecutorArgs {
   public BuckConfig getRemoteRootCellConfig() {
     return getState().getRootCell().getBuckConfig();
   }
+
+  public abstract VersionedTargetGraphCache getVersionedTargetGraphCache();
 }
