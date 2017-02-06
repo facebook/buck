@@ -39,20 +39,21 @@ import javax.annotation.Nonnull;
  * A factory for generating {@link RuleKey}s that only take into the account the path of a file
  * and not the contents(hash) of the file.
  */
-public class ContentAgnosticRuleKeyFactory
-    extends ReflectiveRuleKeyFactory<RuleKeyBuilder<RuleKey>, RuleKey> {
+public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
 
-  private final LoadingCache<RuleKeyAppendable, RuleKey> ruleKeyCache;
+  private final RuleKeyFieldLoader ruleKeyFieldLoader;
+  private final LoadingCache<RuleKeyAppendable, RuleKey> appendableCache;
+  private final LoadingCache<BuildRule, RuleKey> ruleCache;
   private final FileHashLoader fileHashLoader;
   private final SourcePathResolver pathResolver;
   private final SourcePathRuleFinder ruleFinder;
 
   public ContentAgnosticRuleKeyFactory(
-      int seed,
+      RuleKeyFieldLoader ruleKeyFieldLoader,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder) {
-    super(seed);
-    this.ruleKeyCache = CacheBuilder.newBuilder().weakKeys().build(
+    this.ruleKeyFieldLoader = ruleKeyFieldLoader;
+    this.appendableCache = CacheBuilder.newBuilder().weakKeys().build(
         new CacheLoader<RuleKeyAppendable, RuleKey>() {
           @Override
           public RuleKey load(@Nonnull RuleKeyAppendable appendable) throws Exception {
@@ -61,26 +62,40 @@ public class ContentAgnosticRuleKeyFactory
             return subKeyBuilder.build();
           }
         });
-
-    this.pathResolver = pathResolver;
-    this.ruleFinder = ruleFinder;
+    this.ruleCache = CacheBuilder.newBuilder().weakKeys().build(
+        new CacheLoader<BuildRule, RuleKey>() {
+          @Override
+          public RuleKey load(BuildRule buildRule) throws Exception {
+            return newPopulatedBuilder(buildRule).build();
+          }
+        });
     this.fileHashLoader = new FileHashLoader() {
-
       @Override
       public HashCode get(Path path) throws IOException {
         return HashCode.fromLong(0);
       }
-
       @Override
       public long getSize(Path path) throws IOException {
         return 0;
       }
-
       @Override
       public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
         throw new AssertionError();
       }
     };
+    this.pathResolver = pathResolver;
+    this.ruleFinder = ruleFinder;
+  }
+
+  @Override
+  public RuleKey build(BuildRule buildRule) {
+    return ruleCache.getUnchecked(buildRule);
+  }
+
+  private RuleKeyBuilder<RuleKey> newPopulatedBuilder(BuildRule buildRule) {
+    RuleKeyBuilder<RuleKey> builder = newBuilder();
+    ruleKeyFieldLoader.setFields(buildRule, builder);
+    return builder;
   }
 
   private RuleKeyBuilder<RuleKey> newBuilder() {
@@ -92,7 +107,7 @@ public class ContentAgnosticRuleKeyFactory
 
       @Override
       protected RuleKeyBuilder<RuleKey> setAppendableRuleKey(RuleKeyAppendable appendable) {
-        RuleKey subKey = ruleKeyCache.getUnchecked(appendable);
+        RuleKey subKey = appendableCache.getUnchecked(appendable);
         return setAppendableRuleKey(subKey);
       }
 
@@ -111,10 +126,5 @@ public class ContentAgnosticRuleKeyFactory
       }
 
     };
-  }
-
-  @Override
-  protected RuleKeyBuilder<RuleKey> newBuilder(final BuildRule rule) {
-    return newBuilder();
   }
 }

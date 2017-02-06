@@ -169,6 +169,6 @@ public class ToolTest {
   private RuleKeyBuilder<RuleKey> createRuleKeyBuilder(
       DefaultRuleKeyFactory factory,
       SourcePathResolver resolver) {
-    return factory.newInstance(new FakeBuildRule("//:test", resolver));
+    return factory.newBuilderForTesting(new FakeBuildRule("//:test", resolver));
   }
 }

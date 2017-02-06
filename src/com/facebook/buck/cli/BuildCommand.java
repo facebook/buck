@@ -65,6 +65,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFactoryManager;
+import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.shell.WorkerProcessPool;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.DefaultStepRunner;
@@ -653,10 +654,12 @@ public class BuildCommand extends AbstractCommand {
     if (showRuleKey) {
       SourcePathRuleFinder ruleFinder =
           new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
+      RuleKeyFieldLoader fieldLoader =
+          new RuleKeyFieldLoader(params.getBuckConfig().getKeySeed());
       SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
       ruleKeyFactory = Optional.of(
           new DefaultRuleKeyFactory(
-              params.getBuckConfig().getKeySeed(),
+              fieldLoader,
               params.getFileHashCache(),
               pathResolver,
               ruleFinder));

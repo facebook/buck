@@ -606,6 +606,7 @@ public class DependencyFileRuleKeyFactoryTest {
       boolean expectSameKeys,
       ImmutableSet<SourcePath> expectedDepFileInputsAfter,
       String failureMessage) throws Exception {
+    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(0);
     FakeDepFileBuildRule rule1 = new FakeDepFileBuildRule("//:rule") {
       @AddToRuleKey
       final Object myField = fieldValueBefore;
@@ -614,7 +615,7 @@ public class DependencyFileRuleKeyFactoryTest {
     rule1.setExistenceOfInterestPredicate(interestingInputPaths);
     FakeFileHashCache hashCache = new FakeFileHashCache(hashesBefore, true, ImmutableMap.of());
     Pair<RuleKey, ImmutableSet<SourcePath>> res1 =
-        new DefaultDependencyFileRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+        new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
             .build(rule1, depFileEntries);
 
     FakeDepFileBuildRule rule2 = new FakeDepFileBuildRule("//:rule") {
@@ -625,7 +626,7 @@ public class DependencyFileRuleKeyFactoryTest {
     rule2.setExistenceOfInterestPredicate(interestingInputPaths);
     hashCache = new FakeFileHashCache(hashesAfter, true, ImmutableMap.of());
     Pair<RuleKey, ImmutableSet<SourcePath>> res2 =
-        new DefaultDependencyFileRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+        new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
             .build(rule2, depFileEntries);
 
     if (expectSameKeys) {
@@ -932,6 +933,7 @@ public class DependencyFileRuleKeyFactoryTest {
       boolean expectSameKeys,
       ImmutableSet<SourcePath> expectedDepFileInputsAfter,
       String failureMessage) throws Exception {
+    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(0);
     FakeDepFileBuildRule rule1 = new FakeDepFileBuildRule("//:rule") {
       @AddToRuleKey
       final Object myField = fieldValueBefore;
@@ -940,7 +942,7 @@ public class DependencyFileRuleKeyFactoryTest {
     rule1.setExistenceOfInterestPredicate(interestingInputPaths);
     FakeFileHashCache hashCache = new FakeFileHashCache(hashesBefore, true, ImmutableMap.of());
     Pair<RuleKey, ImmutableSet<SourcePath>> res1 =
-        new DefaultDependencyFileRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+        new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
             .buildManifestKey(rule1);
 
     FakeDepFileBuildRule rule2 = new FakeDepFileBuildRule("//:rule") {
@@ -951,7 +953,7 @@ public class DependencyFileRuleKeyFactoryTest {
     rule2.setExistenceOfInterestPredicate(interestingInputPaths);
     hashCache = new FakeFileHashCache(hashesAfter, true, ImmutableMap.of());
     Pair<RuleKey, ImmutableSet<SourcePath>> res2 =
-        new DefaultDependencyFileRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+        new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
             .buildManifestKey(rule2);
 
     if (expectSameKeys) {

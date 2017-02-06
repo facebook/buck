@@ -29,6 +29,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
@@ -119,7 +120,7 @@ public class DistBuildFileHashes {
           @Override
           public DefaultRuleKeyFactory load(ProjectFilesystem key) throws Exception {
             return new DefaultRuleKeyFactory(
-                /* seed */ keySeed,
+                new RuleKeyFieldLoader(keySeed),
                 fileHashLoaders.get(key),
                 sourcePathResolver,
                 ruleFinder

@@ -110,12 +110,12 @@ public class PreprocessorFlagsTest {
 
       RuleKeyBuilder<RuleKey> builder;
       builder = new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
-          .newInstance(fakeBuildRule);
+          .newBuilderForTesting(fakeBuildRule);
       defaultFlags.appendToRuleKey(builder, CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
       RuleKey defaultRuleKey = builder.build();
 
       builder = new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
-          .newInstance(fakeBuildRule);
+          .newBuilderForTesting(fakeBuildRule);
       alteredFlags.appendToRuleKey(builder, CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
       RuleKey alteredRuleKey = builder.build();
 
@@ -155,7 +155,7 @@ public class PreprocessorFlagsTest {
 
           RuleKeyBuilder<RuleKey> builder =
               new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
-                  .newInstance(fakeBuildRule);
+                  .newBuilderForTesting(fakeBuildRule);
           PreprocessorFlags.builder().setOtherFlags(flags).build()
               .appendToRuleKey(builder, sanitizer);
           return builder.build();

@@ -25,7 +25,9 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -43,31 +45,29 @@ import javax.annotation.Nonnull;
  *
  * @see SupportsInputBasedRuleKey
  */
-public final class InputBasedRuleKeyFactory
-    extends ReflectiveRuleKeyFactory<
-            InputBasedRuleKeyFactory.Builder,
-            RuleKey> {
+public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
 
+  private final RuleKeyFieldLoader ruleKeyFieldLoader;
   private final FileHashLoader fileHashLoader;
   private final SourcePathResolver pathResolver;
   private final SourcePathRuleFinder ruleFinder;
-  private final LoadingCache<RuleKeyAppendable, Result> cache;
+  private final LoadingCache<RuleKeyAppendable, Result> appendableCache;
+  private final LoadingCache<BuildRule, RuleKey> ruleCache;
   private final long inputSizeLimit;
 
   public InputBasedRuleKeyFactory(
-      int seed,
+      RuleKeyFieldLoader ruleKeyFieldLoader,
       FileHashLoader hashLoader,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       long inputSizeLimit) {
-    super(seed);
+    this.ruleKeyFieldLoader = ruleKeyFieldLoader;
     this.fileHashLoader = hashLoader;
     this.pathResolver = pathResolver;
     this.ruleFinder = ruleFinder;
     this.inputSizeLimit = inputSizeLimit;
 
-    // Build the cache around the sub-rule-keys and their dep lists.
-    cache = CacheBuilder.newBuilder().weakKeys().build(
+    this.appendableCache = CacheBuilder.newBuilder().weakKeys().build(
         new CacheLoader<RuleKeyAppendable, Result>() {
           @Override
           public Result load(
@@ -77,18 +77,51 @@ public final class InputBasedRuleKeyFactory
             return subKeyBuilder.buildResult();
           }
         });
+    this.ruleCache = CacheBuilder.newBuilder().weakKeys().build (
+        new CacheLoader<BuildRule, RuleKey>() {
+          @Override
+          public RuleKey load(BuildRule buildRule) throws Exception {
+            return newPopulatedBuilder(buildRule).build();
+          }
+        });
   }
 
+  @VisibleForTesting
   public InputBasedRuleKeyFactory(
       int seed,
       FileHashLoader hashLoader,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder) {
-    this(seed, hashLoader, pathResolver, ruleFinder, Long.MAX_VALUE);
+    this(new RuleKeyFieldLoader(seed), hashLoader, pathResolver, ruleFinder, Long.MAX_VALUE);
   }
 
   @Override
-  protected Builder newBuilder(final BuildRule rule) {
+  public RuleKey build(BuildRule buildRule) {
+    try {
+      return ruleCache.getUnchecked(buildRule);
+    } catch (RuntimeException e) {
+      propagateIfSizeLimitException(e);
+      throw e;
+    }
+  }
+
+  private void propagateIfSizeLimitException(Throwable throwable) {
+    // At the moment, it is difficult to make SizeLimitException be a checked exception. Due to how
+    // exceptions are currently handled (e.g. LoadingCache wraps them with ExecutionException),
+    // we need to iterate through the cause chain to check if a SizeLimitException is wrapped.
+    Throwables.getCausalChain(throwable).stream()
+        .filter(t -> t instanceof SizeLimiter.SizeLimitException)
+        .findFirst()
+        .ifPresent(Throwables::propagateIfPossible);
+  }
+
+  private RuleKeyBuilder<RuleKey> newPopulatedBuilder(BuildRule buildRule) {
+    RuleKeyBuilder<RuleKey> builder = newVerifyingBuilder(buildRule);
+    ruleKeyFieldLoader.setFields(buildRule, builder);
+    return builder;
+  }
+
+  private Builder newVerifyingBuilder(final BuildRule rule) {
     final Iterable<DependencyAggregation> aggregatedRules =
         Iterables.filter(rule.getDeps(), DependencyAggregation.class);
     return new Builder() {
@@ -116,7 +149,6 @@ public final class InputBasedRuleKeyFactory
         }
         return result.getRuleKey();
       }
-
     };
   }
 
@@ -131,7 +163,7 @@ public final class InputBasedRuleKeyFactory
 
     @Override
     protected Builder setAppendableRuleKey(RuleKeyAppendable appendable) {
-      Result result = cache.getUnchecked(appendable);
+      Result result = appendableCache.getUnchecked(appendable);
       deps.add(result.getDeps());
       setAppendableRuleKey(result.getRuleKey());
       return this;

@@ -176,8 +176,8 @@ class RuleKeyStructureInfo(object):
     @staticmethod
     def _nameFromStruct(structure):
         name = None
-        if 'name' in structure and 'buck.type' in structure:
-            name = list(structure['name'])[0]
+        if '.name' in structure and '.type' in structure:
+            name = list(structure['.name'])[0]
             if name.startswith('string("'):
                 name = name[8:-2]
         return name

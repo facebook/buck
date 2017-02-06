@@ -26,6 +26,7 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -37,21 +38,31 @@ import javax.annotation.Nonnull;
 /**
  * A {@link RuleKeyFactory} which adds some default settings to {@link RuleKey}s.
  */
-public class DefaultRuleKeyFactory
-    extends ReflectiveRuleKeyFactory<RuleKeyBuilder<RuleKey>, RuleKey> {
+public class DefaultRuleKeyFactory implements RuleKeyFactory<RuleKey> {
 
-  protected final LoadingCache<RuleKeyAppendable, RuleKey> ruleKeyCache;
+  private final RuleKeyFieldLoader ruleKeyFieldLoader;
+  protected final LoadingCache<RuleKeyAppendable, RuleKey> appendableCache;
+  private final LoadingCache<BuildRule, RuleKey> ruleCache;
   private final FileHashLoader hashLoader;
   private final SourcePathResolver pathResolver;
   private final SourcePathRuleFinder ruleFinder;
 
+  @VisibleForTesting
   public DefaultRuleKeyFactory(
       int seed,
       FileHashLoader hashLoader,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder) {
-    super(seed);
-    this.ruleKeyCache = CacheBuilder.newBuilder().weakKeys().build(
+    this(new RuleKeyFieldLoader(seed), hashLoader, pathResolver, ruleFinder);
+  }
+
+  public DefaultRuleKeyFactory(
+      RuleKeyFieldLoader ruleKeyFieldLoader,
+      FileHashLoader hashLoader,
+      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder) {
+    this.ruleKeyFieldLoader = ruleKeyFieldLoader;
+    this.appendableCache = CacheBuilder.newBuilder().weakKeys().build(
         new CacheLoader<RuleKeyAppendable, RuleKey>() {
           @Override
           public RuleKey load(@Nonnull RuleKeyAppendable appendable) throws Exception {
@@ -60,9 +71,45 @@ public class DefaultRuleKeyFactory
             return subKeyBuilder.build();
           }
         });
+    this.ruleCache = CacheBuilder.newBuilder().weakKeys().build(
+        new CacheLoader<BuildRule, RuleKey>() {
+          @Override
+          public RuleKey load(BuildRule buildRule) throws Exception {
+            return newPopulatedBuilder(buildRule).build();
+          }
+        });
     this.hashLoader = hashLoader;
     this.pathResolver = pathResolver;
     this.ruleFinder = ruleFinder;
+  }
+
+  @Override
+  public RuleKey build(BuildRule buildRule) {
+    return ruleCache.getUnchecked(buildRule);
+  }
+
+  @VisibleForTesting
+  public RuleKeyBuilder<RuleKey> newBuilderForTesting(BuildRule buildRule) {
+    return newPopulatedBuilder(buildRule);
+  }
+
+  private RuleKeyBuilder<RuleKey> newPopulatedBuilder(BuildRule buildRule) {
+    RuleKeyBuilder<RuleKey> builder = newBuilder();
+    ruleKeyFieldLoader.setFields(buildRule, builder);
+    addDepsToRuleKey(buildRule, builder);
+    return builder;
+  }
+
+  private void addDepsToRuleKey(BuildRule buildRule, RuleKeyObjectSink sink) {
+    if (buildRule instanceof AbstractBuildRule) {
+      // TODO(marcinkosiba): We really need to get rid of declared/extra deps in rules. Instead
+      // rules should explicitly take the needed sub-sets of deps as constructor args.
+      AbstractBuildRule abstractBuildRule = (AbstractBuildRule) buildRule;
+      sink.setReflectively("buck.extraDeps", abstractBuildRule.deprecatedGetExtraDeps());
+      sink.setReflectively("buck.declaredDeps", abstractBuildRule.getDeclaredDeps());
+    } else {
+      sink.setReflectively("buck.deps", buildRule.getDeps());
+    }
   }
 
   private RuleKeyBuilder<RuleKey> newBuilder() {
@@ -74,7 +121,7 @@ public class DefaultRuleKeyFactory
 
       @Override
       protected RuleKeyBuilder<RuleKey> setAppendableRuleKey(RuleKeyAppendable appendable) {
-        RuleKey subKey = ruleKeyCache.getUnchecked(appendable);
+        RuleKey subKey = appendableCache.getUnchecked(appendable);
         return setAppendableRuleKey(subKey);
       }
 
@@ -92,25 +139,5 @@ public class DefaultRuleKeyFactory
         return buildRuleKey();
       }
     };
-  }
-
-  @Override
-  protected RuleKeyBuilder<RuleKey> newBuilder(BuildRule rule) {
-    RuleKeyBuilder<RuleKey> builder = newBuilder();
-    addDepsToRuleKey(builder, rule);
-    return builder;
-  }
-
-  private void addDepsToRuleKey(RuleKeyObjectSink sink, BuildRule buildRule) {
-    if (buildRule instanceof AbstractBuildRule) {
-      // TODO(marcinkosiba): We really need to get rid of declared/extra deps in rules. Instead
-      // rules should explicitly take the needed sub-sets of deps as constructor args.
-      AbstractBuildRule abstractBuildRule = (AbstractBuildRule) buildRule;
-      sink
-          .setReflectively("buck.extraDeps", abstractBuildRule.deprecatedGetExtraDeps())
-          .setReflectively("buck.declaredDeps", abstractBuildRule.getDeclaredDeps());
-    } else {
-      sink.setReflectively("buck.deps", buildRule.getDeps());
-    }
   }
 }

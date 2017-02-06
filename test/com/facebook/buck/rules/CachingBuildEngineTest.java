@@ -58,6 +58,7 @@ import com.facebook.buck.rules.keys.FakeInputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
+import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.SizeLimiter;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
@@ -162,22 +163,23 @@ public class CachingBuildEngineTest {
   private static final SourcePathResolver DEFAULT_SOURCE_PATH_RESOLVER =
       new SourcePathResolver(DEFAULT_RULE_FINDER);
   private static final long NO_INPUT_FILE_SIZE_LIMIT = Long.MAX_VALUE;
+  private static final RuleKeyFieldLoader FIELD_LOADER = new RuleKeyFieldLoader(0);
   private static final DefaultRuleKeyFactory NOOP_RULE_KEY_FACTORY =
       new DefaultRuleKeyFactory(
-          0,
+          FIELD_LOADER,
           new NullFileHashCache(),
           DEFAULT_SOURCE_PATH_RESOLVER,
           DEFAULT_RULE_FINDER);
   private static final InputBasedRuleKeyFactory NOOP_INPUT_BASED_RULE_KEY_FACTORY =
       new InputBasedRuleKeyFactory(
-          0,
+          FIELD_LOADER,
           new NullFileHashCache(),
           DEFAULT_SOURCE_PATH_RESOLVER,
           DEFAULT_RULE_FINDER,
           NO_INPUT_FILE_SIZE_LIMIT);
   private static final DependencyFileRuleKeyFactory NOOP_DEP_FILE_RULE_KEY_FACTORY =
       new DefaultDependencyFileRuleKeyFactory(
-          0,
+          FIELD_LOADER,
           new NullFileHashCache(),
           DEFAULT_SOURCE_PATH_RESOLVER,
           DEFAULT_RULE_FINDER);
@@ -215,9 +217,9 @@ public class CachingBuildEngineTest {
       ruleFinder = new SourcePathRuleFinder(resolver);
       pathResolver = new SourcePathResolver(ruleFinder);
       defaultRuleKeyFactory =
-          new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder);
+          new DefaultRuleKeyFactory(FIELD_LOADER, fileHashCache, pathResolver, ruleFinder);
       inputBasedRuleKeyFactory = new InputBasedRuleKeyFactory(
-          0,
+          FIELD_LOADER,
           fileHashCache,
           pathResolver,
           ruleFinder,
@@ -1530,7 +1532,7 @@ public class CachingBuildEngineTest {
     @Before
     public void setUpDepFileFixture() {
       depFileFactory = new DefaultDependencyFileRuleKeyFactory(
-          0,
+          FIELD_LOADER,
           fileHashCache,
           pathResolver,
           ruleFinder);
@@ -2079,7 +2081,7 @@ public class CachingBuildEngineTest {
     public void manifestIsWrittenWhenBuiltLocally() throws Exception {
       DefaultDependencyFileRuleKeyFactory depFilefactory =
           new DefaultDependencyFileRuleKeyFactory(
-              0,
+              FIELD_LOADER,
               fileHashCache,
               pathResolver,
               ruleFinder);
@@ -2194,7 +2196,7 @@ public class CachingBuildEngineTest {
     public void manifestIsUpdatedWhenBuiltLocally() throws Exception {
       DefaultDependencyFileRuleKeyFactory depFilefactory =
           new DefaultDependencyFileRuleKeyFactory(
-              0,
+              FIELD_LOADER,
               fileHashCache,
               pathResolver,
               ruleFinder);
@@ -2315,7 +2317,7 @@ public class CachingBuildEngineTest {
     public void manifestIsTruncatedWhenGrowingPastSizeLimit() throws Exception {
       DefaultDependencyFileRuleKeyFactory depFilefactory =
           new DefaultDependencyFileRuleKeyFactory(
-              0,
+              FIELD_LOADER,
               fileHashCache,
               pathResolver,
               ruleFinder);
@@ -2428,7 +2430,7 @@ public class CachingBuildEngineTest {
     public void manifestBasedCacheHit() throws Exception {
       DefaultDependencyFileRuleKeyFactory depFilefactory =
           new DefaultDependencyFileRuleKeyFactory(
-              0,
+              FIELD_LOADER,
               fileHashCache,
               pathResolver,
               ruleFinder);

@@ -68,7 +68,7 @@ public class ContentAgnosticRuleKeyFactoryTest {
       String filename,
       String fileContents
   ) throws Exception {
-
+    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(0);
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -90,6 +90,6 @@ public class ContentAgnosticRuleKeyFactoryTest {
             .setSrcs(ImmutableList.of(new BuildTargetSourcePath(dep.getBuildTarget())))
             .build(resolver, fileSystem);
 
-    return new ContentAgnosticRuleKeyFactory(0, pathResolver, ruleFinder).build(rule);
+    return new ContentAgnosticRuleKeyFactory(fieldLoader, pathResolver, ruleFinder).build(rule);
   }
 }

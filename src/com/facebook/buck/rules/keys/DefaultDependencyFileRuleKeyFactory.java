@@ -44,21 +44,20 @@ import javax.annotation.Nullable;
 /**
  * A factory for generating dependency-file {@link RuleKey}s.
  */
-public final class DefaultDependencyFileRuleKeyFactory
-    extends ReflectiveRuleKeyFactory<DefaultDependencyFileRuleKeyFactory.Builder, RuleKey>
-    implements DependencyFileRuleKeyFactory {
+public final class DefaultDependencyFileRuleKeyFactory implements DependencyFileRuleKeyFactory {
 
+  private final RuleKeyFieldLoader ruleKeyFieldLoader;
   private final FileHashLoader fileHashLoader;
   private final SourcePathResolver pathResolver;
   private final SourcePathRuleFinder ruleFinder;
   private final LoadingCache<RuleKeyAppendable, Result> cache;
 
   public DefaultDependencyFileRuleKeyFactory(
-      int seed,
+      RuleKeyFieldLoader ruleKeyFieldLoader,
       FileHashLoader hashLoader,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder) {
-    super(seed);
+    this.ruleKeyFieldLoader = ruleKeyFieldLoader;
     this.fileHashLoader = hashLoader;
     this.pathResolver = pathResolver;
     this.ruleFinder = ruleFinder;
@@ -76,9 +75,10 @@ public final class DefaultDependencyFileRuleKeyFactory
         });
   }
 
-  @Override
-  protected Builder newBuilder(final BuildRule rule) {
-    return new Builder();
+  private Builder newPopulatedBuilder(BuildRule buildRule) {
+    Builder builder = new Builder();
+    ruleKeyFieldLoader.setFields(buildRule, builder);
+    return builder;
   }
 
   class Builder extends RuleKeyBuilder<RuleKey> {
@@ -166,7 +166,7 @@ public final class DefaultDependencyFileRuleKeyFactory
       SupportsDependencyFileRuleKey rule,
       ImmutableList<DependencyFileEntry> depFileEntries) throws IOException {
     // Create a builder which records all `SourcePath`s which are possibly used by the rule.
-    Builder builder = newInstance(rule);
+    Builder builder = newPopulatedBuilder(rule);
 
     Predicate<SourcePath> coveredPathPredicate = rule.getCoveredByDepFilePredicate();
     Predicate<SourcePath> interestingPathPredicate = rule.getExistenceOfInterestPredicate();
@@ -225,7 +225,7 @@ public final class DefaultDependencyFileRuleKeyFactory
   public Pair<RuleKey, ImmutableSet<SourcePath>> buildManifestKey(
       SupportsDependencyFileRuleKey rule)
       throws IOException {
-    Builder builder = newInstance(rule);
+    Builder builder = newPopulatedBuilder(rule);
     builder.setReflectively("buck.key_type", "manifest");
 
     Predicate<SourcePath> coveredPathPredicate = rule.getCoveredByDepFilePredicate();

@@ -27,6 +27,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
+import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
@@ -82,11 +83,12 @@ public class ActionGraphCache {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
     try {
+      RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(keySeed);
       if (lastActionGraph != null && lastActionGraph.getFirst().equals(targetGraph)) {
         eventBus.post(ActionGraphEvent.Cache.hit());
         LOG.info("ActionGraph cache hit.");
         if (checkActionGraphs) {
-          compareActionGraphs(eventBus, lastActionGraph.getSecond(), targetGraph, keySeed);
+          compareActionGraphs(eventBus, lastActionGraph.getSecond(), targetGraph, fieldLoader);
         }
       } else {
         eventBus.post(ActionGraphEvent.Cache.miss(lastActionGraph == null));
@@ -194,11 +196,11 @@ public class ActionGraphCache {
   private static Map<BuildRule, RuleKey> getRuleKeysFromBuildRules(
       Iterable<BuildRule> buildRules,
       BuildRuleResolver buildRuleResolver,
-      int keySeed) {
+      RuleKeyFieldLoader fieldLoader) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     ContentAgnosticRuleKeyFactory factory =
-        new ContentAgnosticRuleKeyFactory(keySeed, pathResolver, ruleFinder);
+        new ContentAgnosticRuleKeyFactory(fieldLoader, pathResolver, ruleFinder);
 
     HashMap<BuildRule, RuleKey> ruleKeysMap = new HashMap<>();
     for (BuildRule rule : buildRules) {
@@ -220,7 +222,7 @@ public class ActionGraphCache {
       final BuckEventBus eventBus,
       final ActionGraphAndResolver lastActionGraphAndResolver,
       final TargetGraph targetGraph,
-      final int keySeed) {
+      final RuleKeyFieldLoader fieldLoader) {
     try (SimplePerfEvent.Scope scope = SimplePerfEvent.scope(
         eventBus,
         PerfEventId.of("ActionGraphCacheCheck"))) {
@@ -238,11 +240,11 @@ public class ActionGraphCache {
       Map<BuildRule, RuleKey> lastActionGraphRuleKeys = getRuleKeysFromBuildRules(
           lastActionGraphAndResolver.getActionGraph().getNodes(),
           lastActionGraphAndResolver.getResolver(),
-          keySeed);
+          fieldLoader);
       Map<BuildRule, RuleKey> newActionGraphRuleKeys = getRuleKeysFromBuildRules(
           newActionGraph.getSecond().getActionGraph().getNodes(),
           newActionGraph.getSecond().getResolver(),
-          keySeed);
+          fieldLoader);
 
       if (!lastActionGraphRuleKeys.equals(newActionGraphRuleKeys)) {
         invalidateCache();

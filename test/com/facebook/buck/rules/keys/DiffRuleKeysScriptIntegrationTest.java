@@ -181,15 +181,15 @@ public class DiffRuleKeysScriptIntegrationTest {
             "    -[<missing>]",
             "    +[\"//:java_lib_1#abi\"@ruleKey(sha1=", /* some rulekey */ ")]",
             "Change details for [//:java_lib_2->abiClasspath]",
+            "  (.name):",
+            "    -[string(\"//:java_lib_1#abi\")]",
+            "    +[string(\"//:java_lib_3#abi\")]",
             "  (binaryJar):",
             "    -[\"//:java_lib_1\"@ruleKey(sha1=", /* some rulekey */ ")]",
             "    +[\"//:java_lib_3\"@ruleKey(sha1=", /* some rulekey */ ")]",
             "  (buck.declaredDeps):",
             "    -[\"//:java_lib_1\"@ruleKey(sha1=", /* some rulekey */ ")]",
-            "    +[\"//:java_lib_3\"@ruleKey(sha1=", /* some rulekey */ ")]",
-            "  (name):",
-            "    -[string(\"//:java_lib_1#abi\")]",
-            "    +[string(\"//:java_lib_3#abi\")]"));
+            "    +[\"//:java_lib_3\"@ruleKey(sha1=", /* some rulekey */ ")]"));
   }
 
   private void writeBuckConfig(

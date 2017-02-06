@@ -51,6 +51,7 @@ import com.facebook.buck.rules.TargetGraphHashing;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
@@ -823,7 +824,7 @@ public class TargetsCommand extends AbstractCommand {
         SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(result.getResolver());
         ruleKeyFactory = Optional.of(
             new DefaultRuleKeyFactory(
-                params.getBuckConfig().getKeySeed(),
+                new RuleKeyFieldLoader(params.getBuckConfig().getKeySeed()),
                 params.getFileHashCache(),
                 new SourcePathResolver(ruleFinder),
                 ruleFinder));

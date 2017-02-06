@@ -61,23 +61,24 @@ public class RuleKeyFactoryManager {
   }
 
   private RuleKeyFactories create(ProjectFilesystem filesystem) {
+    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(keySeed);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     FileHashCache fileHashCache = fileHashCacheProvider.apply(filesystem);
     return RuleKeyFactories.of(
         new DefaultRuleKeyFactory(
-            keySeed,
+            fieldLoader,
             fileHashCache,
             pathResolver,
             ruleFinder),
         new InputBasedRuleKeyFactory(
-            keySeed,
+            fieldLoader,
             fileHashCache,
             pathResolver,
             ruleFinder,
             inputRuleKeyFileSizeLimit),
         new DefaultDependencyFileRuleKeyFactory(
-            keySeed,
+            fieldLoader,
             fileHashCache,
             pathResolver,
             ruleFinder));
