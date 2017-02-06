@@ -202,15 +202,14 @@ public class Watchman implements AutoCloseable {
         }
         projectWatchesBuilder.put(rootPath, projectWatch.get());
 
-        if (capabilities.contains(Capability.CLOCK_SYNC_TIMEOUT)) {
-          Optional<String> clockId = queryClock(
-              watchmanClient.get(),
-              projectWatch.get().getWatchRoot(),
-              clock,
-              endTimeNanos - clock.nanoTime());
-          if (clockId.isPresent()) {
-            clockIdsBuilder.put(rootPath, clockId.get());
-          }
+        Optional<String> clockId = queryClock(
+            watchmanClient.get(),
+            projectWatch.get().getWatchRoot(),
+            capabilities,
+            clock,
+            endTimeNanos - clock.nanoTime());
+        if (clockId.isPresent()) {
+          clockIdsBuilder.put(rootPath, clockId.get());
         }
       }
 
@@ -346,15 +345,19 @@ public class Watchman implements AutoCloseable {
   private static Optional<String> queryClock(
       WatchmanClient watchmanClient,
       String watchRoot,
+      ImmutableSet<Capability> capabilities,
       Clock clock,
       long timeoutNanos) throws IOException, InterruptedException {
     Optional<String> clockId = Optional.empty();
     long clockStartTimeNanos = clock.nanoTime();
+    ImmutableMap<String, Object> args = capabilities.contains(Capability.CLOCK_SYNC_TIMEOUT) ?
+        ImmutableMap.of("sync_timeout", WATCHMAN_CLOCK_SYNC_TIMEOUT) : ImmutableMap.of();
+
     Optional<? extends Map<String, ?>> result = watchmanClient.queryWithTimeout(
         timeoutNanos,
         "clock",
         watchRoot,
-        ImmutableMap.of("sync_timeout", WATCHMAN_CLOCK_SYNC_TIMEOUT));
+        args);
     if (result.isPresent()) {
       Map<String, ?> clockResult = result.get();
       clockId = Optional.ofNullable((String) clockResult.get("clock"));

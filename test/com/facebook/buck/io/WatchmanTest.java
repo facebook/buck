@@ -325,7 +325,12 @@ public class WatchmanTest {
                         .put("clock-sync-timeout", false)
                         .build()),
                 ImmutableList.of("watch-project", root),
-                ImmutableMap.of("version", "3.8.0", "watch", root))),
+                ImmutableMap.of("version", "3.8.0", "watch", root),
+                ImmutableList.of(
+                    "clock",
+                    root,
+                    ImmutableMap.of()),
+                ImmutableMap.of("version", "3.8.0", "clock", "c:0:0:1"))),
         rootPaths,
         env,
         finder,
@@ -342,7 +347,7 @@ public class WatchmanTest {
         watchman.getCapabilities());
 
     assertEquals(
-        ImmutableMap.of(),
+        ImmutableMap.of(Paths.get(root), "c:0:0:1"),
         watchman.getClockIds());
   }
 
