@@ -9,6 +9,17 @@ rust_binary(
 )
 
 rust_binary(
+  name = "transitive",
+  srcs = [
+    "transitive.rs",
+  ],
+  deps = [
+    "//messenger:messenger",
+    "//messenger/messengerdep:messengerdep",
+  ],
+)
+
+rust_binary(
   name = "illegal_dep",
   srcs = [
     "main.rs",

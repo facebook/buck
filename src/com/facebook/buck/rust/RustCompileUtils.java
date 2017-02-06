@@ -126,10 +126,23 @@ public class RustCompileUtils {
         .map(StringArg::new)
         .forEach(args::add);
 
-    // Find direct and transitive Rust deps. This could end up with a lot of redundant
-    // parameters (lots of rlibs in one directory), but Arg isn't comparable, so we can't
-    // put it in a Set.
-    new AbstractBreadthFirstTraversal<BuildRule>(ruledeps) {
+    // Find direct and transitive Rust deps. We do this in two passes, since a dependency that's
+    // both direct and transitive needs to be listed on the command line in each form.
+    //
+    // This could end up with a lot of redundant parameters (lots of rlibs in one directory),
+    // but Arg isn't comparable, so we can't put it in a Set.
+
+    // First pass - direct deps
+    ruledeps.stream()
+        .filter(RustLinkable.class::isInstance)
+        .map(rule -> ((RustLinkable) rule).getLinkerArg(true, cxxPlatform, depType))
+        .forEach(args::add);
+
+    // Second pass - indirect deps
+    new AbstractBreadthFirstTraversal<BuildRule>(
+        ruledeps.stream()
+            .flatMap(r -> r.getDeps().stream())
+            .collect(MoreCollectors.toImmutableList())) {
       private final ImmutableSet<BuildRule> empty = ImmutableSet.of();
 
       @Override
@@ -137,8 +150,9 @@ public class RustCompileUtils {
         ImmutableSet<BuildRule> deps = empty;
         if (rule instanceof RustLinkable) {
           deps = rule.getDeps();
+
           Arg arg = ((RustLinkable) rule).getLinkerArg(
-              ruledeps.contains(rule),
+              false,
               cxxPlatform,
               depType);
 

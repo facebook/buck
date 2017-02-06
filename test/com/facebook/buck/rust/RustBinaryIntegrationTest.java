@@ -326,6 +326,20 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void binaryWithLibraryWithTriangleDep() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_library_with_dep", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:transitive").assertSuccess().getStdout(),
+        Matchers.allOf(
+            Matchers.containsString("Hello from transitive"),
+            Matchers.containsString("I have a message to deliver to you"),
+            Matchers.containsString("thing handled")));
+  }
+
+  @Test
   public void featureProvidedWorks() throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "feature_test", tmp);
