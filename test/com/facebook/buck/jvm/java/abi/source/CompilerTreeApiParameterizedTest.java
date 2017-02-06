@@ -17,15 +17,8 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTest;
-import com.sun.source.util.JavacTask;
-import com.sun.source.util.Trees;
 
 import org.junit.runners.Parameterized;
-
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
 
 /**
  * A base class for tests that compare the behavior of javac's implementation of Elements and
@@ -51,30 +44,6 @@ public abstract class CompilerTreeApiParameterizedTest extends CompilerTreeApiTe
     }
 
     return result;
-  }
-
-  private static class TreesCompilerTreeApiFactory implements CompilerTreeApiFactory {
-    private final CompilerTreeApiFactory inner;
-
-    public TreesCompilerTreeApiFactory(CompilerTreeApiFactory inner) {
-      this.inner = inner;
-    }
-
-    @Override
-    public JavacTask newJavacTask(
-        JavaCompiler compiler,
-        StandardJavaFileManager fileManager,
-        DiagnosticCollector<JavaFileObject> diagnostics,
-        Iterable<String> options,
-        Iterable<? extends JavaFileObject> sourceObjects) {
-      return new FrontendOnlyJavacTask(
-          inner.newJavacTask(compiler, fileManager, diagnostics, options, sourceObjects));
-    }
-
-    @Override
-    public Trees getTrees(JavacTask task) {
-      return TreeBackedTrees.instance(task);
-    }
   }
 
   protected boolean testingJavac() {

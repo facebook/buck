@@ -61,7 +61,7 @@ import javax.tools.ToolProvider;
 
 /** Base class for tests that want to use the Compiler Tree API exposed by javac. */
 public abstract class CompilerTreeApiTest {
-  protected interface TaskListenerFactory {
+  public interface TaskListenerFactory {
     TaskListener newTaskListener(JavacTask task);
   }
 
@@ -77,7 +77,7 @@ public abstract class CompilerTreeApiTest {
    * is more than a nice abstraction here; it helps ensure that some of the problematic accesses
    * are far enough away from the initial class load as to not block it.
    */
-  protected interface CompilerTreeApiFactory {
+  public interface CompilerTreeApiFactory {
     JavacTask newJavacTask(
         JavaCompiler compiler,
         StandardJavaFileManager fileManager,

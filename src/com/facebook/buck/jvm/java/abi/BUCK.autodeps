@@ -3,15 +3,15 @@
     "deps" : [
       "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/jvm/java/plugin:plugin",
-      "//src/com/facebook/buck/util:exceptions",
-      "//third-party/java/jsr:jsr305"
+      "//src/com/facebook/buck/util:exceptions"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/java/abi/source/api:api",
       "//src/com/facebook/buck/util:util",
       "//third-party/java/asm:asm",
-      "//third-party/java/guava:guava"
+      "//third-party/java/guava:guava",
+      "//third-party/java/jsr:jsr305"
     ]
   },
   "lib-api-stubber" : {

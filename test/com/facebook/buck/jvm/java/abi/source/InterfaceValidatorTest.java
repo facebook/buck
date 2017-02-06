@@ -18,14 +18,11 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.jvm.java.abi.source.api.BootClasspathOracle;
 import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTest;
 import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTestRunner;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.util.JavacTask;
-import com.sun.source.util.TaskListener;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -35,8 +32,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import javax.tools.Diagnostic;
 
 @RunWith(CompilerTreeApiTestRunner.class)
 public class InterfaceValidatorTest extends CompilerTreeApiTest {
@@ -363,17 +358,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
         sources,
         // A side effect of our hacky test class loader appears to be that this only works if
         // it's NOT a lambda. LoL.
-        new TaskListenerFactory() {
-          @Override
-          public TaskListener newTaskListener(JavacTask task) {
-            return new ValidatingTaskListener(task, new BootClasspathOracle() {
-              @Override
-              public boolean isOnBootClasspath(String binaryName) {
-                return binaryName.startsWith("java.");
-              }
-            }, Diagnostic.Kind.ERROR);
-          }
-        });
+        new ValidatingTaskListenerFactory());
   }
 
   protected void assertNoErrors() {
@@ -395,4 +380,5 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
             .collect(Collectors.toSet()),
         Matchers.containsInAnyOrder(messages));
   }
+
 }
