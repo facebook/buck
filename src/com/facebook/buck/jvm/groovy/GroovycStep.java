@@ -164,7 +164,7 @@ class GroovycStep implements Step {
             }
           },
           resolver,
-          filesystem::resolve);
+          filesystem);
     }
   }
 

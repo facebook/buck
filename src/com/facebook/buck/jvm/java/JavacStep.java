@@ -383,7 +383,7 @@ public class JavacStep implements Step {
             }
           },
           pathResolver,
-          filesystem::resolve);
+          filesystem);
 
     // verbose flag, if appropriate.
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {

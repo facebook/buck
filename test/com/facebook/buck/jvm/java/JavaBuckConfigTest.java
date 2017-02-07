@@ -40,7 +40,6 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
@@ -382,7 +381,7 @@ public class JavaBuckConfigTest {
     options.appendOptionsTo(
         optionsConsumer,
         createMock(SourcePathResolver.class),
-        Functions.identity());
+        defaultFilesystem);
     return optionsConsumer;
   }
 

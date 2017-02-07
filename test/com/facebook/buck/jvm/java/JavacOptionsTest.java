@@ -29,6 +29,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -37,7 +38,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Functions;
 import com.google.common.collect.Lists;
 
 import org.hamcrest.Matcher;
@@ -317,7 +317,7 @@ public class JavacOptionsTest {
     options.appendOptionsTo(
         optionsConsumer,
         createMock(SourcePathResolver.class),
-        Functions.identity());
+        createMock(ProjectFilesystem.class));
     return optionsConsumer;
   }
 

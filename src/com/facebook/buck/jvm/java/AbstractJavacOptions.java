@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
@@ -233,7 +234,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   public void appendOptionsTo(
       OptionsConsumer optionsConsumer,
       SourcePathResolver pathResolver,
-      final Function<Path, Path> pathRelativizer) {
+      ProjectFilesystem filesystem) {
 
     // Add some standard options.
     optionsConsumer.addOptionValue("source", getSourceLevel());
@@ -266,7 +267,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
       Path generateTo = getAnnotationProcessingParams().getGeneratedSourceFolderName();
       if (generateTo != null) {
         //noinspection ConstantConditions
-        optionsConsumer.addOptionValue("s", pathRelativizer.apply(generateTo).toString());
+        optionsConsumer.addOptionValue("s", filesystem.resolve(generateTo).toString());
       }
 
       // Specify processorpath to search for processors.
@@ -274,7 +275,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
           Joiner.on(File.pathSeparator).join(
               FluentIterable.from(getAnnotationProcessingParams().getSearchPathElements())
                   .transform(pathResolver::getAbsolutePath)
-                  .transform(pathRelativizer)
+                  .transform(filesystem::resolve)
                   .transform(Object::toString)));
 
       // Specify names of processors.
