@@ -76,6 +76,12 @@ public class XCScheme {
     return archiveAction;
   }
 
+  public enum AdditionalActions {
+    PRE_SCHEME_ACTIONS,
+    POST_SCHEME_ACTIONS,
+    ;
+  }
+
   public static class BuildableReference {
     private String containerRelativePath;
     private String blueprintIdentifier;

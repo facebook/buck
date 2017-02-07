@@ -25,6 +25,7 @@ import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -77,6 +78,13 @@ class SchemeGenerator {
   private final Optional<String> remoteRunnablePath;
   private final ImmutableMap<SchemeActionType, String> actionConfigNames;
   private final ImmutableMap<PBXTarget, Path> targetToProjectPathMap;
+
+  @SuppressWarnings("unused")
+  private Optional<
+          ImmutableMap<
+              SchemeActionType, ImmutableMap<XCScheme.AdditionalActions, ImmutableList<String>>>>
+      additionalSchemeActions;
+
   private Optional<XCScheme> outputScheme = Optional.empty();
   private final XCScheme.LaunchAction.LaunchStyle launchStyle;
   private final Optional<ImmutableMap<SchemeActionType, ImmutableMap<String, String>>>
@@ -96,6 +104,11 @@ class SchemeGenerator {
       ImmutableMap<SchemeActionType, String> actionConfigNames,
       ImmutableMap<PBXTarget, Path> targetToProjectPathMap,
       Optional<ImmutableMap<SchemeActionType, ImmutableMap<String, String>>> environmentVariables,
+      Optional<
+              ImmutableMap<
+                  SchemeActionType,
+                  ImmutableMap<XCScheme.AdditionalActions, ImmutableList<String>>>>
+          additionalSchemeActions,
       XCScheme.LaunchAction.LaunchStyle launchStyle) {
     this.projectFilesystem = projectFilesystem;
     this.primaryTarget = primaryTarget;
@@ -111,6 +124,7 @@ class SchemeGenerator {
     this.actionConfigNames = actionConfigNames;
     this.targetToProjectPathMap = targetToProjectPathMap;
     this.environmentVariables = environmentVariables;
+    this.additionalSchemeActions = additionalSchemeActions;
 
     LOG.debug(
         "Generating scheme with build targets %s, test build targets %s, test bundle targets %s",
