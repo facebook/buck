@@ -217,7 +217,7 @@ public class ParserConfigTest {
 
   @Test
   public void testGetEnableBuildFileSandboxing() throws IOException {
-    assertFalse(
+    assertTrue(
         FakeBuckConfig.builder().build().getView(ParserConfig.class)
             .getEnableBuildFileSandboxing());
 
