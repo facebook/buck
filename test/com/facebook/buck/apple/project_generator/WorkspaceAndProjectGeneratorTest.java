@@ -22,6 +22,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
@@ -34,10 +35,13 @@ import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleLibraryDescriptionArg;
 import com.facebook.buck.apple.AppleTestBuilder;
+import com.facebook.buck.apple.SchemeActionType;
 import com.facebook.buck.apple.XcodeWorkspaceConfigBuilder;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescriptionArg;
 import com.facebook.buck.apple.xcode.XCScheme;
+import com.facebook.buck.apple.xcode.XCScheme.AdditionalActions;
+import com.facebook.buck.apple.xcode.XCScheme.SchemePrePostAction;
 import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
@@ -70,6 +74,8 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.facebook.buck.util.types.Either;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -938,6 +944,70 @@ public class WorkspaceAndProjectGeneratorTest {
     assertThat(launchAction.getRunnablePath().get(), Matchers.equalTo("/some.app"));
     assertThat(
         launchAction.getLaunchStyle(), Matchers.equalTo(XCScheme.LaunchAction.LaunchStyle.WAIT));
+  }
+
+  @Test
+  public void customPrePostActions() throws IOException, InterruptedException {
+    BuildTarget fooLibTarget =
+        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "FooLib");
+    TargetNode<AppleLibraryDescriptionArg, ?> fooLib =
+        AppleLibraryBuilder.createBuilder(fooLibTarget).build();
+
+    ImmutableMap<SchemeActionType, ImmutableMap<XCScheme.AdditionalActions, ImmutableList<String>>>
+        schemeActions =
+            ImmutableMap.of(
+                SchemeActionType.BUILD,
+                ImmutableMap.of(AdditionalActions.PRE_SCHEME_ACTIONS, ImmutableList.of("echo yeha")),
+                SchemeActionType.LAUNCH,
+                ImmutableMap.of(AdditionalActions.POST_SCHEME_ACTIONS, ImmutableList.of("echo takeoff")));
+    TargetNode<XcodeWorkspaceConfigDescriptionArg, ?> workspaceNode =
+        XcodeWorkspaceConfigBuilder.createBuilder(
+                BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "workspace"))
+            .setWorkspaceName(Optional.of("workspace"))
+            .setSrcTarget(Optional.of(fooLibTarget))
+            .setAdditionalSchemeActions(Optional.of(schemeActions))
+            .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(fooLib, workspaceNode);
+
+    WorkspaceAndProjectGenerator generator =
+        new WorkspaceAndProjectGenerator(
+            rootCell,
+            targetGraph,
+            workspaceNode.getConstructorArg(),
+            workspaceNode.getBuildTarget(),
+            ImmutableSet.of(
+                ProjectGenerator.Option.INCLUDE_TESTS,
+                ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
+            false /* combinedProject */,
+            FocusedModuleTargetMatcher.noFocus(),
+            true /* parallelizeBuild */,
+            DEFAULT_PLATFORM,
+            ImmutableSet.of(),
+            "BUCK",
+            getBuildRuleResolverForNodeFunction(targetGraph),
+            getFakeBuckEventBus(),
+            TestRuleKeyConfigurationFactory.create(),
+            halideBuckConfig,
+            cxxBuckConfig,
+            appleConfig,
+            swiftBuckConfig);
+    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
+    generator.generateWorkspaceAndDependentProjects(
+        projectGenerators, MoreExecutors.newDirectExecutorService());
+
+    XCScheme mainScheme = generator.getSchemeGenerators().get("workspace").getOutputScheme().get();
+    XCScheme.BuildAction buildAction = mainScheme.getBuildAction().get();
+
+    ImmutableList<SchemePrePostAction> preBuild = buildAction.getPreActions().get();
+    assertEquals(preBuild.size(), 1);
+    assertFalse(buildAction.getPostActions().isPresent());
+    assertEquals(preBuild.iterator().next().getCommand(), "echo yeha");
+
+    XCScheme.LaunchAction launchAction = mainScheme.getLaunchAction().get();
+    ImmutableList<XCScheme.SchemePrePostAction> postLaunch = launchAction.getPostActions().get();
+    assertEquals(postLaunch.size(), 1);
+    assertFalse(launchAction.getPreActions().isPresent());
   }
 
   private Matcher<XCScheme.BuildActionEntry> buildActionEntryWithName(String name) {

@@ -79,16 +79,14 @@ class SchemeGenerator {
   private final ImmutableMap<SchemeActionType, String> actionConfigNames;
   private final ImmutableMap<PBXTarget, Path> targetToProjectPathMap;
 
-  @SuppressWarnings("unused")
-  private Optional<
-          ImmutableMap<
-              SchemeActionType, ImmutableMap<XCScheme.AdditionalActions, ImmutableList<String>>>>
-      additionalSchemeActions;
-
   private Optional<XCScheme> outputScheme = Optional.empty();
   private final XCScheme.LaunchAction.LaunchStyle launchStyle;
   private final Optional<ImmutableMap<SchemeActionType, ImmutableMap<String, String>>>
       environmentVariables;
+  private Optional<
+          ImmutableMap<
+              SchemeActionType, ImmutableMap<XCScheme.AdditionalActions, ImmutableList<String>>>>
+      additionalSchemeActions;
 
   public SchemeGenerator(
       ProjectFilesystem projectFilesystem,
@@ -132,6 +130,31 @@ class SchemeGenerator {
   }
 
   @VisibleForTesting
+  private Optional<ImmutableList<XCScheme.SchemePrePostAction>> additionalCommandsForSchemeAction(
+      SchemeActionType schemeActionType,
+      XCScheme.AdditionalActions actionType,
+      Optional<XCScheme.BuildableReference> primaryTarget) {
+
+    Optional<ImmutableList<String>> commands =
+        this.additionalSchemeActions
+            .map(input -> Optional.ofNullable(input.get(schemeActionType)))
+            .filter(Optional::isPresent)
+            .map(input -> Optional.ofNullable(input.get().get(actionType)))
+            .orElse(Optional.empty());
+    if (commands.isPresent()) {
+      ImmutableList<XCScheme.SchemePrePostAction> actions =
+          commands
+              .get()
+              .stream()
+              .map(command -> new XCScheme.SchemePrePostAction(primaryTarget, command))
+              .collect(ImmutableList.toImmutableList());
+      return Optional.of(actions);
+    } else {
+      return Optional.empty();
+    }
+  }
+
+  @VisibleForTesting
   Optional<XCScheme> getOutputScheme() {
     return outputScheme;
   }
@@ -166,7 +189,23 @@ class SchemeGenerator {
       buildTargetToBuildableReferenceMap.put(target, buildableReference);
     }
 
-    XCScheme.BuildAction buildAction = new XCScheme.BuildAction(parallelizeBuild);
+    Optional<XCScheme.BuildableReference> primaryBuildReference = Optional.empty();
+    if (primaryTarget.isPresent()) {
+      primaryBuildReference =
+          Optional.ofNullable(buildTargetToBuildableReferenceMap.get(primaryTarget.get()));
+    }
+
+    XCScheme.BuildAction buildAction =
+        new XCScheme.BuildAction(
+            parallelizeBuild,
+            additionalCommandsForSchemeAction(
+                SchemeActionType.BUILD,
+                XCScheme.AdditionalActions.PRE_SCHEME_ACTIONS,
+                primaryBuildReference),
+            additionalCommandsForSchemeAction(
+                SchemeActionType.BUILD,
+                XCScheme.AdditionalActions.POST_SCHEME_ACTIONS,
+                primaryBuildReference));
 
     // For aesthetic reasons put all non-test build actions before all test build actions.
     for (PBXTarget target : orderedBuildTargets) {
@@ -191,7 +230,15 @@ class SchemeGenerator {
     XCScheme.TestAction testAction =
         new XCScheme.TestAction(
             Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.TEST)),
-            Optional.ofNullable(envVariables.get(SchemeActionType.TEST)));
+            Optional.ofNullable(envVariables.get(SchemeActionType.TEST)),
+            additionalCommandsForSchemeAction(
+                SchemeActionType.TEST,
+                XCScheme.AdditionalActions.PRE_SCHEME_ACTIONS,
+                primaryBuildReference),
+            additionalCommandsForSchemeAction(
+                SchemeActionType.TEST,
+                XCScheme.AdditionalActions.POST_SCHEME_ACTIONS,
+                primaryBuildReference));
 
     for (PBXTarget target : orderedRunTestTargets) {
       XCScheme.BuildableReference buildableReference =
@@ -216,21 +263,55 @@ class SchemeGenerator {
                     runnablePath,
                     remoteRunnablePath,
                     launchStyle,
-                    Optional.ofNullable(envVariables.get(SchemeActionType.LAUNCH))));
+                    Optional.ofNullable(envVariables.get(SchemeActionType.LAUNCH)),
+                    additionalCommandsForSchemeAction(
+                        SchemeActionType.LAUNCH,
+                        XCScheme.AdditionalActions.PRE_SCHEME_ACTIONS,
+                        primaryBuildReference),
+                    additionalCommandsForSchemeAction(
+                        SchemeActionType.LAUNCH,
+                        XCScheme.AdditionalActions.POST_SCHEME_ACTIONS,
+                        primaryBuildReference)));
+
         profileAction =
             Optional.of(
                 new XCScheme.ProfileAction(
                     primaryBuildableReference,
                     Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.PROFILE)),
-                    Optional.ofNullable(envVariables.get(SchemeActionType.PROFILE))));
+                    Optional.ofNullable(envVariables.get(SchemeActionType.PROFILE)),
+                    additionalCommandsForSchemeAction(
+                        SchemeActionType.PROFILE,
+                        XCScheme.AdditionalActions.PRE_SCHEME_ACTIONS,
+                        primaryBuildReference),
+                    additionalCommandsForSchemeAction(
+                        SchemeActionType.PROFILE,
+                        XCScheme.AdditionalActions.POST_SCHEME_ACTIONS,
+                        primaryBuildReference)));
       }
     }
     XCScheme.AnalyzeAction analyzeAction =
         new XCScheme.AnalyzeAction(
-            Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.ANALYZE)));
+            Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.ANALYZE)),
+            additionalCommandsForSchemeAction(
+                SchemeActionType.ANALYZE,
+                XCScheme.AdditionalActions.PRE_SCHEME_ACTIONS,
+                primaryBuildReference),
+            additionalCommandsForSchemeAction(
+                SchemeActionType.ANALYZE,
+                XCScheme.AdditionalActions.POST_SCHEME_ACTIONS,
+                primaryBuildReference));
+
     XCScheme.ArchiveAction archiveAction =
         new XCScheme.ArchiveAction(
-            Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.ARCHIVE)));
+            Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.ARCHIVE)),
+            additionalCommandsForSchemeAction(
+                SchemeActionType.ARCHIVE,
+                XCScheme.AdditionalActions.PRE_SCHEME_ACTIONS,
+                primaryBuildReference),
+            additionalCommandsForSchemeAction(
+                SchemeActionType.ARCHIVE,
+                XCScheme.AdditionalActions.POST_SCHEME_ACTIONS,
+                primaryBuildReference));
 
     XCScheme scheme =
         new XCScheme(
