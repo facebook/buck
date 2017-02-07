@@ -346,8 +346,8 @@ public class Genrule extends AbstractBuildRuleWithResolver
       commands.add(createGenruleStep(context));
     }
 
-    if (MorePaths.getFileExtension(getPathToOutput()).equals("zip")) {
-      commands.add(new ZipScrubberStep(getProjectFilesystem(), getPathToOutput()));
+    if (MorePaths.getFileExtension(pathToOutFile).equals("zip")) {
+      commands.add(new ZipScrubberStep(getProjectFilesystem(), pathToOutFile));
     }
 
     buildableContext.recordArtifact(pathToOutFile);

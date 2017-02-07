@@ -235,7 +235,7 @@ public class AppleBundle
     this.cacheable = cacheable;
 
     bundleBinaryPath = bundleRoot.resolve(binaryPath);
-    hasBinary = binary.isPresent() && binary.get().getPathToOutput() != null;
+    hasBinary = binary.isPresent() && binary.get().getSourcePathToOutput() != null;
 
     if (needCodeSign() && !adHocCodeSignIsSufficient()) {
       this.provisioningProfileStore = provisioningProfileStore;
@@ -387,8 +387,8 @@ public class AppleBundle
             PlistProcessStep.OutputFormat.BINARY));
 
     if (hasBinary) {
-      appendCopyBinarySteps(stepsBuilder);
-      appendCopyDsymStep(stepsBuilder, buildableContext);
+      appendCopyBinarySteps(stepsBuilder, context.getSourcePathResolver());
+      appendCopyDsymStep(stepsBuilder, buildableContext, context.getSourcePathResolver());
     }
 
     if (
@@ -603,11 +603,13 @@ public class AppleBundle
     return stepsBuilder.build();
   }
 
-  private void appendCopyBinarySteps(ImmutableList.Builder<Step> stepsBuilder) {
+  private void appendCopyBinarySteps(
+      ImmutableList.Builder<Step> stepsBuilder,
+      SourcePathResolver pathResolver) {
     Preconditions.checkArgument(hasBinary);
 
-    final Path binaryOutputPath = binary.get().getPathToOutput();
-    Preconditions.checkNotNull(binaryOutputPath);
+    final Path binaryOutputPath = pathResolver.getRelativePath(
+        Preconditions.checkNotNull(binary.get().getSourcePathToOutput()));
 
     copyBinaryIntoBundle(stepsBuilder, binaryOutputPath);
     copyAnotherCopyOfWatchKitStub(stepsBuilder, binaryOutputPath);
@@ -646,25 +648,27 @@ public class AppleBundle
 
   private void appendCopyDsymStep(
       ImmutableList.Builder<Step> stepsBuilder,
-      BuildableContext buildableContext) {
+      BuildableContext buildableContext,
+      SourcePathResolver pathResolver) {
     if (appleDsym.isPresent()) {
       stepsBuilder.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
-              appleDsym.get().getPathToOutput(),
+              pathResolver.getRelativePath(appleDsym.get().getSourcePathToOutput()),
               bundleRoot.getParent(),
               CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
-      appendDsymRenameStepToMatchBundleName(stepsBuilder, buildableContext);
+      appendDsymRenameStepToMatchBundleName(stepsBuilder, buildableContext, pathResolver);
     }
   }
 
   private void appendDsymRenameStepToMatchBundleName(
       ImmutableList.Builder<Step> stepsBuilder,
-      BuildableContext buildableContext) {
+      BuildableContext buildableContext,
+      SourcePathResolver pathResolver) {
     Preconditions.checkArgument(hasBinary && appleDsym.isPresent());
 
     // rename dSYM bundle to match bundle name
-    Path dsymPath = appleDsym.get().getPathToOutput();
+    Path dsymPath = pathResolver.getRelativePath(appleDsym.get().getSourcePathToOutput());
     Path dsymSourcePath = bundleRoot.getParent().resolve(dsymPath.getFileName());
     Path dsymDestinationPath = bundleRoot.getParent().resolve(
         bundleRoot.getFileName() + "." + AppleBundleExtension.DSYM.toFileExtension());

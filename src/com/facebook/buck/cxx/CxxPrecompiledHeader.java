@@ -145,8 +145,8 @@ public class CxxPrecompiledHeader
     return output;
   }
 
-  private Path getSuffixedOutput(String suffix) {
-    return Paths.get(getPathToOutput().toString() + suffix);
+  private Path getSuffixedOutput(SourcePathResolver pathResolver, String suffix) {
+    return Paths.get(pathResolver.getRelativePath(getSourcePathToOutput()).toString() + suffix);
   }
 
   public CxxIncludePaths getCxxIncludePaths() {
@@ -192,8 +192,8 @@ public class CxxPrecompiledHeader
     return false;
   }
 
-  private Path getDepFilePath() {
-    return getSuffixedOutput(".dep");
+  private Path getDepFilePath(SourcePathResolver pathResolver) {
+    return getSuffixedOutput(pathResolver, ".dep");
   }
 
   public ImmutableList<Path> readDepFileLines(BuildContext context)
@@ -205,7 +205,7 @@ public class CxxPrecompiledHeader
               getProjectFilesystem(),
               preprocessorDelegate.getHeaderPathNormalizer(),
               preprocessorDelegate.getHeaderVerification(),
-              getDepFilePath(),
+              getDepFilePath(context.getSourcePathResolver()),
               // TODO(10194465): This uses relative path so as to get relative paths in the dep file
               context.getSourcePathResolver().getRelativePath(input),
               output));
@@ -225,8 +225,8 @@ public class CxxPrecompiledHeader
     return new CxxPreprocessAndCompileStep(
         getProjectFilesystem(),
         CxxPreprocessAndCompileStep.Operation.GENERATE_PCH,
-        getPathToOutput(),
-        getDepFilePath(),
+        resolver.getRelativePath(getSourcePathToOutput()),
+        getDepFilePath(resolver),
         // TODO(10194465): This uses relative path so as to get relative paths in the dep file
         resolver.getRelativePath(input),
         inputType,

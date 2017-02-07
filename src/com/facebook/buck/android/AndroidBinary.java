@@ -58,6 +58,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
@@ -87,7 +88,6 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.AbstractMap;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -722,14 +722,10 @@ public class AndroidBinary
         enhancementResult.getPackageableCollection();
 
     ImmutableSet<Path> classpathEntriesToDex =
-        FluentIterable
-            .from(enhancementResult.getClasspathEntriesToDex())
-            .transform(resolver::getRelativePath)
-            .append(Collections.singleton(
-                // Note: Need that call to Collections.singleton because
-                // unfortunately Path implements Iterable<Path>.
-                enhancementResult.getCompiledUberRDotJava().getPathToOutput()))
-            .toSet();
+        RichStream.of(enhancementResult.getCompiledUberRDotJava().getSourcePathToOutput())
+            .concat(enhancementResult.getClasspathEntriesToDex().stream())
+            .map(resolver::getRelativePath)
+            .collect(MoreCollectors.toImmutableSet());
 
     ImmutableMultimap.Builder<APKModule, Path> additionalDexStoreToJarPathMapBuilder =
         ImmutableMultimap.builder();

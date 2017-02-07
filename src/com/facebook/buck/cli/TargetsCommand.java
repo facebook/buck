@@ -843,6 +843,7 @@ public class TargetsCommand extends AbstractCommand {
         if (isShowOutput() || isShowFullOutput()) {
           Optional<Path> outputPath =
               getUserFacingOutputPath(
+                  new SourcePathResolver(new SourcePathRuleFinder(buildRuleResolver.get())),
                   rule,
                   isShowFullOutput(),
                   params.getBuckConfig().getBuckOutCompatLink());
@@ -861,10 +862,12 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   static Optional<Path> getUserFacingOutputPath(
+      SourcePathResolver pathResolver,
       BuildRule rule,
       boolean absolute,
       boolean buckOutCompatLink) {
-    Optional<Path> outputPathOptional = Optional.ofNullable(rule.getPathToOutput());
+    Optional<Path> outputPathOptional =
+        Optional.ofNullable(rule.getSourcePathToOutput()).map(pathResolver::getRelativePath);
 
     // When using buck out compat mode, we favor using the default buck output path in the UI, so
     // amend the output paths when this is set.
