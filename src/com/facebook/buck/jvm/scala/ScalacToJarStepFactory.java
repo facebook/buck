@@ -22,15 +22,18 @@ import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
 import com.facebook.buck.jvm.java.ClassUsageFileWriter;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
@@ -39,36 +42,32 @@ import java.util.Optional;
 
 public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory {
 
-  public static ImmutableList<String> collectScalacArguments(
-      ScalaBuckConfig config,
-      BuildRuleResolver resolver,
-      ImmutableList<String> extraArguments) {
-
-    return ImmutableList.<String>builder()
-        .addAll(config.getCompilerFlags())
-        .addAll(extraArguments)
-        .addAll(
-            Iterables.transform(
-                resolver.getAllRules(config.getCompilerPlugins()),
-                input -> "-Xplugin:" + input.getPathToOutput())
-        )
-        .build();
-  }
-
   private final Tool scalac;
+  private final ImmutableList<String> configCompilerFlags;
   private final ImmutableList<String> extraArguments;
+  private final ImmutableSet<SourcePath> compilerPlugins;
   private final Function<BuildContext, Iterable<Path>> extraClassPath;
 
-  public ScalacToJarStepFactory(Tool scalac, ImmutableList<String> extraArguments) {
-    this(scalac, extraArguments, EMPTY_EXTRA_CLASSPATH);
+  public ScalacToJarStepFactory(
+      Tool scalac,
+      ImmutableList<String> configCompilerFlags,
+      ImmutableList<String> extraArguments,
+      ImmutableSet<BuildRule> compilerPlugins) {
+    this(scalac, configCompilerFlags, extraArguments, compilerPlugins, EMPTY_EXTRA_CLASSPATH);
   }
 
   public ScalacToJarStepFactory(
       Tool scalac,
+      ImmutableList<String> configCompilerFlags,
       ImmutableList<String> extraArguments,
+      ImmutableSet<BuildRule> compilerPlugins,
       Function<BuildContext, Iterable<Path>> extraClassPath) {
     this.scalac = scalac;
+    this.configCompilerFlags = configCompilerFlags;
     this.extraArguments = extraArguments;
+    this.compilerPlugins = compilerPlugins.stream()
+        .map(BuildRule::getSourcePathToOutput)
+        .collect(MoreCollectors.toImmutableSet());
     this.extraClassPath = extraClassPath;
   }
 
@@ -93,7 +92,15 @@ public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory {
     steps.add(
       new ScalacStep(
           scalac,
-          extraArguments,
+          ImmutableList.<String>builder()
+              .addAll(configCompilerFlags)
+              .addAll(extraArguments)
+              .addAll(
+                  Iterables.transform(
+                      compilerPlugins,
+                      input -> "-Xplugin:" +
+                          context.getSourcePathResolver().getRelativePath(input).toString()))
+              .build(),
           resolver,
           outputDirectory,
           sourceFilePaths,
@@ -107,6 +114,8 @@ public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory {
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     scalac.appendToRuleKey(sink);
+    sink.setReflectively("configCompilerFlags", configCompilerFlags);
     sink.setReflectively("extraArguments", extraArguments);
+    sink.setReflectively("compilerPlugins", compilerPlugins);
   }
 }

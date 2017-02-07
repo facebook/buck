@@ -150,10 +150,9 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                 /* additionalClasspathEntries */ ImmutableSet.of(),
                 new ScalacToJarStepFactory(
                     scalac,
-                    ImmutableList.<String>builder()
-                        .addAll(config.getCompilerFlags())
-                        .addAll(args.extraArguments)
-                        .build()
+                    config.getCompilerFlags(),
+                    args.extraArguments,
+                    ImmutableSet.of()
                 ),
                 args.resourcesRoot,
                 args.manifestFile,

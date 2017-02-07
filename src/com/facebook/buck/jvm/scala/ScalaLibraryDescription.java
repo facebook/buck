@@ -123,10 +123,10 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
         /* additionalClasspathEntries */ ImmutableSet.of(),
         new ScalacToJarStepFactory(
             scalac,
-            ScalacToJarStepFactory.collectScalacArguments(
-                scalaBuckConfig,
-                resolver,
-                args.extraArguments)),
+            scalaBuckConfig.getCompilerFlags(),
+            args.extraArguments,
+            resolver.getAllRules(scalaBuckConfig.getCompilerPlugins())
+        ),
         args.resourcesRoot,
         args.manifestFile,
         args.mavenCoords,

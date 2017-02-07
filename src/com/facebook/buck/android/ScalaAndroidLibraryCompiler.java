@@ -72,10 +72,9 @@ public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
 
     return new ScalacToJarStepFactory(
         getScalac(resolver),
-        ScalacToJarStepFactory.collectScalacArguments(
-            scalaBuckConfig,
-            resolver,
-            arg.extraArguments),
+        scalaBuckConfig.getCompilerFlags(),
+        arg.extraArguments,
+        resolver.getAllRules(scalaBuckConfig.getCompilerPlugins()),
         ANDROID_CLASSPATH_FROM_CONTEXT);
   }
 
