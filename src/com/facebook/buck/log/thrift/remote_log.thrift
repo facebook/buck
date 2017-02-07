@@ -43,10 +43,22 @@ struct ProcessStatsRemoteLogEntry {
   9: optional map<string, string> context;
 }
 
+struct TimeStatsRemoteLogEntry {
+  1: i64 pythonTimeMs;
+  2: i64 initTimeMs;
+  3: i64 parseTimeMs;
+  5: i64 actionGraphTimeMs;
+  6: i64 rulekeyTimeMs;
+  7: i64 fetchTimeMs;
+  8: i64 buildTimeMs;
+  9: i64 installTimeMs;
+}
+
 struct RemoteLogEntry {
   1: optional string buildUuid;
 
   2: optional VersionControlStatsRemoteLogEntry versionControlStats;
   3: optional MemoryStatsRemoteLogEntry memoryStats;
   4: optional ProcessStatsRemoteLogEntry processStats;
+  5: optional TimeStatsRemoteLogEntry timeStats;
 }

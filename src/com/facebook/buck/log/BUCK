@@ -30,6 +30,7 @@ java_immutables_library(
   immutable_types = [
     'InvocationInfo',
     'LogConfigSetup',
+    'PerfTimeStats',
   ],
   tests = [
     '//test/com/facebook/buck/log:log',
