@@ -58,6 +58,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   private final ObjectWriter objectWriter;
   private BufferedOutputStream outputStream;
 
+  // Values to be written in the end of the log.
   private OptionalInt exitCode = OptionalInt.empty();
 
   public MachineReadableLoggerListener(
@@ -132,6 +133,11 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   @Subscribe
   public synchronized void environmentalChange(ParsingEvent.EnvVariableChange event) {
     writeToLog("EnvChange", event);
+  }
+
+  @Subscribe
+  public synchronized void timePerfStatsEvent(PerfTimesEventListener.PerfTimesEvent event) {
+    writeToLog("PertTimesStats", event);
   }
 
   private Path getLogFilePath() {
