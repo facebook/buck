@@ -56,6 +56,11 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
       throw new RuntimeException("Error parsing/executing query from deps", e);
     }
 
+    // If there's no targets, bail early.
+    if (targets.isEmpty()) {
+      return Optional.empty();
+    }
+
     // A pattern matching all of the build targets in the query string.
     Pattern targetsPattern =
         Pattern.compile(

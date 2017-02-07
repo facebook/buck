@@ -55,4 +55,17 @@ public class QueryTargetTranslatorTest {
         Matchers.equalTo(Optional.of(Query.of("deps(//:b)"))));
   }
 
+  @Test
+  public void noTargets() {
+    FixedTargetNodeTranslator translator = new FixedTargetNodeTranslator(ImmutableMap.of());
+    QueryTargetTranslator queryTranslator = new QueryTargetTranslator();
+    assertThat(
+        queryTranslator.translateTargets(
+            CELL_PATH_RESOLVER,
+            PATTERN,
+            translator,
+            Query.of("$declared_deps")),
+        Matchers.equalTo(Optional.empty()));
+  }
+
 }
