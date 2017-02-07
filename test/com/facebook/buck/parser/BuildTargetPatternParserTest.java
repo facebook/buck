@@ -128,8 +128,8 @@ public class BuildTargetPatternParserTest {
         BuildTargetPatternParser.forVisibilityArgument();
 
     exception.expect(BuildTargetParseException.class);
-    exception.expectMessage("Build target path cannot be absolute or contain . or .. " +
-        "(found ///facebookorca/...)");
+    exception.expectMessage("absolute");
+    exception.expectMessage("(found ///facebookorca/...)");
     buildTargetPatternParser.parse(createCellRoots(filesystem), "///facebookorca/...");
   }
 }

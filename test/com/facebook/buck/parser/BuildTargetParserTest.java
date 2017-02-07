@@ -92,25 +92,33 @@ public class BuildTargetParserTest {
   @Test
   public void testParsePathWithDot() {
     exception.expect(BuildTargetParseException.class);
-    exception.expectMessage("Build target path cannot be absolute or contain . or .. " +
-            "(found //.:assets)");
+    exception.expectMessage(" . ");
+    exception.expectMessage("(found //.:assets)");
     parser.parse("//.:assets", fullyQualifiedParser, createCellRoots(null));
   }
 
   @Test
   public void testParsePathWithDotDot() {
     exception.expect(BuildTargetParseException.class);
-    exception.expectMessage("Build target path cannot be absolute or contain . or .. " +
-            "(found //../facebookorca:assets)");
+    exception.expectMessage(" .. ");
+    exception.expectMessage("(found //../facebookorca:assets)");
     parser.parse("//../facebookorca:assets", fullyQualifiedParser, createCellRoots(null));
   }
 
   @Test
   public void testParseAbsolutePath() {
     exception.expect(BuildTargetParseException.class);
-    exception.expectMessage("Build target path cannot be absolute or contain . or .. " +
-            "(found ///facebookorca:assets)");
+    exception.expectMessage("absolute");
+    exception.expectMessage("(found ///facebookorca:assets)");
     parser.parse("///facebookorca:assets", fullyQualifiedParser, createCellRoots(null));
+  }
+
+  @Test
+  public void testParseDoubleSlashPath() {
+    exception.expect(BuildTargetParseException.class);
+    exception.expectMessage("//");
+    exception.expectMessage("(found //facebook//orca:assets)");
+    parser.parse("//facebook//orca:assets", fullyQualifiedParser, createCellRoots(null));
   }
 
   @Test

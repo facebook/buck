@@ -42,7 +42,7 @@ public class BuildTargetParser {
   private static final String BUILD_RULE_PREFIX = "//";
   private static final String BUILD_RULE_SEPARATOR = ":";
   private static final Splitter BUILD_RULE_SEPARATOR_SPLITTER = Splitter.on(BUILD_RULE_SEPARATOR);
-  private static final Set<String> INVALID_BASE_NAME_PARTS = ImmutableSet.of("", ".", "..");
+  private static final Set<String> INVALID_BASE_NAME_PARTS = ImmutableSet.of(".", "..");
 
   private final Interner<BuildTarget> flavoredTargetCache = Interners.newWeakInterner();
 
@@ -139,11 +139,27 @@ public class BuildTargetParser {
               BUILD_RULE_PREFIX));
     }
     String baseNamePath = baseName.substring(BUILD_RULE_PREFIX.length());
+    if (baseNamePath.startsWith("/")) {
+      throw new BuildTargetParseException(
+          String.format(
+              "Build target path should start with an optional cell name, then // and then a " +
+              " relative directory name, not an absolute directory path (found %s)",
+              buildTargetName
+          ));
+    }
     for (String baseNamePart : Splitter.on('/').split(baseNamePath)) {
+      if ("".equals(baseNamePart)) {
+        throw new BuildTargetParseException(
+            String.format(
+                "Build target path cannot contain // other than at the start " +
+                "(or after a cell name) (found %s)",
+                buildTargetName
+            ));
+      }
       if (INVALID_BASE_NAME_PARTS.contains(baseNamePart)) {
         throw new BuildTargetParseException(
             String.format(
-                "Build target path cannot be absolute or contain . or .. (found %s)",
+                "Build target path cannot contain . or .. (found %s)",
                 buildTargetName));
       }
     }
