@@ -14,22 +14,14 @@
 {call buck.command}
 
 {param overview}
-<h1 class="warning">THIS COMMAND IS HIGHLY EXPERIMENTAL AND IS SUBJECT TO CHANGE WITHOUT NOTICE!</h1>
-
-<blockquote>
-Normally, we would not publicly document a feature of Buck that is in such early stages; however,
-because we are using it in Buck itself, contributors need to know how it works.
-</blockquote>
+<h1 class="warning">THIS COMMAND IS DEPRECATED AND NOT ACTIVELY MAINTAINED!</h1>
 
 <h2>tl;dr</h2>
 
-We have an experimental feature to auto-generate the <code>deps</code> and{sp}
+Deprecated feature to auto-generate the <code>deps</code> and{sp}
 <code>exported_deps</code> for the following rules:
 
 <ul>
-  // Don't mention android_library() yet because we don't have a story around
-  // automatically adding android_resource() dependencies.
-  // <li>{call buck.android_library /}
   <li>{call buck.java_library /}
   <li>{call buck.java_test /}
 </ul>
