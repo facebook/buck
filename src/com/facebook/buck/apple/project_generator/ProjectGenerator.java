@@ -90,18 +90,27 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasTests;
+import com.facebook.buck.model.MacroException;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringWithMacrosArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.macros.AbstractMacroExpander;
+import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.swift.SwiftBuckConfig;
@@ -110,7 +119,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.PackagedResource;
-import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -163,7 +171,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
@@ -1073,21 +1080,24 @@ public class ProjectGenerator {
     return target;
   }
 
-  /**
-   * @return a function to convert {@link StringWithMacros}s into {@link String}s, throwing an error
-   *         if we see an macros, which aren't supported in project generation.
-   */
-  private java.util.function.Function<StringWithMacros, String> convertFlagWithoutMacrosFn(
-      String source) {
-    return flag ->
-      flag.format(
-          macro -> {
-            throw new IllegalArgumentException(
-                String.format(
-                    "%s: unsupported macro \"%s\"",
-                    source,
-                    macro.getClass()));
-          });
+  private ImmutableList<Arg> convertStringWithMacros(
+      TargetNode<?, ?> node,
+      Iterable<StringWithMacros> flags) {
+    ImmutableList.Builder<Arg> result = ImmutableList.builder();
+    ImmutableList<? extends AbstractMacroExpander<? extends Macro>> expanders =
+        ImmutableList.of(new AsIsLocationMacroExpander());
+    for (StringWithMacros flag : flags) {
+      result.add(
+          StringWithMacrosArg.of(
+              flag,
+              expanders,
+              node.getBuildTarget(),
+              node.getCellNames(),
+              new BuildRuleResolver(
+                  TargetGraph.EMPTY,
+                  new DefaultTargetNodeToBuildRuleTransformer())));
+    }
+    return result.build();
   }
 
   private PBXNativeTarget generateBinaryTarget(
@@ -1379,13 +1389,12 @@ public class ProjectGenerator {
       ImmutableList<String> otherLdFlags =
           ImmutableList.<String>builder()
               .addAll(
-                  Stream.concat(
-                      targetNode.getConstructorArg().linkerFlags.stream(),
-                      collectRecursiveExportedLinkerFlags(ImmutableList.of(targetNode)).stream())
-                      .map(
-                          convertFlagWithoutMacrosFn(
-                              String.format("%s: `linker_flags`", targetNode.getBuildTarget())))
-                      .collect(Collectors.toList()))
+                  Arg.stringify(
+                      convertStringWithMacros(
+                          targetNode,
+                          Iterables.concat(
+                              targetNode.getConstructorArg().linkerFlags,
+                              collectRecursiveExportedLinkerFlags(ImmutableList.of(targetNode))))))
               .build();
 
       appendConfigsBuilder
@@ -1439,11 +1448,7 @@ public class ProjectGenerator {
         String sdk = flags.getFirst().pattern().replaceAll("[*.]", "");
         platformLinkerFlagsBuilder.put(
             sdk,
-            RichStream.from(flags.getSecond())
-                .map(
-                    convertFlagWithoutMacrosFn(
-                        String.format("%s: `platform_linker_flags`", targetNode.getBuildTarget())))
-                .toImmutableList());
+            Arg.stringify(convertStringWithMacros(targetNode, flags.getSecond())));
       }
       ImmutableMultimap<String, ImmutableList<String>> platformLinkerFlags =
           platformLinkerFlagsBuilder.build();
@@ -2733,4 +2738,35 @@ public class ProjectGenerator {
         .resolve("_project")
         .resolve(hashedPath + AppleHeaderVisibilities.getHeaderSymlinkTreeSuffix(headerVisibility));
   }
+
+  /**
+   * An expander for the location macro which leaves it as-is.
+   */
+  private static class AsIsLocationMacroExpander extends AbstractMacroExpander<LocationMacro> {
+
+    @Override
+    public Class<LocationMacro> getInputClass() {
+      return LocationMacro.class;
+    }
+
+    @Override
+    protected LocationMacro parse(
+        BuildTarget target,
+        CellPathResolver cellNames,
+        ImmutableList<String> input)
+        throws MacroException {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String expandFrom(
+        BuildTarget target,
+        CellPathResolver cellNames,
+        BuildRuleResolver resolver,
+        LocationMacro input)
+        throws MacroException {
+      return String.format("$(location %s)", input.getTarget());
+    }
+  }
+
 }
