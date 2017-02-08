@@ -878,7 +878,7 @@ public class NdkCxxPlatforms {
         // Since this flag can be used multiple times, and because the compiler just uses
         // whichever standard was specified last, cxx_library rules can override this from
         // their BUCK-file definitions.
-        "-std=gnu++1y",
+        "-std=gnu++11",
         // By default, Android builds disable exceptions and runtime type identification.
         "-fno-exceptions",
         "-fno-rtti");
