@@ -138,6 +138,7 @@ public class AppleCxxPlatforms {
     // TODO(bhamiltoncx): Add more and better cflags.
     ImmutableList.Builder<String> cflagsBuilder = ImmutableList.builder();
     cflagsBuilder.add("-isysroot", sdkPaths.getSdkPath().toString());
+    cflagsBuilder.add("-iquote", filesystem.getRootPath().toString());
     cflagsBuilder.add("-arch", targetArchitecture);
     cflagsBuilder.add(targetSdk.getApplePlatform().getMinVersionFlagPrefix() + minVersion);
 

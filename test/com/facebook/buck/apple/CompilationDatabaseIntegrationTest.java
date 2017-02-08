@@ -250,6 +250,8 @@ public class CompilationDatabaseIntegrationTest {
     ImmutableList<String> commandArgs2 = ImmutableList.of(
         "-isysroot",
         sdkRoot.toString(),
+        "-iquote",
+        tmpRoot.toString(),
         "-arch",
         "x86_64",
         "'-mios-simulator-version-min=8.0'");
