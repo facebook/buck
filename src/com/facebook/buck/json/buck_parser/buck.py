@@ -1434,7 +1434,7 @@ def main():
                 message='Mercurial not available for glob_handler = mercurial, aborting.',
                 level='fatal',
                 source='mercurial',
-                exception=sys.exc_info()
+                exception=None,
             )
             to_parent.write(encode_result([], [d], None))
             to_parent.flush()
