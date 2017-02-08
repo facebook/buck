@@ -28,17 +28,12 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.nio.file.Path;
-
-import javax.annotation.Nonnull;
 
 /**
  * A factory for generating input-based {@link RuleKey}s.
@@ -51,9 +46,9 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
   private final FileHashLoader fileHashLoader;
   private final SourcePathResolver pathResolver;
   private final SourcePathRuleFinder ruleFinder;
-  private final LoadingCache<RuleKeyAppendable, Result> appendableCache;
-  private final LoadingCache<BuildRule, RuleKey> ruleCache;
   private final long inputSizeLimit;
+
+  private final SingleBuildRuleKeyCache<Result> ruleKeyCache = new SingleBuildRuleKeyCache<>();
 
   public InputBasedRuleKeyFactory(
       RuleKeyFieldLoader ruleKeyFieldLoader,
@@ -66,24 +61,6 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     this.pathResolver = pathResolver;
     this.ruleFinder = ruleFinder;
     this.inputSizeLimit = inputSizeLimit;
-
-    this.appendableCache = CacheBuilder.newBuilder().weakKeys().build(
-        new CacheLoader<RuleKeyAppendable, Result>() {
-          @Override
-          public Result load(
-              @Nonnull RuleKeyAppendable appendable) {
-            Builder subKeyBuilder = new Builder();
-            appendable.appendToRuleKey(subKeyBuilder);
-            return subKeyBuilder.buildResult();
-          }
-        });
-    this.ruleCache = CacheBuilder.newBuilder().weakKeys().build (
-        new CacheLoader<BuildRule, RuleKey>() {
-          @Override
-          public RuleKey load(BuildRule buildRule) throws Exception {
-            return newPopulatedBuilder(buildRule).build();
-          }
-        });
   }
 
   @VisibleForTesting
@@ -95,10 +72,16 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     this(new RuleKeyFieldLoader(seed), hashLoader, pathResolver, ruleFinder, Long.MAX_VALUE);
   }
 
+  private Result calculateBuildRuleKey(BuildRule buildRule) {
+    Builder builder = newVerifyingBuilder(buildRule);
+    ruleKeyFieldLoader.setFields(buildRule, builder);
+    return builder.build();
+  }
+
   @Override
   public RuleKey build(BuildRule buildRule) {
     try {
-      return ruleCache.getUnchecked(buildRule);
+      return ruleKeyCache.get(buildRule, this::calculateBuildRuleKey).getRuleKey();
     } catch (RuntimeException e) {
       propagateIfSizeLimitException(e);
       throw e;
@@ -113,12 +96,6 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
         .filter(t -> t instanceof SizeLimiter.SizeLimitException)
         .findFirst()
         .ifPresent(Throwables::propagateIfPossible);
-  }
-
-  private RuleKeyBuilder<RuleKey> newPopulatedBuilder(BuildRule buildRule) {
-    RuleKeyBuilder<RuleKey> builder = newVerifyingBuilder(buildRule);
-    ruleKeyFieldLoader.setFields(buildRule, builder);
-    return builder;
   }
 
   private Builder newVerifyingBuilder(final BuildRule rule) {
@@ -137,8 +114,8 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
       // Construct the rule key, verifying that all the deps we saw when constructing it
       // are explicit dependencies of the rule.
       @Override
-      public RuleKey build() {
-        Result result = buildResult();
+      public Result build() {
+        Result result = super.build();
         for (BuildRule usedDep : result.getDeps()) {
           Preconditions.checkState(
               rule.getDeps().contains(usedDep) || hasEffectiveDirectDep(usedDep),
@@ -147,12 +124,12 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
               usedDep.getBuildTarget(),
               rule.getDeps());
         }
-        return result.getRuleKey();
+        return result;
       }
     };
   }
 
-  /* package */ class Builder extends RuleKeyBuilder<RuleKey> {
+  /* package */ class Builder extends RuleKeyBuilder<Result> {
 
     private final ImmutableList.Builder<Iterable<BuildRule>> deps = ImmutableList.builder();
     private final SizeLimiter sizeLimiter = new SizeLimiter(inputSizeLimit);
@@ -161,9 +138,15 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
       super(ruleFinder, pathResolver, fileHashLoader);
     }
 
+    private Result calculateRuleKeyAppendableKey(RuleKeyAppendable appendable) {
+      Builder subKeyBuilder = new Builder();
+      appendable.appendToRuleKey(subKeyBuilder);
+      return subKeyBuilder.build();
+    }
+
     @Override
     protected Builder setAppendableRuleKey(RuleKeyAppendable appendable) {
-      Result result = appendableCache.getUnchecked(appendable);
+      Result result = ruleKeyCache.get(appendable, this::calculateRuleKeyAppendableKey);
       deps.add(result.getDeps());
       setAppendableRuleKey(result.getRuleKey());
       return this;
@@ -205,18 +188,14 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
               rule));
     }
 
-    // Build the rule key and the list of deps found from this builder.
-    final Result buildResult() {
+    @Override
+    public Result build() {
       return new Result(buildRuleKey(), Iterables.concat(deps.build()));
     }
 
-    @Override
-    public RuleKey build() {
-      return buildRuleKey();
-    }
   }
 
-  private static class Result {
+  protected static class Result {
 
     private final RuleKey ruleKey;
     private final Iterable<BuildRule> deps;

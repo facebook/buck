@@ -25,9 +25,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.base.Joiner;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -38,7 +35,6 @@ import java.nio.file.NoSuchFileException;
 import java.util.Collections;
 import java.util.function.Predicate;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -50,7 +46,9 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
   private final FileHashLoader fileHashLoader;
   private final SourcePathResolver pathResolver;
   private final SourcePathRuleFinder ruleFinder;
-  private final LoadingCache<RuleKeyAppendable, Result> cache;
+
+  private final SingleBuildRuleKeyCache<Result> ruleKeyCache =
+      new SingleBuildRuleKeyCache<>();
 
   public DefaultDependencyFileRuleKeyFactory(
       RuleKeyFieldLoader ruleKeyFieldLoader,
@@ -61,18 +59,6 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
     this.fileHashLoader = hashLoader;
     this.pathResolver = pathResolver;
     this.ruleFinder = ruleFinder;
-
-    // Build the cache around the sub-rule-keys and their dep lists.
-    cache = CacheBuilder.newBuilder().weakKeys().build(
-        new CacheLoader<RuleKeyAppendable, Result>() {
-          @Override
-          public Result load(
-              @Nonnull RuleKeyAppendable appendable) {
-            Builder subKeyBuilder = new Builder();
-            appendable.appendToRuleKey(subKeyBuilder);
-            return subKeyBuilder.buildResult();
-          }
-        });
   }
 
   private Builder newPopulatedBuilder(BuildRule buildRule) {
@@ -89,9 +75,16 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
       super(ruleFinder, pathResolver, fileHashLoader);
     }
 
+    private Result calculateRuleKeyAppendableKey(RuleKeyAppendable appendable) {
+      Builder subKeyBuilder = new Builder();
+      appendable.appendToRuleKey(subKeyBuilder);
+      return subKeyBuilder.buildResult();
+    }
+
     @Override
     protected Builder setAppendableRuleKey(RuleKeyAppendable appendable) {
-      Result result = cache.getUnchecked(appendable);
+      Result result =
+          ruleKeyCache.get(appendable, this::calculateRuleKeyAppendableKey);
       inputs.add(result.getInputs());
       setAppendableRuleKey(result.getRuleKey());
       return this;
