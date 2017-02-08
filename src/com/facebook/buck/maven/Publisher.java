@@ -137,10 +137,10 @@ public class Publisher {
               publishable.getMavenCoords().get(),
               "No maven coordinates specified for published rule ",
               publishable));
-      Path relativePathToOutput = Preconditions.checkNotNull(
-          pathResolver.getRelativePath(publishable.getSourcePathToOutput()),
+      Path relativePathToOutput = pathResolver.getRelativePath(
+          Preconditions.checkNotNull(publishable.getSourcePathToOutput(),
           "No path to output present in ",
-          publishable);
+          publishable));
       File mainItem = publishable
           .getProjectFilesystem()
           .resolve(relativePathToOutput)

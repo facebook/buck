@@ -72,8 +72,8 @@ public class DCompileBuildRule extends AbstractBuildRule {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    Path output = Preconditions.checkNotNull(
-        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
+    Path output = context.getSourcePathResolver().getRelativePath(
+        Preconditions.checkNotNull(getSourcePathToOutput()));
     buildableContext.recordArtifact(output);
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
