@@ -649,6 +649,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       throws IOException {
     Preconditions.checkState(useDependencyFileRuleKeys());
     return DefaultClassUsageFileReader.loadFromFile(
+        context.getSourcePathResolver(),
         getProjectFilesystem(),
         Preconditions.checkNotNull(depFileOutputPath),
         deps);

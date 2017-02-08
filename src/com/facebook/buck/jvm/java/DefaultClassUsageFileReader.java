@@ -22,6 +22,7 @@ import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -49,6 +50,7 @@ class DefaultClassUsageFileReader {
   private DefaultClassUsageFileReader() {}
 
   private static ImmutableMap<Path, SourcePath> buildJarToAbiJarMap(
+      SourcePathResolver pathResolver,
       ImmutableSortedSet<BuildRule> deps) {
     ImmutableMap.Builder<Path, SourcePath> jarAbsolutePathToAbiJarSourcePathBuilder =
         ImmutableMap.builder();
@@ -64,7 +66,7 @@ class DefaultClassUsageFileReader {
         continue;
       }
 
-      Path jarAbsolutePath = dep.getProjectFilesystem().resolve(dep.getPathToOutput());
+      Path jarAbsolutePath = pathResolver.getAbsolutePath(dep.getSourcePathToOutput());
 
       jarAbsolutePathToAbiJarSourcePathBuilder.put(
           jarAbsolutePath,
@@ -83,11 +85,12 @@ class DefaultClassUsageFileReader {
   }
 
   public static ImmutableList<SourcePath> loadFromFile(
+      SourcePathResolver pathResolver,
       ProjectFilesystem projectFilesystem,
       Path classUsageFilePath,
       ImmutableSortedSet<BuildRule> deps) {
     final ImmutableMap<Path, SourcePath> jarAbsolutePathToAbiJarSourcePath =
-        buildJarToAbiJarMap(deps);
+        buildJarToAbiJarMap(pathResolver, deps);
     final ImmutableList.Builder<SourcePath> builder = ImmutableList.builder();
     try {
       final ImmutableSet<Map.Entry<String, ImmutableList<String>>> classUsageEntries =
