@@ -24,7 +24,8 @@ import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.CharMatcher;
@@ -62,14 +63,16 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander {
     if (input.isEmpty()) {
       throw new MacroException("One quoted query expression is expected");
     }
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.get(0));
     return resolveQuery(target, cellNames, resolver, queryExpression)
         .map(queryTarget -> {
           Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
           return resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
         })
-        .map(rule -> rule.getProjectFilesystem().resolve(rule.getPathToOutput()))
+        .map(BuildRule::getSourcePathToOutput)
         .filter(Objects::nonNull)
+        .map(pathResolver::getAbsolutePath)
         .map(Path::toString)
         .sorted()
         .collect(Collectors.joining(" "));
@@ -99,8 +102,8 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander {
                 new MacroException("Error extracting rule key appendables", e));
           }
         })
-        .filter(rule -> rule.getPathToOutput() != null)
-        .map(rule -> SourcePaths.getToBuildTargetSourcePath().apply(rule))
+        .map(BuildRule::getSourcePathToOutput)
+        .filter(Objects::nonNull)
         .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
   }
 
