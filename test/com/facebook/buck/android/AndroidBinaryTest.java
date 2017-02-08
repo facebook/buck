@@ -103,6 +103,7 @@ public class AndroidBinaryTest {
             ImmutableSet.of(libraryTwoRule.getBuildTarget()))
         .setManifest(new FakeSourcePath("java/src/com/facebook/base/AndroidManifest.xml"))
         .setKeystore(keystoreRule.getBuildTarget())
+        .setPackageType("release")
         .build(ruleResolver);
 
     AndroidPackageableCollection packageableCollection =
@@ -274,16 +275,18 @@ public class AndroidBinaryTest {
 
     BuildTarget libBaseTarget =
         BuildTargetFactory.newInstance("//first-party/orca/lib-base:lib-base");
-    Path proguardDir = rule.getProguardOutputFromInputClasspath(
+    Path proguardConfigDir = BuildTargets.getGenPath(
+        rule.getProjectFilesystem(),
+        target.withFlavors(AndroidBinaryGraphEnhancer.AAPT_PACKAGE_FLAVOR),
+        "__%s__proguard__/.proguard");
+    Path proguardDir = AndroidBinary.getProguardOutputFromInputClasspath(
+        proguardConfigDir,
         BuildTargets.getScratchPath(
             rule.getProjectFilesystem(),
             libBaseTarget,
             "lib__%s__classes"));
     assertEquals(
-        BuildTargets.getGenPath(
-            rule.getProjectFilesystem(),
-            target.withFlavors(AndroidBinaryGraphEnhancer.AAPT_PACKAGE_FLAVOR),
-            "__%s__proguard__/.proguard")
+        proguardConfigDir
             .resolve(
                 BuildTargets.getScratchPath(
                     rule.getProjectFilesystem(),

@@ -19,16 +19,12 @@ package com.facebook.buck.android;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RecordFileSha1Step;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.annotations.VisibleForTesting;
@@ -52,8 +48,7 @@ import javax.annotation.Nullable;
  * of locales provided. The contents of string_assets.zip is built into the assets of the APK.
  * all_locales_string_assets.zip is used for debugging purposes.
  */
-public class PackageStringAssets extends AbstractBuildRule
-    implements InitializableFromDisk<PackageStringAssets.BuildOutput> {
+public class PackageStringAssets extends AbstractBuildRule {
 
   private static final String STRING_ASSETS_ZIP_HASH = "STRING_ASSETS_ZIP_HASH";
   @VisibleForTesting
@@ -62,7 +57,6 @@ public class PackageStringAssets extends AbstractBuildRule
 
   private final FilteredResourcesProvider filteredResourcesProvider;
   private final AaptPackageResources aaptPackageResources;
-  private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
   private final ImmutableSet<String> locales;
 
   public PackageStringAssets(
@@ -74,7 +68,6 @@ public class PackageStringAssets extends AbstractBuildRule
     this.locales = locales;
     this.filteredResourcesProvider = filteredResourcesProvider;
     this.aaptPackageResources = aaptPackageResources;
-    this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
   // TODO(russellporter): Add an integration test for packaging string assets
@@ -143,28 +136,6 @@ public class PackageStringAssets extends AbstractBuildRule
 
   private Path getPathToAllLocalesStringAssetsZip() {
     return getPathToStringAssetsDir().resolve("all_locales_string_assets.zip");
-  }
-
-  public Sha1HashCode getStringAssetsZipHash() {
-    return buildOutputInitializer.getBuildOutput().stringAssetsZipHash;
-  }
-
-  @Override
-  public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
-    return new BuildOutput(onDiskBuildInfo.getHash(STRING_ASSETS_ZIP_HASH).get());
-  }
-
-  @Override
-  public BuildOutputInitializer<BuildOutput> getBuildOutputInitializer() {
-    return buildOutputInitializer;
-  }
-
-  public static class BuildOutput {
-    private final Sha1HashCode stringAssetsZipHash;
-
-    public BuildOutput(Sha1HashCode stringAssetsZipHash) {
-      this.stringAssetsZipHash = stringAssetsZipHash;
-    }
   }
 
   @Nullable
