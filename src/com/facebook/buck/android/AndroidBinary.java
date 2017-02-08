@@ -239,15 +239,6 @@ public class AndroidBinary
   @AddToRuleKey
   private final JavaRuntimeLauncher javaRuntimeLauncher;
   @AddToRuleKey
-  private final SourcePath androidManifestPath;
-  @AddToRuleKey
-  private final SourcePath resourcesApkPath;
-  @AddToRuleKey
-  private ImmutableList<SourcePath> primaryApkAssetsZips;
-  @AddToRuleKey
-  private Optional<SourcePath> pathToGeneratedProguardConfigDir;
-
-  @AddToRuleKey
   @Nullable
   @SuppressWarnings("PMD.UnusedPrivateField")
   private final SourcePath abiPath;
@@ -321,13 +312,6 @@ public class AndroidBinary
     this.compressAssetLibraries = compressAssetLibraries;
     this.skipProguard = skipProguard;
     this.manifestEntries = manifestEntries;
-    this.androidManifestPath =
-        enhancementResult.getAndroidManifestPath();
-    this.resourcesApkPath =
-        enhancementResult.getPrimaryResourcesApkPath();
-    this.primaryApkAssetsZips = enhancementResult.getPrimaryApkAssetZips();
-    this.pathToGeneratedProguardConfigDir = enhancementResult.getPathToGeneratedProguardConfigDir();
-
     if (exopackageModes.isEmpty()) {
       this.abiPath = null;
     } else {
@@ -452,11 +436,12 @@ public class AndroidBinary
     steps.add(
         CopyStep.forFile(
             getProjectFilesystem(),
-            context.getSourcePathResolver().getRelativePath(androidManifestPath),
+            enhancementResult.getAaptPackageResources().getAndroidManifestXml(),
             manifestPath));
     buildableContext.recordArtifact(manifestPath);
 
     // Create the .dex files if we aren't doing pre-dexing.
+    Path signedApkPath = getSignedApkPath();
     DexFilesInfo dexFilesInfo =
         addFinalDxSteps(buildableContext, context.getSourcePathResolver(), steps);
 
@@ -513,11 +498,15 @@ public class AndroidBinary
       }
     }
 
+
+
     // If non-english strings are to be stored as assets, pass them to ApkBuilder.
     ImmutableSet.Builder<Path> zipFiles = ImmutableSet.builder();
-    RichStream.from(primaryApkAssetsZips)
-        .map(context.getSourcePathResolver()::getRelativePath)
-        .forEach(zipFiles::add);
+    Optional<PackageStringAssets> packageStringAssets = enhancementResult.getPackageStringAssets();
+    if (packageStringAssets.isPresent()) {
+      final Path pathToStringAssetsZip = packageStringAssets.get().getPathToStringAssetsZip();
+      zipFiles.add(pathToStringAssetsZip);
+    }
 
     if (ExopackageMode.enabledForNativeLibraries(exopackageModes)) {
       // We need to include a few dummy native libraries with our application so that Android knows
@@ -539,10 +528,9 @@ public class AndroidBinary
         .build();
 
     SourcePathResolver resolver = context.getSourcePathResolver();
-    Path signedApkPath = getSignedApkPath();
     ApkBuilderStep apkBuilderCommand = new ApkBuilderStep(
         getProjectFilesystem(),
-        context.getSourcePathResolver().getAbsolutePath(resourcesApkPath),
+        enhancementResult.getAaptPackageResources().getResourceApkPath(),
         getSignedApkPath(),
         dexFilesInfo.primaryDexPath,
         allAssetDirectories,
@@ -933,7 +921,7 @@ public class AndroidBinary
   }
 
   @VisibleForTesting
-  static Path getProguardOutputFromInputClasspath(Path proguardConfigDir, Path classpathEntry) {
+  Path getProguardOutputFromInputClasspath(Path classpathEntry) {
     // Hehe, this is so ridiculously fragile.
     Preconditions.checkArgument(!classpathEntry.isAbsolute(),
         "Classpath entries should be relative rather than absolute paths: %s",
@@ -941,6 +929,8 @@ public class AndroidBinary
     String obfuscatedName =
         Files.getNameWithoutExtension(classpathEntry.toString()) + "-obfuscated.jar";
     Path dirName = classpathEntry.getParent();
+    Path proguardConfigDir = enhancementResult.getAaptPackageResources()
+        .getPathToGeneratedProguardConfigDir();
     return proguardConfigDir.resolve(dirName).resolve(obfuscatedName);
   }
 
@@ -955,7 +945,6 @@ public class AndroidBinary
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext,
       SourcePathResolver resolver) {
-    Preconditions.checkArgument(pathToGeneratedProguardConfigDir.isPresent());
     ImmutableSet.Builder<Path> additionalLibraryJarsForProguardBuilder = ImmutableSet.builder();
 
     for (JavaLibrary buildRule : rulesToExcludeFromDex) {
@@ -973,15 +962,16 @@ public class AndroidBinary
       proguardConfigsBuilder.add(resolver.getAbsolutePath(proguardConfig.get()));
     }
 
-    Path proguardConfigDir = resolver.getRelativePath(pathToGeneratedProguardConfigDir.get());
     // Transform our input classpath to a set of output locations for each input classpath.
     // TODO(jasta): the output path we choose is the result of a slicing function against
     // input classpath. This is fragile and should be replaced with knowledge of the BuildTarget.
-    final ImmutableMap<Path, Path> inputOutputEntries = classpathEntriesToDex.stream().collect(
-        MoreCollectors.toImmutableMap(
-            java.util.function.Function.identity(),
-            (path) -> getProguardOutputFromInputClasspath(proguardConfigDir, path)));
+      final ImmutableMap<Path, Path> inputOutputEntries = classpathEntriesToDex.stream().collect(
+          MoreCollectors.toImmutableMap(
+              java.util.function.Function.identity(),
+              this::getProguardOutputFromInputClasspath));
 
+    Path proguardConfigDir = enhancementResult.getAaptPackageResources()
+        .getPathToGeneratedProguardConfigDir();
     // Run ProGuard on the classpath entries.
     ProGuardObfuscateStep.create(
         javaRuntimeLauncher,
@@ -1054,7 +1044,8 @@ public class AndroidBinary
       Optional<Path> proguardFullConfigFile = Optional.empty();
       Optional<Path> proguardMappingFile = Optional.empty();
       if (packageType.isBuildWithObfuscation()) {
-        Path proguardConfigDir = resolver.getRelativePath(pathToGeneratedProguardConfigDir.get());
+        Path proguardConfigDir = enhancementResult.getAaptPackageResources()
+            .getPathToGeneratedProguardConfigDir();
         proguardFullConfigFile = Optional.of(proguardConfigDir.resolve("configuration.txt"));
         proguardMappingFile = Optional.of(proguardConfigDir.resolve("mapping.txt"));
       }
