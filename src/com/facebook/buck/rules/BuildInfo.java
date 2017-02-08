@@ -59,11 +59,6 @@ public class BuildInfo {
     static final String INPUT_BASED_RULE_KEY = "INPUT_BASED_RULE_KEY";
 
     /**
-     * Key for {@link OnDiskBuildInfo} to identify the ABI RuleKey for a build rule.
-     */
-    static final String ABI_RULE_KEY = "ABI_RULE_KEY";
-
-    /**
      * Key for {@link OnDiskBuildInfo} to identify the dependency-file {@link RuleKey} for a build
      * rule.
      */

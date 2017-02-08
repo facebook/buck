@@ -92,10 +92,6 @@ public class BuckBuildLog {
     assertBuildSuccessType(buildTargetRaw, BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY);
   }
 
-  public void assertTargetHadMatchingDepsAbi(String buildTargetRaw) {
-    assertBuildSuccessType(buildTargetRaw, BuildRuleSuccessType.MATCHING_ABI_RULE_KEY);
-  }
-
   public void assertTargetHadMatchingRuleKey(String buildTargetRaw) {
     assertBuildSuccessType(buildTargetRaw, BuildRuleSuccessType.MATCHING_RULE_KEY);
   }

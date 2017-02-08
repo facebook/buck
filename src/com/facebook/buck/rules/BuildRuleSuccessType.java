@@ -76,14 +76,6 @@ public enum BuildRuleSuccessType {
   ),
 
   /**
-   * Computed ABI {@link RuleKey} matches the one on disk.
-   */
-  MATCHING_ABI_RULE_KEY(
-      "FOUND",
-      Property.SHOULD_UPDATE_METADATA_ON_DISK
-  ),
-
-  /**
    * Computed dep-file {@link RuleKey} matches the one on disk
    */
   MATCHING_DEP_FILE_RULE_KEY(
