@@ -216,31 +216,6 @@ public class ParserConfigTest {
   }
 
   @Test
-  public void testGetEnableBuildFileSandboxing() throws IOException {
-    assertTrue(
-        FakeBuckConfig.builder().build().getView(ParserConfig.class)
-            .getEnableBuildFileSandboxing());
-
-    Reader reader = new StringReader(
-        Joiner.on('\n').join(
-            "[project]",
-            "enable_build_file_sandboxing = true"));
-    ParserConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
-        temporaryFolder,
-        reader).getView(ParserConfig.class);
-    assertTrue(config.getEnableBuildFileSandboxing());
-
-    reader = new StringReader(
-        Joiner.on('\n').join(
-            "[project]",
-            "enable_build_file_sandboxing = false"));
-    config = BuckConfigTestUtils.createWithDefaultFilesystem(
-        temporaryFolder,
-        reader).getView(ParserConfig.class);
-    assertFalse(config.getEnableBuildFileSandboxing());
-  }
-
-  @Test
   public void testGetTrackCellAgnosticTarget() throws IOException {
     assertTrue(
         FakeBuckConfig.builder().build().getView(ParserConfig.class)

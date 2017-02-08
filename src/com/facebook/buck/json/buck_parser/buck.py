@@ -14,7 +14,7 @@ from .glob_internal import glob_internal
 from .glob_mercurial import glob_mercurial_manifest, load_mercurial_repo_info
 from .glob_watchman import SyncCookieState, glob_watchman
 from .util import Diagnostic, cygwin_adjusted_path, get_caller_frame, is_special, is_in_dir
-from .module_whitelist import ImportWhitelistManager, NoopImportWhitelistManager
+from .module_whitelist import ImportWhitelistManager
 import StringIO
 import abc
 import cProfile
@@ -514,7 +514,7 @@ class BuildFileProcessor(object):
     def __init__(self, project_root, cell_roots, build_file_name,
                  allow_empty_globs, ignore_buck_autodeps_files, no_autodeps_signatures,
                  watchman_client, watchman_glob_stat_results,
-                 watchman_use_glob_generator, use_mercurial_glob, enable_build_file_sandboxing,
+                 watchman_use_glob_generator, use_mercurial_glob,
                  project_import_whitelist=None, implicit_includes=None,
                  extra_funcs=None, configs=None, env_vars=None,
                  ignore_paths=None):
@@ -541,7 +541,6 @@ class BuildFileProcessor(object):
         self._allow_empty_globs = allow_empty_globs
         self._ignore_buck_autodeps_files = ignore_buck_autodeps_files
         self._no_autodeps_signatures = no_autodeps_signatures
-        self._enable_build_file_sandboxing = enable_build_file_sandboxing
         self._watchman_client = watchman_client
         self._watchman_glob_stat_results = watchman_glob_stat_results
         self._watchman_use_glob_generator = watchman_use_glob_generator
@@ -555,13 +554,10 @@ class BuildFileProcessor(object):
             func_with_env = LazyBuildEnvPartial(func)
             lazy_functions[func.__name__] = func_with_env
         self._functions = lazy_functions
-        if self._enable_build_file_sandboxing:
-            self._import_whitelist_manager = ImportWhitelistManager(
-                import_whitelist=self._create_import_whitelist(project_import_whitelist),
-                safe_modules_config=self.SAFE_MODULES_CONFIG,
-                path_predicate=lambda path: is_in_dir(path, self._project_root))
-        else:
-            self._import_whitelist_manager = NoopImportWhitelistManager()
+        self._import_whitelist_manager = ImportWhitelistManager(
+            import_whitelist=self._create_import_whitelist(project_import_whitelist),
+            safe_modules_config=self.SAFE_MODULES_CONFIG,
+            path_predicate=lambda path: is_in_dir(path, self._project_root))
 
     def _wrap_env_var_read(self, read, real):
         """
@@ -885,10 +881,6 @@ class BuildFileProcessor(object):
         """
         Creates a context that sandboxes build file processing.
         """
-
-        if not self._enable_build_file_sandboxing:
-            yield
-            return
 
         with self._wrap_file_access():
             with self._import_whitelist_manager.allow_unsafe_import(False):
@@ -1389,10 +1381,6 @@ def main():
         action='store_true',
         help='Profile every buck file execution')
     parser.add_option(
-        '--enable_build_file_sandboxing',
-        action='store_true',
-        help='Limits abilities of buck files')
-    parser.add_option(
         '--build_file_import_whitelist',
         action='append',
         dest='build_file_import_whitelist')
@@ -1463,7 +1451,6 @@ def main():
         options.watchman_glob_stat_results,
         options.watchman_use_glob_generator,
         use_mercurial_glob,
-        options.enable_build_file_sandboxing,
         project_import_whitelist=options.build_file_import_whitelist or [],
         implicit_includes=options.include or [],
         configs=configs,

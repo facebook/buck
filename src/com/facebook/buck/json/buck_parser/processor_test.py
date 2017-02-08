@@ -81,7 +81,6 @@ class BuckTest(unittest.TestCase):
         self.allow_empty_globs = False
         self.build_file_name = 'BUCK'
         self.watchman_client = None
-        self.enable_build_file_sandboxing = False
         self.project_import_whitelist = None
 
     def tearDown(self):
@@ -107,7 +106,6 @@ class BuckTest(unittest.TestCase):
             False,              # watchman_glob_stat_results
             False,              # watchman_use_glob_generator
             False,              # use_mercurial_glob
-            self.enable_build_file_sandboxing,
             self.project_import_whitelist,
             includes or [],
             **kwargs)
@@ -514,25 +512,7 @@ class BuckTest(unittest.TestCase):
             os.path.join(self.project_root, dep.path) in
             get_includes_from_results(results))
 
-    def test_import_works_without_sandboxing(self):
-        self.enable_build_file_sandboxing = False
-        build_file = ProjectFile(
-            self.project_root,
-            path='BUCK',
-            contents=(
-                'import ssl',
-            ))
-        self.write_files(build_file)
-        build_file_processor = self.create_build_file_processor()
-        with build_file_processor.with_builtins(__builtin__.__dict__):
-            build_file_processor.process(
-                build_file.root,
-                build_file.prefix,
-                build_file.path,
-                [])
-
-    def test_enabled_sandboxing_blocks_import(self):
-        self.enable_build_file_sandboxing = True
+    def test_imports_are_blocked(self):
         build_file = ProjectFile(
             self.project_root,
             path='BUCK',
@@ -552,7 +532,6 @@ class BuckTest(unittest.TestCase):
         Verify that modules whitelisted globally or in configs can be imported
         with sandboxing enabled.
         """
-        self.enable_build_file_sandboxing = True
         self.project_import_whitelist = ['sys', 'subprocess']
         build_file = ProjectFile(
             self.project_root,
@@ -572,7 +551,6 @@ class BuckTest(unittest.TestCase):
         """
         Verify that `allow_unsafe_import()` allows to import specified modules
         """
-        self.enable_build_file_sandboxing = True
         # Importing httplib results in `__import__()` calls for other modules, e.g. socket, sys
         build_file = ProjectFile(
             self.project_root,
@@ -599,9 +577,10 @@ class BuckTest(unittest.TestCase):
             self.project_root,
             path='inc_def',
             contents=(
-                'import math',
-                'def math_pi():',
-                '    return math.pi',
+                'with allow_unsafe_import():',
+                '    import math',
+                '    def math_pi():',
+                '        return math.pi',
             ))
         self.write_files(include_def)
 
@@ -638,7 +617,8 @@ class BuckTest(unittest.TestCase):
             path='inc_def',
             contents=(
                 '__all__ = ["math"]',
-                'import math',
+                'with allow_unsafe_import():',
+                '    import math',
             ))
         build_file = ProjectFile(
             self.project_root,
@@ -709,7 +689,6 @@ class BuckTest(unittest.TestCase):
         'import pipes' allows 'quote' and also that 'from os.path import *' works.
         """
 
-        self.enable_build_file_sandboxing = True
         build_file = ProjectFile(
             self.project_root,
             path='BUCK',
@@ -733,7 +712,6 @@ class BuckTest(unittest.TestCase):
         Test that after 'import os.path' unsafe functions raise errors
         """
 
-        self.enable_build_file_sandboxing = True
         build_file = ProjectFile(
             self.project_root,
             path='BUCK',
@@ -750,7 +728,6 @@ class BuckTest(unittest.TestCase):
             build_file.root, build_file.prefix, build_file.path, [])
 
     def test_wrap_access_prints_warnings(self):
-        self.enable_build_file_sandboxing = True
         path = os.path.normpath(os.path.join(self.project_root, 'foo.py'))
         build_file = ProjectFile(
             self.project_root,

@@ -270,7 +270,6 @@ public class Cell {
             .setWatchmanQueryTimeoutMs(parserConfig.getWatchmanQueryTimeoutMs())
             .setUseMercurialGlob(useMercurialGlob)
             .setRawConfig(getBuckConfig().getRawConfigForParser())
-            .setEnableBuildFileSandboxing(parserConfig.getEnableBuildFileSandboxing())
             .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
             .build());
   }

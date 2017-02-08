@@ -207,11 +207,6 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   }
 
   @Value.Lazy
-  public boolean getEnableBuildFileSandboxing() {
-    return getDelegate().getBooleanValue("project", "enable_build_file_sandboxing", true);
-  }
-
-  @Value.Lazy
   public ImmutableList<String> getBuildFileImportWhitelist() {
     return getDelegate().getListWithoutComments("project", "build_file_import_whitelist");
   }
