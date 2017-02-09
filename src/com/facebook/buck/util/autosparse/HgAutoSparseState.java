@@ -106,10 +106,10 @@ public class HgAutoSparseState implements AutoSparseState {
         try {
           hgCmdLine.exportHgSparseRules(exportFile);
         } catch (VersionControlCommandFailedException | InterruptedException e) {
-          LOG.debug("Sparse profile refresh command failed");
+          LOG.debug(e, "Sparse profile refresh command failed");
         }
       } catch (IOException e) {
-        LOG.debug("Failed to write out sparse profile export");
+        LOG.debug(e, "Failed to write out sparse profile export");
         return;
       }
     }
