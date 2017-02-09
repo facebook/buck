@@ -67,4 +67,17 @@ public class MkdirStep implements Step {
   public Path getPath() {
     return filesystem.resolve(pathRelativeToProjectRoot);
   }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof MkdirStep)) {
+      return false;
+    }
+    return getPath().equals(((MkdirStep) obj).getPath());
+  }
+
+  @Override
+  public int hashCode() {
+    return getPath().hashCode();
+  }
 }

@@ -100,6 +100,19 @@ public class RmStep implements Step {
     return modes.contains(Mode.RECURSIVE);
   }
 
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof RmStep)) {
+      return false;
+    }
+    return getShellCommand().equals(((RmStep) obj).getShellCommand());
+  }
+
+  @Override
+  public int hashCode() {
+    return getShellCommand().hashCode();
+  }
+
   public enum Mode {
     RECURSIVE("-r");
 

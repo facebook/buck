@@ -38,7 +38,8 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -126,7 +127,8 @@ public class DirectHeaderMapTest {
 
     ImmutableList<Step> expectedBuildSteps =
         ImmutableList.of(
-            new MakeCleanDirectoryStep(filesystem, symlinkTreeRoot),
+            new MkdirStep(filesystem, headerMapPath.getParent()),
+            new RmStep(filesystem, headerMapPath),
             new HeaderMapStep(
                 filesystem,
                 headerMapPath,
