@@ -20,6 +20,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -27,10 +30,23 @@ import com.google.common.hash.HashCode;
 
 import java.lang.reflect.Field;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+
+import javax.annotation.Nonnull;
 
 public class TargetNodeFactory {
   private final TypeCoercerFactory typeCoercerFactory;
+  private final LoadingCache<Class<?>, List<ParamInfo>> paramInfoCache = CacheBuilder.newBuilder()
+      .build(
+          new CacheLoader<Class<?>, List<ParamInfo>>() {
+            @Override
+            public List<ParamInfo> load(@Nonnull Class<?> key) {
+              return computeParamInfosFromArg(key);
+            }
+          }
+      );
 
   public TargetNodeFactory(TypeCoercerFactory typeCoercerFactory) {
     this.typeCoercerFactory = typeCoercerFactory;
@@ -83,16 +99,12 @@ public class TargetNodeFactory {
 
     // Scan the input to find possible BuildTargets, necessary for loading dependent rules.
     T arg = description.createUnpopulatedConstructorArg();
-    for (Field field : arg.getClass().getFields()) {
-      ParamInfo info = new ParamInfo(typeCoercerFactory, arg.getClass(), field);
-      if (info.isDep() && info.isInput() &&
-          info.hasElementTypes(BuildTarget.class, SourcePath.class, Path.class)) {
-        detectBuildTargetsAndPathsForConstructorArg(
-            extraDepsBuilder,
-            pathsBuilder,
-            info,
-            constructorArg);
-      }
+    for (ParamInfo info : paramInfoCache.getUnchecked(arg.getClass())) {
+      detectBuildTargetsAndPathsForConstructorArg(
+          extraDepsBuilder,
+          pathsBuilder,
+          info,
+          constructorArg);
     }
 
     if (description instanceof ImplicitDepsInferringDescription) {
@@ -124,6 +136,19 @@ public class TargetNodeFactory {
         pathsBuilder.build(),
         cellRoots,
         Optional.empty());
+  }
+
+  private List<ParamInfo> computeParamInfosFromArg(Class<?> key) {
+    List<ParamInfo> ret = new ArrayList<>();
+    // Scan the input to find possible BuildTargets, necessary for loading dependent rules.
+    for (Field field : key.getFields()) {
+      ParamInfo info = new ParamInfo(typeCoercerFactory, key, field);
+      if (info.isDep() && info.isInput() &&
+          info.hasElementTypes(BuildTarget.class, SourcePath.class, Path.class)) {
+        ret.add(info);
+      }
+    }
+    return ret;
   }
 
   private static void detectBuildTargetsAndPathsForConstructorArg(
