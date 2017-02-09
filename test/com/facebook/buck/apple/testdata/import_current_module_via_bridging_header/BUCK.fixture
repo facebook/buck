@@ -1,6 +1,6 @@
 apple_library(
     name = 'Greeter',
-    bridging_header = 'bridging-header.h',
+    bridging_header = 'bridging-header/bridging-header.h',
     headers = glob([
         '*.h',
     ]),
