@@ -39,14 +39,16 @@ abstract class AbstractSourcePath<T extends AbstractSourcePath<T>> implements So
       return 0;
     }
 
-    int result = this.getClass().getName().compareTo(o.getClass().getName());
-    if (result != 0) {
-      return result;
-    }
+    if (this.getClass() != o.getClass()) {
+      int result = this.getClass().getName().compareTo(o.getClass().getName());
+      if (result != 0) {
+        return result;
+      }
 
-    Preconditions.checkState(
-        this.getClass().equals(o.getClass()),
-        "Classes are different but have the same name.");
+      Preconditions.checkState(
+          this.getClass().equals(o.getClass()),
+          "Classes are different but have the same name.");
+    }
 
     return this.compareReferences((T) o);
   }
