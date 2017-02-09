@@ -63,89 +63,98 @@ function installAndLaunch() {
   sleep 1
   adb logcat -d '*:S' EXOPACKAGE_TEST:V > out.txt
   cp out.txt out$((++OUT_COUNT)).txt
+
+  # Check for values in the logs.
+  grep "VALUE=$EXP_JAVA" out.txt || (cat out.txt && false)
+  grep "NATIVE_ONE=$EXP_CPP1" out.txt || (cat out.txt && false)
+  grep "NATIVE_TWO=$EXP_CPP2" out.txt || (cat out.txt && false)
+  grep "RESOURCE=$EXP_RESOURCE" out.txt || (cat out.txt && false)
+  grep "IMAGE=$EXP_IMAGE" out.txt || (cat out.txt && false)
+  grep "ASSET=$EXP_ASSET" out.txt || (cat out.txt && false)
 }
 
 function create_image() {
   mkdir -p res/drawable
   convert -size ${1}x${1} xc:none res/drawable/image.png
+  EXP_IMAGE=png_${1}_${1}
 }
 
 function edit_asset() {
   echo "asset_$1" > assets/asset.txt
+  EXP_ASSET=asset_$1
 }
 
 function edit_asset2() {
   echo "asset2_$1" > assets2/asset2.txt
+  EXP_ASSET2=asset2_$1
 }
 
 function edit_resource() {
   sedInPlace "s/\(string name=\"hello\">\)[^<]*/\1$1/" res/values/strings.xml
+  EXP_RESOURCE=res_$1
+}
+
+function edit_java() {
+  echo "$1" > value.txt
+  EXP_JAVA=$1
+}
+
+function edit_cpp1() {
+  sedInPlace "s/one_../one_$1/" jni/one/one.c
+  EXP_CPP1=one_$1
+}
+
+function edit_cpp2() {
+  sedInPlace "s/two_../two_$1/" jni/two/two.c
+  EXP_CPP2=two_$1
 }
 
 # Build and do a clean install of the app.  Launch it and capture logs.
-echo '1a' > value.txt
 create_image 1
+edit_java '1a'
 
 installAndLaunch
 
 # Check for full install.
 test "$SECONDARY_DEX_INSTALLED" = 1
 test "$NATIVE_LIBS_INSTALLED" = 2
-# Check for values in the logs.
-grep 'VALUE=1a' out.txt
-grep 'NATIVE_ONE=one_1a' out.txt
-grep 'NATIVE_TWO=two_1a' out.txt
-
 
 # Change java code and do an incremental install of the app.  Launch it and capture logs.
-echo '2b' > value.txt
+edit_java '2b'
 installAndLaunch
 
 # Check for incremental java install.
 test "$SECONDARY_DEX_INSTALLED" = 1
 test "$NATIVE_LIBS_INSTALLED" = 0
 # Check for the new values in the logs.
-grep 'VALUE=2b' out.txt
-
 
 # Change one of the native libraries, do an incremental install and capture logs.
-sedInPlace s/one_1a/one_3c/ jni/one/one.c
+edit_cpp1 3c
 installAndLaunch
 
 # Check for incremental native install.
 test "$SECONDARY_DEX_INSTALLED" = 0
 test "$NATIVE_LIBS_INSTALLED" = 1
-# Check for the new values in the logs.
-grep 'NATIVE_ONE=one_3c' out.txt
-grep 'NATIVE_TWO=two_1a' out.txt
 
 
 # Change both native and java code and do an incremental build.
-echo '4d' > value.txt
-sedInPlace s/two_1a/two_4d/ jni/two/two.c
+edit_java '4d'
+edit_cpp2 4d
 installAndLaunch
 
 # Check for incremental java and native install.
 test "$SECONDARY_DEX_INSTALLED" = 1
 test "$NATIVE_LIBS_INSTALLED" = 1
-# Check for the new values in the logs.
-grep 'VALUE=4d' out.txt
-grep 'NATIVE_ONE=one_3c' out.txt
-grep 'NATIVE_TWO=two_4d' out.txt
 
 
 # Change both native and java code and do a no-exopackage incremental build.
-echo '5e' > value.txt
-sedInPlace s/two_4d/two_5e/ jni/two/two.c
+edit_java '5e'
+edit_cpp2 5e
 installAndLaunch //:exotest-noexo
 
 # Check for no exo install.
 test "$SECONDARY_DEX_INSTALLED" = 0
 test "$NATIVE_LIBS_INSTALLED" = 0
-# Check for the new values in the logs.
-grep 'VALUE=5e' out.txt
-grep 'NATIVE_ONE=one_3c' out.txt
-grep 'NATIVE_TWO=two_5e' out.txt
 
 
 # Clean up after ourselves.
