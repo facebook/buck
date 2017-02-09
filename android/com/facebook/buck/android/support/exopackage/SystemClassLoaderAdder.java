@@ -18,7 +18,6 @@ package com.facebook.buck.android.support.exopackage;
 
 import java.io.File;
 import java.lang.reflect.Array;
-import java.lang.reflect.Field;
 import java.util.List;
 
 import android.annotation.TargetApi;
@@ -137,49 +136,49 @@ class SystemClassLoaderAdder {
 
     // Copy value in scalar field newClassLoader.mRawDexPath and array field
     // systemClassLoader.mPaths to a new array that replaces systemClassLoader.mPaths.
-    setField(
+    Reflect.setField(
         systemClassLoader,
         PathClassLoader.class,
         "mPaths",
         mergeArrayAndScalar(
-            getField(systemClassLoader, PathClassLoader.class, "mPaths"),
-            getField(newClassLoader, DexClassLoader.class, "mRawDexPath")
+            Reflect.getField(systemClassLoader, PathClassLoader.class, "mPaths"),
+            Reflect.getField(newClassLoader, DexClassLoader.class, "mRawDexPath")
         )
     );
 
     // Copy values in array field newClassLoader.mFiles and array field systemClassLoader.mFiles
     // to a new array that replaces systemClassLoader.mFiles.
-    setField(
+    Reflect.setField(
         systemClassLoader,
         PathClassLoader.class,
         "mFiles",
         mergeArrays(
-            getField(systemClassLoader, PathClassLoader.class, "mFiles"),
-            getField(newClassLoader, DexClassLoader.class, "mFiles")
+            Reflect.getField(systemClassLoader, PathClassLoader.class, "mFiles"),
+            Reflect.getField(newClassLoader, DexClassLoader.class, "mFiles")
         )
     );
 
     // Copy values in array field newClassLoader.mZips and array field systemClassLoader.mZips
     // to a new array that replaces systemClassLoader.mZips.
-    setField(
+    Reflect.setField(
         systemClassLoader,
         PathClassLoader.class,
         "mZips",
         mergeArrays(
-            getField(systemClassLoader, PathClassLoader.class, "mZips"),
-            getField(newClassLoader, DexClassLoader.class, "mZips")
+            Reflect.getField(systemClassLoader, PathClassLoader.class, "mZips"),
+            Reflect.getField(newClassLoader, DexClassLoader.class, "mZips")
         )
     );
 
     // Copy values in array field newClassLoader.mDexs and array field systemClassLoader.mDexs
     // to a new array that replaces systemClassLoader.mDexs.
-    setField(
+    Reflect.setField(
         systemClassLoader,
         PathClassLoader.class,
         "mDexs",
         mergeArrays(
-            getField(systemClassLoader, PathClassLoader.class, "mDexs"),
-            getField(newClassLoader, DexClassLoader.class, "mDexs")
+            Reflect.getField(systemClassLoader, PathClassLoader.class, "mDexs"),
+            Reflect.getField(newClassLoader, DexClassLoader.class, "mDexs")
         )
     );
   }
@@ -187,17 +186,17 @@ class SystemClassLoaderAdder {
   @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
   private Object getDexPathList(BaseDexClassLoader classLoader)
       throws NoSuchFieldException, IllegalAccessException {
-    return getField(classLoader, BaseDexClassLoader.class, "pathList");
+    return Reflect.getField(classLoader, BaseDexClassLoader.class, "pathList");
   }
 
   private Object getDexElementsArray(Object dexPathList)
       throws NoSuchFieldException, IllegalAccessException {
-    return getField(dexPathList, dexPathList.getClass(), "dexElements");
+    return Reflect.getField(dexPathList, dexPathList.getClass(), "dexElements");
   }
 
   private void setDexElementsArray(Object dexPathList, Object newElementArray)
       throws NoSuchFieldException, IllegalAccessException {
-    setField(dexPathList, dexPathList.getClass(), "dexElements", newElementArray);
+    Reflect.setField(dexPathList, dexPathList.getClass(), "dexElements", newElementArray);
   }
 
   private Object mergeArrays(Object array1, Object array2) {
@@ -231,19 +230,5 @@ class SystemClassLoaderAdder {
       }
     }
     return newArray;
-  }
-
-  private Object getField(Object object, Class<?> clazz, String fieldName)
-      throws NoSuchFieldException, IllegalAccessException {
-    Field field = clazz.getDeclaredField(fieldName);
-    field.setAccessible(true);
-    return field.get(object);
-  }
-
-  private void setField(Object object, Class<?> clazz, String fieldName, Object fieldValue)
-      throws NoSuchFieldException, IllegalAccessException {
-    Field field = clazz.getDeclaredField(fieldName);
-    field.setAccessible(true);
-    field.set(object, fieldValue);
   }
 }
