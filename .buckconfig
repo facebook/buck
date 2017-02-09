@@ -8,7 +8,7 @@
     abi_generation_mode = migrating_to_source
 [alias]
     buck = //programs:buck
-    buck-android-support = //src/com/facebook/buck/android/support:buck-android-support
+    buck-android-support = //android/com/facebook/buck/android/support:buck-android-support
     eden = //test/com/facebook/buck/eden/cli:cli_bin
     hmaptool = //src/com/facebook/buck/apple/clang:hmaptool
     ideabuck = //src/com/facebook/buck/intellij/ideabuck:ideabuck

@@ -4,6 +4,6 @@ android_library(
   source = '7',
   target = '7',
   visibility = [
-    '//src/com/facebook/buck/android/support/...',
+    '//android/com/facebook/buck/android/support/...',
   ],
 )

@@ -1,6 +1,0 @@
-java_binary(
-  name = 'buck-android-support',
-  deps = [
-    '//src/com/facebook/buck/android/support/exopackage:exopackage',
-  ],
-)
