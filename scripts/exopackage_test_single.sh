@@ -10,10 +10,10 @@ set -o pipefail
 function sedInPlace() {
   case "$(uname -s)" in
     Darwin)
-      sed -i '' -e $1 $2
+      sed -i '' -e "$1" "$2"
       ;;
     Linux)
-      sed $1 -i $2
+      sed "$1" -i "$2"
       ;;
     *)
       echo "Unsupported OS name '$(uname -s)' for running sed."
@@ -65,10 +65,26 @@ function installAndLaunch() {
   cp out.txt out$((++OUT_COUNT)).txt
 }
 
+function create_image() {
+  mkdir -p res/drawable
+  convert -size ${1}x${1} xc:none res/drawable/image.png
+}
+
+function edit_asset() {
+  echo "asset_$1" > assets/asset.txt
+}
+
+function edit_asset2() {
+  echo "asset2_$1" > assets2/asset2.txt
+}
+
+function edit_resource() {
+  sedInPlace "s/\(string name=\"hello\">\)[^<]*/\1$1/" res/values/strings.xml
+}
+
 # Build and do a clean install of the app.  Launch it and capture logs.
 echo '1a' > value.txt
-mkdir -p res/drawable
-convert -size 1x1 xc:none res/drawable/image.png
+create_image 1
 
 installAndLaunch
 
