@@ -39,6 +39,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
@@ -188,6 +189,18 @@ public interface QueryEnvironment {
   /** Returns the direct forward dependencies of the specified targets. */
   Set<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets)
       throws QueryException, InterruptedException;
+
+  /**
+   * Applies {@code action} to each forward dependencies of the specified targets.
+   *
+   * Might apply more than once to the same target, so {@code action} should be idempotent.
+   */
+  default void forEachFwdDep(
+      Iterable<QueryTarget> targets,
+      Consumer<? super QueryTarget> action)
+      throws QueryException, InterruptedException {
+    getFwdDeps(targets).forEach(action);
+  }
 
   /** Returns the direct reverse dependencies of the specified targets. */
   Set<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets)

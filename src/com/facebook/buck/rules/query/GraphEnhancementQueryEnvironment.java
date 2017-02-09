@@ -48,6 +48,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -123,6 +124,22 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
       builder.addAll(deps);
     }
     return builder.build();
+  }
+
+  @Override
+  public void forEachFwdDep(
+      Iterable<QueryTarget> targets,
+      Consumer<? super QueryTarget> action)
+      throws QueryException, InterruptedException {
+    for (QueryTarget target : targets) {
+      TargetNode<?, ?> node = getNode(target);
+      for (BuildTarget dep : node.getDeclaredDeps()) {
+        action.accept(QueryBuildTarget.of(dep));
+      }
+      for (BuildTarget dep : node.getExtraDeps()) {
+        action.accept(QueryBuildTarget.of(dep));
+      }
+    }
   }
 
   @Override

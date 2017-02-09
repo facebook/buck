@@ -33,11 +33,11 @@ package com.facebook.buck.query;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -89,14 +89,18 @@ public class DepsFunction implements QueryFunction {
     // LinkedHashSet preserves the order of insertion when iterating over the values.
     // The order by which we traverse the result is meaningful because the dependencies are
     // traversed level-by-level.
-    Set<QueryTarget> result = new LinkedHashSet<>();
-    Set<QueryTarget> current = argumentSet;
+    Set<QueryTarget> result = new LinkedHashSet<>(argumentSet);
+    Collection<QueryTarget> current = argumentSet;
 
     // Iterating depthBound+1 times because the first one processes the given argument set.
-    for (int i = 0; i <= depthBound; i++) {
-      Set<QueryTarget> next = env.getFwdDeps(
-          Iterables.filter(current, Predicates.not(result::contains)));
-      result.addAll(current);
+    for (int i = 0; i < depthBound; i++) {
+      Collection<QueryTarget> next = new ArrayList<>();
+      env.forEachFwdDep(current, queryTarget -> {
+        boolean added = result.add(queryTarget);
+        if (added) {
+          next.add(queryTarget);
+        }
+      });
       if (next.isEmpty()) {
         break;
       }
