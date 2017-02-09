@@ -18,7 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
-import com.google.common.collect.ComparisonChain;
+import com.google.common.primitives.Booleans;
 
 import java.nio.file.Path;
 import java.util.Optional;
@@ -62,13 +62,26 @@ public class BuildTargetSourcePath extends AbstractSourcePath<BuildTargetSourceP
       return 0;
     }
 
-    ComparisonChain comparison = ComparisonChain.start()
-        .compare(target, o.target)
-        .compareTrueFirst(resolvedPath.isPresent(), o.resolvedPath.isPresent());
-    if (resolvedPath.isPresent() && o.resolvedPath.isPresent()) {
-      comparison = comparison.compare(resolvedPath.get(), o.resolvedPath.get());
+    int res;
+
+    res = target.compareTo(o.target);
+    if (res != 0) {
+      return res;
     }
-    return comparison.result();
+
+    res = Booleans.compare(o.resolvedPath.isPresent(), resolvedPath.isPresent());
+    if (res != 0) {
+      return res;
+    }
+
+    if (resolvedPath.isPresent() && o.resolvedPath.isPresent()) {
+      res = resolvedPath.get().compareTo(o.resolvedPath.get());
+      if (res != 0) {
+        return res;
+      }
+    }
+
+    return 0;
   }
 
   public BuildTarget getTarget() {
