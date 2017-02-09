@@ -21,6 +21,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Process;
 import android.util.Log;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import buck.exotest.R;
+
+import java.util.Scanner;
+import java.io.IOException;
 
 import com.facebook.buck.android.support.exopackage.ExopackageSoLoader;
 
@@ -38,6 +44,13 @@ public class LogActivity extends Activity {
     Log.i("EXOPACKAGE_TEST", "NATIVE_ONE=" + stringOneFromJNI());
     Log.i("EXOPACKAGE_TEST", "NATIVE_TWO=" + stringTwoFromJNI());
 
+    Log.i("EXOPACKAGE_TEST", "RESOURCE=" + getResourceString());
+    Log.i("EXOPACKAGE_TEST", "IMAGE=" + getImageString());
+    Log.i("EXOPACKAGE_TEST", "ASSET=" + getAssetString());
+    Log.i("EXOPACKAGE_TEST", "ASSET_TWO=" + getExtraAssetString());
+
+    Log.i("EXOPACKAGE_TEST", "EXITING");
+
     finish();
   }
 
@@ -49,6 +62,33 @@ public class LogActivity extends Activity {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
       Process.killProcess(Process.myPid());
     }
+  }
+
+  public String getResourceString() {
+    String string = getString(R.string.hello);
+    return string;
+  }
+
+  public String getAssetString(String file) {
+    try {
+      return new Scanner(getAssets().open(file)).next();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public String getAssetString() {
+    return getAssetString("asset.txt");
+  }
+
+  public String getExtraAssetString() {
+    return getAssetString("asset2.txt");
+  }
+
+  public String getImageString() {
+    // Android pretty reliably returns a bitmap with 2x the width/height of the png.
+    Bitmap bitmap = ((BitmapDrawable) getResources().getDrawable(R.drawable.image)).getBitmap();
+    return "png_" + (bitmap.getWidth() / 2) + "_" + (bitmap.getHeight() / 2);
   }
 
   public native String stringOneFromJNI();

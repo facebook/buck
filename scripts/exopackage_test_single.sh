@@ -67,6 +67,8 @@ function installAndLaunch() {
 
 # Build and do a clean install of the app.  Launch it and capture logs.
 echo '1a' > value.txt
+mkdir -p res/drawable
+convert -size 1x1 xc:none res/drawable/image.png
 
 installAndLaunch
 
