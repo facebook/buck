@@ -44,7 +44,6 @@ import java.nio.file.WatchEvent;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
 
@@ -158,9 +157,6 @@ public class ActionGraphCache {
       TargetGraph targetGraph) {
     final BuildRuleResolver resolver = new BuildRuleResolver(targetGraph, transformer, eventBus);
 
-    final int numberOfNodes = targetGraph.getNodes().size();
-    final AtomicInteger processedNodes = new AtomicInteger(0);
-
     AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException> bottomUpTraversal =
         new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(targetGraph) {
 
@@ -171,9 +167,6 @@ public class ActionGraphCache {
             } catch (NoSuchBuildTargetException e) {
               throw new HumanReadableException(e);
             }
-            eventBus.post(ActionGraphEvent.processed(
-                processedNodes.incrementAndGet(),
-                numberOfNodes));
           }
         };
     bottomUpTraversal.traverse();

@@ -42,10 +42,6 @@ public abstract class ActionGraphEvent
     return new Started();
   }
 
-  public static Processed processed(int p, int t) {
-    return new Processed(p, t);
-  }
-
   public static Finished finished(Started started) {
     return new Finished(started);
   }
@@ -59,28 +55,6 @@ public abstract class ActionGraphEvent
     @Override
     public String getEventName() {
       return "BuildActionGraphStarted";
-    }
-  }
-
-  public static class Processed extends ActionGraphEvent {
-
-    private int processed;
-    private int total;
-
-    public Processed(int processed, int total) {
-      super(EventKey.unique());
-      this.processed = processed;
-      this.total = total;
-    }
-
-    @Override
-    public String getEventName() {
-      return "BuildActionGraphProcessed";
-    }
-
-    @Override
-    protected String getValueString() {
-      return processed + " of " + total;
     }
   }
 
