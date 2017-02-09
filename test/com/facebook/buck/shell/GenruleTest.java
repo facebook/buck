@@ -168,8 +168,8 @@ public class GenruleTest {
         "First command should delete the output file to be written by the genrule.",
         ImmutableList.of(
             "rm",
-            "-r",
             "-f",
+            "-r",
 
             filesystem.resolve(filesystem.getBuckPaths().getGenDir() +
             "/src/com/facebook/katana/katana_manifest/AndroidManifest.xml").toString()),

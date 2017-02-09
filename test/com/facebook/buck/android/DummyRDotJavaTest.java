@@ -182,7 +182,7 @@ public class DummyRDotJavaTest {
   }
 
   private static String makeCleanDirDescription(Path dirname) {
-    return String.format("rm -r -f %s && mkdir -p %s", dirname, dirname);
+    return String.format("rm -f -r %s && mkdir -p %s", dirname, dirname);
   }
 
   private void setAndroidResourceBuildOutput(BuildRule resourceRule) {

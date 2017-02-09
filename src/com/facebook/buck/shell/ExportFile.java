@@ -123,7 +123,6 @@ public class ExportFile extends AbstractBuildRuleWithResolver
       builder.add(new RmStep(
           getProjectFilesystem(),
           out,
-          RmStep.Mode.FORCED,
           RmStep.Mode.RECURSIVE));
       if (resolver.getFilesystem(src).isDirectory(resolver.getRelativePath(src))) {
         builder.add(

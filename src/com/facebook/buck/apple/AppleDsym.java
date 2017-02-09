@@ -124,7 +124,6 @@ public class AppleDsym
         new RmStep(
             getProjectFilesystem(),
             dsymOutputPath,
-            RmStep.Mode.FORCED,
             RmStep.Mode.RECURSIVE),
         new DsymStep(
             getProjectFilesystem(),

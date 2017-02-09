@@ -105,8 +105,8 @@ public class CxxLink
     return ImmutableList.of(
         new MkdirStep(getProjectFilesystem(), output.getParent()),
         new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir),
-        new RmStep(getProjectFilesystem(), argFilePath, RmStep.Mode.FORCED),
-        new RmStep(getProjectFilesystem(), fileListPath, RmStep.Mode.FORCED),
+        new RmStep(getProjectFilesystem(), argFilePath),
+        new RmStep(getProjectFilesystem(), fileListPath),
         CxxPrepareForLinkStep.create(
             argFilePath,
             fileListPath,
@@ -126,9 +126,9 @@ public class CxxLink
             getProjectFilesystem(),
             output,
             linker.getScrubbers(cellRoots.build())),
-        new RmStep(getProjectFilesystem(), argFilePath, RmStep.Mode.FORCED),
-        new RmStep(getProjectFilesystem(), fileListPath, RmStep.Mode.FORCED),
-        new RmStep(getProjectFilesystem(), scratchDir, RmStep.Mode.FORCED, RmStep.Mode.RECURSIVE));
+        new RmStep(getProjectFilesystem(), argFilePath),
+        new RmStep(getProjectFilesystem(), fileListPath),
+        new RmStep(getProjectFilesystem(), scratchDir, RmStep.Mode.RECURSIVE));
   }
 
   @Override

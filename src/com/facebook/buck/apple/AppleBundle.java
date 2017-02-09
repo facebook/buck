@@ -675,7 +675,6 @@ public class AppleBundle
     stepsBuilder.add(new RmStep(
         getProjectFilesystem(),
         dsymDestinationPath,
-        RmStep.Mode.FORCED,
         RmStep.Mode.RECURSIVE));
     stepsBuilder.add(new MoveStep(getProjectFilesystem(), dsymSourcePath, dsymDestinationPath));
 

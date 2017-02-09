@@ -103,7 +103,6 @@ public class LuaStandaloneBinary extends AbstractBuildRule {
     steps.add(new RmStep(
         getProjectFilesystem(),
         output,
-        RmStep.Mode.FORCED,
         RmStep.Mode.RECURSIVE));
 
     SourcePathResolver resolver = context.getSourcePathResolver();

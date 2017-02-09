@@ -57,6 +57,7 @@ public class RmStep implements Step {
   public ImmutableList<String> getShellCommand() {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add("rm");
+    args.add("-f");
 
     for (Mode mode : modes) {
       args.add(mode.toShellArgument());
@@ -78,18 +79,10 @@ public class RmStep implements Step {
     try {
       if (shouldRecurse()) {
         // Delete a folder recursively
-        if (shouldForceDeletion()) {
-          filesystem.deleteRecursivelyIfExists(toDelete);
-        } else {
-          filesystem.deleteRecursively(toDelete);
-        }
+        filesystem.deleteRecursivelyIfExists(toDelete);
       } else {
         // Delete a single file
-        if (shouldForceDeletion()) {
-          filesystem.deleteFileAtPathIfExists(toDelete);
-        } else {
-          filesystem.deleteFileAtPath(toDelete);
-        }
+        filesystem.deleteFileAtPathIfExists(toDelete);
       }
     } catch (IOException e) {
       LOG.error(e);
@@ -107,13 +100,8 @@ public class RmStep implements Step {
     return modes.contains(Mode.RECURSIVE);
   }
 
-  private boolean shouldForceDeletion() {
-    return modes.contains(Mode.FORCED);
-  }
-
   public enum Mode {
-    RECURSIVE("-r"),
-    FORCED("-f"),;
+    RECURSIVE("-r");
 
     private final String shellArgument;
 

@@ -55,30 +55,10 @@ public class RmStepTest {
   }
 
   @Test
-  public void deletesAFileWithForce() throws IOException {
-    Path file = createFile();
-
-    RmStep step = new RmStep(filesystem, file, RmStep.Mode.FORCED);
-    assertEquals(0, step.execute(context).getExitCode());
-
-    assertFalse(Files.exists(file));
-  }
-
-  @Test
   public void deletesADirectory() throws IOException {
     Path dir = createNonEmptyDirectory();
 
     RmStep step = new RmStep(filesystem, dir, RmStep.Mode.RECURSIVE);
-    assertEquals(0, step.execute(context).getExitCode());
-
-    assertFalse(Files.exists(dir));
-  }
-
-  @Test
-  public void deletesADirectoryWithForce() throws IOException {
-    Path dir = createNonEmptyDirectory();
-
-    RmStep step = new RmStep(filesystem, dir, RmStep.Mode.FORCED, RmStep.Mode.RECURSIVE);
     assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(dir));
@@ -95,16 +75,6 @@ public class RmStepTest {
   }
 
   @Test
-  public void recursiveModeWithForceWorksOnFiles() throws IOException {
-    Path file = createFile();
-
-    RmStep step = new RmStep(filesystem, file, RmStep.Mode.RECURSIVE, RmStep.Mode.FORCED);
-    assertEquals(0, step.execute(context).getExitCode());
-
-    assertFalse(Files.exists(file));
-  }
-
-  @Test
   public void nonRecursiveModeFailsOnDirectories() throws IOException {
     Path dir = createNonEmptyDirectory();
 
@@ -112,45 +82,22 @@ public class RmStepTest {
     assertEquals(1, step.execute(context).getExitCode());
   }
 
-  @Test
-  public void nonRecursiveModeWithForceFailsOnDirectories() throws IOException {
-    Path dir = createNonEmptyDirectory();
-
-    RmStep step = new RmStep(filesystem, dir, RmStep.Mode.FORCED);
-    assertEquals(1, step.execute(context).getExitCode());
-  }
 
   @Test
-  public void deletingNonExistentFileFails() throws IOException {
+  public void deletingNonExistentFileSucceeds() throws IOException {
     Path file = getNonExistentFile();
 
     RmStep step = new RmStep(filesystem, file);
-    assertEquals(1, step.execute(context).getExitCode());
-  }
-
-  @Test
-  public void deletingNonExistentFileWithForceSucceeds() throws IOException {
-    Path file = getNonExistentFile();
-
-    RmStep step = new RmStep(filesystem, file, RmStep.Mode.FORCED);
     assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(file));
   }
 
   @Test
-  public void deletingNonExistentFileRecursivelyFails() throws IOException {
+  public void deletingNonExistentFileRecursivelySucceeds() throws IOException {
     Path file = getNonExistentFile();
 
     RmStep step = new RmStep(filesystem, file, RmStep.Mode.RECURSIVE);
-    assertEquals(1, step.execute(context).getExitCode());
-  }
-
-  @Test
-  public void deletingNonExistentFileRecursivelyWithForceSucceeds() throws IOException {
-    Path file = getNonExistentFile();
-
-    RmStep step = new RmStep(filesystem, file, RmStep.Mode.FORCED, RmStep.Mode.RECURSIVE);
     assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(file));

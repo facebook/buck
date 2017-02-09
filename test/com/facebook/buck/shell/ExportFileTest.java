@@ -91,7 +91,7 @@ public class ExportFileTest {
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
             "mkdir -p " + projectFilesystem.resolve("buck-out/gen"),
-            "rm -r -f " + projectFilesystem.resolve("buck-out/gen/example.html"),
+            "rm -f -r " + projectFilesystem.resolve("buck-out/gen/example.html"),
             "cp " + projectFilesystem.resolve("example.html") + " " +
                 Paths.get("buck-out/gen/example.html")),
         steps,
@@ -119,7 +119,7 @@ public class ExportFileTest {
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
             "mkdir -p " + projectFilesystem.resolve("buck-out/gen"),
-            "rm -r -f " + projectFilesystem.resolve("buck-out/gen/fish"),
+            "rm -f -r " + projectFilesystem.resolve("buck-out/gen/fish"),
             "cp " + projectFilesystem.resolve("example.html") + " " +
                 Paths.get("buck-out/gen/fish")),
         steps,
@@ -150,7 +150,7 @@ public class ExportFileTest {
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
             "mkdir -p " + projectFilesystem.resolve("buck-out/gen"),
-            "rm -r -f " + projectFilesystem.resolve("buck-out/gen/fish"),
+            "rm -f -r " + projectFilesystem.resolve("buck-out/gen/fish"),
             "cp " + projectFilesystem.resolve("chips") + " " +
                 Paths.get("buck-out/gen/fish")),
         steps,

@@ -183,7 +183,7 @@ public class Archive extends AbstractBuildRuleWithResolver implements SupportsIn
 
     builder.add(
         new MkdirStep(getProjectFilesystem(), output.getParent()),
-        new RmStep(getProjectFilesystem(), output, RmStep.Mode.FORCED),
+        new RmStep(getProjectFilesystem(), output),
         new ArchiveStep(
             getProjectFilesystem(),
             archiver.getEnvironment(),

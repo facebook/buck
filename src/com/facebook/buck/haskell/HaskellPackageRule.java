@@ -199,7 +199,6 @@ public class HaskellPackageRule extends AbstractBuildRule {
     steps.add(new RmStep(
         getProjectFilesystem(),
         packageDb,
-        RmStep.Mode.FORCED,
         RmStep.Mode.RECURSIVE));
     buildableContext.recordArtifact(packageDb);
 

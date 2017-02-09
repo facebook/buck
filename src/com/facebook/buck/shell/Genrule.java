@@ -325,7 +325,6 @@ public class Genrule extends AbstractBuildRuleWithResolver
         new RmStep(
             getProjectFilesystem(),
             context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()),
-            RmStep.Mode.FORCED,
             RmStep.Mode.RECURSIVE));
 
     // Make sure that the directory to contain the output file exists. Rules get output to a

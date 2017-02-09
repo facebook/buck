@@ -128,7 +128,6 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
     steps.add(new RmStep(
         getProjectFilesystem(),
         binPath,
-        RmStep.Mode.FORCED,
         RmStep.Mode.RECURSIVE));
 
     Path workingDirectory = BuildTargets.getGenPath(
