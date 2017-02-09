@@ -102,6 +102,7 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.AndroidReactNativeLibraryDescription;
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
+import com.facebook.buck.js.JsFileDescription;
 import com.facebook.buck.js.ReactNativeBuckConfig;
 import com.facebook.buck.jvm.groovy.GroovyBuckConfig;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
@@ -738,6 +739,7 @@ public class KnownBuildRuleTypes {
             defaultJavacOptions,
             defaultTestRuleTimeoutMs,
             defaultCxxPlatform));
+    builder.register(new JsFileDescription());
     builder.register(new KeystoreDescription());
     builder.register(new KotlinLibraryDescription(kotlinBuckConfig, defaultJavacOptions));
     builder.register(

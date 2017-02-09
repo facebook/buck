@@ -2,6 +2,7 @@
   "js" : {
     "deps" : [
       "//src/com/facebook/buck/android:rules",
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/shell:worker_job_params",
       "//src/com/facebook/buck/shell:worker_pool_factory",
       "//src/com/facebook/buck/step/fs:fs",

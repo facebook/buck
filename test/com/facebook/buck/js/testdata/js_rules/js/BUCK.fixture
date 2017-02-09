@@ -1,0 +1,26 @@
+sh_binary(
+  name = 'packager_worker_exe',
+  main = 'packager_worker.sh',
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+worker_tool(
+    name = 'packager_worker',
+    exe = ':packager_worker_exe',
+)
+
+js_file(
+    name = 'a',
+    src = 'a.js',
+    worker = ':packager_worker',
+)
+
+js_file(
+  name = 'b',
+  src = 'a.js',
+  worker = ':packager_worker',
+  virtual_path = 'a/b/c/d.js',
+  extra_args = '--arbitrary extra --flags',
+)
