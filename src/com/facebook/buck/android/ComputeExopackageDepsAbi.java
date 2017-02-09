@@ -59,9 +59,7 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule {
 
   private final EnumSet<ExopackageMode> exopackageModes;
   private final AndroidPackageableCollection packageableCollection;
-  private final AaptPackageResources aaptPackageResources;
   private final Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibraries;
-  private final Optional<PackageStringAssets> packageStringAssets;
   private final Optional<PreDexMerge> preDexMerge;
   private final Path abiPath;
 
@@ -69,17 +67,13 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule {
       BuildRuleParams params,
       EnumSet<ExopackageMode> exopackageModes,
       AndroidPackageableCollection packageableCollection,
-      AaptPackageResources aaptPackageResources,
       Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibraries,
-      Optional<PackageStringAssets> packageStringAssets,
       Optional<PreDexMerge> preDexMerge) {
     super(params);
     Preconditions.checkArgument(!exopackageModes.isEmpty());
     this.exopackageModes = exopackageModes;
     this.packageableCollection = packageableCollection;
-    this.aaptPackageResources = aaptPackageResources;
     this.copyNativeLibraries = copyNativeLibraries;
-    this.packageStringAssets = packageStringAssets;
     this.preDexMerge = preDexMerge;
     this.abiPath = BuildTargets.getGenPath(
         getProjectFilesystem(), getBuildTarget(), "%s/exopackage.abi");
@@ -104,23 +98,12 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule {
               // For exopackages, the only significant thing android_binary does is apkbuilder,
               // so we need to include all of the apkbuilder inputs in the ABI key.
               final Hasher hasher = Hashing.sha1().newHasher();
-              // The first input to apkbuilder is the ap_ produced by aapt package.
-              // Get its hash from the buildable that created it.
-              Sha1HashCode resourceApkHash = aaptPackageResources.getResourcePackageHash();
-              LOG.verbose("resource apk = %s", resourceApkHash.getHash());
-              resourceApkHash.update(hasher);
-              // Next is the primary dex.  Same plan.
+
+              // The primary dex is always added.
               Sha1HashCode primaryDexHash = Preconditions.checkNotNull(
                   preDexMerge.get().getPrimaryDexHash());
               LOG.verbose("primary dex = %s", primaryDexHash);
               primaryDexHash.update(hasher);
-              // Non-english strings packaged as assets.
-              if (packageStringAssets.isPresent()) {
-                Sha1HashCode stringAssetsHash =
-                    packageStringAssets.get().getStringAssetsZipHash();
-                LOG.verbose("string assets = %s", stringAssetsHash.getHash());
-                stringAssetsHash.update(hasher);
-              }
 
               // We currently don't use any resource directories, so nothing to add there.
 

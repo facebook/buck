@@ -495,9 +495,7 @@ public class AndroidBinaryGraphEnhancer {
               paramsForComputeExopackageAbi,
               exopackageModes,
               packageableCollection,
-              aaptPackageResources,
               copyNativeLibraries,
-              packageStringAssets,
               preDexMerge
           ));
       ruleResolver.addToIndex(computeExopackageDepsAbi.get());

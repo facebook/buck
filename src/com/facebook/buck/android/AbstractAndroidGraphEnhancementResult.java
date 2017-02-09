@@ -18,8 +18,10 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -52,7 +54,32 @@ interface AbstractAndroidGraphEnhancementResult {
    */
   ImmutableSet<SourcePath> getClasspathEntriesToDex();
 
+  default SourcePath getPrimaryResourcesApkPath() {
+    return new BuildTargetSourcePath(
+        getAaptPackageResources().getBuildTarget(),
+        getAaptPackageResources().getResourceApkPath());
+  }
+
+  default SourcePath getAndroidManifestPath() {
+    return getAaptPackageResources().getAndroidManifestXmlSourcePath();
+  }
+
+  default Optional<SourcePath> getPathToGeneratedProguardConfigDir() {
+    return getAaptPackageResources().getSourcePathtoGeneratedProguardConfigDir();
+  }
+
   ImmutableSortedSet<BuildRule> getFinalDeps();
 
   APKModuleGraph getAPKModuleGraph();
+
+  default ImmutableList<SourcePath> getPrimaryApkAssetZips() {
+    if (!getPackageStringAssets().isPresent()) {
+      return ImmutableList.of();
+    }
+    PackageStringAssets stringAssets = getPackageStringAssets().get();
+    return ImmutableList.of(
+        new BuildTargetSourcePath(
+            stringAssets.getBuildTarget(), stringAssets.getPathToStringAssetsZip())
+    );
+  }
 }
