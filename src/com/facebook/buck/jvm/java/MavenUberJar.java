@@ -22,8 +22,11 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -37,8 +40,6 @@ import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
-
-import javax.annotation.Nullable;
 
 /**
  * A {@link BuildRule} used to have the provided {@link JavaLibrary} published to a maven repository
@@ -97,29 +98,20 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
     JarDirectoryStep mergeOutputsStep = new JarDirectoryStep(
         getProjectFilesystem(),
         pathToOutput,
-        toOutputPaths(traversedDeps.packagedDeps),
+        toOutputPaths(context.getSourcePathResolver(), traversedDeps.packagedDeps),
         /* mainClass */ null,
         /* manifestFile */ null);
     return ImmutableList.of(mkOutputDirStep, mergeOutputsStep);
   }
 
-  private static ImmutableSortedSet<Path> toOutputPaths(Iterable<? extends BuildRule> rules) {
-    return FluentIterable
-          .from(rules)
-          .transform(
-              new Function<BuildRule, Path>() {
-                @Nullable
-                @Override
-                public Path apply(BuildRule input) {
-                  Path pathToOutput = input.getPathToOutput();
-                  if (pathToOutput == null) {
-                    return null;
-                  }
-                  return input.getProjectFilesystem().resolve(pathToOutput);
-                }
-              })
-          .filter(Objects::nonNull)
-          .toSortedSet(Ordering.natural());
+  private static ImmutableSortedSet<Path> toOutputPaths(
+      SourcePathResolver pathResolver,
+      Iterable<? extends BuildRule> rules) {
+    return RichStream.from(rules)
+        .map(BuildRule::getSourcePathToOutput)
+        .filter(Objects::nonNull)
+        .map(pathResolver::getAbsolutePath)
+        .collect(MoreCollectors.toImmutableSortedSet());
   }
 
   @Override
