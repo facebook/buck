@@ -798,12 +798,15 @@ public class TestRunning {
       if (!sourceFolderPath.isEmpty()) {
         srcDirectories.addAll(sourceFolderPath);
       }
-      Path classesItem;
+      Path classesItem = null;
 
       if (useIntermediateClassesDir) {
         classesItem = DefaultJavaLibrary.getClassesDir(rule.getBuildTarget(), filesystem);
       } else {
-        classesItem = sourcePathResolver.getRelativePath(rule.getSourcePathToOutput());
+        SourcePath path = rule.getSourcePathToOutput();
+        if (path != null) {
+          classesItem = sourcePathResolver.getRelativePath(path);
+        }
       }
       if (classesItem == null) {
         continue;
