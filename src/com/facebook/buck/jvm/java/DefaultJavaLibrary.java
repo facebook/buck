@@ -552,7 +552,11 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       buildableContext.recordArtifact(output);
     }
 
-    JavaLibraryRules.addAccumulateClassNamesStep(this, buildableContext, steps);
+    JavaLibraryRules.addAccumulateClassNamesStep(
+        this,
+        buildableContext,
+        context.getSourcePathResolver(),
+        steps);
 
     return steps.build();
   }

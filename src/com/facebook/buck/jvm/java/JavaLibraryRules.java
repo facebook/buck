@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
@@ -54,6 +55,7 @@ public class JavaLibraryRules {
   static void addAccumulateClassNamesStep(
       JavaLibrary javaLibrary,
       BuildableContext buildableContext,
+      SourcePathResolver pathResolver,
       ImmutableList.Builder<Step> steps) {
 
     Path pathToClassHashes = JavaLibraryRules.getPathToClassHashes(
@@ -62,7 +64,8 @@ public class JavaLibraryRules {
     steps.add(
         new AccumulateClassNamesStep(
             javaLibrary.getProjectFilesystem(),
-            Optional.ofNullable(javaLibrary.getPathToOutput()),
+            Optional.ofNullable(javaLibrary.getSourcePathToOutput())
+                .map(pathResolver::getRelativePath),
             pathToClassHashes));
     buildableContext.recordArtifact(pathToClassHashes);
   }

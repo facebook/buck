@@ -278,7 +278,11 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
             resolvedBinaryJar,
             internalAbiJar));
 
-    JavaLibraryRules.addAccumulateClassNamesStep(this, buildableContext, steps);
+    JavaLibraryRules.addAccumulateClassNamesStep(
+        this,
+        buildableContext,
+        context.getSourcePathResolver(),
+        steps);
 
     return steps.build();
   }
