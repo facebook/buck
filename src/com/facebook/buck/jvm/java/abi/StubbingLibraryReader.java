@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.io.MorePaths;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -25,19 +26,18 @@ import java.util.List;
 
 /**
  * A {@link LibraryReader} that stubs classes in the process of reading them.
+ *
+ * @param <UnstubbedClass> the type used to work with the unstubbed class
  */
-class StubbingLibraryReader implements LibraryReader<ClassMirror> {
-  private final LibraryReader<?> inner;
-  private final StubDriver<Path> stubDriver;
+class StubbingLibraryReader<UnstubbedClass> implements LibraryReader<ClassMirror> {
+  private final LibraryReader<UnstubbedClass> inner;
+  private final StubDriver<UnstubbedClass> stubDriver;
 
-  /**
-  * @param <UnstubbedClass> the type used to work with the unstubbed class
-  */
-  <UnstubbedClass> StubbingLibraryReader(
+  StubbingLibraryReader(
       LibraryReader<UnstubbedClass> inner,
       StubDriver<UnstubbedClass> stubDriver) {
     this.inner = inner;
-    this.stubDriver = (path, mirror) -> stubDriver.accept(inner.openClass(path), mirror);
+    this.stubDriver = stubDriver;
   }
 
   @Override
@@ -57,7 +57,16 @@ class StubbingLibraryReader implements LibraryReader<ClassMirror> {
   public ClassMirror openClass(Path relativePath) throws IOException {
     String fileName = MorePaths.pathWithUnixSeparators(relativePath);
     ClassMirror stub = new ClassMirror(fileName);
-    stubDriver.accept(relativePath, stub);
+
+    UnstubbedClass unstubbed = inner.openClass(relativePath);
+    if (unstubbed instanceof Closeable) {
+      try (Closeable closeable = (Closeable) unstubbed) {
+        stubDriver.accept(unstubbed, stub);
+      }
+    } else {
+      stubDriver.accept(unstubbed, stub);
+    }
+
     return stub;
   }
 

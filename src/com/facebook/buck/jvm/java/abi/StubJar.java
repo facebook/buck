@@ -36,7 +36,7 @@ public class StubJar {
 
   public StubJar(Path toMirror) {
     libraryReaderSupplier = () ->
-        new StubbingLibraryReader(LibraryReader.of(toMirror), BytecodeStubber::createStub);
+        new StubbingLibraryReader<>(LibraryReader.of(toMirror), BytecodeStubber::createStub);
   }
 
   /**
@@ -49,7 +49,7 @@ public class StubJar {
       Iterable<TypeElement> topLevelTypes) {
     ClassVisitorDriverFromElement driver =
         new ClassVisitorDriverFromElement(targetVersion, elements);
-    libraryReaderSupplier = () -> new StubbingLibraryReader(
+    libraryReaderSupplier = () -> new StubbingLibraryReader<>(
         LibraryReader.of(elements, topLevelTypes),
         driver::driveVisitor);
   }
