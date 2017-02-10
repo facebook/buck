@@ -964,6 +964,53 @@ public class DependencyFileRuleKeyFactoryTest {
     assertThat(res2.getSecond(), Matchers.equalTo(expectedDepFileInputsAfter));
   }
 
+  @Test
+  public void testKeysGetHashed() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(0);
+    BuildRuleResolver ruleResolver = newRuleResolver();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+
+    SourcePath unusedSourcePath = new PathSourcePath(filesystem, Paths.get("input0"));
+    SourcePath sourcePath = new PathSourcePath(filesystem, Paths.get("input"));
+    DependencyFileEntry dependencyFileEntry =
+        DependencyFileEntry.fromSourcePath(sourcePath, pathResolver);
+
+    ImmutableMap<Path, HashCode> hashes = ImmutableMap.of(
+        pathResolver.getAbsolutePath(sourcePath), HashCode.fromInt(42));
+
+    Predicate<SourcePath> coveredPredicate =
+        ImmutableSet.of(sourcePath, unusedSourcePath)::contains;
+
+    FakeDepFileBuildRule rule1 = new FakeDepFileBuildRule("//:rule") {
+      @AddToRuleKey
+      final Object myField1 = sourcePath;
+      @AddToRuleKey
+      final Object myField2 = unusedSourcePath;
+    };
+    rule1.setCoveredByDepFilePredicate(coveredPredicate);
+    FakeFileHashCache hashCache = new FakeFileHashCache(hashes, true, ImmutableMap.of());
+    Pair<RuleKey, ImmutableSet<SourcePath>> res1 =
+        new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
+            .build(rule1, ImmutableList.of(dependencyFileEntry));
+
+    FakeDepFileBuildRule rule2 = new FakeDepFileBuildRule("//:rule") {
+      @AddToRuleKey
+      final Object myField1 = unusedSourcePath;
+      @AddToRuleKey
+      final Object myField2 = sourcePath;
+    };
+    rule2.setCoveredByDepFilePredicate(coveredPredicate);
+    hashCache = new FakeFileHashCache(hashes, true, ImmutableMap.of());
+    Pair<RuleKey, ImmutableSet<SourcePath>> res2 =
+        new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
+            .build(rule2, ImmutableList.of(dependencyFileEntry));
+
+    assertThat(res2.getFirst(), Matchers.not(Matchers.equalTo(res1.getFirst())));
+    assertThat(res2.getSecond(), Matchers.equalTo(ImmutableSet.of(sourcePath)));
+  }
+
   private static class RuleKeyAppendableWrapped implements RuleKeyAppendable {
 
     private final Object field;

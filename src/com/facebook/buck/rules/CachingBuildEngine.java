@@ -1506,7 +1506,11 @@ public class CachingBuildEngine implements BuildEngine {
           .getDepFileRuleKeyFactory().build(((SupportsDependencyFileRuleKey) rule), inputs));
     } catch (SizeLimiter.SizeLimitException ex) {
       return Optional.empty();
-    } catch (NoSuchFileException e) {
+    } catch (Exception e) {
+      // TODO(plamenko): fix exception propagation in RuleKeyBuilder
+      if (!(Throwables.getRootCause(e) instanceof NoSuchFileException)) {
+        throw e;
+      }
       if (!allowMissingInputs) {
         throw e;
       }
