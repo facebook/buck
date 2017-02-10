@@ -102,7 +102,6 @@ public class SwiftLibraryIntegrationTest {
     args.compilerFlags = ImmutableList.of();
     args.frameworks = ImmutableSortedSet.of();
     args.libraries = ImmutableSortedSet.of();
-    args.enableObjcInterop = Optional.empty();
     args.supportedPlatformsRegex = Optional.empty();
     args.bridgingHeader = Optional.empty();
 

@@ -68,7 +68,6 @@ class SwiftDescriptions {
     output.supportedPlatformsRegex = args.supportedPlatformsRegex;
     output.moduleName =
         args.moduleName.map(Optional::of).orElse(Optional.of(buildTarget.getShortName()));
-    output.enableObjcInterop = Optional.of(true);
     output.bridgingHeader = args.bridgingHeader;
 
     boolean isCompanionTarget = buildTarget.getFlavors().contains(SWIFT_COMPANION_FLAVOR);
