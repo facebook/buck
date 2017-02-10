@@ -2733,9 +2733,9 @@ public class ProjectGenerator {
     String hashedPath = BaseEncoding.base64Url().omitPadding().encode(
       Hashing.sha1().hashString(
           targetNode.getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName(),
-          Charsets.UTF_8).asBytes());
+          Charsets.UTF_8).asBytes()).substring(0, 10);
     return projectFilesystem.getBuckPaths().getGenDir()
-        .resolve("_project")
+        .resolve("_p")
         .resolve(hashedPath + AppleHeaderVisibilities.getHeaderSymlinkTreeSuffix(headerVisibility));
   }
 

@@ -360,17 +360,17 @@ public class ProjectGeneratorTest {
     assertThat(headerSymlinkTrees, hasSize(2));
 
     assertEquals(
-        "buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-public-headers",
+        "buck-out/gen/_p/CwkbTNOBmb-pub",
         headerSymlinkTrees.get(0).toString());
     assertThatHeaderSymlinkTreeContains(
-        Paths.get("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-public-headers"),
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
         ImmutableMap.of("lib/bar.h", "HeaderGroup1/bar.h"));
 
     assertEquals(
-        "buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers",
+        "buck-out/gen/_p/CwkbTNOBmb-priv",
         headerSymlinkTrees.get(1).toString());
     assertThatHeaderSymlinkTreeContains(
-        Paths.get("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers"),
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
         ImmutableMap.<String, String>builder()
             .put("lib/foo.h", "HeaderGroup1/foo.h")
             .put("lib/baz.h", "HeaderGroup2/baz.h")
@@ -454,19 +454,19 @@ public class ProjectGeneratorTest {
     assertThat(headerSymlinkTrees, hasSize(2));
 
     assertEquals(
-        "buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-public-headers",
+        "buck-out/gen/_p/CwkbTNOBmb-pub",
         headerSymlinkTrees.get(0).toString());
     assertThatHeaderSymlinkTreeContains(
-        Paths.get("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-public-headers"),
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
         ImmutableMap.of(
             "yet/another/name.h", "HeaderGroup1/bar.h",
             "and/one/more.h", "foo/generated2.h"));
 
     assertEquals(
-        "buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers",
+        "buck-out/gen/_p/CwkbTNOBmb-priv",
         headerSymlinkTrees.get(1).toString());
     assertThatHeaderSymlinkTreeContains(
-        Paths.get("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers"),
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
         ImmutableMap.of(
             "any/name.h", "HeaderGroup1/foo.h",
             "different/name.h", "HeaderGroup2/baz.h",
@@ -497,16 +497,16 @@ public class ProjectGeneratorTest {
 
     assertThat(
         headerSymlinkTrees.get(0).toString(),
-        is(equalTo("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-public-headers")));
+        is(equalTo("buck-out/gen/_p/CwkbTNOBmb-pub")));
     assertThatHeaderSymlinkTreeContains(
-        Paths.get("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-public-headers"),
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
         ImmutableMap.of("foo/dir1/bar.h", "foo/dir1/bar.h"));
 
     assertThat(
         headerSymlinkTrees.get(1).toString(),
-        is(equalTo("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers")));
+        is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
     assertThatHeaderSymlinkTreeContains(
-        Paths.get("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers"),
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
         ImmutableMap.<String, String>builder()
             .put("foo/dir1/foo.h", "foo/dir1/foo.h")
             .put("foo/dir2/baz.h", "foo/dir2/baz.h")
@@ -542,16 +542,16 @@ public class ProjectGeneratorTest {
 
     assertThat(
         headerSymlinkTrees.get(0).toString(),
-        is(equalTo("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-public-headers")));
+        is(equalTo("buck-out/gen/_p/CwkbTNOBmb-pub")));
     assertThatHeaderMapWithoutSymLinksContains(
-        Paths.get("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-public-headers"),
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
         ImmutableMap.of("foo/dir1/bar.h", "foo/dir1/bar.h"));
 
     assertThat(
         headerSymlinkTrees.get(1).toString(),
-        is(equalTo("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers")));
+        is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
     assertThatHeaderMapWithoutSymLinksContains(
-        Paths.get("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers"),
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
         ImmutableMap.<String, String>builder()
             .put("foo/dir1/foo.h", "foo/dir1/foo.h")
             .put("foo/dir2/baz.h", "foo/dir2/baz.h")
@@ -583,16 +583,16 @@ public class ProjectGeneratorTest {
 
     assertThat(
         headerSymlinkTrees.get(0).toString(),
-        is(equalTo("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-public-headers")));
+        is(equalTo("buck-out/gen/_p/CwkbTNOBmb-pub")));
     assertThatHeaderSymlinkTreeContains(
-        Paths.get("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-public-headers"),
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
         ImmutableMap.of("name/space/dir1/bar.h", "foo/dir1/bar.h"));
 
     assertThat(
         headerSymlinkTrees.get(1).toString(),
-        is(equalTo("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers")));
+        is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
     assertThatHeaderSymlinkTreeContains(
-        Paths.get("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers"),
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
         ImmutableMap.<String, String>builder()
             .put("name/space/dir1/foo.h", "foo/dir1/foo.h")
             .put("name/space/dir2/baz.h", "foo/dir2/baz.h")
@@ -635,18 +635,18 @@ public class ProjectGeneratorTest {
 
     assertThat(
         headerSymlinkTrees.get(0).toString(),
-        is(equalTo("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-public-headers")));
+        is(equalTo("buck-out/gen/_p/CwkbTNOBmb-pub")));
     assertThatHeaderSymlinkTreeContains(
-        Paths.get("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-public-headers"),
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
         ImmutableMap.of(
             "foo/yet/another/name.h", "foo/dir1/bar.h",
             "foo/and/one/more.h", "foo/generated2.h"));
 
     assertThat(
         headerSymlinkTrees.get(1).toString(),
-        is(equalTo("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers")));
+        is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
     assertThatHeaderSymlinkTreeContains(
-        Paths.get("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers"),
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
         ImmutableMap.of(
             "foo/any/name.h", "foo/dir1/foo.h",
             "foo/different/name.h", "foo/dir2/baz.h",
@@ -690,18 +690,18 @@ public class ProjectGeneratorTest {
 
     assertThat(
         headerSymlinkTrees.get(0).toString(),
-        is(equalTo("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-public-headers")));
+        is(equalTo("buck-out/gen/_p/CwkbTNOBmb-pub")));
     assertThatHeaderSymlinkTreeContains(
-        Paths.get("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-public-headers"),
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
         ImmutableMap.of(
             "name/space/yet/another/name.h", "foo/dir1/bar.h",
             "name/space/and/one/more.h", "foo/generated2.h"));
 
     assertThat(
         headerSymlinkTrees.get(1).toString(),
-        is(equalTo("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers")));
+        is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
     assertThatHeaderSymlinkTreeContains(
-        Paths.get("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers"),
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
         ImmutableMap.of(
             "name/space/any/name.h", "foo/dir1/foo.h",
             "name/space/different/name.h", "foo/dir2/baz.h",
@@ -728,10 +728,10 @@ public class ProjectGeneratorTest {
     assertThat(headerSymlinkTrees, hasSize(2));
 
     assertEquals(
-        "buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers",
+        "buck-out/gen/_p/CwkbTNOBmb-priv",
         headerSymlinkTrees.get(1).toString());
     assertThatHeaderSymlinkTreeContains(
-        Paths.get("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers"),
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
         ImmutableMap.of("key.h", "value.h"));
 
     node = AppleLibraryBuilder
@@ -751,14 +751,14 @@ public class ProjectGeneratorTest {
     assertThat(headerSymlinkTrees, hasSize(2));
 
     assertEquals(
-        "buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers",
+        "buck-out/gen/_p/CwkbTNOBmb-priv",
         headerSymlinkTrees.get(1).toString());
     assertFalse(
         projectFilesystem.isSymLink(
             Paths.get(
                 "buck-out/gen/foo/lib-private-header-symlink-tree/key.h")));
     assertThatHeaderSymlinkTreeContains(
-        Paths.get("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers"),
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
         ImmutableMap.of("new-key.h", "value.h"));
   }
 
@@ -782,10 +782,10 @@ public class ProjectGeneratorTest {
     assertThat(headerSymlinkTrees, hasSize(2));
 
     assertEquals(
-        "buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers",
+        "buck-out/gen/_p/CwkbTNOBmb-priv",
         headerSymlinkTrees.get(1).toString());
     assertThatHeaderSymlinkTreeContains(
-        Paths.get("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers"),
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
         ImmutableMap.of("key.h", "value.h"));
 
     node = AppleLibraryBuilder
@@ -805,10 +805,10 @@ public class ProjectGeneratorTest {
     assertThat(headerSymlinkTrees, hasSize(2));
 
     assertEquals(
-        "buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers",
+        "buck-out/gen/_p/CwkbTNOBmb-priv",
         headerSymlinkTrees.get(1).toString());
     assertThatHeaderSymlinkTreeContains(
-        Paths.get("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers"),
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
         ImmutableMap.of("key.h", "new-value.h"));
   }
 
@@ -855,10 +855,10 @@ public class ProjectGeneratorTest {
         "test binary should use header symlink trees for both public and non-public headers " +
             "of the tested library in HEADER_SEARCH_PATHS",
         "$(inherited) " +
-            "../buck-out/gen/_project/LpygK8zq5FL2BZS9-wAcgwZi7NQ-private-headers/.hmap " +
-            "../buck-out/gen/_project/LpygK8zq5FL2BZS9-wAcgwZi7NQ-public-headers/.hmap " +
-            "../buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-public-headers/.hmap " +
-            "../buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers/.hmap " +
+            "../buck-out/gen/_p/LpygK8zq5F-priv/.hmap " +
+            "../buck-out/gen/_p/LpygK8zq5F-pub/.hmap " +
+            "../buck-out/gen/_p/CwkbTNOBmb-pub/.hmap " +
+            "../buck-out/gen/_p/CwkbTNOBmb-priv/.hmap " +
             "../buck-out",
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
@@ -918,10 +918,10 @@ public class ProjectGeneratorTest {
         "test binary should use header symlink trees for both public and non-public headers " +
             "of the tested library in HEADER_SEARCH_PATHS",
         "$(inherited) " +
-            "../buck-out/gen/_project/LpygK8zq5FL2BZS9-wAcgwZi7NQ-private-headers/.hmap " +
-            "../buck-out/gen/_project/LpygK8zq5FL2BZS9-wAcgwZi7NQ-public-headers/.hmap " +
-            "../buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-public-headers/.hmap " +
-            "../buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers/.hmap " +
+            "../buck-out/gen/_p/LpygK8zq5F-priv/.hmap " +
+            "../buck-out/gen/_p/LpygK8zq5F-pub/.hmap " +
+            "../buck-out/gen/_p/CwkbTNOBmb-pub/.hmap " +
+            "../buck-out/gen/_p/CwkbTNOBmb-priv/.hmap " +
             "../buck-out",
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
@@ -981,10 +981,10 @@ public class ProjectGeneratorTest {
         "test binary should use header symlink trees for both public and non-public headers " +
             "of the tested binary in HEADER_SEARCH_PATHS",
         "$(inherited) " +
-            "../buck-out/gen/_project/LpygK8zq5FL2BZS9-wAcgwZi7NQ-private-headers/.hmap " +
-            "../buck-out/gen/_project/LpygK8zq5FL2BZS9-wAcgwZi7NQ-public-headers/.hmap " +
-            "../buck-out/gen/_project/4UdYl649eelC5an4rMFbcNM2aR4-public-headers/.hmap " +
-            "../buck-out/gen/_project/4UdYl649eelC5an4rMFbcNM2aR4-private-headers/.hmap " +
+            "../buck-out/gen/_p/LpygK8zq5F-priv/.hmap " +
+            "../buck-out/gen/_p/LpygK8zq5F-pub/.hmap " +
+            "../buck-out/gen/_p/4UdYl649ee-pub/.hmap " +
+            "../buck-out/gen/_p/4UdYl649ee-priv/.hmap " +
             "../buck-out",
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
@@ -1896,9 +1896,9 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, target, "Debug");
     assertEquals(
         "$(inherited) " +
-            "../buck-out/gen/_project/ptQfVNNRREMFWy8msh938FIQgOU-private-headers/.hmap " +
-            "../buck-out/gen/_project/ptQfVNNRREMFWy8msh938FIQgOU-public-headers/.hmap " +
-            "../buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-public-headers/.hmap " +
+            "../buck-out/gen/_p/ptQfVNNRRE-priv/.hmap " +
+            "../buck-out/gen/_p/ptQfVNNRRE-pub/.hmap " +
+            "../buck-out/gen/_p/CwkbTNOBmb-pub/.hmap " +
             "../buck-out",
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
@@ -1965,9 +1965,9 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, target, "Debug");
     assertEquals(
         "headers " +
-            "../buck-out/gen/_project/ptQfVNNRREMFWy8msh938FIQgOU-private-headers/.hmap " +
-            "../buck-out/gen/_project/ptQfVNNRREMFWy8msh938FIQgOU-public-headers/.hmap " +
-            "../buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-public-headers/.hmap " +
+            "../buck-out/gen/_p/ptQfVNNRRE-priv/.hmap " +
+            "../buck-out/gen/_p/ptQfVNNRRE-pub/.hmap " +
+            "../buck-out/gen/_p/CwkbTNOBmb-pub/.hmap " +
             "../buck-out",
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
@@ -2044,10 +2044,10 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, target, "Debug");
     assertEquals(
         "$(inherited) " +
-            "../buck-out/gen/_project/ptQfVNNRREMFWy8msh938FIQgOU-private-headers/.hmap " +
-            "../buck-out/gen/_project/ptQfVNNRREMFWy8msh938FIQgOU-public-headers/.hmap " +
-            "../buck-out/gen/_project/zAW4E7kxsVkCaZeEiNxOKdDCHis-public-headers/.hmap " +
-            "../buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-public-headers/.hmap " +
+            "../buck-out/gen/_p/ptQfVNNRRE-priv/.hmap " +
+            "../buck-out/gen/_p/ptQfVNNRRE-pub/.hmap " +
+            "../buck-out/gen/_p/zAW4E7kxsV-pub/.hmap " +
+            "../buck-out/gen/_p/CwkbTNOBmb-pub/.hmap " +
             "../buck-out",
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
@@ -2152,9 +2152,9 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, target, "Debug");
     assertEquals(
         "headers " +
-            "../buck-out/gen/_project/ptQfVNNRREMFWy8msh938FIQgOU-private-headers/.hmap " +
-            "../buck-out/gen/_project/ptQfVNNRREMFWy8msh938FIQgOU-public-headers/.hmap " +
-            "../buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-public-headers/.hmap " +
+            "../buck-out/gen/_p/ptQfVNNRRE-priv/.hmap " +
+            "../buck-out/gen/_p/ptQfVNNRRE-pub/.hmap " +
+            "../buck-out/gen/_p/CwkbTNOBmb-pub/.hmap " +
             "../buck-out",
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
@@ -4108,9 +4108,9 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, target, "Debug");
     assertEquals(
         "$(inherited) " +
-            "../buck-out/gen/_project/ptQfVNNRREMFWy8msh938FIQgOU-private-headers " +
-            "../buck-out/gen/_project/ptQfVNNRREMFWy8msh938FIQgOU-public-headers " +
-            "../buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-public-headers " +
+            "../buck-out/gen/_p/ptQfVNNRRE-priv " +
+            "../buck-out/gen/_p/ptQfVNNRRE-pub " +
+            "../buck-out/gen/_p/CwkbTNOBmb-pub " +
             "../buck-out",
         settings.get("HEADER_SEARCH_PATHS"));
   }

@@ -40,9 +40,9 @@ public class AppleHeaderVisibilities {
   public static String getHeaderSymlinkTreeSuffix(HeaderVisibility headerVisibility) {
     switch (headerVisibility) {
       case PUBLIC:
-        return "-public-headers";
+        return "-pub";
       case PRIVATE:
-        return "-private-headers";
+        return "-priv";
     }
     throw new IllegalStateException("Invalid header visibility value: " + headerVisibility);
   }
