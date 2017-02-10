@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
@@ -45,22 +46,30 @@ import java.util.stream.Collectors;
  *   '$(query_targets "attrfilter(annotation_processors, com.foo.Processor, deps(:app))")'
  * </pre>
  */
-public class QueryTargetsMacroExpander extends QueryMacroExpander {
+public class QueryTargetsMacroExpander extends QueryMacroExpander<QueryTargetsMacro> {
 
   public QueryTargetsMacroExpander(Optional<TargetGraph> targetGraph) {
     super(targetGraph);
   }
 
   @Override
-  public String expand(
+  public Class<QueryTargetsMacro> getInputClass() {
+    return QueryTargetsMacro.class;
+  }
+
+  @Override
+  QueryTargetsMacro fromQuery(Query query) {
+    return QueryTargetsMacro.of(query);
+  }
+
+  @Override
+  public String expandFrom(
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      ImmutableList<String> input) throws MacroException {
-    if (input.isEmpty()) {
-      throw new MacroException("One quoted query expression is expected");
-    }
-    String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.get(0));
+      QueryTargetsMacro input)
+      throws MacroException {
+    String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.getQuery().getQuery());
     return resolveQuery(target, cellNames, resolver, queryExpression)
         .map(queryTarget -> {
           Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
@@ -72,16 +81,13 @@ public class QueryTargetsMacroExpander extends QueryMacroExpander {
   }
 
   @Override
-  public Object extractRuleKeyAppendables(
+  public Object extractRuleKeyAppendablesFrom(
       BuildTarget target,
       CellPathResolver cellNames,
       final BuildRuleResolver resolver,
-      ImmutableList<String> input)
+      QueryTargetsMacro input)
       throws MacroException {
-    if (input.isEmpty()) {
-      throw new MacroException("One quoted query expression is expected");
-    }
-    String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.get(0));
+    String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.getQuery().getQuery());
     // Return the set of targets which matched the query
     return resolveQuery(target, cellNames, resolver, queryExpression)
         .map(QueryTarget::toString)
@@ -89,11 +95,12 @@ public class QueryTargetsMacroExpander extends QueryMacroExpander {
   }
 
   @Override
-  public ImmutableList<BuildRule> extractBuildTimeDeps(
+  public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      ImmutableList<String> input) throws MacroException {
+      QueryTargetsMacro input)
+      throws MacroException {
     // The query_targets macro is only used for inspecting the build graph or creating
     // log files, or buck invocations, so it should not depend on actual builds of the referenced
     // rules

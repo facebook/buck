@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
+import com.facebook.buck.rules.query.Query;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -43,7 +44,7 @@ import java.util.stream.Stream;
 /**
  * Abstract base class for the query_targets and query_outputs macros
  */
-public abstract class QueryMacroExpander implements MacroExpander {
+public abstract class QueryMacroExpander<T extends QueryMacro> extends AbstractMacroExpander<T> {
 
   private ListeningExecutorService executorService;
   private Optional<TargetGraph> targetGraph;
@@ -53,16 +54,13 @@ public abstract class QueryMacroExpander implements MacroExpander {
     this.executorService = MoreExecutors.newDirectExecutorService();
   }
 
-
   private Stream<BuildTarget> extractTargets(
       BuildTarget target,
       CellPathResolver cellNames,
       Optional<BuildRuleResolver> resolver,
-      ImmutableList<String> input) throws MacroException {
-    if (input.isEmpty()) {
-      throw new MacroException("One quoted query expression is expected with optional flags");
-    }
-    String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.get(0));
+      T input)
+      throws MacroException {
+    String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.getQuery().getQuery());
     final GraphEnhancementQueryEnvironment env = new GraphEnhancementQueryEnvironment(
         resolver,
         targetGraph,
@@ -113,12 +111,26 @@ public abstract class QueryMacroExpander implements MacroExpander {
     }
   }
 
+  abstract T fromQuery(Query query);
 
   @Override
-  public ImmutableList<BuildTarget> extractParseTimeDeps(
+  protected final T parse(
       BuildTarget target,
       CellPathResolver cellNames,
-      ImmutableList<String> input) throws MacroException {
+      ImmutableList<String> input)
+      throws MacroException {
+    if (input.size() != 1) {
+      throw new MacroException("One quoted query expression is expected");
+    }
+    return fromQuery(Query.of(input.get(0)));
+  }
+
+  @Override
+  public ImmutableList<BuildTarget> extractParseTimeDepsFrom(
+      BuildTarget target,
+      CellPathResolver cellNames,
+      T input)
+      throws MacroException {
     return ImmutableList.copyOf(extractTargets(target, cellNames, Optional.empty(), input)
         .collect(Collectors.toList()));
   }

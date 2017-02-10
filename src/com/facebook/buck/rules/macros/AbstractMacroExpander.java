@@ -89,7 +89,8 @@ public abstract class AbstractMacroExpander<T> implements MacroExpander {
   public ImmutableList<BuildTarget> extractParseTimeDepsFrom(
       BuildTarget target,
       CellPathResolver cellNames,
-      T input) {
+      T input)
+      throws MacroException {
     return ImmutableList.of();
   }
 
@@ -98,7 +99,8 @@ public abstract class AbstractMacroExpander<T> implements MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      ImmutableList<String> input) throws MacroException {
+      ImmutableList<String> input)
+      throws MacroException {
     return extractRuleKeyAppendablesFrom(
         target,
         cellNames,
