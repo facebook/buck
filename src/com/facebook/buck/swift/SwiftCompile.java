@@ -45,6 +45,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.annotations.VisibleForTesting;
@@ -210,9 +211,18 @@ class SwiftCompile
       BuildContext context,
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(outputPath);
-    return ImmutableList.of(
-        new MkdirStep(getProjectFilesystem(), outputPath),
-        makeCompileStep(context.getSourcePathResolver()));
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    steps.add(new MkdirStep(getProjectFilesystem(), outputPath));
+    steps.add(makeCompileStep(context.getSourcePathResolver()));
+
+    // Objective-C part can address -Swift.h file with a prefix within a mixed rule.
+    // So let's just copy an emitted header to the expected location
+    // since we can't create it ahead of compilation like we do with other headers symlink trees
+    Path companionHeaderFolder = outputPath.resolve(moduleName);
+    Path companionHeaderPath = companionHeaderFolder.resolve(headerPath.getFileName());
+    steps.add(new MkdirStep(getProjectFilesystem(), companionHeaderFolder));
+    steps.add(CopyStep.forFile(getProjectFilesystem(), headerPath, companionHeaderPath));
+    return steps.build();
   }
 
   @Override

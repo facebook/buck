@@ -1,6 +1,6 @@
 #import <UIKit/UIKit.h>
 #import "AppDelegate.h"
-#import "binary-Swift.h"
+#import "binary/binary-Swift.h"
 
 int main(int argc, char * argv[]) {
     [Test0 func0:@"tho12345"];
