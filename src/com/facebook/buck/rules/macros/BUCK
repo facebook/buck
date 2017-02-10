@@ -3,9 +3,12 @@ TYPES_SRCS = [
   'AbstractExecutableMacro.java',
   'AbstractLocationMacro.java',
   'AbstractMavenCoordinatesMacro.java',
+  'AbstractQueryOutputsMacro.java',
+  'AbstractQueryTargetsMacro.java',
   'AbstractStringWithMacros.java',
   'BuildTargetMacro.java',
   'Macro.java',
+  'QueryMacro.java',
 ]
 java_immutables_library(
   name = 'types',
@@ -14,6 +17,8 @@ java_immutables_library(
     'ExecutableMacro',
     'LocationMacro',
     'MavenCoordinatesMacro',
+    'QueryTargetsMacros',
+    'QueryOutputsMacros',
     'StringWithMacros',
   ],
   srcs = TYPES_SRCS,
