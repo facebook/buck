@@ -90,7 +90,7 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
   @Override
   public Symbols initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo)
       throws IOException {
-    List<String> lines = onDiskBuildInfo.getOutputFileContentsByLine(getPathToOutput());
+    List<String> lines = onDiskBuildInfo.getOutputFileContentsByLine(outputPath);
     Preconditions.checkArgument(lines.size() == 1, "Should be one line of JSON: %s", lines);
     return objectMapper.readValue(lines.get(0), Symbols.class);
   }
@@ -103,7 +103,7 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    Step mkdirStep = new MkdirStep(getProjectFilesystem(), getPathToOutput().getParent());
+    Step mkdirStep = new MkdirStep(getProjectFilesystem(), outputPath.getParent());
     Step extractSymbolsStep = new AbstractExecutionStep("java-symbols") {
       @Override
       public StepExecutionResult execute(ExecutionContext context) throws IOException {
@@ -119,7 +119,7 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
               symbols.exported);
         }
 
-        try (OutputStream output = getProjectFilesystem().newFileOutputStream(getPathToOutput())) {
+        try (OutputStream output = getProjectFilesystem().newFileOutputStream(outputPath)) {
           context.getObjectMapper().writeValue(output, symbolsToSerialize);
         }
 
