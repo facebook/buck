@@ -64,7 +64,9 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedSet;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -111,6 +113,7 @@ public class StubJarTest {
 
   @Parameterized.Parameter
   public String testingMode;
+  private Map<String, AbiClass> classNameToOriginal;
 
   @Parameterized.Parameters
   public static Object[] getParameters() {
@@ -491,7 +494,10 @@ public class StubJarTest {
             "@Retention(RetentionPolicy.SOURCE)",
             "@interface SourceRetentionAnno { }"));
 
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+    assertClassesStubbedCorrectly(
+        paths,
+        "com/example/buck/A.class",
+        "com/example/buck/SourceRetentionAnno.class");
   }
 
   @Test
@@ -507,7 +513,10 @@ public class StubJarTest {
             "@Retention(RetentionPolicy.CLASS)",
             "@interface ClassRetentionAnno { }"));
 
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+    assertClassesStubbedCorrectly(
+        paths,
+        "com/example/buck/A.class",
+        "com/example/buck/ClassRetentionAnno.class");
   }
 
   @Test
@@ -523,7 +532,10 @@ public class StubJarTest {
             "@Retention(RetentionPolicy.RUNTIME)",
             "@interface RuntimeRetentionAnno { }"));
 
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+    assertClassesStubbedCorrectly(
+        paths,
+        "com/example/buck/A.class",
+        "com/example/buck/RuntimeRetentionAnno.class");
   }
 
   @Test
@@ -656,35 +668,50 @@ public class StubJarTest {
   public void preservesAnnotationPrimitiveDefaultValues() throws IOException {
     JarPaths paths = createAnnotationFullAndStubJars();
 
-    assertClassesStubbedCorrectly(paths, "com/example/buck/Foo.class");
+    assertClassesStubbedCorrectly(
+        paths,
+        "com/example/buck/Foo.class",
+        "com/example/buck/Foo$TypeAnnotation.class");
   }
 
   @Test
   public void preservesAnnotationArrayDefaultValues() throws IOException {
     JarPaths paths = createAnnotationFullAndStubJars();
 
-    assertClassesStubbedCorrectly(paths, "com/example/buck/Foo.class");
+    assertClassesStubbedCorrectly(
+        paths,
+        "com/example/buck/Foo.class",
+        "com/example/buck/Foo$TypeAnnotation.class");
   }
 
   @Test
   public void preservesAnnotationAnnotationDefaultValues() throws IOException {
     JarPaths paths = createAnnotationFullAndStubJars();
 
-    assertClassesStubbedCorrectly(paths, "com/example/buck/Foo.class");
+    assertClassesStubbedCorrectly(
+        paths,
+        "com/example/buck/Foo.class",
+        "com/example/buck/Foo$TypeAnnotation.class");
   }
 
   @Test
   public void preservesAnnotationEnumDefaultValues() throws IOException {
     JarPaths paths = createAnnotationFullAndStubJars();
 
-    assertClassesStubbedCorrectly(paths, "com/example/buck/Foo.class");
+    assertClassesStubbedCorrectly(
+        paths,
+        "com/example/buck/Foo.class",
+        "com/example/buck/Foo$TypeAnnotation.class");
   }
 
   @Test
   public void preservesAnnotationTypeDefaultValues() throws IOException {
     JarPaths paths = createAnnotationFullAndStubJars();
 
-    assertClassesStubbedCorrectly(paths, "com/example/buck/Foo.class");
+    assertClassesStubbedCorrectly(
+        paths,
+        "com/example/buck/Foo.class",
+        "com/example/buck/Foo$TypeAnnotation.class");
   }
 
   @Test
@@ -720,6 +747,7 @@ public class StubJarTest {
             "}"));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+    assertClassesNotStubbed(paths, "com/example/buck/A$1.class");
   }
 
   @Test
@@ -738,8 +766,7 @@ public class StubJarTest {
                 "}"
             )));
 
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A$B.class");
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class", "com/example/buck/A$B.class");
   }
 
   @Test
@@ -799,8 +826,7 @@ public class StubJarTest {
                 "}"
             )));
 
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A$B.class");
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class", "com/example/buck/A$B.class");
   }
 
   @Test
@@ -821,13 +847,15 @@ public class StubJarTest {
                 "}"
             )));
 
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A$B.class");
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A$B$C.class");
+    assertClassesStubbedCorrectly(
+        paths,
+        "com/example/buck/A.class",
+        "com/example/buck/A$B.class",
+        "com/example/buck/A$B$C.class");
   }
 
   @Test
-  public void doesNotStubReferencesToInnerClassesOfOtherTypess() throws IOException {
+  public void doesNotStubReferencesToInnerClassesOfOtherTypes() throws IOException {
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
@@ -842,7 +870,11 @@ public class StubJarTest {
                 "}"
             )));
 
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+    assertClassesStubbedCorrectly(
+        paths,
+        "com/example/buck/A.class",
+        "com/example/buck/B.class",
+        "com/example/buck/B$C.class");
   }
 
   @Test
@@ -861,8 +893,7 @@ public class StubJarTest {
                 "}"
             )));
 
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A$B.class");
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class", "com/example/buck/A$B.class");
   }
 
   @Test
@@ -880,7 +911,8 @@ public class StubJarTest {
                 "}"
             )));
 
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class", "com/example/buck/A$1.class");
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+    assertClassesNotStubbed(paths, "com/example/buck/A$1.class");
   }
 
   @Test
@@ -898,10 +930,8 @@ public class StubJarTest {
                 "}"
             )));
 
-    assertClassesStubbedCorrectly(
-        paths,
-        "com/example/buck/A.class",
-        "com/example/buck/A$1Local.class");
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+    assertClassesNotStubbed(paths, "com/example/buck/A$1Local.class");
   }
 
   @Test
@@ -919,8 +949,7 @@ public class StubJarTest {
             "}"
         ));
 
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A$B.class");
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class", "com/example/buck/A$B.class");
   }
 
   @Test
@@ -1242,16 +1271,29 @@ public class StubJarTest {
         temp.newFolder());
   }
 
+  private void assertClassesNotStubbed(
+      JarPaths paths,
+      String... classFilePaths) throws IOException {
+    for (String classFilePath : classFilePaths) {
+      AbiClass stubbed = readClass(paths.stubJar, classFilePath);
+      if (stubbed != null) {
+        fail(String.format("Should not have stubbed %s", stubbed.getClassNode().name));
+      }
+    }
+  }
+
   private void assertClassesStubbedCorrectly(
       JarPaths paths,
-      String... classNames) throws IOException {
-    for (String className : classNames) {
-      AbiClass original = readClass(paths.fullJar, className);
-      AbiClass stubbed = readClass(paths.stubJar, className);
+      String... classFilePaths) throws IOException {
+    classNameToOriginal = new HashMap<>();
+    for (String classFilePath : classFilePaths) {
+      AbiClass original = readClass(paths.fullJar, classFilePath);
+      classNameToOriginal.put(original.getClassNode().name, original);
+    }
 
-      if (isAnonymousOrLocalClass(original.getClassNode())) {
-        original = null;
-      }
+    for (String classFilePath : classFilePaths) {
+      AbiClass original = readClass(paths.fullJar, classFilePath);
+      AbiClass stubbed = readClass(paths.stubJar, classFilePath);
 
       assertClassStubbedCorrectly(original, stubbed);
     }
@@ -1265,13 +1307,14 @@ public class StubJarTest {
    *       are present</li>
    * </ul>
    */
-  private static void assertClassStubbedCorrectly(AbiClass original, AbiClass stubbed) {
+  private void assertClassStubbedCorrectly(AbiClass original, AbiClass stubbed) {
     if (original == null) {
       if (stubbed != null) {
         fail(String.format("Should not have stubbed %s", stubbed.getClassNode().name));
       }
       return;
     }
+    assertNotNull(String.format("Should have stubbed %s", original.getClassNode().name), stubbed);
 
     ClassNode originalNode = original.getClassNode();
     ClassNode stubbedNode = stubbed.getClassNode();
@@ -1304,13 +1347,13 @@ public class StubJarTest {
     assertMethodsStubbedCorrectly(originalNode.methods, stubbedNode.methods);
   }
 
-  private static void assertInnerClassesStubbedCorrectly(
+  private void assertInnerClassesStubbedCorrectly(
       ClassNode originalOuter,
       List<InnerClassNode> original,
       List<InnerClassNode> stubbed) {
     List<InnerClassNode> filteredOriginal = original.stream()
-        .filter(node -> node.name == originalOuter.name ||
-            (!isAnonymousOrLocalClass(node) && isMemberOf(node, originalOuter)))
+        .filter(node -> classNameToOriginal.containsKey(node.name) &&
+            (node.outerName == originalOuter.name || node.name == originalOuter.name))
         .collect(Collectors.toList());
 
     assertMembersStubbedCorrectly(
@@ -1318,35 +1361,6 @@ public class StubJarTest {
         stubbed,
         node -> node.access,
         StubJarTest::assertInnerClassStubbedCorrectly);
-  }
-
-  private static boolean isAnonymousOrLocalClass(ClassNode node) {
-    return isLocalClass(node) || isAnonymousClass(node);
-  }
-
-  private static boolean isLocalClass(ClassNode node) {
-    return node.outerMethod != null;
-  }
-
-  private static boolean isAnonymousClass(ClassNode node) {
-    if (node.outerClass == null) {
-      return false;
-    }
-
-    for (InnerClassNode innerClass : node.innerClasses) {
-      if (innerClass.name.equals(node.name) && innerClass.innerName == null) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private static boolean isAnonymousOrLocalClass(InnerClassNode node) {
-    return node.innerName == null || node.outerName == null;
-  }
-
-  private static boolean isMemberOf(InnerClassNode inner, ClassNode outer) {
-    return inner.outerName.equals(outer.name);
   }
 
   private static void assertMethodsStubbedCorrectly(
@@ -1377,6 +1391,10 @@ public class StubJarTest {
 
     List<M> filtered = original.stream()
         .filter(m -> {
+          if (m instanceof InnerClassNode) {
+            return true;
+          }
+
           if (m instanceof MethodNode &&
               ((MethodNode) m).name.equals("<clinit>") &&
               ((MethodNode) m).desc.equals("()V")) {
