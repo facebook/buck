@@ -2164,7 +2164,7 @@ public class CachingBuildEngineTest {
       Path fetchedManifest = tmp.newFile("manifest");
       CacheResult cacheResult =
           cache.fetch(
-              cachingBuildEngine.getManifestRuleKey(rule).get(),
+              cachingBuildEngine.getManifestRuleKey(rule, buildContext.getEventBus()).get(),
               LazyPath.ofInstance(fetchedManifest));
       assertThat(
           cacheResult.getType(),
@@ -2268,7 +2268,8 @@ public class CachingBuildEngineTest {
       }
       cache.store(
           ArtifactInfo.builder()
-              .addRuleKeys(cachingBuildEngine.getManifestRuleKey(rule).get())
+              .addRuleKeys(
+                  cachingBuildEngine.getManifestRuleKey(rule, buildContext.getEventBus()).get())
               .build(),
           byteArrayOutputStream.toByteArray());
 
@@ -2287,7 +2288,7 @@ public class CachingBuildEngineTest {
       Path fetchedManifest = tmp.newFile("manifest");
       CacheResult cacheResult =
           cache.fetch(
-              cachingBuildEngine.getManifestRuleKey(rule).get(),
+              cachingBuildEngine.getManifestRuleKey(rule, buildContext.getEventBus()).get(),
               LazyPath.ofInstance(fetchedManifest));
       assertThat(
           cacheResult.getType(),
@@ -2391,7 +2392,8 @@ public class CachingBuildEngineTest {
       }
       cache.store(
           ArtifactInfo.builder()
-              .addRuleKeys(cachingBuildEngine.getManifestRuleKey(rule).get())
+              .addRuleKeys(
+                  cachingBuildEngine.getManifestRuleKey(rule, buildContext.getEventBus()).get())
               .build(),
           byteArrayOutputStream.toByteArray());
 
@@ -2410,7 +2412,7 @@ public class CachingBuildEngineTest {
       Path fetchedManifest = tmp.newFile("manifest");
       CacheResult cacheResult =
           cache.fetch(
-              cachingBuildEngine.getManifestRuleKey(rule).get(),
+              cachingBuildEngine.getManifestRuleKey(rule, buildContext.getEventBus()).get(),
               LazyPath.ofInstance(fetchedManifest));
       assertThat(
           cacheResult.getType(),
@@ -2506,7 +2508,8 @@ public class CachingBuildEngineTest {
       }
       cache.store(
           ArtifactInfo.builder()
-              .addRuleKeys(cachingBuildEngine.getManifestRuleKey(rule).get())
+              .addRuleKeys(
+                  cachingBuildEngine.getManifestRuleKey(rule, buildContext.getEventBus()).get())
               .build(),
           byteArrayOutputStream.toByteArray());
       Path artifact = tmp.newFile("artifact.zip");

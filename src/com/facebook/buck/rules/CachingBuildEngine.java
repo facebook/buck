@@ -422,15 +422,27 @@ public class CachingBuildEngine implements BuildEngine {
       }
 
       // Manifest caching
-      try (BuckEvent.Scope scope =
-               BuildRuleCacheEvent.startCacheCheckScope(
-                   context.getEventBus(),
-                   rule,
-                   BuildRuleCacheEvent.CacheStepType.DEPFILE_BASED)) {
-        Optional<BuildResult> manifestResult =
-            performManifestBasedCacheFetch(rule, context, buildInfoRecorder);
-        if (manifestResult.isPresent()) {
-          return Futures.immediateFuture(manifestResult);
+      if (useManifestCaching(rule)) {
+        Optional<RuleKeyAndInputs> manifestKey =
+            calculateManifestKey(rule, context.getEventBus());
+        if (manifestKey.isPresent()) {
+          buildInfoRecorder.addBuildMetadata(
+              BuildInfo.MetadataKey.MANIFEST_KEY,
+              manifestKey.get().getRuleKey().toString());
+          try (BuckEvent.Scope scope =
+                   BuildRuleCacheEvent.startCacheCheckScope(
+                       context.getEventBus(),
+                       rule,
+                       BuildRuleCacheEvent.CacheStepType.DEPFILE_BASED)) {
+            Optional<BuildResult> manifestResult =
+                performManifestBasedCacheFetch(
+                    rule,
+                    context,
+                    manifestKey.get());
+            if (manifestResult.isPresent()) {
+              return Futures.immediateFuture(manifestResult);
+            }
+          }
         }
       }
 
@@ -728,23 +740,18 @@ public class CachingBuildEngine implements BuildEngine {
 
               // Push an updated manifest to the cache.
               if (useManifestCaching(rule)) {
-                final RuleKeyAndInputs manifestKey;
-                try {
-                  manifestKey =
-                      ruleKeyFactories.apply(rule.getProjectFilesystem())
-                          .getDepFileRuleKeyFactory()
-                              .buildManifestKey((SupportsDependencyFileRuleKey) rule);
+                Optional<RuleKeyAndInputs> manifestKey =
+                  calculateManifestKey(rule, buildContext.getEventBus());
+                if (manifestKey.isPresent()) {
                   buildInfoRecorder.addBuildMetadata(
                       BuildInfo.MetadataKey.MANIFEST_KEY,
-                      manifestKey.getRuleKey().toString());
+                      manifestKey.get().getRuleKey().toString());
                   updateAndStoreManifest(
                       rule,
                       depFileRuleKeyAndInputs.get().getRuleKey(),
                       depFileRuleKeyAndInputs.get().getInputs(),
-                      manifestKey,
+                      manifestKey.get(),
                       buildContext.getArtifactCache());
-                } catch (SizeLimiter.SizeLimitException ex) { //NOPMD
-                  // if the input size limit was exceeded, we simply don't store the manifest
                 }
               }
             }
@@ -1548,14 +1555,10 @@ public class CachingBuildEngine implements BuildEngine {
 
   @VisibleForTesting
   protected Optional<RuleKey> getManifestRuleKey(
-      SupportsDependencyFileRuleKey rule) throws IOException {
-    try {
-      return Optional.of(
-          ruleKeyFactories.apply(rule.getProjectFilesystem())
-            .getDepFileRuleKeyFactory().buildManifestKey(rule).getRuleKey());
-    } catch (SizeLimiter.SizeLimitException ex) {
-      return Optional.empty();
-    }
+      SupportsDependencyFileRuleKey rule,
+      BuckEventBus eventBus)
+      throws IOException {
+    return calculateManifestKey(rule, eventBus).map(RuleKeyAndInputs::getRuleKey);
   }
 
   // Update the on-disk manifest with the new dep-file rule key and push it to the cache.
@@ -1631,27 +1634,27 @@ public class CachingBuildEngine implements BuildEngine {
             MoreExecutors.directExecutor());
   }
 
+  private Optional<RuleKeyAndInputs> calculateManifestKey(
+      BuildRule rule,
+      BuckEventBus eventBus)
+      throws IOException {
+    try (BuckEvent.Scope scope =
+             RuleKeyCalculationEvent.scope(eventBus, RuleKeyCalculationEvent.Type.MANIFEST)) {
+      return Optional.of(
+          ruleKeyFactories.apply(rule.getProjectFilesystem())
+              .getDepFileRuleKeyFactory().buildManifestKey((SupportsDependencyFileRuleKey) rule));
+    } catch (SizeLimiter.SizeLimitException ex) {
+      return Optional.empty();
+    }
+  }
+
   // Fetch an artifact from the cache using manifest-based caching.
   private Optional<BuildResult> performManifestBasedCacheFetch(
       final BuildRule rule,
       final BuildEngineBuildContext context,
-      final BuildInfoRecorder buildInfoRecorder)
+      RuleKeyAndInputs manifestKey)
       throws IOException {
-    if (!useManifestCaching(rule)) {
-      return Optional.empty();
-    }
-
-    final RuleKeyAndInputs manifestKey;
-    try {
-      manifestKey =
-          ruleKeyFactories.apply(rule.getProjectFilesystem())
-              .getDepFileRuleKeyFactory().buildManifestKey((SupportsDependencyFileRuleKey) rule);
-    } catch (SizeLimiter.SizeLimitException ex) {
-      return Optional.empty();
-    }
-    buildInfoRecorder.addBuildMetadata(
-        BuildInfo.MetadataKey.MANIFEST_KEY,
-        manifestKey.getRuleKey().toString());
+    Preconditions.checkArgument(useManifestCaching(rule));
 
     final LazyPath tempFile = new LazyPath() {
       @Override
