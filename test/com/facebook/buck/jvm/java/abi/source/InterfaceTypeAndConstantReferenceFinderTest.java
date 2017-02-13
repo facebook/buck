@@ -528,39 +528,46 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
         createSymbolicReference("3", 2, 39)));
   }
 
+  @Test
+  public void testIgnoresReferencesToNonexistentTypes() throws IOException {
+    findTypeReferencesErrorsOK(
+        "package com.facebook.foo;",
+        "class Foo {",
+        "  protected Bar getBar() { return null; };",
+        "}");
+
+    assertThat(typeReferences, Matchers.empty());
+  }
+
   private void findTypeReferences(String... sourceLines) throws IOException {
-    Iterable<? extends CompilationUnitTree> files = compile(Joiner.on('\n').join(sourceLines));
+    findTypeReferences(sourceLines, false);
+  }
 
-    assertThat(diagnostics.getDiagnostics(), Matchers.empty());
+  private void findTypeReferencesErrorsOK(String... sourceLines) throws IOException {
+    findTypeReferences(sourceLines, true);
+  }
 
+  private void findTypeReferences(String[] sourceLines, boolean errorsOK) throws IOException {
     constantReferences = new ArrayList<>();
     typeReferences = new ArrayList<>();
     importedTypes = new ArrayList<>();
-    new InterfaceTypeAndConstantReferenceFinder(
-        trees,
-        new InterfaceTypeAndConstantReferenceFinder.Listener() {
-          @Override
-          public void onTypeImported(TypeElement type) {
-            importedTypes.add(type);
-          }
 
+    compile(
+        ImmutableMap.of("Foo.java", Joiner.on('\n').join(sourceLines)),
+        // ErrorType's get nulled out when the task returns, so we have to get a call back during
+        // the run so that we can still look at them.
+        task -> new PostEnterCallback() {
           @Override
-          public void onTypeReferenceFound(
-              TypeElement type,
-              TreePath path,
-              Element enclosingElement) {
-            typeReferences.add(createSymbolicReference(type.getQualifiedName().toString(), path));
+          protected void enterComplete(List<CompilationUnitTree> compilationUnits) {
+            InterfaceTypeAndConstantReferenceFinder finder =
+                new InterfaceTypeAndConstantReferenceFinder(trees, new FinderListener());
+            finder.findReferences(compilationUnits);
           }
+        });
 
-          @Override
-          public void onConstantReferenceFound(
-              VariableElement constant, TreePath path, Element enclosingElement) {
-            constantReferences.add(createSymbolicReference(
-                constant.getConstantValue().toString(),
-                path));
-          }
-        })
-        .findReferences(files);
+    if (!errorsOK) {
+      assertThat(diagnostics.getDiagnostics(), Matchers.empty());
+    }
   }
 
   private String createSymbolicReference(String referent, TreePath treePath) {
@@ -589,5 +596,28 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
 
   private String createSymbolicReference(String referent, int line, int column) {
     return String.format("%d, %d: %s", line, column, referent);
+  }
+
+  private class FinderListener implements InterfaceTypeAndConstantReferenceFinder.Listener {
+    @Override
+    public void onTypeImported(TypeElement type) {
+      importedTypes.add(type);
+    }
+
+    @Override
+    public void onTypeReferenceFound(
+        TypeElement type,
+        TreePath path,
+        Element enclosingElement) {
+      typeReferences.add(createSymbolicReference(type.getQualifiedName().toString(), path));
+    }
+
+    @Override
+    public void onConstantReferenceFound(
+        VariableElement constant, TreePath path, Element enclosingElement) {
+      constantReferences.add(createSymbolicReference(
+          constant.getConstantValue().toString(),
+          path));
+    }
   }
 }

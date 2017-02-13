@@ -24,6 +24,7 @@ import com.sun.source.util.TreeScanner;
 import com.sun.source.util.Trees;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.type.TypeMirror;
 
 /**
  * A {@link TreeScanner} that keeps track of the following as it is scanning:
@@ -64,6 +65,11 @@ class TreeContextScanner<R, P> extends TreeScanner<R, P> {
   @Nullable
   protected final Element getCurrentElement() {
     return trees.getElement(getCurrentPath());
+  }
+
+  @Nullable
+  protected final TypeMirror getCurrentType() {
+    return trees.getTypeMirror(getCurrentPath());
   }
 
   @Override
