@@ -86,6 +86,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     return new Resumed(rule, ruleKeyFactory);
   }
 
+  public static WillBuildLocally willBuildLocally(
+      BuildRule rule) {
+    return new WillBuildLocally(rule);
+  }
+
   public static class Started extends BuildRuleEvent {
     protected Started(BuildRule rule) {
       super(rule);
@@ -245,6 +250,26 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     @Override
     public String getEventName() {
       return "BuildRuleResumed";
+    }
+  }
+
+  public static class WillBuildLocally extends AbstractBuckEvent implements WorkAdvanceEvent {
+
+    private final BuildRule rule;
+
+    public WillBuildLocally(BuildRule rule) {
+      super(EventKey.unique());
+      this.rule = rule;
+    }
+
+    @Override
+    public String getEventName() {
+      return "BuildRuleWillBuildLocally";
+    }
+
+    @Override
+    protected String getValueString() {
+      return rule.toString();
     }
   }
 

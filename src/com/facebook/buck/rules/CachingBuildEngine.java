@@ -1365,6 +1365,7 @@ public class CachingBuildEngine implements BuildEngine {
     @SuppressWarnings("PMD.PrematureDeclaration")
     long start = System.nanoTime();
 
+    buildContext.getEventBus().post(BuildRuleEvent.willBuildLocally(rule));
     cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
 
     // Get and run all of the commands.

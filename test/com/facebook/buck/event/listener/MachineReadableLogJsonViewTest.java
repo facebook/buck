@@ -20,6 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.log.PerfTimesStats;
@@ -36,8 +37,10 @@ import com.facebook.buck.testutil.JsonMatcher;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 
 import org.junit.Before;
@@ -45,6 +48,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Random;
 
 public class MachineReadableLogJsonViewTest {
@@ -133,7 +137,11 @@ public class MachineReadableLogJsonViewTest {
   @Test
   public void testPerfTimesStatsEvent() throws IOException {
     PerfTimesEventListener.PerfTimesEvent event =
-        new PerfTimesEventListener().new PerfTimesEvent(
+        new PerfTimesEventListener(
+            new BuckEventBus(
+                new DefaultClock(), buildId),
+            new DefaultExecutionEnvironment(ImmutableMap.of(), new Properties()))
+            .new PerfTimesEvent(
             PerfTimesStats.builder()
                 .setPythonTimeMs(4L)
                 .setInitTimeMs(8L)
