@@ -391,40 +391,44 @@ public class CachingBuildEngine implements BuildEngine {
 
       }
 
-      try (BuildRuleEvent.Scope scope = BuildRuleCacheEvent.startCacheCheckScope(
-          context.getEventBus(), rule, BuildRuleCacheEvent.CacheStepType.DEPFILE_BASED)) {
-        // Dep-file rule keys.
-        if (useDependencyFileRuleKey(rule)) {
-          // Try to get the current dep-file rule key.
-          Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> depFileRuleKeyAndInputs =
-              calculateDepFileRuleKey(
-                  rule,
-                  onDiskBuildInfo.getValues(BuildInfo.MetadataKey.DEP_FILE),
-                /* allowMissingInputs */ true);
-          if (depFileRuleKeyAndInputs.isPresent()) {
-            RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getFirst();
-            buildInfoRecorder.addBuildMetadata(
-                BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
-                depFileRuleKey.toString());
+      // Dep-file rule keys.
+      if (useDependencyFileRuleKey(rule)) {
 
-            // Check the input-based rule key says we're already built.
-            Optional<RuleKey> lastDepFileRuleKey =
-                onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
-            if (lastDepFileRuleKey.isPresent() &&
-                depFileRuleKey.equals(lastDepFileRuleKey.get())) {
-              return Futures.immediateFuture(Optional.of(
-                  BuildResult.success(
-                      rule,
-                      BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY,
-                      CacheResult.localKeyUnchangedHit())));
-            }
+        // Try to get the current dep-file rule key.
+        Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> depFileRuleKeyAndInputs =
+            calculateDepFileRuleKey(
+                rule,
+                context,
+                onDiskBuildInfo.getValues(BuildInfo.MetadataKey.DEP_FILE),
+                /* allowMissingInputs */ true);
+        if (depFileRuleKeyAndInputs.isPresent()) {
+          RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getFirst();
+          buildInfoRecorder.addBuildMetadata(
+              BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
+              depFileRuleKey.toString());
+
+          // Check the input-based rule key says we're already built.
+          Optional<RuleKey> lastDepFileRuleKey =
+              onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
+          if (lastDepFileRuleKey.isPresent() &&
+              depFileRuleKey.equals(lastDepFileRuleKey.get())) {
+            return Futures.immediateFuture(Optional.of(
+                BuildResult.success(
+                    rule,
+                    BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY,
+                    CacheResult.localKeyUnchangedHit())));
           }
         }
+      }
 
-        // Manifest caching
+      // Manifest caching
+      try (BuckEvent.Scope scope =
+               BuildRuleCacheEvent.startCacheCheckScope(
+                   context.getEventBus(),
+                   rule,
+                   BuildRuleCacheEvent.CacheStepType.DEPFILE_BASED)) {
         Optional<BuildResult> manifestResult =
             performManifestBasedCacheFetch(rule, context, buildInfoRecorder);
-
         if (manifestResult.isPresent()) {
           return Futures.immediateFuture(manifestResult);
         }
@@ -713,6 +717,7 @@ public class CachingBuildEngine implements BuildEngine {
             Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> depFileRuleKeyAndInputs =
                 calculateDepFileRuleKey(
                     rule,
+                    buildContext,
                     Optional.of(inputStrings),
                     /* allowMissingInputs */ false);
             if (depFileRuleKeyAndInputs.isPresent()) {
@@ -1497,6 +1502,7 @@ public class CachingBuildEngine implements BuildEngine {
 
   private Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> calculateDepFileRuleKey(
       BuildRule rule,
+      BuildEngineBuildContext context,
       Optional<ImmutableList<String>> depFile,
       boolean allowMissingInputs)
       throws IOException {
@@ -1514,7 +1520,10 @@ public class CachingBuildEngine implements BuildEngine {
         .map(MoreFunctions.fromJsonFunction(objectMapper, DependencyFileEntry.class))
         .collect(MoreCollectors.toImmutableList());
 
-    try {
+    try (BuckEvent.Scope scope =
+             RuleKeyCalculationEvent.scope(
+                 context.getEventBus(),
+                 RuleKeyCalculationEvent.Type.DEP_FILE)) {
       return Optional.of(this.ruleKeyFactories.apply(rule.getProjectFilesystem())
           .getDepFileRuleKeyFactory().build(((SupportsDependencyFileRuleKey) rule), inputs));
     } catch (SizeLimiter.SizeLimitException ex) {
