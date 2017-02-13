@@ -317,11 +317,11 @@ public class CachingBuildEngineTest {
 
       // Verify the events logged to the BuckEventBus.
       List<BuckEvent> events = listener.getEvents();
-      assertThat(events, hasItem(BuildRuleEvent.started(dep)));
+      assertThat(events, hasItem(BuildRuleEvent.ruleKeyCalculationStarted(dep)));
       assertThat(
           listener.getEvents(),
           Matchers.containsInRelativeOrder(
-              BuildRuleEvent.started(ruleToTest),
+              BuildRuleEvent.ruleKeyCalculationStarted(ruleToTest),
               BuildRuleEvent.finished(
                   ruleToTest,
                   BuildRuleKeys.of(ruleToTestKey),
@@ -375,7 +375,7 @@ public class CachingBuildEngineTest {
       assertThat(
           listener.getEvents(),
           Matchers.containsInRelativeOrder(
-              BuildRuleEvent.started(buildRule),
+              BuildRuleEvent.ruleKeyCalculationStarted(buildRule),
               BuildRuleEvent.finished(
                   buildRule,
                   BuildRuleKeys.of(defaultRuleKeyFactory.build(buildRule)),
@@ -559,11 +559,11 @@ public class CachingBuildEngineTest {
 
       // Verify the events logged to the BuckEventBus.
       List<BuckEvent> events = listener.getEvents();
-      assertThat(events, hasItem(BuildRuleEvent.started(dep)));
+      assertThat(events, hasItem(BuildRuleEvent.ruleKeyCalculationStarted(dep)));
       assertThat(
           events,
           Matchers.containsInRelativeOrder(
-              BuildRuleEvent.started(ruleToTest),
+              BuildRuleEvent.ruleKeyCalculationStarted(ruleToTest),
               BuildRuleEvent.finished(
                   ruleToTest,
                   BuildRuleKeys.of(ruleToTestKey),
@@ -618,7 +618,7 @@ public class CachingBuildEngineTest {
       assertThat(
           events,
           Matchers.containsInRelativeOrder(
-              BuildRuleEvent.started(dep),
+              BuildRuleEvent.ruleKeyCalculationStarted(dep),
               BuildRuleEvent.finished(
                   dep,
                   BuildRuleKeys.of(depKey),
@@ -630,7 +630,7 @@ public class CachingBuildEngineTest {
       assertThat(
           events,
           Matchers.containsInRelativeOrder(
-              BuildRuleEvent.started(ruleToTest),
+              BuildRuleEvent.ruleKeyCalculationStarted(ruleToTest),
               BuildRuleEvent.finished(
                   ruleToTest,
                   BuildRuleKeys.of(ruleToTestKey),
@@ -708,7 +708,7 @@ public class CachingBuildEngineTest {
       assertThat(
           events,
           Matchers.containsInRelativeOrder(
-              BuildRuleEvent.started(ruleToTest),
+              BuildRuleEvent.ruleKeyCalculationStarted(ruleToTest),
               BuildRuleEvent.finished(
                   ruleToTest,
                   BuildRuleKeys.of(ruleToTestKey),
@@ -720,7 +720,7 @@ public class CachingBuildEngineTest {
       assertThat(
           events,
           Matchers.containsInRelativeOrder(
-              BuildRuleEvent.started(runtimeDep),
+              BuildRuleEvent.ruleKeyCalculationStarted(runtimeDep),
               BuildRuleEvent.finished(
                   runtimeDep,
                   BuildRuleKeys.of(runtimeDepKey),
@@ -732,7 +732,7 @@ public class CachingBuildEngineTest {
       assertThat(
           events,
           Matchers.containsInRelativeOrder(
-              BuildRuleEvent.started(transitiveRuntimeDep),
+              BuildRuleEvent.ruleKeyCalculationStarted(transitiveRuntimeDep),
               BuildRuleEvent.finished(
                   transitiveRuntimeDep,
                   BuildRuleKeys.of(transitiveRuntimeDepKey),

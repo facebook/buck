@@ -26,6 +26,7 @@ import com.facebook.buck.event.ChromeTraceEvent;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.CompilerPluginDurationEvent;
 import com.facebook.buck.event.InstallEvent;
+import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StartActivityEvent;
 import com.facebook.buck.event.UninstallEvent;
@@ -747,6 +748,26 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         ImmutableMap.of(
             "test_case_name", finished.getTestCaseName(),
             "test_name", finished.getTestName()),
+        finished);
+  }
+
+  @Subscribe
+  public void ruleKeyCalculationStarted(RuleKeyCalculationEvent.Started started) {
+    writeChromeTraceEvent(
+        "buck",
+        started.getCategory(),
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.of(),
+        started);
+  }
+
+  @Subscribe
+  public void compilerPluginDurationEventFinished(RuleKeyCalculationEvent.Finished finished) {
+    writeChromeTraceEvent(
+        "buck",
+        finished.getCategory(),
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.of(),
         finished);
   }
 

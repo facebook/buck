@@ -1184,7 +1184,7 @@ public class CachingBuildEngine implements BuildEngine {
             @Override
             public RuleKey apply(List<RuleKey> input) {
               try (BuildRuleEvent.Scope scope =
-                       BuildRuleEvent.startSuspendScope(
+                       BuildRuleEvent.ruleKeyCalculationScope(
                            context.getEventBus(),
                            rule,
                            keyFactories.getDefaultRuleKeyFactory())) {
