@@ -590,12 +590,7 @@ public abstract class Jsr199Javac implements Javac {
     }
 
     private String getPackageName(String binaryName) {
-      int lastDot = binaryName.lastIndexOf('.');
-      if (lastDot < 0) {
-        return "";
-      }
-
-      return binaryName.substring(0, lastDot);
+      return binaryName.substring(0, binaryName.lastIndexOf('.'));
     }
   }
 }
