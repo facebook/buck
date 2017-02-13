@@ -37,6 +37,8 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -86,17 +88,21 @@ public class TrimUberRDotJavaTest {
     BuildRuleResolver resolver = new BuildRuleResolver(
         TargetGraph.EMPTY,
         new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:aapt"))
             .setProjectFilesystem(filesystem)
             .build(),
+         ruleFinder,
+         resolver,
         null,
-        null,
-        null,
-        null,
-        null,
+        new IdentityResourcesProvider(ImmutableList.of()),
+        ImmutableList.of(),
+        ImmutableSortedSet.of(),
+        ImmutableSet.of(),
+        Optional.empty(),
         null,
         false,
         false,

@@ -16,9 +16,11 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.rules.BuildRule;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class IdentityResourcesProvider implements FilteredResourcesProvider {
 
@@ -36,5 +38,10 @@ public class IdentityResourcesProvider implements FilteredResourcesProvider {
   @Override
   public ImmutableList<Path> getStringFiles() {
     return ImmutableList.of();
+  }
+
+  @Override
+  public Optional<BuildRule> getResourceFilterRule() {
+    return Optional.empty();
   }
 }

@@ -21,6 +21,7 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
@@ -38,6 +39,7 @@ import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -124,6 +126,11 @@ public class ResourcesFilter extends AbstractBuildRule
   @Override
   public ImmutableList<Path> getStringFiles() {
     return buildOutputInitializer.getBuildOutput().stringFiles;
+  }
+
+  @Override
+  public Optional<BuildRule> getResourceFilterRule() {
+    return Optional.of(this);
   }
 
   @Override

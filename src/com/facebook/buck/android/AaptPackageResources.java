@@ -21,14 +21,19 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RecordFileSha1Step;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -37,15 +42,18 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Packages the resources using {@code aapt}.
@@ -76,12 +84,40 @@ public class AaptPackageResources extends AbstractBuildRule {
   @AddToRuleKey
   private final boolean includesVectorDrawables;
 
-
-  AaptPackageResources(
-      BuildRuleParams params,
+  static ImmutableSortedSet<BuildRule> getAllDeps(
+      BuildTarget aaptTarget,
+      SourcePathRuleFinder ruleFinder,
+      BuildRuleResolver ruleResolver,
       SourcePath manifest,
       FilteredResourcesProvider filteredResourcesProvider,
       ImmutableList<HasAndroidResourceDeps> resourceDeps,
+      ImmutableSortedSet<BuildRule> extraDeps,
+      ImmutableSet<SourcePath> assetsDirectories) {
+
+    ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
+    depsBuilder.addAll(extraDeps);
+    Stream<BuildTarget> resourceTargets = resourceDeps.stream().map(HasBuildTarget::getBuildTarget);
+    depsBuilder.addAll(
+            BuildRules.toBuildRulesFor(
+                aaptTarget,
+                ruleResolver,
+                resourceTargets::iterator));
+    Stream<SourcePath> resourceDirs = resourceDeps.stream().map(HasAndroidResourceDeps::getRes);
+    depsBuilder.addAll(ruleFinder.filterBuildRuleInputs(resourceDirs));
+    depsBuilder.addAll(ruleFinder.filterBuildRuleInputs(assetsDirectories));
+    ruleFinder.getRule(manifest).ifPresent(depsBuilder::add);
+    filteredResourcesProvider.getResourceFilterRule().ifPresent(depsBuilder::add);
+    return depsBuilder.build();
+  }
+
+  AaptPackageResources(
+      BuildRuleParams params,
+      SourcePathRuleFinder ruleFinder,
+      BuildRuleResolver ruleResolver,
+      SourcePath manifest,
+      FilteredResourcesProvider filteredResourcesProvider,
+      ImmutableList<HasAndroidResourceDeps> resourceDeps,
+      ImmutableSortedSet<BuildRule> extraDeps,
       ImmutableSet<SourcePath> assetsDirectories,
       Optional<String> resourceUnionPackage,
       PackageType packageType,
@@ -90,7 +126,18 @@ public class AaptPackageResources extends AbstractBuildRule {
       boolean includesVectorDrawables,
       EnumSet<RType> bannedDuplicateResourceTypes,
       ManifestEntries manifestEntries) {
-    super(params);
+    super(params.copyWithDeps(
+        Suppliers.ofInstance(getAllDeps(
+            params.getBuildTarget(),
+            ruleFinder,
+            ruleResolver,
+            manifest,
+            filteredResourcesProvider,
+            resourceDeps,
+            extraDeps,
+            assetsDirectories)),
+        Suppliers.ofInstance(ImmutableSortedSet.of())
+    ));
     this.manifest = manifest;
     this.filteredResourcesProvider = filteredResourcesProvider;
     this.resourceDeps = resourceDeps;

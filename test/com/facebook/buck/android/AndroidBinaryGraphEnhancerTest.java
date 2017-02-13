@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
-import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.createStrictMock;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
@@ -106,6 +105,7 @@ public class AndroidBinaryGraphEnhancerTest {
         TargetGraphFactory.newInstance(javaDep1Node, javaDep2Node, javaLibNode);
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
 
     BuildRule javaDep1 = ruleResolver.requireRule(javaDep1BuildTarget);
     BuildRule javaDep2 = ruleResolver.requireRule(javaDep2BuildTarget);
@@ -171,9 +171,12 @@ public class AndroidBinaryGraphEnhancerTest {
         new FakeBuildRuleParamsBuilder(aaptPackageResourcesTarget).build();
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         aaptPackageResourcesParams,
+        ruleFinder,
+        ruleResolver,
         /* manifest */ new FakeSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
-        createMock(FilteredResourcesProvider.class),
+        new IdentityResourcesProvider(ImmutableList.of()),
         ImmutableList.of(),
+        ImmutableSortedSet.of(),
         ImmutableSet.of(),
         /* resourceUnionPackage */ Optional.empty(),
         AndroidBinary.PackageType.DEBUG,

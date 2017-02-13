@@ -16,9 +16,11 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.rules.BuildRule;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public interface FilteredResourcesProvider {
 
@@ -32,4 +34,6 @@ public interface FilteredResourcesProvider {
    *     Empty unless {@code ResourceCompressionMode.isStoreStringsAsAssets} is true.
    */
   ImmutableList<Path> getStringFiles();
+
+  Optional<BuildRule> getResourceFilterRule();
 }

@@ -32,7 +32,6 @@ import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -328,23 +327,16 @@ public class AndroidBinaryGraphEnhancer {
     BuildTarget buildTargetForAapt = createBuildTargetWithFlavor(AAPT_PACKAGE_FLAVOR);
     BuildRuleParams paramsForAaptPackageResources = buildRuleParams.copyWithChanges(
         buildTargetForAapt,
-        Suppliers.ofInstance(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                // Add all deps with non-empty res dirs, since we at least need the R.txt file
-                // (even if we're filtering).
-                .addAll(getTargetsAsRules(resourceDetails.getResourcesWithNonEmptyResDir()))
-                .addAll(rulesWithResourceDirectories)
-                .addAll(
-                    ruleFinder.filterBuildRuleInputs(
-                        packageableCollection.getAssetsDirectories()))
-                .addAll(getAdditionalAaptDeps(resourceRules, packageableCollection))
-                .build()),
-        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
+        Suppliers.ofInstance(ImmutableSortedSet.of()),
+        Suppliers.ofInstance(ImmutableSortedSet.of()));
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         paramsForAaptPackageResources,
+        ruleFinder,
+        ruleResolver,
         manifest,
         filteredResourcesProvider,
         getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
+        getTargetsAsRules(resourceDetails.getResourcesWithEmptyResButNonEmptyAssetsDir()),
         packageableCollection.getAssetsDirectories(),
         resourceUnionPackage,
         packageType,
@@ -675,24 +667,6 @@ public class AndroidBinaryGraphEnhancer {
     return BuildTarget.builder(originalBuildTarget)
         .addFlavors(flavor)
         .build();
-  }
-
-  private ImmutableSortedSet<BuildRule> getAdditionalAaptDeps(
-      ImmutableSortedSet<BuildRule> resourceRules,
-      AndroidPackageableCollection packageableCollection) {
-    ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(resourceRules)
-        .addAll(
-            getTargetsAsRules(
-                packageableCollection.getResourceDetails()
-                    .getResourcesWithEmptyResButNonEmptyAssetsDir().stream()
-                    .map(HasBuildTarget::getBuildTarget)
-                    .collect(MoreCollectors.toImmutableList())));
-    Optional<BuildRule> manifestRule = ruleFinder.getRule(manifest);
-    if (manifestRule.isPresent()) {
-      builder.add(manifestRule.get());
-    }
-    return builder.build();
   }
 
   private ImmutableSortedSet<BuildRule> getDexMergeDeps(
