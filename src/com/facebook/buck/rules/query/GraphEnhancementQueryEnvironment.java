@@ -234,6 +234,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
         new AttrFilterFunction(),
         new ClasspathFunction(),
         new DepsFunction(),
+        new DepsFunction.FirstOrderDepsFunction(),
         new KindFunction(),
         new FilterFunction()
     );

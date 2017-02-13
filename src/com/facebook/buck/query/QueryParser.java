@@ -240,16 +240,17 @@ final class QueryParser {
             throw new QueryException(syntaxError(token), "Unknown function '%s'", word);
           }
           ImmutableList.Builder<Argument> argsBuilder = ImmutableList.builder();
-          TokenKind tokenKind = TokenKind.LPAREN;
+          consume(TokenKind.LPAREN);
           int argsSeen = 0;
           for (ArgumentType type : function.getArgumentTypes()) {
+
+            // If the next token is a `)` and we've seen all mandatory args, then break out.
             if (token.kind == TokenKind.RPAREN && argsSeen >= function.getMandatoryArguments()) {
               break;
             }
 
+            // Parse the individual arguments.
             try {
-              consume(tokenKind);
-              tokenKind = TokenKind.COMMA;
               switch (type) {
                 case EXPRESSION:
                   argsBuilder.add(Argument.of(parseExpression()));
@@ -270,6 +271,11 @@ final class QueryParser {
               throw syntaxError(e, function);
             }
 
+            // If the next argument is a `,`, consume it before continuing to parsing the next
+            // argument.
+            if (token.kind == TokenKind.COMMA) {
+              consume(TokenKind.COMMA);
+            }
 
             argsSeen++;
           }

@@ -33,13 +33,18 @@ package com.facebook.buck.query;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * A 'deps(x [, depth])' expression, which finds the dependencies of the given argument set 'x'.
@@ -52,7 +57,10 @@ import java.util.Set;
 public class DepsFunction implements QueryFunction {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
-      ImmutableList.of(ArgumentType.EXPRESSION, ArgumentType.INTEGER);
+      ImmutableList.of(
+          ArgumentType.EXPRESSION,
+          ArgumentType.INTEGER,
+          ArgumentType.EXPRESSION);
 
   public DepsFunction() {
   }
@@ -72,6 +80,25 @@ public class DepsFunction implements QueryFunction {
     return ARGUMENT_TYPES;
   }
 
+  private void forEachDep(
+      QueryEnvironment env,
+      ListeningExecutorService executor,
+      QueryExpression depsExpression,
+      Iterable<QueryTarget> targets,
+      Consumer<? super QueryTarget> consumer)
+      throws QueryException, InterruptedException {
+    for (QueryTarget target : targets) {
+      Set<QueryTarget> deps =
+          depsExpression.eval(
+              env.withTargetVariables(
+                  ImmutableMap.of(
+                      FirstOrderDepsFunction.NAME,
+                      ImmutableSet.copyOf(env.getFwdDeps(ImmutableList.of(target))))),
+              executor);
+      deps.forEach(consumer);
+    }
+  }
+
   /**
    * Evaluates to the dependencies of the argument.
    * Breadth first search from the given argument until there are no more unvisited nodes in the
@@ -84,6 +111,8 @@ public class DepsFunction implements QueryFunction {
       ListeningExecutorService executor) throws QueryException, InterruptedException {
     Set<QueryTarget> argumentSet = args.get(0).getExpression().eval(env, executor);
     int depthBound = args.size() > 1 ? args.get(1).getInteger() : Integer.MAX_VALUE;
+    Optional<QueryExpression> deps =
+        args.size() > 2 ? Optional.of(args.get(2).getExpression()) : Optional.empty();
     env.buildTransitiveClosure(argumentSet, depthBound, executor);
 
     // LinkedHashSet preserves the order of insertion when iterating over the values.
@@ -95,18 +124,59 @@ public class DepsFunction implements QueryFunction {
     // Iterating depthBound+1 times because the first one processes the given argument set.
     for (int i = 0; i < depthBound; i++) {
       Collection<QueryTarget> next = new ArrayList<>();
-      env.forEachFwdDep(current, queryTarget -> {
-        boolean added = result.add(queryTarget);
-        if (added) {
-          next.add(queryTarget);
-        }
-      });
+      Consumer<? super QueryTarget> consumer =
+          queryTarget -> {
+            boolean added = result.add(queryTarget);
+            if (added) {
+              next.add(queryTarget);
+            }
+          };
+      if (deps.isPresent()) {
+        forEachDep(env, executor, deps.get(), current, consumer);
+      } else {
+        env.forEachFwdDep(current, consumer);
+      }
       if (next.isEmpty()) {
         break;
       }
       current = next;
     }
     return result;
+  }
+
+  /**
+   * A function that resolves to the current node's target being traversed when evaluating the deps
+   * function.
+   */
+  public static class FirstOrderDepsFunction implements QueryFunction {
+
+    private static final String NAME = "first_order_deps";
+
+    @Override
+    public String getName() {
+      return NAME;
+    }
+
+    @Override
+    public int getMandatoryArguments() {
+      return 0;
+    }
+
+    @Override
+    public ImmutableList<ArgumentType> getArgumentTypes() {
+      return ImmutableList.of();
+    }
+
+    @Override
+    public Set<QueryTarget> eval(
+        QueryEnvironment env,
+        ImmutableList<Argument> args,
+        ListeningExecutorService executor)
+        throws QueryException, InterruptedException {
+      Preconditions.checkArgument(args.size() == 0);
+      return env.resolveTargetVariable(getName());
+    }
+
   }
 
 }
