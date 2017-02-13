@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.hashing.FileHashLoader;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
@@ -57,7 +56,7 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
   }
 
   @Override
-  public Pair<RuleKey, ImmutableSet<SourcePath>> build(
+  public RuleKeyAndInputs build(
       SupportsDependencyFileRuleKey rule,
       ImmutableList<DependencyFileEntry> depFileEntries) throws IOException {
     // Note, we do not cache this as it didn't show performance improvements.
@@ -65,14 +64,14 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
   }
 
   @Override
-  public Pair<RuleKey, ImmutableSet<SourcePath>> buildManifestKey(
+  public RuleKeyAndInputs buildManifestKey(
       SupportsDependencyFileRuleKey rule)
       throws IOException {
     // Note, we do not cache this as it didn't show performance improvements.
     return buildKey(rule, KeyType.MANIFEST, ImmutableList.of());
   }
 
-  private Pair<RuleKey, ImmutableSet<SourcePath>> buildKey(
+  private RuleKeyAndInputs buildKey(
       SupportsDependencyFileRuleKey rule,
       KeyType keyType,
       ImmutableList<DependencyFileEntry> depFileEntries) throws IOException {
@@ -85,7 +84,7 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
     ruleKeyFieldLoader.setFields(rule, builder);
     builder.setReflectively("buck.key_type", keyType);
     Result result = builder.buildResult();
-    return new Pair<>(result.getRuleKey(), result.getSourcePaths());
+    return RuleKeyAndInputs.of(result.getRuleKey(), result.getSourcePaths());
   }
 
   class Builder extends RuleKeyBuilder<RuleKey> {

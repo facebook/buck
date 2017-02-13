@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -79,16 +78,16 @@ public class FakeRuleKeyFactory
   }
 
   @Override
-  public Pair<RuleKey, ImmutableSet<SourcePath>> build(
+  public RuleKeyAndInputs build(
       SupportsDependencyFileRuleKey rule,
       ImmutableList<DependencyFileEntry> inputs) throws IOException {
-    return new Pair<>(build(rule), ImmutableSet.<SourcePath>of());
+    return RuleKeyAndInputs.of(build(rule), ImmutableSet.<SourcePath>of());
   }
 
   @Override
-  public Pair<RuleKey, ImmutableSet<SourcePath>> buildManifestKey(
+  public RuleKeyAndInputs buildManifestKey(
       SupportsDependencyFileRuleKey rule) {
-    return new Pair<>(build(rule), ImmutableSet.<SourcePath>of());
+    return RuleKeyAndInputs.of(build(rule), ImmutableSet.<SourcePath>of());
   }
 
 }

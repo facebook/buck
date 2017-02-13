@@ -21,7 +21,6 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -30,7 +29,6 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeDepFileBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
@@ -614,7 +612,7 @@ public class DependencyFileRuleKeyFactoryTest {
     rule1.setCoveredByDepFilePredicate(coveredInputPaths);
     rule1.setExistenceOfInterestPredicate(interestingInputPaths);
     FakeFileHashCache hashCache = new FakeFileHashCache(hashesBefore, true, ImmutableMap.of());
-    Pair<RuleKey, ImmutableSet<SourcePath>> res1 =
+    RuleKeyAndInputs res1 =
         new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
             .build(rule1, depFileEntries);
 
@@ -625,16 +623,19 @@ public class DependencyFileRuleKeyFactoryTest {
     rule2.setCoveredByDepFilePredicate(coveredInputPaths);
     rule2.setExistenceOfInterestPredicate(interestingInputPaths);
     hashCache = new FakeFileHashCache(hashesAfter, true, ImmutableMap.of());
-    Pair<RuleKey, ImmutableSet<SourcePath>> res2 =
+    RuleKeyAndInputs res2 =
         new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
             .build(rule2, depFileEntries);
 
     if (expectSameKeys) {
-      assertThat(failureMessage, res2.getFirst(), Matchers.equalTo(res1.getFirst()));
+      assertThat(failureMessage, res2.getRuleKey(), Matchers.equalTo(res1.getRuleKey()));
     } else {
-      assertThat(failureMessage, res2.getFirst(), Matchers.not(Matchers.equalTo(res1.getFirst())));
+      assertThat(
+          failureMessage,
+          res2.getRuleKey(),
+          Matchers.not(Matchers.equalTo(res1.getRuleKey())));
     }
-    assertThat(res2.getSecond(), Matchers.equalTo(expectedDepFileInputsAfter));
+    assertThat(res2.getInputs(), Matchers.equalTo(expectedDepFileInputsAfter));
   }
 
   /**
@@ -941,7 +942,7 @@ public class DependencyFileRuleKeyFactoryTest {
     rule1.setCoveredByDepFilePredicate(coveredInputPaths);
     rule1.setExistenceOfInterestPredicate(interestingInputPaths);
     FakeFileHashCache hashCache = new FakeFileHashCache(hashesBefore, true, ImmutableMap.of());
-    Pair<RuleKey, ImmutableSet<SourcePath>> res1 =
+    RuleKeyAndInputs res1 =
         new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
             .buildManifestKey(rule1);
 
@@ -952,16 +953,19 @@ public class DependencyFileRuleKeyFactoryTest {
     rule2.setCoveredByDepFilePredicate(coveredInputPaths);
     rule2.setExistenceOfInterestPredicate(interestingInputPaths);
     hashCache = new FakeFileHashCache(hashesAfter, true, ImmutableMap.of());
-    Pair<RuleKey, ImmutableSet<SourcePath>> res2 =
+    RuleKeyAndInputs res2 =
         new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
             .buildManifestKey(rule2);
 
     if (expectSameKeys) {
-      assertThat(failureMessage, res2.getFirst(), Matchers.equalTo(res1.getFirst()));
+      assertThat(failureMessage, res2.getRuleKey(), Matchers.equalTo(res1.getRuleKey()));
     } else {
-      assertThat(failureMessage, res2.getFirst(), Matchers.not(Matchers.equalTo(res1.getFirst())));
+      assertThat(
+          failureMessage,
+          res2.getRuleKey(),
+          Matchers.not(Matchers.equalTo(res1.getRuleKey())));
     }
-    assertThat(res2.getSecond(), Matchers.equalTo(expectedDepFileInputsAfter));
+    assertThat(res2.getInputs(), Matchers.equalTo(expectedDepFileInputsAfter));
   }
 
   @Test
@@ -991,7 +995,7 @@ public class DependencyFileRuleKeyFactoryTest {
     };
     rule1.setCoveredByDepFilePredicate(coveredPredicate);
     FakeFileHashCache hashCache = new FakeFileHashCache(hashes, true, ImmutableMap.of());
-    Pair<RuleKey, ImmutableSet<SourcePath>> res1 =
+    RuleKeyAndInputs res1 =
         new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
             .build(rule1, ImmutableList.of(dependencyFileEntry));
 
@@ -1003,12 +1007,12 @@ public class DependencyFileRuleKeyFactoryTest {
     };
     rule2.setCoveredByDepFilePredicate(coveredPredicate);
     hashCache = new FakeFileHashCache(hashes, true, ImmutableMap.of());
-    Pair<RuleKey, ImmutableSet<SourcePath>> res2 =
+    RuleKeyAndInputs res2 =
         new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
             .build(rule2, ImmutableList.of(dependencyFileEntry));
 
-    assertThat(res2.getFirst(), Matchers.not(Matchers.equalTo(res1.getFirst())));
-    assertThat(res2.getSecond(), Matchers.equalTo(ImmutableSet.of(sourcePath)));
+    assertThat(res2.getRuleKey(), Matchers.not(Matchers.equalTo(res1.getRuleKey())));
+    assertThat(res2.getInputs(), Matchers.equalTo(ImmutableSet.of(sourcePath)));
   }
 
   private static class RuleKeyAppendableWrapped implements RuleKeyAppendable {

@@ -32,8 +32,8 @@ import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
+import com.facebook.buck.rules.keys.RuleKeyAndInputs;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.RuleKeyFactoryManager;
 import com.facebook.buck.rules.keys.SizeLimiter;
@@ -395,14 +395,14 @@ public class CachingBuildEngine implements BuildEngine {
       if (useDependencyFileRuleKey(rule)) {
 
         // Try to get the current dep-file rule key.
-        Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> depFileRuleKeyAndInputs =
+        Optional<RuleKeyAndInputs> depFileRuleKeyAndInputs =
             calculateDepFileRuleKey(
                 rule,
                 context,
                 onDiskBuildInfo.getValues(BuildInfo.MetadataKey.DEP_FILE),
                 /* allowMissingInputs */ true);
         if (depFileRuleKeyAndInputs.isPresent()) {
-          RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getFirst();
+          RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getRuleKey();
           buildInfoRecorder.addBuildMetadata(
               BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
               depFileRuleKey.toString());
@@ -714,21 +714,21 @@ public class CachingBuildEngine implements BuildEngine {
                 inputStrings);
 
             // Re-calculate and store the depfile rule key for next time.
-            Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> depFileRuleKeyAndInputs =
+            Optional<RuleKeyAndInputs> depFileRuleKeyAndInputs =
                 calculateDepFileRuleKey(
                     rule,
                     buildContext,
                     Optional.of(inputStrings),
                     /* allowMissingInputs */ false);
             if (depFileRuleKeyAndInputs.isPresent()) {
-              RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getFirst();
+              RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getRuleKey();
               buildInfoRecorder.addBuildMetadata(
                   BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
                   depFileRuleKey.toString());
 
               // Push an updated manifest to the cache.
               if (useManifestCaching(rule)) {
-                final Pair<RuleKey, ImmutableSet<SourcePath>> manifestKey;
+                final RuleKeyAndInputs manifestKey;
                 try {
                   manifestKey =
                       ruleKeyFactories.apply(rule.getProjectFilesystem())
@@ -736,11 +736,11 @@ public class CachingBuildEngine implements BuildEngine {
                               .buildManifestKey((SupportsDependencyFileRuleKey) rule);
                   buildInfoRecorder.addBuildMetadata(
                       BuildInfo.MetadataKey.MANIFEST_KEY,
-                      manifestKey.getFirst().toString());
+                      manifestKey.getRuleKey().toString());
                   updateAndStoreManifest(
                       rule,
-                      depFileRuleKeyAndInputs.get().getFirst(),
-                      depFileRuleKeyAndInputs.get().getSecond(),
+                      depFileRuleKeyAndInputs.get().getRuleKey(),
+                      depFileRuleKeyAndInputs.get().getInputs(),
                       manifestKey,
                       buildContext.getArtifactCache());
                 } catch (SizeLimiter.SizeLimitException ex) { //NOPMD
@@ -1500,7 +1500,7 @@ public class CachingBuildEngine implements BuildEngine {
         ((SupportsDependencyFileRuleKey) rule).useDependencyFileRuleKeys();
   }
 
-  private Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> calculateDepFileRuleKey(
+  private Optional<RuleKeyAndInputs> calculateDepFileRuleKey(
       BuildRule rule,
       BuildEngineBuildContext context,
       Optional<ImmutableList<String>> depFile,
@@ -1552,7 +1552,7 @@ public class CachingBuildEngine implements BuildEngine {
     try {
       return Optional.of(
           ruleKeyFactories.apply(rule.getProjectFilesystem())
-            .getDepFileRuleKeyFactory().buildManifestKey(rule).getFirst());
+            .getDepFileRuleKeyFactory().buildManifestKey(rule).getRuleKey());
     } catch (SizeLimiter.SizeLimitException ex) {
       return Optional.empty();
     }
@@ -1563,7 +1563,7 @@ public class CachingBuildEngine implements BuildEngine {
       BuildRule rule,
       RuleKey key,
       ImmutableSet<SourcePath> inputs,
-      Pair<RuleKey, ImmutableSet<SourcePath>> manifestKey,
+      RuleKeyAndInputs manifestKey,
       ArtifactCache cache)
       throws IOException {
 
@@ -1595,7 +1595,7 @@ public class CachingBuildEngine implements BuildEngine {
         fileHashCaches.getUnchecked(rule.getProjectFilesystem()),
         key,
         pathResolver,
-        manifestKey.getSecond(),
+        manifestKey.getInputs(),
         inputs);
 
     // Serialize the manifest to disk.
@@ -1615,7 +1615,7 @@ public class CachingBuildEngine implements BuildEngine {
     }
     cache
         .store(
-            ArtifactInfo.builder().addRuleKeys(manifestKey.getFirst()).build(),
+            ArtifactInfo.builder().addRuleKeys(manifestKey.getRuleKey()).build(),
             BorrowablePath.borrowablePath(tempFile))
         .addListener(
             () -> {
@@ -1641,7 +1641,7 @@ public class CachingBuildEngine implements BuildEngine {
       return Optional.empty();
     }
 
-    final Pair<RuleKey, ImmutableSet<SourcePath>> manifestKey;
+    final RuleKeyAndInputs manifestKey;
     try {
       manifestKey =
           ruleKeyFactories.apply(rule.getProjectFilesystem())
@@ -1651,7 +1651,7 @@ public class CachingBuildEngine implements BuildEngine {
     }
     buildInfoRecorder.addBuildMetadata(
         BuildInfo.MetadataKey.MANIFEST_KEY,
-        manifestKey.getFirst().toString());
+        manifestKey.getRuleKey().toString());
 
     final LazyPath tempFile = new LazyPath() {
       @Override
@@ -1661,7 +1661,7 @@ public class CachingBuildEngine implements BuildEngine {
     };
 
     CacheResult manifestResult = fetchArtifactForBuildable(
-        manifestKey.getFirst(),
+        manifestKey.getRuleKey(),
         tempFile,
         context.getArtifactCache());
 
@@ -1697,7 +1697,7 @@ public class CachingBuildEngine implements BuildEngine {
         manifest.lookup(
             fileHashCaches.getUnchecked(rule.getProjectFilesystem()),
             pathResolver,
-            manifestKey.getSecond());
+            manifestKey.getInputs());
     if (!ruleKey.isPresent()) {
       return Optional.empty();
     }

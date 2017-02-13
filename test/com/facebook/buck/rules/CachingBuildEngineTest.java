@@ -49,7 +49,6 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.keys.DefaultDependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
@@ -57,6 +56,7 @@ import com.facebook.buck.rules.keys.DependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.FakeInputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
+import com.facebook.buck.rules.keys.RuleKeyAndInputs;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.SizeLimiter;
@@ -1594,7 +1594,7 @@ public class CachingBuildEngineTest {
       RuleKey depFileRuleKey = depFileFactory.build(
           rule,
           ImmutableList.of(DependencyFileEntry.of(input, Optional.empty())))
-          .getFirst();
+          .getRuleKey();
       BuildResult result =
           cachingBuildEngine.build(buildContext, TestExecutionContext.newInstance(), rule).get();
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, getSuccess(result));
@@ -1753,7 +1753,7 @@ public class CachingBuildEngineTest {
       RuleKey depFileRuleKey = depFileFactory.build(
           rule,
           ImmutableList.of(DependencyFileEntry.of(input, Optional.empty())))
-          .getFirst();
+          .getRuleKey();
 
       // Prepopulate the dep file rule key and dep file.
       filesystem.writeContentsToPath(
@@ -1833,7 +1833,7 @@ public class CachingBuildEngineTest {
       // Prepopulate the dep file rule key and dep file.
       RuleKey depFileRuleKey = depFileFactory.build(
           rule,
-          ImmutableList.of()).getFirst();
+          ImmutableList.of()).getRuleKey();
       filesystem.writeContentsToPath(
           depFileRuleKey.toString(),
           BuildInfo.getPathToMetadataDirectory(target, filesystem)
@@ -1921,7 +1921,7 @@ public class CachingBuildEngineTest {
       RuleKey depFileRuleKey = depFileFactory.build(
           rule,
           ImmutableList.of(DependencyFileEntry.of(input, Optional.empty())))
-          .getFirst();
+          .getRuleKey();
 
       // Prepopulate the dep file rule key and dep file.
       filesystem.writeContentsToPath(
@@ -2001,7 +2001,7 @@ public class CachingBuildEngineTest {
       DependencyFileRuleKeyFactory depFileRuleKeyFactory =
           new DependencyFileRuleKeyFactory() {
             @Override
-            public Pair<RuleKey, ImmutableSet<SourcePath>> build(
+            public RuleKeyAndInputs build(
                 SupportsDependencyFileRuleKey rule,
                 ImmutableList<DependencyFileEntry> inputs) {
               if (rule.getBuildTarget().equals(target)) {
@@ -2012,7 +2012,7 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public Pair<RuleKey, ImmutableSet<SourcePath>> buildManifestKey(
+            public RuleKeyAndInputs buildManifestKey(
                 SupportsDependencyFileRuleKey rule) {
               if (rule.getBuildTarget().equals(target)) {
                 throw new SizeLimiter.SizeLimitException();
@@ -2028,7 +2028,7 @@ public class CachingBuildEngineTest {
       RuleKey depFileRuleKey = depFileFactory.build(
           rule,
           ImmutableList.of(DependencyFileEntry.of(input, Optional.empty())))
-          .getFirst();
+          .getRuleKey();
 
       // Prepopulate the dep file rule key and dep file.
       filesystem.writeContentsToPath(
