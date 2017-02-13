@@ -255,6 +255,15 @@ public class Logger
     }
 
     /**
+     * Logs given message at given level.
+     * @param level level
+     * @param message message to log
+     */
+    public void logWithLevel(Level level, String message) {
+        logger.log(level, message);
+    }
+
+    /**
      * Logs a message at WARN level.
      * <br>
      * Usage example:
@@ -398,6 +407,10 @@ public class Logger
 
     public void setLevel(Level newLevel) {
         logger.setLevel(newLevel);
+    }
+
+    public boolean isLoggable(Level level) {
+        return logger.isLoggable(level);
     }
 
     public void addHandler(Handler handler) {

@@ -29,6 +29,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.FileScrubberStep;
+import com.facebook.buck.step.fs.LogContentsOfFileStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
@@ -39,6 +40,7 @@ import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.logging.Level;
 
 public class CxxLink
     extends AbstractBuildRule
@@ -126,7 +128,9 @@ public class CxxLink
             getProjectFilesystem(),
             output,
             linker.getScrubbers(cellRoots.build())),
+        new LogContentsOfFileStep(getProjectFilesystem().resolve(argFilePath), Level.FINEST),
         new RmStep(getProjectFilesystem(), argFilePath),
+        new LogContentsOfFileStep(getProjectFilesystem().resolve(fileListPath), Level.FINEST),
         new RmStep(getProjectFilesystem(), fileListPath),
         new RmStep(getProjectFilesystem(), scratchDir, RmStep.Mode.RECURSIVE));
   }
