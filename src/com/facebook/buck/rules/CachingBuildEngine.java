@@ -21,8 +21,10 @@ import com.facebook.buck.artifact_cache.ArtifactInfo;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.event.ArtifactCompressionEvent;
+import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
@@ -346,8 +348,7 @@ public class CachingBuildEngine implements BuildEngine {
       final BuildRule rule,
       final BuildEngineBuildContext context,
       final OnDiskBuildInfo onDiskBuildInfo,
-      final BuildInfoRecorder buildInfoRecorder,
-      final RuleKeyFactories ruleKeyFactory) {
+      final BuildInfoRecorder buildInfoRecorder) {
     return depResults -> {
       for (BuildResult depResult : depResults) {
         if (buildMode != BuildMode.POPULATE_FROM_REMOTE_CACHE &&
@@ -364,19 +365,30 @@ public class CachingBuildEngine implements BuildEngine {
         return Futures.immediateFuture(Optional.of(BuildResult.canceled(rule, firstFailure)));
       }
 
-      try (BuildRuleEvent.Scope scope = BuildRuleCacheEvent.startCacheCheckScope(
-          context.getEventBus(), rule, BuildRuleCacheEvent.CacheStepType.INPUT_BASED)) {
-        // Input-based rule keys.
-        Optional<BuildResult> inputResult = performInputBasedCacheFetch(
-            rule,
-            context,
-            onDiskBuildInfo,
-            buildInfoRecorder,
-            ruleKeyFactory);
+      // Handle input-based rule keys.
+      if (SupportsInputBasedRuleKey.isSupported(rule)) {
 
-        if (inputResult.isPresent()) {
-          return Futures.immediateFuture(inputResult);
+        // Calculate input-based rule key.
+        Optional<RuleKey> inputRuleKey = calculateInputBasedRuleKey(rule, context.getEventBus());
+        if (inputRuleKey.isPresent()) {
+
+          // Perform the cache fetch.
+          try (BuckEvent.Scope scope = BuildRuleCacheEvent.startCacheCheckScope(
+              context.getEventBus(), rule, BuildRuleCacheEvent.CacheStepType.INPUT_BASED)) {
+            // Input-based rule keys.
+            Optional<BuildResult> inputResult = performInputBasedCacheFetch(
+                rule,
+                context,
+                onDiskBuildInfo,
+                buildInfoRecorder,
+                inputRuleKey.get());
+
+            if (inputResult.isPresent()) {
+              return Futures.immediateFuture(inputResult);
+            }
+          }
         }
+
       }
 
       try (BuildRuleEvent.Scope scope = BuildRuleCacheEvent.startCacheCheckScope(
@@ -529,7 +541,7 @@ public class CachingBuildEngine implements BuildEngine {
     // 4. Return to the current rule and check caches to see if we can avoid building
     // locally.
     AsyncFunction<List<BuildResult>, Optional<BuildResult>> checkCachesCallback =
-        checkCaches(rule, buildContext, onDiskBuildInfo, buildInfoRecorder, ruleKeyFactory);
+        checkCaches(rule, buildContext, onDiskBuildInfo, buildInfoRecorder);
 
     ListenableFuture<Optional<BuildResult>> checkCachesResult =
         Futures.transformAsync(
@@ -1700,22 +1712,29 @@ public class CachingBuildEngine implements BuildEngine {
 
   }
 
+  private Optional<RuleKey> calculateInputBasedRuleKey(
+      BuildRule rule,
+      BuckEventBus eventBus) {
+    try (BuckEvent.Scope scope =
+             RuleKeyCalculationEvent.scope(
+                 eventBus,
+                 RuleKeyCalculationEvent.Type.INPUT)) {
+      return Optional.of(
+          ruleKeyFactories.apply(rule.getProjectFilesystem())
+              .getInputBasedRuleKeyFactory()
+              .build(rule));
+    } catch (SizeLimiter.SizeLimitException ex) {
+      return Optional.empty();
+    }
+  }
+
   private Optional<BuildResult> performInputBasedCacheFetch(
       final BuildRule rule,
       final BuildEngineBuildContext context,
       final OnDiskBuildInfo onDiskBuildInfo,
       BuildInfoRecorder buildInfoRecorder,
-      final RuleKeyFactories ruleKeyFactory) {
-    if (!SupportsInputBasedRuleKey.isSupported(rule)) {
-      return Optional.empty();
-    }
-
-    final RuleKey inputRuleKey;
-    try {
-      inputRuleKey = ruleKeyFactory.getInputBasedRuleKeyFactory().build(rule);
-    } catch (SizeLimiter.SizeLimitException ex) {
-      return Optional.empty();
-    }
+      RuleKey inputRuleKey) {
+    Preconditions.checkArgument(SupportsInputBasedRuleKey.isSupported(rule));
 
     buildInfoRecorder.addBuildMetadata(
         BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY,
