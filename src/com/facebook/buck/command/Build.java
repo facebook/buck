@@ -343,9 +343,7 @@ public class Build implements Closeable {
       try {
         BuildExecutionResult buildExecutionResult = executeBuild(targetsish, isKeepGoing);
 
-        SourcePathResolver pathResolver =
-            new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
-        BuildReport buildReport = new BuildReport(buildExecutionResult, pathResolver);
+        BuildReport buildReport = new BuildReport(buildExecutionResult);
 
         if (isKeepGoing) {
           String buildReportText = buildReport.generateForConsole(console);

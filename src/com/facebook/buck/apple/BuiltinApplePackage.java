@@ -33,7 +33,6 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSource;
@@ -73,8 +72,7 @@ public class BuiltinApplePackage extends AbstractBuildRule {
     commands.add(new MkdirStep(getProjectFilesystem(), payloadDir));
 
     // Recursively copy the .app directory into the Payload folder
-    Path bundleOutputPath = context.getSourcePathResolver().getRelativePath(
-        Preconditions.checkNotNull(bundle.getSourcePathToOutput()));
+    Path bundleOutputPath = bundle.getPathToOutput();
 
     appendAdditionalAppleWatchSteps(commands);
 

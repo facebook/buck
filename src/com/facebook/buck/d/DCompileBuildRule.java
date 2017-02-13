@@ -93,7 +93,7 @@ public class DCompileBuildRule extends AbstractBuildRule {
             compiler.getEnvironment(),
             compiler.getCommandPrefix(context.getSourcePathResolver()),
             flags,
-            context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()),
+            getPathToOutput(),
             context.getSourcePathResolver().getAllAbsolutePaths(sources)));
     return steps.build();
   }

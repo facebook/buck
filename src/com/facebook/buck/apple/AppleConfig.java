@@ -274,7 +274,7 @@ public class AppleConfig {
   }
 
 
-  public Optional<Path> getAppleDeviceHelperAbsolutePath() {
+  public Optional<Path> getAppleDeviceHelperPath() {
     return getOptionalPath("apple", "device_helper_path");
   }
 

@@ -58,7 +58,6 @@ import com.facebook.buck.rules.CachingBuildEngineDelegate;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
@@ -490,7 +489,7 @@ public class BuildCommand extends AbstractCommand {
             loneTarget));
         return 1;
       } else {
-        SourcePath output = rule.getSourcePathToOutput();
+        Path output = rule.getPathToOutput();
         Preconditions.checkNotNull(
             output,
             "%s specified a build target that does not have an output file: %s",
@@ -498,10 +497,8 @@ public class BuildCommand extends AbstractCommand {
             loneTarget);
 
         ProjectFilesystem projectFilesystem = rule.getProjectFilesystem();
-        SourcePathResolver pathResolver =
-            new SourcePathResolver(new SourcePathRuleFinder(graphs.actionGraph.getResolver()));
         projectFilesystem.copyFile(
-            pathResolver.getAbsolutePath(output),
+            projectFilesystem.resolve(output),
             outputPathForSingleBuildTarget);
       }
     }
@@ -654,12 +651,12 @@ public class BuildCommand extends AbstractCommand {
       ActionGraphAndResolver actionGraphAndResolver) {
     Optional<DefaultRuleKeyFactory> ruleKeyFactory =
         Optional.empty();
-    SourcePathRuleFinder ruleFinder =
-        new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     if (showRuleKey) {
+      SourcePathRuleFinder ruleFinder =
+          new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
       RuleKeyFieldLoader fieldLoader =
           new RuleKeyFieldLoader(params.getBuckConfig().getKeySeed());
+      SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
       ruleKeyFactory = Optional.of(
           new DefaultRuleKeyFactory(
               fieldLoader,
@@ -673,7 +670,6 @@ public class BuildCommand extends AbstractCommand {
         BuildRule rule = actionGraphAndResolver.getResolver().requireRule(buildTarget);
         Optional<Path> outputPath =
             TargetsCommand.getUserFacingOutputPath(
-                pathResolver,
                 rule,
                 showFullOutput,
                 params.getBuckConfig().getBuckOutCompatLink());

@@ -57,13 +57,12 @@ import javax.annotation.Nullable;
 public class BuildCommandTest {
 
   private BuildExecutionResult buildExecutionResult;
-  private SourcePathResolver resolver;
 
   @Before
   public void setUp() {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    resolver = new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
 
     LinkedHashMap<BuildRule, Optional<BuildResult>> ruleToResult = new LinkedHashMap<>();
 
@@ -76,7 +75,6 @@ public class BuildCommandTest {
         return Paths.get("buck-out/gen/fake/rule1.txt");
       }
     };
-    ruleResolver.addToIndex(rule1);
     ruleToResult.put(
         rule1,
         Optional.of(BuildResult.success(rule1, BUILT_LOCALLY, CacheResult.miss())));
@@ -86,7 +84,6 @@ public class BuildCommandTest {
         resolver);
     BuildResult rule2Failure = BuildResult.failure(rule2, new RuntimeException("some"));
     ruleToResult.put(rule2, Optional.of(rule2Failure));
-    ruleResolver.addToIndex(rule2);
 
     BuildRule rule3 = new FakeBuildRule(
         BuildTargetFactory.newInstance("//fake:rule3"),
@@ -94,13 +91,11 @@ public class BuildCommandTest {
     ruleToResult.put(
         rule3,
         Optional.of(BuildResult.success(rule3, FETCHED_FROM_CACHE, CacheResult.hit("dir"))));
-    ruleResolver.addToIndex(rule3);
 
     BuildRule rule4 = new FakeBuildRule(
         BuildTargetFactory.newInstance("//fake:rule4"),
         resolver);
     ruleToResult.put(rule4, Optional.empty());
-    ruleResolver.addToIndex(rule4);
 
     buildExecutionResult = BuildExecutionResult.builder()
         .setResults(ruleToResult)
@@ -118,7 +113,7 @@ public class BuildCommandTest {
         "\u001B[31mFAIL\u001B[0m //fake:rule2\n" +
         "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule3 FETCHED_FROM_CACHE\n" +
         "\u001B[31mFAIL\u001B[0m //fake:rule4\n";
-    String observedReport = new BuildReport(buildExecutionResult, resolver).generateForConsole(
+    String observedReport = new BuildReport(buildExecutionResult).generateForConsole(
         new Console(
             Verbosity.STANDARD_INFORMATION,
             new CapturingPrintStream(),
@@ -137,7 +132,7 @@ public class BuildCommandTest {
         "FAIL //fake:rule4\n\n" +
         " ** Summary of failures encountered during the build **\n" +
         "Rule //fake:rule2 FAILED because some.\n";
-    String observedReport = new BuildReport(buildExecutionResult, resolver).generateForConsole(
+    String observedReport = new BuildReport(buildExecutionResult).generateForConsole(
         new TestConsole(Verbosity.COMMANDS));
     assertEquals(expectedReport, observedReport);
   }
@@ -173,8 +168,7 @@ public class BuildCommandTest {
         "    \"//fake:rule2\" : \"some\"",
         "  }",
         "}");
-    String observedReport =
-        new BuildReport(buildExecutionResult, resolver).generateJsonBuildReport();
+    String observedReport = new BuildReport(buildExecutionResult).generateJsonBuildReport();
     assertEquals(expectedReport, observedReport);
   }
 }

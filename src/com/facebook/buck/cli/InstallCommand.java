@@ -45,7 +45,6 @@ import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetNode;
@@ -257,8 +256,7 @@ public class InstallCommand extends BuildCommand {
             params,
             appleBundle,
             appleBundle.getProjectFilesystem(),
-            build.getExecutionContext().getProcessExecutor(),
-            pathResolver);
+            build.getExecutionContext().getProcessExecutor());
         params.getBuckEventBus().post(
             InstallEvent.finished(
                 started,
@@ -384,16 +382,15 @@ public class InstallCommand extends BuildCommand {
       CommandRunnerParams params,
       AppleBundle appleBundle,
       ProjectFilesystem projectFilesystem,
-      ProcessExecutor processExecutor,
-      SourcePathResolver pathResolver)
+      ProcessExecutor processExecutor)
       throws IOException, InterruptedException, NoSuchBuildTargetException {
     if (appleBundle.getPlatformName().equals(ApplePlatform.IPHONESIMULATOR.getName())) {
-      return installAppleBundleForSimulator(params, appleBundle, pathResolver, projectFilesystem,
+      return installAppleBundleForSimulator(params, appleBundle, projectFilesystem,
           processExecutor);
     }
     if (appleBundle.getPlatformName().equals(ApplePlatform.IPHONEOS.getName())) {
       return installAppleBundleForDevice(params, appleBundle, projectFilesystem,
-          processExecutor, pathResolver);
+          processExecutor);
     }
     params.getConsole().printBuildFailure("Install not yet supported for platform " +
         appleBundle.getPlatformName() + ".");
@@ -404,8 +401,7 @@ public class InstallCommand extends BuildCommand {
       CommandRunnerParams params,
       AppleBundle appleBundle,
       ProjectFilesystem projectFilesystem,
-      ProcessExecutor processExecutor,
-      SourcePathResolver pathResolver)
+      ProcessExecutor processExecutor)
       throws IOException, NoSuchBuildTargetException {
     // TODO(bhamiltoncx): This should be shared with the build and passed down.
     AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
@@ -422,7 +418,7 @@ public class InstallCommand extends BuildCommand {
                 appleBundle.getFullyQualifiedName(), helperTarget.get().getBaseName()));
         return FAILURE;
       }
-      SourcePath buildRuleOutputPath = buildRule.getSourcePathToOutput();
+      Path buildRuleOutputPath = buildRule.getPathToOutput();
       if (buildRuleOutputPath == null) {
         params.getConsole().printBuildFailure(
             String.format(
@@ -430,11 +426,11 @@ public class InstallCommand extends BuildCommand {
                 appleBundle.getFullyQualifiedName(), helperTarget.get().getBaseName()));
         return FAILURE;
       }
-      helperPath = pathResolver.getAbsolutePath(buildRuleOutputPath);
+      helperPath = projectFilesystem.resolve(buildRuleOutputPath);
     } else {
-      Optional<Path> helperOverridePath = appleConfig.getAppleDeviceHelperAbsolutePath();
+      Optional<Path> helperOverridePath = appleConfig.getAppleDeviceHelperPath();
       if (helperOverridePath.isPresent()) {
-        helperPath = helperOverridePath.get();
+        helperPath = projectFilesystem.resolve(helperOverridePath.get());
       } else {
         params.getConsole().printBuildFailure(
             String.format(
@@ -490,8 +486,7 @@ public class InstallCommand extends BuildCommand {
 
     if (helper.installBundleOnDevice(
         selectedUdid,
-        pathResolver.getAbsolutePath(
-            Preconditions.checkNotNull(appleBundle.getSourcePathToOutput())))) {
+        projectFilesystem.resolve(Preconditions.checkNotNull(appleBundle.getPathToOutput())))) {
       params.getConsole().printSuccess(
           "Installed " + appleBundle.getFullyQualifiedName() + " to device " + selectedUdid + " (" +
               connectedDevices.get(selectedUdid) + ")");
@@ -536,7 +531,6 @@ public class InstallCommand extends BuildCommand {
   private InstallResult installAppleBundleForSimulator(
       CommandRunnerParams params,
       AppleBundle appleBundle,
-      SourcePathResolver pathResolver,
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor) throws IOException, InterruptedException {
 
@@ -676,13 +670,12 @@ public class InstallCommand extends BuildCommand {
 
     if (!appleSimulatorController.installBundleInSimulator(
             appleSimulator.get().getUdid(),
-            pathResolver.getAbsolutePath(
-                Preconditions.checkNotNull(appleBundle.getSourcePathToOutput())))) {
+            projectFilesystem.resolve(Preconditions.checkNotNull(appleBundle.getPathToOutput())))) {
       params.getConsole().printBuildFailure(
           String.format(
               "Cannot install %s (could not install bundle %s in simulator %s)",
               appleBundle.getFullyQualifiedName(),
-              pathResolver.getAbsolutePath(appleBundle.getSourcePathToOutput()),
+              appleBundle.getPathToOutput(),
               appleSimulator.get().getName()));
       return FAILURE;
     }
