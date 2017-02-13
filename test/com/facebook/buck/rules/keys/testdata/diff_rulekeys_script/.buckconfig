@@ -1,0 +1,5 @@
+[cxx]
+  cc=//cxx:cxx
+  cpp=//cxx:cxx
+  cxx=//cxx:cxx
+  cxxpp=//cxx:cxx

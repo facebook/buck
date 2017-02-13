@@ -29,6 +29,7 @@ import com.google.common.base.Joiner;
 
 import org.hamcrest.Matchers;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -142,6 +143,31 @@ public class DiffRuleKeysScriptIntegrationTest {
   }
 
   @Test
+  public void cxxHeaderChanged() throws Exception {
+    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "diff_rulekeys_script", tmp);
+    workspace.setUp();
+
+    invokeBuckCommand(workspace, "//cxx:cxx_bin", "buck-0.log");
+    workspace.writeContentsToPath(
+        "// Different contents",
+        "cxx/a.h");
+    invokeBuckCommand(workspace, "//cxx:cxx_bin", "buck-1.log");
+
+    assertThat(
+        runRuleKeyDiffer(workspace, "//cxx:cxx_bin").getStdout().get(),
+        Matchers.stringContainsInOrder(
+            "Change details for [//cxx:cxx_bin#compile-a.cpp.", /* hash */
+            ",default->preprocessDelegate->includes]",
+            "(include(cxx/a.h)):",
+            "-[path(cxx/a.h:", /*hash*/ ")]",
+            "+[path(cxx/a.h:", /*hash*/ ")]"
+        ));
+  }
+
+  @Test
   public void dependencyAdded() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "diff_rulekeys_script", tmp);
@@ -206,23 +232,35 @@ public class DiffRuleKeysScriptIntegrationTest {
 
   private ProcessExecutor.Result runRuleKeyDiffer(
       ProjectWorkspace workspace) throws IOException, InterruptedException {
+    return runRuleKeyDiffer(workspace, "//:java_lib_2");
+  }
+
+  private ProcessExecutor.Result runRuleKeyDiffer(
+      ProjectWorkspace workspace,
+      String target) throws IOException, InterruptedException {
     String cmd = Platform.detect() == Platform.WINDOWS ? "python" : "python2.7";
     ProcessExecutor.Result result = workspace.runCommand(
         cmd,
         Paths.get("scripts", "diff_rulekeys.py").toString(),
         tmp.getRoot().resolve("buck-0.log").toString(),
         tmp.getRoot().resolve("buck-1.log").toString(),
-        "//:java_lib_2");
+        target);
     assertThat(result.getStderr(), Matchers.equalTo(Optional.of("")));
     assertThat(result.getExitCode(), Matchers.is(0));
     return result;
   }
 
+
   private void invokeBuckCommand(ProjectWorkspace workspace, String logOut) throws IOException {
+    invokeBuckCommand(workspace, "//:", logOut);
+  }
+
+  private void invokeBuckCommand(ProjectWorkspace workspace, String target, String logOut)
+      throws IOException {
     ProjectWorkspace.ProcessResult buckCommandResult = workspace.runBuckCommand(
         "targets",
         "--show-rulekey",
-        "//:java_lib_2");
+        target);
     buckCommandResult.assertSuccess();
     String fullLogContents = workspace.getFileContents(getLogFilePath());
     String logContentsForThisInvocation = fullLogContents.substring(lastPositionInLog);

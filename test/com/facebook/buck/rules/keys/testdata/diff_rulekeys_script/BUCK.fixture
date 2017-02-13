@@ -10,5 +10,5 @@ java_library(
     'JavaLib2.java',
     'JavaLib3.java',
   ]),
-  deps = [':java_lib_1']
+  deps = [ ':java_lib_1' ]
 )
