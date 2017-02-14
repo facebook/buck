@@ -66,11 +66,12 @@ public class ThriftOverHttpService
     // Make the HTTP request and handle the response status code.
     try (HttpResponse response = config.getService().makeRequest(
         config.getThriftPath(), requestBuilder)) {
-      if (response.code() != 200) {
+      if (response.statusCode() != 200) {
         throw new IOException(
             String.format(
-                "HTTP response returned unexpected status code [%s] from URL [%s].",
-                response.code(),
+                "HTTP response returned unexpected status [%s:%s] from URL [%s].",
+                response.statusCode(),
+                response.statusMessage(),
                 response.requestUrl()));
       }
 

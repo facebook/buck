@@ -29,8 +29,13 @@ public class OkHttpResponseWrapper implements HttpResponse {
   }
 
   @Override
-  public int code() {
+  public int statusCode() {
     return response.code();
+  }
+
+  @Override
+  public String statusMessage() {
+    return response.message();
   }
 
   @Override

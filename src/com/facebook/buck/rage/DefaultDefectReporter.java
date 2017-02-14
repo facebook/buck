@@ -219,7 +219,7 @@ public class DefaultDefectReporter implements DefectReporter {
         responseBody = CharStreams.toString(new InputStreamReader(inputStream, Charsets.UTF_8));
       }
 
-      if (response.code() == HTTP_SUCCESS_CODE) {
+      if (response.statusCode() == HTTP_SUCCESS_CODE) {
         defectSubmitResult.setIsRequestSuccessful(true);
         if (rageConfig.getProtocolVersion().equals(AbstractRageConfig.RageProtocolVersion.SIMPLE)) {
           return defectSubmitResult
@@ -243,7 +243,7 @@ public class DefaultDefectReporter implements DefectReporter {
             String.format(
                 "Connection to %s returned code %d and message: %s",
                 response.requestUrl(),
-                response.code(),
+                response.statusCode(),
                 responseBody));
       }
     } catch (IOException e) {

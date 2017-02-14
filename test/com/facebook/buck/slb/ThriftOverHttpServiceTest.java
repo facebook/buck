@@ -60,7 +60,8 @@ public class ThriftOverHttpServiceTest {
 
     Capture<Request.Builder> requestBuilder = EasyMock.newCapture();
     HttpResponse httpResponse = EasyMock.createMock(HttpResponse.class);
-    EasyMock.expect(httpResponse.code()).andReturn(404).atLeastOnce();
+    EasyMock.expect(httpResponse.statusCode()).andReturn(404).atLeastOnce();
+    EasyMock.expect(httpResponse.statusMessage()).andReturn("topspin").atLeastOnce();
     EasyMock.expect(httpResponse.requestUrl()).andReturn("super url").atLeastOnce();
     EasyMock.expect(
         httpService.makeRequest(EasyMock.eq("/thrift"), EasyMock.capture(requestBuilder)))
@@ -95,8 +96,13 @@ public class ThriftOverHttpServiceTest {
     final byte[] responseBuffer = serializer.serialize(expectedResponse);
     HttpResponse httpResponse = new HttpResponse() {
       @Override
-      public int code() {
+      public int statusCode() {
         return 200;
+      }
+
+      @Override
+      public String statusMessage() {
+        return "super cool msg";
       }
 
       @Override

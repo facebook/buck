@@ -69,13 +69,16 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
       try (DataInputStream input =
                new DataInputStream(new FullyReadOnCloseInputStream(response.getBody()))) {
 
-        if (response.code() == HttpURLConnection.HTTP_NOT_FOUND) {
+        if (response.statusCode() == HttpURLConnection.HTTP_NOT_FOUND) {
           LOG.info("fetch(%s, %s): cache miss", response.requestUrl(), ruleKey);
           return CacheResult.miss();
         }
 
-        if (response.code() != HttpURLConnection.HTTP_OK) {
-          String msg = String.format("unexpected response: %d", response.code());
+        if (response.statusCode() != HttpURLConnection.HTTP_OK) {
+          String msg = String.format(
+              "unexpected server response: [%d:%s]",
+              response.statusCode(),
+              response.statusMessage());
           reportFailure("fetch(%s, %s): %s", response.requestUrl(), ruleKey, msg);
           eventBuilder.getFetchBuilder().setErrorMessage(msg);
           return CacheResult.error(name, msg);
@@ -175,13 +178,14 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
 
     // Dispatch the store operation and verify it succeeded.
     try (HttpResponse response = storeClient.makeRequest("/artifacts/key", builder)) {
-      final boolean requestFailed = response.code() != HttpURLConnection.HTTP_ACCEPTED;
+      final boolean requestFailed = response.statusCode() != HttpURLConnection.HTTP_ACCEPTED;
       if (requestFailed) {
         reportFailure(
-            "store(%s, %s): unexpected response: %d",
+            "store(%s, %s): unexpected response: [%d:%s].",
             response.requestUrl(),
             info.getRuleKeys(),
-            response.code());
+            response.statusCode(),
+            response.statusMessage());
       }
 
       eventBuilder.getStoreBuilder().setWasStoreSuccessful(!requestFailed);

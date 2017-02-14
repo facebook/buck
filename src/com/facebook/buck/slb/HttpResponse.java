@@ -24,7 +24,12 @@ public interface HttpResponse extends Closeable {
   /**
    * @return HTTP Response code.
    */
-  int code();
+  int statusCode();
+
+  /**
+   * @return HTTP Response code message.
+   */
+  String statusMessage();
 
   /**
    * @return Number of bytes in the body of this response.

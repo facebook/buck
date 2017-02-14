@@ -100,11 +100,12 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         ThriftArtifactCacheProtocol.createRequest(PROTOCOL, cacheRequest);
     Request.Builder builder = toOkHttpRequest(request);
     try (HttpResponse httpResponse = fetchClient.makeRequest(hybridThriftEndpoint, builder)) {
-      if (httpResponse.code() != 200) {
+      if (httpResponse.statusCode() != 200) {
         String message = String.format(
-            "Failed to fetch cache artifact with HTTP status code [%d] " +
+            "Failed to fetch cache artifact with HTTP status code [%d:%s] " +
                 " to url [%s] for rule key [%s].",
-            httpResponse.code(),
+            httpResponse.statusCode(),
+            httpResponse.statusMessage(),
             httpResponse.requestUrl(),
             ruleKey.toString());
         LOG.error(message);
@@ -223,11 +224,12 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     Request.Builder builder = toOkHttpRequest(request);
     eventBuilder.getStoreBuilder().setRequestSizeBytes(request.getRequestLengthBytes());
     try (HttpResponse httpResponse = storeClient.makeRequest(hybridThriftEndpoint, builder)) {
-      if (httpResponse.code() != 200) {
+      if (httpResponse.statusCode() != 200) {
         throw new IOException(String.format(
-            "Failed to store cache artifact with HTTP status code [%d] " +
+            "Failed to store cache artifact with HTTP status code [%d:%s] " +
                 " to url [%s] for build target [%s] that has size [%d] bytes.",
-            httpResponse.code(),
+            httpResponse.statusCode(),
+            httpResponse.statusMessage(),
             httpResponse.requestUrl(),
             info.getBuildTarget().orElse(null),
             artifactSizeBytes));
