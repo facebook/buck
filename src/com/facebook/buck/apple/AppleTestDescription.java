@@ -324,7 +324,8 @@ public class AppleTestDescription implements
                     new MakeCleanDirectoryStep(getProjectFilesystem(), outputDirectory),
                     new UnzipStep(
                         getProjectFilesystem(),
-                        Preconditions.checkNotNull(xctoolZipBuildRule.getPathToOutput()),
+                        context.getSourcePathResolver().getAbsolutePath(
+                            Preconditions.checkNotNull(xctoolZipBuildRule.getSourcePathToOutput())),
                         outputDirectory));
               }
               @Override

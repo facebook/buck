@@ -19,6 +19,8 @@ package com.facebook.buck.command;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccessType;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ObjectMappers;
@@ -29,7 +31,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -38,12 +39,17 @@ import java.util.Optional;
 public class BuildReport {
 
   private final BuildExecutionResult buildExecutionResult;
+  private final SourcePathResolver pathResolver;
 
   /**
    * @param buildExecutionResult the build result to generate the report for.
+   * @param pathResolver source path resolver which can be used for the result.
    */
-  public BuildReport(BuildExecutionResult buildExecutionResult) {
+  public BuildReport(
+      BuildExecutionResult buildExecutionResult,
+      SourcePathResolver pathResolver) {
     this.buildExecutionResult = buildExecutionResult;
+    this.pathResolver = pathResolver;
   }
 
   public String generateForConsole(Console console) {
@@ -62,11 +68,11 @@ public class BuildReport {
 
       String successIndicator;
       String successType;
-      Path outputFile;
+      SourcePath outputFile;
       if (success.isPresent()) {
         successIndicator = ansi.asHighlightedSuccessText("OK  ");
         successType = success.get().name();
-        outputFile = rule.getPathToOutput();
+        outputFile = rule.getSourcePathToOutput();
       } else {
         successIndicator = ansi.asHighlightedFailureText("FAIL");
         successType = null;
@@ -78,7 +84,7 @@ public class BuildReport {
               successIndicator,
               rule.getBuildTarget(),
               successType != null ? " " + successType : "",
-              outputFile != null ? " " + outputFile : ""));
+              outputFile != null ? " " + pathResolver.getRelativePath(outputFile) : ""));
     }
 
     if (!buildExecutionResult.getFailures().isEmpty() &&
@@ -119,8 +125,9 @@ public class BuildReport {
 
       if (isSuccess) {
         value.put("type", success.get().name());
-        Path outputFile = rule.getPathToOutput();
-        value.put("output", outputFile != null ? outputFile.toString() : null);
+        SourcePath outputFile = rule.getSourcePathToOutput();
+        value.put("output",
+            outputFile != null ? pathResolver.getRelativePath(outputFile).toString() : null);
       }
       results.put(rule.getFullyQualifiedName(), value);
     }
