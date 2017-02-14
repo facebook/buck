@@ -88,7 +88,6 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.AbstractMap;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -735,14 +734,11 @@ public class AndroidBinary
         enhancementResult.getPackageableCollection();
 
     ImmutableSet<Path> classpathEntriesToDex =
-        FluentIterable
-            .from(enhancementResult.getClasspathEntriesToDex())
-            .transform(resolver::getRelativePath)
-            .append(Collections.singleton(
-                // Note: Need that call to Collections.singleton because
-                // unfortunately Path implements Iterable<Path>.
-                enhancementResult.getCompiledUberRDotJava().getPathToOutput()))
-            .toSet();
+        Stream.concat(
+            enhancementResult.getClasspathEntriesToDex().stream(),
+            RichStream.of(enhancementResult.getCompiledUberRDotJava().getSourcePathToOutput()))
+                .map(resolver::getRelativePath)
+                .collect(MoreCollectors.toImmutableSet());
 
     ImmutableMultimap.Builder<APKModule, Path> additionalDexStoreToJarPathMapBuilder =
         ImmutableMultimap.builder();
