@@ -137,6 +137,21 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
     }
   }
 
+  public AnnotationProcessingParams withoutProcessOnly() {
+    if (processOnly) {
+      return new AnnotationProcessingParams(
+          ownerTarget,
+          filesystem,
+          searchPathElements,
+          names,
+          parameters,
+          inputs,
+          false);
+    } else {
+      return this;
+    }
+  }
+
   public static class Builder {
     @Nullable
     private BuildTarget ownerTarget;

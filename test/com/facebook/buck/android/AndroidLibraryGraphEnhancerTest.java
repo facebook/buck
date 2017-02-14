@@ -23,6 +23,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -172,6 +173,10 @@ public class AndroidLibraryGraphEnhancerTest {
         buildTarget,
         buildRuleParams,
         JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
+            .setAnnotationProcessingParams(
+                new AnnotationProcessingParams.Builder()
+                    .setProcessOnly(true)
+                    .build())
             .setSourceLevel("7")
             .setTargetLevel("7")
                     .build(),
@@ -185,6 +190,7 @@ public class AndroidLibraryGraphEnhancerTest {
 
     assertTrue(dummyRDotJava.isPresent());
     JavacOptions javacOptions = dummyRDotJava.get().getJavacOptions();
+    assertFalse(javacOptions.getAnnotationProcessingParams().getProcessOnly());
     assertEquals("7", javacOptions.getSourceLevel());
   }
 

@@ -111,7 +111,8 @@ public class DummyRDotJava extends AbstractBuildRule
         .collect(MoreCollectors.toImmutableList());
     this.abiJar = abiJar;
     this.outputJar = getOutputJarPath(getBuildTarget(), getProjectFilesystem());
-    this.javacOptions = javacOptions;
+    this.javacOptions = javacOptions.withAnnotationProcessingParams(
+        javacOptions.getAnnotationProcessingParams().withoutProcessOnly());
     this.forceFinalResourceIds = forceFinalResourceIds;
     this.unionPackage = unionPackage;
     this.finalRName = finalRName;
