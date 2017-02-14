@@ -200,7 +200,7 @@ public class DistBuildStateTest {
     assertEquals(
         reconstructedGraph.getNodes().stream()
             .map(targetNode -> targetNode.castArg(JavaLibraryDescription.Arg.class).get())
-            .sorted(BuildTarget.BUILD_TARGET_COMPARATOR)
+            .sorted()
             .map(targetNode -> targetNode.getConstructorArg().srcs)
             .collect(Collectors.toList()),
         Lists.newArrayList("A.java", "B.java", "C.java").stream()

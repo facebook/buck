@@ -16,23 +16,6 @@
 
 package com.facebook.buck.model;
 
-import java.util.Comparator;
-
 public interface HasBuildTarget {
-
-  Comparator<HasBuildTarget> BUILD_TARGET_COMPARATOR =
-      (a, b) -> {
-        if (a == b) {
-          return 0;
-        }
-        if (a == null) {
-          return 1;
-        }
-        if (b == null) {
-          return -1;
-        }
-        return a.getBuildTarget().compareTo(b.getBuildTarget());
-      };
-
   BuildTarget getBuildTarget();
 }

@@ -37,7 +37,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
@@ -55,6 +54,7 @@ import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
@@ -63,6 +63,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.EnumSet;
@@ -259,7 +260,7 @@ public class AndroidBinaryDescription
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex =
           RichStream.from(buildRulesToExcludeFromDex)
               .filter(JavaLibrary.class)
-              .toImmutableSortedSet(HasBuildTarget.BUILD_TARGET_COMPARATOR);
+              .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
 
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       return new AndroidBinary(

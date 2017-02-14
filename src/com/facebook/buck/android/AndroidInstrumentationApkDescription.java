@@ -45,6 +45,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.nio.file.Path;
@@ -94,12 +95,11 @@ public class AndroidInstrumentationApkDescription
     }
     AndroidBinary apkUnderTest = getUnderlyingApk((HasInstallableApk) installableApk);
 
-    ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex = ImmutableSortedSet.copyOf(
-        HasBuildTarget.BUILD_TARGET_COMPARATOR,
-        ImmutableSet.<JavaLibrary>builder()
+    ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex =
+        new ImmutableSortedSet.Builder<>(Ordering.<JavaLibrary>natural())
             .addAll(apkUnderTest.getRulesToExcludeFromDex())
             .addAll(getClasspathDeps(apkUnderTest.getClasspathDeps()))
-            .build());
+            .build();
 
     // TODO(natthu): Instrumentation APKs should also exclude native libraries and assets from the
     // apk under test.

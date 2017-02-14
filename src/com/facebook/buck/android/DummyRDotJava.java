@@ -24,7 +24,6 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -37,12 +36,14 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.Set;
 
@@ -105,8 +106,9 @@ public class DummyRDotJava extends AbstractBuildRule
     super(params.appendExtraDeps(() -> ruleFinder.filterBuildRuleInputs(abiInputs)));
     this.ruleFinder = ruleFinder;
     // Sort the input so that we get a stable ABI for the same set of resources.
-    this.androidResourceDeps = FluentIterable.from(androidResourceDeps)
-        .toSortedList(HasBuildTarget.BUILD_TARGET_COMPARATOR);
+    this.androidResourceDeps = androidResourceDeps.stream()
+        .sorted(Comparator.comparing(HasAndroidResourceDeps::getBuildTarget))
+        .collect(MoreCollectors.toImmutableList());
     this.abiJar = abiJar;
     this.outputJar = getOutputJarPath(getBuildTarget(), getProjectFilesystem());
     this.javacOptions = javacOptions;
