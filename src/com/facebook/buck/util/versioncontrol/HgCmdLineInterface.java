@@ -83,7 +83,6 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   private static final ImmutableList<String> ROOT_COMMAND =
       ImmutableList.of(HG_CMD_TEMPLATE, "root");
 
-
   private static final ImmutableList<String> CURRENT_REVISION_ID_COMMAND =
       ImmutableList.of(HG_CMD_TEMPLATE, "log", "-l", "1", "--template", "{node|short}");
 
