@@ -77,7 +77,9 @@ public class InputBasedRuleKeyFactoryTest {
                 filesystem,
                 pathResolver));
     dep.setOutputFile(depOutput.toString());
-    filesystem.writeContentsToPath("hello", dep.getPathToOutput());
+    filesystem.writeContentsToPath(
+        "hello",
+        pathResolver.getRelativePath(dep.getSourcePathToOutput()));
 
     FakeFileHashCache hashCache = new FakeFileHashCache(
         ImmutableMap.of(filesystem.resolve(depOutput), HashCode.fromInt(0)));
@@ -165,7 +167,7 @@ public class InputBasedRuleKeyFactoryTest {
     // Build a rule key with a particular hash set for the output for the above rule.
     FakeFileHashCache hashCache = new FakeFileHashCache(
         ImmutableMap.of(
-            filesystem.resolve(Preconditions.checkNotNull(dep.getPathToOutput())),
+            pathResolver.getAbsolutePath(Preconditions.checkNotNull(dep.getSourcePathToOutput())),
             HashCode.fromInt(0)));
 
     RuleKey inputKey1 =
@@ -175,7 +177,7 @@ public class InputBasedRuleKeyFactoryTest {
     // Now, build a rule key with a different hash for the output for the above rule.
     hashCache = new FakeFileHashCache(
         ImmutableMap.of(
-            filesystem.resolve(Preconditions.checkNotNull(dep.getPathToOutput())),
+            pathResolver.getAbsolutePath((Preconditions.checkNotNull(dep.getSourcePathToOutput()))),
             HashCode.fromInt(1)));
 
     RuleKey inputKey2 =
@@ -260,7 +262,7 @@ public class InputBasedRuleKeyFactoryTest {
     // Build a rule key with a particular hash set for the output for the above rule.
     FakeFileHashCache hashCache = new FakeFileHashCache(
         ImmutableMap.of(
-            filesystem.resolve(Preconditions.checkNotNull(dep.getPathToOutput())),
+            pathResolver.getAbsolutePath(Preconditions.checkNotNull(dep.getSourcePathToOutput())),
             HashCode.fromInt(0)));
 
     RuleKey inputKey1 =
@@ -270,7 +272,7 @@ public class InputBasedRuleKeyFactoryTest {
     // Now, build a rule key with a different hash for the output for the above rule.
     hashCache = new FakeFileHashCache(
         ImmutableMap.of(
-            filesystem.resolve(Preconditions.checkNotNull(dep.getPathToOutput())),
+            pathResolver.getAbsolutePath(Preconditions.checkNotNull(dep.getSourcePathToOutput())),
             HashCode.fromInt(1)));
 
     RuleKey inputKey2 =

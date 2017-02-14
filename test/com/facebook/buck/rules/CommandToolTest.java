@@ -62,7 +62,8 @@ public class CommandToolTest {
     assertThat(
         tool.getCommandPrefix(pathResolver),
         Matchers.contains(
-            Preconditions.checkNotNull(rule.getPathToOutput()).toAbsolutePath().toString()));
+            pathResolver.getAbsolutePath(
+                Preconditions.checkNotNull(rule.getSourcePathToOutput())).toString()));
     assertThat(
         tool.getDeps(ruleFinder),
         Matchers.contains(rule));

@@ -32,6 +32,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -101,9 +103,10 @@ public class LocationMacroExpanderTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
     BuildRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
-    Path outputPath = javaBinary.getPathToOutput();
-    Path absolutePath = outputPath.toAbsolutePath();
+    Path absolutePath = pathResolver.getAbsolutePath(javaBinary.getSourcePathToOutput());
 
     String originalCmd = String.format(
         "$(location :%s) $(location %s) $OUT",

@@ -248,7 +248,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
         new DexProducedFromJavaLibrary(
             params,
             accumulateClassNames);
-    assertNull(preDexWithClasses.getPathToOutput());
+    assertNull(preDexWithClasses.getSourcePathToOutput());
     assertEquals(
         BuildTargets.getGenPath(params.getProjectFilesystem(), buildTarget, "%s.dex.jar"),
         preDexWithClasses.getPathToDex());

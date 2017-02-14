@@ -19,9 +19,10 @@ package com.facebook.buck.jvm.java;
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
+import static org.hamcrest.Matchers.endsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
@@ -55,15 +56,21 @@ public class JavaSourceJarTest {
 
   @Test
   public void outputNameShouldIndicateThatTheOutputIsASrcJar() {
+    BuildRuleResolver resolver = new BuildRuleResolver(
+        TargetGraph.EMPTY,
+        new DefaultTargetNodeToBuildRuleTransformer());
+
     JavaSourceJar rule = new JavaSourceJar(
         new FakeBuildRuleParamsBuilder("//example:target").build(),
         ImmutableSortedSet.of(),
         Optional.empty());
+    resolver.addToIndex(rule);
 
-    Path output = rule.getPathToOutput();
+    SourcePath output = rule.getSourcePathToOutput();
 
     assertNotNull(output);
-    assertTrue(output.toString().endsWith(Javac.SRC_JAR));
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    assertThat(pathResolver.getRelativePath(output).toString(), endsWith(Javac.SRC_JAR));
   }
 
   @Test

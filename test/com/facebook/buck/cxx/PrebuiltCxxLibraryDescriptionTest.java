@@ -63,7 +63,6 @@ import com.google.common.collect.Iterables;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -299,7 +298,8 @@ public class PrebuiltCxxLibraryDescriptionTest {
         CxxPlatformUtils.DEFAULT_PLATFORM
             .withFlavor(ImmutableFlavor.of("PLATFORM1"));
 
-    Path path = Preconditions.checkNotNull(genRule.getPathToOutput()).toAbsolutePath();
+    Path path = pathResolver.getAbsolutePath(
+        Preconditions.checkNotNull(genRule.getSourcePathToOutput()));
     final SourcePath staticLibraryPath = PrebuiltCxxLibraryDescription.getStaticLibraryPath(
         TARGET,
         cellRoots,
@@ -553,10 +553,11 @@ public class PrebuiltCxxLibraryDescriptionTest {
         TargetGraphFactory.newInstance(genruleBuilder.build(), builder.build());
 
     BuildRule genSrc = genruleBuilder.build(resolver, filesystem, targetGraph);
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     filesystem.writeContentsToPath(
         "class Test {}",
-        new File(Preconditions.checkNotNull(genSrc.getPathToOutput()).toString(), "libx.so")
-            .toPath());
+        pathResolver.getAbsolutePath(Preconditions.checkNotNull(genSrc.getSourcePathToOutput()))
+            .resolve("libx.so"));
 
     CxxLink lib = (CxxLink) builder.build(resolver, filesystem, targetGraph);
     assertNotNull(lib);

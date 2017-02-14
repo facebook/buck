@@ -219,8 +219,10 @@ public class ExecutableMacroExpanderTest {
         Matchers.equalTo(
             String.format(
                 "%s %s",
-                Preconditions.checkNotNull(dep1.getPathToOutput()).toAbsolutePath(),
-                Preconditions.checkNotNull(dep2.getPathToOutput()).toAbsolutePath())));
+                pathResolver.getAbsolutePath(
+                    Preconditions.checkNotNull(dep1.getSourcePathToOutput())),
+                pathResolver.getAbsolutePath(
+                    Preconditions.checkNotNull(dep2.getSourcePathToOutput())))));
   }
 
   @Test

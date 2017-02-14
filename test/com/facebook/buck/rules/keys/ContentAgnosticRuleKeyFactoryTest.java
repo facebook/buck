@@ -82,7 +82,9 @@ public class ContentAgnosticRuleKeyFactoryTest {
                 fileSystem,
                 pathResolver));
     dep.setOutputFile(depOutput.toString());
-    fileSystem.writeContentsToPath(fileContents, dep.getPathToOutput());
+    fileSystem.writeContentsToPath(
+        fileContents,
+        pathResolver.getRelativePath(dep.getSourcePathToOutput()));
 
     BuildRule rule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))

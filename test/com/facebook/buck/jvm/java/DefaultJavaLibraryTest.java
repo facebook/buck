@@ -705,7 +705,9 @@ public class DefaultJavaLibraryTest {
             .setOut("Test.java")
             .setCmd("something")
             .build(ruleResolver, filesystem);
-    filesystem.writeContentsToPath("class Test {}", genSrc.getPathToOutput());
+    filesystem.writeContentsToPath(
+        "class Test {}",
+        pathResolver.getRelativePath(genSrc.getSourcePathToOutput()));
     JavaLibrary library =
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
             .addSrc(new BuildTargetSourcePath(genSrc.getBuildTarget()))
@@ -751,7 +753,9 @@ public class DefaultJavaLibraryTest {
             .setOut("Test.java")
             .setCmd("something else")
             .build(ruleResolver, filesystem);
-    filesystem.writeContentsToPath("class Test2 {}", genSrc.getPathToOutput());
+    filesystem.writeContentsToPath(
+        "class Test2 {}",
+        pathResolver.getRelativePath(genSrc.getSourcePathToOutput()));
     library =
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
             .addSrc(new BuildTargetSourcePath(genSrc.getBuildTarget()))
@@ -793,10 +797,13 @@ public class DefaultJavaLibraryTest {
     JavaLibrary dep = (JavaLibrary) ruleResolver.requireRule(depNode.getBuildTarget());
     JavaLibrary library = (JavaLibrary) ruleResolver.requireRule(libraryNode.getBuildTarget());
 
-    filesystem.writeContentsToPath("JAR contents", dep.getPathToOutput());
+    filesystem.writeContentsToPath(
+        "JAR contents",
+        pathResolver.getRelativePath(dep.getSourcePathToOutput()));
     writeAbiJar(
         filesystem,
-        ruleResolver.requireRule(dep.getAbiJar().get()).getPathToOutput(),
+        pathResolver.getRelativePath(
+            ruleResolver.requireRule(dep.getAbiJar().get()).getSourcePathToOutput()),
         "Source.class",
         "ABI JAR contents");
     FileHashCache originalHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
@@ -825,7 +832,9 @@ public class DefaultJavaLibraryTest {
     dep = (JavaLibrary) ruleResolver.requireRule(depNode.getBuildTarget());
     library = (JavaLibrary) ruleResolver.requireRule(libraryNode.getBuildTarget());
 
-    filesystem.writeContentsToPath("different JAR contents", dep.getPathToOutput());
+    filesystem.writeContentsToPath(
+        "different JAR contents",
+        pathResolver.getRelativePath(dep.getSourcePathToOutput()));
     FileHashCache unaffectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     factory =
         new InputBasedRuleKeyFactory(
@@ -848,7 +857,8 @@ public class DefaultJavaLibraryTest {
 
     writeAbiJar(
         filesystem,
-        ruleResolver.requireRule(dep.getAbiJar().get()).getPathToOutput(),
+        pathResolver.getRelativePath(
+            ruleResolver.requireRule(dep.getAbiJar().get()).getSourcePathToOutput()),
         "Source.class",
         "changed ABI JAR contents");
     FileHashCache affectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
@@ -895,10 +905,13 @@ public class DefaultJavaLibraryTest {
     JavaLibrary library =
         (JavaLibrary) ruleResolver.requireRule(BuildTargetFactory.newInstance("//:lib"));
 
-    filesystem.writeContentsToPath("JAR contents", exportedDep.getPathToOutput());
+    filesystem.writeContentsToPath(
+        "JAR contents",
+        pathResolver.getRelativePath(exportedDep.getSourcePathToOutput()));
     writeAbiJar(
         filesystem,
-        ruleResolver.requireRule(exportedDep.getAbiJar().get()).getPathToOutput(),
+        pathResolver.getRelativePath(
+            ruleResolver.requireRule(exportedDep.getAbiJar().get()).getSourcePathToOutput()),
         "Source1.class",
         "ABI JAR contents");
 
@@ -929,7 +942,9 @@ public class DefaultJavaLibraryTest {
     exportedDep = (JavaLibrary) ruleResolver.requireRule(BuildTargetFactory.newInstance("//:edep"));
     library = (JavaLibrary) ruleResolver.requireRule(BuildTargetFactory.newInstance("//:lib"));
 
-    filesystem.writeContentsToPath("different JAR contents", exportedDep.getPathToOutput());
+    filesystem.writeContentsToPath(
+        "different JAR contents",
+        pathResolver.getRelativePath(exportedDep.getSourcePathToOutput()));
     FileHashCache unaffectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     factory =
         new InputBasedRuleKeyFactory(
@@ -952,7 +967,8 @@ public class DefaultJavaLibraryTest {
 
     writeAbiJar(
         filesystem,
-        ruleResolver.requireRule(exportedDep.getAbiJar().get()).getPathToOutput(),
+        pathResolver.getRelativePath(
+            ruleResolver.requireRule(exportedDep.getAbiJar().get()).getSourcePathToOutput()),
         "Source1.class",
         "changed ABI JAR contents");
     FileHashCache affectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
@@ -1005,10 +1021,13 @@ public class DefaultJavaLibraryTest {
     JavaLibrary library =
         (JavaLibrary) ruleResolver.requireRule(BuildTargetFactory.newInstance("//:lib"));
 
-    filesystem.writeContentsToPath("JAR contents", exportedDep.getPathToOutput());
+    filesystem.writeContentsToPath(
+        "JAR contents",
+        pathResolver.getRelativePath(exportedDep.getSourcePathToOutput()));
     writeAbiJar(
         filesystem,
-        ruleResolver.requireRule(exportedDep.getAbiJar().get()).getPathToOutput(),
+        pathResolver.getRelativePath(
+            ruleResolver.requireRule(exportedDep.getAbiJar().get()).getSourcePathToOutput()),
         "Source1.class",
         "ABI JAR contents");
     FileHashCache originalHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
@@ -1038,7 +1057,9 @@ public class DefaultJavaLibraryTest {
     exportedDep = (JavaLibrary) ruleResolver.requireRule(BuildTargetFactory.newInstance("//:edep"));
     library = (JavaLibrary) ruleResolver.requireRule(BuildTargetFactory.newInstance("//:lib"));
 
-    filesystem.writeContentsToPath("different JAR contents", exportedDep.getPathToOutput());
+    filesystem.writeContentsToPath(
+        "different JAR contents",
+        pathResolver.getRelativePath(exportedDep.getSourcePathToOutput()));
     FileHashCache unaffectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     factory =
         new InputBasedRuleKeyFactory(
@@ -1061,7 +1082,8 @@ public class DefaultJavaLibraryTest {
 
     writeAbiJar(
         filesystem,
-        ruleResolver.requireRule(exportedDep.getAbiJar().get()).getPathToOutput(),
+        pathResolver.getRelativePath(
+            ruleResolver.requireRule(exportedDep.getAbiJar().get()).getSourcePathToOutput()),
         "Source1.class",
         "changed ABI JAR contents");
     FileHashCache affectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);

@@ -116,7 +116,7 @@ public class DirectHeaderMapTest {
         links);
     ruleResolver.addToIndex(buildRule);
 
-    headerMapPath = buildRule.getPathToOutput();
+    headerMapPath = pathResolver.getRelativePath(buildRule.getSourcePathToOutput());
   }
 
   @Test

@@ -158,7 +158,7 @@ public class TrimUberRDotJavaTest {
     }
 
     ZipInspector inspector =
-        new ZipInspector(filesystem.resolve(trimUberRDotJava.getPathToOutput()));
+        new ZipInspector(pathResolver.getAbsolutePath(trimUberRDotJava.getSourcePathToOutput()));
     inspector.assertFileContents("com/test/R.java", rDotJavaContentsAfterFiltering);
   }
 }

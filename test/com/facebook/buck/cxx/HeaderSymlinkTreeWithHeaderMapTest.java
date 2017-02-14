@@ -67,7 +67,6 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
   private HeaderSymlinkTreeWithHeaderMap symlinkTreeBuildRule;
   private ImmutableMap<Path, SourcePath> links;
   private Path symlinkTreeRoot;
-  private Path headerMapPath;
 
   @Before
   public void setUp() throws Exception {
@@ -106,8 +105,6 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
         symlinkTreeRoot,
         links);
-
-    headerMapPath = symlinkTreeBuildRule.getPathToOutput();
   }
 
   @Test
@@ -128,7 +125,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
                 resolver.getMappedPaths(links)),
             new HeaderMapStep(
                 filesystem,
-                headerMapPath,
+                HeaderSymlinkTreeWithHeaderMap.getPath(filesystem, buildTarget),
                 ImmutableMap.of(
                     Paths.get("file"),
                     filesystem.getBuckPaths().getBuckOut()

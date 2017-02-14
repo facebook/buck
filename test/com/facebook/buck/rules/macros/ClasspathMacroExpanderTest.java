@@ -70,12 +70,17 @@ public class ClasspathMacroExpanderTest {
   public void shouldIncludeARuleIfNothingIsGiven() throws Exception {
     final BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(buildRuleResolver));
     BuildRule rule =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//cheese:cake"))
             .addSrc(Paths.get("Example.java"))  // Force a jar to be created
             .build(buildRuleResolver, filesystem);
 
-    assertExpandsTo(rule, buildRuleResolver, ROOT + File.separator + rule.getPathToOutput());
+    assertExpandsTo(
+        rule,
+        buildRuleResolver,
+        ROOT + File.separator + pathResolver.getRelativePath(rule.getSourcePathToOutput()));
   }
 
   @Test
@@ -94,6 +99,8 @@ public class ClasspathMacroExpanderTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, ruleNode);
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
 
     BuildRule rule = ruleResolver.requireRule(ruleNode.getBuildTarget());
     BuildRule dep = ruleResolver.requireRule(depNode.getBuildTarget());
@@ -105,9 +112,9 @@ public class ClasspathMacroExpanderTest {
         String.format(
             "%s" + File.separator + "%s" + File.pathSeparatorChar + "%s" + File.separator + "%s",
             ROOT,
-            dep.getPathToOutput(),
+            pathResolver.getRelativePath(dep.getSourcePathToOutput()),
             ROOT,
-            rule.getPathToOutput()));
+            pathResolver.getRelativePath(rule.getSourcePathToOutput())));
   }
 
   @Test(expected = MacroException.class)

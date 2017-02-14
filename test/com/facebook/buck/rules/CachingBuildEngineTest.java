@@ -270,6 +270,7 @@ public class CachingBuildEngineTest {
       List<Step> buildSteps = Lists.newArrayList();
       final BuildRule ruleToTest = createRule(
           filesystem,
+          resolver,
           pathResolver,
           ImmutableSet.of(dep),
           buildSteps,
@@ -289,7 +290,7 @@ public class CachingBuildEngineTest {
           new AbstractExecutionStep("Some Short Name") {
             @Override
             public StepExecutionResult execute(ExecutionContext context) throws IOException {
-              filesystem.touch(ruleToTest.getPathToOutput());
+              filesystem.touch(pathResolver.getRelativePath(ruleToTest.getSourcePathToOutput()));
               return StepExecutionResult.SUCCESS;
             }
           });
@@ -397,6 +398,7 @@ public class CachingBuildEngineTest {
       };
       BuildRule buildRule = createRule(
           filesystem,
+          resolver,
           pathResolver,
           /* deps */ ImmutableSet.of(),
           ImmutableList.of(step),
@@ -474,6 +476,7 @@ public class CachingBuildEngineTest {
 
       BuildRule buildRule = createRule(
           filesystem,
+          resolver,
           pathResolver,
           /* deps */ ImmutableSet.of(),
           /* buildSteps */ ImmutableList.of(),
@@ -755,6 +758,7 @@ public class CachingBuildEngineTest {
           };
       BuildRule ruleToTest = createRule(
           filesystem,
+          resolver,
           pathResolver,
           /* deps */ ImmutableSet.of(),
           /* buildSteps */ ImmutableList.of(failingStep),
@@ -794,6 +798,7 @@ public class CachingBuildEngineTest {
           };
       BuildRule ruleToTest = createRule(
           filesystem,
+          resolver,
           pathResolver,
           /* deps */ ImmutableSet.of(),
           /* buildSteps */ ImmutableList.of(failingStep),
@@ -828,6 +833,7 @@ public class CachingBuildEngineTest {
           };
       BuildRule ruleToTest = createRule(
           filesystem,
+          resolver,
           pathResolver,
           /* deps */ ImmutableSet.of(),
           /* buildSteps */ ImmutableList.of(),
@@ -1298,13 +1304,18 @@ public class CachingBuildEngineTest {
               .build();
       final RuleKey inputRuleKey = new RuleKey("aaaa");
       final BuildRule rule = new FailingInputRuleKeyBuildRule(params, pathResolver);
+      resolver.addToIndex(rule);
 
       // Create the output file.
-      filesystem.writeContentsToPath("stuff", rule.getPathToOutput());
+      filesystem.writeContentsToPath(
+          "stuff",
+          pathResolver.getRelativePath(rule.getSourcePathToOutput()));
 
       // Prepopulate the recorded paths metadata.
       filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of(rule.getPathToOutput().toString())),
+          MAPPER.writeValueAsString(
+              ImmutableList.of(
+                  pathResolver.getRelativePath(rule.getSourcePathToOutput()).toString())),
           BuildInfo.getPathToMetadataDirectory(target, filesystem)
               .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
 
@@ -1354,10 +1365,13 @@ public class CachingBuildEngineTest {
               .setProjectFilesystem(filesystem)
               .build();
       final BuildRule rule = new FailingInputRuleKeyBuildRule(params, pathResolver);
+      resolver.addToIndex(rule);
 
       // Prepopulate the recorded paths metadata.
       filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of(rule.getPathToOutput().toString())),
+          MAPPER.writeValueAsString(
+              ImmutableList.of(
+                  pathResolver.getRelativePath(rule.getSourcePathToOutput()).toString())),
           BuildInfo.getPathToMetadataDirectory(target, filesystem)
               .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
 
@@ -1368,8 +1382,10 @@ public class CachingBuildEngineTest {
           ImmutableMap.of(
               BuildInfo.getPathToMetadataDirectory(target, filesystem)
                   .resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
-              MAPPER.writeValueAsString(ImmutableList.of(rule.getPathToOutput().toString())),
-              rule.getPathToOutput(),
+              MAPPER.writeValueAsString(
+                  ImmutableList.of(
+                      pathResolver.getRelativePath(rule.getSourcePathToOutput()).toString())),
+              pathResolver.getRelativePath(rule.getSourcePathToOutput()),
               "stuff"));
       cache.store(
           ArtifactInfo.builder()
@@ -1453,13 +1469,18 @@ public class CachingBuildEngineTest {
               return output;
             }
           };
+      resolver.addToIndex(rule);
 
       // Create the output file.
-      filesystem.writeContentsToPath("stuff", rule.getPathToOutput());
+      filesystem.writeContentsToPath(
+          "stuff",
+          pathResolver.getRelativePath(rule.getSourcePathToOutput()));
 
       // Prepopulate the recorded paths metadata.
       filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of(rule.getPathToOutput().toString())),
+          MAPPER.writeValueAsString(
+              ImmutableList.of(
+                  pathResolver.getRelativePath(rule.getSourcePathToOutput()).toString())),
           BuildInfo.getPathToMetadataDirectory(target, filesystem)
               .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
 
@@ -1545,7 +1566,8 @@ public class CachingBuildEngineTest {
           (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setOut("input")
               .build(resolver, filesystem);
-      final Path input = Preconditions.checkNotNull(genrule.getPathToOutput());
+      final Path input = pathResolver.getRelativePath(
+          Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
       filesystem.writeContentsToPath("contents", input);
 
       // Create a simple rule which just writes a file.
@@ -1707,7 +1729,8 @@ public class CachingBuildEngineTest {
           (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setOut("input")
               .build(resolver, filesystem);
-      final Path input = Preconditions.checkNotNull(genrule.getPathToOutput());
+      final Path input = pathResolver.getRelativePath(
+          Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
 
       // Create a simple rule which just writes a file.
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -1875,7 +1898,8 @@ public class CachingBuildEngineTest {
           (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setOut("input")
               .build(resolver, filesystem);
-      final Path input = Preconditions.checkNotNull(genrule.getPathToOutput());
+      final Path input = pathResolver.getRelativePath(
+          Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
 
       // Create a simple rule which just writes a file.
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -1957,7 +1981,8 @@ public class CachingBuildEngineTest {
           (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setOut("input")
               .build(resolver, filesystem);
-      final Path input = Preconditions.checkNotNull(genrule.getPathToOutput());
+      final Path input = pathResolver.getRelativePath(
+          Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
 
       // Create a simple rule which just writes a file.
       final BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -2091,7 +2116,8 @@ public class CachingBuildEngineTest {
           (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setOut("input")
               .build(resolver, filesystem);
-      final Path input = Preconditions.checkNotNull(genrule.getPathToOutput());
+      final Path input = pathResolver.getRelativePath(
+          Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
       filesystem.writeContentsToPath("contents", input);
 
       // Create another input that will be ineligible for the dep file. Such inputs should still
@@ -2206,7 +2232,8 @@ public class CachingBuildEngineTest {
           (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setOut("input")
               .build(resolver, filesystem);
-      final Path input = Preconditions.checkNotNull(genrule.getPathToOutput());
+      final Path input = pathResolver.getRelativePath(
+          Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
       filesystem.writeContentsToPath("contents", input);
 
       // Create a simple rule which just writes a file.
@@ -2328,7 +2355,8 @@ public class CachingBuildEngineTest {
           (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setOut("input")
               .build(resolver, filesystem);
-      final Path input = Preconditions.checkNotNull(genrule.getPathToOutput());
+      final Path input = pathResolver.getRelativePath(
+          Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
       filesystem.writeContentsToPath("contents", input);
 
       // Create a simple rule which just writes a file.
@@ -2442,7 +2470,8 @@ public class CachingBuildEngineTest {
           (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setOut("input")
               .build(resolver, filesystem);
-      final Path input = Preconditions.checkNotNull(genrule.getPathToOutput());
+      final Path input = pathResolver.getRelativePath(
+          Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
       filesystem.writeContentsToPath("contents", input);
 
       // Create a simple rule which just writes a file.
@@ -2938,6 +2967,7 @@ public class CachingBuildEngineTest {
 
   private static BuildRule createRule(
       ProjectFilesystem filesystem,
+      BuildRuleResolver ruleResolver,
       SourcePathResolver resolver,
       ImmutableSet<BuildRule> deps,
       List<Step> buildSteps,
@@ -2951,12 +2981,14 @@ public class CachingBuildEngineTest {
         .setDeclaredDeps(sortedDeps)
         .build();
 
-    return new BuildableAbstractCachingBuildRule(
+    BuildableAbstractCachingBuildRule rule = new BuildableAbstractCachingBuildRule(
         buildRuleParams,
         resolver,
         pathToOutputFile,
         buildSteps,
         postBuildSteps);
+    ruleResolver.addToIndex(rule);
+    return rule;
   }
 
   private static Manifest loadManifest(Path path) throws IOException {

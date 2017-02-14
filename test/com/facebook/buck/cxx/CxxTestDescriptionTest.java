@@ -201,7 +201,8 @@ public class CxxTestDescriptionTest {
             ImmutableMap.of(
                 "TEST",
                 "value " +
-                    Preconditions.checkNotNull(someRule.getPathToOutput()).toAbsolutePath())));
+                    pathResolver.getAbsolutePath(
+                        Preconditions.checkNotNull(someRule.getSourcePathToOutput())))));
   }
 
   @Test
@@ -236,7 +237,8 @@ public class CxxTestDescriptionTest {
     assertThat(
         testStep.getCommand(),
         Matchers.hasItem(
-            "value " + Preconditions.checkNotNull(someRule.getPathToOutput()).toAbsolutePath()));
+            "value " + pathResolver.getAbsolutePath(
+                Preconditions.checkNotNull(someRule.getSourcePathToOutput()))));
   }
 
   @Test

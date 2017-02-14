@@ -76,21 +76,24 @@ public class AssembleDirectoriesTest {
             .build();
     ImmutableList<SourcePath> directories = ImmutableList.of(
         new FakeSourcePath(filesystem, "folder_a"), new FakeSourcePath(filesystem, "folder_b"));
+    BuildRuleResolver ruleResolver = new BuildRuleResolver(
+        TargetGraph.EMPTY,
+        new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
-        new BuildRuleResolver(
-            TargetGraph.EMPTY,
-            new DefaultTargetNodeToBuildRuleTransformer())
+        ruleResolver
     ));
     AssembleDirectories assembleDirectories = new AssembleDirectories(
         buildRuleParams,
         directories);
+    ruleResolver.addToIndex(assembleDirectories);
+
     ImmutableList<Step> steps = assembleDirectories.getBuildSteps(
         FakeBuildContext.withSourcePathResolver(pathResolver),
         new FakeBuildableContext());
     for (Step step : steps) {
       assertEquals(0, step.execute(context).getExitCode());
     }
-    Path outputFile = filesystem.resolve(assembleDirectories.getPathToOutput());
+    Path outputFile = pathResolver.getAbsolutePath(assembleDirectories.getSourcePathToOutput());
     try (DirectoryStream<Path> dir = Files.newDirectoryStream(outputFile)) {
       assertEquals(4, Iterables.size(dir));
     }

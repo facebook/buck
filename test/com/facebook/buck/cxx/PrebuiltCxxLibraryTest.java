@@ -37,7 +37,6 @@ import com.facebook.buck.util.cache.FileHashCache;
 
 import org.junit.Test;
 
-import java.io.File;
 
 
 public class PrebuiltCxxLibraryTest {
@@ -66,7 +65,7 @@ public class PrebuiltCxxLibraryTest {
     BuildRule genSrc = genSrcBuilder.build(resolver, filesystem, targetGraph);
     filesystem.writeContentsToPath(
         "class Test {}",
-        new File(filesystem.resolve(genSrc.getPathToOutput()).toString(), "libx.a").toPath());
+        pathResolver.getAbsolutePath(genSrc.getSourcePathToOutput()).resolve("libx.a"));
 
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) builder.build(resolver, filesystem, targetGraph);
     lib.getNativeLinkableInput(

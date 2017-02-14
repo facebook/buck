@@ -99,13 +99,19 @@ public class ExternallyBuiltApplePackageTest {
 
   @Test
   public void outputContainsCorrectExtension() {
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(this.resolver));
     ExternallyBuiltApplePackage rule = new ExternallyBuiltApplePackage(
         params,
-        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
+        pathResolver,
         config,
         new FakeSourcePath("Fake/Bundle/Location"),
         true);
-    assertThat(Preconditions.checkNotNull(rule.getPathToOutput()).toString(), endsWith(".api"));
+    resolver.addToIndex(rule);
+    assertThat(
+        pathResolver.getRelativePath(
+            Preconditions.checkNotNull(rule.getSourcePathToOutput())).toString(),
+        endsWith(".api"));
   }
 
   @Test

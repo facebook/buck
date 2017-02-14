@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -440,7 +441,7 @@ public class CxxLibraryDescriptionTest {
             Linker.LinkableDepType.STATIC);
     assertThat(
         Arg.stringify(input.getArgs()),
-        Matchers.not(hasItems(linkWholeFlags.toArray(new String[linkWholeFlags.size()]))));
+        not(hasItems(linkWholeFlags.toArray(new String[linkWholeFlags.size()]))));
 
     // Create a cxx library using link whole.
     CxxLibraryBuilder linkWholeBuilder =
@@ -723,14 +724,14 @@ public class CxxLibraryDescriptionTest {
         .build(resolver1, filesystem, targetGraph1);
     assertThat(
         cxxLibrary.getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM).entrySet(),
-        Matchers.not(empty()));
+        not(empty()));
     assertThat(
         cxxLibrary
             .getNativeLinkableInput(
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 Linker.LinkableDepType.SHARED)
             .getArgs(),
-        Matchers.not(empty()));
+        not(empty()));
 
     // Now, verify we get nothing when the supported platform regex excludes our platform.
     cxxLibraryBuilder.setSupportedPlatformsRegex(Pattern.compile("nothing"));
@@ -856,10 +857,12 @@ public class CxxLibraryDescriptionTest {
             targetGraph);
 
     assertThat(lib.getDeps(), hasItem(loc));
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     assertThat(
         Arg.stringify(lib.getArgs()),
         hasItem(
-            containsString(Preconditions.checkNotNull(loc.getPathToOutput()).toString())));
+            containsString(pathResolver.getRelativePath(
+                Preconditions.checkNotNull(loc.getSourcePathToOutput())).toString())));
   }
 
   @Test
@@ -874,6 +877,7 @@ public class CxxLibraryDescriptionTest {
         new BuildRuleResolver(
             prepopulateWithSandbox(target),
             new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ExportFileBuilder locBuilder = ExportFileBuilder.newExportFileBuilder(location);
     locBuilder.setOut("somewhere.over.the.rainbow");
@@ -910,10 +914,11 @@ public class CxxLibraryDescriptionTest {
         hasItem(
             String.format(
                 "-Wl,--version-script=%s",
-                Preconditions.checkNotNull(loc.getPathToOutput()).toAbsolutePath())));
+                pathResolver.getAbsolutePath(
+                    Preconditions.checkNotNull(loc.getSourcePathToOutput())))));
     assertThat(
         Arg.stringify(lib.getArgs()),
-        Matchers.not(hasItem(loc.getPathToOutput().toAbsolutePath().toString())));
+        not(hasItem(pathResolver.getAbsolutePath(loc.getSourcePathToOutput()).toString())));
   }
 
   @Test
@@ -958,13 +963,15 @@ public class CxxLibraryDescriptionTest {
             filesystem,
             targetGraph);
 
-    assertThat(lib.getDeps(), Matchers.not(hasItem(loc)));
+    assertThat(lib.getDeps(), not(hasItem(loc)));
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     assertThat(
         Arg.stringify(lib.getArgs()),
-        Matchers.not(
+        not(
             hasItem(
                 containsString(
-                    Preconditions.checkNotNull(loc.getPathToOutput()).toString()))));
+                    pathResolver.getRelativePath(
+                        Preconditions.checkNotNull(loc.getSourcePathToOutput())).toString()))));
   }
 
   @Test
@@ -1009,11 +1016,13 @@ public class CxxLibraryDescriptionTest {
             .transformAndConcat(arg -> arg.getDeps(ruleFinder))
             .toSet(),
         hasItem(loc));
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     assertThat(
         Arg.stringify(nativeLinkableInput.getArgs()),
         hasItem(
             containsString(
-                Preconditions.checkNotNull(loc.getPathToOutput()).toString())));
+                pathResolver.getRelativePath(
+                    Preconditions.checkNotNull(loc.getSourcePathToOutput())).toString())));
   }
 
   @Test
@@ -1062,11 +1071,13 @@ public class CxxLibraryDescriptionTest {
             .transformAndConcat(arg -> arg.getDeps(ruleFinder))
             .toSet(),
         hasItem(loc));
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     assertThat(
         Arg.stringify(nativeLinkableInput.getArgs()),
         hasItem(
             containsString(
-                Preconditions.checkNotNull(loc.getPathToOutput()).toString())));
+                pathResolver.getRelativePath(
+                    Preconditions.checkNotNull(loc.getSourcePathToOutput())).toString())));
   }
 
   @Test
@@ -1117,13 +1128,15 @@ public class CxxLibraryDescriptionTest {
         FluentIterable.from(nativeLinkableInput.getArgs())
             .transformAndConcat(arg -> arg.getDeps(ruleFinder))
             .toSet(),
-        Matchers.not(hasItem(loc)));
+        not(hasItem(loc)));
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     assertThat(
         Arg.stringify(nativeLinkableInput.getArgs()),
-        Matchers.not(
+        not(
             hasItem(
                 containsString(
-                    Preconditions.checkNotNull(loc.getPathToOutput()).toString()))));
+                    pathResolver.getRelativePath(
+                        Preconditions.checkNotNull(loc.getSourcePathToOutput())).toString()))));
   }
 
   @Test
@@ -1144,7 +1157,7 @@ public class CxxLibraryDescriptionTest {
         filesystem,
         targetGraph);
 
-    assertThat(lib.getPathToOutput(), nullValue());
+    assertThat(lib.getSourcePathToOutput(), nullValue());
   }
 
   @Test

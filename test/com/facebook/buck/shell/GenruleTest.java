@@ -140,7 +140,7 @@ public class GenruleTest {
     assertEquals(
         filesystem.getBuckPaths().getGenDir().resolve(
             "src/com/facebook/katana/katana_manifest/AndroidManifest.xml"),
-        genrule.getPathToOutput());
+        pathResolver.getRelativePath(genrule.getSourcePathToOutput()));
     assertEquals(
         filesystem.resolve(filesystem.getBuckPaths().getGenDir().resolve(
             "src/com/facebook/katana/katana_manifest/AndroidManifest.xml"))
@@ -680,15 +680,17 @@ public class GenruleTest {
     // Create an initial input-based rule key
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildRule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("dep.out")
             .setCmd("something")
             .build(resolver);
-    filesystem.writeContentsToPath("something", dep.getPathToOutput());
+    filesystem.writeContentsToPath(
+        "something",
+        pathResolver.getRelativePath(dep.getSourcePathToOutput()));
     BuildRule rule = ruleBuilder.build(resolver);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(
             0,
@@ -744,7 +746,9 @@ public class GenruleTest {
             .setOut("dep.out")
             .setCmd("something")
             .build(resolver);
-    filesystem.writeContentsToPath("something else", dep.getPathToOutput());
+    filesystem.writeContentsToPath(
+        "something else",
+        pathResolver.getRelativePath(dep.getSourcePathToOutput()));
     rule = ruleBuilder.build(resolver);
     inputBasedRuleKeyFactory =
         new InputBasedRuleKeyFactory(
@@ -767,15 +771,17 @@ public class GenruleTest {
     // Create an initial input-based rule key
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildRule dep =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setMain(new PathSourcePath(filesystem, Paths.get("dep.exe")))
             .build(resolver, filesystem);
     filesystem.writeContentsToPath("something", Paths.get("dep.exe"));
-    filesystem.writeContentsToPath("something", dep.getPathToOutput());
+    filesystem.writeContentsToPath(
+        "something",
+        pathResolver.getRelativePath(dep.getSourcePathToOutput()));
     BuildRule rule = ruleBuilder.build(resolver);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     DefaultRuleKeyFactory defaultRuleKeyFactory =
         new DefaultRuleKeyFactory(
             0,
@@ -832,7 +838,9 @@ public class GenruleTest {
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setMain(new PathSourcePath(filesystem, Paths.get("dep.exe")))
             .build(resolver, filesystem);
-    filesystem.writeContentsToPath("something else", dep.getPathToOutput());
+    filesystem.writeContentsToPath(
+        "something else",
+        pathResolver.getRelativePath(dep.getSourcePathToOutput()));
     rule = ruleBuilder.build(resolver);
     ruleFinder = new SourcePathRuleFinder(resolver);
     pathResolver = new SourcePathResolver(ruleFinder);
@@ -857,15 +865,17 @@ public class GenruleTest {
     // Create an initial input-based rule key
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     JavaLibrary dep =
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"))
             .addSrc(Paths.get("source.java"))
             .build(resolver, filesystem);
     filesystem.writeContentsToPath("something", Paths.get("source.java"));
-    filesystem.writeContentsToPath("something", dep.getPathToOutput());
+    filesystem.writeContentsToPath(
+        "something",
+        pathResolver.getRelativePath(dep.getSourcePathToOutput()));
     BuildRule rule = ruleBuilder.build(resolver);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     DefaultRuleKeyFactory defaultRuleKeyFactory =
         new DefaultRuleKeyFactory(
             0,
@@ -918,7 +928,9 @@ public class GenruleTest {
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"))
             .addSrc(Paths.get("source.java"))
             .build(resolver, filesystem);
-    filesystem.writeContentsToPath("something else", dep.getPathToOutput());
+    filesystem.writeContentsToPath(
+        "something else",
+        pathResolver.getRelativePath(dep.getSourcePathToOutput()));
     rule = ruleBuilder.build(resolver);
     ruleFinder = new SourcePathRuleFinder(resolver);
     pathResolver = new SourcePathResolver(ruleFinder);

@@ -184,6 +184,7 @@ public class PythonBinaryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     PythonBuckConfig config =
         new PythonBuckConfig(
             FakeBuckConfig.builder().setSections(
@@ -203,7 +204,8 @@ public class PythonBinaryDescriptionTest {
             .setMainModule("main")
             .build(resolver);
     assertThat(
-        Preconditions.checkNotNull(binary.getPathToOutput()).toString(),
+        pathResolver.getRelativePath(
+            Preconditions.checkNotNull(binary.getSourcePathToOutput())).toString(),
         Matchers.endsWith(".different_extension"));
   }
 
@@ -212,6 +214,7 @@ public class PythonBinaryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     PythonBinaryBuilder builder = PythonBinaryBuilder.create(target);
     PythonBinary binary =
         (PythonBinary) builder
@@ -219,7 +222,8 @@ public class PythonBinaryDescriptionTest {
             .setExtension(".different_extension")
             .build(resolver);
     assertThat(
-        Preconditions.checkNotNull(binary.getPathToOutput()).toString(),
+        pathResolver.getRelativePath(
+            Preconditions.checkNotNull(binary.getSourcePathToOutput())).toString(),
         Matchers.endsWith(".different_extension"));
   }
 

@@ -98,7 +98,7 @@ public class ExportFileTest {
         TestExecutionContext.newInstance());
     assertEquals(
         projectFilesystem.getBuckPaths().getGenDir().resolve("example.html"),
-        exportFile.getPathToOutput());
+        pathResolver.getRelativePath(exportFile.getSourcePathToOutput()));
   }
 
   @Test
@@ -126,7 +126,7 @@ public class ExportFileTest {
         TestExecutionContext.newInstance());
     assertEquals(
         projectFilesystem.getBuckPaths().getGenDir().resolve("fish"),
-        exportFile.getPathToOutput());
+        pathResolver.getRelativePath(exportFile.getSourcePathToOutput()));
   }
 
   @Test
@@ -157,7 +157,7 @@ public class ExportFileTest {
         TestExecutionContext.newInstance());
     assertEquals(
         projectFilesystem.getBuckPaths().getGenDir().resolve("fish"),
-        exportFile.getPathToOutput());
+        pathResolver.getRelativePath(exportFile.getSourcePathToOutput()));
   }
 
   @Test
@@ -283,7 +283,9 @@ public class ExportFileTest {
             .setMode(ExportFileDescription.Mode.REFERENCE)
             .setSrc(src)
             .build(resolver, projectFilesystem);
-    assertThat(exportFile.getPathToOutput(), Matchers.equalTo(pathResolver.getRelativePath(src)));
+    assertThat(
+        pathResolver.getRelativePath(exportFile.getSourcePathToOutput()),
+        Matchers.equalTo(pathResolver.getRelativePath(src)));
   }
 
   @Test

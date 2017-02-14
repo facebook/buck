@@ -33,11 +33,13 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -103,11 +105,13 @@ public class HaskellLibraryDescriptionTest {
                 HaskellLibraryDescription.Type.SHARED.getFlavor()))
             .build(resolver);
 
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     ImmutableList<Path> outputs =
         ImmutableList.of(
-            Preconditions.checkNotNull(staticLib.getPathToOutput()),
-            Preconditions.checkNotNull(staticPicLib.getPathToOutput()),
-            Preconditions.checkNotNull(sharedLib.getPathToOutput()));
+            Preconditions.checkNotNull(staticLib.getSourcePathToOutput()),
+            Preconditions.checkNotNull(staticPicLib.getSourcePathToOutput()),
+            Preconditions.checkNotNull(sharedLib.getSourcePathToOutput()))
+        .stream().map(pathResolver::getRelativePath).collect(MoreCollectors.toImmutableList());
     assertThat(outputs.size(), Matchers.equalTo(ImmutableSet.copyOf(outputs).size()));
 
     ImmutableList<BuildTarget> targets =

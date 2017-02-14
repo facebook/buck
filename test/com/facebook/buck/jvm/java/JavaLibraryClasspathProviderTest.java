@@ -25,17 +25,15 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
@@ -45,7 +43,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
@@ -66,14 +63,11 @@ public class JavaLibraryClasspathProviderTest {
   private BuildRule e;
   private BuildRule z;
   private SourcePathResolver resolver;
-  private Path basePath;
-  private Function<Path, SourcePath> sourcePathFunction;
   private ProjectFilesystem filesystem;
 
   @Before
   public void setUp() throws Exception {
     filesystem = new FakeProjectFilesystem();
-    basePath = filesystem.getRootPath();
 
     // Create our target graph. All nodes are JavaLibrary except b
     // (exports c) az (no exports)
@@ -86,10 +80,8 @@ public class JavaLibraryClasspathProviderTest {
         ImmutableSet.of(),
         filesystem);
 
-    sourcePathFunction = SourcePaths.toSourcePath(filesystem);
     bNode = GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//foo:b"))
-        .setSrcs(ImmutableList.of(
-            sourcePathFunction.apply(Paths.get("foo", "b.java"))))
+        .setSrcs(ImmutableList.of(new FakeSourcePath(filesystem, "foo/b.java")))
         .setCmd("echo $(classpath //foo:d")
         .setOut("b.out")
         .build();
@@ -142,7 +134,7 @@ public class JavaLibraryClasspathProviderTest {
         ),
         JavaLibraryClasspathProvider.getOutputClasspathJars(
             aLib,
-            Optional.of(sourcePathFunction.apply(aLib.getPathToOutput())))
+            Optional.of(aLib.getSourcePathToOutput()))
                 .stream().map(resolver::getAbsolutePath).collect(MoreCollectors.toImmutableSet())
     );
   }
@@ -254,7 +246,7 @@ public class JavaLibraryClasspathProviderTest {
   }
 
   private Path getFullOutput(BuildRule lib) {
-    return basePath.resolve(lib.getPathToOutput().toString());
+    return resolver.getAbsolutePath(lib.getSourcePathToOutput());
   }
 
   private static TargetNode<?, ?> makeRule(
