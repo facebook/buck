@@ -83,9 +83,6 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   private static final ImmutableList<String> ROOT_COMMAND =
       ImmutableList.of(HG_CMD_TEMPLATE, "root");
 
-  private static final ImmutableList<String> HG_ROOT_COMMAND =
-      ImmutableList.of(HG_CMD_TEMPLATE, "root");
-
   private static final ImmutableList<String> CURRENT_REVISION_ID_COMMAND =
       ImmutableList.of(HG_CMD_TEMPLATE, "log", "-l", "1", "--template", "{node|short}");
 
@@ -271,10 +268,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   @Override
   public ImmutableMap<String, String> bookmarksRevisionsId(ImmutableSet<String> bookmarks)
       throws InterruptedException, VersionControlCommandFailedException {
-    Path remoteNames = Paths.get(
-        executeCommand(HG_ROOT_COMMAND),
-        HG_ROOT_PATH,
-        REMOTE_NAMES_FILENAME);
+    Path remoteNames = Paths.get(executeCommand(ROOT_COMMAND), HG_ROOT_PATH, REMOTE_NAMES_FILENAME);
 
     ImmutableMap.Builder<String, String> bookmarksRevisions = ImmutableMap.builder();
     try {
