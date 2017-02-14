@@ -1318,7 +1318,7 @@ docsearch({
 {template .fork_mode}
 {call buck.arg}
   {param name: 'fork_mode' /}
-  {param default : 'none' /}
+  {param default : 'None' /}
   {param desc}
   Controls whether tests will all be run in the same process or a process will be
   started for each set of tests in a class.
@@ -1343,7 +1343,7 @@ docsearch({
 {template .test_rule_timeout_ms}
 {call buck.arg}
   {param name: 'test_rule_timeout_ms' /}
-  {param default: '[]' /}
+  {param default: 'None' /}
   {param desc}
   If set specifies the maximum amount of time (in milliseconds) in which all of the tests in this
   rule should complete. This overrides the default <code>rule_timeout</code> if any has been
