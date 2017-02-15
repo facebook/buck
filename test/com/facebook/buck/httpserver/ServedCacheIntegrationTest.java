@@ -124,7 +124,8 @@ public class ServedCacheIntegrationTest {
     return createMockLocalConfig(
         "[cache]",
         "mode = dir",
-        "dir = test-cache");
+        "dir = test-cache",
+        "http_timeout_seconds = 10000");
   }
 
   @Test
