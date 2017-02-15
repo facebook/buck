@@ -21,7 +21,6 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
@@ -183,7 +182,7 @@ public class CxxPreprocessAndCompile
     if (precompiledHeaderRule.isPresent()) {
       sink.setReflectively(
           "precompiledHeaderRuleInput",
-          new BuildTargetSourcePath(precompiledHeaderRule.get().getBuildTarget()));
+          precompiledHeaderRule.get().getInput());
     }
   }
 
@@ -366,7 +365,8 @@ public class CxxPreprocessAndCompile
     }
 
     if (precompiledHeaderRule.isPresent()) {
-      inputs.add(new BuildTargetSourcePath(precompiledHeaderRule.get().getBuildTarget()));
+      CxxPrecompiledHeader pch = precompiledHeaderRule.get();
+      inputs.addAll(pch.getInputsAfterBuildingLocally(context));
     }
 
     // Add the input.

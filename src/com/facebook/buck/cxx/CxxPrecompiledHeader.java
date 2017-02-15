@@ -140,6 +140,10 @@ public class CxxPrecompiledHeader
         makeMainStep(context.getSourcePathResolver(), scratchDir));
   }
 
+  public SourcePath getInput() {
+    return input;
+  }
+
   @Override
   public Path getPathToOutput() {
     return output;
