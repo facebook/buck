@@ -16,6 +16,7 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
@@ -64,12 +65,15 @@ public class GoTestDescription implements
 
   private final GoBuckConfig goBuckConfig;
   private final Optional<Long> defaultTestRuleTimeoutMs;
+  private final CxxBinaryDescription cxxBinaryDescription;
 
   public GoTestDescription(
       GoBuckConfig goBuckConfig,
-      Optional<Long> defaultTestRuleTimeoutMs) {
+      Optional<Long> defaultTestRuleTimeoutMs,
+      CxxBinaryDescription cxxBinaryDescription) {
     this.goBuckConfig = goBuckConfig;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
+    this.cxxBinaryDescription = cxxBinaryDescription;
   }
 
   @Override
@@ -216,10 +220,14 @@ public class GoTestDescription implements
         resolver,
         goBuckConfig,
         ImmutableSet.of(new BuildTargetSourcePath(generatedTestMain.getBuildTarget())),
+        args.cgoSrcs,
         args.compilerFlags,
         args.assemblerFlags,
         args.linkerFlags,
-        platform);
+        args.cgoNativeDeps,
+        platform,
+        cxxBinaryDescription
+        );
     resolver.addToIndex(testMain);
     return testMain;
   }
@@ -296,6 +304,8 @@ public class GoTestDescription implements
               .addAll(libraryArg.srcs)
               .addAll(args.srcs)
               .build(),
+          // XXX cgo
+          ImmutableSet.of(),
           ImmutableList.<String>builder()
               .addAll(libraryArg.compilerFlags)
               .addAll(args.compilerFlags)
@@ -306,7 +316,9 @@ public class GoTestDescription implements
               .build(),
           platform,
           FluentIterable.from(params.getDeclaredDeps().get())
-              .transform(HasBuildTarget::getBuildTarget));
+              .transform(HasBuildTarget::getBuildTarget),
+          args.cgoNativeDeps,
+          cxxBinaryDescription);
     } else {
       testLibrary = GoDescriptors.createGoCompileRule(
           params,
@@ -314,11 +326,14 @@ public class GoTestDescription implements
           goBuckConfig,
           packageName,
           args.srcs,
+          args.cgoSrcs,
           args.compilerFlags,
           args.assemblerFlags,
           platform,
           FluentIterable.from(params.getDeclaredDeps().get())
-              .transform(HasBuildTarget::getBuildTarget));
+              .transform(HasBuildTarget::getBuildTarget),
+          args.cgoNativeDeps,
+          cxxBinaryDescription);
     }
 
     return testLibrary;
@@ -347,12 +362,14 @@ public class GoTestDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public ImmutableSet<SourcePath> srcs;
+    public ImmutableSet<SourcePath> cgoSrcs = ImmutableSet.of();
     public Optional<BuildTarget> library;
     public Optional<String> packageName;
     public List<String> compilerFlags = ImmutableList.of();
     public List<String> assemblerFlags = ImmutableList.of();
     public List<String> linkerFlags = ImmutableList.of();
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+    public ImmutableSortedSet<BuildTarget> cgoNativeDeps = ImmutableSortedSet.of();
     public ImmutableSet<String> contacts = ImmutableSet.of();
     public Optional<Long> testRuleTimeoutMs;
     public Optional<Boolean> runTestSeparately;

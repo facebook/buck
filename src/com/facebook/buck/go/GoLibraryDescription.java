@@ -16,6 +16,7 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -54,9 +55,13 @@ public class GoLibraryDescription implements
     MetadataProvidingDescription<GoLibraryDescription.Arg> {
 
   private final GoBuckConfig goBuckConfig;
+  private final CxxBinaryDescription cxxBinaryDescription;
 
-  public GoLibraryDescription(GoBuckConfig goBuckConfig) {
+  public GoLibraryDescription(
+      GoBuckConfig goBuckConfig,
+      CxxBinaryDescription cxxBinaryDescription) {
     this.goBuckConfig = goBuckConfig;
+    this.cxxBinaryDescription = cxxBinaryDescription;
   }
 
   @Override
@@ -127,12 +132,15 @@ public class GoLibraryDescription implements
           args.packageName.map(Paths::get)
               .orElse(goBuckConfig.getDefaultPackageName(params.getBuildTarget())),
           args.srcs,
+          args.cgoSrcs,
           args.compilerFlags,
           args.assemblerFlags,
           platform.get(),
           FluentIterable.from(params.getDeclaredDeps().get())
               .transform(HasBuildTarget::getBuildTarget)
-              .append(args.exportedDeps));
+              .append(args.exportedDeps),
+          args.cgoNativeDeps,
+          cxxBinaryDescription);
     }
 
     return new NoopBuildRule(params, new SourcePathResolver(new SourcePathRuleFinder(resolver)));
@@ -141,11 +149,13 @@ public class GoLibraryDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg implements HasTests {
     public ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
+    public ImmutableSortedSet<SourcePath> cgoSrcs = ImmutableSortedSet.of();
     public List<String> compilerFlags = ImmutableList.of();
     public List<String> assemblerFlags = ImmutableList.of();
     public Optional<String> packageName;
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public ImmutableSortedSet<BuildTarget> exportedDeps = ImmutableSortedSet.of();
+    public ImmutableSortedSet<BuildTarget> cgoNativeDeps = ImmutableSortedSet.of();
 
     @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
 

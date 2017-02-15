@@ -92,7 +92,7 @@ public class GoCompileStep extends ShellStep {
     if (!allowExternalReferences) {
       // -complete means the package does not use any non Go code, so external functions
       // (e.g. Cgo, asm) aren't allowed.
-      commandBuilder.add("-complete");
+       commandBuilder.add("-complete");
     }
 
     commandBuilder.addAll(srcs.stream().map(Object::toString).iterator());
