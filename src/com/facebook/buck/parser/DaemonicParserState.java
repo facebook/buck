@@ -446,8 +446,9 @@ class DaemonicParserState {
           }
         } catch (ExecutionException | UncheckedExecutionException e) {
           try {
-            Throwables.propagateIfInstanceOf(e, BuildFileParseException.class);
-            Throwables.propagate(e);
+            Throwables.throwIfInstanceOf(e, BuildFileParseException.class);
+            Throwables.throwIfUnchecked(e);
+            throw new RuntimeException(e);
           } catch (BuildFileParseException bfpe) {
             LOG.warn("Unable to parse already parsed build file.", bfpe);
           }

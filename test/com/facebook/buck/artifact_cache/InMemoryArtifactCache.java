@@ -52,7 +52,7 @@ public class InMemoryArtifactCache implements ArtifactCache {
     try {
       Files.write(output.get(), artifact.data);
     } catch (IOException e) {
-      throw Throwables.propagate(e);
+      Throwables.throwIfUnchecked(e);
     }
     return CacheResult.hit("in-memory", artifact.metadata, artifact.data.length);
   }
@@ -75,7 +75,7 @@ public class InMemoryArtifactCache implements ArtifactCache {
     try (InputStream inputStream = Files.newInputStream(output.getPath())) {
       store(info, ByteStreams.toByteArray(inputStream));
     } catch (IOException e) {
-      throw Throwables.propagate(e);
+      Throwables.throwIfUnchecked(e);
     }
 
     return Futures.immediateFuture(null);

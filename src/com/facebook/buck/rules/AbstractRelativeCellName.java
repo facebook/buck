@@ -59,7 +59,7 @@ abstract class AbstractRelativeCellName {
   }
 
   public static RelativeCellName fromComponents(String ... strings) {
-    return RelativeCellName.of(FluentIterable.of(strings));
+    return RelativeCellName.of(FluentIterable.from(strings));
   }
 
   @Override

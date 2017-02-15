@@ -28,7 +28,6 @@ import java.util.Optional;
 
 public class UnsortedAndroidResourceDeps {
 
-  @SuppressWarnings("unchecked")
   private static final ImmutableSet<Class<? extends BuildRule>> TRAVERSABLE_TYPES = ImmutableSet.of(
       AndroidBinary.class,
       AndroidInstrumentationApk.class,

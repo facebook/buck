@@ -172,7 +172,7 @@ abstract class GoDescriptors {
     ImmutableList.Builder<Path> vendorPathsBuilder = ImmutableList.builder();
     vendorPathsBuilder.addAll(globalVendorPaths);
     Path prefix = Paths.get("");
-    for (Path component : FluentIterable.of(new Path[]{Paths.get("")}).append(basePackagePath)) {
+    for (Path component : FluentIterable.from(new Path[]{Paths.get("")}).append(basePackagePath)) {
       prefix = prefix.resolve(component);
       vendorPathsBuilder.add(prefix.resolve("vendor"));
     }

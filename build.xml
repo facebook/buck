@@ -72,7 +72,7 @@
   <fileset dir="${third-party.dir}/java" id="buck.jars">
     <include name="args4j/args4j-2.0.30.jar" />
     <include name="ddmlib/ddmlib-25.2.0.jar" />
-    <include name="guava/guava-19.0.jar" />
+    <include name="guava/guava-20.0.jar" />
     <include name="ini4j/ini4j-0.5.2.jar" />
     <include name="jackson/jackson-annotations-2.7.8.jar" />
     <include name="jackson/jackson-core-2.7.8.jar" />
@@ -391,7 +391,7 @@
           tofile="${classes.dir}/com/facebook/buck/android/android-tools-common.jar"/>
     <copy file="${third-party.dir}/java/kxml2/kxml2-2.3.0.jar"
           tofile="${classes.dir}/com/facebook/buck/android/kxml2.jar"/>
-    <copy file="${third-party.dir}/java/guava/guava-19.0.jar"
+    <copy file="${third-party.dir}/java/guava/guava-20.0.jar"
           tofile="${classes.dir}/com/facebook/buck/android/guava.jar"/>
 
     <!--
@@ -440,7 +440,7 @@
   </target>
 
   <fileset dir="${third-party.dir}/java" id="dx.jars">
-    <include name="guava/guava-19.0.jar" />
+    <include name="guava/guava-20.0.jar" />
   </fileset>
 
   <path id="dx.classpath">
@@ -468,7 +468,7 @@
     </javac>
 
     <jar destfile="${build.dir}/dx.jar">
-      <zipfileset includes="**/*.class" src="${third-party.dir}/java/guava/guava-19.0.jar"/>
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/guava/guava-20.0.jar"/>
       <zipfileset includes="**/*.class" src="${third-party.dir}/java/junit/junit-4.12.jar" />
       <fileset dir="${dx.classes.dir}" />
       <manifest>
@@ -737,7 +737,7 @@
 
   <path id="pmd-classpath">
     <fileset dir="${basedir}/pmd" includes="*.jar" />
-    <pathelement location="${third-party.dir}/java/guava/guava-19.0.jar" />
+    <pathelement location="${third-party.dir}/java/guava/guava-20.0.jar" />
   </path>
 
   <!--

@@ -44,7 +44,8 @@ public final class ConfigViewCache<T> {
     try {
       return viewClass.cast(cache.getUnchecked(viewClass));
     } catch (UncheckedExecutionException e) {
-      throw Throwables.propagate(e.getCause());
+      Throwables.throwIfUnchecked(e.getCause());
+      throw e;
     }
   }
 

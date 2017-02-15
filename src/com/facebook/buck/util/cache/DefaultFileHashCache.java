@@ -194,8 +194,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     try {
       sha1 = loadingCache.get(path.normalize()).getHashCode();
     } catch (ExecutionException e) {
-      Throwables.propagateIfInstanceOf(e.getCause(), IOException.class);
-      throw Throwables.propagate(e.getCause());
+      Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
+      throw new RuntimeException(e.getCause());
     }
     return Preconditions.checkNotNull(sha1, "Failed to find a HashCode for %s.", path);
   }
@@ -206,8 +206,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     try {
       return sizeCache.get(path.normalize());
     } catch (ExecutionException e) {
-      Throwables.propagateIfInstanceOf(e.getCause(), IOException.class);
-      throw Throwables.propagate(e.getCause());
+      Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
+      throw new RuntimeException(e.getCause());
     }
   }
 
@@ -230,8 +230,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
 
       return memberHashCodeAndFileType.getHashCode();
     } catch (ExecutionException e) {
-      Throwables.propagateIfInstanceOf(e.getCause(), IOException.class);
-      throw Throwables.propagate(e.getCause());
+      Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
+      throw new RuntimeException(e.getCause());
     }
   }
 

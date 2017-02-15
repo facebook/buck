@@ -95,7 +95,7 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     Throwables.getCausalChain(throwable).stream()
         .filter(t -> t instanceof SizeLimiter.SizeLimitException)
         .findFirst()
-        .ifPresent(Throwables::propagateIfPossible);
+        .ifPresent(Throwables::throwIfUnchecked);
   }
 
   private Builder newVerifyingBuilder(final BuildRule rule) {

@@ -267,7 +267,7 @@ public class JvmLibraryArgInterpreterTest {
           ImmutableSet.builder(),
           ImmutableMap.of());
     } catch (ParamInfoException error) {
-      throw Throwables.propagate(error);
+      Throwables.throwIfUnchecked(error);
     }
   }
 }

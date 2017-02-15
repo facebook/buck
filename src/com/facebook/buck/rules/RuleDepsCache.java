@@ -57,7 +57,8 @@ public class RuleDepsCache {
           }));
     } catch (ExecutionException e) {
       // service.submit doesn't throw any checked exceptions, so this should be fine.
-      throw Throwables.propagate(e.getCause());
+      Throwables.throwIfUnchecked(e.getCause());
+      throw new RuntimeException(e.getCause());
     }
   }
 }

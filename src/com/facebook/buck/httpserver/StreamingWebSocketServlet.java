@@ -18,7 +18,6 @@ package com.facebook.buck.httpserver;
 
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 
 import org.eclipse.jetty.websocket.api.Session;
@@ -62,7 +61,7 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
       String message = objectMapper.writeValueAsString(event);
       tellAll(message);
     } catch (IOException e) {
-      Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 

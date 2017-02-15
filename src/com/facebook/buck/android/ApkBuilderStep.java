@@ -158,7 +158,7 @@ public class ApkBuilderStep implements Step {
             SealedApkException |
             UnrecoverableKeyException e) {
       context.logError(e, "Error when creating APK at: %s.", pathToOutputApkFile);
-      Throwables.propagateIfInstanceOf(e, IOException.class);
+      Throwables.throwIfInstanceOf(e, IOException.class);
       return StepExecutionResult.ERROR;
     } catch (DuplicateFileException e) {
       throw new HumanReadableException(
