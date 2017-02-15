@@ -1178,7 +1178,7 @@ public final class Main {
               commandEventListeners
           );
 
-          if (buckConfig.isPublicAnnouncementsEnabled()) {
+          if (commandMode == CommandMode.RELEASE && buckConfig.isPublicAnnouncementsEnabled()) {
             PublicAnnouncementManager announcementManager = new PublicAnnouncementManager(
                 clock,
                 buildEventBus,
