@@ -19,7 +19,9 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.zip.CustomZipOutputStream;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.concurrent.Semaphore;
@@ -32,16 +34,19 @@ import javax.tools.SimpleJavaFileObject;
  * output stream instead of writing it to disk. Since the Jar can be shared between multiple
  * threads, a semaphore is used to ensure exclusive access to the output stream.
  */
-public class JavaInMemoryFileObject extends SimpleJavaFileObject {
+public class InMemoryFileObject extends SimpleJavaFileObject {
+  // Bump the default buffer size because usual file sizes using this are around 300K
   private static final int BUFFER_SIZE = 4096;
 
   private final CustomZipOutputStream jarOutputStream;
   private final Semaphore jarFileSemaphore;
   private final ByteArrayOutputStream bos = new ByteArrayOutputStream(BUFFER_SIZE);
 
-  public JavaInMemoryFileObject(String path, Kind kind,
-      CustomZipOutputStream jarOutputStream, Semaphore jarFileSemaphore) {
-    super(URI.create(path), kind);
+  public InMemoryFileObject(
+      String path,
+      CustomZipOutputStream jarOutputStream,
+      Semaphore jarFileSemaphore) {
+    super(URI.create(path), Kind.OTHER);
     this.jarOutputStream = jarOutputStream;
     this.jarFileSemaphore = jarFileSemaphore;
   }
@@ -69,6 +74,11 @@ public class JavaInMemoryFileObject extends SimpleJavaFileObject {
         }
       }
     };
+  }
+
+  @Override
+  public InputStream openInputStream() throws IOException {
+    throw new FileNotFoundException(getName());
   }
 
   @Override
