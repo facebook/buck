@@ -377,17 +377,17 @@ public class Build implements Closeable {
       } catch (ExecutionException | RuntimeException e) {
         // This is likely a checked exception that was caught while building a build rule.
         Throwable cause = e.getCause();
-        Throwables.propagateIfInstanceOf(cause, IOException.class);
-        Throwables.propagateIfInstanceOf(cause, StepFailedException.class);
-        Throwables.propagateIfInstanceOf(cause, InterruptedException.class);
-        Throwables.propagateIfInstanceOf(cause, ClosedByInterruptException.class);
-        Throwables.propagateIfInstanceOf(cause, HumanReadableException.class);
+        Throwables.throwIfInstanceOf(cause, IOException.class);
+        Throwables.throwIfInstanceOf(cause, StepFailedException.class);
+        Throwables.throwIfInstanceOf(cause, InterruptedException.class);
+        Throwables.throwIfInstanceOf(cause, ClosedByInterruptException.class);
+        Throwables.throwIfInstanceOf(cause, HumanReadableException.class);
         if (cause instanceof ExceptionWithHumanReadableMessage) {
           throw new HumanReadableException((ExceptionWithHumanReadableMessage) cause);
         }
 
         LOG.debug(e, "Got an exception during the build.");
-        throw Throwables.propagate(e);
+        throw new RuntimeException(e);
       }
     } catch (IOException e) {
       LOG.debug(e, "Got an exception during the build.");

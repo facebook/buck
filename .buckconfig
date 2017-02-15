@@ -15,7 +15,7 @@
     maven-importer = //src/com/facebook/buck/maven:resolver
 [autodeps]
    include_signature = false
-   java-package-mappings = com.google.caliper => //third-party/java/caliper:caliper
+   java-package-mappings = com.google.caliper => //third-party/java/caliper:caliper,com.google.errorprone.annotations => //third-party/java/errorprone:error-prone-annotations
 [buildfile]
     includes = //DEFS
 [log]

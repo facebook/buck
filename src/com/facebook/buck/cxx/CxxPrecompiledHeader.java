@@ -211,11 +211,11 @@ public class CxxPrecompiledHeader
               output));
     } catch (ExecutionException e) {
       // Unwrap and re-throw the loader's Exception.
-      Throwables.propagateIfInstanceOf(e.getCause(), IOException.class);
-      Throwables.propagateIfInstanceOf(e.getCause(), Depfiles.HeaderVerificationException.class);
+      Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
+      Throwables.throwIfInstanceOf(e.getCause(), Depfiles.HeaderVerificationException.class);
       throw new IllegalStateException("Unexpected cause for ExecutionException: ", e);
     } catch (UncheckedExecutionException e) {
-      Throwables.propagateIfPossible(e.getCause());
+      Throwables.throwIfUnchecked(e.getCause());
       throw e;
     }
   }

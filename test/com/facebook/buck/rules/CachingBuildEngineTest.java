@@ -354,7 +354,8 @@ public class CachingBuildEngineTest {
                   try {
                     Thread.sleep(500);
                   } catch (InterruptedException e) {
-                    throw Throwables.propagate(e);
+                    Throwables.throwIfUnchecked(e);
+                    throw new RuntimeException(e);
                   }
                   return Futures.immediateFuture(null);
                 }
@@ -3001,7 +3002,8 @@ public class CachingBuildEngineTest {
   private static BuildRuleSuccessType getSuccess(BuildResult result) {
     switch (result.getStatus()) {
       case FAIL:
-        throw Throwables.propagate(Preconditions.checkNotNull(result.getFailure()));
+        Throwables.throwIfUnchecked(Preconditions.checkNotNull(result.getFailure()));
+        throw new RuntimeException(result.getFailure());
       case CANCELED:
         throw new RuntimeException("result is canceled");
       case SUCCESS:
@@ -3215,7 +3217,8 @@ public class CachingBuildEngineTest {
       try {
         Thread.sleep(millis);
       } catch (InterruptedException e) {
-        throw Throwables.propagate(e);
+        Throwables.throwIfUnchecked(e);
+        throw new RuntimeException(e);
       }
       return StepExecutionResult.SUCCESS;
     }

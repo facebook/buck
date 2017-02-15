@@ -144,7 +144,8 @@ public abstract class AbstractNodeBuilder<A, B extends Description<A>> {
       }
       return node;
     } catch (NoSuchBuildTargetException e) {
-      throw Throwables.propagate(e);
+      Throwables.throwIfUnchecked(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -211,7 +212,8 @@ public abstract class AbstractNodeBuilder<A, B extends Description<A>> {
               target,
               arg);
     } catch (ParamInfoException error) {
-      throw Throwables.propagate(error);
+      Throwables.throwIfUnchecked(error);
+      throw new RuntimeException(error);
     }
   }
 

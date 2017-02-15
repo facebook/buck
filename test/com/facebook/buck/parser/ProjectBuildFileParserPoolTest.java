@@ -76,7 +76,8 @@ public class ProjectBuildFileParserPoolTest {
                     try {
                       didntTimeout = createParserLatch.await(1, TimeUnit.SECONDS);
                     } catch (InterruptedException e) {
-                      Throwables.propagate(e);
+                      Throwables.throwIfUnchecked(e);
+                      throw new RuntimeException(e);
                     }
                     assertThat(didntTimeout, Matchers.equalTo(true));
                     return ImmutableList.of();
@@ -147,7 +148,8 @@ public class ProjectBuildFileParserPoolTest {
                       }
                     });
               } catch (Exception e) {
-                Throwables.propagate(e);
+                Throwables.throwIfUnchecked(e);
+                throw new RuntimeException(e);
               }
               EasyMock.replay(parser);
               return parser;
@@ -349,7 +351,8 @@ public class ProjectBuildFileParserPoolTest {
       mock.close();
       EasyMock.expectLastCall().andVoid().once();
     } catch (Exception e) {
-      Throwables.propagate(e);
+      Throwables.throwIfUnchecked(e);
+      throw new RuntimeException(e);
     }
     EasyMock.replay(mock);
     return mock;

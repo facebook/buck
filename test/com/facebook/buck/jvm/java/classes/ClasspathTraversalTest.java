@@ -61,7 +61,8 @@ public class ClasspathTraversalTest {
             try {
               contents = new FileLikeCharSource(fileLike).read();
             } catch (IOException e) {
-              throw Throwables.propagate(e);
+              Throwables.throwIfUnchecked(e);
+              throw new RuntimeException(e);
             }
             completeList.put(fileLike, contents);
           }

@@ -112,7 +112,8 @@ public class HttpdForTests implements AutoCloseable {
       return getUri("/");
     } catch (SocketException | URISyntaxException e) {
       // Should never happen
-      throw Throwables.propagate(e);
+      Throwables.throwIfUnchecked(e);
+      throw new RuntimeException(e);
     }
   }
 

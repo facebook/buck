@@ -174,7 +174,7 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
           try {
             timeTaken = Float.parseFloat(matcher.group("duration"));
           } catch (NumberFormatException ex) {
-            Throwables.propagate(ex);
+            Throwables.throwIfUnchecked(ex);
           }
 
           summariesBuilder.add(new TestResultSummary(

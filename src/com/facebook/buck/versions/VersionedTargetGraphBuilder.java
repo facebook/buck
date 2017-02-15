@@ -413,8 +413,8 @@ public class VersionedTargetGraphBuilder {
         return get();
       } catch (ExecutionException e) {
         Throwable rootCause = Throwables.getRootCause(e);
-        Throwables.propagateIfInstanceOf(rootCause, VersionException.class);
-        Throwables.propagateIfInstanceOf(rootCause, RuntimeException.class);
+        Throwables.throwIfInstanceOf(rootCause, VersionException.class);
+        Throwables.throwIfInstanceOf(rootCause, RuntimeException.class);
         throw new IllegalStateException(
             String.format("Unexpected exception: %s: %s", e.getClass(), e.getMessage()),
             e);

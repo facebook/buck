@@ -767,7 +767,7 @@ public class JavaFileParser {
           // end up in the set of required symbols. To this end, we perform a second check for
           // "all caps" types to see if there is a corresponding import and if it should be exported
           // rather than simply required.
-          if (!CharMatcher.JAVA_UPPER_CASE.matchesAllOf(simpleName) ||
+          if (!CharMatcher.javaUpperCase().matchesAllOf(simpleName) ||
               (dependencyType == DependencyType.EXPORTED &&
                   simpleImportedTypes.containsKey(simpleName))) {
             addSimpleTypeName(simpleTypeName, dependencyType);

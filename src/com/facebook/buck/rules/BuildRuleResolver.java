@@ -170,7 +170,7 @@ public class BuildRuleResolver {
       return (Optional<T>) metadataCache.get(
           new Pair<BuildTarget, Class<?>>(target, metadataClass));
     } catch (ExecutionException e) {
-      Throwables.propagateIfInstanceOf(e.getCause(), NoSuchBuildTargetException.class);
+      Throwables.throwIfInstanceOf(e.getCause(), NoSuchBuildTargetException.class);
       throw new RuntimeException(e);
     }
   }

@@ -49,7 +49,6 @@ public final class AppleBuildRules {
   // Utility class not to be instantiated.
   private AppleBuildRules() { }
 
-  @SuppressWarnings("unchecked")
   public static final ImmutableSet<Class<? extends Description<?>>>
       XCODE_TARGET_DESCRIPTION_CLASSES = ImmutableSet.of(
           AppleLibraryDescription.class,

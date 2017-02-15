@@ -206,7 +206,8 @@ public class BuildInfoRecorderTest {
               assertArrayEquals(contents, zip.readFully("file"));
               assertArrayEquals(contents, zip.readFully("dir/file"));
             } catch (IOException e) {
-              throw Throwables.propagate(e);
+              Throwables.throwIfUnchecked(e);
+              throw new RuntimeException(e);
             }
             return Futures.immediateFuture(null);
           }

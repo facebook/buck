@@ -133,7 +133,7 @@ public class PublishCommandIntegrationTest {
       String... extraArgs) throws IOException {
     return workspace.runBuckCommand(
         FluentIterable
-            .of(new String[]{"publish"})
+            .from(new String[]{"publish"})
             .append(extraArgs)
             .append(
                 PublishCommand.REMOTE_REPO_SHORT_ARG,

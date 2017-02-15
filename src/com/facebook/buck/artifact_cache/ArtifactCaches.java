@@ -412,12 +412,12 @@ public class ArtifactCaches implements ArtifactCacheFactory {
   }
 
   private static String stripNonAscii(String str) {
-    if (CharMatcher.ASCII.matchesAllOf(str)) {
+    if (CharMatcher.ascii().matchesAllOf(str)) {
       return str;
     }
     StringBuilder builder = new StringBuilder();
     for (char c : str.toCharArray()) {
-      builder.append(CharMatcher.ASCII.matches(c) ? c : '?');
+      builder.append(CharMatcher.ascii().matches(c) ? c : '?');
     }
     return builder.toString();
   }

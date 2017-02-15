@@ -67,7 +67,8 @@ abstract class AbstractGlobArg extends Arg {
               getPathResolver().getRelativePath(getRoot()),
               matcher::matches));
     } catch (IOException e) {
-      throw Throwables.propagate(e);
+      Throwables.throwIfUnchecked(e);
+      throw new RuntimeException(e);
     }
     builder.addAll(
         paths.stream()

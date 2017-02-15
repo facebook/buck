@@ -30,7 +30,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -122,7 +121,7 @@ public class PublishCommand extends BuildCommand {
         buildRule = getBuild().getRuleResolver().requireRule(buildTarget);
       } catch (NoSuchBuildTargetException e) {
         // This doesn't seem physically possible!
-        Throwables.propagate(e);
+        throw new RuntimeException(e);
       }
       Preconditions.checkNotNull(buildRule);
 
