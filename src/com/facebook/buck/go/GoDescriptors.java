@@ -23,7 +23,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BinaryBuildRule;
@@ -212,7 +211,7 @@ abstract class GoDescriptors {
         assemblerFlags,
         platform,
         FluentIterable.from(params.getDeclaredDeps().get())
-            .transform(HasBuildTarget::getBuildTarget));
+            .transform(BuildRule::getBuildTarget));
     resolver.addToIndex(library);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -227,7 +226,7 @@ abstract class GoDescriptors {
             resolver,
             platform,
             FluentIterable.from(params.getDeclaredDeps().get())
-                .transform(HasBuildTarget::getBuildTarget),
+                .transform(BuildRule::getBuildTarget),
             /* includeSelf */ false));
     resolver.addToIndex(symlinkTree);
 

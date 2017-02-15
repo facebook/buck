@@ -16,13 +16,15 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 
 import java.nio.file.Path;
 import java.util.Optional;
 
-public interface NativeLinkTarget extends HasBuildTarget {
+public interface NativeLinkTarget {
+
+  BuildTarget getBuildTarget();
 
   NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform);
 

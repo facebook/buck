@@ -4,6 +4,7 @@
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/kotlin:kotlin",
+      "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/util:exceptions",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/jvm/kotlin:testutil",

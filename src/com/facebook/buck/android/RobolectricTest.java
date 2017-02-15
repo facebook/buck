@@ -27,7 +27,6 @@ import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -224,7 +223,7 @@ public class RobolectricTest extends JavaTest {
                 // tools are available when this test runs.
                 getDeps().stream())
             .reduce(Stream.empty(), Stream::concat)
-            .map(HasBuildTarget::getBuildTarget)
+            .map(BuildRule::getBuildTarget)
             .map(BuildTargetSourcePath::new));
   }
 

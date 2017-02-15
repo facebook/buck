@@ -24,7 +24,6 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryEnvironment;
@@ -211,11 +210,20 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     return queryBuildTarget;
   }
 
-  public ImmutableSet<QueryTarget> getTargetsFromBuildTargetsContainer(
-      Iterable<? extends  HasBuildTarget> buildTargetsContainer) {
+  public ImmutableSet<QueryTarget> getTargetsFromTargetNodes(
+      Iterable<TargetNode<?, ?>> targetNodes) {
     ImmutableSortedSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();
-    for (HasBuildTarget hasBuildTarget : buildTargetsContainer) {
-      builder.add(getOrCreateQueryBuildTarget(hasBuildTarget.getBuildTarget()));
+    for (TargetNode<?, ?> targetNode : targetNodes) {
+      builder.add(getOrCreateQueryBuildTarget(targetNode.getBuildTarget()));
+    }
+    return builder.build();
+  }
+
+  public ImmutableSet<QueryTarget> getTargetsFromBuildTargets(
+      Iterable<BuildTarget> buildTargets) {
+    ImmutableSortedSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();
+    for (BuildTarget buildTarget : buildTargets) {
+      builder.add(getOrCreateQueryBuildTarget(buildTarget));
     }
     return builder.build();
   }
@@ -244,7 +252,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     Set<QueryTarget> result = new LinkedHashSet<>();
     for (QueryTarget target : targets) {
       TargetNode<?, ?> node = getNode(target);
-      result.addAll(getTargetsFromBuildTargetsContainer(graph.getOutgoingNodesFor(node)));
+      result.addAll(getTargetsFromTargetNodes(graph.getOutgoingNodesFor(node)));
     }
     return result;
   }
@@ -255,7 +263,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     Set<QueryTarget> result = new LinkedHashSet<>();
     for (QueryTarget target : targets) {
       TargetNode<?, ?> node = getNode(target);
-      result.addAll(getTargetsFromBuildTargetsContainer(graph.getIncomingNodesFor(node)));
+      result.addAll(getTargetsFromTargetNodes(graph.getIncomingNodesFor(node)));
     }
     return result;
   }
@@ -277,7 +285,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     }
     // Reusing the existing getSubgraph() for simplicity. It builds the graph when we only need the
     // nodes. The impact of creating the edges in terms of time and space should be minimal.
-    return getTargetsFromBuildTargetsContainer(graph.getSubgraph(nodes).getNodes());
+    return getTargetsFromTargetNodes(graph.getSubgraph(nodes).getNodes());
   }
 
   private void buildGraphForBuildTargets(Set<BuildTarget> targets)
@@ -319,7 +327,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   @Override
   public ImmutableSet<QueryTarget> getTestsForTarget(QueryTarget target)
       throws QueryException, InterruptedException {
-    return getTargetsFromBuildTargetsContainer(TargetNodes.getTestTargetsForNode(getNode(target)));
+    return getTargetsFromBuildTargets(TargetNodes.getTestTargetsForNode(getNode(target)));
   }
 
   @Override
@@ -366,7 +374,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     try {
       BuildFileTree buildFileTree = Preconditions.checkNotNull(buildFileTrees.get(rootCell));
       OwnersReport report = ownersReportBuilder.build(buildFileTree, executor, files);
-      return getTargetsFromBuildTargetsContainer(report.owners.keySet());
+      return getTargetsFromTargetNodes(report.owners.keySet());
     } catch (BuildFileParseException | IOException e) {
       throw new QueryException(e, "Could not parse build targets.\n%s", e.getMessage());
     }

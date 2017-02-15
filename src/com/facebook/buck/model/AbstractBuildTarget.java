@@ -42,10 +42,7 @@ import java.util.SortedSet;
     setterVisibility = JsonAutoDetect.Visibility.NONE)
 @BuckStyleImmutable
 @Value.Immutable(prehash = true)
-abstract class AbstractBuildTarget
-    implements
-    Comparable<AbstractBuildTarget>,
-    HasBuildTarget {
+abstract class AbstractBuildTarget implements Comparable<AbstractBuildTarget> {
 
   private static final Ordering<Iterable<Flavor>> LEXICOGRAPHICAL_ORDERING =
       Ordering.<Flavor>natural().lexicographical();
@@ -179,11 +176,6 @@ abstract class AbstractBuildTarget
         .result();
   }
 
-  @Override
-  public BuildTarget getBuildTarget() {
-    return BuildTarget.copyOf(this);
-  }
-
   public BuildTarget withoutFlavors(Set<Flavor> flavors) {
     BuildTarget.Builder builder = BuildTarget.builder();
     builder.setUnflavoredBuildTarget(getUnflavoredBuildTarget());
@@ -200,7 +192,7 @@ abstract class AbstractBuildTarget
   }
 
   public BuildTarget withAppendedFlavors(Set<Flavor> flavorsToAppend) {
-    BuildTarget.Builder builder = BuildTarget.builder(getBuildTarget());
+    BuildTarget.Builder builder = BuildTarget.builder(BuildTarget.copyOf(this));
     builder.addAllFlavors(flavorsToAppend);
     return builder.build();
   }

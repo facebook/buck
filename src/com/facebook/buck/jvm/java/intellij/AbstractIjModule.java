@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java.intellij;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -112,7 +111,7 @@ abstract class AbstractIjModule implements IjProjectElement {
   @Value.Check
   protected void checkDependencyConsistency() {
     ImmutableSet<BuildTarget> buildTargets = getTargets().stream()
-        .map(HasBuildTarget::getBuildTarget)
+        .map(TargetNode::getBuildTarget)
         .collect(MoreCollectors.toImmutableSet());
 
     for (Map.Entry<BuildTarget, DependencyType> entry :

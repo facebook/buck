@@ -89,7 +89,7 @@ public class VersionUniverseVersionSelector implements VersionSelector {
     ImmutableMap.Builder<BuildTarget, Version> selectedVersions = ImmutableMap.builder();
 
     Optional<Map.Entry<String, VersionUniverse>> universe = getVersionUniverse(node);
-    LOG.verbose("%s: selected universe: %s", root.getBuildTarget(), universe);
+    LOG.verbose("%s: selected universe: %s", root, universe);
     for (Map.Entry<BuildTarget, ImmutableSet<Version>> ent : domain.entrySet()) {
       Version version;
       if (universe.isPresent() &&

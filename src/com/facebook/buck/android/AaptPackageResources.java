@@ -21,7 +21,6 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -96,7 +95,8 @@ public class AaptPackageResources extends AbstractBuildRule {
 
     ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
     depsBuilder.addAll(extraDeps);
-    Stream<BuildTarget> resourceTargets = resourceDeps.stream().map(HasBuildTarget::getBuildTarget);
+    Stream<BuildTarget> resourceTargets = resourceDeps.stream()
+        .map(HasAndroidResourceDeps::getBuildTarget);
     depsBuilder.addAll(
             BuildRules.toBuildRulesFor(
                 aaptTarget,

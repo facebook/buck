@@ -18,7 +18,6 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
@@ -86,23 +85,13 @@ abstract class AbstractOmnibusRoots {
      *
      * @return whether the node was added as a root.
      */
-    public boolean addPotentialRoot(HasBuildTarget node) {
-
-      // First check if this root can be used as an included root.
+    public void addPotentialRoot(NativeLinkable node) {
       Optional<NativeLinkTarget> target = NativeLinkables.getNativeLinkTarget(node, cxxPlatform);
       if (target.isPresent() && !excludes.contains(node.getBuildTarget())) {
         addIncludedRoot(target.get());
-        return true;
+      } else {
+        addExcludedRoot(node);
       }
-
-      // If not, check if it can be used as a excluded root.
-      if (node instanceof NativeLinkable) {
-        addExcludedRoot((NativeLinkable) node);
-        return true;
-      }
-
-      // Otherwise, return `false` to indicate this wasn't a root.
-      return false;
     }
 
     private ImmutableMap<BuildTarget, NativeLinkable> buildExcluded() {

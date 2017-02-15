@@ -37,7 +37,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -323,7 +322,7 @@ public class CxxLibraryDescriptionTest {
             cxxSourceRuleFactory.createCompileBuildTarget("test/bar.cpp"),
             cxxSourceRuleFactory.createCompileBuildTarget(genSourceName)),
         archiveRule.getDeps().stream()
-            .map(HasBuildTarget::getBuildTarget)
+            .map(BuildRule::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()));
 
     // Verify that the compile rule for our user-provided source has correct deps setup
@@ -333,7 +332,7 @@ public class CxxLibraryDescriptionTest {
     assertNotNull(compileRule1);
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(compileRule1)
-            .map(HasBuildTarget::getBuildTarget)
+            .map(BuildRule::getBuildTarget)
             ::iterator,
         containsInAnyOrder(
             genHeaderTarget,
@@ -354,7 +353,7 @@ public class CxxLibraryDescriptionTest {
     assertNotNull(compileRule2);
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(compileRule2)
-            .map(HasBuildTarget::getBuildTarget)
+            .map(BuildRule::getBuildTarget)
             ::iterator,
         containsInAnyOrder(
             genHeaderTarget,
@@ -594,7 +593,7 @@ public class CxxLibraryDescriptionTest {
             cxxSourceRuleFactoryPDC.createCompileBuildTarget("test/bar.cpp"),
             cxxSourceRuleFactoryPDC.createCompileBuildTarget(genSourceName)),
         staticRule.getDeps().stream()
-            .map(HasBuildTarget::getBuildTarget)
+            .map(BuildRule::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()));
 
     // Verify that the compile rule for our user-provided source has correct deps setup
@@ -604,7 +603,7 @@ public class CxxLibraryDescriptionTest {
     assertNotNull(staticCompileRule1);
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(staticCompileRule1)
-            .map(HasBuildTarget::getBuildTarget)
+            .map(BuildRule::getBuildTarget)
             ::iterator,
         containsInAnyOrder(
             genHeaderTarget,
@@ -625,7 +624,7 @@ public class CxxLibraryDescriptionTest {
     assertNotNull(staticCompileRule2);
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(staticCompileRule2)
-            .map(HasBuildTarget::getBuildTarget)
+            .map(BuildRule::getBuildTarget)
             ::iterator,
         containsInAnyOrder(
             genHeaderTarget,
@@ -660,7 +659,7 @@ public class CxxLibraryDescriptionTest {
             cxxSourceRuleFactoryPIC.createCompileBuildTarget("test/bar.cpp"),
             cxxSourceRuleFactoryPIC.createCompileBuildTarget(genSourceName)),
         sharedRule.getDeps().stream()
-            .map(HasBuildTarget::getBuildTarget)
+            .map(BuildRule::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()));
 
     // Verify that the compile rule for our user-provided source has correct deps setup
@@ -670,7 +669,7 @@ public class CxxLibraryDescriptionTest {
     assertNotNull(sharedCompileRule1);
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(sharedCompileRule1)
-            .map(HasBuildTarget::getBuildTarget)
+            .map(BuildRule::getBuildTarget)
             ::iterator,
         containsInAnyOrder(
             genHeaderTarget,
@@ -691,7 +690,7 @@ public class CxxLibraryDescriptionTest {
     assertNotNull(sharedCompileRule2);
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(sharedCompileRule2)
-            .map(HasBuildTarget::getBuildTarget)
+            .map(BuildRule::getBuildTarget)
             ::iterator,
         containsInAnyOrder(
             genHeaderTarget,
@@ -841,7 +840,7 @@ public class CxxLibraryDescriptionTest {
         ImmutableList.of(
             StringWithMacrosUtils.format(
                 "-Wl,--version-script=%s",
-                LocationMacro.of(location.getBuildTarget()))));
+                LocationMacro.of(location))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(
         libBuilder.build(),
         locBuilder.build());
@@ -892,7 +891,7 @@ public class CxxLibraryDescriptionTest {
                 ImmutableList.of(
                     StringWithMacrosUtils.format(
                         "-Wl,--version-script=%s",
-                        LocationMacro.of(location.getBuildTarget()))))
+                        LocationMacro.of(location))))
             .build());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(
         libBuilder.build(),
@@ -947,7 +946,7 @@ public class CxxLibraryDescriptionTest {
                 ImmutableList.of(
                     StringWithMacrosUtils.format(
                         "-Wl,--version-script=%s",
-                        LocationMacro.of(location.getBuildTarget()))))
+                        LocationMacro.of(location))))
             .build());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(
         libBuilder.build(),
@@ -989,7 +988,7 @@ public class CxxLibraryDescriptionTest {
         ImmutableList.of(
             StringWithMacrosUtils.format(
                 "-Wl,--version-script=%s",
-                LocationMacro.of(location.getBuildTarget()))));
+                LocationMacro.of(location))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(
         libBuilder.build(),
         locBuilder.build());
@@ -1043,7 +1042,7 @@ public class CxxLibraryDescriptionTest {
                 ImmutableList.of(
                     StringWithMacrosUtils.format(
                         "-Wl,--version-script=%s",
-                        LocationMacro.of(location.getBuildTarget()))))
+                        LocationMacro.of(location))))
             .build());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(
         libBuilder.build(),
@@ -1101,7 +1100,7 @@ public class CxxLibraryDescriptionTest {
                 ImmutableList.of(
                     StringWithMacrosUtils.format(
                         "-Wl,--version-script=%s",
-                        LocationMacro.of(location.getBuildTarget()))))
+                        LocationMacro.of(location))))
             .build());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(
         libBuilder.build(),

@@ -42,7 +42,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -263,7 +262,7 @@ public class CxxPythonExtensionDescription implements
 
     // Add a dep on the python C/C++ library.
     if (pythonPlatform.getCxxLibrary().isPresent()) {
-      rules.add(ruleResolver.getRule(pythonPlatform.getCxxLibrary().get().getBuildTarget()));
+      rules.add(ruleResolver.getRule(pythonPlatform.getCxxLibrary().get()));
     }
 
     return rules.build();
@@ -463,7 +462,7 @@ public class CxxPythonExtensionDescription implements
       @Override
       public Stream<SourcePath> getRuntimeDeps() {
         return getDeclaredDeps().stream()
-            .map(HasBuildTarget::getBuildTarget)
+            .map(BuildRule::getBuildTarget)
             .map(BuildTargetSourcePath::new);
       }
 

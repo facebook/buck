@@ -31,7 +31,6 @@ import com.facebook.buck.cxx.OmnibusRoots;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -296,7 +295,7 @@ public class PythonUtil {
             Maps.uniqueIndex(
                 entry.getValue().getNativeLinkTarget(pythonPlatform)
                     .getNativeLinkTargetDeps(cxxPlatform),
-                HasBuildTarget::getBuildTarget));
+                NativeLinkable::getBuildTarget));
       }
 
       // Add all the native libraries.

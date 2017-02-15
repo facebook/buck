@@ -20,7 +20,6 @@ import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
@@ -85,9 +84,9 @@ public class VersionedTargetGraphBuilderTest {
 
   private static void assertEquals(TargetGraph expected, TargetGraph actual) {
     ImmutableMap<BuildTarget, TargetNode<?, ?>> expectedNodes =
-        Maps.uniqueIndex(expected.getNodes(), HasBuildTarget::getBuildTarget);
+        Maps.uniqueIndex(expected.getNodes(), TargetNode::getBuildTarget);
     ImmutableMap<BuildTarget, TargetNode<?, ?>> actualNodes =
-        Maps.uniqueIndex(actual.getNodes(), HasBuildTarget::getBuildTarget);
+        Maps.uniqueIndex(actual.getNodes(), TargetNode::getBuildTarget);
     assertThat(actualNodes.keySet(), Matchers.equalTo(expectedNodes.keySet()));
     for (Map.Entry<BuildTarget, TargetNode<?, ?>> ent : expectedNodes.entrySet()) {
       assertEquals(ent.getValue(), actualNodes.get(ent.getKey()));

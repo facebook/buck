@@ -16,13 +16,12 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.HasBuildTarget;
-
 /**
  * Something (usually a {@link com.facebook.buck.rules.BuildRule}) that can be included in
  * an Android package (android_binary or (hopefully soon) aar).
  */
-public interface AndroidPackageable extends HasBuildTarget {
+public interface AndroidPackageable {
+
   /**
    * Get the set of packagables that need to be included in any package that includes this object.
    *

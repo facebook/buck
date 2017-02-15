@@ -24,7 +24,6 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -329,7 +328,7 @@ public class ThriftLibraryDescription
                 target,
                 ImmutableList.of(enhancers),
                 FluentIterable.from(thriftDeps)
-                    .transform(HasBuildTarget::getBuildTarget)),
+                    .transform(BuildRule::getBuildTarget)),
             implicitDeps));
 
     // Form the set of generated sources, so that compiler rules know what output paths to record.

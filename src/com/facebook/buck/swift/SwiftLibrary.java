@@ -36,7 +36,6 @@ import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -242,7 +241,7 @@ class SwiftLibrary
         .concat(
             getDeclaredDeps().stream(),
             StreamSupport.stream(exportedDeps.spliterator(), false))
-        .map(HasBuildTarget::getBuildTarget)
+        .map(BuildRule::getBuildTarget)
         .map(BuildTargetSourcePath::new);
   }
 

@@ -20,7 +20,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -132,7 +131,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
     // lay out the headers so the resulting compilation database can
     // be used.
     return runtimeDeps.stream()
-        .map(HasBuildTarget::getBuildTarget)
+        .map(BuildRule::getBuildTarget)
         .map(BuildTargetSourcePath::new);
   }
 

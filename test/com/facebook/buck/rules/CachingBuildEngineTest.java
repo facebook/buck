@@ -48,7 +48,6 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.keys.DefaultDependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
@@ -3145,7 +3144,7 @@ public class CachingBuildEngineTest {
     @Override
     public Stream<SourcePath> getRuntimeDeps() {
       return runtimeDeps.stream()
-          .map(HasBuildTarget::getBuildTarget)
+          .map(BuildRule::getBuildTarget)
           .map(BuildTargetSourcePath::new);
     }
 

@@ -26,7 +26,6 @@ import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -267,7 +266,7 @@ public class AndroidPackageableCollectorTest {
     // Note that a topological sort for a DAG is not guaranteed to be unique, but we order nodes
     // within the same depth of the search.
     ImmutableList<BuildTarget> result = ImmutableList.of(a, d, b, c).stream()
-        .map(HasBuildTarget::getBuildTarget)
+        .map(BuildRule::getBuildTarget)
         .collect(MoreCollectors.toImmutableList());
 
     assertEquals(

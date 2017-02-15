@@ -19,7 +19,7 @@ package com.facebook.buck.python;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableProperties;
@@ -84,7 +84,7 @@ public class PythonLibrary extends NoopBuildRule implements PythonPackagable, Ha
   @Override
   public Stream<SourcePath> getRuntimeDeps() {
     return getDeclaredDeps().stream()
-        .map(HasBuildTarget::getBuildTarget)
+        .map(BuildRule::getBuildTarget)
         .map(BuildTargetSourcePath::new);
   }
 

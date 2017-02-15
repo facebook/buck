@@ -30,7 +30,6 @@ import com.facebook.buck.event.EventKey;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.collect.ImmutableSet;
@@ -257,7 +256,7 @@ public class UnskippedRulesTrackerTest {
     @Override
     public Stream<SourcePath> getRuntimeDeps() {
       return runtimeDeps.stream()
-          .map(HasBuildTarget::getBuildTarget)
+          .map(BuildRule::getBuildTarget)
           .map(BuildTargetSourcePath::new);
     }
   }

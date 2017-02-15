@@ -539,7 +539,7 @@ public class PrebuiltCxxLibraryDescription implements
 
     SourcePath sharedLibrary =
         requireSharedLibrary(
-            baseTarget.getBuildTarget(),
+            baseTarget,
             resolver,
             pathResolver,
             baseParams.getCellRoots(),

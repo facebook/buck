@@ -91,7 +91,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -3577,7 +3576,7 @@ public class ProjectGeneratorTest {
         targetGraph,
         cache,
         nodes.stream()
-            .map(HasBuildTarget::getBuildTarget)
+            .map(TargetNode::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()),
         projectCell,
         OUTPUT_DIRECTORY,
@@ -3685,7 +3684,7 @@ public class ProjectGeneratorTest {
         targetGraph,
         cache,
         nodes.stream()
-            .map(HasBuildTarget::getBuildTarget)
+            .map(TargetNode::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()),
         projectCell,
         OUTPUT_DIRECTORY,
@@ -3768,7 +3767,7 @@ public class ProjectGeneratorTest {
         targetGraph,
         cache,
         nodes.stream()
-            .map(HasBuildTarget::getBuildTarget)
+            .map(TargetNode::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()),
         projectCell,
         OUTPUT_DIRECTORY,
@@ -4443,7 +4442,7 @@ public class ProjectGeneratorTest {
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions,
       Function<? super TargetNode<?, ?>, SourcePathResolver> sourcePathResolverForNode) {
     ImmutableSet<BuildTarget> initialBuildTargets = nodes.stream()
-        .map(HasBuildTarget::getBuildTarget)
+        .map(TargetNode::getBuildTarget)
         .collect(MoreCollectors.toImmutableSet());
 
     final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes));

@@ -21,7 +21,6 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -287,7 +286,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     // Since thrift generated C/C++ code uses lots of templates, just use exported deps throughout.
     langArgs.exportedDeps =
         FluentIterable.from(allDeps)
-            .transform(HasBuildTarget::getBuildTarget)
+            .transform(BuildRule::getBuildTarget)
             .toSortedSet(Ordering.natural());
 
     return cxxLibraryDescription.createBuildRule(targetGraph, langParams, resolver, langArgs);

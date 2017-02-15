@@ -5,6 +5,7 @@
       "//src/com/facebook/buck/testrunner:junit",
       "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util:util",
+      "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:util",
       "//third-party/java/ddmlib:ddmlib",

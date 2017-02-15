@@ -17,12 +17,12 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
@@ -193,7 +193,7 @@ public class PythonTest
         .concat(
             binary.getExecutableCommand().getDeps(ruleFinder).stream(),
             getDeclaredDeps().stream())
-        .map(HasBuildTarget::getBuildTarget)
+        .map(BuildRule::getBuildTarget)
         .map(BuildTargetSourcePath::new);
   }
 

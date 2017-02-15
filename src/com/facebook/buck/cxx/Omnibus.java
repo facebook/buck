@@ -23,7 +23,6 @@ import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -165,7 +164,7 @@ public class Omnibus {
         ImmutableMap<BuildTarget, NativeLinkable> deps =
             Maps.uniqueIndex(
                 getDeps(nativeLinkable, cxxPlatform),
-                HasBuildTarget::getBuildTarget);
+                NativeLinkable::getBuildTarget);
         nativeLinkables.putAll(deps);
         if (nativeLinkable.getPreferredLinkage(cxxPlatform) == NativeLinkable.Linkage.SHARED) {
           excluded.add(target);
@@ -182,7 +181,7 @@ public class Omnibus {
         ImmutableMap<BuildTarget, NativeLinkable> deps =
             Maps.uniqueIndex(
                 getDeps(nativeLinkable, cxxPlatform),
-                HasBuildTarget::getBuildTarget);
+                NativeLinkable::getBuildTarget);
         nativeLinkables.putAll(deps);
         excluded.add(target);
         return deps.keySet();
@@ -201,7 +200,7 @@ public class Omnibus {
         for (BuildTarget dep :
             Iterables.transform(
                 getDeps(target, roots, nativeLinkables, cxxPlatform),
-                HasBuildTarget::getBuildTarget)) {
+                NativeLinkable::getBuildTarget)) {
           if (excluded.contains(dep)) {
             deps.add(dep);
           } else {

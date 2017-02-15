@@ -18,7 +18,6 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -458,7 +457,7 @@ public class AppleTest
         .concat(
             Stream
                 .concat(Stream.of(testBundle), OptionalCompat.asSet(testHostApp).stream())
-                .map(HasBuildTarget::getBuildTarget)
+                .map(BuildRule::getBuildTarget)
                 .map(BuildTargetSourcePath::new),
             OptionalCompat.asSet(xctool).stream());
   }

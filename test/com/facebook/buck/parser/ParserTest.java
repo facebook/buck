@@ -45,7 +45,6 @@ import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.ActionGraphCache;
@@ -2684,7 +2683,7 @@ public class ParserTest {
                 /* ignoreBuckAutodepsFiles */ false)
                 .getTargetGraph().getNodes())
         .filter(filter)
-        .transform(HasBuildTarget::getBuildTarget)
+        .transform(TargetNode::getBuildTarget)
         .toSet();
   }
 

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.query;
 
-import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.ParamInfo;
 import com.facebook.buck.rules.PathSourcePath;
@@ -54,8 +54,8 @@ public class QueryTargetAccessor {
               builder.add(QueryFileTarget.of((Path) value));
             } else if (value instanceof SourcePath) {
               builder.add(extractSourcePath((SourcePath) value));
-            } else if (value instanceof HasBuildTarget) {
-              builder.add(extractBuildTargetContainer((HasBuildTarget) value));
+            } else if (value instanceof BuildTarget) {
+              builder.add(extractBuildTargetContainer((BuildTarget) value));
             }
           },
           node.getConstructorArg()
@@ -103,7 +103,7 @@ public class QueryTargetAccessor {
     throw new HumanReadableException("Unsupported source path type: %s", sourcePath.getClass());
   }
 
-  public static QueryTarget extractBuildTargetContainer(HasBuildTarget buildTargetContainer) {
-    return QueryBuildTarget.of(buildTargetContainer.getBuildTarget());
+  public static QueryTarget extractBuildTargetContainer(BuildTarget buildTargetContainer) {
+    return QueryBuildTarget.of(buildTargetContainer);
   }
 }

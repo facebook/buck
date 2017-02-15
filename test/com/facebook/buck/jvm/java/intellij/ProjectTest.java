@@ -41,7 +41,6 @@ import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.jvm.java.intellij.SerializableModule.SourceFolder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -861,7 +860,7 @@ public class ProjectTest {
         new InMemoryBuildFileTree(
             Iterables.transform(
                 ruleResolver.getBuildRules(),
-                HasBuildTarget::getBuildTarget)),
+                BuildRule::getBuildTarget)),
         projectFilesystem,
         /* pathToDefaultAndroidManifest */ Optional.empty(),
         intellijConfig,

@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.step.Step;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -35,9 +34,8 @@ import javax.annotation.Nullable;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE,
     getterVisibility = JsonAutoDetect.Visibility.NONE,
     setterVisibility = JsonAutoDetect.Visibility.NONE)
-public interface BuildRule extends Comparable<BuildRule>, HasBuildTarget {
+public interface BuildRule extends Comparable<BuildRule> {
 
-  @Override
   BuildTarget getBuildTarget();
 
   @JsonProperty("name")

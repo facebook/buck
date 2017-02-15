@@ -51,8 +51,10 @@ import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.ListeningProcessExecutor;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.versions.VersionException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -566,7 +568,9 @@ public class TestCommand extends BuildCommand {
 
           // Build all of the test rules.
           int exitCode = build.executeAndPrintFailuresToEventBus(
-              testRules,
+              RichStream.from(testRules)
+                  .map(TestRule::getBuildTarget)
+                  .collect(MoreCollectors.toImmutableList()),
               isKeepGoing(),
               params.getBuckEventBus(),
               params.getConsole(),

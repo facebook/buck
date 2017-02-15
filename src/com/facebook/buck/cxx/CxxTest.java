@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
@@ -223,7 +222,7 @@ public abstract class CxxTest
   @Override
   public Stream<SourcePath> getRuntimeDeps() {
     return additionalDeps.get().stream()
-        .map(HasBuildTarget::getBuildTarget)
+        .map(BuildRule::getBuildTarget)
         .map(BuildTargetSourcePath::new);
   }
 

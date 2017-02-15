@@ -24,7 +24,6 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -658,7 +657,7 @@ public class JavaTest
             // this rules first-order deps to runtime deps, so that these potential tools are
             // available when this test runs.
             compiledTestsLibrary.getDeps().stream())
-        .map(HasBuildTarget::getBuildTarget)
+        .map(BuildRule::getBuildTarget)
         .map(BuildTargetSourcePath::new);
   }
 

@@ -28,7 +28,6 @@ import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -243,7 +242,7 @@ public class HaskellLibraryDescriptionTest {
     assertThat(
         FluentIterable.from(staticInput.getArgs())
             .transformAndConcat(arg -> arg.getDeps(new SourcePathRuleFinder(resolver)))
-            .transform(HasBuildTarget::getBuildTarget)
+            .transform(BuildRule::getBuildTarget)
             .toList(),
         Matchers.hasItem(
             HaskellDescriptionUtils.getCompileBuildTarget(

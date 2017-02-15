@@ -21,7 +21,6 @@ import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
@@ -306,7 +305,7 @@ public class GoTestDescription implements
               .build(),
           platform,
           FluentIterable.from(params.getDeclaredDeps().get())
-              .transform(HasBuildTarget::getBuildTarget));
+              .transform(BuildRule::getBuildTarget));
     } else {
       testLibrary = GoDescriptors.createGoCompileRule(
           params,
@@ -318,7 +317,7 @@ public class GoTestDescription implements
           args.assemblerFlags,
           platform,
           FluentIterable.from(params.getDeclaredDeps().get())
-              .transform(HasBuildTarget::getBuildTarget));
+              .transform(BuildRule::getBuildTarget));
     }
 
     return testLibrary;

@@ -2,7 +2,7 @@
   "classhash" : {
     "deps" : [ ],
     "exported_deps" : [
-      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:build_rule",
       "//third-party/java/guava:guava"
     ]
   },

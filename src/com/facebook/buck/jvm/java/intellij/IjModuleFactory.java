@@ -31,7 +31,6 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -155,7 +154,7 @@ public class IjModuleFactory {
 
 
     ImmutableSet<BuildTarget> moduleBuildTargets = targetNodes.stream()
-        .map(HasBuildTarget::getBuildTarget)
+        .map(TargetNode::getBuildTarget)
         .collect(MoreCollectors.toImmutableSet());
 
     ModuleBuildContext context = new ModuleBuildContext(moduleBuildTargets);

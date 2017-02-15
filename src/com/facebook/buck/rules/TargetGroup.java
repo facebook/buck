@@ -16,7 +16,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.HasBuildTarget;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.Iterator;
@@ -24,7 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public class TargetGroup implements Iterable<BuildTarget>, HasBuildTarget {
+public class TargetGroup implements Iterable<BuildTarget> {
 
   private final ImmutableSet<BuildTarget> targets;
   private final boolean restrictOutboundVisibility;
@@ -53,7 +52,6 @@ public class TargetGroup implements Iterable<BuildTarget>, HasBuildTarget {
     return targets.iterator();
   }
 
-  @Override
   public BuildTarget getBuildTarget() {
     return buildTarget;
   }

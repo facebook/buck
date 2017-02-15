@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 
 import javax.annotation.Nullable;
@@ -24,7 +24,10 @@ import javax.annotation.Nullable;
 /**
  * Indicates that this class may have android resources that should be packaged into an APK.
  */
-public interface HasAndroidResourceDeps extends HasBuildTarget {
+public interface HasAndroidResourceDeps {
+
+  BuildTarget getBuildTarget();
+
   /**
    * @return the package name in which to generate the R.java representing these resources.
    */

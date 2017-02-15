@@ -28,7 +28,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.parser.BuildFileSpec;
@@ -388,7 +387,7 @@ public class TargetsCommand extends AbstractCommand {
           descriptionClasses);
 
       Iterable<BuildTarget> buildTargets = FluentIterable.from(matchingNodes.values()).transform(
-          HasBuildTarget::getBuildTarget);
+          TargetNode::getBuildTarget);
 
       return TargetGraphAndBuildTargets.builder()
           .setTargetGraph(completeTargetGraphAndBuildTargets.getTargetGraph())
@@ -591,7 +590,7 @@ public class TargetsCommand extends AbstractCommand {
     if (referencedFiles.isPresent()) {
       BuildFileTree buildFileTree = new InMemoryBuildFileTree(
           graph.getNodes().stream()
-              .map(HasBuildTarget::getBuildTarget)
+              .map(TargetNode::getBuildTarget)
               .collect(MoreCollectors.toImmutableSet()));
       directOwners = FluentIterable
           .from(graph.getNodes())

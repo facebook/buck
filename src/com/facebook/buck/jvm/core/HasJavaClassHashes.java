@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.core;
 
-import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.rules.BuildRule;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
 
@@ -25,7 +25,7 @@ import com.google.common.hash.HashCode;
  * and input-based rule keys.  It will be a lot of work to eliminate (including getting rid of
  * SmartDexingStep), but we should do it at some point.
  */
-public interface HasJavaClassHashes extends HasBuildTarget {
+public interface HasJavaClassHashes extends BuildRule {
 
   /**
    * @return a (possibly empty) map of names of {@code .class} files in the output of this rule

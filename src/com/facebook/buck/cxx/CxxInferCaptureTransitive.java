@@ -17,9 +17,9 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
@@ -56,7 +56,7 @@ public class CxxInferCaptureTransitive extends AbstractBuildRule
   @Override
   public Stream<SourcePath> getRuntimeDeps() {
     return captureRules.stream()
-        .map(HasBuildTarget::getBuildTarget)
+        .map(BuildRule::getBuildTarget)
         .map(BuildTargetSourcePath::new);
   }
 

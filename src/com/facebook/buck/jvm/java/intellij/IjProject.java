@@ -30,7 +30,6 @@ import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
@@ -204,7 +203,7 @@ public class IjProject {
           private Path getRelativePathAndRecordRule(SourcePath sourcePath) {
             requiredBuildTargets.addAll(
                 OptionalCompat.asSet(ruleFinder.getRule(sourcePath)
-                    .map(HasBuildTarget::getBuildTarget)));
+                    .map(BuildRule::getBuildTarget)));
             return sourcePathResolver.getRelativePath(sourcePath);
           }
         };

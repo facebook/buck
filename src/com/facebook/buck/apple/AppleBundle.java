@@ -33,7 +33,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -954,7 +953,7 @@ public class AppleBundle
       linkDeps.addAll(((ProvidesLinkedBinaryDeps) binary.get()).getStaticLibraryDeps());
       if (linkDeps.size() > 0) {
         return Stream.concat(Stream.of(binary.get()), linkDeps.stream())
-            .map(HasBuildTarget::getBuildTarget)
+            .map(BuildRule::getBuildTarget)
             .map(BuildTargetSourcePath::new);
       }
     }

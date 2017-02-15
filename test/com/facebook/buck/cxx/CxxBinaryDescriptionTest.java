@@ -26,7 +26,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -205,7 +204,7 @@ public class CxxBinaryDescriptionTest {
             cxxSourceRuleFactory.createCompileBuildTarget(genSourceName),
             archiveTarget),
         rule.getDeps().stream()
-            .map(HasBuildTarget::getBuildTarget)
+            .map(BuildRule::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()));
 
     // Verify that the compile rule for our user-provided source has correct deps setup
@@ -215,7 +214,7 @@ public class CxxBinaryDescriptionTest {
     assertNotNull(compileRule1);
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(compileRule1)
-            .map(HasBuildTarget::getBuildTarget)
+            .map(BuildRule::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()),
         Matchers.containsInAnyOrder(
             genHeaderTarget,
@@ -232,7 +231,7 @@ public class CxxBinaryDescriptionTest {
     assertNotNull(compileRule2);
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(compileRule2)
-            .map(HasBuildTarget::getBuildTarget)
+            .map(BuildRule::getBuildTarget)
             .collect(MoreCollectors.toImmutableList()),
         Matchers.containsInAnyOrder(
             genHeaderTarget,

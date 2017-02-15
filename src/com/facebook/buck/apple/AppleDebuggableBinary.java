@@ -19,7 +19,6 @@ import com.facebook.buck.cxx.BuildRuleWithBinary;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -158,7 +157,7 @@ public class AppleDebuggableBinary
   @Override
   public Stream<SourcePath> getRuntimeDeps() {
     return getDeclaredDeps().stream()
-        .map(HasBuildTarget::getBuildTarget)
+        .map(BuildRule::getBuildTarget)
         .map(BuildTargetSourcePath::new);
   }
 }

@@ -26,7 +26,6 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
@@ -128,7 +127,7 @@ public class AndroidInstrumentationApkDescription
         primaryDexPath,
         DexSplitMode.NO_SPLIT,
         rulesToExcludeFromDex.stream()
-            .map(HasBuildTarget::getBuildTarget)
+            .map(BuildRule::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()),
         resourcesToExclude,
         /* skipCrunchPngs */ false,

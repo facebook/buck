@@ -17,11 +17,11 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildInfo;
 import com.facebook.buck.rules.BuildOutputInitializer;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CommandTool;
@@ -119,7 +119,7 @@ public class DefaultWorkerTool extends NoopBuildRule implements
   @Override
   public Stream<SourcePath> getRuntimeDeps() {
     return getDeps().stream()
-        .map(HasBuildTarget::getBuildTarget)
+        .map(BuildRule::getBuildTarget)
         .map(BuildTargetSourcePath::new);
   }
 

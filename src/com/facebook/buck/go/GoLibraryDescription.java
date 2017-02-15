@@ -19,7 +19,6 @@ package com.facebook.buck.go;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
@@ -131,7 +130,7 @@ public class GoLibraryDescription implements
           args.assemblerFlags,
           platform.get(),
           FluentIterable.from(params.getDeclaredDeps().get())
-              .transform(HasBuildTarget::getBuildTarget)
+              .transform(BuildRule::getBuildTarget)
               .append(args.exportedDeps));
     }
 

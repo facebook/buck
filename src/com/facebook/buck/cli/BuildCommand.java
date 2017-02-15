@@ -39,7 +39,6 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
@@ -737,7 +736,7 @@ public class BuildCommand extends AbstractCommand {
           Preconditions.checkNotNull(actionGraphAndResolver.getActionGraph().getNodes());
       ImmutableSet<BuildTarget> actionGraphTargets =
           ImmutableSet.copyOf(
-              Iterables.transform(actionGraphRules, HasBuildTarget::getBuildTarget));
+              Iterables.transform(actionGraphRules, BuildRule::getBuildTarget));
       if (!actionGraphTargets.contains(explicitTarget)) {
         throw new ActionGraphCreationException(
             "Targets specified via `--just-build` must be a subset of action graph.");
@@ -776,7 +775,7 @@ public class BuildCommand extends AbstractCommand {
       ArtifactCache artifactCache,
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
       BuckConfig rootCellBuckConfig,
-      Iterable<? extends HasBuildTarget> targetsToBuild) throws IOException, InterruptedException {
+      Iterable<BuildTarget> targetsToBuild) throws IOException, InterruptedException {
     CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
         rootCellBuckConfig.getView(CachingBuildEngineBuckConfig.class);
     try (CommandThreadManager artifactFetchService =

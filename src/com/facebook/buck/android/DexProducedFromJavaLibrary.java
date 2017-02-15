@@ -20,7 +20,6 @@ import com.facebook.buck.android.DexProducedFromJavaLibrary.BuildOutput;
 import com.facebook.buck.dalvik.EstimateDexWeightStep;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -77,7 +76,7 @@ import javax.annotation.Nullable;
  * cannot write a meaningful "dummy .dex" if there are no class files to pass to {@code dx}.
  */
 public class DexProducedFromJavaLibrary extends AbstractBuildRule
-    implements SupportsInputBasedRuleKey, HasBuildTarget, InitializableFromDisk<BuildOutput> {
+    implements SupportsInputBasedRuleKey, InitializableFromDisk<BuildOutput> {
 
   private static final ObjectMapper MAPPER = ObjectMappers.newDefaultInstance();
 

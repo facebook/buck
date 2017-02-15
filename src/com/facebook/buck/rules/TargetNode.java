@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableMap;
@@ -37,7 +36,7 @@ import java.util.stream.Stream;
  * targets and paths referenced from those inputs.
  */
 public class TargetNode<T, U extends Description<T>>
-    implements Comparable<TargetNode<?, ?>>, HasBuildTarget {
+    implements Comparable<TargetNode<?, ?>> {
 
   private final TargetNodeFactory factory;
 
@@ -102,7 +101,6 @@ public class TargetNode<T, U extends Description<T>>
     return filesystem;
   }
 
-  @Override
   public BuildTarget getBuildTarget() {
     return buildTarget;
   }

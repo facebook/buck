@@ -18,9 +18,9 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -192,7 +192,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
         .of(
             Stream
                 .concat(Stream.of(linkTree), getDeclaredDeps().stream())
-                .map(HasBuildTarget::getBuildTarget)
+                .map(BuildRule::getBuildTarget)
                 .<SourcePath>map(BuildTargetSourcePath::new),
             components.getModules().values().stream(),
             components.getResources().values().stream(),

@@ -28,7 +28,6 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
@@ -222,7 +221,7 @@ public class Build implements Closeable {
    */
   @SuppressWarnings("PMD.EmptyCatchBlock")
   public BuildExecutionResult executeBuild(
-      Iterable<? extends HasBuildTarget> targetish,
+      Iterable<? extends BuildTarget> targetish,
       boolean isKeepGoing)
       throws IOException, ExecutionException, InterruptedException {
     BuildId buildId = executionContext.getBuildId();
@@ -247,7 +246,6 @@ public class Build implements Closeable {
     // there could be disconnected subgraphs in the DependencyGraph that we do not want to build.
     ImmutableSet<BuildTarget> targetsToBuild =
         StreamSupport.stream(targetish.spliterator(), false)
-            .map(HasBuildTarget::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet());
 
     // It is important to use this logic to determine the set of rules to build rather than
@@ -255,13 +253,13 @@ public class Build implements Closeable {
     // there could be disconnected subgraphs in the DependencyGraph that we do not want to build.
     ImmutableList<BuildRule> rulesToBuild = ImmutableList.copyOf(
         targetsToBuild.stream()
-            .map(hasBuildTarget -> {
+            .map(buildTarget -> {
               try {
-                return getRuleResolver().requireRule(hasBuildTarget.getBuildTarget());
+                return getRuleResolver().requireRule(buildTarget);
               } catch (NoSuchBuildTargetException e) {
                 throw new HumanReadableException(
                     "No build rule found for target %s",
-                    hasBuildTarget.getBuildTarget());
+                    buildTarget);
               }
             })
             .collect(MoreCollectors.toImmutableSet()));
@@ -332,7 +330,7 @@ public class Build implements Closeable {
   }
 
   public int executeAndPrintFailuresToEventBus(
-      Iterable<? extends HasBuildTarget> targetsish,
+      Iterable<BuildTarget> targetsish,
       boolean isKeepGoing,
       BuckEventBus eventBus,
       Console console,

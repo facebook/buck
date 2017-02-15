@@ -35,7 +35,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.python.CxxPythonExtension;
@@ -373,7 +372,7 @@ public class LuaBinaryDescription implements
         } else if (rule instanceof NativeLinkable) {
           NativeLinkable linkable = (NativeLinkable) rule;
           nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
-          omnibusRoots.addPotentialRoot(rule);
+          omnibusRoots.addPotentialRoot(linkable);
         }
         return deps;
       }
@@ -472,7 +471,7 @@ public class LuaBinaryDescription implements
         nativeLinkableRoots.putAll(
             Maps.uniqueIndex(
                 extension.getNativeLinkTargetDeps(cxxPlatform),
-                HasBuildTarget::getBuildTarget));
+                NativeLinkable::getBuildTarget));
       }
 
       // Add in native executable deps.
@@ -481,7 +480,7 @@ public class LuaBinaryDescription implements
         nativeLinkableRoots.putAll(
             Maps.uniqueIndex(
                 executableStarter.getNativeStarterDeps(),
-                HasBuildTarget::getBuildTarget));
+                NativeLinkable::getBuildTarget));
       }
 
       // For regular linking, add all extensions via the package components interface and their
@@ -501,7 +500,7 @@ public class LuaBinaryDescription implements
             Maps.uniqueIndex(
                 entry.getValue().getNativeLinkTarget(pythonPlatform)
                     .getNativeLinkTargetDeps(cxxPlatform),
-                HasBuildTarget::getBuildTarget));
+                NativeLinkable::getBuildTarget));
       }
 
       // Add shared libraries from all native linkables.
