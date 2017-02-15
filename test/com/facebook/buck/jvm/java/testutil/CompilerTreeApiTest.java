@@ -173,6 +173,9 @@ public abstract class CompilerTreeApiTest {
       javacTask.setTaskListener(taskListenerFactory.newTaskListener(javacTask));
     }
 
+    // Suppress processor auto-discovery; it was picking up the immutables processor unnecessarily
+    javacTask.setProcessors(Collections.emptyList());
+
     final Iterable<? extends CompilationUnitTree> compilationUnits = javacTask.parse();
 
     // Make sure we've got elements for things. Technically this is going a little further than

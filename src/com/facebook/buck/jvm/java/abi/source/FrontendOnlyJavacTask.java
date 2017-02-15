@@ -256,7 +256,10 @@ class FrontendOnlyJavacTask extends JavacTask {
 
   @Override
   public void setProcessors(Iterable<? extends Processor> processors) {
-    throw new UnsupportedOperationException("NYI");
+    if (processors.iterator().hasNext()) {
+      // Only throw if there's actually something there; an empty list we can actually handle
+      throw new UnsupportedOperationException("NYI");
+    }
   }
 
   @Override
