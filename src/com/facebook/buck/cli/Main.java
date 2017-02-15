@@ -1198,8 +1198,9 @@ public final class Main {
           if (command.subcommand instanceof AbstractCommand) {
             AbstractCommand subcommand = (AbstractCommand) command.subcommand;
             VersionControlBuckConfig vcBuckConfig = new VersionControlBuckConfig(buckConfig);
-            if (subcommand.isSourceControlStatsGatheringEnabled() ||
-                vcBuckConfig.shouldGenerateStatistics()) {
+            if ((subcommand.isSourceControlStatsGatheringEnabled() ||
+                vcBuckConfig.shouldGenerateStatistics() &&
+                !commandMode.equals(CommandMode.TEST))) {
               vcStatsGenerator = new VersionControlStatsGenerator(
                   diskIoExecutorService,
                   new DefaultVersionControlCmdLineInterfaceFactory(
