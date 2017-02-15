@@ -33,11 +33,10 @@ import javax.tools.SimpleJavaFileObject;
  * threads, a semaphore is used to ensure exclusive access to the output stream.
  */
 public class JavaInMemoryFileObject extends SimpleJavaFileObject {
-  private static final int BUFFER_SIZE = 4096;
 
   private final CustomZipOutputStream jarOutputStream;
   private final Semaphore jarFileSemaphore;
-  private final ByteArrayOutputStream bos = new ByteArrayOutputStream(BUFFER_SIZE);
+  private final ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
   public JavaInMemoryFileObject(String path, Kind kind,
       CustomZipOutputStream jarOutputStream, Semaphore jarFileSemaphore) {
