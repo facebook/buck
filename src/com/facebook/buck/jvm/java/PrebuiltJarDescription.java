@@ -132,7 +132,8 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
       public ImmutableList<Step> getBuildSteps(
           BuildContext context,
           BuildableContext buildableContext) {
-        buildableContext.recordArtifact(getPathToOutput());
+        buildableContext.recordArtifact(
+            context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
 
         ImmutableList.Builder<Step> steps = ImmutableList.builder();
         steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), output.getParent()));
