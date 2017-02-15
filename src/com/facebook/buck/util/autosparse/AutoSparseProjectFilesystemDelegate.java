@@ -20,6 +20,7 @@ import com.facebook.buck.event.EventBus;
 import com.facebook.buck.io.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.io.ProjectFilesystemDelegate;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 
 import java.io.IOException;
@@ -57,7 +58,14 @@ public final class AutoSparseProjectFilesystemDelegate implements ProjectFilesys
     AutoSparseStateEvents.SparseRefreshStarted started =
         new AutoSparseStateEvents.SparseRefreshStarted();
     eventBus.post(started);
-    autoSparseState.materialiseSparseProfile();
+    try {
+      autoSparseState.materialiseSparseProfile();
+    } catch (IOException | InterruptedException e) {
+      throw new HumanReadableException(
+          e,
+          "Sparse profile could not be materialised. " +
+              "Try again or disable the project.enable_autosparse option.");
+    }
     eventBus.post(new AutoSparseStateEvents.SparseRefreshFinished(started));
   }
 

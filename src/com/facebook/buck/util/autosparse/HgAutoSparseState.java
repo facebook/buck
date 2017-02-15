@@ -90,7 +90,7 @@ public class HgAutoSparseState implements AutoSparseState {
   }
 
   @Override
-  public void materialiseSparseProfile() {
+  public void materialiseSparseProfile() throws IOException, InterruptedException {
     if (!hgSparseSeen.isEmpty()) {
       LOG.debug("Exporting %d entries to the sparse profile", hgSparseSeen.size());
       try {
@@ -105,12 +105,13 @@ public class HgAutoSparseState implements AutoSparseState {
         }
         try {
           hgCmdLine.exportHgSparseRules(exportFile);
-        } catch (VersionControlCommandFailedException | InterruptedException e) {
+        } catch (VersionControlCommandFailedException e) {
           LOG.debug(e, "Sparse profile refresh command failed");
+          throw new IOException("Sparse profile refresh command failed", e);
         }
       } catch (IOException e) {
         LOG.debug(e, "Failed to write out sparse profile export");
-        return;
+        throw e;
       }
     }
   }
