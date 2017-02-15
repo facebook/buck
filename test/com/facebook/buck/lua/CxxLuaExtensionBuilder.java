@@ -29,6 +29,7 @@ public class CxxLuaExtensionBuilder
     AbstractCxxSourceBuilder<
         CxxLuaExtensionDescription.Arg,
         CxxLuaExtensionDescription,
+        CxxLuaExtension,
         CxxLuaExtensionBuilder> {
 
   public CxxLuaExtensionBuilder(

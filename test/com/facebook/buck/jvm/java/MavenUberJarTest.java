@@ -65,9 +65,9 @@ public class MavenUberJarTest {
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     PythonLibrary pythonLibrary =
-        (PythonLibrary) pythonLibraryBuilder.build(resolver, filesystem, targetGraph);
+        pythonLibraryBuilder.build(resolver, filesystem, targetGraph);
     JavaLibrary javaLibrary =
-        (JavaLibrary) javaLibraryBuilder.build(resolver, filesystem, targetGraph);
+        javaLibraryBuilder.build(resolver, filesystem, targetGraph);
 
     MavenUberJar buildRule =
         MavenUberJar.create(

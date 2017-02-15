@@ -42,36 +42,39 @@ import javax.annotation.Nullable;
  * and {@link ActionGraph} ({@link TargetNode} and {@link BuildRule} respectively) mirroring the
  * behavior seen when running the actual parser as closely as possible.
  */
-public abstract class AbstractNodeBuilder<A, B extends Description<A>> {
+public abstract class AbstractNodeBuilder<
+    TArg,
+    TDescription extends Description<TArg>,
+    TBuildRule extends BuildRule> {
   private static final DefaultTypeCoercerFactory TYPE_COERCER_FACTORY =
       new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance());
   private static final VisibilityPatternParser VISIBILITY_PATTERN_PARSER =
       new VisibilityPatternParser();
 
-  protected final B description;
+  protected final TDescription description;
   protected final ProjectFilesystem filesystem;
   protected final BuildTarget target;
-  protected final A arg;
+  protected final TArg arg;
   private final CellPathResolver cellRoots;
   @Nullable
   private final HashCode rawHashCode;
   private Optional<ImmutableMap<BuildTarget, Version>> selectedVersions = Optional.empty();
 
   protected AbstractNodeBuilder(
-      B description,
+      TDescription description,
       BuildTarget target) {
     this(description, target, new FakeProjectFilesystem(), null);
   }
 
   protected AbstractNodeBuilder(
-      B description,
+      TDescription description,
       BuildTarget target,
       ProjectFilesystem projectFilesystem) {
     this(description, target, projectFilesystem, null);
   }
 
   protected AbstractNodeBuilder(
-      B description,
+      TDescription description,
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
       HashCode hashCode) {
@@ -86,21 +89,21 @@ public abstract class AbstractNodeBuilder<A, B extends Description<A>> {
     populateWithDefaultValues(this.arg);
   }
 
-  public final BuildRule build(BuildRuleResolver resolver) throws NoSuchBuildTargetException {
+  public final TBuildRule build(BuildRuleResolver resolver) throws NoSuchBuildTargetException {
     return build(resolver, filesystem, TargetGraph.EMPTY);
   }
 
-  public final BuildRule build(BuildRuleResolver resolver, TargetGraph targetGraph)
+  public final TBuildRule build(BuildRuleResolver resolver, TargetGraph targetGraph)
       throws NoSuchBuildTargetException {
     return build(resolver, filesystem, targetGraph);
   }
 
-  public final BuildRule build(BuildRuleResolver resolver, ProjectFilesystem filesystem)
+  public final TBuildRule build(BuildRuleResolver resolver, ProjectFilesystem filesystem)
       throws NoSuchBuildTargetException {
     return build(resolver, filesystem, TargetGraph.EMPTY);
   }
 
-  public final BuildRule build(
+  public final TBuildRule build(
       BuildRuleResolver resolver,
       ProjectFilesystem filesystem,
       TargetGraph targetGraph) throws NoSuchBuildTargetException {
@@ -108,18 +111,20 @@ public abstract class AbstractNodeBuilder<A, B extends Description<A>> {
     // The BuildRule determines its deps by extracting them from the rule parameters.
     BuildRuleParams params = createBuildRuleParams(resolver, filesystem);
 
-    BuildRule rule = description.createBuildRule(targetGraph, params, resolver, arg);
+    @SuppressWarnings("unchecked")
+    TBuildRule rule =
+        (TBuildRule) description.createBuildRule(targetGraph, params, resolver, arg);
     resolver.addToIndex(rule);
     return rule;
   }
 
-  public TargetNode<A, B> build() {
+  public TargetNode<TArg, TDescription> build() {
     try {
       HashCode hash = rawHashCode == null ?
           Hashing.sha1().hashString(target.getFullyQualifiedName(), UTF_8) :
           rawHashCode;
       TargetNodeFactory factory = new TargetNodeFactory(TYPE_COERCER_FACTORY);
-      TargetNode<A, B> node =
+      TargetNode<TArg, TDescription> node =
           factory.create(
               // This hash will do in a pinch.
               hash,
@@ -203,7 +208,7 @@ public abstract class AbstractNodeBuilder<A, B extends Description<A>> {
   /**
    * Populate optional fields of this constructor arg with their default values.
    */
-  private void populateWithDefaultValues(A arg) {
+  private void populateWithDefaultValues(TArg arg) {
     try {
       new ConstructorArgMarshaller(TYPE_COERCER_FACTORY)
           .populateDefaults(
@@ -219,7 +224,8 @@ public abstract class AbstractNodeBuilder<A, B extends Description<A>> {
 
   @SuppressWarnings("unchecked")
   public Iterable<BuildTarget> findImplicitDeps() {
-    ImplicitDepsInferringDescription<A> desc = (ImplicitDepsInferringDescription<A>) description;
+    ImplicitDepsInferringDescription<TArg> desc =
+        (ImplicitDepsInferringDescription<TArg>) description;
     return desc.findDepsForTargetFromConstructorArgs(target, cellRoots, arg);
   }
 
@@ -227,7 +233,7 @@ public abstract class AbstractNodeBuilder<A, B extends Description<A>> {
     return target;
   }
 
-  public AbstractNodeBuilder<A, B> setSelectedVersions(
+  public AbstractNodeBuilder<TArg, TDescription, TBuildRule> setSelectedVersions(
       ImmutableMap<BuildTarget, Version> selectedVersions) {
     this.selectedVersions = Optional.of(selectedVersions);
     return this;

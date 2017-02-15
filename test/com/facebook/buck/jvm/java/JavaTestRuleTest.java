@@ -122,7 +122,7 @@ public class JavaTestRuleTest {
                 ImmutableSortedSet.of(transitiveDep)));
 
     JavaTest rule =
-        (JavaTest) JavaTestBuilder.createBuilder(BuildTargetFactory.newInstance("//:rule"))
+        JavaTestBuilder.createBuilder(BuildTargetFactory.newInstance("//:rule"))
             .addSrc(Paths.get("ExampleTest.java"))
             .addDep(firstOrderDep.getBuildTarget())
             .build(resolver);
@@ -136,7 +136,7 @@ public class JavaTestRuleTest {
   }
 
   private JavaTest newRule(ImmutableList<String> vmArgs) throws NoSuchBuildTargetException {
-    return (JavaTest) JavaTestBuilder
+    return JavaTestBuilder
         .createBuilder(BuildTargetFactory.newInstance("//example:test"))
         .setVmArgs(vmArgs)
         .addSrc(Paths.get("ExampleTest.java"))

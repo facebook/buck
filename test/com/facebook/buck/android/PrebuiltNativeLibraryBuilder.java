@@ -26,9 +26,10 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
-public class PrebuiltNativeLibraryBuilder
-    extends
-    AbstractNodeBuilder<PrebuiltNativeLibraryDescription.Arg, PrebuiltNativeLibraryDescription> {
+public class PrebuiltNativeLibraryBuilder extends AbstractNodeBuilder<
+    PrebuiltNativeLibraryDescription.Arg,
+    PrebuiltNativeLibraryDescription,
+    PrebuiltNativeLibrary> {
 
   private PrebuiltNativeLibraryBuilder(BuildTarget target) {
     this(target, new FakeProjectFilesystem());

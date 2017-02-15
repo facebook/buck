@@ -26,6 +26,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -41,6 +42,7 @@ public class HalideLibraryBuilder
     AbstractCxxSourceBuilder<
         HalideLibraryDescription.Arg,
         HalideLibraryDescription,
+        BuildRule,
         HalideLibraryBuilder> {
   public HalideLibraryBuilder(
       BuildTarget target,

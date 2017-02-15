@@ -34,8 +34,10 @@ import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class VersionRootBuilder
-    extends AbstractNodeBuilder<VersionRootBuilder.Arg, VersionRootBuilder.VersionRootDescription> {
+public class VersionRootBuilder extends AbstractNodeBuilder<
+    VersionRootBuilder.Arg,
+    VersionRootBuilder.VersionRootDescription,
+    BuildRule> {
 
   public VersionRootBuilder(BuildTarget target) {
     super(new VersionRootDescription(), target);

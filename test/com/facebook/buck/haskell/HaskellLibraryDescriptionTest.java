@@ -64,7 +64,7 @@ public class HaskellLibraryDescriptionTest {
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(builder.build()),
             new DefaultTargetNodeToBuildRuleTransformer());
-    HaskellLibrary library = (HaskellLibrary) builder.build(resolver);
+    HaskellLibrary library = builder.build(resolver);
     library.getCompileInput(
         CxxPlatformUtils.DEFAULT_PLATFORM,
         Linker.LinkableDepType.STATIC);
@@ -131,7 +131,7 @@ public class HaskellLibraryDescriptionTest {
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(builder.build()),
             new DefaultTargetNodeToBuildRuleTransformer());
-    HaskellLibrary library = (HaskellLibrary) builder.build(resolver);
+    HaskellLibrary library = builder.build(resolver);
 
     // Lookup the link whole flags.
     Linker linker = CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(resolver);
@@ -178,7 +178,7 @@ public class HaskellLibraryDescriptionTest {
 
     // Test default value.
     HaskellLibrary defaultLib =
-        (HaskellLibrary) new HaskellLibraryBuilder(BuildTargetFactory.newInstance("//:default"))
+        new HaskellLibraryBuilder(BuildTargetFactory.newInstance("//:default"))
             .build(resolver);
     assertThat(
         defaultLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
@@ -186,7 +186,7 @@ public class HaskellLibraryDescriptionTest {
 
     // Test `ANY` value.
     HaskellLibrary anyLib =
-        (HaskellLibrary) new HaskellLibraryBuilder(BuildTargetFactory.newInstance("//:any"))
+        new HaskellLibraryBuilder(BuildTargetFactory.newInstance("//:any"))
             .setPreferredLinkage(NativeLinkable.Linkage.ANY)
             .build(resolver);
     assertThat(
@@ -195,7 +195,7 @@ public class HaskellLibraryDescriptionTest {
 
     // Test `STATIC` value.
     HaskellLibrary staticLib =
-        (HaskellLibrary) new HaskellLibraryBuilder(BuildTargetFactory.newInstance("//:static"))
+        new HaskellLibraryBuilder(BuildTargetFactory.newInstance("//:static"))
             .setPreferredLinkage(NativeLinkable.Linkage.STATIC)
             .build(resolver);
     assertThat(
@@ -204,7 +204,7 @@ public class HaskellLibraryDescriptionTest {
 
     // Test `SHARED` value.
     HaskellLibrary sharedLib =
-        (HaskellLibrary) new HaskellLibraryBuilder(BuildTargetFactory.newInstance("//:shared"))
+        new HaskellLibraryBuilder(BuildTargetFactory.newInstance("//:shared"))
             .setPreferredLinkage(NativeLinkable.Linkage.SHARED)
             .build(resolver);
     assertThat(
@@ -232,7 +232,7 @@ public class HaskellLibraryDescriptionTest {
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(builder.build()),
             new DefaultTargetNodeToBuildRuleTransformer());
-    HaskellLibrary library = (HaskellLibrary) builder.build(resolver);
+    HaskellLibrary library = builder.build(resolver);
 
     // Test static dep type.
     NativeLinkableInput staticInput =

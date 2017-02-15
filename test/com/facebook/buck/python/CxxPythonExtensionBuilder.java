@@ -31,6 +31,7 @@ public class CxxPythonExtensionBuilder
     AbstractCxxSourceBuilder<
         CxxPythonExtensionDescription.Arg,
         CxxPythonExtensionDescription,
+        CxxPythonExtension,
         CxxPythonExtensionBuilder> {
 
   public CxxPythonExtensionBuilder(

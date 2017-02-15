@@ -222,11 +222,11 @@ public class ArchiveTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
 
     // Create a couple of genrules to generate inputs for an archive rule.
-    Genrule genrule1 = (Genrule) GenruleBuilder
+    Genrule genrule1 = GenruleBuilder
         .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
         .setOut("foo/bar.o")
         .build(resolver);
-    Genrule genrule2 = (Genrule) GenruleBuilder
+    Genrule genrule2 = GenruleBuilder
         .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule2"))
         .setOut("foo/test.o")
         .build(resolver);

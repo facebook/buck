@@ -711,7 +711,7 @@ public class ProjectTest {
     BuildRule baseBuildRule = AndroidLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
         .build(ruleResolver2);
-    ProjectConfig inPackageProjectConfig = (ProjectConfig) ProjectConfigBuilder
+    ProjectConfig inPackageProjectConfig = ProjectConfigBuilder
         .createBuilder(
             BuildTargetFactory.newInstance("//java/com/example/base:project_config"))
         .setSrcRule(baseBuildRule.getBuildTarget())
@@ -748,7 +748,7 @@ public class ProjectTest {
     BuildRule baseBuildRule3 = AndroidLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
         .build(ruleResolver3);
-    ProjectConfig hasSrcFolderProjectConfig = (ProjectConfig) ProjectConfigBuilder
+    ProjectConfig hasSrcFolderProjectConfig = ProjectConfigBuilder
         .createBuilder(
             BuildTargetFactory.newInstance("//java/com/example/base:project_config"))
         .setSrcRule(baseBuildRule3.getBuildTarget())
@@ -783,7 +783,7 @@ public class ProjectTest {
     BuildRule baseBuildRule = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
         .build(ruleResolver);
-    ProjectConfig packageProjectConfig = (ProjectConfig) ProjectConfigBuilder
+    ProjectConfig packageProjectConfig = ProjectConfigBuilder
         .createBuilder(
             BuildTargetFactory.newInstance("//java/com/example/base:project_config"))
         .setSrcRule(baseBuildRule.getBuildTarget())
@@ -900,10 +900,10 @@ public class ProjectTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildTarget fooJni = BuildTargetFactory.newInstance("//third_party/java/foo/jni:foo-jni");
     NdkLibrary ndkLibrary =
-        (NdkLibrary) new NdkLibraryBuilder(fooJni)
+        new NdkLibraryBuilder(fooJni)
             .build(ruleResolver, projectFilesystem);
 
-    ProjectConfig ndkProjectConfig = (ProjectConfig) ProjectConfigBuilder
+    ProjectConfig ndkProjectConfig = ProjectConfigBuilder
         .createBuilder(
             BuildTargetFactory.newInstance(
                 "//third_party/java/foo/jni:project_config"))

@@ -40,7 +40,7 @@ public class CxxLuaExtensionDescriptionTest {
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(builder.build()),
             new DefaultTargetNodeToBuildRuleTransformer());
-    CxxLuaExtension extension = (CxxLuaExtension) builder.build(resolver);
+    CxxLuaExtension extension = builder.build(resolver);
     assertThat(
         Paths.get(extension.getModule(CxxPlatformUtils.DEFAULT_PLATFORM)),
         Matchers.equalTo(Paths.get("hello/world/rule.so")));

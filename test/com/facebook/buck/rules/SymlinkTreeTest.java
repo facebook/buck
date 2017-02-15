@@ -244,7 +244,7 @@ public class SymlinkTreeTest {
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     Genrule dep =
-        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
             .build(resolver);
 

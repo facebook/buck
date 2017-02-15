@@ -38,7 +38,8 @@ public class VersionPropagatorBuilder
     extends
     AbstractNodeBuilder<
         VersionPropagatorBuilder.Arg,
-        VersionPropagatorBuilder.VersionPropagatorDescription> {
+        VersionPropagatorBuilder.VersionPropagatorDescription,
+        BuildRule> {
 
   public VersionPropagatorBuilder(BuildTarget target) {
     super(

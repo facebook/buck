@@ -30,8 +30,10 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.Optional;
 
-public class PythonBinaryBuilder
-    extends AbstractNodeBuilder<PythonBinaryDescription.Arg, PythonBinaryDescription> {
+public class PythonBinaryBuilder extends AbstractNodeBuilder<
+    PythonBinaryDescription.Arg,
+    PythonBinaryDescription,
+    PythonBinary> {
 
   public PythonBinaryBuilder(
       BuildTarget target,

@@ -24,7 +24,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 public class RemoteFileBuilder
-    extends AbstractNodeBuilder<RemoteFileDescription.Arg, RemoteFileDescription> {
+    extends AbstractNodeBuilder<RemoteFileDescription.Arg, RemoteFileDescription, RemoteFile> {
   protected RemoteFileBuilder(Downloader downloader, BuildTarget target) {
     super(new RemoteFileDescription(downloader), target);
   }

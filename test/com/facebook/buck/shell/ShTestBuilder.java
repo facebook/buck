@@ -26,7 +26,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class ShTestBuilder extends AbstractNodeBuilder<ShTestDescription.Arg, ShTestDescription> {
+public class ShTestBuilder
+    extends AbstractNodeBuilder<ShTestDescription.Arg, ShTestDescription, ShTest> {
 
   public ShTestBuilder(BuildTarget target) {
     super(new ShTestDescription(Optional.empty()), target);

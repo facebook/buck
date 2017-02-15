@@ -298,7 +298,7 @@ public class GenruleTest {
         .setMain(new FakeSourcePath("bin/exe"))
         .build(resolver);
 
-    DefaultWorkerTool workerTool = (DefaultWorkerTool) WorkerToolBuilder
+    DefaultWorkerTool workerTool = WorkerToolBuilder
         .newWorkerToolBuilder(BuildTargetFactory.newInstance("//:worker_rule"))
         .setExe(shBinaryRule.getBuildTarget())
         .build(resolver);
@@ -490,7 +490,7 @@ public class GenruleTest {
     EasyMock.replay(android);
 
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
-    Genrule genrule = (Genrule) GenruleBuilder
+    Genrule genrule = GenruleBuilder
         .newGenruleBuilder(target)
         .setBash("echo something > $OUT")
         .setOut("file")
@@ -518,7 +518,7 @@ public class GenruleTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
-    Genrule genrule = (Genrule) GenruleBuilder.newGenruleBuilder(target)
+    Genrule genrule = GenruleBuilder.newGenruleBuilder(target)
         .setBash("echo something > $OUT")
         .setOut("file")
         .build(resolver);
@@ -542,7 +542,7 @@ public class GenruleTest {
     ExecutionContext windowsExecutionContext = newEmptyExecutionContext(Platform.WINDOWS);
 
     // Test platform-specific
-    Genrule genrule = (Genrule) GenruleBuilder
+    Genrule genrule = GenruleBuilder
         .newGenruleBuilder(BuildTargetFactory.newInstance("//example:genrule1"))
         .setBash(bash)
         .setCmdExe(cmdExe)
@@ -562,7 +562,7 @@ public class GenruleTest {
         cmdExe);
 
     // Test fallback
-    genrule = (Genrule) GenruleBuilder
+    genrule = GenruleBuilder
         .newGenruleBuilder(BuildTargetFactory.newInstance("//example:genrule2"))
         .setCmd(cmd)
         .setOut("out.txt")
@@ -580,7 +580,7 @@ public class GenruleTest {
         cmd);
 
     // Test command absent
-    genrule = (Genrule) GenruleBuilder
+    genrule = GenruleBuilder
         .newGenruleBuilder(BuildTargetFactory.newInstance("//example:genrule3"))
         .setOut("out.txt")
         .build(resolver);
@@ -619,7 +619,7 @@ public class GenruleTest {
   public void testGetOutputNameMethod() throws Exception {
     {
       String name = "out.txt";
-      Genrule genrule = (Genrule) GenruleBuilder
+      Genrule genrule = GenruleBuilder
           .newGenruleBuilder(BuildTargetFactory.newInstance("//:test"))
           .setOut(name)
           .build(
@@ -630,7 +630,7 @@ public class GenruleTest {
     }
     {
       String name = "out/file.txt";
-      Genrule genrule = (Genrule) GenruleBuilder
+      Genrule genrule = GenruleBuilder
           .newGenruleBuilder(BuildTargetFactory.newInstance("//:test"))
           .setOut(name)
           .build(
@@ -804,7 +804,7 @@ public class GenruleTest {
     resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     Genrule extra =
-        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:extra"))
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:extra"))
             .setOut("something")
             .build(resolver);
     new ShBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
@@ -868,7 +868,7 @@ public class GenruleTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     JavaLibrary dep =
-        (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"))
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"))
             .addSrc(Paths.get("source.java"))
             .build(resolver, filesystem);
     filesystem.writeContentsToPath("something", Paths.get("source.java"));
@@ -925,7 +925,7 @@ public class GenruleTest {
     resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     dep =
-        (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"))
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"))
             .addSrc(Paths.get("source.java"))
             .build(resolver, filesystem);
     filesystem.writeContentsToPath(

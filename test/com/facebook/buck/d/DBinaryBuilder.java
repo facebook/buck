@@ -23,7 +23,7 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 
 
 public class DBinaryBuilder
-    extends AbstractNodeBuilder<DBinaryDescription.Arg, DBinaryDescription> {
+    extends AbstractNodeBuilder<DBinaryDescription.Arg, DBinaryDescription, DBinary> {
 
   public DBinaryBuilder(
       BuildTarget target,

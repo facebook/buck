@@ -31,7 +31,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 
 public class NdkLibraryBuilder
-    extends AbstractNodeBuilder<NdkLibraryDescription.Arg, NdkLibraryDescription> {
+    extends AbstractNodeBuilder<NdkLibraryDescription.Arg, NdkLibraryDescription, NdkLibrary> {
 
   private static final NdkCxxPlatform DEFAULT_NDK_PLATFORM =
       NdkCxxPlatform.builder()

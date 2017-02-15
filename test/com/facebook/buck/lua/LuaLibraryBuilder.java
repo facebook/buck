@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
 public class LuaLibraryBuilder
-    extends AbstractNodeBuilder<LuaLibraryDescription.Arg, LuaLibraryDescription> {
+    extends AbstractNodeBuilder<LuaLibraryDescription.Arg, LuaLibraryDescription, LuaLibrary> {
 
   public LuaLibraryBuilder(
       LuaLibraryDescription description,

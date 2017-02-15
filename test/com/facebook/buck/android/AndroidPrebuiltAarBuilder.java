@@ -25,8 +25,10 @@ import com.facebook.buck.rules.SourcePath;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class AndroidPrebuiltAarBuilder
-    extends AbstractNodeBuilder<AndroidPrebuiltAarDescription.Arg, AndroidPrebuiltAarDescription> {
+public class AndroidPrebuiltAarBuilder extends AbstractNodeBuilder<
+    AndroidPrebuiltAarDescription.Arg,
+    AndroidPrebuiltAarDescription,
+    AndroidPrebuiltAar> {
 
  private AndroidPrebuiltAarBuilder(BuildTarget target) {
   super(new AndroidPrebuiltAarDescription(JavaCompilationConstants.ANDROID_JAVAC_OPTIONS), target);

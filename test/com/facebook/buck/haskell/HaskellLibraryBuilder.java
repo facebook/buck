@@ -28,8 +28,10 @@ import com.google.common.collect.ImmutableList;
 
 import java.util.Optional;
 
-public class HaskellLibraryBuilder
-    extends AbstractNodeBuilder<HaskellLibraryDescription.Arg, HaskellLibraryDescription> {
+public class HaskellLibraryBuilder extends AbstractNodeBuilder<
+    HaskellLibraryDescription.Arg,
+    HaskellLibraryDescription,
+    HaskellLibrary> {
 
   public HaskellLibraryBuilder(
       BuildTarget target,

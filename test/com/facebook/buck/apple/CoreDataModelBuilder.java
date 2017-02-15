@@ -22,7 +22,7 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 import java.nio.file.Path;
 
 public class CoreDataModelBuilder
-    extends AbstractNodeBuilder<AppleWrapperResourceArg, CoreDataModelDescription> {
+    extends AbstractNodeBuilder<AppleWrapperResourceArg, CoreDataModelDescription, CoreDataModel> {
 
   protected CoreDataModelBuilder(BuildTarget target) {
     super(new CoreDataModelDescription(), target);

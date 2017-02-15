@@ -78,7 +78,7 @@ public class ExportFileTest {
         TargetGraph.EMPTY,
         new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    ExportFile exportFile = (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
+    ExportFile exportFile = ExportFileBuilder.newExportFileBuilder(target)
         .build(
             resolver,
             projectFilesystem);
@@ -107,7 +107,7 @@ public class ExportFileTest {
         TargetGraph.EMPTY,
         new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    ExportFile exportFile = (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
+    ExportFile exportFile = ExportFileBuilder.newExportFileBuilder(target)
         .setOut("fish")
         .build(resolver, projectFilesystem);
 
@@ -135,7 +135,7 @@ public class ExportFileTest {
         TargetGraph.EMPTY,
         new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    ExportFile exportFile = (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
+    ExportFile exportFile = ExportFileBuilder.newExportFileBuilder(target)
         .setSrc(new PathSourcePath(projectFilesystem, Paths.get("chips")))
         .setOut("fish")
         .build(
@@ -171,7 +171,7 @@ public class ExportFileTest {
         new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
 
-    ExportFile exportFile = (ExportFile) builder
+    ExportFile exportFile = builder
         .build(
             resolver,
             projectFilesystem);
@@ -192,7 +192,7 @@ public class ExportFileTest {
                 pathResolver));
 
     builder.setSrc(new BuildTargetSourcePath(rule.getBuildTarget()));
-    exportFile = (ExportFile) builder.build(resolver, projectFilesystem);
+    exportFile = builder.build(resolver, projectFilesystem);
     assertThat(
         pathResolver.filterInputsToCompareToOutput(exportFile.getSource()),
         Matchers.empty());
@@ -204,7 +204,7 @@ public class ExportFileTest {
 
     builder.setSrc(null);
     exportFile =
-        (ExportFile) builder.build(
+        builder.build(
             resolver,
             projectFilesystem);
     assertIterablesEquals(
@@ -214,7 +214,7 @@ public class ExportFileTest {
 
   @Test
   public void getOutputName() throws Exception {
-    ExportFile exportFile = (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
+    ExportFile exportFile = ExportFileBuilder.newExportFileBuilder(target)
         .setOut("cake")
         .build(
             new BuildRuleResolver(
@@ -245,7 +245,7 @@ public class ExportFileTest {
         .newExportFileBuilder(BuildTargetFactory.newInstance("//some:file"))
         .setSrc(new PathSourcePath(filesystem, temp));
 
-    ExportFile rule = (ExportFile) builder.build(
+    ExportFile rule = builder.build(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
         filesystem);
 
@@ -255,7 +255,7 @@ public class ExportFileTest {
 
     // Create a new rule. The FileHashCache held by the existing rule will retain a reference to the
     // previous content of the file, so we need to create an identical rule.
-    rule = (ExportFile) builder.build(
+    rule = builder.build(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
         filesystem);
 
@@ -279,7 +279,7 @@ public class ExportFileTest {
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     SourcePath src = new FakeSourcePath(projectFilesystem, "source");
     ExportFile exportFile =
-        (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
+        ExportFileBuilder.newExportFileBuilder(target)
             .setMode(ExportFileDescription.Mode.REFERENCE)
             .setSrc(src)
             .build(resolver, projectFilesystem);

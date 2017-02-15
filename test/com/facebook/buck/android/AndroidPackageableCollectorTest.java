@@ -285,7 +285,7 @@ public class AndroidPackageableCollectorTest {
 
     ImmutableSortedSet<BuildTarget> declaredDepsTargets =
         ImmutableSortedSet.of(a.getBuildTarget(), c.getBuildTarget());
-    AndroidBinary androidBinary = (AndroidBinary) AndroidBinaryBuilder
+    AndroidBinary androidBinary = AndroidBinaryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//:e"))
         .setManifest(new FakeSourcePath("AndroidManfiest.xml"))
         .setKeystore(keystoreTarget)
@@ -386,7 +386,7 @@ public class AndroidPackageableCollectorTest {
 
     ImmutableSortedSet<BuildTarget> originalDepsTargets =
         ImmutableSortedSet.of(androidLibrary.getBuildTarget());
-    AndroidBinary androidBinary = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
+    AndroidBinary androidBinary = AndroidBinaryBuilder.createBuilder(
         BuildTargetFactory.newInstance("//apps/sample:app"))
         .setManifest(new FakeSourcePath("apps/sample/AndroidManifest.xml"))
         .setOriginalDeps(originalDepsTargets)

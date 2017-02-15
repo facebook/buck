@@ -83,7 +83,7 @@ public class NdkLibraryTest {
     String basePath = "java/src/com/facebook/base";
     BuildTarget target = BuildTargetFactory.newInstance(String.format("//%s:base", basePath));
     NdkLibrary ndkLibrary =
-        (NdkLibrary) new NdkLibraryBuilder(target)
+        new NdkLibraryBuilder(target)
             .setFlags(ImmutableList.of("flag1", "flag2"))
             .setIsAsset(true)
             .build(ruleResolver, projectFilesystem);

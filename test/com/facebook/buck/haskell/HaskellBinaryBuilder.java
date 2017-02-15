@@ -21,11 +21,12 @@ import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.BuildRule;
 import com.google.common.collect.ImmutableList;
 
 
 public class HaskellBinaryBuilder
-    extends AbstractNodeBuilder<HaskellBinaryDescription.Arg, HaskellBinaryDescription> {
+    extends AbstractNodeBuilder<HaskellBinaryDescription.Arg, HaskellBinaryDescription, BuildRule> {
 
   public HaskellBinaryBuilder(
       BuildTarget target,

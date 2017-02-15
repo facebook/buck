@@ -25,7 +25,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import java.nio.file.Path;
 
 public class PrebuiltJarBuilder
-    extends AbstractNodeBuilder<PrebuiltJarDescription.Arg, PrebuiltJarDescription> {
+    extends AbstractNodeBuilder<PrebuiltJarDescription.Arg, PrebuiltJarDescription, PrebuiltJar> {
 
   private PrebuiltJarBuilder(BuildTarget target) {
     super(new PrebuiltJarDescription(), target);

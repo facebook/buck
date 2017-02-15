@@ -709,7 +709,7 @@ public class DefaultJavaLibraryTest {
         "class Test {}",
         pathResolver.getRelativePath(genSrc.getSourcePathToOutput()));
     JavaLibrary library =
-        (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
             .addSrc(new BuildTargetSourcePath(genSrc.getBuildTarget()))
             .build(ruleResolver, filesystem);
     FileHashCache originalHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
@@ -732,7 +732,7 @@ public class DefaultJavaLibraryTest {
             .setCmd("something else")
             .build(ruleResolver, filesystem);
     library =
-        (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
             .addSrc(new BuildTargetSourcePath(genSrc.getBuildTarget()))
             .build(ruleResolver, filesystem);
     FileHashCache unaffectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
@@ -757,7 +757,7 @@ public class DefaultJavaLibraryTest {
         "class Test2 {}",
         pathResolver.getRelativePath(genSrc.getSourcePathToOutput()));
     library =
-        (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
             .addSrc(new BuildTargetSourcePath(genSrc.getBuildTarget()))
             .build(ruleResolver, filesystem);
     FileHashCache affectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);

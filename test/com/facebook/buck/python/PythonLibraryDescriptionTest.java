@@ -61,7 +61,7 @@ public class PythonLibraryDescriptionTest {
     TargetGraph normalTargetGraph =
         TargetGraphFactory.newInstance(normalBuilder.build());
     PythonLibrary normal =
-        (PythonLibrary) normalBuilder.build(
+        normalBuilder.build(
             new BuildRuleResolver(
                 normalTargetGraph,
                 new DefaultTargetNodeToBuildRuleTransformer()),
@@ -82,7 +82,7 @@ public class PythonLibraryDescriptionTest {
     TargetGraph withBaseModuleTargetGraph =
         TargetGraphFactory.newInstance(normalBuilder.build());
     PythonLibrary withBaseModule =
-        (PythonLibrary) withBaseModuleBuilder.build(
+        withBaseModuleBuilder.build(
             new BuildRuleResolver(
                 withBaseModuleTargetGraph,
                 new DefaultTargetNodeToBuildRuleTransformer()),
@@ -114,7 +114,7 @@ public class PythonLibraryDescriptionTest {
                     .build());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     PythonLibrary library =
-        (PythonLibrary) builder.build(
+        builder.build(
             new BuildRuleResolver(
                 targetGraph,
                 new DefaultTargetNodeToBuildRuleTransformer()),
@@ -144,7 +144,7 @@ public class PythonLibraryDescriptionTest {
                     .build());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     PythonLibrary library =
-        (PythonLibrary) builder.build(
+        builder.build(
               new BuildRuleResolver(
                   targetGraph,
                   new DefaultTargetNodeToBuildRuleTransformer()),
@@ -164,7 +164,7 @@ public class PythonLibraryDescriptionTest {
     GenruleBuilder depBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out");
-    AbstractNodeBuilder<?, ?> builder =
+    AbstractNodeBuilder<?, ?, ?> builder =
         new PythonLibraryBuilder(target)
             .setVersionedSrcs(
                 VersionMatchedCollection.<SourceList>builder()
@@ -197,7 +197,7 @@ public class PythonLibraryDescriptionTest {
     GenruleBuilder depBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out");
-    AbstractNodeBuilder<?, ?> builder =
+    AbstractNodeBuilder<?, ?, ?> builder =
         new PythonLibraryBuilder(target)
             .setVersionedResources(
                 VersionMatchedCollection.<SourceList>builder()

@@ -31,7 +31,8 @@ public class AndroidInstrumentationApkBuilder
     extends
     AbstractNodeBuilder<
         AndroidInstrumentationApkDescription.Arg,
-        AndroidInstrumentationApkDescription> {
+        AndroidInstrumentationApkDescription,
+        AndroidInstrumentationApk> {
 
   private AndroidInstrumentationApkBuilder(BuildTarget target) {
     super(

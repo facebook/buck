@@ -29,8 +29,10 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class AndroidResourceBuilder
-    extends AbstractNodeBuilder<AndroidResourceDescription.Arg, AndroidResourceDescription> {
+public class AndroidResourceBuilder extends AbstractNodeBuilder<
+    AndroidResourceDescription.Arg,
+    AndroidResourceDescription,
+    AndroidResource> {
 
   private AndroidResourceBuilder(BuildTarget target, ProjectFilesystem filesystem) {
     super(new AndroidResourceDescription(false), target, filesystem);

@@ -228,7 +228,7 @@ public class CxxPreprocessablesTest {
 
     // Setup a simple genrule we can wrap in a BuildTargetSourcePath to model a input source
     // that is built by another rule.
-    Genrule genrule = (Genrule) GenruleBuilder
+    Genrule genrule = GenruleBuilder
         .newGenruleBuilder(BuildTargetFactory.newInstance(filesystem, "//:genrule"))
         .setOut("foo/bar.o")
         .build(resolver);

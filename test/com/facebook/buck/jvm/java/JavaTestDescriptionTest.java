@@ -48,7 +48,7 @@ public class JavaTestDescriptionTest {
             new FakeExportDependenciesRule("//:exporting_rule", pathResolver, exportedRule));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    JavaTest javaTest = (JavaTest) JavaTestBuilder.createBuilder(target)
+    JavaTest javaTest = JavaTestBuilder.createBuilder(target)
         .addDep(exportingRule.getBuildTarget())
         .build(resolver);
 
@@ -69,7 +69,7 @@ public class JavaTestDescriptionTest {
             new FakeExportDependenciesRule("//:exporting_rule", pathResolver, exportedRule));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    JavaTest javaTest = (JavaTest) JavaTestBuilder.createBuilder(target)
+    JavaTest javaTest = JavaTestBuilder.createBuilder(target)
         .addProvidedDep(exportingRule.getBuildTarget())
         .build(resolver);
 

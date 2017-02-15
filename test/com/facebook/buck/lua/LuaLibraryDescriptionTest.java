@@ -44,7 +44,7 @@ public class LuaLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    LuaLibrary library = (LuaLibrary) builder.build(resolver, filesystem, targetGraph);
+    LuaLibrary library = builder.build(resolver, filesystem, targetGraph);
     assertThat(
         library.getLuaPackageComponents().getModules(),
         Matchers.equalTo(
@@ -62,7 +62,7 @@ public class LuaLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    LuaLibrary library = (LuaLibrary) builder.build(resolver, filesystem, targetGraph);
+    LuaLibrary library = builder.build(resolver, filesystem, targetGraph);
     assertThat(
         library.getLuaPackageComponents().getModules(),
         Matchers.equalTo(
@@ -81,7 +81,7 @@ public class LuaLibraryDescriptionTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    LuaLibrary library = (LuaLibrary) builder.build(resolver, filesystem, targetGraph);
+    LuaLibrary library = builder.build(resolver, filesystem, targetGraph);
     assertThat(
         library.getLuaPackageComponents().getModules(),
         Matchers.equalTo(

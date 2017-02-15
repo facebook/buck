@@ -75,7 +75,7 @@ public class RemoteFileTest {
         new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     RemoteFile remoteFile =
-        (RemoteFile) new RemoteFileBuilder(downloader, target)
+        new RemoteFileBuilder(downloader, target)
             .setUrl("http://www.facebook.com/")
             .setSha1(Hashing.sha1().hashLong(42))
             .build(resolver);

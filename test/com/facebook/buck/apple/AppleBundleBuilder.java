@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
 public class AppleBundleBuilder
-    extends AbstractNodeBuilder<AppleBundleDescription.Arg, AppleBundleDescription> {
+    extends AbstractNodeBuilder<AppleBundleDescription.Arg, AppleBundleDescription, AppleBundle> {
 
   protected AppleBundleBuilder(BuildTarget target) {
     super(

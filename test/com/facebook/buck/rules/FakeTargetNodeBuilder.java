@@ -19,8 +19,10 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 
-public class FakeTargetNodeBuilder
-    extends AbstractNodeBuilder<FakeTargetNodeBuilder.Arg, FakeTargetNodeBuilder.FakeDescription> {
+public class FakeTargetNodeBuilder extends AbstractNodeBuilder<
+    FakeTargetNodeBuilder.Arg,
+    FakeTargetNodeBuilder.FakeDescription,
+    BuildRule> {
 
   private FakeTargetNodeBuilder(
       FakeDescription description,

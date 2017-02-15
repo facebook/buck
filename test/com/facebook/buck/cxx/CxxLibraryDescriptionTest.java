@@ -793,7 +793,7 @@ public class CxxLibraryDescriptionTest {
             new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     Genrule dep =
-        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
             .build(resolver);
     CxxLibraryBuilder builder =
@@ -844,7 +844,7 @@ public class CxxLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(
         libBuilder.build(),
         locBuilder.build());
-    ExportFile loc = (ExportFile) locBuilder
+    ExportFile loc = locBuilder
         .build(
             resolver,
             filesystem,
@@ -896,7 +896,7 @@ public class CxxLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(
         libBuilder.build(),
         locBuilder.build());
-    ExportFile loc = (ExportFile) locBuilder
+    ExportFile loc = locBuilder
         .build(
             resolver,
             filesystem,
@@ -951,7 +951,7 @@ public class CxxLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(
         libBuilder.build(),
         locBuilder.build());
-    ExportFile loc = (ExportFile) locBuilder
+    ExportFile loc = locBuilder
         .build(
             resolver,
             filesystem,
@@ -994,7 +994,7 @@ public class CxxLibraryDescriptionTest {
         locBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    ExportFile loc = (ExportFile) locBuilder
+    ExportFile loc = locBuilder
         .build(
             resolver,
             filesystem,
@@ -1049,7 +1049,7 @@ public class CxxLibraryDescriptionTest {
         locBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    ExportFile loc = (ExportFile) locBuilder
+    ExportFile loc = locBuilder
         .build(
             resolver,
             filesystem,
@@ -1107,7 +1107,7 @@ public class CxxLibraryDescriptionTest {
         locBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    ExportFile loc = (ExportFile) locBuilder
+    ExportFile loc = locBuilder
         .build(
             resolver,
             filesystem,

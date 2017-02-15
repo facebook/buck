@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableSortedSet;
@@ -26,7 +27,7 @@ import com.google.common.collect.ImmutableSortedSet;
 public abstract class AbstractXcodeScriptBuilder<
     T extends AbstractXcodeScriptBuilder<T, U>,
     U extends Description<XcodeScriptDescriptionArg>>
-    extends AbstractNodeBuilder<XcodeScriptDescriptionArg, U> {
+    extends AbstractNodeBuilder<XcodeScriptDescriptionArg, U, BuildRule> {
 
   public AbstractXcodeScriptBuilder(
       U description,

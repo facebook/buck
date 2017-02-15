@@ -22,7 +22,7 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 import java.util.Optional;
 
 public class ApkGenruleBuilder
-    extends AbstractNodeBuilder<ApkGenruleDescription.Arg, ApkGenruleDescription> {
+    extends AbstractNodeBuilder<ApkGenruleDescription.Arg, ApkGenruleDescription, ApkGenrule> {
 
   private ApkGenruleBuilder(BuildTarget target) {
     super(new ApkGenruleDescription(), target);

@@ -27,7 +27,7 @@ import java.util.Optional;
 
 public class CxxTestBuilder
     extends
-    AbstractCxxSourceBuilder<CxxTestDescription.Arg, CxxTestDescription, CxxTestBuilder> {
+    AbstractCxxSourceBuilder<CxxTestDescription.Arg, CxxTestDescription, CxxTest, CxxTestBuilder> {
 
   public CxxTestBuilder(
       BuildTarget target,

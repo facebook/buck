@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -31,7 +32,8 @@ public class PrebuiltCxxLibraryGroupBuilder
     extends
     AbstractNodeBuilder<
         PrebuiltCxxLibraryGroupDescription.Args,
-        PrebuiltCxxLibraryGroupDescription> {
+        PrebuiltCxxLibraryGroupDescription,
+        BuildRule> {
 
   public PrebuiltCxxLibraryGroupBuilder(BuildTarget target) {
     super(PrebuiltCxxLibraryGroupDescription.of(), target);

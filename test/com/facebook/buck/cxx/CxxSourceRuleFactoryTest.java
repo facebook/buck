@@ -431,11 +431,11 @@ public class CxxSourceRuleFactoryTest {
       SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
       ShBinary cxxpp =
-          (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//:cxxpp"))
+          new ShBinaryBuilder(BuildTargetFactory.newInstance("//:cxxpp"))
               .setMain(new FakeSourcePath("blah"))
               .build(resolver);
       ShBinary cxx =
-          (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//:cxx"))
+          new ShBinaryBuilder(BuildTargetFactory.newInstance("//:cxx"))
               .setMain(new FakeSourcePath("blah"))
               .build(resolver);
 

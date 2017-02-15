@@ -28,6 +28,7 @@ public final class AppleTestBuilder
     AbstractAppleNativeTargetBuilder<
         AppleTestDescription.Arg,
         AppleTestDescription,
+        AppleTest,
         AppleTestBuilder> {
 
   @Override

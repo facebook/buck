@@ -182,7 +182,7 @@ public class CxxBinaryDescriptionTest {
     genSourceBuilder.build(resolver, projectFilesystem, targetGraph);
     depBuilder.build(resolver, projectFilesystem, targetGraph);
     CxxBinary binRule =
-        (CxxBinary) cxxBinaryBuilder.build(resolver, projectFilesystem, targetGraph);
+        cxxBinaryBuilder.build(resolver, projectFilesystem, targetGraph);
 
     assertThat(binRule.getLinkRule(), Matchers.instanceOf(CxxLink.class));
     CxxLink rule = (CxxLink) binRule.getLinkRule();
@@ -284,7 +284,7 @@ public class CxxBinaryDescriptionTest {
             new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule leafCxxBinary = leafCxxBinaryBuilder.build(resolver, filesystem);
     cxxLibraryBuilder.build(resolver, filesystem);
-    CxxBinary topLevelCxxBinary = (CxxBinary) topLevelCxxBinaryBuilder.build(resolver, filesystem);
+    CxxBinary topLevelCxxBinary = topLevelCxxBinaryBuilder.build(resolver, filesystem);
 
     assertThat(
         BuildRules.getTransitiveRuntimeDeps(topLevelCxxBinary, new SourcePathRuleFinder(resolver)),
@@ -300,7 +300,7 @@ public class CxxBinaryDescriptionTest {
             new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     Genrule dep =
-        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
             .build(resolver);
     CxxBinaryBuilder builder =
@@ -313,7 +313,7 @@ public class CxxBinaryDescriptionTest {
     assertThat(
         builder.build().getExtraDeps(),
         Matchers.hasItem(dep.getBuildTarget()));
-    BuildRule binary = ((CxxBinary) builder.build(resolver)).getLinkRule();
+    BuildRule binary = builder.build(resolver).getLinkRule();
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
         Arg.stringify(((CxxLink) binary).getArgs()),
@@ -333,7 +333,7 @@ public class CxxBinaryDescriptionTest {
             new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     Genrule dep =
-        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
             .build(resolver);
     CxxBinaryBuilder builder =
@@ -352,7 +352,7 @@ public class CxxBinaryDescriptionTest {
     assertThat(
         builder.build().getExtraDeps(),
         Matchers.hasItem(dep.getBuildTarget()));
-    BuildRule binary = ((CxxBinary) builder.build(resolver)).getLinkRule();
+    BuildRule binary = builder.build(resolver).getLinkRule();
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
         Arg.stringify(((CxxLink) binary).getArgs()),
@@ -372,7 +372,7 @@ public class CxxBinaryDescriptionTest {
             new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     Genrule dep =
-        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
             .build(resolver);
     CxxBinaryBuilder builder =
@@ -389,7 +389,7 @@ public class CxxBinaryDescriptionTest {
     assertThat(
         builder.build().getExtraDeps(),
         Matchers.hasItem(dep.getBuildTarget()));
-    BuildRule binary = ((CxxBinary) builder.build(resolver)).getLinkRule();
+    BuildRule binary = builder.build(resolver).getLinkRule();
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
         Arg.stringify(((CxxLink) binary).getArgs()),
@@ -423,7 +423,7 @@ public class CxxBinaryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(binaryBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    CxxBinary binary = (CxxBinary) binaryBuilder.build(resolver, filesystem, targetGraph);
+    CxxBinary binary = binaryBuilder.build(resolver, filesystem, targetGraph);
     assertThat(binary.getLinkRule(), Matchers.instanceOf(CxxLink.class));
     assertThat(
         Arg.stringify(((CxxLink) binary.getLinkRule()).getArgs()),
@@ -480,7 +480,7 @@ public class CxxBinaryDescriptionTest {
             new DefaultTargetNodeToBuildRuleTransformer());
     CxxLibrary transitiveDep = (CxxLibrary) transitiveDepBuilder.build(resolver, targetGraph);
     depBuilder.build(resolver, targetGraph);
-    CxxBinary binary = (CxxBinary) builder.build(resolver, targetGraph);
+    CxxBinary binary = builder.build(resolver, targetGraph);
     // TODO(andrewjcg): should also test that `:dep` does *not* get included.
     assertThat(
         binary.getDeps(),

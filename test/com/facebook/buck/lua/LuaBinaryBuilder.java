@@ -30,7 +30,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
 public class LuaBinaryBuilder
-    extends AbstractNodeBuilder<LuaBinaryDescription.Arg, LuaBinaryDescription> {
+    extends AbstractNodeBuilder<LuaBinaryDescription.Arg, LuaBinaryDescription, LuaBinary> {
 
   public LuaBinaryBuilder(
       LuaBinaryDescription description,

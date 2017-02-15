@@ -65,11 +65,11 @@ public class AppleTestDescriptionTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    Genrule dep = (Genrule) depBuilder.build(resolver, targetGraph);
+    Genrule dep = depBuilder.build(resolver, targetGraph);
     assertThat(
         builder.build().getExtraDeps(),
         Matchers.hasItem(dep.getBuildTarget()));
-    AppleTest test = (AppleTest) builder.build(resolver, targetGraph);
+    AppleTest test = builder.build(resolver, targetGraph);
     CxxStrip strip = (CxxStrip) RichStream.from(test.getDeps())
         .filter(AppleBundle.class)
         .findFirst()

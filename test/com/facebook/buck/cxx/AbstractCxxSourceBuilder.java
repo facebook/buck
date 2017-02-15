@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
@@ -33,8 +34,9 @@ import java.util.Optional;
 public abstract class AbstractCxxSourceBuilder<
     T extends CxxConstructorArg,
     U extends Description<T>,
-    V extends AbstractCxxSourceBuilder<T, U, V>>
-    extends AbstractCxxBuilder<T, U> {
+    R extends BuildRule,
+    V extends AbstractCxxSourceBuilder<T, U, R, V>>
+    extends AbstractCxxBuilder<T, U, R> {
 
   public AbstractCxxSourceBuilder(
       U description,

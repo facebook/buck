@@ -210,7 +210,7 @@ public class AndroidBinaryGraphEnhancerTest {
 
     BuildTarget fakeUberRDotJavaCompileTarget = BuildTargetFactory.newInstance(
         "//fake:uber_r_dot_java#compile");
-    JavaLibrary fakeUberRDotJavaCompile = (JavaLibrary)
+    JavaLibrary fakeUberRDotJavaCompile =
         JavaLibraryBuilder.createBuilder(fakeUberRDotJavaCompileTarget).build(ruleResolver);
     BuildTarget fakeUberRDotJavaDexTarget = BuildTargetFactory.newInstance(
         "//fake:uber_r_dot_java#dex");

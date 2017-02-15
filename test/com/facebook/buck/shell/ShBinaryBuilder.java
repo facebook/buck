@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 
 public class ShBinaryBuilder
-    extends AbstractNodeBuilder<ShBinaryDescription.Arg, ShBinaryDescription> {
+    extends AbstractNodeBuilder<ShBinaryDescription.Arg, ShBinaryDescription, ShBinary> {
 
   public ShBinaryBuilder(BuildTarget target) {
     super(new ShBinaryDescription(), target);

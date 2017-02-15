@@ -61,7 +61,7 @@ public class ShTestDescriptionTest {
             .setTest(new FakeSourcePath("test.sh"))
             .setArgs(ImmutableList.of("$(location //:dep)"));
     assertThat(shTestBuilder.findImplicitDeps(), Matchers.hasItem(dep.getBuildTarget()));
-    ShTest shTest = (ShTest) shTestBuilder.build(resolver);
+    ShTest shTest = shTestBuilder.build(resolver);
     assertThat(
         shTest.getDeps(),
         Matchers.contains(dep));
@@ -86,7 +86,7 @@ public class ShTestDescriptionTest {
             .setTest(new FakeSourcePath("test.sh"))
             .setEnv(ImmutableMap.of("LOC", "$(location //:dep)"));
     assertThat(shTestBuilder.findImplicitDeps(), Matchers.hasItem(dep.getBuildTarget()));
-    ShTest shTest = (ShTest) shTestBuilder.build(resolver);
+    ShTest shTest = shTestBuilder.build(resolver);
     assertThat(
         shTest.getDeps(),
         Matchers.contains(dep));
@@ -110,7 +110,7 @@ public class ShTestDescriptionTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ShTest shTestWithoutResources =
-        (ShTest) new ShTestBuilder(target)
+        new ShTestBuilder(target)
             .build(resolver, filesystem);
     RuleKey ruleKeyWithoutResource = getRuleKey(shTestWithoutResources);
 
@@ -118,7 +118,7 @@ public class ShTestDescriptionTest {
     resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ShTest shTestWithResources =
-        (ShTest) new ShTestBuilder(target)
+        new ShTestBuilder(target)
             .setResources(ImmutableSortedSet.of(resource))
             .build(resolver, filesystem);
     RuleKey ruleKeyWithResource = getRuleKey(shTestWithResources);

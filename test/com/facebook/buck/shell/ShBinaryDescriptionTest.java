@@ -36,7 +36,7 @@ public class ShBinaryDescriptionTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     FakeSourcePath main = new FakeSourcePath("main.sh");
     ShBinary shBinary =
-        (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
+        new ShBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setMain(main)
             .build(resolver);
     assertThat(
@@ -51,7 +51,7 @@ public class ShBinaryDescriptionTest {
     FakeSourcePath main = new FakeSourcePath("main.sh");
     FakeSourcePath resource = new FakeSourcePath("resource.dat");
     ShBinary shBinary =
-        (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
+        new ShBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setMain(main)
             .setResources(ImmutableSet.of(resource))
             .build(resolver);

@@ -21,6 +21,7 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -29,7 +30,7 @@ import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 
 public class GroovyLibraryBuilder
-    extends AbstractNodeBuilder<GroovyLibraryDescription.Arg, GroovyLibraryDescription> {
+    extends AbstractNodeBuilder<GroovyLibraryDescription.Arg, GroovyLibraryDescription, BuildRule> {
 
   private final ProjectFilesystem projectFilesystem;
 

@@ -64,7 +64,7 @@ public class AppleLibraryDescriptionTest {
             DefaultCxxPlatforms.FLAVOR,
             CxxDescriptionEnhancer.SHARED_FLAVOR);
     Genrule dep =
-        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
             .build(resolver);
     AppleLibraryBuilder builder =

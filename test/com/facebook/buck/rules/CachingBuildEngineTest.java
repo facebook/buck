@@ -1563,7 +1563,7 @@ public class CachingBuildEngineTest {
     public void depFileRuleKeyAndDepFileAreWrittenForSupportedRules() throws Exception {
       // Use a genrule to produce the input file.
       final Genrule genrule =
-          (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+          GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setOut("input")
               .build(resolver, filesystem);
       final Path input = pathResolver.getRelativePath(
@@ -1726,7 +1726,7 @@ public class CachingBuildEngineTest {
     public void depFileInputChangeCausesRebuild() throws Exception {
       // Use a genrule to produce the input file.
       final Genrule genrule =
-          (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+          GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setOut("input")
               .build(resolver, filesystem);
       final Path input = pathResolver.getRelativePath(
@@ -1895,7 +1895,7 @@ public class CachingBuildEngineTest {
     public void depFileDeletedInputCausesRebuild() throws Exception {
       // Use a genrule to produce the input file.
       final Genrule genrule =
-          (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+          GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setOut("input")
               .build(resolver, filesystem);
       final Path input = pathResolver.getRelativePath(
@@ -1978,7 +1978,7 @@ public class CachingBuildEngineTest {
     public void missingDepFileKeyCausesLocalBuild() throws Exception {
       // Use a genrule to produce the input file.
       final Genrule genrule =
-          (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+          GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setOut("input")
               .build(resolver, filesystem);
       final Path input = pathResolver.getRelativePath(
@@ -2113,7 +2113,7 @@ public class CachingBuildEngineTest {
 
       // Use a genrule to produce the input file.
       final Genrule genrule =
-          (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+          GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setOut("input")
               .build(resolver, filesystem);
       final Path input = pathResolver.getRelativePath(
@@ -2229,7 +2229,7 @@ public class CachingBuildEngineTest {
 
       // Use a genrule to produce the input file.
       final Genrule genrule =
-          (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+          GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setOut("input")
               .build(resolver, filesystem);
       final Path input = pathResolver.getRelativePath(
@@ -2352,7 +2352,7 @@ public class CachingBuildEngineTest {
 
       // Use a genrule to produce the input file.
       final Genrule genrule =
-          (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+          GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setOut("input")
               .build(resolver, filesystem);
       final Path input = pathResolver.getRelativePath(
@@ -2467,7 +2467,7 @@ public class CachingBuildEngineTest {
 
       // Prepare an input file that should appear in the dep file.
       final Genrule genrule =
-          (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+          GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setOut("input")
               .build(resolver, filesystem);
       final Path input = pathResolver.getRelativePath(

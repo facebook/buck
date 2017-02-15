@@ -40,7 +40,7 @@ public class KeystoreTest {
   private static Keystore createKeystoreRuleForTest() throws NoSuchBuildTargetException {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    return (Keystore) KeystoreBuilder.createBuilder(
+    return KeystoreBuilder.createBuilder(
         BuildTargetFactory.newInstance("//keystores:debug"))
         .setStore(new FakeSourcePath("keystores/debug.keystore"))
         .setProperties(new FakeSourcePath("keystores/debug.keystore.properties"))

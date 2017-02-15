@@ -19,10 +19,11 @@ package com.facebook.buck.js;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 
-public class IosReactNativeLibraryBuilder
-    extends AbstractNodeBuilder<ReactNativeLibraryArgs, IosReactNativeLibraryDescription> {
+public class IosReactNativeLibraryBuilder extends
+    AbstractNodeBuilder<ReactNativeLibraryArgs, IosReactNativeLibraryDescription, BuildRule> {
 
   protected IosReactNativeLibraryBuilder(
       IosReactNativeLibraryDescription description,

@@ -59,8 +59,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    PrebuiltHaskellLibrary library =
-        (PrebuiltHaskellLibrary) builder.build(resolver, filesystem, targetGraph);
+    PrebuiltHaskellLibrary library = builder.build(resolver, filesystem, targetGraph);
     NativeLinkableInput input =
         library.getNativeLinkableInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -85,8 +84,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    PrebuiltHaskellLibrary library =
-        (PrebuiltHaskellLibrary) builder.build(resolver, filesystem, targetGraph);
+    PrebuiltHaskellLibrary library = builder.build(resolver, filesystem, targetGraph);
     NativeLinkableInput input =
         library.getNativeLinkableInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -111,8 +109,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    PrebuiltHaskellLibrary library =
-        (PrebuiltHaskellLibrary) builder.build(resolver, filesystem, targetGraph);
+    PrebuiltHaskellLibrary library = builder.build(resolver, filesystem, targetGraph);
     HaskellCompileInput input =
         library.getCompileInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -134,8 +131,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    PrebuiltHaskellLibrary library =
-        (PrebuiltHaskellLibrary) builder.build(resolver, filesystem, targetGraph);
+    PrebuiltHaskellLibrary library = builder.build(resolver, filesystem, targetGraph);
     HaskellCompileInput input =
         library.getCompileInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -157,8 +153,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    PrebuiltHaskellLibrary library =
-        (PrebuiltHaskellLibrary) builder.build(resolver, filesystem, targetGraph);
+    PrebuiltHaskellLibrary library = builder.build(resolver, filesystem, targetGraph);
     HaskellCompileInput input =
         library.getCompileInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -182,8 +177,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    PrebuiltHaskellLibrary library =
-        (PrebuiltHaskellLibrary) builder.build(resolver, filesystem, targetGraph);
+    PrebuiltHaskellLibrary library = builder.build(resolver, filesystem, targetGraph);
     NativeLinkableInput staticInput =
         library.getNativeLinkableInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -213,8 +207,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    PrebuiltHaskellLibrary library =
-        (PrebuiltHaskellLibrary) builder.build(resolver, filesystem, targetGraph);
+    PrebuiltHaskellLibrary library = builder.build(resolver, filesystem, targetGraph);
     HaskellCompileInput staticInput =
         library.getCompileInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -246,8 +239,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    PrebuiltHaskellLibrary library =
-        (PrebuiltHaskellLibrary) builder.build(resolver, filesystem, targetGraph);
+    PrebuiltHaskellLibrary library = builder.build(resolver, filesystem, targetGraph);
     assertThat(
         library.getCxxPreprocessorInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,

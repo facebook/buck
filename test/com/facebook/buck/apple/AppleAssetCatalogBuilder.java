@@ -22,8 +22,10 @@ import com.facebook.buck.rules.SourcePath;
 
 import java.util.SortedSet;
 
-public class AppleAssetCatalogBuilder
-    extends AbstractNodeBuilder<AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription> {
+public class AppleAssetCatalogBuilder extends AbstractNodeBuilder<
+    AppleAssetCatalogDescription.Arg,
+    AppleAssetCatalogDescription,
+    AppleAssetCatalog> {
 
   protected AppleAssetCatalogBuilder(BuildTarget target) {
     super(new AppleAssetCatalogDescription(), target);

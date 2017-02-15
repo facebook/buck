@@ -271,7 +271,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     JavaLibrary javaLibrary =
-        (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
             .build(ruleResolver);
 
     BuildRuleParams params =

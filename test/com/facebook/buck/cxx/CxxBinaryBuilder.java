@@ -23,9 +23,11 @@ import com.facebook.buck.rules.query.Query;
 
 import java.util.Optional;
 
-public class CxxBinaryBuilder
-    extends
-    AbstractCxxSourceBuilder<CxxBinaryDescription.Arg, CxxBinaryDescription, CxxBinaryBuilder> {
+public class CxxBinaryBuilder extends AbstractCxxSourceBuilder<
+    CxxBinaryDescription.Arg,
+    CxxBinaryDescription,
+    CxxBinary,
+    CxxBinaryBuilder> {
 
   public CxxBinaryBuilder(
       BuildTarget target,

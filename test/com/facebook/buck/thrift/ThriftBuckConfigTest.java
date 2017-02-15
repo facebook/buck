@@ -101,7 +101,7 @@ public class ThriftBuckConfigTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ShBinary thriftRule =
-        (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//thrift:target"))
+        new ShBinaryBuilder(BuildTargetFactory.newInstance("//thrift:target"))
             .setMain(new FakeSourcePath("thrift.sh"))
             .build(resolver);
 

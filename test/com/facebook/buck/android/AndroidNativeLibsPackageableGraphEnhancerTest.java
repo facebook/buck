@@ -58,7 +58,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     SourcePathResolver sourcePathResolver =
         new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
 
-    NdkLibrary ndkLibrary = (NdkLibrary) new NdkLibraryBuilder(
+    NdkLibrary ndkLibrary = new NdkLibraryBuilder(
         BuildTargetFactory.newInstance("//:ndklib"))
         .build(ruleResolver);
 

@@ -66,7 +66,7 @@ public class MacroArgTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Genrule rule =
-        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("output")
             .build(resolver);
     MacroArg arg =

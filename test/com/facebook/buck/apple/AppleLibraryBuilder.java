@@ -17,12 +17,14 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
 
 public class AppleLibraryBuilder
     extends
     AbstractAppleNativeTargetBuilder<
         AppleLibraryDescription.Arg,
         AppleLibraryDescription,
+        BuildRule,
         AppleLibraryBuilder> {
 
   @Override

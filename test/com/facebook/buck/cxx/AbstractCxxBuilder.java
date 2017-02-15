@@ -21,9 +21,11 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Description;
 
-public class AbstractCxxBuilder<T, U extends Description<T>> extends AbstractNodeBuilder<T, U> {
+public class AbstractCxxBuilder<T, U extends Description<T>, V extends BuildRule>
+    extends AbstractNodeBuilder<T, U, V> {
 
   public AbstractCxxBuilder(U description, BuildTarget target) {
     super(description, target);
