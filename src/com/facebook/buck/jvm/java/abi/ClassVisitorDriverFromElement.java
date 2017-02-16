@@ -218,12 +218,15 @@ class ClassVisitorDriverFromElement {
       for (int i = 0; i < parameters.size(); i++) {
         VariableElement parameter = parameters.get(i);
         for (AnnotationMirror annotationMirror : parameter.getAnnotationMirrors()) {
+          if (MoreElements.isSourceRetention(annotationMirror)) {
+            continue;
+          }
           visitAnnotationValues(
               annotationMirror,
               methodVisitor.visitParameterAnnotation(
                   i,
                   descriptorFactory.getDescriptor(annotationMirror.getAnnotationType()),
-                  MoreElements.isRuntimeVisible(annotationMirror)));
+                  MoreElements.isRuntimeRetention(annotationMirror)));
         }
       }
     }
@@ -264,9 +267,12 @@ class ClassVisitorDriverFromElement {
     }
 
     private void visitAnnotation(AnnotationMirror annotation, VisitorWithAnnotations visitor) {
+      if (MoreElements.isSourceRetention(annotation)) {
+        return;
+      }
       AnnotationVisitor annotationVisitor = visitor.visitAnnotation(
           descriptorFactory.getDescriptor(annotation.getAnnotationType()),
-          MoreElements.isRuntimeVisible(annotation));
+          MoreElements.isRuntimeRetention(annotation));
       visitAnnotationValues(annotation, annotationVisitor);
       annotationVisitor.visitEnd();
     }
