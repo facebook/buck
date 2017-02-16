@@ -174,35 +174,6 @@ public class StubJarTest {
   }
 
   @Test
-  public void preservesThrowsClauses() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on('\n').join(
-            "package com.example.buck;",
-            "public class A {",
-            "  public void throwSomeStuff() throws Exception, Throwable {}",
-            "}"));
-
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
-  }
-
-  @Test
-  public void preservesThrowsClausesWithTypeVars() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on('\n').join(
-            "package com.example.buck;",
-            "import java.io.IOException;",
-            "public class A {",
-            "  public <E extends IOException> void throwSomeStuff() throws E {}",
-            "}"));
-
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
-  }
-
-  @Test
   public void genericClassSignaturesShouldBePreserved() throws IOException {
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
@@ -699,25 +670,6 @@ public class StubJarTest {
         paths,
         "com/example/buck/A.class",
         "com/example/buck/A$1Local.class");
-  }
-
-  @Test
-  public void preservesThrowsClausesOnInnerClassConstructors() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on('\n').join(
-            "package com.example.buck;",
-            "public class A {",
-            "  public class B {",
-            "    B() throws Exception, Throwable {",
-            "    }",
-            "  }",
-            "}"
-        ));
-
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A$B.class");
   }
 
   @Test
