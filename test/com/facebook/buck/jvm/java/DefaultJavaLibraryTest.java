@@ -1162,7 +1162,7 @@ public class DefaultJavaLibraryTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder1 = new SourcePathRuleFinder(resolver1);
     SourcePathResolver pathResolver1 = new SourcePathResolver(ruleFinder1);
-    DefaultJavaLibrary rule1 = (DefaultJavaLibrary) JavaLibraryBuilder
+    DefaultJavaLibrary rule1 = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//lib:lib"))
         .addSrc(Paths.get("agifhbkjdec.java"))
         .addSrc(Paths.get("bdeafhkgcji.java"))
@@ -1178,7 +1178,7 @@ public class DefaultJavaLibraryTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder2 = new SourcePathRuleFinder(resolver2);
     SourcePathResolver pathResolver2 = new SourcePathResolver(ruleFinder2);
-    DefaultJavaLibrary rule2 = (DefaultJavaLibrary) JavaLibraryBuilder
+    DefaultJavaLibrary rule2 = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//lib:lib"))
         .addSrc(Paths.get("cfiabkjehgd.java"))
         .addSrc(Paths.get("bdehgaifjkc.java"))

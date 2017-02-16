@@ -33,8 +33,8 @@ import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class JavaLibraryBuilder
-    extends AbstractNodeBuilder<JavaLibraryDescription.Arg, JavaLibraryDescription, JavaLibrary> {
+public class JavaLibraryBuilder extends
+    AbstractNodeBuilder<JavaLibraryDescription.Arg, JavaLibraryDescription, DefaultJavaLibrary> {
 
   private final ProjectFilesystem projectFilesystem;
 

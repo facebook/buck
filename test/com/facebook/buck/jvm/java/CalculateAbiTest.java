@@ -56,7 +56,7 @@ public class CalculateAbiTest {
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//:library");
     JavaLibraryBuilder builder =  JavaLibraryBuilder.createBuilder(javaLibraryTarget)
         .addSrc(new PathSourcePath(filesystem, input));
-    DefaultJavaLibrary javaLibrary = (DefaultJavaLibrary) builder.build(resolver, filesystem);
+    DefaultJavaLibrary javaLibrary = builder.build(resolver, filesystem);
 
     // Write something to the library source and geneated JAR, so they exist to generate rule keys.
     filesystem.writeContentsToPath("stuff", input);
@@ -132,7 +132,7 @@ public class CalculateAbiTest {
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//:library");
     JavaLibraryBuilder builder =  JavaLibraryBuilder.createBuilder(javaLibraryTarget)
         .addSrc(new PathSourcePath(filesystem, input));
-    DefaultJavaLibrary javaLibrary = (DefaultJavaLibrary) builder.build(resolver, filesystem);
+    DefaultJavaLibrary javaLibrary = builder.build(resolver, filesystem);
 
     // Write something to the library source and geneated JAR, so they exist to generate rule keys.
     filesystem.writeContentsToPath("stuff", input);
