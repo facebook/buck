@@ -22,9 +22,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
@@ -48,9 +46,7 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
   public static final AnnotationProcessingParams EMPTY = new AnnotationProcessingParams(
       /* owner target */ null,
       /* project filesystem */ null,
-      ImmutableSet.of(),
-      ImmutableSet.of(),
-      ImmutableSet.of(),
+      /* processors */ JavacPluginProperties.builder().build(),
       ImmutableSortedSet.of(),
       false);
 
@@ -58,26 +54,20 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
   private final BuildTarget ownerTarget;
   @Nullable
   private final ProjectFilesystem filesystem;
-  private final ImmutableSortedSet<SourcePath> searchPathElements;
-  private final ImmutableSortedSet<String> names;
+  private final JavacPluginProperties annotationProcessors;
   private final ImmutableSortedSet<String> parameters;
-  private final ImmutableSortedSet<SourcePath> inputs;
   private final boolean processOnly;
 
   private AnnotationProcessingParams(
       @Nullable BuildTarget ownerTarget,
       @Nullable ProjectFilesystem filesystem,
-      Set<SourcePath> searchPathElements,
-      Set<String> names,
+      JavacPluginProperties annotationProcessors,
       Set<String> parameters,
-      ImmutableSortedSet<SourcePath> inputs,
       boolean processOnly) {
     this.ownerTarget = ownerTarget;
     this.filesystem = filesystem;
-    this.searchPathElements = ImmutableSortedSet.copyOf(searchPathElements);
-    this.names = ImmutableSortedSet.copyOf(names);
+    this.annotationProcessors = annotationProcessors;
     this.parameters = ImmutableSortedSet.copyOf(parameters);
-    this.inputs = inputs;
     this.processOnly = processOnly;
 
     if (!isEmpty() && ownerTarget != null) {
@@ -93,15 +83,15 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
   }
 
   public boolean isEmpty() {
-    return searchPathElements.isEmpty() && names.isEmpty() && parameters.isEmpty();
+    return annotationProcessors.isEmpty() && parameters.isEmpty();
   }
 
   public ImmutableSortedSet<SourcePath> getSearchPathElements() {
-    return searchPathElements;
+    return annotationProcessors.getClasspathEntries();
   }
 
   public ImmutableSortedSet<String> getNames() {
-    return names;
+    return annotationProcessors.getProcessorNames();
   }
 
   public ImmutableSortedSet<String> getParameters() {
@@ -109,18 +99,16 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
   }
 
   public ImmutableSortedSet<SourcePath> getInputs() {
-    return inputs;
+    return annotationProcessors.getInputs();
   }
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     if (!isEmpty()) {
-      // searchPathElements is not needed here since it comes from rules, which is appended below.
       sink.setReflectively("owner", ownerTarget)
-          .setReflectively("names", names)
+          .setReflectively("properties", annotationProcessors)
           .setReflectively("parameters", parameters)
-          .setReflectively("processOnly", processOnly)
-          .setReflectively("inputs", inputs);
+          .setReflectively("processOnly", processOnly);
     }
   }
 
@@ -157,8 +145,7 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
     private BuildTarget ownerTarget;
     @Nullable
     private ProjectFilesystem filesystem;
-    private Set<BuildRule> rules = Sets.newHashSet();
-    private Set<String> names = Sets.newHashSet();
+    private JavacPluginProperties.Builder processorsBuilder = JavacPluginProperties.builder();
     private Set<String> parameters = Sets.newHashSet();
     private boolean processOnly;
 
@@ -168,12 +155,12 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
     }
 
     public Builder addProcessorBuildTarget(BuildRule rule) {
-      rules.add(rule);
+      processorsBuilder.addDep(rule);
       return this;
     }
 
-    public Builder addAllProcessors(Collection<? extends String> processorNames) {
-      names.addAll(processorNames);
+    public Builder addAllProcessors(Collection<String> processorNames) {
+      processorsBuilder.addAllProcessorNames(processorNames);
       return this;
     }
 
@@ -193,47 +180,16 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
     }
 
     public AnnotationProcessingParams build() {
-      if (names.isEmpty() && rules.isEmpty() && parameters.isEmpty()) {
+      JavacPluginProperties processors = processorsBuilder.build();
+      if (processors.isEmpty() && parameters.isEmpty()) {
         return EMPTY;
-      }
-
-      ImmutableSortedSet.Builder<SourcePath> inputs = ImmutableSortedSet.naturalOrder();
-      Set<SourcePath> searchPathElements = Sets.newHashSet();
-
-      for (BuildRule rule : this.rules) {
-        if (rule.getClass().isAnnotationPresent(BuildsAnnotationProcessor.class)) {
-          SourcePath outputSourcePath = rule.getSourcePathToOutput();
-          if (outputSourcePath != null) {
-            inputs.add(outputSourcePath);
-            searchPathElements.add(outputSourcePath);
-          }
-        } else if (rule instanceof HasClasspathEntries) {
-          HasClasspathEntries hasClasspathEntries = (HasClasspathEntries) rule;
-          ImmutableSet<JavaLibrary> entries = hasClasspathEntries.getTransitiveClasspathDeps();
-          for (JavaLibrary entry : entries) {
-            // Libraries may merely re-export other libraries' class paths, instead of having one
-            // itself. In such cases do not add the library itself, and just move on.
-            if (entry.getSourcePathToOutput() != null) {
-              inputs.add(entry.getSourcePathToOutput());
-            }
-          }
-          searchPathElements.addAll(hasClasspathEntries.getTransitiveClasspaths());
-        } else {
-          throw new HumanReadableException(
-              "%1$s: Error adding '%2$s' to annotation_processing_deps: " +
-              "must refer only to prebuilt jar, java binary, or java library targets.",
-              ownerTarget,
-              rule.getFullyQualifiedName());
-        }
       }
 
       return new AnnotationProcessingParams(
           ownerTarget,
           filesystem,
-          searchPathElements,
-          names,
+          processors,
           parameters,
-          inputs.build(),
           processOnly);
     }
   }

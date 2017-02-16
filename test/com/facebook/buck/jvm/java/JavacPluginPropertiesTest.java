@@ -29,8 +29,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-public class AnnotationProcessingParamsTest {
-
+public class JavacPluginPropertiesTest {
   @Test
   public void transitiveAnnotationProcessorDepsInInputs() {
     BuildRuleResolver resolver =
@@ -48,13 +47,12 @@ public class AnnotationProcessingParamsTest {
                 pathResolver,
                 ImmutableSortedSet.of(dep)));
 
-    AnnotationProcessingParams params = new AnnotationProcessingParams.Builder()
-        .addProcessorBuildTarget(processor)
+    JavacPluginProperties props = JavacPluginProperties.builder()
+        .addDep(processor)
         .build();
 
     assertThat(
-        ruleFinder.filterBuildRuleInputs(params.getInputs()),
+        ruleFinder.filterBuildRuleInputs(props.getInputs()),
         Matchers.containsInAnyOrder(processor, dep));
   }
-
 }

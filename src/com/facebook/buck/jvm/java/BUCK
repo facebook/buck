@@ -49,6 +49,7 @@ java_immutables_library(
     'AbstractJavacExecutionContext.java',
     'AbstractDirectToJarOutputSettings.java',
     'AbstractJavacOptions.java',
+    'AbstractJavacPluginProperties.java',
     'AbstractJavacVersion.java',
     'AnnotationProcessingEvent.java',
     'AnnotationProcessingParams.java',
