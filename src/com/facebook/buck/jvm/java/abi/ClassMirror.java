@@ -155,20 +155,6 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
     return fileName.compareTo(o.fileName);
   }
 
-  public boolean isAnonymousOrLocalClass() {
-    if (outerClass == null) {
-      return false;
-    }
-
-    for (InnerClass innerClass : innerClasses) {
-      if (innerClass.name.equals(name) && innerClass.outerName == null) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   public ByteSource getStubClassBytes() {
     ClassWriter writer = new ClassWriter(0);
     writer.visit(version, access, name, signature, superName, interfaces);
@@ -178,9 +164,7 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
     }
 
     for (InnerClass inner : innerClasses) {
-      if (!isAnonymousOrLocalClass(inner)) {
-        writer.visitInnerClass(inner.name, inner.outerName, inner.innerName, inner.access);
-      }
+      writer.visitInnerClass(inner.name, inner.outerName, inner.innerName, inner.access);
     }
 
     for (AnnotationMirror annotation : annotations) {
@@ -196,10 +180,6 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
     }
     writer.visitEnd();
     return ByteSource.wrap(writer.toByteArray());
-  }
-
-  private boolean isAnonymousOrLocalClass(InnerClass inner) {
-    return inner.outerName == null || inner.innerName == null;
   }
 
   private static class InnerClass implements Comparable<InnerClass> {

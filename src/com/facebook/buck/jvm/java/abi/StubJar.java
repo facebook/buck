@@ -72,9 +72,7 @@ public class StubJar {
           }
         } else if (input.isClass(path)) {
           ClassMirror stub = input.openClass(path);
-          if (!stub.isAnonymousOrLocalClass()) {
-            writer.writeClass(path, stub);
-          }
+          writer.writeClass(path, stub);
         }
       }
     }

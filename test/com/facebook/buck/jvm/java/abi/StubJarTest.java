@@ -504,45 +504,6 @@ public class StubJarTest {
   }
 
   @Test
-  public void ignoresAnonymousClasses() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  public Runnable r = new Runnable() {",
-                "    public void run() { }",
-                "  };",
-                "}"
-            )));
-
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class", "com/example/buck/A$1.class");
-  }
-
-  @Test
-  public void ignoresLocalClasses() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  public void method() {",
-                "    class Local { };",
-                "  }",
-                "}"
-            )));
-
-    assertClassesStubbedCorrectly(
-        paths,
-        "com/example/buck/A.class",
-        "com/example/buck/A$1Local.class");
-  }
-
-  @Test
   public void abiSafeChangesResultInTheSameOutputJar() throws IOException {
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
@@ -833,10 +794,6 @@ public class StubJarTest {
       AbiClass original = readClass(paths.fullJar, className);
       AbiClass stubbed = readClass(paths.stubJar, className);
 
-      if (isAnonymousOrLocalClass(original.getClassNode())) {
-        original = null;
-      }
-
       assertClassStubbedCorrectly(original, stubbed);
     }
   }
@@ -851,13 +808,6 @@ public class StubJarTest {
    * </ul>
    */
   private static void assertClassStubbedCorrectly(AbiClass original, AbiClass stubbed) {
-    if (original == null) {
-      if (stubbed != null) {
-        fail(String.format("Should not have stubbed %s", stubbed.getClassNode().name));
-      }
-      return;
-    }
-
     ClassNode originalNode = original.getClassNode();
     ClassNode stubbedNode = stubbed.getClassNode();
 
@@ -870,8 +820,7 @@ public class StubJarTest {
     assertNull(stubbedNode.sourceFile);
     assertNull(stubbedNode.sourceDebug);
     assertEquals(originalNode.outerClass, stubbedNode.outerClass);
-    assertNull(stubbedNode.outerMethod);
-    assertNull(stubbedNode.outerMethodDesc);
+    assertEquals(originalNode.outerMethodDesc, stubbedNode.outerMethodDesc);
     assertAnnotationsEqual(originalNode.visibleAnnotations, stubbedNode.visibleAnnotations);
     assertAnnotationsEqual(originalNode.invisibleAnnotations, stubbedNode.invisibleAnnotations);
     assertTypeAnnotationsEqual(
@@ -889,41 +838,12 @@ public class StubJarTest {
   private static void assertInnerClassesStubbedCorrectly(
       List<InnerClassNode> original,
       List<InnerClassNode> stubbed) {
-    List<InnerClassNode> filteredOriginal = original.stream()
-        .filter(node -> !isAnonymousOrLocalClass(node))
-        .collect(Collectors.toList());
-
     assertMembersStubbedCorrectly(
-        filteredOriginal,
+        original,
         stubbed,
         node -> node.name,
         node -> node.access,
         StubJarTest::assertInnerClassStubbedCorrectly);
-  }
-
-  private static boolean isAnonymousOrLocalClass(ClassNode node) {
-    return isLocalClass(node) || isAnonymousClass(node);
-  }
-
-  private static boolean isLocalClass(ClassNode node) {
-    return node.outerMethod != null;
-  }
-
-  private static boolean isAnonymousClass(ClassNode node) {
-    if (node.outerClass == null) {
-      return false;
-    }
-
-    for (InnerClassNode innerClass : node.innerClasses) {
-      if (innerClass.name.equals(node.name) && innerClass.innerName == null) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private static boolean isAnonymousOrLocalClass(InnerClassNode node) {
-    return node.innerName == null || node.outerName == null;
   }
 
   private static void assertMethodsStubbedCorrectly(
