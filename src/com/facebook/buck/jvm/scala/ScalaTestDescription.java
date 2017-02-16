@@ -85,7 +85,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
       A args) throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
-    if (rawParams.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
+    if (CalculateAbi.isAbiTarget(rawParams.getBuildTarget())) {
       BuildTarget testTarget = rawParams.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
       resolver.requireRule(testTarget);
       return CalculateAbi.of(

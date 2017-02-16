@@ -104,7 +104,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
         /* resourceUnionPackage */ Optional.empty(),
         /* rName */ Optional.empty());
 
-    if (params.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
+    if (CalculateAbi.isAbiTarget(params.getBuildTarget())) {
       if (params.getBuildTarget().getFlavors().contains(
           AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR)) {
         return graphEnhancer.getBuildableForAndroidResourcesAbi(resolver, ruleFinder);

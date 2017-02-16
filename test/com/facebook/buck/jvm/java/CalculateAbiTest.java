@@ -16,7 +16,9 @@
 
 package com.facebook.buck.jvm.java;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -42,6 +44,20 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class CalculateAbiTest {
+
+  @Test
+  public void testIsAbiTargetRecognizesAbiTargets() {
+    assertTrue(
+        CalculateAbi.isAbiTarget(
+            BuildTargetFactory.newInstance("//foo/bar:bar#abi")));
+  }
+
+  @Test
+  public void testIsAbiTargetRecognizesNonAbiTargets() {
+    assertFalse(
+        CalculateAbi.isAbiTarget(
+            BuildTargetFactory.newInstance("//foo/bar:bar#not-abi")));
+  }
 
   @Test
   public void ruleKeysChangeIfGeneratedBinaryJarChanges() throws Exception {

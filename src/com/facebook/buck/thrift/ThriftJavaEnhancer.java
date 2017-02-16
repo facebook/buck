@@ -112,7 +112,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
       ImmutableSortedSet<BuildRule> deps) throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
-    if (params.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
+    if (CalculateAbi.isAbiTarget(params.getBuildTarget())) {
       BuildTarget libraryTarget = params.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
       resolver.requireRule(libraryTarget);
       return CalculateAbi.of(

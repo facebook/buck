@@ -100,7 +100,7 @@ public class AndroidPrebuiltAarDescription
         params.getBuildTarget());
     UnzipAar unzipAar = (UnzipAar) unzipAarRule;
 
-    if (flavors.contains(CalculateAbi.FLAVOR)) {
+    if (CalculateAbi.isAbiTarget(params.getBuildTarget())) {
       return CalculateAbi.of(
           params.getBuildTarget(),
           ruleFinder,

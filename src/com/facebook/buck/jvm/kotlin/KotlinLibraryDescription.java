@@ -92,9 +92,7 @@ public class KotlinLibraryDescription implements
 
     // We know that the flavour we're being asked to create is valid, since the check is done when
     // creating the action graph from the target graph.
-    ImmutableSortedSet<Flavor> flavors = target.getFlavors();
-
-    if (flavors.contains(CalculateAbi.FLAVOR)) {
+    if (CalculateAbi.isAbiTarget(target)) {
       BuildTarget libraryTarget = params.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
       resolver.requireRule(libraryTarget);
       return CalculateAbi.of(
@@ -103,6 +101,8 @@ public class KotlinLibraryDescription implements
           params,
           new BuildTargetSourcePath(libraryTarget));
     }
+
+    ImmutableSortedSet<Flavor> flavors = target.getFlavors();
 
     BuildRuleParams paramsWithMavenFlavor = null;
     if (flavors.contains(JavaLibrary.MAVEN_JAR)) {

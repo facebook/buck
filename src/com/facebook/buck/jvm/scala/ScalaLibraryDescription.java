@@ -71,7 +71,7 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
       A args) throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
-    if (rawParams.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
+    if (CalculateAbi.isAbiTarget(rawParams.getBuildTarget())) {
       BuildTarget libraryTarget = rawParams.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
       resolver.requireRule(libraryTarget);
       return CalculateAbi.of(

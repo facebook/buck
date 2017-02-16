@@ -54,6 +54,10 @@ public class CalculateAbi extends AbstractBuildRule
     this.outputPath = getAbiJarPath();
   }
 
+  public static boolean isAbiTarget(BuildTarget target) {
+    return target.getFlavors().contains(FLAVOR);
+  }
+
   public static CalculateAbi of(
       BuildTarget target,
       SourcePathRuleFinder ruleFinder,

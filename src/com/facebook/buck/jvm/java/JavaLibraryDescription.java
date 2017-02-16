@@ -132,7 +132,7 @@ public class JavaLibraryDescription implements
           sources);
     }
 
-    if (flavors.contains(CalculateAbi.FLAVOR)) {
+    if (CalculateAbi.isAbiTarget(target)) {
       BuildTarget libraryTarget = target.withoutFlavors(CalculateAbi.FLAVOR);
       resolver.requireRule(libraryTarget);
       return CalculateAbi.of(
