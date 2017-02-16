@@ -269,20 +269,26 @@ public abstract class BaseRunner {
   }
 
   protected void runAndExit() {
+    int exitCode;
+
     // Run the tests.
     try {
       run();
-    } catch (Throwable e){
-      e.printStackTrace();
-    } finally {
-      // Explicitly exit to force the test runner to complete even if tests have sloppily left
-      // behind non-daemon threads that would have otherwise forced the process to wait and
-      // eventually timeout.
-      //
-      // Separately, we're using a successful exit code regardless of test outcome since JUnitRunner
+
+      // We're using a successful exit code regardless of test outcome since JUnitRunner
       // is designed to execute all tests and produce a report of success or failure.  We've done
       // that successfully if we've gotten here.
-      System.exit(0);
+      exitCode = 0;
+    } catch (Throwable e){
+      e.printStackTrace();
+      // We're using a failed exit code here because something in the test runner crashed. We can't
+      // tell whether there were still tests left to be run, so it's safest if we fail.
+      exitCode = 1;
     }
+
+    // Explicitly exit to force the test runner to complete even if tests have sloppily left
+    // behind non-daemon threads that would have otherwise forced the process to wait and
+    // eventually timeout.
+    System.exit(exitCode);
   }
 }
