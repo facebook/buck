@@ -605,6 +605,29 @@ public class StubJarTest {
   }
 
   @Test
+  public void stubsNestedInnerClasses() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class A {",
+                "  public class B {",
+                "    public class C {",
+                "      public int count;",
+                "      public void foo() {}",
+                "    }",
+                "  }",
+                "}"
+            )));
+
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A$B.class");
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A$B$C.class");
+  }
+
+  @Test
   public void doesNotStubReferencesToInnerClassesOfOtherTypess() throws IOException {
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
