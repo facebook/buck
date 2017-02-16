@@ -104,7 +104,6 @@ class ClassVisitorDriverFromElement {
         visitMemberClass(e, visitor);
         return null;
       }
-      // TODO(jkeljo): Skip anonymous and local
 
       TypeMirror superclass = e.getSuperclass();
       if (superclass.getKind() == TypeKind.NONE) {
