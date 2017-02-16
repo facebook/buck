@@ -33,6 +33,8 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 
 /**
  * Examines the non-private interfaces of types defined in one or more
@@ -221,6 +223,11 @@ class InterfaceTypeAndConstantReferenceFinder {
       }
 
       private void reportType() {
+        TypeMirror currentType = Preconditions.checkNotNull(getCurrentType());
+        if (currentType.getKind() != TypeKind.DECLARED) {
+          return;
+        }
+
         listener.onTypeReferenceFound(
             (TypeElement) Preconditions.checkNotNull(getCurrentElement()),
             getCurrentPath(),
