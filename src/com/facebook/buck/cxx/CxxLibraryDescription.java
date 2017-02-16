@@ -143,6 +143,7 @@ public class CxxLibraryDescription implements
         flavors.contains(CxxInferEnhancer.InferFlavors.INFER.get()) ||
         flavors.contains(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get()) ||
         flavors.contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get()) ||
+        flavors.contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR) ||
         LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(flavors);
 
   }
@@ -813,7 +814,9 @@ public class CxxLibraryDescription implements
         args.linkWhole.orElse(false),
         args.soname,
         args.tests,
-        args.canBeAsset.orElse(false));
+        args.canBeAsset.orElse(false),
+        !params.getBuildTarget().getFlavors()
+            .contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR));
   }
 
   public static Optional<Map.Entry<Flavor, Type>> getLibType(BuildTarget buildTarget) {

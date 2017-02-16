@@ -80,6 +80,12 @@ public class CxxLibrary
   private final Optional<String> soname;
   private final ImmutableSortedSet<BuildTarget> tests;
   private final boolean canBeAsset;
+  /**
+   * Whether Native Linkable dependencies should be propagated for the purpose of computing objects
+   * to link at link time. Setting this to false makes this library invisible to linking, so it and
+   * its link-time dependencies are ignored.
+   */
+  private final boolean propagateLinkables;
 
   private final Map<Pair<Flavor, Linker.LinkableDepType>, NativeLinkableInput> nativeLinkableCache =
       new HashMap<>();
@@ -108,7 +114,8 @@ public class CxxLibrary
       boolean linkWhole,
       Optional<String> soname,
       ImmutableSortedSet<BuildTarget> tests,
-      boolean canBeAsset) {
+      boolean canBeAsset,
+      boolean propagateLinkables) {
     super(params, pathResolver);
     this.params = params;
     this.ruleResolver = ruleResolver;
@@ -127,6 +134,7 @@ public class CxxLibrary
     this.soname = soname;
     this.tests = tests;
     this.canBeAsset = canBeAsset;
+    this.propagateLinkables = propagateLinkables;
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
@@ -185,6 +193,9 @@ public class CxxLibrary
 
   @Override
   public Iterable<NativeLinkable> getNativeLinkableDeps() {
+    if (!propagateLinkables) {
+      return ImmutableList.of();
+    }
     return FluentIterable.from(getDeclaredDeps())
         .filter(NativeLinkable.class);
   }
@@ -199,6 +210,9 @@ public class CxxLibrary
 
   @Override
   public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
+    if (!propagateLinkables) {
+      return ImmutableList.of();
+    }
     return FluentIterable.from(exportedDeps)
         .filter(NativeLinkable.class);
   }
@@ -225,7 +239,7 @@ public class CxxLibrary
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
     linkerArgsBuilder.addAll(Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform)));
 
-    if (!headerOnly.apply(cxxPlatform)) {
+    if (!headerOnly.apply(cxxPlatform) && propagateLinkables) {
       boolean isStatic;
       switch (linkage) {
         case STATIC:

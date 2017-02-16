@@ -16,8 +16,10 @@
 
 package com.facebook.buck.cxx;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
@@ -243,5 +245,26 @@ public class CxxLibraryIntegrationTest {
     workspace.runBuckBuild("-v=3", "//:test_lib").assertFailure();
     workspace.runBuckBuild("-v=3", "//:test_both").assertFailure();
 
+  }
+
+  @Test
+  public void explicitHeaderOnlyDependency() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this,
+            "explicit_header_only_dependency",
+            tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:binary").assertSuccess();
+    ProjectWorkspace.ProcessResult shouldFail =
+        workspace.runBuckBuild("//:binary-lacking-symbols").assertFailure();
+    assertThat(
+        "Should not link in archive of direct header-only dependency.",
+        shouldFail.getStderr(),
+        containsString("lib1_function"));
+    assertThat(
+        "Dependencies of header-only dependencies should also be header only.",
+        shouldFail.getStderr(),
+        containsString("lib1_dep_function"));
   }
 }
