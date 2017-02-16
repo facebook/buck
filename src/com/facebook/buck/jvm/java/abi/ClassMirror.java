@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Sets;
@@ -142,8 +143,16 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
       return;
     }
 
-    innerClasses.add(new InnerClass(name, outerName, innerName, access));
-    super.visitInnerClass(name, outerName, innerName, access);
+    String currentClassName = Preconditions.checkNotNull(this.name);
+    if (currentClassName.equals(name) || currentClassName.equals(outerName)) {
+      // InnerClasses attributes are normally present for any member class (of any type) that is
+      // referenced from code in this class file. However, for stubbing purposes we need only
+      // include InnerClasses attributes for the class itself (if it is a member class, so that
+      // the compiler can know that), and for the member classes of this class (so that the
+      // compiler knows to go looking for them). All of the other ones are only needed at runtime.
+      innerClasses.add(new InnerClass(name, outerName, innerName, access));
+      super.visitInnerClass(name, outerName, innerName, access);
+    }
   }
 
   @Override
@@ -178,9 +187,7 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
     }
 
     for (InnerClass inner : innerClasses) {
-      if (!isAnonymousOrLocalClass(inner)) {
-        writer.visitInnerClass(inner.name, inner.outerName, inner.innerName, inner.access);
-      }
+      writer.visitInnerClass(inner.name, inner.outerName, inner.innerName, inner.access);
     }
 
     for (AnnotationMirror annotation : annotations) {
@@ -196,10 +203,6 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
     }
     writer.visitEnd();
     return ByteSource.wrap(writer.toByteArray());
-  }
-
-  private boolean isAnonymousOrLocalClass(InnerClass inner) {
-    return inner.outerName == null || inner.innerName == null;
   }
 
   private static class InnerClass implements Comparable<InnerClass> {
