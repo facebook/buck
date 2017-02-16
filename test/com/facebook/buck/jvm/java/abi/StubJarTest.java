@@ -20,8 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
@@ -64,7 +62,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.jar.JarOutputStream;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 
 import javax.annotation.processing.Processor;
@@ -378,53 +375,6 @@ public class StubJarTest {
 
     List<AnnotationNode>[] parameterAnnotations = method.visibleParameterAnnotations;
     assertEquals(2, parameterAnnotations.length);
-  }
-
-  @Test
-  public void preservesAnnotationsWithClassRetention() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on('\n').join(
-            "package com.example.buck;",
-            "import java.lang.annotation.*;",
-            "@ClassRetentionAnno()",
-            "public class A { }",
-            "@Retention(RetentionPolicy.CLASS)",
-            "@interface ClassRetentionAnno { }"));
-
-    AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/A.class");
-    ClassNode classNode = stubbed.getClassNode();
-    assertNull(classNode.visibleAnnotations);
-
-    List<String> annotations = classNode.invisibleAnnotations.stream()
-        .map(anno -> anno.desc)
-        .collect(Collectors.toList());
-
-    assertThat(annotations, Matchers.contains("Lcom/example/buck/ClassRetentionAnno;"));
-  }
-
-  @Test
-  public void preservesAnnotationsWithRuntimeRetention() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on('\n').join(
-            "package com.example.buck;",
-            "import java.lang.annotation.*;",
-            "@RuntimeRetentionAnno()",
-            "public class A { }",
-            "@Retention(RetentionPolicy.RUNTIME)",
-            "@interface RuntimeRetentionAnno { }"));
-
-    AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/A.class");
-    ClassNode classNode = stubbed.getClassNode();
-    List<String> annotations = classNode.visibleAnnotations.stream()
-        .map(anno -> anno.desc)
-        .collect(Collectors.toList());
-
-    assertThat(annotations, Matchers.contains("Lcom/example/buck/RuntimeRetentionAnno;"));
-    assertNull(classNode.invisibleAnnotations);
   }
 
   @Test
