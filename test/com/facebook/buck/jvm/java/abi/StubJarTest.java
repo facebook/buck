@@ -710,50 +710,6 @@ public class StubJarTest {
   }
 
   @Test
-  public void stubsProtectedInnerClasses() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  protected class B {",
-                "    public int count;",
-                "    public void foo() {}",
-                "  }",
-                "}"
-            )));
-
-    assertClassesStubbedCorrectly(
-        paths,
-        "com/example/buck/A.class",
-        "com/example/buck/A$B.class");
-  }
-
-  @Test
-  public void stubsDefaultInnerClasses() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  class B {",
-                "    public int count;",
-                "    public void foo() {}",
-                "  }",
-                "}"
-            )));
-
-    assertClassesStubbedCorrectly(
-        paths,
-        "com/example/buck/A.class",
-        "com/example/buck/A$B.class");
-  }
-
-  @Test
   public void stubsInnerEnums() throws IOException {
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,

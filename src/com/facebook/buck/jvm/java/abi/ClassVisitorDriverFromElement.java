@@ -110,18 +110,9 @@ class ClassVisitorDriverFromElement {
       if (superclass.getKind() == TypeKind.NONE) {
         superclass = elements.getTypeElement("java.lang.Object").asType();
       }
-      // Static never makes it into the file for classes
-      int accessFlags = AccessFlags.getAccessFlags(e) & ~Opcodes.ACC_STATIC;
-      if (e.getNestingKind() != NestingKind.TOP_LEVEL &&
-          e.getModifiers().contains(Modifier.PROTECTED)) {
-        // It looks like inner classes with protected visibility get marked as public, and then
-        // their InnerClasses attributes override that more specifically
-        accessFlags = (accessFlags & ~Opcodes.ACC_PROTECTED) | Opcodes.ACC_PUBLIC;
-      }
-
       visitor.visit(
           sourceVersionToClassFileVersion(targetVersion),
-          accessFlags,
+          AccessFlags.getAccessFlags(e) & ~Opcodes.ACC_STATIC,
           descriptorFactory.getInternalName(e),
           signatureFactory.getSignature(e),
           descriptorFactory.getInternalName(superclass),
