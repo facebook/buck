@@ -105,6 +105,7 @@ public class StubJarTest {
       "  Retention annotationValue() default @Retention(RetentionPolicy.SOURCE);",
       "  Retention[] annotationArrayValue() default {};",
       "  RetentionPolicy enumValue () default RetentionPolicy.CLASS;",
+      "  Class typeValue() default Foo.class;",
       "  @Target({TYPE_PARAMETER, TYPE_USE})",
       "  @interface TypeAnnotation { }",
       "}"
@@ -523,6 +524,22 @@ public class StubJarTest {
   }
 
   @Test
+  public void preservesAnnotationsWithTypeValues() throws IOException {
+    notYetImplementedForMissingClasspath();
+
+    Path annotations = createAnnotationFullJar();
+    JarPaths paths = createFullAndStubJars(
+        ImmutableSortedSet.of(annotations),
+        "A.java",
+        Joiner.on("\n").join(
+            "package com.example.buck;",
+            "@Foo(typeValue=String.class)",
+            "public @interface A {}"));
+
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+  }
+
+  @Test
   public void preservesAnnotationsWithEnumArrayValues() throws IOException {
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
@@ -571,6 +588,22 @@ public class StubJarTest {
   }
 
   @Test
+  public void preservesAnnotationsWithDefaultValues() throws IOException {
+    notYetImplementedForMissingClasspath();
+
+    Path annotations = createAnnotationFullJar();
+    JarPaths paths = createFullAndStubJars(
+        ImmutableSortedSet.of(annotations),
+        "A.java",
+        Joiner.on("\n").join(
+            "package com.example.buck;",
+            "@Foo()",
+            "public @interface A {}"));
+
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+  }
+
+  @Test
   public void preservesAnnotationPrimitiveDefaultValues() throws IOException {
     JarPaths paths = createAnnotationFullAndStubJars();
 
@@ -593,6 +626,13 @@ public class StubJarTest {
 
   @Test
   public void preservesAnnotationEnumDefaultValues() throws IOException {
+    JarPaths paths = createAnnotationFullAndStubJars();
+
+    assertClassesStubbedCorrectly(paths, "com/example/buck/Foo.class");
+  }
+
+  @Test
+  public void preservesAnnotationTypeDefaultValues() throws IOException {
     JarPaths paths = createAnnotationFullAndStubJars();
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/Foo.class");
