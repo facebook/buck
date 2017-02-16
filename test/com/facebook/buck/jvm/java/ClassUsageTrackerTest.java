@@ -58,11 +58,12 @@ public class ClassUsageTrackerTest {
 
   private ClassUsageTracker tracker;
   private StandardJavaFileManager fileManager;
+  private FakeStandardJavaFileManager fakeFileManager;
 
   @Before
   public void setUp() {
     tracker = new ClassUsageTracker();
-    FakeStandardJavaFileManager fakeFileManager = new FakeStandardJavaFileManager();
+    fakeFileManager = new FakeStandardJavaFileManager();
     fileManager = tracker.wrapFileManager(fakeFileManager);
 
     fakeFileManager.addFile(
@@ -238,6 +239,32 @@ public class ClassUsageTrackerTest {
   @Test
   public void readingOtherFileShouldNotBeTracked() throws IOException {
     assertFalse(fileTypeIsTracked(JavaFileObject.Kind.OTHER));
+  }
+
+  @Test
+  public void readingAnonymousClassShouldNotBeTracked() throws IOException {
+    String anonymousClassName = "Foo$3.class";
+    fakeFileManager.addFile(TEST_JAR_PATH, anonymousClassName, JavaFileObject.Kind.CLASS);
+
+    fileManager.getJavaFileForInput(
+        null,
+        anonymousClassName,
+        JavaFileObject.Kind.CLASS).getCharContent(false);
+
+    assertNoFilesRead();
+  }
+
+  @Test
+  public void readingLocalClassShouldNotBeTracked() throws IOException {
+    String localClassName = "Foo$3SomeLocalCLass.class";
+    fakeFileManager.addFile(TEST_JAR_PATH, localClassName, JavaFileObject.Kind.CLASS);
+
+    fileManager.getJavaFileForInput(
+        null,
+        localClassName,
+        JavaFileObject.Kind.CLASS).getCharContent(false);
+
+    assertNoFilesRead();
   }
 
   private boolean fileTypeIsTracked(JavaFileObject.Kind kind) throws IOException {

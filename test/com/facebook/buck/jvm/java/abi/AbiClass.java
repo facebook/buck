@@ -65,6 +65,9 @@ public class AbiClass {
   public static AbiClass extract(Path pathToJar, String className) throws IOException {
     try (ZipFile zip = new ZipFile(pathToJar.toString())) {
       ZipEntry entry = zip.getEntry(className);
+      if (entry == null) {
+        return null;
+      }
       try (InputStream entryStream = zip.getInputStream(entry)) {
         ClassReader reader = new ClassReader(entryStream);
         ClassNode classNode = new ClassNode();
