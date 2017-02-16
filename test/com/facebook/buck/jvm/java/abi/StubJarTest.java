@@ -446,6 +446,22 @@ public class StubJarTest {
   }
 
   @Test
+  public void omitsAnnotationsWithSourceRetention() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on('\n').join(
+            "package com.example.buck;",
+            "import java.lang.annotation.*;",
+            "@SourceRetentionAnno()",
+            "public class A { }",
+            "@Retention(RetentionPolicy.SOURCE)",
+            "@interface SourceRetentionAnno { }"));
+
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+  }
+
+  @Test
   public void preservesAnnotationsWithClassRetention() throws IOException {
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
