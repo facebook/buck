@@ -92,7 +92,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
-    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
+    BuildTarget abiJarTarget = CalculateAbi.getAbiTarget(params.getBuildTarget());
 
     JavacOptions javacOptions = JavacOptionsFactory
         .create(

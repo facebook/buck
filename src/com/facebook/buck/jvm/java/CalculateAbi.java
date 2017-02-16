@@ -41,7 +41,7 @@ import java.nio.file.Path;
 public class CalculateAbi extends AbstractBuildRule
     implements SupportsInputBasedRuleKey {
 
-  public static final Flavor FLAVOR = ImmutableFlavor.of("abi");
+  private static final Flavor FLAVOR = ImmutableFlavor.of("abi");
 
   @AddToRuleKey
   private final SourcePath binaryJar;
@@ -63,6 +63,12 @@ public class CalculateAbi extends AbstractBuildRule
     Preconditions.checkArgument(isAbiTarget(abiTarget));
 
     return abiTarget.withoutFlavors(FLAVOR);
+  }
+
+  public static BuildTarget getAbiTarget(BuildTarget libraryTarget) {
+    Preconditions.checkArgument(!isAbiTarget(libraryTarget));
+
+    return libraryTarget.withAppendedFlavors(FLAVOR);
   }
 
   public static CalculateAbi of(

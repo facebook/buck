@@ -119,7 +119,7 @@ public class AndroidLibraryGraphEnhancer {
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     BuildTarget abiJarTarget =
-        dummyRDotJavaParams.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
+        CalculateAbi.getAbiTarget(dummyRDotJavaParams.getBuildTarget());
 
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
         dummyRDotJavaParams,

@@ -120,7 +120,7 @@ public class AndroidPrebuiltAarDescription
                 AndroidPrebuiltAar.class),
             AndroidPrebuiltAar::getPrebuiltJar));
 
-    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
+    BuildTarget abiJarTarget = CalculateAbi.getAbiTarget(params.getBuildTarget());
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 

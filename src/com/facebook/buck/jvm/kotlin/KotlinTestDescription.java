@@ -103,7 +103,7 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
             args
         );
 
-    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
+    BuildTarget abiJarTarget = CalculateAbi.getAbiTarget(params.getBuildTarget());
 
     KotlincToJarStepFactory stepFactory = new KotlincToJarStepFactory(
         kotlinBuckConfig.getKotlinCompiler().get(),

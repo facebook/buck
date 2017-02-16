@@ -70,7 +70,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
-    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
+    BuildTarget abiJarTarget = CalculateAbi.getAbiTarget(params.getBuildTarget());
 
     BuildRule prebuilt = new PrebuiltJar(
         params,

@@ -67,10 +67,17 @@ public class CalculateAbiTest {
   }
 
   @Test
-  public void testGetLibraryTargetFlavored() {
+  public void testGetAbiTarget() {
     assertThat(
-        CalculateAbi.getLibraryTarget(BuildTargetFactory.newInstance("//foo/bar:bar#baz,abi,waz")),
-        Matchers.equalTo(BuildTargetFactory.newInstance("//foo/bar:bar#baz,waz")));
+        CalculateAbi.getAbiTarget(BuildTargetFactory.newInstance("//foo/bar:bar")),
+        Matchers.equalTo(BuildTargetFactory.newInstance("//foo/bar:bar#abi")));
+  }
+
+  @Test
+  public void testGetAbiTargetFlavored() {
+    assertThat(
+        CalculateAbi.getAbiTarget(BuildTargetFactory.newInstance("//foo/bar:bar#baz")),
+        Matchers.equalTo(BuildTargetFactory.newInstance("//foo/bar:bar#baz,abi")));
   }
 
   @Test

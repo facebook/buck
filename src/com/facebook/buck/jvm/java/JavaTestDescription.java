@@ -114,7 +114,7 @@ public class JavaTestDescription implements
         cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
 
-    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
+    BuildTarget abiJarTarget = CalculateAbi.getAbiTarget(params.getBuildTarget());
 
     BuildRuleParams testsLibraryParams = params.copyWithDeps(
             Suppliers.ofInstance(

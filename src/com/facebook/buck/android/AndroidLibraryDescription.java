@@ -148,7 +148,7 @@ public class AndroidLibraryDescription
             params.getExtraDeps());
       }
 
-      BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
+      BuildTarget abiJarTarget = CalculateAbi.getAbiTarget(params.getBuildTarget());
 
       AndroidLibraryCompiler compiler =
           compilerFactory.getCompiler(args.language.orElse(JvmLanguage.JAVA));

@@ -147,7 +147,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
 
-    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
+    BuildTarget abiJarTarget = CalculateAbi.getAbiTarget(params.getBuildTarget());
 
     // Rewrite dependencies on tests to actually depend on the code which backs the test.
     BuildRuleParams testsLibraryParams = params.copyWithDeps(
