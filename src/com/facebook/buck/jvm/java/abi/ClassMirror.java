@@ -80,15 +80,11 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
     this.signature = signature;
     this.interfaces = interfaces;
     this.superName = superName;
-    super.visit(version, access, name, signature, superName, interfaces);
   }
 
   @Override
   public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-    AnnotationMirror mirror = new AnnotationMirror(
-        desc,
-        visible,
-        super.visitAnnotation(desc, visible));
+    AnnotationMirror mirror = new AnnotationMirror(desc, visible);
     annotations.add(mirror);
     return mirror;
   }
@@ -96,18 +92,12 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
   @Override
   public AnnotationVisitor visitTypeAnnotation(
       int typeRef, TypePath typePath, String desc, boolean visible) {
-    TypeAnnotationMirror mirror = new TypeAnnotationMirror(
-        typeRef,
-        typePath,
-        desc,
-        visible,
-        super.visitTypeAnnotation(typeRef, typePath, desc, visible));
+    TypeAnnotationMirror mirror = new TypeAnnotationMirror(typeRef, typePath, desc, visible);
     typeAnnotations.add(mirror);
     return mirror;
   }
 
   @Override
-  @Nullable
   public FieldVisitor visitField(
       int access,
       String name,
@@ -115,22 +105,15 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
       String signature,
       Object value) {
     if ((access & Opcodes.ACC_PRIVATE) > 0) {
-      return null;
+      return super.visitField(access, name, desc, signature, value);
     }
 
-    FieldMirror mirror = new FieldMirror(
-        access,
-        name,
-        desc,
-        signature,
-        value,
-        super.visitField(access, name, desc, signature, value));
+    FieldMirror mirror = new FieldMirror(access, name, desc, signature, value);
     fields.add(mirror);
     return mirror;
   }
 
   @Override
-  @Nullable
   public MethodVisitor visitMethod(
       int access, String name, String desc, String signature, String[] exceptions) {
 
@@ -140,7 +123,7 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
     // initialization process." Thus we don't need to emit a stub of <clinit>.
     if (((access & Opcodes.ACC_PRIVATE) > 0) ||
         (name.equals("<clinit>") && (access & Opcodes.ACC_STATIC) > 0)) {
-      return null;
+      return super.visitMethod(access, name, desc, signature, exceptions);
     }
 
     // Bridge methods are created by the compiler, and don't appear in source. It would be nice to
@@ -153,13 +136,7 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
     // section 4.7.8 of the JVM spec, which are "<init>" and "Enum.valueOf()" and "Enum.values".
     // None of these are actually harmful to the ABI, so we allow synthetic methods through.
     // http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.8
-    MethodMirror mirror = new MethodMirror(
-        access,
-        name,
-        desc,
-        signature,
-        exceptions,
-        super.visitMethod(access, name, desc, signature, exceptions));
+    MethodMirror mirror = new MethodMirror(access, name, desc, signature, exceptions);
     methods.add(mirror);
 
     return mirror;

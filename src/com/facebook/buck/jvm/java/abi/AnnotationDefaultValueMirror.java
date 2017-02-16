@@ -26,15 +26,14 @@ import javax.annotation.Nullable;
 public class AnnotationDefaultValueMirror extends AnnotationVisitor {
   @Nullable private AnnotationValueMirror defaultValue;
 
-  public AnnotationDefaultValueMirror(AnnotationVisitor inner) {
-    super(Opcodes.ASM5, inner);
+  public AnnotationDefaultValueMirror() {
+    super(Opcodes.ASM5);
   }
 
   @Override
   public void visit(String name, Object value) {
     Preconditions.checkState(defaultValue == null);
 
-    super.visit(name, value);
     defaultValue = AnnotationValueMirror.forPrimitive(value);
   }
 
@@ -42,7 +41,6 @@ public class AnnotationDefaultValueMirror extends AnnotationVisitor {
   public void visitEnum(String name, String desc, String value) {
     Preconditions.checkState(defaultValue == null);
 
-    super.visitEnum(name, desc, value);
     defaultValue = AnnotationValueMirror.forEnum(desc, value);
   }
 
@@ -50,12 +48,9 @@ public class AnnotationDefaultValueMirror extends AnnotationVisitor {
   public AnnotationVisitor visitAnnotation(String name, String desc) {
     Preconditions.checkState(defaultValue == null);
 
-    AnnotationMirror annotationMirror = new AnnotationMirror(
-        desc,
-        true,
-        super.visitAnnotation(name, desc));
+    AnnotationMirror annotationMirror = new AnnotationMirror(desc, true);
 
-    defaultValue = AnnotationValueMirror.forAnnotation(annotationMirror, av);
+    defaultValue = AnnotationValueMirror.forAnnotation(annotationMirror);
 
     return annotationMirror;
   }
@@ -64,7 +59,7 @@ public class AnnotationDefaultValueMirror extends AnnotationVisitor {
   public AnnotationVisitor visitArray(String name) {
     Preconditions.checkState(defaultValue == null);
 
-    defaultValue = AnnotationValueMirror.forArray(super.visitArray(name));
+    defaultValue = AnnotationValueMirror.forArray();
     return defaultValue;
   }
 

@@ -31,14 +31,12 @@ class AnnotationValueMirror extends AnnotationVisitor {
   @Nullable private final AnnotationMirror annotationValue;
   @Nullable private final List<AnnotationValueMirror> arrayValue;
 
-  public static AnnotationValueMirror forArray(AnnotationVisitor inner) {
-    return new AnnotationValueMirror(inner);
+  public static AnnotationValueMirror forArray() {
+    return new AnnotationValueMirror();
   }
 
-  public static AnnotationValueMirror forAnnotation(
-      AnnotationMirror annotation,
-      AnnotationVisitor inner) {
-    return new AnnotationValueMirror(annotation, inner);
+  public static AnnotationValueMirror forAnnotation(AnnotationMirror annotation) {
+    return new AnnotationValueMirror(annotation);
   }
 
   public static AnnotationValueMirror forEnum(String desc, String value) {
@@ -65,16 +63,16 @@ class AnnotationValueMirror extends AnnotationVisitor {
     this.arrayValue = null;
   }
 
-  private AnnotationValueMirror(AnnotationMirror annotationValue, AnnotationVisitor inner) {
-    super(Opcodes.ASM5, inner);
+  private AnnotationValueMirror(AnnotationMirror annotationValue) {
+    super(Opcodes.ASM5);
     this.primitiveValue = null;
     this.enumValue = null;
     this.annotationValue = annotationValue;
     this.arrayValue = null;
   }
 
-  private AnnotationValueMirror(AnnotationVisitor inner) {
-    super(Opcodes.ASM5, inner);
+  private AnnotationValueMirror() {
+    super(Opcodes.ASM5);
     this.primitiveValue = null;
     this.enumValue = null;
     this.annotationValue = null;
@@ -113,7 +111,6 @@ class AnnotationValueMirror extends AnnotationVisitor {
       throw new AssertionError("ASM is expected to provide primitive arrays as simple values.");
     }
 
-    super.visit(name, value);
     arrayValue.add(AnnotationValueMirror.forPrimitive(value));
   }
 
@@ -126,7 +123,6 @@ class AnnotationValueMirror extends AnnotationVisitor {
       throw new AssertionError("Expected name == null");
     }
 
-    super.visitEnum(name, desc, value);
     arrayValue.add(AnnotationValueMirror.forEnum(desc, value));
   }
 
@@ -140,11 +136,8 @@ class AnnotationValueMirror extends AnnotationVisitor {
       throw new AssertionError("Expected name == null");
     }
 
-    AnnotationMirror annotation = new AnnotationMirror(
-        desc,
-        true,
-        super.visitAnnotation(name, desc));
-    arrayValue.add(AnnotationValueMirror.forAnnotation(annotation, av));
+    AnnotationMirror annotation = new AnnotationMirror(desc, true);
+    arrayValue.add(AnnotationValueMirror.forAnnotation(annotation));
     return annotation;  // Caller will call visit methods on this to provide the annotation args
   }
 }

@@ -20,7 +20,6 @@ import com.google.common.collect.ComparisonChain;
 
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.TypePath;
 
@@ -28,13 +27,8 @@ class TypeAnnotationMirror extends AnnotationMirror {
   private final int typeRef;
   private final TypePath typePath;
 
-  public TypeAnnotationMirror(
-      int typeRef,
-      TypePath typePath,
-      String desc,
-      boolean visible,
-      AnnotationVisitor annotationVisitor) {
-    super(desc, visible, annotationVisitor);
+  public TypeAnnotationMirror(int typeRef, TypePath typePath, String desc, boolean visible) {
+    super(desc, visible);
 
     this.typeRef = typeRef;
     this.typePath = typePath;
@@ -50,13 +44,6 @@ class TypeAnnotationMirror extends AnnotationMirror {
   @Override
   public void appendTo(MethodVisitor method) {
     AnnotationVisitor visitor = method.visitTypeAnnotation(typeRef, typePath, desc, visible);
-    visitValues(visitor);
-    visitor.visitEnd();
-  }
-
-  @Override
-  public void appendTo(FieldVisitor field) {
-    AnnotationVisitor visitor = field.visitTypeAnnotation(typeRef, typePath, desc, visible);
     visitValues(visitor);
     visitor.visitEnd();
   }
