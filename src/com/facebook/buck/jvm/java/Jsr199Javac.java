@@ -23,14 +23,11 @@ import com.facebook.buck.jvm.java.tracing.TranslatingJavacPhaseTracer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -49,10 +46,8 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -66,7 +61,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import javax.annotation.Nullable;
-import javax.annotation.processing.Processor;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
@@ -275,6 +269,12 @@ public abstract class Jsr199Javac implements Javac {
               Diagnostic.Kind.WARNING);
     }
 
+    AnnotationProcessorFactory processorFactory = new AnnotationProcessorFactory(
+        context.getEventSink(),
+        compiler.getClass().getClassLoader(),
+        context.getClassLoaderCache(),
+        safeAnnotationProcessors,
+        invokingRule);
     try {
       try (
           // TranslatingJavacPhaseTracer is AutoCloseable so that it can detect the end of tracing
@@ -290,14 +290,8 @@ public abstract class Jsr199Javac implements Javac {
           // this, then the evidence suggests that they get one polluted with Buck's own classpath,
           // which means that libraries that have dependencies on different versions of Buck's deps
           // may choke with novel errors that don't occur on the command line.
-          ProcessorBundle bundle = prepareProcessors(
-              context.getEventSink(),
-              compiler.getClass().getClassLoader(),
-              context.getClassLoaderCache(),
-              safeAnnotationProcessors,
-              invokingRule,
-              options)) {
-        compilationTask.setProcessors(bundle.processors);
+          ProcessorBundle processorBundle = prepareProcessors(processorFactory, options)) {
+        compilationTask.setProcessors(processorBundle.processors);
 
         // Invoke the compilation and inspect the result.
         isSuccess = compilationTask.call();
@@ -360,11 +354,7 @@ public abstract class Jsr199Javac implements Javac {
   }
 
   private ProcessorBundle prepareProcessors(
-      JavacEventSink eventSink,
-      ClassLoader compilerClassLoader,
-      ClassLoaderCache classLoaderCache,
-      Set<String> safeAnnotationProcessors,
-      BuildTarget target,
+      AnnotationProcessorFactory processorFactory,
       List<String> options) {
     String processorClassPath = null;
     String processorNames = null;
@@ -405,78 +395,7 @@ public abstract class Jsr199Javac implements Javac {
         .omitEmptyStrings()
         .splitToList(processorNames);
 
-    ProcessorBundle processorBundle = new ProcessorBundle();
-    setProcessorBundleClassLoader(
-        names,
-        urls,
-        compilerClassLoader,
-        classLoaderCache,
-        safeAnnotationProcessors,
-        target,
-        processorBundle);
-
-
-    for (String name : names) {
-      try {
-        LOG.debug("Loading %s from own classloader", name);
-
-        Class<? extends Processor> aClass =
-            Preconditions.checkNotNull(processorBundle.classLoader)
-                .loadClass(name)
-                .asSubclass(Processor.class);
-        processorBundle.processors.add(
-            new TracingProcessorWrapper(
-                eventSink,
-                target,
-                aClass.newInstance()));
-      } catch (ReflectiveOperationException e) {
-        // If this happens, then the build is really in trouble. Better warn the user.
-        throw new HumanReadableException(
-            "%s: javac unable to load annotation processor: %s",
-            target.getFullyQualifiedName(),
-            name);
-      }
-    }
-
-    return processorBundle;
-  }
-
-  @VisibleForTesting
-  void setProcessorBundleClassLoader(
-      List<String> processorNames,
-      URL[] processorClasspath,
-      ClassLoader baseClassLoader,
-      ClassLoaderCache classLoaderCache,
-      Set<String> safeAnnotationProcessors,
-      BuildTarget target,
-      ProcessorBundle processorBundle) {
-    // We can avoid lots of overhead in large builds by reusing the same classloader for annotation
-    // processors. However, some annotation processors use static variables in a way that assumes
-    // there is only one instance running in the process at a time (or at all), and such annotation
-    // processors would break running inside of Buck. So we default to creating a new ClassLoader
-    // for each build rule, with an option to whitelist "safe" processors in .buckconfig.
-    if (safeAnnotationProcessors.containsAll(processorNames)) {
-      LOG.debug("Reusing class loaders for %s.", target);
-      processorBundle.classLoader = (URLClassLoader) classLoaderCache.getClassLoaderForClassPath(
-          baseClassLoader,
-          ImmutableList.copyOf(processorClasspath));
-    } else {
-      final List<String> unsafeProcessors = new ArrayList<>();
-      for (String name : processorNames) {
-        if (safeAnnotationProcessors.contains(name)) {
-          continue;
-        }
-        unsafeProcessors.add(name);
-      }
-      LOG.debug(
-          "Creating new class loader for %s because the following processors are not marked safe " +
-              "for multiple use in a single process: %s",
-          target,
-          Joiner.on(',').join(unsafeProcessors));
-      processorBundle.classLoader = new URLClassLoader(
-          processorClasspath,
-          baseClassLoader);
-    }
+    return processorFactory.createProcessors(names, urls);
   }
 
   private Iterable<? extends JavaFileObject> createCompilationUnits(
@@ -529,21 +448,6 @@ public abstract class Jsr199Javac implements Javac {
       return;
     }
     context.getEventSink().reportMissingJavaSymbol(invokingRule, symbol.get());
-  }
-
-  @VisibleForTesting
-  static class ProcessorBundle implements Closeable {
-    @Nullable
-    public URLClassLoader classLoader;
-    public List<Processor> processors = Lists.newArrayList();
-
-    @Override
-    public void close() throws IOException {
-      if (classLoader != null) {
-        classLoader.close();
-        classLoader = null;
-      }
-    }
   }
 
   private static class FileManagerBootClasspathOracle implements BootClasspathOracle {
