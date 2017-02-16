@@ -30,7 +30,7 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -39,12 +39,16 @@ import org.immutables.value.Value;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.URL;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Represents the command line options that should be passed to javac. Note that the options do not
@@ -262,35 +266,42 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     }
 
     // Add annotation processors.
-    if (!getAnnotationProcessingParams().isEmpty()) {
+    AnnotationProcessingParams annotationProcessingParams = getAnnotationProcessingParams();
+    if (!annotationProcessingParams.isEmpty()) {
       // Specify where to generate sources so IntelliJ can pick them up.
-      Path generateTo = getAnnotationProcessingParams().getGeneratedSourceFolderName();
+      Path generateTo = annotationProcessingParams.getGeneratedSourceFolderName();
       if (generateTo != null) {
         //noinspection ConstantConditions
         optionsConsumer.addOptionValue("s", filesystem.resolve(generateTo).toString());
       }
 
+      ImmutableList<ResolvedJavacPluginProperties> annotationProcessors =
+          annotationProcessingParams.getAnnotationProcessors(filesystem, pathResolver);
+
       // Specify processorpath to search for processors.
-      optionsConsumer.addOptionValue("processorpath",
-          Joiner.on(File.pathSeparator).join(
-              FluentIterable.from(getAnnotationProcessingParams().getSearchPathElements())
-                  .transform(pathResolver::getAbsolutePath)
-                  .transform(filesystem::resolve)
-                  .transform(Object::toString)));
+      optionsConsumer.addOptionValue(
+          "processorpath",
+          annotationProcessors.stream()
+              .map(ResolvedJavacPluginProperties::getClasspath)
+              .flatMap(Arrays::stream)
+              .distinct()
+              .map(URL::toString)
+              .collect(Collectors.joining(File.pathSeparator)));
 
       // Specify names of processors.
-      if (!getAnnotationProcessingParams().getNames().isEmpty()) {
-        optionsConsumer.addOptionValue(
-            "processor",
-            Joiner.on(',').join(getAnnotationProcessingParams().getNames()));
-      }
+      optionsConsumer.addOptionValue(
+          "processor",
+          annotationProcessors.stream()
+              .map(ResolvedJavacPluginProperties::getProcessorNames)
+              .flatMap(Collection::stream)
+              .collect(Collectors.joining(",")));
 
       // Add processor parameters.
-      for (String parameter : getAnnotationProcessingParams().getParameters()) {
+      for (String parameter : annotationProcessingParams.getParameters()) {
         optionsConsumer.addFlag("A" + parameter);
       }
 
-      if (getAnnotationProcessingParams().getProcessOnly()) {
+      if (annotationProcessingParams.getProcessOnly()) {
         optionsConsumer.addFlag("proc:only");
       }
     }

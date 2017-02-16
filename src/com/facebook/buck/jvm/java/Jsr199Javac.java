@@ -28,7 +28,6 @@ import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -40,20 +39,14 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -62,7 +55,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import javax.annotation.Nullable;
-import javax.annotation.processing.Processor;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
@@ -119,6 +111,7 @@ public abstract class Jsr199Javac implements Javac {
       JavacExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
+      ImmutableList<ResolvedJavacPluginProperties> annotationProcessors,
       ImmutableSet<String> safeAnnotationProcessors,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
@@ -161,6 +154,7 @@ public abstract class Jsr199Javac implements Javac {
             context,
             invokingRule,
             options,
+            annotationProcessors,
             safeAnnotationProcessors,
             javaSourceFilePaths,
             pathToSrcsList,
@@ -222,6 +216,7 @@ public abstract class Jsr199Javac implements Javac {
       JavacExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
+      ImmutableList<ResolvedJavacPluginProperties> annotationProcessors,
       ImmutableSet<String> safeAnnotationProcessors,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
@@ -292,7 +287,7 @@ public abstract class Jsr199Javac implements Javac {
               context.getClassLoaderCache(),
               safeAnnotationProcessors,
               invokingRule)) {
-        compilationTask.setProcessors(prepareProcessors(processorFactory, options));
+        compilationTask.setProcessors(processorFactory.createProcessors(annotationProcessors));
 
         // Invoke the compilation and inspect the result.
         isSuccess = compilationTask.call();
@@ -352,51 +347,6 @@ public abstract class Jsr199Javac implements Javac {
         }
       }
     }
-  }
-
-  private List<Processor> prepareProcessors(
-      AnnotationProcessorFactory processorFactory,
-      List<String> options) {
-    String processorClassPath = null;
-    String processorNames = null;
-
-    Iterator<String> iterator = options.iterator();
-    while (iterator.hasNext()) {
-      String curr = iterator.next();
-      if ("-processorpath".equals(curr) && iterator.hasNext()) {
-        processorClassPath = iterator.next();
-      } else if ("-processor".equals(curr) && iterator.hasNext()) {
-        processorNames = iterator.next();
-      }
-    }
-
-    if (processorClassPath == null || processorNames == null) {
-      return Collections.emptyList();
-    }
-
-    Iterable<String> rawPaths = Splitter.on(File.pathSeparator)
-        .omitEmptyStrings()
-        .split(processorClassPath);
-    URL[] urls = FluentIterable.from(rawPaths)
-        .transform(
-            pathRelativeToProjectRoot -> {
-              try {
-                return Paths.get(pathRelativeToProjectRoot).toUri().toURL();
-              } catch (MalformedURLException e) {
-                // The paths we're being given should have all been resolved from the file
-                // system already. We'd need to be unfortunate to get here. Bubble up a runtime
-                // exception.
-                throw new RuntimeException(e);
-              }
-            })
-        .toArray(URL.class);
-
-    List<String> names = Splitter.on(",")
-        .trimResults()
-        .omitEmptyStrings()
-        .splitToList(processorNames);
-
-    return processorFactory.createProcessors(names, urls);
   }
 
   private Iterable<? extends JavaFileObject> createCompilationUnits(

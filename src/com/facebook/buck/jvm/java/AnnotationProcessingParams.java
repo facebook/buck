@@ -22,7 +22,9 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
@@ -86,12 +88,14 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
     return annotationProcessors.isEmpty() && parameters.isEmpty();
   }
 
-  public ImmutableSortedSet<SourcePath> getSearchPathElements() {
-    return annotationProcessors.getClasspathEntries();
-  }
+  public ImmutableList<ResolvedJavacPluginProperties> getAnnotationProcessors(
+      ProjectFilesystem filesystem,
+      SourcePathResolver resolver) {
+    if (annotationProcessors.isEmpty()) {
+      return ImmutableList.of();
+    }
 
-  public ImmutableSortedSet<String> getNames() {
-    return annotationProcessors.getProcessorNames();
+    return ImmutableList.of(annotationProcessors.resolve(filesystem, resolver));
   }
 
   public ImmutableSortedSet<String> getParameters() {

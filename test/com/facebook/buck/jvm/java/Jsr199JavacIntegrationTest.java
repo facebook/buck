@@ -134,6 +134,7 @@ public class Jsr199JavacIntegrationTest {
         javacExecutionContext,
         BuildTargetFactory.newInstance("//some:example"),
         ImmutableList.of(),
+        ImmutableList.of(),
         ImmutableSet.of(),
         SOURCE_PATHS,
         pathToSrcsList,
@@ -182,6 +183,7 @@ public class Jsr199JavacIntegrationTest {
     int exitCode = javac.buildWithClasspath(
         javacExecutionContext,
         BuildTargetFactory.newInstance("//some:example"),
+        ImmutableList.of(),
         ImmutableList.of(),
         ImmutableSet.of(),
         SOURCE_PATHS,
@@ -287,6 +289,7 @@ public class Jsr199JavacIntegrationTest {
       javac.buildWithClasspath(
           javacExecutionContext,
           BuildTargetFactory.newInstance("//some:example"),
+          ImmutableList.of(),
           ImmutableList.of(),
           ImmutableSet.of(),
           SOURCE_PATHS,

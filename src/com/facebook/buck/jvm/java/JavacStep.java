@@ -201,6 +201,7 @@ public class JavacStep implements Step {
         javacExecutionContext,
         invokingRule,
         getOptions(context, declaredClasspathEntries),
+        javacOptions.getAnnotationProcessingParams().getAnnotationProcessors(filesystem, resolver),
         javacOptions.getSafeAnnotationProcessors(),
         javaSourceFilePaths,
         pathToSrcsList,

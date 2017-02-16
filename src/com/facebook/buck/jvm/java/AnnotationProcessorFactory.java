@@ -26,7 +26,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.processing.Processor;
 
@@ -56,8 +58,18 @@ class AnnotationProcessorFactory implements AutoCloseable {
     localClassLoaderCache.close();
   }
 
-  public List<Processor> createProcessors(List<String> names, URL[] urls) {
-    return names.stream().map(name -> createProcessor(name, urls)).collect(Collectors.toList());
+  public List<Processor> createProcessors(
+      ImmutableList<ResolvedJavacPluginProperties> processorsProperties) {
+    return processorsProperties.stream()
+        .map(this::createProcessorsWithCommonClasspath)
+        .flatMap(Function.identity())
+        .collect(Collectors.toList());
+  }
+
+  private Stream<Processor> createProcessorsWithCommonClasspath(
+      ResolvedJavacPluginProperties properties) {
+    return properties.getProcessorNames().stream()
+        .map(name -> createProcessor(name, properties.getClasspath()));
   }
 
   private Processor createProcessor(String name, URL[] urls) {

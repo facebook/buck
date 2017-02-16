@@ -16,10 +16,12 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
@@ -48,6 +50,12 @@ abstract class AbstractJavacPluginProperties implements RuleKeyAppendable {
   public boolean isEmpty() {
     return getProcessorNames().isEmpty() &&
         getClasspathEntries().isEmpty();
+  }
+
+  public ResolvedJavacPluginProperties resolve(
+      ProjectFilesystem filesystem,
+      SourcePathResolver resolver) {
+    return new ResolvedJavacPluginProperties(this, filesystem, resolver);
   }
 
   @Override

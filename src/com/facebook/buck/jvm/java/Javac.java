@@ -43,6 +43,7 @@ public interface Javac extends RuleKeyAppendable, Tool {
       JavacExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
+      ImmutableList<ResolvedJavacPluginProperties> annotationProcessors,
       ImmutableSet<String> safeAnnotationProcessors,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
