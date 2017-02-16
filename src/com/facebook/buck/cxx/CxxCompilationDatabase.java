@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -26,7 +27,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
@@ -121,7 +121,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
   }
 
   @Override
-  public Stream<SourcePath> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps() {
     // The compilation database contains commands which refer to a
     // particular state of generated header symlink trees/header map
     // files.
@@ -130,9 +130,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
     // cache hit on the (empty) output of the rule, we still fetch and
     // lay out the headers so the resulting compilation database can
     // be used.
-    return runtimeDeps.stream()
-        .map(BuildRule::getBuildTarget)
-        .map(BuildTargetSourcePath::new);
+    return runtimeDeps.stream().map(BuildRule::getBuildTarget);
   }
 
   class GenerateCompilationCommandsJson extends AbstractExecutionStep {

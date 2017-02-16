@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.model.BuildTarget;
+
 import java.util.stream.Stream;
 
 /**
@@ -35,5 +37,5 @@ import java.util.stream.Stream;
  * the future.
  */
 public interface HasRuntimeDeps extends BuildRule {
-  Stream<SourcePath> getRuntimeDeps();
+  Stream<BuildTarget> getRuntimeDeps();
 }

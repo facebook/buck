@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Pair;
@@ -24,7 +25,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
@@ -32,6 +32,7 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
@@ -112,6 +113,7 @@ public class AppleTest
   private final Optional<Either<SourcePath, String>> snapshotReferenceImagesPath;
 
   private Optional<Long> testRuleTimeoutMs;
+  private final SourcePathRuleFinder ruleFinder;
 
   private Optional<AppleTestXctoolStdoutReader> xctoolStdoutReader;
   private Optional<AppleTestXctestOutputReader> xctestOutputReader;
@@ -196,7 +198,8 @@ public class AppleTest
       String testLogLevel,
       Optional<Long> testRuleTimeoutMs,
       boolean isUiTest,
-      Optional<Either<SourcePath, String>> snapshotReferenceImagesPath) {
+      Optional<Either<SourcePath, String>> snapshotReferenceImagesPath,
+      SourcePathRuleFinder ruleFinder) {
     super(params);
     this.xctool = xctool;
     this.xctoolStutterTimeout = xctoolStutterTimeout;
@@ -211,6 +214,7 @@ public class AppleTest
     this.labels = labels;
     this.runTestSeparately = runTestSeparately;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
+    this.ruleFinder = ruleFinder;
     this.testOutputPath = getPathToTestOutputDirectory().resolve("test-output.json");
     this.testLogsPath = getPathToTestOutputDirectory().resolve("logs");
     this.xctoolStdoutReader = Optional.empty();
@@ -452,14 +456,16 @@ public class AppleTest
 
   // This test rule just executes the test bundle, so we need it available locally.
   @Override
-  public Stream<SourcePath> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps() {
     return Stream
         .concat(
             Stream
                 .concat(Stream.of(testBundle), OptionalCompat.asSet(testHostApp).stream())
-                .map(BuildRule::getBuildTarget)
-                .map(BuildTargetSourcePath::new),
-            OptionalCompat.asSet(xctool).stream());
+                .map(BuildRule::getBuildTarget),
+            OptionalCompat.asSet(xctool).stream()
+                .map(ruleFinder::filterBuildRuleInputs)
+                .flatMap(ImmutableSet::stream)
+                .map(BuildRule::getBuildTarget));
   }
 
   @Override

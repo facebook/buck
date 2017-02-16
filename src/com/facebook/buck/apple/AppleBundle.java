@@ -40,7 +40,6 @@ import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HasRuntimeDeps;
@@ -946,15 +945,14 @@ public class AppleBundle
   }
 
   @Override
-  public Stream<SourcePath> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps() {
     if (binary.get() instanceof ProvidesLinkedBinaryDeps) {
       List<BuildRule> linkDeps = new ArrayList<>();
       linkDeps.addAll(((ProvidesLinkedBinaryDeps) binary.get()).getCompileDeps());
       linkDeps.addAll(((ProvidesLinkedBinaryDeps) binary.get()).getStaticLibraryDeps());
       if (linkDeps.size() > 0) {
         return Stream.concat(Stream.of(binary.get()), linkDeps.stream())
-            .map(BuildRule::getBuildTarget)
-            .map(BuildTargetSourcePath::new);
+            .map(BuildRule::getBuildTarget);
       }
     }
     return Stream.empty();

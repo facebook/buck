@@ -25,7 +25,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -115,8 +114,8 @@ public class ShTestTest extends EasyMockSupport {
     assertThat(
         shTest.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
         containsInAnyOrder(
-            new BuildTargetSourcePath(dep.getBuildTarget()),
-            new BuildTargetSourcePath(extraDep.getBuildTarget())));
+            dep.getBuildTarget(),
+            extraDep.getBuildTarget()));
   }
 
 }

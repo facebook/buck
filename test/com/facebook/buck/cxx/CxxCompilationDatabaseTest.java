@@ -26,7 +26,6 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -162,8 +161,8 @@ public class CxxCompilationDatabaseTest {
     assertThat(
         compilationDatabase.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
         Matchers.contains(
-            new BuildTargetSourcePath(exportedSymlinkTree.getBuildTarget()),
-            new BuildTargetSourcePath(privateSymlinkTree.getBuildTarget())));
+            exportedSymlinkTree.getBuildTarget(),
+            privateSymlinkTree.getBuildTarget()));
 
     assertEquals(
         "getPathToOutput() should be a function of the build target.",

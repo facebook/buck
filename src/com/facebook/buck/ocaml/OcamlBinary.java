@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -25,7 +26,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -69,8 +69,8 @@ public class OcamlBinary extends AbstractBuildRuleWithResolver
   // Since this rule doesn't actual generate the binary it references, and is just a wrapper for
   // the real binary rule, mark that rule as a runtime dep.
   @Override
-  public Stream<SourcePath> getRuntimeDeps() {
-    return Stream.of(new BuildTargetSourcePath(binary.getBuildTarget()));
+  public Stream<BuildTarget> getRuntimeDeps() {
+    return Stream.of(binary.getBuildTarget());
   }
 
 }

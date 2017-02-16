@@ -67,6 +67,9 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
   private HeaderSymlinkTreeWithHeaderMap symlinkTreeBuildRule;
   private ImmutableMap<Path, SourcePath> links;
   private Path symlinkTreeRoot;
+  private BuildRuleResolver ruleResolver;
+  private SourcePathRuleFinder ruleFinder;
+  private SourcePathResolver resolver;
 
   @Before
   public void setUp() throws Exception {
@@ -100,18 +103,22 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     symlinkTreeRoot =
         BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root");
 
+    ruleResolver = new BuildRuleResolver(
+        TargetGraph.EMPTY,
+        new DefaultTargetNodeToBuildRuleTransformer());
+    ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    resolver = new SourcePathResolver(ruleFinder);
+
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule = new HeaderSymlinkTreeWithHeaderMap(
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
         symlinkTreeRoot,
-        links);
+        links,
+        ruleFinder);
   }
 
   @Test
   public void testSymlinkTreeBuildSteps() throws IOException {
-    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    ));
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(resolver);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     FakeBuildableContext buildableContext = new FakeBuildableContext();
@@ -153,12 +160,8 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
             Paths.get("different/link"),
             new PathSourcePath(
                 projectFilesystem,
-                MorePaths.relativize(tmpDir.getRoot(), aFile))));
-
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+                MorePaths.relativize(tmpDir.getRoot(), aFile))),
+        ruleFinder);
 
     // Calculate their rule keys and verify they're different.
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
@@ -172,12 +175,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
 
   @Test
   public void testSymlinkTreeRuleKeyDoesNotChangeIfLinkTargetsChange() throws IOException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver(
-        TargetGraph.EMPTY,
-        new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(symlinkTreeBuildRule);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
 
     DefaultRuleKeyFactory ruleKeyFactory = new DefaultRuleKeyFactory(
         0,

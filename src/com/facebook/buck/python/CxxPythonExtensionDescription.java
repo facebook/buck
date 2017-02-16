@@ -460,10 +460,8 @@ public class CxxPythonExtensionDescription implements
       }
 
       @Override
-      public Stream<SourcePath> getRuntimeDeps() {
-        return getDeclaredDeps().stream()
-            .map(BuildRule::getBuildTarget)
-            .map(BuildTargetSourcePath::new);
+      public Stream<BuildTarget> getRuntimeDeps() {
+        return getDeclaredDeps().stream().map(BuildRule::getBuildTarget);
       }
 
     };

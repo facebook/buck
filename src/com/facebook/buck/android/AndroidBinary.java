@@ -1311,20 +1311,18 @@ public class AndroidBinary
   }
 
   @Override
-  public Stream<SourcePath> getRuntimeDeps() {
-    Stream.Builder<Stream<SourcePath>> deps = Stream.builder();
+  public Stream<BuildTarget> getRuntimeDeps() {
+    Stream.Builder<Stream<BuildTarget>> deps = Stream.builder();
     if (ExopackageMode.enabledForNativeLibraries(exopackageModes) &&
         enhancementResult.getCopyNativeLibraries().isPresent()) {
       deps.add(
           enhancementResult.getCopyNativeLibraries().get().values().stream()
-              .map(BuildRule::getBuildTarget)
-              .map(BuildTargetSourcePath::new));
+              .map(BuildRule::getBuildTarget));
     }
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       deps.add(
           OptionalCompat.asSet(enhancementResult.getPreDexMerge()).stream()
-              .map(BuildRule::getBuildTarget)
-              .map(BuildTargetSourcePath::new));
+              .map(BuildRule::getBuildTarget));
     }
     return deps.build().reduce(Stream.empty(), Stream::concat);
   }

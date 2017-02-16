@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -31,6 +32,7 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multiset;
@@ -49,12 +51,15 @@ public class SymlinkTree
 
   private final Path root;
   private final ImmutableSortedMap<Path, SourcePath> links;
+  private final SourcePathRuleFinder ruleFinder;
 
   public SymlinkTree(
       BuildRuleParams params,
       Path root,
-      final ImmutableMap<Path, SourcePath> links) {
+      final ImmutableMap<Path, SourcePath> links,
+      SourcePathRuleFinder ruleFinder) {
     super(params);
+    this.ruleFinder = ruleFinder;
 
     Preconditions.checkState(
         !root.isAbsolute(),
@@ -193,8 +198,11 @@ public class SymlinkTree
   }
 
   @Override
-  public Stream<SourcePath> getRuntimeDeps() {
-    return links.values().stream();
+  public Stream<BuildTarget> getRuntimeDeps() {
+    return links.values().stream()
+        .map(ruleFinder::filterBuildRuleInputs)
+        .flatMap(ImmutableSet::stream)
+        .map(BuildRule::getBuildTarget);
   }
 
   public Path getRoot() {

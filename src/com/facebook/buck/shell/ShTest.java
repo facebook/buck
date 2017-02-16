@@ -16,12 +16,12 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
@@ -188,10 +188,8 @@ public class ShTest
   // A shell test has no real build dependencies.  Instead interpret the dependencies as runtime
   // dependencies, as these are always components that the shell test needs available to run.
   @Override
-  public Stream<SourcePath> getRuntimeDeps() {
-    return getDeps().stream()
-        .map(BuildRule::getBuildTarget)
-        .map(BuildTargetSourcePath::new);
+  public Stream<BuildTarget> getRuntimeDeps() {
+    return getDeps().stream().map(BuildRule::getBuildTarget);
   }
 
   @Override

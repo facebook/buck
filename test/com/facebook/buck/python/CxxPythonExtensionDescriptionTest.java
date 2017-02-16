@@ -54,7 +54,6 @@ import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.MoreStreams;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -525,8 +524,6 @@ public class CxxPythonExtensionDescriptionTest {
             .build(resolver);
     assertThat(
         cxxPythonExtension.getRuntimeDeps()
-            .flatMap(MoreStreams.filterCast(BuildTargetSourcePath.class))
-            .map(BuildTargetSourcePath::getTarget)
             .collect(MoreCollectors.toImmutableSet()),
         Matchers.hasItem(cxxBinary.getBuildTarget()));
   }

@@ -232,7 +232,7 @@ class SwiftLibrary
   }
 
   @Override
-  public Stream<SourcePath> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps() {
     // We export all declared deps as runtime deps, to setup a transitive runtime dep chain which
     // will pull in runtime deps (e.g. other binaries) or transitive C/C++ libraries.  Since the
     // `CxxLibrary` rules themselves are noop meta rules, they shouldn't add any unnecessary
@@ -241,8 +241,7 @@ class SwiftLibrary
         .concat(
             getDeclaredDeps().stream(),
             StreamSupport.stream(exportedDeps.spliterator(), false))
-        .map(BuildRule::getBuildTarget)
-        .map(BuildTargetSourcePath::new);
+        .map(BuildRule::getBuildTarget);
   }
 
   @Override

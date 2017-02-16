@@ -730,6 +730,7 @@ public class CxxGenruleDescription
           symlinkTree =
               resolver.addToIndex(
                   CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
+                      new SourcePathRuleFinder(resolver),
                       params,
                       cxxPlatform,
                       rules,

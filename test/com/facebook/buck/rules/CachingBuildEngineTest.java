@@ -3142,10 +3142,8 @@ public class CachingBuildEngineTest {
     }
 
     @Override
-    public Stream<SourcePath> getRuntimeDeps() {
-      return runtimeDeps.stream()
-          .map(BuildRule::getBuildTarget)
-          .map(BuildTargetSourcePath::new);
+    public Stream<BuildTarget> getRuntimeDeps() {
+      return runtimeDeps.stream().map(BuildRule::getBuildTarget);
     }
 
   }

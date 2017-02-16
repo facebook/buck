@@ -23,7 +23,6 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -130,9 +129,9 @@ public class JavaTestRuleTest {
     assertThat(
         rule.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
         Matchers.hasItems(
-            new BuildTargetSourcePath(rule.getCompiledTestsLibrary().getBuildTarget()),
-            new BuildTargetSourcePath(firstOrderDep.getBuildTarget()),
-            new BuildTargetSourcePath(transitiveDep.getBuildTarget())));
+            rule.getCompiledTestsLibrary().getBuildTarget(),
+            firstOrderDep.getBuildTarget(),
+            transitiveDep.getBuildTarget()));
   }
 
   private JavaTest newRule(ImmutableList<String> vmArgs) throws NoSuchBuildTargetException {

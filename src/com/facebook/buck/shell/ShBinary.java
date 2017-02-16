@@ -22,6 +22,7 @@ import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
@@ -29,6 +30,7 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
@@ -54,6 +56,7 @@ public class ShBinary extends AbstractBuildRuleWithResolver
           "buck.path_to_sh_binary_template",
           "src/com/facebook/buck/shell/sh_binary_template"));
 
+  private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey
   private final SourcePath main;
   @AddToRuleKey
@@ -64,10 +67,12 @@ public class ShBinary extends AbstractBuildRuleWithResolver
 
   protected ShBinary(
       BuildRuleParams params,
+      SourcePathRuleFinder ruleFinder,
       SourcePathResolver resolver,
       SourcePath main,
       ImmutableSet<SourcePath> resources) {
     super(params, resolver);
+    this.ruleFinder = ruleFinder;
     this.main = main;
     this.resources = resources;
 
@@ -137,8 +142,11 @@ public class ShBinary extends AbstractBuildRuleWithResolver
   // If the script is generated from another build rule, it needs to be available on disk
   // for this rule to be usable.
   @Override
-  public Stream<SourcePath> getRuntimeDeps() {
-    return Stream.concat(resources.stream(), Stream.of(main));
+  public Stream<BuildTarget> getRuntimeDeps() {
+    return Stream.concat(resources.stream(), Stream.of(main))
+        .map(ruleFinder::filterBuildRuleInputs)
+        .flatMap(ImmutableSet::stream)
+        .map(BuildRule::getBuildTarget);
   }
 
 }

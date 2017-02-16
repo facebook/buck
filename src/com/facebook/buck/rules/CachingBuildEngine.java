@@ -152,6 +152,7 @@ public class CachingBuildEngine implements BuildEngine {
   private final DepFiles depFiles;
   private final long maxDepFileCacheEntries;
   private final ObjectMapper objectMapper;
+  private final BuildRuleResolver resolver;
   private final SourcePathRuleFinder ruleFinder;
   private final SourcePathResolver pathResolver;
   private final Optional<Long> artifactCacheSizeLimit;
@@ -185,6 +186,7 @@ public class CachingBuildEngine implements BuildEngine {
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
     this.objectMapper = objectMapper;
+    this.resolver = resolver;
     this.ruleFinder = new SourcePathRuleFinder(resolver);
     this.pathResolver = new SourcePathResolver(ruleFinder);
 
@@ -192,9 +194,9 @@ public class CachingBuildEngine implements BuildEngine {
     this.ruleKeyFactories = ruleKeyFactoryManager.getProvider();
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
 
-    this.ruleDeps = new RuleDepsCache(service, ruleFinder);
+    this.ruleDeps = new RuleDepsCache(service, resolver);
     this.unskippedRulesTracker =
-        createUnskippedRulesTracker(buildMode, ruleDeps, ruleFinder, service);
+        createUnskippedRulesTracker(buildMode, ruleDeps, resolver, service);
   }
 
   /**
@@ -209,6 +211,7 @@ public class CachingBuildEngine implements BuildEngine {
       DepFiles depFiles,
       long maxDepFileCacheEntries,
       Optional<Long> artifactCacheSizeLimit,
+      BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
       final Function<? super ProjectFilesystem, RuleKeyFactories> ruleKeyFactoriesFunction,
@@ -223,6 +226,7 @@ public class CachingBuildEngine implements BuildEngine {
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
     this.objectMapper = ObjectMappers.newDefaultInstance();
+    this.resolver = resolver;
     this.ruleFinder = ruleFinder;
     this.pathResolver = pathResolver;
 
@@ -230,9 +234,9 @@ public class CachingBuildEngine implements BuildEngine {
     this.ruleKeyFactories = ruleKeyFactoriesFunction::apply;
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
 
-    this.ruleDeps = new RuleDepsCache(service, ruleFinder);
+    this.ruleDeps = new RuleDepsCache(service, resolver);
     this.unskippedRulesTracker =
-        createUnskippedRulesTracker(buildMode, ruleDeps, ruleFinder, service);
+        createUnskippedRulesTracker(buildMode, ruleDeps, resolver, service);
   }
 
   /**
@@ -251,13 +255,13 @@ public class CachingBuildEngine implements BuildEngine {
   private static Optional<UnskippedRulesTracker> createUnskippedRulesTracker(
       BuildMode buildMode,
       RuleDepsCache ruleDeps,
-      SourcePathRuleFinder ruleFinder,
+      BuildRuleResolver resolver,
       ListeningExecutorService service) {
     if (buildMode == BuildMode.DEEP || buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE) {
       // Those modes never skip rules, there is no need to track unskipped rules.
       return Optional.empty();
     }
-    return Optional.of(new UnskippedRulesTracker(ruleDeps, ruleFinder, service));
+    return Optional.of(new UnskippedRulesTracker(ruleDeps, resolver, service));
   }
 
   @VisibleForTesting
@@ -1097,9 +1101,10 @@ public class CachingBuildEngine implements BuildEngine {
     }
 
     // Collect any runtime deps we have into a list of futures.
-    Stream<SourcePath> runtimeDepPaths = ((HasRuntimeDeps) rule).getRuntimeDeps();
+    Stream<BuildTarget> runtimeDepPaths = ((HasRuntimeDeps) rule).getRuntimeDeps();
     List<ListenableFuture<BuildResult>> runtimeDepResults = Lists.newArrayList();
-    ImmutableSet<BuildRule> runtimeDeps = ruleFinder.filterBuildRuleInputs(runtimeDepPaths);
+    ImmutableSet<BuildRule> runtimeDeps = resolver.getAllRules(
+        runtimeDepPaths.collect(MoreCollectors.toImmutableSet()));
     for (BuildRule dep : runtimeDeps) {
       runtimeDepResults.add(
           getBuildRuleResultWithRuntimeDepsUnlocked(

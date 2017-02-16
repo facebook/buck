@@ -26,10 +26,10 @@ import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
@@ -207,7 +207,7 @@ public class RobolectricTest extends JavaTest {
   }
 
   @Override
-  public Stream<SourcePath> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps() {
     return Stream.concat(
         // Inherit any runtime deps from `JavaTest`.
         super.getRuntimeDeps(),
@@ -223,8 +223,7 @@ public class RobolectricTest extends JavaTest {
                 // tools are available when this test runs.
                 getDeps().stream())
             .reduce(Stream.empty(), Stream::concat)
-            .map(BuildRule::getBuildTarget)
-            .map(BuildTargetSourcePath::new));
+            .map(BuildRule::getBuildTarget));
   }
 
   public SourcePathRuleFinder getRuleFinder() {

@@ -86,6 +86,7 @@ public class ThriftLibraryDescriptionTest {
   private static HeaderSymlinkTree createFakeSymlinkTree(
       BuildTarget target,
       Path root,
+      SourcePathRuleFinder ruleFinder,
       BuildRule... deps) {
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(target)
@@ -94,7 +95,8 @@ public class ThriftLibraryDescriptionTest {
     return new HeaderSymlinkTree(
         params,
         root,
-        ImmutableMap.of());
+        ImmutableMap.of(),
+        ruleFinder);
   }
 
   private static class FakeThriftLanguageSpecificEnhancer
@@ -181,7 +183,8 @@ public class ThriftLibraryDescriptionTest {
   public void createThriftCompilerBuildRulesHasCorrectDeps() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     String language = "fake";
@@ -249,7 +252,8 @@ public class ThriftLibraryDescriptionTest {
     Path includeRoot = desc.getIncludeRoot(unflavoredTarget, filesystem);
     HeaderSymlinkTree thriftIncludeSymlinkTree = createFakeSymlinkTree(
         desc.createThriftIncludeSymlinkTreeTarget(unflavoredTarget),
-        includeRoot);
+        includeRoot,
+        ruleFinder);
     ThriftLibrary lib = new ThriftLibrary(
         unflavoredParams,
         pathResolver,
@@ -352,7 +356,8 @@ public class ThriftLibraryDescriptionTest {
   public void createBuildRuleForUnflavoredTargetCreateThriftLibrary() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildTarget unflavoredTarget = BuildTargetFactory.newInstance("//:thrift");
     BuildRuleParams unflavoredParams =
         new FakeBuildRuleParamsBuilder(unflavoredTarget).build();
@@ -373,7 +378,7 @@ public class ThriftLibraryDescriptionTest {
     BuildTarget depTarget = BuildTargetFactory.newInstance("//:dep");
     Path depIncludeRoot = desc.getIncludeRoot(depTarget, filesystem);
     HeaderSymlinkTree depIncludeSymlinkTree =
-        createFakeSymlinkTree(depTarget, depIncludeRoot);
+        createFakeSymlinkTree(depTarget, depIncludeRoot, ruleFinder);
     ThriftLibrary dep = new ThriftLibrary(
         new FakeBuildRuleParamsBuilder(depTarget).build(),
         pathResolver,

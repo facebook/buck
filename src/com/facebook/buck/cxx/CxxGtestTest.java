@@ -16,9 +16,9 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
@@ -230,12 +230,11 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   // The C++ test rules just wrap a test binary produced by another rule, so make sure that's
   // always available to run the test.
   @Override
-  public Stream<SourcePath> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps() {
     return Stream.concat(
         super.getRuntimeDeps(),
         executable.getDeps(ruleFinder).stream()
-            .map(BuildRule::getBuildTarget)
-            .map(BuildTargetSourcePath::new));
+            .map(BuildRule::getBuildTarget));
   }
 
   @Override

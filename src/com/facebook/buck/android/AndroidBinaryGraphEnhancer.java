@@ -38,7 +38,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -503,7 +502,7 @@ public class AndroidBinaryGraphEnhancer {
                 .addAll(packageableCollection.getClasspathEntriesToDex())
                 .addAll(
                     additionalJavaLibraries.stream()
-                        .map(rule -> new BuildTargetSourcePath(rule.getBuildTarget()))
+                        .map(BuildRule::getSourcePathToOutput)
                         .collect(MoreCollectors.toImmutableList()))
                 .build())
         .setFinalDeps(enhancedDeps.build())

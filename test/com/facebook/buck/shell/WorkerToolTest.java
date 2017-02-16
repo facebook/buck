@@ -112,8 +112,8 @@ public class WorkerToolTest {
     assertThat(
         workerTool.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
         Matchers.hasItems(
-            new BuildTargetSourcePath(shBinaryRule.getBuildTarget()),
-            new BuildTargetSourcePath(exportFileRule.getBuildTarget())));
+            shBinaryRule.getBuildTarget(),
+            exportFileRule.getBuildTarget()));
     assertThat(
         workerTool.getArgs(), Matchers.containsString(
             pathResolver.getAbsolutePath(

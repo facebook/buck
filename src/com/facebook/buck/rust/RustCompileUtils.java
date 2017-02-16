@@ -355,6 +355,7 @@ public class RustCompileUtils {
       SymlinkTree sharedLibraries =
           resolver.addToIndex(
               CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
+                  ruleFinder,
                   params,
                   cxxPlatform,
                   params.getDeps(),

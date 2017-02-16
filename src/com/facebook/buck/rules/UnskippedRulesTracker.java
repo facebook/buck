@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.base.Function;
 import com.google.common.cache.CacheBuilder;
@@ -62,7 +63,7 @@ public class UnskippedRulesTracker {
       this::releaseReferences;
 
   private final RuleDepsCache ruleDepsCache;
-  private final SourcePathRuleFinder ruleFinder;
+  private final BuildRuleResolver ruleResolver;
   private final ListeningExecutorService executor;
   private final AtomicInteger unskippedRules = new AtomicInteger(0);
   private final AtomicBoolean stateChanged = new AtomicBoolean(false);
@@ -71,10 +72,10 @@ public class UnskippedRulesTracker {
 
   public UnskippedRulesTracker(
       RuleDepsCache ruleDepsCache,
-      SourcePathRuleFinder ruleFinder,
+      BuildRuleResolver ruleResolver,
       ListeningExecutorService executor) {
     this.ruleDepsCache = ruleDepsCache;
-    this.ruleFinder = ruleFinder;
+    this.ruleResolver = ruleResolver;
     this.executor = executor;
   }
 
@@ -100,7 +101,9 @@ public class UnskippedRulesTracker {
       future = MoreFutures.chainExceptions(
           future,
           acquireReferences(
-              ruleFinder.filterBuildRuleInputs(((HasRuntimeDeps) rule).getRuntimeDeps())));
+              ruleResolver.getAllRules(
+                  ((HasRuntimeDeps) rule).getRuntimeDeps()
+                      .collect(MoreCollectors.toImmutableSet()))));
     }
 
     // Release references from rule's dependencies since this rule will not need them anymore.

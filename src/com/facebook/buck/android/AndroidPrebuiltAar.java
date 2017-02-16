@@ -128,8 +128,8 @@ public class AndroidPrebuiltAar
   // use this interface to access the underlying R.java package, so make sure it's available when
   // a dependent is building against us.
   @Override
-  public Stream<SourcePath> getRuntimeDeps() {
-    return Stream.of(new BuildTargetSourcePath(unzipAar.getBuildTarget()));
+  public Stream<BuildTarget> getRuntimeDeps() {
+    return Stream.of(unzipAar.getBuildTarget());
   }
 
 }

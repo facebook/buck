@@ -181,6 +181,7 @@ abstract class DDescriptionUtils {
   public static SymlinkTree createSourceSymlinkTree(
       BuildTarget target,
       BuildRuleParams baseParams,
+      SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
       SourceList sources) {
     Preconditions.checkState(target.getFlavors().contains(SOURCE_LINK_TREE));
@@ -198,7 +199,8 @@ abstract class DDescriptionUtils {
                 baseParams.getBuildTarget(),
                 pathResolver,
                 "srcs"),
-            MorePaths.toPathFn(baseParams.getProjectFilesystem().getRootPath().getFileSystem())));
+            MorePaths.toPathFn(baseParams.getProjectFilesystem().getRootPath().getFileSystem())),
+        ruleFinder);
   }
 
   private static ImmutableMap<BuildTarget, DLibrary> getTransitiveDLibraryRules(

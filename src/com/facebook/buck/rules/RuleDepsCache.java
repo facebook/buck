@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Throwables;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -33,12 +34,12 @@ import java.util.concurrent.ExecutionException;
  */
 public class RuleDepsCache {
   private final ListeningExecutorService service;
-  private final SourcePathRuleFinder ruleFinder;
+  private final BuildRuleResolver resolver;
   private final Cache<BuildTarget, ListenableFuture<ImmutableSortedSet<BuildRule>>> cache;
 
-  public RuleDepsCache(ListeningExecutorService service, SourcePathRuleFinder ruleFinder) {
+  public RuleDepsCache(ListeningExecutorService service, BuildRuleResolver resolver) {
     this.service = service;
-    this.ruleFinder = ruleFinder;
+    this.resolver = resolver;
     this.cache = CacheBuilder.newBuilder().build();
   }
 
@@ -51,7 +52,8 @@ public class RuleDepsCache {
             deps.addAll(rule.getDeps());
             if (rule instanceof HasRuntimeDeps) {
               deps.addAll(
-                  ruleFinder.filterBuildRuleInputs(((HasRuntimeDeps) rule).getRuntimeDeps()));
+                  resolver.getAllRules(((HasRuntimeDeps) rule).getRuntimeDeps()
+                      .collect(MoreCollectors.toImmutableSet())));
             }
             return deps.build();
           }));

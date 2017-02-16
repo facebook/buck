@@ -21,6 +21,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
@@ -30,7 +31,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
@@ -645,7 +645,7 @@ public class JavaTest
   }
 
   @Override
-  public Stream<SourcePath> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps() {
     return Stream
         .concat(
             // By the end of the build, all the transitive Java library dependencies *must* be
@@ -657,8 +657,7 @@ public class JavaTest
             // this rules first-order deps to runtime deps, so that these potential tools are
             // available when this test runs.
             compiledTestsLibrary.getDeps().stream())
-        .map(BuildRule::getBuildTarget)
-        .map(BuildTargetSourcePath::new);
+        .map(BuildRule::getBuildTarget);
   }
 
   @Override

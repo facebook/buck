@@ -81,17 +81,17 @@ public class BuildRules {
     return exportedRules.build();
   }
 
-  public static ImmutableSet<SourcePath> getTransitiveRuntimeDeps(
+  public static ImmutableSet<BuildTarget> getTransitiveRuntimeDeps(
       HasRuntimeDeps rule,
-      SourcePathRuleFinder ruleFinder) {
-    final ImmutableSet.Builder<SourcePath> runtimeDeps = ImmutableSet.builder();
-    AbstractBreadthFirstTraversal<SourcePath> visitor =
-        new AbstractBreadthFirstTraversal<SourcePath>(
+      BuildRuleResolver resolver) {
+    final ImmutableSet.Builder<BuildTarget> runtimeDeps = ImmutableSet.builder();
+    AbstractBreadthFirstTraversal<BuildTarget> visitor =
+        new AbstractBreadthFirstTraversal<BuildTarget>(
             rule.getRuntimeDeps().collect(MoreCollectors.toImmutableSet())) {
           @Override
-          public ImmutableCollection<SourcePath> visit(SourcePath runtimeDep) {
+          public ImmutableCollection<BuildTarget> visit(BuildTarget runtimeDep) {
             runtimeDeps.add(runtimeDep);
-            Optional<BuildRule> rule = ruleFinder.getRule(runtimeDep);
+            Optional<BuildRule> rule = resolver.getRuleOptional(runtimeDep);
             if (rule.isPresent() && rule.get() instanceof HasRuntimeDeps) {
               return
                   ((HasRuntimeDeps) rule.get()).getRuntimeDeps()

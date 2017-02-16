@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -28,7 +29,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
@@ -167,13 +167,12 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   }
 
   @Override
-  public Stream<SourcePath> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps() {
     return Stream.concat(
         super.getRuntimeDeps(),
         pathToPexExecuter.getDeps(ruleFinder)
             .stream()
-            .map(BuildRule::getBuildTarget)
-            .map(BuildTargetSourcePath::new));
+            .map(BuildRule::getBuildTarget));
   }
 
   @Override

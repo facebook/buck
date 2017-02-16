@@ -18,19 +18,18 @@ package com.facebook.buck.android;
 
 import com.android.ddmlib.IDevice;
 import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
@@ -335,13 +334,12 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
   }
 
   @Override
-  public Stream<SourcePath> getRuntimeDeps() {
-    Stream.Builder<SourcePath> builder = Stream.builder();
-    builder.add(new BuildTargetSourcePath(apk.getBuildTarget()));
+  public Stream<BuildTarget> getRuntimeDeps() {
+    Stream.Builder<BuildTarget> builder = Stream.builder();
+    builder.add(apk.getBuildTarget());
 
     if (apk instanceof ApkGenrule) {
-      builder.add(
-          new BuildTargetSourcePath(((ApkGenrule) apk).getInstallableApk().getBuildTarget()));
+      builder.add(((ApkGenrule) apk).getInstallableApk().getBuildTarget());
     }
 
     return builder.build();

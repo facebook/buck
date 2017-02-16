@@ -146,6 +146,7 @@ public class PythonBinaryDescription implements
   private PythonInPlaceBinary createInPlaceBinaryRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
@@ -182,10 +183,12 @@ public class PythonBinaryDescription implements
                     .putAll(components.getModules())
                     .putAll(components.getResources())
                     .putAll(components.getNativeLibraries())
-                    .build()));
+                    .build(),
+                ruleFinder));
 
     return new PythonInPlaceBinary(
         params,
+        ruleFinder,
         pathResolver,
         resolver,
         pythonPlatform,
@@ -219,6 +222,7 @@ public class PythonBinaryDescription implements
         return createInPlaceBinaryRule(
             params,
             resolver,
+            ruleFinder,
             pathResolver,
             pythonPlatform,
             cxxPlatform,

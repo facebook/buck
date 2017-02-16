@@ -43,8 +43,9 @@ public class ShBinaryDescription implements Description<ShBinaryDescription.Arg>
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    return new ShBinary(params, pathResolver, args.main, args.resources);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    return new ShBinary(params, ruleFinder, pathResolver, args.main, args.resources);
   }
 
   @SuppressFieldNotInitialized

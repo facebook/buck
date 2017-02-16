@@ -177,12 +177,14 @@ public class GoTestDescription implements
         platform);
     resolver.addToIndex(testMain);
 
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new GoTest(
         params.copyWithDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(testMain)),
             Suppliers.ofInstance(ImmutableSortedSet.of())
         ),
+        ruleFinder,
         pathResolver,
         testMain,
         args.labels,

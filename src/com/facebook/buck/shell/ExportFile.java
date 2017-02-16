@@ -16,15 +16,18 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -34,6 +37,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -78,6 +82,7 @@ import java.util.stream.Stream;
 public class ExportFile extends AbstractBuildRuleWithResolver
     implements HasOutputName, HasRuntimeDeps {
 
+  private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey
   private final String name;
   @AddToRuleKey
@@ -87,11 +92,13 @@ public class ExportFile extends AbstractBuildRuleWithResolver
 
   ExportFile(
       BuildRuleParams buildRuleParams,
+      SourcePathRuleFinder ruleFinder,
       SourcePathResolver resolver,
       String name,
       ExportFileDescription.Mode mode,
       SourcePath src) {
     super(buildRuleParams, resolver);
+    this.ruleFinder = ruleFinder;
     this.name = name;
     this.mode = mode;
     this.src = src;
@@ -160,10 +167,12 @@ public class ExportFile extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public Stream<SourcePath> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps() {
     // When using reference mode, we need to make sure that any build rule that builds the source
     // is built when we are, so accomplish this by exporting it as a runtime dep.
-    return mode == ExportFileDescription.Mode.REFERENCE ? Stream.of(src) : Stream.empty();
+    Optional<BuildRule> rule = ruleFinder.getRule(src);
+    return mode == ExportFileDescription.Mode.REFERENCE && rule.isPresent() ?
+        Stream.of(rule.get().getBuildTarget()) : Stream.empty();
   }
 
 }

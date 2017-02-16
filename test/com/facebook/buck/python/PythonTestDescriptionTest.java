@@ -31,7 +31,6 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -296,8 +295,8 @@ public class PythonTestDescriptionTest {
               "Transitive runtime deps of %s [%s]",
               pythonTest,
               packageStyle.toString()),
-          BuildRules.getTransitiveRuntimeDeps(pythonTest, new SourcePathRuleFinder(resolver)),
-          Matchers.hasItem(new BuildTargetSourcePath(cxxBinary.getBuildTarget())));
+          BuildRules.getTransitiveRuntimeDeps(pythonTest, resolver),
+          Matchers.hasItem(cxxBinary.getBuildTarget()));
     }
   }
 
@@ -361,7 +360,7 @@ public class PythonTestDescriptionTest {
     PythonTest binary = builder.build(resolver, filesystem, targetGraph);
     assertThat(
         binary.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
-        Matchers.hasItem(new BuildTargetSourcePath(pexExecutor.getBuildTarget())));
+        Matchers.hasItem(pexExecutor.getBuildTarget()));
   }
 
   @Test

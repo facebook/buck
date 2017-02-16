@@ -130,6 +130,7 @@ public class HaskellBinaryDescription implements
       SymlinkTree sharedLibraries =
           resolver.addToIndex(
               CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
+                  ruleFinder,
                   params,
                   cxxPlatform,
                   params.getDeps(),

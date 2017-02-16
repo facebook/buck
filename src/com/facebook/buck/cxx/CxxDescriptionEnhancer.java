@@ -138,13 +138,15 @@ public class CxxDescriptionEnhancer {
         params,
         headerSymlinkTreeRoot,
         headers,
-        mode);
+        mode,
+        new SourcePathRuleFinder(resolver));
   }
 
   public static SymlinkTree createSandboxSymlinkTree(
       BuildRuleParams params,
       CxxPlatform cxxPlatform,
-      ImmutableMap<Path, SourcePath> map) {
+      ImmutableMap<Path, SourcePath> map,
+      SourcePathRuleFinder ruleFinder) {
     BuildTarget sandboxSymlinkTreeTarget =
         CxxDescriptionEnhancer.createSandboxSymlinkTreeTarget(
             params.getBuildTarget(),
@@ -163,7 +165,8 @@ public class CxxDescriptionEnhancer {
     return new SymlinkTree(
         paramsWithoutDeps,
         sandboxSymlinkTreeRoot,
-        map);
+        map,
+        ruleFinder);
   }
 
   public static HeaderSymlinkTree requireHeaderSymlinkTree(
@@ -811,6 +814,7 @@ public class CxxDescriptionEnhancer {
           requireSharedLibrarySymlinkTree(
               params,
               resolver,
+              ruleFinder,
               cxxPlatform,
               deps,
               NativeLinkable.class::isInstance);
@@ -1210,6 +1214,7 @@ public class CxxDescriptionEnhancer {
    * transitive dependencies.
    */
   public static SymlinkTree createSharedLibrarySymlinkTree(
+      SourcePathRuleFinder ruleFinder,
       BuildRuleParams params,
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> deps,
@@ -1244,16 +1249,19 @@ public class CxxDescriptionEnhancer {
             Suppliers.ofInstance(ImmutableSortedSet.of()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         symlinkTreeRoot,
-        links.build());
+        links.build(),
+        ruleFinder);
   }
 
   public static SymlinkTree createSharedLibrarySymlinkTree(
+      SourcePathRuleFinder ruleFinder,
       BuildRuleParams params,
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> deps,
       Predicate<Object> traverse)
       throws NoSuchBuildTargetException {
     return createSharedLibrarySymlinkTree(
+        ruleFinder,
         params,
         cxxPlatform,
         deps,
@@ -1264,6 +1272,7 @@ public class CxxDescriptionEnhancer {
   public static SymlinkTree requireSharedLibrarySymlinkTree(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> deps,
       Predicate<Object> traverse)
@@ -1275,6 +1284,7 @@ public class CxxDescriptionEnhancer {
       tree =
           resolver.addToIndex(
               createSharedLibrarySymlinkTree(
+                  ruleFinder,
                   params,
                   cxxPlatform,
                   deps,
@@ -1340,7 +1350,8 @@ public class CxxDescriptionEnhancer {
     return createSandboxSymlinkTree(
         params,
         platform,
-        ImmutableMap.copyOf(links));
+        ImmutableMap.copyOf(links),
+        ruleFinder);
   }
 
   /**

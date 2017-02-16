@@ -67,6 +67,9 @@ public class SymlinkTreeTest {
   private SymlinkTree symlinkTreeBuildRule;
   private ImmutableMap<Path, SourcePath> links;
   private Path outputPath;
+  private SourcePathRuleFinder ruleFinder;
+  private SourcePathResolver pathResolver;
+  private BuildRuleResolver ruleResolver;
 
   @Before
   public void setUp() throws Exception {
@@ -99,11 +102,17 @@ public class SymlinkTreeTest {
     // The output path used by the buildable for the link tree.
     outputPath = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root");
 
+    ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    pathResolver = new SourcePathResolver(ruleFinder);
+
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule = new SymlinkTree(
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
         outputPath,
-        links);
+        links,
+        ruleFinder);
 
   }
 
@@ -111,10 +120,7 @@ public class SymlinkTreeTest {
   public void testSymlinkTreeBuildSteps() throws IOException {
 
     // Create the fake build contexts.
-    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    ));
-    BuildContext buildContext = FakeBuildContext.withSourcePathResolver(resolver);
+    BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
@@ -126,7 +132,7 @@ public class SymlinkTreeTest {
             new SymlinkTreeStep(
                 filesystem,
                 outputPath,
-                resolver.getMappedPaths(links)));
+                pathResolver.getMappedPaths(links)));
     ImmutableList<Step> actualBuildSteps =
         symlinkTreeBuildRule.getBuildSteps(
             buildContext,
@@ -136,7 +142,6 @@ public class SymlinkTreeTest {
 
   @Test
   public void testSymlinkTreeRuleKeyChangesIfLinkMapChanges() throws Exception {
-
     // Create a BuildRule wrapping the stock SymlinkTree buildable.
     //BuildRule rule1 = symlinkTreeBuildable;
 
@@ -151,7 +156,8 @@ public class SymlinkTreeTest {
             Paths.get("different/link"),
             new PathSourcePath(
                 projectFilesystem,
-                MorePaths.relativize(tmpDir.getRoot(), aFile))));
+                MorePaths.relativize(tmpDir.getRoot(), aFile))),
+        ruleFinder);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
@@ -169,25 +175,20 @@ public class SymlinkTreeTest {
 
   @Test
   public void testSymlinkTreeRuleKeyDoesNotChangeIfLinkTargetsChangeOnUnix() throws IOException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver(
-        TargetGraph.EMPTY,
-        new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(symlinkTreeBuildRule);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
 
     DefaultRuleKeyFactory ruleKeyFactory = new DefaultRuleKeyFactory(
         0,
         FakeFileHashCache.createFromStrings(
             ImmutableMap.of()),
-        resolver,
+        pathResolver,
         ruleFinder);
 
     // Calculate the rule key
     RuleKey key1 = ruleKeyFactory.build(symlinkTreeBuildRule);
 
     // Change the contents of the target of the link.
-    Path existingFile = resolver.getAbsolutePath(links.values().asList().get(0));
+    Path existingFile = pathResolver.getAbsolutePath(links.values().asList().get(0));
     Files.write(existingFile, "something new".getBytes(Charsets.UTF_8));
 
     // Re-calculate the rule key
@@ -200,10 +201,6 @@ public class SymlinkTreeTest {
 
   @Test
   public void testSymlinkTreeInputBasedRuleKeysAreImmuneToDependencyChanges() throws Exception {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
         ImmutableMap.of());
     InputBasedRuleKeyFactory inputBasedRuleKeyFactory =
@@ -220,7 +217,8 @@ public class SymlinkTreeTest {
                 .setDeclaredDeps(ImmutableSortedSet.of(dep))
                 .build(),
             outputPath,
-            links);
+            links,
+            ruleFinder);
 
     // Generate an input-based rule key for the symlink tree.
     RuleKey ruleKey1 =
@@ -238,15 +236,10 @@ public class SymlinkTreeTest {
   @Test
   public void testSymlinkTreeInputBasedRuleKeysAreImmuneToLinkSourceContentChanges()
       throws Exception {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-
     Genrule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
-            .build(resolver);
+            .build(ruleResolver);
 
     symlinkTreeBuildRule =
         new SymlinkTree(
@@ -256,7 +249,8 @@ public class SymlinkTreeTest {
             outputPath,
             ImmutableMap.of(
                 Paths.get("link"),
-                new BuildTargetSourcePath(dep.getBuildTarget())));
+                new BuildTargetSourcePath(dep.getBuildTarget())),
+            ruleFinder);
 
     // Generate an input-based rule key for the symlink tree with the contents of the link
     // target hashing to "aaaa".
@@ -298,7 +292,8 @@ public class SymlinkTreeTest {
                 Paths.get("../something"),
                 new PathSourcePath(
                     projectFilesystem,
-                    MorePaths.relativize(tmpDir.getRoot(), tmpDir.newFile()))));
+                    MorePaths.relativize(tmpDir.getRoot(), tmpDir.newFile()))),
+            ruleFinder);
     int exitCode = symlinkTree.getVerifyStep().execute(TestExecutionContext.newInstance())
                    .getExitCode();
     assertThat(exitCode, Matchers.not(Matchers.equalTo(0)));

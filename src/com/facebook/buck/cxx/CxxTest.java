@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -23,7 +24,6 @@ import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
@@ -220,10 +220,8 @@ public abstract class CxxTest
   }
 
   @Override
-  public Stream<SourcePath> getRuntimeDeps() {
-    return additionalDeps.get().stream()
-        .map(BuildRule::getBuildTarget)
-        .map(BuildTargetSourcePath::new);
+  public Stream<BuildTarget> getRuntimeDeps() {
+    return additionalDeps.get().stream().map(BuildRule::getBuildTarget);
   }
 
   protected Supplier<ImmutableMap<String, String>> getEnv() {

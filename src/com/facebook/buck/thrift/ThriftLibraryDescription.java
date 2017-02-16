@@ -291,7 +291,8 @@ public class ThriftLibraryDescription
                 Suppliers.ofInstance(ImmutableSortedSet.of()),
                 Suppliers.ofInstance(ImmutableSortedSet.of())),
             includeRoot,
-            includes);
+            includes,
+            new SourcePathRuleFinder(resolver));
       resolver.addToIndex(symlinkTree);
 
       // Create a dummy rule that dependents can use to grab the information they need

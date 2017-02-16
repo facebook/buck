@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -27,8 +28,8 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -68,9 +69,11 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   private final PythonPackageComponents components;
   @AddToRuleKey
   private final Tool python;
+  private final SourcePathRuleFinder ruleFinder;
 
   public PythonInPlaceBinary(
       BuildRuleParams params,
+      SourcePathRuleFinder ruleFinder,
       SourcePathResolver resolver,
       BuildRuleResolver ruleResolver,
       PythonPlatform pythonPlatform,
@@ -91,6 +94,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
         preloadLibraries,
         pexExtension,
         legacyOutputPath);
+    this.ruleFinder = ruleFinder;
     this.script =
         getScript(
             ruleResolver,
@@ -187,16 +191,20 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   }
 
   @Override
-  public Stream<SourcePath> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps() {
     return Stream
         .of(
             Stream
                 .concat(Stream.of(linkTree), getDeclaredDeps().stream())
-                .map(BuildRule::getBuildTarget)
-                .<SourcePath>map(BuildTargetSourcePath::new),
-            components.getModules().values().stream(),
-            components.getResources().values().stream(),
-            components.getNativeLibraries().values().stream())
+                .map(BuildRule::getBuildTarget),
+            Stream.concat(
+                Stream.concat(
+                    components.getModules().values().stream(),
+                    components.getResources().values().stream()),
+                components.getNativeLibraries().values().stream())
+                    .map(ruleFinder::filterBuildRuleInputs)
+                    .flatMap(ImmutableSet::stream)
+                    .map(BuildRule::getBuildTarget))
         .reduce(Stream.empty(), Stream::concat);
   }
 

@@ -78,14 +78,15 @@ public class DTestDescription implements
 
     BuildTarget target = params.getBuildTarget();
 
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(buildRuleResolver));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     SymlinkTree sourceTree =
         buildRuleResolver.addToIndex(
             DDescriptionUtils.createSourceSymlinkTree(
                 DDescriptionUtils.getSymlinkTreeTarget(params.getBuildTarget()),
                 params,
+                ruleFinder,
                 pathResolver,
                 args.srcs));
 

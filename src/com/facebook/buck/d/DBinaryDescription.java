@@ -87,6 +87,7 @@ public class DBinaryDescription implements
             DDescriptionUtils.createSourceSymlinkTree(
                 DDescriptionUtils.getSymlinkTreeTarget(params.getBuildTarget()),
                 params,
+                ruleFinder,
                 pathResolver,
                 args.srcs));
 

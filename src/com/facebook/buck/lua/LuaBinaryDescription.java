@@ -541,7 +541,8 @@ public class LuaBinaryDescription implements
                         ruleFinder.filterBuildRuleInputs(components.values()))),
                 Suppliers.ofInstance(ImmutableSortedSet.of())),
             root,
-            MoreMaps.transformKeys(components, MorePaths.toPathFn(root.getFileSystem()))));
+            MoreMaps.transformKeys(components, MorePaths.toPathFn(root.getFileSystem())),
+            ruleFinder));
   }
 
   /**

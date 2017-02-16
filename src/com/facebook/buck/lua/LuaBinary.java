@@ -16,15 +16,14 @@
 
 package com.facebook.buck.lua;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
@@ -109,10 +108,9 @@ public class LuaBinary
   }
 
   @Override
-  public Stream<SourcePath> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps() {
     return Stream.concat(getDeclaredDeps().stream(), wrappedBinary.getDeps(ruleFinder).stream())
-        .map(BuildRule::getBuildTarget)
-        .map(BuildTargetSourcePath::new);
+        .map(BuildRule::getBuildTarget);
   }
 
 }

@@ -243,6 +243,6 @@ public class RobolectricTestRuleTest {
 
     assertThat(
         robolectricTest.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
-        Matchers.hasItem(new BuildTargetSourcePath(genRule.getBuildTarget())));
+        Matchers.hasItem(genRule.getBuildTarget()));
   }
 }

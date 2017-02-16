@@ -46,6 +46,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -268,6 +269,7 @@ public class AppleTestDescription implements
 
     Optional<SourcePath> xctool = getXctool(params, resolver);
 
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new AppleTest(
         xctool,
         appleConfig.getXctoolStutterTimeoutMs(),
@@ -290,7 +292,8 @@ public class AppleTestDescription implements
         appleConfig.getTestLogLevel(),
         args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs),
         args.isUiTest(),
-        args.snapshotReferenceImagesPath);
+        args.snapshotReferenceImagesPath,
+        ruleFinder);
   }
 
   private Optional<SourcePath> getXctool(

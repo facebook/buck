@@ -71,6 +71,7 @@ public class DirectHeaderMapTest {
   private Path headerMapPath;
   private Path file1;
   private Path file2;
+  private SourcePathRuleFinder ruleFinder;
 
   @Before
   public void setUp() throws Exception {
@@ -109,11 +110,14 @@ public class DirectHeaderMapTest {
         TargetGraph.EMPTY,
         new DefaultTargetNodeToBuildRuleTransformer());
 
-    pathResolver = new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+    ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    pathResolver = new SourcePathResolver(ruleFinder);
+
     buildRule = new DirectHeaderMap(
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
         symlinkTreeRoot,
-        links);
+        links,
+        ruleFinder);
     ruleResolver.addToIndex(buildRule);
 
     headerMapPath = pathResolver.getRelativePath(buildRule.getSourcePathToOutput());
@@ -157,7 +161,8 @@ public class DirectHeaderMapTest {
             Paths.get("different/link"),
             new PathSourcePath(
                 projectFilesystem,
-                MorePaths.relativize(tmpDir.getRoot(), aFile))));
+                MorePaths.relativize(tmpDir.getRoot(), aFile))),
+        ruleFinder);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())

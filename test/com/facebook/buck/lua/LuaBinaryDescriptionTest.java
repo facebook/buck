@@ -38,7 +38,6 @@ import com.facebook.buck.python.PythonLibraryBuilder;
 import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonVersion;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -52,7 +51,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.MoreStreams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -326,8 +324,6 @@ public class LuaBinaryDescriptionTest {
     LuaBinary luaBinary = luaBinaryBuilder.build(resolver, filesystem, targetGraph);
     assertThat(
         luaBinary.getRuntimeDeps()
-            .flatMap(MoreStreams.filterCast(BuildTargetSourcePath.class))
-            .map(BuildTargetSourcePath::getTarget)
             .collect(MoreCollectors.toImmutableSet()),
         Matchers.hasItem(PythonBinaryDescription.getEmptyInitTarget(luaBinary.getBuildTarget())));
   }

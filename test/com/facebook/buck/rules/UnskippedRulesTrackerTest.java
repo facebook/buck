@@ -72,8 +72,8 @@ public class UnskippedRulesTrackerTest {
     ListeningExecutorService executor = listeningDecorator(
         MostExecutors.newMultiThreadExecutor(
             "UnskippedRulesTracker", 7));
-    RuleDepsCache depsCache = new RuleDepsCache(executor, ruleFinder);
-    unskippedRulesTracker = new UnskippedRulesTracker(depsCache, ruleFinder, executor);
+    RuleDepsCache depsCache = new RuleDepsCache(executor, resolver);
+    unskippedRulesTracker = new UnskippedRulesTracker(depsCache, resolver, executor);
     eventBus = new BuckEventBus(new FakeClock(1), new BuildId());
     eventBus.register(new Object() {
       @Subscribe
@@ -254,10 +254,8 @@ public class UnskippedRulesTrackerTest {
     }
 
     @Override
-    public Stream<SourcePath> getRuntimeDeps() {
-      return runtimeDeps.stream()
-          .map(BuildRule::getBuildTarget)
-          .map(BuildTargetSourcePath::new);
+    public Stream<BuildTarget> getRuntimeDeps() {
+      return runtimeDeps.stream().map(BuildRule::getBuildTarget);
     }
   }
 

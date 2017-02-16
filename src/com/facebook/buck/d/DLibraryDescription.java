@@ -78,6 +78,7 @@ public class DLibraryDescription implements
       return DDescriptionUtils.createSourceSymlinkTree(
           params.getBuildTarget(),
           params,
+          ruleFinder,
           pathResolver,
           args.srcs);
     }

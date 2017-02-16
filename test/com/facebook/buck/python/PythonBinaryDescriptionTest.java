@@ -314,8 +314,8 @@ public class PythonBinaryDescriptionTest {
               "Transitive runtime deps of %s [%s]",
               pythonBinary,
               packageStyle.toString()),
-          BuildRules.getTransitiveRuntimeDeps(pythonBinary, new SourcePathRuleFinder(resolver)),
-          Matchers.hasItem(new BuildTargetSourcePath(cxxBinary.getBuildTarget())));
+          BuildRules.getTransitiveRuntimeDeps(pythonBinary, resolver),
+          Matchers.hasItem(cxxBinary.getBuildTarget()));
     }
   }
 
@@ -943,7 +943,7 @@ public class PythonBinaryDescriptionTest {
             .build(resolver);
     assertThat(
         standaloneBinary.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
-        Matchers.hasItem(new BuildTargetSourcePath(pyTool.getBuildTarget())));
+        Matchers.hasItem(pyTool.getBuildTarget()));
   }
 
 }
