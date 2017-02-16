@@ -460,7 +460,6 @@ public abstract class Jsr199Javac implements Javac {
       processorBundle.classLoader = (URLClassLoader) classLoaderCache.getClassLoaderForClassPath(
           baseClassLoader,
           ImmutableList.copyOf(processorClasspath));
-      processorBundle.closeClassLoader = false;
     } else {
       final List<String> unsafeProcessors = new ArrayList<>();
       for (String name : processorNames) {
@@ -477,7 +476,6 @@ public abstract class Jsr199Javac implements Javac {
       processorBundle.classLoader = new URLClassLoader(
           processorClasspath,
           baseClassLoader);
-      processorBundle.closeClassLoader = true;
     }
   }
 
@@ -537,12 +535,11 @@ public abstract class Jsr199Javac implements Javac {
   static class ProcessorBundle implements Closeable {
     @Nullable
     public URLClassLoader classLoader;
-    public boolean closeClassLoader;
     public List<Processor> processors = Lists.newArrayList();
 
     @Override
     public void close() throws IOException {
-      if (closeClassLoader && classLoader != null) {
+      if (classLoader != null) {
         classLoader.close();
         classLoader = null;
       }

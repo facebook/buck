@@ -17,27 +17,47 @@
 package com.facebook.buck.util;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeThat;
 
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
+import org.hamcrest.Matchers;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Paths;
 
 public class ClassLoaderCacheTest {
-  private static final String DUMMYDIR = "d7b9d9fd-1a83-4c76-8981-52deb0fa4d17";
+  @Rule
+  public TemporaryFolder tempFolder = new TemporaryFolder();
+  private File fooDir;
+  private File barDir;
+  private File bazFile;
+
+  @Before
+  public void setupTempFolder() throws IOException {
+    fooDir = tempFolder.newFolder("foo");
+    barDir = tempFolder.newFolder("bar");
+    bazFile = new File(barDir, "baz");
+    bazFile.createNewFile();
+  }
 
   @Test
   public void cacheLoaderReturnsSameClassLoader() throws Exception {
     try (ClassLoaderCache clc = new ClassLoaderCache()) {
     ClassLoader dummyParent = ClassLoader.getSystemClassLoader();
     ImmutableList<URL> dummyClassPath = ImmutableList.of(
-        Paths.get(DUMMYDIR, "foo").toUri().toURL(),
-        Paths.get(DUMMYDIR, "bar").toUri().toURL());
+        fooDir.toURI().toURL(),
+        barDir.toURI().toURL());
     ClassLoader cl1 = clc.getClassLoaderForClassPath(dummyParent, dummyClassPath);
     ClassLoader cl2 = clc.getClassLoaderForClassPath(dummyParent, dummyClassPath);
 
@@ -50,6 +70,41 @@ public class ClassLoaderCacheTest {
     assertArrayEquals(
         dummyUrls,
         ((URLClassLoader) cl1).getURLs());
+    }
+  }
+
+  @Test
+  public void cacheLoaderClosesClassLoaders() throws Exception {
+    ClassLoader cl;
+    try (ClassLoaderCache clc = new ClassLoaderCache()) {
+      ClassLoader dummyParent = ClassLoader.getSystemClassLoader();
+      ImmutableList<URL> dummyClassPath = ImmutableList.of(
+          fooDir.toURI().toURL(),
+          barDir.toURI().toURL());
+      cl = clc.getClassLoaderForClassPath(dummyParent, dummyClassPath);
+
+      assumeThat(cl.getResource("baz"), Matchers.equalTo(bazFile.toURI().toURL()));
+    }
+
+    // When the class loader is closed, resources are no longer accessible
+    assertNull(cl.getResource("baz"));
+  }
+
+  @Test
+  public void callersCannotCloseCachedClassLoaders() throws Exception {
+    URLClassLoader cl;
+    try (ClassLoaderCache clc = new ClassLoaderCache()) {
+      ClassLoader dummyParent = ClassLoader.getSystemClassLoader();
+      ImmutableList<URL> dummyClassPath = ImmutableList.of(
+          fooDir.toURI().toURL(),
+          barDir.toURI().toURL());
+      cl = (URLClassLoader) clc.getClassLoaderForClassPath(dummyParent, dummyClassPath);
+
+      assumeThat(cl.getResource("baz"), Matchers.equalTo(bazFile.toURI().toURL()));
+      cl.close();
+
+      // Because the class loader isn't closed, we can still get at the resource
+      assertThat(cl.getResource("baz"), Matchers.equalTo(bazFile.toURI().toURL()));
     }
   }
 }

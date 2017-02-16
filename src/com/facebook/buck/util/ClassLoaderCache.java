@@ -61,7 +61,7 @@ public final class ClassLoaderCache implements AutoCloseable {
     ClassLoader classLoader = cacheForParent.get(classPath);
     if (classLoader == null) {
       URL[] urls = classPath.toArray(new URL[classPath.size()]);
-      classLoader = new URLClassLoader(urls, parentClassLoader);
+      classLoader = new CachedURLClassLoader(urls, parentClassLoader);
       cacheForParent.put(classPath, classLoader);
     }
 
@@ -96,8 +96,8 @@ public final class ClassLoaderCache implements AutoCloseable {
     for (Map<ImmutableList<URL>, ClassLoader> cacheForParent : cache.values()) {
       for (ClassLoader cl : cacheForParent.values()) {
         try {
-          if (cl instanceof URLClassLoader) {
-            ((URLClassLoader) cl).close();
+          if (cl instanceof CachedURLClassLoader) {
+            ((CachedURLClassLoader) cl).reallyClose();
           }
         } catch (IOException ex) {
           if (caughtEx.isPresent()) {
@@ -111,6 +111,21 @@ public final class ClassLoaderCache implements AutoCloseable {
 
     if (caughtEx.isPresent()) {
       throw caughtEx.get();
+    }
+  }
+
+  private static class CachedURLClassLoader extends URLClassLoader {
+    public CachedURLClassLoader(URL[] urls, @Nullable ClassLoader parent) {
+      super(urls, parent);
+    }
+
+    @Override
+    public void close() throws IOException {
+      // Do nothing; only the cache can close this ClassLoader
+    }
+
+    private void reallyClose() throws IOException {
+      super.close();
     }
   }
 }
