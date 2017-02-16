@@ -23,6 +23,7 @@ import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.TypePath;
 
 import java.util.SortedSet;
 
@@ -35,6 +36,7 @@ class MethodMirror extends MethodVisitor implements Comparable<MethodMirror> {
   private final int access;
   private final String[] exceptions;
   private final SortedSet<AnnotationMirror> annotations;
+  private final SortedSet<TypeAnnotationMirror> typeAnnotations;
   private final AnnotationMirror[] parameterAnnotations;
   @Nullable private AnnotationDefaultValueMirror annotationDefault;
   private final String key;
@@ -49,6 +51,7 @@ class MethodMirror extends MethodVisitor implements Comparable<MethodMirror> {
     this.exceptions = exceptions;
 
     this.annotations = Sets.newTreeSet();
+    this.typeAnnotations = Sets.newTreeSet();
 
     int paramCount = countParameters(desc);
     this.parameterAnnotations = new AnnotationMirror[paramCount];
@@ -116,6 +119,17 @@ class MethodMirror extends MethodVisitor implements Comparable<MethodMirror> {
   }
 
   @Override
+  public AnnotationVisitor visitTypeAnnotation(
+      int typeRef,
+      TypePath typePath,
+      String desc,
+      boolean visible) {
+    TypeAnnotationMirror mirror = new TypeAnnotationMirror(typeRef, typePath, desc, visible);
+    typeAnnotations.add(mirror);
+    return mirror;
+  }
+
+  @Override
   public AnnotationVisitor visitParameterAnnotation(int parameter, String desc, boolean visible) {
     AnnotationMirror mirror = new AnnotationMirror(desc, visible);
     parameterAnnotations[parameter] = mirror;
@@ -141,6 +155,9 @@ class MethodMirror extends MethodVisitor implements Comparable<MethodMirror> {
     MethodVisitor method = writer.visitMethod(access, name, desc, signature, exceptions);
     for (AnnotationMirror annotation : annotations) {
       annotation.appendTo(method);
+    }
+    for (TypeAnnotationMirror typeAnnotation: typeAnnotations) {
+      typeAnnotation.appendTo(method);
     }
     for (int i = 0; i < parameterAnnotations.length; i++) {
       AnnotationMirror annotation = parameterAnnotations[i];

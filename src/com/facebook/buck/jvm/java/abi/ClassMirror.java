@@ -28,6 +28,7 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.TypePath;
 
 import java.util.Set;
 
@@ -37,6 +38,7 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
 
   private final String fileName;
   private final Set<AnnotationMirror> annotations;
+  private final Set<TypeAnnotationMirror> typeAnnotations;
   private final Set<FieldMirror> fields;
   private final Set<InnerClass> innerClasses;
   private final Set<MethodMirror> methods;
@@ -58,6 +60,7 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
 
     this.fileName = name;
     this.annotations = Sets.newLinkedHashSet();
+    this.typeAnnotations = Sets.newLinkedHashSet();
     this.fields = Sets.newLinkedHashSet();
     this.innerClasses = Sets.newLinkedHashSet();
     this.methods = Sets.newLinkedHashSet();
@@ -83,6 +86,14 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
   public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
     AnnotationMirror mirror = new AnnotationMirror(desc, visible);
     annotations.add(mirror);
+    return mirror;
+  }
+
+  @Override
+  public AnnotationVisitor visitTypeAnnotation(
+      int typeRef, TypePath typePath, String desc, boolean visible) {
+    TypeAnnotationMirror mirror = new TypeAnnotationMirror(typeRef, typePath, desc, visible);
+    typeAnnotations.add(mirror);
     return mirror;
   }
 
@@ -192,6 +203,10 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
 
     for (AnnotationMirror annotation : annotations) {
       annotation.appendTo(writer);
+    }
+
+    for (TypeAnnotationMirror typeAnnotation : typeAnnotations) {
+      typeAnnotation.appendTo(writer);
     }
 
     for (FieldMirror field : fields) {

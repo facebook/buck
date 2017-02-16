@@ -103,6 +103,8 @@ public class StubJarTest {
       "  Retention annotationValue() default @Retention(RetentionPolicy.SOURCE);",
       "  Retention[] annotationArrayValue() default {};",
       "  RetentionPolicy enumValue () default RetentionPolicy.CLASS;",
+      "  @Target({TYPE_PARAMETER, TYPE_USE})",
+      "  @interface TypeAnnotation { }",
       "}"
   ));
 
@@ -402,6 +404,74 @@ public class StubJarTest {
                 "package com.example.buck;",
                 "public class A {",
                 "  public void peynir(@Foo String very, int tasty) {}",
+                "}")));
+
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+  }
+
+  @Test
+  public void preservesTypeAnnotationsInClasses() throws IOException {
+    // TODO(jkeljo): It looks like annotated types are not accessible via Elements. The annotated
+    // type gets put on the Tree object but doesn't make it to the corresponding Element. We can
+    // work around this using Trees.getTypeMirror, but that brings in a lot of classpath challenges
+    // that I don't want to deal with right now.
+    notYetImplementedForSource();
+
+    Path annotations = createAnnotationFullJar();
+
+    JarPaths paths = createFullAndStubJars(
+        ImmutableSortedSet.of(annotations),
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class A<@Foo.TypeAnnotation T> { }")));
+
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+  }
+
+  @Test
+  public void preservesTypeAnnotationsInMethods() throws IOException {
+    // TODO(jkeljo): It looks like annotated types are not accessible via Elements. The annotated
+    // type gets put on the Tree object but doesn't make it to the corresponding Element. We can
+    // work around this using Trees.getTypeMirror, but that brings in a lot of classpath challenges
+    // that I don't want to deal with right now.
+    notYetImplementedForSource();
+
+    Path annotations = createAnnotationFullJar();
+
+    JarPaths paths = createFullAndStubJars(
+        ImmutableSortedSet.of(annotations),
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class A {",
+                "  <@Foo.TypeAnnotation T> void foo(@Foo.TypeAnnotation String s) { }",
+                "}")));
+
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+  }
+
+  @Test
+  public void preservesTypeAnnotationsInFields() throws IOException {
+    // TODO(jkeljo): It looks like annotated types are not accessible via Elements. The annotated
+    // type gets put on the Tree object but doesn't make it to the corresponding Element. We can
+    // work around this using Trees.getTypeMirror, but that brings in a lot of classpath challenges
+    // that I don't want to deal with right now.
+    notYetImplementedForSource();
+
+    Path annotations = createAnnotationFullJar();
+
+    JarPaths paths = createFullAndStubJars(
+        ImmutableSortedSet.of(annotations),
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "import java.util.List;",
+                "public class A {",
+                "  List<@Foo.TypeAnnotation String> list;",
                 "}")));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
@@ -1268,6 +1338,7 @@ public class StubJarTest {
     assertAnnotationsEqual(original.visibleAnnotations, stubbed.visibleAnnotations);
     assertAnnotationsEqual(original.invisibleAnnotations, stubbed.invisibleAnnotations);
     assertTypeAnnotationsEqual(original.visibleTypeAnnotations, stubbed.visibleTypeAnnotations);
+    assertTypeAnnotationsEqual(original.invisibleTypeAnnotations, stubbed.invisibleTypeAnnotations);
     assertEquals(original.attrs, stubbed.attrs);
 
     return null;

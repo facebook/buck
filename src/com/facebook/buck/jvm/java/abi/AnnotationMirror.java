@@ -28,10 +28,12 @@ import java.util.SortedMap;
 
 import javax.annotation.Nullable;
 
-class AnnotationMirror extends AnnotationVisitor implements Comparable<AnnotationMirror> {
+class AnnotationMirror
+    extends AnnotationVisitor
+    implements Comparable<AnnotationMirror> {
   private final SortedMap<String, AnnotationValueMirror> values;
-  private final String desc;
-  private final boolean visible;
+  protected final String desc;
+  protected final boolean visible;
 
   public AnnotationMirror(String desc, boolean visible) {
     super(Opcodes.ASM5);
@@ -98,7 +100,7 @@ class AnnotationMirror extends AnnotationVisitor implements Comparable<Annotatio
     visitor.visitEnd();
   }
 
-  private void visitValues(AnnotationVisitor visitor) {
+  protected final void visitValues(AnnotationVisitor visitor) {
     for (Map.Entry<String, AnnotationValueMirror> entry : values.entrySet()) {
       entry.getValue().accept(entry.getKey(), visitor);
     }
