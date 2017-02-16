@@ -57,7 +57,7 @@ final class MoreElements {
     return innerClass.getEnclosingElement();
   }
 
-  public static boolean isRuntimeRetention(AnnotationMirror annotation) {
+  public static boolean isRuntimeVisible(AnnotationMirror annotation) {
     DeclaredType annotationType = annotation.getAnnotationType();
     TypeElement annotationTypeElement = (TypeElement) annotationType.asElement();
 
@@ -74,25 +74,6 @@ final class MoreElements {
           "value"));
 
     return retentionPolicy.getSimpleName().contentEquals("RUNTIME");
-  }
-
-  public static boolean isSourceRetention(AnnotationMirror annotation) {
-    DeclaredType annotationType = annotation.getAnnotationType();
-    TypeElement annotationTypeElement = (TypeElement) annotationType.asElement();
-
-    AnnotationMirror retentionAnnotation = findAnnotation(
-        "java.lang.annotation.Retention",
-        annotationTypeElement);
-    if (retentionAnnotation == null) {
-      return false;
-    }
-
-    VariableElement retentionPolicy = (VariableElement) Preconditions.checkNotNull(
-        findAnnotationValue(
-            retentionAnnotation,
-            "value"));
-
-    return retentionPolicy.getSimpleName().contentEquals("SOURCE");
   }
 
   @Nullable
