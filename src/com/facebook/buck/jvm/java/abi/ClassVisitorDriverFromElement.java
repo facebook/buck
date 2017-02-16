@@ -176,7 +176,9 @@ class ClassVisitorDriverFromElement {
       // TODO(jkeljo): Bridge methods: Look at superclasses, then interfaces, checking whether
       // method types change in the new class
 
-      String[] exceptions = null;  // TODO(jkeljo): Handle throws
+      String[] exceptions = e.getThrownTypes().stream()
+          .map(descriptorFactory::getInternalName)
+          .toArray(count -> new String[count]);
 
       MethodVisitor methodVisitor = visitor.visitMethod(
           AccessFlags.getAccessFlags(e),
