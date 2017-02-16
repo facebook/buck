@@ -572,25 +572,6 @@ public class StubJarTest {
   }
 
   @Test
-  public void doesNotStubReferencesToInnerClassesOfOtherTypess() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  B.C field;",
-                "}",
-                "class B {",
-                "  public class C { }",
-                "}"
-            )));
-
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
-  }
-
-  @Test
   public void stubsStaticMemberClasses() throws IOException {
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
@@ -988,21 +969,16 @@ public class StubJarTest {
         originalNode.invisibleTypeAnnotations,
         stubbedNode.invisibleTypeAnnotations);
     assertEquals(originalNode.attrs, stubbedNode.attrs);
-    assertInnerClassesStubbedCorrectly(
-        originalNode,
-        originalNode.innerClasses,
-        stubbedNode.innerClasses);
+    assertInnerClassesStubbedCorrectly(originalNode.innerClasses, stubbedNode.innerClasses);
     assertFieldsStubbedCorrectly(originalNode.fields, stubbedNode.fields);
     assertMethodsStubbedCorrectly(originalNode.methods, stubbedNode.methods);
   }
 
   private static void assertInnerClassesStubbedCorrectly(
-      ClassNode originalOuter,
       List<InnerClassNode> original,
       List<InnerClassNode> stubbed) {
     List<InnerClassNode> filteredOriginal = original.stream()
-        .filter(node -> node.name == originalOuter.name ||
-            (!isAnonymousOrLocalClass(node) && isMemberOf(node, originalOuter)))
+        .filter(node -> !isAnonymousOrLocalClass(node))
         .collect(Collectors.toList());
 
     assertMembersStubbedCorrectly(
@@ -1036,10 +1012,6 @@ public class StubJarTest {
 
   private static boolean isAnonymousOrLocalClass(InnerClassNode node) {
     return node.innerName == null || node.outerName == null;
-  }
-
-  private static boolean isMemberOf(InnerClassNode inner, ClassNode outer) {
-    return inner.outerName.equals(outer.name);
   }
 
   private static void assertMethodsStubbedCorrectly(
