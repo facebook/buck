@@ -25,7 +25,7 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 
-public class DistributedBuildIntegrationTest {
+public class DistBuildIntegrationTest {
   @Rule
   public TemporaryPaths temporaryFolder = new TemporaryPaths();
 

@@ -75,7 +75,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.jar.JarOutputStream;
 
-public class DistributedBuildFileHashesTest {
+public class DistBuildFileHashesTest {
   @Rule
   public TemporaryFolder tempDir = new TemporaryFolder();
 
