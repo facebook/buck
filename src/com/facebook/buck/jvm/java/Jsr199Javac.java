@@ -48,6 +48,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -61,6 +62,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import javax.annotation.Nullable;
+import javax.annotation.processing.Processor;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
@@ -269,12 +271,6 @@ public abstract class Jsr199Javac implements Javac {
               Diagnostic.Kind.WARNING);
     }
 
-    AnnotationProcessorFactory processorFactory = new AnnotationProcessorFactory(
-        context.getEventSink(),
-        compiler.getClass().getClassLoader(),
-        context.getClassLoaderCache(),
-        safeAnnotationProcessors,
-        invokingRule);
     try {
       try (
           // TranslatingJavacPhaseTracer is AutoCloseable so that it can detect the end of tracing
@@ -290,8 +286,13 @@ public abstract class Jsr199Javac implements Javac {
           // this, then the evidence suggests that they get one polluted with Buck's own classpath,
           // which means that libraries that have dependencies on different versions of Buck's deps
           // may choke with novel errors that don't occur on the command line.
-          ProcessorBundle processorBundle = prepareProcessors(processorFactory, options)) {
-        compilationTask.setProcessors(processorBundle.processors);
+          AnnotationProcessorFactory processorFactory = new AnnotationProcessorFactory(
+              context.getEventSink(),
+              compiler.getClass().getClassLoader(),
+              context.getClassLoaderCache(),
+              safeAnnotationProcessors,
+              invokingRule)) {
+        compilationTask.setProcessors(prepareProcessors(processorFactory, options));
 
         // Invoke the compilation and inspect the result.
         isSuccess = compilationTask.call();
@@ -353,7 +354,7 @@ public abstract class Jsr199Javac implements Javac {
     }
   }
 
-  private ProcessorBundle prepareProcessors(
+  private List<Processor> prepareProcessors(
       AnnotationProcessorFactory processorFactory,
       List<String> options) {
     String processorClassPath = null;
@@ -370,7 +371,7 @@ public abstract class Jsr199Javac implements Javac {
     }
 
     if (processorClassPath == null || processorNames == null) {
-      return new ProcessorBundle();
+      return Collections.emptyList();
     }
 
     Iterable<String> rawPaths = Splitter.on(File.pathSeparator)

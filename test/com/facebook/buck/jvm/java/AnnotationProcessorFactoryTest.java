@@ -22,11 +22,11 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.util.ClassLoaderCache;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
@@ -38,61 +38,48 @@ public class AnnotationProcessorFactoryTest {
   @Test
   public void testAnnotationProcessorClassloadersNotReusedByDefault() throws MalformedURLException {
     assertFalse(isAnnotationProcessorClassLoaderReused(
-        ImmutableList.of("some.Processor"),  // processors
+        "some.Processor",  // processor
         Collections.emptySet()));    // safe processors
   }
 
   @Test
   public void testAnnotationProcessorClassloadersReusedIfMarkedSafe() throws MalformedURLException {
     assertTrue(isAnnotationProcessorClassLoaderReused(
-        ImmutableList.of("some.Processor"),  // processors
-        ImmutableSet.of("some.Processor")));    // safe processors
-  }
-
-  @Test
-  public void testAnnotationProcessorsMustAllBeSafeToReuseClassLoader()
-      throws MalformedURLException {
-    assertFalse(isAnnotationProcessorClassLoaderReused(
-        ImmutableList.of("some.Processor", "some.other.Processor"),  // processors
+        "some.Processor",  // processor
         ImmutableSet.of("some.Processor")));    // safe processors
   }
 
   private boolean isAnnotationProcessorClassLoaderReused(
-      ImmutableList<String> annotationProcessors,
+      String annotationProcessor,
       Set<String> safeAnnotationProcessors) throws MalformedURLException {
     URL[] annotationProcessorClasspath = {new URL("file:///some/path/to.jar")};
     ClassLoader baseClassLoader = ToolProvider.getSystemToolClassLoader();
     ClassLoaderCache classLoaderCache = new ClassLoaderCache();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:test");
 
-    AnnotationProcessorFactory factory = new AnnotationProcessorFactory(
-        null,
-        baseClassLoader,
-        classLoaderCache,
-        safeAnnotationProcessors,
-        buildTarget);
-
-    ProcessorBundle bundle = new ProcessorBundle();
-    factory.setProcessorBundleClassLoader(
-        annotationProcessors,
-        annotationProcessorClasspath,
-        baseClassLoader,
-        classLoaderCache,
-        safeAnnotationProcessors,
-        buildTarget,
-        bundle);
-
-    ProcessorBundle bundle2 = new ProcessorBundle();
-    factory.setProcessorBundleClassLoader(
-        annotationProcessors,
-        annotationProcessorClasspath,
-        baseClassLoader,
-        classLoaderCache,
-        safeAnnotationProcessors,
-        buildTarget,
-        bundle2);
-
-    return bundle.classLoader == bundle2.classLoader;
+    try (
+        AnnotationProcessorFactory factory1 = new AnnotationProcessorFactory(
+            null,
+            baseClassLoader,
+            classLoaderCache,
+            safeAnnotationProcessors,
+            buildTarget);
+         AnnotationProcessorFactory factory2 = new AnnotationProcessorFactory(
+             null,
+             baseClassLoader,
+             classLoaderCache,
+             safeAnnotationProcessors,
+             buildTarget)) {
+      ClassLoader classLoader1 = factory1.getClassLoaderForProcessor(
+          annotationProcessor,
+          annotationProcessorClasspath);
+      ClassLoader classLoader2 = factory2.getClassLoaderForProcessor(
+          annotationProcessor,
+          annotationProcessorClasspath);
+      return classLoader1 == classLoader2;
+    } catch (IOException e) {
+      throw new AssertionError(e);
+    }
   }
 
 }
