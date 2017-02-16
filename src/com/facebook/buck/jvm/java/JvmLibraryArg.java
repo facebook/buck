@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 @SuppressFieldNotInitialized
@@ -51,7 +52,8 @@ public class JvmLibraryArg extends AbstractDescriptionArg {
   public AnnotationProcessingParams buildAnnotationProcessingParams(
       BuildTarget owner,
       ProjectFilesystem filesystem,
-      BuildRuleResolver resolver) {
+      BuildRuleResolver resolver,
+      Set<String> safeAnnotationProcessors) {
     ImmutableSet<String> annotationProcessors =
         this.annotationProcessors;
 
@@ -61,6 +63,7 @@ public class JvmLibraryArg extends AbstractDescriptionArg {
 
     AnnotationProcessingParams.Builder builder = new AnnotationProcessingParams.Builder();
     builder.setOwnerTarget(owner);
+    builder.setSafeAnnotationProcessors(safeAnnotationProcessors);
     builder.addAllProcessors(annotationProcessors);
     builder.setProjectFilesystem(filesystem);
     ImmutableSortedSet<BuildRule> processorDeps = resolver.getAllRules(annotationProcessorDeps);

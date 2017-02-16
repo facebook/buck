@@ -23,6 +23,7 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -48,7 +49,7 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
   public static final AnnotationProcessingParams EMPTY = new AnnotationProcessingParams(
       /* owner target */ null,
       /* project filesystem */ null,
-      /* processors */ JavacPluginProperties.builder().build(),
+      ImmutableList.of(),
       ImmutableSortedSet.of(),
       false);
 
@@ -56,14 +57,14 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
   private final BuildTarget ownerTarget;
   @Nullable
   private final ProjectFilesystem filesystem;
-  private final JavacPluginProperties annotationProcessors;
+  private final ImmutableList<JavacPluginProperties> annotationProcessors;
   private final ImmutableSortedSet<String> parameters;
   private final boolean processOnly;
 
   private AnnotationProcessingParams(
       @Nullable BuildTarget ownerTarget,
       @Nullable ProjectFilesystem filesystem,
-      JavacPluginProperties annotationProcessors,
+      ImmutableList<JavacPluginProperties> annotationProcessors,
       Set<String> parameters,
       boolean processOnly) {
     this.ownerTarget = ownerTarget;
@@ -95,7 +96,9 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
       return ImmutableList.of();
     }
 
-    return ImmutableList.of(annotationProcessors.resolve(filesystem, resolver));
+    return annotationProcessors.stream()
+        .map(processors -> processors.resolve(filesystem, resolver))
+        .collect(MoreCollectors.toImmutableList());
   }
 
   public ImmutableSortedSet<String> getParameters() {
@@ -103,7 +106,10 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
   }
 
   public ImmutableSortedSet<SourcePath> getInputs() {
-    return annotationProcessors.getInputs();
+    return annotationProcessors.stream()
+        .map(JavacPluginProperties::getInputs)
+        .flatMap(Collection::stream)
+        .collect(MoreCollectors.toImmutableSortedSet());
   }
 
   @Override
@@ -149,7 +155,12 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
     private BuildTarget ownerTarget;
     @Nullable
     private ProjectFilesystem filesystem;
-    private JavacPluginProperties.Builder processorsBuilder = JavacPluginProperties.builder();
+    @Nullable
+    private Set<String> safeAnnotationProcessors;
+    private JavacPluginProperties.Builder safeProcessorsBuilder =
+        JavacPluginProperties.builder().setCanReuseClassLoader(true);
+    private JavacPluginProperties.Builder unsafeProcessorsBuilder =
+        JavacPluginProperties.builder().setCanReuseClassLoader(false);
     private Set<String> parameters = Sets.newHashSet();
     private boolean processOnly;
 
@@ -158,13 +169,25 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
       return this;
     }
 
+    public Builder setSafeAnnotationProcessors(Set<String> safeAnnotationProcessors) {
+      this.safeAnnotationProcessors = safeAnnotationProcessors;
+      return this;
+    }
+
     public Builder addProcessorBuildTarget(BuildRule rule) {
-      processorsBuilder.addDep(rule);
+      safeProcessorsBuilder.addDep(rule);
+      unsafeProcessorsBuilder.addDep(rule);
       return this;
     }
 
     public Builder addAllProcessors(Collection<String> processorNames) {
-      processorsBuilder.addAllProcessorNames(processorNames);
+      for (String name : processorNames) {
+        if (Preconditions.checkNotNull(safeAnnotationProcessors).contains(name)) {
+          safeProcessorsBuilder.addProcessorNames(name);
+        } else {
+          unsafeProcessorsBuilder.addProcessorNames(name);
+        }
+      }
       return this;
     }
 
@@ -184,15 +207,24 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
     }
 
     public AnnotationProcessingParams build() {
-      JavacPluginProperties processors = processorsBuilder.build();
-      if (processors.isEmpty() && parameters.isEmpty()) {
+      JavacPluginProperties safeProcessors = safeProcessorsBuilder.build();
+      JavacPluginProperties unsafeProcessors = unsafeProcessorsBuilder.build();
+      if (safeProcessors.isEmpty() && unsafeProcessors.isEmpty() && parameters.isEmpty()) {
         return EMPTY;
+      }
+
+      ImmutableList.Builder<JavacPluginProperties> processorsBuilder = ImmutableList.builder();
+      if (!safeProcessors.isEmpty()) {
+        processorsBuilder.add(safeProcessors);
+      }
+      if (!unsafeProcessors.isEmpty()) {
+        processorsBuilder.add(unsafeProcessors);
       }
 
       return new AnnotationProcessingParams(
           ownerTarget,
           filesystem,
-          processors,
+          processorsBuilder.build(),
           parameters,
           processOnly);
     }

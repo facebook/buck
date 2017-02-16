@@ -149,6 +149,7 @@ public class JavacOptionsTest {
   @Test
   public void shouldSetTheAnnotationSource() {
     AnnotationProcessingParams params = new AnnotationProcessingParams.Builder()
+        .setSafeAnnotationProcessors(Collections.emptySet())
         .addAllProcessors(Collections.singleton("processor"))
         .setProcessOnly(true)
         .build();
@@ -163,6 +164,7 @@ public class JavacOptionsTest {
   @Test
   public void shouldAddAllAddedAnnotationProcessors() {
     AnnotationProcessingParams params = new AnnotationProcessingParams.Builder()
+        .setSafeAnnotationProcessors(Collections.emptySet())
         .addAllProcessors(Lists.newArrayList("myproc", "theirproc"))
         .setProcessOnly(true)
         .build();

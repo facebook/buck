@@ -112,7 +112,6 @@ public abstract class Jsr199Javac implements Javac {
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableList<ResolvedJavacPluginProperties> annotationProcessors,
-      ImmutableSet<String> safeAnnotationProcessors,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
@@ -155,7 +154,6 @@ public abstract class Jsr199Javac implements Javac {
             invokingRule,
             options,
             annotationProcessors,
-            safeAnnotationProcessors,
             javaSourceFilePaths,
             pathToSrcsList,
             compiler,
@@ -217,7 +215,6 @@ public abstract class Jsr199Javac implements Javac {
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableList<ResolvedJavacPluginProperties> annotationProcessors,
-      ImmutableSet<String> safeAnnotationProcessors,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       JavaCompiler compiler,
@@ -285,7 +282,6 @@ public abstract class Jsr199Javac implements Javac {
               context.getEventSink(),
               compiler.getClass().getClassLoader(),
               context.getClassLoaderCache(),
-              safeAnnotationProcessors,
               invokingRule)) {
         compilationTask.setProcessors(processorFactory.createProcessors(annotationProcessors));
 

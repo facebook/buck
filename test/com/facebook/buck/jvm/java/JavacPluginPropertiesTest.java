@@ -48,6 +48,7 @@ public class JavacPluginPropertiesTest {
                 ImmutableSortedSet.of(dep)));
 
     JavacPluginProperties props = JavacPluginProperties.builder()
+        .setCanReuseClassLoader(false)
         .addDep(processor)
         .build();
 

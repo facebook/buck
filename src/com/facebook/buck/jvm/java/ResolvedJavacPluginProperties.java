@@ -54,6 +54,10 @@ public class ResolvedJavacPluginProperties {
         .toArray(size -> new URL[size]));
   }
 
+  public boolean getCanReuseClassLoader() {
+    return inner.getCanReuseClassLoader();
+  }
+
   public ImmutableSortedSet<String> getProcessorNames() {
     return inner.getProcessorNames();
   }

@@ -27,7 +27,6 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
@@ -74,7 +73,6 @@ public class FakeJavac implements Javac {
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableList<ResolvedJavacPluginProperties> annotationProcessors,
-      ImmutableSet<String> safeAnnotationProcessors,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,

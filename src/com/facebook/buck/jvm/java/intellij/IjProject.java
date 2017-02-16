@@ -191,8 +191,8 @@ public class IjProject {
                 .buildAnnotationProcessingParams(
                     targetNode.getBuildTarget(),
                     projectFilesystem,
-                    buildRuleResolver
-                );
+                    buildRuleResolver,
+                    ImmutableSet.of());
             if (annotationProcessingParams == null || annotationProcessingParams.isEmpty()) {
               return Optional.empty();
             }

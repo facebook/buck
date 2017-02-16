@@ -47,6 +47,8 @@ abstract class AbstractJavacPluginProperties implements RuleKeyAppendable {
   @Value.NaturalOrder
   public abstract ImmutableSortedSet<SourcePath> getInputs();
 
+  public abstract boolean getCanReuseClassLoader();
+
   public boolean isEmpty() {
     return getProcessorNames().isEmpty() &&
         getClasspathEntries().isEmpty();

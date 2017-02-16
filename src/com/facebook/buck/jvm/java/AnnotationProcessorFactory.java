@@ -23,9 +23,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -37,19 +35,16 @@ class AnnotationProcessorFactory implements AutoCloseable {
   private final ClassLoader compilerClassLoader;
   private final ClassLoaderCache globalClassLoaderCache;
   private final ClassLoaderCache localClassLoaderCache = new ClassLoaderCache();
-  private final Set<String> safeAnnotationProcessors;
   private final BuildTarget target;
 
   AnnotationProcessorFactory(
       JavacEventSink eventSink,
       ClassLoader compilerClassLoader,
       ClassLoaderCache globalClassLoaderCache,
-      Set<String> safeAnnotationProcessors,
       BuildTarget target) {
     this.eventSink = eventSink;
     this.compilerClassLoader = compilerClassLoader;
     this.globalClassLoaderCache = globalClassLoaderCache;
-    this.safeAnnotationProcessors = safeAnnotationProcessors;
     this.target = target;
   }
 
@@ -67,13 +62,13 @@ class AnnotationProcessorFactory implements AutoCloseable {
   }
 
   private Stream<Processor> createProcessorsWithCommonClasspath(
-      ResolvedJavacPluginProperties properties) {
-    return properties.getProcessorNames().stream()
-        .map(name -> createProcessor(name, properties.getClasspath()));
+      ResolvedJavacPluginProperties processorGroup) {
+    ClassLoader classLoader = getClassLoaderForProcessorGroup(processorGroup);
+    return processorGroup.getProcessorNames().stream()
+        .map(name -> createProcessor(classLoader, name));
   }
 
-  private Processor createProcessor(String name, URL[] urls) {
-    ClassLoader classLoader = getClassLoaderForProcessor(name, urls);
+  private Processor createProcessor(ClassLoader classLoader, String name) {
     try {
       Class<? extends Processor> aClass = classLoader.loadClass(name).asSubclass(Processor.class);
       return new TracingProcessorWrapper(eventSink, target, aClass.newInstance());
@@ -87,20 +82,20 @@ class AnnotationProcessorFactory implements AutoCloseable {
   }
 
   @VisibleForTesting
-  ClassLoader getClassLoaderForProcessor(String name, URL[] urls) {
+  ClassLoader getClassLoaderForProcessorGroup(ResolvedJavacPluginProperties processorGroup) {
     ClassLoaderCache cache;
     // We can avoid lots of overhead in large builds by reusing the same classloader for annotation
     // processors. However, some annotation processors use static variables in a way that assumes
     // there is only one instance running in the process at a time (or at all), and such annotation
     // processors would break running inside of Buck. So we default to creating a new ClassLoader
     // for each build rule, with an option to whitelist "safe" processors in .buckconfig.
-    if (safeAnnotationProcessors.contains(name)) {
+    if (processorGroup.getCanReuseClassLoader()) {
       cache = globalClassLoaderCache;
     } else {
       cache = localClassLoaderCache;
     }
     return cache.getClassLoaderForClassPath(
         compilerClassLoader,
-        ImmutableList.copyOf(urls));
+        ImmutableList.copyOf(processorGroup.getClasspath()));
   }
 }

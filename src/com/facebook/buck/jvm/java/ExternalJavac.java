@@ -172,7 +172,6 @@ public class ExternalJavac implements Javac {
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableList<ResolvedJavacPluginProperties> annotationProcessors,
-      ImmutableSet<String> safeAnnotationProcessors,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,

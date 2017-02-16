@@ -94,7 +94,8 @@ public final class JavacOptionsFactory {
         jvmLibraryArg.buildAnnotationProcessingParams(
             params.getBuildTarget(),
             params.getProjectFilesystem(),
-            resolver);
+            resolver,
+            defaultOptions.getSafeAnnotationProcessors());
     builder.setAnnotationProcessingParams(annotationParams);
 
     return builder.build();
