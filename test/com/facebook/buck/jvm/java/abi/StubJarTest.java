@@ -223,6 +223,22 @@ public class StubJarTest {
   }
 
   @Test
+  public void genericInterfaceSignaturesShouldBePreserved() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public interface A<T> {",
+                "  T get(String key);",
+                "}"
+            )));
+
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+  }
+
+  @Test
   public void shouldIgnorePrivateMethods() throws IOException {
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
@@ -517,6 +533,41 @@ public class StubJarTest {
   }
 
   @Test
+  public void stubsEnums() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on("\n").join(
+            "package com.example.buck;",
+            "public enum A {",
+            "  Value1,",
+            "  Value2",
+            "}"
+        ));
+
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+  }
+
+  @Test
+  public void stubsAbstractEnums() throws IOException {
+    notYetImplementedForSource();
+
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on("\n").join(
+            "package com.example.buck;",
+            "public enum A {",
+            "  Value1 {",
+            "    public int get() { return 1; }",
+            "  };",
+            "  public abstract int get();",
+            "}"));
+
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+  }
+
+  @Test
   public void stubsInnerClasses() throws IOException {
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
@@ -526,6 +577,43 @@ public class StubJarTest {
                 "package com.example.buck;",
                 "public class A {",
                 "  public class B {",
+                "    public int count;",
+                "    public void foo() {}",
+                "  }",
+                "}"
+            )));
+
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A$B.class");
+  }
+
+  @Test
+  public void stubsInnerEnums() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class A {",
+                "  public enum B { Value }",
+                "}"
+            )));
+
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A$B.class");
+  }
+
+  @Test
+  public void stubsStaticMemberClasses() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class A {",
+                "  public static class B {",
                 "    public int count;",
                 "    public void foo() {}",
                 "  }",
