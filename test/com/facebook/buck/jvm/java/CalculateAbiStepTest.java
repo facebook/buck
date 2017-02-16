@@ -63,7 +63,7 @@ public class CalculateAbiStepTest {
     // investigate why the value is different.
     // NOTE: If this starts failing on CI for no obvious reason it's possible that the offset
     // calculation in ZipConstants.getFakeTime() does not account for DST correctly.
-    assertEquals("6866a1f2e236dd85c7ed9b7c291c0cc61d6451d3", seenHash);
+    assertEquals("929dc3a9a3470e885bf97eba60dd68b520b55c48", seenHash);
 
     // Assert that the abiJar contains non-class resources (like txt files).
     ZipInspector inspector = new ZipInspector(abiJar);
