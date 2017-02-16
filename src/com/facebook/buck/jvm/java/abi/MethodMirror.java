@@ -41,8 +41,14 @@ class MethodMirror extends MethodVisitor implements Comparable<MethodMirror> {
   @Nullable private AnnotationDefaultValueMirror annotationDefault;
   private final String key;
 
-  public MethodMirror(int access, String name, String desc, String signature, String[] exceptions) {
-    super(Opcodes.ASM5);
+  public MethodMirror(
+      int access,
+      String name,
+      String desc,
+      String signature,
+      String[] exceptions,
+      MethodVisitor methodVisitor) {
+    super(Opcodes.ASM5, methodVisitor);
 
     this.access = access;
     this.name = name;
@@ -113,7 +119,8 @@ class MethodMirror extends MethodVisitor implements Comparable<MethodMirror> {
 
   @Override
   public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-    AnnotationMirror mirror = new AnnotationMirror(desc, visible);
+    AnnotationMirror mirror = new AnnotationMirror(desc, visible,
+        super.visitAnnotation(desc, visible));
     annotations.add(mirror);
     return mirror;
   }
@@ -124,21 +131,29 @@ class MethodMirror extends MethodVisitor implements Comparable<MethodMirror> {
       TypePath typePath,
       String desc,
       boolean visible) {
-    TypeAnnotationMirror mirror = new TypeAnnotationMirror(typeRef, typePath, desc, visible);
+    TypeAnnotationMirror mirror = new TypeAnnotationMirror(
+        typeRef,
+        typePath,
+        desc,
+        visible,
+        super.visitTypeAnnotation(typeRef, typePath, desc, visible));
     typeAnnotations.add(mirror);
     return mirror;
   }
 
   @Override
   public AnnotationVisitor visitParameterAnnotation(int parameter, String desc, boolean visible) {
-    AnnotationMirror mirror = new AnnotationMirror(desc, visible);
+    AnnotationMirror mirror = new AnnotationMirror(
+        desc,
+        visible,
+        super.visitAnnotation(desc, visible));
     parameterAnnotations[parameter] = mirror;
     return mirror;
   }
 
   @Override
   public AnnotationVisitor visitAnnotationDefault() {
-    annotationDefault = new AnnotationDefaultValueMirror();
+    annotationDefault = new AnnotationDefaultValueMirror(super.visitAnnotationDefault());
     return annotationDefault;
   }
 
