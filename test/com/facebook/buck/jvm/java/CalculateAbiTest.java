@@ -67,20 +67,6 @@ public class CalculateAbiTest {
   }
 
   @Test
-  public void testGetAbiTarget() {
-    assertThat(
-        CalculateAbi.getAbiTarget(BuildTargetFactory.newInstance("//foo/bar:bar")),
-        Matchers.equalTo(BuildTargetFactory.newInstance("//foo/bar:bar#abi")));
-  }
-
-  @Test
-  public void testGetAbiTargetFlavored() {
-    assertThat(
-        CalculateAbi.getAbiTarget(BuildTargetFactory.newInstance("//foo/bar:bar#baz")),
-        Matchers.equalTo(BuildTargetFactory.newInstance("//foo/bar:bar#baz,abi")));
-  }
-
-  @Test
   public void ruleKeysChangeIfGeneratedBinaryJarChanges() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());

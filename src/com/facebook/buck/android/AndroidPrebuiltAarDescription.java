@@ -120,8 +120,6 @@ public class AndroidPrebuiltAarDescription
                 AndroidPrebuiltAar.class),
             AndroidPrebuiltAar::getPrebuiltJar));
 
-    BuildTarget abiJarTarget = CalculateAbi.getAbiTarget(params.getBuildTarget());
-
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     PrebuiltJar prebuiltJar = buildRuleResolver.addToIndex(
@@ -129,7 +127,6 @@ public class AndroidPrebuiltAarDescription
             unzipAar,
             params,
             pathResolver,
-            abiJarTarget,
             ImmutableSortedSet.copyOf(javaDeps)));
 
     BuildRuleParams androidLibraryParams = params.copyWithDeps(
@@ -150,7 +147,6 @@ public class AndroidPrebuiltAarDescription
         /* javacOptions */ javacOptions,
         new JavacToJarStepFactory(javacOptions, new BootClasspathAppender()),
         /* exportedDeps */ javaDeps,
-        abiJarTarget,
         JavaLibraryRules.getAbiInputs(buildRuleResolver, androidLibraryParams.getDeps()));
   }
 
@@ -158,7 +154,6 @@ public class AndroidPrebuiltAarDescription
       UnzipAar unzipAar,
       BuildRuleParams params,
       SourcePathResolver resolver,
-      BuildTarget abiJar,
       ImmutableSortedSet<BuildRule> deps) {
     BuildRuleParams buildRuleParams = params.copyWithChanges(
         /* buildTarget */ BuildTargets.createFlavoredBuildTarget(
@@ -172,7 +167,6 @@ public class AndroidPrebuiltAarDescription
         /* binaryJar */ new BuildTargetSourcePath(
             unzipAar.getBuildTarget(),
             unzipAar.getPathToClassesJar()),
-        abiJar,
         /* sourceJar */ Optional.empty(),
         /* gwtJar */ Optional.empty(),
         /* javadocUrl */ Optional.empty(),

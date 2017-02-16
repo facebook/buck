@@ -58,7 +58,6 @@ public class DummyRDotJava extends AbstractBuildRule
 
   private final SourcePathRuleFinder ruleFinder;
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
-  private final BuildTarget abiJar;
   private final Path outputJar;
   @AddToRuleKey
   private final JavacOptions javacOptions;
@@ -76,7 +75,6 @@ public class DummyRDotJava extends AbstractBuildRule
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       Set<HasAndroidResourceDeps> androidResourceDeps,
-      BuildTarget abiJar,
       JavacOptions javacOptions,
       boolean forceFinalResourceIds,
       Optional<String> unionPackage,
@@ -85,7 +83,6 @@ public class DummyRDotJava extends AbstractBuildRule
         params,
         ruleFinder,
         androidResourceDeps,
-        abiJar,
         javacOptions,
         forceFinalResourceIds,
         unionPackage,
@@ -97,7 +94,6 @@ public class DummyRDotJava extends AbstractBuildRule
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       Set<HasAndroidResourceDeps> androidResourceDeps,
-      BuildTarget abiJar,
       JavacOptions javacOptions,
       boolean forceFinalResourceIds,
       Optional<String> unionPackage,
@@ -109,7 +105,6 @@ public class DummyRDotJava extends AbstractBuildRule
     this.androidResourceDeps = androidResourceDeps.stream()
         .sorted(Comparator.comparing(HasAndroidResourceDeps::getBuildTarget))
         .collect(MoreCollectors.toImmutableList());
-    this.abiJar = abiJar;
     this.outputJar = getOutputJarPath(getBuildTarget(), getProjectFilesystem());
     this.javacOptions = javacOptions.withAnnotationProcessingParams(
         javacOptions.getAnnotationProcessingParams().withoutProcessOnly());
@@ -271,10 +266,4 @@ public class DummyRDotJava extends AbstractBuildRule
   JavacOptions getJavacOptions() {
     return javacOptions;
   }
-
-  @Override
-  public Optional<BuildTarget> getAbiJar() {
-    return Optional.of(abiJar);
-  }
-
 }

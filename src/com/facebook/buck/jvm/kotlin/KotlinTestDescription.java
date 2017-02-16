@@ -103,8 +103,6 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
             args
         );
 
-    BuildTarget abiJarTarget = CalculateAbi.getAbiTarget(params.getBuildTarget());
-
     KotlincToJarStepFactory stepFactory = new KotlincToJarStepFactory(
         kotlinBuckConfig.getKotlinCompiler().get(),
         args.extraKotlincArguments);
@@ -140,7 +138,6 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
                 ImmutableList.of(),      /* postprocessClassesCommands */
                 ImmutableSortedSet.of(), /* exportedDeps */
                 ImmutableSortedSet.of(), /* providedDeps */
-                abiJarTarget,
                 JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()),
                 false,                   /* trackClassUsage */
                 ImmutableSet.of(),       /* additionalClasspathEntries */

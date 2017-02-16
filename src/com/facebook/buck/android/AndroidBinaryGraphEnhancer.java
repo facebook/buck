@@ -261,9 +261,6 @@ public class AndroidBinaryGraphEnhancer {
           /* postprocessClassesCommands */ ImmutableList.of(),
           /* exportedDeps */ ImmutableSortedSet.of(),
           /* providedDeps */ ImmutableSortedSet.of(),
-          // We just use the full output jar as the ABI jar.
-          // Because no Java libraries depend on us, there is no risk of wasteful rebuilding.
-          compileMergedNativeLibGenCode,
           JavaLibraryRules.getAbiInputs(ruleResolver, paramsForCompileGenCode.getDeps()),
           /* trackClassUsage */ false,
           /* additionalClasspathEntries */ ImmutableSet.of(),
@@ -435,7 +432,6 @@ public class AndroidBinaryGraphEnhancer {
         /* providedDeps */ ImmutableSortedSet.of(),
         // Because the Uber R.java has no method bodies or private methods or fields,
         // we can just use its output as the ABI.
-        compileUberRDotJavaTarget,
         JavaLibraryRules.getAbiInputs(ruleResolver, paramsForCompileUberRDotJava.getDeps()),
         /* trackClassUsage */ false,
         /* additionalClasspathEntries */ ImmutableSet.of(),

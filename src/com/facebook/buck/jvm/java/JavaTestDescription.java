@@ -114,8 +114,6 @@ public class JavaTestDescription implements
         cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
 
-    BuildTarget abiJarTarget = CalculateAbi.getAbiTarget(params.getBuildTarget());
-
     BuildRuleParams testsLibraryParams = params.copyWithDeps(
             Suppliers.ofInstance(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -147,7 +145,6 @@ public class JavaTestDescription implements
                 /* postprocessClassesCommands */ ImmutableList.of(),
                 /* exportDeps */ ImmutableSortedSet.of(),
                 resolver.getAllRules(args.providedDeps),
-                abiJarTarget,
                 JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()),
                 javacOptions.trackClassUsage(),
                 /* additionalClasspathEntries */ ImmutableSet.of(),

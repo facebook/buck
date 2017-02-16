@@ -127,7 +127,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       transitiveClasspathsSupplier;
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
 
-  private final BuildTarget abiJar;
   private final boolean trackClassUsage;
   @AddToRuleKey
   @SuppressWarnings("PMD.UnusedPrivateField")
@@ -186,7 +185,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       ImmutableList<String> postprocessClassesCommands,
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,
-      BuildTarget abiJar,
       ImmutableSortedSet<SourcePath> abiInputs,
       boolean trackClassUsage,
       ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries,
@@ -207,7 +205,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         postprocessClassesCommands,
         exportedDeps,
         providedDeps,
-        abiJar,
         trackClassUsage,
         new JarArchiveDependencySupplier(
             abiInputs,
@@ -232,7 +229,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       ImmutableList<String> postprocessClassesCommands,
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,
-      BuildTarget abiJar,
       boolean trackClassUsage,
       final JarArchiveDependencySupplier abiClasspath,
       ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries,
@@ -271,7 +267,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     this.mavenCoords = mavenCoords;
     this.tests = tests;
 
-    this.abiJar = abiJar;
     this.trackClassUsage = trackClassUsage;
     this.abiClasspath = abiClasspath;
     this.deps = params.getDeps();
@@ -583,8 +578,8 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public Optional<BuildTarget> getAbiJar() {
-    return outputJar.isPresent() ? Optional.of(abiJar) : Optional.empty();
+  public final Optional<BuildTarget> getAbiJar() {
+    return outputJar.isPresent() ? JavaLibrary.super.getAbiJar() : Optional.empty();
   }
 
   @Override

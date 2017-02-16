@@ -117,8 +117,6 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
 
     Tool scalac = config.getScalac(resolver);
 
-    BuildTarget abiJarTarget = CalculateAbi.getAbiTarget(params.getBuildTarget());
-
     BuildRuleParams javaLibraryParams =
         params.appendExtraDeps(
             Iterables.concat(
@@ -144,7 +142,6 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                 /* postprocessClassesCommands */ ImmutableList.of(),
                 /* exportDeps */ ImmutableSortedSet.of(),
                 /* providedDeps */ ImmutableSortedSet.of(),
-                abiJarTarget,
                 JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()),
                 /* trackClassUsage */ false,
                 /* additionalClasspathEntries */ ImmutableSet.of(),

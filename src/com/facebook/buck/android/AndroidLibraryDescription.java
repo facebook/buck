@@ -148,8 +148,6 @@ public class AndroidLibraryDescription
             params.getExtraDeps());
       }
 
-      BuildTarget abiJarTarget = CalculateAbi.getAbiTarget(params.getBuildTarget());
-
       AndroidLibraryCompiler compiler =
           compilerFactory.getCompiler(args.language.orElse(JvmLanguage.JAVA));
 
@@ -203,7 +201,6 @@ public class AndroidLibraryDescription
           args.postprocessClassesCommands,
           exportedDeps,
           resolver.getAllRules(args.providedDeps),
-          abiJarTarget,
           JavaLibraryRules.getAbiInputs(resolver, androidLibraryParams.getDeps()),
           additionalClasspathEntries,
           javacOptions,

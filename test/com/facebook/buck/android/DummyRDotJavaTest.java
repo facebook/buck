@@ -85,7 +85,6 @@ public class DummyRDotJavaTest {
         ImmutableSet.of(
             (HasAndroidResourceDeps) resourceRule1,
             (HasAndroidResourceDeps) resourceRule2),
-        BuildTargetFactory.newInstance("//:abi"),
         ANDROID_JAVAC_OPTIONS,
         /* forceFinalResourceIds */ false,
         Optional.empty(),
@@ -168,7 +167,6 @@ public class DummyRDotJavaTest {
             .build(),
         ruleFinder,
         ImmutableSet.of(),
-        BuildTargetFactory.newInstance("//:abi"),
         ANDROID_JAVAC_OPTIONS,
         /* forceFinalResourceIds */ false,
         Optional.empty(),

@@ -118,14 +118,10 @@ public class AndroidLibraryGraphEnhancer {
                 ruleFinder.filterBuildRuleInputs(javacOptions.getInputs(ruleFinder)))),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
 
-    BuildTarget abiJarTarget =
-        CalculateAbi.getAbiTarget(dummyRDotJavaParams.getBuildTarget());
-
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
         dummyRDotJavaParams,
         ruleFinder,
         androidResourceDeps,
-        abiJarTarget,
         javacOptions,
         forceFinalResourceIds,
         resourceUnionPackage,

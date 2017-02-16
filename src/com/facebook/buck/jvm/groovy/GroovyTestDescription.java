@@ -92,8 +92,6 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
-    BuildTarget abiJarTarget = CalculateAbi.getAbiTarget(params.getBuildTarget());
-
     JavacOptions javacOptions = JavacOptionsFactory
         .create(
           defaultJavacOptions,
@@ -135,7 +133,6 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
                 /* postprocessClassesCommands */ ImmutableList.of(),
                 /* exportDeps */ ImmutableSortedSet.of(),
                 /* providedDeps */ ImmutableSortedSet.of(),
-                abiJarTarget,
                 JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()),
                 /* trackClassUsage */ false,
                 /* additionalClasspathEntries */ ImmutableSet.of(),

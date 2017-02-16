@@ -180,8 +180,6 @@ public class JavaLibraryDescription implements
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
-    BuildTarget abiJarTarget = CalculateAbi.getAbiTarget(params.getBuildTarget());
-
     ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps);
     BuildRuleParams javaLibraryParams =
         params.appendExtraDeps(
@@ -208,7 +206,6 @@ public class JavaLibraryDescription implements
             args.postprocessClassesCommands,
             exportedDeps,
             resolver.getAllRules(args.providedDeps),
-            abiJarTarget,
             JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()),
             javacOptions.trackClassUsage(),
             /* additionalClasspathEntries */ ImmutableSet.of(),

@@ -148,8 +148,6 @@ public class AndroidBuildConfigDescription
         useConstantExpressions);
     ruleResolver.addToIndex(androidBuildConfig);
 
-    BuildTarget abiJarTarget = CalculateAbi.getAbiTarget(params.getBuildTarget());
-
     // Create a second build rule to compile BuildConfig.java and expose it as a JavaLibrary.
     BuildRuleParams javaLibraryParams = params.copyWithChanges(
         params.getBuildTarget(),
@@ -161,7 +159,6 @@ public class AndroidBuildConfigDescription
         pathResolver,
         ruleFinder,
         javacOptions,
-        abiJarTarget,
         JavaLibraryRules.getAbiInputs(ruleResolver, javaLibraryParams.getDeps()),
         androidBuildConfig);
   }

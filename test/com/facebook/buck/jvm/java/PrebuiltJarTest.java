@@ -64,7 +64,6 @@ public class PrebuiltJarTest {
               new DefaultTargetNodeToBuildRuleTransformer())
         )),
         new FakeSourcePath("abi.jar"),
-        BuildTargetFactory.newInstance("//:abi"),
         Optional.of(new FakeSourcePath("lib/junit-4.11-sources.jar")),
         /* gwtJar */ Optional.empty(),
         Optional.of("http://junit-team.github.io/junit/javadoc/latest/"),

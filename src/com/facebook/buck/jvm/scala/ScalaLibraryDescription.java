@@ -93,8 +93,6 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
             .build(),
         rawParams.getExtraDeps());
 
-    BuildTarget abiJarTarget = CalculateAbi.getAbiTarget(params.getBuildTarget());
-
     BuildRuleParams javaLibraryParams =
         params.appendExtraDeps(
             Iterables.concat(
@@ -117,7 +115,6 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
         /* postprocessClassesCommands */ ImmutableList.of(),
         params.getDeclaredDeps().get(),
         resolver.getAllRules(args.providedDeps),
-        abiJarTarget,
         JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()),
         /* trackClassUsage */ false,
         /* additionalClasspathEntries */ ImmutableSet.of(),

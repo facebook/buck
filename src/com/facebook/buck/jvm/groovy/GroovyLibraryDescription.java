@@ -83,8 +83,6 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
-    BuildTarget abiJarTarget = CalculateAbi.getAbiTarget(params.getBuildTarget());
-
     ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps);
     BuildRuleParams javaLibraryParams =
         params.appendExtraDeps(
@@ -116,7 +114,6 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
         ImmutableList.of(),
         exportedDeps,
         resolver.getAllRules(args.providedDeps),
-        abiJarTarget,
         JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()),
         /* trackClassUsage */ false,
         /* additionalClasspathEntries */ ImmutableSet.of(),

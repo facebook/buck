@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -41,7 +40,7 @@ import java.nio.file.Path;
 public class CalculateAbi extends AbstractBuildRule
     implements SupportsInputBasedRuleKey {
 
-  private static final Flavor FLAVOR = ImmutableFlavor.of("abi");
+  private static final Flavor FLAVOR = HasJavaAbi.ABI_FLAVOR;
 
   @AddToRuleKey
   private final SourcePath binaryJar;
@@ -63,12 +62,6 @@ public class CalculateAbi extends AbstractBuildRule
     Preconditions.checkArgument(isAbiTarget(abiTarget));
 
     return abiTarget.withoutFlavors(FLAVOR);
-  }
-
-  public static BuildTarget getAbiTarget(BuildTarget libraryTarget) {
-    Preconditions.checkArgument(!isAbiTarget(libraryTarget));
-
-    return libraryTarget.withAppendedFlavors(FLAVOR);
   }
 
   public static CalculateAbi of(

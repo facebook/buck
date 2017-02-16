@@ -162,8 +162,6 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
                 .build()),
         Suppliers.ofInstance(ImmutableSortedSet.of()));
 
-    BuildTarget abiJarTarget = CalculateAbi.getAbiTarget(params.getBuildTarget());
-
     final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     return new DefaultJavaLibrary(
@@ -179,7 +177,6 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
         /* postprocessClassesCommands */ ImmutableList.of(),
         /* exportedDeps */ ImmutableSortedSet.of(),
         /* providedDeps */ ImmutableSortedSet.of(),
-        /* abiJar */ abiJarTarget,
         JavaLibraryRules.getAbiInputs(resolver, javaParams.getDeps()),
         templateOptions.trackClassUsage(),
         /* additionalClasspathEntries */ ImmutableSet.of(),

@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.PrebuiltJar;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -53,7 +52,6 @@ public class AndroidPrebuiltAar
       JavacOptions javacOptions,
       CompileToJarStepFactory compileStepFactory,
       Iterable<PrebuiltJar> exportedDeps,
-      BuildTarget abiJar,
       ImmutableSortedSet<SourcePath> abiInputs) {
     super(
         androidLibraryParams,
@@ -68,7 +66,6 @@ public class AndroidPrebuiltAar
             .addAll(exportedDeps)
             .build(),
         /* providedDeps */ ImmutableSortedSet.of(),
-        abiJar,
         abiInputs,
         /* additionalClasspathEntries */ ImmutableSet.of(),
         javacOptions,

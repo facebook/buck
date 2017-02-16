@@ -17,15 +17,21 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.SourcePath;
 
 import java.util.Optional;
 
 public interface HasJavaAbi {
+  Flavor ABI_FLAVOR = ImmutableFlavor.of("abi");
+
+  BuildTarget getBuildTarget();
 
   /**
    * @return the {@link SourcePath} representing the ABI Jar for this rule.
    */
-  Optional<BuildTarget> getAbiJar();
-
+  default Optional<BuildTarget> getAbiJar() {
+    return Optional.of(getBuildTarget().withAppendedFlavors(ABI_FLAVOR));
+  }
 }
