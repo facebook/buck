@@ -81,7 +81,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
     if (CalculateAbi.isAbiTarget(params.getBuildTarget())) {
-      BuildTarget testTarget = params.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
+      BuildTarget testTarget = CalculateAbi.getLibraryTarget(params.getBuildTarget());
       resolver.requireRule(testTarget);
       return CalculateAbi.of(
           params.getBuildTarget(),

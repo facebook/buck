@@ -72,7 +72,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
     if (CalculateAbi.isAbiTarget(params.getBuildTarget())) {
-      BuildTarget libraryTarget = params.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
+      BuildTarget libraryTarget = CalculateAbi.getLibraryTarget(params.getBuildTarget());
       resolver.requireRule(libraryTarget);
       return CalculateAbi.of(
           params.getBuildTarget(),

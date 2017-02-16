@@ -93,7 +93,7 @@ public class KotlinLibraryDescription implements
     // We know that the flavour we're being asked to create is valid, since the check is done when
     // creating the action graph from the target graph.
     if (CalculateAbi.isAbiTarget(target)) {
-      BuildTarget libraryTarget = params.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
+      BuildTarget libraryTarget = CalculateAbi.getLibraryTarget(params.getBuildTarget());
       resolver.requireRule(libraryTarget);
       return CalculateAbi.of(
           params.getBuildTarget(),

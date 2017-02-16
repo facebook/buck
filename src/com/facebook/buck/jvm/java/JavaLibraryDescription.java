@@ -133,7 +133,7 @@ public class JavaLibraryDescription implements
     }
 
     if (CalculateAbi.isAbiTarget(target)) {
-      BuildTarget libraryTarget = target.withoutFlavors(CalculateAbi.FLAVOR);
+      BuildTarget libraryTarget = CalculateAbi.getLibraryTarget(target);
       resolver.requireRule(libraryTarget);
       return CalculateAbi.of(
           params.getBuildTarget(),

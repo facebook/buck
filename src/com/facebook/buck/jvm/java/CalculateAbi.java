@@ -31,6 +31,7 @@ import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -56,6 +57,12 @@ public class CalculateAbi extends AbstractBuildRule
 
   public static boolean isAbiTarget(BuildTarget target) {
     return target.getFlavors().contains(FLAVOR);
+  }
+
+  public static BuildTarget getLibraryTarget(BuildTarget abiTarget) {
+    Preconditions.checkArgument(isAbiTarget(abiTarget));
+
+    return abiTarget.withoutFlavors(FLAVOR);
   }
 
   public static CalculateAbi of(

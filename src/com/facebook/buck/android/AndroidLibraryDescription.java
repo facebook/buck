@@ -120,7 +120,7 @@ public class AndroidLibraryDescription
       if (hasDummyRDotJavaFlavor) {
         return graphEnhancer.getBuildableForAndroidResourcesAbi(resolver, ruleFinder);
       }
-      BuildTarget libraryTarget = params.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
+      BuildTarget libraryTarget = CalculateAbi.getLibraryTarget(params.getBuildTarget());
       resolver.requireRule(libraryTarget);
       return CalculateAbi.of(
           params.getBuildTarget(),

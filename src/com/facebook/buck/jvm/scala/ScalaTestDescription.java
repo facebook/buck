@@ -86,7 +86,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
     if (CalculateAbi.isAbiTarget(rawParams.getBuildTarget())) {
-      BuildTarget testTarget = rawParams.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
+      BuildTarget testTarget = CalculateAbi.getLibraryTarget(rawParams.getBuildTarget());
       resolver.requireRule(testTarget);
       return CalculateAbi.of(
           rawParams.getBuildTarget(),

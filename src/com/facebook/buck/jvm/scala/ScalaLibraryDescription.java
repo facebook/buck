@@ -72,7 +72,7 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
     if (CalculateAbi.isAbiTarget(rawParams.getBuildTarget())) {
-      BuildTarget libraryTarget = rawParams.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
+      BuildTarget libraryTarget = CalculateAbi.getLibraryTarget(rawParams.getBuildTarget());
       resolver.requireRule(libraryTarget);
       return CalculateAbi.of(
           rawParams.getBuildTarget(),

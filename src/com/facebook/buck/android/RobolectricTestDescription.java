@@ -109,7 +109,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
           AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR)) {
         return graphEnhancer.getBuildableForAndroidResourcesAbi(resolver, ruleFinder);
       }
-      BuildTarget testTarget = params.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
+      BuildTarget testTarget = CalculateAbi.getLibraryTarget(params.getBuildTarget());
       resolver.requireRule(testTarget);
       return CalculateAbi.of(
           params.getBuildTarget(),
