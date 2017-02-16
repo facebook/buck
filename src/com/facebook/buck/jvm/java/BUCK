@@ -142,6 +142,8 @@ java_library(
     'JavacOptionsFactory.java',
     'Javadoc.java',
     'JvmLibraryArg.java',
+    'JavaAnnotationProcessor.java',
+    'JavaAnnotationProcessorDescription.java',
     'JavaLibraryDescription.java',
     'JavaLibraryClasspathProvider.java',
     'JavaLibraryRules.java',

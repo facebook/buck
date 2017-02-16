@@ -59,7 +59,8 @@ public class GenruleDescriptionIntegrationTest {
         ImmutableList.of(
             "//:lib_a",
             "//:lib_b",
-            "//annotations:proc"));
+            "//:lib_d",
+            "//annotations:proc-lib"));
   }
 
   @Test
@@ -76,6 +77,14 @@ public class GenruleDescriptionIntegrationTest {
         ":echo_with_annotation_processor_is_proc",
         ImmutableList.of(
             "//:lib_b"));
+  }
+
+  @Test
+  public void depsFromClasspathMacroAreFilteredByPlugin() throws Exception {
+    expectGenruleOutput(
+        ":echo_with_plugin_is_proc",
+        ImmutableList.of(
+            "//:lib_d"));
   }
 
   @Test
@@ -99,7 +108,9 @@ public class GenruleDescriptionIntegrationTest {
             "//:app",
             "//:lib_a",
             "//:lib_b",
-            "//annotations:proc"));
+            "//:lib_d",
+            "//annotations:proc",
+            "//annotations:proc-lib"));
   }
 
   @Test
@@ -120,7 +131,9 @@ public class GenruleDescriptionIntegrationTest {
             "//:echo_with_annotation_processor_is_proc",
             "//:lib_a",
             "//:lib_b",
-            "//annotations:proc"));
+            "//:lib_d",
+            "//annotations:proc",
+            "//annotations:proc-lib"));
   }
 
   @Test
@@ -128,7 +141,7 @@ public class GenruleDescriptionIntegrationTest {
     expectOutputPathsGenruleOutput(
         ":echo_from_filtered_set",
         ImmutableList.of(
-            "//annotations:proc",
+            "//annotations:proc-lib",
             "//:app",
             "//:lib_a"));
   }
@@ -190,7 +203,7 @@ public class GenruleDescriptionIntegrationTest {
     expectGenruleOutput(
         ":echo_with_has_debug_flag",
         ImmutableList.of(
-            "//annotations:proc"));
+            "//annotations:proc-lib"));
   }
 
   @Test

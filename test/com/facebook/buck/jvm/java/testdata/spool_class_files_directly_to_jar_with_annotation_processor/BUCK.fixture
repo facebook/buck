@@ -2,14 +2,11 @@ java_library(
   name = 'a',
   srcs = ['A.java', 'B.java', 'AbstractC.java'],
   deps = [
-    ':processor',
+    ':immutables',
     ':guava',
     ':jsr305',
   ],
-  annotation_processors = [
-    'org.immutables.value.internal.$processor$.$Processor',
-  ],
-  annotation_processor_deps = [
+  plugins = [
     ':processor',
   ],
 )
@@ -20,8 +17,16 @@ java_binary(
     main_class = 'A',
 )
 
-prebuilt_jar(
+java_annotation_processor(
   name = 'processor',
+  processor_class = 'org.immutables.value.internal.$processor$.$Processor',
+  deps = [
+    ':immutables',
+  ],
+)
+
+prebuilt_jar(
+  name = 'immutables',
   binary_jar = 'value-2.3.8.jar',
 )
 

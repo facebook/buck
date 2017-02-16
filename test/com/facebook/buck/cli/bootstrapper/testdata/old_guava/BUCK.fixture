@@ -1,10 +1,7 @@
 java_library(
   name = 'example',
   srcs = ['A.java'],
-  annotation_processors = [
-    'SimpleProc',
-  ],
-  annotation_processor_deps = [
+  plugins = [
     ':simple-proc',
   ],
   deps = [
@@ -17,8 +14,16 @@ prebuilt_jar(
   binary_jar = 'guava-15.0.jar',
 )
 
-java_library(
+java_annotation_processor(
   name = 'simple-proc',
+  processor_class = 'SimpleProc',
+  deps = [
+    ':simple-proc-lib',
+  ]
+)
+
+java_library(
+  name = 'simple-proc-lib',
   srcs = ['SimpleProc.java'],
   deps = [
     ':old-guava',

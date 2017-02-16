@@ -111,6 +111,7 @@ import com.facebook.buck.jvm.java.JavaBinaryDescription;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaOptions;
+import com.facebook.buck.jvm.java.JavaAnnotationProcessorDescription;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.KeystoreDescription;
@@ -732,6 +733,7 @@ public class KnownBuildRuleTypes {
         defaultJavacOptions,
         defaultCxxPlatform,
         javaConfig));
+    builder.register(new JavaAnnotationProcessorDescription());
     builder.register(new JavaLibraryDescription(defaultJavacOptions));
     builder.register(
         new JavaTestDescription(

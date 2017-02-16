@@ -64,8 +64,7 @@ public class BuckCompletionContributor extends CompletionContributor {
     "source_jar",
     "aidl",
     "import_path",
-    "annotation_processors",
-    "annotation_processor_deps",
+    "plugins",
     "keystore"
   );
 

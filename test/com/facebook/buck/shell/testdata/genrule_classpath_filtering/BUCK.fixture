@@ -6,13 +6,19 @@ genrule(
 
 genrule(
   name = 'echo_with_dep_is_proc',
-  cmd = 'echo $(query_targets "attrfilter(deps, //annotations:proc, classpath(:app))") > $OUT',
+  cmd = 'echo $(query_targets "attrfilter(deps, //annotations:proc-lib, classpath(:app))") > $OUT',
   out = 'out',
 )
 
 genrule(
   name = 'echo_with_annotation_processor_is_proc',
   cmd = 'echo $(query_targets "attrfilter(annotation_processors, com.example.annotations.Proc, classpath(:app))") > $OUT',
+  out = 'out',
+)
+
+genrule(
+  name = 'echo_with_plugin_is_proc',
+  cmd = 'echo $(query_targets "attrfilter(plugins, //annotations:proc, classpath(:app))") > $OUT',
   out = 'out',
 )
 
@@ -48,7 +54,7 @@ genrule(
 
 genrule(
   name = 'echo_from_filtered_set',
-  cmd = 'echo $(query_outputs "filter(a, set(:app :lib_a :lib_b //annotations:proc :echo_with_deps))") > $OUT',
+  cmd = 'echo $(query_outputs "filter(a, set(:app :lib_a :lib_b //annotations:proc-lib :echo_with_deps))") > $OUT',
   out = 'out',
 )
 
@@ -75,7 +81,8 @@ java_library(
   srcs = ['A.java'],
   deps = [
     ':lib_b',
-    '//annotations:proc',
+    ':lib_d',
+    '//annotations:proc-lib',
     #add_import_to_lib_a ':lib_c',
   ],
 )
@@ -90,13 +97,21 @@ java_library(
     'com.example.annotations.Proc',
   ],
   annotation_processor_deps = [
-    '//annotations:proc',
+    '//annotations:proc-lib',
   ],
 )
 
 java_library(
   name = 'lib_c',
   deps = [
+    '//annotations:proc-lib',
+  ],
+)
+
+java_library(
+  name = 'lib_d',
+  srcs = ['D.java'],
+  plugins = [
     '//annotations:proc',
   ],
 )

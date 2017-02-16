@@ -22,6 +22,7 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -47,6 +48,7 @@ public class JvmLibraryArg extends AbstractDescriptionArg {
   public ImmutableList<String> annotationProcessorParams = ImmutableList.of();
   public ImmutableSet<String> annotationProcessors = ImmutableSet.of();
   public Optional<Boolean> annotationProcessorOnly;
+  public ImmutableList<BuildTarget> plugins = ImmutableList.of();
   public Optional<Boolean> generateAbiFromSource;
 
   public AnnotationProcessingParams buildAnnotationProcessingParams(
@@ -54,27 +56,51 @@ public class JvmLibraryArg extends AbstractDescriptionArg {
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver,
       Set<String> safeAnnotationProcessors) {
-    ImmutableSet<String> annotationProcessors =
-        this.annotationProcessors;
-
-    if (annotationProcessors.isEmpty()) {
+    if (annotationProcessors.isEmpty() && plugins.isEmpty()) {
       return AnnotationProcessingParams.EMPTY;
     }
 
     AnnotationProcessingParams.Builder builder = new AnnotationProcessingParams.Builder();
     builder.setOwnerTarget(owner);
     builder.setSafeAnnotationProcessors(safeAnnotationProcessors);
-    builder.addAllProcessors(annotationProcessors);
     builder.setProjectFilesystem(filesystem);
-    ImmutableSortedSet<BuildRule> processorDeps = resolver.getAllRules(annotationProcessorDeps);
-    for (BuildRule processorDep : processorDeps) {
-      builder.addProcessorBuildTarget(processorDep);
-    }
+
+    addLegacyProcessors(builder, resolver);
+    addProcessors(builder, resolver, owner);
+
     for (String processorParam : annotationProcessorParams) {
       builder.addParameter(processorParam);
     }
     builder.setProcessOnly(annotationProcessorOnly.orElse(Boolean.FALSE));
 
     return builder.build();
+  }
+
+  void addProcessors(
+      AnnotationProcessingParams.Builder builder,
+      BuildRuleResolver resolver,
+      BuildTarget owner) {
+    for (BuildTarget pluginTarget : plugins) {
+      BuildRule pluginRule = resolver.getRule(pluginTarget);
+      if (!(pluginRule instanceof JavaAnnotationProcessor)) {
+        throw new HumanReadableException(String.format(
+            "%s: only java_annotation_processor rules can be specified as plugins. " +
+                "%s is not a java_annotation_processor.",
+            owner,
+            pluginTarget));
+      }
+      JavaAnnotationProcessor plugin = (JavaAnnotationProcessor) pluginRule;
+      builder.addProcessor(plugin.getProcessorProperties());
+    }
+  }
+
+  void addLegacyProcessors(
+      AnnotationProcessingParams.Builder builder,
+      BuildRuleResolver resolver) {
+    builder.addAllProcessors(annotationProcessors);
+    ImmutableSortedSet<BuildRule> processorDeps = resolver.getAllRules(annotationProcessorDeps);
+    for (BuildRule processorDep : processorDeps) {
+      builder.addProcessorBuildTarget(processorDep);
+    }
   }
 }

@@ -31,13 +31,10 @@ def java_immutables_library(
     for dep in needed_deps:
       if not dep in deps:
         deps.append(dep)
-    annotation_processors = kwargs.get('annotation_processors', [])
-    if not 'org.immutables.value.internal.$processor$.$Processor' in annotation_processors:
-      annotation_processors.append('org.immutables.value.internal.$processor$.$Processor')
-    annotation_processor_deps = kwargs.get('annotation_processor_deps', [])
-    if not '//third-party/java/immutables:processor' in annotation_processor_deps:
-      annotation_processor_deps.append('//third-party/java/immutables:processor')
-    keys_to_remove = ['deps', 'annotation_processors', 'annotation_processor_deps']
+    plugins = kwargs.get('plugins', [])
+    if not '//third-party/java/immutables:processor' in plugins:
+      plugins.append('//third-party/java/immutables:processor')
+    keys_to_remove = ['deps', 'plugins']
     args = {}
     for k in kwargs:
       if not k in keys_to_remove:
@@ -47,8 +44,7 @@ def java_immutables_library(
       source=source,
       target=target,
       deps=deps,
-      annotation_processors=annotation_processors,
-      annotation_processor_deps=annotation_processor_deps,
+      plugins=plugins,
       **args)
 
 original_java_test = java_test

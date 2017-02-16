@@ -1,5 +1,11 @@
-java_library(
+java_annotation_processor(
   name = 'processor',
+  processor_class = 'com.facebook.example.MyAnnotationProcessor',
+  deps = [':processor-lib'],
+)
+
+java_library(
+  name = 'processor-lib',
   srcs = [ 'MyAnnotationProcessor.java' ],
 )
 
@@ -39,12 +45,9 @@ android_library(
     ':lib',
     #add_dep ':lib2',
   ],
-  annotation_processor_deps = [
+  plugins = [
     ':processor',
-  ],
-  annotation_processors = [
-    'com.facebook.example.MyAnnotationProcessor',
-  ],
+  ]
 )
 
 genrule(

@@ -24,6 +24,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -46,6 +47,8 @@ abstract class AbstractJavacPluginProperties implements RuleKeyAppendable {
 
   @Value.NaturalOrder
   public abstract ImmutableSortedSet<SourcePath> getInputs();
+
+  public abstract ImmutableList<BuildRule> getClasspathDeps();
 
   public abstract boolean getCanReuseClassLoader();
 
@@ -74,9 +77,14 @@ abstract class AbstractJavacPluginProperties implements RuleKeyAppendable {
 
     public abstract Builder addAllClasspathEntries(Iterable<? extends SourcePath> elements);
 
+    public abstract Builder addClasspathDeps(BuildRule... elements);
+
+    public abstract Builder addAllClasspathDeps(Iterable<? extends BuildRule> elements);
+
     public abstract JavacPluginProperties build();
 
     public JavacPluginProperties.Builder addDep(BuildRule rule) {
+      addClasspathDeps(rule);
       if (rule.getClass().isAnnotationPresent(BuildsAnnotationProcessor.class)) {
         SourcePath outputSourcePath = rule.getSourcePathToOutput();
         if (outputSourcePath != null) {
@@ -86,6 +94,7 @@ abstract class AbstractJavacPluginProperties implements RuleKeyAppendable {
       } else if (rule instanceof HasClasspathEntries) {
         HasClasspathEntries hasClasspathEntries = (HasClasspathEntries) rule;
         ImmutableSet<JavaLibrary> entries = hasClasspathEntries.getTransitiveClasspathDeps();
+        addAllClasspathDeps(entries);
         for (JavaLibrary entry : entries) {
           // Libraries may merely re-export other libraries' class paths, instead of having one
           // itself. In such cases do not add the library itself, and just move on.

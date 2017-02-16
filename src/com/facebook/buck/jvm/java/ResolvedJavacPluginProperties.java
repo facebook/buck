@@ -17,6 +17,8 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Supplier;
@@ -27,7 +29,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
 
-public class ResolvedJavacPluginProperties {
+public class ResolvedJavacPluginProperties implements RuleKeyAppendable {
   private final AbstractJavacPluginProperties inner;
   private final Supplier<URL[]> classpathSupplier;
 
@@ -68,5 +70,10 @@ public class ResolvedJavacPluginProperties {
 
   public ImmutableSortedSet<SourcePath> getInputs() {
     return inner.getInputs();
+  }
+
+  @Override
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    inner.appendToRuleKey(sink);
   }
 }

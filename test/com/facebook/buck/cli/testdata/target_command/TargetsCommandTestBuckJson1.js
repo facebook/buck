@@ -25,6 +25,7 @@
   "mavenCoords":null,
   "mavenPomTemplate":null,
   "name" : "test-library",
+  "plugins" : null,
   "postprocessClassesCommands" : null,
   "proguardConfig" : null,
   "providedDeps": null,

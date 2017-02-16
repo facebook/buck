@@ -1,5 +1,12 @@
-java_library(
+java_annotation_processor(
   name = 'proc',
+  processor_class = 'com.example.annotations.Proc',
+  deps = [':proc-lib'],
+  visibility = ['PUBLIC'],
+)
+
+java_library(
+  name = 'proc-lib',
   srcs = [
     'Proc.java',
   ],

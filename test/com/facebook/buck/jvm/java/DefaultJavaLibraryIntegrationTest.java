@@ -405,7 +405,8 @@ public class DefaultJavaLibraryIntegrationTest {
     // but still rebuild //:main because the code of the annotation processor has changed
     workspace.getBuildLog().assertTargetBuiltLocally("//:util");
     workspace.getBuildLog().assertTargetBuiltLocally("//:main");
-    workspace.getBuildLog().assertTargetHadMatchingInputRuleKey("//:annotation_processor");
+    workspace.getBuildLog().assertTargetHadMatchingInputRuleKey("//:annotation_processor_lib");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:annotation_processor");
   }
 
   @Test
@@ -438,6 +439,39 @@ public class DefaultJavaLibraryIntegrationTest {
     workspace.getBuildLog().assertTargetHadMatchingRuleKey("//:util");
     workspace.getBuildLog().assertTargetBuiltLocally("//:main");
     workspace.getBuildLog().assertTargetBuiltLocally("//:annotation_processor");
+  }
+
+  @Test
+  public void testAnnotationProcessorFileChangeThatDoesNotModifyCodeDoesNotCauseRebuild()
+      throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "annotation_processors", tmp);
+    workspace.setUp();
+
+    // Run `buck build` to create the dep file
+    BuildTarget mainTarget = BuildTargetFactory.newInstance("//:main");
+    // Warm the used classes file
+    ProcessResult buildResult =
+        workspace.runBuckCommand("build", mainTarget.getFullyQualifiedName());
+    buildResult.assertSuccess("Successful build should exit with 0.");
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//:main");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:annotation_processor");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:util");
+
+    // Edit a source file in the annotation processor in a way that doesn't change the ABI
+    workspace.replaceFileContents("AnnotationProcessor.java", "false", "false /* false */");
+
+    // Run `buck build` again.
+    ProcessResult buildResult2 = workspace.runBuckCommand("build", "//:main");
+    buildResult2.assertSuccess("Successful build should exit with 0.");
+
+    // If all goes well, we'll rebuild //:annotation_processor because of the source change,
+    // and then rebuild //:main because the code of the annotation processor has changed
+    workspace.getBuildLog().assertTargetHadMatchingRuleKey("//:util");
+    workspace.getBuildLog().assertTargetHadMatchingInputRuleKey("//:main");
+    workspace.getBuildLog().assertTargetHadMatchingInputRuleKey("//:annotation_processor");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:annotation_processor_lib");
   }
 
   @Test
