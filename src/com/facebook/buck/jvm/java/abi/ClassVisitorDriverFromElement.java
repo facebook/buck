@@ -111,7 +111,7 @@ class ClassVisitorDriverFromElement {
       }
       visitor.visit(
           sourceVersionToClassFileVersion(targetVersion),
-          AccessFlags.getAccessFlags(e),
+          AccessFlags.getAccessFlags(e) & ~Opcodes.ACC_STATIC,
           descriptorFactory.getInternalName(e),
           signatureFactory.getSignature(e),
           descriptorFactory.getInternalName(superclass),
