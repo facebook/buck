@@ -17,6 +17,7 @@
 package com.facebook.buck.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
@@ -28,6 +29,9 @@ public class ObjectMappers {
 
   public static ObjectMapper newDefaultInstance() {
     ObjectMapper mapper = new ObjectMapper();
+    // Disable automatic flush() after mapper.write() call, because it is usually unnecessary,
+    // and it makes BufferedOutputStreams to be useless
+    mapper.disable(SerializationFeature.FLUSH_AFTER_WRITE_VALUE);
     // Add support for serializing Guava collections.
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new Jdk8Module());
