@@ -753,8 +753,6 @@ public class StubJarTest {
 
   @Test
   public void shouldKeepMultipleFieldsWithSameDescValue() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
@@ -771,6 +769,23 @@ public class StubJarTest {
     stubbed.findField("SEVERE");
     stubbed.findField("NOT_SEVERE");
     stubbed.findField("QUITE_MILD");
+  }
+
+  @Test
+  public void shouldNotStubClinit() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on('\n').join(
+            "package com.example.buck;",
+            "public class A {",
+            "  public static int i = 3;",
+            "}"));
+
+    AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/A.class");
+    for (MethodNode method : stubbed.getClassNode().methods) {
+      assertNotEquals("<clinit>", method.name);
+    }
   }
 
   @Test

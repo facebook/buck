@@ -105,7 +105,12 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
   public MethodVisitor visitMethod(
       int access, String name, String desc, String signature, String[] exceptions) {
 
-    if ((access & Opcodes.ACC_PRIVATE) > 0) {
+    // Per JVMS8 2.9, "Class and interface initialization methods are invoked
+    // implicitly by the Java Virtual Machine; they are never invoked directly from any
+    // Java Virtual Machine instruction, but are invoked only indirectly as part of the class
+    // initialization process." Thus we don't need to emit a stub of <clinit>.
+    if (((access & Opcodes.ACC_PRIVATE) > 0) ||
+        (name.equals("<clinit>") && (access & Opcodes.ACC_STATIC) > 0)) {
       return super.visitMethod(access, name, desc, signature, exceptions);
     }
 
