@@ -28,12 +28,14 @@ import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -46,6 +48,9 @@ public class ArtifactCacheBuckConfigTest {
 
   @Rule
   public TemporaryPaths tmpDir = new TemporaryPaths();
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
   @Test
   public void testWifiBlacklist() throws IOException {
@@ -167,7 +172,7 @@ public class ArtifactCacheBuckConfigTest {
         "dir = cache_dir",
         "dir_mode = readonly",
         "dir_max_size = 1022B");
-    DirCacheEntry dirCacheConfig = config.getDirCache();
+    DirCacheEntry dirCacheConfig = config.getDirCacheEntries().get(0);
 
     assertThat(
         dirCacheConfig.getCacheDir(),
@@ -176,6 +181,44 @@ public class ArtifactCacheBuckConfigTest {
         dirCacheConfig.getCacheReadMode(),
         Matchers.is(ArtifactCacheBuckConfig.CacheReadMode.readonly));
     assertThat(dirCacheConfig.getMaxSizeBytes(), Matchers.equalTo(Optional.of(1022L)));
+  }
+
+  @Test
+  public void testMultipleDirCacheSettings() throws IOException {
+    ArtifactCacheBuckConfig config = createFromText(
+        "[cache]",
+        "dir_cache_names = name1, othername",
+        "[cache#name1]",
+        "dir = cache_dir_name1",
+        "dir_mode = readwrite",
+        "dir_max_size = 1022B",
+        "[cache#othername]",
+        "dir = othername_dir_cache",
+        "dir_mode = readonly",
+        "dir_max_size = 800B");
+
+    ImmutableList<DirCacheEntry> entries = ImmutableList.copyOf(config.getDirCacheEntries());
+    DirCacheEntry name1Entry = entries.get(0);
+    assertThat(
+        name1Entry.getCacheDir(),
+        Matchers.equalTo(Paths.get("cache_dir_name1").toAbsolutePath()));
+    assertThat(
+        name1Entry.getCacheReadMode(),
+        Matchers.equalTo(ArtifactCacheBuckConfig.CacheReadMode.readwrite));
+    assertThat(
+        name1Entry.getMaxSizeBytes(),
+        Matchers.equalTo(Optional.of(1022L)));
+
+    DirCacheEntry othernameDirCche = entries.get(1);
+    assertThat(
+        othernameDirCche.getCacheDir(),
+        Matchers.equalTo(Paths.get("othername_dir_cache").toAbsolutePath()));
+    assertThat(
+        othernameDirCche.getCacheReadMode(),
+        Matchers.equalTo(ArtifactCacheBuckConfig.CacheReadMode.readonly));
+    assertThat(
+        othernameDirCche.getMaxSizeBytes(),
+        Matchers.equalTo(Optional.of(800L)));
   }
 
   @Test(expected = HumanReadableException.class)
@@ -193,7 +236,7 @@ public class ArtifactCacheBuckConfigTest {
         "[cache]",
         "dir_mode = notamode");
 
-    config.getDirCache();
+    config.getDirCacheEntries().get(0);
   }
 
   @Test
@@ -261,7 +304,7 @@ public class ArtifactCacheBuckConfigTest {
         "dir = ~/cache_dir");
     assertThat(
         "User home cache directory must be expanded.",
-        config.getDirCache().getCacheDir(),
+        config.getDirCacheEntries().get(0).getCacheDir(),
         Matchers.equalTo(MorePaths.expandHomeDir(Paths.get("~/cache_dir"))));
   }
 

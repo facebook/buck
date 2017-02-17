@@ -348,4 +348,9 @@ public class DirArtifactCache implements ArtifactCache {
       }
     };
   }
+
+  @VisibleForTesting
+  Path getCacheDir() {
+    return cacheDir;
+  }
 }

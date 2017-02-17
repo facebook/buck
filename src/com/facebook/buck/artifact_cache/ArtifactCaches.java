@@ -188,11 +188,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
     for (ArtifactCacheBuckConfig.ArtifactCacheMode mode : modes) {
       switch (mode) {
         case dir:
-          builder.add(
-              createDirArtifactCache(
-                  Optional.of(buckEventBus),
-                  buckConfig.getDirCache(),
-                  projectFilesystem));
+          initializeDirCaches(buckConfig, buckEventBus, projectFilesystem, builder);
           break;
         case http:
           initializeDistributedCaches(
@@ -239,6 +235,20 @@ public class ArtifactCaches implements ArtifactCacheFactory {
         buckConfig.getTwoLevelCachingMaximumSize());
 
     return result;
+  }
+
+  private static void initializeDirCaches(
+      ArtifactCacheBuckConfig buckConfig,
+      BuckEventBus buckEventBus,
+      ProjectFilesystem projectFilesystem,
+      ImmutableList.Builder<ArtifactCache> builder) {
+    for (DirCacheEntry cacheEntry : buckConfig.getDirCacheEntries()) {
+      builder.add(
+          createDirArtifactCache(
+              Optional.ofNullable(buckEventBus),
+              cacheEntry,
+              projectFilesystem));
+    }
   }
 
   private static void initializeDistributedCaches(

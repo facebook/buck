@@ -79,6 +79,7 @@ java_immutables_library(
     '//test/com/facebook/buck/artifact_cache/...',
     '//test/com/facebook/buck/cli/...',
     '//test/com/facebook/buck/httpserver:httpserver_cache_integration_test',
+    '//src/com/facebook/buck/jvm/java/intellij:intellij',
   ]
 )
 

@@ -74,6 +74,15 @@ public class ArtifactCacheBuckConfig {
   // dicts, essentially.
   private static final String HTTP_CACHE_NAMES_FIELD_NAME = "http_cache_names";
 
+  private static final String DIR_FIELD = "dir";
+  private static final String DIR_MODE_FIELD = "dir_mode";
+  private static final String DIR_MAX_SIZE_FIELD = "dir_max_size";
+  private static final String DIR_CACHE_NAMES_FIELD_NAME = "dir_cache_names";
+  private static final ImmutableSet<String> DIR_CACHE_DESCRIPTION_FIELDS = ImmutableSet.of(
+      DIR_FIELD,
+      DIR_MODE_FIELD,
+      DIR_MAX_SIZE_FIELD);
+
   private static final URI DEFAULT_HTTP_URL = URI.create("http://localhost:8080/");
   private static final String DEFAULT_HTTP_CACHE_MODE = CacheReadMode.readwrite.name();
   private static final long DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS = 3L;
@@ -199,15 +208,29 @@ public class ArtifactCacheBuckConfig {
     if (!getServingLocalCacheEnabled()) {
       return Optional.empty();
     }
-    return Optional.of(getDirCache().withCacheReadMode(getServedLocalCacheReadMode()));
+    return Optional.of(obtainDirEntryForName(Optional.empty())
+            .withCacheReadMode(getServedLocalCacheReadMode()));
   }
 
-  public DirCacheEntry getDirCache() {
-    return DirCacheEntry.builder()
-        .setCacheDir(getCacheDir())
-        .setCacheReadMode(getDirCacheReadMode())
-        .setMaxSizeBytes(getCacheDirMaxSizeBytes())
-        .build();
+  /**
+   * We return list instead of set to preserve an order of cache names.
+   * Buck will be attempting to use dir caches in a listed order.
+   */
+  public ImmutableList<DirCacheEntry> getDirCacheEntries() {
+    ImmutableList.Builder<DirCacheEntry> result = ImmutableList.builder();
+
+    ImmutableList<String> names = getDirCacheNames();
+    boolean implicitLegacyCache = names.isEmpty() &&
+        getArtifactCacheModes().contains(ArtifactCacheMode.dir);
+    if (implicitLegacyCache || legacyDirCacheConfigurationFieldsPresent()) {
+      result.add(obtainDirEntryForName(Optional.empty()));
+    }
+
+    for (String cacheName : names) {
+      result.add(obtainDirEntryForName(Optional.of(cacheName)));
+    }
+
+    return result.build();
   }
 
   public ImmutableSet<HttpCacheEntry> getHttpCaches() {
@@ -216,12 +239,12 @@ public class ArtifactCacheBuckConfig {
     ImmutableSet<String> httpCacheNames = getHttpCacheNames();
     boolean implicitLegacyCache = httpCacheNames.isEmpty() &&
         getArtifactCacheModes().contains(ArtifactCacheMode.http);
-    if (implicitLegacyCache || legacyCacheConfigurationFieldsPresent()) {
-      result.add(obtainEntryForName(Optional.empty()));
+    if (implicitLegacyCache || legacyHttpCacheConfigurationFieldsPresent()) {
+      result.add(obtainHttpEntryForName(Optional.empty()));
     }
 
     for (String cacheName : httpCacheNames) {
-      result.add(obtainEntryForName(Optional.of(cacheName)));
+      result.add(obtainHttpEntryForName(Optional.of(cacheName)));
     }
     return result.build();
   }
@@ -264,22 +287,6 @@ public class ArtifactCacheBuckConfig {
         SizeUnit::parseBytes);
   }
 
-  private CacheReadMode getDirCacheReadMode() {
-    return getCacheReadMode(CACHE_SECTION_NAME, "dir_mode", DEFAULT_DIR_CACHE_MODE);
-  }
-
-  private Path getCacheDir() {
-    String cacheDir = buckConfig.getLocalCacheDirectory();
-    Path pathToCacheDir = buckConfig.resolvePathThatMayBeOutsideTheProjectFilesystem(
-        Paths.get(
-            cacheDir));
-    return Preconditions.checkNotNull(pathToCacheDir);
-  }
-
-  private Optional<Long> getCacheDirMaxSizeBytes() {
-    return buckConfig.getValue(CACHE_SECTION_NAME, "dir_max_size").map(SizeUnit::parseBytes);
-  }
-
   private boolean getServingLocalCacheEnabled() {
     return buckConfig.getBooleanValue(CACHE_SECTION_NAME, SERVED_CACHE_ENABLED_FIELD_NAME, false);
   }
@@ -318,6 +325,12 @@ public class ArtifactCacheBuckConfig {
     return headerBuilder.build();
   }
 
+  private ImmutableList<String> getDirCacheNames() {
+    return buckConfig.getListWithoutComments(
+        CACHE_SECTION_NAME,
+        DIR_CACHE_NAMES_FIELD_NAME);
+  }
+
   private ImmutableSet<String> getHttpCacheNames() {
     ImmutableList<String> httpCacheNames = buckConfig.getListWithoutComments(
         CACHE_SECTION_NAME,
@@ -329,7 +342,30 @@ public class ArtifactCacheBuckConfig {
     return buckConfig.getValue(section, fieldName).orElse(defaultValue);
   }
 
-  private HttpCacheEntry obtainEntryForName(Optional<String> cacheName) {
+  private DirCacheEntry obtainDirEntryForName(Optional<String> cacheName) {
+    final String section = Joiner.on('#').skipNulls().join(
+        CACHE_SECTION_NAME,
+        cacheName.orElse(null));
+
+    CacheReadMode readMode = getCacheReadMode(section, DIR_MODE_FIELD, DEFAULT_DIR_CACHE_MODE);
+
+    String cacheDir = buckConfig.getLocalCacheDirectory(section);
+    Path pathToCacheDir = buckConfig.resolvePathThatMayBeOutsideTheProjectFilesystem(
+        Paths.get(cacheDir));
+    Preconditions.checkNotNull(pathToCacheDir);
+
+    Optional<Long> maxSizeBytes = buckConfig
+        .getValue(section, DIR_MAX_SIZE_FIELD)
+        .map(SizeUnit::parseBytes);
+
+    return DirCacheEntry.builder()
+        .setCacheDir(pathToCacheDir)
+        .setCacheReadMode(readMode)
+        .setMaxSizeBytes(maxSizeBytes)
+        .build();
+  }
+
+  private HttpCacheEntry obtainHttpEntryForName(Optional<String> cacheName) {
     final String section = Joiner.on('#').skipNulls().join(
         CACHE_SECTION_NAME,
         cacheName.orElse(null));
@@ -355,8 +391,17 @@ public class ArtifactCacheBuckConfig {
     return builder.build();
   }
 
-  private boolean legacyCacheConfigurationFieldsPresent() {
+  private boolean legacyHttpCacheConfigurationFieldsPresent() {
     for (String field : HTTP_CACHE_DESCRIPTION_FIELDS) {
+      if (buckConfig.getValue(CACHE_SECTION_NAME, field).isPresent()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean legacyDirCacheConfigurationFieldsPresent() {
+    for (String field : DIR_CACHE_DESCRIPTION_FIELDS) {
       if (buckConfig.getValue(CACHE_SECTION_NAME, field).isPresent()) {
         return true;
       }

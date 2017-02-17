@@ -687,8 +687,8 @@ public class BuckConfig implements ConfigPathGetter {
   /**
    * @return the local cache directory
    */
-  public String getLocalCacheDirectory() {
-    return getValue("cache", "dir").orElse(BuckConstant.getDefaultCacheDir());
+  public String getLocalCacheDirectory(String dirCacheName) {
+    return getValue(dirCacheName, "dir").orElse(BuckConstant.getDefaultCacheDir());
   }
 
   public int getKeySeed() {

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.jvm.java.intellij;
 
+import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
+import com.facebook.buck.artifact_cache.DirCacheEntry;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -37,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Cleans out any unwanted IntelliJ IDEA project files.
  */
-public class IJProjectCleaner {
+  public class IJProjectCleaner {
 
   private static final Logger LOG = Logger.get(IJProjectCleaner.class);
 
@@ -102,10 +104,11 @@ public class IJProjectCleaner {
     buckDirectories.add(
         convertPathToFile(
             projectFilesystem.resolve(projectFilesystem.getBuckPaths().getBuckOut())));
-    buckDirectories.add(
-        convertPathToFile(
-            projectFilesystem.resolve(
-                buckConfig.getLocalCacheDirectory())));
+
+    ArtifactCacheBuckConfig cacheBuckConfig = new ArtifactCacheBuckConfig(buckConfig);
+    for (DirCacheEntry entry : cacheBuckConfig.getDirCacheEntries()) {
+      buckDirectories.add(convertPathToFile(entry.getCacheDir()));
+    }
 
     ForkJoinPool cleanExecutor = new ForkJoinPool(getParallelismLimit());
     try {
