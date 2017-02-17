@@ -75,6 +75,7 @@ public class HaskellDescriptionUtils {
       final BuildRuleParams baseParams,
       final BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
+      ImmutableSet<BuildRule> deps,
       final CxxPlatform cxxPlatform,
       HaskellConfig haskellConfig,
       final Linker.LinkableDepType depType,
@@ -90,14 +91,13 @@ public class HaskellDescriptionUtils {
         ImmutableSortedMap.naturalOrder();
     final ImmutableSortedMap.Builder<String, HaskellPackage> packagesBuilder =
         ImmutableSortedMap.naturalOrder();
-    new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(
-        baseParams.getDeps()) {
+    new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(deps) {
       private final ImmutableSet<BuildRule> empty = ImmutableSet.of();
       @Override
       public Iterable<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
-        ImmutableSet<BuildRule> deps = empty;
+        ImmutableSet<BuildRule> ruleDeps = empty;
         if (rule instanceof HaskellCompileDep) {
-          deps = rule.getDeps();
+          ruleDeps = rule.getDeps();
           HaskellCompileInput compileInput =
               ((HaskellCompileDep) rule).getCompileInput(cxxPlatform, depType);
           depFlags.put(rule.getBuildTarget(), compileInput.getFlags());
@@ -105,7 +105,7 @@ public class HaskellDescriptionUtils {
 
           // We add packages from first-order deps as expose modules, and transitively included
           // packages as hidden ones.
-          boolean firstOrderDep = baseParams.getDeps().contains(rule);
+          boolean firstOrderDep = deps.contains(rule);
           for (HaskellPackage pkg : compileInput.getPackages()) {
             if (firstOrderDep) {
               exposedPackagesBuilder.put(pkg.getInfo().getIdentifier(), pkg);
@@ -114,12 +114,12 @@ public class HaskellDescriptionUtils {
             }
           }
         }
-        return deps;
+        return ruleDeps;
       }
     }.start();
 
     Collection<CxxPreprocessorInput> cxxPreprocessorInputs =
-        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, baseParams.getDeps());
+        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, deps);
     ExplicitCxxToolFlags.Builder toolFlagsBuilder = CxxToolFlags.explicitBuilder();
     PreprocessorFlags.Builder ppFlagsBuilder = PreprocessorFlags.builder();
     toolFlagsBuilder.setPlatformFlags(
@@ -179,6 +179,7 @@ public class HaskellDescriptionUtils {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
+      ImmutableSet<BuildRule> deps,
       CxxPlatform cxxPlatform,
       HaskellConfig haskellConfig,
       Linker.LinkableDepType depType,
@@ -203,6 +204,7 @@ public class HaskellDescriptionUtils {
             params,
             resolver,
             ruleFinder,
+            deps,
             cxxPlatform,
             haskellConfig,
             depType,
@@ -288,6 +290,10 @@ public class HaskellDescriptionUtils {
                 baseParams,
                 resolver,
                 ruleFinder,
+                // TODO(andrewjcg): We shouldn't need any deps to compile an empty module, but ghc
+                // implicitly tries to load the prelude and in some setups this is provided via a
+                // Buck dependency.
+                baseParams.getDeps(),
                 cxxPlatform,
                 haskellConfig,
                 depType,

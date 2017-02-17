@@ -117,6 +117,7 @@ public class HaskellLibraryDescription implements
         params,
         resolver,
         ruleFinder,
+        params.getDeps(),
         cxxPlatform,
         haskellConfig,
         depType,
