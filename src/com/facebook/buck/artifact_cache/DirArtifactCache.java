@@ -120,7 +120,7 @@ public class DirArtifactCache implements ArtifactCache {
       result = CacheResult.error(name, String.format("%s: %s", e.getClass(), e.getMessage()));
     }
 
-    LOG.debug(
+    LOG.verbose(
         "Artifact fetch(%s, %s) cache %s",
         ruleKey,
         output,
