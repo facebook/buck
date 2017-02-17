@@ -18,6 +18,7 @@ package com.facebook.buck.rust;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
@@ -30,6 +31,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.Optional;
@@ -70,6 +72,16 @@ public class PrebuiltRustLibraryDescription implements
             args.rlib,
             direct,
             getDeps());
+      }
+
+      @Override
+      public NativeLinkable.Linkage getPreferredLinkage() {
+        return NativeLinkable.Linkage.STATIC;
+      }
+
+      @Override
+      public ImmutableMap<String, SourcePath> getRustSharedLibraries(CxxPlatform cxxPlatform) {
+        return ImmutableMap.of();
       }
     };
   }

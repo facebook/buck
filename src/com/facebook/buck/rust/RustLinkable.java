@@ -18,7 +18,12 @@ package com.facebook.buck.rust;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.NativeLinkable;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.args.Arg;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Slightly misnamed. Really just a non-source input to the compiler (ie, an already-compiled
@@ -34,4 +39,28 @@ interface RustLinkable {
    * @return Arg for linking dependency.
    */
   Arg getLinkerArg(boolean direct, CxxPlatform cxxPlatform, Linker.LinkableDepType depType);
+
+  /**
+   * Return {@link BuildTarget} for linkable
+   *
+   * @return BuildTarget for linkable.
+   */
+  BuildTarget getBuildTarget();
+
+  /**
+   * Return a map of shared libraries this linkable produces (typically just one)
+   *
+   * @param cxxPlatform the platform we're generating the shared library for
+   * @return Map of soname -> source path
+   */
+  ImmutableMap<String, SourcePath> getRustSharedLibraries(CxxPlatform cxxPlatform)
+      throws NoSuchBuildTargetException;
+
+
+  /**
+   * Return the linkage style for this linkable.
+   *
+   * @return Linkage mode.
+   */
+  NativeLinkable.Linkage getPreferredLinkage();
 }

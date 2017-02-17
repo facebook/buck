@@ -9,6 +9,17 @@ rust_binary(
 )
 
 rust_binary(
+  name = "hello-shared",
+  link_style = 'shared',
+  srcs = [
+    "main.rs",
+  ],
+  deps = [
+    "//messenger:messenger",
+  ],
+)
+
+rust_binary(
   name = "hello_alias",
   srcs = [
     "main.rs",

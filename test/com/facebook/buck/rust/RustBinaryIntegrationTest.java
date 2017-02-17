@@ -244,6 +244,19 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void binaryWithSharedLibrary() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:hello-shared").assertSuccess().getStdout(),
+        Matchers.allOf(
+            Matchers.containsString("Hello, world!"),
+            Matchers.containsString("I have a message to deliver to you")));
+  }
+
+  @Test
   public void binaryWithHyphenatedLibrary() throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "binary_with_library", tmp);

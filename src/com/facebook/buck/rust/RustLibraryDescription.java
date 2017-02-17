@@ -223,6 +223,38 @@ public class RustLibraryDescription implements
         return new RustLibraryArg(pathResolver, crate, rlib, direct, params.getDeps());
       }
 
+      @Override
+      public Linkage getPreferredLinkage() {
+        return args.preferredLinkage;
+      }
+
+      @Override
+      public ImmutableMap<String, SourcePath> getRustSharedLibraries(CxxPlatform cxxPlatform)
+          throws NoSuchBuildTargetException {
+        ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
+        String sharedLibrarySoname = CrateType.DYLIB.filenameFor(crate, cxxPlatform);
+        BuildRule sharedLibraryBuildRule =
+            RustCompileUtils.requireBuild(
+                crate,
+                params,
+                resolver,
+                getResolver(),
+                ruleFinder,
+                cxxPlatform,
+                rustBuckConfig,
+                rustcArgs.build(),
+                /* linkerArgs */ ImmutableList.of(),
+                /* linkerInputs */ ImmutableList.of(),
+                CrateType.DYLIB,
+                Linker.LinkableDepType.SHARED,
+                args.srcs,
+                rootModule.get());
+        libs.put(
+            sharedLibrarySoname,
+            new BuildTargetSourcePath(sharedLibraryBuildRule.getBuildTarget()));
+        return libs.build();
+      }
+
       // NativeLinkable
       @Override
       public Iterable<? extends NativeLinkable> getNativeLinkableDeps() {
