@@ -175,6 +175,7 @@ public class ProcessHelper {
     }
   }
 
+  @Nullable
   private Long jdk9ProcessId(Object process) {
     if (IS_JDK9) {
       try {
@@ -188,6 +189,7 @@ public class ProcessHelper {
     return null;
   }
 
+  @Nullable
   private Long unixLikeProcessId(Object process) {
     Class<?> clazz = process.getClass();
     try {
@@ -202,6 +204,7 @@ public class ProcessHelper {
     return null;
   }
 
+  @Nullable
   private Long windowsProcessId(Object process) {
     Class<?> clazz = process.getClass();
     if (clazz.getName().equals("java.lang.Win32Process") ||
