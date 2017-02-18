@@ -3585,6 +3585,8 @@ public class ProjectGeneratorTest {
         ImmutableSet.of(),
         Optional.of(bundleTarget),
         ImmutableList.of("--flag", "value with spaces"),
+        false,
+        Optional.empty(),
         ImmutableSet.of(),
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.of(),
@@ -3693,6 +3695,8 @@ public class ProjectGeneratorTest {
         ImmutableSet.of(),
         Optional.of(binaryTarget),
         ImmutableList.of("--flag", "value with spaces"),
+        false,
+        Optional.empty(),
         ImmutableSet.of(),
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.of(),
@@ -3776,6 +3780,8 @@ public class ProjectGeneratorTest {
         ImmutableSet.of(),
         Optional.of(libraryTarget),
         ImmutableList.of("--flag", "value with spaces"),
+        false,
+        Optional.empty(),
         ImmutableSet.of(),
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.of(),
@@ -4419,6 +4425,136 @@ public class ProjectGeneratorTest {
     assertThat(buildSettings.get("SWIFT_VERSION"), equalTo("1.23"));
   }
 
+  @Test
+  public void testMergedHeaderMap() throws IOException {
+    BuildTarget lib1Target = BuildTarget.builder(rootPath, "//foo", "lib1").build();
+    BuildTarget lib2Target = BuildTarget.builder(rootPath, "//bar", "lib2").build();
+
+    TargetNode<?, ?> lib1Node = AppleLibraryBuilder
+        .createBuilder(lib1Target)
+        .setConfigs(
+            ImmutableSortedMap.of(
+                "Default",
+                ImmutableMap.of()))
+        .setExportedHeaders(
+            ImmutableSortedSet.of(new FakeSourcePath("lib1.h")))
+        .build();
+
+    TargetNode<?, ?> lib2Node = AppleLibraryBuilder
+        .createBuilder(lib2Target)
+        .setConfigs(
+            ImmutableSortedMap.of(
+                "Default",
+                ImmutableMap.of()))
+        .setExportedHeaders(
+            ImmutableSortedSet.of(new FakeSourcePath("lib2.h")))
+        .build();
+
+    final TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(ImmutableSet.of(lib1Node, lib2Node));
+    final AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
+
+    ProjectGenerator projectGeneratorLib2 = new ProjectGenerator(
+        targetGraph,
+        cache,
+        ImmutableSet.of(lib2Target),
+        projectCell,
+        OUTPUT_DIRECTORY,
+        PROJECT_NAME,
+        "BUCK",
+        ImmutableSet.of(ProjectGenerator.Option.MERGE_HEADER_MAPS),
+        Optional.empty(),
+        ImmutableList.of("--flag", "value with spaces"),
+        false, /* isMainProject */
+        Optional.of(lib1Target),
+        ImmutableSet.of(),
+        new AlwaysFoundExecutableFinder(),
+        ImmutableMap.of(),
+        PLATFORMS,
+        DEFAULT_PLATFORM,
+        getSourcePathResolverForNodeFunction(targetGraph),
+        getFakeBuckEventBus(),
+        halideBuckConfig,
+        cxxBuckConfig,
+        appleConfig,
+        swiftBuckConfig);
+
+    projectGeneratorLib2.createXcodeProjects();
+
+    // The merged header map should not generated at this point.
+    Path hmapPath = Paths.get("buck-out/gen/_p/pub-hmap/.hmap");
+    assertFalse(hmapPath.toString() + " should NOT exist.", projectFilesystem.isFile(hmapPath));
+    // Checks the content of the header search paths.
+    PBXProject project2 = projectGeneratorLib2.getGeneratedProject();
+    PBXTarget testPBXTarget2 =
+        assertTargetExistsAndReturnTarget(project2, "//bar:lib2");
+
+    ImmutableMap<String, String> buildSettings2 =
+        getBuildSettings(lib2Target, testPBXTarget2, "Default");
+
+    assertEquals(
+        "test binary should use header symlink trees for both public and non-public headers " +
+            "of the tested library in HEADER_SEARCH_PATHS",
+        "$(inherited) " +
+            "../buck-out/gen/_p/YAYFR3hXIb-priv/.hmap " +
+            "../buck-out/gen/_p/pub-hmap/.hmap " +
+            "../buck-out",
+        buildSettings2.get("HEADER_SEARCH_PATHS"));
+
+    ProjectGenerator projectGeneratorLib1 = new ProjectGenerator(
+        targetGraph,
+        cache,
+        ImmutableSet.of(lib1Target),
+        projectCell,
+        OUTPUT_DIRECTORY,
+        PROJECT_NAME,
+        "BUCK",
+        ImmutableSet.of(ProjectGenerator.Option.MERGE_HEADER_MAPS),
+        Optional.empty(),
+        ImmutableList.of("--flag", "value with spaces"),
+        true, /* isMainProject */
+        Optional.of(lib1Target),
+        ImmutableSet.of(),
+        new AlwaysFoundExecutableFinder(),
+        ImmutableMap.of(),
+        PLATFORMS,
+        DEFAULT_PLATFORM,
+        getSourcePathResolverForNodeFunction(targetGraph),
+        getFakeBuckEventBus(),
+        halideBuckConfig,
+        cxxBuckConfig,
+        appleConfig,
+        swiftBuckConfig);
+
+    projectGeneratorLib1.createXcodeProjects();
+
+    // The merged header map should not generated at this point.
+    assertTrue(hmapPath.toString() + " should exist.", projectFilesystem.isFile(hmapPath));
+    assertThatHeaderMapWithoutSymLinksContains(
+        Paths.get("buck-out/gen/_p/pub-hmap"),
+        ImmutableMap.of(
+            "lib1/lib1.h",
+            "buck-out/gen/_p/WNl0jZWMBk-pub/lib1/lib1.h",
+            "lib2/lib2.h",
+            "buck-out/gen/_p/YAYFR3hXIb-pub/lib2/lib2.h"));
+    // Checks the content of the header search paths.
+    PBXProject project1 = projectGeneratorLib1.getGeneratedProject();
+    PBXTarget testPBXTarget1 =
+        assertTargetExistsAndReturnTarget(project1, "//foo:lib1");
+
+    ImmutableMap<String, String> buildSettings1 =
+        getBuildSettings(lib1Target, testPBXTarget1, "Default");
+
+    assertEquals(
+        "test binary should use header symlink trees for both public and non-public headers " +
+            "of the tested library in HEADER_SEARCH_PATHS",
+        "$(inherited) " +
+            "../buck-out/gen/_p/WNl0jZWMBk-priv/.hmap " +
+            "../buck-out/gen/_p/pub-hmap/.hmap " +
+            "../buck-out",
+        buildSettings1.get("HEADER_SEARCH_PATHS"));
+  }
+
   private ProjectGenerator createProjectGeneratorForCombinedProject(
       Collection<TargetNode<?, ?>> nodes) {
     return createProjectGeneratorForCombinedProject(
@@ -4458,6 +4594,8 @@ public class ProjectGeneratorTest {
         projectGeneratorOptions,
         Optional.empty(),
         ImmutableList.of(),
+        false,
+        Optional.empty(),
         ImmutableSet.of(),
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.of(),

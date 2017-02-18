@@ -163,6 +163,7 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.function.BiConsumer;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -220,6 +221,12 @@ public class ProjectGenerator {
 
     /** Don't use header maps as header search paths */
     DISABLE_HEADER_MAPS,
+
+    /**
+     * Generate one header map containing all the headers it's using and reference only this
+     * header map in the header search paths.
+     */
+    MERGE_HEADER_MAPS,
   }
 
   /**
@@ -307,6 +314,8 @@ public class ProjectGenerator {
   private final AppleConfig appleConfig;
   private final SwiftBuckConfig swiftBuckConfig;
   private final ImmutableSet<UnflavoredBuildTarget> focusModules;
+  private final boolean isMainProject;
+  private final Optional<BuildTarget> workspaceTarget;
 
   public ProjectGenerator(
       TargetGraph targetGraph,
@@ -319,6 +328,8 @@ public class ProjectGenerator {
       Set<Option> options,
       Optional<BuildTarget> targetToBuildWithBuck,
       ImmutableList<String> buildWithBuckFlags,
+      boolean isMainProject,
+      Optional<BuildTarget> workspaceTarget,
       ImmutableSet<UnflavoredBuildTarget> focusModules,
       ExecutableFinder executableFinder,
       ImmutableMap<String, String> environment,
@@ -343,6 +354,8 @@ public class ProjectGenerator {
     this.options = ImmutableSet.copyOf(options);
     this.targetToBuildWithBuck = targetToBuildWithBuck;
     this.buildWithBuckFlags = buildWithBuckFlags;
+    this.isMainProject = isMainProject;
+    this.workspaceTarget = workspaceTarget;
     this.executableFinder = executableFinder;
     this.environment = environment;
     this.cxxPlatforms = cxxPlatforms;
@@ -419,6 +432,16 @@ public class ProjectGenerator {
 
   public Path getProjectPath() {
     return projectPath;
+  }
+
+  private boolean isHeaderMapDisabled() {
+    return options.contains(Option.DISABLE_HEADER_MAPS);
+  }
+
+  private boolean shouldMergeHeaderMaps() {
+    return options.contains(Option.MERGE_HEADER_MAPS) &&
+        workspaceTarget.isPresent() &&
+        !isHeaderMapDisabled();
   }
 
   public ImmutableMultimap<BuildTarget, PBXTarget> getBuildTargetToGeneratedTargetMap() {
@@ -1485,18 +1508,22 @@ public class ProjectGenerator {
     }
 
     // -- phases
-    boolean headerMapDisabled = options.contains(Option.DISABLE_HEADER_MAPS);
     createHeaderSymlinkTree(
         sourcePathResolver,
         getPublicCxxHeaders(targetNode),
         getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC),
-        arg.xcodePublicHeadersSymlinks.orElse(true) || headerMapDisabled);
+        arg.xcodePublicHeadersSymlinks.orElse(true) || isHeaderMapDisabled(),
+        !shouldMergeHeaderMaps());
     if (isFocusedOnTarget) {
       createHeaderSymlinkTree(
           sourcePathResolver,
           getPrivateCxxHeaders(targetNode),
           getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PRIVATE),
-          arg.xcodePrivateHeadersSymlinks.orElse(true) || headerMapDisabled);
+          arg.xcodePrivateHeadersSymlinks.orElse(true) || isHeaderMapDisabled(),
+          !isHeaderMapDisabled());
+    }
+    if (shouldMergeHeaderMaps() && isMainProject) {
+      createMergedHeaderMap(sourcePathResolver);
     }
 
     if (appleTargetNode.isPresent() && isFocusedOnTarget) {
@@ -1772,11 +1799,86 @@ public class ProjectGenerator {
     }
   }
 
+  /**
+   * Adds the set of headers defined by headerVisibility to the merged header maps.
+   */
+  private void addToMergedHeaderMap(
+      TargetNode<? extends CxxLibraryDescription.Arg, ?> targetNode,
+      HeaderMap.Builder headerMapBuilder,
+      Function<SourcePath, Path> pathResolver,
+      HeaderVisibility headerVisibility) {
+    CxxLibraryDescription.Arg arg = targetNode.getConstructorArg();
+    boolean shouldCreateHeadersSymlinks;
+    Map<Path, SourcePath> contents;
+    switch (headerVisibility) {
+      case PUBLIC:
+        shouldCreateHeadersSymlinks = arg.xcodePublicHeadersSymlinks.orElse(true);
+        contents = getPublicCxxHeaders(targetNode);
+        break;
+      case PRIVATE:
+        shouldCreateHeadersSymlinks = arg.xcodePrivateHeadersSymlinks.orElse(true);
+        contents = getPrivateCxxHeaders(targetNode);
+        break;
+      default:
+        throw new IllegalStateException("unhandled header visibility type: " + headerVisibility);
+    }
+    Path headerSymlinkTreeRoot = getPathToHeaderSymlinkTree(targetNode, headerVisibility);
+
+    Path basePath;
+    if (shouldCreateHeadersSymlinks) {
+      basePath = projectFilesystem.getRootPath()
+          .resolve(targetNode.getBuildTarget().getCellPath())
+          .resolve(headerSymlinkTreeRoot);
+    } else {
+      basePath = projectFilesystem.getRootPath()
+          .resolve(targetNode.getBuildTarget().getCellPath());
+    }
+    for (Map.Entry<Path, SourcePath> entry : contents.entrySet()) {
+      Path path;
+      if (shouldCreateHeadersSymlinks) {
+        path = basePath.resolve(entry.getKey());
+      } else {
+        path = basePath.resolve(pathResolver.apply(entry.getValue()));
+      }
+      headerMapBuilder.add(entry.getKey().toString(), path);
+    }
+  }
+
+  /**
+   * Generates the merged header maps and write it to the public header symlink tree location.
+   */
+  private void createMergedHeaderMap(
+      Function<SourcePath, Path> pathResolver) throws IOException {
+    HeaderMap.Builder headerMapBuilder = new HeaderMap.Builder();
+
+    for (TargetNode<?, ?> targetNode : targetGraph.getNodes()) {
+      Optional<TargetNode<CxxLibraryDescription.Arg, ?>> nativeNode =
+          getAppleNativeNode(targetGraph, targetNode);
+      if (nativeNode.isPresent()) {
+        addToMergedHeaderMap(
+            nativeNode.get(),
+            headerMapBuilder,
+            pathResolver,
+            HeaderVisibility.PUBLIC);
+      }
+    }
+
+    // Writes the resulting header map.
+    Path mergedHeaderMapRoot = getPathToMergedHeaderMap();
+    Path headerMapLocation = getHeaderMapLocationFromSymlinkTreeRoot(mergedHeaderMapRoot);
+    projectFilesystem.mkdirs(mergedHeaderMapRoot);
+    projectFilesystem.writeBytesToPath(headerMapBuilder.build().getBytes(), headerMapLocation);
+  }
+
   private void createHeaderSymlinkTree(
       Function<SourcePath, Path> pathResolver,
       Map<Path, SourcePath> contents,
       Path headerSymlinkTreeRoot,
-      boolean shouldCreateHeadersSymlinks) throws IOException {
+      boolean shouldCreateHeadersSymlinks,
+      boolean shouldCreateHeaderMap) throws IOException {
+    if (!shouldCreateHeaderMap && !shouldCreateHeadersSymlinks) {
+      return;
+    }
     LOG.verbose(
         "Building header symlink tree at %s with contents %s",
         headerSymlinkTreeRoot,
@@ -1819,22 +1921,24 @@ public class ProjectGenerator {
       }
       projectFilesystem.writeContentsToPath(newHashCode, hashCodeFilePath);
 
-      HeaderMap.Builder headerMapBuilder = new HeaderMap.Builder();
-      for (Map.Entry<Path, SourcePath> entry : contents.entrySet()) {
-        if (shouldCreateHeadersSymlinks) {
-          headerMapBuilder.add(
-              entry.getKey().toString(),
-              Paths.get("../../")
-                  .resolve(projectCell.getRoot().getFileName())
-                  .resolve(headerSymlinkTreeRoot)
-                  .resolve(entry.getKey()));
-        } else {
-          headerMapBuilder.add(
-              entry.getKey().toString(),
-              projectFilesystem.resolve(pathResolver.apply(entry.getValue())));
+      if (shouldCreateHeaderMap) {
+        HeaderMap.Builder headerMapBuilder = new HeaderMap.Builder();
+        for (Map.Entry<Path, SourcePath> entry : contents.entrySet()) {
+          if (shouldCreateHeadersSymlinks) {
+            headerMapBuilder.add(
+                entry.getKey().toString(),
+                Paths.get("../../")
+                    .resolve(projectCell.getRoot().getFileName())
+                    .resolve(headerSymlinkTreeRoot)
+                    .resolve(entry.getKey()));
+          } else {
+            headerMapBuilder.add(
+                entry.getKey().toString(),
+                projectFilesystem.resolve(pathResolver.apply(entry.getValue())));
+          }
         }
+        projectFilesystem.writeBytesToPath(headerMapBuilder.build().getBytes(), headerMapLocation);
       }
-      projectFilesystem.writeBytesToPath(headerMapBuilder.build().getBytes(), headerMapLocation);
     }
     headerSymlinkTrees.add(headerSymlinkTreeRoot);
   }
@@ -2125,11 +2229,19 @@ public class ProjectGenerator {
   }
 
   private Path getHeaderSearchPathFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
-    if (options.contains(Option.DISABLE_HEADER_MAPS)) {
+    if (isHeaderMapDisabled()) {
       return headerSymlinkTreeRoot;
     } else {
       return getHeaderMapLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot);
     }
+  }
+
+  private Path getRelativePathToMergedHeaderMap() {
+    Path treeRoot = getPathToMergedHeaderMap();
+    Path cellRoot = MorePaths.relativize(
+        projectFilesystem.getRootPath(),
+        workspaceTarget.get().getCellPath());
+    return pathRelativizer.outputDirToRootRelative(cellRoot.resolve(treeRoot));
   }
 
   private String getBuiltProductsRelativeTargetOutputPath(TargetNode<?, ?> targetNode) {
@@ -2205,8 +2317,16 @@ public class ProjectGenerator {
       TargetNode<? extends CxxLibraryDescription.Arg, ?> targetNode) {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
 
-    for (Path headerSymlinkTreePath : collectRecursiveHeaderSymlinkTrees(targetNode)) {
-      builder.add(getHeaderSearchPathFromSymlinkTreeRoot(headerSymlinkTreePath));
+    if (shouldMergeHeaderMaps()) {
+      builder.add(getHeaderSearchPathFromSymlinkTreeRoot(getHeaderSymlinkTreeRelativePath(
+          targetNode,
+          HeaderVisibility.PRIVATE)));
+      builder.add(getHeaderSearchPathFromSymlinkTreeRoot(
+          getRelativePathToMergedHeaderMap()));
+    } else {
+      for (Path headerSymlinkTreePath : collectRecursiveHeaderSymlinkTrees(targetNode)) {
+        builder.add(getHeaderSearchPathFromSymlinkTreeRoot(headerSymlinkTreePath));
+      }
     }
 
     for (Path halideHeaderPath : collectRecursiveHalideLibraryHeaderPaths(targetNode)) {
@@ -2245,13 +2365,14 @@ public class ProjectGenerator {
     return builder.build();
   }
 
-  private ImmutableSet<Path> collectRecursiveHeaderSymlinkTrees(
-      TargetNode<? extends CxxLibraryDescription.Arg, ?> targetNode) {
-    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
+  private void visitRecursiveHeaderSymlinkTrees(
+      TargetNode<? extends CxxLibraryDescription.Arg, ?> targetNode,
+      BiConsumer<TargetNode<? extends CxxLibraryDescription.Arg, ?>, HeaderVisibility> visitor) {
+    // Visits public and private headers from current target.
+    visitor.accept(targetNode, HeaderVisibility.PRIVATE);
+    visitor.accept(targetNode, HeaderVisibility.PUBLIC);
 
-    builder.add(getHeaderSymlinkTreeRelativePath(targetNode, HeaderVisibility.PRIVATE));
-    builder.add(getHeaderSymlinkTreeRelativePath(targetNode, HeaderVisibility.PUBLIC));
-
+    // Visits public headers from dependencies.
     for (TargetNode<?, ?> input :
         AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
             targetGraph,
@@ -2262,34 +2383,32 @@ public class ProjectGenerator {
       Optional<TargetNode<CxxLibraryDescription.Arg, ?>> nativeNode =
           getAppleNativeNode(targetGraph, input);
       if (nativeNode.isPresent()) {
-        builder.add(
-            getHeaderSymlinkTreeRelativePath(
-                nativeNode.get(),
-                HeaderVisibility.PUBLIC));
+        visitor.accept(nativeNode.get(), HeaderVisibility.PUBLIC);
       }
     }
 
-    addHeaderSymlinkTreesForSourceUnderTest(targetNode, builder, HeaderVisibility.PRIVATE);
-
-    return builder.build();
-  }
-
-  private void addHeaderSymlinkTreesForSourceUnderTest(
-      TargetNode<? extends CxxLibraryDescription.Arg, ?> targetNode,
-      ImmutableSet.Builder<Path> headerSymlinkTreesBuilder,
-      HeaderVisibility headerVisibility) {
+    // Visits headers of source under tests.
     ImmutableSet<TargetNode<?, ?>> directDependencies = ImmutableSet.copyOf(
         targetGraph.getAll(targetNode.getDeps()));
     for (TargetNode<?, ?> dependency : directDependencies) {
       Optional<TargetNode<CxxLibraryDescription.Arg, ?>> nativeNode =
           getAppleNativeNode(targetGraph, dependency);
       if (nativeNode.isPresent() && isSourceUnderTest(dependency, nativeNode.get(), targetNode)) {
-        headerSymlinkTreesBuilder.add(
-            getHeaderSymlinkTreeRelativePath(
-                nativeNode.get(),
-                headerVisibility));
+        visitor.accept(nativeNode.get(), HeaderVisibility.PRIVATE);
       }
     }
+  }
+
+  private ImmutableSet<Path> collectRecursiveHeaderSymlinkTrees(
+      TargetNode<? extends CxxLibraryDescription.Arg, ?> targetNode) {
+    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
+    visitRecursiveHeaderSymlinkTrees(targetNode, (nativeNode, headerVisibility) -> {
+      builder.add(
+          getHeaderSymlinkTreeRelativePath(
+              nativeNode,
+              headerVisibility));
+    });
+    return builder.build();
   }
 
   private boolean isSourceUnderTest(
@@ -2727,16 +2846,29 @@ public class ProjectGenerator {
     return false;
   }
 
-  private Path getPathToHeaderSymlinkTree(
+  private Path getPathToHeaderMapsRoot() {
+    return projectFilesystem.getBuckPaths().getGenDir().resolve("_p");
+  }
+
+  private Path getPathToHeadersPath(
       TargetNode<? extends CxxLibraryDescription.Arg, ?> targetNode,
-      HeaderVisibility headerVisibility) {
+      String suffix) {
     String hashedPath = BaseEncoding.base64Url().omitPadding().encode(
       Hashing.sha1().hashString(
           targetNode.getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName(),
           Charsets.UTF_8).asBytes()).substring(0, 10);
-    return projectFilesystem.getBuckPaths().getGenDir()
-        .resolve("_p")
-        .resolve(hashedPath + AppleHeaderVisibilities.getHeaderSymlinkTreeSuffix(headerVisibility));
+    return getPathToHeaderMapsRoot().resolve(hashedPath + suffix);
+  }
+
+  private Path getPathToHeaderSymlinkTree(
+      TargetNode<? extends CxxLibraryDescription.Arg, ?> targetNode,
+      HeaderVisibility headerVisibility) {
+    return getPathToHeadersPath(
+        targetNode, AppleHeaderVisibilities.getHeaderSymlinkTreeSuffix(headerVisibility));
+  }
+
+  private Path getPathToMergedHeaderMap() {
+    return getPathToHeaderMapsRoot().resolve("pub-hmap");
   }
 
   /**

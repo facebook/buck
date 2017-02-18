@@ -921,7 +921,8 @@ public class ProjectCommand extends BuildCommand {
         isWithTests(params.getBuckConfig()),
         isWithDependenciesTests(params.getBuckConfig()),
         getCombinedProject(),
-        appleConfig.shouldUseHeaderMapsInXcodeProject());
+        appleConfig.shouldUseHeaderMapsInXcodeProject(),
+        appleConfig.shouldMergeHeaderMapsInXcodeProject());
 
     boolean shouldBuildWithBuck = buildWithBuck ||
         shouldForceBuildingWithBuck(params.getBuckConfig(), passedInTargetsSet);
@@ -1128,7 +1129,8 @@ public class ProjectCommand extends BuildCommand {
       boolean isWithTests,
       boolean isWithDependenciesTests,
       boolean isProjectsCombined,
-      boolean shouldUseHeaderMaps) {
+      boolean shouldUseHeaderMaps,
+      boolean shouldMergeHeaderMaps) {
     ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
     if (isReadonly) {
       optionsBuilder.add(ProjectGenerator.Option.GENERATE_READ_ONLY_FILES);
@@ -1146,6 +1148,9 @@ public class ProjectCommand extends BuildCommand {
     }
     if (!shouldUseHeaderMaps) {
       optionsBuilder.add(ProjectGenerator.Option.DISABLE_HEADER_MAPS);
+    }
+    if (shouldMergeHeaderMaps) {
+      optionsBuilder.add(ProjectGenerator.Option.MERGE_HEADER_MAPS);
     }
     return optionsBuilder.build();
   }

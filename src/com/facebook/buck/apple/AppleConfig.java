@@ -306,6 +306,13 @@ public class AppleConfig {
         true);
   }
 
+  public boolean shouldMergeHeaderMapsInXcodeProject() {
+    return delegate.getBooleanValue(
+        "apple",
+        "merge_header_maps_in_xcode",
+        false);
+  }
+
   public String getTestLogDirectoryEnvironmentVariable() {
     return delegate.getValue(
         "apple",

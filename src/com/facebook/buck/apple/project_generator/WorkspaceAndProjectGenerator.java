@@ -368,6 +368,8 @@ public class WorkspaceAndProjectGenerator {
           continue;
         }
 
+        final boolean isMainProject = workspaceArguments.srcTarget.isPresent() &&
+            rules.contains(workspaceArguments.srcTarget.get());
         projectGeneratorFutures.add(
             listeningExecutorService.submit(
                 () -> {
@@ -376,7 +378,8 @@ public class WorkspaceAndProjectGenerator {
                         targetToBuildWithBuck,
                         projectCell,
                         projectDirectory,
-                        rules);
+                        rules,
+                        isMainProject);
                   // convert the projectPath to relative to the target cell here
                   result = GenerationResult.of(
                       relativeTargetCell.resolve(result.getProjectPath()),
@@ -424,7 +427,8 @@ public class WorkspaceAndProjectGenerator {
       Optional<BuildTarget> targetToBuildWithBuck,
       Cell projectCell,
       Path projectDirectory,
-      final ImmutableSet<BuildTarget> rules) throws IOException {
+      final ImmutableSet<BuildTarget> rules,
+      boolean isMainProject) throws IOException {
     boolean shouldGenerateProjects = false;
     ProjectGenerator generator;
     synchronized (projectGenerators) {
@@ -459,6 +463,8 @@ public class WorkspaceAndProjectGenerator {
                     ? Optional.of(input)
                     : Optional.empty()),
             buildWithBuckFlags,
+            isMainProject,
+            workspaceArguments.srcTarget,
             focusModules,
             executableFinder,
             environment,
@@ -513,6 +519,8 @@ public class WorkspaceAndProjectGenerator {
         projectGeneratorOptions,
         targetToBuildWithBuck,
         buildWithBuckFlags,
+        true,
+        workspaceArguments.srcTarget,
         focusModules,
         executableFinder,
         environment,
