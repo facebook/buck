@@ -20,7 +20,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -218,7 +217,6 @@ public class FirstOrderTest {
       reader.accept(node, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
       return node;
     } catch (IOException e) {
-      Throwables.throwIfUnchecked(e);
       throw new RuntimeException(e);
     }
   }

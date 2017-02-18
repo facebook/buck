@@ -23,7 +23,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
@@ -67,7 +66,6 @@ abstract class AbstractGlobArg extends Arg {
               getPathResolver().getRelativePath(getRoot()),
               matcher::matches));
     } catch (IOException e) {
-      Throwables.throwIfUnchecked(e);
       throw new RuntimeException(e);
     }
     builder.addAll(
