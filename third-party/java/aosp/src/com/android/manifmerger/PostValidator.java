@@ -200,6 +200,8 @@ public class PostValidator {
                             ));
                 }
                 break;
+	    default:
+		// fall out
         }
         validateAttributes(xmlElement, actions, mergingReport);
         validateAndroidAttributes(xmlElement, mergingReport);
@@ -250,6 +252,8 @@ public class PostValidator {
                                 ));
                     }
                     break;
+		default:
+		   // fall out
             }
         }
 

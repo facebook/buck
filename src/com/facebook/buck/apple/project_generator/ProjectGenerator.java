@@ -2695,7 +2695,6 @@ public class ProjectGenerator {
         : target.getFullyQualifiedName();
   }
 
-  @SuppressWarnings("incomplete-switch")
   ProductType bundleToTargetProductType(
       TargetNode<? extends HasAppleBundleFields, ?> targetNode,
       TargetNode<? extends AppleNativeTargetDescriptionArg, ?> binaryNode) {
@@ -2716,17 +2715,13 @@ public class ProjectGenerator {
           if (productType.isPresent()) {
             return productType.get();
           }
-        } else {
-          switch (extension) {
-            case FRAMEWORK:
-              return ProductType.STATIC_FRAMEWORK;
-          }
+        } else if (extension == AppleBundleExtension.FRAMEWORK) {
+          return ProductType.STATIC_FRAMEWORK;
         }
       } else if (
           binaryNode.getDescription() instanceof AppleBinaryDescription) {
-        switch (extension) {
-          case APP:
-            return ProductType.APPLICATION;
+        if (extension == AppleBundleExtension.APP) {
+          return ProductType.APPLICATION;
         }
       } else if (
           binaryNode.getDescription() instanceof AppleTestDescription) {
