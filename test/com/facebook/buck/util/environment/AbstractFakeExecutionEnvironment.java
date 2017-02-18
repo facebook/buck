@@ -46,6 +46,9 @@ abstract class AbstractFakeExecutionEnvironment implements ExecutionEnvironment 
   public abstract Platform getPlatform();
 
   @Override
+  public abstract Network getLikelyActiveNetwork();
+
+  @Override
   public abstract Optional<String> getWifiSsid();
 
   public abstract Map<String, String> getEnvironment();

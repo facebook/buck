@@ -3,6 +3,8 @@
     "deps" : [
       "//src/com/facebook/buck/build_type:build_type",
       "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util/network/hostname:hostname",
       "//third-party/java/ObjCBridge:ObjCBridge",
       "//third-party/java/immutables:immutables"

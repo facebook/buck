@@ -78,7 +78,15 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
   }
 
   @Override
-  public Optional<String> getWifiSsid() throws InterruptedException {
+  public Network getLikelyActiveNetwork() {
+    if (ENABLE_OBJC) {
+      return MacNetworkConfiguration.getLikelyActiveNetwork();
+    }
+    return new Network(NetworkMedium.UNKNOWN);
+  }
+
+  @Override
+  public Optional<String> getWifiSsid() {
     // TODO(rowillia): Support Linux and Windows.
     if (ENABLE_OBJC) {
       return MacWifiSsidFinder.findCurrentSsid();

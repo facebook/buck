@@ -45,9 +45,14 @@ public interface ExecutionEnvironment {
   Platform getPlatform();
 
   /**
+   * @return Whether an ethernet interface is available and enabled.
+   */
+  Network getLikelyActiveNetwork();
+
+  /**
    * @return The SSID of the current wifi network if it can be determined.
    */
-  Optional<String> getWifiSsid() throws InterruptedException;
+  Optional<String> getWifiSsid();
 
   /**
    * Gets the environment variable indicated by the specified key.
