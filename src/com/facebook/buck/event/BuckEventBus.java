@@ -88,11 +88,6 @@ public class BuckEventBus implements Closeable, com.facebook.buck.event.EventBus
     post(event);
   }
 
-  public void logDebugAndPost(Logger logger, BuckEvent event) {
-    logger.debug("%s", event);
-    post(event);
-  }
-
   /**
    * Post event to the EventBus using the timestamp given by atTime.
    */

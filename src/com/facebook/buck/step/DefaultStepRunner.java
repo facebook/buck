@@ -40,7 +40,7 @@ public final class DefaultStepRunner implements StepRunner {
     String stepDescription = step.getDescription(context);
     UUID stepUuid = UUID.randomUUID();
     StepEvent.Started started = StepEvent.started(stepShortName, stepDescription, stepUuid);
-    context.getBuckEventBus().logDebugAndPost(
+    context.getBuckEventBus().logVerboseAndPost(
         LOG, started);
     StepExecutionResult executionResult = StepExecutionResult.ERROR;
     try {
@@ -48,7 +48,7 @@ public final class DefaultStepRunner implements StepRunner {
     } catch (IOException | RuntimeException e) {
       throw StepFailedException.createForFailingStepWithException(step, e, buildTarget);
     } finally {
-      context.getBuckEventBus().logDebugAndPost(
+      context.getBuckEventBus().logVerboseAndPost(
           LOG, StepEvent.finished(started, executionResult.getExitCode()));
     }
     if (!executionResult.isSuccess()) {
