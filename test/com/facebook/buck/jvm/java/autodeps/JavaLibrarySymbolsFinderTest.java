@@ -19,12 +19,9 @@ package com.facebook.buck.jvm.java.autodeps;
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaFileParser;
@@ -33,7 +30,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -54,7 +50,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -134,7 +129,7 @@ public class JavaLibrarySymbolsFinderTest {
     // Mock out calls to a SourcePathResolver so we can create a legitimate
     // DefaultRuleKeyFactory.
     final SourcePathRuleFinder ruleFinder = createMock(SourcePathRuleFinder.class);
-    final SourcePathResolver pathResolver = createMock(SourcePathResolver.class);
+    final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     expect(ruleFinder.getRule(anyObject(SourcePath.class)))
         .andAnswer(() -> {
           SourcePath input = (SourcePath) EasyMock.getCurrentArguments()[0];
@@ -145,22 +140,6 @@ public class JavaLibrarySymbolsFinderTest {
           }
         })
         .anyTimes();
-    expect(pathResolver.getIdeallyRelativePath(anyObject(SourcePath.class)))
-        .andAnswer(() -> {
-          SourcePath input = (SourcePath) EasyMock.getCurrentArguments()[0];
-          assertTrue(input instanceof PathSourcePath);
-          return ((PathSourcePath) input).getRelativePath();
-        })
-        .anyTimes();
-    expect(pathResolver.getAbsolutePath(anyObject(SourcePath.class)))
-        .andAnswer(() -> {
-          SourcePath input = (SourcePath) EasyMock.getCurrentArguments()[0];
-          assertTrue(input instanceof PathSourcePath);
-          Path relativePath = ((PathSourcePath) input).getRelativePath();
-          return projectFilesystem.resolve(relativePath);
-        })
-        .anyTimes();
-    replay(pathResolver);
 
     // Calculates the RuleKey for a JavaSymbolsRule with the specified JavaLibrarySymbolsFinder.
     final FileHashCache fileHashCache =
@@ -198,6 +177,5 @@ public class JavaLibrarySymbolsFinderTest {
         "Introducing an extra generated .java file to the srcs should not change the RuleKey.",
         key1,
         key3);
-    verify(pathResolver);
   }
 }
