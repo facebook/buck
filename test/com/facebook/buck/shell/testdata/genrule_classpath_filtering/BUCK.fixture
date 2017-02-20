@@ -6,7 +6,8 @@ genrule(
 
 genrule(
   name = 'echo_with_dep_is_proc',
-  cmd = 'echo $(query_targets "attrfilter(deps, //annotations:proc-lib, classpath(:app))") > $OUT',
+  bash = 'echo $(query_targets "attrfilter(deps, //annotations:proc-lib, classpath(:app))") > $OUT',
+  cmd_exe = 'powershell -Command "echo $(query_targets \"attrfilter(deps, //annotations:proc-lib, classpath(:app))\") | Out-file -Encoding ascii $env:OUT"',
   out = 'out',
 )
 
