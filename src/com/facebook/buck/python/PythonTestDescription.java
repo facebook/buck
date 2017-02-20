@@ -269,13 +269,9 @@ public class PythonTestDescription implements
             args.preloadDeps);
 
     // Build the PEX using a python binary rule with the minimum dependencies.
-    BuildRuleParams binaryParams = params.copyWithChanges(
-        getBinaryBuildTarget(params.getBuildTarget()),
-        Suppliers.ofInstance(PythonUtil.getDepsFromComponents(ruleFinder, allComponents)),
-        Suppliers.ofInstance(ImmutableSortedSet.of()));
     PythonBinary binary =
         binaryDescription.createPackageRule(
-            binaryParams,
+            params.copyWithBuildTarget(getBinaryBuildTarget(params.getBuildTarget())),
             resolver,
             pathResolver,
             ruleFinder,
@@ -336,15 +332,8 @@ public class PythonTestDescription implements
                     resolver)));
 
     // Generate and return the python test rule, which depends on the python binary rule above.
-    return new PythonTest(
-        params.copyWithDeps(
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(params.getDeclaredDeps().get())
-                    .add(binary)
-                    .build()),
-            params.getExtraDeps()),
-        ruleFinder,
+    return PythonTest.from(
+        params,
         testEnv,
         binary,
         args.labels,

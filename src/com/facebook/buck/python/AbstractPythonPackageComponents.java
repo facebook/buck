@@ -18,12 +18,16 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -100,6 +104,15 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
 
   public static PythonPackageComponents of() {
     return EMPTY;
+  }
+
+  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
+    deps.addAll(ruleFinder.filterBuildRuleInputs(getModules().values()));
+    deps.addAll(ruleFinder.filterBuildRuleInputs(getResources().values()));
+    deps.addAll(ruleFinder.filterBuildRuleInputs(getNativeLibraries().values()));
+    deps.addAll(ruleFinder.filterBuildRuleInputs(getPrebuiltLibraries()));
+    return deps.build();
   }
 
   /**

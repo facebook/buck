@@ -69,7 +69,7 @@ public class PythonPackagedBinaryTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     // The top-level python binary that lists the above libraries as deps.
-    PythonBinary binary = new PythonPackagedBinary(
+    PythonBinary binary = PythonPackagedBinary.from(
         new FakeBuildRuleParamsBuilder("//:bin").build(),
         resolver,
         ruleFinder,

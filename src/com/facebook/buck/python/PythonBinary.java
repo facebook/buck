@@ -16,6 +16,7 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
@@ -26,6 +27,8 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
@@ -35,8 +38,10 @@ public abstract class PythonBinary
     extends AbstractBuildRuleWithResolver
     implements BinaryBuildRule, HasRuntimeDeps {
 
+  private final Supplier<? extends ImmutableCollection<BuildRule>> originalDeclaredDeps;
   private final PythonPlatform pythonPlatform;
   private final String mainModule;
+  @AddToRuleKey
   private final PythonPackageComponents components;
   private final ImmutableSet<String> preloadLibraries;
   @AddToRuleKey
@@ -46,6 +51,7 @@ public abstract class PythonBinary
 
   public PythonBinary(
       BuildRuleParams buildRuleParams,
+      Supplier<? extends ImmutableCollection<BuildRule>> originalDeclaredDeps,
       SourcePathResolver resolver,
       PythonPlatform pythonPlatform,
       String mainModule,
@@ -54,6 +60,7 @@ public abstract class PythonBinary
       String pexExtension,
       boolean legacyOutputPath) {
     super(buildRuleParams, resolver);
+    this.originalDeclaredDeps = originalDeclaredDeps;
     this.pythonPlatform = pythonPlatform;
     this.mainModule = mainModule;
     this.components = components;
@@ -62,12 +69,19 @@ public abstract class PythonBinary
     this.legacyOutputPath = legacyOutputPath;
   }
 
-  protected final Path getBinPath() {
-    BuildTarget buildTarget = getBuildTarget();
+  static Path getBinPath(
+      BuildTarget target,
+      ProjectFilesystem filesystem,
+      String extension,
+      boolean legacyOutputPath) {
     if (!legacyOutputPath) {
-      buildTarget = buildTarget.withFlavors();
+      target = target.withFlavors();
     }
-    return BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s" + pexExtension);
+    return BuildTargets.getGenPath(filesystem, target, "%s" + extension);
+  }
+
+  final Path getBinPath() {
+    return getBinPath(getBuildTarget(), getProjectFilesystem(), pexExtension, legacyOutputPath);
   }
 
   @Override
@@ -97,7 +111,7 @@ public abstract class PythonBinary
 
   @Override
   public Stream<BuildTarget> getRuntimeDeps() {
-    return getDeclaredDeps().stream().map(BuildRule::getBuildTarget);
+    return originalDeclaredDeps.get().stream().map(BuildRule::getBuildTarget);
   }
 
 }

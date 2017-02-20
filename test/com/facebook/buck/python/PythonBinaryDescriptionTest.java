@@ -43,6 +43,7 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -52,6 +53,8 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.ShBinary;
@@ -61,6 +64,7 @@ import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -944,6 +948,55 @@ public class PythonBinaryDescriptionTest {
     assertThat(
         standaloneBinary.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
         Matchers.hasItem(pyTool.getBuildTarget()));
+  }
+
+  @Test
+  public void nonBuildDepsDoNotAffectRuleKey() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    for (PythonBuckConfig.PackageStyle packageStyle : PythonBuckConfig.PackageStyle.values()) {
+
+      // First, calculate the rule key of a python binary with no deps.
+      PythonBinaryBuilder pythonBinaryBuilder =
+          PythonBinaryBuilder.create(BuildTargetFactory.newInstance("//:bin"))
+              .setMainModule("main")
+              .setPackageStyle(packageStyle);
+      TargetGraph targetGraph =
+          TargetGraphFactory.newInstance(
+              pythonBinaryBuilder.build());
+      BuildRuleResolver resolver =
+          new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+      PythonBinary pythonBinaryWithoutDep =
+          pythonBinaryBuilder.build(resolver, filesystem, targetGraph);
+      RuleKey ruleKeyWithoutDep = calculateRuleKey(resolver, pythonBinaryWithoutDep);
+
+      // Next, calculate the rule key of a python binary with a deps on another binary.
+      CxxBinaryBuilder cxxBinaryBuilder =
+          new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:dep"));
+      pythonBinaryBuilder.setDeps(ImmutableSortedSet.of(cxxBinaryBuilder.getTarget()));
+      targetGraph =
+          TargetGraphFactory.newInstance(
+              cxxBinaryBuilder.build(),
+              pythonBinaryBuilder.build());
+      resolver = new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+      cxxBinaryBuilder.build(resolver, filesystem, targetGraph);
+      PythonBinary pythonBinaryWithDep =
+          pythonBinaryBuilder.build(resolver, filesystem, targetGraph);
+      RuleKey ruleKeyWithDep = calculateRuleKey(resolver, pythonBinaryWithDep);
+
+      // Verify that the rule keys are identical.
+      assertThat(ruleKeyWithoutDep, Matchers.equalTo(ruleKeyWithDep));
+    }
+  }
+
+  private RuleKey calculateRuleKey(BuildRuleResolver ruleResolver, BuildRule rule) {
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    DefaultRuleKeyFactory ruleKeyFactory =
+        new DefaultRuleKeyFactory(
+            new RuleKeyFieldLoader(0),
+            DefaultFileHashCache.createDefaultFileHashCache(rule.getProjectFilesystem()),
+            new SourcePathResolver(ruleFinder),
+            ruleFinder);
+    return ruleKeyFactory.build(rule);
   }
 
 }

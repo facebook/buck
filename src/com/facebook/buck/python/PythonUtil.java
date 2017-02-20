@@ -153,17 +153,6 @@ public class PythonUtil {
     return MorePaths.pathWithUnixSeparators(name).replace('/', '.');
   }
 
-  public static ImmutableSortedSet<BuildRule> getDepsFromComponents(
-      SourcePathRuleFinder ruleFinder,
-      PythonPackageComponents components) {
-    return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(ruleFinder.filterBuildRuleInputs(components.getModules().values()))
-        .addAll(ruleFinder.filterBuildRuleInputs(components.getResources().values()))
-        .addAll(ruleFinder.filterBuildRuleInputs(components.getNativeLibraries().values()))
-        .addAll(ruleFinder.filterBuildRuleInputs(components.getPrebuiltLibraries()))
-        .build();
-  }
-
   public static PythonPackageComponents getAllComponents(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
