@@ -61,11 +61,11 @@ public class WatchmanDiagnosticEventListenerTest {
         Matchers.contains(ImmutableList.of(
             new PredicateMatcher<>(
                 "warning message containing \"a warning\"",
-                event -> event.getMessage().contains("a warning") &&
+                (ConsoleEvent event) -> event.getMessage().contains("a warning") &&
                     event.getLevel() == Level.WARNING),
             new PredicateMatcher<>(
                 "error message containing \"an error\"",
-                event -> event.getMessage().contains("an error") &&
+                (ConsoleEvent event) -> event.getMessage().contains("an error") &&
                     event.getLevel() == Level.SEVERE))));
   }
 
@@ -87,10 +87,10 @@ public class WatchmanDiagnosticEventListenerTest {
         Matchers.contains(ImmutableList.of(
             new PredicateMatcher<>(
                 "message containing \"a warning\"",
-                event -> event.getMessage().contains("a warning")),
+                (ConsoleEvent event) -> event.getMessage().contains("a warning")),
             new PredicateMatcher<>(
                 "message containing \"another warning\"",
-                event -> event.getMessage().contains("another warning")))));
+                (ConsoleEvent event) -> event.getMessage().contains("another warning")))));
   }
 
   /**
