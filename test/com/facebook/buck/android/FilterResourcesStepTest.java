@@ -110,6 +110,8 @@ public class FilterResourcesStepTest {
 
     // Execute command.
     assertThat(command.execute(TestExecutionContext.newInstance()).getExitCode(), Matchers.is(0));
+
+    assertTrue(filesystem.isFile(baseDestination.resolve("1/drawable-mdpi/some.png")));
   }
 
   @Test
@@ -217,6 +219,46 @@ public class FilterResourcesStepTest {
               .resolve(String.format("%s-%s", folderName, excludedDensity))
               .resolve(file)));
     }
+  }
+
+  @Test
+  public void xmlDrawableResourcesFiltered() throws IOException, InterruptedException {
+    final ResourceFilters.Density targetDensity = ResourceFilters.Density.MDPI;
+    final ResourceFilters.Density excludedDensity = ResourceFilters.Density.LDPI;
+    final String file = "somefile.xml";
+    final Path resDir = Paths.get("res");
+    final Path resOutDir = Paths.get("res-out");
+
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    filesystem.mkdirs(resDir);
+    filesystem.createNewFile(
+        resDir.resolve(String.format("drawable-%s", targetDensity)).resolve(file));
+    filesystem.createNewFile(
+        resDir.resolve(String.format("drawable-%s", excludedDensity)).resolve(file));
+
+    FilterResourcesStep command = new FilterResourcesStep(
+        filesystem,
+        ImmutableBiMap.of(resDir, resOutDir),
+        /* filterByDPI */ true,
+        /* enableStringWhitelisting */ false,
+        /* whitelistedStringDirs */ ImmutableSet.of(),
+        /* locales */ ImmutableSet.of(),
+        DefaultFilteredDirectoryCopier.getInstance(),
+        ImmutableSet.of(targetDensity),
+        FilterResourcesStep.DefaultDrawableFinder.getInstance(),
+        /* imageScaler */ null);
+    command.execute(null);
+
+    assertThat(
+        filesystem,
+        ProjectFilesystemMatchers.pathExists(resOutDir
+            .resolve(String.format("drawable-%s", targetDensity))
+            .resolve(file)));
+    assertThat(
+        filesystem,
+        ProjectFilesystemMatchers.pathDoesNotExist(resOutDir
+            .resolve(String.format("drawable-%s", excludedDensity))
+            .resolve(file)));
   }
 
   @Test
@@ -389,7 +431,7 @@ public class FilterResourcesStepTest {
         /* locales */ locales,
         DefaultFilteredDirectoryCopier.getInstance(),
         /* targetDensities */ null,
-        /* drawableFinder */ null,
+        FilterResourcesStep.DefaultDrawableFinder.getInstance(),
         /* imageScaler */ null);
 
     return step.getFilteringPredicate(TestExecutionContext.newInstance());
