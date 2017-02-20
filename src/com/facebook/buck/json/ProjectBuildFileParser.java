@@ -394,7 +394,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
           buckPyStdinWriter);
       buckPyStdinWriter.flush();
 
-      LOG.debug("Parsing output of process %s...", buckPyProcess);
+      LOG.verbose("Parsing output of process %s...", buckPyProcess);
       Object deserializedValue;
       try {
         deserializedValue = bserDeserializer.deserializeBserValue(
@@ -411,11 +411,12 @@ public class ProjectBuildFileParser implements AutoCloseable {
           resultObject.getDiagnostics(),
           buckEventBus);
       values = resultObject.getValues();
+
       LOG.verbose("Got rules: %s", values);
-      LOG.debug("Parsed %d rules from %s", values.size(), buildFile);
+      LOG.verbose("Parsed %d rules from %s", values.size(), buildFile);
       profile = resultObject.getProfile();
-      if (profile != null) {
-        LOG.debug("Profile result: %s", profile);
+      if (profile != null && profile.length() > 0) {
+        LOG.verbose("Profile result: %s", profile);
       }
       return values;
     } finally {
