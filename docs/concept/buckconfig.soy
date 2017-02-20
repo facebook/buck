@@ -652,15 +652,6 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
-{call buckconfig.entry}
-  {param section: 'build' /}
-  {param name: 'rule_key_caching' /}
-  {param example_value: 'true' /}
-  {param description}
-    Enables caching of rule key calculations between builds when using the Buck daemon.
-  {/param}
-{/call}
-
 {call buckconfig.section}
   {param name: 'buildfile' /}
   {param description}
