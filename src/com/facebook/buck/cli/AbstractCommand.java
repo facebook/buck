@@ -28,7 +28,12 @@ import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.RelativeCellName;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
+import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
+import com.facebook.buck.rules.keys.EventPostingRuleKeyCacheScope;
+import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
+import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
@@ -336,4 +341,23 @@ public abstract class AbstractCommand implements Command {
       ProjectFilesystem filesystem) {
     return ImmutableList.of();
   }
+
+  RuleKeyCacheScope<RuleKey> getDefaultRuleKeyCacheScope(
+      CommandRunnerParams params,
+      RuleKeyCacheRecycler.SettingsAffectingCache settings) {
+    return params.getDefaultRuleKeyFactoryCacheRecycler()
+        // First try to get the cache from the recycler.
+        .map(
+            recycler ->
+                recycler.withRecycledCache(
+                    params.getBuckEventBus(),
+                    settings))
+        // Otherwise, create a new one.
+        .orElseGet(
+            () ->
+                new EventPostingRuleKeyCacheScope<>(
+                    params.getBuckEventBus(),
+                    new DefaultRuleKeyCache<>()));
+  }
+
 }

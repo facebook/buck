@@ -57,6 +57,7 @@ import com.facebook.buck.rules.CachingBuildEngineDelegate;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -64,6 +65,8 @@ import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
+import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactoryManager;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.shell.WorkerProcessPool;
@@ -779,50 +782,57 @@ public class BuildCommand extends AbstractCommand {
     CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
         rootCellBuckConfig.getView(CachingBuildEngineBuckConfig.class);
     try (CommandThreadManager artifactFetchService =
-             getArtifactFetchService(params.getBuckConfig(), executor)) {
-      try (Build build = createBuild(
-          rootCellBuckConfig,
-          actionGraphAndResolver.getActionGraph(),
-          actionGraphAndResolver.getResolver(),
-          params.getCell(),
-          params.getAndroidPlatformTargetSupplier(),
-          new CachingBuildEngine(
-              cachingBuildEngineDelegate,
-              executor,
-              artifactFetchService.getExecutor(),
-              new DefaultStepRunner(),
-              getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
-              cachingBuildEngineBuckConfig.getBuildDepFiles(),
-              cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
-              cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
-              params.getObjectMapper(),
-              actionGraphAndResolver.getResolver(),
-              cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
-              new RuleKeyFactoryManager(
-                  rootCellBuckConfig.getKeySeed(),
-                  cachingBuildEngineDelegate.createFileHashCacheLoader()::getUnchecked,
-                  actionGraphAndResolver.getResolver(),
-                  cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit())),
-          artifactCache,
-          params.getConsole(),
+             getArtifactFetchService(params.getBuckConfig(), executor);
+         RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
+             getDefaultRuleKeyCacheScope(
+                 params,
+                 new RuleKeyCacheRecycler.SettingsAffectingCache(
+                     rootCellBuckConfig.getKeySeed(),
+                     actionGraphAndResolver.getActionGraph()));
+         Build build =
+             createBuild(
+               rootCellBuckConfig,
+               actionGraphAndResolver.getActionGraph(),
+               actionGraphAndResolver.getResolver(),
+               params.getCell(),
+               params.getAndroidPlatformTargetSupplier(),
+               new CachingBuildEngine(
+                   cachingBuildEngineDelegate,
+                   executor,
+                   artifactFetchService.getExecutor(),
+                   new DefaultStepRunner(),
+                   getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
+                   cachingBuildEngineBuckConfig.getBuildDepFiles(),
+                   cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
+                   cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
+                   params.getObjectMapper(),
+                   actionGraphAndResolver.getResolver(),
+                   cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
+                   new RuleKeyFactoryManager(
+                       rootCellBuckConfig.getKeySeed(),
+                       cachingBuildEngineDelegate.createFileHashCacheLoader()::getUnchecked,
+                       actionGraphAndResolver.getResolver(),
+                       cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
+                       ruleKeyCacheScope.getCache())),
+               artifactCache,
+               params.getConsole(),
+               params.getBuckEventBus(),
+               Optional.empty(),
+               params.getPersistentWorkerPools(),
+               rootCellBuckConfig.getPlatform(),
+               rootCellBuckConfig.getEnvironment(),
+               params.getObjectMapper(),
+               params.getClock(),
+               Optional.empty(),
+               Optional.empty(),
+               params.getExecutors())) {
+      lastBuild = build;
+      return build.executeAndPrintFailuresToEventBus(
+          targetsToBuild,
+          isKeepGoing(),
           params.getBuckEventBus(),
-          Optional.empty(),
-          params.getPersistentWorkerPools(),
-          rootCellBuckConfig.getPlatform(),
-          rootCellBuckConfig.getEnvironment(),
-          params.getObjectMapper(),
-          params.getClock(),
-          Optional.empty(),
-          Optional.empty(),
-          params.getExecutors())) {
-        lastBuild = build;
-        return build.executeAndPrintFailuresToEventBus(
-            targetsToBuild,
-            isKeepGoing(),
-            params.getBuckEventBus(),
-            params.getConsole(),
-            getPathToBuildReport(rootCellBuckConfig));
-      }
+          params.getConsole(),
+          getPathToBuildReport(rootCellBuckConfig));
     }
   }
 

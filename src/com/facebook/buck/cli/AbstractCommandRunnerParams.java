@@ -25,6 +25,8 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.shell.WorkerProcessPool;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.timing.Clock;
@@ -95,4 +97,6 @@ public interface AbstractCommandRunnerParams {
   KnownBuildRuleTypesFactory getKnownBuildRuleTypesFactory();
 
   Optional<InvocationInfo> getInvocationInfo();
+
+  Optional<RuleKeyCacheRecycler<RuleKey>> getDefaultRuleKeyFactoryCacheRecycler();
 }

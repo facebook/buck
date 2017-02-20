@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.RuleKeyFactoryManager;
 import com.facebook.buck.step.DefaultStepRunner;
@@ -140,7 +141,8 @@ public class CachingBuildEngineFactory {
             0,
             cachingBuildEngineDelegate.createFileHashCacheLoader()::getUnchecked,
             buildRuleResolver,
-            inputFileSizeLimit));
+            inputFileSizeLimit,
+            new DefaultRuleKeyCache<>()));
   }
 
   private static WeightedListeningExecutorService toWeighted(ListeningExecutorService service) {
