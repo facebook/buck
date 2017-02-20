@@ -21,6 +21,8 @@
   },
   "python" : {
     "deps" : [
+      "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/io:MorePaths.java",
@@ -33,6 +35,7 @@
       "//src/com/facebook/buck/python:support",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:command_tool",
+      "//src/com/facebook/buck/rules:default_cell_path_resolver",
       "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/rules/args:args",

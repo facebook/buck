@@ -334,6 +334,7 @@ public class PythonTestDescription implements
     // Generate and return the python test rule, which depends on the python binary rule above.
     return PythonTest.from(
         params,
+        ruleFinder,
         testEnv,
         binary,
         args.labels,

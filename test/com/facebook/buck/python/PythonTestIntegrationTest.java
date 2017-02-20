@@ -17,12 +17,19 @@
 package com.facebook.buck.python;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.Config;
+import com.facebook.buck.config.Configs;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.DefaultCellPathResolver;
+import com.facebook.buck.testutil.ParameterizedTests;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -30,14 +37,31 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.VersionStringComparator;
+import com.facebook.buck.util.environment.Architecture;
+import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.io.IOException;
+import java.util.Collection;
 
+@RunWith(Parameterized.class)
 public class PythonTestIntegrationTest {
+
+  @Parameterized.Parameters(name = "{0}")
+  public static Collection<Object[]> data() {
+    return ParameterizedTests.getPermutations(
+        ImmutableList.copyOf(PythonBuckConfig.PackageStyle.values()));
+  }
+
+  @Parameterized.Parameter
+  public PythonBuckConfig.PackageStyle packageStyle;
 
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
@@ -48,6 +72,11 @@ public class PythonTestIntegrationTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "python_test", tmp);
     workspace.setUp();
+    workspace.writeContentsToPath(
+        "[python]\npackage_style = " + packageStyle.toString().toLowerCase() + "\n",
+        ".buckconfig");
+    PythonBuckConfig config = getPythonBuckConfig();
+    assertThat(config.getPackageStyle(), equalTo(packageStyle));
   }
 
   @Test
@@ -147,6 +176,21 @@ public class PythonTestIntegrationTest {
                 " Exception: setup failure!"));
   }
 
+
+  @Test
+  public void testPythonTestCached() throws IOException {
+    workspace.enableDirCache();
+
+    // Warm the cache.
+    workspace.runBuckBuild("//:test-success").assertSuccess();
+
+    // Clean buck-out.
+    workspace.runBuckCommand("clean");
+
+    // Run the tests, which should get cache hits for everything.
+    workspace.runBuckCommand("test", "//:test-success").assertSuccess();
+  }
+
   private void assumePythonVersionIsAtLeast(String expectedVersion, String message)
       throws InterruptedException {
     PythonVersion actualVersion =
@@ -161,6 +205,21 @@ public class PythonTestIntegrationTest {
             message),
         new VersionStringComparator().compare(
             actualVersion.getVersionString(), expectedVersion) >= 0);
+  }
+
+  private PythonBuckConfig getPythonBuckConfig() throws IOException {
+    Config rawConfig = Configs.createDefaultConfig(tmp.getRoot());
+    BuckConfig buckConfig =
+        new BuckConfig(
+            rawConfig,
+            new ProjectFilesystem(tmp.getRoot()),
+            Architecture.detect(),
+            Platform.detect(),
+            ImmutableMap.copyOf(System.getenv()),
+            new DefaultCellPathResolver(tmp.getRoot(), rawConfig));
+    return new PythonBuckConfig(
+        buckConfig,
+        new ExecutableFinder());
   }
 
 }

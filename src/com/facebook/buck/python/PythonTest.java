@@ -31,6 +31,7 @@ import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
@@ -61,6 +62,7 @@ public class PythonTest
     extends AbstractBuildRule
     implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule, BinaryBuildRule {
 
+  private final SourcePathRuleFinder ruleFinder;
   private final Supplier<ImmutableSortedSet<BuildRule>> originalDeclaredDeps;
   @AddToRuleKey
   private final Supplier<ImmutableMap<String, String>> env;
@@ -72,6 +74,7 @@ public class PythonTest
 
   private PythonTest(
       BuildRuleParams params,
+      SourcePathRuleFinder ruleFinder,
       Supplier<ImmutableSortedSet<BuildRule>> originalDeclaredDeps,
       final Supplier<ImmutableMap<String, String>> env,
       final PythonBinary binary,
@@ -80,6 +83,7 @@ public class PythonTest
       Optional<Long> testRuleTimeoutMs,
       ImmutableSet<String> contacts) {
     super(params);
+    this.ruleFinder = ruleFinder;
     this.originalDeclaredDeps = originalDeclaredDeps;
     this.env = env;
     this.binary = binary;
@@ -91,6 +95,7 @@ public class PythonTest
 
   public static PythonTest from(
       BuildRuleParams params,
+      SourcePathRuleFinder ruleFinder,
       final Supplier<ImmutableMap<String, String>> env,
       final PythonBinary binary,
       ImmutableSet<Label> labels,
@@ -101,6 +106,7 @@ public class PythonTest
         params.copyWithDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(binary)),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
+        ruleFinder,
         params.getDeclaredDeps(),
         Suppliers.memoize(
             () -> {
@@ -209,8 +215,11 @@ public class PythonTest
   @Override
   public Stream<BuildTarget> getRuntimeDeps() {
     return RichStream.<BuildTarget>empty()
+        .concat(originalDeclaredDeps.get().stream().map(BuildRule::getBuildTarget))
         .concat(binary.getRuntimeDeps())
-        .concat(originalDeclaredDeps.get().stream().map(BuildRule::getBuildTarget));
+        .concat(
+            binary.getExecutableCommand().getDeps(ruleFinder).stream()
+                .map(BuildRule::getBuildTarget));
   }
 
   @Override
