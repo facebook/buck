@@ -30,7 +30,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
-import com.facebook.buck.rules.keys.RuleKeyResult;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableBiMap;
@@ -109,16 +108,16 @@ public class PreprocessorFlagsTest {
           ));
       BuildRule fakeBuildRule = new FakeBuildRule(target, pathResolver);
 
-      RuleKeyBuilder<RuleKeyResult<RuleKey>> builder;
+      RuleKeyBuilder<RuleKey> builder;
       builder = new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
           .newBuilderForTesting(fakeBuildRule);
       defaultFlags.appendToRuleKey(builder, CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
-      RuleKey defaultRuleKey = builder.build().result;
+      RuleKey defaultRuleKey = builder.build();
 
       builder = new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
           .newBuilderForTesting(fakeBuildRule);
       alteredFlags.appendToRuleKey(builder, CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
-      RuleKey alteredRuleKey = builder.build().result;
+      RuleKey alteredRuleKey = builder.build();
 
       if (shouldDiffer) {
         Assert.assertNotEquals(defaultRuleKey, alteredRuleKey);
@@ -154,12 +153,12 @@ public class PreprocessorFlagsTest {
               .addRuleFlags("-I" + prefix + "/bar")
               .build();
 
-          RuleKeyBuilder<RuleKeyResult<RuleKey>> builder =
+          RuleKeyBuilder<RuleKey> builder =
               new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
                   .newBuilderForTesting(fakeBuildRule);
           PreprocessorFlags.builder().setOtherFlags(flags).build()
               .appendToRuleKey(builder, sanitizer);
-          return builder.build().result;
+          return builder.build();
         }
       }
 

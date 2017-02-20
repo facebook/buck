@@ -262,17 +262,4 @@ public class SourcePathResolver {
   public ImmutableCollection<Path> filterInputsToCompareToOutput(SourcePath... sources) {
     return filterInputsToCompareToOutput(Arrays.asList(sources));
   }
-
-  /**
-   * @return the {@link PathSourcePath} backing the given {@link SourcePath}, if any.
-   */
-  public Optional<PathSourcePath> getPathSourcePath(SourcePath sourcePath) {
-    if (sourcePath instanceof ArchiveMemberSourcePath) {
-      sourcePath = ((ArchiveMemberSourcePath) sourcePath).getArchiveSourcePath();
-    }
-    return sourcePath instanceof PathSourcePath ?
-        Optional.of((PathSourcePath) sourcePath) :
-        Optional.empty();
-  }
-
 }

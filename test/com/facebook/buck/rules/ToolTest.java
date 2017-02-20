@@ -22,7 +22,6 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyBuilder;
-import com.facebook.buck.rules.keys.RuleKeyResult;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Strings;
@@ -61,15 +60,13 @@ public class ToolTest {
     RuleKey tool1RuleKey =
         createRuleKeyBuilder(ruleKeyFactory, pathResolver)
             .setReflectively("tool", tool1)
-            .build()
-        .result;
+            .build();
 
     Tool tool2 = new HashedFileTool(path);
     RuleKey tool2RuleKey =
         createRuleKeyBuilder(ruleKeyFactory, pathResolver)
             .setReflectively("tool", tool2)
-            .build()
-        .result;
+            .build();
 
     // Same name, same sha1
     assertEquals(tool1RuleKey, tool2RuleKey);
@@ -78,8 +75,7 @@ public class ToolTest {
     RuleKey tool3RuleKey =
         createRuleKeyBuilder(ruleKeyFactory, pathResolver)
             .setReflectively("tool", tool3)
-            .build()
-        .result;
+            .build();
 
     // Different name, different sha1
     assertNotEquals(tool1RuleKey, tool3RuleKey);
@@ -88,8 +84,7 @@ public class ToolTest {
     RuleKey tool4RuleKey =
         createRuleKeyBuilder(ruleKeyFactory, pathResolver)
             .setReflectively("tool", tool4)
-            .build()
-        .result;
+            .build();
 
     // Different name, same sha1
     assertNotEquals(tool1RuleKey, tool4RuleKey);
@@ -120,8 +115,7 @@ public class ToolTest {
     RuleKey tool1RuleKey =
         createRuleKeyBuilder(ruleKeyFactory, pathResolver)
             .setReflectively("tool", tool1)
-            .build()
-        .result;
+            .build();
 
     Tool tool2 =
         VersionedTool.of(
@@ -131,8 +125,7 @@ public class ToolTest {
     RuleKey tool2RuleKey =
         createRuleKeyBuilder(ruleKeyFactory, pathResolver)
             .setReflectively("tool", tool2)
-            .build()
-        .result;
+            .build();
 
     assertEquals(tool1RuleKey, tool2RuleKey);
   }
@@ -163,19 +156,17 @@ public class ToolTest {
     RuleKey tool1RuleKey =
         createRuleKeyBuilder(ruleKeyFactory, pathResolver)
             .setReflectively("tool", tool1)
-            .build()
-        .result;
+            .build();
 
     RuleKey tool2RuleKey =
         createRuleKeyBuilder(ruleKeyFactory, pathResolver)
             .setReflectively("tool", tool2)
-            .build()
-        .result;
+            .build();
 
     assertEquals(tool1RuleKey, tool2RuleKey);
   }
 
-  private RuleKeyBuilder<RuleKeyResult<RuleKey>> createRuleKeyBuilder(
+  private RuleKeyBuilder<RuleKey> createRuleKeyBuilder(
       DefaultRuleKeyFactory factory,
       SourcePathResolver resolver) {
     return factory.newBuilderForTesting(new FakeBuildRule("//:test", resolver));

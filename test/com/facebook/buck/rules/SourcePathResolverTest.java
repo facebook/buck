@@ -394,35 +394,6 @@ public class SourcePathResolverTest {
     assertEquals(memberPath, absolutePath.getMemberPath());
   }
 
-  @Test
-  public void getPathSourcePath() {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    PathSourcePath pathSourcePath = new PathSourcePath(filesystem, filesystem.getPath("test"));
-
-    assertThat(
-        pathResolver.getPathSourcePath(pathSourcePath),
-        Matchers.equalTo(Optional.of(pathSourcePath)));
-
-    assertThat(
-        pathResolver.getPathSourcePath(
-            new BuildTargetSourcePath(BuildTargetFactory.newInstance("//:rule"))),
-        Matchers.equalTo(Optional.empty()));
-
-    assertThat(
-        pathResolver.getPathSourcePath(
-            new ArchiveMemberSourcePath(pathSourcePath, filesystem.getPath("something"))),
-        Matchers.equalTo(Optional.of(pathSourcePath)));
-    assertThat(
-        pathResolver.getPathSourcePath(
-            new ArchiveMemberSourcePath(
-                new BuildTargetSourcePath(BuildTargetFactory.newInstance("//:rule")),
-                filesystem.getPath("something"))),
-        Matchers.equalTo(Optional.empty()));
-  }
-
   private static class PathReferenceRule extends AbstractBuildRuleWithResolver {
 
     private final Path source;

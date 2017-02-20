@@ -19,6 +19,8 @@ package com.facebook.buck.jvm.java.autodeps;
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -115,11 +117,17 @@ public class PrebuiltJarSymbolsFinderTest {
     // Mock out calls to a SourcePathResolver so we can create a legitimate
     // DefaultRuleKeyFactory.
     final SourcePathRuleFinder ruleFinder = createMock(SourcePathRuleFinder.class);
-    final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    createMock(SourcePathResolver.class);
+    final SourcePathResolver pathResolver = createMock(SourcePathResolver.class);
     expect(ruleFinder.getRule(anyObject(SourcePath.class)))
         .andReturn(Optional.empty())
         .anyTimes();
+    expect(pathResolver.getIdeallyRelativePath(anyObject(SourcePath.class)))
+        .andReturn(relativePathToJar)
+        .anyTimes();
+    expect(pathResolver.getAbsolutePath(anyObject(SourcePath.class)))
+        .andReturn(absolutePathToJar)
+        .anyTimes();
+    replay(pathResolver);
 
     // Calculates the RuleKey for a JavaSymbolsRule with a PrebuiltJarSymbolsFinder whose binaryJar
     // is a JAR file with the specified entries.
@@ -172,6 +180,7 @@ public class PrebuiltJarSymbolsFinderTest {
             "the RuleKey of the JavaSymbolsRule that contains it.",
         key1,
         key3);
+    verify(pathResolver);
   }
 
   @Test

@@ -19,7 +19,6 @@ package com.facebook.buck.rules.keys;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -33,43 +32,31 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.NoopBuildRule;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
-import com.google.common.cache.CacheStats;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.MapMaker;
 
-import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
@@ -116,10 +103,10 @@ public class DefaultRuleKeyFactoryTest {
 
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
-    RuleKeyBuilder<RuleKeyResult<RuleKey>> builder = factory.newBuilderForTesting(rule);
+    RuleKeyBuilder<RuleKey> builder = factory.newBuilderForTesting(rule);
 
     builder.setReflectively("field", "cake-walk");
-    RuleKey expected = builder.build().result;
+    RuleKey expected = builder.build();
 
     class DecoratedFields extends EmptyRule {
 
@@ -149,10 +136,10 @@ public class DefaultRuleKeyFactoryTest {
 
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
-    RuleKeyBuilder<RuleKeyResult<RuleKey>> builder = factory.newBuilderForTesting(rule);
+    RuleKeyBuilder<RuleKey> builder = factory.newBuilderForTesting(rule);
 
     builder.setReflectively("field", "sausages");
-    RuleKey expected = builder.build().result;
+    RuleKey expected = builder.build();
 
     class Stringifiable {
       @Override
@@ -194,14 +181,14 @@ public class DefaultRuleKeyFactoryTest {
             .setReflectively("cheese", "brie")
             .build();
 
-    RuleKeyBuilder<RuleKeyResult<RuleKey>> builder = factory.newBuilderForTesting(rule);
+    RuleKeyBuilder<RuleKey> builder = factory.newBuilderForTesting(rule);
     try (RuleKeyScopedHasher.Scope keyScope = builder.getScopedHasher().keyScope("field")) {
       try (RuleKeyScopedHasher.Scope appendableScope =
                builder.getScopedHasher().wrapperScope(RuleKeyHasher.Wrapper.APPENDABLE)) {
         builder.getScopedHasher().getHasher().putRuleKey(subKey);
       }
     }
-    RuleKey expected = builder.build().result;
+    RuleKey expected = builder.build();
 
     class AppendingField extends EmptyRule {
 
@@ -252,14 +239,14 @@ public class DefaultRuleKeyFactoryTest {
             .build();
     RuleKey ruleSubKey = factory.build(appendableRule);
 
-    RuleKeyBuilder<RuleKeyResult<RuleKey>> builder = factory.newBuilderForTesting(rule);
+    RuleKeyBuilder<RuleKey> builder = factory.newBuilderForTesting(rule);
     try (RuleKeyScopedHasher.Scope keyScope = builder.getScopedHasher().keyScope("field")) {
       try (RuleKeyScopedHasher.Scope appendableScope =
                builder.getScopedHasher().wrapperScope(RuleKeyHasher.Wrapper.BUILD_RULE)) {
         builder.getScopedHasher().getHasher().putRuleKey(ruleSubKey);
       }
     }
-    RuleKey expected = builder.build().result;
+    RuleKey expected = builder.build();
 
     class RuleContainingAppendableRule extends EmptyRule {
       @AddToRuleKey
@@ -288,10 +275,10 @@ public class DefaultRuleKeyFactoryTest {
 
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
-    RuleKeyBuilder<RuleKeyResult<RuleKey>> builder = factory.newBuilderForTesting(rule);
+    RuleKeyBuilder<RuleKey> builder = factory.newBuilderForTesting(rule);
 
     builder.setReflectively("field", "cheddar");
-    RuleKey expected = builder.build().result;
+    RuleKey expected = builder.build();
 
     class AppendingField extends EmptyRule {
 
@@ -319,12 +306,12 @@ public class DefaultRuleKeyFactoryTest {
 
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
-    RuleKeyBuilder<RuleKeyResult<RuleKey>> builder = factory.newBuilderForTesting(rule);
+    RuleKeyBuilder<RuleKey> builder = factory.newBuilderForTesting(rule);
 
     builder.setReflectively("alpha", "stilton");
     builder.setReflectively("beta", 1);
     builder.setReflectively("gamma", "stinking bishop");
-    RuleKey expected = builder.build().result;
+    RuleKey expected = builder.build();
 
     class UnsortedFields extends EmptyRule {
 
@@ -356,11 +343,11 @@ public class DefaultRuleKeyFactoryTest {
 
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
-    RuleKeyBuilder<RuleKeyResult<RuleKey>> builder = factory.newBuilderForTesting(rule);
+    RuleKeyBuilder<RuleKey> builder = factory.newBuilderForTesting(rule);
 
     builder.setReflectively("exoticCheese", "bavarian smoked");
     builder.setReflectively("target", topLevelTarget);
-    RuleKey expected = builder.build().result;
+    RuleKey expected = builder.build();
 
     class Parent extends EmptyRule {
 
@@ -399,11 +386,11 @@ public class DefaultRuleKeyFactoryTest {
 
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
-    RuleKeyBuilder<RuleKeyResult<RuleKey>> builder = factory.newBuilderForTesting(rule);
+    RuleKeyBuilder<RuleKey> builder = factory.newBuilderForTesting(rule);
 
     builder.setReflectively("key", "child");
     builder.setReflectively("key", "parent");
-    RuleKey expected = builder.build().result;
+    RuleKey expected = builder.build();
 
     class Parent extends EmptyRule {
       @AddToRuleKey
@@ -471,125 +458,6 @@ public class DefaultRuleKeyFactoryTest {
         ImmutableMap.of("key", Optional.of(ImmutableList.of(1, 2, 4))));
   }
 
-  @Test
-  public void testFactoryReportsInputsAndDependenciesToCacheForBuildRule() throws IOException {
-    SourcePathRuleFinder ruleFinder =
-        new SourcePathRuleFinder(
-            new BuildRuleResolver(
-                TargetGraph.EMPTY,
-                new DefaultTargetNodeToBuildRuleTransformer()));
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    NoopRuleKeyCache<RuleKey> noopRuleKeyCache = new NoopRuleKeyCache<>();
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    DefaultRuleKeyFactory factory =
-        new DefaultRuleKeyFactory(
-            new RuleKeyFieldLoader(0),
-            DefaultFileHashCache.createDefaultFileHashCache(filesystem),
-            pathResolver,
-            ruleFinder,
-            noopRuleKeyCache);
-
-    // Create a sample input.
-    PathSourcePath input = new PathSourcePath(filesystem, filesystem.getPath("input"));
-    filesystem.touch(input.getRelativePath());
-
-    // Create a sample dep rule.
-    BuildRule dep = new EmptyRule(BuildTargetFactory.newInstance("//:dep"));
-
-    // Create a sample rule key appendable.
-    RuleKeyAppendable appendable = sink -> {};
-
-    // Create a dummy build rule that uses the input.
-    BuildRule rule =
-        new NoopBuildRule(
-            new FakeBuildRuleParamsBuilder("//:target")
-                .setProjectFilesystem(filesystem)
-                .setDeclaredDeps(ImmutableSortedSet.of(dep))
-                .build(),
-            pathResolver) {
-
-          @AddToRuleKey
-          private final SourcePath inputField = input;
-
-          @AddToRuleKey
-          private final RuleKeyAppendable appendableField = appendable;
-
-        };
-
-    // Build the rule key.
-    factory.build(rule);
-
-    // Verify the input was properly reported to the rule key cache.
-    RuleKeyResult<RuleKey> result = noopRuleKeyCache.results.get(rule);
-    assertThat(result, Matchers.notNullValue());
-    assertThat(
-        result.inputs,
-        Matchers.containsInAnyOrder(RuleKeyInput.of(filesystem, input.getRelativePath())));
-    assertThat(result.deps, Matchers.containsInAnyOrder(dep, appendable));
-  }
-
-  @Test
-  public void testFactoryReportsInputsAndDependenciesToCacheForRuleKeyAppendable()
-      throws IOException {
-    SourcePathRuleFinder ruleFinder =
-        new SourcePathRuleFinder(
-            new BuildRuleResolver(
-                TargetGraph.EMPTY,
-                new DefaultTargetNodeToBuildRuleTransformer()));
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    NoopRuleKeyCache<RuleKey> noopRuleKeyCache = new NoopRuleKeyCache<>();
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    DefaultRuleKeyFactory factory =
-        new DefaultRuleKeyFactory(
-            new RuleKeyFieldLoader(0),
-            DefaultFileHashCache.createDefaultFileHashCache(filesystem),
-            pathResolver,
-            ruleFinder,
-            noopRuleKeyCache);
-
-    // Create a sample input.
-    PathSourcePath input = new PathSourcePath(filesystem, filesystem.getPath("input"));
-    filesystem.touch(input.getRelativePath());
-
-    // Create a sample dep rule.
-    BuildRule dep = new EmptyRule(BuildTargetFactory.newInstance("//:dep"));
-
-    // Create a sample dep appendable.
-    RuleKeyAppendable depAppendable = sink -> {};
-
-    // Create a sample rule key appendable.
-    RuleKeyAppendable appendable =
-        sink -> {
-          sink.setReflectively("input", input);
-          sink.setReflectively("dep", dep);
-          sink.setReflectively("depAppendable", depAppendable);
-        };
-
-    // Create a dummy build rule that uses the input.
-    BuildRule rule =
-        new NoopBuildRule(
-            new FakeBuildRuleParamsBuilder("//:target")
-                .setProjectFilesystem(filesystem)
-                .build(),
-            pathResolver) {
-
-          @AddToRuleKey
-          private final RuleKeyAppendable appendableField = appendable;
-
-        };
-
-    // Build the rule key.
-    factory.build(rule);
-
-    // Verify the input was properly reported to the rule key cache.
-    RuleKeyResult<RuleKey> result = noopRuleKeyCache.results.get(appendable);
-    assertThat(result, Matchers.notNullValue());
-    assertThat(
-        result.inputs,
-        Matchers.containsInAnyOrder(RuleKeyInput.of(filesystem, input.getRelativePath())));
-    assertThat(result.deps, Matchers.containsInAnyOrder(dep, depAppendable));
-  }
-
   private void assertBothKeysAndValuesGetHashed(@Nullable Object val1, @Nullable Object val2) {
     assertKeysGetHashed(val1);
     assertValuesGetHashed(val1, val2);
@@ -606,10 +474,9 @@ public class DefaultRuleKeyFactoryTest {
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
 
-    RuleKey key1 = factory.newBuilderForTesting(rule).setReflectively("key1", val).build().result;
-    RuleKey key1again =
-        factory.newBuilderForTesting(rule).setReflectively("key1", val).build().result;
-    RuleKey key2 = factory.newBuilderForTesting(rule).setReflectively("key2", val).build().result;
+    RuleKey key1 = factory.newBuilderForTesting(rule).setReflectively("key1", val).build();
+    RuleKey key1again = factory.newBuilderForTesting(rule).setReflectively("key1", val).build();
+    RuleKey key2 = factory.newBuilderForTesting(rule).setReflectively("key2", val).build();
     assertEquals("Rule keys should be same! " + val, key1, key1again);
     assertNotEquals("Rule keys should be different! " + val, key1, key2);
   }
@@ -626,10 +493,9 @@ public class DefaultRuleKeyFactoryTest {
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
 
-    RuleKey key1 = factory.newBuilderForTesting(rule).setReflectively("key", val1).build().result;
-    RuleKey key1again =
-        factory.newBuilderForTesting(rule).setReflectively("key", val1).build().result;
-    RuleKey key2 = factory.newBuilderForTesting(rule).setReflectively("key", val2).build().result;
+    RuleKey key1 = factory.newBuilderForTesting(rule).setReflectively("key", val1).build();
+    RuleKey key1again = factory.newBuilderForTesting(rule).setReflectively("key", val1).build();
+    RuleKey key2 = factory.newBuilderForTesting(rule).setReflectively("key", val2).build();
     assertEquals("Rule keys should be same! " + val1, key1, key1again);
     assertNotEquals("Rule keys should be different! " + val1 + " != " + val2, key1, key2);
   }
@@ -714,67 +580,4 @@ public class DefaultRuleKeyFactoryTest {
     BLACK,
     WHITE,
   }
-
-  private static class NoopRuleKeyCache<V> implements RuleKeyCache<V> {
-
-    private final Map<Object, RuleKeyResult<V>> results = new MapMaker().weakKeys().makeMap();
-
-    @Override
-    public V get(
-        BuildRule rule,
-        Function<? super BuildRule, RuleKeyResult<V>> create) {
-      RuleKeyResult<V> result = create.apply(rule);
-      results.put(rule, result);
-      return result.result;
-    }
-
-    @Override
-    public V get(
-        RuleKeyAppendable appendable,
-        Function<? super RuleKeyAppendable, RuleKeyResult<V>> create) {
-      RuleKeyResult<V> result = create.apply(appendable);
-      results.put(appendable, result);
-      return result.result;
-    }
-
-    public boolean isCached(BuildRule rule) {
-      throw new UnsupportedOperationException();
-    }
-
-    public boolean isCached(RuleKeyAppendable appendable) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void invalidateInputs(Iterable<RuleKeyInput> inputs) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void invalidateInputsMatchingRelativePath(Path path) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void invalidateAllExceptFilesystems(ImmutableSet<ProjectFilesystem> filesystems) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void invalidateFilesystem(ProjectFilesystem filesystem) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void invalidateAll() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public CacheStats getStats() {
-      throw new UnsupportedOperationException();
-    }
-
-  }
-
 }

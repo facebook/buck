@@ -27,7 +27,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 
@@ -40,32 +39,18 @@ public class DefaultRuleKeyFactory implements RuleKeyFactory<RuleKey> {
   private final FileHashLoader hashLoader;
   private final SourcePathResolver pathResolver;
   private final SourcePathRuleFinder ruleFinder;
-  private final RuleKeyCache<RuleKey> ruleKeyCache;
 
-  public DefaultRuleKeyFactory(
-      RuleKeyFieldLoader ruleKeyFieldLoader,
-      FileHashLoader hashLoader,
-      SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
-      RuleKeyCache<RuleKey> ruleKeyCache) {
-    this.ruleKeyFieldLoader = ruleKeyFieldLoader;
-    this.hashLoader = hashLoader;
-    this.pathResolver = pathResolver;
-    this.ruleFinder = ruleFinder;
-    this.ruleKeyCache = ruleKeyCache;
-  }
+  private final SingleBuildRuleKeyCache<RuleKey> ruleKeyCache = new SingleBuildRuleKeyCache<>();
 
   public DefaultRuleKeyFactory(
       RuleKeyFieldLoader ruleKeyFieldLoader,
       FileHashLoader hashLoader,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder) {
-    this(
-        ruleKeyFieldLoader,
-        hashLoader,
-        pathResolver,
-        ruleFinder,
-        new DefaultRuleKeyCache<>());
+    this.ruleKeyFieldLoader = ruleKeyFieldLoader;
+    this.hashLoader = hashLoader;
+    this.pathResolver = pathResolver;
+    this.ruleFinder = ruleFinder;
   }
 
   public DefaultRuleKeyFactory(
@@ -76,14 +61,14 @@ public class DefaultRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     this(new RuleKeyFieldLoader(seed), hashLoader, pathResolver, ruleFinder);
   }
 
-  private RuleKeyBuilder<RuleKeyResult<RuleKey>> newPopulatedBuilder(BuildRule buildRule) {
-    RuleKeyBuilder<RuleKeyResult<RuleKey>> builder = newBuilder();
+  private RuleKeyBuilder<RuleKey> newPopulatedBuilder(BuildRule buildRule) {
+    RuleKeyBuilder<RuleKey> builder = newBuilder();
     ruleKeyFieldLoader.setFields(buildRule, builder);
     addDepsToRuleKey(buildRule, builder);
     return builder;
   }
 
-  private RuleKeyResult<RuleKey> calculateBuildRuleKey(BuildRule buildRule) {
+  private RuleKey calculateBuildRuleKey(BuildRule buildRule) {
     return newPopulatedBuilder(buildRule).build();
   }
 
@@ -93,7 +78,7 @@ public class DefaultRuleKeyFactory implements RuleKeyFactory<RuleKey> {
   }
 
   @VisibleForTesting
-  public RuleKeyBuilder<RuleKeyResult<RuleKey>> newBuilderForTesting(BuildRule buildRule) {
+  public RuleKeyBuilder<RuleKey> newBuilderForTesting(BuildRule buildRule) {
     return newPopulatedBuilder(buildRule);
   }
 
@@ -109,61 +94,40 @@ public class DefaultRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     }
   }
 
-  private RuleKeyBuilder<RuleKeyResult<RuleKey>> newBuilder() {
-    return new RuleKeyBuilder<RuleKeyResult<RuleKey>>(ruleFinder, pathResolver, hashLoader) {
-
-      private final ImmutableList.Builder<Object> deps = ImmutableList.builder();
-      private final ImmutableList.Builder<RuleKeyInput> inputs = ImmutableList.builder();
+  private RuleKeyBuilder<RuleKey> newBuilder() {
+    return new RuleKeyBuilder<RuleKey>(ruleFinder, pathResolver, hashLoader) {
 
       @Override
-      protected RuleKeyBuilder<RuleKeyResult<RuleKey>> setBuildRule(BuildRule rule) {
-
-        // Record the `BuildRule` as an immediate dep.
-        deps.add(rule);
-
+      protected RuleKeyBuilder<RuleKey> setBuildRule(BuildRule rule) {
         return setBuildRuleKey(DefaultRuleKeyFactory.this.build(rule));
       }
 
-      private RuleKeyResult<RuleKey> calculateRuleKeyAppendableKey(RuleKeyAppendable appendable) {
-        RuleKeyBuilder<RuleKeyResult<RuleKey>> subKeyBuilder = newBuilder();
+      private RuleKey calculateRuleKeyAppendableKey(RuleKeyAppendable appendable) {
+        RuleKeyBuilder<RuleKey> subKeyBuilder = newBuilder();
         appendable.appendToRuleKey(subKeyBuilder);
         return subKeyBuilder.build();
       }
 
       @Override
-      protected RuleKeyBuilder<RuleKeyResult<RuleKey>> setAppendableRuleKey(
-          RuleKeyAppendable appendable) {
-
-        // Record the `RuleKeyAppendable` as an immediate dep.
-        deps.add(appendable);
-
-        // Calculate the rule key for the rule key appendable.
-        RuleKey ruleKey = ruleKeyCache.get(appendable, this::calculateRuleKeyAppendableKey);
-
-        return setAppendableRuleKey(ruleKey);
+      protected RuleKeyBuilder<RuleKey> setAppendableRuleKey(RuleKeyAppendable appendable) {
+        return setAppendableRuleKey(
+            ruleKeyCache.get(appendable, this::calculateRuleKeyAppendableKey));
       }
 
       @Override
-      protected RuleKeyBuilder<RuleKeyResult<RuleKey>> setSourcePath(SourcePath sourcePath)
-          throws IOException {
+      protected RuleKeyBuilder<RuleKey> setSourcePath(SourcePath sourcePath) throws IOException {
         if (sourcePath instanceof BuildTargetSourcePath) {
           return setSourcePathAsRule((BuildTargetSourcePath) sourcePath);
         } else {
-
-          // Add `PathSourcePath`s to our tracked inputs.
-          pathResolver.getPathSourcePath(sourcePath).ifPresent(
-              path -> inputs.add(RuleKeyInput.of(path.getFilesystem(), path.getRelativePath())));
-
           return setSourcePathDirectly(sourcePath);
         }
       }
 
       @Override
-      public RuleKeyResult<RuleKey> build() {
-        return new RuleKeyResult<>(buildRuleKey(), deps.build(), inputs.build());
+      public RuleKey build() {
+        return buildRuleKey();
       }
 
     };
   }
-
 }
