@@ -159,6 +159,8 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
             ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
             temp));
 
+
+    buildableContext.recordArtifact(pathToOutputFile);
     return commands.build();
   }
 

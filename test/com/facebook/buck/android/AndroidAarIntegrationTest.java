@@ -184,4 +184,22 @@ public class AndroidAarIntegrationTest {
     workspace.setUp();
     workspace.runBuckBuild("//apps/sample:nearly_empty_aar").assertSuccess();
   }
+
+  @Test
+  public void testResultIsRecorded() throws IOException, InterruptedException {
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "android_project",
+        tmp);
+    workspace.setUp();
+    workspace.enableDirCache();
+    workspace.runBuckBuild("//apps/sample:nearly_empty_aar").assertSuccess();
+    workspace.runBuckCommand("clean");
+    Path result = workspace.buildAndReturnOutput("//apps/sample:nearly_empty_aar");
+    assertThat(
+        workspace.asCell().getFilesystem().exists(result),
+        Matchers.is(true));
+  }
 }
+
