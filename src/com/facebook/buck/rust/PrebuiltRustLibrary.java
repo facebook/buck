@@ -20,7 +20,6 @@ import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -36,7 +35,7 @@ import java.nio.file.Path;
  * compatible with all other modes. Later we may want to allow per-flavor files.
  */
 abstract class PrebuiltRustLibrary extends AbstractBuildRuleWithResolver
-    implements RustLinkable, RuleKeyAppendable {
+    implements RustLinkable {
 
   public PrebuiltRustLibrary(
       BuildRuleParams params,
