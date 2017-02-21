@@ -44,6 +44,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
             ruleResolver.requireAllRules(targetNode.getExtraDeps()))))
         .setProjectFilesystem(targetNode.getFilesystem())
         .setCellRoots(targetNode.getCellNames())
+        .setSelectedVersions(targetNode.getSelectedVersions())
         .build();
 
     return description.createBuildRule(targetGraph, params, ruleResolver, arg);

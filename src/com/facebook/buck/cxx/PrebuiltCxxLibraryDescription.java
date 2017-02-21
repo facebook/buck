@@ -571,8 +571,7 @@ public class PrebuiltCxxLibraryDescription implements
     Optional<Map.Entry<Flavor, CxxPlatform>> platform = cxxPlatforms.getFlavorAndValue(
         params.getBuildTarget());
 
-    Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
-        targetGraph.get(params.getBuildTarget()).getSelectedVersions();
+    Optional<ImmutableMap<BuildTarget, Version>> selectedVersions = params.getSelectedVersions();
     final Optional<String> versionSubdir =
         selectedVersions.isPresent() && args.versionedSubDir.isPresent() ?
             Optional.of(args.versionedSubDir.get().getOnlyMatchingValue(selectedVersions.get())) :

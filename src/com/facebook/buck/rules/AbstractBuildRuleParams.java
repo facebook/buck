@@ -20,14 +20,17 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.versions.Version;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
 import org.immutables.value.Value;
 
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -46,6 +49,8 @@ abstract class AbstractBuildRuleParams {
   public abstract Supplier<ImmutableSortedSet<BuildRule>> getExtraDeps();
 
   public abstract ProjectFilesystem getProjectFilesystem();
+
+  public abstract Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions();
 
 
   public BuildRuleParams appendExtraDep(BuildRule additional) {

@@ -181,8 +181,7 @@ public class PythonTestDescription implements
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
-    Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
-        targetGraph.get(params.getBuildTarget()).getSelectedVersions();
+    Optional<ImmutableMap<BuildTarget, Version>> selectedVersions = params.getSelectedVersions();
 
     ImmutableMap<Path, SourcePath> srcs =
         PythonUtil.getModules(

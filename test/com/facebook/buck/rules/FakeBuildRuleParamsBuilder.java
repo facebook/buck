@@ -20,9 +20,13 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.versions.Version;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.Optional;
 
 public class FakeBuildRuleParamsBuilder {
 
@@ -30,6 +34,7 @@ public class FakeBuildRuleParamsBuilder {
   private ImmutableSortedSet<BuildRule> declaredDeps = ImmutableSortedSet.of();
   private ImmutableSortedSet<BuildRule> extraDeps = ImmutableSortedSet.of();
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
+  private Optional<ImmutableMap<BuildTarget, Version>> selectedVersions = Optional.empty();
 
   public FakeBuildRuleParamsBuilder(BuildTarget buildTarget) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
@@ -54,6 +59,12 @@ public class FakeBuildRuleParamsBuilder {
     return this;
   }
 
+  public FakeBuildRuleParamsBuilder setSelectedVersions(
+      ImmutableMap<BuildTarget, Version> selectedVersions) {
+    this.selectedVersions = Optional.of(selectedVersions);
+    return this;
+  }
+
   public BuildRuleParams build() {
     return BuildRuleParams.builder()
         .setBuildTarget(buildTarget)
@@ -61,6 +72,7 @@ public class FakeBuildRuleParamsBuilder {
         .setExtraDeps(Suppliers.ofInstance(extraDeps))
         .setProjectFilesystem(filesystem)
         .setCellRoots(TestCellBuilder.createCellRoots(filesystem))
+        .setSelectedVersions(selectedVersions)
         .build();
   }
 }

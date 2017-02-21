@@ -158,11 +158,14 @@ public abstract class AbstractNodeBuilder<
       BuildRuleResolver resolver,
       ProjectFilesystem filesystem) {
     TargetNode<?, ?> node = build();
-    return new FakeBuildRuleParamsBuilder(target)
+    FakeBuildRuleParamsBuilder builder = new FakeBuildRuleParamsBuilder(target)
         .setProjectFilesystem(filesystem)
         .setDeclaredDeps(resolver.getAllRules(node.getDeclaredDeps()))
-        .setExtraDeps(resolver.getAllRules(node.getExtraDeps()))
-        .build();
+        .setExtraDeps(resolver.getAllRules(node.getExtraDeps()));
+    if (selectedVersions.isPresent()) {
+      builder.setSelectedVersions(selectedVersions.get());
+    }
+    return builder.build();
   }
 
   @SuppressWarnings("unchecked")
