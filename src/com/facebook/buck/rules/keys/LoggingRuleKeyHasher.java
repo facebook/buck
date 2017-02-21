@@ -25,6 +25,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
 import java.util.regex.Pattern;
@@ -107,14 +108,14 @@ public class LoggingRuleKeyHasher<HASH> implements RuleKeyHasher<HASH> {
   }
 
   @Override
-  public LoggingRuleKeyHasher<HASH> putPath(Path path, String hash) {
+  public LoggingRuleKeyHasher<HASH> putPath(Path path, HashCode hash) {
     stringHasher.putPath(path, hash);
     delegate.putPath(path, hash);
     return this;
   }
 
   @Override
-  public LoggingRuleKeyHasher<HASH> putArchiveMemberPath(ArchiveMemberPath path, String hash) {
+  public LoggingRuleKeyHasher<HASH> putArchiveMemberPath(ArchiveMemberPath path, HashCode hash) {
     stringHasher.putArchiveMemberPath(path, hash);
     delegate.putArchiveMemberPath(path, hash);
     return this;

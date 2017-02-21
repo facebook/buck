@@ -130,14 +130,16 @@ public class LoggingRuleKeyHasherTest {
     expect(guavaHasher.hash()).andReturn(hash);
     expect(stringHasher.hash()).andReturn(string);
 
-    expect(guavaHasher.putPath(Paths.get("42/42"), "42")).andReturn(guavaHasher);
-    expect(stringHasher.putPath(Paths.get("42/42"), "42")).andReturn(stringHasher);
+    expect(guavaHasher.putPath(Paths.get("42/42"), HashCode.fromInt(42))).andReturn(guavaHasher);
+    expect(stringHasher.putPath(Paths.get("42/42"), HashCode.fromInt(42))).andReturn(stringHasher);
     expect(guavaHasher.hash()).andReturn(hash);
     expect(stringHasher.hash()).andReturn(string);
 
-    expect(guavaHasher.putArchiveMemberPath(newArchiveMember("42/42", "42/42"), "42"))
+    expect(guavaHasher.putArchiveMemberPath(
+        newArchiveMember("42/42", "42/42"), HashCode.fromInt(42)))
         .andReturn(guavaHasher);
-    expect(stringHasher.putArchiveMemberPath(newArchiveMember("42/42", "42/42"), "42"))
+    expect(stringHasher.putArchiveMemberPath(
+        newArchiveMember("42/42", "42/42"), HashCode.fromInt(42)))
         .andReturn(stringHasher);
     expect(guavaHasher.hash()).andReturn(hash);
     expect(stringHasher.hash()).andReturn(string);
@@ -232,11 +234,11 @@ public class LoggingRuleKeyHasherTest {
         .andReturn(guavaHasher);
     expect(stringHasher.putSha1(Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c")))
         .andReturn(stringHasher);
-    expect(guavaHasher.putPath(Paths.get("45"), "45")).andReturn(guavaHasher);
-    expect(stringHasher.putPath(Paths.get("45"), "45")).andReturn(stringHasher);
-    expect(guavaHasher.putArchiveMemberPath(newArchiveMember("45", "45"), "45"))
+    expect(guavaHasher.putPath(Paths.get("45"), HashCode.fromInt(45))).andReturn(guavaHasher);
+    expect(stringHasher.putPath(Paths.get("45"), HashCode.fromInt(45))).andReturn(stringHasher);
+    expect(guavaHasher.putArchiveMemberPath(newArchiveMember("45", "45"), HashCode.fromInt(45)))
         .andReturn(guavaHasher);
-    expect(stringHasher.putArchiveMemberPath(newArchiveMember("45", "45"), "45"))
+    expect(stringHasher.putArchiveMemberPath(newArchiveMember("45", "45"), HashCode.fromInt(45)))
         .andReturn(stringHasher);
     expect(guavaHasher.putNonHashingPath("45")).andReturn(guavaHasher);
     expect(stringHasher.putNonHashingPath("45")).andReturn(stringHasher);
@@ -279,9 +281,10 @@ public class LoggingRuleKeyHasherTest {
     newHasher(guavaHasher, stringHasher).putPattern(PATTERN).hash();
     newHasher(guavaHasher, stringHasher)
         .putSha1(Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c")).hash();
-    newHasher(guavaHasher, stringHasher).putPath(Paths.get("42/42"), "42").hash();
+    newHasher(guavaHasher, stringHasher).putPath(Paths.get("42/42"), HashCode.fromInt(42)).hash();
     newHasher(guavaHasher, stringHasher)
-        .putArchiveMemberPath(newArchiveMember("42/42", "42/42"), "42").hash();
+        .putArchiveMemberPath(
+            newArchiveMember("42/42", "42/42"), HashCode.fromInt(42)).hash();
     newHasher(guavaHasher, stringHasher).putNonHashingPath("42").hash();
     newHasher(guavaHasher, stringHasher).putSourceRoot(SOURCE_ROOT).hash();
     newHasher(guavaHasher, stringHasher).putRuleKey(RULE_KEY_1).hash();
@@ -307,8 +310,8 @@ public class LoggingRuleKeyHasherTest {
         .putBytes(BYTE_ARRAY)
         .putPattern(PATTERN)
         .putSha1(Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c"))
-        .putPath(Paths.get("45"), "45")
-        .putArchiveMemberPath(newArchiveMember("45", "45"), "45")
+        .putPath(Paths.get("45"), HashCode.fromInt(45))
+        .putArchiveMemberPath(newArchiveMember("45", "45"), HashCode.fromInt(45))
         .putNonHashingPath("45")
         .putSourceRoot(SOURCE_ROOT)
         .putRuleKey(RULE_KEY_1)

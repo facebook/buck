@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
+import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
 import java.util.regex.Pattern;
@@ -100,14 +101,14 @@ public class CountingRuleKeyHasher<HASH> implements RuleKeyHasher<HASH> {
   }
 
   @Override
-  public CountingRuleKeyHasher<HASH> putPath(Path path, String hash) {
+  public CountingRuleKeyHasher<HASH> putPath(Path path, HashCode hash) {
     count++;
     delegate.putPath(path, hash);
     return this;
   }
 
   @Override
-  public CountingRuleKeyHasher<HASH> putArchiveMemberPath(ArchiveMemberPath path, String hash) {
+  public CountingRuleKeyHasher<HASH> putArchiveMemberPath(ArchiveMemberPath path, HashCode hash) {
     count++;
     delegate.putArchiveMemberPath(path, hash);
     return this;

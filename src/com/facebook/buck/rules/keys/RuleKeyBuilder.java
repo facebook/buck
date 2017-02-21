@@ -338,7 +338,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
       ideallyRelative = ideallyRelative.getFileName();
     }
 
-    hasher.putPath(ideallyRelative, hashLoader.get(absolutePath).toString());
+    hasher.putPath(ideallyRelative, hashLoader.get(absolutePath));
     return this;
   }
 
@@ -349,7 +349,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     Preconditions.checkState(!relativeArchiveMemberPath.isAbsolute());
     hasher.putArchiveMemberPath(
         relativeArchiveMemberPath,
-        hashLoader.get(absoluteArchiveMemberPath).toString());
+        hashLoader.get(absoluteArchiveMemberPath));
     return this;
   }
 

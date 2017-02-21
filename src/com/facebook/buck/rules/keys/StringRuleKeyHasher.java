@@ -24,6 +24,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Joiner;
+import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -86,13 +87,13 @@ public class StringRuleKeyHasher implements RuleKeyHasher<String> {
   }
 
   @Override
-  public RuleKeyHasher<String> putArchiveMemberPath(ArchiveMemberPath path, String hash) {
+  public RuleKeyHasher<String> putArchiveMemberPath(ArchiveMemberPath path, HashCode hash) {
     parts.add(String.format("archiveMember(%s:%s)", path.toString(), hash));
     return this;
   }
 
   @Override
-  public RuleKeyHasher<String> putPath(Path path, String hash) {
+  public RuleKeyHasher<String> putPath(Path path, HashCode hash) {
     parts.add(String.format("path(%s:%s)", path, hash));
     return this;
   }

@@ -151,16 +151,16 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
   }
 
   @Override
-  public RuleKeyHasher<HashCode> putPath(Path path, String hash) {
+  public RuleKeyHasher<HashCode> putPath(Path path, HashCode hash) {
     this.putStringified(TYPE_PATH, path.toString());
-    this.putStringified(TYPE_PATH, hash);
+    this.putBytes(TYPE_PATH, hash.asBytes());
     return this;
   }
 
   @Override
-  public RuleKeyHasher<HashCode> putArchiveMemberPath(ArchiveMemberPath path, String hash) {
+  public RuleKeyHasher<HashCode> putArchiveMemberPath(ArchiveMemberPath path, HashCode hash) {
     this.putStringified(TYPE_ARCHIVE_MEMBER_PATH, path.toString());
-    this.putStringified(TYPE_ARCHIVE_MEMBER_PATH, hash);
+    this.putBytes(TYPE_ARCHIVE_MEMBER_PATH, hash.asBytes());
     return this;
   }
 

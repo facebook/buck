@@ -82,16 +82,21 @@ public class GuavaRuleKeyHasherTest {
         newHasher().putSha1(Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c")).hash());
     hashes.add(
         newHasher().putSha1(Sha1HashCode.of("b67816b13867c32ac52ca002b39af204cdfaa5fd")).hash());
-    hashes.add(newHasher().putPath(Paths.get(""), "").hash());
-    hashes.add(newHasher().putPath(Paths.get(""), "42").hash());
-    hashes.add(newHasher().putPath(Paths.get("42"), "").hash());
-    hashes.add(newHasher().putPath(Paths.get("42"), "42").hash());
-    hashes.add(newHasher().putPath(Paths.get("42/42"), "42").hash());
-    hashes.add(newHasher().putArchiveMemberPath(newArchiveMember("", ""), "").hash());
-    hashes.add(newHasher().putArchiveMemberPath(newArchiveMember("", ""), "42").hash());
-    hashes.add(newHasher().putArchiveMemberPath(newArchiveMember("42", "42"), "").hash());
-    hashes.add(newHasher().putArchiveMemberPath(newArchiveMember("42", "42"), "42").hash());
-    hashes.add(newHasher().putArchiveMemberPath(newArchiveMember("42/42", "42/42"), "42").hash());
+    hashes.add(newHasher().putPath(Paths.get(""), HashCode.fromInt(0)).hash());
+    hashes.add(newHasher().putPath(Paths.get(""), HashCode.fromInt(42)).hash());
+    hashes.add(newHasher().putPath(Paths.get("42"), HashCode.fromInt(0)).hash());
+    hashes.add(newHasher().putPath(Paths.get("42"), HashCode.fromInt(42)).hash());
+    hashes.add(newHasher().putPath(Paths.get("42/42"), HashCode.fromInt(42)).hash());
+    hashes.add(newHasher().putArchiveMemberPath(
+        newArchiveMember("", ""), HashCode.fromInt(0)).hash());
+    hashes.add(newHasher().putArchiveMemberPath(
+        newArchiveMember("", ""), HashCode.fromInt(42)).hash());
+    hashes.add(newHasher().putArchiveMemberPath(
+        newArchiveMember("42", "42"), HashCode.fromInt(0)).hash());
+    hashes.add(newHasher().putArchiveMemberPath(
+        newArchiveMember("42", "42"), HashCode.fromInt(42)).hash());
+    hashes.add(newHasher().putArchiveMemberPath(
+        newArchiveMember("42/42", "42/42"), HashCode.fromInt(42)).hash());
     hashes.add(newHasher().putNonHashingPath("").hash());
     hashes.add(newHasher().putNonHashingPath("42").hash());
     hashes.add(newHasher().putNonHashingPath("4").putNonHashingPath("2").hash());
@@ -151,11 +156,13 @@ public class GuavaRuleKeyHasherTest {
         newHasher().putPattern(Pattern.compile("42")).hash(),
         newHasher().putPattern(Pattern.compile("42")).hash());
     assertEquals(
-        newHasher().putPath(Paths.get("42/42"), "42").hash(),
-        newHasher().putPath(Paths.get("42/42"), "42").hash());
+        newHasher().putPath(Paths.get("42/42"), HashCode.fromInt(42)).hash(),
+        newHasher().putPath(Paths.get("42/42"), HashCode.fromInt(42)).hash());
     assertEquals(
-        newHasher().putArchiveMemberPath(newArchiveMember("42/42", "42/42"), "42").hash(),
-        newHasher().putArchiveMemberPath(newArchiveMember("42/42", "42/42"), "42").hash());
+        newHasher().putArchiveMemberPath(
+            newArchiveMember("42/42", "42/42"), HashCode.fromInt(42)).hash(),
+        newHasher().putArchiveMemberPath(
+            newArchiveMember("42/42", "42/42"), HashCode.fromInt(42)).hash());
     assertEquals(
         newHasher().putNonHashingPath("42").hash(),
         newHasher().putNonHashingPath("42").hash());
