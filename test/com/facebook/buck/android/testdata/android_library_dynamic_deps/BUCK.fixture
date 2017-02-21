@@ -56,3 +56,10 @@ android_library(
   deps = [ ':top_level', ],
   deps_query = 'kind(java_library, deps($declared_deps))',
 )
+
+android_library(
+  name = 'resources_from_query',
+  srcs = [ 'UsesR.java', ],
+  deps = [ ':top_level', ],
+  deps_query = 'kind(android_resource, deps($declared_deps))',
+)

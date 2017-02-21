@@ -123,4 +123,11 @@ public class AndroidLibraryDescriptionIntegrationTest {
     // But the libs above get a dep file hit
     workspace.getBuildLog().assertTargetHadMatchingDepfileRuleKey("//:java_libraries");
   }
+
+  @Test
+  public void testDepQueryCanApplyToResources() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    // Build once to warm cache
+    workspace.runBuckCommand("build", "//:resources_from_query").assertSuccess();
+  }
 }

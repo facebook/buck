@@ -104,9 +104,26 @@ public class AndroidLibraryDescription
         args
     );
 
+    final ImmutableSet.Builder<BuildRule> queriedDepsBuilder = ImmutableSet.builder();
+    if (args.depsQuery.isPresent()) {
+      queriedDepsBuilder.addAll(
+          QueryUtils.resolveDepQuery(
+              params,
+              args.depsQuery.get(),
+              resolver,
+              targetGraph)
+              .collect(Collectors.toList()));
+
+    }
+    final ImmutableSet<BuildRule> queriedDeps = queriedDepsBuilder.build();
+
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         params.getBuildTarget(),
-        params.withExtraDeps(Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps))),
+        params.withExtraDeps(Suppliers.ofInstance(
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(queriedDeps)
+                .addAll(resolver.getAllRules(args.exportedDeps))
+                .build())),
         javacOptions,
         DependencyMode.FIRST_ORDER,
         /* forceFinalResourceIds */ false,
@@ -153,18 +170,8 @@ public class AndroidLibraryDescription
       ImmutableSortedSet.Builder<BuildRule> declaredDepsBuilder =
           ImmutableSortedSet.<BuildRule>naturalOrder()
               .addAll(params.getDeclaredDeps().get())
+              .addAll(queriedDeps)
               .addAll(compiler.getDeclaredDeps(args, resolver));
-
-      // Resolve the dependencies query, if present and add to declared deps
-      if (args.depsQuery.isPresent()) {
-        declaredDepsBuilder.addAll(
-            QueryUtils.resolveDepQuery(
-                params,
-                args.depsQuery.get(),
-                resolver,
-                targetGraph)
-                .collect(Collectors.toList()));
-      }
 
       ImmutableSortedSet<BuildRule> declaredDeps = declaredDepsBuilder.build();
 
