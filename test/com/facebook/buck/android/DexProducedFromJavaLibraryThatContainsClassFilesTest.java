@@ -43,9 +43,9 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
-import com.facebook.buck.rules.FakeSourcePathResolver;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
@@ -79,9 +79,10 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
   public void testGetBuildStepsWhenThereAreClassesToDex() throws IOException, InterruptedException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-    FakeSourcePathResolver pathResolver = new FakeSourcePathResolver(new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    ));
+    BuildRuleResolver resolver = new BuildRuleResolver(
+        TargetGraph.EMPTY,
+        new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     FakeJavaLibrary javaLibraryRule = new FakeJavaLibrary(
         BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar"),
         pathResolver,
@@ -92,7 +93,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
         return ImmutableSortedMap.of("com/example/Foo", HashCode.fromString("cafebabe"));
       }
     };
-    pathResolver.addRule(javaLibraryRule);
+    resolver.addToIndex(javaLibraryRule);
     Path jarOutput =
         BuildTargets.getGenPath(filesystem, javaLibraryRule.getBuildTarget(), "%s.jar");
     javaLibraryRule.setOutputFile(jarOutput.toString());

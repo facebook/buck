@@ -23,8 +23,8 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.FakeSourcePathResolver;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ClassLoaderCache;
 
@@ -66,7 +66,7 @@ public class AnnotationProcessorFactoryTest {
             .setCanReuseClassLoader(canReuseClasspath)
             .build(),
         filesystem,
-        new FakeSourcePathResolver(null));
+        new SourcePathResolver(null));
 
     try (
         AnnotationProcessorFactory factory1 = new AnnotationProcessorFactory(
