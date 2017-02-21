@@ -97,14 +97,7 @@ public class BuckConfig implements ConfigPathGetter {
 
   private static final String DEFAULT_MAX_TRACES = "25";
 
-  private static final ImmutableMap<String, ImmutableSet<String>> IGNORE_FIELDS_FOR_DAEMON_RESTART =
-      ImmutableMap.of(
-          "build", ImmutableSet.of("threads", "load_limit"),
-          "cache", ImmutableSet.of(
-              "dir", "dir_mode", "http_mode", "http_url", "mode", "slb_server_pool"),
-          "client", ImmutableSet.of("id"),
-          "project", ImmutableSet.of("ide_prompt", "xcode_focus_disable_build_with_buck")
-  );
+  private static final ImmutableMap<String, ImmutableSet<String>> IGNORE_FIELDS_FOR_DAEMON_RESTART;
 
   private final CellPathResolver cellPathResolver;
 
@@ -121,6 +114,18 @@ public class BuckConfig implements ConfigPathGetter {
   private final ImmutableMap<String, String> environment;
 
   private final ConfigViewCache<BuckConfig> viewCache = new ConfigViewCache<>(this);
+
+  static {
+    ImmutableMap.Builder<String, ImmutableSet<String>> ignoreFieldsForDaemonRestartBuilder =
+        ImmutableMap.builder();
+    ignoreFieldsForDaemonRestartBuilder.put("build", ImmutableSet.of("threads", "load_limit"));
+    ignoreFieldsForDaemonRestartBuilder.put("cache", ImmutableSet.of(
+        "dir", "dir_mode", "http_mode", "http_url", "mode", "slb_server_pool"));
+    ignoreFieldsForDaemonRestartBuilder.put("client", ImmutableSet.of("id"));
+    ignoreFieldsForDaemonRestartBuilder.put("project", ImmutableSet.of(
+        "ide_prompt", "xcode_focus_disable_build_with_buck"));
+    IGNORE_FIELDS_FOR_DAEMON_RESTART = ignoreFieldsForDaemonRestartBuilder.build();
+  }
 
   public BuckConfig(
       Config config,
