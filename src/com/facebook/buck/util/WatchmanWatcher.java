@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
@@ -222,12 +223,17 @@ public class WatchmanWatcher {
       BuckEventBus buckEventBus,
       FreshInstanceAction freshInstanceAction
   ) throws IOException, InterruptedException {
+    // Speculatively set to false
+    AtomicBoolean filesHaveChanged = new AtomicBoolean(false);
     for (Path cellPath : queries.keySet()) {
       WatchmanQuery query = queries.get(cellPath);
       WatchmanCursor cursor = cursors.get(cellPath);
       if (query != null && cursor != null) {
-        postEvents(buckEventBus, freshInstanceAction, query, cursor);
+        postEvents(buckEventBus, freshInstanceAction, query, cursor, filesHaveChanged);
       }
+    }
+    if (!filesHaveChanged.get()) {
+      buckEventBus.post(WatchmanStatusEvent.zeroFileChanges());
     }
   }
 
@@ -236,7 +242,8 @@ public class WatchmanWatcher {
       BuckEventBus buckEventBus,
       FreshInstanceAction freshInstanceAction,
       WatchmanQuery query,
-      WatchmanCursor cursor) throws IOException, InterruptedException {
+      WatchmanCursor cursor,
+      AtomicBoolean filesHaveChanged) throws IOException, InterruptedException {
     try {
       Optional<? extends Map<String, ? extends Object>> queryResponse =
           watchmanClient.queryWithTimeout(
@@ -249,6 +256,7 @@ public class WatchmanWatcher {
             timeoutMillis);
         postWatchEvent(
             createOverflowEvent("Query to Watchman timed out after " + timeoutMillis + "ms"));
+        filesHaveChanged.set(true);
         return;
       }
 
@@ -292,6 +300,7 @@ public class WatchmanWatcher {
             postWatchEvent(createOverflowEvent("New Buck instance"));
             break;
         }
+        filesHaveChanged.set(true);
         return;
       }
 
@@ -302,6 +311,7 @@ public class WatchmanWatcher {
           if (fileName == null) {
             LOG.warn("Filename missing from Watchman file response %s", file);
             postWatchEvent(createOverflowEvent("Filename missing from Watchman response"));
+            filesHaveChanged.set(true);
             return;
           }
           PathEventBuilder builder = new PathEventBuilder();
@@ -317,14 +327,14 @@ public class WatchmanWatcher {
           postWatchEvent(builder.build());
         }
 
-        if (files.isEmpty() && freshInstanceAction != FreshInstanceAction.NONE) {
-          buckEventBus.post(WatchmanStatusEvent.zeroFileChanges());
+        if (!files.isEmpty() || freshInstanceAction == FreshInstanceAction.NONE) {
+          filesHaveChanged.set(true);
         }
 
         LOG.debug("Posted %d Watchman events.", files.size());
       } else {
-        if (freshInstanceAction != FreshInstanceAction.NONE) {
-          buckEventBus.post(WatchmanStatusEvent.zeroFileChanges());
+        if (freshInstanceAction == FreshInstanceAction.NONE) {
+          filesHaveChanged.set(true);
         }
       }
     } catch (InterruptedException e) {

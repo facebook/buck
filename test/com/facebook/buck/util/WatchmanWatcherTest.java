@@ -30,8 +30,10 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.io.FakeWatchmanClient;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.PathOrGlobMatcher;
@@ -73,6 +75,10 @@ public class WatchmanWatcherTest {
       WatchmanQuery.of("/fake/root", ImmutableMap.of());
   private static final List<Object> FAKE_UUID_QUERY = FAKE_QUERY.toList("n:buckduuid");
   private static final List<Object> FAKE_CLOCK_QUERY = FAKE_QUERY.toList("c:0:0");
+
+  private static final Path FAKE_SECONDARY_ROOT = Paths.get("/fake/secondary").toAbsolutePath();
+  private static final WatchmanQuery FAKE_SECONDARY_QUERY =
+      WatchmanQuery.of("/fake/SECONDARY", ImmutableMap.of());
 
   @After
   public void cleanUp() {
@@ -682,6 +688,80 @@ public class WatchmanWatcherTest {
       overflowSeen |= event.kind().equals(StandardWatchEventKinds.OVERFLOW);
     }
     assertTrue(overflowSeen);
+  }
+
+  @Test
+  public void whenWatchmanReportsZeroFilesChangedThenPostEvent()
+      throws IOException, InterruptedException {
+    ImmutableMap<String, Object> watchmanOutput = ImmutableMap.of(
+        "files", ImmutableList.of());
+
+    WatchmanWatcher watcher = createWatcher(
+        new EventBus("watchman test"),
+        watchmanOutput);
+    final Set<BuckEvent> events = Sets.newHashSet();
+    BuckEventBus bus = BuckEventBusFactory.newInstance(new FakeClock(0));
+    bus.register(
+        new Object() {
+          @Subscribe
+          public void listen(WatchmanStatusEvent event) {
+            events.add(event);
+          }
+        });
+    watcher.postEvents(
+        bus,
+        WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT);
+
+    boolean zeroFilesChangedSeen = false;
+    System.err.println(String.format("Events: %d", events.size()));
+    for (BuckEvent event : events) {
+      zeroFilesChangedSeen |= event.getEventName().equals("WatchmanZeroFileChanges");
+    }
+    assertTrue(zeroFilesChangedSeen);
+  }
+
+  @Test
+  public void whenWatchmanCellReportsFilesChangedThenPostEvent()
+      throws IOException, InterruptedException {
+    ImmutableMap<String, Object> watchmanRootOutput = ImmutableMap.of(
+        "files", ImmutableList.of());
+    ImmutableMap<String, Object> watchmanSecondaryOutput = ImmutableMap.of(
+        "files", ImmutableList.of(ImmutableMap.<String, Object>of("name", "foo/bar/baz")));
+
+    WatchmanWatcher watcher = new WatchmanWatcher(
+        new EventBus("watchman test"),
+        new FakeWatchmanClient(
+            0,
+            ImmutableMap.of(
+                FAKE_CLOCK_QUERY, watchmanRootOutput,
+                FAKE_SECONDARY_QUERY.toList("c:0:0"), watchmanSecondaryOutput)),
+        10000,
+        ImmutableMap.of(
+            FAKE_ROOT, FAKE_QUERY,
+            FAKE_SECONDARY_ROOT, FAKE_SECONDARY_QUERY),
+        ImmutableMap.of(
+            FAKE_ROOT, new WatchmanCursor("c:0:0"),
+            FAKE_SECONDARY_ROOT, new WatchmanCursor("c:0:0")));
+    final Set<BuckEvent> events = Sets.newHashSet();
+    BuckEventBus bus = BuckEventBusFactory.newInstance(new FakeClock(0));
+    bus.register(
+        new Object() {
+          @Subscribe
+          public void listen(WatchmanStatusEvent event) {
+            events.add(event);
+          }
+        });
+    watcher.postEvents(
+        bus,
+        WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT);
+
+    boolean zeroFilesChangedSeen = false;
+    System.err.println(String.format("Events: %d", events.size()));
+    for (BuckEvent event : events) {
+      System.err.println(String.format("Event: %s", event));
+      zeroFilesChangedSeen |= event.getEventName().equals("WatchmanZeroFileChanges");
+    }
+    assertFalse(zeroFilesChangedSeen);
   }
 
   private WatchmanWatcher createWatcher(
