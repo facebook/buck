@@ -32,6 +32,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
+import javax.annotation.Nullable;
+
 public class OutputToFileExpander implements MacroExpander {
   private final MacroExpander delegate;
 
@@ -91,6 +93,7 @@ public class OutputToFileExpander implements MacroExpander {
   }
 
   @Override
+  @Nullable
   public Object extractRuleKeyAppendables(
       BuildTarget target,
       CellPathResolver cellNames,

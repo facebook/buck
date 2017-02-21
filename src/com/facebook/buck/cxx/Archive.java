@@ -22,7 +22,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -219,7 +218,7 @@ public class Archive extends AbstractBuildRuleWithResolver implements SupportsIn
    *     archive.
    */
   public Arg toArg() {
-    SourcePath archive = new BuildTargetSourcePath(getBuildTarget());
+    SourcePath archive = getSourcePathToOutput();
     return contents == Contents.NORMAL ?
         new SourcePathArg(pathResolver, archive) :
         ThinArchiveArg.of(pathResolver, archive, inputs);

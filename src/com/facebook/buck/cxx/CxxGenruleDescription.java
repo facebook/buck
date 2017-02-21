@@ -50,6 +50,7 @@ import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.StringExpander;
 import com.facebook.buck.shell.AbstractGenruleDescription;
+import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -100,10 +101,9 @@ public class CxxGenruleDescription
       throws NoSuchBuildTargetException {
     Optional<BuildRule> rule = ruleFinder.getRule(path);
     if (rule.isPresent() && rule.get() instanceof CxxGenrule) {
-      BuildRule platformRule =
-          ruleResolver.requireRule(
-              rule.get().getBuildTarget().withAppendedFlavors(platform.getFlavor()));
-      path = new BuildTargetSourcePath(platformRule.getBuildTarget());
+      Genrule platformRule = (Genrule) ruleResolver.requireRule(
+          rule.get().getBuildTarget().withAppendedFlavors(platform.getFlavor()));
+      path = platformRule.getSourcePathToOutput();
     }
     return path;
   }

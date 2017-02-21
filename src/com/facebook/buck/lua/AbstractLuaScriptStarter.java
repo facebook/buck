@@ -23,7 +23,6 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -78,7 +77,7 @@ abstract class AbstractLuaScriptStarter implements Starter {
         BuildTarget.builder(getBaseParams().getBuildTarget())
             .addFlavors(ImmutableFlavor.of("starter-template"))
             .build();
-    getRuleResolver().addToIndex(
+    WriteFile templateRule = getRuleResolver().addToIndex(
         new WriteFile(
             getBaseParams().copyWithChanges(
                 templateTarget,
@@ -92,13 +91,13 @@ abstract class AbstractLuaScriptStarter implements Starter {
             /* executable */ false));
 
     final Tool lua = getLuaConfig().getLua(getRuleResolver());
-    getRuleResolver().addToIndex(
+    WriteStringTemplateRule writeStringTemplateRule = getRuleResolver().addToIndex(
         WriteStringTemplateRule.from(
             getBaseParams(),
             getRuleFinder(),
             getTarget(),
             getOutput(),
-            new BuildTargetSourcePath(templateTarget),
+            templateRule.getSourcePathToOutput(),
             ImmutableMap.of(
                 "SHEBANG",
                 lua.getCommandPrefix(getPathResolver()).get(0),
@@ -116,7 +115,7 @@ abstract class AbstractLuaScriptStarter implements Starter {
                 Escaper.escapeAsPythonString(getCxxPlatform().getSharedLibraryExtension())),
             /* executable */ true));
 
-    return new BuildTargetSourcePath(getTarget());
+    return writeStringTemplateRule.getSourcePathToOutput();
   }
 
 }

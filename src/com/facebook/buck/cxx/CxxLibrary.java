@@ -25,7 +25,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
@@ -281,7 +280,9 @@ public class CxxLibrary
                     CxxLibraryDescription.Type.SHARED_INTERFACE.getFlavor() :
                     CxxLibraryDescription.Type.SHARED.getFlavor());
         linkerArgsBuilder.add(
-            new SourcePathArg(pathResolver, new BuildTargetSourcePath(rule.getBuildTarget())));
+            new SourcePathArg(
+                pathResolver,
+                Preconditions.checkNotNull(rule.getSourcePathToOutput())));
       }
     }
 
@@ -349,7 +350,7 @@ public class CxxLibrary
         CxxDescriptionEnhancer.SHARED_FLAVOR);
     libs.put(
         sharedLibrarySoname,
-        new BuildTargetSourcePath(sharedLibraryBuildRule.getBuildTarget()));
+        sharedLibraryBuildRule.getSourcePathToOutput());
     return libs.build();
   }
 

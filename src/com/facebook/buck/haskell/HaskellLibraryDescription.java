@@ -34,7 +34,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -267,7 +266,7 @@ public class HaskellLibraryDescription implements
         getPackageInfo(target),
         depPackages,
         compileRule.getModules(),
-        ImmutableSortedSet.of(new BuildTargetSourcePath(library.getBuildTarget())),
+        ImmutableSortedSet.of(library.getSourcePathToOutput()),
         ImmutableSortedSet.of(compileRule.getInterfaces()));
   }
 
@@ -512,8 +511,7 @@ public class HaskellLibraryDescription implements
                     args);
             linkArgs =
                 ImmutableList.of(
-                    new SourcePathArg(getResolver(),
-                        new BuildTargetSourcePath(rule.getBuildTarget())));
+                    new SourcePathArg(getResolver(), rule.getSourcePathToOutput()));
             break;
           default:
             throw new IllegalStateException();
@@ -548,7 +546,7 @@ public class HaskellLibraryDescription implements
                 args);
         libs.put(
             sharedLibrarySoname,
-            new BuildTargetSourcePath(sharedLibraryBuildRule.getBuildTarget()));
+            sharedLibraryBuildRule.getSourcePathToOutput());
         return libs.build();
       }
     };

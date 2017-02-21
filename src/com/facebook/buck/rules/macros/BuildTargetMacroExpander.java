@@ -23,13 +23,14 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Optional;
+
+import javax.annotation.Nullable;
 
 /**
  * Abstract expander which resolves using a references to another {@link BuildRule}.
@@ -112,13 +113,14 @@ public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
   }
 
   @Override
+  @Nullable
   public Object extractRuleKeyAppendablesFrom(
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
       M input)
       throws MacroException {
-    return new BuildTargetSourcePath(resolve(resolver, input).getBuildTarget());
+    return resolve(resolver, input).getSourcePathToOutput();
   }
 
 }

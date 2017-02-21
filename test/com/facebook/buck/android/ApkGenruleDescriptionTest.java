@@ -23,10 +23,12 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.FakeTargetNodeBuilder;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -36,6 +38,7 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class ApkGenruleDescriptionTest {
@@ -51,7 +54,8 @@ public class ApkGenruleDescriptionTest {
 
     BuildTarget installableApkTarget = BuildTargetFactory.newInstance("//:installable");
     TargetNode<?, ?> installableApkNode =
-        FakeTargetNodeBuilder.build(new FakeInstallable(installableApkTarget, emptyPathResolver));
+        FakeTargetNodeBuilder
+            .build(new FakeInstallable(installableApkTarget, emptyPathResolver));
     TargetNode<?, ?> transitiveDepNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
             .addSrc(Paths.get("Dep.java"))
@@ -82,6 +86,9 @@ public class ApkGenruleDescriptionTest {
 
   private static class FakeInstallable extends FakeBuildRule implements HasInstallableApk {
 
+    Path pathToOutput = Paths.get("buck-out", "app.apk");
+    SourcePath apkPath = new BuildTargetSourcePath(getBuildTarget(), pathToOutput);
+
     public FakeInstallable(
         BuildTarget buildTarget,
         SourcePathResolver resolver) {
@@ -91,9 +98,19 @@ public class ApkGenruleDescriptionTest {
     @Override
     public ApkInfo getApkInfo() {
       return ApkInfo.builder()
-          .setApkPath(new FakeSourcePath("buck-out/app.apk"))
+          .setApkPath(apkPath)
           .setManifestPath(new FakeSourcePath("nothing"))
           .build();
+    }
+
+    @Override
+    public Path getPathToOutput() {
+      return pathToOutput;
+    }
+
+    @Override
+    public SourcePath getSourcePathToOutput() {
+      return apkPath;
     }
   }
 }

@@ -34,7 +34,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -46,6 +45,7 @@ import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -121,12 +121,12 @@ public class AndroidLibraryDescription
         return graphEnhancer.getBuildableForAndroidResourcesAbi(resolver, ruleFinder);
       }
       BuildTarget libraryTarget = CalculateAbi.getLibraryTarget(params.getBuildTarget());
-      resolver.requireRule(libraryTarget);
+      BuildRule libraryRule = resolver.requireRule(libraryTarget);
       return CalculateAbi.of(
           params.getBuildTarget(),
           ruleFinder,
           params,
-          new BuildTargetSourcePath(libraryTarget));
+          Preconditions.checkNotNull(libraryRule.getSourcePathToOutput()));
     }
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.getBuildableForAndroidResources(
         resolver,

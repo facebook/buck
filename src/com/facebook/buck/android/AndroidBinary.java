@@ -436,6 +436,11 @@ public class AndroidBinary
     return Paths.get(getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".apk"));
   }
 
+  @Override
+  public SourcePath getSourcePathToOutput() {
+    return new BuildTargetSourcePath(getBuildTarget(), getPathToOutput());
+  }
+
   @SuppressWarnings("PMD.PrematureDeclaration")
   @Override
   public ImmutableList<Step> getBuildSteps(

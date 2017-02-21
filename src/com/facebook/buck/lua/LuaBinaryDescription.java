@@ -46,7 +46,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.Description;
@@ -726,7 +725,7 @@ public class LuaBinaryDescription implements
                 luaConfig.shouldCacheBinaries()));
 
     return new CommandTool.Builder()
-        .addArg(new SourcePathArg(pathResolver, new BuildTargetSourcePath(binary.getBuildTarget())))
+        .addArg(new SourcePathArg(pathResolver, binary.getSourcePathToOutput()))
         .build();
   }
 

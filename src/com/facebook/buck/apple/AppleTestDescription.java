@@ -422,8 +422,8 @@ public class AppleTestDescription implements
     }
 
     AppleBundle testHostApp = (AppleBundle) rule;
-    SourcePath testHostAppBinarySourcePath = new BuildTargetSourcePath(
-        testHostApp.getBinaryBuildRule().getBuildTarget());
+    SourcePath testHostAppBinarySourcePath =
+        testHostApp.getBinaryBuildRule().getSourcePathToOutput();
 
     ImmutableMap<BuildTarget, NativeLinkable> roots =
         NativeLinkables.getNativeLinkableRoots(

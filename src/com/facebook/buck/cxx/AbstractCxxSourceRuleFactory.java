@@ -803,7 +803,7 @@ abstract class AbstractCxxSourceRuleFactory {
         })
         .collect(MoreCollectors.toImmutableMap(
             Function.identity(),
-            input -> new BuildTargetSourcePath(input.getBuildTarget())));
+            CxxPreprocessAndCompile::getSourcePathToOutput));
   }
 
   private CxxSource getSandboxedCxxSource(CxxSource source) {

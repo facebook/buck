@@ -30,7 +30,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -238,7 +237,7 @@ public class PythonTestDescription implements
             .<Path, SourcePath>builder()
             .put(
                 getTestModulesListName(),
-                new BuildTargetSourcePath(testModulesBuildRule.getBuildTarget()))
+                testModulesBuildRule.getSourcePathToOutput())
             .put(
                 getTestMainName(),
                 pythonBuckConfig.getPathToTestMain(params.getProjectFilesystem()))

@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -250,7 +249,7 @@ public class CxxLibraryDescription implements
    *
    * @return the {@link CxxLink} rule representing the actual shared library.
    */
-  private static BuildRule createSharedLibrary(
+  private static CxxLink createSharedLibrary(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -491,7 +490,7 @@ public class CxxLibraryDescription implements
   /**
    * @return a {@link CxxLink} rule which builds a shared library version of this C/C++ library.
    */
-  private static <A extends Arg> BuildRule createSharedLibraryBuildRule(
+  private static <A extends Arg> CxxLink createSharedLibraryBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxBuckConfig cxxBuckConfig,
@@ -554,11 +553,10 @@ public class CxxLibraryDescription implements
           cxxPlatform.getFlavor());
     }
 
-    BuildRule sharedLibrary =
-        resolver.requireRule(
-            baseTarget.withAppendedFlavors(
-                cxxPlatform.getFlavor(),
-                Type.SHARED.getFlavor()));
+    CxxLink sharedLibrary = (CxxLink) resolver.requireRule(
+        baseTarget.withAppendedFlavors(
+            cxxPlatform.getFlavor(),
+            Type.SHARED.getFlavor()));
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
@@ -570,7 +568,7 @@ public class CxxLibraryDescription implements
         resolver,
         pathResolver,
         ruleFinder,
-        new BuildTargetSourcePath(sharedLibrary.getBuildTarget()));
+        sharedLibrary.getSourcePathToOutput());
   }
 
   @Override

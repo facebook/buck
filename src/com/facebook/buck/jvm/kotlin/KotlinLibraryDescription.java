@@ -35,7 +35,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -94,12 +93,12 @@ public class KotlinLibraryDescription implements
     // creating the action graph from the target graph.
     if (CalculateAbi.isAbiTarget(target)) {
       BuildTarget libraryTarget = CalculateAbi.getLibraryTarget(params.getBuildTarget());
-      resolver.requireRule(libraryTarget);
+      BuildRule libraryRule = resolver.requireRule(libraryTarget);
       return CalculateAbi.of(
           params.getBuildTarget(),
           ruleFinder,
           params,
-          new BuildTargetSourcePath(libraryTarget));
+          Preconditions.checkNotNull(libraryRule.getSourcePathToOutput()));
     }
 
     ImmutableSortedSet<Flavor> flavors = target.getFlavors();

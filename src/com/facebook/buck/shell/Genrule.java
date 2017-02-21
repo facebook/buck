@@ -26,6 +26,7 @@ import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -50,6 +51,7 @@ import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+
 
 /**
  * Build rule for generating a file via a shell command. For example, to generate the katana
@@ -178,6 +180,11 @@ public class Genrule extends AbstractBuildRuleWithResolver
   @Override
   public Path getPathToOutput() {
     return pathToOutFile;
+  }
+
+  @Override
+  public SourcePath getSourcePathToOutput() {
+    return new BuildTargetSourcePath(getBuildTarget(), getPathToOutput());
   }
 
   protected void addEnvironmentVariables(

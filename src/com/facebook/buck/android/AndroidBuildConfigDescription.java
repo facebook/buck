@@ -27,7 +27,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
@@ -67,12 +66,12 @@ public class AndroidBuildConfigDescription
     if (CalculateAbi.isAbiTarget(params.getBuildTarget())) {
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       BuildTarget configTarget = CalculateAbi.getLibraryTarget(params.getBuildTarget());
-      resolver.requireRule(configTarget);
+      BuildRule configRule = resolver.requireRule(configTarget);
       return CalculateAbi.of(
           params.getBuildTarget(),
           ruleFinder,
           params,
-          new BuildTargetSourcePath(configTarget));
+          Preconditions.checkNotNull(configRule.getSourcePathToOutput()));
     }
 
     return createBuildRule(

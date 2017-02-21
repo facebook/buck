@@ -33,12 +33,12 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -162,7 +162,9 @@ public class HalideLibrary
     if (rule instanceof Archive) {
       return ((Archive) rule).toArg();
     } else {
-      return new SourcePathArg(getResolver(), new BuildTargetSourcePath(rule.getBuildTarget()));
+      return new SourcePathArg(
+          getResolver(),
+          Preconditions.checkNotNull(rule.getSourcePathToOutput()));
     }
   }
 

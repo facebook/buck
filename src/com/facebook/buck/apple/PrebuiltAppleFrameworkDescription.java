@@ -24,7 +24,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePath;
@@ -78,9 +77,8 @@ public class PrebuiltAppleFrameworkDescription implements
       A args,
       Class<U> metadataClass) throws NoSuchBuildTargetException {
     if (metadataClass.isAssignableFrom(FrameworkDependencies.class)) {
-      resolver.requireRule(buildTarget);
-      ImmutableSet<BuildTargetSourcePath> sourcePaths =
-          ImmutableSet.of(new BuildTargetSourcePath(buildTarget));
+      BuildRule buildRule = resolver.requireRule(buildTarget);
+      ImmutableSet<SourcePath> sourcePaths = ImmutableSet.of(buildRule.getSourcePathToOutput());
       return Optional.of(metadataClass.cast(FrameworkDependencies.of(sourcePaths)));
     }
     return Optional.empty();

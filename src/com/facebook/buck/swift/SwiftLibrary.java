@@ -40,7 +40,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
@@ -166,8 +165,7 @@ class SwiftLibrary
     }
     if (isDynamic) {
       inputBuilder.addArgs(new SourcePathArg(getResolver(),
-          new BuildTargetSourcePath(requireSwiftLinkRule(cxxPlatform.getFlavor())
-              .getBuildTarget())));
+          requireSwiftLinkRule(cxxPlatform.getFlavor()).getSourcePathToOutput()));
     }
     return inputBuilder.build();
   }
@@ -186,7 +184,7 @@ class SwiftLibrary
         cxxPlatform);
     libs.put(
         sharedLibrarySoname,
-        new BuildTargetSourcePath(sharedLibraryBuildRule.getBuildTarget()));
+        sharedLibraryBuildRule.getSourcePathToOutput());
     return libs.build();
   }
 
@@ -206,7 +204,7 @@ class SwiftLibrary
     return (SwiftCompile) rule;
   }
 
-  private BuildRule requireSwiftLinkRule(Flavor... flavors) throws NoSuchBuildTargetException {
+  private CxxLink requireSwiftLinkRule(Flavor... flavors) throws NoSuchBuildTargetException {
     BuildTarget requiredBuildTarget = getBuildTarget()
         .withoutFlavors(SWIFT_COMPANION_FLAVOR)
         .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
@@ -218,7 +216,7 @@ class SwiftLibrary
               "Could not find CxxLink with target %s",
               requiredBuildTarget));
     }
-    return rule;
+    return (CxxLink) rule;
   }
 
   @Override
@@ -270,7 +268,7 @@ class SwiftLibrary
         .addIncludes(
             CxxHeadersDir.of(
                 CxxPreprocessables.IncludeType.LOCAL,
-                new BuildTargetSourcePath(rule.getBuildTarget())))
+                rule.getSourcePathToOutput()))
         .build();
   }
 

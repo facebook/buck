@@ -31,7 +31,6 @@ import com.facebook.buck.rules.BinaryWrapperRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -346,11 +345,28 @@ public class RustCompileUtils {
             cxxPlatform.getFlavor(),
             RustDescriptionEnhancer.RFBIN);
 
+    final RustCompileRule buildRule = RustCompileUtils.createBuild(
+        binaryTarget,
+        crate,
+        params,
+        resolver,
+        pathResolver,
+        ruleFinder,
+        cxxPlatform,
+        rustBuckConfig,
+        rustcArgs.build(),
+        linkerArgs.build(),
+        /* linkerInputs */ ImmutableList.of(),
+        CrateType.BIN,
+        linkStyle,
+        rpath,
+        srcs,
+        rootModule.get());
+
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
 
     // Add the binary as the first argument.
-    executableBuilder.addArg(
-        new SourcePathArg(pathResolver, new BuildTargetSourcePath(binaryTarget)));
+    executableBuilder.addArg(new SourcePathArg(pathResolver, buildRule.getSourcePathToOutput()));
 
     // Special handling for dynamically linked binaries.
     if (linkStyle == Linker.LinkableDepType.SHARED) {
@@ -393,24 +409,6 @@ public class RustCompileUtils {
     }
 
     final CommandTool executable = executableBuilder.build();
-
-    final RustCompileRule buildRule = RustCompileUtils.createBuild(
-        binaryTarget,
-        crate,
-        params,
-        resolver,
-        pathResolver,
-        ruleFinder,
-        cxxPlatform,
-        rustBuckConfig,
-        rustcArgs.build(),
-        linkerArgs.build(),
-        /* linkerInputs */ ImmutableList.of(),
-        CrateType.BIN,
-        linkStyle,
-        rpath,
-        srcs,
-        rootModule.get());
 
     return new BinaryWrapperRule(params.appendExtraDeps(buildRule), ruleFinder) {
 

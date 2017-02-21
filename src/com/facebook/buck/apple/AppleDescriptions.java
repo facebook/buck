@@ -41,7 +41,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -571,7 +570,7 @@ public class AppleDescriptions {
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         appleCxxPlatform.getDsymutil(),
         appleCxxPlatform.getLldb(),
-        new BuildTargetSourcePath(unstrippedBinaryBuildRule.getBuildTarget()),
+        unstrippedBinaryBuildRule.getSourcePathToOutput(),
         AppleDsym.getDsymOutputPath(params.getBuildTarget(), params.getProjectFilesystem()));
     resolver.addToIndex(appleDsym);
     return appleDsym;

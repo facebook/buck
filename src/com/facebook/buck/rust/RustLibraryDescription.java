@@ -34,7 +34,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
@@ -219,7 +218,7 @@ public class RustLibraryDescription implements
         } catch (NoSuchBuildTargetException e) {
           throw new RuntimeException(e);
         }
-        SourcePath rlib = new BuildTargetSourcePath(rule.getBuildTarget());
+        SourcePath rlib = rule.getSourcePathToOutput();
         return new RustLibraryArg(pathResolver, crate, rlib, direct, params.getDeps());
       }
 
@@ -251,7 +250,7 @@ public class RustLibraryDescription implements
                 rootModule.get());
         libs.put(
             sharedLibrarySoname,
-            new BuildTargetSourcePath(sharedLibraryBuildRule.getBuildTarget()));
+            sharedLibraryBuildRule.getSourcePathToOutput());
         return libs.build();
       }
 
@@ -305,7 +304,7 @@ public class RustLibraryDescription implements
             args.srcs,
             rootModule.get());
 
-        SourcePath lib = new BuildTargetSourcePath(rule.getBuildTarget());
+        SourcePath lib = rule.getSourcePathToOutput();
         SourcePathArg arg = new SourcePathArg(getResolver(), lib);
 
         return NativeLinkableInput.builder().addArgs(arg).build();
@@ -343,7 +342,7 @@ public class RustLibraryDescription implements
                 rootModule.get());
         libs.put(
             sharedLibrarySoname,
-            new BuildTargetSourcePath(sharedLibraryBuildRule.getBuildTarget()));
+            sharedLibraryBuildRule.getSourcePathToOutput());
         return libs.build();
       }
     };

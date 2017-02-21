@@ -40,7 +40,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -459,8 +458,8 @@ public class AppleLibraryDescription implements
     }
     // Not all parts of Buck use require yet, so require the rule here so it's available in the
     // resolver for the parts that don't.
-    resolver.requireRule(buildTarget);
-    sourcePaths.add(new BuildTargetSourcePath(buildTarget));
+    BuildRule buildRule = resolver.requireRule(buildTarget);
+    sourcePaths.add(buildRule.getSourcePathToOutput());
     return Optional.of(metadataClass.cast(FrameworkDependencies.of(sourcePaths.build())));
   }
 

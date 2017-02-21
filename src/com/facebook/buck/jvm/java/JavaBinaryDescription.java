@@ -27,7 +27,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
@@ -122,7 +121,7 @@ public class JavaBinaryDescription implements
     if (!nativeLibraries.isEmpty()) {
       BuildRule innerJarRule = rule;
       resolver.addToIndex(innerJarRule);
-      SourcePath innerJar = new BuildTargetSourcePath(innerJarRule.getBuildTarget());
+      SourcePath innerJar = innerJarRule.getSourcePathToOutput();
       rule = new JarFattener(
           params.appendExtraDeps(
               Suppliers.<Iterable<BuildRule>>ofInstance(

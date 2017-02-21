@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibrary;
-import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
@@ -37,7 +36,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -775,8 +773,11 @@ class NativeLibraryMergeEnhancer {
       String soname = getSoname(cxxPlatform);
       BuildTarget target = getBuildTargetForPlatform(cxxPlatform);
       Optional<BuildRule> ruleOptional = ruleResolver.getRuleOptional(target);
-      if (!ruleOptional.isPresent()) {
-        CxxLink rule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+      BuildRule rule = null;
+      if (ruleOptional.isPresent()) {
+        rule = ruleOptional.get();
+      } else {
+        rule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
             cxxBuckConfig,
             cxxPlatform,
             baseBuildRuleParams,
@@ -801,10 +802,7 @@ class NativeLibraryMergeEnhancer {
             getImmediateNativeLinkableInput(cxxPlatform));
         ruleResolver.addToIndex(rule);
       }
-      return ImmutableMap.of(
-          soname,
-          new BuildTargetSourcePath(target)
-      );
+      return ImmutableMap.of(soname, rule.getSourcePathToOutput());
     }
   }
 }

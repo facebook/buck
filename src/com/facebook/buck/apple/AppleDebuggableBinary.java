@@ -26,7 +26,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
@@ -70,7 +69,7 @@ public class AppleDebuggableBinary
     super(buildRuleParams, resolver);
     this.pathResolver = resolver;
     this.binaryRule = binaryRule;
-    this.binarySourcePath = new BuildTargetSourcePath(binaryRule.getBuildTarget());
+    this.binarySourcePath = Preconditions.checkNotNull(binaryRule.getSourcePathToOutput());
     performChecks(buildRuleParams, binaryRule);
   }
 

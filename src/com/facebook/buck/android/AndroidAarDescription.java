@@ -26,7 +26,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -176,12 +175,12 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         .add(assembleResourceDirectories)
         .addAll(originalBuildRuleParams.getDeclaredDeps().get())
         .build(),
-        new BuildTargetSourcePath(assembleResourceDirectories.getBuildTarget()),
+        assembleResourceDirectories.getSourcePathToOutput(),
         /* resSrcs */ ImmutableSortedMap.of(),
         /* rDotJavaPackage */ null,
-        new BuildTargetSourcePath(assembleAssetsDirectories.getBuildTarget()),
+        assembleAssetsDirectories.getSourcePathToOutput(),
         /* assetsSrcs */ ImmutableSortedMap.of(),
-        new BuildTargetSourcePath(manifest.getBuildTarget()),
+        manifest.getSourcePathToOutput(),
         /* hasWhitelistedStrings */ false);
     aarExtraDepsBuilder.add(resolver.addToIndex(androidResource));
 

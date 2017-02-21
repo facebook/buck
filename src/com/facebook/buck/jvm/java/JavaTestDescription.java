@@ -37,6 +37,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -86,12 +87,12 @@ public class JavaTestDescription implements
 
     if (CalculateAbi.isAbiTarget(params.getBuildTarget())) {
       BuildTarget testTarget = CalculateAbi.getLibraryTarget(params.getBuildTarget());
-      resolver.requireRule(testTarget);
+      BuildRule testRule = resolver.requireRule(testTarget);
       return CalculateAbi.of(
           params.getBuildTarget(),
           ruleFinder,
           params,
-          new BuildTargetSourcePath(testTarget));
+          Preconditions.checkNotNull(testRule.getSourcePathToOutput()));
     }
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);

@@ -33,12 +33,12 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -82,12 +82,12 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
 
     if (CalculateAbi.isAbiTarget(params.getBuildTarget())) {
       BuildTarget testTarget = CalculateAbi.getLibraryTarget(params.getBuildTarget());
-      resolver.requireRule(testTarget);
+      BuildRule testRule = resolver.requireRule(testTarget);
       return CalculateAbi.of(
           params.getBuildTarget(),
           ruleFinder,
           params,
-          new BuildTargetSourcePath(testTarget));
+          Preconditions.checkNotNull(testRule.getSourcePathToOutput()));
     }
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);

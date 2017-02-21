@@ -23,6 +23,8 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.collect.ImmutableList;
 
+import javax.annotation.Nullable;
+
 public interface MacroExpander {
 
   /**
@@ -63,6 +65,7 @@ public interface MacroExpander {
   /**
    * @return something that should be added to the rule key of the rule that expands this macro.
    */
+  @Nullable
   Object extractRuleKeyAppendables(
       BuildTarget target,
       CellPathResolver cellNames,

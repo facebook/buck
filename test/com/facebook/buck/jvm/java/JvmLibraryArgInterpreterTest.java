@@ -37,6 +37,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.ParamInfoException;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -59,6 +60,7 @@ public class JvmLibraryArgInterpreterTest {
   private JvmLibraryArg arg;
   private BuildRuleResolver ruleResolver;
   private SourcePathRuleFinder ruleFinder;
+  private SourcePathResolver pathResolver;
 
   @Before
   public void createHelpers() {
@@ -73,6 +75,7 @@ public class JvmLibraryArgInterpreterTest {
     ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    pathResolver = new SourcePathResolver(ruleFinder);
   }
 
   @Test
@@ -147,7 +150,9 @@ public class JvmLibraryArgInterpreterTest {
 
     Javac javac = options.getJavac();
 
-    assertEquals(Optional.of(sourcePath), options.getJavacJarPath());
+    assertEquals(
+        pathResolver.getRelativePath(sourcePath),
+        pathResolver.getRelativePath(options.getJavacJarPath().get()));
     assertEquals(Optional.empty(), options.getJavacPath());
     assertTrue(javac.getClass().getName(), javac instanceof Jsr199Javac);
   }
@@ -202,7 +207,9 @@ public class JvmLibraryArgInterpreterTest {
 
     Javac javac = options.getJavac();
 
-    assertEquals(Optional.of(sourcePath), options.getJavacJarPath());
+    assertEquals(
+        pathResolver.getRelativePath(sourcePath),
+        pathResolver.getRelativePath(options.getJavacJarPath().get()));
     assertEquals(Optional.empty(), options.getJavacPath());
     assertTrue(javac.getClass().getName(), javac instanceof Jsr199Javac);
   }

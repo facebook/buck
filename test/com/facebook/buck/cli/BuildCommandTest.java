@@ -47,12 +47,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.Optional;
 
-import javax.annotation.Nullable;
 
 public class BuildCommandTest {
 
@@ -67,15 +64,10 @@ public class BuildCommandTest {
 
     LinkedHashMap<BuildRule, Optional<BuildResult>> ruleToResult = new LinkedHashMap<>();
 
-    BuildRule rule1 = new FakeBuildRule(
+    FakeBuildRule rule1 = new FakeBuildRule(
         BuildTargetFactory.newInstance("//fake:rule1"),
-        resolver) {
-      @Override
-      @Nullable
-      public Path getPathToOutput() {
-        return Paths.get("buck-out/gen/fake/rule1.txt");
-      }
-    };
+        resolver);
+    rule1.setOutputFile("buck-out/gen/fake/rule1.txt");
     ruleResolver.addToIndex(rule1);
     ruleToResult.put(
         rule1,

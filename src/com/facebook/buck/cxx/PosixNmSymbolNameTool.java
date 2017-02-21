@@ -74,7 +74,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Iterable<? extends SourcePath> linkerInputs) {
-    ruleResolver.addToIndex(
+    UndefinedSymbolsFile rule = ruleResolver.addToIndex(
         new UndefinedSymbolsFile(
             baseParams.copyWithChanges(
                 target,
@@ -86,7 +86,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
                 Suppliers.ofInstance(ImmutableSortedSet.of())),
             nm,
             linkerInputs));
-    return new BuildTargetSourcePath(target);
+    return rule.getSourcePathToOutput();
   }
 
   private static class UndefinedSymbolsFile extends AbstractBuildRule {
@@ -191,6 +191,11 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
     @Override
     public Path getPathToOutput() {
       return getUndefinedSymbolsPath();
+    }
+
+    @Override
+    public SourcePath getSourcePathToOutput() {
+      return new BuildTargetSourcePath(getBuildTarget(), getPathToOutput());
     }
 
   }

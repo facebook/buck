@@ -40,7 +40,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -301,7 +300,7 @@ public class HaskellDescriptionUtils {
                 Optional.empty(),
                 ImmutableList.of(),
                 HaskellSources.builder()
-                    .putModuleMap("Unused", new BuildTargetSourcePath(emptyModule.getBuildTarget()))
+                    .putModuleMap("Unused", emptyModule.getSourcePathToOutput())
                     .build()));
     BuildTarget emptyArchiveTarget =
         target.withAppendedFlavors(ImmutableFlavor.of("empty-archive"));
@@ -320,7 +319,7 @@ public class HaskellDescriptionUtils {
                     "%s/libempty.a"),
                 emptyCompiledModule.getObjects()));
     argsBuilder.add(
-        new SourcePathArg(pathResolver, new BuildTargetSourcePath(emptyArchive.getBuildTarget())));
+        new SourcePathArg(pathResolver, emptyArchive.getSourcePathToOutput()));
 
     ImmutableList<Arg> args = argsBuilder.build();
     ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();

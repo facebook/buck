@@ -25,13 +25,13 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -124,8 +124,8 @@ public class JavaLibraryRules {
       if (dep instanceof HasJavaAbi) {
         Optional<BuildTarget> abiJarTarget = ((HasJavaAbi) dep).getAbiJar();
         if (abiJarTarget.isPresent()) {
-          resolver.requireRule(abiJarTarget.get());
-          abiRules.add(new BuildTargetSourcePath(abiJarTarget.get()));
+          BuildRule abiJarRule = resolver.requireRule(abiJarTarget.get());
+          abiRules.add(Preconditions.checkNotNull(abiJarRule.getSourcePathToOutput()));
         }
       }
     }

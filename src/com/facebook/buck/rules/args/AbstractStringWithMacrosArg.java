@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
@@ -36,6 +35,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
+
+import javax.annotation.Nullable;
 
 /**
  * Packages a {@link StringWithMacros} along with necessary objects to implement the {@link Arg}
@@ -87,6 +88,7 @@ abstract class AbstractStringWithMacrosArg extends Arg {
     }
   }
 
+  @Nullable
   private <M extends Macro> Object extractRuleKeyAppendables(M macro) {
     try {
       return getExpander(macro).extractRuleKeyAppendablesFrom(
@@ -132,8 +134,7 @@ abstract class AbstractStringWithMacrosArg extends Arg {
   @Override
   public ImmutableCollection<SourcePath> getInputs() {
     return RichStream.from(getDeps())
-        .map(BuildRule::getBuildTarget)
-        .<SourcePath>map(BuildTargetSourcePath::new)
+        .map(BuildRule::getSourcePathToOutput)
         .toImmutableList();
   }
 

@@ -28,7 +28,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -894,7 +893,7 @@ public class CxxDescriptionEnhancer {
     executableBuilder.addArg(
         new SourcePathArg(
             sourcePathResolver,
-            new BuildTargetSourcePath(binaryRuleForExecutable.getBuildTarget())));
+            binaryRuleForExecutable.getSourcePathToOutput()));
 
     return new CxxLinkAndCompileRules(
         cxxLink,
@@ -975,7 +974,7 @@ public class CxxDescriptionEnhancer {
       CxxStrip cxxStrip = new CxxStrip(
           stripRuleParams,
           stripStyle,
-          new BuildTargetSourcePath(unstrippedBinaryRule.getBuildTarget()),
+          Preconditions.checkNotNull(unstrippedBinaryRule.getSourcePathToOutput()),
           cxxPlatform.getStrip(),
           CxxDescriptionEnhancer.getBinaryOutputPath(
               stripRuleParams.getBuildTarget(),
@@ -1069,8 +1068,8 @@ public class CxxDescriptionEnhancer {
     }
     // Not all parts of Buck use require yet, so require the rule here so it's available in the
     // resolver for the parts that don't.
-    resolver.requireRule(buildTarget);
-    sourcePaths.add(new BuildTargetSourcePath(buildTarget));
+    BuildRule buildRule = resolver.requireRule(buildTarget);
+    sourcePaths.add(buildRule.getSourcePathToOutput());
     return Optional.of(CxxCompilationDatabaseDependencies.of(sourcePaths.build()));
   }
 

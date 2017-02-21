@@ -390,7 +390,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       result.put(
           stripLinkable,
           StrippedObjectDescription.builder()
-              .setSourcePath(new BuildTargetSourcePath(stripLinkable.getBuildTarget()))
+              .setSourcePath(stripLinkable.getSourcePathToOutput())
               .setStrippedObjectName(sharedLibrarySoName)
               .setTargetCpuType(targetCpuType)
               .build());

@@ -56,6 +56,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
+
 @BuildsAnnotationProcessor
 public class PrebuiltJar extends AbstractBuildRuleWithResolver
     implements AndroidPackageable, ExportDependencies, HasClasspathEntries,
@@ -182,7 +183,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
   @Override
   public ImmutableSet<SourcePath> getImmediateClasspaths() {
     if (!provided) {
-      return ImmutableSet.of(getBinaryJar());
+      return ImmutableSet.of(getSourcePathToOutput());
     } else {
       return ImmutableSet.of();
     }
@@ -190,7 +191,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
 
   @Override
   public ImmutableSet<SourcePath> getOutputClasspaths() {
-    return ImmutableSet.of(getBinaryJar());
+    return ImmutableSet.of(getSourcePathToOutput());
   }
 
   @Override
@@ -286,8 +287,8 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
     if (!provided) {
-      collector.addClasspathEntry(this, getBinaryJar());
-      collector.addPathToThirdPartyJar(getBuildTarget(), getBinaryJar());
+      collector.addClasspathEntry(this, getSourcePathToOutput());
+      collector.addPathToThirdPartyJar(getBuildTarget(), getSourcePathToOutput());
     }
   }
 
@@ -296,8 +297,9 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
     return copiedBinaryJar;
   }
 
-  public SourcePath getBinaryJar() {
-    return new BuildTargetSourcePath(getBuildTarget());
+  @Override
+  public SourcePath getSourcePathToOutput() {
+    return new BuildTargetSourcePath(getBuildTarget(), getPathToOutput());
   }
 
   @Override

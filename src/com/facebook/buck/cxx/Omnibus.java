@@ -27,7 +27,6 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -243,7 +242,7 @@ public class Omnibus {
     BuildTarget dummyOmnibusTarget =
         params.getBuildTarget().withAppendedFlavors(DUMMY_OMNIBUS_FLAVOR);
     String omnibusSoname = getOmnibusSoname(cxxPlatform);
-    ruleResolver.addToIndex(
+    CxxLink rule = ruleResolver.addToIndex(
         CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
             cxxBuckConfig,
             cxxPlatform,
@@ -255,7 +254,7 @@ public class Omnibus {
                 .resolve(omnibusSoname),
             Optional.of(omnibusSoname),
             extraLdflags));
-    return new BuildTargetSourcePath(dummyOmnibusTarget);
+    return rule.getSourcePathToOutput();
   }
 
   // Create a build rule which links the given root node against the merged omnibus library
@@ -322,10 +321,10 @@ public class Omnibus {
         argsBuilder.add(
             new SourcePathArg(
                 pathResolver,
-                new BuildTargetSourcePath(
+                ((CxxLink) ruleResolver.requireRule(
                     getRootTarget(
                         params.getBuildTarget(),
-                        target))));
+                        target))).getSourcePathToOutput()));
         continue;
       }
 
@@ -408,8 +407,8 @@ public class Omnibus {
 
     }
 
-    ruleResolver.addToIndex(rootLinkRule);
-    return OmnibusRoot.of(new BuildTargetSourcePath(rootTarget));
+    CxxLink rootRule = ruleResolver.addToIndex(rootLinkRule);
+    return OmnibusRoot.of(rootRule.getSourcePathToOutput());
   }
 
   protected static OmnibusRoot createRoot(
@@ -517,12 +516,12 @@ public class Omnibus {
          Sets.difference(spec.getRoots().keySet(), spec.getGraph().getNodes())) {
       NativeLinkTarget linkTarget = Preconditions.checkNotNull(spec.getRoots().get(target));
       undefinedSymbolsOnlyRoots.add(
-          new BuildTargetSourcePath(
+          ruleResolver.requireRule(
               getRootTarget(
                   params.getBuildTarget(),
                   shouldCreateDummyRoot(linkTarget, cxxPlatform) ?
                       getDummyRootTarget(target) :
-                      target)));
+                      target)).getSourcePathToOutput());
     }
     argsBuilder.addAll(
         createUndefinedSymbolsArgs(
@@ -546,10 +545,10 @@ public class Omnibus {
         argsBuilder.add(
             new SourcePathArg(
                 pathResolver,
-                new BuildTargetSourcePath(
+                ((CxxLink) ruleResolver.requireRule(
                     getRootTarget(
                         params.getBuildTarget(),
-                        root.getBuildTarget()))));
+                        root.getBuildTarget()))).getSourcePathToOutput()));
         continue;
       }
 
@@ -583,7 +582,7 @@ public class Omnibus {
     // Create the merged omnibus library using the arguments assembled above.
     BuildTarget omnibusTarget = params.getBuildTarget().withAppendedFlavors(OMNIBUS_FLAVOR);
     String omnibusSoname = getOmnibusSoname(cxxPlatform);
-    ruleResolver.addToIndex(
+    CxxLink omnibusRule = ruleResolver.addToIndex(
         CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
             cxxBuckConfig,
             cxxPlatform,
@@ -596,7 +595,7 @@ public class Omnibus {
             Optional.of(omnibusSoname),
             argsBuilder.build()));
 
-    return OmnibusLibrary.of(omnibusSoname, new BuildTargetSourcePath(omnibusTarget));
+    return OmnibusLibrary.of(omnibusSoname, omnibusRule.getSourcePathToOutput());
   }
 
   /**

@@ -27,7 +27,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.Description;
@@ -104,7 +103,7 @@ public class DBinaryDescription implements
             args.srcs,
             args.linkerFlags,
             DIncludes.builder()
-                .setLinkTree(new BuildTargetSourcePath(sourceTree.getBuildTarget()))
+                .setLinkTree(sourceTree.getSourcePathToOutput())
                 .addAllSources(args.srcs.getPaths())
                 .build());
     buildRuleResolver.addToIndex(nativeLinkable);
@@ -114,8 +113,7 @@ public class DBinaryDescription implements
     executableBuilder.addArg(
         new SourcePathArg(
             pathResolver,
-            new BuildTargetSourcePath(
-                nativeLinkable.getBuildTarget())));
+            nativeLinkable.getSourcePathToOutput()));
 
     // Return a BinaryBuildRule implementation, so that this works
     // with buck run etc.

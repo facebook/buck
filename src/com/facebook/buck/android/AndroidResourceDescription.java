@@ -31,7 +31,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.PathSourcePath;
@@ -282,8 +281,7 @@ public class AndroidResourceDescription
     } catch (NoSuchBuildTargetException e) {
       throw new RuntimeException(e);
     }
-    SourcePath sourcePath = new BuildTargetSourcePath(symlinkTreeTarget);
-    return new Pair<>(Optional.of(symlinkTree), Optional.of(sourcePath));
+    return new Pair<>(Optional.of(symlinkTree), Optional.of(symlinkTree.getSourcePathToOutput()));
   }
 
   @VisibleForTesting

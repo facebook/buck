@@ -46,7 +46,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -398,7 +397,7 @@ public class CxxPythonExtensionDescription implements
           CxxPlatform cxxPlatform)
           throws NoSuchBuildTargetException {
         BuildRule extension = getExtension(pythonPlatform, cxxPlatform);
-        SourcePath output = new BuildTargetSourcePath(extension.getBuildTarget());
+        SourcePath output = extension.getSourcePathToOutput();
         return PythonPackageComponents.of(
             ImmutableMap.of(module, output),
             ImmutableMap.of(),

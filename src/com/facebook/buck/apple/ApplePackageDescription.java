@@ -27,7 +27,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
@@ -40,6 +39,7 @@ import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -97,7 +97,7 @@ public class ApplePackageDescription implements
               .build()),
           sourcePathResolver,
           applePackageConfigAndPlatformInfo.get(),
-          new BuildTargetSourcePath(bundle.getBuildTarget()),
+          Preconditions.checkNotNull(bundle.getSourcePathToOutput()),
           bundle.isCacheable());
     } else {
       return new BuiltinApplePackage(

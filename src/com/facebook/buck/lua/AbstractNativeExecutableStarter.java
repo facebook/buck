@@ -18,6 +18,7 @@ package com.facebook.buck.lua;
 
 import com.facebook.buck.cxx.AbstractCxxLibrary;
 import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
@@ -41,7 +42,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -51,6 +51,7 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -106,13 +107,16 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
         BuildTarget.builder(getBaseParams().getBuildTarget())
             .addFlavors(ImmutableFlavor.of("native-starter-cxx-source"))
             .build();
-    if (!getRuleResolver().getRuleOptional(target).isPresent()) {
-
+    BuildRule rule;
+    Optional<BuildRule> maybeRule = getRuleResolver().getRuleOptional(target);
+    if (maybeRule.isPresent()) {
+      rule = maybeRule.get();
+    } else {
       BuildTarget templateTarget =
           BuildTarget.builder(getBaseParams().getBuildTarget())
               .addFlavors(ImmutableFlavor.of("native-starter-cxx-source-template"))
               .build();
-      getRuleResolver().addToIndex(
+      WriteFile templateRule = getRuleResolver().addToIndex(
           new WriteFile(
               getBaseParams().copyWithChanges(
                   templateTarget,
@@ -130,13 +134,13 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
               getBaseParams().getProjectFilesystem(),
               target,
               "%s/native-starter.cpp");
-      getRuleResolver().addToIndex(
+      rule = getRuleResolver().addToIndex(
           WriteStringTemplateRule.from(
               getBaseParams(),
               getRuleFinder(),
               target,
               output,
-              new BuildTargetSourcePath(templateTarget),
+              templateRule.getSourcePathToOutput(),
               ImmutableMap.of(
                   "MAIN_MODULE",
                   Escaper.escapeAsPythonString(getMainModule()),
@@ -155,7 +159,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
 
     return CxxSource.of(
         CxxSource.Type.CXX,
-        new BuildTargetSourcePath(target),
+        Preconditions.checkNotNull(rule.getSourcePathToOutput()),
         ImmutableList.of());
   }
 
@@ -230,7 +234,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
   @Override
   public SourcePath build() throws NoSuchBuildTargetException {
     BuildTarget linkTarget = getTarget();
-    getRuleResolver().addToIndex(
+    CxxLink linkRule = getRuleResolver().addToIndex(
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             getCxxBuckConfig(),
             getCxxPlatform(),
@@ -248,7 +252,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
             Optional.empty(),
             ImmutableSet.of(),
             getNativeLinkableInput()));
-    return new BuildTargetSourcePath(linkTarget);
+    return linkRule.getSourcePathToOutput();
   }
 
   @Override

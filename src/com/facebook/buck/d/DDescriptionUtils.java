@@ -33,7 +33,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -310,7 +309,7 @@ abstract class DDescriptionUtils {
               baseParams.getBuildTarget(),
               source.getKey(),
               cxxPlatform);
-      requireBuildRule(
+      BuildRule rule = requireBuildRule(
           compileTarget,
           baseParams,
           buildRuleResolver,
@@ -320,7 +319,7 @@ abstract class DDescriptionUtils {
           source.getKey(),
           source.getValue(),
           includes);
-      sourcePaths.add(new BuildTargetSourcePath(compileTarget));
+      sourcePaths.add(rule.getSourcePathToOutput());
     }
     return sourcePaths.build();
   }

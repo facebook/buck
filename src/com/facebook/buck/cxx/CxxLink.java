@@ -22,9 +22,11 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.OverrideScheduleRule;
 import com.facebook.buck.rules.RuleScheduleInfo;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -148,6 +150,11 @@ public class CxxLink
   @Override
   public Path getPathToOutput() {
     return output;
+  }
+
+  @Override
+  public SourcePath getSourcePathToOutput() {
+    return new BuildTargetSourcePath(getBuildTarget(), output);
   }
 
   @Override

@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.MacroMatchResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
@@ -30,6 +29,7 @@ import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
@@ -87,7 +87,7 @@ public class MacroArg extends Arg {
     }
     ImmutableList.Builder<SourcePath> paths = ImmutableList.builder();
     for (BuildRule rule : rules) {
-      paths.add(new BuildTargetSourcePath(rule.getBuildTarget()));
+      paths.add(Preconditions.checkNotNull(rule.getSourcePathToOutput()));
     }
     return paths.build();
   }

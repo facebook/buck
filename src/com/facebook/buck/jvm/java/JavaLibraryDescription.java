@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
@@ -134,12 +133,12 @@ public class JavaLibraryDescription implements
 
     if (CalculateAbi.isAbiTarget(target)) {
       BuildTarget libraryTarget = CalculateAbi.getLibraryTarget(target);
-      resolver.requireRule(libraryTarget);
+      BuildRule libraryRule = resolver.requireRule(libraryTarget);
       return CalculateAbi.of(
           params.getBuildTarget(),
           ruleFinder,
           params,
-          new BuildTargetSourcePath(libraryTarget));
+          Preconditions.checkNotNull(libraryRule.getSourcePathToOutput()));
     }
 
     BuildRuleParams paramsWithMavenFlavor = null;

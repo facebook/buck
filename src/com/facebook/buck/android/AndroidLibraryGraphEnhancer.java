@@ -26,7 +26,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.DependencyMode;
 import com.google.common.base.Preconditions;
@@ -136,11 +135,11 @@ public class AndroidLibraryGraphEnhancer {
       SourcePathRuleFinder ruleFinder) throws NoSuchBuildTargetException {
     Preconditions.checkState(CalculateAbi.isAbiTarget(dummyRDotJavaBuildTarget));
     BuildTarget resourcesTarget = CalculateAbi.getLibraryTarget(dummyRDotJavaBuildTarget);
-    resolver.requireRule(resourcesTarget);
+    BuildRule resourcesRule = resolver.requireRule(resourcesTarget);
     return CalculateAbi.of(
         dummyRDotJavaBuildTarget,
         ruleFinder,
         originalBuildRuleParams,
-        new BuildTargetSourcePath(resourcesTarget));
+        Preconditions.checkNotNull(resourcesRule.getSourcePathToOutput()));
   }
 }

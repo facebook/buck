@@ -971,7 +971,7 @@ public class Project {
     String name;
     if (rule instanceof PrebuiltJar) {
       PrebuiltJar prebuiltJar = (PrebuiltJar) rule;
-      Path absolutePath = resolver.getAbsolutePath(prebuiltJar.getBinaryJar());
+      Path absolutePath = resolver.getAbsolutePath(prebuiltJar.getSourcePathToOutput());
       Path relativePath = projectFilesystem.getRootPath().relativize(absolutePath);
       String binaryJarUnixPath = MorePaths.pathWithUnixSeparators(relativePath);
       return getIntellijNameForBinaryJar(binaryJarUnixPath);
@@ -1035,7 +1035,7 @@ public class Project {
 
       PrebuiltJar prebuiltJar = (PrebuiltJar) libraryJar;
 
-      Path binaryJarAbsolutePath = resolver.getAbsolutePath(prebuiltJar.getBinaryJar());
+      Path binaryJarAbsolutePath = resolver.getAbsolutePath(prebuiltJar.getSourcePathToOutput());
       String binaryJar = MorePaths.pathWithUnixSeparators(
           projectFilesystem.relativize(binaryJarAbsolutePath));
       String sourceJar = prebuiltJar.getSourceJar().map(resolver::getAbsolutePath)

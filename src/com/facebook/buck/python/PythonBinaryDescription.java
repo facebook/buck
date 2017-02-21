@@ -31,7 +31,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
@@ -104,7 +103,7 @@ public class PythonBinaryDescription implements
             params.getProjectFilesystem(),
             params.getBuildTarget(),
             "%s/__init__.py");
-    resolver.addToIndex(
+    WriteFile rule = resolver.addToIndex(
         new WriteFile(
             params.copyWithChanges(
                 emptyInitTarget,
@@ -113,7 +112,7 @@ public class PythonBinaryDescription implements
             "",
             emptyInitPath,
             /* executable */ false));
-    return new BuildTargetSourcePath(emptyInitTarget);
+    return rule.getSourcePathToOutput();
   }
 
   public static ImmutableMap<Path, SourcePath> addMissingInitModules(

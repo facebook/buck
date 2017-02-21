@@ -122,9 +122,6 @@ public class StringWithMacrosArgTest {
             .setOut("out")
             .build(resolver);
 
-    BuildTargetSourcePath input1 = new BuildTargetSourcePath(rule1.getBuildTarget());
-    BuildTargetSourcePath input2 = new BuildTargetSourcePath(rule2.getBuildTarget());
-
     // Test no embedded macros.
     StringWithMacrosArg noMacrosArg =
         StringWithMacrosArg.of(
@@ -142,30 +139,33 @@ public class StringWithMacrosArgTest {
         StringWithMacrosArg.of(
             StringWithMacrosUtils.format(
                 "--test=%s",
-                LocationMacro.of(input1.getTarget())),
+                LocationMacro.of(rule1.getBuildTarget())),
             MACRO_EXPANDERS,
             TARGET,
             CELL_PATH_RESOLVER,
             resolver);
     assertThat(
         oneMacrosArg.getInputs(),
-        Matchers.contains(input1));
+        Matchers.contains(rule1.getSourcePathToOutput()));
 
     // Test multiple embedded macros.
     StringWithMacrosArg multipleMacrosArg =
         StringWithMacrosArg.of(
             StringWithMacrosUtils.format(
                 "--test=%s --test2=%s --test3=%s",
-                LocationMacro.of(input1.getTarget()),
-                LocationMacro.of(input2.getTarget()),
-                LocationMacro.of(input1.getTarget())),
+                LocationMacro.of(rule1.getBuildTarget()),
+                LocationMacro.of(rule2.getBuildTarget()),
+                LocationMacro.of(rule1.getBuildTarget())),
             MACRO_EXPANDERS,
             TARGET,
             CELL_PATH_RESOLVER,
             resolver);
     assertThat(
         multipleMacrosArg.getInputs(),
-        Matchers.contains(input1, input2, input1));
+        Matchers.contains(
+            rule1.getSourcePathToOutput(),
+            rule2.getSourcePathToOutput(),
+            rule1.getSourcePathToOutput()));
   }
 
   @Test

@@ -500,13 +500,13 @@ public class PrebuiltCxxLibraryDescription implements
     }
 
     // Otherwise, generate it's build rule.
-    BuildRule sharedLibrary =
-        resolver.requireRule(
+    CxxLink sharedLibrary =
+        (CxxLink) resolver.requireRule(
             target.withAppendedFlavors(
                 cxxPlatform.getFlavor(),
                 CxxDescriptionEnhancer.SHARED_FLAVOR));
 
-    return new BuildTargetSourcePath(sharedLibrary.getBuildTarget());
+    return sharedLibrary.getSourcePathToOutput();
   }
 
   private <A extends Arg> BuildRule createSharedLibraryInterface(
@@ -702,8 +702,8 @@ public class PrebuiltCxxLibraryDescription implements
               params.getBuildTarget().withAppendedFlavors(
                   cxxPlatform.getFlavor(),
                   Type.SHARED_INTERFACE.getFlavor());
-          ruleResolver.requireRule(target);
-          return new BuildTargetSourcePath(target);
+          BuildRule rule = ruleResolver.requireRule(target);
+          return Preconditions.checkNotNull(rule.getSourcePathToOutput());
         }
         return PrebuiltCxxLibraryDescription.this.requireSharedLibrary(
             params.getBuildTarget(),

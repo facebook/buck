@@ -24,6 +24,8 @@ import com.google.common.collect.ImmutableList;
 
 import java.util.Optional;
 
+import javax.annotation.Nullable;
+
 public abstract class AbstractMacroExpander<T> implements MacroExpander {
 
   /**
@@ -95,6 +97,7 @@ public abstract class AbstractMacroExpander<T> implements MacroExpander {
   }
 
   @Override
+  @Nullable
   public final Object extractRuleKeyAppendables(
       BuildTarget target,
       CellPathResolver cellNames,
@@ -109,6 +112,7 @@ public abstract class AbstractMacroExpander<T> implements MacroExpander {
   }
 
   @SuppressWarnings("unused")
+  @Nullable
   public Object extractRuleKeyAppendablesFrom(
       BuildTarget target,
       CellPathResolver cellNames,

@@ -34,12 +34,12 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -114,12 +114,12 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
 
     if (CalculateAbi.isAbiTarget(params.getBuildTarget())) {
       BuildTarget libraryTarget = CalculateAbi.getLibraryTarget(params.getBuildTarget());
-      resolver.requireRule(libraryTarget);
+      BuildRule libraryRule = resolver.requireRule(libraryTarget);
       return CalculateAbi.of(
           params.getBuildTarget(),
           ruleFinder,
           params,
-          new BuildTargetSourcePath(libraryTarget));
+          Preconditions.checkNotNull(libraryRule.getSourcePathToOutput()));
     }
 
     // Pack all the generated sources into a single source zip that we'll pass to the

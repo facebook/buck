@@ -97,6 +97,11 @@ public class WriteStringTemplateRule extends AbstractBuildRule {
     return output;
   }
 
+  @Override
+  public SourcePath getSourcePathToOutput() {
+    return new BuildTargetSourcePath(getBuildTarget(), getPathToOutput());
+  }
+
   public static WriteStringTemplateRule from(
       BuildRuleParams baseParams,
       SourcePathRuleFinder ruleFinder,

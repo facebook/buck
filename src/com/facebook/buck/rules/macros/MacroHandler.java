@@ -159,12 +159,14 @@ public class MacroHandler {
     // Iterate over all macros found in the string, collecting all `BuildTargets` each expander
     // extract for their respective macros.
     for (MacroMatchResult matchResult : getMacroMatchResults(blob)) {
-      targets.add(
-          getExpander(matchResult.getMacroType()).extractRuleKeyAppendables(
-              target,
-              cellNames,
-              resolver,
-              matchResult.getMacroInput()));
+      Object ruleKeyAppendable = getExpander(matchResult.getMacroType()).extractRuleKeyAppendables(
+          target,
+          cellNames,
+          resolver,
+          matchResult.getMacroInput());
+      if (ruleKeyAppendable != null) {
+        targets.add(ruleKeyAppendable);
+      }
     }
 
     return targets.build();

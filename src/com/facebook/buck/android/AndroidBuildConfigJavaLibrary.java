@@ -22,7 +22,6 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -56,8 +55,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         params,
         resolver,
         ruleFinder,
-        /* srcs */ ImmutableSortedSet.of(
-            new BuildTargetSourcePath(androidBuildConfig.getBuildTarget())),
+        /* srcs */ ImmutableSortedSet.of(androidBuildConfig.getSourcePathToOutput()),
         /* resources */ ImmutableSortedSet.of(),
         javacOptions.getGeneratedSourceFolderName(),
         /* proguardConfig */ Optional.empty(),

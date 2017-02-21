@@ -25,6 +25,7 @@ import org.immutables.value.Value;
 
 import java.util.Optional;
 
+
 /**
  * Build rule that generates an APK that can be installed with the install command.
  *
@@ -33,6 +34,9 @@ import java.util.Optional;
 public interface HasInstallableApk extends BuildRule {
 
   ApkInfo getApkInfo();
+
+  @Override
+  SourcePath getSourcePathToOutput();
 
   @Value.Immutable
   @BuckStyleImmutable

@@ -27,7 +27,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -97,8 +96,7 @@ public class GoTestDescription implements
 
       Path packageName = getGoPackageName(resolver, buildTarget, args);
 
-      SourcePath output = new BuildTargetSourcePath(
-          resolver.requireRule(buildTarget).getBuildTarget());
+      SourcePath output = resolver.requireRule(buildTarget).getSourcePathToOutput();
       return Optional.of(metadataClass.cast(GoLinkable.builder()
           .setGoLinkInput(ImmutableMap.of(packageName, output))
           .build()));
@@ -216,7 +214,7 @@ public class GoTestDescription implements
             Suppliers.ofInstance(ImmutableSortedSet.of(generatedTestMain))),
         resolver,
         goBuckConfig,
-        ImmutableSet.of(new BuildTargetSourcePath(generatedTestMain.getBuildTarget())),
+        ImmutableSet.of(generatedTestMain.getSourcePathToOutput()),
         args.compilerFlags,
         args.assemblerFlags,
         args.linkerFlags,

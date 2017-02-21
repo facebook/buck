@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
@@ -97,7 +96,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
       JavaLibrary javaLibrary) {
     super(params);
     this.javaLibrary = javaLibrary;
-    this.javaLibrarySourcePath = new BuildTargetSourcePath(javaLibrary.getBuildTarget());
+    this.javaLibrarySourcePath = javaLibrary.getSourcePathToOutput();
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 

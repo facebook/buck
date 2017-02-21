@@ -24,7 +24,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.CommandTool;
@@ -206,7 +205,7 @@ public class JavaBinary extends AbstractBuildRuleWithResolver
     return new CommandTool.Builder()
         .addArg(javaRuntimeLauncher.getCommand())
         .addArg("-jar")
-        .addArg(new SourcePathArg(getResolver(), new BuildTargetSourcePath(getBuildTarget())))
+        .addArg(new SourcePathArg(getResolver(), getSourcePathToOutput()))
         .build();
   }
 

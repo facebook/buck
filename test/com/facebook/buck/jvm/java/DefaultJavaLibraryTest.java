@@ -71,6 +71,7 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -1247,6 +1248,8 @@ public class DefaultJavaLibraryTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(javacNode, ruleNode);
     ruleResolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
 
     BuildRule javac = ruleResolver.requireRule(javacTarget);
     BuildRule rule = ruleResolver.requireRule(libraryOneTarget);
@@ -1261,8 +1264,11 @@ public class DefaultJavaLibraryTest {
     assertTrue(javacStep instanceof Jsr199Javac);
     JarBackedJavac jsrJavac = ((JarBackedJavac) javacStep);
     assertEquals(
-        jsrJavac.getCompilerClassPath(),
-        ImmutableSet.of(new BuildTargetSourcePath(javac.getBuildTarget())));
+        RichStream.from(jsrJavac.getCompilerClassPath())
+            .map(pathResolver::getRelativePath)
+            .collect(MoreCollectors.toImmutableSet()),
+        ImmutableSet.of(pathResolver.getRelativePath(javac.getSourcePathToOutput()))
+    );
   }
 
   // Utilities

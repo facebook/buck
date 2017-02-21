@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -296,7 +295,7 @@ abstract class GoDescriptors {
                     Suppliers.ofInstance(ImmutableSortedSet.of(writeFile))),
                 resolver,
                 goBuckConfig,
-                ImmutableSet.of(new BuildTargetSourcePath(generatorSourceTarget)),
+                ImmutableSet.of(writeFile.getSourcePathToOutput()),
                 ImmutableList.of(),
                 ImmutableList.of(),
                 ImmutableList.of(),

@@ -42,7 +42,6 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -226,7 +225,7 @@ public class CxxPythonExtensionDescriptionTest {
         ImmutableMap.of(
             target.getBasePath()
                 .resolve(CxxPythonExtensionDescription.getExtensionName(target.getShortName())),
-            new BuildTargetSourcePath(rule.getBuildTarget())),
+            rule.getSourcePathToOutput()),
         ImmutableMap.of(),
         ImmutableMap.of(),
         ImmutableSet.of(),

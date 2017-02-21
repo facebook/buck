@@ -19,7 +19,6 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.HumanReadableException;
@@ -73,7 +72,7 @@ public final class JavacOptionsFactory {
 
         Optional<BuildRule> possibleRule = ruleFinder.getRule(sourcePath);
         if (possibleRule.isPresent() && possibleRule.get() instanceof PrebuiltJar) {
-          builder.setJavacJarPath(new BuildTargetSourcePath(possibleRule.get().getBuildTarget()));
+          builder.setJavacJarPath(((PrebuiltJar) possibleRule.get()).getSourcePathToOutput());
         } else {
           builder.setJavacPath(Either.ofRight(sourcePath));
         }

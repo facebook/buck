@@ -26,7 +26,6 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -211,8 +210,7 @@ public class OcamlBuildRulesGenerator {
               cCompileFlags.build(),
               cxxPreprocessorInput.getIncludes()));
       resolver.addToIndex(compileRule);
-      objects.add(
-          new BuildTargetSourcePath(compileRule.getBuildTarget()));
+      objects.add(compileRule.getSourcePathToOutput());
     }
     return objects.build();
   }
@@ -543,8 +541,7 @@ public class OcamlBuildRulesGenerator {
             .addAll(deps)
             .build());
     if (!outputFileName.endsWith(OcamlCompilables.OCAML_CMI)) {
-      cmxFiles.add(
-          new BuildTargetSourcePath(compile.getBuildTarget()));
+      cmxFiles.add(compile.getSourcePathToOutput());
     }
   }
 
@@ -645,8 +642,7 @@ public class OcamlBuildRulesGenerator {
             .addAll(deps)
             .build());
     if (!outputFileName.endsWith(OcamlCompilables.OCAML_CMI)) {
-      cmoFiles.add(
-          new BuildTargetSourcePath(compileBytecode.getBuildTarget()));
+      cmoFiles.add(compileBytecode.getSourcePathToOutput());
     }
   }
 
