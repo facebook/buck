@@ -3,6 +3,7 @@
     "deps" : [
       "//src/com/facebook/buck/android:packageable",
       "//src/com/facebook/buck/android:steps",
+      "//src/com/facebook/buck/artifact_cache:config",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/io:MorePaths.java",
