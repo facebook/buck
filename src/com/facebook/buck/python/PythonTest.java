@@ -103,9 +103,9 @@ public class PythonTest
       Optional<Long> testRuleTimeoutMs,
       ImmutableSet<String> contacts) {
     return new PythonTest(
-        params.copyWithDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.of(binary)),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+        params
+            .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.of(binary)))
+            .withoutExtraDeps(),
         ruleFinder,
         params.getDeclaredDeps(),
         Suppliers.memoize(

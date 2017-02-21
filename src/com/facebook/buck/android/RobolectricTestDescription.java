@@ -96,8 +96,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         params.getBuildTarget(),
-        params.copyWithExtraDeps(
-            Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps))),
+        params.withExtraDeps(Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps))),
         javacOptions,
         DependencyMode.TRANSITIVE,
         /* forceFinalResourceIds */ true,
@@ -132,7 +131,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
           .addAll(params.getExtraDeps().get())
           .add(dummyRDotJava.get())
           .build();
-      params = params.copyWithExtraDeps(Suppliers.ofInstance(newExtraDeps));
+      params = params.withExtraDeps(Suppliers.ofInstance(newExtraDeps));
     }
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
@@ -148,8 +147,9 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
     params = cxxLibraryEnhancement.updatedParams;
 
     // Rewrite dependencies on tests to actually depend on the code which backs the test.
-    BuildRuleParams testsLibraryParams = params.copyWithDeps(
-        Suppliers.ofInstance(
+    BuildRuleParams testsLibraryParams = params
+        .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR)
+        .withDeclaredDeps(Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>naturalOrder()
                 .addAll(params.getDeclaredDeps().get())
                 .addAll(BuildRules.getExportedRules(
@@ -158,9 +158,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                         resolver.getAllRules(args.providedDeps))))
                 .addAll(ruleFinder.filterBuildRuleInputs(
                     javacOptions.getInputs(ruleFinder)))
-                .build()),
-        params.getExtraDeps())
-        .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+                .build()));
 
     JavaLibrary testsLibrary =
         resolver.addToIndex(
@@ -190,9 +188,9 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
 
     return new RobolectricTest(
-        params.copyWithDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+        params
+            .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)))
+            .withoutExtraDeps(),
         ruleFinder,
         testsLibrary,
         additionalClasspathEntries,

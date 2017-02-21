@@ -308,7 +308,7 @@ public class CxxPythonExtensionDescription implements
         NativeLinkableInput.builder()
         .setArgs(
             getExtensionArgs(
-                params.copyWithBuildTarget(
+                params.withBuildTarget(
                     params.getBuildTarget().withoutFlavors(
                         LinkerMapMode.FLAVOR_DOMAIN.getFlavors())),
                 ruleResolver,
@@ -350,15 +350,15 @@ public class CxxPythonExtensionDescription implements
     if (type.isPresent() && platform.isPresent() && pythonPlatform.isPresent()) {
       Preconditions.checkState(type.get().getValue() == Type.EXTENSION);
       return createExtensionBuildRule(
-          params.copyWithDeps(
-              Suppliers.ofInstance(
+          params
+              .withDeclaredDeps(Suppliers.ofInstance(
                   ImmutableSortedSet.copyOf(
                       getPlatformDeps(
                           params,
                           ruleResolver,
                           pythonPlatform.get().getValue(),
-                          args))),
-              Suppliers.ofInstance(ImmutableSortedSet.of())),
+                          args))))
+              .withoutExtraDeps(),
           ruleResolver,
           pythonPlatform.get().getValue(),
           platform.get().getValue(),
@@ -433,14 +433,18 @@ public class CxxPythonExtensionDescription implements
             return NativeLinkableInput.builder()
                 .addAllArgs(
                     getExtensionArgs(
-                        params.copyWithChanges(
-                            params.getBuildTarget().withAppendedFlavors(
-                                pythonPlatform.getFlavor(),
-                                CxxDescriptionEnhancer.SHARED_FLAVOR),
-                            Suppliers.ofInstance(
-                                ImmutableSortedSet.copyOf(
-                                    getPlatformDeps(params, ruleResolver, pythonPlatform, args))),
-                            Suppliers.ofInstance(ImmutableSortedSet.of())),
+                        params
+                            .withFlavor(pythonPlatform.getFlavor())
+                            .withFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
+                            .withDeclaredDeps(
+                                Suppliers.ofInstance(
+                                    ImmutableSortedSet.copyOf(
+                                        getPlatformDeps(
+                                            params,
+                                            ruleResolver,
+                                            pythonPlatform,
+                                            args))))
+                            .withoutExtraDeps(),
                         ruleResolver,
                         pathResolver,
                         ruleFinder,

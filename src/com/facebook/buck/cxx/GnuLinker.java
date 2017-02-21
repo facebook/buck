@@ -146,11 +146,11 @@ public class GnuLinker implements Linker {
       Iterable<? extends SourcePath> symbolFiles) {
     UndefinedSymbolsLinkerScript rule = ruleResolver.addToIndex(
         new UndefinedSymbolsLinkerScript(
-            baseParams.copyWithChanges(
-                target,
-                Suppliers.ofInstance(
-                    ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(symbolFiles))),
-                Suppliers.ofInstance(ImmutableSortedSet.of())),
+            baseParams
+                .withBuildTarget(target)
+                .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.copyOf(
+                    ruleFinder.filterBuildRuleInputs(symbolFiles))))
+                .withoutExtraDeps(),
             symbolFiles));
     return ImmutableList.of(new SourcePathArg(pathResolver, rule.getSourcePathToOutput()));
   }

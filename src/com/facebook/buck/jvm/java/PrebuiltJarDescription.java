@@ -83,10 +83,10 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
     UnflavoredBuildTarget prebuiltJarBuildTarget = params.getBuildTarget().checkUnflavored();
     BuildTarget flavoredBuildTarget = BuildTargets.createFlavoredBuildTarget(
         prebuiltJarBuildTarget, JavaLibrary.GWT_MODULE_FLAVOR);
-    BuildRuleParams gwtParams = params.copyWithChanges(
-        flavoredBuildTarget,
-        /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(prebuilt)),
-        /* inferredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
+    BuildRuleParams gwtParams = params
+        .withBuildTarget(flavoredBuildTarget)
+        .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.of(prebuilt)))
+        .withoutExtraDeps();
     BuildRule gwtModule = createGwtModule(gwtParams, args);
     resolver.addToIndex(gwtModule);
 

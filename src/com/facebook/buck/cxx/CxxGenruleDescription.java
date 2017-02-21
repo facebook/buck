@@ -252,7 +252,7 @@ public class CxxGenruleDescription
     if (cxxPlatform.isPresent()) {
       return super.createBuildRule(
           targetGraph,
-          params.copyWithBuildTarget(
+          params.withBuildTarget(
               params.getBuildTarget().withAppendedFlavors(cxxPlatform.get().getFlavor())),
           resolver,
           args);

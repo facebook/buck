@@ -70,11 +70,11 @@ public class CalculateAbi extends AbstractBuildRule
       BuildRuleParams libraryParams,
       SourcePath library) {
     return new CalculateAbi(
-        libraryParams.copyWithChanges(
-            target,
-            Suppliers.ofInstance(
-                ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(library))),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+        libraryParams
+            .withBuildTarget(target)
+            .withDeclaredDeps(Suppliers.ofInstance(
+                ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(library))))
+            .withoutExtraDeps(),
         library);
   }
 

@@ -138,10 +138,10 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
 
       sourceZipsBuilder.add(
           new SrcZip(
-              params.copyWithChanges(
-                  sourceZipTarget,
-                  Suppliers.ofInstance(ImmutableSortedSet.of(compilerRule)),
-                  Suppliers.ofInstance(ImmutableSortedSet.of())),
+              params
+                  .withBuildTarget(sourceZipTarget)
+                  .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.of(compilerRule)))
+                  .withoutExtraDeps(),
               sourceZip,
               sourceDirectory));
     }
@@ -149,18 +149,17 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
     resolver.addAllToIndex(sourceZips);
 
     // Create to main compile rule.
-    BuildRuleParams javaParams = params.copyWithChanges(
-        BuildTargets.createFlavoredBuildTarget(
-            unflavoredBuildTarget,
-            getFlavor()),
-        Suppliers.ofInstance(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(sourceZips)
-                .addAll(deps)
-                .addAll(BuildRules.getExportedRules(deps))
-                .addAll(ruleFinder.filterBuildRuleInputs(templateOptions.getInputs(ruleFinder)))
-                .build()),
-        Suppliers.ofInstance(ImmutableSortedSet.of()));
+    BuildRuleParams javaParams = params
+        .withBuildTarget(BuildTargets.createFlavoredBuildTarget(unflavoredBuildTarget, getFlavor()))
+        .withDeclaredDeps(
+            Suppliers.ofInstance(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(sourceZips)
+                    .addAll(deps)
+                    .addAll(BuildRules.getExportedRules(deps))
+                    .addAll(ruleFinder.filterBuildRuleInputs(templateOptions.getInputs(ruleFinder)))
+                    .build()))
+        .withoutExtraDeps();
 
     final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 

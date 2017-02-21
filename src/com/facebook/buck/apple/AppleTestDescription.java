@@ -238,20 +238,17 @@ public class AppleTestDescription implements
         defaultCxxPlatform,
         appleCxxPlatformFlavorDomain,
         targetGraph,
-        params.copyWithChanges(
-            params.getBuildTarget().withAppendedFlavors(
-                BUNDLE_FLAVOR,
-                debugFormat.getFlavor(),
-                LinkerMapMode.NO_LINKER_MAP.getFlavor(),
-                AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
-            // We have to add back the original deps here, since they're likely
-            // stripped from the library link above (it doesn't actually depend on them).
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .add(library)
-                    .addAll(params.getDeclaredDeps().get())
-                    .build()),
-            params.getExtraDeps()),
+        params
+            .withFlavor(BUNDLE_FLAVOR)
+            .withFlavor(debugFormat.getFlavor())
+            .withFlavor(LinkerMapMode.NO_LINKER_MAP.getFlavor())
+            .withFlavor(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+            .withDeclaredDeps(
+                Suppliers.ofInstance(
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .add(library)
+                        .addAll(params.getDeclaredDeps().get())
+                        .build())),
         resolver,
         codeSignIdentityStore,
         provisioningProfileStore,
@@ -278,9 +275,9 @@ public class AppleTestDescription implements
         platformName,
         appleConfig.getXctoolDefaultDestinationSpecifier(),
         Optional.of(args.destinationSpecifier),
-        params.copyWithDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.of(bundle)),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+        params
+            .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.of(bundle)))
+            .withoutExtraDeps(),
         bundle,
         testHostInfo.map(TestHostInfo::getTestHostApp),
         args.contacts,
@@ -312,10 +309,10 @@ public class AppleTestDescription implements
           BuildTargets.getGenPath(params.getProjectFilesystem(), unzipXctoolTarget, "%s/unzipped");
       if (!resolver.getRuleOptional(unzipXctoolTarget).isPresent()) {
         BuildRuleParams unzipXctoolParams =
-            params.copyWithChanges(
-                unzipXctoolTarget,
-                Suppliers.ofInstance(ImmutableSortedSet.of(xctoolZipBuildRule)),
-                Suppliers.ofInstance(ImmutableSortedSet.of()));
+            params
+                .withBuildTarget(unzipXctoolTarget)
+                .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.of(xctoolZipBuildRule)))
+                .withoutExtraDeps();
         resolver.addToIndex(
             new AbstractBuildRule(unzipXctoolParams) {
               @Override
@@ -365,7 +362,7 @@ public class AppleTestDescription implements
     } else {
       library = appleLibraryDescription.createLibraryBuildRule(
           targetGraph,
-          params.copyWithBuildTarget(libraryTarget),
+          params.withBuildTarget(libraryTarget),
           resolver,
           args,
           // For now, instead of building all deps as dylibs and fixing up their install_names,

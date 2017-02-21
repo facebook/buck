@@ -239,9 +239,9 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
             .build();
 
     // Create language specific build params by using the deps we formed above.
-    BuildRuleParams langParams = params.copyWithDeps(
-        Suppliers.ofInstance(ImmutableSortedSet.of()),
-        Suppliers.ofInstance(allDeps));
+    BuildRuleParams langParams = params
+        .withoutDeclaredDeps()
+        .withExtraDeps(Suppliers.ofInstance(allDeps));
 
     // Merge the thrift generated headers with the ones passed in via the description.
     ImmutableSortedMap.Builder<String, SourcePath> headersBuilder =

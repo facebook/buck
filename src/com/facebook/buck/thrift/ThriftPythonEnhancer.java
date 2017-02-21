@@ -152,10 +152,9 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
     ImmutableMap<Path, SourcePath> modules = modulesBuilder.build();
 
     // Create params which only use the language specific deps.
-    BuildRuleParams langParams = params.copyWithChanges(
-        params.getBuildTarget(),
-        Suppliers.ofInstance(deps),
-        Suppliers.ofInstance(ImmutableSortedSet.of()));
+    BuildRuleParams langParams = params
+        .withDeclaredDeps(Suppliers.ofInstance(deps))
+        .withoutExtraDeps();
 
     // Construct a python library and return it as our language specific build rule.  Dependents
     // will use this to pull the generated sources into packages/PEXs.

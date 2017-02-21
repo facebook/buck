@@ -55,11 +55,12 @@ public class FakeBuildRuleParamsBuilder {
   }
 
   public BuildRuleParams build() {
-    return new BuildRuleParams(
-        buildTarget,
-        Suppliers.ofInstance(declaredDeps),
-        Suppliers.ofInstance(extraDeps),
-        filesystem,
-        TestCellBuilder.createCellRoots(filesystem));
+    return BuildRuleParams.builder()
+        .setBuildTarget(buildTarget)
+        .setDeclaredDeps(Suppliers.ofInstance(declaredDeps))
+        .setExtraDeps(Suppliers.ofInstance(extraDeps))
+        .setProjectFilesystem(filesystem)
+        .setCellRoots(TestCellBuilder.createCellRoots(filesystem))
+        .build();
   }
 }

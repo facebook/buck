@@ -94,9 +94,9 @@ public class AndroidPrebuiltAarDescription
     ImmutableSet<Flavor> flavors = params.getBuildTarget().getFlavors();
     if (flavors.contains(AAR_UNZIP_FLAVOR)) {
       Preconditions.checkState(flavors.size() == 1);
-      BuildRuleParams unzipAarParams = params.copyWithDeps(
-          Suppliers.ofInstance(ImmutableSortedSet.of()),
-          Suppliers.ofInstance(ImmutableSortedSet.copyOf(
+      BuildRuleParams unzipAarParams = params
+          .withoutDeclaredDeps()
+          .withExtraDeps(Suppliers.ofInstance(ImmutableSortedSet.copyOf(
               ruleFinder.filterBuildRuleInputs(args.aar))));
       return new UnzipAar(unzipAarParams, args.aar);
     }
@@ -139,9 +139,9 @@ public class AndroidPrebuiltAarDescription
             pathResolver,
             ImmutableSortedSet.copyOf(javaDeps)));
 
-    BuildRuleParams androidLibraryParams = params.copyWithDeps(
-        /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(prebuiltJar)),
-        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(unzipAar)));
+    BuildRuleParams androidLibraryParams = params
+        .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.of(prebuiltJar)))
+        .withExtraDeps(Suppliers.ofInstance(ImmutableSortedSet.of(unzipAar)));
     return new AndroidPrebuiltAar(
         androidLibraryParams,
         /* resolver */ pathResolver,
@@ -165,12 +165,12 @@ public class AndroidPrebuiltAarDescription
       BuildRuleParams params,
       SourcePathResolver resolver,
       ImmutableSortedSet<BuildRule> deps) {
-    BuildRuleParams buildRuleParams = params.copyWithChanges(
-        /* buildTarget */ BuildTargets.createFlavoredBuildTarget(
+    BuildRuleParams buildRuleParams = params
+        .withBuildTarget(BuildTargets.createFlavoredBuildTarget(
             params.getBuildTarget().checkUnflavored(),
-            AAR_PREBUILT_JAR_FLAVOR),
-        /* declaredDeps */ Suppliers.ofInstance(deps),
-        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(unzipAar)));
+            AAR_PREBUILT_JAR_FLAVOR))
+        .withDeclaredDeps(Suppliers.ofInstance(deps))
+        .withExtraDeps(Suppliers.ofInstance(ImmutableSortedSet.of(unzipAar)));
     return new PrebuiltJar(
         /* params */ buildRuleParams,
         /* resolver */ resolver,

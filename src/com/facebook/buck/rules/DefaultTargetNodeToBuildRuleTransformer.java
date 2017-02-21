@@ -36,12 +36,15 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
     // The params used for the Buildable only contain the declared parameters. However, the deps of
     // the rule include not only those, but also any that were picked up through the deps declared
     // via a SourcePath.
-    BuildRuleParams params = new BuildRuleParams(
-        targetNode.getBuildTarget(),
-        Suppliers.ofInstance(ruleResolver.requireAllRules(targetNode.getDeclaredDeps())),
-        Suppliers.ofInstance(ruleResolver.requireAllRules(targetNode.getExtraDeps())),
-        targetNode.getFilesystem(),
-        targetNode.getCellNames());
+    BuildRuleParams params = BuildRuleParams.builder()
+        .setBuildTarget(targetNode.getBuildTarget())
+        .setDeclaredDeps(Suppliers.memoize(Suppliers.ofInstance(
+            ruleResolver.requireAllRules(targetNode.getDeclaredDeps()))))
+        .setExtraDeps(Suppliers.memoize(Suppliers.ofInstance(
+            ruleResolver.requireAllRules(targetNode.getExtraDeps()))))
+        .setProjectFilesystem(targetNode.getFilesystem())
+        .setCellRoots(targetNode.getCellNames())
+        .build();
 
     return description.createBuildRule(targetGraph, params, ruleResolver, arg);
   }

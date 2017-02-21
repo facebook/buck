@@ -147,10 +147,8 @@ public class AndroidResourceDescription
         // We only propagate other AndroidResource rule dependencies, as these are
         // the only deps which should control whether we need to re-run the aapt_package
         // step.
-        params.copyWithDeps(
-            Suppliers.ofInstance(
-                AndroidResourceHelper.androidResOnly(params.getDeclaredDeps().get())),
-            params.getExtraDeps()),
+        params.withDeclaredDeps(Suppliers.ofInstance(
+            AndroidResourceHelper.androidResOnly(params.getDeclaredDeps().get()))),
         ruleFinder,
         resolver.getAllRules(args.deps),
         resInputs.getSecond().orElse(null),
@@ -194,9 +192,9 @@ public class AndroidResourceDescription
         BuildTargets
             .getGenPath(params.getProjectFilesystem(), params.getBuildTarget(), "%s")
             .resolve(outputDirName);
-    params = params.copyWithDeps(
-        Suppliers.ofInstance(ImmutableSortedSet.of()),
-        Suppliers.ofInstance(ImmutableSortedSet.of()));
+    params = params
+        .withoutDeclaredDeps()
+        .withoutExtraDeps();
     return new SymlinkTree(params, symlinkTreeRoot, links, ruleFinder);
   }
 

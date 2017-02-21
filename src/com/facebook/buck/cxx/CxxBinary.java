@@ -127,7 +127,7 @@ public class CxxBinary
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
     return CxxPreprocessables.getCxxPreprocessorInput(
-        params.copyWithBuildTarget(platformlessTarget),
+        params.withBuildTarget(platformlessTarget),
         ruleResolver,
         /* hasHeaderSymlinkTree */ true,
         cxxPlatform,

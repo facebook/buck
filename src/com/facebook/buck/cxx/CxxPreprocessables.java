@@ -28,14 +28,12 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
@@ -182,10 +180,10 @@ public class CxxPreprocessables {
       SourcePathRuleFinder ruleFinder) {
     // Symlink trees never need to depend on anything.
     BuildRuleParams paramsWithoutDeps =
-        params.copyWithChanges(
-            target,
-            Suppliers.ofInstance(ImmutableSortedSet.of()),
-            Suppliers.ofInstance(ImmutableSortedSet.of()));
+        params
+            .withBuildTarget(target)
+            .withoutDeclaredDeps()
+            .withoutExtraDeps();
 
     switch (headerMode) {
       case SYMLINK_TREE_WITH_HEADER_MAP:

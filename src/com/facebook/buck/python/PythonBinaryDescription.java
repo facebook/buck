@@ -46,7 +46,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.versions.VersionRoot;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -105,10 +104,10 @@ public class PythonBinaryDescription implements
             "%s/__init__.py");
     WriteFile rule = resolver.addToIndex(
         new WriteFile(
-            params.copyWithChanges(
-                emptyInitTarget,
-                Suppliers.ofInstance(ImmutableSortedSet.of()),
-                Suppliers.ofInstance(ImmutableSortedSet.of())),
+            params
+                .withBuildTarget(emptyInitTarget)
+                .withoutDeclaredDeps()
+                .withoutExtraDeps(),
             "",
             emptyInitPath,
             /* executable */ false));
@@ -171,10 +170,10 @@ public class PythonBinaryDescription implements
     SymlinkTree linkTree =
         resolver.addToIndex(
             new SymlinkTree(
-                params.copyWithChanges(
-                    linkTreeTarget,
-                    Suppliers.ofInstance(ImmutableSortedSet.of()),
-                    Suppliers.ofInstance(ImmutableSortedSet.of())),
+                params
+                    .withBuildTarget(linkTreeTarget)
+                    .withoutDeclaredDeps()
+                    .withoutExtraDeps(),
                 linkTreeRoot,
                 ImmutableMap.<Path, SourcePath>builder()
                     .putAll(components.getModules())

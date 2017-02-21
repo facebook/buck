@@ -31,9 +31,7 @@ import com.facebook.buck.rules.WriteStringTemplateRule;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Charsets;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Resources;
 
 import org.immutables.value.Value;
@@ -79,10 +77,10 @@ abstract class AbstractLuaScriptStarter implements Starter {
             .build();
     WriteFile templateRule = getRuleResolver().addToIndex(
         new WriteFile(
-            getBaseParams().copyWithChanges(
-                templateTarget,
-                Suppliers.ofInstance(ImmutableSortedSet.of()),
-                Suppliers.ofInstance(ImmutableSortedSet.of())),
+            getBaseParams()
+                .withBuildTarget(templateTarget)
+                .withoutDeclaredDeps()
+                .withoutExtraDeps(),
             getPureStarterTemplate(),
             BuildTargets.getGenPath(
                 getBaseParams().getProjectFilesystem(),

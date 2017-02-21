@@ -40,6 +40,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -86,12 +87,12 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
     Tool scalac = scalaBuckConfig.getScalac(resolver);
 
     final BuildRule scalaLibrary = resolver.getRule(scalaBuckConfig.getScalaLibraryTarget());
-    BuildRuleParams params = rawParams.copyWithDeps(
+    Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
         () -> ImmutableSortedSet.<BuildRule>naturalOrder()
             .addAll(rawParams.getDeclaredDeps().get())
             .add(scalaLibrary)
-            .build(),
-        rawParams.getExtraDeps());
+            .build();
+    BuildRuleParams params = rawParams.withDeclaredDeps(declaredDeps);
 
     BuildRuleParams javaLibraryParams =
         params.appendExtraDeps(

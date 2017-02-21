@@ -163,7 +163,7 @@ public class SwiftLibraryDescription implements
             .filter(input -> !input.getBuildTarget().getUnflavoredBuildTarget()
                 .equals(buildTarget.getUnflavoredBuildTarget()))
             .toSortedSet(Ordering.natural());
-    params = params.copyWithExtraDeps(Suppliers.ofInstance(filteredExtraDeps));
+    params = params.withExtraDeps(Suppliers.ofInstance(filteredExtraDeps));
 
     if (!buildFlavors.contains(SWIFT_COMPANION_FLAVOR) && platform.isPresent()) {
       final CxxPlatform cxxPlatform = platform.get().getValue();
@@ -185,11 +185,7 @@ public class SwiftLibraryDescription implements
         if (flavoredLinkerMapMode.isPresent()) {
           target = target.withAppendedFlavors(flavoredLinkerMapMode.get().getFlavor());
         }
-        BuildRuleParams typeParams =
-            params.copyWithChanges(
-                target,
-                params.getDeclaredDeps(),
-                params.getExtraDeps());
+        BuildRuleParams typeParams = params.withBuildTarget(target);
 
         switch (type.get().getValue()) {
           case SHARED:

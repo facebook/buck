@@ -101,10 +101,11 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
     androidManifestArgs.skeleton = args.manifestSkeleton;
     androidManifestArgs.deps = args.deps;
 
-    BuildRuleParams androidManifestParams = originalBuildRuleParams.copyWithChanges(
-        BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ANDROID_MANIFEST_FLAVOR),
-        originalBuildRuleParams.getDeclaredDeps(),
-        originalBuildRuleParams.getExtraDeps());
+    BuildRuleParams androidManifestParams =
+        originalBuildRuleParams
+            .withBuildTarget(BuildTargets.createFlavoredBuildTarget(
+                originalBuildTarget,
+                AAR_ANDROID_MANIFEST_FLAVOR));
 
     AndroidManifest manifest = androidManifestDescription.createBuildRule(
         targetGraph,
@@ -135,10 +136,12 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
     ImmutableSortedSet<BuildRule> androidResourceExtraDeps =
         AndroidResourceHelper.androidResOnly(originalBuildRuleParams.getExtraDeps().get());
 
-    BuildRuleParams assembleAssetsParams = originalBuildRuleParams.copyWithChanges(
-        BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ASSEMBLE_ASSETS_FLAVOR),
-        Suppliers.ofInstance(androidResourceDeclaredDeps),
-        Suppliers.ofInstance(androidResourceExtraDeps));
+    BuildRuleParams assembleAssetsParams = originalBuildRuleParams
+        .withBuildTarget(BuildTargets.createFlavoredBuildTarget(
+            originalBuildTarget,
+            AAR_ASSEMBLE_ASSETS_FLAVOR))
+        .withDeclaredDeps(Suppliers.ofInstance(androidResourceDeclaredDeps))
+        .withExtraDeps(Suppliers.ofInstance(androidResourceExtraDeps));
     ImmutableCollection<SourcePath> assetsDirectories =
         packageableCollection.getAssetsDirectories();
     AssembleDirectories assembleAssetsDirectories = new AssembleDirectories(
@@ -146,10 +149,13 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         assetsDirectories);
     aarExtraDepsBuilder.add(resolver.addToIndex(assembleAssetsDirectories));
 
-    BuildRuleParams assembleResourceParams = originalBuildRuleParams.copyWithChanges(
-        BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ASSEMBLE_RESOURCE_FLAVOR),
-        Suppliers.ofInstance(androidResourceDeclaredDeps),
-        Suppliers.ofInstance(androidResourceExtraDeps));
+    BuildRuleParams assembleResourceParams = originalBuildRuleParams
+        .withBuildTarget(
+            BuildTargets.createFlavoredBuildTarget(
+                originalBuildTarget,
+                AAR_ASSEMBLE_RESOURCE_FLAVOR))
+        .withDeclaredDeps(Suppliers.ofInstance(androidResourceDeclaredDeps))
+        .withExtraDeps(Suppliers.ofInstance(androidResourceExtraDeps));
     ImmutableCollection<SourcePath> resDirectories =
         packageableCollection.getResourceDetails().getResourceDirectories();
     MergeAndroidResourceSources assembleResourceDirectories = new MergeAndroidResourceSources(
@@ -158,14 +164,17 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
     aarExtraDepsBuilder.add(resolver.addToIndex(assembleResourceDirectories));
 
     /* android_resource */
-    BuildRuleParams androidResourceParams = originalBuildRuleParams.copyWithChanges(
-        BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ANDROID_RESOURCE_FLAVOR),
-        Suppliers.ofInstance(
-            ImmutableSortedSet.of(
-                manifest,
-                assembleAssetsDirectories,
-                assembleResourceDirectories)),
-        Suppliers.ofInstance(ImmutableSortedSet.of()));
+    BuildRuleParams androidResourceParams = originalBuildRuleParams
+        .withBuildTarget(BuildTargets.createFlavoredBuildTarget(
+            originalBuildTarget,
+            AAR_ANDROID_RESOURCE_FLAVOR))
+        .withDeclaredDeps(
+            Suppliers.ofInstance(
+                ImmutableSortedSet.of(
+                    manifest,
+                    assembleAssetsDirectories,
+                    assembleResourceDirectories)))
+        .withoutExtraDeps();
 
     AndroidResource androidResource = new AndroidResource(
         androidResourceParams,
@@ -214,8 +223,9 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
       }
       return copyNativeLibraries.getPathToNativeLibsDir();
     });
-    BuildRuleParams androidAarParams = originalBuildRuleParams.copyWithExtraDeps(
-        Suppliers.ofInstance(ImmutableSortedSet.copyOf(aarExtraDepsBuilder.build())));
+    BuildRuleParams androidAarParams = originalBuildRuleParams
+        .withExtraDeps(
+            Suppliers.ofInstance(ImmutableSortedSet.copyOf(aarExtraDepsBuilder.build())));
     return new AndroidAar(
         androidAarParams,
         manifest,

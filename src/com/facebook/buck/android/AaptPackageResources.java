@@ -126,8 +126,8 @@ public class AaptPackageResources extends AbstractBuildRule {
       boolean includesVectorDrawables,
       EnumSet<RType> bannedDuplicateResourceTypes,
       ManifestEntries manifestEntries) {
-    super(params.copyWithDeps(
-        Suppliers.ofInstance(getAllDeps(
+    super(params
+        .withDeclaredDeps(Suppliers.ofInstance(getAllDeps(
             params.getBuildTarget(),
             ruleFinder,
             ruleResolver,
@@ -135,9 +135,8 @@ public class AaptPackageResources extends AbstractBuildRule {
             filteredResourcesProvider,
             resourceDeps,
             extraDeps,
-            assetsDirectories)),
-        Suppliers.ofInstance(ImmutableSortedSet.of())
-    ));
+            assetsDirectories)))
+        .withoutExtraDeps());
     this.manifest = manifest;
     this.filteredResourcesProvider = filteredResourcesProvider;
     this.resourceDeps = resourceDeps;

@@ -43,6 +43,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -98,12 +99,12 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     final BuildRule scalaLibrary = resolver.getRule(config.getScalaLibraryTarget());
-    BuildRuleParams params = rawParams.copyWithDeps(
+    Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
         () -> ImmutableSortedSet.<BuildRule>naturalOrder()
             .addAll(rawParams.getDeclaredDeps().get())
             .add(scalaLibrary)
-            .build(),
-        rawParams.getExtraDeps());
+            .build();
+    BuildRuleParams params = rawParams.withDeclaredDeps(declaredDeps);
 
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
         new JavaTestDescription.CxxLibraryEnhancement(
@@ -158,9 +159,9 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                 /* classesToRemoveFromJar */ ImmutableSet.of()));
 
     return new JavaTest(
-        params.copyWithDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+        params
+            .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)))
+            .withoutExtraDeps(),
         pathResolver,
         testsLibrary,
         /* additionalClasspathEntries */ ImmutableSet.of(),

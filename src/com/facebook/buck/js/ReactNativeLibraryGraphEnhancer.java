@@ -54,15 +54,16 @@ public class ReactNativeLibraryGraphEnhancer {
       ReactNativePlatform platform) {
     Tool jsPackager = buckConfig.getPackager(resolver);
     return new ReactNativeBundle(
-        baseParams.copyWithChanges(
-            target,
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(ruleFinder.filterBuildRuleInputs(args.entryPath))
-                    .addAll(ruleFinder.filterBuildRuleInputs(args.srcs))
-                    .addAll(jsPackager.getDeps(ruleFinder))
-                    .build()),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+        baseParams
+            .withBuildTarget(target)
+            .withDeclaredDeps(
+                Suppliers.ofInstance(
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(ruleFinder.filterBuildRuleInputs(args.entryPath))
+                        .addAll(ruleFinder.filterBuildRuleInputs(args.srcs))
+                        .addAll(jsPackager.getDeps(ruleFinder))
+                        .build()))
+            .withoutExtraDeps(),
         pathResolver,
         args.entryPath,
         args.srcs,
@@ -101,12 +102,9 @@ public class ReactNativeLibraryGraphEnhancer {
     extraDeps.add(bundle);
     if (args.rDotJavaPackage.isPresent()) {
       BuildRuleParams paramsForResource =
-          params.copyWithBuildTarget(
-              BuildTarget.builder(originalBuildTarget)
-                  .addFlavors(REACT_NATIVE_ANDROID_RES_FLAVOR)
-                  .build())
-              .copyWithExtraDeps(Suppliers.ofInstance(
-                      ImmutableSortedSet.of(bundle)));
+          params
+              .withFlavor(REACT_NATIVE_ANDROID_RES_FLAVOR)
+              .withExtraDeps(Suppliers.ofInstance(ImmutableSortedSet.of(bundle)));
 
       SourcePath resources = new BuildTargetSourcePath(
           bundle.getBuildTarget(),

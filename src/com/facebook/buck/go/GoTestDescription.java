@@ -40,6 +40,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -137,12 +138,10 @@ public class GoTestDescription implements
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     GoTestMain generatedTestMain = new GoTestMain(
-        params.copyWithChanges(
-            params.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("test-main-src")),
-            Suppliers.ofInstance(ImmutableSortedSet.copyOf(
-                testMainGenerator.getDeps(ruleFinder))),
-            Suppliers.ofInstance(ImmutableSortedSet.of())
-        ),
+        params.withFlavor(ImmutableFlavor.of("test-main-src"))
+            .withDeclaredDeps(Suppliers.ofInstance(
+                ImmutableSortedSet.copyOf(testMainGenerator.getDeps(ruleFinder))))
+            .withoutExtraDeps(),
         testMainGenerator,
         srcs,
         packageName
@@ -178,10 +177,9 @@ public class GoTestDescription implements
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new GoTest(
-        params.copyWithDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.of(testMain)),
-            Suppliers.ofInstance(ImmutableSortedSet.of())
-        ),
+        params
+            .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.of(testMain)))
+            .withoutExtraDeps(),
         ruleFinder,
         pathResolver,
         testMain,
@@ -199,7 +197,7 @@ public class GoTestDescription implements
       GoPlatform platform) throws NoSuchBuildTargetException {
     Path packageName = getGoPackageName(resolver, params.getBuildTarget(), args);
 
-    BuildRuleParams testTargetParams = params.copyWithBuildTarget(
+    BuildRuleParams testTargetParams = params.withBuildTarget(
         params.getBuildTarget().withAppendedFlavors(TEST_LIBRARY_FLAVOR));
     BuildRule testLibrary = new NoopBuildRule(
         testTargetParams, new SourcePathResolver(new SourcePathRuleFinder(resolver)));
@@ -208,10 +206,9 @@ public class GoTestDescription implements
     BuildRule generatedTestMain = requireTestMainGenRule(
         params, resolver, args.srcs, packageName);
     GoBinary testMain = GoDescriptors.createGoBinaryRule(
-        params.copyWithChanges(
-            params.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("test-main")),
-            Suppliers.ofInstance(ImmutableSortedSet.of(testLibrary)),
-            Suppliers.ofInstance(ImmutableSortedSet.of(generatedTestMain))),
+        params.withFlavor(ImmutableFlavor.of("test-main"))
+            .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.of(testLibrary)))
+            .withExtraDeps(Suppliers.ofInstance(ImmutableSortedSet.of(generatedTestMain))),
         resolver,
         goBuckConfig,
         ImmutableSet.of(generatedTestMain.getSourcePathToOutput()),
@@ -272,19 +269,22 @@ public class GoTestDescription implements
           args.library.get(), GoLibraryDescription.Arg.class).get();
 
       final BuildRuleParams originalParams = params;
-      BuildRuleParams testTargetParams = params.copyWithDeps(
+      Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
           () -> ImmutableSortedSet.<BuildRule>naturalOrder()
               .addAll(originalParams.getDeclaredDeps().get())
               .addAll(resolver.getAllRules(libraryArg.deps))
-              .build(),
-          () -> {
-            SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-            return ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(originalParams.getExtraDeps().get())
-                // Make sure to include dynamically generated sources as deps.
-                .addAll(ruleFinder.filterBuildRuleInputs(libraryArg.srcs))
-                .build();
-          });
+              .build();
+      Supplier<ImmutableSortedSet<BuildRule>> extraDeps = () -> {
+        SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+        return ImmutableSortedSet.<BuildRule>naturalOrder()
+            .addAll(originalParams.getExtraDeps().get())
+            // Make sure to include dynamically generated sources as deps.
+            .addAll(ruleFinder.filterBuildRuleInputs(libraryArg.srcs))
+            .build();
+      };
+      BuildRuleParams testTargetParams = params
+          .withDeclaredDeps(declaredDeps)
+          .withExtraDeps(extraDeps);
 
       testLibrary = GoDescriptors.createGoCompileRule(
           testTargetParams,

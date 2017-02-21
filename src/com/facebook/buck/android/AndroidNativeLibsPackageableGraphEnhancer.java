@@ -251,15 +251,14 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
           (!nativeLinkableLibs.isEmpty() || !nativeLinkableLibsAssets.isEmpty())) {
         NativeRelinker relinker =
             new NativeRelinker(
-                buildRuleParams.copyWithExtraDeps(
-                    Suppliers.ofInstance(
-                        ImmutableSortedSet.<BuildRule>naturalOrder()
-                            .addAll(
-                                ruleFinder.filterBuildRuleInputs(nativeLinkableLibs.values()))
-                            .addAll(
-                                ruleFinder.filterBuildRuleInputs(
-                                    nativeLinkableLibsAssets.values()))
-                            .build())),
+                buildRuleParams.withExtraDeps(Suppliers.ofInstance(
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(
+                            ruleFinder.filterBuildRuleInputs(nativeLinkableLibs.values()))
+                        .addAll(
+                            ruleFinder.filterBuildRuleInputs(
+                                nativeLinkableLibsAssets.values()))
+                        .build())),
                 pathResolver,
                 ruleFinder,
                 cxxBuckConfig,
@@ -291,25 +290,23 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
               nativePlatforms,
               nativeLinkableLibsAssets);
 
-      BuildTarget targetForCopyNativeLibraries = BuildTarget.builder(originalBuildTarget)
-          .addFlavors(ImmutableFlavor.of(COPY_NATIVE_LIBS + "_" + module.getName()))
-          .build();
       ImmutableSortedSet<BuildRule> nativeLibsRules = BuildRules.toBuildRulesFor(
           originalBuildTarget,
           ruleResolver,
           packageableCollection.getNativeLibsTargets().get(module));
-      BuildRuleParams paramsForCopyNativeLibraries = buildRuleParams.copyWithChanges(
-          targetForCopyNativeLibraries,
-          Suppliers.ofInstance(
-              ImmutableSortedSet.<BuildRule>naturalOrder()
-                  .addAll(nativeLibsRules)
-                  .addAll(
-                      ruleFinder.filterBuildRuleInputs(
-                          packageableCollection.getNativeLibsDirectories().get(module)))
-                  .addAll(strippedLibsMap.keySet())
-                  .addAll(strippedLibsAssetsMap.keySet())
-                  .build()),
-            /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
+      BuildRuleParams paramsForCopyNativeLibraries = buildRuleParams
+          .withFlavor(ImmutableFlavor.of(COPY_NATIVE_LIBS + "_" + module.getName()))
+          .withDeclaredDeps(
+              Suppliers.ofInstance(
+                  ImmutableSortedSet.<BuildRule>naturalOrder()
+                      .addAll(nativeLibsRules)
+                      .addAll(
+                          ruleFinder.filterBuildRuleInputs(
+                              packageableCollection.getNativeLibsDirectories().get(module)))
+                      .addAll(strippedLibsMap.keySet())
+                      .addAll(strippedLibsAssetsMap.keySet())
+                      .build()))
+          .withoutExtraDeps();
       moduleMappedCopyNativeLibriesBuilder.put(
           module,
           new CopyNativeLibraries(
@@ -371,13 +368,14 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       if (previouslyCreated.isPresent()) {
         stripLinkable = (StripLinkable) previouslyCreated.get();
       } else {
-        BuildRuleParams paramsForStripLinkable = buildRuleParams.copyWithChanges(
-            targetForStripRule,
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(ruleFinder.filterBuildRuleInputs(ImmutableList.of(sourcePath)))
-                    .build()),
-            /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
+        BuildRuleParams paramsForStripLinkable = buildRuleParams
+            .withBuildTarget(targetForStripRule)
+            .withDeclaredDeps(
+                Suppliers.ofInstance(
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(ruleFinder.filterBuildRuleInputs(ImmutableList.of(sourcePath)))
+                        .build()))
+            .withoutExtraDeps();
 
         stripLinkable = new StripLinkable(
             paramsForStripLinkable,

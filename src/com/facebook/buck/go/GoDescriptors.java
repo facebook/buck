@@ -125,7 +125,7 @@ abstract class GoDescriptors {
 
     BuildTarget target = createSymlinkTreeTarget(params.getBuildTarget());
     SymlinkTree symlinkTree = makeSymlinkTree(
-        params.copyWithBuildTarget(target),
+        params.withBuildTarget(target),
         pathResolver,
         ruleFinder,
         linkables);
@@ -201,7 +201,7 @@ abstract class GoDescriptors {
         params.getBuildTarget().withAppendedFlavors(
             ImmutableFlavor.of("compile"), platform.getFlavor());
     GoCompile library = GoDescriptors.createGoCompileRule(
-        params.copyWithBuildTarget(libraryTarget),
+        params.withBuildTarget(libraryTarget),
         resolver,
         goBuckConfig,
         Paths.get("main"),
@@ -217,7 +217,7 @@ abstract class GoDescriptors {
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildTarget target = createTransitiveSymlinkTreeTarget(params.getBuildTarget());
     SymlinkTree symlinkTree = makeSymlinkTree(
-        params.copyWithBuildTarget(target),
+        params.withBuildTarget(target),
         pathResolver,
         ruleFinder,
         requireTransitiveGoLinkables(
@@ -232,14 +232,14 @@ abstract class GoDescriptors {
     LOG.verbose("Symlink tree for linking of %s: %s", params.getBuildTarget(), symlinkTree);
 
     return new GoBinary(
-        params.copyWithDeps(
-            Suppliers.ofInstance(
+        params
+            .withDeclaredDeps(Suppliers.ofInstance(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(ruleFinder.filterBuildRuleInputs(symlinkTree.getLinks().values()))
                     .add(symlinkTree)
                     .add(library)
-                    .build()),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+                    .build()))
+            .withoutExtraDeps(),
         pathResolver,
         platform.getCxxPlatform().map(input -> input.getLd().resolve(resolver)),
         symlinkTree,
@@ -275,10 +275,10 @@ abstract class GoDescriptors {
     WriteFile writeFile =
         resolver.addToIndex(
             new WriteFile(
-                sourceParams.copyWithChanges(
-                    generatorSourceTarget,
-                    Suppliers.ofInstance(ImmutableSortedSet.of()),
-                    Suppliers.ofInstance(ImmutableSortedSet.of())),
+                sourceParams
+                    .withBuildTarget(generatorSourceTarget)
+                    .withoutDeclaredDeps()
+                    .withoutExtraDeps(),
                 extractTestMainGenerator(),
                 BuildTargets.getGenPath(
                     sourceParams.getProjectFilesystem(),
@@ -289,10 +289,10 @@ abstract class GoDescriptors {
     GoBinary binary =
         resolver.addToIndex(
             createGoBinaryRule(
-                sourceParams.copyWithChanges(
-                    generatorTarget,
-                    Suppliers.ofInstance(ImmutableSortedSet.of()),
-                    Suppliers.ofInstance(ImmutableSortedSet.of(writeFile))),
+                sourceParams
+                    .withBuildTarget(generatorTarget)
+                    .withoutDeclaredDeps()
+                    .withExtraDeps(Suppliers.ofInstance(ImmutableSortedSet.of(writeFile))),
                 resolver,
                 goBuckConfig,
                 ImmutableSet.of(writeFile.getSourcePathToOutput()),

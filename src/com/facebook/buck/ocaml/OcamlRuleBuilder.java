@@ -256,10 +256,10 @@ public class OcamlRuleBuilder {
     BuildTarget buildTarget =
         isLibrary ? createStaticLibraryBuildTarget(params.getBuildTarget())
             : createOcamlLinkTarget(params.getBuildTarget());
-    final BuildRuleParams compileParams = params.copyWithChanges(
-        buildTarget,
-        /* declaredDeps */ Suppliers.ofInstance(allDeps),
-        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
+    final BuildRuleParams compileParams = params
+        .withBuildTarget(buildTarget)
+        .withDeclaredDeps(Suppliers.ofInstance(allDeps))
+        .withoutExtraDeps();
 
     ImmutableList.Builder<String> flagsBuilder = ImmutableList.builder();
     flagsBuilder.addAll(argFlags);
@@ -306,13 +306,12 @@ public class OcamlRuleBuilder {
 
     if (isLibrary) {
       return new OcamlStaticLibrary(
-          params.copyWithDeps(
-              Suppliers.ofInstance(
+          params
+              .withDeclaredDeps(Suppliers.ofInstance(
                   ImmutableSortedSet.<BuildRule>naturalOrder()
                       .addAll(params.getDeclaredDeps().get())
                       .add(ocamlLibraryBuild)
-                      .build()),
-              params.getExtraDeps()),
+                      .build())),
           pathResolver,
           compileParams,
           linkerFlags,
@@ -330,13 +329,13 @@ public class OcamlRuleBuilder {
           ImmutableSortedSet.of(ocamlLibraryBuild));
     } else {
       return new OcamlBinary(
-          params.copyWithDeps(
-              Suppliers.ofInstance(
-                  ImmutableSortedSet.<BuildRule>naturalOrder()
-                      .addAll(params.getDeclaredDeps().get())
-                      .add(ocamlLibraryBuild)
-                      .build()),
-              params.getExtraDeps()),
+          params
+              .withDeclaredDeps(
+                  Suppliers.ofInstance(
+                      ImmutableSortedSet.<BuildRule>naturalOrder()
+                          .addAll(params.getDeclaredDeps().get())
+                          .add(ocamlLibraryBuild)
+                          .build())),
           pathResolver,
           ocamlLibraryBuild);
     }
@@ -383,24 +382,25 @@ public class OcamlRuleBuilder {
         isLibrary ? createStaticLibraryBuildTarget(params.getBuildTarget())
             : createOcamlLinkTarget(params.getBuildTarget());
 
-    final BuildRuleParams compileParams = params.copyWithChanges(
-        buildTarget,
-        /* declaredDeps */ Suppliers.ofInstance(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(ruleFinder.filterBuildRuleInputs(getInput(srcs)))
-                .addAll(
-                    Stream.of(nativeLinkableInput, bytecodeLinkableInput, cLinkableInput)
-                    .flatMap(input -> input.getArgs().stream())
-                    .flatMap(arg -> arg.getDeps(ruleFinder).stream())
-                    .iterator())
-                .addAll(
-                    ruleFinder.filterBuildRuleInputs(
-                        ocamlBuckConfig.getCCompiler().resolve(resolver).getInputs()))
-                .addAll(
-                    ruleFinder.filterBuildRuleInputs(
-                        ocamlBuckConfig.getCxxCompiler().resolve(resolver).getInputs()))
-                .build()),
-        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
+    final BuildRuleParams compileParams = params
+        .withBuildTarget(buildTarget)
+        .withDeclaredDeps(
+            Suppliers.ofInstance(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(ruleFinder.filterBuildRuleInputs(getInput(srcs)))
+                    .addAll(
+                        Stream.of(nativeLinkableInput, bytecodeLinkableInput, cLinkableInput)
+                            .flatMap(input -> input.getArgs().stream())
+                            .flatMap(arg -> arg.getDeps(ruleFinder).stream())
+                            .iterator())
+                    .addAll(
+                        ruleFinder.filterBuildRuleInputs(
+                            ocamlBuckConfig.getCCompiler().resolve(resolver).getInputs()))
+                    .addAll(
+                        ruleFinder.filterBuildRuleInputs(
+                            ocamlBuckConfig.getCxxCompiler().resolve(resolver).getInputs()))
+                    .build()))
+        .withoutExtraDeps();
 
     ImmutableList.Builder<String> flagsBuilder = ImmutableList.builder();
     flagsBuilder.addAll(argFlags);
@@ -461,13 +461,12 @@ public class OcamlRuleBuilder {
 
     if (isLibrary) {
       return new OcamlStaticLibrary(
-          params.copyWithDeps(
-              Suppliers.ofInstance(
+          params
+              .withDeclaredDeps(Suppliers.ofInstance(
                   ImmutableSortedSet.<BuildRule>naturalOrder()
                       .addAll(params.getDeclaredDeps().get())
                       .addAll(result.getRules())
-                      .build()),
-              params.getExtraDeps()),
+                      .build())),
           pathResolver,
           compileParams,
           linkerFlags,
@@ -482,13 +481,12 @@ public class OcamlRuleBuilder {
               .build());
     } else {
       return new OcamlBinary(
-          params.copyWithDeps(
-              Suppliers.ofInstance(
+          params
+              .withDeclaredDeps(Suppliers.ofInstance(
                   ImmutableSortedSet.<BuildRule>naturalOrder()
                       .addAll(params.getDeclaredDeps().get())
                       .addAll(result.getRules())
-                      .build()),
-              params.getExtraDeps()),
+                      .build())),
           pathResolver,
           result.getRules().get(0));
     }

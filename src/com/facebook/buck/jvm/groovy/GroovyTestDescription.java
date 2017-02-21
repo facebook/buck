@@ -144,9 +144,9 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
                 /* classesToRemoveFromJar */ ImmutableSet.of()));
 
     return new JavaTest(
-        params.copyWithDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+        params
+            .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)))
+            .withoutExtraDeps(),
         pathResolver,
         testsLibrary,
         /* additionalClasspathEntries */ ImmutableSet.of(),

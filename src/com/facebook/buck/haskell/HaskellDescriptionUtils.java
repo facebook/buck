@@ -275,7 +275,7 @@ public class HaskellDescriptionUtils {
     WriteFile emptyModule =
         resolver.addToIndex(
             new WriteFile(
-                baseParams.copyWithBuildTarget(emptyModuleTarget),
+                baseParams.withBuildTarget(emptyModuleTarget),
                 "module Unused where",
                 BuildTargets.getGenPath(
                     baseParams.getProjectFilesystem(),
@@ -326,18 +326,19 @@ public class HaskellDescriptionUtils {
 
     return resolver.addToIndex(
         new HaskellLinkRule(
-            baseParams.copyWithChanges(
-                target,
-                Suppliers.ofInstance(
-                    ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(linker.getDeps(ruleFinder))
-                        .addAll(
-                            Stream.of(args, linkerArgs)
-                                .flatMap(Collection::stream)
-                                .flatMap(arg -> arg.getDeps(ruleFinder).stream())
-                                .iterator())
-                        .build()),
-                Suppliers.ofInstance(ImmutableSortedSet.of())),
+            baseParams
+                .withBuildTarget(target)
+                .withDeclaredDeps(
+                    Suppliers.ofInstance(
+                        ImmutableSortedSet.<BuildRule>naturalOrder()
+                            .addAll(linker.getDeps(ruleFinder))
+                            .addAll(
+                                Stream.of(args, linkerArgs)
+                                    .flatMap(Collection::stream)
+                                    .flatMap(arg -> arg.getDeps(ruleFinder).stream())
+                                    .iterator())
+                            .build()))
+                .withoutExtraDeps(),
             linker,
             name,
             args,

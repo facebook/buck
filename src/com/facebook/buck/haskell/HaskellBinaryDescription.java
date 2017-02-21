@@ -214,7 +214,7 @@ public class HaskellBinaryDescription implements
             depType);
 
     return new HaskellBinary(
-        params.appendExtraDeps(linkRule),
+        params.appendExtraDep(linkRule),
         ruleFinder,
         deps,
         executable,

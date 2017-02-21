@@ -260,10 +260,10 @@ public class AaptPackageResourcesTest {
     previousRuleKey = assertKeyChanged(previousRuleKey, args);
 
     args.filteredResourcesProvider = new ResourcesFilter(
-        params.copyWithChanges(
-            params.getBuildTarget().withFlavors(ImmutableFlavor.of("filter")),
-            Suppliers.ofInstance(ImmutableSortedSet.of(resource1, resource2)),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+        params
+            .withFlavor(ImmutableFlavor.of("filter"))
+            .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.of(resource1, resource2)))
+            .withoutExtraDeps(),
         ImmutableList.of(resource1.getRes(), resource2.getRes()),
         ImmutableSet.of(),
         ImmutableSet.of(),
@@ -274,11 +274,10 @@ public class AaptPackageResourcesTest {
     previousRuleKey = assertKeyChanged(previousRuleKey, args);
 
     args.filteredResourcesProvider = new ResourcesFilter(
-        params.copyWithChanges(
-            params.getBuildTarget().withFlavors(ImmutableFlavor.of("filter")),
-            Suppliers.ofInstance(ImmutableSortedSet.of(resource1, resource2)),
-            Suppliers.ofInstance(ImmutableSortedSet.of())
-        ),
+        params
+            .withFlavor(ImmutableFlavor.of("filter"))
+            .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.of(resource1, resource2)))
+            .withoutExtraDeps(),
         ImmutableList.of(resource1.getRes(), resource2.getRes()),
         ImmutableSet.of(),
         ImmutableSet.of("some_locale"),
