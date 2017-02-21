@@ -19,13 +19,13 @@ package com.facebook.buck.util.cache;
 import com.facebook.buck.hashing.PathHashing;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
@@ -248,10 +248,9 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     if (projectFilesystem.isDirectory(path)) {
       value = HashCodeAndFileType.ofDirectory(
           hashCode,
-          ImmutableSet.copyOf(
-              FluentIterable.from(projectFilesystem.getFilesUnderPath(path))
-                  .transform(
-                      path::relativize)));
+          projectFilesystem.getFilesUnderPath(path).stream()
+              .map(path::relativize)
+              .collect(MoreCollectors.toImmutableSet()));
     } else if (rawPath.toString().endsWith(".jar")) {
       value = HashCodeAndFileType.ofArchive(
           hashCode,
