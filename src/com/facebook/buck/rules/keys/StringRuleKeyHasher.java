@@ -62,7 +62,7 @@ public class StringRuleKeyHasher implements RuleKeyHasher<String> {
   }
 
   @Override
-  public RuleKeyHasher<String> putString(CharSequence val) {
+  public RuleKeyHasher<String> putString(String val) {
     parts.add(String.format("string(\"%s\")", val));
     return this;
   }

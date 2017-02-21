@@ -72,7 +72,7 @@ public interface RuleKeyHasher<HASH> {
   RuleKeyHasher<HASH> putNull();
   RuleKeyHasher<HASH> putBoolean(boolean val);
   RuleKeyHasher<HASH> putNumber(Number val);
-  RuleKeyHasher<HASH> putString(CharSequence val);
+  RuleKeyHasher<HASH> putString(String val);
   RuleKeyHasher<HASH> putBytes(byte[] bytes);
   RuleKeyHasher<HASH> putPattern(Pattern pattern);
 

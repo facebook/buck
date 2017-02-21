@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
+import com.google.common.base.Charsets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 
@@ -68,11 +69,15 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
     this.hasher = hasher;
   }
 
-  private RuleKeyHasher<HashCode> putStringified(byte type, CharSequence val) {
-    hasher.putUnencodedChars(val);
-    hasher.putInt(val.length());
+  private RuleKeyHasher<HashCode> putBytes(byte type, byte[] bytes) {
+    hasher.putBytes(bytes);
+    hasher.putInt(bytes.length);
     hasher.putByte(type);
     return this;
+  }
+
+  private RuleKeyHasher<HashCode> putStringified(byte type, String val) {
+    return putBytes(type, val.getBytes(Charsets.UTF_8));
   }
 
   @Override
@@ -119,16 +124,13 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
   }
 
   @Override
-  public RuleKeyHasher<HashCode> putString(CharSequence val) {
+  public RuleKeyHasher<HashCode> putString(String val) {
     return this.putStringified(TYPE_STRING, val);
   }
 
   @Override
   public RuleKeyHasher<HashCode> putBytes(byte[] bytes) {
-    hasher.putBytes(bytes);
-    hasher.putInt(bytes.length);
-    hasher.putByte(TYPE_BYTE_ARRAY);
-    return this;
+    return putBytes(TYPE_BYTE_ARRAY, bytes);
   }
 
   @Override

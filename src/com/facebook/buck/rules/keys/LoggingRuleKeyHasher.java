@@ -79,7 +79,7 @@ public class LoggingRuleKeyHasher<HASH> implements RuleKeyHasher<HASH> {
   }
 
   @Override
-  public LoggingRuleKeyHasher<HASH> putString(CharSequence val) {
+  public LoggingRuleKeyHasher<HASH> putString(String val) {
     stringHasher.putString(val);
     delegate.putString(val);
     return this;

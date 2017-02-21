@@ -72,7 +72,7 @@ public class CountingRuleKeyHasher<HASH> implements RuleKeyHasher<HASH> {
   }
 
   @Override
-  public CountingRuleKeyHasher<HASH> putString(CharSequence val) {
+  public CountingRuleKeyHasher<HASH> putString(String val) {
     count++;
     delegate.putString(val);
     return this;
