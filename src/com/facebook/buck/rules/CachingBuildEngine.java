@@ -1183,51 +1183,47 @@ public class CachingBuildEngine implements BuildEngine {
     return seen.size();
   }
 
-  private synchronized ListenableFuture<RuleKey> calculateRuleKey(
+  private ListenableFuture<RuleKey> calculateRuleKey(
       final BuildRule rule,
       final BuildEngineBuildContext context) {
-    ListenableFuture<RuleKey> ruleKey = ruleKeys.get(rule.getBuildTarget());
-    if (ruleKey == null) {
+    return ruleKeys.computeIfAbsent(
+        rule.getBuildTarget(),
+        target -> {
 
-      // Grab all the dependency rule key futures.  Since our rule key calculation depends on this
-      // one, we need to wait for them to complete.
-      ListenableFuture<List<RuleKey>> depKeys =
-          Futures.transformAsync(
-              ruleDeps.get(rule),
-              deps -> {
-                List<ListenableFuture<RuleKey>> depKeys1 =
-                    Lists.newArrayListWithExpectedSize(rule.getDeps().size());
-                for (BuildRule dep : deps) {
-                  depKeys1.add(calculateRuleKey(dep, context));
+          // Grab all the dependency rule key futures.  Since our rule key calculation depends on
+          // this one, we need to wait for them to complete.
+          ListenableFuture<List<RuleKey>> depKeys =
+              Futures.transformAsync(
+                  ruleDeps.get(rule),
+                  deps -> {
+                    List<ListenableFuture<RuleKey>> depKeys1 =
+                        Lists.newArrayListWithExpectedSize(rule.getDeps().size());
+                    for (BuildRule dep : deps) {
+                      depKeys1.add(calculateRuleKey(dep, context));
+                    }
+                    return Futures.allAsList(depKeys1);
+                  },
+                  serviceByAdjustingDefaultWeightsTo(RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS));
+
+          final RuleKeyFactories keyFactories = ruleKeyFactories.apply(rule.getProjectFilesystem());
+
+          // Setup a future to calculate this rule key once the dependencies have been calculated.
+          return Futures.transform(
+              depKeys,
+              new Function<List<RuleKey>, RuleKey>() {
+                @Override
+                public RuleKey apply(List<RuleKey> input) {
+                  try (BuildRuleEvent.Scope scope =
+                           BuildRuleEvent.ruleKeyCalculationScope(
+                               context.getEventBus(),
+                               rule,
+                               keyFactories.getDefaultRuleKeyFactory())) {
+                    return keyFactories.getDefaultRuleKeyFactory().build(rule);
+                  }
                 }
-                return Futures.allAsList(depKeys1);
               },
               serviceByAdjustingDefaultWeightsTo(RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS));
-
-      final RuleKeyFactories keyFactories = ruleKeyFactories.apply(rule.getProjectFilesystem());
-
-      // Setup a future to calculate this rule key once the dependencies have been calculated.
-      ruleKey = Futures.transform(
-          depKeys,
-          new Function<List<RuleKey>, RuleKey>() {
-            @Override
-            public RuleKey apply(List<RuleKey> input) {
-              try (BuildRuleEvent.Scope scope =
-                       BuildRuleEvent.ruleKeyCalculationScope(
-                           context.getEventBus(),
-                           rule,
-                           keyFactories.getDefaultRuleKeyFactory())) {
-                return keyFactories.getDefaultRuleKeyFactory().build(rule);
-              }
-            }
-          },
-          serviceByAdjustingDefaultWeightsTo(RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS));
-
-      // Record the rule key future.
-      ruleKeys.put(rule.getBuildTarget(), ruleKey);
-    }
-
-    return ruleKey;
+        });
   }
 
   @Override
