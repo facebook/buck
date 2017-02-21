@@ -162,6 +162,7 @@ import java.net.URLClassLoader;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.FileSystems;
 import java.nio.file.LinkOption;
@@ -2086,8 +2087,8 @@ public final class Main {
           StandardOpenOption.WRITE,
           StandardOpenOption.CREATE);
       resourcesFileLock = fileChannel.tryLock(0L, Long.MAX_VALUE, true);
-    } catch (IOException e) {
-      LOG.error(e, "Error when attempting to acquire resources file lock.");
+    } catch (IOException | OverlappingFileLockException  e) {
+      LOG.debug(e, "Error when attempting to acquire resources file lock.");
     }
   }
 
