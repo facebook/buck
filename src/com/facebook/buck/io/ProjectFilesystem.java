@@ -662,13 +662,6 @@ public class ProjectFilesystem {
   }
 
   /**
-   * Recursively delete everything under the specified path.
-   */
-  public void deleteRecursively(Path pathRelativeToProjectRoot) throws IOException {
-    MoreFiles.deleteRecursively(resolve(pathRelativeToProjectRoot));
-  }
-
-  /**
    * Recursively delete everything under the specified path. Ignore the failure if the file at the
    * specified path does not exist.
    */
