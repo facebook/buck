@@ -28,6 +28,7 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -78,6 +79,10 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
 
   private RuleKeyHasher<HashCode> putStringified(byte type, String val) {
     return putBytes(type, val.getBytes(Charsets.UTF_8));
+  }
+
+  private RuleKeyHasher<HashCode> putBuildTarget(byte type, BuildTarget target) {
+    return putStringified(type, target.getFullyQualifiedName());
   }
 
   @Override
@@ -186,7 +191,12 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
 
   @Override
   public RuleKeyHasher<HashCode> putBuildTargetSourcePath(BuildTargetSourcePath targetSourcePath) {
-    return this.putStringified(TYPE_TARGET_SOURCE_PATH, targetSourcePath.toString());
+    this.putBuildTarget(TYPE_TARGET_SOURCE_PATH, targetSourcePath.getTarget());
+    Optional<Path> resolvedPath = targetSourcePath.getResolvedPath();
+    if (resolvedPath.isPresent()) {
+      this.putStringified(TYPE_TARGET_SOURCE_PATH, resolvedPath.get().toString());
+    }
+    return this;
   }
 
   @Override
