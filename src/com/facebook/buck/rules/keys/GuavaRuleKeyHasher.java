@@ -171,7 +171,7 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
 
   @Override
   public RuleKeyHasher<HashCode> putRuleKey(RuleKey ruleKey) {
-    return this.putStringified(TYPE_RULE_KEY, ruleKey.toString());
+    return this.putBytes(TYPE_RULE_KEY, ruleKey.getHashCode().asBytes());
   }
 
   @Override
