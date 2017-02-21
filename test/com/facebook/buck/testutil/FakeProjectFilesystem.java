@@ -22,10 +22,10 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.FakeClock;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
@@ -446,25 +445,20 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
       throws IOException {
     Preconditions.checkState(isDirectory(pathRelativeToProjectRoot));
     final PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:" + globPattern);
-    return FluentIterable.from(fileContents.keySet()).filter(
-        input -> input.getParent().equals(pathRelativeToProjectRoot) &&
-            pathMatcher.matches(input.getFileName()))
-        .toSortedSet(
-            Ordering
-                .natural()
-                .onResultOf(
-                    new Function<Path, FileTime>() {
-                      @Override
-                      public FileTime apply(Path path) {
-                        try {
-                          return getLastModifiedTimeFetcher().getLastModifiedTime(path);
-                        } catch (IOException e) {
-                          throw new RuntimeException(e);
-                        }
-                      }
-                    })
-                .compound(Ordering.natural())
-                .reverse());
+
+    return fileContents.keySet().stream()
+        .filter(i -> i.getParent().equals(pathRelativeToProjectRoot) &&
+            pathMatcher.matches(i.getFileName()))
+        // Sort them in reverse order.
+        .sorted((f0, f1) -> {
+          try {
+            return getLastModifiedTimeFetcher().getLastModifiedTime(f1).compareTo(
+                getLastModifiedTimeFetcher().getLastModifiedTime(f0));
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        })
+        .collect(MoreCollectors.toImmutableSortedSet());
   }
 
   @Override
