@@ -175,7 +175,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                 args.proguardConfig,
                 /* postprocessClassesCommands */ ImmutableList.of(),
                 /* exportDeps */ ImmutableSortedSet.of(),
-                /* providedDeps */ ImmutableSortedSet.of(),
+                /* providedDeps */ resolver.getAllRules(args.providedDeps),
                 JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()),
                 javacOptions.trackClassUsage(),
                 additionalClasspathEntries,
