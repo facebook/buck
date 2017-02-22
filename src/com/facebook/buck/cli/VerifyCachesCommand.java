@@ -24,7 +24,7 @@ import java.io.IOException;
 /**
  * Verify the contents of our FileHashCache.
  */
-public class VerifyHashCacheCommand extends AbstractCommand {
+public class VerifyCachesCommand extends AbstractCommand {
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     FileHashCacheVerificationResult result = params.getFileHashCache().verify();
@@ -50,6 +50,6 @@ public class VerifyHashCacheCommand extends AbstractCommand {
 
   @Override
   public String getShortDescription() {
-    return "Verify contents of FileHashCache";
+    return "Verify contents of internal Buck in-memory caches.";
   }
 }
