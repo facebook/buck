@@ -27,13 +27,16 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheStats;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -264,6 +267,21 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
         0L,
         totalLoadTime.longValue(),
         evictionCount.longValue());
+  }
+
+  @Override
+  public ImmutableList<Map.Entry<BuildRule, V>> getCachedBuildRules() {
+    ImmutableList.Builder<Map.Entry<BuildRule, V>> builder = ImmutableList.builder();
+    cache.entrySet().forEach(
+        entry -> {
+          if (entry.getKey().delegate instanceof BuildRule) {
+            builder.add(
+                new AbstractMap.SimpleEntry<>(
+                    (BuildRule) entry.getKey().delegate,
+                    entry.getValue().get()));
+          }
+        });
+    return builder.build();
   }
 
   /**

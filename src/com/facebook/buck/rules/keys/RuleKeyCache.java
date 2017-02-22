@@ -20,9 +20,11 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.google.common.cache.CacheStats;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -41,6 +43,13 @@ public interface RuleKeyCache<V> {
    *         running the given function.
    */
   V get(RuleKeyAppendable appendable, Function<? super RuleKeyAppendable, RuleKeyResult<V>> create);
+
+  /**
+   * @return the contents of the {@link RuleKeyCache}.
+   */
+  default ImmutableList<Map.Entry<BuildRule, V>> getCachedBuildRules() {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Invalidate the given inputs and all their transitive dependents.

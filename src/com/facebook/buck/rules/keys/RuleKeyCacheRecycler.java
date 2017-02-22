@@ -22,6 +22,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.WatchEvents;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.rules.BuildRule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
@@ -29,6 +30,7 @@ import com.google.common.eventbus.Subscribe;
 
 import java.nio.file.Path;
 import java.nio.file.WatchEvent;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -176,6 +178,10 @@ public class RuleKeyCacheRecycler<V> {
     try (RuleKeyCacheScope<V> scope = withRecycledCache(buckEventBus, currentSettings)) {
       func.accept(scope.getCache());
     }
+  }
+
+  public ImmutableList<Map.Entry<BuildRule, V>> getCachedBuildRules() {
+    return cache.getCachedBuildRules();
   }
 
   /**
