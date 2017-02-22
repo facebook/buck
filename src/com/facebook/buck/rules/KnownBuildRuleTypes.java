@@ -108,11 +108,11 @@ import com.facebook.buck.js.ReactNativeBuckConfig;
 import com.facebook.buck.jvm.groovy.GroovyBuckConfig;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
 import com.facebook.buck.jvm.groovy.GroovyTestDescription;
+import com.facebook.buck.jvm.java.JavaAnnotationProcessorDescription;
 import com.facebook.buck.jvm.java.JavaBinaryDescription;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaOptions;
-import com.facebook.buck.jvm.java.JavaAnnotationProcessorDescription;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.KeystoreDescription;
@@ -610,13 +610,17 @@ public class KnownBuildRuleTypes {
         new HaskellBinaryDescription(haskellBuckConfig, cxxPlatforms, defaultCxxPlatform));
     builder.register(new HaskellPrebuiltLibraryDescription());
 
+    if (javaConfig.getDxThreadCount().isPresent()) {
+      LOG.warn("java.dx_threads has been deprecated. Use dx.max_threads instead");
+    }
     // Create an executor service exclusively for the smart dexing step.
     ListeningExecutorService dxExecutorService =
         MoreExecutors.listeningDecorator(
             Executors.newFixedThreadPool(
-                dxConfig.getDxThreadCount().orElse(SmartDexingStep.determineOptimalThreadCount()),
+                dxConfig.getDxMaxThreadCount().orElse(
+                    javaConfig.getDxThreadCount().orElse(
+                        SmartDexingStep.determineOptimalThreadCount())),
                 new CommandThreadFactory("SmartDexing")));
-
 
     builder.register(
         new AndroidAarDescription(

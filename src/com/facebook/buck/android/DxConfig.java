@@ -32,13 +32,13 @@ public class DxConfig {
    * @return The upper heap size limit for out of process dx if specified.
    */
   public Optional<String> getDxMaxHeapSize() {
-    return delegate.getValue("dx", "dx-max-heap-size");
+    return delegate.getValue("dx", "max_heap_size");
   }
 
   /**
    * @return The dx thread count.
    */
-  public Optional<Integer> getDxThreadCount() {
-    return delegate.getInteger("dx", "dx-threads");
+  public Optional<Integer> getDxMaxThreadCount() {
+    return delegate.getInteger("dx", "max_threads");
   }
 }
