@@ -227,6 +227,9 @@ public class ProjectGenerator {
      * header map in the header search paths.
      */
     MERGE_HEADER_MAPS,
+
+    /** Generates only headers symlink trees. */
+    GENERATE_HEADERS_SYMLINK_TREES_ONLY,
   }
 
   /**
@@ -444,6 +447,10 @@ public class ProjectGenerator {
         !isHeaderMapDisabled();
   }
 
+  private boolean shouldGenerateHeaderSymlinkTreesOnly() {
+    return options.contains(Option.GENERATE_HEADERS_SYMLINK_TREES_ONLY);
+  }
+
   public ImmutableMultimap<BuildTarget, PBXTarget> getBuildTargetToGeneratedTargetMap() {
     Preconditions.checkState(projectGenerated, "Must have called createXcodeProjects");
     ImmutableMultimap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMap =
@@ -510,7 +517,9 @@ public class ProjectGenerator {
         outputConfig.setBuildSettings(new NSDictionary());
       }
 
-      writeProjectFile(project);
+      if (!shouldGenerateHeaderSymlinkTreesOnly()) {
+        writeProjectFile(project);
+      }
 
       projectGenerated = true;
     } catch (UncheckedExecutionException e) {
@@ -1165,346 +1174,354 @@ public class ProjectGenerator {
 
     boolean isFocusedOnTarget = shouldIncludeBuildTargetIntoFocusedProject(
         focusModules, buildTarget);
-    if (isFocusedOnTarget) {
-      mutator
-          .setLangPreprocessorFlags(langPreprocessorFlags)
-          .setPublicHeaders(exportedHeaders)
-          .setPrefixHeader(arg.prefixHeader)
-          .setSourcesWithFlags(ImmutableSet.copyOf(arg.srcs))
-          .setPrivateHeaders(headers)
-          .setRecursiveResources(recursiveResources)
-          .setDirectResources(directResources)
-          .setWrapperResources(wrapperResources);
-    }
-
-    if (bundle.isPresent() && isFocusedOnTarget) {
-      HasAppleBundleFields bundleArg = bundle.get().getConstructorArg();
-      mutator.setInfoPlist(Optional.of(bundleArg.getInfoPlist()));
-    }
-
-    mutator.setBridgingHeader(arg.bridgingHeader);
-
     Optional<TargetNode<AppleNativeTargetDescriptionArg, ?>> appleTargetNode =
         targetNode.castArg(AppleNativeTargetDescriptionArg.class);
-    if (appleTargetNode.isPresent() && isFocusedOnTarget) {
-      AppleNativeTargetDescriptionArg appleArg = appleTargetNode.get().getConstructorArg();
-      mutator = mutator
-          .setExtraXcodeSources(ImmutableSet.copyOf(appleArg.extraXcodeSources));
-    }
 
-    if (options.contains(Option.CREATE_DIRECTORY_STRUCTURE) && isFocusedOnTarget) {
-      mutator.setTargetGroupPath(
-          StreamSupport.stream(buildTarget.getBasePath().spliterator(), false)
-              .map(Object::toString)
-              .collect(MoreCollectors.toImmutableList()));
-    }
+    if (!shouldGenerateHeaderSymlinkTreesOnly()) {
+      if (isFocusedOnTarget) {
+        mutator
+            .setLangPreprocessorFlags(langPreprocessorFlags)
+            .setPublicHeaders(exportedHeaders)
+            .setPrefixHeader(arg.prefixHeader)
+            .setSourcesWithFlags(ImmutableSet.copyOf(arg.srcs))
+            .setPrivateHeaders(headers)
+            .setRecursiveResources(recursiveResources)
+            .setDirectResources(directResources)
+            .setWrapperResources(wrapperResources);
+      }
 
-    if (!recursiveAssetCatalogs.isEmpty() && isFocusedOnTarget) {
-      mutator.setRecursiveAssetCatalogs(recursiveAssetCatalogs);
-    }
+      if (bundle.isPresent() && isFocusedOnTarget) {
+        HasAppleBundleFields bundleArg = bundle.get().getConstructorArg();
+        mutator.setInfoPlist(Optional.of(bundleArg.getInfoPlist()));
+      }
 
-    if (!directAssetCatalogs.isEmpty() && isFocusedOnTarget) {
-      mutator.setDirectAssetCatalogs(directAssetCatalogs);
-    }
+      mutator.setBridgingHeader(arg.bridgingHeader);
 
-    if (includeFrameworks && isFocusedOnTarget) {
-      ImmutableSet.Builder<FrameworkPath> frameworksBuilder = ImmutableSet.builder();
-      frameworksBuilder.addAll(targetNode.getConstructorArg().frameworks);
-      frameworksBuilder.addAll(targetNode.getConstructorArg().libraries);
-      frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(ImmutableList.of(targetNode)));
-      mutator.setFrameworks(frameworksBuilder.build());
+      if (appleTargetNode.isPresent() && isFocusedOnTarget) {
+        AppleNativeTargetDescriptionArg appleArg = appleTargetNode.get().getConstructorArg();
+        mutator = mutator
+            .setExtraXcodeSources(ImmutableSet.copyOf(appleArg.extraXcodeSources));
+      }
 
-      mutator.setArchives(
-          collectRecursiveLibraryDependencies(ImmutableList.of(targetNode)));
-    }
+      if (options.contains(Option.CREATE_DIRECTORY_STRUCTURE) && isFocusedOnTarget) {
+        mutator.setTargetGroupPath(
+            StreamSupport.stream(buildTarget.getBasePath().spliterator(), false)
+                .map(Object::toString)
+                .collect(MoreCollectors.toImmutableList()));
+      }
 
-    // TODO(Task #3772930): Go through all dependencies of the rule
-    // and add any shell script rules here
-    ImmutableList.Builder<TargetNode<?, ?>> preScriptPhases = ImmutableList.builder();
-    ImmutableList.Builder<TargetNode<?, ?>> postScriptPhases = ImmutableList.builder();
-    if (bundle.isPresent() && targetNode != bundle.get() && isFocusedOnTarget) {
+      if (!recursiveAssetCatalogs.isEmpty() && isFocusedOnTarget) {
+        mutator.setRecursiveAssetCatalogs(recursiveAssetCatalogs);
+      }
+
+      if (!directAssetCatalogs.isEmpty() && isFocusedOnTarget) {
+        mutator.setDirectAssetCatalogs(directAssetCatalogs);
+      }
+
+      if (includeFrameworks && isFocusedOnTarget) {
+        ImmutableSet.Builder<FrameworkPath> frameworksBuilder = ImmutableSet.builder();
+        frameworksBuilder.addAll(targetNode.getConstructorArg().frameworks);
+        frameworksBuilder.addAll(targetNode.getConstructorArg().libraries);
+        frameworksBuilder.addAll(
+            collectRecursiveFrameworkDependencies(ImmutableList.of(targetNode)));
+        mutator.setFrameworks(frameworksBuilder.build());
+
+        mutator.setArchives(
+            collectRecursiveLibraryDependencies(ImmutableList.of(targetNode)));
+      }
+
+      // TODO(Task #3772930): Go through all dependencies of the rule
+      // and add any shell script rules here
+      ImmutableList.Builder<TargetNode<?, ?>> preScriptPhases = ImmutableList.builder();
+      ImmutableList.Builder<TargetNode<?, ?>> postScriptPhases = ImmutableList.builder();
+      if (bundle.isPresent() && targetNode != bundle.get() && isFocusedOnTarget) {
+        collectBuildScriptDependencies(
+            targetGraph.getAll(bundle.get().getDeclaredDeps()),
+            preScriptPhases,
+            postScriptPhases);
+      }
       collectBuildScriptDependencies(
-          targetGraph.getAll(bundle.get().getDeclaredDeps()),
+          targetGraph.getAll(targetNode.getDeclaredDeps()),
           preScriptPhases,
           postScriptPhases);
-    }
-    collectBuildScriptDependencies(
-        targetGraph.getAll(targetNode.getDeclaredDeps()),
-        preScriptPhases,
-        postScriptPhases);
-    if (isFocusedOnTarget) {
-      mutator.setPreBuildRunScriptPhasesFromTargetNodes(preScriptPhases.build());
-      if (copyFilesPhases.isPresent()) {
-        mutator.setCopyFilesPhases(copyFilesPhases.get());
+      if (isFocusedOnTarget) {
+        mutator.setPreBuildRunScriptPhasesFromTargetNodes(preScriptPhases.build());
+        if (copyFilesPhases.isPresent()) {
+          mutator.setCopyFilesPhases(copyFilesPhases.get());
+        }
+        mutator.setPostBuildRunScriptPhasesFromTargetNodes(postScriptPhases.build());
       }
-      mutator.setPostBuildRunScriptPhasesFromTargetNodes(postScriptPhases.build());
     }
 
-    NewNativeTargetProjectMutator.Result targetBuilderResult;
-    targetBuilderResult = mutator.buildTargetAndAddToProject(project, isFocusedOnTarget);
+    NewNativeTargetProjectMutator.Result targetBuilderResult =
+        mutator.buildTargetAndAddToProject(project, isFocusedOnTarget);
+    PBXNativeTarget target = targetBuilderResult.target;
     Optional<PBXGroup> targetGroup = targetBuilderResult.targetGroup;
 
-    if (isFocusedOnTarget) {
-      SourceTreePath buckFilePath = new SourceTreePath(
-          PBXReference.SourceTree.SOURCE_ROOT,
-          pathRelativizer.outputPathToBuildTargetPath(buildTarget).resolve(buildFileName),
-          Optional.empty());
-      PBXFileReference buckReference =
-          targetGroup.get().getOrCreateFileReferenceBySourceTreePath(buckFilePath);
-      buckReference.setExplicitFileType(Optional.of("text.script.python"));
-    }
-
-    // -- configurations
     ImmutableMap.Builder<String, String> extraSettingsBuilder = ImmutableMap.builder();
-    extraSettingsBuilder
-        .put("TARGET_NAME", buildTargetName)
-        .put("SRCROOT", pathRelativizer.outputPathToBuildTargetPath(buildTarget).toString());
-    if (productType == ProductType.UI_TEST && isFocusedOnTarget) {
-      if (bundleLoaderNode.isPresent()) {
-        BuildTarget testTarget = bundleLoaderNode.get().getBuildTarget();
-        extraSettingsBuilder
-            .put("TEST_TARGET_NAME", getXcodeTargetName(testTarget));
-      } else {
-        throw new HumanReadableException(
-            "The test rule '%s' is configured with 'is_ui_test' but has no test_host_app",
-            buildTargetName);
-      }
-    } else if (bundleLoaderNode.isPresent() && isFocusedOnTarget) {
-      TargetNode<AppleBundleDescription.Arg, ?> bundleLoader = bundleLoaderNode.get();
-      String bundleLoaderProductName = getProductNameForBuildTarget(bundleLoader.getBuildTarget());
-      String bundleLoaderBundleName = bundleLoaderProductName + "." +
-          getExtensionString(bundleLoader.getConstructorArg().getExtension());
-      // NOTE(grp): This is a hack. We need to support both deep (OS X) and flat (iOS)
-      // style bundles for the bundle loader, but at this point we don't know what platform
-      // the bundle loader (or current target) is going to be built for. However, we can be
-      // sure that it's the same as the target (presumably a test) we're building right now.
-      //
-      // Using that knowledge, we can do build setting tricks to defer choosing the bundle
-      // loader path until Xcode build time, when the platform is known. There's no build
-      // setting that conclusively says whether the current platform uses deep bundles:
-      // that would be too easy. But in the cases we care about (unit test bundles), the
-      // current bundle will have a style matching the style of the bundle loader app, so
-      // we can take advantage of that to do the determination.
-      //
-      // Unfortunately, the build setting for the bundle structure (CONTENTS_FOLDER_PATH)
-      // includes the WRAPPER_NAME, so we can't just interpolate that in. Instead, we have
-      // to use another trick with build setting operations and evaluation. By using the
-      // $(:file) operation, we can extract the last component of the contents path: either
-      // "Contents" or the current bundle name. Then, we can interpolate with that expected
-      // result in the build setting name to conditionally choose a different loader path.
-
-      // The conditional that decdies which path is used. This is a complex Xcode build setting
-      // expression that expands to one of two values, depending on the last path component of
-      // the CONTENTS_FOLDER_PATH variable. As described above, this will be either "Contents"
-      // for deep bundles or the bundle file name itself for flat bundles. Finally, to santiize
-      // the potentially invalid build setting names from the bundle file name, it converts that
-      // to an identifier. We rely on BUNDLE_LOADER_BUNDLE_STYLE_CONDITIONAL_<bundle file name>
-      // being undefined (and thus expanding to nothing) for the path resolution to work.
-      //
-      // The operations on the CONTENTS_FOLDER_PATH are documented here:
-      // http://codeworkshop.net/posts/xcode-build-setting-transformations
-      String bundleLoaderOutputPathConditional =
-          "$(BUNDLE_LOADER_BUNDLE_STYLE_CONDITIONAL_$(CONTENTS_FOLDER_PATH:file:identifier))";
-
-      // If the $(CONTENTS_FOLDER_PATH:file:identifier) expands to this, we add the deep bundle
-      // path into the bundle loader. See above for the case when it will expand to this value.
-      String bundleLoaderOutputPathDeepSetting = "BUNDLE_LOADER_BUNDLE_STYLE_CONDITIONAL_Contents";
-      String bundleLoaderOutputPathDeepValue = "Contents/MacOS/";
-
-      String bundleLoaderOutputPathValue = Joiner.on('/').join(
-          getTargetOutputPath(bundleLoader),
-          bundleLoaderBundleName,
-          bundleLoaderOutputPathConditional,
-          bundleLoaderProductName);
-
-      extraSettingsBuilder
-          .put(bundleLoaderOutputPathDeepSetting, bundleLoaderOutputPathDeepValue)
-          .put("BUNDLE_LOADER", bundleLoaderOutputPathValue)
-          .put("TEST_HOST", "$(BUNDLE_LOADER)");
-    }
-    if (infoPlistOptional.isPresent()) {
-      Path infoPlistPath = pathRelativizer.outputDirToRootRelative(infoPlistOptional.get());
-      extraSettingsBuilder.put("INFOPLIST_FILE", infoPlistPath.toString());
-    }
-    if (arg.bridgingHeader.isPresent()) {
-      Path bridgingHeaderPath = pathRelativizer.outputDirToRootRelative(
-          sourcePathResolver.apply(arg.bridgingHeader.get()));
-      extraSettingsBuilder.put(
-          "SWIFT_OBJC_BRIDGING_HEADER",
-          Joiner.on('/').join("$(SRCROOT)", bridgingHeaderPath.toString()));
-    }
-    Optional<String> swiftVersion = swiftBuckConfig.getVersion();
-    if (swiftVersion.isPresent()) {
-      extraSettingsBuilder.put("SWIFT_VERSION", swiftVersion.get());
-    }
-    Optional<SourcePath> prefixHeaderOptional = targetNode.getConstructorArg().prefixHeader;
-    if (prefixHeaderOptional.isPresent()) {
-      Path prefixHeaderRelative = sourcePathResolver.apply(prefixHeaderOptional.get());
-      Path prefixHeaderPath = pathRelativizer.outputDirToRootRelative(prefixHeaderRelative);
-      extraSettingsBuilder.put("GCC_PREFIX_HEADER", prefixHeaderPath.toString());
-      extraSettingsBuilder.put("GCC_PRECOMPILE_PREFIX_HEADER", "YES");
-    }
-    extraSettingsBuilder.put("USE_HEADERMAP", "NO");
-
     ImmutableMap.Builder<String, String> defaultSettingsBuilder = ImmutableMap.builder();
-    defaultSettingsBuilder.put(
-        "REPO_ROOT",
-        projectFilesystem.getRootPath().toAbsolutePath().normalize().toString());
-    defaultSettingsBuilder.put(PRODUCT_NAME, getProductName(buildTargetNode, buildTarget));
-    if (bundle.isPresent()) {
+
+    if (!shouldGenerateHeaderSymlinkTreesOnly()) {
+      if (isFocusedOnTarget) {
+        SourceTreePath buckFilePath = new SourceTreePath(
+            PBXReference.SourceTree.SOURCE_ROOT,
+            pathRelativizer.outputPathToBuildTargetPath(buildTarget).resolve(buildFileName),
+            Optional.empty());
+        PBXFileReference buckReference =
+            targetGroup.get().getOrCreateFileReferenceBySourceTreePath(buckFilePath);
+        buckReference.setExplicitFileType(Optional.of("text.script.python"));
+      }
+
+      // -- configurations
+      extraSettingsBuilder
+          .put("TARGET_NAME", buildTargetName)
+          .put("SRCROOT", pathRelativizer.outputPathToBuildTargetPath(buildTarget).toString());
+      if (productType == ProductType.UI_TEST && isFocusedOnTarget) {
+        if (bundleLoaderNode.isPresent()) {
+          BuildTarget testTarget = bundleLoaderNode.get().getBuildTarget();
+          extraSettingsBuilder
+              .put("TEST_TARGET_NAME", getXcodeTargetName(testTarget));
+        } else {
+          throw new HumanReadableException(
+              "The test rule '%s' is configured with 'is_ui_test' but has no test_host_app",
+              buildTargetName);
+        }
+      } else if (bundleLoaderNode.isPresent() && isFocusedOnTarget) {
+        TargetNode<AppleBundleDescription.Arg, ?> bundleLoader = bundleLoaderNode.get();
+        String bundleLoaderProductName =
+            getProductNameForBuildTarget(bundleLoader.getBuildTarget());
+        String bundleLoaderBundleName = bundleLoaderProductName + "." +
+            getExtensionString(bundleLoader.getConstructorArg().getExtension());
+        // NOTE(grp): This is a hack. We need to support both deep (OS X) and flat (iOS)
+        // style bundles for the bundle loader, but at this point we don't know what platform
+        // the bundle loader (or current target) is going to be built for. However, we can be
+        // sure that it's the same as the target (presumably a test) we're building right now.
+        //
+        // Using that knowledge, we can do build setting tricks to defer choosing the bundle
+        // loader path until Xcode build time, when the platform is known. There's no build
+        // setting that conclusively says whether the current platform uses deep bundles:
+        // that would be too easy. But in the cases we care about (unit test bundles), the
+        // current bundle will have a style matching the style of the bundle loader app, so
+        // we can take advantage of that to do the determination.
+        //
+        // Unfortunately, the build setting for the bundle structure (CONTENTS_FOLDER_PATH)
+        // includes the WRAPPER_NAME, so we can't just interpolate that in. Instead, we have
+        // to use another trick with build setting operations and evaluation. By using the
+        // $(:file) operation, we can extract the last component of the contents path: either
+        // "Contents" or the current bundle name. Then, we can interpolate with that expected
+        // result in the build setting name to conditionally choose a different loader path.
+
+        // The conditional that decides which path is used. This is a complex Xcode build setting
+        // expression that expands to one of two values, depending on the last path component of
+        // the CONTENTS_FOLDER_PATH variable. As described above, this will be either "Contents"
+        // for deep bundles or the bundle file name itself for flat bundles. Finally, to santiize
+        // the potentially invalid build setting names from the bundle file name, it converts that
+        // to an identifier. We rely on BUNDLE_LOADER_BUNDLE_STYLE_CONDITIONAL_<bundle file name>
+        // being undefined (and thus expanding to nothing) for the path resolution to work.
+        //
+        // The operations on the CONTENTS_FOLDER_PATH are documented here:
+        // http://codeworkshop.net/posts/xcode-build-setting-transformations
+        String bundleLoaderOutputPathConditional =
+            "$(BUNDLE_LOADER_BUNDLE_STYLE_CONDITIONAL_$(CONTENTS_FOLDER_PATH:file:identifier))";
+
+        // If the $(CONTENTS_FOLDER_PATH:file:identifier) expands to this, we add the deep bundle
+        // path into the bundle loader. See above for the case when it will expand to this value.
+        String bundleLoaderOutputPathDeepSetting =
+            "BUNDLE_LOADER_BUNDLE_STYLE_CONDITIONAL_Contents";
+        String bundleLoaderOutputPathDeepValue = "Contents/MacOS/";
+
+        String bundleLoaderOutputPathValue = Joiner.on('/').join(
+            getTargetOutputPath(bundleLoader),
+            bundleLoaderBundleName,
+            bundleLoaderOutputPathConditional,
+            bundleLoaderProductName);
+
+        extraSettingsBuilder
+            .put(bundleLoaderOutputPathDeepSetting, bundleLoaderOutputPathDeepValue)
+            .put("BUNDLE_LOADER", bundleLoaderOutputPathValue)
+            .put("TEST_HOST", "$(BUNDLE_LOADER)");
+      }
+      if (infoPlistOptional.isPresent()) {
+        Path infoPlistPath = pathRelativizer.outputDirToRootRelative(infoPlistOptional.get());
+        extraSettingsBuilder.put("INFOPLIST_FILE", infoPlistPath.toString());
+      }
+      if (arg.bridgingHeader.isPresent()) {
+        Path bridgingHeaderPath = pathRelativizer.outputDirToRootRelative(
+            sourcePathResolver.apply(arg.bridgingHeader.get()));
+        extraSettingsBuilder.put(
+            "SWIFT_OBJC_BRIDGING_HEADER",
+            Joiner.on('/').join("$(SRCROOT)", bridgingHeaderPath.toString()));
+      }
+      Optional<String> swiftVersion = swiftBuckConfig.getVersion();
+      if (swiftVersion.isPresent()) {
+        extraSettingsBuilder.put("SWIFT_VERSION", swiftVersion.get());
+      }
+      Optional<SourcePath> prefixHeaderOptional = targetNode.getConstructorArg().prefixHeader;
+      if (prefixHeaderOptional.isPresent()) {
+        Path prefixHeaderRelative = sourcePathResolver.apply(prefixHeaderOptional.get());
+        Path prefixHeaderPath = pathRelativizer.outputDirToRootRelative(prefixHeaderRelative);
+        extraSettingsBuilder.put("GCC_PREFIX_HEADER", prefixHeaderPath.toString());
+        extraSettingsBuilder.put("GCC_PRECOMPILE_PREFIX_HEADER", "YES");
+      }
+      extraSettingsBuilder.put("USE_HEADERMAP", "NO");
+
       defaultSettingsBuilder.put(
-          "WRAPPER_EXTENSION",
-          getExtensionString(bundle.get().getConstructorArg().getExtension()));
-    }
+          "REPO_ROOT",
+          projectFilesystem.getRootPath().toAbsolutePath().normalize().toString());
+      defaultSettingsBuilder.put(PRODUCT_NAME, getProductName(buildTargetNode, buildTarget));
+      if (bundle.isPresent()) {
+        defaultSettingsBuilder.put(
+            "WRAPPER_EXTENSION",
+            getExtensionString(bundle.get().getConstructorArg().getExtension()));
+      }
 
-    // We use BUILT_PRODUCTS_DIR as the root for the everything being built. Target-
-    // specific output is placed within CONFIGURATION_BUILD_DIR, inside BUILT_PRODUCTS_DIR.
-    // That allows Copy Files build phases to reference files in the CONFIGURATION_BUILD_DIR
-    // of other targets by using paths relative to the target-independent BUILT_PRODUCTS_DIR.
-    defaultSettingsBuilder.put(
-        "BUILT_PRODUCTS_DIR",
-        // $EFFECTIVE_PLATFORM_NAME starts with a dash, so this expands to something like:
-        // $SYMROOT/Debug-iphonesimulator
-        Joiner.on('/').join("$SYMROOT", "$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"));
-    defaultSettingsBuilder.put("CONFIGURATION_BUILD_DIR", "$BUILT_PRODUCTS_DIR");
-    boolean nodeIsAppleLibrary =
-        targetNode.getDescription() instanceof AppleLibraryDescription;
-    boolean nodeIsCxxLibrary =
-        targetNode.getDescription() instanceof CxxLibraryDescription;
-    if (!bundle.isPresent() && (nodeIsAppleLibrary || nodeIsCxxLibrary)) {
-      defaultSettingsBuilder.put("EXECUTABLE_PREFIX", "lib");
-    }
+      // We use BUILT_PRODUCTS_DIR as the root for the everything being built. Target-
+      // specific output is placed within CONFIGURATION_BUILD_DIR, inside BUILT_PRODUCTS_DIR.
+      // That allows Copy Files build phases to reference files in the CONFIGURATION_BUILD_DIR
+      // of other targets by using paths relative to the target-independent BUILT_PRODUCTS_DIR.
+      defaultSettingsBuilder.put(
+          "BUILT_PRODUCTS_DIR",
+          // $EFFECTIVE_PLATFORM_NAME starts with a dash, so this expands to something like:
+          // $SYMROOT/Debug-iphonesimulator
+          Joiner.on('/').join("$SYMROOT", "$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"));
+      defaultSettingsBuilder.put("CONFIGURATION_BUILD_DIR", "$BUILT_PRODUCTS_DIR");
+      boolean nodeIsAppleLibrary =
+          targetNode.getDescription() instanceof AppleLibraryDescription;
+      boolean nodeIsCxxLibrary =
+          targetNode.getDescription() instanceof CxxLibraryDescription;
+      if (!bundle.isPresent() && (nodeIsAppleLibrary || nodeIsCxxLibrary)) {
+        defaultSettingsBuilder.put("EXECUTABLE_PREFIX", "lib");
+      }
 
-    ImmutableMap.Builder<String, String> appendConfigsBuilder = ImmutableMap.builder();
+      if (isFocusedOnTarget) {
+        ImmutableSet<Path> recursiveHeaderSearchPaths =
+            collectRecursiveHeaderSearchPaths(targetNode);
+        ImmutableSet<Path> headerMapBases = recursiveHeaderSearchPaths.isEmpty() ?
+            ImmutableSet.of() :
+            ImmutableSet.of(
+                pathRelativizer.outputDirToRootRelative(
+                    buildTargetNode.getFilesystem().getBuckPaths().getBuckOut()));
 
-    if (isFocusedOnTarget) {
-      ImmutableSet<Path> recursiveHeaderSearchPaths = collectRecursiveHeaderSearchPaths(targetNode);
-      ImmutableSet<Path> headerMapBases = recursiveHeaderSearchPaths.isEmpty() ?
-          ImmutableSet.of() :
-          ImmutableSet.of(
-              pathRelativizer.outputDirToRootRelative(
-                  buildTargetNode.getFilesystem().getBuckPaths().getBuckOut()));
+        ImmutableMap.Builder<String, String> appendConfigsBuilder = ImmutableMap.builder();
+        appendConfigsBuilder
+            .put(
+                "HEADER_SEARCH_PATHS",
+                Joiner.on(' ').join(Iterables.concat(recursiveHeaderSearchPaths, headerMapBases)))
+            .put(
+                "LIBRARY_SEARCH_PATHS",
+                Joiner.on(' ').join(
+                    collectRecursiveLibrarySearchPaths(ImmutableSet.of(targetNode))))
+            .put(
+                "FRAMEWORK_SEARCH_PATHS",
+                Joiner.on(' ').join(
+                    collectRecursiveFrameworkSearchPaths(ImmutableList.of(targetNode))));
 
-      appendConfigsBuilder
-          .put(
-              "HEADER_SEARCH_PATHS",
-              Joiner.on(' ').join(Iterables.concat(recursiveHeaderSearchPaths, headerMapBases)))
-          .put(
-              "LIBRARY_SEARCH_PATHS",
-              Joiner.on(' ').join(collectRecursiveLibrarySearchPaths(ImmutableSet.of(targetNode))))
-          .put(
-              "FRAMEWORK_SEARCH_PATHS",
-              Joiner.on(' ').join(
-                  collectRecursiveFrameworkSearchPaths(ImmutableList.of(targetNode))));
+        Iterable<String> otherCFlags = Iterables.concat(
+            cxxBuckConfig.getFlags("cflags").orElse(DEFAULT_CFLAGS),
+            collectRecursiveExportedPreprocessorFlags(
+                ImmutableList.of(targetNode)),
+            targetNode.getConstructorArg().compilerFlags,
+            targetNode.getConstructorArg().preprocessorFlags);
+        Iterable<String> otherCxxFlags = Iterables.concat(
+            cxxBuckConfig.getFlags("cxxflags").orElse(DEFAULT_CXXFLAGS),
+            collectRecursiveExportedPreprocessorFlags(
+                ImmutableList.of(targetNode)),
+            targetNode.getConstructorArg().compilerFlags,
+            targetNode.getConstructorArg().preprocessorFlags);
+        ImmutableList<String> otherLdFlags =
+            ImmutableList.<String>builder()
+                .addAll(
+                    Arg.stringify(
+                        convertStringWithMacros(
+                            targetNode,
+                            Iterables.concat(
+                                targetNode.getConstructorArg().linkerFlags,
+                                collectRecursiveExportedLinkerFlags(
+                                    ImmutableList.of(targetNode))))))
+                .build();
 
-      Iterable<String> otherCFlags = Iterables.concat(
-          cxxBuckConfig.getFlags("cflags").orElse(DEFAULT_CFLAGS),
-          collectRecursiveExportedPreprocessorFlags(
-              ImmutableList.of(targetNode)),
-          targetNode.getConstructorArg().compilerFlags,
-          targetNode.getConstructorArg().preprocessorFlags);
-      Iterable<String> otherCxxFlags = Iterables.concat(
-          cxxBuckConfig.getFlags("cxxflags").orElse(DEFAULT_CXXFLAGS),
-          collectRecursiveExportedPreprocessorFlags(
-              ImmutableList.of(targetNode)),
-          targetNode.getConstructorArg().compilerFlags,
-          targetNode.getConstructorArg().preprocessorFlags);
-      ImmutableList<String> otherLdFlags =
-          ImmutableList.<String>builder()
-              .addAll(
-                  Arg.stringify(
-                      convertStringWithMacros(
-                          targetNode,
+        appendConfigsBuilder
+            .put(
+                "OTHER_CFLAGS",
+                Joiner.on(' ').join(Iterables.transform(otherCFlags, Escaper.BASH_ESCAPER)))
+            .put(
+                "OTHER_CPLUSPLUSFLAGS",
+                Joiner.on(' ').join(Iterables.transform(otherCxxFlags, Escaper.BASH_ESCAPER)))
+            .put(
+                "OTHER_LDFLAGS",
+                Joiner.on(' ').join(Iterables.transform(otherLdFlags, Escaper.BASH_ESCAPER)));
+
+        ImmutableMultimap.Builder<String, ImmutableList<String>> platformFlagsBuilder =
+            ImmutableMultimap.builder();
+        for (Pair<Pattern, ImmutableList<String>> flags :
+               Iterables.concat(
+                   targetNode.getConstructorArg().platformCompilerFlags
+                       .getPatternsAndValues(),
+                   targetNode.getConstructorArg().platformPreprocessorFlags
+                       .getPatternsAndValues(),
+                   collectRecursiveExportedPlatformPreprocessorFlags(
+                       ImmutableList.of(targetNode)))) {
+          String sdk = flags.getFirst().pattern().replaceAll("[*.]", "");
+          platformFlagsBuilder.put(sdk, flags.getSecond());
+        }
+        ImmutableMultimap<String, ImmutableList<String>> platformFlags =
+            platformFlagsBuilder.build();
+        for (String sdk : platformFlags.keySet()) {
+          appendConfigsBuilder
+              .put(
+                  String.format("OTHER_CFLAGS[sdk=*%s*]", sdk),
+                  Joiner.on(' ').join(
+                      Iterables.transform(
+                          Iterables.concat(otherCFlags, Iterables.concat(platformFlags.get(sdk))),
+                          Escaper.BASH_ESCAPER)))
+              .put(
+                  String.format("OTHER_CPLUSPLUSFLAGS[sdk=*%s*]", sdk),
+                  Joiner.on(' ').join(
+                      Iterables.transform(
+                          Iterables.concat(otherCxxFlags, Iterables.concat(platformFlags.get(sdk))),
+                          Escaper.BASH_ESCAPER)));
+        }
+
+        ImmutableMultimap.Builder<String, ImmutableList<String>> platformLinkerFlagsBuilder =
+            ImmutableMultimap.builder();
+        for (Pair<Pattern, ImmutableList<StringWithMacros>> flags :
+            Iterables.concat(
+                targetNode.getConstructorArg().platformLinkerFlags.getPatternsAndValues(),
+                collectRecursiveExportedPlatformLinkerFlags(ImmutableList.of(targetNode)))) {
+          String sdk = flags.getFirst().pattern().replaceAll("[*.]", "");
+          platformLinkerFlagsBuilder.put(
+              sdk,
+              Arg.stringify(convertStringWithMacros(targetNode, flags.getSecond())));
+        }
+        ImmutableMultimap<String, ImmutableList<String>> platformLinkerFlags =
+            platformLinkerFlagsBuilder.build();
+        for (String sdk : platformLinkerFlags.keySet()) {
+          appendConfigsBuilder
+              .put(
+                  String.format("OTHER_LDFLAGS[sdk=*%s*]", sdk),
+                  Joiner.on(' ').join(
+                      Iterables.transform(
                           Iterables.concat(
-                              targetNode.getConstructorArg().linkerFlags,
-                              collectRecursiveExportedLinkerFlags(ImmutableList.of(targetNode))))))
-              .build();
+                              otherLdFlags,
+                              Iterables.concat(platformLinkerFlags.get(sdk))),
+                          Escaper.BASH_ESCAPER)));
+        }
 
-      appendConfigsBuilder
-          .put(
-              "OTHER_CFLAGS",
-              Joiner.on(' ').join(Iterables.transform(otherCFlags, Escaper.BASH_ESCAPER)))
-          .put(
-              "OTHER_CPLUSPLUSFLAGS",
-              Joiner.on(' ').join(Iterables.transform(otherCxxFlags, Escaper.BASH_ESCAPER)))
-          .put(
-              "OTHER_LDFLAGS",
-              Joiner.on(' ').join(Iterables.transform(otherLdFlags, Escaper.BASH_ESCAPER)));
+        ImmutableMap<String, String> appendedConfig = appendConfigsBuilder.build();
 
-      ImmutableMultimap.Builder<String, ImmutableList<String>> platformFlagsBuilder =
-          ImmutableMultimap.builder();
-      for (Pair<Pattern, ImmutableList<String>> flags :
-             Iterables.concat(
-                 targetNode.getConstructorArg().platformCompilerFlags
-                     .getPatternsAndValues(),
-                 targetNode.getConstructorArg().platformPreprocessorFlags
-                     .getPatternsAndValues(),
-                 collectRecursiveExportedPlatformPreprocessorFlags(
-                     ImmutableList.of(targetNode)))) {
-        String sdk = flags.getFirst().pattern().replaceAll("[*.]", "");
-        platformFlagsBuilder.put(sdk, flags.getSecond());
+        Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs =
+            getXcodeBuildConfigurationsForTargetNode(
+                targetNode,
+                appendedConfig);
+        setTargetBuildConfigurations(
+            getConfigurationNameToXcconfigPath(buildTarget),
+            target,
+            project.getMainGroup(),
+            configs.get(),
+            extraSettingsBuilder.build(),
+            defaultSettingsBuilder.build(),
+            appendedConfig);
       }
-      ImmutableMultimap<String, ImmutableList<String>> platformFlags =
-          platformFlagsBuilder.build();
-      for (String sdk : platformFlags.keySet()) {
-        appendConfigsBuilder
-            .put(
-                String.format("OTHER_CFLAGS[sdk=*%s*]", sdk),
-                Joiner.on(' ').join(
-                    Iterables.transform(
-                        Iterables.concat(otherCFlags, Iterables.concat(platformFlags.get(sdk))),
-                        Escaper.BASH_ESCAPER)))
-            .put(
-                String.format("OTHER_CPLUSPLUSFLAGS[sdk=*%s*]", sdk),
-                Joiner.on(' ').join(
-                    Iterables.transform(
-                        Iterables.concat(otherCxxFlags, Iterables.concat(platformFlags.get(sdk))),
-                        Escaper.BASH_ESCAPER)));
-      }
-
-      ImmutableMultimap.Builder<String, ImmutableList<String>> platformLinkerFlagsBuilder =
-          ImmutableMultimap.builder();
-      for (Pair<Pattern, ImmutableList<StringWithMacros>> flags :
-          Iterables.concat(
-              targetNode.getConstructorArg().platformLinkerFlags.getPatternsAndValues(),
-              collectRecursiveExportedPlatformLinkerFlags(ImmutableList.of(targetNode)))) {
-        String sdk = flags.getFirst().pattern().replaceAll("[*.]", "");
-        platformLinkerFlagsBuilder.put(
-            sdk,
-            Arg.stringify(convertStringWithMacros(targetNode, flags.getSecond())));
-      }
-      ImmutableMultimap<String, ImmutableList<String>> platformLinkerFlags =
-          platformLinkerFlagsBuilder.build();
-      for (String sdk : platformLinkerFlags.keySet()) {
-        appendConfigsBuilder
-            .put(
-                String.format("OTHER_LDFLAGS[sdk=*%s*]", sdk),
-                Joiner.on(' ').join(
-                    Iterables.transform(
-                        Iterables.concat(
-                            otherLdFlags,
-                            Iterables.concat(platformLinkerFlags.get(sdk))),
-                        Escaper.BASH_ESCAPER)));
-      }
-    }
-
-    PBXNativeTarget target = targetBuilderResult.target;
-
-    if (isFocusedOnTarget) {
-      ImmutableMap<String, String> appendedConfig = appendConfigsBuilder.build();
-
-      Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs =
-          getXcodeBuildConfigurationsForTargetNode(
-              targetNode,
-              appendedConfig);
-      setTargetBuildConfigurations(
-          getConfigurationNameToXcconfigPath(buildTarget),
-          target,
-          project.getMainGroup(),
-          configs.get(),
-          extraSettingsBuilder.build(),
-          defaultSettingsBuilder.build(),
-          appendedConfig);
     }
 
     // -- phases
@@ -1526,7 +1543,9 @@ public class ProjectGenerator {
       createMergedHeaderMap(sourcePathResolver);
     }
 
-    if (appleTargetNode.isPresent() && isFocusedOnTarget) {
+    if (appleTargetNode.isPresent() &&
+        isFocusedOnTarget &&
+        !shouldGenerateHeaderSymlinkTreesOnly()) {
       // Use Core Data models from immediate dependencies only.
       addCoreDataModelsIntoTarget(appleTargetNode.get(), targetGroup.get());
       addSceneKitAssetsIntoTarget(appleTargetNode.get(), targetGroup.get());
@@ -1709,6 +1728,9 @@ public class ProjectGenerator {
       ImmutableMap<String, String> defaultBuildSettings,
       ImmutableMap<String, String> appendBuildSettings)
       throws IOException {
+    if (shouldGenerateHeaderSymlinkTreesOnly()) {
+      return;
+    }
 
     for (Map.Entry<String, ImmutableMap<String, String>> configurationEntry :
         configurations.entrySet()) {
@@ -1897,7 +1919,8 @@ public class ProjectGenerator {
     Path hashCodeFilePath = headerSymlinkTreeRoot.resolve(".contents-hash");
     Optional<String> currentHashCode = projectFilesystem.readFileIfItExists(hashCodeFilePath);
     String newHashCode =
-        getHeaderSymlinkTreeHashCode(resolvedContents, shouldCreateHeadersSymlinks).toString();
+        getHeaderSymlinkTreeHashCode(
+            resolvedContents, shouldCreateHeadersSymlinks, shouldCreateHeaderMap).toString();
     if (Optional.of(newHashCode).equals(currentHashCode)) {
       LOG.debug(
           "Symlink tree at %s is up to date, not regenerating (key %s).",
@@ -1945,13 +1968,18 @@ public class ProjectGenerator {
 
   private HashCode getHeaderSymlinkTreeHashCode(
       ImmutableSortedMap<Path, Path> contents,
-      boolean shouldCreateHeadersSymlinks) {
+      boolean shouldCreateHeadersSymlinks,
+      boolean shouldCreateHeaderMap) {
     Hasher hasher = Hashing.sha1().newHasher();
     hasher.putBytes(BuckVersion.getVersion().getBytes(Charsets.UTF_8));
     String symlinkState = shouldCreateHeadersSymlinks ? "symlinks-enabled" : "symlinks-disabled";
     byte[] symlinkStateValue = symlinkState.getBytes(Charsets.UTF_8);
     hasher.putInt(symlinkStateValue.length);
     hasher.putBytes(symlinkStateValue);
+    String hmapState = shouldCreateHeaderMap ? "hmap-enabled" : "hmap-disabled";
+    byte[] hmapStateValue = hmapState.getBytes(Charsets.UTF_8);
+    hasher.putInt(hmapStateValue.length);
+    hasher.putBytes(hmapStateValue);
     hasher.putInt(0);
     for (Map.Entry<Path, Path> entry : contents.entrySet()) {
       byte[] key = entry.getKey().toString().getBytes(Charsets.UTF_8);

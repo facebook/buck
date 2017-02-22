@@ -992,6 +992,50 @@ public class ProjectGeneratorTest {
         buildSettings.get("USER_HEADER_SEARCH_PATHS"));
   }
 
+  @Test
+  public void testGenerateOnlyHeaderSymlinkTrees() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+    TargetNode<?, ?> node = new CxxLibraryBuilder(buildTarget)
+        .setExportedHeaders(
+            ImmutableSortedSet.of(
+                new FakeSourcePath("foo/dir1/bar.h")))
+        .setHeaders(
+            ImmutableSortedSet.of(
+                new FakeSourcePath("foo/dir1/foo.h"),
+                new FakeSourcePath("foo/dir2/baz.h")))
+        .setSrcs(ImmutableSortedSet.of())
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(node),
+        ImmutableSet.of(ProjectGenerator.Option.GENERATE_HEADERS_SYMLINK_TREES_ONLY));
+    projectGenerator.createXcodeProjects();
+
+    // The project should not generated since we're generating only header symlink trees.
+    assertFalse(projectGenerator.getProjectPath() + " should not be generated.",
+        projectFilesystem.isDirectory(projectGenerator.getProjectPath()));
+
+    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    assertThat(headerSymlinkTrees, hasSize(2));
+
+    assertThat(
+        headerSymlinkTrees.get(0).toString(),
+        is(equalTo("buck-out/gen/_p/CwkbTNOBmb-pub")));
+    assertThatHeaderSymlinkTreeContains(
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
+        ImmutableMap.of("foo/dir1/bar.h", "foo/dir1/bar.h"));
+
+    assertThat(
+        headerSymlinkTrees.get(1).toString(),
+        is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
+    assertThatHeaderSymlinkTreeContains(
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
+        ImmutableMap.<String, String>builder()
+            .put("foo/dir1/foo.h", "foo/dir1/foo.h")
+            .put("foo/dir2/baz.h", "foo/dir2/baz.h")
+            .build());
+  }
+
   private void assertThatHeaderSymlinkTreeContains(Path root, ImmutableMap<String, String> content)
       throws IOException {
     // Read the tree's header map.

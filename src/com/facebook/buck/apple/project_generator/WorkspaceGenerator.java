@@ -182,6 +182,10 @@ class WorkspaceGenerator {
     }
   }
 
+  public Path getWorkspaceDir() {
+    return outputDirectory.resolve(workspaceName + ".xcworkspace");
+  }
+
   public Path writeWorkspace() throws IOException {
     DocumentBuilder docBuilder;
     Transformer transformer;
@@ -253,7 +257,7 @@ class WorkspaceGenerator {
 
     walkNodeTree(visitor);
 
-    Path projectWorkspaceDir = outputDirectory.resolve(workspaceName + ".xcworkspace");
+    Path projectWorkspaceDir = getWorkspaceDir();
     projectFilesystem.mkdirs(projectWorkspaceDir);
     Path serializedWorkspace = projectWorkspaceDir.resolve("contents.xcworkspacedata");
     try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {

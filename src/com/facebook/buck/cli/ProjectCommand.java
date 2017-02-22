@@ -922,7 +922,8 @@ public class ProjectCommand extends BuildCommand {
         isWithDependenciesTests(params.getBuckConfig()),
         getCombinedProject(),
         appleConfig.shouldUseHeaderMapsInXcodeProject(),
-        appleConfig.shouldMergeHeaderMapsInXcodeProject());
+        appleConfig.shouldMergeHeaderMapsInXcodeProject(),
+        appleConfig.shouldGenerateHeaderSymlinkTreesOnly());
 
     boolean shouldBuildWithBuck = buildWithBuck ||
         shouldForceBuildingWithBuck(params.getBuckConfig(), passedInTargetsSet);
@@ -1130,7 +1131,8 @@ public class ProjectCommand extends BuildCommand {
       boolean isWithDependenciesTests,
       boolean isProjectsCombined,
       boolean shouldUseHeaderMaps,
-      boolean shouldMergeHeaderMaps) {
+      boolean shouldMergeHeaderMaps,
+      boolean shouldGenerateHeaderSymlinkTreesOnly) {
     ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
     if (isReadonly) {
       optionsBuilder.add(ProjectGenerator.Option.GENERATE_READ_ONLY_FILES);
@@ -1151,6 +1153,9 @@ public class ProjectCommand extends BuildCommand {
     }
     if (shouldMergeHeaderMaps) {
       optionsBuilder.add(ProjectGenerator.Option.MERGE_HEADER_MAPS);
+    }
+    if (shouldGenerateHeaderSymlinkTreesOnly) {
+      optionsBuilder.add(ProjectGenerator.Option.GENERATE_HEADERS_SYMLINK_TREES_ONLY);
     }
     return optionsBuilder.build();
   }

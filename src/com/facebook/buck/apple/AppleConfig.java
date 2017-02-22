@@ -313,6 +313,13 @@ public class AppleConfig {
         false);
   }
 
+  public boolean shouldGenerateHeaderSymlinkTreesOnly() {
+    return delegate.getBooleanValue(
+        "apple",
+        "generate_header_symlink_tree_only",
+        false);
+  }
+
   public String getTestLogDirectoryEnvironmentVariable() {
     return delegate.getValue(
         "apple",

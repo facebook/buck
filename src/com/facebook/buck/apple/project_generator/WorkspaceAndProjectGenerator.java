@@ -252,21 +252,27 @@ public class WorkspaceAndProjectGenerator {
         buildTargetToPbxTargetMapBuilder,
         targetToProjectPathMapBuilder,
         targetToBuildWithBuck);
-    final Multimap<BuildTarget, PBXTarget> buildTargetToTarget =
-        buildTargetToPbxTargetMapBuilder.build();
 
-    writeWorkspaceSchemes(
-        workspaceName,
-        outputDirectory,
-        schemeConfigs,
-        schemeNameToSrcTargetNode,
-        buildForTestNodes,
-        tests,
-        targetToProjectPathMapBuilder.build(),
-        input -> buildTargetToTarget.get(input.getBuildTarget()),
-        getTargetNodeToPBXTargetTransformFunction(buildTargetToTarget, buildWithBuck));
+    if (projectGeneratorOptions.contains(
+        ProjectGenerator.Option.GENERATE_HEADERS_SYMLINK_TREES_ONLY)) {
+      return workspaceGenerator.getWorkspaceDir();
+    } else {
+      final Multimap<BuildTarget, PBXTarget> buildTargetToTarget =
+          buildTargetToPbxTargetMapBuilder.build();
 
-    return workspaceGenerator.writeWorkspace();
+      writeWorkspaceSchemes(
+          workspaceName,
+          outputDirectory,
+          schemeConfigs,
+          schemeNameToSrcTargetNode,
+          buildForTestNodes,
+          tests,
+          targetToProjectPathMapBuilder.build(),
+          input -> buildTargetToTarget.get(input.getBuildTarget()),
+          getTargetNodeToPBXTargetTransformFunction(buildTargetToTarget, buildWithBuck));
+
+      return workspaceGenerator.writeWorkspace();
+    }
   }
 
   private void generateProjects(

@@ -118,6 +118,8 @@ public class BuckConfig implements ConfigPathGetter {
   static {
     ImmutableMap.Builder<String, ImmutableSet<String>> ignoreFieldsForDaemonRestartBuilder =
         ImmutableMap.builder();
+    ignoreFieldsForDaemonRestartBuilder.put(
+        "apple", ImmutableSet.of("generate_header_symlink_tree_only"));
     ignoreFieldsForDaemonRestartBuilder.put("build", ImmutableSet.of("threads", "load_limit"));
     ignoreFieldsForDaemonRestartBuilder.put("cache", ImmutableSet.of(
         "dir", "dir_mode", "http_mode", "http_url", "mode", "slb_server_pool"));
