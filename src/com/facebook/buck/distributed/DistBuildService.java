@@ -68,7 +68,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
 
@@ -120,31 +119,28 @@ public class DistBuildService implements Closeable {
       ListeningExecutorService executorService) {
     // TODO(shivanker): We shouldn't be doing this. Fix after we stop reading all files into memory.
     final BuildJobState buildJobState = buildJobStateArg.deepCopy();
-    return executorService.submit(new Callable<Void>() {
-      @Override
-      public Void call() throws IOException {
-        // Get rid of file contents from buildJobState
-        for (BuildJobStateFileHashes cell : buildJobState.getFileHashes()) {
-          if (!cell.isSetEntries()) {
-            continue;
-          }
-          for (BuildJobStateFileHashEntry file : cell.getEntries()) {
-            file.unsetContents();
-          }
+    return executorService.submit(() -> {
+      // Get rid of file contents from buildJobState
+      for (BuildJobStateFileHashes cell : buildJobState.getFileHashes()) {
+        if (!cell.isSetEntries()) {
+          continue;
         }
-
-        // Now serialize and send the whole buildJobState
-        StoreBuildGraphRequest storeBuildGraphRequest = new StoreBuildGraphRequest();
-        storeBuildGraphRequest.setStampedeId(stampedeId);
-        storeBuildGraphRequest.setBuildGraph(BuildJobStateSerializer.serialize(buildJobState));
-
-        FrontendRequest request = new FrontendRequest();
-        request.setType(FrontendRequestType.STORE_BUILD_GRAPH);
-        request.setStoreBuildGraphRequest(storeBuildGraphRequest);
-        makeRequestChecked(request);
-        // No response expected.
-        return null;
+        for (BuildJobStateFileHashEntry file : cell.getEntries()) {
+          file.unsetContents();
+        }
       }
+
+      // Now serialize and send the whole buildJobState
+      StoreBuildGraphRequest storeBuildGraphRequest = new StoreBuildGraphRequest();
+      storeBuildGraphRequest.setStampedeId(stampedeId);
+      storeBuildGraphRequest.setBuildGraph(BuildJobStateSerializer.serialize(buildJobState));
+
+      FrontendRequest request = new FrontendRequest();
+      request.setType(FrontendRequestType.STORE_BUILD_GRAPH);
+      request.setStoreBuildGraphRequest(storeBuildGraphRequest);
+      makeRequestChecked(request);
+      // No response expected.
+      return null;
     });
   }
 
@@ -189,47 +185,44 @@ public class DistBuildService implements Closeable {
   private ListenableFuture<Void> uploadMissingFilesFromList(
       final List<FileInfo> fileList,
       ListeningExecutorService executorService) {
-    return executorService.submit(new Callable<Void>() {
-      @Override
-      public Void call() throws IOException {
-        Map<String, FileInfo> sha1ToFileInfo = new HashMap<>();
-        for (FileInfo file : fileList) {
-          sha1ToFileInfo.put(file.getContentHash(), file);
-        }
-
-        List<String> contentHashes = ImmutableList.copyOf(sha1ToFileInfo.keySet());
-        CASContainsRequest containsReq = new CASContainsRequest();
-        containsReq.setContentSha1s(contentHashes);
-        FrontendRequest request = new FrontendRequest();
-        request.setType(FrontendRequestType.CAS_CONTAINS);
-        request.setCasContainsRequest(containsReq);
-        FrontendResponse response = makeRequestChecked(request);
-
-        Preconditions.checkState(
-            response.getCasContainsResponse().exists.size() == contentHashes.size());
-        List<Boolean> isPresent = response.getCasContainsResponse().exists;
-        List<FileInfo> filesToBeUploaded = new LinkedList<>();
-        for (int i = 0; i < isPresent.size(); ++i) {
-          if (isPresent.get(i)) {
-            continue;
-          }
-          filesToBeUploaded.add(sha1ToFileInfo.get(contentHashes.get(i)));
-        }
-
-        LOG.info(
-            "%d out of %d files already exist in the cache. Uploading %d files..",
-            sha1ToFileInfo.size() - filesToBeUploaded.size(),
-            sha1ToFileInfo.size(),
-            filesToBeUploaded.size());
-        request = new FrontendRequest();
-        StoreLocalChangesRequest storeReq = new StoreLocalChangesRequest();
-        storeReq.setFiles(filesToBeUploaded);
-        request.setType(FrontendRequestType.STORE_LOCAL_CHANGES);
-        request.setStoreLocalChangesRequest(storeReq);
-        makeRequestChecked(request);
-        // No response expected.
-        return null;
+    return executorService.submit(() -> {
+      Map<String, FileInfo> sha1ToFileInfo = new HashMap<>();
+      for (FileInfo file : fileList) {
+        sha1ToFileInfo.put(file.getContentHash(), file);
       }
+
+      List<String> contentHashes = ImmutableList.copyOf(sha1ToFileInfo.keySet());
+      CASContainsRequest containsReq = new CASContainsRequest();
+      containsReq.setContentSha1s(contentHashes);
+      FrontendRequest request = new FrontendRequest();
+      request.setType(FrontendRequestType.CAS_CONTAINS);
+      request.setCasContainsRequest(containsReq);
+      FrontendResponse response = makeRequestChecked(request);
+
+      Preconditions.checkState(
+          response.getCasContainsResponse().exists.size() == contentHashes.size());
+      List<Boolean> isPresent = response.getCasContainsResponse().exists;
+      List<FileInfo> filesToBeUploaded = new LinkedList<>();
+      for (int i = 0; i < isPresent.size(); ++i) {
+        if (isPresent.get(i)) {
+          continue;
+        }
+        filesToBeUploaded.add(sha1ToFileInfo.get(contentHashes.get(i)));
+      }
+
+      LOG.info(
+          "%d out of %d files already exist in the cache. Uploading %d files..",
+          sha1ToFileInfo.size() - filesToBeUploaded.size(),
+          sha1ToFileInfo.size(),
+          filesToBeUploaded.size());
+      request = new FrontendRequest();
+      StoreLocalChangesRequest storeReq = new StoreLocalChangesRequest();
+      storeReq.setFiles(filesToBeUploaded);
+      request.setType(FrontendRequestType.STORE_LOCAL_CHANGES);
+      request.setStoreLocalChangesRequest(storeReq);
+      makeRequestChecked(request);
+      // No response expected.
+      return null;
     });
   }
 
@@ -353,38 +346,35 @@ public class DistBuildService implements Closeable {
       FileHashCache fileHashCache,
       ListeningExecutorService executorService) throws IOException {
     ListenableFuture<Pair<List<FileInfo>, List<PathInfo>>> filesFuture =
-        executorService.submit(new Callable<Pair<List<FileInfo>, List<PathInfo>>>() {
-          @Override
-          public Pair<List<FileInfo>, List<PathInfo>> call() throws IOException {
+        executorService.submit(() -> {
 
-            Path[] buckDotFilesExceptConfig =
-                Arrays.stream(filesystem.listFiles(Paths.get(".")))
-                    .filter(f -> !f.isDirectory())
-                    .filter(f -> !Files.isSymbolicLink(f.toPath()))
-                    .filter(f -> f.getName().startsWith("."))
-                    .filter(f -> f.getName().contains("buck"))
-                    .filter(f -> !f.getName().startsWith(".buckconfig"))
-                    .map(f -> f.toPath())
-                    .toArray(Path[]::new);
+          Path[] buckDotFilesExceptConfig =
+              Arrays.stream(filesystem.listFiles(Paths.get(".")))
+                  .filter(f -> !f.isDirectory())
+                  .filter(f -> !Files.isSymbolicLink(f.toPath()))
+                  .filter(f -> f.getName().startsWith("."))
+                  .filter(f -> f.getName().contains("buck"))
+                  .filter(f -> !f.getName().startsWith(".buckconfig"))
+                  .map(f -> f.toPath())
+                  .toArray(Path[]::new);
 
-            List<FileInfo> fileEntriesToUpload = new LinkedList<>();
-            List<PathInfo> pathEntriesToUpload = new LinkedList<>();
-            for (Path path : buckDotFilesExceptConfig) {
-              FileInfo fileInfoObject = new FileInfo();
-              fileInfoObject.setContent(filesystem.readFileIfItExists(path).get().getBytes());
-              fileInfoObject.setContentHash(fileHashCache.get(path.toAbsolutePath()).toString());
-              fileEntriesToUpload.add(fileInfoObject);
+          List<FileInfo> fileEntriesToUpload = new LinkedList<>();
+          List<PathInfo> pathEntriesToUpload = new LinkedList<>();
+          for (Path path : buckDotFilesExceptConfig) {
+            FileInfo fileInfoObject = new FileInfo();
+            fileInfoObject.setContent(filesystem.readFileIfItExists(path).get().getBytes());
+            fileInfoObject.setContentHash(fileHashCache.get(path.toAbsolutePath()).toString());
+            fileEntriesToUpload.add(fileInfoObject);
 
-              PathInfo pathInfoObject = new PathInfo();
-              pathInfoObject.setPath(path.toString());
-              pathInfoObject.setContentHash(fileHashCache.get(path.toAbsolutePath()).toString());
-              pathEntriesToUpload.add(pathInfoObject);
-            }
-
-            return new Pair<>(
-                fileEntriesToUpload,
-                pathEntriesToUpload);
+            PathInfo pathInfoObject = new PathInfo();
+            pathInfoObject.setPath(path.toString());
+            pathInfoObject.setContentHash(fileHashCache.get(path.toAbsolutePath()).toString());
+            pathEntriesToUpload.add(pathInfoObject);
           }
+
+          return new Pair<>(
+              fileEntriesToUpload,
+              pathEntriesToUpload);
         });
 
     ListenableFuture<Void> setFilesFuture = Futures.transformAsync(
