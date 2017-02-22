@@ -16,8 +16,6 @@
 
 package com.facebook.buck.jvm.kotlin;
 
-import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
-
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
@@ -39,7 +37,7 @@ public class KotlinLibraryBuilder
       ProjectFilesystem projectFilesystem,
       HashCode hashCode) {
     super(
-        new KotlinLibraryDescription(null, DEFAULT_JAVAC_OPTIONS),
+        new KotlinLibraryDescription(null, null),
         target,
         projectFilesystem,
         hashCode);

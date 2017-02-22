@@ -21,7 +21,8 @@
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//src/com/facebook/buck/versions:translator",
-      "//third-party/java/guava:guava"
+      "//third-party/java/guava:guava",
+      "//third-party/java/jsr:jsr305"
     ]
   },
   "types" : {

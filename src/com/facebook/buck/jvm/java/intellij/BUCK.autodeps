@@ -11,6 +11,7 @@
       "//src/com/facebook/buck/jvm/java:packagefinder",
       "//src/com/facebook/buck/jvm/java:rules",
       "//src/com/facebook/buck/jvm/java:support",
+      "//src/com/facebook/buck/jvm/kotlin:kotlin",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/util:exceptions",

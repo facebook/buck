@@ -5,7 +5,8 @@
       "//src/com/facebook/buck/shell:worker_tool",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:util",
-      "//third-party/java/immutables:immutables"
+      "//third-party/java/immutables:immutables",
+      "//third-party/java/jsr:jsr305"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/model:macros",
