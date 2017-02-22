@@ -24,21 +24,17 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.file.ProjectFilesystemMatchers;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 
-import org.hamcrest.CustomTypeSafeMatcher;
-import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.Optional;
 
 public class PrecompiledHeaderIntegrationTest {
 
@@ -84,14 +80,8 @@ public class PrecompiledHeaderIntegrationTest {
         "prefix_header.h");
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    assertThat(
-        buildLog,
-        reportedTargetSuccessType(findPchTarget(), BuildRuleSuccessType.BUILT_LOCALLY));
-    assertThat(
-        buildLog,
-        reportedTargetSuccessType(
-            workspace.newBuildTarget("//:some_library#default,static"),
-            BuildRuleSuccessType.BUILT_LOCALLY));
+    buildLog.assertTargetBuiltLocally(findPchTarget().toString());
+    buildLog.assertTargetBuiltLocally("//:some_library#default,static");
   }
 
   @Test
@@ -104,14 +94,8 @@ public class PrecompiledHeaderIntegrationTest {
         "referenced_by_prefix_header.h");
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    assertThat(
-        buildLog,
-        reportedTargetSuccessType(findPchTarget(), BuildRuleSuccessType.BUILT_LOCALLY));
-    assertThat(
-        buildLog,
-        reportedTargetSuccessType(
-            workspace.newBuildTarget("//:some_library#default,static"),
-            BuildRuleSuccessType.BUILT_LOCALLY));
+    buildLog.assertTargetBuiltLocally(findPchTarget().toString());
+    buildLog.assertTargetBuiltLocally("//:some_library#default,static");
   }
 
   @Test
@@ -124,14 +108,8 @@ public class PrecompiledHeaderIntegrationTest {
         "referenced_by_prefix_header_from_dependency.h");
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    assertThat(
-        buildLog,
-        reportedTargetSuccessType(findPchTarget(), BuildRuleSuccessType.BUILT_LOCALLY));
-    assertThat(
-        buildLog,
-        reportedTargetSuccessType(
-            workspace.newBuildTarget("//:some_library#default,static"),
-            BuildRuleSuccessType.BUILT_LOCALLY));
+    buildLog.assertTargetBuiltLocally(findPchTarget().toString());
+    buildLog.assertTargetBuiltLocally("//:some_library#default,static");
   }
 
   @Test
@@ -149,15 +127,8 @@ public class PrecompiledHeaderIntegrationTest {
         "referenced_by_prefix_header_from_dependency.h");
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    assertThat(
-        "PCH should not change as no pch input file contents has changed.",
-        buildLog,
-        reportedTargetSuccessType(findPchTarget(), BuildRuleSuccessType.MATCHING_RULE_KEY));
-    assertThat(
-        buildLog,
-        reportedTargetSuccessType(
-            workspace.newBuildTarget("//:some_library#default,static"),
-            BuildRuleSuccessType.BUILT_LOCALLY));
+    buildLog.assertTargetHadMatchingRuleKey(findPchTarget().toString());
+    buildLog.assertTargetBuiltLocally("//:some_library#default,static");
   }
 
 
@@ -172,21 +143,13 @@ public class PrecompiledHeaderIntegrationTest {
         "lib.c");
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    assertThat(
-        buildLog,
-        reportedTargetSuccessType(
-            findPchTarget(),
-            BuildRuleSuccessType.BUILT_LOCALLY));
+    buildLog.assertTargetBuiltLocally(findPchTarget().toString());
     assertThat(
         workspace.asCell().getFilesystem(),
         ProjectFilesystemMatchers.pathExists(
             workspace.getPath(
                 "buck-out/gen/" + findPchTarget().getShortNameAndFlavorPostfix() + ".h.gch")));
-    assertThat(
-        buildLog,
-        reportedTargetSuccessType(
-            workspace.newBuildTarget("//:some_library#default,static"),
-            BuildRuleSuccessType.BUILT_LOCALLY));
+    buildLog.assertTargetBuiltLocally("//:some_library#default,static");
   }
 
   private BuildTarget findPchTarget() throws IOException {
@@ -200,18 +163,4 @@ public class PrecompiledHeaderIntegrationTest {
     fail("should have generated a pch target");
     return null;
   }
-
-  private static Matcher<BuckBuildLog> reportedTargetSuccessType(
-      final BuildTarget target,
-      final BuildRuleSuccessType successType) {
-    return new CustomTypeSafeMatcher<BuckBuildLog>(
-        "target: " + target.toString() + " with result: " + successType) {
-
-      @Override
-      protected boolean matchesSafely(BuckBuildLog buckBuildLog) {
-        return buckBuildLog.getLogEntry(target).getSuccessType().equals(Optional.of(successType));
-      }
-    };
-  }
-
 }
