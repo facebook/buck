@@ -5,6 +5,10 @@ java_library(
       '//third-party/java/guava:guava',
       '//third-party/java/gson:gson',
   ],
+  deps = [
+      '//third-party/java/guava:guava',
+      '//third-party/java/gson:gson',
+  ],
   licenses = [
     'NOTICE',
   ],
