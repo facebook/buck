@@ -180,7 +180,6 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(SECTION, "skip_checking_missing_deps", true);
   }
 
-  @Deprecated
   public Optional<Integer> getDxThreadCount() {
     return delegate.getInteger(SECTION, "dx_threads");
   }
