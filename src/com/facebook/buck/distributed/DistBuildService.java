@@ -167,6 +167,11 @@ public class DistBuildService implements Closeable {
               "Path [%s] is a directory. Skipping upload..",
               file.path.getPath());
           continue;
+        } else if (file.isPathIsAbsolute()) {
+          LOG.info(
+              "Path [%s] is absolute. Skipping upload..",
+              file.path.getPath());
+          continue;
         }
 
         // TODO(shivanker): Eventually, we won't have file contents in BuildJobState.
