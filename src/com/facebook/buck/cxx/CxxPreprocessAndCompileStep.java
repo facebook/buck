@@ -146,7 +146,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     return ProcessExecutorParams.builder()
         .setDirectory(filesystem.getRootPath().toAbsolutePath())
         .setRedirectError(ProcessBuilder.Redirect.PIPE)
-        .setEnvironment(env);
+        .setEnvironment(ImmutableMap.copyOf(env));
   }
 
   private ImmutableList<String> getDepFileArgs(Path depFile) {

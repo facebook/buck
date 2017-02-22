@@ -58,7 +58,8 @@ public class ProcessTrackerTest {
   private static final ImmutableMap<String, String> CONTEXT = ImmutableMap.of("aaa", "bbb");
 
   private static final long PID = 1337;
-  private static final Map<String, String> ENVIRONMENT = ImmutableMap.of("ProcessTrackerTest", "1");
+  private static final ImmutableMap<String, String> ENVIRONMENT =
+      ImmutableMap.of("ProcessTrackerTest", "1");
 
   private FakeProcessHelper processHelper;
   private FakeProcessRegistry processRegistry;

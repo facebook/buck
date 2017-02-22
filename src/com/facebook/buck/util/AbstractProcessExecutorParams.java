@@ -18,11 +18,11 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -53,7 +53,7 @@ abstract class AbstractProcessExecutorParams {
    * process. Otherwise, inherits the current process's environment.
    */
   @Value.Parameter
-  public abstract Optional<Map<String, String>> getEnvironment();
+  public abstract Optional<ImmutableMap<String, String>> getEnvironment();
 
   /**
    * If present, redirects stdout for the process to this location.

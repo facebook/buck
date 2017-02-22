@@ -41,7 +41,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
-import java.util.Map;
 import java.util.Optional;
 
 public class GoBuckConfig {
@@ -196,7 +195,7 @@ public class GoBuckConfig {
 
   private String getGoEnvFromTool(ProcessExecutor processExecutor, String env) {
     Path goTool = getGoToolPath();
-    Optional<Map<String, String>> goRootEnv = delegate.getPath(
+    Optional<ImmutableMap<String, String>> goRootEnv = delegate.getPath(
         SECTION,
         "root").map(input -> ImmutableMap.of("GOROOT", input.toString()));
     try {

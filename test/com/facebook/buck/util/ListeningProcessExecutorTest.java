@@ -16,16 +16,17 @@
 
 package com.facebook.buck.util;
 
-import static org.junit.Assert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.ProcessListeners.CapturingListener;
 import com.facebook.buck.util.ProcessListeners.StdinWritingListener;
+import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.junit.ExpectedException;
 import org.junit.Rule;
@@ -35,7 +36,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -225,7 +225,7 @@ public class ListeningProcessExecutorTest {
     } else {
       params = ProcessExecutorParams.ofCommand("env");
     }
-    params = params.withEnvironment(new HashMap<String, String>());
+    params = params.withEnvironment(ImmutableMap.of());
     ListeningProcessExecutor.LaunchedProcess process =
         executor.launchProcess(params, listener);
     int returnCode = executor.waitForProcess(process);
