@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * In actual build files, Buck requires that build targets are well-formed, which means that they
@@ -61,11 +60,11 @@ import java.util.Set;
  */
 class CommandLineBuildTargetNormalizer {
 
-  private final Function<String, Set<String>> normalizer;
+  private final Function<String, ImmutableSet<String>> normalizer;
 
   CommandLineBuildTargetNormalizer(final BuckConfig buckConfig) {
     this.normalizer = arg -> {
-      Set<String> aliasValues = buckConfig.getBuildTargetForAliasAsString(arg);
+      ImmutableSet<String> aliasValues = buckConfig.getBuildTargetForAliasAsString(arg);
       if (!aliasValues.isEmpty()) {
         return aliasValues;
       } else {
@@ -74,11 +73,11 @@ class CommandLineBuildTargetNormalizer {
     };
   }
 
-  public Set<String> normalize(String argument) {
+  public ImmutableSet<String> normalize(String argument) {
     return normalizer.apply(argument);
   }
 
-  public List<String> normalizeAll(List<String> arguments) {
+  public ImmutableList<String> normalizeAll(List<String> arguments) {
     // When transforming command-line arguments, first check to see whether it is an alias in the
     // BuckConfig. If so, return the value associated with the alias. Otherwise, try normalize().
     ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();

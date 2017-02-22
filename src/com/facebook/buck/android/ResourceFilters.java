@@ -152,7 +152,7 @@ public class ResourceFilters {
    * @return set of files to remove
    */
   @VisibleForTesting
-  static Set<Path> filterByDensity(
+  static ImmutableSet<Path> filterByDensity(
       Collection<Path> candidates,
       Set<ResourceFilters.Density> targetDensities,
       boolean canDownscale) {

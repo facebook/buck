@@ -242,10 +242,10 @@ public class BuckConfig implements ConfigPathGetter {
     return Optional.empty();
   }
 
-  public Set<String> getBuildTargetForAliasAsString(String possiblyFlavoredAlias) {
+  public ImmutableSet<String> getBuildTargetForAliasAsString(String possiblyFlavoredAlias) {
     String[] parts = possiblyFlavoredAlias.split("#", 2);
     String unflavoredAlias = parts[0];
-    Set<BuildTarget> buildTargets = getBuildTargetsForAlias(unflavoredAlias);
+    ImmutableSet<BuildTarget> buildTargets = getBuildTargetsForAlias(unflavoredAlias);
     if (buildTargets.isEmpty()) {
       return ImmutableSet.of();
     }
@@ -255,7 +255,7 @@ public class BuckConfig implements ConfigPathGetter {
         .collect(MoreCollectors.toImmutableSet());
   }
 
-  public Set<BuildTarget> getBuildTargetsForAlias(String unflavoredAlias) {
+  public ImmutableSet<BuildTarget> getBuildTargetsForAlias(String unflavoredAlias) {
     return aliasToBuildTargetMap.get(unflavoredAlias);
   }
 

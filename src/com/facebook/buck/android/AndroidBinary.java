@@ -89,7 +89,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.AbstractMap;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -359,7 +358,7 @@ public class AndroidBinary
     return rulesToExcludeFromDex;
   }
 
-  public Set<BuildTarget> getBuildTargetsToExcludeFromDex() {
+  public ImmutableSet<BuildTarget> getBuildTargetsToExcludeFromDex() {
     return buildTargetsToExcludeFromDex;
   }
 
@@ -823,7 +822,7 @@ public class AndroidBinary
           resolver);
     }
 
-    Supplier<Map<String, HashCode>> classNamesToHashesSupplier;
+    Supplier<ImmutableMap<String, HashCode>> classNamesToHashesSupplier;
     boolean classFilesHaveChanged = preprocessJavaClassesBash.isPresent() ||
         packageType.isBuildWithObfuscation();
 
@@ -875,7 +874,7 @@ public class AndroidBinary
     return new DexFilesInfo(primaryDexPath, secondaryDexDirectoriesBuilder.build());
   }
 
-  public Supplier<Map<String, HashCode>> addAccumulateClassNamesStep(
+  public Supplier<ImmutableMap<String, HashCode>> addAccumulateClassNamesStep(
       final ImmutableSet<Path> classPathEntriesToDex,
       ImmutableList.Builder<Step> steps) {
     final ImmutableMap.Builder<String, HashCode> builder = ImmutableMap.builder();
@@ -1039,7 +1038,7 @@ public class AndroidBinary
   @VisibleForTesting
   void addDexingSteps(
       Set<Path> classpathEntriesToDex,
-      Supplier<Map<String, HashCode>> classNamesToHashesSupplier,
+      Supplier<ImmutableMap<String, HashCode>> classNamesToHashesSupplier,
       ImmutableSet.Builder<Path> secondaryDexDirectories,
       ImmutableList.Builder<Step> steps,
       Path primaryDexPath,

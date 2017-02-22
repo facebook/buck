@@ -34,7 +34,6 @@ import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -122,7 +121,7 @@ public class WebServer {
 
     // Package up all of the handlers into a ContextHandlerCollection to serve as the handler for
     // the server.
-    List<? extends Handler> handlers = createHandlers();
+    ImmutableList<? extends Handler> handlers = createHandlers();
     ContextHandlerCollection contexts = new ContextHandlerCollection();
     contexts.setHandlers(handlers.toArray(new Handler[0]));
     server.setHandler(contexts);
@@ -135,7 +134,7 @@ public class WebServer {
   }
 
   @VisibleForTesting
-  List<ContextHandler> createHandlers() {
+  ImmutableList<ContextHandler> createHandlers() {
     Map<String, Handler> contextPathToHandler = Maps.newHashMap();
 
     contextPathToHandler.put(INDEX_CONTEXT_PATH, new TemplateHandler(new IndexHandlerDelegate()));

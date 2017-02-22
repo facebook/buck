@@ -294,7 +294,7 @@ public class FilterResourcesStep implements Step {
   }
 
   public interface DrawableFinder {
-    public Set<Path> findDrawables(Collection<Path> dirs, ProjectFilesystem filesystem)
+    public ImmutableSet<Path> findDrawables(Collection<Path> dirs, ProjectFilesystem filesystem)
         throws IOException;
   }
 
@@ -307,7 +307,7 @@ public class FilterResourcesStep implements Step {
     }
 
     @Override
-    public Set<Path> findDrawables(Collection<Path> dirs, ProjectFilesystem filesystem)
+    public ImmutableSet<Path> findDrawables(Collection<Path> dirs, ProjectFilesystem filesystem)
         throws IOException {
       final ImmutableSet.Builder<Path> drawableBuilder = ImmutableSet.builder();
       for (Path dir : dirs) {

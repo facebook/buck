@@ -247,14 +247,14 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public Set<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets)
+  public ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets)
       throws QueryException, InterruptedException {
-    Set<QueryTarget> result = new LinkedHashSet<>();
+    ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
     for (QueryTarget target : targets) {
       TargetNode<?, ?> node = getNode(target);
       result.addAll(getTargetsFromTargetNodes(graph.getOutgoingNodesFor(node)));
     }
-    return result;
+    return result.build();
   }
 
   @Override

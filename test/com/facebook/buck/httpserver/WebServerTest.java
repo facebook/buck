@@ -22,13 +22,13 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.junit.Test;
 
-import java.util.List;
 import java.util.Map;
 
 public class WebServerTest {
@@ -41,7 +41,7 @@ public class WebServerTest {
         projectFilesystem,
         "/static/",
         ObjectMappers.newDefaultInstance());
-    List<ContextHandler> handlers = webServer.createHandlers();
+    ImmutableList<ContextHandler> handlers = webServer.createHandlers();
     final Map<String, ContextHandler> contextPathToHandler = Maps.newHashMap();
     for (ContextHandler handler : handlers) {
       contextPathToHandler.put(handler.getContextPath(), handler);

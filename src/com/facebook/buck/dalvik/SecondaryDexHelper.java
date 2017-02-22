@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -93,7 +92,7 @@ abstract class SecondaryDexHelper<ZIP_OUTPUT_STREAM_HELPER extends ZipOutputStre
     }
   }
 
-  List<Path> getFiles() {
+  ImmutableList<Path> getFiles() {
     return secondaryFiles.build();
   }
 

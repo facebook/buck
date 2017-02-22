@@ -22,8 +22,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.collect.ImmutableMap;
 
-import java.util.Map;
-
 /**
  * Json format for Chrome Trace events that can be viewed in chrome://tracing.
  * See https://github.com/google/trace-viewer for more information.
@@ -112,7 +110,7 @@ public class ChromeTraceEvent {
   }
 
   @JsonProperty("args")
-  public Map<String, String> getArgs() {
+  public ImmutableMap<String, String> getArgs() {
     return args;
   }
 

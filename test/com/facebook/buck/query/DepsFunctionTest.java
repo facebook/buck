@@ -126,7 +126,7 @@ public class DepsFunctionTest {
     }
 
     @Override
-    public Set<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets)
+    public ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets)
         throws QueryException, InterruptedException {
       return RichStream.from(targets)
           .map(QueryBuildTarget.class::cast)

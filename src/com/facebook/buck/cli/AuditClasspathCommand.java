@@ -39,6 +39,7 @@ import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
@@ -87,7 +88,7 @@ public class AuditClasspathCommand extends AbstractCommand {
     return arguments;
   }
 
-  public List<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
+  public ImmutableList<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
     return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments());
   }
 

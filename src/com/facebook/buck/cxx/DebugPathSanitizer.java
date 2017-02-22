@@ -22,6 +22,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -61,7 +62,9 @@ public abstract class DebugPathSanitizer {
     return Strings.padEnd(path.toString(), pathSize, separator);
   }
 
-  abstract Map<String, String> getCompilationEnvironment(Path workingDir, boolean shouldSanitize);
+  abstract ImmutableMap<String, String> getCompilationEnvironment(
+      Path workingDir,
+      boolean shouldSanitize);
 
   abstract ImmutableList<String> getCompilationFlags();
 

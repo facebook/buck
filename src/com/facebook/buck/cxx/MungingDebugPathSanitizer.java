@@ -38,7 +38,6 @@ import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
@@ -80,7 +79,7 @@ public class MungingDebugPathSanitizer extends DebugPathSanitizer {
   }
 
   @Override
-  public Map<String, String> getCompilationEnvironment(
+  public ImmutableMap<String, String> getCompilationEnvironment(
       Path workingDir,
       boolean shouldSanitize) {
     // A forced compilation directory is set in the constructor.  Now, we can't actually force

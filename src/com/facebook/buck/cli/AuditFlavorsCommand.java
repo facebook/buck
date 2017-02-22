@@ -70,7 +70,7 @@ public class AuditFlavorsCommand extends AbstractCommand {
     return arguments;
   }
 
-  private List<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
+  private ImmutableList<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
     return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments());
   }
 

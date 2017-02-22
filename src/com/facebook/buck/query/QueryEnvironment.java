@@ -188,7 +188,7 @@ public interface QueryEnvironment {
       throws QueryException, InterruptedException;
 
   /** Returns the direct forward dependencies of the specified targets. */
-  Set<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets)
+  ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets)
       throws QueryException, InterruptedException;
 
   /**

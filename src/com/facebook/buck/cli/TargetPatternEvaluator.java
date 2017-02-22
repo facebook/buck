@@ -44,7 +44,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class TargetPatternEvaluator {
   private static final Logger LOG = Logger.get(TargetPatternEvaluator.class);
@@ -101,7 +100,7 @@ public class TargetPatternEvaluator {
       }
 
       // Check if this is an alias.
-      Set<BuildTarget> aliasTargets = buckConfig.getBuildTargetsForAlias(pattern);
+      ImmutableSet<BuildTarget> aliasTargets = buckConfig.getBuildTargetsForAlias(pattern);
       if (!aliasTargets.isEmpty()) {
         for (BuildTarget alias : aliasTargets) {
           unresolved.put(alias.getFullyQualifiedName(), pattern);

@@ -77,7 +77,7 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
   }
 
   @Override
-  Map<String, String> getCompilationEnvironment(
+  ImmutableMap<String, String> getCompilationEnvironment(
       Path workingDir, boolean shouldSanitize) {
     if (!workingDir.equals(compilationDir)) {
       throw new AssertionError(String.format(

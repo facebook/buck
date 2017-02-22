@@ -28,7 +28,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -52,7 +51,7 @@ public class ResolveAliasHelper {
 
     List<String> resolvedAliases = Lists.newArrayList();
     for (String alias : aliases) {
-      Set<String> buildTargets;
+      ImmutableSet<String> buildTargets;
       if (alias.startsWith("//")) {
         String buildTarget = validateBuildTargetForFullyQualifiedTarget(
             params,
@@ -124,7 +123,7 @@ public class ResolveAliasHelper {
   }
 
   /** @return the name of the build target identified by the specified alias or an empty set. */
-  private static Set<String> getBuildTargetForAlias(BuckConfig buckConfig, String alias) {
+  private static ImmutableSet<String> getBuildTargetForAlias(BuckConfig buckConfig, String alias) {
     return buckConfig.getBuildTargetForAliasAsString(alias);
   }
 

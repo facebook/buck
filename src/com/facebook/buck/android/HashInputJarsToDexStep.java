@@ -52,7 +52,7 @@ public class HashInputJarsToDexStep extends AbstractExecutionStep
   private final Supplier<Set<Path>> primaryInputsToDex;
   private final Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs;
 
-  private final Supplier<Map<String, HashCode>> classNamesToHashesSupplier;
+  private final Supplier<ImmutableMap<String, HashCode>> classNamesToHashesSupplier;
   private final ImmutableMap.Builder<Path, Sha1HashCode> dexInputsToHashes;
   private boolean stepFinished;
 
@@ -60,7 +60,7 @@ public class HashInputJarsToDexStep extends AbstractExecutionStep
       ProjectFilesystem filesystem,
       Supplier<Set<Path>> primaryInputsToDex,
       Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs,
-      Supplier<Map<String, HashCode>> classNamesToHashesSupplier) {
+      Supplier<ImmutableMap<String, HashCode>> classNamesToHashesSupplier) {
     super("collect_smart_dex_inputs_hash");
     this.filesystem = filesystem;
     this.primaryInputsToDex = primaryInputsToDex;

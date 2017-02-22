@@ -30,7 +30,6 @@ import com.google.common.hash.HashCode;
 
 import org.immutables.value.Value;
 
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -146,5 +145,5 @@ interface AbstractAndroidPackageableCollection {
   /**
    * See {@link com.facebook.buck.jvm.java.JavaLibrary#getClassNamesToHashes()}
    */
-  Supplier<Map<String, HashCode>> getClassNamesToHashesSupplier();
+  Supplier<ImmutableMap<String, HashCode>> getClassNamesToHashesSupplier();
 }

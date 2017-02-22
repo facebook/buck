@@ -269,7 +269,7 @@ public class SmartDexingStep implements Step {
    * Once the {@code .class} files have been split into separate zip files, each must be converted
    * to a {@code .dex} file.
    */
-  private List<Step> generateDxCommands(
+  private ImmutableList<Step> generateDxCommands(
       ProjectFilesystem filesystem,
       Multimap<Path, Path> outputToInputs) {
     ImmutableList.Builder<DxPseudoRule> pseudoRules = ImmutableList.builder();
@@ -374,7 +374,7 @@ public class SmartDexingStep implements Step {
       return newInputsHash.equals(currentInputsHash);
     }
 
-    public List<Step> buildInternal() {
+    private ImmutableList<Step> buildInternal() {
       Preconditions.checkState(newInputsHash != null, "Must call checkIsCached first!");
 
       List<Step> steps = Lists.newArrayList();

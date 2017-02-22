@@ -35,10 +35,10 @@ import java.util.Optional;
  */
 class ProguardTranslatorFactory {
 
-  private final Optional<Map<String, String>> rawMap;
+  private final Optional<ImmutableMap<String, String>> rawMap;
 
   private ProguardTranslatorFactory(
-      Optional<Map<String, String>> rawMap) {
+      Optional<ImmutableMap<String, String>> rawMap) {
     this.rawMap = rawMap;
   }
 
@@ -54,11 +54,11 @@ class ProguardTranslatorFactory {
 
   @VisibleForTesting
   static ProguardTranslatorFactory createForTest(
-      Optional<Map<String, String>> rawMap) {
+      Optional<ImmutableMap<String, String>> rawMap) {
     return new ProguardTranslatorFactory(rawMap);
   }
 
-  private static Optional<Map<String, String>> loadOptionalRawMap(
+  private static Optional<ImmutableMap<String, String>> loadOptionalRawMap(
       ProjectFilesystem filesystem,
       Optional<Path> proguardFullConfigFile,
       Optional<Path> proguardMappingFile,
