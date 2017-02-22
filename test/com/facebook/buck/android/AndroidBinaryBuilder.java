@@ -48,7 +48,8 @@ public class AndroidBinaryBuilder extends
             ImmutableMap.of(),
             MoreExecutors.newDirectExecutorService(),
             FakeBuckConfig.builder().build(),
-            CxxPlatformUtils.DEFAULT_CONFIG),
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            new DxConfig(FakeBuckConfig.builder().build())),
         target);
   }
 

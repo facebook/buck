@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
+import java.util.Optional;
 
 public class DxStepTest extends EasyMockSupport {
 
@@ -196,6 +197,33 @@ public class DxStepTest extends EasyMockSupport {
           dx.shouldPrintStdout(context.getVerbosity()));
       assertTrue("Should print stdout since `dx --verbose` is enabled.",
           dx.shouldPrintStderr(context.getVerbosity()));
+      verifyAll();
+    }
+  }
+
+  @Test
+  public void testOverridenMaxHeapSize() throws IOException {
+    try (ExecutionContext context = createExecutionContext(2)) {
+      ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+
+      DxStep dx = new DxStep(
+          filesystem,
+          SAMPLE_OUTPUT_PATH,
+          SAMPLE_FILES_TO_DEX,
+          EnumSet.noneOf(DxStep.Option.class),
+          Optional.of("2g"));
+
+      String expected = String.format(
+          "%s --output %s %s",
+          "/usr/bin/dx -JXmx2g --dex",
+          SAMPLE_OUTPUT_PATH,
+          Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, filesystem::resolve)));
+      MoreAsserts.assertShellCommands(
+          "Ensure that the -JXmx flag is present.",
+          ImmutableList.of(expected),
+          ImmutableList.of(dx),
+          context);
+
       verifyAll();
     }
   }

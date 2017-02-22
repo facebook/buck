@@ -119,6 +119,7 @@ public class AndroidBinaryGraphEnhancer {
   private final AndroidNativeLibsPackageableGraphEnhancer nativeLibsEnhancer;
   private final APKModuleGraph apkModuleGraph;
   private final ListeningExecutorService dxExecutorService;
+  private final DxConfig dxConfig;
 
   AndroidBinaryGraphEnhancer(
       BuildRuleParams originalParams,
@@ -154,7 +155,8 @@ public class AndroidBinaryGraphEnhancer {
       ListeningExecutorService dxExecutorService,
       ManifestEntries manifestEntries,
       CxxBuckConfig cxxBuckConfig,
-      APKModuleGraph apkModuleGraph) {
+      APKModuleGraph apkModuleGraph,
+      DxConfig dxConfig) {
     this.buildRuleParams = originalParams;
     this.manifestEntries = manifestEntries;
     this.originalBuildTarget = originalParams.getBuildTarget();
@@ -198,6 +200,7 @@ public class AndroidBinaryGraphEnhancer {
             relinkerMode,
             apkModuleGraph);
     this.apkModuleGraph = apkModuleGraph;
+    this.dxConfig = dxConfig;
   }
 
   AndroidGraphEnhancementResult createAdditionalBuildables() throws NoSuchBuildTargetException {
@@ -597,7 +600,8 @@ public class AndroidBinaryGraphEnhancer {
         allPreDexDeps,
         dexForUberRDotJava,
         dxExecutorService,
-        xzCompressionLevel);
+        xzCompressionLevel,
+        dxConfig.getDxMaxHeapSize());
     ruleResolver.addToIndex(preDexMerge);
 
     return preDexMerge;

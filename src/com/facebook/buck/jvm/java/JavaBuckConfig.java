@@ -179,8 +179,4 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   public boolean getSkipCheckingMissingDeps() {
     return delegate.getBooleanValue(SECTION, "skip_checking_missing_deps", true);
   }
-
-  public Optional<Integer> getDxThreadCount() {
-    return delegate.getInteger(SECTION, "dx_threads");
-  }
 }

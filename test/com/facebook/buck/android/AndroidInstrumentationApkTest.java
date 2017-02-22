@@ -128,7 +128,8 @@ public class AndroidInstrumentationApkTest {
             DEFAULT_JAVAC_OPTIONS,
             ImmutableMap.of(),
             MoreExecutors.newDirectExecutorService(),
-            CxxPlatformUtils.DEFAULT_CONFIG)
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            new DxConfig(FakeBuckConfig.builder().build()))
             .createBuildRule(TargetGraph.EMPTY, params, ruleResolver, arg);
 
     assertEquals(

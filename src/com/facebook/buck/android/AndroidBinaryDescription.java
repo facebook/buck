@@ -115,6 +115,7 @@ public class AndroidBinaryDescription implements
   private final ProGuardConfig proGuardConfig;
   private final BuckConfig buckConfig;
   private final CxxBuckConfig cxxBuckConfig;
+  private final DxConfig dxConfig;
   private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
   private final ListeningExecutorService dxExecutorService;
 
@@ -125,7 +126,8 @@ public class AndroidBinaryDescription implements
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ListeningExecutorService dxExecutorService,
       BuckConfig buckConfig,
-      CxxBuckConfig cxxBuckConfig) {
+      CxxBuckConfig cxxBuckConfig,
+      DxConfig dxConfig) {
     this.javaOptions = javaOptions;
     this.javacOptions = javacOptions;
     this.proGuardConfig = proGuardConfig;
@@ -133,6 +135,7 @@ public class AndroidBinaryDescription implements
     this.cxxBuckConfig = cxxBuckConfig;
     this.nativePlatforms = nativePlatforms;
     this.dxExecutorService = dxExecutorService;
+    this.dxConfig = dxConfig;
   }
 
   @Override
@@ -251,7 +254,8 @@ public class AndroidBinaryDescription implements
           dxExecutorService,
           args.manifestEntries,
           cxxBuckConfig,
-          apkModuleGraph);
+          apkModuleGraph,
+          dxConfig);
       AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
       if (target.getFlavors().contains(PACKAGE_STRING_ASSETS_FLAVOR)) {
@@ -319,7 +323,8 @@ public class AndroidBinaryDescription implements
           args.packageAssetLibraries,
           args.compressAssetLibraries,
           args.manifestEntries,
-          javaOptions.getJavaRuntimeLauncher());
+          javaOptions.getJavaRuntimeLauncher(),
+          dxConfig.getDxMaxHeapSize());
     }
   }
 
