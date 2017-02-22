@@ -120,6 +120,8 @@ public class AndroidPrebuiltAarDescription
               unzipAar.getPathToClassesJar()));
     }
 
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+
     Iterable<PrebuiltJar> javaDeps = Iterables.concat(
         Iterables.filter(
             buildRuleResolver.getAllRules(args.deps),
@@ -130,14 +132,39 @@ public class AndroidPrebuiltAarDescription
                 AndroidPrebuiltAar.class),
             AndroidPrebuiltAar::getPrebuiltJar));
 
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    if (flavors.contains(AAR_PREBUILT_JAR_FLAVOR)) {
+      Preconditions.checkState(
+          flavors.size() == 1,
+          "Expected only flavor to be %s but also found %s",
+          AAR_PREBUILT_JAR_FLAVOR,
+          flavors);
+      BuildRuleParams buildRuleParams = params
+          .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.copyOf(javaDeps)))
+          .withExtraDeps(Suppliers.ofInstance(ImmutableSortedSet.of(unzipAar)));
+      return new PrebuiltJar(
+        /* params */ buildRuleParams,
+        /* resolver */ pathResolver,
+        /* binaryJar */ new BuildTargetSourcePath(
+          unzipAar.getBuildTarget(),
+          unzipAar.getPathToClassesJar()),
+        /* sourceJar */ Optional.empty(),
+        /* gwtJar */ Optional.empty(),
+        /* javadocUrl */ Optional.empty(),
+        /* mavenCoords */ Optional.empty(),
+        /* provided */ false);
+    }
 
-    PrebuiltJar prebuiltJar = buildRuleResolver.addToIndex(
-        createPrebuiltJar(
-            unzipAar,
-            params,
-            pathResolver,
-            ImmutableSortedSet.copyOf(javaDeps)));
+    BuildRule prebuiltJarRule = buildRuleResolver.requireRule(
+        BuildTargets.createFlavoredBuildTarget(
+            params.getBuildTarget().checkUnflavored(),
+            AAR_PREBUILT_JAR_FLAVOR));
+    Preconditions.checkState(
+        prebuiltJarRule instanceof PrebuiltJar,
+        "%s flavor created rule of unexpected type %s for target %s",
+        AAR_PREBUILT_JAR_FLAVOR,
+        unzipAarRule.getType(),
+        params.getBuildTarget());
+    PrebuiltJar prebuiltJar = (PrebuiltJar) prebuiltJarRule;
 
     BuildRuleParams androidLibraryParams = params
         .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.of(prebuiltJar)))
@@ -158,31 +185,6 @@ public class AndroidPrebuiltAarDescription
         new JavacToJarStepFactory(javacOptions, new BootClasspathAppender()),
         /* exportedDeps */ javaDeps,
         JavaLibraryRules.getAbiInputs(buildRuleResolver, androidLibraryParams.getDeps()));
-  }
-
-  private PrebuiltJar createPrebuiltJar(
-      UnzipAar unzipAar,
-      BuildRuleParams params,
-      SourcePathResolver resolver,
-      ImmutableSortedSet<BuildRule> deps) {
-    BuildRuleParams buildRuleParams = params
-        .withBuildTarget(BuildTargets.createFlavoredBuildTarget(
-            params.getBuildTarget().checkUnflavored(),
-            AAR_PREBUILT_JAR_FLAVOR))
-        .withDeclaredDeps(Suppliers.ofInstance(deps))
-        .withExtraDeps(Suppliers.ofInstance(ImmutableSortedSet.of(unzipAar)));
-    return new PrebuiltJar(
-        /* params */ buildRuleParams,
-        /* resolver */ resolver,
-        /* binaryJar */ new BuildTargetSourcePath(
-            unzipAar.getBuildTarget(),
-            unzipAar.getPathToClassesJar()),
-        /* sourceJar */ Optional.empty(),
-        /* gwtJar */ Optional.empty(),
-        /* javadocUrl */ Optional.empty(),
-        /* mavenCoords */ Optional.empty(),
-        /* provided */ false);
-
   }
 
   @SuppressFieldNotInitialized
