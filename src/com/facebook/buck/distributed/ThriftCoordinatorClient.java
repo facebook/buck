@@ -16,12 +16,12 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.CoordinatorService;
 import com.facebook.buck.distributed.thrift.FinishedBuildingRequest;
 import com.facebook.buck.distributed.thrift.FinishedBuildingResponse;
 import com.facebook.buck.distributed.thrift.GetTargetsToBuildRequest;
 import com.facebook.buck.distributed.thrift.GetTargetsToBuildResponse;
+import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.ThriftException;
 import com.google.common.base.Preconditions;
@@ -48,15 +48,15 @@ public class ThriftCoordinatorClient implements Closeable {
 
   private final String remoteHost;
   private final int remotePort;
-  private final BuildId stampedeBuildId;
+  private final StampedeId stampedeId;
 
   @Nullable private TFramedTransport transport;
   @Nullable private CoordinatorService.Client client;
 
-  public ThriftCoordinatorClient(String remoteHost, int remotePort, BuildId stampedeBuildId) {
+  public ThriftCoordinatorClient(String remoteHost, int remotePort, StampedeId stampedeId) {
     this.remoteHost = Preconditions.checkNotNull(remoteHost);
     this.remotePort = remotePort;
-    this.stampedeBuildId = stampedeBuildId;
+    this.stampedeId = stampedeId;
   }
 
   public ThriftCoordinatorClient start() throws IOException {
@@ -102,7 +102,7 @@ public class ThriftCoordinatorClient implements Closeable {
     Preconditions.checkNotNull(client, "Client was not started.");
     GetTargetsToBuildRequest request = new GetTargetsToBuildRequest()
         .setMinionId(minionId)
-        .setBuildId(stampedeBuildId);
+        .setStampedeId(stampedeId);
     try {
       GetTargetsToBuildResponse response = client.getTargetsToBuild(request);
       return response;
@@ -118,7 +118,7 @@ public class ThriftCoordinatorClient implements Closeable {
         minionId));
     Preconditions.checkNotNull(client, "Client was not started.");
     FinishedBuildingRequest request = new FinishedBuildingRequest()
-        .setBuildId(stampedeBuildId)
+        .setStampedeId(stampedeId)
         .setMinionId(minionId)
         .setBuildExitCode(minionExitCode);
     try {

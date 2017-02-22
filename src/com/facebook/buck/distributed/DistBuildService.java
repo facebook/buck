@@ -17,7 +17,6 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuckVersion;
-import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
@@ -41,6 +40,7 @@ import com.facebook.buck.distributed.thrift.PathInfo;
 import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.SetBuckDotFilePathsRequest;
 import com.facebook.buck.distributed.thrift.SetBuckVersionRequest;
+import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.StartBuildRequest;
 import com.facebook.buck.distributed.thrift.StoreBuildGraphRequest;
 import com.facebook.buck.distributed.thrift.StoreLocalChangesRequest;
@@ -51,7 +51,6 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -84,12 +83,12 @@ public class DistBuildService implements Closeable {
   }
 
   public MultiGetBuildSlaveRealTimeLogsResponse fetchSlaveLogLines(
-      final BuildId buildId,
+      final StampedeId stampedeId,
       final List<LogLineBatchRequest> logLineRequests) throws IOException {
 
     MultiGetBuildSlaveRealTimeLogsRequest getLogLinesRequest =
         new MultiGetBuildSlaveRealTimeLogsRequest();
-    getLogLinesRequest.setBuildId(buildId);
+    getLogLinesRequest.setStampedeId(stampedeId);
     getLogLinesRequest.setBatches(logLineRequests);
 
     FrontendRequest request = new FrontendRequest();
@@ -100,12 +99,12 @@ public class DistBuildService implements Closeable {
   }
 
   public MultiGetBuildSlaveLogDirResponse fetchBuildSlaveLogDir(
-      final BuildId buildId,
+      final StampedeId stampedeId,
       final List<RunId> runIds) throws IOException {
 
     MultiGetBuildSlaveLogDirRequest getBuildSlaveLogDirRequest =
         new MultiGetBuildSlaveLogDirRequest();
-    getBuildSlaveLogDirRequest.setBuildId(buildId);
+    getBuildSlaveLogDirRequest.setStampedeId(stampedeId);
     getBuildSlaveLogDirRequest.setRunIds(runIds);
 
     FrontendRequest request = new FrontendRequest();
@@ -117,7 +116,7 @@ public class DistBuildService implements Closeable {
 
   public ListenableFuture<Void> uploadTargetGraph(
       final BuildJobState buildJobStateArg,
-      final BuildId buildId,
+      final StampedeId stampedeId,
       ListeningExecutorService executorService) {
     // TODO(shivanker): We shouldn't be doing this. Fix after we stop reading all files into memory.
     final BuildJobState buildJobState = buildJobStateArg.deepCopy();
@@ -136,7 +135,7 @@ public class DistBuildService implements Closeable {
 
         // Now serialize and send the whole buildJobState
         StoreBuildGraphRequest storeBuildGraphRequest = new StoreBuildGraphRequest();
-        storeBuildGraphRequest.setBuildId(buildId);
+        storeBuildGraphRequest.setStampedeId(stampedeId);
         storeBuildGraphRequest.setBuildGraph(BuildJobStateSerializer.serialize(buildJobState));
 
         FrontendRequest request = new FrontendRequest();
@@ -241,35 +240,35 @@ public class DistBuildService implements Closeable {
     return response.getCreateBuildResponse().getBuildJob();
   }
 
-  public BuildJob startBuild(BuildId id) throws IOException {
+  public BuildJob startBuild(StampedeId id) throws IOException {
     // Start the build
     StartBuildRequest startRequest = new StartBuildRequest();
-    startRequest.setBuildId(id);
+    startRequest.setStampedeId(id);
     FrontendRequest request = new FrontendRequest();
     request.setType(FrontendRequestType.START_BUILD);
     request.setStartBuildRequest(startRequest);
     FrontendResponse response = makeRequestChecked(request);
 
     BuildJob job = response.getStartBuildResponse().getBuildJob();
-    Preconditions.checkState(job.getBuildId().equals(id));
+    Preconditions.checkState(job.getStampedeId().equals(id));
     return job;
   }
 
-  public BuildJob getCurrentBuildJobState(BuildId id) throws IOException {
+  public BuildJob getCurrentBuildJobState(StampedeId id) throws IOException {
     BuildStatusRequest statusRequest = new BuildStatusRequest();
-    statusRequest.setBuildId(id);
+    statusRequest.setStampedeId(id);
     FrontendRequest request = new FrontendRequest();
     request.setType(FrontendRequestType.BUILD_STATUS);
     request.setBuildStatusRequest(statusRequest);
     FrontendResponse response = makeRequestChecked(request);
 
     BuildJob job = response.getBuildStatusResponse().getBuildJob();
-    Preconditions.checkState(job.getBuildId().equals(id));
+    Preconditions.checkState(job.getStampedeId().equals(id));
     return job;
   }
 
-  public BuildJobState fetchBuildJobState(BuildId buildId) throws IOException {
-    FrontendRequest request = createFetchBuildGraphRequest(buildId);
+  public BuildJobState fetchBuildJobState(StampedeId stampedeId) throws IOException {
+    FrontendRequest request = createFetchBuildGraphRequest(stampedeId);
     FrontendResponse response = makeRequestChecked(request);
 
     Preconditions.checkState(response.isSetFetchBuildGraphResponse());
@@ -281,9 +280,9 @@ public class DistBuildService implements Closeable {
         response.getFetchBuildGraphResponse().getBuildGraph());
   }
 
-  public static FrontendRequest createFetchBuildGraphRequest(BuildId buildId) {
+  public static FrontendRequest createFetchBuildGraphRequest(StampedeId stampedeId) {
     FetchBuildGraphRequest fetchBuildGraphRequest = new FetchBuildGraphRequest();
-    fetchBuildGraphRequest.setBuildId(buildId);
+    fetchBuildGraphRequest.setStampedeId(stampedeId);
     FrontendRequest frontendRequest = new FrontendRequest();
     frontendRequest.setType(FrontendRequestType.FETCH_BUILD_GRAPH);
     frontendRequest.setFetchBuildGraphRequest(fetchBuildGraphRequest);
@@ -314,18 +313,18 @@ public class DistBuildService implements Closeable {
     return frontendRequest;
   }
 
-  public static FrontendRequest createFrontendBuildStatusRequest(BuildId buildId) {
+  public static FrontendRequest createFrontendBuildStatusRequest(StampedeId stampedeId) {
     BuildStatusRequest buildStatusRequest = new BuildStatusRequest();
-    buildStatusRequest.setBuildId(buildId);
+    buildStatusRequest.setStampedeId(stampedeId);
     FrontendRequest frontendRequest = new FrontendRequest();
     frontendRequest.setType(FrontendRequestType.BUILD_STATUS);
     frontendRequest.setBuildStatusRequest(buildStatusRequest);
     return frontendRequest;
   }
 
-  public void setBuckVersion(BuildId id, BuckVersion buckVersion) throws IOException {
+  public void setBuckVersion(StampedeId id, BuckVersion buckVersion) throws IOException {
     SetBuckVersionRequest setBuckVersionRequest = new SetBuckVersionRequest();
-    setBuckVersionRequest.setBuildId(id);
+    setBuckVersionRequest.setStampedeId(id);
     setBuckVersionRequest.setBuckVersion(buckVersion);
     FrontendRequest request = new FrontendRequest();
     request.setType(FrontendRequestType.SET_BUCK_VERSION);
@@ -333,9 +332,9 @@ public class DistBuildService implements Closeable {
     makeRequestChecked(request);
   }
 
-  public void setBuckDotFiles(BuildId id, List<PathInfo> dotFiles) throws IOException {
+  public void setBuckDotFiles(StampedeId id, List<PathInfo> dotFiles) throws IOException {
     SetBuckDotFilePathsRequest storeBuckDotFilesRequest = new SetBuckDotFilePathsRequest();
-    storeBuckDotFilesRequest.setBuildId(id);
+    storeBuckDotFilesRequest.setStampedeId(id);
     storeBuckDotFilesRequest.setDotFiles(dotFiles);
     FrontendRequest request = new FrontendRequest();
     request.setType(FrontendRequestType.SET_DOTFILE_PATHS);
@@ -344,7 +343,7 @@ public class DistBuildService implements Closeable {
   }
 
   public ListenableFuture<Void> uploadBuckDotFiles(
-      final BuildId id,
+      final StampedeId id,
       final ProjectFilesystem filesystem,
       FileHashCache fileHashCache,
       ListeningExecutorService executorService) throws IOException {
@@ -377,7 +376,7 @@ public class DistBuildService implements Closeable {
               pathEntriesToUpload.add(pathInfoObject);
             }
 
-            return new Pair<List<FileInfo>, List<PathInfo>>(
+            return new Pair<>(
                 fileEntriesToUpload,
                 pathEntriesToUpload);
           }
@@ -385,25 +384,17 @@ public class DistBuildService implements Closeable {
 
     ListenableFuture<Void> setFilesFuture = Futures.transformAsync(
         filesFuture,
-        new AsyncFunction<Pair<List<FileInfo>, List<PathInfo>>, Void>() {
-          @Override
-          public ListenableFuture<Void> apply(
-              @Nullable Pair<List<FileInfo>, List<PathInfo>> filesAndPaths) throws IOException {
-            setBuckDotFiles(id, filesAndPaths.getSecond());
-            return Futures.immediateFuture(null);
-          }
+        filesAndPaths -> {
+          setBuckDotFiles(id, filesAndPaths.getSecond());
+          return Futures.immediateFuture(null);
         },
         executorService);
 
     ListenableFuture<Void> uploadFilesFuture = Futures.transformAsync(
         filesFuture,
-        new AsyncFunction<Pair<List<FileInfo>, List<PathInfo>>, Void>() {
-          @Override
-          public ListenableFuture<Void> apply(
-              @Nullable Pair<List<FileInfo>, List<PathInfo>> filesAndPaths) throws Exception {
-            uploadMissingFilesFromList(filesAndPaths.getFirst(), executorService);
-            return Futures.immediateFuture(null);
-          }
+        filesAndPaths -> {
+          uploadMissingFilesFromList(filesAndPaths.getFirst(), executorService);
+          return Futures.immediateFuture(null);
         },
         executorService);
 

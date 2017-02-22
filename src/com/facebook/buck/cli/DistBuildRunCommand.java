@@ -20,8 +20,8 @@ import com.facebook.buck.distributed.BuildJobStateSerializer;
 import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildSlaveExecutor;
-import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.BuildJobState;
+import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.Console;
@@ -91,7 +91,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
             service,
             Preconditions.checkNotNull(distBuildMode),
             coordinatorPort,
-            getStampedeBuildIdOptional());
+            getStampedeIdOptional());
         int returnCode = distBuildExecutor.buildAndReturnExitCode();
         console.printSuccess(String.format(
             "Successfully ran distributed build [%s] in [%d millis].",
@@ -117,13 +117,13 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
           BuildJobStateSerializer.deserialize(filesystem.newFileInputStream(buildStateFilePath)),
           String.format("LocalFile=[%s]", buildStateFile));
     } else {
-      BuildId buildId = getStampedeBuildId();
+      StampedeId stampedeId = getStampedeId();
       console.getStdOut().println(String.format(
           "Retrieving BuildJobState for build [%s].",
-          buildId));
+          stampedeId));
       return new Pair<>(
-          service.fetchBuildJobState(buildId),
-          String.format("DistBuild=[%s]", buildId.toString()));
+          service.fetchBuildJobState(stampedeId),
+          String.format("DistBuild=[%s]", stampedeId.toString()));
     }
   }
 }

@@ -26,8 +26,8 @@ import com.facebook.buck.distributed.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.FileContentsProviders;
 import com.facebook.buck.distributed.FrontendService;
-import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.BuildJobState;
+import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.rules.Cell;
@@ -83,7 +83,7 @@ public abstract class DistBuildFactory {
       DistBuildService service,
       DistBuildMode mode,
       int coordinatorPort,
-      Optional<BuildId> stampedeBuildId) throws IOException {
+      Optional<StampedeId> stampedeId) throws IOException {
     DistBuildState state = DistBuildState.load(
         Optional.of(params.getBuckConfig()),
         jobState,
@@ -116,7 +116,7 @@ public abstract class DistBuildFactory {
             .setExecutors(params.getExecutors())
             .setDistBuildMode(mode)
             .setCoordinatorPort(coordinatorPort)
-            .setStampedeBuildId(stampedeBuildId.orElse(new BuildId().setId("LOCAL_FILE")))
+            .setStampedeId(stampedeId.orElse(new StampedeId().setId("LOCAL_FILE")))
             .setVersionedTargetGraphCache(params.getVersionedTargetGraphCache())
             .build());
     return executor;

@@ -16,9 +16,9 @@
 
 package com.facebook.buck.slb;
 
-import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildStatus;
+import com.facebook.buck.distributed.thrift.StampedeId;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Assert;
@@ -65,9 +65,9 @@ public class ThriftUtilTest {
   private BuildJob createBuildJob() {
     BuildJob job = new BuildJob();
     job.setStatus(BuildStatus.FINISHED_SUCCESSFULLY);
-    BuildId buildId = new BuildId();
-    buildId.setId("all will be well");
-    job.setBuildId(buildId);
+    StampedeId stampedeId = new StampedeId();
+    stampedeId.setId("all will be well");
+    job.setStampedeId(stampedeId);
     return job;
   }
 

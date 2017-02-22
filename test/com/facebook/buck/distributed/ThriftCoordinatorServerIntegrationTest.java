@@ -16,10 +16,10 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.FinishedBuildingResponse;
 import com.facebook.buck.distributed.thrift.GetTargetsToBuildAction;
 import com.facebook.buck.distributed.thrift.GetTargetsToBuildResponse;
+import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 
 import org.junit.Assert;
@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 
 public class ThriftCoordinatorServerIntegrationTest {
-  public static final BuildId BUILD_ID = new BuildId().setId("down the line");
+  public static final StampedeId STAMPEDE_ID = new StampedeId().setId("down the line");
 
   private static final String MINION_ID = "super cool minion";
 
@@ -37,9 +37,9 @@ public class ThriftCoordinatorServerIntegrationTest {
   public void testMakingSimpleRequest() throws IOException {
     int port = findRandomOpenPortOnAllLocalInterfaces();
     try (ThriftCoordinatorServer server =
-             new ThriftCoordinatorServer(port, BuildTargetsQueue.newEmptyQueue(), BUILD_ID);
+             new ThriftCoordinatorServer(port, BuildTargetsQueue.newEmptyQueue(), STAMPEDE_ID);
          ThriftCoordinatorClient client =
-             new ThriftCoordinatorClient("localhost", port, BUILD_ID)) {
+             new ThriftCoordinatorClient("localhost", port, STAMPEDE_ID)) {
       server.start();
       client.start();
       GetTargetsToBuildResponse response = client.getTargetsToBuild(MINION_ID);
@@ -52,9 +52,10 @@ public class ThriftCoordinatorServerIntegrationTest {
   public void testThriftServerWithDiamondGraph() throws IOException, NoSuchBuildTargetException {
     int port = findRandomOpenPortOnAllLocalInterfaces();
     BuildTargetsQueue diamondQueue = BuildTargetsQueueTest.createDiamondDependencyQueue();
-    try (ThriftCoordinatorServer server = new ThriftCoordinatorServer(port, diamondQueue, BUILD_ID);
+    try (ThriftCoordinatorServer server = new ThriftCoordinatorServer(port, diamondQueue,
+        STAMPEDE_ID);
          ThriftCoordinatorClient client =
-             new ThriftCoordinatorClient("localhost", port, BUILD_ID)) {
+             new ThriftCoordinatorClient("localhost", port, STAMPEDE_ID)) {
       server.start();
       client.start();
 
@@ -86,6 +87,6 @@ public class ThriftCoordinatorServerIntegrationTest {
   public static ThriftCoordinatorServer createServerOnRandomPort(BuildTargetsQueue queue)
       throws IOException {
     int port = findRandomOpenPortOnAllLocalInterfaces();
-    return new ThriftCoordinatorServer(port, queue, BUILD_ID);
+    return new ThriftCoordinatorServer(port, queue, STAMPEDE_ID);
   }
 }

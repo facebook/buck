@@ -16,7 +16,6 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
@@ -30,6 +29,7 @@ import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
+import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.StartBuildResponse;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -95,15 +95,15 @@ public class DistBuildServiceTest {
     graph.addToNodes(node1);
     graph.addToNodes(node2);
     buildJobState.setTargetGraph(graph);
-    BuildId id = new BuildId();
-    id.setId("check-id");
-    distBuildService.uploadTargetGraph(buildJobState, id, executor).get();
+    StampedeId stampedeId = new StampedeId();
+    stampedeId.setId("check-id");
+    distBuildService.uploadTargetGraph(buildJobState, stampedeId, executor).get();
 
     Assert.assertTrue(request.getValue().isSetType());
     Assert.assertEquals(request.getValue().getType(), FrontendRequestType.STORE_BUILD_GRAPH);
     Assert.assertTrue(request.getValue().isSetStoreBuildGraphRequest());
-    Assert.assertTrue(request.getValue().getStoreBuildGraphRequest().isSetBuildId());
-    Assert.assertEquals(request.getValue().getStoreBuildGraphRequest().getBuildId(), id);
+    Assert.assertTrue(request.getValue().getStoreBuildGraphRequest().isSetStampedeId());
+    Assert.assertEquals(request.getValue().getStoreBuildGraphRequest().getStampedeId(), stampedeId);
     Assert.assertTrue(request.getValue().getStoreBuildGraphRequest().isSetBuildGraph());
 
     BuildJobState sentState = BuildJobStateSerializer.deserialize(
@@ -182,9 +182,9 @@ public class DistBuildServiceTest {
     response.setType(FrontendRequestType.CREATE_BUILD);
     CreateBuildResponse createBuildResponse = new CreateBuildResponse();
     BuildJob buildJob = new BuildJob();
-    BuildId buildId = new BuildId();
-    buildId.setId(idString);
-    buildJob.setBuildId(buildId);
+    StampedeId stampedeId = new StampedeId();
+    stampedeId.setId(idString);
+    buildJob.setStampedeId(stampedeId);
     createBuildResponse.setBuildJob(buildJob);
     response.setCreateBuildResponse(createBuildResponse);
     response.setWasSuccessful(true);
@@ -198,9 +198,9 @@ public class DistBuildServiceTest {
     Assert.assertTrue(request.getValue().isSetCreateBuildRequest());
     Assert.assertTrue(request.getValue().getCreateBuildRequest().isSetCreateTimestampMillis());
 
-    Assert.assertTrue(job.isSetBuildId());
-    Assert.assertTrue(job.getBuildId().isSetId());
-    Assert.assertEquals(job.getBuildId().getId(), idString);
+    Assert.assertTrue(job.isSetStampedeId());
+    Assert.assertTrue(job.getStampedeId().isSetId());
+    Assert.assertEquals(job.getStampedeId().getId(), idString);
   }
 
   @Test
@@ -212,9 +212,9 @@ public class DistBuildServiceTest {
     response.setType(FrontendRequestType.START_BUILD);
     StartBuildResponse startBuildResponse = new StartBuildResponse();
     BuildJob buildJob = new BuildJob();
-    BuildId buildId = new BuildId();
-    buildId.setId(idString);
-    buildJob.setBuildId(buildId);
+    StampedeId stampedeId = new StampedeId();
+    stampedeId.setId(idString);
+    buildJob.setStampedeId(stampedeId);
     startBuildResponse.setBuildJob(buildJob);
     response.setStartBuildResponse(startBuildResponse);
     response.setWasSuccessful(true);
@@ -222,17 +222,17 @@ public class DistBuildServiceTest {
         .andReturn(response).once();
     EasyMock.replay(frontendService);
 
-    BuildId id = new BuildId();
+    StampedeId id = new StampedeId();
     id.setId(idString);
     BuildJob job = distBuildService.startBuild(id);
 
     Assert.assertEquals(request.getValue().getType(), FrontendRequestType.START_BUILD);
     Assert.assertTrue(request.getValue().isSetStartBuildRequest());
-    Assert.assertTrue(request.getValue().getStartBuildRequest().isSetBuildId());
-    Assert.assertEquals(request.getValue().getStartBuildRequest().getBuildId(), id);
+    Assert.assertTrue(request.getValue().getStartBuildRequest().isSetStampedeId());
+    Assert.assertEquals(request.getValue().getStartBuildRequest().getStampedeId(), id);
 
-    Assert.assertTrue(job.isSetBuildId());
-    Assert.assertEquals(job.getBuildId(), id);
+    Assert.assertTrue(job.isSetStampedeId());
+    Assert.assertEquals(job.getStampedeId(), id);
   }
 
   @Test
@@ -244,9 +244,9 @@ public class DistBuildServiceTest {
     response.setType(FrontendRequestType.BUILD_STATUS);
     BuildStatusResponse buildStatusResponse = new BuildStatusResponse();
     BuildJob buildJob = new BuildJob();
-    BuildId buildId = new BuildId();
-    buildId.setId(idString);
-    buildJob.setBuildId(buildId);
+    StampedeId stampedeId = new StampedeId();
+    stampedeId.setId(idString);
+    buildJob.setStampedeId(stampedeId);
     buildStatusResponse.setBuildJob(buildJob);
     response.setBuildStatusResponse(buildStatusResponse);
     response.setWasSuccessful(true);
@@ -254,29 +254,29 @@ public class DistBuildServiceTest {
         .andReturn(response).once();
     EasyMock.replay(frontendService);
 
-    BuildId id = new BuildId();
+    StampedeId id = new StampedeId();
     id.setId(idString);
     BuildJob job = distBuildService.getCurrentBuildJobState(id);
 
     Assert.assertEquals(request.getValue().getType(), FrontendRequestType.BUILD_STATUS);
     Assert.assertTrue(request.getValue().isSetBuildStatusRequest());
-    Assert.assertTrue(request.getValue().getBuildStatusRequest().isSetBuildId());
-    Assert.assertEquals(request.getValue().getBuildStatusRequest().getBuildId(), id);
+    Assert.assertTrue(request.getValue().getBuildStatusRequest().isSetStampedeId());
+    Assert.assertEquals(request.getValue().getBuildStatusRequest().getStampedeId(), id);
 
-    Assert.assertTrue(job.isSetBuildId());
-    Assert.assertEquals(job.getBuildId(), id);
+    Assert.assertTrue(job.isSetStampedeId());
+    Assert.assertEquals(job.getStampedeId(), id);
   }
 
   @Test
-  public void testRequestContainsBuildId() {
-    BuildId buildId = createBuildId("topspin");
-    FrontendRequest request = DistBuildService.createFrontendBuildStatusRequest(buildId);
-    Assert.assertEquals(buildId, request.getBuildStatusRequest().getBuildId());
+  public void testRequestContainsStampedeId() {
+    StampedeId stampedeId = createStampedeId("topspin");
+    FrontendRequest request = DistBuildService.createFrontendBuildStatusRequest(stampedeId);
+    Assert.assertEquals(stampedeId, request.getBuildStatusRequest().getStampedeId());
   }
 
-  private static BuildId createBuildId(String id) {
-    BuildId buildId = new BuildId();
-    buildId.setId(id);
-    return buildId;
+  private static StampedeId createStampedeId(String id) {
+    StampedeId stampedeId = new StampedeId();
+    stampedeId.setId(id);
+    return stampedeId;
   }
 }

@@ -30,7 +30,7 @@ enum GetTargetsToBuildAction {
 ##############################################################################
 struct GetTargetsToBuildRequest {
   1: optional string minionId;
-  2: optional stampede.BuildId buildId;
+  2: optional stampede.StampedeId stampedeId;
 }
 
 struct GetTargetsToBuildResponse {
@@ -43,7 +43,7 @@ struct GetTargetsToBuildResponse {
 struct FinishedBuildingRequest {
   1: optional string minionId;
   2: optional i32 buildExitCode;
-  3: optional stampede.BuildId buildId;
+  3: optional stampede.StampedeId stampedeId;
 }
 
 struct FinishedBuildingResponse {

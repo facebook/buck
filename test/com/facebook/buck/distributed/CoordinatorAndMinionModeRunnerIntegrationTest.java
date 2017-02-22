@@ -16,7 +16,7 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.distributed.thrift.BuildId;
+import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 
 import org.junit.Assert;
@@ -26,7 +26,7 @@ import java.io.IOException;
 
 public class CoordinatorAndMinionModeRunnerIntegrationTest {
 
-  private static final BuildId BUILD_ID = ThriftCoordinatorServerIntegrationTest.BUILD_ID;
+  private static final StampedeId STAMPEDE_ID = ThriftCoordinatorServerIntegrationTest.STAMPEDE_ID;
 
   @Test
   public void testDiamondGraphRun()
@@ -35,14 +35,14 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
     int port = ThriftCoordinatorServerIntegrationTest.findRandomOpenPortOnAllLocalInterfaces();
     CoordinatorModeRunner coordinator = new CoordinatorModeRunner(
         port,
-        BuildTargetsQueueTest.createDiamondDependencyQueue(), BUILD_ID);
+        BuildTargetsQueueTest.createDiamondDependencyQueue(), STAMPEDE_ID);
     MinionModeRunnerIntegrationTest.LocalBuilderImpl localBuilder =
         new MinionModeRunnerIntegrationTest.LocalBuilderImpl();
     MinionModeRunner minion = new MinionModeRunner(
         "localhost",
         port,
         localBuilder,
-        BUILD_ID);
+        STAMPEDE_ID);
     CoordinatorAndMinionModeRunner jointRunner = new CoordinatorAndMinionModeRunner(
         coordinator,
         minion);

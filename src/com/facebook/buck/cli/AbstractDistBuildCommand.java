@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.distributed.thrift.BuildId;
+import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.util.HumanReadableException;
 
 import org.kohsuke.args4j.Option;
@@ -28,21 +28,21 @@ import javax.annotation.Nullable;
 public abstract class AbstractDistBuildCommand extends AbstractCommand {
 
   @Nullable
-  @Option(name = "--build-id", usage = "Distributed build id.")
-  private String buildId;
+  @Option(name = "--stampede-id", usage = "Stampede distributed build id.")
+  private String stampedeId;
 
-  public Optional<BuildId> getStampedeBuildIdOptional() {
-    if (buildId == null) {
+  public Optional<StampedeId> getStampedeIdOptional() {
+    if (stampedeId == null) {
       return Optional.empty();
     }
 
-    BuildId buildId = new BuildId();
-    buildId.setId(this.buildId);
-    return Optional.of(buildId);
+    StampedeId stampedeId = new StampedeId();
+    stampedeId.setId(this.stampedeId);
+    return Optional.of(stampedeId);
   }
 
-  public BuildId getStampedeBuildId() {
-    Optional<BuildId> buildId = getStampedeBuildIdOptional();
+  public StampedeId getStampedeId() {
+    Optional<StampedeId> buildId = getStampedeIdOptional();
     if (!buildId.isPresent()) {
       throw new HumanReadableException("--build-id argument is missing.");
     }

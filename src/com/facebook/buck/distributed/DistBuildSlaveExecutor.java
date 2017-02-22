@@ -19,7 +19,6 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.command.Build;
-import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -124,7 +123,7 @@ public class DistBuildSlaveExecutor {
         args.getCoordinatorAddress(),
         args.getCoordinatorPort(),
         localBuilder,
-        getStampedeBuildIdForCoordinator());
+        args.getStampedeId());
   }
 
   private CoordinatorModeRunner newCoordinatorMode() {
@@ -134,7 +133,7 @@ public class DistBuildSlaveExecutor {
     return new CoordinatorModeRunner(
         args.getCoordinatorPort(),
         queue,
-        getStampedeBuildIdForCoordinator());
+        args.getStampedeId());
   }
 
   private TargetGraph createTargetGraph() throws IOException, InterruptedException {
@@ -268,10 +267,6 @@ public class DistBuildSlaveExecutor {
         new HashSet<>(args.getState().getRemoteState().getTopLevelTargets()));
 
     return targetGraphCodec;
-  }
-
-  private BuildId getStampedeBuildIdForCoordinator() {
-    return args.getStampedeBuildId().orElse(new BuildId().setId("LOCAL_DEBUG_FILE"));
   }
 
   private class LocalBuilderImpl implements LocalBuilder {

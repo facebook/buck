@@ -12,7 +12,6 @@
 
 namespace java com.facebook.buck.distributed.thrift
 
-
 ##############################################################################
 ## DataTypes
 ##############################################################################
@@ -26,10 +25,13 @@ struct DebugInfo {
   1: optional list<LogRecord> logBook;
 }
 
-struct BuildId {
+# Uniquely identifies a stampede distributed build
+struct StampedeId {
   1 : optional string id;
 }
 
+# Uniquely identifies the run of a specific remote build server. One StampedeId will have one or
+# more RunId's associated with it. (one RunId per Minion that contributes to the build).
 struct RunId {
   1 : optional string id;
 }
@@ -139,7 +141,7 @@ struct BuckVersion {
 }
 
 struct BuildJob {
-  1: optional BuildId buildId;
+  1: optional StampedeId stampedeId;
   2: optional DebugInfo debug;
   3: optional BuildStatus status = BuildStatus.UNKNOWN;
   4: optional BuckVersion buckVersion;
@@ -166,7 +168,7 @@ struct CreateBuildResponse {
 
 # Request for the servers to start a distributed build.
 struct StartBuildRequest {
-  1: optional BuildId buildId;
+  1: optional StampedeId stampedeId;
 }
 
 struct StartBuildResponse {
@@ -174,7 +176,7 @@ struct StartBuildResponse {
 }
 
 struct BuildStatusRequest {
-  1: optional BuildId buildId;
+  1: optional StampedeId stampedeId;
 }
 
 struct BuildStatusResponse {
@@ -210,12 +212,12 @@ struct FetchSourceFilesResponse {
 
 # Used to store the buildGraph and other related information to the build.
 struct StoreBuildGraphRequest {
-  1: optional BuildId buildId;
+  1: optional StampedeId stampedeId;
   2: optional binary buildGraph;
 }
 
 struct FetchBuildGraphRequest {
-  1: optional BuildId buildId;
+  1: optional StampedeId stampedeId;
 }
 
 struct FetchBuildGraphResponse {
@@ -224,19 +226,19 @@ struct FetchBuildGraphResponse {
 
 # Used to specify the BuckVersion a distributed build will use.
 struct SetBuckVersionRequest {
-  1: optional BuildId buildId;
+  1: optional StampedeId stampedeId;
   2: optional BuckVersion buckVersion;
 }
 
 # Used to store the paths and hashes of dot-files associated with a distributed
 # build.
 struct SetBuckDotFilePathsRequest {
-  1: optional BuildId buildId;
+  1: optional StampedeId stampedeId;
   2: optional list<PathInfo> dotFiles;
 }
 
 struct MultiGetBuildSlaveLogDirRequest {
-  1: optional BuildId buildId;
+  1: optional StampedeId stampedeId;
   2: optional list<RunId> runIds;
 }
 
@@ -255,7 +257,7 @@ struct LogLineBatchRequest {
 }
 
 struct MultiGetBuildSlaveRealTimeLogsRequest {
-  1: optional BuildId buildId;
+  1: optional StampedeId stampedeId;
   2: optional list<LogLineBatchRequest> batches;
 }
 

@@ -17,7 +17,6 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuckVersion;
-import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildStatus;
@@ -25,6 +24,7 @@ import com.facebook.buck.distributed.thrift.LogLineBatchRequest;
 import com.facebook.buck.distributed.thrift.LogRecord;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveLogDirResponse;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveRealTimeLogsResponse;
+import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -77,7 +77,7 @@ public class DistBuildClientExecutor {
       throws IOException, InterruptedException {
 
     BuildJob job = distBuildService.createBuild();
-    final BuildId id = job.getBuildId();
+    final StampedeId id = job.getStampedeId();
     LOG.info("Created job. Build id = " + id.getId());
     logDebugInfo(job);
 
@@ -124,7 +124,7 @@ public class DistBuildClientExecutor {
       List<LogLineBatchRequest> newLogLineRequests =
           distBuildLogStateTracker.createRealtimeLogRequests(job.getSlaveInfoByRunId().values());
       MultiGetBuildSlaveRealTimeLogsResponse slaveLogsResponse =
-          distBuildService.fetchSlaveLogLines(job.buildId, newLogLineRequests);
+          distBuildService.fetchSlaveLogLines(job.stampedeId, newLogLineRequests);
 
       distBuildLogStateTracker.processStreamLogs(slaveLogsResponse.getMultiStreamLogs());
 
@@ -139,7 +139,7 @@ public class DistBuildClientExecutor {
 
     try {
       MultiGetBuildSlaveLogDirResponse logDirsResponse = distBuildService.fetchBuildSlaveLogDir(
-          job.buildId,
+          job.stampedeId,
           distBuildLogStateTracker.runIdsToMaterializeLogDirsFor(job.slaveInfoByRunId.values()));
       distBuildLogStateTracker.materializeLogDirs(logDirsResponse.getLogDirs());
     } catch (IOException ex) {

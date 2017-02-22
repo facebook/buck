@@ -16,7 +16,7 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.distributed.thrift.BuildId;
+import com.facebook.buck.distributed.thrift.StampedeId;
 import com.google.common.base.Preconditions;
 
 import java.io.Closeable;
@@ -26,12 +26,12 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
 
   private final BuildTargetsQueue queue;
   private final int coordinatorPort;
-  private final BuildId stampedeBuildId;
+  private final StampedeId stampedeId;
 
   public CoordinatorModeRunner(
       int coordinatorPort,
-      BuildTargetsQueue queue, BuildId stampedeBuildId) {
-    this.stampedeBuildId = stampedeBuildId;
+      BuildTargetsQueue queue, StampedeId stampedeId) {
+    this.stampedeId = stampedeId;
     Preconditions.checkArgument(
         coordinatorPort > 0,
         "The coordinator's port needs to be a positive integer.");
@@ -54,7 +54,7 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
     private final ThriftCoordinatorServer server;
 
     private AsyncCoordinatorRun(BuildTargetsQueue queue) throws IOException {
-      this.server = new ThriftCoordinatorServer(coordinatorPort, queue, stampedeBuildId);
+      this.server = new ThriftCoordinatorServer(coordinatorPort, queue, stampedeId);
       this.server.start();
     }
 

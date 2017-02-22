@@ -16,13 +16,13 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.CoordinatorService;
 import com.facebook.buck.distributed.thrift.FinishedBuildingRequest;
 import com.facebook.buck.distributed.thrift.FinishedBuildingResponse;
 import com.facebook.buck.distributed.thrift.GetTargetsToBuildAction;
 import com.facebook.buck.distributed.thrift.GetTargetsToBuildRequest;
 import com.facebook.buck.distributed.thrift.GetTargetsToBuildResponse;
+import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.ThriftException;
 import com.google.common.base.Joiner;
@@ -60,7 +60,7 @@ public class ThriftCoordinatorServer implements Closeable {
   private final CoordinatorService.Processor<CoordinatorService.Iface> processor;
   private final Object lock;
   private final CompletableFuture<Integer> exitCodeFuture;
-  private final BuildId stampedeBuildId;
+  private final StampedeId stampedeId;
 
   @Nullable
   private TNonblockingServerSocket transport;
@@ -69,8 +69,8 @@ public class ThriftCoordinatorServer implements Closeable {
   @Nullable
   private Thread serverThread;
 
-  public ThriftCoordinatorServer(int port, BuildTargetsQueue queue, BuildId stampedeBuildId) {
-    this.stampedeBuildId = stampedeBuildId;
+  public ThriftCoordinatorServer(int port, BuildTargetsQueue queue, StampedeId stampedeId) {
+    this.stampedeId = stampedeId;
     this.lock = new Object();
     this.exitCodeFuture = new CompletableFuture<>();
     this.allocator = new MinionWorkloadAllocator(queue, MAX_TARGETS_ALLOCATED_PER_MINION);
@@ -149,7 +149,7 @@ public class ThriftCoordinatorServer implements Closeable {
       LOG.debug(String.format(
           "Minion [%s] is requesting for new targets to build.",
           request.minionId));
-      checkBuildId(request.getBuildId());
+      checkBuildId(request.getStampedeId());
       synchronized (lock) {
         Preconditions.checkArgument(request.isSetMinionId());
 
@@ -185,7 +185,7 @@ public class ThriftCoordinatorServer implements Closeable {
       LOG.info(String.format(
           "Minion [%s] has finished building.",
           request.getMinionId()));
-      checkBuildId(request.getBuildId());
+      checkBuildId(request.getStampedeId());
       synchronized (lock) {
         Preconditions.checkArgument(request.isSetMinionId());
         Preconditions.checkArgument(request.isSetBuildExitCode());
@@ -212,12 +212,12 @@ public class ThriftCoordinatorServer implements Closeable {
       }
     }
 
-    private void checkBuildId(BuildId buildId) {
+    private void checkBuildId(StampedeId buildId) {
       Preconditions.checkArgument(
-          stampedeBuildId.equals(buildId),
+          stampedeId.equals(buildId),
           "Request stampede build id [%s] does not match the current build id [%s].",
           buildId.getId(),
-          stampedeBuildId.getId());
+          stampedeId.getId());
     }
   }
 }

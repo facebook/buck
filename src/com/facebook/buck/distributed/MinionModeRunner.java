@@ -16,9 +16,9 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.FinishedBuildingResponse;
 import com.facebook.buck.distributed.thrift.GetTargetsToBuildResponse;
+import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -38,15 +38,15 @@ public class MinionModeRunner implements DistBuildModeRunner {
   private final String coordinatorAddress;
   private final int coordinatorPort;
   private final LocalBuilder builder;
-  private final BuildId stampedeBuildid;
+  private final StampedeId stampedeId;
 
   public MinionModeRunner(
       String coordinatorAddress,
       int coordinatorPort,
       LocalBuilder builder,
-      BuildId stampedeBuildid) {
+      StampedeId stampedeId) {
     this.builder = builder;
-    this.stampedeBuildid = stampedeBuildid;
+    this.stampedeId = stampedeId;
     Preconditions.checkArgument(
         coordinatorPort > 0,
         "The coordinator's port needs to be a positive integer.");
@@ -57,7 +57,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
   @Override
   public int runAndReturnExitCode() throws IOException, InterruptedException {
     try (ThriftCoordinatorClient client =
-             new ThriftCoordinatorClient(coordinatorAddress, coordinatorPort, stampedeBuildid)) {
+             new ThriftCoordinatorClient(coordinatorAddress, coordinatorPort, stampedeId)) {
       client.start();
       final String minionId = generateNewMinionId();
       while (true) {

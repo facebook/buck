@@ -16,7 +16,7 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.distributed.thrift.BuildId;
+import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -29,7 +29,7 @@ import java.util.List;
 
 public class MinionModeRunnerIntegrationTest {
 
-  private static final BuildId BUILD_ID = ThriftCoordinatorServerIntegrationTest.BUILD_ID;
+  private static final StampedeId STAMPEDE_ID = ThriftCoordinatorServerIntegrationTest.STAMPEDE_ID;
 
   @Test
   public void testDiamondGraphRun()
@@ -41,7 +41,7 @@ public class MinionModeRunnerIntegrationTest {
           "localhost",
           server.getPort(),
           localBuilder,
-          BUILD_ID);
+          STAMPEDE_ID);
       int exitCode = minion.runAndReturnExitCode();
       Assert.assertEquals(0, exitCode);
       Assert.assertEquals(3, localBuilder.getCallArguments().size());
