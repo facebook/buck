@@ -1054,6 +1054,13 @@ public class BuckConfig implements ConfigPathGetter {
     return getBooleanValue("targets", "versions", false);
   }
 
+  /**
+   * @return whether to enable caching of rule key calculations between builds.
+   */
+  public boolean getRuleKeyCaching() {
+    return getBooleanValue("build", "rule_key_caching", false);
+  }
+
   public Config getConfig() {
     return config;
   }

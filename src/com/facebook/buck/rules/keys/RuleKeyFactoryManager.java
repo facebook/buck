@@ -18,6 +18,7 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -38,6 +39,7 @@ public class RuleKeyFactoryManager {
   private final Function<ProjectFilesystem, FileHashCache> fileHashCacheProvider;
   private final BuildRuleResolver resolver;
   private final long inputRuleKeyFileSizeLimit;
+  private final RuleKeyCache<RuleKey> defaultRuleKeyFactoryCache;
 
   private final LoadingCache<ProjectFilesystem, RuleKeyFactories> cache =
       CacheBuilder.newBuilder()
@@ -53,11 +55,13 @@ public class RuleKeyFactoryManager {
       int keySeed,
       Function<ProjectFilesystem, FileHashCache> fileHashCacheProvider,
       BuildRuleResolver resolver,
-      long inputRuleKeyFileSizeLimit) {
+      long inputRuleKeyFileSizeLimit,
+      RuleKeyCache<RuleKey> defaultRuleKeyFactoryCache) {
     this.keySeed = keySeed;
     this.fileHashCacheProvider = fileHashCacheProvider;
     this.resolver = resolver;
     this.inputRuleKeyFileSizeLimit = inputRuleKeyFileSizeLimit;
+    this.defaultRuleKeyFactoryCache = defaultRuleKeyFactoryCache;
   }
 
   private RuleKeyFactories create(ProjectFilesystem filesystem) {
@@ -70,7 +74,8 @@ public class RuleKeyFactoryManager {
             fieldLoader,
             fileHashCache,
             pathResolver,
-            ruleFinder),
+            ruleFinder,
+            defaultRuleKeyFactoryCache),
         new InputBasedRuleKeyFactory(
             fieldLoader,
             fileHashCache,

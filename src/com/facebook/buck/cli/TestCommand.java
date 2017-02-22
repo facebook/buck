@@ -35,6 +35,7 @@ import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -42,6 +43,8 @@ import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
+import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactoryManager;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.DefaultStepRunner;
@@ -522,8 +525,16 @@ public class TestCommand extends BuildCommand {
 
       CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
           params.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
-      try (CommandThreadManager artifactFetchService = getArtifactFetchService(
-          params.getBuckConfig(), pool.getExecutor())) {
+      try (CommandThreadManager artifactFetchService =
+               getArtifactFetchService(
+                   params.getBuckConfig(),
+                   pool.getExecutor());
+           RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
+               getDefaultRuleKeyCacheScope(
+                   params,
+                   new RuleKeyCacheRecycler.SettingsAffectingCache(
+                       params.getBuckConfig().getKeySeed(),
+                       actionGraphAndResolver.getActionGraph()))) {
         LocalCachingBuildEngineDelegate localCachingBuildEngineDelegate =
             new LocalCachingBuildEngineDelegate(params.getFileHashCache());
         CachingBuildEngine cachingBuildEngine =
@@ -545,7 +556,8 @@ public class TestCommand extends BuildCommand {
                     params.getBuckConfig().getKeySeed(),
                     localCachingBuildEngineDelegate.createFileHashCacheLoader()::getUnchecked,
                     actionGraphAndResolver.getResolver(),
-                    cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit()));
+                    cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
+                    ruleKeyCacheScope.getCache()));
         try (Build build = createBuild(
             params.getBuckConfig(),
             actionGraphAndResolver.getActionGraph(),

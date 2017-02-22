@@ -83,8 +83,11 @@ import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.RelativeCellName;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
+import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.shell.WorkerProcessPool;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.test.TestConfig;
@@ -108,6 +111,7 @@ import com.facebook.buck.util.PkillProcessManager;
 import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.WatchmanWatcherException;
@@ -188,7 +192,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
@@ -346,6 +349,7 @@ public final class Main {
     private final VersionedTargetGraphCache versionedTargetGraphCache;
     private final ActionGraphCache actionGraphCache;
     private final BroadcastEventListener broadcastEventListener;
+    private final RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler;
 
     private ImmutableMap<Path, WatchmanCursor> cursor;
 
@@ -356,19 +360,25 @@ public final class Main {
       this.cell = cell;
       this.fileEventBus = new EventBus("file-change-events");
 
-      ImmutableList.Builder<FileHashCache> hashCaches = ImmutableList.builder();
-
-      Consumer<Cell> appendToCaches = (Cell subCell) -> {
-        WatchedFileHashCache watchedCache = new WatchedFileHashCache(subCell.getFilesystem());
-        fileEventBus.register(watchedCache);
-        hashCaches.add(watchedCache);
-      };
-      appendToCaches.accept(cell);
-      cell.getCellPathResolver().getCellPaths().values()
-          .stream()
+      // Collect all transitive cells.
+      ImmutableList.Builder<Cell> cellsBuilder = ImmutableList.builder();
+      cellsBuilder.add(cell);
+      cell.getCellPathResolver().getCellPaths().values().stream()
           .map(cell::getCell)
-          .forEach(appendToCaches);
-      this.hashCache = new StackedFileHashCache(hashCaches.build());
+          .forEach(cellsBuilder::add);
+      ImmutableList<Cell> cells = cellsBuilder.build();
+
+      // Setup the stacked file hash cache from all cells.
+      ImmutableList.Builder<FileHashCache> hashCachesBuilder = ImmutableList.builder();
+      cells.forEach(
+          (Cell subCell) -> {
+            WatchedFileHashCache watchedCache = new WatchedFileHashCache(subCell.getFilesystem());
+            fileEventBus.register(watchedCache);
+            hashCachesBuilder.add(watchedCache);
+          });
+      ImmutableList<FileHashCache> hashCaches = hashCachesBuilder.build();
+      this.hashCache = new StackedFileHashCache(hashCaches);
+
       this.buckOutHashCache = DefaultFileHashCache.createBuckOutFileHashCache(
           cell.getFilesystem().replaceBlacklistedPaths(ImmutableSet.of()),
           cell.getFilesystem().getBuckPaths().getBuckOut());
@@ -386,6 +396,14 @@ public final class Main {
       fileEventBus.register(parser);
       fileEventBus.register(actionGraphCache);
 
+      // Build the the rule key cache recycler.
+      this.defaultRuleKeyFactoryCacheRecycler =
+          RuleKeyCacheRecycler.createAndRegister(
+              fileEventBus,
+              new DefaultRuleKeyCache<>(),
+              RichStream.from(cells)
+                  .map(Cell::getFilesystem)
+                  .toImmutableSet());
 
       if (webServerToReuse.isPresent()) {
         webServer = webServerToReuse;
@@ -494,6 +512,10 @@ public final class Main {
 
     private ConcurrentMap<String, WorkerProcessPool> getPersistentWorkerPools() {
       return persistentWorkerPools;
+    }
+
+    public RuleKeyCacheRecycler<RuleKey> getDefaultRuleKeyFactoryCacheRecycler() {
+      return defaultRuleKeyFactoryCacheRecycler;
     }
 
     private void watchClient(final NGContext context) {
@@ -1229,6 +1251,8 @@ public final class Main {
           Parser parser = null;
           VersionedTargetGraphCache versionedTargetGraphCache = null;
           ActionGraphCache actionGraphCache = null;
+          Optional<RuleKeyCacheRecycler<RuleKey>> defaultRuleKeyFactoryCacheRecycler =
+              Optional.empty();
 
           if (isDaemon) {
             try {
@@ -1251,6 +1275,11 @@ public final class Main {
                   watchmanFreshInstanceAction);
               versionedTargetGraphCache = daemon.getVersionedTargetGraphCache();
               actionGraphCache = daemon.getActionGraphCache();
+              if (buckConfig.getRuleKeyCaching()) {
+                LOG.debug("Using rule key calculation caching");
+                defaultRuleKeyFactoryCacheRecycler =
+                    Optional.of(daemon.getDefaultRuleKeyFactoryCacheRecycler());
+              }
             } catch (WatchmanWatcherException | IOException e) {
               buildEventBus.post(
                   ConsoleEvent.warning(
@@ -1343,6 +1372,7 @@ public final class Main {
                     .setActionGraphCache(actionGraphCache)
                     .setKnownBuildRuleTypesFactory(factory)
                     .setInvocationInfo(Optional.of(invocationInfo))
+                    .setDefaultRuleKeyFactoryCacheRecycler(defaultRuleKeyFactoryCacheRecycler)
                     .build());
           } catch (InterruptedException | ClosedByInterruptException e) {
             exitCode = INTERRUPTED_EXIT_CODE;

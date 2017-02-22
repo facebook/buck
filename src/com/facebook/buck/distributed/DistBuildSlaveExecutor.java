@@ -42,6 +42,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyFactoryManager;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
@@ -301,7 +302,8 @@ public class DistBuildSlaveExecutor {
               distBuildConfig.getKeySeed(),
               cachingBuildEngineDelegate.createFileHashCacheLoader()::getUnchecked,
               actionGraphAndResolver.getResolver(),
-              engineConfig.getBuildInputRuleKeyFileSizeLimit()));
+              engineConfig.getBuildInputRuleKeyFileSizeLimit(),
+              new DefaultRuleKeyCache<>()));
 
       // TODO(ruibm): Fix this to work with Android.
       try (Build build = new Build(
