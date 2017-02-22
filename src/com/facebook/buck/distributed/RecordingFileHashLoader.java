@@ -25,6 +25,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 
@@ -277,7 +278,8 @@ public class RecordingFileHashLoader implements FileHashLoader {
     // TODO(alisdair04,ruibm): capture all .buckconfig dependencies automatically.
 
     Optional<ImmutableList<Path>> whitelist = distBuildConfig.getOptionalPathWhitelist();
-    LOG.info("Stampede always materialize whitelist: %s", whitelist);
+    LOG.info("Stampede always materialize whitelist: [%s]",
+        whitelist.isPresent() ? Joiner.on(", ").join(whitelist.get()) : "");
     addAllPresent(paths, whitelist);
 
     try {
