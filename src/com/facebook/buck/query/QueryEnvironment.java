@@ -174,7 +174,7 @@ public interface QueryEnvironment {
      * @param env the query environment this function is evaluated in.
      * @param args the input arguments. These are type-checked against the specification returned
      *     by {@link #getArgumentTypes} and {@link #getMandatoryArguments}*/
-    Set<QueryTarget> eval(
+    ImmutableSet<QueryTarget> eval(
         QueryEnvironment env,
         ImmutableList<Argument> args,
         ListeningExecutorService executor) throws QueryException, InterruptedException;
@@ -184,8 +184,9 @@ public interface QueryEnvironment {
    * Returns the set of target nodes in the graph for the specified target
    * pattern, in 'buck build' syntax.
    */
-  Set<QueryTarget> getTargetsMatchingPattern(String pattern, ListeningExecutorService executor)
-      throws QueryException, InterruptedException;
+  ImmutableSet<QueryTarget> getTargetsMatchingPattern(
+      String pattern,
+      ListeningExecutorService executor) throws QueryException, InterruptedException;
 
   /** Returns the direct forward dependencies of the specified targets. */
   ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets)

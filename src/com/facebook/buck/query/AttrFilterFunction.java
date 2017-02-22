@@ -25,9 +25,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 /**
  * A attrfilter(attribute, value, argument) filter expression, which computes the subset
  * of nodes in 'argument' whose 'attribute' contains the given value.
@@ -58,7 +55,7 @@ public class AttrFilterFunction implements QueryFunction {
   }
 
   @Override
-  public Set<QueryTarget> eval(
+  public ImmutableSet<QueryTarget> eval(
       QueryEnvironment env,
       ImmutableList<Argument> args,
       ListeningExecutorService executor)
@@ -69,14 +66,14 @@ public class AttrFilterFunction implements QueryFunction {
     final String attrValue = args.get(1).getWord();
     final Predicate<Object> predicate = input -> attrValue.equals(input.toString());
 
-    Set<QueryTarget> result = new LinkedHashSet<>();
+    ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
     for (QueryTarget target : argument.eval(env, executor)) {
       ImmutableSet<Object> matchingObjects = env.filterAttributeContents(target, attr, predicate);
       if (!matchingObjects.isEmpty()) {
         result.add(target);
       }
     }
-    return result;
+    return result.build();
   }
 
 }

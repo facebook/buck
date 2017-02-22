@@ -215,7 +215,7 @@ public class QueryCommand extends AbstractCommand {
     TreeMultimap<String, QueryTarget> queryResultMap = TreeMultimap.create();
     for (String input : inputsFormattedAsBuildTargets) {
       String query = queryFormat.replace("%s", input);
-      Set<QueryTarget> queryResult = env.evaluateQuery(query, executor);
+      ImmutableSet<QueryTarget> queryResult = env.evaluateQuery(query, executor);
       queryResultMap.putAll(input, queryResult);
     }
 
@@ -234,7 +234,7 @@ public class QueryCommand extends AbstractCommand {
       ListeningExecutorService executor,
       String query)
       throws IOException, InterruptedException, QueryException {
-    Set<QueryTarget> queryResult = env.evaluateQuery(query, executor);
+    ImmutableSet<QueryTarget> queryResult = env.evaluateQuery(query, executor);
 
     LOG.debug("Printing out the following targets: " + queryResult);
     if (shouldOutputAttributes()) {

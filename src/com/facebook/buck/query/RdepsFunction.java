@@ -36,6 +36,7 @@ import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -81,7 +82,7 @@ public class RdepsFunction implements QueryFunction {
    * reverse transitive closure or the maximum depth (if supplied) is reached.
    */
   @Override
-  public Set<QueryTarget> eval(
+  public ImmutableSet<QueryTarget> eval(
       QueryEnvironment env,
       ImmutableList<Argument> args,
       ListeningExecutorService executor) throws QueryException, InterruptedException {
@@ -111,7 +112,7 @@ public class RdepsFunction implements QueryFunction {
       }
       current = next;
     }
-    return visited;
+    return ImmutableSet.copyOf(visited);
   }
 
 }

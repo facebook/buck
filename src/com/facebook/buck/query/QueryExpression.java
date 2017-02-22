@@ -30,10 +30,10 @@
 
 package com.facebook.buck.query;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.Collection;
-import java.util.Set;
 
 /**
  * Base class for expressions in the Buck query language.
@@ -74,8 +74,9 @@ public abstract class QueryExpression {
    *
    * Failures resulting from evaluation of an ill-formed query cause QueryException to be thrown.
    */
-  public abstract Set<QueryTarget> eval(QueryEnvironment env, ListeningExecutorService executor)
-      throws QueryException, InterruptedException;
+  public abstract ImmutableSet<QueryTarget> eval(
+      QueryEnvironment env,
+      ListeningExecutorService executor) throws QueryException, InterruptedException;
 
   /**
    * Collects all target patterns that are referenced anywhere within this

@@ -22,6 +22,7 @@ import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryTarget;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.Set;
@@ -48,7 +49,7 @@ public class ClasspathFunction implements QueryEnvironment.QueryFunction {
   }
 
   @Override
-  public Set<QueryTarget> eval(
+  public ImmutableSet<QueryTarget> eval(
       QueryEnvironment env,
       ImmutableList<QueryEnvironment.Argument> args,
       ListeningExecutorService executor) throws QueryException, InterruptedException {

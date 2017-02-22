@@ -35,6 +35,7 @@ import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.facebook.buck.util.MoreSets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -72,7 +73,7 @@ public class AllPathsFunction implements QueryFunction {
   }
 
   @Override
-  public Set<QueryTarget> eval(
+  public ImmutableSet<QueryTarget> eval(
       QueryEnvironment env,
       ImmutableList<Argument> args,
       ListeningExecutorService executor) throws QueryException, InterruptedException {
@@ -102,7 +103,7 @@ public class AllPathsFunction implements QueryFunction {
         }
       }
     }
-    return result;
+    return ImmutableSet.copyOf(result);
   }
 
 }

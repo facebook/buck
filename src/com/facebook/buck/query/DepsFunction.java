@@ -105,7 +105,7 @@ public class DepsFunction implements QueryFunction {
    * transitive closure or the maximum depth (if supplied) is reached.
    */
   @Override
-  public Set<QueryTarget> eval(
+  public ImmutableSet<QueryTarget> eval(
       QueryEnvironment env,
       ImmutableList<Argument> args,
       ListeningExecutorService executor) throws QueryException, InterruptedException {
@@ -141,7 +141,7 @@ public class DepsFunction implements QueryFunction {
       }
       current = next;
     }
-    return result;
+    return ImmutableSet.copyOf(result);
   }
 
   /**
@@ -168,7 +168,7 @@ public class DepsFunction implements QueryFunction {
     }
 
     @Override
-    public Set<QueryTarget> eval(
+    public ImmutableSet<QueryTarget> eval(
         QueryEnvironment env,
         ImmutableList<Argument> args,
         ListeningExecutorService executor)

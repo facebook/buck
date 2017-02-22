@@ -94,14 +94,14 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public Set<QueryTarget> getTargetsMatchingPattern(
+  public ImmutableSet<QueryTarget> getTargetsMatchingPattern(
       String pattern,
       ListeningExecutorService executor) throws QueryException, InterruptedException {
     if ("$declared_deps".equals(pattern)) {
       return declaredDeps
           .stream()
           .map(QueryBuildTarget::of)
-          .collect(Collectors.toSet());
+          .collect(MoreCollectors.toImmutableSet());
     }
     try {
       BuildTarget buildTarget = BuildTargetParser.INSTANCE.parse(pattern, context, cellNames);

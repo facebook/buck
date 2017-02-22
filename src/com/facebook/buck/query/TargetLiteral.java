@@ -31,10 +31,10 @@
 package com.facebook.buck.query;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.Collection;
-import java.util.Set;
 
 /**
  * A literal set of targets. (The syntax of the string "pattern" determines which.)
@@ -50,7 +50,7 @@ public final class TargetLiteral extends QueryExpression {
   }
 
   @Override
-  public Set<QueryTarget> eval(QueryEnvironment env, ListeningExecutorService executor)
+  public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ListeningExecutorService executor)
       throws QueryException, InterruptedException {
     return env.getTargetsMatchingPattern(pattern, executor);
   }

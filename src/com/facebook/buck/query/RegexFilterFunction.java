@@ -19,9 +19,9 @@ package com.facebook.buck.query;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -42,7 +42,7 @@ abstract class RegexFilterFunction implements QueryFunction {
       throws QueryException, InterruptedException;
 
   @Override
-  public Set<QueryTarget> eval(
+  public ImmutableSet<QueryTarget> eval(
       QueryEnvironment env,
       ImmutableList<Argument> args,
       ListeningExecutorService executor)
@@ -56,13 +56,13 @@ abstract class RegexFilterFunction implements QueryFunction {
     }
 
     Set<QueryTarget> targets = getExpressionToEval(args).eval(env, executor);
-    Set<QueryTarget> result = new LinkedHashSet<>();
+    ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
     for (QueryTarget target : targets) {
       String attributeValue = getStringToFilter(env, args, target);
       if (compiledPattern.matcher(attributeValue).find()) {
         result.add(target);
       }
     }
-    return result;
+    return result.build();
   }
 }

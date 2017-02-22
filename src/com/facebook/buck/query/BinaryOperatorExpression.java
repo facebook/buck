@@ -33,6 +33,7 @@ import static com.facebook.buck.query.Lexer.TokenKind;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.Collection;
@@ -64,7 +65,7 @@ class BinaryOperatorExpression extends QueryExpression {
   }
 
   @Override
-  public Set<QueryTarget> eval(QueryEnvironment env, ListeningExecutorService executor)
+  public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ListeningExecutorService executor)
       throws QueryException, InterruptedException {
     Set<QueryTarget> lhsValue = new LinkedHashSet<>(operands.get(0).eval(env, executor));
 
@@ -88,7 +89,7 @@ class BinaryOperatorExpression extends QueryExpression {
           throw new IllegalStateException("operator=" + operator);
       }
     }
-    return lhsValue;
+    return ImmutableSet.copyOf(lhsValue);
   }
 
   @Override

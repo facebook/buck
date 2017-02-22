@@ -152,7 +152,9 @@ public class BuckQueryEnvironment implements QueryEnvironment {
    * @return the resulting set of targets.
    * @throws QueryException if the evaluation failed.
    */
-  public Set<QueryTarget> evaluateQuery(QueryExpression expr, ListeningExecutorService executor)
+  public ImmutableSet<QueryTarget> evaluateQuery(
+      QueryExpression expr,
+      ListeningExecutorService executor)
       throws QueryException, InterruptedException {
     Set<String> targetLiterals = new HashSet<>();
     expr.collectTargetPatterns(targetLiterals);
@@ -160,7 +162,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     return expr.eval(this, executor);
   }
 
-  public Set<QueryTarget> evaluateQuery(String query, ListeningExecutorService executor)
+  public ImmutableSet<QueryTarget> evaluateQuery(String query, ListeningExecutorService executor)
       throws QueryException, InterruptedException {
     return evaluateQuery(QueryExpression.parse(query, this), executor);
   }
