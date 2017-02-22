@@ -27,6 +27,7 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -321,10 +322,8 @@ public class Omnibus {
         argsBuilder.add(
             new SourcePathArg(
                 pathResolver,
-                ((CxxLink) ruleResolver.requireRule(
-                    getRootTarget(
-                        params.getBuildTarget(),
-                        target))).getSourcePathToOutput()));
+                new BuildTargetSourcePath(
+                    getRootTarget(params.getBuildTarget(), target))));
         continue;
       }
 
