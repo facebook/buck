@@ -29,6 +29,8 @@ import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
+import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription;
+import com.facebook.buck.jvm.kotlin.KotlinTestDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.Description;
@@ -72,7 +74,9 @@ public class IjModuleFactory {
           JavaTestDescription.class,
           RobolectricTestDescription.class,
           GroovyLibraryDescription.class,
-          GroovyTestDescription.class);
+          GroovyTestDescription.class,
+          KotlinLibraryDescription.class,
+          KotlinTestDescription.class);
 
   /**
    * Rule describing which aspects of the supplied {@link TargetNode} to transfer to the
@@ -125,6 +129,8 @@ public class IjModuleFactory {
     addToIndex(new RobolectricTestModuleRule());
     addToIndex(new GroovyLibraryModuleRule());
     addToIndex(new GroovyTestModuleRule());
+    addToIndex(new KotlinLibraryModuleRule());
+    addToIndex(new KotlinTestModuleRule());
 
     this.moduleFactoryResolver = moduleFactoryResolver;
 
@@ -674,6 +680,42 @@ public class IjModuleFactory {
           true /* wantsPackagePrefix */,
           context);
       addCompiledShadowIfNeeded(target, context);
+    }
+  }
+
+  private class KotlinLibraryModuleRule implements IjModuleRule<KotlinLibraryDescription.Arg> {
+
+    @Override
+    public Class<? extends Description<?>> getDescriptionClass() {
+      return KotlinLibraryDescription.class;
+    }
+
+    @Override
+    public void apply(
+        TargetNode<KotlinLibraryDescription.Arg, ?> target,
+        ModuleBuildContext context) {
+      addDepsAndSources(
+          target,
+          false /* wantsPackagePrefix */,
+          context);
+    }
+  }
+
+  private class KotlinTestModuleRule implements IjModuleRule<KotlinTestDescription.Arg> {
+
+    @Override
+    public Class<? extends Description<?>> getDescriptionClass() {
+      return KotlinTestDescription.class;
+    }
+
+    @Override
+    public void apply(
+        TargetNode<KotlinTestDescription.Arg, ?> target,
+        ModuleBuildContext context) {
+      addDepsAndTestSources(
+          target,
+          false /* wantsPackagePrefix */,
+          context);
     }
   }
 

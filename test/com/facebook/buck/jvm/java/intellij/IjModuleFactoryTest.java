@@ -35,6 +35,7 @@ import com.facebook.buck.jvm.groovy.GroovyLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
+import com.facebook.buck.jvm.kotlin.KotlinLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -333,6 +334,31 @@ public class IjModuleFactoryTest {
 
     IjFolder folder = module.getFolders().iterator().next();
     assertEquals(Paths.get("groovy/com/example/base"), folder.getPath());
+    assertFalse(folder instanceof TestFolder);
+    assertFalse(folder.getWantsPackagePrefix());
+  }
+
+  @Test
+  public void testKotlinLibrary() {
+    IjModuleFactory factory = createIjModuleFactory();
+
+    TargetNode<?, ?> kotlinLib = KotlinLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//kotlin/com/example/base:base"))
+        .addSrc(Paths.get("kotlin/com/example/base/File.kt"))
+        .build();
+
+    Path moduleBasePath = Paths.get("kotlin/com/example/base");
+    IjModule module = factory.createModule(
+        moduleBasePath,
+        ImmutableSet.<TargetNode<?, ?>>of(kotlinLib));
+
+    assertEquals(moduleBasePath, module.getModuleBasePath());
+    assertFalse(module.getAndroidFacet().isPresent());
+    assertEquals(1, module.getFolders().size());
+    assertEquals(ImmutableSet.of(kotlinLib), module.getTargets());
+
+    IjFolder folder = module.getFolders().iterator().next();
+    assertEquals(Paths.get("kotlin/com/example/base"), folder.getPath());
     assertFalse(folder instanceof TestFolder);
     assertFalse(folder.getWantsPackagePrefix());
   }
