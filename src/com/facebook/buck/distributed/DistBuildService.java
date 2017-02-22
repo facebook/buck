@@ -51,6 +51,7 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -59,11 +60,8 @@ import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -347,16 +345,16 @@ public class DistBuildService implements Closeable {
       ListeningExecutorService executorService) throws IOException {
     ListenableFuture<Pair<List<FileInfo>, List<PathInfo>>> filesFuture =
         executorService.submit(() -> {
-
-          Path[] buckDotFilesExceptConfig =
-              Arrays.stream(filesystem.listFiles(Paths.get(".")))
-                  .filter(f -> !f.isDirectory())
-                  .filter(f -> !Files.isSymbolicLink(f.toPath()))
-                  .filter(f -> f.getName().startsWith("."))
-                  .filter(f -> f.getName().contains("buck"))
-                  .filter(f -> !f.getName().startsWith(".buckconfig"))
-                  .map(f -> f.toPath())
-                  .toArray(Path[]::new);
+          List<Path> buckDotFilesExceptConfig = Lists.newArrayList();
+          for (Path path : filesystem.getDirectoryContents(filesystem.getRootPath())) {
+            if (!filesystem.isDirectory(path) &&
+                !filesystem.isSymLink(path) &&
+                path.getFileName().startsWith(".") &&
+                path.getFileName().toString().contains("buck") &&
+                !path.getFileName().startsWith(".buckconfig")) {
+              buckDotFilesExceptConfig.add(path);
+            }
+          }
 
           List<FileInfo> fileEntriesToUpload = new LinkedList<>();
           List<PathInfo> pathEntriesToUpload = new LinkedList<>();
