@@ -96,6 +96,7 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
   // XXXXXXXXXX.com.example.* will match over XXXXXXXXXX.* for com.example.TestApp
   public Optional<ProvisioningProfileMetadata> getBestProvisioningProfile(
       String bundleID,
+      ApplePlatform platform,
       Optional<ImmutableMap<String, NSObject>> entitlements,
       Optional<? extends Iterable<CodeSignIdentity>> identities) {
     final Optional<String> prefix;
@@ -127,7 +128,17 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
           }
 
           if (!match) {
-            LOG.debug("Ignoring non-matching ID for profile " + profile.getUUID());
+            LOG.debug("Ignoring non-matching ID for profile " + profile.getUUID() +
+                ".  Expected: " + profileBundleID + ", actual: " + bundleID);
+            continue;
+          }
+
+          Optional<String> platformName = platform.getProvisioningProfileName();
+          if (platformName.isPresent() &&
+              !profile.getPlatforms().contains(platformName.get())) {
+            LOG.debug("Ignoring incompatible platform " + platformName.get() +
+                " for profile " + profile.getUUID());
+            continue;
           }
 
           // Match against other keys of the entitlements.  Otherwise, we could potentially select
@@ -135,7 +146,7 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
           // installing to device.
           //
           // For example: get-task-allow, aps-environment, etc.
-          if (match && entitlements.isPresent()) {
+          if (entitlements.isPresent()) {
             ImmutableMap<String, NSObject> entitlementsDict = entitlements.get();
             ImmutableMap<String, NSObject> profileEntitlements = profile.getEntitlements();
             for (Entry<String, NSObject> entry : entitlementsDict.entrySet()) {
@@ -169,6 +180,7 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
             if (!match) {
               LOG.debug("Ignoring profile " + profile.getUUID() +
                   " because it can't be signed with any valid identity in the current keychain.");
+              continue;
             }
           }
 

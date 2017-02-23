@@ -131,7 +131,7 @@ public class AppleBundle
   private final ImmutableSortedSet<BuildTarget> tests;
 
   @AddToRuleKey
-  private final String platformName;
+  private final ApplePlatform platform;
 
   @AddToRuleKey
   private final String sdkName;
@@ -222,7 +222,7 @@ public class AppleBundle
         .resolve(this.binaryName);
     this.tests = ImmutableSortedSet.copyOf(tests);
     AppleSdk sdk = appleCxxPlatform.getAppleSdk();
-    this.platformName = sdk.getApplePlatform().getName();
+    this.platform = sdk.getApplePlatform();
     this.sdkName = sdk.getName();
     this.sdkVersion = sdk.getVersion();
     this.minOSVersion = appleCxxPlatform.getMinVersion();
@@ -289,7 +289,7 @@ public class AppleBundle
   }
 
   public String getPlatformName() {
-    return platformName;
+    return platform.getName();
   }
 
   public Optional<BuildRule> getBinary() {
@@ -477,7 +477,7 @@ public class AppleBundle
         Optional<String> entitlementsPlistString =
             InfoPlistSubstitution.getVariableExpansionForPlatform(
                 CODE_SIGN_ENTITLEMENTS,
-                platformName,
+                platform.getName(),
                 withDefaults(
                     infoPlistSubstitutions,
                     ImmutableMap.of(
@@ -498,6 +498,7 @@ public class AppleBundle
             new ProvisioningProfileCopyStep(
                 getProjectFilesystem(),
                 infoPlistOutputPath,
+                platform,
                 Optional.empty(),  // Provisioning profile UUID -- find automatically.
                 entitlementsPlist,
                 provisioningProfileStore,
@@ -631,7 +632,7 @@ public class AppleBundle
       ImmutableList.Builder<Step> stepsBuilder,
       Path binaryOutputPath) {
     if ((isLegacyWatchApp() ||
-        (platformName.contains("watch") &&
+        (platform.getName().contains("watch") &&
             minOSVersion.equals("2.0"))) &&
         binary.get() instanceof WriteFile) {
       final Path watchKitStubDir = bundleRoot.resolve("_WatchKitStub");
@@ -725,9 +726,9 @@ public class AppleBundle
   private ImmutableMap<String, NSObject> getInfoPlistOverrideKeys() {
     ImmutableMap.Builder<String, NSObject> keys = ImmutableMap.builder();
 
-    if (platformName.contains("osx")) {
+    if (platform.getName().contains("osx")) {
       keys.put("LSRequiresIPhoneOS", new NSNumber(false));
-    } else if (!platformName.contains("watch") && !isLegacyWatchApp()) {
+    } else if (!platform.getName().contains("watch") && !isLegacyWatchApp()) {
       keys.put("LSRequiresIPhoneOS", new NSNumber(true));
     }
 
@@ -736,6 +737,7 @@ public class AppleBundle
 
   private ImmutableMap<String, NSObject> getInfoPlistAdditionalKeys() {
     ImmutableMap.Builder<String, NSObject> keys = ImmutableMap.builder();
+    final String platformName = platform.getName();
 
     if (platformName.contains("osx")) {
       keys.put("NSHighResolutionCapable", new NSNumber(true));
@@ -810,7 +812,7 @@ public class AppleBundle
       Path sourcePath,
       Path destinationPath,
       ImmutableList.Builder<Step> stepsBuilder) {
-    if (platformName.contains("watch") || isLegacyWatchApp()) {
+    if (platform.getName().contains("watch") || isLegacyWatchApp()) {
       LOG.debug("Compiling storyboard %s to storyboardc %s and linking",
           sourcePath,
           destinationPath);
@@ -930,12 +932,12 @@ public class AppleBundle
   }
 
   private boolean adHocCodeSignIsSufficient() {
-    return ApplePlatform.adHocCodeSignIsSufficient(platformName);
+    return ApplePlatform.adHocCodeSignIsSufficient(platform.getName());
   }
 
   // .framework bundles will be code-signed when they're copied into the containing bundle.
   private boolean needCodeSign() {
-    return binary.isPresent() && ApplePlatform.needsCodeSign(platformName) &&
+    return binary.isPresent() && ApplePlatform.needsCodeSign(platform.getName()) &&
         !extension.equals(FRAMEWORK_EXTENSION);
   }
 

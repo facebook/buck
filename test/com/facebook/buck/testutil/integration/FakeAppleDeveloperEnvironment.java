@@ -16,6 +16,7 @@
 
 package com.facebook.buck.testutil.integration;
 
+import com.facebook.buck.apple.ApplePlatform;
 import com.facebook.buck.apple.CodeSignIdentityStore;
 import com.facebook.buck.apple.ProvisioningProfileMetadata;
 import com.facebook.buck.apple.ProvisioningProfileStore;
@@ -61,6 +62,7 @@ public class FakeAppleDeveloperEnvironment {
         Optional<ProvisioningProfileMetadata> profile =
             store.getBestProvisioningProfile(
                 "*",
+                ApplePlatform.IPHONEOS,
                 ProvisioningProfileStore.MATCH_ANY_ENTITLEMENT,
                 ProvisioningProfileStore.MATCH_ANY_IDENTITY);
         return profile.isPresent();

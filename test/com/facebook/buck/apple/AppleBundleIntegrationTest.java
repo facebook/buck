@@ -201,6 +201,19 @@ public class AppleBundleIntegrationTest {
     assertTrue(Files.exists(appPath.resolve(target.getShortName())));
 
     assertTrue(checkCodeSigning(appPath));
+
+    // Do not match iOS profiles on tvOS targets.
+    target =
+        workspace.newBuildTarget("//:DemoApp#appletvos-arm64,no-debug");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertFailure();
+    assertTrue(result.getStderr().contains("No valid non-expired provisioning profiles match"));
+
+    // Match tvOS profile.
+    workspace.addBuckConfigLocalOption(
+        "apple", "provisioning_profile_search_path", "provisioning_profiles_tvos");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
   }
 
   private NSDictionary verifyAndParsePlist(Path path) throws Exception {

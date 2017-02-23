@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 
@@ -27,12 +29,14 @@ import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform> {
+abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform>,
+    RuleKeyAppendable {
 
   public static final ApplePlatform IPHONEOS =
       ApplePlatform.builder()
           .setName("iphoneos")
           .setSwiftName("ios")
+          .setProvisioningProfileName("iOS")
           .setArchitectures(ImmutableList.of("armv7", "arm64"))
           .setMinVersionFlagPrefix("-mios-version-min=")
           // only used for legacy watch apps
@@ -50,6 +54,7 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
   public static final ApplePlatform WATCHOS =
       ApplePlatform.builder()
           .setName("watchos")
+          .setProvisioningProfileName("iOS")  // watchOS uses iOS provisioning profiles.
           .setArchitectures(ImmutableList.of("armv7k"))
           .setMinVersionFlagPrefix("-mwatchos-version-min=")
           .setStubBinaryPath(Optional.of(Paths.get("Library/Application Support/WatchKit/WK")))
@@ -64,6 +69,7 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
   public static final ApplePlatform APPLETVOS =
       ApplePlatform.builder()
           .setName("appletvos")
+          .setProvisioningProfileName("tvOS")
           .setArchitectures(ImmutableList.of("arm64"))
           .setMinVersionFlagPrefix("-mtvos-version-min=")
           .build();
@@ -91,6 +97,13 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
    * use {@link #getName()} instead.
    */
   public abstract Optional<String> getSwiftName();
+
+  /**
+   * The platform name used to match provisioning profiles. For example: {@code iOS}.
+   *
+   * Not all platforms use provisioning profiles; these will return absent.
+   */
+  public abstract Optional<String> getProvisioningProfileName();
 
   @SuppressWarnings("immutables")
   @Value.Default
@@ -161,5 +174,10 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
     }
 
     return getName().compareTo(other.getName());
+  }
+
+  @Override
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("platform-name", getName());
   }
 }

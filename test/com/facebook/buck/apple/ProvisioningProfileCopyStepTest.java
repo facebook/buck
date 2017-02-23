@@ -108,6 +108,7 @@ public class ProvisioningProfileCopyStepTest {
     ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
         projectFilesystem,
         testdataDir.resolve("Info.plist"),
+        ApplePlatform.IPHONEOS,
         Optional.empty(),
         Optional.of(testdataDir.resolve("Invalid.plist")),
         ProvisioningProfileStore.fromSearchPath(
@@ -132,6 +133,7 @@ public class ProvisioningProfileCopyStepTest {
     ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
         projectFilesystem,
         testdataDir.resolve("Invalid.plist"),
+        ApplePlatform.IPHONEOS,
         Optional.empty(),
         Optional.empty(),
         ProvisioningProfileStore.fromSearchPath(
@@ -160,6 +162,7 @@ public class ProvisioningProfileCopyStepTest {
     ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
         projectFilesystem,
         testdataDir.resolve("Info.plist"),
+        ApplePlatform.IPHONEOS,
         Optional.empty(),
         Optional.empty(),
         ProvisioningProfileStore.fromSearchPath(
@@ -184,6 +187,7 @@ public class ProvisioningProfileCopyStepTest {
     ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
         projectFilesystem,
         testdataDir.resolve("Info.plist"),
+        ApplePlatform.IPHONEOS,
         Optional.empty(),
         Optional.empty(),
         ProvisioningProfileStore.fromSearchPath(
@@ -218,6 +222,7 @@ public class ProvisioningProfileCopyStepTest {
     ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
         projectFilesystem,
         testdataDir.resolve("Info.plist"),
+        ApplePlatform.IPHONEOS,
         Optional.empty(),
         Optional.empty(),
         ProvisioningProfileStore.fromSearchPath(
@@ -243,6 +248,7 @@ public class ProvisioningProfileCopyStepTest {
     ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
         projectFilesystem,
         testdataDir.resolve("Info.plist"),
+        ApplePlatform.IPHONEOS,
         Optional.of("00000000-0000-0000-0000-000000000000"),
         Optional.empty(),
         ProvisioningProfileStore.fromSearchPath(
@@ -278,6 +284,7 @@ public class ProvisioningProfileCopyStepTest {
     ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
         projectFilesystem,
         testdataDir.resolve("Info.plist"),
+        ApplePlatform.IPHONEOS,
         Optional.of("00000000-0000-0000-0000-000000000000"),
         Optional.of(entitlementsFile),
         ProvisioningProfileStore.fromSearchPath(

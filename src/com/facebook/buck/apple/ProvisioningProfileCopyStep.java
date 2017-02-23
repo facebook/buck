@@ -57,6 +57,7 @@ class ProvisioningProfileCopyStep implements Step {
 
 
   private final ProjectFilesystem filesystem;
+  private final ApplePlatform platform;
   private final Optional<Path> entitlementsPlist;
   private final Optional<String> provisioningProfileUUID;
   private final Path provisioningProfileDestination;
@@ -95,6 +96,7 @@ class ProvisioningProfileCopyStep implements Step {
   public ProvisioningProfileCopyStep(
       ProjectFilesystem filesystem,
       Path infoPlist,
+      ApplePlatform platform,
       Optional<String> provisioningProfileUUID,
       Optional<Path> entitlementsPlist,
       ProvisioningProfileStore provisioningProfileStore,
@@ -105,6 +107,7 @@ class ProvisioningProfileCopyStep implements Step {
     this.filesystem = filesystem;
     this.provisioningProfileDestination = provisioningProfileDestination;
     this.infoPlist = infoPlist;
+    this.platform = platform;
     this.provisioningProfileUUID = provisioningProfileUUID;
     this.entitlementsPlist = entitlementsPlist;
     this.provisioningProfileStore = provisioningProfileStore;
@@ -157,6 +160,7 @@ class ProvisioningProfileCopyStep implements Step {
             provisioningProfileStore.getProvisioningProfileByUUID(provisioningProfileUUID.get()) :
             provisioningProfileStore.getBestProvisioningProfile(
                 bundleID,
+                platform,
                 entitlements,
                 identities);
 

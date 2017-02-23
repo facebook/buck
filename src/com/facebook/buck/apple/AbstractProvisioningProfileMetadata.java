@@ -71,6 +71,14 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
   public abstract Path getProfilePath();
 
   /**
+   * The set of platforms the profile is valid for.
+   */
+  @Value.Default
+  public ImmutableList<String> getPlatforms() {
+    return ImmutableList.of(ApplePlatform.IPHONEOS.getProvisioningProfileName().get());
+  }
+
+  /**
    * Key/value pairs of the "Entitlements" dictionary in the embedded plist.
    */
   public abstract ImmutableMap<String, NSObject> getEntitlements();
@@ -160,7 +168,12 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
       }
       String appID = entitlements.get("application-identifier").toString();
 
-      return ProvisioningProfileMetadata.builder()
+      ProvisioningProfileMetadata.Builder provisioningProfileMetadata =
+          ProvisioningProfileMetadata.builder();
+      for (Object platform : (Object []) plist.get("Platform").toJavaObject()) {
+        provisioningProfileMetadata.addPlatforms((String) platform);
+      }
+      return provisioningProfileMetadata
           .setAppID(ProvisioningProfileMetadata.splitAppID(appID))
           .setExpirationDate(expirationDate)
           .setUUID(uuid)

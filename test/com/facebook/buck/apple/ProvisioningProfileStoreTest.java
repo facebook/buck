@@ -79,6 +79,7 @@ public class ProvisioningProfileStoreTest {
 
     Optional<ProvisioningProfileMetadata> actual =  profiles.getBestProvisioningProfile(
         "com.facebook.test",
+        ApplePlatform.IPHONEOS,
         ProvisioningProfileStore.MATCH_ANY_ENTITLEMENT,
         ProvisioningProfileStore.MATCH_ANY_IDENTITY);
 
@@ -106,6 +107,7 @@ public class ProvisioningProfileStoreTest {
     Optional<ProvisioningProfileMetadata> actual =
         profiles.getBestProvisioningProfile(
             "com.facebook.test",
+            ApplePlatform.IPHONEOS,
             Optional.of(fakeEntitlements),
             ProvisioningProfileStore.MATCH_ANY_IDENTITY);
 
@@ -153,6 +155,7 @@ public class ProvisioningProfileStoreTest {
     Optional<ProvisioningProfileMetadata> actual =
         profiles.getBestProvisioningProfile(
             "com.facebook.test",
+            ApplePlatform.IPHONEOS,
             Optional.of(ImmutableMap.of(
                 "keychain-access-groups",
                 fakeKeychainAccessGroupsArray,
@@ -169,6 +172,7 @@ public class ProvisioningProfileStoreTest {
     actual =
         profiles.getBestProvisioningProfile(
             "com.facebook.test",
+            ApplePlatform.IPHONEOS,
             Optional.of(ImmutableMap.of(
                 "keychain-access-groups",
                 fakeKeychainAccessGroupsArray,
@@ -185,6 +189,7 @@ public class ProvisioningProfileStoreTest {
     actual =
         profiles.getBestProvisioningProfile(
             "com.facebook.test",
+            ApplePlatform.IPHONEOS,
             Optional.of(ImmutableMap.of(
                 "aps-environment",
                 new NSString("production"),
@@ -199,6 +204,7 @@ public class ProvisioningProfileStoreTest {
     actual =
         profiles.getBestProvisioningProfile(
             "com.facebook.test",
+            ApplePlatform.IPHONEOS,
             Optional.of(ImmutableMap.of(
                 "aps-environment",
                 new NSString("production"),
@@ -245,6 +251,7 @@ public class ProvisioningProfileStoreTest {
     Optional<ProvisioningProfileMetadata> actual =
         profiles.getBestProvisioningProfile(
             "com.facebook.test",
+            ApplePlatform.IPHONEOS,
             ProvisioningProfileStore.MATCH_ANY_ENTITLEMENT,
             Optional.of(ImmutableList.of(validIdentity)));
 
@@ -286,6 +293,7 @@ public class ProvisioningProfileStoreTest {
 
     Optional<ProvisioningProfileMetadata> actual = profiles.getBestProvisioningProfile(
           "com.facebook.test",
+          ApplePlatform.IPHONEOS,
           ProvisioningProfileStore.MATCH_ANY_ENTITLEMENT,
           ProvisioningProfileStore.MATCH_ANY_IDENTITY);
 
@@ -303,6 +311,7 @@ public class ProvisioningProfileStoreTest {
 
     Optional<ProvisioningProfileMetadata> actual = profiles.getBestProvisioningProfile(
         "com.facebook.test",
+        ApplePlatform.IPHONEOS,
         ProvisioningProfileStore.MATCH_ANY_ENTITLEMENT,
         ProvisioningProfileStore.MATCH_ANY_IDENTITY);
 
