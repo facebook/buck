@@ -533,11 +533,12 @@ public class LuaBinaryDescription implements
       ImmutableMap<String, SourcePath> components) {
     return resolver.addToIndex(
         new SymlinkTree(
-            params
-                .withBuildTarget(linkTreeTarget)
-                .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.copyOf(
-                    ruleFinder.filterBuildRuleInputs(components.values()))))
-                .withoutExtraDeps(),
+            params.copyWithChanges(
+                linkTreeTarget,
+                Suppliers.ofInstance(
+                    ImmutableSortedSet.copyOf(
+                        ruleFinder.filterBuildRuleInputs(components.values()))),
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
             root,
             MoreMaps.transformKeys(components, MorePaths.toPathFn(root.getFileSystem())),
             ruleFinder));
@@ -704,17 +705,16 @@ public class LuaBinaryDescription implements
     LuaStandaloneBinary binary =
         resolver.addToIndex(
             new LuaStandaloneBinary(
-                params
-                    .withFlavor(BINARY_FLAVOR)
-                    .withDeclaredDeps(
-                        Suppliers.ofInstance(
-                            ImmutableSortedSet.<BuildRule>naturalOrder()
-                                .addAll(ruleFinder.filterBuildRuleInputs(starter))
-                                .addAll(components.getDeps(ruleFinder))
-                                .addAll(lua.getDeps(ruleFinder))
-                                .addAll(packager.getDeps(ruleFinder))
-                                .build()))
-                    .withoutExtraDeps(),
+                params.copyWithChanges(
+                    params.getBuildTarget().withAppendedFlavors(BINARY_FLAVOR),
+                    Suppliers.ofInstance(
+                        ImmutableSortedSet.<BuildRule>naturalOrder()
+                            .addAll(ruleFinder.filterBuildRuleInputs(starter))
+                            .addAll(components.getDeps(ruleFinder))
+                            .addAll(lua.getDeps(ruleFinder))
+                            .addAll(packager.getDeps(ruleFinder))
+                            .build()),
+                    Suppliers.ofInstance(ImmutableSortedSet.of())),
                 packager,
                 ImmutableList.of(),
                 output,

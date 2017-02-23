@@ -55,7 +55,8 @@ public class PythonLibraryDescription
       final A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
-    Optional<ImmutableMap<BuildTarget, Version>> selectedVersions = params.getSelectedVersions();
+    Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
+        targetGraph.get(params.getBuildTarget()).getSelectedVersions();
     return new PythonLibrary(
         params,
         pathResolver,

@@ -152,10 +152,10 @@ public class CxxTestDescription implements
 
     // Construct the actual build params we'll use, notably with an added dependency on the
     // CxxLink rule above which builds the test binary.
-    Supplier<ImmutableSortedSet<BuildRule>> declaredDeps = () -> cxxLinkAndCompileRules.deps;
-    BuildRuleParams testParams = params
-        .withDeclaredDeps(declaredDeps)
-        .appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder));
+    BuildRuleParams testParams =
+        params
+            .copyWithDeps(() -> cxxLinkAndCompileRules.deps, params.getExtraDeps())
+            .appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder));
     testParams = CxxStrip.restoreStripStyleFlavorInParams(
         testParams,
         flavoredStripStyle);

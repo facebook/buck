@@ -261,7 +261,8 @@ public class HalideLibraryDescription
         params.getBuildTarget().withFlavors(HALIDE_COMPILER_FLAVOR));
 
     return new HalideCompile(
-        params.withExtraDeps(Suppliers.ofInstance(ImmutableSortedSet.of(halideCompiler))),
+        params.copyWithExtraDeps(
+            Suppliers.ofInstance(ImmutableSortedSet.of(halideCompiler))),
         halideCompiler.getExecutableCommand(),
         halideBuckConfig.getHalideTargetForPlatform(platform),
         expandInvocationFlags(compilerInvocationFlags, platform),
@@ -314,10 +315,10 @@ public class HalideLibraryDescription
       final ImmutableSortedSet<BuildTarget> compilerDeps =
           args.compilerDeps;
       return createHalideCompiler(
-          params
-              .withFlavor(HALIDE_COMPILER_FLAVOR)
-              .withDeclaredDeps(Suppliers.ofInstance(resolver.getAllRules(compilerDeps)))
-              .withoutExtraDeps(),
+          params.copyWithChanges(
+              params.getBuildTarget().withFlavors(HALIDE_COMPILER_FLAVOR),
+              Suppliers.ofInstance(resolver.getAllRules(compilerDeps)),
+              Suppliers.ofInstance(ImmutableSortedSet.of())),
           resolver,
           pathResolver,
           ruleFinder,
@@ -347,9 +348,11 @@ public class HalideLibraryDescription
           params.getBuildTarget());
     } else if (flavors.contains(HALIDE_COMPILE_FLAVOR)) {
       return createHalideCompile(
-          params
-              .withoutDeclaredDeps()
-              .withoutExtraDeps(),
+          params.copyWithDeps(
+              Suppliers.ofInstance(
+                  ImmutableSortedSet.of()),
+              Suppliers.ofInstance(
+                  ImmutableSortedSet.of())),
           resolver,
           cxxPlatform,
           Optional.of(args.compilerInvocationFlags),

@@ -185,10 +185,10 @@ abstract class DDescriptionUtils {
       SourceList sources) {
     Preconditions.checkState(target.getFlavors().contains(SOURCE_LINK_TREE));
     return new SymlinkTree(
-        baseParams
-            .withBuildTarget(target)
-            .withoutDeclaredDeps()
-            .withoutExtraDeps(),
+        baseParams.copyWithChanges(
+            target,
+            Suppliers.ofInstance(ImmutableSortedSet.of()),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         BuildTargets.getGenPath(
             baseParams.getProjectFilesystem(),
             baseParams.getBuildTarget(),
@@ -263,10 +263,10 @@ abstract class DDescriptionUtils {
 
       return buildRuleResolver.addToIndex(
           new DCompileBuildRule(
-              baseParams
-                  .withBuildTarget(compileTarget)
-                  .withDeclaredDeps(Suppliers.ofInstance(deps))
-                  .withoutExtraDeps(),
+              baseParams.copyWithChanges(
+                  compileTarget,
+                  Suppliers.ofInstance(deps),
+                  Suppliers.ofInstance(ImmutableSortedSet.of())),
               compiler,
               ImmutableList.<String>builder()
                   .addAll(dBuckConfig.getBaseCompilerFlags())

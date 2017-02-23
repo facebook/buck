@@ -60,13 +60,13 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    Supplier<ImmutableSortedSet<BuildRule>> extraDeps = Suppliers.memoize(
-        () -> ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(originalExtraDeps.get())
-            .add(installableApk)
-            .build());
     return new ApkGenrule(
-        params.withExtraDeps(extraDeps),
+        params.copyWithExtraDeps(
+            Suppliers.memoize(
+                () -> ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(originalExtraDeps.get())
+                    .add(installableApk)
+                    .build())),
         pathResolver,
         ruleFinder,
         args.srcs,

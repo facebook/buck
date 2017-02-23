@@ -156,10 +156,10 @@ public class CxxDescriptionEnhancer {
             sandboxSymlinkTreeTarget);
 
     BuildRuleParams paramsWithoutDeps =
-        params
-            .withBuildTarget(sandboxSymlinkTreeTarget)
-            .withoutDeclaredDeps()
-            .withoutExtraDeps();
+        params.copyWithChanges(
+            sandboxSymlinkTreeTarget,
+            Suppliers.ofInstance(ImmutableSortedSet.of()),
+            Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     return new SymlinkTree(
         paramsWithoutDeps,
@@ -961,10 +961,11 @@ public class CxxDescriptionEnhancer {
       BuildRule unstrippedBinaryRule,
       CxxPlatform cxxPlatform) {
     BuildRuleParams stripRuleParams = params
-        .withFlavor(CxxStrip.RULE_FLAVOR)
-        .withFlavor(stripStyle.getFlavor())
-        .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.of(unstrippedBinaryRule)))
-        .withoutExtraDeps();
+        .copyWithChanges(
+            params.getBuildTarget().withAppendedFlavors(
+                CxxStrip.RULE_FLAVOR, stripStyle.getFlavor()),
+            Suppliers.ofInstance(ImmutableSortedSet.of(unstrippedBinaryRule)),
+            Suppliers.ofInstance(ImmutableSortedSet.of()));
     Optional<BuildRule> exisitingRule = resolver.getRuleOptional(stripRuleParams.getBuildTarget());
     if (exisitingRule.isPresent()) {
       Preconditions.checkArgument(exisitingRule.get() instanceof CxxStrip);
@@ -1027,10 +1028,12 @@ public class CxxDescriptionEnhancer {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new JsonConcatenate(
-        params
-            .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.copyOf(
-                ruleFinder.filterBuildRuleInputs(compilationDatabases.get().getSourcePaths()))))
-            .withoutExtraDeps(),
+        params.copyWithDeps(
+            Suppliers.ofInstance(
+                ImmutableSortedSet.copyOf(
+                    ruleFinder.filterBuildRuleInputs(
+                        compilationDatabases.get().getSourcePaths()))),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver.getAllAbsolutePaths(compilationDatabases.get().getSourcePaths()),
         "compilation-database-concatenate",
         "Concatenate compilation databases",
@@ -1240,10 +1243,10 @@ public class CxxDescriptionEnhancer {
       links.put(Paths.get(ent.getKey()), ent.getValue());
     }
     return new SymlinkTree(
-        params
-            .withBuildTarget(symlinkTreeTarget)
-            .withoutDeclaredDeps()
-            .withoutExtraDeps(),
+        params.copyWithChanges(
+            symlinkTreeTarget,
+            Suppliers.ofInstance(ImmutableSortedSet.of()),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         symlinkTreeRoot,
         links.build(),
         ruleFinder);

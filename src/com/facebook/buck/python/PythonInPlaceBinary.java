@@ -40,6 +40,7 @@ import com.facebook.buck.util.RichStream;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -116,9 +117,9 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
       Tool python) {
     return new PythonInPlaceBinary(
         // The actual steps of a in-place binary doesn't actually have any build-time deps.
-        params
-            .withoutDeclaredDeps()
-            .withoutExtraDeps(),
+        params.copyWithDeps(
+            Suppliers.ofInstance(ImmutableSortedSet.of()),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         params.getDeclaredDeps(),
         resolver,
         pythonPlatform,

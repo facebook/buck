@@ -152,7 +152,7 @@ public class AndroidBinaryDescription
               "'package_string_assets' flavor does not exist for %s.",
               target.getUnflavoredBuildTarget());
         }
-        params = params.withBuildTarget(BuildTarget.of(target.getUnflavoredBuildTarget()));
+        params = params.copyWithBuildTarget(BuildTarget.of(target.getUnflavoredBuildTarget()));
       }
 
       BuildRule keystore = resolver.getRule(args.keystore);
@@ -265,7 +265,7 @@ public class AndroidBinaryDescription
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       return new AndroidBinary(
           params
-              .withExtraDeps(Suppliers.ofInstance(result.getFinalDeps()))
+              .copyWithExtraDeps(Suppliers.ofInstance(result.getFinalDeps()))
               .appendExtraDeps(
                   ruleFinder.filterBuildRuleInputs(
                       result.getPackageableCollection().getProguardConfigs()))

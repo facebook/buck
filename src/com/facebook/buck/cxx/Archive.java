@@ -137,10 +137,10 @@ public class Archive extends AbstractBuildRuleWithResolver implements SupportsIn
     // Convert the input build params into ones specialized for this archive build rule.
     // In particular, we only depend on BuildRules directly from the input file SourcePaths.
     BuildRuleParams archiveParams =
-        baseParams
-            .withBuildTarget(target)
-            .withoutDeclaredDeps()
-            .withExtraDeps(Suppliers.ofInstance(
+        baseParams.copyWithChanges(
+            target,
+            Suppliers.ofInstance(ImmutableSortedSet.of()),
+            Suppliers.ofInstance(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(ruleFinder.filterBuildRuleInputs(inputs))
                     .addAll(archiver.getDeps(ruleFinder))

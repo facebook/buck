@@ -117,14 +117,13 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
       boolean cache,
       boolean legacyOutputPath) {
     return new PythonPackagedBinary(
-        params
-            .withDeclaredDeps(
-                Suppliers.ofInstance(
-                    ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(components.getDeps(ruleFinder))
-                        .addAll(builder.getDeps(ruleFinder))
-                        .build()))
-            .withoutExtraDeps(),
+        params.copyWithDeps(
+            Suppliers.ofInstance(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(components.getDeps(ruleFinder))
+                    .addAll(builder.getDeps(ruleFinder))
+                    .build()),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         params.getDeclaredDeps(),
         resolver,
         ruleFinder,

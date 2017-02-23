@@ -83,7 +83,7 @@ public class RustTestDescription implements
 
     BinaryWrapperRule testExeBuild = resolver.addToIndex(
         RustCompileUtils.createBinaryBuildRule(
-            params.withBuildTarget(exeTarget),
+            params.copyWithBuildTarget(exeTarget),
             resolver,
             rustBuckConfig,
             cxxPlatforms,

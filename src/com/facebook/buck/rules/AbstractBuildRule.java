@@ -45,7 +45,7 @@ public abstract class AbstractBuildRule implements BuildRule {
     this.buildTarget = buildRuleParams.getBuildTarget();
     this.declaredDeps = buildRuleParams.getDeclaredDeps();
     this.extraDeps = buildRuleParams.getExtraDeps();
-    this.deps = buildRuleParams::getDeps;
+    this.deps = buildRuleParams.getTotalDeps();
     this.projectFilesystem = buildRuleParams.getProjectFilesystem();
   }
 

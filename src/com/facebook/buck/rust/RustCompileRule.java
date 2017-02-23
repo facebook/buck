@@ -38,7 +38,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Verbosity;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -125,21 +124,21 @@ public class RustCompileRule
       ImmutableList<Arg> linkerArgs,
       ImmutableSortedSet<SourcePath> sources,
       SourcePath rootModule) {
-    Supplier<ImmutableSortedSet<BuildRule>> extraDeps = Suppliers.memoize(
-        () -> ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(compiler.getDeps(ruleFinder))
-            .addAll(linker.getDeps(ruleFinder))
-            .addAll(
-                Stream.of(args, linkerArgs)
-                    .flatMap(
-                        a -> a.stream()
-                            .flatMap(arg -> arg.getDeps(ruleFinder).stream()))
-                    .iterator())
-            .addAll(ruleFinder.filterBuildRuleInputs(ImmutableList.of(rootModule)))
-            .addAll(ruleFinder.filterBuildRuleInputs(sources))
-            .build());
     return new RustCompileRule(
-        params.withExtraDeps(extraDeps),
+        params.copyWithExtraDeps(
+            Suppliers.memoize(
+                () -> ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(compiler.getDeps(ruleFinder))
+                    .addAll(linker.getDeps(ruleFinder))
+                    .addAll(
+                        Stream.of(args, linkerArgs)
+                            .flatMap(
+                                a -> a.stream()
+                                    .flatMap(arg -> arg.getDeps(ruleFinder).stream()))
+                            .iterator())
+                    .addAll(ruleFinder.filterBuildRuleInputs(ImmutableList.of(rootModule)))
+                    .addAll(ruleFinder.filterBuildRuleInputs(sources))
+                    .build())),
         resolver,
         filename,
         compiler,

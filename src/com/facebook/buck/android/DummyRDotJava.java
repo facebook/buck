@@ -99,7 +99,7 @@ public class DummyRDotJava extends AbstractBuildRule
       Optional<String> unionPackage,
       Optional<String> finalRName,
       ImmutableList<SourcePath> abiInputs) {
-    super(params.appendExtraDeps(ruleFinder.filterBuildRuleInputs(abiInputs)));
+    super(params.appendExtraDeps(() -> ruleFinder.filterBuildRuleInputs(abiInputs)));
     this.ruleFinder = ruleFinder;
     // Sort the input so that we get a stable ABI for the same set of resources.
     this.androidResourceDeps = androidResourceDeps.stream()

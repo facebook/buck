@@ -394,10 +394,10 @@ public class AppleDescriptions {
       }
     }
 
-    BuildRuleParams assetCatalogParams = params
-        .withFlavor(AppleAssetCatalog.FLAVOR)
-        .withoutDeclaredDeps()
-        .withoutExtraDeps();
+    BuildRuleParams assetCatalogParams = params.copyWithChanges(
+        params.getBuildTarget().withAppendedFlavors(AppleAssetCatalog.FLAVOR),
+        Suppliers.ofInstance(ImmutableSortedSet.of()),
+        Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     return Optional.of(
         new AppleAssetCatalog(
@@ -425,10 +425,10 @@ public class AppleDescriptions {
             AppleBuildRules.CORE_DATA_MODEL_DESCRIPTION_CLASSES,
             ImmutableList.of(targetNode));
 
-    BuildRuleParams coreDataModelParams = params
-        .withFlavor(CoreDataModel.FLAVOR)
-        .withoutDeclaredDeps()
-        .withoutExtraDeps();
+    BuildRuleParams coreDataModelParams = params.copyWithChanges(
+        params.getBuildTarget().withAppendedFlavors(CoreDataModel.FLAVOR),
+        Suppliers.ofInstance(ImmutableSortedSet.of()),
+        Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     if (coreDataModelArgs.isEmpty()) {
       return Optional.empty();
@@ -456,10 +456,10 @@ public class AppleDescriptions {
             AppleBuildRules.SCENEKIT_ASSETS_DESCRIPTION_CLASSES,
             ImmutableList.of(targetNode));
 
-    BuildRuleParams sceneKitAssetsParams = params
-        .withFlavor(SceneKitAssets.FLAVOR)
-        .withoutDeclaredDeps()
-        .withoutExtraDeps();
+    BuildRuleParams sceneKitAssetsParams = params.copyWithChanges(
+        params.getBuildTarget().withAppendedFlavors(SceneKitAssets.FLAVOR),
+        Suppliers.ofInstance(ImmutableSortedSet.of()),
+        Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     if (sceneKitAssetsArgs.isEmpty()) {
       return Optional.empty();
@@ -497,17 +497,16 @@ public class AppleDescriptions {
       buildRuleForDebugFormat = strippedBinaryRule;
     }
     AppleDebuggableBinary rule = new AppleDebuggableBinary(
-        params
-            .withFlavor(AppleDebuggableBinary.RULE_FLAVOR)
-            .withFlavor(debugFormat.getFlavor())
-            .withDeclaredDeps(
-                Suppliers.ofInstance(
-                    AppleDebuggableBinary.getRequiredRuntimeDeps(
-                        debugFormat,
-                        strippedBinaryRule,
-                        unstrippedBinaryRule,
-                        appleDsym)))
-            .withoutExtraDeps(),
+        params.copyWithChanges(
+            strippedBinaryRule.getBuildTarget()
+                .withAppendedFlavors(AppleDebuggableBinary.RULE_FLAVOR, debugFormat.getFlavor()),
+            Suppliers.ofInstance(
+                AppleDebuggableBinary.getRequiredRuntimeDeps(
+                    debugFormat,
+                    strippedBinaryRule,
+                    unstrippedBinaryRule,
+                    appleDsym)),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         buildRuleForDebugFormat);
     return rule;
@@ -532,7 +531,7 @@ public class AppleDescriptions {
       if (!dsymRule.isPresent()) {
         dsymRule = Optional.of(
             createAppleDsym(
-                params.withBuildTarget(dsymBuildTarget),
+                params.copyWithBuildTarget(dsymBuildTarget),
                 resolver,
                 unstrippedBinaryRule,
                 cxxPlatformFlavorDomain,
@@ -561,14 +560,14 @@ public class AppleDescriptions {
         MultiarchFileInfos.create(appleCxxPlatforms, unstrippedBinaryBuildRule.getBuildTarget()));
 
     AppleDsym appleDsym = new AppleDsym(
-        params
-            .withDeclaredDeps(Suppliers.ofInstance(
+        params.copyWithDeps(
+            Suppliers.ofInstance(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .add(unstrippedBinaryBuildRule)
                     .addAll(unstrippedBinaryBuildRule.getCompileDeps())
                     .addAll(unstrippedBinaryBuildRule.getStaticLibraryDeps())
-                    .build()))
-            .withoutExtraDeps(),
+                    .build()),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         appleCxxPlatform.getDsymutil(),
         appleCxxPlatform.getLldb(),
         unstrippedBinaryBuildRule.getSourcePathToOutput(),
@@ -700,7 +699,7 @@ public class AppleDescriptions {
       BuildTarget binaryBuildTarget = getBinaryFromBuildRuleWithBinary(flavoredBinaryRule)
           .getBuildTarget()
           .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors());
-      BuildRuleParams binaryParams = params.withBuildTarget(binaryBuildTarget);
+      BuildRuleParams binaryParams = params.copyWithBuildTarget(binaryBuildTarget);
       targetDebuggableBinaryRule = createAppleDebuggableBinary(
           binaryParams,
           resolver,
@@ -862,14 +861,14 @@ public class AppleDescriptions {
     // Remove the unflavored binary rule and add the flavored one instead.
     final Predicate<BuildRule> notOriginalBinaryRule = Predicates.not(
         BuildRules.isBuildRuleWithTarget(originalBinaryTarget));
-    return params
-        .withDeclaredDeps(Suppliers.ofInstance(
+    return params.copyWithDeps(
+        Suppliers.ofInstance(
             FluentIterable
                 .from(params.getDeclaredDeps().get())
                 .filter(notOriginalBinaryRule)
                 .append(newDeps)
-                .toSortedSet(Ordering.natural())))
-        .withExtraDeps(Suppliers.ofInstance(
+                .toSortedSet(Ordering.natural())),
+        Suppliers.ofInstance(
             FluentIterable
                 .from(params.getExtraDeps().get())
                 .filter(notOriginalBinaryRule)
@@ -924,7 +923,7 @@ public class AppleDescriptions {
    * rules of the bundle, such as its associated binary, asset catalog, etc.
    */
   private static BuildRuleParams stripBundleSpecificFlavors(BuildRuleParams params) {
-    return params.withBuildTarget(
+    return params.copyWithBuildTarget(
         params.getBuildTarget().withoutFlavors(BUNDLE_SPECIFIC_FLAVORS));
   }
 

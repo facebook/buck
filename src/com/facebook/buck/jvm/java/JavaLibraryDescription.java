@@ -119,9 +119,9 @@ public class JavaLibraryDescription implements
               .filter(rule -> HasClasspathEntries.class.isAssignableFrom(rule.getClass()))
               .flatMap(rule -> rule.getTransitiveClasspathDeps().stream())
               .iterator());
-      BuildRuleParams emptyParams = params
-          .withDeclaredDeps(Suppliers.ofInstance(deps.build()))
-          .withoutExtraDeps();
+      BuildRuleParams emptyParams = params.copyWithDeps(
+          Suppliers.ofInstance(deps.build()),
+          Suppliers.ofInstance(ImmutableSortedSet.of()));
 
       return new Javadoc(
           emptyParams,
@@ -147,7 +147,7 @@ public class JavaLibraryDescription implements
 
       // Maven rules will depend upon their vanilla versions, so the latter have to be constructed
       // without the maven flavor to prevent output-path conflict
-      params = params.withBuildTarget(
+      params = params.copyWithBuildTarget(
           params.getBuildTarget().withoutFlavors(ImmutableSet.of(JavaLibrary.MAVEN_JAR)));
     }
 

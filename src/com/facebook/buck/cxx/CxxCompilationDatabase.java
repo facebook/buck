@@ -38,6 +38,7 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
@@ -72,9 +73,9 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
     }
 
     return new CxxCompilationDatabase(
-        params
-            .withoutDeclaredDeps()
-            .withoutExtraDeps(),
+        params.copyWithDeps(
+            Suppliers.ofInstance(ImmutableSortedSet.of()),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         compileRules.build(),
         deps.build());
   }

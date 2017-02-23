@@ -37,7 +37,6 @@ import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.versions.VersionRoot;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -129,7 +128,11 @@ public class CxxBinaryDescription implements
           .builder(params.getBuildTarget().getUnflavoredBuildTarget())
           .addAllFlavors(flavors)
           .build();
-      BuildRuleParams typeParams = params.withBuildTarget(target);
+      BuildRuleParams typeParams =
+          params.copyWithChanges(
+              target,
+              params.getDeclaredDeps(),
+              params.getExtraDeps());
 
       return createHeaderSymlinkTreeBuildRule(
           typeParams,
@@ -244,10 +247,9 @@ public class CxxBinaryDescription implements
 
     params = CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle);
     params = LinkerMapMode.restoreLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode);
-    Supplier<ImmutableSortedSet<BuildRule>> declaredDeps = () -> cxxLinkAndCompileRules.deps;
     CxxBinary cxxBinary = new CxxBinary(
         params
-            .withDeclaredDeps(declaredDeps)
+            .copyWithDeps(() -> cxxLinkAndCompileRules.deps, params.getExtraDeps())
             .appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder)),
         resolver,
         ruleFinder,

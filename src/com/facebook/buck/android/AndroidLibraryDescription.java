@@ -119,11 +119,12 @@ public class AndroidLibraryDescription
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         params.getBuildTarget(),
-        params.withExtraDeps(Suppliers.ofInstance(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(queriedDeps)
-                .addAll(resolver.getAllRules(args.exportedDeps))
-                .build())),
+        params.copyWithExtraDeps(
+            Suppliers.ofInstance(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(queriedDeps)
+                    .addAll(resolver.getAllRules(args.exportedDeps))
+                    .build())),
         javacOptions,
         DependencyMode.FIRST_ORDER,
         /* forceFinalResourceIds */ false,
@@ -159,7 +160,9 @@ public class AndroidLibraryDescription
             .addAll(params.getDeclaredDeps().get())
             .add(dummyRDotJava.get())
             .build();
-        params = params.withDeclaredDeps(Suppliers.ofInstance(newDeclaredDeps));
+        params = params.copyWithDeps(
+            Suppliers.ofInstance(newDeclaredDeps),
+            params.getExtraDeps());
       }
 
       AndroidLibraryCompiler compiler =
@@ -189,9 +192,10 @@ public class AndroidLibraryDescription
 
       SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
-      BuildRuleParams androidLibraryParams = params
-          .withDeclaredDeps(Suppliers.ofInstance(declaredDeps))
-          .withExtraDeps(Suppliers.ofInstance(extraDeps));
+      BuildRuleParams androidLibraryParams =
+          params.copyWithDeps(
+              Suppliers.ofInstance(declaredDeps),
+              Suppliers.ofInstance(extraDeps));
       return new AndroidLibrary(
           androidLibraryParams,
           pathResolver,

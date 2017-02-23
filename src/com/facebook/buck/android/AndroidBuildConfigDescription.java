@@ -131,9 +131,14 @@ public class AndroidBuildConfigDescription
     }
 
     // Create one build rule to generate BuildConfig.java.
-    BuildRuleParams buildConfigParams = params
-        .withBuildTarget(buildConfigBuildTarget)
-        .appendExtraDeps(ruleFinder.filterBuildRuleInputs(OptionalCompat.asSet(valuesFile)));
+    BuildRuleParams buildConfigParams = params.copyWithChanges(
+        buildConfigBuildTarget,
+        params.getDeclaredDeps(),
+        /* extraDeps */ Suppliers.ofInstance(
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(params.getExtraDeps().get())
+                .addAll(ruleFinder.filterBuildRuleInputs(OptionalCompat.asSet(valuesFile)))
+                .build()));
     AndroidBuildConfig androidBuildConfig = new AndroidBuildConfig(
         buildConfigParams,
         javaPackage,
@@ -143,9 +148,11 @@ public class AndroidBuildConfigDescription
     ruleResolver.addToIndex(androidBuildConfig);
 
     // Create a second build rule to compile BuildConfig.java and expose it as a JavaLibrary.
-    BuildRuleParams javaLibraryParams = params
-        .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.of(androidBuildConfig)))
-        .withoutExtraDeps();
+    BuildRuleParams javaLibraryParams = params.copyWithChanges(
+        params.getBuildTarget(),
+        /* declaredDeps */ Suppliers.ofInstance(
+            ImmutableSortedSet.of(androidBuildConfig)),
+        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
     return new AndroidBuildConfigJavaLibrary(
         javaLibraryParams,
         pathResolver,

@@ -194,21 +194,20 @@ public class ThriftLibraryDescription
       compileRules.put(
           name,
           new ThriftCompiler(
-              params
-                  .withBuildTarget(target)
-                  .withDeclaredDeps(
-                      Suppliers.ofInstance(
-                          ImmutableSortedSet.<BuildRule>naturalOrder()
-                              .addAll(compiler.getDeps(ruleFinder))
-                              .addAll(
-                                  ruleFinder.filterBuildRuleInputs(
-                                      ImmutableList.<SourcePath>builder()
-                                          .add(source)
-                                          .addAll(includes.values())
-                                          .build()))
-                              .addAll(includeTreeRules)
-                              .build()))
-                  .withoutExtraDeps(),
+              params.copyWithChanges(
+                  target,
+                  Suppliers.ofInstance(
+                      ImmutableSortedSet.<BuildRule>naturalOrder()
+                          .addAll(compiler.getDeps(ruleFinder))
+                          .addAll(
+                              ruleFinder.filterBuildRuleInputs(
+                                  ImmutableList.<SourcePath>builder()
+                                      .add(source)
+                                      .addAll(includes.values())
+                                      .build()))
+                          .addAll(includeTreeRules)
+                          .build()),
+                  Suppliers.ofInstance(ImmutableSortedSet.of())),
               compiler,
               flags,
               outputDir,
@@ -287,10 +286,10 @@ public class ThriftLibraryDescription
       BuildTarget symlinkTreeTarget = createThriftIncludeSymlinkTreeTarget(target);
       HeaderSymlinkTree symlinkTree =
         new HeaderSymlinkTree(
-            params
-                .withBuildTarget(symlinkTreeTarget)
-                .withoutDeclaredDeps()
-                .withoutExtraDeps(),
+            params.copyWithChanges(
+                symlinkTreeTarget,
+                Suppliers.ofInstance(ImmutableSortedSet.of()),
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
             includeRoot,
             includes,
             new SourcePathRuleFinder(resolver));

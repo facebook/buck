@@ -121,12 +121,13 @@ public final class CxxInferEnhancer {
 
     return ruleResolver.addToIndex(
         new CxxInferCaptureTransitive(
-            params
-                .withDeclaredDeps(
-                    Suppliers.ofInstance(
-                        ImmutableSortedSet.<BuildRule>naturalOrder()
-                            .addAll(captureRules)
-                            .build())),
+            params.copyWithChanges(
+                params.getBuildTarget(),
+                Suppliers.ofInstance(
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(captureRules)
+                        .build()),
+                params.getExtraDeps()),
             captureRules));
   }
 
@@ -473,13 +474,14 @@ public final class CxxInferEnhancer {
       CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> captureAnalyzeRules) {
     return resolver.addToIndex(
         new CxxInferAnalyze(
-            params
-                .withDeclaredDeps(
-                    Suppliers.ofInstance(
-                        ImmutableSortedSet.<BuildRule>naturalOrder()
-                            .addAll(captureAnalyzeRules.captureRules)
-                            .addAll(captureAnalyzeRules.aggregatingRules)
-                            .build())),
+            params.copyWithChanges(
+                params.getBuildTarget(),
+                Suppliers.ofInstance(
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(captureAnalyzeRules.captureRules)
+                        .addAll(captureAnalyzeRules.aggregatingRules)
+                        .build()),
+                params.getExtraDeps()),
             inferConfig,
             captureAnalyzeRules));
   }
@@ -502,12 +504,13 @@ public final class CxxInferEnhancer {
       CxxInferAnalyze analysisToReport) {
     return buildRuleResolver.addToIndex(
         new CxxInferComputeReport(
-            buildRuleParams
-                .withDeclaredDeps(Suppliers.ofInstance(
+            buildRuleParams.copyWithDeps(
+                Suppliers.ofInstance(
                     ImmutableSortedSet.<BuildRule>naturalOrder()
                         .addAll(analysisToReport.getTransitiveAnalyzeRules())
                         .add(analysisToReport)
-                        .build())),
+                        .build()),
+                buildRuleParams.getExtraDeps()),
             analysisToReport));
   }
 }

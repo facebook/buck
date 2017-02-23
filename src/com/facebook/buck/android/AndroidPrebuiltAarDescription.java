@@ -94,9 +94,9 @@ public class AndroidPrebuiltAarDescription
     ImmutableSet<Flavor> flavors = params.getBuildTarget().getFlavors();
     if (flavors.contains(AAR_UNZIP_FLAVOR)) {
       Preconditions.checkState(flavors.size() == 1);
-      BuildRuleParams unzipAarParams = params
-          .withoutDeclaredDeps()
-          .withExtraDeps(Suppliers.ofInstance(ImmutableSortedSet.copyOf(
+      BuildRuleParams unzipAarParams = params.copyWithDeps(
+          Suppliers.ofInstance(ImmutableSortedSet.of()),
+          Suppliers.ofInstance(ImmutableSortedSet.copyOf(
               ruleFinder.filterBuildRuleInputs(args.aar))));
       return new UnzipAar(unzipAarParams, args.aar);
     }
@@ -139,8 +139,9 @@ public class AndroidPrebuiltAarDescription
           AAR_PREBUILT_JAR_FLAVOR,
           flavors);
       BuildRuleParams buildRuleParams = params
-          .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.copyOf(javaDeps)))
-          .withExtraDeps(Suppliers.ofInstance(ImmutableSortedSet.of(unzipAar)));
+          .copyWithDeps(
+              Suppliers.ofInstance(ImmutableSortedSet.copyOf(javaDeps)),
+              Suppliers.ofInstance(ImmutableSortedSet.of(unzipAar)));
       return new PrebuiltJar(
         /* params */ buildRuleParams,
         /* resolver */ pathResolver,
@@ -166,9 +167,9 @@ public class AndroidPrebuiltAarDescription
         params.getBuildTarget());
     PrebuiltJar prebuiltJar = (PrebuiltJar) prebuiltJarRule;
 
-    BuildRuleParams androidLibraryParams = params
-        .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.of(prebuiltJar)))
-        .withExtraDeps(Suppliers.ofInstance(ImmutableSortedSet.of(unzipAar)));
+    BuildRuleParams androidLibraryParams = params.copyWithDeps(
+        /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(prebuiltJar)),
+        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(unzipAar)));
     return new AndroidPrebuiltAar(
         androidLibraryParams,
         /* resolver */ pathResolver,

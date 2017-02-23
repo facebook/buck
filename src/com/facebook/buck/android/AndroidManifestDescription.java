@@ -67,7 +67,9 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
         .build();
 
     return new AndroidManifest(
-        params.withDeclaredDeps(Suppliers.ofInstance(newDeps)),
+        params.copyWithDeps(
+            Suppliers.ofInstance(newDeps),
+            params.getExtraDeps()),
         args.skeleton,
         manifestFiles);
   }

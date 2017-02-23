@@ -38,6 +38,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.versions.VersionRoot;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -91,7 +92,10 @@ public class JavaBinaryDescription implements
     // If we're packaging native libraries, we'll build the binary JAR in a separate rule and
     // package it into the final fat JAR, so adjust it's params to use a flavored target.
     if (!nativeLibraries.isEmpty()) {
-      binaryParams = params.withFlavor(FAT_JAR_INNER_JAR_FLAVOR);
+      binaryParams = params.copyWithChanges(
+          params.getBuildTarget().withAppendedFlavors(FAT_JAR_INNER_JAR_FLAVOR),
+          params.getDeclaredDeps(),
+          params.getExtraDeps());
     }
 
     // Construct the build rule to build the binary JAR.
@@ -120,11 +124,12 @@ public class JavaBinaryDescription implements
       SourcePath innerJar = innerJarRule.getSourcePathToOutput();
       rule = new JarFattener(
           params.appendExtraDeps(
-              ruleFinder.filterBuildRuleInputs(
-                  ImmutableList.<SourcePath>builder()
-                      .add(innerJar)
-                      .addAll(nativeLibraries.values())
-                      .build())),
+              Suppliers.<Iterable<BuildRule>>ofInstance(
+                  ruleFinder.filterBuildRuleInputs(
+                      ImmutableList.<SourcePath>builder()
+                          .add(innerJar)
+                          .addAll(nativeLibraries.values())
+                          .build()))),
           pathResolver,
           ruleFinder,
           javacOptions,

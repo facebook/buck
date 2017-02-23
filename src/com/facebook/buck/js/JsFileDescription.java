@@ -74,7 +74,7 @@ public class JsFileDescription
     final JsFile devFile = (JsFile) resolver.requireRule(params.getBuildTarget().withFlavors());
 
     return new JsFile.JsFileProd(
-        params.appendExtraDep(devFile),
+        params.appendExtraDeps(devFile),
         devFile,
         args.extraArgs,
         worker);

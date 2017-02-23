@@ -48,6 +48,7 @@ import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -459,10 +460,12 @@ public class CxxLibraryDescription implements
 
     if (objects.isEmpty()) {
       return new NoopBuildRule(
-          params
-              .withBuildTarget(staticTarget)
-              .withoutDeclaredDeps()
-              .withoutExtraDeps(),
+          new BuildRuleParams(
+              staticTarget,
+              Suppliers.ofInstance(ImmutableSortedSet.of()),
+              Suppliers.ofInstance(ImmutableSortedSet.of()),
+              params.getProjectFilesystem(),
+              params.getCellRoots()),
           sourcePathResolver);
     }
 
@@ -829,7 +832,10 @@ public class CxxLibraryDescription implements
         .builder(params.getBuildTarget().getUnflavoredBuildTarget())
         .addAllFlavors(flavors)
         .build();
-    return params.withBuildTarget(target);
+    return params.copyWithChanges(
+        target,
+        params.getDeclaredDeps(),
+        params.getExtraDeps());
   }
 
   @Override

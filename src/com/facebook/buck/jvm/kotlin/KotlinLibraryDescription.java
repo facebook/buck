@@ -109,7 +109,7 @@ public class KotlinLibraryDescription implements
 
       // Maven rules will depend upon their vanilla versions, so the latter have to be constructed
       // without the maven flavor to prevent output-path conflict
-      params = params.withBuildTarget(
+      params = params.copyWithBuildTarget(
           params.getBuildTarget().withoutFlavors(ImmutableSet.of(JavaLibrary.MAVEN_JAR)));
     }
 

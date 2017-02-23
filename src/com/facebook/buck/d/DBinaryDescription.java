@@ -94,7 +94,7 @@ public class DBinaryDescription implements
     // rule to the index.
     CxxLink nativeLinkable =
         DDescriptionUtils.createNativeLinkable(
-            params.withBuildTarget(params.getBuildTarget().withAppendedFlavors(BINARY_FLAVOR)),
+            params.copyWithBuildTarget(params.getBuildTarget().withAppendedFlavors(BINARY_FLAVOR)),
             buildRuleResolver,
             cxxPlatform,
             dBuckConfig,
@@ -118,7 +118,8 @@ public class DBinaryDescription implements
     // Return a BinaryBuildRule implementation, so that this works
     // with buck run etc.
     return new DBinary(
-        params.withExtraDeps(Suppliers.ofInstance(ImmutableSortedSet.of(nativeLinkable))),
+        params.copyWithExtraDeps(
+            Suppliers.ofInstance(ImmutableSortedSet.of(nativeLinkable))),
         ruleFinder,
         executableBuilder.build(),
         nativeLinkable.getPathToOutput());

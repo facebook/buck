@@ -115,18 +115,20 @@ public class JavaTestDescription implements
         cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
 
-    BuildRuleParams testsLibraryParams = params
-        .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR)
-        .withDeclaredDeps(Suppliers.ofInstance(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(params.getDeclaredDeps().get())
-                .addAll(BuildRules.getExportedRules(
-                    Iterables.concat(
-                        params.getDeclaredDeps().get(),
-                        resolver.getAllRules(args.providedDeps))))
-                .addAll(ruleFinder.filterBuildRuleInputs(
-                    javacOptions.getInputs(ruleFinder)))
-                .build()));
+    BuildRuleParams testsLibraryParams = params.copyWithDeps(
+            Suppliers.ofInstance(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(params.getDeclaredDeps().get())
+                    .addAll(BuildRules.getExportedRules(
+                        Iterables.concat(
+                            params.getDeclaredDeps().get(),
+                            resolver.getAllRules(args.providedDeps))))
+                    .addAll(ruleFinder.filterBuildRuleInputs(
+                        javacOptions.getInputs(ruleFinder)))
+                    .build()
+            ),
+            params.getExtraDeps())
+        .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     JavaLibrary testsLibrary =
         resolver.addToIndex(
@@ -156,9 +158,9 @@ public class JavaTestDescription implements
             ));
 
     return new JavaTest(
-        params
-            .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)))
-            .withoutExtraDeps(),
+        params.copyWithDeps(
+            Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver,
         testsLibrary,
         /* additionalClasspathEntries */ ImmutableSet.of(),
@@ -242,10 +244,10 @@ public class JavaTestDescription implements
             }
           }
           nativeLibsSymlinkTree = new SymlinkTree(
-              params
-                  .withBuildTarget(nativeLibsSymlinkTree.getBuildTarget())
-                  .withoutDeclaredDeps()
-                  .withoutExtraDeps(),
+              params.copyWithChanges(
+                  nativeLibsSymlinkTree.getBuildTarget(),
+                  Suppliers.ofInstance(ImmutableSortedSet.of()),
+                  Suppliers.ofInstance(ImmutableSortedSet.of())),
               nativeLibsSymlinkTree.getPathToOutput(),
               filteredLinks.build(),
               ruleFinder);

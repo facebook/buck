@@ -116,13 +116,12 @@ public class AndroidBinaryGraphEnhancerTest {
     ImmutableSet<BuildTarget> buildRulesToExcludeFromDex = ImmutableSet.of(javaDep2BuildTarget);
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleParams originalParams = BuildRuleParams.builder()
-        .setBuildTarget(apkTarget)
-        .setDeclaredDeps(Suppliers.ofInstance(originalDeps))
-        .setExtraDeps(Suppliers.ofInstance(originalDeps))
-        .setProjectFilesystem(filesystem)
-        .setCellRoots(TestCellBuilder.createCellRoots(filesystem))
-        .build();
+    BuildRuleParams originalParams = new BuildRuleParams(
+        apkTarget,
+        Suppliers.ofInstance(originalDeps),
+        Suppliers.ofInstance(originalDeps),
+        filesystem,
+        TestCellBuilder.createCellRoots(filesystem));
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
         originalParams,
         ruleResolver,

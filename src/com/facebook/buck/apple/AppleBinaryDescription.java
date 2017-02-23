@@ -215,7 +215,7 @@ public class AppleBinaryDescription
 
     BuildRule unstrippedBinaryRule = createBinary(
         targetGraph,
-        params.withBuildTarget(unstrippedBinaryBuildTarget),
+        params.copyWithBuildTarget(unstrippedBinaryBuildTarget),
         resolver,
         args);
 
@@ -246,11 +246,11 @@ public class AppleBinaryDescription
                 .orElse(StripStyle.NON_GLOBAL_SYMBOLS.getFlavor()));
     BuildRule strippedBinaryRule = createBinary(
         targetGraph,
-        params.withBuildTarget(strippedBinaryBuildTarget),
+        params.copyWithBuildTarget(strippedBinaryBuildTarget),
         resolver,
         args);
     return AppleDescriptions.createAppleDebuggableBinary(
-        params.withBuildTarget(unstrippedBinaryBuildTarget),
+        params.copyWithBuildTarget(unstrippedBinaryBuildTarget),
         resolver,
         strippedBinaryRule,
         unstrippedBinaryRule,
@@ -334,7 +334,7 @@ public class AppleBinaryDescription
         BuildTarget thinTarget = Iterables.getFirst(fatBinaryInfo.get().getThinTargets(), null);
         return requireThinBinary(
             targetGraph,
-            params.withBuildTarget(thinTarget),
+            params.copyWithBuildTarget(thinTarget),
             resolver,
             args);
       }
@@ -348,7 +348,7 @@ public class AppleBinaryDescription
         }
         BuildRule thinRule = requireThinBinary(
             targetGraph,
-            params.withBuildTarget(thinTarget),
+            params.copyWithBuildTarget(thinTarget),
             resolver,
             args);
         resolver.addToIndex(thinRule);

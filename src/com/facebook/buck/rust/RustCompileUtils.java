@@ -209,7 +209,7 @@ public class RustCompileUtils {
     return resolver.addToIndex(
         RustCompileRule.from(
             ruleFinder,
-            params.withBuildTarget(target),
+            params.copyWithBuildTarget(target),
             pathResolver,
             filename,
             rustConfig.getRustCompiler().resolve(resolver),
@@ -410,7 +410,7 @@ public class RustCompileUtils {
 
     final CommandTool executable = executableBuilder.build();
 
-    return new BinaryWrapperRule(params.appendExtraDep(buildRule), ruleFinder) {
+    return new BinaryWrapperRule(params.appendExtraDeps(buildRule), ruleFinder) {
 
       @Override
       public Tool getExecutableCommand() {

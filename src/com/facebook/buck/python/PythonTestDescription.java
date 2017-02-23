@@ -48,6 +48,7 @@ import com.facebook.buck.versions.VersionRoot;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -147,13 +148,12 @@ public class PythonTestDescription implements
       ImmutableSet<String> testModules) {
 
     // Modify the build rule params to change the target, type, and remove all deps.
-    BuildRuleParams newParams = params
-        .withBuildTarget(
-            BuildTargets.createFlavoredBuildTarget(
-                params.getBuildTarget().checkUnflavored(),
-                ImmutableFlavor.of("test_module")))
-        .withoutDeclaredDeps()
-        .withoutExtraDeps();
+    BuildRuleParams newParams = params.copyWithChanges(
+        BuildTargets.createFlavoredBuildTarget(
+            params.getBuildTarget().checkUnflavored(),
+            ImmutableFlavor.of("test_module")),
+        Suppliers.ofInstance(ImmutableSortedSet.of()),
+        Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     String contents = getTestModulesListContents(testModules);
 
@@ -181,7 +181,8 @@ public class PythonTestDescription implements
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
-    Optional<ImmutableMap<BuildTarget, Version>> selectedVersions = params.getSelectedVersions();
+    Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
+        targetGraph.get(params.getBuildTarget()).getSelectedVersions();
 
     ImmutableMap<Path, SourcePath> srcs =
         PythonUtil.getModules(
@@ -269,7 +270,7 @@ public class PythonTestDescription implements
     // Build the PEX using a python binary rule with the minimum dependencies.
     PythonBinary binary =
         binaryDescription.createPackageRule(
-            params.withBuildTarget(getBinaryBuildTarget(params.getBuildTarget())),
+            params.copyWithBuildTarget(getBinaryBuildTarget(params.getBuildTarget())),
             resolver,
             pathResolver,
             ruleFinder,

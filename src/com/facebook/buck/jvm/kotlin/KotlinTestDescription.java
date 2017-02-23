@@ -107,9 +107,8 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
         kotlinBuckConfig.getKotlinCompiler().get(),
         args.extraKotlincArguments);
 
-    BuildRuleParams testsLibraryParams = params
-        .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR)
-        .withDeclaredDeps(Suppliers.ofInstance(
+    BuildRuleParams testsLibraryParams = params.copyWithDeps(
+        Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>naturalOrder()
                 .addAll(params.getDeclaredDeps().get())
                 .addAll(BuildRules.getExportedRules(
@@ -118,7 +117,10 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
                         resolver.getAllRules(args.providedDeps))))
                 .addAll(ruleFinder.filterBuildRuleInputs(
                     javacOptions.getInputs(ruleFinder)))
-                .build()));
+                .build()
+            ),
+            params.getExtraDeps())
+         .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
         JavaLibrary testsLibrary =
         resolver.addToIndex(
@@ -148,9 +150,9 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
             ));
 
     return new KotlinTest(
-        params
-            .withDeclaredDeps(Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)))
-            .withoutExtraDeps(),
+        params.copyWithDeps(
+            Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver,
         testsLibrary,
         ImmutableSet.<Either<SourcePath, Path>>of(kotlinBuckConfig.getPathToRuntimeJar()),

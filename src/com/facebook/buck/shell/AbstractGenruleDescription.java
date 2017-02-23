@@ -52,6 +52,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -128,14 +129,15 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     final Optional<com.facebook.buck.rules.args.Arg> cmdExe =
         args.cmdExe.map(macroArgFunction);
     return createBuildRule(
-        params
-            .withExtraDeps(Suppliers.ofInstance(
+        params.copyWithExtraDeps(
+            Suppliers.ofInstance(
                 Stream.concat(
                     ruleFinder.filterBuildRuleInputs(args.srcs).stream(),
                     Stream.of(cmd, bash, cmdExe)
                         .flatMap(Optionals::toStream)
-                        .flatMap(input -> input.getDeps(ruleFinder).stream()))
-                    .collect(MoreCollectors.toImmutableSortedSet()))),
+                        .flatMap(input -> input.getDeps(ruleFinder).stream())
+                ).collect(
+                    MoreCollectors.toImmutableSortedSet(Comparator.<BuildRule>naturalOrder())))),
         resolver,
         args,
         cmd,

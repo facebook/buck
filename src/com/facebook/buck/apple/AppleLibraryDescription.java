@@ -341,7 +341,7 @@ public class AppleLibraryDescription implements
       for (BuildTarget thinTarget : multiarchFileInfo.get().getThinTargets()) {
         thinRules.add(
             requireSingleArchUnstrippedBuildRule(
-                params.withBuildTarget(thinTarget),
+                params.copyWithBuildTarget(thinTarget),
                 resolver,
                 args,
                 linkableDepType,
@@ -352,7 +352,7 @@ public class AppleLibraryDescription implements
       return MultiarchFileInfos.requireMultiarchRule(
           // In the same manner that debug flavors are omitted from single-arch constituents, they
           // are omitted here as well.
-          params.withBuildTarget(
+          params.copyWithBuildTarget(
               params.getBuildTarget().withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())),
           resolver,
           multiarchFileInfo.get(),
@@ -398,7 +398,7 @@ public class AppleLibraryDescription implements
       return existingRule.get();
     } else {
       BuildRule rule = delegate.createBuildRule(
-          params.withBuildTarget(unstrippedTarget),
+          params.copyWithBuildTarget(unstrippedTarget),
           resolver,
           delegateArg,
           linkableDepType,
