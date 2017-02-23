@@ -2351,6 +2351,12 @@ public class ProjectGenerator {
           HeaderVisibility.PRIVATE)));
       builder.add(getHeaderSearchPathFromSymlinkTreeRoot(
           getRelativePathToMergedHeaderMap()));
+      visitRecursivePrivateHeaderSymlinkTreesForTests(targetNode,
+          (nativeNode, headerVisibility) -> {
+            builder.add(getHeaderSearchPathFromSymlinkTreeRoot(getHeaderSymlinkTreeRelativePath(
+                nativeNode,
+                headerVisibility)));
+          });
     } else {
       for (Path headerSymlinkTreePath : collectRecursiveHeaderSymlinkTrees(targetNode)) {
         builder.add(getHeaderSearchPathFromSymlinkTreeRoot(headerSymlinkTreePath));
@@ -2415,6 +2421,12 @@ public class ProjectGenerator {
       }
     }
 
+    visitRecursivePrivateHeaderSymlinkTreesForTests(targetNode, visitor);
+  }
+
+  private void visitRecursivePrivateHeaderSymlinkTreesForTests(
+      TargetNode<? extends CxxLibraryDescription.Arg, ?> targetNode,
+      BiConsumer<TargetNode<? extends CxxLibraryDescription.Arg, ?>, HeaderVisibility> visitor) {
     // Visits headers of source under tests.
     ImmutableSet<TargetNode<?, ?>> directDependencies = ImmutableSet.copyOf(
         targetGraph.getAll(targetNode.getDeps()));

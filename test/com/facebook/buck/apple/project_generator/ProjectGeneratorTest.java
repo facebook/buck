@@ -4473,6 +4473,7 @@ public class ProjectGeneratorTest {
   public void testMergedHeaderMap() throws IOException {
     BuildTarget lib1Target = BuildTarget.builder(rootPath, "//foo", "lib1").build();
     BuildTarget lib2Target = BuildTarget.builder(rootPath, "//bar", "lib2").build();
+    BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "test").build();
 
     TargetNode<?, ?> lib1Node = AppleLibraryBuilder
         .createBuilder(lib1Target)
@@ -4482,6 +4483,7 @@ public class ProjectGeneratorTest {
                 ImmutableMap.of()))
         .setExportedHeaders(
             ImmutableSortedSet.of(new FakeSourcePath("lib1.h")))
+        .setTests(ImmutableSortedSet.of(testTarget))
         .build();
 
     TargetNode<?, ?> lib2Node = AppleLibraryBuilder
@@ -4494,8 +4496,18 @@ public class ProjectGeneratorTest {
             ImmutableSortedSet.of(new FakeSourcePath("lib2.h")))
         .build();
 
+    TargetNode<?, ?> testNode = AppleTestBuilder
+        .createBuilder(testTarget)
+        .setConfigs(
+            ImmutableSortedMap.of(
+                "Default",
+                ImmutableMap.of()))
+        .setInfoPlist(new FakeSourcePath("Info.plist"))
+        .setDeps(ImmutableSortedSet.of(lib1Target))
+        .build();
+
     final TargetGraph targetGraph =
-        TargetGraphFactory.newInstance(ImmutableSet.of(lib1Node, lib2Node));
+        TargetGraphFactory.newInstance(ImmutableSet.of(lib1Node, lib2Node, testNode));
     final AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
 
     ProjectGenerator projectGeneratorLib2 = new ProjectGenerator(
@@ -4508,7 +4520,7 @@ public class ProjectGeneratorTest {
         "BUCK",
         ImmutableSet.of(ProjectGenerator.Option.MERGE_HEADER_MAPS),
         Optional.empty(),
-        ImmutableList.of("--flag", "value with spaces"),
+        ImmutableList.of(),
         false, /* isMainProject */
         Optional.of(lib1Target),
         ImmutableSet.of(),
@@ -4548,14 +4560,14 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGeneratorLib1 = new ProjectGenerator(
         targetGraph,
         cache,
-        ImmutableSet.of(lib1Target),
+        ImmutableSet.of(lib1Target, testTarget),
         projectCell,
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
         "BUCK",
         ImmutableSet.of(ProjectGenerator.Option.MERGE_HEADER_MAPS),
         Optional.empty(),
-        ImmutableList.of("--flag", "value with spaces"),
+        ImmutableList.of(),
         true, /* isMainProject */
         Optional.of(lib1Target),
         ImmutableSet.of(),
@@ -4583,6 +4595,8 @@ public class ProjectGeneratorTest {
             "buck-out/gen/_p/YAYFR3hXIb-pub/lib2/lib2.h"));
     // Checks the content of the header search paths.
     PBXProject project1 = projectGeneratorLib1.getGeneratedProject();
+
+    // For //foo:lib1
     PBXTarget testPBXTarget1 =
         assertTargetExistsAndReturnTarget(project1, "//foo:lib1");
 
@@ -4597,6 +4611,23 @@ public class ProjectGeneratorTest {
             "../buck-out/gen/_p/pub-hmap/.hmap " +
             "../buck-out",
         buildSettings1.get("HEADER_SEARCH_PATHS"));
+
+    // For //foo:test
+    PBXTarget testPBXTargetTest =
+        assertTargetExistsAndReturnTarget(project1, "//foo:test");
+
+    ImmutableMap<String, String> buildSettingsTest =
+        getBuildSettings(testTarget, testPBXTargetTest, "Default");
+
+    assertEquals(
+        "test binary should use header symlink trees for both public and non-public headers " +
+            "of the tested library in HEADER_SEARCH_PATHS",
+        "$(inherited) " +
+            "../buck-out/gen/_p/LpygK8zq5F-priv/.hmap " +
+            "../buck-out/gen/_p/pub-hmap/.hmap " +
+            "../buck-out/gen/_p/WNl0jZWMBk-priv/.hmap " +
+            "../buck-out",
+        buildSettingsTest.get("HEADER_SEARCH_PATHS"));
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
