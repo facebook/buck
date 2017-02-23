@@ -3,9 +3,11 @@
     "deps" : [
       "//src/com/facebook/buck/io:DefaultProjectFilesystemDelegate",
       "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/log/views:views",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
-      "//third-party/java/immutables:immutables"
+      "//third-party/java/immutables:immutables",
+      "//third-party/java/jackson:jackson-annotations"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/event:interfaces",

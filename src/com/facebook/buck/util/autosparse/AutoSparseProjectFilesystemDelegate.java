@@ -61,6 +61,11 @@ public final class AutoSparseProjectFilesystemDelegate implements ProjectFilesys
     try {
       autoSparseState.materialiseSparseProfile();
     } catch (IOException | InterruptedException e) {
+      Throwable cause = e.getCause();
+      String details = cause == null ? e.getMessage() : cause.getMessage();
+      AutoSparseStateEvents.SparseRefreshFailed failed =
+          new AutoSparseStateEvents.SparseRefreshFailed(started, details);
+      eventBus.post(failed);
       throw new HumanReadableException(
           e,
           "Sparse profile could not be materialised. " +

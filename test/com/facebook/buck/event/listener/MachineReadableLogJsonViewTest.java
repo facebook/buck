@@ -37,6 +37,7 @@ import com.facebook.buck.testutil.JsonMatcher;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.autosparse.AutoSparseStateEvents;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -100,6 +101,26 @@ public class MachineReadableLogJsonViewTest {
 
     assertJsonEquals("{%s,\"path\":\"target\"}", WRITER.writeValueAsString(symlink));
     assertJsonEquals("{%s,\"diff\":\"diff\"}", WRITER.writeValueAsString(envChange));
+  }
+
+  @Test
+  public void testAutosparseEvents() throws Exception {
+    AutoSparseStateEvents.SparseRefreshStarted startEvent =
+        new AutoSparseStateEvents.SparseRefreshStarted();
+    AutoSparseStateEvents finishedEvent =
+        new AutoSparseStateEvents.SparseRefreshFinished(startEvent);
+    AutoSparseStateEvents failedEvent =
+        new AutoSparseStateEvents.SparseRefreshFailed(startEvent, "output string\n");
+
+    startEvent.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    finishedEvent.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    failedEvent.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+
+    assertJsonEquals("{%s}", WRITER.writeValueAsString(startEvent));
+    assertJsonEquals("{%s}", WRITER.writeValueAsString(finishedEvent));
+    assertJsonEquals(
+        "{%s,\"output\":\"output string\\n\"}",
+        WRITER.writeValueAsString(failedEvent));
   }
 
   @Test

@@ -20,6 +20,8 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
+import com.facebook.buck.log.views.JsonViews;
+import com.fasterxml.jackson.annotation.JsonView;
 
 /**
  * Events posted to mark AutoSparse progress.
@@ -30,6 +32,16 @@ public abstract class AutoSparseStateEvents
   // This class does nothing; it exists only to group AbstractBuckEvents.
   private AutoSparseStateEvents(EventKey eventKey) {
     super(eventKey);
+  }
+
+  @Override
+  public String getCategory() {
+    return "autosparse";
+  }
+
+  @Override
+  protected String getValueString() {
+    return "";
   }
 
   /**
@@ -43,16 +55,6 @@ public abstract class AutoSparseStateEvents
     @Override
     public String getEventName() {
       return "AutoSparseSparseRefreshStarted";
-    }
-
-    @Override
-    public String getCategory() {
-      return "autosparse";
-    }
-
-    @Override
-    protected String getValueString() {
-      return "";
     }
   }
 
@@ -68,15 +70,24 @@ public abstract class AutoSparseStateEvents
     public String getEventName() {
       return "AutoSparseSparseRefreshFinished";
     }
+  }
 
-    @Override
-    public String getCategory() {
-      return "autosparse";
+  /**
+   * Event posted when the sparse profile refresh fails
+   */
+  public static class SparseRefreshFailed extends AutoSparseStateEvents {
+    @JsonView(JsonViews.MachineReadableLog.class)
+    private String output;
+
+    public SparseRefreshFailed(
+        AutoSparseStateEvents.SparseRefreshStarted started, String output) {
+      super(started.getEventKey());
+      this.output = output;
     }
 
     @Override
-    protected String getValueString() {
-      return "";
+    public String getEventName() {
+      return "AutoSparseSparseRefreshFailed";
     }
   }
 }
