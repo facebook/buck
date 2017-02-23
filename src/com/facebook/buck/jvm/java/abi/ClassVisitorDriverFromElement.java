@@ -16,6 +16,8 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.google.common.collect.Lists;
+
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -23,6 +25,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -95,13 +98,15 @@ class ClassVisitorDriverFromElement {
 
   private class ElementVisitorAdapter extends ElementScanner8<Void, ClassVisitor> {
     boolean classVisitorStarted = false;
+    List<TypeElement> innerMembers = new ArrayList<>();
 
     // TODO(jkeljo): Type annotations
 
     @Override
     public Void visitType(TypeElement e, ClassVisitor visitor) {
       if (classVisitorStarted) {
-        visitMemberClass(e, visitor);
+        // Collect inner classes/interfaces and visit them at the end
+        innerMembers.add(e);
         return null;
       }
       // TODO(jkeljo): Skip anonymous and local
@@ -127,10 +132,16 @@ class ClassVisitorDriverFromElement {
 
       visitAnnotations(e.getAnnotationMirrors(), visitor::visitAnnotation);
 
+      super.visitType(e, visitor);
+
       if (MoreElements.isInnerClass(e)) {
         visitOuterThisField(e, visitor);
       }
-      super.visitType(e, visitor);
+
+      // We visit all inner members in reverse to match the order in original, full jars
+      for (TypeElement element : Lists.reverse(innerMembers)) {
+        visitMemberClass(element, visitor);
+      }
 
       return null;
     }

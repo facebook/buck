@@ -28,17 +28,17 @@ import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-import java.util.SortedSet;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
 class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
 
   private final String fileName;
-  private final SortedSet<AnnotationMirror> annotations;
-  private final SortedSet<FieldMirror> fields;
-  private final SortedSet<InnerClass> innerClasses;
-  private final SortedSet<MethodMirror> methods;
+  private final Set<AnnotationMirror> annotations;
+  private final Set<FieldMirror> fields;
+  private final Set<InnerClass> innerClasses;
+  private final Set<MethodMirror> methods;
   @Nullable
   private OuterClass outerClass;
   private int version;
@@ -56,10 +56,10 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
     super(Opcodes.ASM5);
 
     this.fileName = name;
-    this.annotations = Sets.newTreeSet();
-    this.fields = Sets.newTreeSet();
-    this.innerClasses = Sets.newTreeSet();
-    this.methods = Sets.newTreeSet();
+    this.annotations = Sets.newLinkedHashSet();
+    this.fields = Sets.newLinkedHashSet();
+    this.innerClasses = Sets.newLinkedHashSet();
+    this.methods = Sets.newLinkedHashSet();
   }
 
   @Override

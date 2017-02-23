@@ -17,12 +17,12 @@
 package com.facebook.buck.jvm.java.abi;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.io.MorePaths;
@@ -62,11 +62,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.SortedSet;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -187,6 +184,41 @@ public class StubJarTest {
             )));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+  }
+
+  @Test
+  public void elementsInStubCorrectlyInOrder() throws IOException {
+    // Fields and methods should stub in order
+    // Inner classes should stub in reverse
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class A {",
+                "    boolean first;",
+                "    float second;",
+                "  public void foo() { }",
+                "  public class B { }",
+                "  public class C { }",
+                "  public void bar() { }",
+                "  public class D { }",
+                "    int between;",
+                "  public class E {",
+                "    public void hello() { }",
+                "    public void test() { }",
+                "  }",
+                "}"
+            )));
+
+    assertClassesStubbedCorrectly(
+        paths,
+        "com/example/buck/A.class",
+        "com/example/buck/A$B.class",
+        "com/example/buck/A$C.class",
+        "com/example/buck/A$D.class",
+        "com/example/buck/A$E.class");
   }
 
   @Test
@@ -527,15 +559,50 @@ public class StubJarTest {
             ImmutableList.of(
                 "package com.example.buck;",
                 "public class A {",
-                "  Class<?> clazz = String.class;",
-                "  public String getGreeting() { return \"merhaba\"; }",
                 "  protected final static int count = 42;",
+                "  public String getGreeting() { return \"merhaba\"; }",
+                "  Class<?> clazz = String.class;",
                 "  public int other = 32;",
                 "}"
             )));
     Sha1HashCode secondHash = filesystem.computeSha1(paths.stubJar);
 
     assertEquals(originalHash, secondHash);
+  }
+
+  @Test
+  public void ordersChangesResultInADifferentOutputJar() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class A {",
+                "  protected final static int count = 42;",
+                "  public String getGreeting() { return \"hello\"; }",
+                "  Class<?> clazz;",
+                "  public int other;",
+                "}"
+            )));
+    Sha1HashCode originalHash = filesystem.computeSha1(paths.stubJar);
+
+    paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class A {",
+                "  Class<?> clazz;",
+                "  public String getGreeting() { return \"hello\"; }",
+                "  protected final static int count = 42;",
+                "  public int other;",
+                "}"
+            )));
+    Sha1HashCode secondHash = filesystem.computeSha1(paths.stubJar);
+
+    assertNotEquals(originalHash, secondHash);
   }
 
   @Test
@@ -804,7 +871,6 @@ public class StubJarTest {
    * <ul>
    *   <li>No private members, &lt;clinit&gt;, synthetic members, bridge methods, or method bodies
    *       are present</li>
-   *   <li>Members have been sorted</li>
    * </ul>
    */
   private static void assertClassStubbedCorrectly(AbiClass original, AbiClass stubbed) {
@@ -841,7 +907,6 @@ public class StubJarTest {
     assertMembersStubbedCorrectly(
         original,
         stubbed,
-        node -> node.name,
         node -> node.access,
         StubJarTest::assertInnerClassStubbedCorrectly);
   }
@@ -852,7 +917,6 @@ public class StubJarTest {
     assertMembersStubbedCorrectly(
         original,
         stubbed,
-        node -> String.format("%s: %s", node.name, node.desc),
         node -> node.access,
         StubJarTest::assertMethodStubbedCorrectly);
   }
@@ -863,7 +927,6 @@ public class StubJarTest {
     assertMembersStubbedCorrectly(
         original,
         stubbed,
-        node -> node.name,
         node -> node.access,
         StubJarTest::assertFieldStubbedCorrectly);
   }
@@ -871,53 +934,29 @@ public class StubJarTest {
   private static <M> void assertMembersStubbedCorrectly(
       List<M> original,
       List<M> stubbed,
-      Function<M, String> getSortKey,
       Function<M, Integer> getAccess,
       BiFunction<M, M, Void> assertMemberStubbedCorrectly) {
-    Map<String, M> originalMembers = original.stream()
-        .collect(Collectors.toMap(getSortKey, Function.identity()));
 
-    // Never stub clinit
-    originalMembers.remove("<clinit>: ()V");
+    List<M> filtered = original.stream()
+        .filter(m -> {
+          if (m instanceof MethodNode &&
+              ((MethodNode) m).name.equals("<clinit>") &&
+              ((MethodNode) m).desc.equals("()V")) {
+            return false;
+          }
 
-    Iterator<M> originalMemberIterator = originalMembers.values().iterator();
-    while (originalMemberIterator.hasNext()) {
-      M member = originalMemberIterator.next();
-      int access = getAccess.apply(member);
-      // Never stub things that are private
-      if ((access & (Opcodes.ACC_PRIVATE)) != 0) {
-        originalMemberIterator.remove();
-      }
-    }
-
-    for (M stubbedMember : stubbed) {
-      String sortKey = getSortKey.apply(stubbedMember);
-      M originalMember = originalMembers.remove(sortKey);
-      if (originalMember == null) {
-        fail(String.format(
-            "Should not have stubbed %s %s",
-            stubbedMember.getClass().getSimpleName(),
-            getSortKey.apply(stubbedMember)));
-      }
-
-      assertMemberStubbedCorrectly.apply(originalMember, stubbedMember);
-    }
-
-    for (M originalMember : originalMembers.values()) {
-      fail(String.format(
-          "Failed to stub %s %s",
-          originalMember.getClass().getSimpleName(),
-          getSortKey.apply(originalMember)));
-    }
-
-    // Output stubs in sorted order
-    List<String> actualOrder = stubbed.stream()
-        .map(getSortKey)
+          int access = getAccess.apply(m);
+          // Never stub things that are private
+          return (access & (Opcodes.ACC_PRIVATE)) == 0;
+        })
         .collect(Collectors.toList());
 
-    List<String> expectedOrder = new ArrayList<>(actualOrder);
-    Collections.sort(expectedOrder);
-    assertThat(actualOrder, Matchers.equalTo(expectedOrder));
+    // We just iterate through since order of each list should match
+    // An IndexOutOFBoundsException may be thrown if extra or missing stubs are found
+    int max = Math.max(stubbed.size(), filtered.size());
+    for (int i = 0; i < max; i++) {
+      assertMemberStubbedCorrectly.apply(filtered.get(i), stubbed.remove(0));
+    }
   }
 
   private static Void assertInnerClassStubbedCorrectly(
