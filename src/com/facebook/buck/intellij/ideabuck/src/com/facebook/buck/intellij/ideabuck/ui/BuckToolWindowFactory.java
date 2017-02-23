@@ -18,6 +18,7 @@ package com.facebook.buck.intellij.ideabuck.ui;
 
 import com.facebook.buck.intellij.ideabuck.build.BuckBuildManager;
 import com.facebook.buck.intellij.ideabuck.config.BuckSettingsProvider;
+import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeDetail;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeDetailError;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeFileError;
@@ -137,6 +138,7 @@ public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
       final Project project, ToolWindow toolWindow) {
     toolWindow.setAvailable(true, null);
     toolWindow.setToHideOnEmptyContent(true);
+    toolWindow.setIcon(BuckIcons.BUCK_TOOL_WINDOW_ICON);
 
     RunnerLayoutUi runnerLayoutUi = BuckUIManager.getInstance(project).getLayoutUi(project);
 
