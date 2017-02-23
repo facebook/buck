@@ -204,7 +204,12 @@ class InterfaceTypeAndConstantReferenceFinder {
        */
       @Override
       public Void visitIdentifier(IdentifierTree node, Void aVoid) {
-        Element currentElement = Preconditions.checkNotNull(getCurrentElement());
+        Element currentElement = getCurrentElement();
+        if (currentElement == null) {
+          // This can happen with the package name tree at compilation unit level
+          return null;
+        }
+
         ElementKind kind = currentElement.getKind();
         if (kind.isClass() || kind.isInterface()) {
           // Identifier represents a type (either imported, from the same package, or a member of

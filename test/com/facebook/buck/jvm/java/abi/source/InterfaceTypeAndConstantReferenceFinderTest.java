@@ -494,6 +494,13 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
   }
 
   @Test
+  public void testDoesNotCrashOnSimpleNamedPackage() throws IOException {
+    findTypeReferencesErrorsOK(
+        "package example;",
+        "class Foo { }");
+  }
+
+  @Test
   public void testFindsSimpleNameConstants() throws IOException {
     withClasspath(ImmutableMap.of(
         "com/facebook/foo/Constants.java",
