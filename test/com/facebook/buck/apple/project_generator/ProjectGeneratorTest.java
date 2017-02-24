@@ -4473,6 +4473,7 @@ public class ProjectGeneratorTest {
   public void testMergedHeaderMap() throws IOException {
     BuildTarget lib1Target = BuildTarget.builder(rootPath, "//foo", "lib1").build();
     BuildTarget lib2Target = BuildTarget.builder(rootPath, "//bar", "lib2").build();
+    BuildTarget lib3Target = BuildTarget.builder(rootPath, "//foo", "lib3").build();
     BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "test").build();
 
     TargetNode<?, ?> lib1Node = AppleLibraryBuilder
@@ -4483,6 +4484,7 @@ public class ProjectGeneratorTest {
                 ImmutableMap.of()))
         .setExportedHeaders(
             ImmutableSortedSet.of(new FakeSourcePath("lib1.h")))
+        .setDeps(ImmutableSortedSet.of(lib2Target))
         .setTests(ImmutableSortedSet.of(testTarget))
         .build();
 
@@ -4496,6 +4498,16 @@ public class ProjectGeneratorTest {
             ImmutableSortedSet.of(new FakeSourcePath("lib2.h")))
         .build();
 
+    TargetNode<?, ?> lib3Node = AppleLibraryBuilder
+        .createBuilder(lib3Target)
+        .setConfigs(
+            ImmutableSortedMap.of(
+                "Default",
+                ImmutableMap.of()))
+        .setExportedHeaders(
+            ImmutableSortedSet.of(new FakeSourcePath("lib3.h")))
+        .build();
+
     TargetNode<?, ?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
         .setConfigs(
@@ -4507,7 +4519,7 @@ public class ProjectGeneratorTest {
         .build();
 
     final TargetGraph targetGraph =
-        TargetGraphFactory.newInstance(ImmutableSet.of(lib1Node, lib2Node, testNode));
+        TargetGraphFactory.newInstance(ImmutableSet.of(lib1Node, lib2Node, lib3Node, testNode));
     final AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
 
     ProjectGenerator projectGeneratorLib2 = new ProjectGenerator(
@@ -4560,7 +4572,7 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGeneratorLib1 = new ProjectGenerator(
         targetGraph,
         cache,
-        ImmutableSet.of(lib1Target, testTarget),
+        ImmutableSet.of(lib1Target, testTarget), /* lib3Target not included on purpose */
         projectCell,
         OUTPUT_DIRECTORY,
         PROJECT_NAME,

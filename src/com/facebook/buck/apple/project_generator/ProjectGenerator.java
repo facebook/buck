@@ -1873,15 +1873,29 @@ public class ProjectGenerator {
       Function<SourcePath, Path> pathResolver) throws IOException {
     HeaderMap.Builder headerMapBuilder = new HeaderMap.Builder();
 
+    Set<TargetNode<? extends CxxLibraryDescription.Arg, ?>> processedNodes =
+        new HashSet<TargetNode<? extends CxxLibraryDescription.Arg, ?>>();
     for (TargetNode<?, ?> targetNode : targetGraph.getNodes()) {
-      Optional<TargetNode<CxxLibraryDescription.Arg, ?>> nativeNode =
-          getAppleNativeNode(targetGraph, targetNode);
-      if (nativeNode.isPresent()) {
-        addToMergedHeaderMap(
-            nativeNode.get(),
-            headerMapBuilder,
-            pathResolver,
-            HeaderVisibility.PUBLIC);
+      // Only considers the targets that are going to be built by the project.
+      if (isBuiltByCurrentProject(targetNode.getBuildTarget())) {
+        Optional<TargetNode<CxxLibraryDescription.Arg, ?>> nativeNode =
+            getAppleNativeNode(targetGraph, targetNode);
+        if (nativeNode.isPresent()) {
+          // Includes the public headers of the dependencies in the merged header map.
+          visitRecursiveHeaderSymlinkTrees(nativeNode.get(), (depNativeNode, headerVisibility) -> {
+            if (processedNodes.contains(depNativeNode)) {
+              return;
+            }
+            if (headerVisibility == HeaderVisibility.PUBLIC) {
+              addToMergedHeaderMap(
+                  depNativeNode,
+                  headerMapBuilder,
+                  pathResolver,
+                  HeaderVisibility.PUBLIC);
+              processedNodes.add(depNativeNode);
+            }
+          });
+        }
       }
     }
 
