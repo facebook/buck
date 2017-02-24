@@ -169,6 +169,7 @@ class XctoolRunTestsStep implements Step {
       Optional<? extends StdoutReadingCallback> stdoutReadingCallback,
       Supplier<Optional<Path>> xcodeDeveloperDirSupplier,
       TestSelectorList testSelectorList,
+      boolean waitForDebugger,
       Optional<String> logDirectoryEnvironmentVariable,
       Optional<Path> logDirectory,
       Optional<String> logLevelEnvironmentVariable,
@@ -189,7 +190,8 @@ class XctoolRunTestsStep implements Step {
         sdkName,
         destinationSpecifier,
         logicTestBundlePaths,
-        appTestBundleToHostAppPaths);
+        appTestBundleToHostAppPaths,
+        waitForDebugger);
     this.environmentOverrides = environmentOverrides;
     this.xctoolStutterTimeout = xctoolStutterTimeout;
     this.outputPath = outputPath;
@@ -510,7 +512,8 @@ class XctoolRunTestsStep implements Step {
       String sdkName,
       Optional<String> destinationSpecifier,
       Collection<Path> logicTestBundlePaths,
-      Map<Path, Path> appTestBundleToHostAppPaths) {
+      Map<Path, Path> appTestBundleToHostAppPaths,
+      boolean waitForDebugger) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add(xctoolPath.toString());
     args.add("-reporter");
@@ -528,6 +531,9 @@ class XctoolRunTestsStep implements Step {
     for (Map.Entry<Path, Path> appTestBundleAndHostApp : appTestBundleToHostAppPaths.entrySet()) {
       args.add("-appTest");
       args.add(appTestBundleAndHostApp.getKey() + ":" + appTestBundleAndHostApp.getValue());
+    }
+    if (waitForDebugger) {
+      args.add("-waitForDebugger");
     }
 
     return args.build();

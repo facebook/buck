@@ -70,6 +70,7 @@ public class XctoolRunTestsStepTest {
         Optional.empty(),
         Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
         TestSelectorList.EMPTY,
+        false,
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
@@ -121,6 +122,7 @@ public class XctoolRunTestsStepTest {
         Optional.empty(),
         Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
         TestSelectorList.EMPTY,
+        false,
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
@@ -178,6 +180,7 @@ public class XctoolRunTestsStepTest {
         Optional.empty(),
         Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
         TestSelectorList.EMPTY,
+        false,
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
@@ -234,6 +237,7 @@ public class XctoolRunTestsStepTest {
         Optional.empty(),
         Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
         TestSelectorList.EMPTY,
+        false,
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
@@ -289,6 +293,7 @@ public class XctoolRunTestsStepTest {
         Optional.empty(),
         Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
         TestSelectorList.EMPTY,
+        false,
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
@@ -342,6 +347,7 @@ public class XctoolRunTestsStepTest {
         Optional.empty(),
         Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
         TestSelectorList.EMPTY,
+        false,
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
@@ -395,6 +401,7 @@ public class XctoolRunTestsStepTest {
         TestSelectorList.builder()
             .addRawSelectors("#.*Magic.*")
             .build(),
+        false,
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
@@ -487,6 +494,7 @@ public class XctoolRunTestsStepTest {
         TestSelectorList.builder()
             .addRawSelectors("#.*Magic.*")
             .build(),
+        false,
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
@@ -552,6 +560,7 @@ public class XctoolRunTestsStepTest {
         TestSelectorList.builder()
             .addRawSelectors("Blargh#Xyzzy")
             .build(),
+        false,
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
@@ -615,6 +624,7 @@ public class XctoolRunTestsStepTest {
         Optional.empty(),
         Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
         TestSelectorList.EMPTY,
+        false,
         Optional.of("TEST_LOG_PATH"),
         Optional.of(Paths.get("/path/to/test-logs")),
         Optional.of("TEST_LOG_LEVEL"),

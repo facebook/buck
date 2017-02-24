@@ -333,6 +333,7 @@ public class AppleTest
               xctoolStdoutReader,
               xcodeDeveloperDirSupplier,
               options.getTestSelectorList(),
+              context.isDebugEnabled(),
               Optional.of(testLogDirectoryEnvironmentVariable),
               Optional.of(resolvedTestLogsPath),
               Optional.of(testLogLevelEnvironmentVariable),

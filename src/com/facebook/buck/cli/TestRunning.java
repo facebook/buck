@@ -223,6 +223,12 @@ public class TestRunning {
                 "Received begin status before end status (%s)",
                 previousEvent);
             params.getBuckEventBus().post(startedEvent);
+
+            String message = didBeginMessage.getMessage();
+            if (message.toLowerCase().contains("debugger")) {
+              executionContext.getStdErr().println(
+                  executionContext.getAnsi().asWarningText(message));
+            }
           }
 
           @Override
