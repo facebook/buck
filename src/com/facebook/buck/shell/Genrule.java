@@ -38,8 +38,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
-import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
@@ -327,17 +325,10 @@ public class Genrule extends AbstractBuildRuleWithResolver
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
-    // Delete the old output for this rule, if it exists.
-    commands.add(
-        new RmStep(
-            getProjectFilesystem(),
-            context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()),
-            RmStep.Mode.RECURSIVE));
-
-    // Make sure that the directory to contain the output file exists. Rules get output to a
-    // directory named after the base path, so we don't want to nuke the entire directory.
-    commands.add(new MkdirStep(getProjectFilesystem(), pathToOutDirectory));
-
+    // Make sure that the directory to contain the output file exists, deleting any pre-existing
+    // ones. Rules get output to a directory named after the base path, so we don't want to nuke
+    // the entire directory.
+    commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToOutDirectory));
     // Delete the old temp directory
     commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToTmpDirectory));
     // Create a directory to hold all the source files.

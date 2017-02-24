@@ -233,6 +233,33 @@ public class GenruleIntegrationTest {
   }
 
   @Test
+  public void genruleCleansEntireOutputDirectory() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "genrule_robust_cleaning", temporaryFolder);
+    workspace.setUp();
+
+    workspace.copyFile("BUCK.1", "BUCK");
+    workspace.runBuckCommand("build", "//:write").assertSuccess();
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//:write");
+    assertTrue(
+        "write should be built",
+        Files.isRegularFile(
+            workspace.resolve("buck-out/gen/write/one")));
+
+    workspace.copyFile("BUCK.2", "BUCK");
+    workspace.runBuckCommand("build", "//:write").assertSuccess();
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//:write");
+    assertFalse(
+        "Output of BUCK.1 should be deleted before output of BUCK.2 is built",
+        Files.isRegularFile(workspace.resolve("buck-out/gen/write/one")));
+    assertTrue(
+        "BUCK.2 should create its output",
+        Files.isRegularFile(workspace.resolve("buck-out/gen/write/two")));
+  }
+
+  @Test
   public void genruleDirectorySourcePath() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "genrule_directory_source_path", temporaryFolder);
