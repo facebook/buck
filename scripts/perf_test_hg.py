@@ -163,7 +163,14 @@ def buck_build_target(args, cwd, targets, log_as_perftest=True):
     tmpFile = tempfile.TemporaryFile()
     try:
         subprocess.check_call(
-            [args.path_to_buck, 'build', '--deep'] + targets + ['-v', '5'],
+            [
+                args.path_to_buck,
+                'build',
+                '--deep',
+                # t16296463
+                '--config',
+                'project.glob_handler=',
+            ] + targets + ['-v', '5'],
             stdout=tmpFile,
             stderr=tmpFile,
             cwd=cwd,
