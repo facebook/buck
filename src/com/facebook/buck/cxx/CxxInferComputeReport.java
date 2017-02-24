@@ -63,13 +63,14 @@ public class CxxInferComputeReport extends AbstractBuildRule
     buildableContext.recordArtifact(reportOutput);
     ImmutableSortedSet<Path> reportsToMergeFromDeps =
         FluentIterable.from(analysisToReport.getTransitiveAnalyzeRules())
-            .transform(
-                CxxInferAnalyze::getAbsolutePathToOutput)
+            .transform(CxxInferAnalyze::getSourcePathToOutput)
+            .transform(context.getSourcePathResolver()::getAbsolutePath)
             .toSortedSet(Ordering.natural());
 
     ImmutableSortedSet<Path> reportsToMerge = ImmutableSortedSet.<Path>naturalOrder()
         .addAll(reportsToMergeFromDeps)
-        .add(analysisToReport.getAbsolutePathToOutput())
+        .add(context.getSourcePathResolver().getAbsolutePath(
+            analysisToReport.getSourcePathToOutput()))
         .build();
 
     return ImmutableList.<Step>builder()

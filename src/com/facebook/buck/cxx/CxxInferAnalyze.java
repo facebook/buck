@@ -159,8 +159,4 @@ public class CxxInferAnalyze extends AbstractBuildRule {
     return this.reportFile;
   }
 
-  public Path getAbsolutePathToOutput() {
-    return getProjectFilesystem().resolve(this.reportFile);
-  }
-
 }
