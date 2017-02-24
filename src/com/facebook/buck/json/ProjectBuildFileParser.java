@@ -416,7 +416,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
       LOG.verbose("Parsed %d rules from %s", values.size(), buildFile);
       profile = resultObject.getProfile();
       if (profile != null && profile.length() > 0) {
-        LOG.verbose("Profile result: %s", profile);
+        LOG.debug("Profile result: %s", profile);
       }
       return values;
     } finally {
