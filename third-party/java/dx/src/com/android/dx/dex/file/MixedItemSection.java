@@ -301,6 +301,8 @@ public final class MixedItemSection extends Section {
                 Collections.sort(items, TYPE_SORTER);
                 break;
             }
+            default:
+                // fall out
         }
 
         int sz = items.size();

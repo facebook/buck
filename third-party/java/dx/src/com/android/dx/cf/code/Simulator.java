@@ -655,6 +655,7 @@ public class Simulator {
                     cst = ((CstInterfaceMethodRef) cst).toMethodRef();
                     // and fall through...
                 }
+                // and fall through...
                 case ByteOps.INVOKEVIRTUAL:
                 case ByteOps.INVOKESPECIAL: {
                     /*
