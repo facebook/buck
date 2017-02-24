@@ -233,7 +233,7 @@ public class AppleTestDescription implements
 
     String platformName = appleCxxPlatform.getAppleSdk().getApplePlatform().getName();
 
-    BuildRule bundle = AppleDescriptions.createAppleBundle(
+    AppleBundle bundle = AppleDescriptions.createAppleBundle(
         cxxPlatformFlavorDomain,
         defaultCxxPlatform,
         appleCxxPlatformFlavorDomain,

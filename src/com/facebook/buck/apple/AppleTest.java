@@ -66,7 +66,6 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
-import javax.annotation.Nullable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class AppleTest
@@ -92,7 +91,7 @@ public class AppleTest
   private final Optional<ImmutableMap<String, String>> destinationSpecifier;
 
   @AddToRuleKey
-  private final BuildRule testBundle;
+  private final AppleBundle testBundle;
 
   @AddToRuleKey
   private final Optional<AppleBundle> testHostApp;
@@ -187,7 +186,7 @@ public class AppleTest
       Optional<String> defaultDestinationSpecifier,
       Optional<ImmutableMap<String, String>> destinationSpecifier,
       BuildRuleParams params,
-      BuildRule testBundle,
+      AppleBundle testBundle,
       Optional<AppleBundle> testHostApp,
       ImmutableSet<String> contacts,
       ImmutableSet<Label> labels,
@@ -494,7 +493,6 @@ public class AppleTest
     return ImmutableList.of();
   }
 
-  @Nullable
   @Override
   public Path getPathToOutput() {
     return testBundle.getPathToOutput();
