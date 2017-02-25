@@ -41,6 +41,7 @@ class CodeSignStep implements Step {
   private final Path pathToSign;
   private final Optional<Path> pathToSigningEntitlements;
   private final Supplier<CodeSignIdentity> codeSignIdentitySupplier;
+  private final Tool codesign;
   private final Optional<Tool> codesignAllocatePath;
   private final Optional<Path> dryRunResultsPath;
   private final ProjectFilesystem filesystem;
@@ -51,6 +52,7 @@ class CodeSignStep implements Step {
       Path pathToSign,
       Optional<Path> pathToSigningEntitlements,
       Supplier<CodeSignIdentity> codeSignIdentitySupplier,
+      Tool codesign,
       Optional<Tool> codesignAllocatePath,
       Optional<Path> dryRunResultsPath) {
     this.filesystem = filesystem;
@@ -58,6 +60,7 @@ class CodeSignStep implements Step {
     this.pathToSign = pathToSign;
     this.pathToSigningEntitlements = pathToSigningEntitlements;
     this.codeSignIdentitySupplier = codeSignIdentitySupplier;
+    this.codesign = codesign;
     this.codesignAllocatePath = codesignAllocatePath;
     this.dryRunResultsPath = dryRunResultsPath;
   }
@@ -89,8 +92,8 @@ class CodeSignStep implements Step {
           ImmutableMap.of("CODESIGN_ALLOCATE", Joiner.on(" ").join(commandPrefix)));
     }
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
+    commandBuilder.addAll(codesign.getCommandPrefix(resolver));
     commandBuilder.add(
-        "codesign",
         "--force",
         "--sign", getIdentityArg(codeSignIdentitySupplier.get()));
     if (pathToSigningEntitlements.isPresent()) {

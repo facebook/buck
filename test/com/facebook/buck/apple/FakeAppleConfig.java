@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Preconditions;
@@ -27,6 +28,10 @@ public class FakeAppleConfig extends AppleConfig {
 
   @Nullable
   private ImmutableMap<AppleSdk, AppleSdkPaths> appleSdkPaths = null;
+
+  public FakeAppleConfig(BuckConfig config) {
+    super(config);
+  }
 
   public FakeAppleConfig() {
     super(FakeBuckConfig

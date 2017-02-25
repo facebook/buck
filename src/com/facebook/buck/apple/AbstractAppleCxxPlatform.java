@@ -20,6 +20,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.swift.SwiftPlatform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
@@ -58,6 +59,7 @@ abstract class AbstractAppleCxxPlatform implements FlavorConvertible {
   public abstract Tool getLipo();
   public abstract Optional<Path> getStubBinary();
   public abstract Tool getLldb();
+  public abstract ToolProvider getCodesignProvider();
   public abstract Optional<Tool> getCodesignAllocate();
 
   // Short Xcode version code, e.g. 0721

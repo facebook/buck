@@ -749,6 +749,7 @@ public class AppleDescriptions {
     return new AppleBundle(
         bundleParamsWithFlavoredBinaryDep,
         sourcePathResolver,
+        resolver,
         extension,
         productName,
         infoPlist,

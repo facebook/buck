@@ -20,6 +20,10 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BinaryBuildRuleToolProvider;
+import com.facebook.buck.rules.ConstantToolProvider;
+import com.facebook.buck.rules.HashedFileTool;
+import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -53,6 +57,7 @@ public class AppleConfig {
 
   private static final Pattern XCODE_BUILD_NUMBER_PATTERN =
       Pattern.compile("Build version ([a-zA-Z0-9]+)");
+  public static final String APPLE_SECTION = "apple";
 
   private final BuckConfig delegate;
 
@@ -70,7 +75,9 @@ public class AppleConfig {
    */
   public Supplier<Optional<Path>> getAppleDeveloperDirectorySupplier(
       ProcessExecutor processExecutor) {
-    Optional<String> xcodeDeveloperDirectory = delegate.getValue("apple", "xcode_developer_dir");
+    Optional<String> xcodeDeveloperDirectory = delegate.getValue(
+        APPLE_SECTION,
+        "xcode_developer_dir");
     if (xcodeDeveloperDirectory.isPresent()) {
       Path developerDirectory = delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(
           Paths.get(xcodeDeveloperDirectory.get()));
@@ -89,7 +96,7 @@ public class AppleConfig {
   public Supplier<Optional<Path>> getAppleDeveloperDirectorySupplierForTests(
       ProcessExecutor processExecutor) {
     Optional<String> xcodeDeveloperDirectory =
-        delegate.getValue("apple", "xcode_developer_dir_for_tests");
+        delegate.getValue(APPLE_SECTION, "xcode_developer_dir_for_tests");
     if (xcodeDeveloperDirectory.isPresent()) {
       Path developerDirectory = delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(
           Paths.get(xcodeDeveloperDirectory.get()));
@@ -101,7 +108,7 @@ public class AppleConfig {
 
   public ImmutableList<Path> getExtraToolchainPaths() {
     ImmutableList<String> extraPathsStrings = delegate.getListWithoutComments(
-        "apple",
+        APPLE_SECTION,
         "extra_toolchain_paths");
     return ImmutableList.copyOf(Lists.transform(
         extraPathsStrings,
@@ -110,7 +117,7 @@ public class AppleConfig {
 
   public ImmutableList<Path> getExtraPlatformPaths() {
     ImmutableList<String> extraPathsStrings = delegate.getListWithoutComments(
-        "apple",
+        APPLE_SECTION,
         "extra_platform_paths");
     return ImmutableList.copyOf(Lists.transform(
         extraPathsStrings,
@@ -235,56 +242,70 @@ public class AppleConfig {
 
 
   public Optional<String> getTargetSdkVersion(ApplePlatform platform) {
-    return delegate.getValue("apple", platform.getName() + "_target_sdk_version");
+    return delegate.getValue(APPLE_SECTION, platform.getName() + "_target_sdk_version");
   }
 
   public ImmutableList<String> getXctestPlatformNames() {
     return delegate.getListWithoutComments(
-        "apple",
+        APPLE_SECTION,
         "xctest_platforms");
   }
 
   public Optional<Path> getXctoolPath() {
-    Path xctool = getOptionalPath("apple", "xctool_path").orElse(Paths.get("xctool"));
+    Path xctool = getOptionalPath(APPLE_SECTION, "xctool_path").orElse(Paths.get("xctool"));
     return new ExecutableFinder().getOptionalExecutable(xctool, delegate.getEnvironment());
   }
 
   public Optional<BuildTarget> getXctoolZipTarget() {
-    return delegate.getBuildTarget("apple", "xctool_zip_target");
+    return delegate.getBuildTarget(APPLE_SECTION, "xctool_zip_target");
+  }
+
+  public ToolProvider getCodesignProvider() {
+    final String codesignField = "codesign";
+    Optional<BuildTarget> target = delegate.getMaybeBuildTarget(APPLE_SECTION, codesignField);
+    String source = String.format("[%s] %s", APPLE_SECTION, codesignField);
+    if (target.isPresent()) {
+      return new BinaryBuildRuleToolProvider(target.get(), source);
+    } else {
+      Optional<Path> codesignPath = delegate.getPath(APPLE_SECTION, codesignField);
+      Path defaultCodesignPath = Paths.get("/usr/bin/codesign");
+      HashedFileTool codesign = new HashedFileTool(codesignPath.orElse(defaultCodesignPath));
+      return new ConstantToolProvider(codesign);
+    }
   }
 
   public Optional<String> getXctoolDefaultDestinationSpecifier() {
-    return delegate.getValue("apple", "xctool_default_destination_specifier");
+    return delegate.getValue(APPLE_SECTION, "xctool_default_destination_specifier");
   }
 
   public Optional<Long> getXctoolStutterTimeoutMs() {
-    return delegate.getLong("apple", "xctool_stutter_timeout");
+    return delegate.getLong(APPLE_SECTION, "xctool_stutter_timeout");
   }
 
   public boolean getXcodeDisableParallelizeBuild() {
-    return delegate.getBooleanValue("apple", "xcode_disable_parallelize_build", false);
+    return delegate.getBooleanValue(APPLE_SECTION, "xcode_disable_parallelize_build", false);
   }
 
   public boolean useDryRunCodeSigning() {
-    return delegate.getBooleanValue("apple", "dry_run_code_signing", false);
+    return delegate.getBooleanValue(APPLE_SECTION, "dry_run_code_signing", false);
   }
 
   public boolean cacheBundlesAndPackages() {
-    return delegate.getBooleanValue("apple", "cache_bundles_and_packages", true);
+    return delegate.getBooleanValue(APPLE_SECTION, "cache_bundles_and_packages", true);
   }
 
 
   public Optional<Path> getAppleDeviceHelperAbsolutePath() {
-    return getOptionalPath("apple", "device_helper_path");
+    return getOptionalPath(APPLE_SECTION, "device_helper_path");
   }
 
   public Optional<BuildTarget> getAppleDeviceHelperTarget() {
-    return delegate.getBuildTarget("apple", "device_helper_target");
+    return delegate.getBuildTarget(APPLE_SECTION, "device_helper_target");
   }
 
   public Path getProvisioningProfileSearchPath() {
     return getOptionalPath(
-        "apple",
+        APPLE_SECTION,
         "provisioning_profile_search_path").orElse(Paths.get(System.getProperty("user.home") +
         "/Library/MobileDevice/Provisioning Profiles"));
   }
@@ -301,74 +322,74 @@ public class AppleConfig {
 
   public boolean shouldUseHeaderMapsInXcodeProject() {
     return delegate.getBooleanValue(
-        "apple",
+        APPLE_SECTION,
         "use_header_maps_in_xcode",
         true);
   }
 
   public boolean shouldMergeHeaderMapsInXcodeProject() {
     return delegate.getBooleanValue(
-        "apple",
+        APPLE_SECTION,
         "merge_header_maps_in_xcode",
         false);
   }
 
   public boolean shouldGenerateHeaderSymlinkTreesOnly() {
     return delegate.getBooleanValue(
-        "apple",
+        APPLE_SECTION,
         "generate_header_symlink_tree_only",
         false);
   }
 
   public String getTestLogDirectoryEnvironmentVariable() {
     return delegate.getValue(
-        "apple",
+        APPLE_SECTION,
         "test_log_directory_environment_variable").orElse(
         DEFAULT_TEST_LOG_DIRECTORY_ENVIRONMENT_VARIABLE);
   }
 
   public String getTestLogLevelEnvironmentVariable() {
     return delegate.getValue(
-        "apple",
+        APPLE_SECTION,
         "test_log_level_environment_variable").orElse(DEFAULT_TEST_LOG_LEVEL_ENVIRONMENT_VARIABLE);
   }
 
   public String getTestLogLevel() {
     return delegate.getValue(
-        "apple",
+        APPLE_SECTION,
         "test_log_level").orElse(DEFAULT_TEST_LOG_LEVEL);
   }
 
   public AppleDebugFormat getDefaultDebugInfoFormatForBinaries() {
     return delegate.getEnum(
-        "apple",
+        APPLE_SECTION,
         "default_debug_info_format_for_binaries",
         AppleDebugFormat.class).orElse(AppleDebugFormat.DWARF_AND_DSYM);
   }
 
   public AppleDebugFormat getDefaultDebugInfoFormatForTests() {
     return delegate.getEnum(
-        "apple",
+        APPLE_SECTION,
         "default_debug_info_format_for_tests",
         AppleDebugFormat.class).orElse(AppleDebugFormat.DWARF);
   }
 
   public AppleDebugFormat getDefaultDebugInfoFormatForLibraries() {
     return delegate.getEnum(
-        "apple",
+        APPLE_SECTION,
         "default_debug_info_format_for_libraries",
         AppleDebugFormat.class).orElse(AppleDebugFormat.DWARF);
   }
 
   public boolean forceDsymModeInBuildWithBuck() {
     return delegate.getBooleanValue(
-        "apple",
+        APPLE_SECTION,
         "force_dsym_mode_in_build_with_buck",
         true);
   }
 
   public ImmutableList<String> getProvisioningProfileReadCommand() {
-    Optional<String> value = delegate.getValue("apple", "provisioning_profile_read_command");
+    Optional<String> value = delegate.getValue(APPLE_SECTION, "provisioning_profile_read_command");
     if (!value.isPresent()) {
       return ProvisioningProfileStore.DEFAULT_READ_COMMAND;
     }
@@ -376,7 +397,7 @@ public class AppleConfig {
   }
 
   public ImmutableList<String> getCodeSignIdentitiesCommand() {
-    Optional<String> value = delegate.getValue("apple", "code_sign_identities_command");
+    Optional<String> value = delegate.getValue(APPLE_SECTION, "code_sign_identities_command");
     if (!value.isPresent()) {
       return CodeSignIdentityStore.DEFAULT_IDENTITIES_COMMAND;
     }
@@ -393,9 +414,9 @@ public class AppleConfig {
    */
   public Optional<ApplePackageConfig> getPackageConfigForPlatform(ApplePlatform platform) {
     String command =
-        delegate.getValue("apple", platform.getName() + "_package_command").orElse("");
+        delegate.getValue(APPLE_SECTION, platform.getName() + "_package_command").orElse("");
     String extension =
-        delegate.getValue("apple", platform.getName() + "_package_extension").orElse("");
+        delegate.getValue(APPLE_SECTION, platform.getName() + "_package_extension").orElse("");
     if (command.isEmpty() ^ extension.isEmpty()) {
       throw new HumanReadableException(
           "Config option %s and %s should be both specified, or be both omitted.",
@@ -410,7 +431,7 @@ public class AppleConfig {
 
   public Optional<ImmutableList<String>> getToolchainsOverrideForSDKName(String name) {
     return delegate.getOptionalListWithoutComments(
-        "apple",
+        APPLE_SECTION,
         name + "_toolchains_override");
   }
 

@@ -458,7 +458,8 @@ public class AppleCxxPlatforms {
         .setStubBinary(stubBinaryPath)
         .setLldb(lldb)
         .setCodesignAllocate(
-            getOptionalTool("codesign_allocate", toolSearchPaths, executableFinder, version));
+            getOptionalTool("codesign_allocate", toolSearchPaths, executableFinder, version))
+        .setCodesignProvider(appleConfig.getCodesignProvider());
 
     return platformBuilder.build();
   }

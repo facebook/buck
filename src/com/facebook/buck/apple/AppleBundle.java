@@ -40,6 +40,7 @@ import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HasRuntimeDeps;
@@ -149,6 +150,9 @@ public class AppleBundle
   private final Optional<Tool> codesignAllocatePath;
 
   @AddToRuleKey
+  private final Tool codesign;
+
+  @AddToRuleKey
   private final Optional<Tool> swiftStdlibTool;
 
   @AddToRuleKey
@@ -178,6 +182,7 @@ public class AppleBundle
   AppleBundle(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      BuildRuleResolver buildRuleResolver,
       Either<AppleBundleExtension, String> extension,
       Optional<String> productName,
       SourcePath infoPlist,
@@ -245,6 +250,7 @@ public class AppleBundle
           CodeSignIdentityStore.fromIdentities(ImmutableList.of());
     }
     this.codesignAllocatePath = appleCxxPlatform.getCodesignAllocate();
+    this.codesign = appleCxxPlatform.getCodesignProvider().resolve(buildRuleResolver);
     this.swiftStdlibTool = appleCxxPlatform.getSwiftPlatform()
         .map(SwiftPlatform::getSwiftStdlibTool);
   }
@@ -568,6 +574,7 @@ public class AppleBundle
                 codeSignOnCopyPath,
                 Optional.empty(),
                 codeSignIdentitySupplier,
+                codesign,
                 codesignAllocatePath,
                 dryRunCodeSigning ?
                     Optional.of(codeSignOnCopyPath.resolve(CODE_SIGN_DRY_RUN_ARGS_FILE)) :
@@ -581,6 +588,7 @@ public class AppleBundle
               bundleRoot,
               signingEntitlementsTempPath,
               codeSignIdentitySupplier,
+              codesign,
               codesignAllocatePath,
               dryRunCodeSigning ?
                   Optional.of(bundleRoot.resolve(CODE_SIGN_DRY_RUN_ARGS_FILE)) :

@@ -254,6 +254,16 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         buildTarget,
         depsExcludingBinary);
 
+    if (fatBinaryInfo.isPresent()) {
+      depsExcludingBinary = depsExcludingBinary.append(
+          fatBinaryInfo.get().getRepresentativePlatform().getCodesignProvider().getParseTimeDeps());
+    } else {
+      depsExcludingBinary = depsExcludingBinary.append(
+          appleCxxPlatformsFlavorDomain.getValue(buildTarget)
+              .map(platform -> platform.getCodesignProvider().getParseTimeDeps())
+              .orElse(ImmutableSet.of()));
+    }
+
     return ImmutableSet.copyOf(depsExcludingBinary);
   }
 

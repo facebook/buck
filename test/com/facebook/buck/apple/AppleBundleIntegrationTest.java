@@ -216,6 +216,37 @@ public class AppleBundleIntegrationTest {
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
   }
 
+  @Test
+  public void simpleApplicationBundleWithTargetCodeSigning() throws Exception {
+    assertTargetCodesignToolIsUsedFor("//:DemoApp#iphoneos-arm64,no-debug");
+  }
+
+  @Test
+  public void simpleFatApplicationBundleWithTargetCodeSigning() throws Exception {
+    assertTargetCodesignToolIsUsedFor("//:DemoApp#iphoneos-arm64,iphoneos-armv7,no-debug");
+  }
+
+  private void assertTargetCodesignToolIsUsedFor(String fullyQualifiedName) throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "simple_application_bundle_with_target_codesigning",
+        tmp);
+    workspace.setUp();
+
+    BuildTarget target =
+        workspace.newBuildTarget(fullyQualifiedName);
+    ProjectWorkspace.ProcessResult buildResult = workspace.runBuckCommand(
+        "build",
+        target.getFullyQualifiedName());
+
+    // custom codesign tool exits with non-zero error code and prints a message to the stderr, so
+    // that its use can be detected
+    assertThat(buildResult.getStderr(), containsString("codesign was here"));
+  }
+
   private NSDictionary verifyAndParsePlist(Path path) throws Exception {
     assertTrue(Files.exists(path));
     String resultContents = filesystem.readFileIfItExists(path).get();

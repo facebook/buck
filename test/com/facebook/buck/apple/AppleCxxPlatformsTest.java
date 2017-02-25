@@ -32,6 +32,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.dd.plist.NSDictionary;
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
@@ -50,6 +51,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -79,6 +81,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -119,9 +122,12 @@ public class AppleCxxPlatformsTest {
   @Rule
   public TemporaryPaths temp = new TemporaryPaths();
 
+  private FakeProjectFilesystem projectFilesystem;
+
   @Before
   public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    projectFilesystem = new FakeProjectFilesystem();
   }
 
   @Test
@@ -157,7 +163,7 @@ public class AppleCxxPlatformsTest {
 
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
-            new FakeProjectFilesystem(),
+            projectFilesystem,
             targetSdk,
             "7.0",
             "armv7",
@@ -263,7 +269,7 @@ public class AppleCxxPlatformsTest {
 
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
-            new FakeProjectFilesystem(),
+            projectFilesystem,
             targetSdk,
             "2.0",
             "armv7k",
@@ -363,7 +369,7 @@ public class AppleCxxPlatformsTest {
 
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
-            new FakeProjectFilesystem(),
+            projectFilesystem,
             targetSdk,
             "9.1",
             "arm64",
@@ -464,7 +470,7 @@ public class AppleCxxPlatformsTest {
 
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
-            new FakeProjectFilesystem(),
+            projectFilesystem,
             targetSdk,
             "7.0",
             "cha+rs",
@@ -512,7 +518,7 @@ public class AppleCxxPlatformsTest {
 
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
-            new FakeProjectFilesystem(),
+            projectFilesystem,
             targetSdk,
             "7.0",
             "armv7",
@@ -571,7 +577,7 @@ public class AppleCxxPlatformsTest {
         .build();
 
     AppleCxxPlatforms.buildWithExecutableChecker(
-        new FakeProjectFilesystem(),
+        projectFilesystem,
         targetSdk,
         "7.0",
         "armv7",
@@ -614,7 +620,7 @@ public class AppleCxxPlatformsTest {
 
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
-            new FakeProjectFilesystem(),
+            projectFilesystem,
             targetSdk,
             "7.0",
             "armv7",
@@ -668,7 +674,7 @@ public class AppleCxxPlatformsTest {
 
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
-            new FakeProjectFilesystem(),
+            projectFilesystem,
             targetSdk,
             "2.0",
             "armv7k",
@@ -722,7 +728,7 @@ public class AppleCxxPlatformsTest {
 
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
-            new FakeProjectFilesystem(),
+            projectFilesystem,
             targetSdk,
             "9.1",
             "arm64",
@@ -852,7 +858,7 @@ public class AppleCxxPlatformsTest {
     return ruleKeys.build();
   }
 
-  private AppleCxxPlatform buildAppleCxxPlatform(Path root) {
+  private AppleCxxPlatform buildAppleCxxPlatform(Path root, BuckConfig config) {
     AppleSdkPaths appleSdkPaths = AppleSdkPaths.builder()
         .setDeveloperPath(root)
         .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
@@ -872,16 +878,64 @@ public class AppleCxxPlatformsTest {
         .setToolchains(ImmutableList.of(toolchain))
         .build();
     return AppleCxxPlatforms.buildWithExecutableChecker(
-        new FakeProjectFilesystem(),
+        projectFilesystem,
         targetSdk,
         "7.0",
         "armv7",
         appleSdkPaths,
-        FakeBuckConfig.builder().build(),
-        new FakeAppleConfig(),
+        config,
+        new FakeAppleConfig(config),
         new AlwaysFoundExecutableFinder(),
         Optional.empty(),
         Optional.empty());
+  }
+
+  private AppleCxxPlatform buildAppleCxxPlatform(Path root) {
+    return buildAppleCxxPlatform(
+        root,
+        FakeBuckConfig.builder().setFilesystem(projectFilesystem).build());
+  }
+
+  @Test
+  public void byDefaultCodesignToolIsConstant() {
+    AppleCxxPlatform appleCxxPlatform = buildAppleCxxPlatform(temp.getRoot());
+    BuildRuleResolver buildRuleResolver = EasyMock.createMock(BuildRuleResolver.class);
+    SourcePathResolver sourcePathResolver = EasyMock.createMock(SourcePathResolver.class);
+    assertThat(appleCxxPlatform.getCodesignProvider().resolve(buildRuleResolver).getCommandPrefix(
+        sourcePathResolver), is(Arrays.asList("/usr/bin/codesign")));
+  }
+
+  @Test
+  public void buckTargetIsUsedWhenBuildTargetIsSpecified() {
+    AppleCxxPlatform appleCxxPlatform = buildAppleCxxPlatform(
+        temp.getRoot(),
+        FakeBuckConfig.builder().setSections(
+            "[apple]",
+            "codesign = //foo:bar").build());
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
+    BinaryBuildRule buildRule = EasyMock.createMock(BinaryBuildRule.class);
+    Tool codesign = EasyMock.createMock(Tool.class);
+    EasyMock.expect(buildRule.getExecutableCommand()).andReturn(codesign);
+    BuildRuleResolver buildRuleResolver = EasyMock.createMock(BuildRuleResolver.class);
+    EasyMock.expect(buildRuleResolver.getRuleOptional(buildTarget))
+        .andReturn(Optional.of(buildRule));
+    EasyMock.replay(buildRule, buildRuleResolver);
+    assertThat(appleCxxPlatform.getCodesignProvider().resolve(buildRuleResolver), is(codesign));
+  }
+
+  @Test
+  public void filePathIsUsedWhenBuildTargetDoesNotExist() throws IOException {
+    Path codesignPath = Paths.get("/foo/fakecodesign");
+    projectFilesystem.createNewFile(codesignPath);
+    AppleCxxPlatform appleCxxPlatform = buildAppleCxxPlatform(
+        temp.getRoot(),
+        FakeBuckConfig.builder().setFilesystem(projectFilesystem).setSections(
+            "[apple]",
+            "codesign = " + codesignPath).build());
+    BuildRuleResolver buildRuleResolver = EasyMock.createMock(BuildRuleResolver.class);
+    SourcePathResolver sourcePathResolver = EasyMock.createMock(SourcePathResolver.class);
+    assertThat(appleCxxPlatform.getCodesignProvider().resolve(buildRuleResolver).getCommandPrefix(
+        sourcePathResolver), is(Arrays.asList(codesignPath.toString())));
   }
 
   // The important aspects we check for in rule keys is that the host platform and the path
@@ -1034,7 +1088,7 @@ public class AppleCxxPlatformsTest {
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-stdlib-tool"))
         .build();
     return AppleCxxPlatforms.buildWithExecutableChecker(
-        new FakeProjectFilesystem(),
+        projectFilesystem,
         FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_SDK,
         "7.0",
         "i386",

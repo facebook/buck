@@ -309,6 +309,16 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'apple' /}
+  {param name: 'codesign' /}
+  {param example_value: '//path/to/target/that/creates:codesign' /}
+  {param description}
+    To override a default path to <code>codesign</code>, set this setting to either a file path or
+    buck target.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'apple' /}
   {param name: 'test_log' /}
   {param description}
     When running Apple tests via <code>xctool</code>, Buck can set environment variables to
