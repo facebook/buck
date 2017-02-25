@@ -68,8 +68,8 @@ public class SwiftLibraryDescription implements
     Description<SwiftLibraryDescription.Arg>,
     Flavored {
 
-  static final Flavor SWIFT_COMPANION_FLAVOR = ImmutableFlavor.of("swift-companion");
-  static final Flavor SWIFT_COMPILE_FLAVOR = ImmutableFlavor.of("swift-compile");
+  public static final Flavor SWIFT_COMPANION_FLAVOR = ImmutableFlavor.of("swift-companion");
+  public static final Flavor SWIFT_COMPILE_FLAVOR = ImmutableFlavor.of("swift-compile");
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       SWIFT_COMPANION_FLAVOR,
@@ -160,8 +160,7 @@ public class SwiftLibraryDescription implements
     final ImmutableSortedSet<Flavor> buildFlavors = buildTarget.getFlavors();
     ImmutableSortedSet<BuildRule> filteredExtraDeps =
         FluentIterable.from(params.getExtraDeps().get())
-            .filter(input -> !input.getBuildTarget().getUnflavoredBuildTarget()
-                .equals(buildTarget.getUnflavoredBuildTarget()))
+            .filter(input -> shouldFilterTarget(input.getBuildTarget(), buildTarget))
             .toSortedSet(Ordering.natural());
     params = params.copyWithExtraDeps(Suppliers.ofInstance(filteredExtraDeps));
 
@@ -355,6 +354,22 @@ public class SwiftLibraryDescription implements
   public static boolean isSwiftTarget(BuildTarget buildTarget) {
     return buildTarget.getFlavors().contains(SWIFT_COMPANION_FLAVOR) ||
         buildTarget.getFlavors().contains(SWIFT_COMPILE_FLAVOR);
+  }
+
+  private static boolean isHeaderTarget(BuildTarget buildTarget) {
+    return buildTarget.getFlavors().contains(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR) ||
+        buildTarget.getFlavors().contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
+  }
+
+  private static boolean shouldFilterTarget(
+      BuildTarget inputBuildTarget,
+      BuildTarget buildTarget) {
+    if (!inputBuildTarget.getUnflavoredBuildTarget()
+        .equals(buildTarget.getUnflavoredBuildTarget())) {
+      return true;
+    }
+
+    return isHeaderTarget(inputBuildTarget) && !isSwiftTarget(inputBuildTarget);
   }
 
   @SuppressFieldNotInitialized
