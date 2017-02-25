@@ -348,6 +348,19 @@ public class CachingBuildEngine implements BuildEngine {
     };
   }
 
+  private void fillMissingBuildMetadataFromCache(
+      CacheResult cacheResult,
+      BuildInfoRecorder buildInfoRecorder,
+      String... names) {
+    Preconditions.checkState(cacheResult.getType() == CacheResultType.HIT);
+    for (String name : names) {
+      String value = cacheResult.getMetadata().get(name);
+      if (value != null) {
+        buildInfoRecorder.addBuildMetadata(name, value);
+      }
+    }
+  }
+
   private AsyncFunction<List<BuildResult>, Optional<BuildResult>> checkCaches(
       final BuildRule rule,
       final BuildEngineBuildContext context,
@@ -442,6 +455,7 @@ public class CachingBuildEngine implements BuildEngine {
                 performManifestBasedCacheFetch(
                     rule,
                     context,
+                    buildInfoRecorder,
                     manifestKey.get());
             if (manifestResult.isPresent()) {
               return Futures.immediateFuture(manifestResult);
@@ -502,13 +516,25 @@ public class CachingBuildEngine implements BuildEngine {
       // 2. Rule key cache lookup.
       ListenableFuture<CacheResult> rulekeyCacheResult =
           cacheActivityService.submit(
-              () -> tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-                  rule,
-                  defaultRuleKey,
-                  buildContext.getArtifactCache(),
-                  // TODO(shs96c): This should be a shared between all tests, not one per cell
-                  rule.getProjectFilesystem(),
-                  buildContext),
+              () -> {
+                CacheResult cacheResult =
+                    tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+                        rule,
+                        defaultRuleKey,
+                        buildContext.getArtifactCache(),
+                        // TODO(shs96c): This should be a shared between all tests, not one per cell
+                        rule.getProjectFilesystem(),
+                        buildContext);
+                if (cacheResult.getType().isSuccess()) {
+                  fillMissingBuildMetadataFromCache(
+                      cacheResult,
+                      buildInfoRecorder,
+                      BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY,
+                      BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
+                      BuildInfo.MetadataKey.DEP_FILE);
+                }
+                return cacheResult;
+              },
               CACHE_CHECK_RESOURCE_AMOUNTS);
 
       return Futures.transformAsync(
@@ -880,58 +906,83 @@ public class CachingBuildEngine implements BuildEngine {
 
                 // If the rule key has changed (and is not already in the cache), we need to push
                 // the artifact to cache using the new key.
-                if (success.shouldUploadResultingArtifact()) {
-                  ruleKeys.add(
-                      keyFactories.getDefaultRuleKeyFactory().build(rule));
-                }
+                ruleKeys.add(keyFactories.getDefaultRuleKeyFactory().build(rule));
 
                 // If the input-based rule key has changed, we need to push the artifact to cache
                 // using the new key.
-                if (SupportsInputBasedRuleKey.isSupported(rule) &&
-                    success.shouldUploadResultingArtifactInputBased()) {
-                  ruleKeys.addAll(
-                      OptionalCompat.asSet(onDiskBuildInfo.getRuleKey(
-                          BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY)));
+                if (SupportsInputBasedRuleKey.isSupported(rule)) {
+                  Optional<RuleKey> calculatedRuleKey =
+                      calculateInputBasedRuleKey(rule, buildContext.getEventBus());
+                  Optional<RuleKey> onDiskRuleKey =
+                      onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY);
+                  Optional<RuleKey> metaDataRuleKey =
+                      buildInfoRecorder
+                          .getBuildMetadataFor(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY)
+                          .map(RuleKey::new);
+                  Preconditions.checkState(
+                      calculatedRuleKey.equals(onDiskRuleKey),
+                      "%s (%s): %s: invalid on-disk input-based rule key: %s != %s",
+                      rule.getBuildTarget(),
+                      rule.getType(),
+                      success,
+                      calculatedRuleKey,
+                      onDiskRuleKey);
+                  Preconditions.checkState(
+                      calculatedRuleKey.equals(metaDataRuleKey),
+                      "%s: %s: invalid meta-data input-based rule key: %s != %s",
+                      rule.getBuildTarget(),
+                      success,
+                      calculatedRuleKey,
+                      metaDataRuleKey);
+                  ruleKeys.addAll(OptionalCompat.asSet(calculatedRuleKey));
                 }
 
                 // If the manifest-based rule key has changed, we need to push the artifact to cache
                 // using the new key.
-                if (useManifestCaching(rule) &&
-                    success.shouldUploadResultingArtifactManifestBased()) {
-                  ruleKeys.addAll(
-                      OptionalCompat.asSet(onDiskBuildInfo.getRuleKey(
-                          BuildInfo.MetadataKey.DEP_FILE_RULE_KEY)));
+                if (useManifestCaching(rule)) {
+                  Optional<RuleKey> onDiskRuleKey =
+                      onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
+                  Optional<RuleKey> metaDataRuleKey =
+                      buildInfoRecorder
+                          .getBuildMetadataFor(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY)
+                          .map(RuleKey::new);
+                  Preconditions.checkState(
+                      onDiskRuleKey.equals(metaDataRuleKey),
+                      "%s: %s: inconsistent meta-data and on-disk dep-file rule key: %s != %s",
+                      rule.getBuildTarget(),
+                      success,
+                      onDiskRuleKey,
+                      metaDataRuleKey);
+                  ruleKeys.addAll(OptionalCompat.asSet(onDiskRuleKey));
                 }
 
-                // If we have any rule keys to push to the cache with, do the upload now.
-                if (!ruleKeys.isEmpty()) {
-                  try {
+                // Do the actual upload.
+                try {
 
-                    // Verify that the recorded path hashes are accurate.
-                    Optional<String> recordedPathHashes =
-                        buildInfoRecorder.getBuildMetadataFor(
-                            BuildInfo.MetadataKey.RECORDED_PATH_HASHES);
-                    if (recordedPathHashes.isPresent() &&
-                        !verifyRecordedPathHashes(
-                            rule.getBuildTarget(),
-                            rule.getProjectFilesystem(),
-                            recordedPathHashes.get())) {
-                      return;
-                    }
-
-                    // Push to cache.
-                    buildInfoRecorder.performUploadToArtifactCache(
-                        ImmutableSet.copyOf(ruleKeys),
-                        buildContext.getArtifactCache(),
-                        buildContext.getEventBus());
-
-                  } catch (Throwable t) {
-                    buildContext.getEventBus().post(
-                        ThrowableConsoleEvent.create(
-                            t,
-                            "Error uploading to cache for %s.",
-                            rule));
+                  // Verify that the recorded path hashes are accurate.
+                  Optional<String> recordedPathHashes =
+                      buildInfoRecorder.getBuildMetadataFor(
+                          BuildInfo.MetadataKey.RECORDED_PATH_HASHES);
+                  if (recordedPathHashes.isPresent() &&
+                      !verifyRecordedPathHashes(
+                          rule.getBuildTarget(),
+                          rule.getProjectFilesystem(),
+                          recordedPathHashes.get())) {
+                    return;
                   }
+
+                  // Push to cache.
+                  buildInfoRecorder.performUploadToArtifactCache(
+                      ImmutableSet.copyOf(ruleKeys),
+                      buildContext.getArtifactCache(),
+                      buildContext.getEventBus());
+
+                } catch (Throwable t) {
+                  buildContext.getEventBus().post(
+                      ThrowableConsoleEvent.create(
+                          t,
+                          "Error uploading to cache for %s.",
+                          rule));
                 }
 
               }
@@ -973,7 +1024,9 @@ public class CachingBuildEngine implements BuildEngine {
                   }
 
                   // If this rule is cacheable, upload it to the cache.
-                  if (outputSize.isPresent() && shouldUploadToCache(rule, outputSize.get())) {
+                  if (success.shouldUploadResultingArtifact() &&
+                      outputSize.isPresent() &&
+                      shouldUploadToCache(rule, outputSize.get())) {
                     uploadToCache(success);
                   }
 
@@ -1653,6 +1706,7 @@ public class CachingBuildEngine implements BuildEngine {
   private Optional<BuildResult> performManifestBasedCacheFetch(
       final BuildRule rule,
       final BuildEngineBuildContext context,
+      BuildInfoRecorder buildInfoRecorder,
       RuleKeyAndInputs manifestKey)
       throws IOException {
     Preconditions.checkArgument(useManifestCaching(rule));
@@ -1716,10 +1770,16 @@ public class CachingBuildEngine implements BuildEngine {
             context);
 
     if (cacheResult.getType().isSuccess()) {
-      return Optional.of(BuildResult.success(
-          rule,
-          BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED,
-          cacheResult));
+      fillMissingBuildMetadataFromCache(
+          cacheResult,
+          buildInfoRecorder,
+          BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
+          BuildInfo.MetadataKey.DEP_FILE);
+      return Optional.of(
+          BuildResult.success(
+              rule,
+              BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED,
+              cacheResult));
     }
     return Optional.empty();
 
@@ -1775,11 +1835,18 @@ public class CachingBuildEngine implements BuildEngine {
           context);
 
     if (cacheResult.getType().isSuccess()) {
-      return Optional.of(BuildResult.success(
-          rule,
-          BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED,
-          cacheResult));
+      fillMissingBuildMetadataFromCache(
+          cacheResult,
+          buildInfoRecorder,
+          BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
+          BuildInfo.MetadataKey.DEP_FILE);
+      return Optional.of(
+          BuildResult.success(
+              rule,
+              BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED,
+              cacheResult));
     }
+
     return Optional.empty();
   }
 
