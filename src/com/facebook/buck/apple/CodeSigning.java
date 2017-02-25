@@ -43,7 +43,7 @@ public class CodeSigning {
       throws InterruptedException, IOException {
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder()
-            .setCommand(ImmutableList.of("codesign", "-vvvv", path.toString())).build();
+            .setCommand(ImmutableList.of("codesign", "--verify", "-v", path.toString())).build();
 
     // Specify that stdout is expected, or else output may be wrapped in Ansi escape chars.
     Set<ProcessExecutor.Option> options =
