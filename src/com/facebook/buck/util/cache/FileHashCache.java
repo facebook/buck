@@ -17,6 +17,7 @@
 package com.facebook.buck.util.cache;
 
 import com.facebook.buck.hashing.FileHashLoader;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.hash.HashCode;
 
@@ -34,9 +35,25 @@ public interface FileHashCache extends FileHashLoader {
 
   void invalidate(Path path);
 
+  /**
+   * Invalidate any cached entries for the given relative {@link Path} under the given
+   * {@link ProjectFilesystem}.
+   */
+  default void invalidate(ProjectFilesystem filesystem, Path path) {
+    invalidate(filesystem.resolve(path));
+  }
+
   void invalidateAll();
 
   void set(Path path, HashCode hashCode) throws IOException;
+
+  /**
+   * Set the {@link HashCode} for the given relative {@link Path} under the given
+   * {@link ProjectFilesystem}.
+   */
+  default void set(ProjectFilesystem filesystem, Path path, HashCode hashCode) throws IOException {
+    set(filesystem.resolve(path), hashCode);
+  }
 
   default FileHashCacheVerificationResult verify() throws IOException {
     throw new RuntimeException(

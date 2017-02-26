@@ -52,7 +52,7 @@ public class StackedFileHashCacheTest {
   public ExpectedException expectedException = ExpectedException.none();
 
   @Test
-  public void usesFirstCache() throws IOException {
+  public void usesFirstCacheAbsolutePath() throws IOException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     Path path = Paths.get("world.txt");
@@ -66,7 +66,20 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void usesFirstCacheForArchivePath() throws IOException {
+  public void usesFirstCache() throws IOException {
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+
+    Path path = Paths.get("world.txt");
+    filesystem.touch(path);
+
+    ProjectFileHashCache innerCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+    StackedFileHashCache cache = new StackedFileHashCache(ImmutableList.of(innerCache));
+    cache.get(filesystem, path);
+    assertTrue(innerCache.willGet(path));
+  }
+
+  @Test
+  public void usesFirstCacheForArchivePathAbsolutePath() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     Path path = Paths.get("world.jar");
@@ -84,7 +97,23 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void usesSecondCache() throws IOException {
+  public void usesFirstCacheForArchivePath() throws IOException {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    Path path = filesystem.getPath("world.jar");
+    writeJarWithHashes(filesystem, path);
+
+    ArchiveMemberPath archiveMemberPath =
+        ArchiveMemberPath.of(path, Paths.get(SOME_FILE_INSIDE_JAR));
+
+    ProjectFileHashCache innerCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+    StackedFileHashCache cache = new StackedFileHashCache(ImmutableList.of(innerCache));
+    cache.get(filesystem, archiveMemberPath);
+    assertTrue(innerCache.willGet(archiveMemberPath));
+  }
+
+  @Test
+  public void usesSecondCacheAbsolutePath() throws IOException {
     Path path = Paths.get("world.txt");
     Path fullPath = tmp2.getRoot().resolve(path);
 
@@ -106,7 +135,27 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void usesSecondCacheForArchivePath() throws IOException {
+  public void usesSecondCache() throws IOException {
+    ProjectFileHashCache innerCache =
+        DefaultFileHashCache.createDefaultFileHashCache(new ProjectFilesystem(tmp.getRoot()));
+
+    // The second project filesystem has the file.
+    ProjectFilesystem filesystem2 = new ProjectFilesystem(tmp2.getRoot());
+    Path path = filesystem2.getPath("world.txt");
+    ProjectFileHashCache innerCache2 = DefaultFileHashCache.createDefaultFileHashCache(filesystem2);
+    filesystem2.touch(path);
+
+    StackedFileHashCache cache =
+        new StackedFileHashCache(
+            ImmutableList.of(
+                innerCache,
+                innerCache2));
+    cache.get(filesystem2, path);
+    assertTrue(innerCache2.willGet(path));
+  }
+
+  @Test
+  public void usesSecondCacheForArchivePathAbsolutePath() throws IOException {
     Path path = Paths.get("world.jar");
     Path fullPath = tmp2.getRoot().resolve(path);
 
@@ -132,7 +181,29 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void skipsFirstCache() throws IOException {
+  public void usesSecondCacheForArchivePath() throws IOException {
+    ProjectFileHashCache innerCache =
+        DefaultFileHashCache.createDefaultFileHashCache(new ProjectFilesystem(tmp.getRoot()));
+
+    // The second project filesystem has the file.
+    ProjectFilesystem filesystem2 = new ProjectFilesystem(tmp2.getRoot());
+    Path path = filesystem2.getPath("world.jar");
+    ProjectFileHashCache innerCache2 = DefaultFileHashCache.createDefaultFileHashCache(filesystem2);
+    writeJarWithHashes(filesystem2, path);
+
+    ArchiveMemberPath archiveMemberPath =
+        ArchiveMemberPath.of(path, Paths.get(SOME_FILE_INSIDE_JAR));
+    StackedFileHashCache cache =
+        new StackedFileHashCache(
+            ImmutableList.of(
+                innerCache,
+                innerCache2));
+    cache.get(filesystem2, archiveMemberPath);
+    assertTrue(innerCache2.willGet(archiveMemberPath));
+  }
+
+  @Test
+  public void skipsFirstCacheAbsolutePath() throws IOException {
     Path fullPath = Paths.get("some/path");
     ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
     ProjectFileHashCache innerCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
@@ -142,7 +213,17 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void skipsFirstCacheForArchiveMemberPath() throws IOException {
+  public void skipsFirstCache() throws IOException {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    Path path = filesystem.getPath("some/path");
+    ProjectFileHashCache innerCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+    StackedFileHashCache cache = new StackedFileHashCache(ImmutableList.of(innerCache));
+    expectedException.expect(NoSuchFileException.class);
+    cache.get(filesystem, path);
+  }
+
+  @Test
+  public void skipsFirstCacheForArchiveMemberPathAbsolutePath() throws IOException {
     Path fullPath = Paths.get("world.jar");
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
     writeJarWithHashes(filesystem, filesystem.resolve(fullPath));
@@ -156,7 +237,20 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void skipsFirstCacheBecauseIgnored() throws IOException {
+  public void skipsFirstCacheForArchiveMemberPath() throws IOException {
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    Path path = filesystem.getPath("world.jar");
+    writeJarWithHashes(filesystem, path);
+    ArchiveMemberPath archiveMemberPath =
+        ArchiveMemberPath.of(path, filesystem.getPath("Nonexistent.class"));
+    ProjectFileHashCache innerCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+    StackedFileHashCache cache = new StackedFileHashCache(ImmutableList.of(innerCache));
+    expectedException.expect(NoSuchFileException.class);
+    cache.get(filesystem, archiveMemberPath);
+  }
+
+  @Test
+  public void skipsFirstCacheBecauseIgnoredAbsolutePath() throws IOException {
     Config config = ConfigBuilder.createFromText(
         "[project]",
         "ignore = world.txt");
@@ -171,7 +265,21 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void skipsFirstCacheBecauseIgnoredForArchiveMemberPath() throws IOException {
+  public void skipsFirstCacheBecauseIgnored() throws IOException {
+    Config config = ConfigBuilder.createFromText(
+        "[project]",
+        "ignore = world.txt");
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot(), config);
+    Path path = filesystem.getPath("world.txt");
+    filesystem.touch(path);
+    ProjectFileHashCache innerCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+    StackedFileHashCache cache = new StackedFileHashCache(ImmutableList.of(innerCache));
+    expectedException.expect(NoSuchFileException.class);
+    cache.get(filesystem, path);
+  }
+
+  @Test
+  public void skipsFirstCacheBecauseIgnoredForArchiveMemberPathAbsolutePath() throws IOException {
     Config config = ConfigBuilder.createFromText(
         "[project]",
         "ignore = world.jar");
@@ -185,6 +293,22 @@ public class StackedFileHashCacheTest {
     StackedFileHashCache cache = new StackedFileHashCache(ImmutableList.of(innerCache));
     expectedException.expect(NoSuchFileException.class);
     cache.get(archiveMemberPath);
+  }
+
+  @Test
+  public void skipsFirstCacheBecauseIgnoredForArchiveMemberPath() throws IOException {
+    Config config = ConfigBuilder.createFromText(
+        "[project]",
+        "ignore = world.jar");
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot(), config);
+    Path path = filesystem.getPath("world.jar");
+    writeJarWithHashes(filesystem, path);
+    ArchiveMemberPath archiveMemberPath =
+        ArchiveMemberPath.of(path, filesystem.getPath("Nonexistent.class"));
+    ProjectFileHashCache innerCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+    StackedFileHashCache cache = new StackedFileHashCache(ImmutableList.of(innerCache));
+    expectedException.expect(NoSuchFileException.class);
+    cache.get(filesystem, archiveMemberPath);
   }
 
   private void writeJarWithHashes(ProjectFilesystem filesystem, Path path) throws IOException {
