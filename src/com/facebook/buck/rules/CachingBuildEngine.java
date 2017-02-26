@@ -51,6 +51,7 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
@@ -615,7 +616,8 @@ public class CachingBuildEngine implements BuildEngine {
       throws IOException {
 
     // Create a new `DefaultFileHashCache` to prevent caching from interfering with verification.
-    FileHashCache fileHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+    ProjectFileHashCache fileHashCache =
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem);
 
     // Verify each path from the recorded path hashes entry matches the actual on-disk version.
     for (Map.Entry<String, String> ent : recordedPathHashes.entrySet()) {

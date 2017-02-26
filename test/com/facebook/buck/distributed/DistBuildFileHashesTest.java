@@ -48,6 +48,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -134,7 +135,7 @@ public class DistBuildFileHashesTest {
 
     ProjectFilesystem readProjectFilesystem =
         new ProjectFilesystem(tempDir.newFolder("read_hashes").toPath().toRealPath());
-    FileHashCache fileHashCache = DistBuildFileHashes.createFileHashCache(
+    ProjectFileHashCache fileHashCache = DistBuildFileHashes.createFileHashCache(
         readProjectFilesystem,
         fileHashes.get(0));
 
@@ -178,7 +179,7 @@ public class DistBuildFileHashesTest {
 
     ProjectFilesystem readProjectFilesystem =
         new ProjectFilesystem(tempDir.newFolder("read_hashes").toPath().toRealPath());
-    FileHashCache fileHashCache = DistBuildFileHashes.createFileHashCache(
+    ProjectFileHashCache fileHashCache = DistBuildFileHashes.createFileHashCache(
         readProjectFilesystem,
         fileHashes.get(0));
 
@@ -273,7 +274,7 @@ public class DistBuildFileHashesTest {
 
       ProjectFilesystem readProjectFilesystem =
           new ProjectFilesystem(tempDir.newFolder("read_hashes").toPath().toRealPath());
-      FileHashCache fileHashCache = DistBuildFileHashes.createFileHashCache(
+      ProjectFileHashCache fileHashCache = DistBuildFileHashes.createFileHashCache(
           readProjectFilesystem,
           recordedHashes.get(0));
 
@@ -446,7 +447,7 @@ public class DistBuildFileHashesTest {
           actionGraph,
           sourcePathResolver,
           ruleFinder,
-          createFileHashCache(),
+          createFileHashCache().getCaches(),
           cellIndexer,
           MoreExecutors.newDirectExecutorService(),
           /* keySeed */ 0,
@@ -462,8 +463,8 @@ public class DistBuildFileHashesTest {
         BuildRuleResolver resolver,
         SourcePathResolver sourcePathResolver) throws Exception;
 
-    private FileHashCache createFileHashCache() {
-      ImmutableList.Builder<FileHashCache> cacheList = ImmutableList.builder();
+    private StackedFileHashCache createFileHashCache() {
+      ImmutableList.Builder<ProjectFileHashCache> cacheList = ImmutableList.builder();
       for (Path path : javaFs.getRootDirectories()) {
         if (Files.isDirectory(path)) {
           cacheList.add(

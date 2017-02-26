@@ -83,13 +83,14 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
             });
   }
 
-  public static FileHashCache createBuckOutFileHashCache(
+  public static DefaultFileHashCache createBuckOutFileHashCache(
       ProjectFilesystem projectFilesystem,
       Path buckOutPath) {
     return new DefaultFileHashCache(projectFilesystem, Optional.of(buckOutPath));
   }
 
-  public static FileHashCache createDefaultFileHashCache(ProjectFilesystem projectFilesystem) {
+  public static DefaultFileHashCache createDefaultFileHashCache(
+      ProjectFilesystem projectFilesystem) {
     return new DefaultFileHashCache(projectFilesystem, Optional.empty());
   }
 

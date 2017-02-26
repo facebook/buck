@@ -42,11 +42,12 @@ import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.cache.NullFileHashCache;
+import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -112,7 +113,7 @@ public class CommandRunnerParamsForTesting {
         .setProcessManager(Optional.empty())
         .setWebServer(webServer)
         .setBuckConfig(config)
-        .setFileHashCache(new NullFileHashCache())
+        .setFileHashCache(new StackedFileHashCache(ImmutableList.of()))
         .setExecutors(
             ImmutableMap.of(
                 ExecutorPool.PROJECT,

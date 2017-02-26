@@ -38,10 +38,11 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.cache.NullFileHashCache;
+import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.easymock.EasyMockSupport;
@@ -129,7 +130,7 @@ public class CleanCommandTest extends EasyMockSupport {
         .setProcessManager(Optional.empty())
         .setWebServer(Optional.empty())
         .setBuckConfig(FakeBuckConfig.builder().build())
-        .setFileHashCache(new NullFileHashCache())
+        .setFileHashCache(new StackedFileHashCache(ImmutableList.of()))
         .setExecutors(ImmutableMap.of())
         .setBuildEnvironmentDescription(
             CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION)

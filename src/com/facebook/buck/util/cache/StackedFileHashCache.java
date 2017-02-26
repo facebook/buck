@@ -28,20 +28,23 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 /**
- * Presents a list of {@link FileHashCache}s as a single cache, implementing a Chain of
- * Responsibility to find items in the cache.
+ * Wraps a collection of {@link com.facebook.buck.io.ProjectFilesystem}-specific
+ * {@link ProjectFileHashCache}s as a single cache, implementing a Chain of Responsibility to find
+ * items in the cache.  As this "multi"-cache is meant to handle paths across different
+ * {@link com.facebook.buck.io.ProjectFilesystem}s, it is a distinct type from
+ * {@link ProjectFileHashCache}.
  */
 public class StackedFileHashCache implements FileHashCache {
 
-  private final ImmutableList<? extends FileHashCache> caches;
+  private final ImmutableList<? extends ProjectFileHashCache> caches;
 
-  public StackedFileHashCache(ImmutableList<? extends FileHashCache> caches) {
+  public StackedFileHashCache(ImmutableList<? extends ProjectFileHashCache> caches) {
     this.caches = caches;
   }
 
-  private Optional<Pair<FileHashCache, Path>> lookup(Path path) {
+  private Optional<Pair<ProjectFileHashCache, Path>> lookup(Path path) {
     Preconditions.checkArgument(path.isAbsolute());
-    for (FileHashCache cache : caches) {
+    for (ProjectFileHashCache cache : caches) {
       if (cache.willGet(path)) {
         return Optional.of(new Pair<>(cache, path));
       }
@@ -49,29 +52,19 @@ public class StackedFileHashCache implements FileHashCache {
     return Optional.empty();
   }
 
-  private Optional<Pair<FileHashCache, ArchiveMemberPath>> lookup(ArchiveMemberPath path) {
+  private Optional<Pair<ProjectFileHashCache, ArchiveMemberPath>> lookup(ArchiveMemberPath path) {
     Preconditions.checkArgument(path.isAbsolute());
-    for (FileHashCache cache : caches) {
+    for (ProjectFileHashCache cache : caches) {
       if (cache.willGet(path)) {
         return Optional.of(new Pair<>(cache, path));
       }
     }
     return Optional.empty();
-  }
-
-  @Override
-  public boolean willGet(Path path) {
-    return lookup(path).isPresent();
-  }
-
-  @Override
-  public boolean willGet(ArchiveMemberPath archiveMemberPath) {
-    return lookup(archiveMemberPath).isPresent();
   }
 
   @Override
   public void invalidate(Path path) {
-    Optional<Pair<FileHashCache, Path>> found = lookup(path);
+    Optional<Pair<ProjectFileHashCache, Path>> found = lookup(path);
     if (found.isPresent()) {
       found.get().getFirst().invalidate(found.get().getSecond());
     }
@@ -79,14 +72,14 @@ public class StackedFileHashCache implements FileHashCache {
 
   @Override
   public void invalidateAll() {
-    for (FileHashCache cache : caches) {
+    for (ProjectFileHashCache cache : caches) {
       cache.invalidateAll();
     }
   }
 
   @Override
   public HashCode get(Path path) throws IOException {
-    Optional<Pair<FileHashCache, Path>> found = lookup(path);
+    Optional<Pair<ProjectFileHashCache, Path>> found = lookup(path);
     if (!found.isPresent()) {
       throw new NoSuchFileException(path.toString());
     }
@@ -95,7 +88,7 @@ public class StackedFileHashCache implements FileHashCache {
 
   @Override
   public long getSize(Path path) throws IOException {
-    Optional<Pair<FileHashCache, Path>> found = lookup(path);
+    Optional<Pair<ProjectFileHashCache, Path>> found = lookup(path);
     if (!found.isPresent()) {
       throw new NoSuchFileException(path.toString());
     }
@@ -104,7 +97,7 @@ public class StackedFileHashCache implements FileHashCache {
 
   @Override
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
-    Optional<Pair<FileHashCache, ArchiveMemberPath>> found = lookup(archiveMemberPath);
+    Optional<Pair<ProjectFileHashCache, ArchiveMemberPath>> found = lookup(archiveMemberPath);
     if (!found.isPresent()) {
       throw new NoSuchFileException(archiveMemberPath.toString());
     }
@@ -113,7 +106,7 @@ public class StackedFileHashCache implements FileHashCache {
 
   @Override
   public void set(Path path, HashCode hashCode) throws IOException {
-    Optional<Pair<FileHashCache, Path>> found = lookup(path);
+    Optional<Pair<ProjectFileHashCache, Path>> found = lookup(path);
     if (found.isPresent()) {
       found.get().getFirst().set(found.get().getSecond(), hashCode);
     }
@@ -125,7 +118,7 @@ public class StackedFileHashCache implements FileHashCache {
     int cachesExamined = 1;
     int filesExamined = 0;
 
-    for (FileHashCache cache : caches) {
+    for (ProjectFileHashCache cache : caches) {
       FileHashCacheVerificationResult result = cache.verify();
       cachesExamined += result.getCachesExamined();
       filesExamined += result.getFilesExamined();
@@ -137,4 +130,12 @@ public class StackedFileHashCache implements FileHashCache {
         .setFilesExamined(filesExamined)
         .build();
   }
+
+  // NOTE(agallagher): Ideally we wouldn't expose this our wrapped caches.  However, a the dist
+  // build support code needs this in a few locations to re-build the hash cache with additional
+  // child caches.
+  public ImmutableList<? extends ProjectFileHashCache> getCaches() {
+    return caches;
+  }
+
 }

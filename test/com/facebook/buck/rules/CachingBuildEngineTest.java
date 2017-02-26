@@ -82,6 +82,7 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
+import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.concurrent.ListeningMultiSemaphore;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
@@ -202,7 +203,10 @@ public class CachingBuildEngineTest {
     @Before
     public void setUp() {
       filesystem = new FakeProjectFilesystem(tmp.getRoot());
-      fileHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+      fileHashCache =
+          new StackedFileHashCache(
+              ImmutableList.of(
+                  DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
       buildContext = BuildEngineBuildContext.builder()
           .setBuildContext(FakeBuildContext.NOOP_CONTEXT)
           .setArtifactCache(cache)
@@ -955,7 +959,6 @@ public class CachingBuildEngineTest {
       filesystem.mkdirs(output.getParent());
       filesystem.writeContentsToPath("something", output);
       HashCode originalHashCode = fileHashCache.get(filesystem.resolve(output));
-      assertTrue(fileHashCache.willGet(output));
 
       // Create a simple rule which just writes something new to the output file.
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");

@@ -83,16 +83,6 @@ public class FakeFileHashCache implements FileHashCache {
   }
 
   @Override
-  public boolean willGet(Path path) {
-    return true;
-  }
-
-  @Override
-  public boolean willGet(ArchiveMemberPath archiveMemberPath) {
-    throw new UnsupportedOperationException("Not yet implemented");
-  }
-
-  @Override
   public void invalidate(Path path) {
     pathsToHashes.remove(path);
   }

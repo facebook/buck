@@ -41,6 +41,7 @@ import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -242,7 +243,10 @@ public class BuildInfoRecorderTest {
   @Test
   public void testGetOutputHash() throws IOException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    FileHashCache fileHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+    FileHashCache fileHashCache =
+        new StackedFileHashCache(
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
     BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(filesystem);
 
     byte[] contents = "contents".getBytes();

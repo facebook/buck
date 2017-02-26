@@ -53,6 +53,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -519,7 +520,9 @@ public class CxxTestDescriptionTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     FileHashCache fileHashCache =
-        DefaultFileHashCache.createDefaultFileHashCache(rule.getProjectFilesystem());
+        new StackedFileHashCache(
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(rule.getProjectFilesystem())));
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder);
     return factory.build(rule);

@@ -28,16 +28,6 @@ import java.nio.file.Path;
 public class NullFileHashCache implements FileHashCache {
 
   @Override
-  public boolean willGet(Path path) {
-    return false;
-  }
-
-  @Override
-  public boolean willGet(ArchiveMemberPath archiveMemberPath) {
-    return false;
-  }
-
-  @Override
   public void invalidate(Path path) {
   }
 

@@ -20,7 +20,7 @@ import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
@@ -30,17 +30,19 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 
-public class RemoteStateBasedFileHashCache implements FileHashCache {
+public class RemoteStateBasedFileHashCache implements ProjectFileHashCache {
   private static final Function<BuildJobStateFileHashEntry, HashCode>
       HASH_CODE_FROM_FILE_HASH_ENTRY =
       input -> HashCode.fromString(input.getHashCode());
 
+  private final ProjectFilesystem filesystem;
   private final Map<Path, HashCode> remoteFileHashes;
   private final Map<ArchiveMemberPath, HashCode> remoteArchiveHashes;
 
   public RemoteStateBasedFileHashCache(
       final ProjectFilesystem projectFilesystem,
       BuildJobStateFileHashes remoteFileHashes) {
+    this.filesystem = projectFilesystem;
     this.remoteFileHashes =
         Maps.transformValues(
             DistBuildFileHashes.indexEntriesByPath(projectFilesystem, remoteFileHashes),
@@ -96,4 +98,10 @@ public class RemoteStateBasedFileHashCache implements FileHashCache {
   public void set(Path path, HashCode hashCode) throws IOException {
     throw new UnsupportedOperationException();
   }
+
+  @Override
+  public ProjectFilesystem getFilesystem() {
+    return filesystem;
+  }
+
 }

@@ -45,6 +45,7 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.collect.ImmutableList;
 
 import org.hamcrest.Matchers;
@@ -231,7 +232,10 @@ public class ExportFileTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem(root);
     Path temp = Paths.get("example_file");
 
-    FileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+    FileHashCache hashCache =
+        new StackedFileHashCache(
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
@@ -259,7 +263,10 @@ public class ExportFileTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
         filesystem);
 
-    hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+    hashCache =
+        new StackedFileHashCache(
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
     ruleFinder = new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );

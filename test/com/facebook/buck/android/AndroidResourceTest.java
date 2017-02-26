@@ -43,6 +43,8 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.StackedFileHashCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -54,7 +56,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Function;
-
 
 public class AndroidResourceTest {
 
@@ -214,7 +215,9 @@ public class AndroidResourceTest {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    FileHashCache fileHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+    FileHashCache fileHashCache =
+        new StackedFileHashCache(
+            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
     filesystem.writeContentsToPath(
         "something",
         pathResolver.getRelativePath(dep.getPathToTextSymbolsFile()));

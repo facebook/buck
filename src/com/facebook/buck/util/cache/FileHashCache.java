@@ -17,7 +17,6 @@
 package com.facebook.buck.util.cache;
 
 import com.facebook.buck.hashing.FileHashLoader;
-import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.hash.HashCode;
 
@@ -32,10 +31,6 @@ import java.util.List;
  * based on a simplified subset of the java.util.Map&lt;Path, HashCode&gt; interface.
  */
 public interface FileHashCache extends FileHashLoader {
-
-  boolean willGet(Path path);
-
-  boolean willGet(ArchiveMemberPath archiveMemberPath);
 
   void invalidate(Path path);
 
@@ -55,4 +50,5 @@ public interface FileHashCache extends FileHashLoader {
     int getFilesExamined();
     List<String> getVerificationErrors();
   }
+
 }

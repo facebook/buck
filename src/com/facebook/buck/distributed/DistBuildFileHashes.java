@@ -32,6 +32,7 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -72,7 +73,7 @@ public class DistBuildFileHashes {
       ActionGraph actionGraph,
       final SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
-      final FileHashCache rootCellFileHashCache,
+      final ImmutableList<? extends ProjectFileHashCache> rootCellFileHashCaches,
       final Function<? super Path, Integer> cellIndexer,
       ListeningExecutorService executorService,
       final int keySeed,
@@ -93,8 +94,10 @@ public class DistBuildFileHashes {
           public FileHashLoader load(ProjectFilesystem key) throws Exception {
             return new RecordingFileHashLoader(
                 new StackedFileHashCache(
-                    ImmutableList.of(rootCellFileHashCache,
-                        DefaultFileHashCache.createDefaultFileHashCache(key))),
+                    ImmutableList.<ProjectFileHashCache>builder()
+                        .addAll(rootCellFileHashCaches)
+                        .add(DefaultFileHashCache.createDefaultFileHashCache(key))
+                        .build()),
                 key,
                 remoteFileHashes.get(key),
                 new DistBuildConfig(buckConfig));
@@ -191,7 +194,7 @@ public class DistBuildFileHashes {
    * @param remoteFileHashes the serialized state.
    * @return the cache.
    */
-  public static FileHashCache createFileHashCache(
+  public static ProjectFileHashCache createFileHashCache(
       ProjectFilesystem projectFilesystem,
       BuildJobStateFileHashes remoteFileHashes) {
     return new RemoteStateBasedFileHashCache(projectFilesystem, remoteFileHashes);

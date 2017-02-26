@@ -41,7 +41,9 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -143,7 +145,9 @@ public class JavaLibrarySymbolsFinderTest {
 
     // Calculates the RuleKey for a JavaSymbolsRule with the specified JavaLibrarySymbolsFinder.
     final FileHashCache fileHashCache =
-        DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem);
+        new StackedFileHashCache(
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem)));
     final DefaultRuleKeyFactory ruleKeyFactory = new DefaultRuleKeyFactory(
         0,
         fileHashCache,

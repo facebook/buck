@@ -34,6 +34,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
@@ -64,7 +65,8 @@ public class DistBuildState {
   private final BuildJobState remoteState;
   private final ImmutableBiMap<Integer, Cell> cells;
   private final Map<ProjectFilesystem, BuildJobStateFileHashes> fileHashes;
-  private final LoadingCache<ProjectFilesystem, FileHashCache> directFileHashCacheLoder;
+  private final LoadingCache<ProjectFilesystem, ImmutableList<ProjectFileHashCache>>
+      directFileHashCacheLoder;
 
 
   private DistBuildState(
@@ -84,15 +86,15 @@ public class DistBuildState {
         });
 
     this.directFileHashCacheLoder = CacheBuilder.newBuilder()
-        .build(new CacheLoader<ProjectFilesystem, FileHashCache>() {
+        .build(new CacheLoader<ProjectFilesystem, ImmutableList<ProjectFileHashCache>>() {
           @Override
-          public FileHashCache load(@Nonnull ProjectFilesystem filesystem) {
-            FileHashCache cellCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
-            FileHashCache buckOutCache = DefaultFileHashCache.createBuckOutFileHashCache(
+          public ImmutableList<ProjectFileHashCache> load(@Nonnull ProjectFilesystem filesystem) {
+            ProjectFileHashCache cellCache =
+                DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+            ProjectFileHashCache buckOutCache = DefaultFileHashCache.createBuckOutFileHashCache(
                 filesystem.replaceBlacklistedPaths(ImmutableSet.of()),
                 filesystem.getBuckPaths().getBuckOut());
-            return new StackedFileHashCache(
-                ImmutableList.of(cellCache, buckOutCache));
+            return ImmutableList.of(cellCache, buckOutCache);
           }
         });
   }
@@ -233,7 +235,8 @@ public class DistBuildState {
         Functions.forMap(cells));
   }
 
-  private FileHashCache loadDirectFileHashCache(ProjectFilesystem filesystem) {
+  private ImmutableList<ProjectFileHashCache> loadDirectFileHashCache(
+      ProjectFilesystem filesystem) {
     return directFileHashCacheLoder.getUnchecked(filesystem);
   }
 
@@ -243,11 +246,14 @@ public class DistBuildState {
         "Don't have file hashes for filesystem %s.",
         filesystem);
 
-    FileHashCache remoteCache =
+    ProjectFileHashCache remoteCache =
         DistBuildFileHashes.createFileHashCache(filesystem, remoteFileHashes);
 
     return new StackedFileHashCache(
-        ImmutableList.of(remoteCache, loadDirectFileHashCache(filesystem)));
+        ImmutableList.<ProjectFileHashCache>builder()
+            .add(remoteCache)
+            .addAll(loadDirectFileHashCache(filesystem))
+            .build());
   }
 
   public DistBuildFileMaterializer createMaterializingLoader(
@@ -258,6 +264,9 @@ public class DistBuildState {
         "Don't have file hashes for filesystem %s.",
         projectFilesystem);
     return new DistBuildFileMaterializer(
-        projectFilesystem, remoteFileHashes, provider, loadDirectFileHashCache(projectFilesystem));
+        projectFilesystem,
+        remoteFileHashes,
+        provider,
+        new StackedFileHashCache(loadDirectFileHashCache(projectFilesystem)));
   }
 }

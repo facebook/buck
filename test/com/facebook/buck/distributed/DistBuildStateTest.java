@@ -329,7 +329,7 @@ public class DistBuildStateTest {
         actionGraph,
         sourcePathResolver,
         ruleFinder,
-        DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem),
+        ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem)),
         Functions.constant(0),
         MoreExecutors.newDirectExecutorService(),
         /* keySeed */ 0,

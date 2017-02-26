@@ -40,6 +40,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
+import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -75,7 +76,10 @@ public class RuleKeyTest {
   @Test
   public void testRuleKeyDependsOnDeps() throws Exception {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    FileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+    FileHashCache hashCache =
+        new StackedFileHashCache(
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
     BuildRuleResolver ruleResolver1 =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRuleResolver ruleResolver2 =
@@ -649,7 +653,9 @@ public class RuleKeyTest {
     );
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     FileHashCache hashCache =
-        DefaultFileHashCache.createDefaultFileHashCache(new FakeProjectFilesystem());
+        new StackedFileHashCache(
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(new FakeProjectFilesystem())));
 
     BuildRule buildRule1 = new TestRuleKeyAppendableBuildRule(
         params,
@@ -679,7 +685,9 @@ public class RuleKeyTest {
     );
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     FileHashCache hashCache =
-        DefaultFileHashCache.createDefaultFileHashCache(new FakeProjectFilesystem());
+        new StackedFileHashCache(
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(new FakeProjectFilesystem())));
 
     BuildRule buildRule1 = new TestRuleKeyAppendableBuildRule(
         params,
@@ -846,15 +854,6 @@ public class RuleKeyTest {
       SourcePathResolver resolver, SourcePathRuleFinder ruleFinder) {
     FileHashCache fileHashCache =
         new FileHashCache() {
-          @Override
-          public boolean willGet(Path path) {
-            return true;
-          }
-
-          @Override
-          public boolean willGet(ArchiveMemberPath archiveMemberPath) {
-            return true;
-          }
 
           @Override
           public void invalidate(Path path) {

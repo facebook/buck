@@ -16,10 +16,34 @@
 
 package com.facebook.buck.util.cache;
 
+import com.facebook.buck.hashing.FileHashLoader;
+import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.google.common.hash.HashCode;
 
-public interface ProjectFileHashCache extends FileHashCache {
+import java.io.IOException;
+import java.nio.file.Path;
+
+/**
+ * A {@link FileHashLoader} which manages caching file hashes for a given {@link ProjectFilesystem}.
+ */
+public interface ProjectFileHashCache extends FileHashLoader {
 
   ProjectFilesystem getFilesystem();
+
+  boolean willGet(Path path);
+
+  boolean willGet(ArchiveMemberPath archiveMemberPath);
+
+  void invalidate(Path path);
+
+  void invalidateAll();
+
+  void set(Path path, HashCode hashCode) throws IOException;
+
+  default FileHashCacheVerificationResult verify() throws IOException {
+    throw new RuntimeException(
+        "ProjectFileHashCache class " + getClass().getName() + " does not support verification.");
+  }
 
 }

@@ -528,7 +528,7 @@ public class BuildCommand extends AbstractCommand {
         actionGraphAndResolver.getActionGraph(),
         pathResolver,
         ruleFinder,
-        params.getFileHashCache(),
+        params.getFileHashCache().getCaches(),
         cellIndexer,
         executorService,
         params.getBuckConfig().getKeySeed(),

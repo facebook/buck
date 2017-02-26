@@ -43,6 +43,7 @@ import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -292,7 +293,10 @@ public class InputBasedRuleKeyFactoryTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    FileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+    FileHashCache hashCache =
+        new StackedFileHashCache(
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
 
     Path inputFile = filesystem.getPath("input");
     filesystem.writeBytesToPath(new byte[1024], inputFile);
@@ -319,7 +323,10 @@ public class InputBasedRuleKeyFactoryTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    FileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+    FileHashCache hashCache =
+        new StackedFileHashCache(
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
 
     // Create input that passes size limit.
     Path input = filesystem.getPath("input");
@@ -345,7 +352,10 @@ public class InputBasedRuleKeyFactoryTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    FileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+    FileHashCache hashCache =
+        new StackedFileHashCache(
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
 
     // Create inputs that combine to pass size limit.
     Path input1 = filesystem.getPath("input1");
@@ -376,7 +386,10 @@ public class InputBasedRuleKeyFactoryTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    FileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+    FileHashCache hashCache =
+        new StackedFileHashCache(
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
 
     // Create a directory of files which combine to pass size limit.
     Path input = filesystem.getPath("input");
@@ -404,7 +417,10 @@ public class InputBasedRuleKeyFactoryTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    FileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+    FileHashCache hashCache =
+        new StackedFileHashCache(
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
     final int sizeLimit = 200;
     InputBasedRuleKeyFactory factory =
         new InputBasedRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder, sizeLimit);
@@ -431,7 +447,10 @@ public class InputBasedRuleKeyFactoryTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    FileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+    FileHashCache hashCache =
+        new StackedFileHashCache(
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
     final int sizeLimit = 200;
     InputBasedRuleKeyFactory factory =
         new InputBasedRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder, sizeLimit);
