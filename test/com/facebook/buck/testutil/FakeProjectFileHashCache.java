@@ -47,7 +47,7 @@ public class FakeProjectFileHashCache implements ProjectFileHashCache {
       Map<String, String> pathsToHashes) {
     Map<Path, HashCode> cachedValues = new HashMap<>();
     for (Map.Entry<String, String> entry : pathsToHashes.entrySet()) {
-      cachedValues.put(filesystem.resolve(entry.getKey()), HashCode.fromString(entry.getValue()));
+      cachedValues.put(filesystem.getPath(entry.getKey()), HashCode.fromString(entry.getValue()));
     }
     return new FakeProjectFileHashCache(filesystem, cachedValues);
   }

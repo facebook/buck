@@ -112,13 +112,13 @@ public class WatchedFileHashCacheTest {
     Files.write(inputFile, "Hello world".getBytes(Charsets.UTF_8));
 
     Path dir = Paths.get("foo/bar");
-    HashCode dirHash = cache.get(filesystem.resolve(dir));
+    HashCode dirHash = cache.get(dir);
     Files.write(inputFile, "Goodbye world".getBytes(Charsets.UTF_8));
     cache.onFileSystemChange(
         createPathEvent(
             dir.resolve("baz"),
             StandardWatchEventKinds.ENTRY_MODIFY));
-    HashCode dirHash2 = cache.get(filesystem.resolve(dir));
+    HashCode dirHash2 = cache.get(dir);
     assertNotEquals(dirHash, dirHash2);
   }
 
@@ -152,10 +152,10 @@ public class WatchedFileHashCacheTest {
     Path child2 = dir.resolve("child2");
     filesystem.touch(child2);
 
-    cache.get(filesystem.resolve(dir));
-    assertTrue(cache.willGet(filesystem.resolve(dir)));
-    assertTrue(cache.willGet(filesystem.resolve(child1)));
-    assertTrue(cache.willGet(filesystem.resolve(child2)));
+    cache.get(dir);
+    assertTrue(cache.willGet(dir));
+    assertTrue(cache.willGet(child1));
+    assertTrue(cache.willGet(child2));
 
     // Trigger an event on the directory.
     cache.onFileSystemChange(createPathEvent(dir, StandardWatchEventKinds.ENTRY_MODIFY));

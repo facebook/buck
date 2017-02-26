@@ -623,7 +623,7 @@ public class CachingBuildEngine implements BuildEngine {
     for (Map.Entry<String, String> ent : recordedPathHashes.entrySet()) {
       Path path = filesystem.getPath(ent.getKey());
       HashCode cachedHashCode = HashCode.fromString(ent.getValue());
-      HashCode realHashCode = fileHashCache.get(filesystem.resolve(path));
+      HashCode realHashCode = fileHashCache.get(path);
       if (!realHashCode.equals(cachedHashCode)) {
         LOG.debug(
             "%s: recorded hash for \"%s\" doesn't match actual hash: %s (cached) != %s (real).",

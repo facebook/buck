@@ -45,8 +45,9 @@ public class StackedFileHashCache implements FileHashCache {
   private Optional<Pair<ProjectFileHashCache, Path>> lookup(Path path) {
     Preconditions.checkArgument(path.isAbsolute());
     for (ProjectFileHashCache cache : caches) {
-      if (cache.willGet(path)) {
-        return Optional.of(new Pair<>(cache, path));
+      Optional<Path> relativePath = cache.getFilesystem().getPathRelativeToProjectRoot(path);
+      if (relativePath.isPresent() && cache.willGet(relativePath.get())) {
+        return Optional.of(new Pair<>(cache, relativePath.get()));
       }
     }
     return Optional.empty();
@@ -55,8 +56,11 @@ public class StackedFileHashCache implements FileHashCache {
   private Optional<Pair<ProjectFileHashCache, ArchiveMemberPath>> lookup(ArchiveMemberPath path) {
     Preconditions.checkArgument(path.isAbsolute());
     for (ProjectFileHashCache cache : caches) {
-      if (cache.willGet(path)) {
-        return Optional.of(new Pair<>(cache, path));
+      Optional<ArchiveMemberPath> relativePath =
+          cache.getFilesystem().getPathRelativeToProjectRoot(path.getArchivePath())
+              .map(path::withArchivePath);
+      if (relativePath.isPresent() && cache.willGet(relativePath.get())) {
+        return Optional.of(new Pair<>(cache, relativePath.get()));
       }
     }
     return Optional.empty();

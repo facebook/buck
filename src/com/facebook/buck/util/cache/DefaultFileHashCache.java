@@ -94,6 +94,12 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     return new DefaultFileHashCache(projectFilesystem, Optional.empty());
   }
 
+  private void checkNotIgnored(Path relativePath) {
+    if (SHOULD_CHECK_IGNORED_PATHS) {
+      Preconditions.checkArgument(!projectFilesystem.isIgnored(relativePath));
+    }
+  }
+
   private HashCodeAndFileType getHashCodeAndFileType(Path path) throws IOException {
     if (projectFilesystem.isDirectory(path)) {
       return getDirHashCode(path);
@@ -126,23 +132,12 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     return HashCodeAndFileType.ofDirectory(hasher.hash(), children);
   }
 
-  public Path resolvePath(Path path) {
-    Preconditions.checkState(path.isAbsolute());
-    Optional<Path> relativePath = projectFilesystem.getPathRelativeToProjectRoot(path);
-    if (SHOULD_CHECK_IGNORED_PATHS) {
-      Preconditions.checkState(!isIgnored(relativePath.get()));
-    }
-    return relativePath.get();
-  }
-
   @Override
-  public boolean willGet(Path path) {
-    Optional<Path> relativePath = projectFilesystem.getPathRelativeToProjectRoot(path);
-    if (!relativePath.isPresent()) {
-      return false;
-    }
-    return loadingCache.getIfPresent(relativePath.get()) != null ||
-        (projectFilesystem.exists(relativePath.get()) && !isIgnored(relativePath.get()));
+  public boolean willGet(Path relativePath) {
+    Preconditions.checkState(!relativePath.isAbsolute());
+    checkNotIgnored(relativePath);
+    return loadingCache.getIfPresent(relativePath) != null ||
+        (projectFilesystem.exists(relativePath) && !isIgnored(relativePath));
   }
 
   private boolean isIgnored(Path path) {
@@ -154,6 +149,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
 
   @Override
   public boolean willGet(ArchiveMemberPath archiveMemberPath) {
+    Preconditions.checkState(!archiveMemberPath.getArchivePath().isAbsolute());
+    checkNotIgnored(archiveMemberPath.getArchivePath());
     return willGet(archiveMemberPath.getArchivePath());
   }
 
@@ -162,21 +159,17 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     sizeCache.invalidate(path);
   }
 
-  void invalidateResolved(Path path) {
-    Preconditions.checkArgument(!path.isAbsolute());
-    HashCodeAndFileType cached = loadingCache.getIfPresent(path);
-    invalidateImmediate(path);
+  @Override
+  public void invalidate(Path relativePath) {
+    Preconditions.checkArgument(!relativePath.isAbsolute());
+    checkNotIgnored(relativePath);
+    HashCodeAndFileType cached = loadingCache.getIfPresent(relativePath);
+    invalidateImmediate(relativePath);
     if (cached != null) {
       for (Path child : cached.getChildren()) {
-        invalidateImmediate(path.resolve(child));
+        invalidateImmediate(relativePath.resolve(child));
       }
     }
-  }
-
-  @Override
-  public void invalidate(Path rawPath) {
-    Path path = resolvePath(rawPath);
-    invalidateResolved(path);
   }
 
   @Override
@@ -189,23 +182,25 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
    * @return The {@link com.google.common.hash.HashCode} of the contents of path.
    */
   @Override
-  public HashCode get(Path rawPath) throws IOException {
-    Path path = resolvePath(rawPath);
+  public HashCode get(Path relativePath) throws IOException {
+    Preconditions.checkArgument(!relativePath.isAbsolute());
+    checkNotIgnored(relativePath);
     HashCode sha1;
     try {
-      sha1 = loadingCache.get(path.normalize()).getHashCode();
+      sha1 = loadingCache.get(relativePath.normalize()).getHashCode();
     } catch (ExecutionException e) {
       Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
       throw new RuntimeException(e.getCause());
     }
-    return Preconditions.checkNotNull(sha1, "Failed to find a HashCode for %s.", path);
+    return Preconditions.checkNotNull(sha1, "Failed to find a HashCode for %s.", relativePath);
   }
 
   @Override
-  public long getSize(Path rawPath) throws IOException {
-    Path path = resolvePath(rawPath);
+  public long getSize(Path relativePath) throws IOException {
+    Preconditions.checkArgument(!relativePath.isAbsolute());
+    checkNotIgnored(relativePath);
     try {
-      return sizeCache.get(path.normalize());
+      return sizeCache.get(relativePath.normalize());
     } catch (ExecutionException e) {
       Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
       throw new RuntimeException(e.getCause());
@@ -214,10 +209,10 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
 
   @Override
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
-    Preconditions.checkState(archiveMemberPath.isAbsolute());
+    Preconditions.checkArgument(!archiveMemberPath.isAbsolute());
+    checkNotIgnored(archiveMemberPath.getArchivePath());
 
-    Path absoluteFilePath = archiveMemberPath.getArchivePath();
-    Path relativeFilePath = resolvePath(absoluteFilePath).normalize();
+    Path relativeFilePath = archiveMemberPath.getArchivePath().normalize();
 
     try {
       HashCodeAndFileType fileHashCodeAndFileType = loadingCache.get(relativeFilePath);
@@ -242,27 +237,29 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   }
 
   @Override
-  public void set(Path rawPath, HashCode hashCode) throws IOException {
-    final Path path = resolvePath(rawPath);
+  public void set(Path relativePath, HashCode hashCode) throws IOException {
+    Preconditions.checkArgument(!relativePath.isAbsolute());
+    checkNotIgnored(relativePath);
+
     HashCodeAndFileType value;
 
-    if (projectFilesystem.isDirectory(path)) {
+    if (projectFilesystem.isDirectory(relativePath)) {
       value = HashCodeAndFileType.ofDirectory(
           hashCode,
-          projectFilesystem.getFilesUnderPath(path).stream()
-              .map(path::relativize)
+          projectFilesystem.getFilesUnderPath(relativePath).stream()
+              .map(relativePath::relativize)
               .collect(MoreCollectors.toImmutableSet()));
-    } else if (rawPath.toString().endsWith(".jar")) {
+    } else if (relativePath.toString().endsWith(".jar")) {
       value = HashCodeAndFileType.ofArchive(
           hashCode,
           projectFilesystem,
-          projectFilesystem.getPathRelativeToProjectRoot(path).get());
+          projectFilesystem.getPathRelativeToProjectRoot(relativePath).get());
 
     } else {
       value = HashCodeAndFileType.ofFile(hashCode);
     }
 
-    loadingCache.put(path, value);
+    loadingCache.put(relativePath, value);
   }
 
   @Override

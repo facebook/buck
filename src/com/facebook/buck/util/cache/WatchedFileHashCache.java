@@ -74,7 +74,7 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
           ).keySet();
       LOG.verbose("Paths to invalidate: %s", pathsToInvalidate);
       for (Path pathToInvalidate : pathsToInvalidate) {
-        invalidateResolved(pathToInvalidate);
+        invalidate(pathToInvalidate);
       }
     } else {
       // Non-path change event, likely an overflow due to many change events: invalidate everything.

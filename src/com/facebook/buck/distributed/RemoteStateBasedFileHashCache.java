@@ -56,7 +56,7 @@ public class RemoteStateBasedFileHashCache implements ProjectFileHashCache {
   @Override
   public HashCode get(Path path) throws IOException {
     return Preconditions.checkNotNull(
-        remoteFileHashes.get(path),
+        remoteFileHashes.get(filesystem.resolve(path)),
         "Path %s not in remote file hash.",
         path);
   }
@@ -69,19 +69,22 @@ public class RemoteStateBasedFileHashCache implements ProjectFileHashCache {
   @Override
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
     return Preconditions.checkNotNull(
-        remoteArchiveHashes.get(archiveMemberPath),
+        remoteArchiveHashes.get(
+            archiveMemberPath.withArchivePath(
+                filesystem.resolve(archiveMemberPath.getArchivePath()))),
         "Archive path %s not in remote file hash.",
         archiveMemberPath);
   }
 
   @Override
   public boolean willGet(Path path) {
-    return remoteFileHashes.containsKey(path);
+    return remoteFileHashes.containsKey(filesystem.resolve(path));
   }
 
   @Override
   public boolean willGet(ArchiveMemberPath archiveMemberPath) {
-    return remoteArchiveHashes.containsKey(archiveMemberPath);
+    return remoteArchiveHashes.containsKey(
+        archiveMemberPath.withArchivePath(filesystem.resolve(archiveMemberPath.getArchivePath())));
   }
 
   @Override

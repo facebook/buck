@@ -72,13 +72,14 @@ public class StackedFileHashCacheTest {
     Path path = Paths.get("world.jar");
     writeJarWithHashes(filesystem, path);
 
-    Path fullPath = filesystem.resolve(path);
-    ArchiveMemberPath archiveMemberPath = ArchiveMemberPath.of(
-        fullPath,
-        Paths.get(SOME_FILE_INSIDE_JAR));
+    ArchiveMemberPath archiveMemberPath =
+        ArchiveMemberPath.of(path, Paths.get(SOME_FILE_INSIDE_JAR));
+    ArchiveMemberPath fullArchiveMemberPath =
+        archiveMemberPath.withArchivePath(filesystem.resolve(archiveMemberPath.getArchivePath()));
+
     ProjectFileHashCache innerCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     StackedFileHashCache cache = new StackedFileHashCache(ImmutableList.of(innerCache));
-    cache.get(archiveMemberPath);
+    cache.get(fullArchiveMemberPath);
     assertTrue(innerCache.willGet(archiveMemberPath));
   }
 
@@ -117,15 +118,16 @@ public class StackedFileHashCacheTest {
     ProjectFileHashCache innerCache2 = DefaultFileHashCache.createDefaultFileHashCache(filesystem2);
     writeJarWithHashes(filesystem2, fullPath);
 
-    ArchiveMemberPath archiveMemberPath = ArchiveMemberPath.of(
-        fullPath,
-        Paths.get(SOME_FILE_INSIDE_JAR));
+    ArchiveMemberPath archiveMemberPath =
+        ArchiveMemberPath.of(path, Paths.get(SOME_FILE_INSIDE_JAR));
+    ArchiveMemberPath fullArchiveMemberPath =
+        archiveMemberPath.withArchivePath(filesystem2.resolve(archiveMemberPath.getArchivePath()));
     StackedFileHashCache cache =
         new StackedFileHashCache(
             ImmutableList.of(
                 innerCache,
                 innerCache2));
-    cache.get(archiveMemberPath);
+    cache.get(fullArchiveMemberPath);
     assertTrue(innerCache2.willGet(archiveMemberPath));
   }
 

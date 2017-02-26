@@ -48,7 +48,7 @@ public class PathHashing {
       if (!root.equals(path)) {
         children.add(root.relativize(path));
       }
-      hasher.putBytes(fileHashLoader.get(projectFilesystem.resolve(path)).asBytes());
+      hasher.putBytes(fileHashLoader.get(path).asBytes());
     }
     return children.build();
   }
