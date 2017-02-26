@@ -53,19 +53,4 @@ public class PathHashing {
     return children.build();
   }
 
-  /**
-   * Iterates recursively over all files under {@code paths}, sorts
-   * the filenames, and updates the {@link Hasher} with the names and
-   * contents of all files inside.
-   */
-  public static void hashPaths(
-      Hasher hasher,
-      FileHashLoader fileHashLoader,
-      ProjectFilesystem projectFilesystem,
-      ImmutableSortedSet<Path> paths) throws IOException {
-    for (Path path : paths) {
-      hashPath(hasher, fileHashLoader, projectFilesystem, path);
-    }
-  }
-
 }

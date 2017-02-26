@@ -22,7 +22,6 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal.CycleException;
 import com.facebook.buck.hashing.FileHashLoader;
-import com.facebook.buck.hashing.PathHashing;
 import com.facebook.buck.hashing.StringHashing;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -37,6 +36,7 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
@@ -145,18 +145,17 @@ public class TargetGraphHashing {
 
       ProjectFilesystem cellFilesystem = node.getFilesystem();
 
-      try {
-        // Hash the contents of all input files and directories.
-        PathHashing.hashPaths(
-            hasher,
-            fileHashLoader,
-            cellFilesystem,
-            ImmutableSortedSet.copyOf(node.getInputs()));
-      } catch (IOException e) {
-        throw new HumanReadableException(
-            e, "Error reading files for rule %s",
-            node.getBuildTarget()
-        );
+      // Hash the contents of all input files and directories.
+      for (Path input : ImmutableSortedSet.copyOf(node.getInputs())) {
+        try {
+          hasher.putBytes(fileHashLoader.get(cellFilesystem.resolve(input)).asBytes());
+        } catch (IOException e) {
+          throw new HumanReadableException(
+              e,
+              "Error reading path %s for rule %s",
+              input,
+              node.getBuildTarget());
+        }
       }
 
       // hash each dependency's build target and that build target's own hash.
