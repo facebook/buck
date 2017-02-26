@@ -21,12 +21,11 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.testutil.FakeFileHashCache;
+import com.facebook.buck.testutil.FakeProjectFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.SettableFakeClock;
-import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
@@ -41,16 +40,20 @@ import java.nio.file.Paths;
 public class PathHashingTest {
 
   private ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-  private FileHashCache fileHashCache = new FakeFileHashCache(
-      ImmutableMap.of(
-          projectFilesystem.resolve("foo/foo.txt"), HashCode.fromString("abcdef"),
-          projectFilesystem.resolve("foo/bar.txt"), HashCode.fromString("abcdef"),
-          projectFilesystem.resolve("foo/baz.txt"), HashCode.fromString("abcdef")));
-  private FileHashCache modifiedFileHashCache = new FakeFileHashCache(
-      ImmutableMap.of(
-          projectFilesystem.resolve("foo/foo.txt"), HashCode.fromString("123456"),
-          projectFilesystem.resolve("foo/bar.txt"), HashCode.fromString("123456"),
-          projectFilesystem.resolve("foo/baz.txt"), HashCode.fromString("123456")));
+  private ProjectFileHashCache fileHashCache =
+      FakeProjectFileHashCache.createFromStrings(
+          projectFilesystem,
+          ImmutableMap.of(
+              "foo/foo.txt", "abcdef",
+              "foo/bar.txt", "abcdef",
+              "foo/baz.txt", "abcdef"));
+  private ProjectFileHashCache modifiedFileHashCache =
+      FakeProjectFileHashCache.createFromStrings(
+          projectFilesystem,
+          ImmutableMap.of(
+              "foo/foo.txt", "123456",
+              "foo/bar.txt", "123456",
+              "foo/baz.txt", "123456"));
 
   @Test
   public void sameContentsSameNameHaveSameHash() throws IOException {

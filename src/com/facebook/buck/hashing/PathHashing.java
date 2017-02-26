@@ -35,7 +35,7 @@ public class PathHashing {
 
   public static ImmutableSet<Path> hashPath(
       Hasher hasher,
-      FileHashLoader fileHashLoader,
+      ProjectFileHashLoader fileHashLoader,
       ProjectFilesystem projectFilesystem,
       Path root) throws IOException {
     Preconditions.checkArgument(

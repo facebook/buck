@@ -17,6 +17,7 @@
 package com.facebook.buck.util.cache;
 
 import com.facebook.buck.hashing.FileHashLoader;
+import com.facebook.buck.hashing.ProjectFileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.hash.HashCode;
@@ -27,7 +28,7 @@ import java.nio.file.Path;
 /**
  * A {@link FileHashLoader} which manages caching file hashes for a given {@link ProjectFilesystem}.
  */
-public interface ProjectFileHashCache extends FileHashLoader {
+public interface ProjectFileHashCache extends ProjectFileHashLoader {
 
   ProjectFilesystem getFilesystem();
 

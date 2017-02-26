@@ -49,6 +49,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
+import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -484,7 +485,8 @@ public class DefaultRuleKeyFactoryTest {
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(
             new RuleKeyFieldLoader(0),
-            DefaultFileHashCache.createDefaultFileHashCache(filesystem),
+            new StackedFileHashCache(
+                ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem))),
             pathResolver,
             ruleFinder,
             noopRuleKeyCache);
@@ -542,7 +544,8 @@ public class DefaultRuleKeyFactoryTest {
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(
             new RuleKeyFieldLoader(0),
-            DefaultFileHashCache.createDefaultFileHashCache(filesystem),
+            new StackedFileHashCache(
+                ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem))),
             pathResolver,
             ruleFinder,
             noopRuleKeyCache);
