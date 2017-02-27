@@ -23,10 +23,8 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -38,6 +36,7 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -123,6 +122,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   private final Path projectRoot;
   private final String hgCmd;
   private final ImmutableMap<String, String> environment;
+
   private final Supplier<Path> hgRoot;
 
   public HgCmdLineInterface(
@@ -136,18 +136,21 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     this.environment = MoreMaps.merge(
         environment,
         HG_ENVIRONMENT_VARIABLES);
-    this.hgRoot = Suppliers.memoize(
-        () -> {
-          try {
-            Path root = Paths.get(executeCommand(ROOT_COMMAND));
-            LOG.debug("Set hg root to %s", root);
-            return root;
-          } catch (VersionControlCommandFailedException | InterruptedException e) {
-            LOG.debug("Unable to obtain a hg root for %s", projectRoot);
-            return null;
-          }
-        });
-    }
+    this.hgRoot = Suppliers.memoize(new Supplier<Path>() {
+      @Override
+      @Nullable
+      public Path get() {
+        try {
+          Path root = Paths.get(executeCommand(ROOT_COMMAND));
+          LOG.verbose("Set hg root to %s", root);
+          return root;
+        } catch (VersionControlCommandFailedException | InterruptedException e) {
+          LOG.verbose("Unable to obtain a hg root for %s", projectRoot);
+          return null;
+        }
+      }
+    });
+  }
 
   @Override
   public boolean isSupportedVersionControlSystem() {
@@ -260,9 +263,9 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
         CHANGED_FILES_COMMAND,
         REVISION_ID_TEMPLATE,
         fromRevisionId));
-    return FluentIterable.from(hgChangedFilesString.split("\0"))
-        .filter(input -> !Strings.isNullOrEmpty(input))
-        .toSet();
+    return Arrays.stream(hgChangedFilesString.split("\0"))
+        .filter(s -> !s.isEmpty())
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   @Override
