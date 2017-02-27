@@ -46,7 +46,8 @@ public class BuckGotoProvider extends GotoDeclarationHandlerBase {
       }
 
       String target = source.getText();
-      if (target.startsWith("'") && target.endsWith("'")) {
+      if ((target.startsWith("'") && target.endsWith("'")) ||
+          (target.startsWith("\"") && target.endsWith("\""))) {
         target = target.substring(1, target.length() - 1);
       }
 
