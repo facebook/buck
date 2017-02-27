@@ -62,7 +62,6 @@ import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.versions.VersionException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -78,12 +77,14 @@ import java.nio.channels.Channels;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -289,15 +290,15 @@ public class TestCommand extends BuildCommand {
 
     Optional<ImmutableList<String>> coverageIncludes =
         params.getBuckConfig().getOptionalListWithoutComments("test", "coverageIncludes", ',');
-    if (coverageIncludes.isPresent()) {
-      builder.setCoverageIncludes(Joiner.on(",").join(coverageIncludes.get()));
-    }
-
     Optional<ImmutableList<String>> coverageExcludes =
         params.getBuckConfig().getOptionalListWithoutComments("test", "coverageExcludes", ',');
-    if (coverageExcludes.isPresent()) {
-      builder.setCoverageExcludes(Joiner.on(",").join(coverageExcludes.get()));
-    }
+
+
+    coverageIncludes.ifPresent(strings ->
+        builder.setCoverageIncludes(strings.stream().collect(Collectors.joining(","))));
+    coverageExcludes.ifPresent(strings ->
+        builder.setCoverageExcludes(strings.stream().collect(Collectors.joining(","))));
+
     return builder.build();
   }
 
@@ -633,9 +634,7 @@ public class TestCommand extends BuildCommand {
       Iterable<TestRule> testRules) {
 
     ImmutableSortedSet.Builder<TestRule> builder =
-        ImmutableSortedSet.orderedBy(
-            (o1, o2) -> o1.getBuildTarget().getFullyQualifiedName().compareTo(
-                o2.getBuildTarget().getFullyQualifiedName()));
+        ImmutableSortedSet.orderedBy(Comparator.comparing(TestRule::getFullyQualifiedName));
 
     for (TestRule rule : testRules) {
       boolean explicitArgument = explicitBuildTargets.contains(rule.getBuildTarget());
