@@ -24,7 +24,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.Optional;
-import java.util.Set;
 
 public class CommandLineTargetNodeSpecParser {
 
@@ -85,7 +84,7 @@ public class CommandLineTargetNodeSpecParser {
   }
 
   public ImmutableSet<TargetNodeSpec> parse(CellPathResolver cellNames, String arg) {
-    Set<String> resolvedArgs = config.getBuildTargetForAliasAsString(arg);
+    ImmutableSet<String> resolvedArgs = config.getBuildTargetForAliasAsString(arg);
     if (resolvedArgs.isEmpty()) {
       resolvedArgs = ImmutableSet.of(arg);
     }
