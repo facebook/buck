@@ -21,7 +21,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.server.Handler;
@@ -112,7 +111,6 @@ public class HttpdForTests implements AutoCloseable {
       return getUri("/");
     } catch (SocketException | URISyntaxException e) {
       // Should never happen
-      Throwables.throwIfUnchecked(e);
       throw new RuntimeException(e);
     }
   }

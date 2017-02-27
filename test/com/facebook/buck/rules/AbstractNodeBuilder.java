@@ -25,7 +25,6 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.versions.Version;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -149,7 +148,6 @@ public abstract class AbstractNodeBuilder<
       }
       return node;
     } catch (NoSuchBuildTargetException e) {
-      Throwables.throwIfUnchecked(e);
       throw new RuntimeException(e);
     }
   }
@@ -217,7 +215,6 @@ public abstract class AbstractNodeBuilder<
               target,
               arg);
     } catch (ParamInfoException error) {
-      Throwables.throwIfUnchecked(error);
       throw new RuntimeException(error);
     }
   }

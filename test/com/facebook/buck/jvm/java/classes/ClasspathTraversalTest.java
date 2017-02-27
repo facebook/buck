@@ -23,7 +23,6 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Charsets;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
@@ -61,7 +60,6 @@ public class ClasspathTraversalTest {
             try {
               contents = new FileLikeCharSource(fileLike).read();
             } catch (IOException e) {
-              Throwables.throwIfUnchecked(e);
               throw new RuntimeException(e);
             }
             completeList.put(fileLike, contents);

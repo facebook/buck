@@ -19,7 +19,6 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.rules.RuleKey;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
@@ -52,7 +51,7 @@ public class InMemoryArtifactCache implements ArtifactCache {
     try {
       Files.write(output.get(), artifact.data);
     } catch (IOException e) {
-      Throwables.throwIfUnchecked(e);
+      throw new RuntimeException(e);
     }
     return CacheResult.hit("in-memory", artifact.metadata, artifact.data.length);
   }
@@ -75,7 +74,7 @@ public class InMemoryArtifactCache implements ArtifactCache {
     try (InputStream inputStream = Files.newInputStream(output.getPath())) {
       store(info, ByteStreams.toByteArray(inputStream));
     } catch (IOException e) {
-      Throwables.throwIfUnchecked(e);
+      throw new RuntimeException(e);
     }
 
     return Futures.immediateFuture(null);
