@@ -316,7 +316,7 @@ public class ProjectGenerator {
   private final CxxBuckConfig cxxBuckConfig;
   private final AppleConfig appleConfig;
   private final SwiftBuckConfig swiftBuckConfig;
-  private final ImmutableSet<UnflavoredBuildTarget> focusModules;
+  private final Optional<ImmutableSet<UnflavoredBuildTarget>> focusModules;
   private final boolean isMainProject;
   private final Optional<BuildTarget> workspaceTarget;
   ImmutableSet<BuildTarget> targetsInRequiredProjects;
@@ -335,7 +335,7 @@ public class ProjectGenerator {
       boolean isMainProject,
       Optional<BuildTarget> workspaceTarget,
       ImmutableSet<BuildTarget> targetsInRequiredProjects,
-      ImmutableSet<UnflavoredBuildTarget> focusModules,
+      Optional<ImmutableSet<UnflavoredBuildTarget>> focusModules,
       ExecutableFinder executableFinder,
       ImmutableMap<String, String> environment,
       FlavorDomain<CxxPlatform> cxxPlatforms,
@@ -493,8 +493,7 @@ public class ProjectGenerator {
           if (target.isPresent()) {
             targetNodeToGeneratedProjectTargetBuilder.put(targetNode, target.get());
           }
-          if (shouldIncludeBuildTargetIntoFocusedProject(
-              focusModules, targetNode.getBuildTarget())) {
+          if (targetNode.getBuildTarget().matchesUnflavoredTargets(focusModules)) {
             // If the target is not included, we still need to do other operations to generate
             // the required header maps.
             hasAtLeastOneTarget = true;
@@ -504,7 +503,7 @@ public class ProjectGenerator {
         }
       }
 
-      if (!hasAtLeastOneTarget && focusModules.size() != 0) {
+      if (!hasAtLeastOneTarget && focusModules.isPresent()) {
         return;
       }
 
@@ -813,8 +812,7 @@ public class ProjectGenerator {
       PBXProject project,
       TargetNode<HalideLibraryDescription.Arg, ?> targetNode) throws IOException {
     final BuildTarget buildTarget = targetNode.getBuildTarget();
-    boolean isFocusedOnTarget = shouldIncludeBuildTargetIntoFocusedProject(
-        focusModules, buildTarget);
+    boolean isFocusedOnTarget = buildTarget.matchesUnflavoredTargets(focusModules);
     String productName = getProductNameForBuildTarget(buildTarget);
     Path outputPath = getHalideOutputPath(targetNode.getFilesystem(), buildTarget);
 
@@ -1175,8 +1173,7 @@ public class ProjectGenerator {
             buildTargetName,
             Paths.get(String.format(productOutputFormat, buildTargetName)));
 
-    boolean isFocusedOnTarget = shouldIncludeBuildTargetIntoFocusedProject(
-        focusModules, buildTarget);
+    boolean isFocusedOnTarget = buildTarget.matchesUnflavoredTargets(focusModules);
     Optional<TargetNode<AppleNativeTargetDescriptionArg, ?>> appleTargetNode =
         targetNode.castArg(AppleNativeTargetDescriptionArg.class);
 
@@ -1555,24 +1552,6 @@ public class ProjectGenerator {
     }
 
     return target;
-  }
-
-  /**
-   * Returns true if a target matches a set of unflavored targets or the main target.
-   *
-   * @param focusModules Set of unflavored targets.
-   * @param buildTarget Target to test against the set of unflavored targets.
-   *
-   * @return {@code true} if the target is member of {@code focusModules}.
-   */
-  public static boolean shouldIncludeBuildTargetIntoFocusedProject(
-      ImmutableSet<UnflavoredBuildTarget> focusModules,
-      BuildTarget buildTarget) {
-    if (focusModules.isEmpty()) {
-      return true;
-    }
-
-    return focusModules.contains(buildTarget.getUnflavoredBuildTarget());
   }
 
   public static String getProductName(TargetNode<?, ?> buildTargetNode, BuildTarget buildTarget) {

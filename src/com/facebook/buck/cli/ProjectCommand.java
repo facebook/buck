@@ -938,7 +938,7 @@ public class ProjectCommand extends BuildCommand {
         passedInTargetsSet,
         options,
         super.getOptions(),
-        getFocusModules(targetGraphAndTargets, params, executor),
+        getFocusModules(params, executor),
         new HashMap<Path, ProjectGenerator>(),
         getCombinedProject(),
         shouldBuildWithBuck);
@@ -969,7 +969,7 @@ public class ProjectCommand extends BuildCommand {
       ImmutableSet<BuildTarget> passedInTargetsSet,
       ImmutableSet<ProjectGenerator.Option> options,
       ImmutableList<String> buildWithBuckFlags,
-      ImmutableSet<UnflavoredBuildTarget> focusModules,
+      Optional<ImmutableSet<UnflavoredBuildTarget>> focusModules,
       Map<Path, ProjectGenerator> projectGenerators,
       boolean combinedProject,
       boolean buildWithBuck)
@@ -1051,13 +1051,12 @@ public class ProjectCommand extends BuildCommand {
     return requiredBuildTargetsBuilder.build();
   }
 
-  private ImmutableSet<UnflavoredBuildTarget> getFocusModules(
-      final TargetGraphAndTargets targetGraphAndTargets,
+  private Optional<ImmutableSet<UnflavoredBuildTarget>> getFocusModules(
       CommandRunnerParams params,
       ListeningExecutorService executor)
       throws IOException, InterruptedException {
     if (modulesToFocusOn == null) {
-      return ImmutableSet.of();
+      return Optional.empty();
     }
 
     Iterable<String> patterns = Splitter.onPattern("\\s+").split(modulesToFocusOn);
@@ -1084,7 +1083,7 @@ public class ProjectCommand extends BuildCommand {
     } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
           MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return ImmutableSet.of();
+      return Optional.empty();
     }
     LOG.debug("Selected targets: %s", passedInTargetsSet.toString());
 
@@ -1109,20 +1108,7 @@ public class ProjectCommand extends BuildCommand {
     }
     ImmutableSet<UnflavoredBuildTarget> passedInUnflavoredTargetsSet = builder.build();
     LOG.debug("Selected unflavored targets: %s", passedInUnflavoredTargetsSet.toString());
-
-    // Build the set of unflavored targets in the target graph.
-    ImmutableSet<UnflavoredBuildTarget> validUnflavoredTargets =
-      targetGraphAndTargets.getTargetGraph().getNodes().stream()
-        .map(node -> node.getBuildTarget().getUnflavoredBuildTarget())
-        .collect(MoreCollectors.toImmutableSet());
-
-    // Match the targets resolved using the patterns with the valid of valid targets.
-    ImmutableSet<UnflavoredBuildTarget> result = passedInUnflavoredTargetsSet.stream()
-      .filter(target -> validUnflavoredTargets.contains(target))
-      .collect(MoreCollectors.toImmutableSet());
-
-    LOG.debug("Focused targets: %s", result.toString());
-    return result;
+    return Optional.of(passedInUnflavoredTargetsSet);
   }
 
   public static ImmutableSet<ProjectGenerator.Option> buildWorkspaceGeneratorOptions(
@@ -1301,10 +1287,14 @@ public class ProjectCommand extends BuildCommand {
         replaceWorkspacesWithSourceTargetsIfPossible(graphRoots, projectGraph);
 
     if (isWithTests) {
+      Optional<ImmutableSet<UnflavoredBuildTarget>> focusedModules =
+          getFocusModules(params, executor);
+
       explicitTestTargets = TargetGraphAndTargets.getExplicitTestTargets(
           graphRootsOrSourceTargets,
           projectGraph,
-          isWithDependenciesTests);
+          isWithDependenciesTests,
+          focusedModules);
       if (!needsFullRecursiveParse) {
         projectGraph = params.getParser().buildTargetGraph(
             params.getBuckEventBus(),

@@ -17,10 +17,14 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import java.util.Optional;
+import java.util.stream.StreamSupport;
 
 public class TargetGraphAndTargets {
   private final TargetGraph targetGraph;
@@ -51,12 +55,20 @@ public class TargetGraphAndTargets {
   public static ImmutableSet<BuildTarget> getExplicitTestTargets(
       ImmutableSet<BuildTarget> buildTargets,
       TargetGraph projectGraph,
-      boolean shouldIncludeDependenciesTests) {
+      boolean shouldIncludeDependenciesTests,
+      Optional<ImmutableSet<UnflavoredBuildTarget>> focusedModules) {
     Iterable<TargetNode<?, ?>> projectRoots = projectGraph.getAll(buildTargets);
+    Iterable<TargetNode<?, ?>> nodes;
     if (shouldIncludeDependenciesTests) {
-      return getExplicitTestTargets(projectGraph.getSubgraph(projectRoots).getNodes());
+      nodes = projectGraph.getSubgraph(projectRoots).getNodes();
+    } else {
+      nodes = projectRoots;
     }
-    return getExplicitTestTargets(projectRoots);
+
+    nodes = StreamSupport.stream(nodes.spliterator(), false)
+        .filter(node -> node.getBuildTarget().matchesUnflavoredTargets(focusedModules))
+        .collect(MoreCollectors.toImmutableList());
+    return getExplicitTestTargets(nodes);
   }
 
   /**

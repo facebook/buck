@@ -77,7 +77,8 @@ public class ProjectCommandTests {
       explicitTests = TargetGraphAndTargets.getExplicitTestTargets(
           graphRootsOrSourceTargets,
           projectGraph,
-          withDependenciesTests);
+          withDependenciesTests,
+          Optional.empty());
     } else {
       explicitTests = ImmutableSet.of();
     }
@@ -120,7 +121,7 @@ public class ProjectCommandTests {
             false /* shouldMergeHeaderMaps */,
             false /* shouldGenerateHeaderSymlinkTreeOnly */),
         ImmutableList.of(),
-        ImmutableSet.of(),
+        Optional.empty(),
         projectGenerators,
         isBuildWithBuck,
         isCombinedProjects);
