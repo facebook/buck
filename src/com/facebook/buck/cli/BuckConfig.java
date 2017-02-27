@@ -124,6 +124,8 @@ public class BuckConfig implements ConfigPathGetter {
     ignoreFieldsForDaemonRestartBuilder.put("cache", ImmutableSet.of(
         "dir", "dir_mode", "http_mode", "http_url", "mode", "slb_server_pool"));
     ignoreFieldsForDaemonRestartBuilder.put("client", ImmutableSet.of("id"));
+    ignoreFieldsForDaemonRestartBuilder.put("log", ImmutableSet.of(
+        "chrome_trace_generation", "compress_traces", "max_traces", "public_announcements"));
     ignoreFieldsForDaemonRestartBuilder.put("project", ImmutableSet.of(
         "ide_prompt", "xcode_focus_disable_build_with_buck"));
     IGNORE_FIELDS_FOR_DAEMON_RESTART = ignoreFieldsForDaemonRestartBuilder.build();
