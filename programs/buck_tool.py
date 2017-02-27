@@ -20,7 +20,6 @@ from tracing import Tracing
 from subprocutils import check_output, CalledProcessError, which
 from sys import platform as os_platform
 
-MAX_BUCKD_RUN_COUNT = 64
 BUCKD_CLIENT_TIMEOUT_MILLIS = 60000
 GC_MAX_PAUSE_TARGET = 15000
 
@@ -145,19 +144,13 @@ class BuckTool(object):
             if not self._command_line.is_help():
                 has_watchman = bool(which('watchman'))
                 if use_buckd and has_watchman:
-                    buckd_run_count = self._buck_project.get_buckd_run_count()
                     running_version = self._buck_project.get_running_buckd_version()
-                    new_buckd_run_count = buckd_run_count + 1
 
-                    if (buckd_run_count == MAX_BUCKD_RUN_COUNT or
-                            running_version != buck_version_uid):
+                    if (running_version != buck_version_uid):
                         self.kill_buckd()
-                        new_buckd_run_count = 0
 
-                    if new_buckd_run_count == 0 or not self._is_buckd_running():
+                    if not self._is_buckd_running():
                         self.launch_buckd(buck_version_uid=buck_version_uid)
-                    else:
-                        self._buck_project.update_buckd_run_count(new_buckd_run_count)
                 elif use_buckd and not has_watchman:
                     print("Not using buckd because watchman isn't installed.",
                           file=sys.stderr)
@@ -329,7 +322,6 @@ class BuckTool(object):
                 env=self._environ_for_buck())
 
             self._buck_project.save_buckd_version(buck_version_uid)
-            self._buck_project.update_buckd_run_count(0)
 
             # Give Java some time to create the listening socket.
             for i in range(0, 300):

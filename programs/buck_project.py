@@ -42,8 +42,6 @@ class BuckProject:
         self.buckd_tmp_dir = None
 
         self.buckd_dir = os.path.join(root, ".buckd")
-        self.buckd_run_count_file = (os.path.join(
-            self.buckd_dir, "buckd.runcount"))
         self.buckd_version_file = os.path.join(self.buckd_dir, "buckd.version")
 
         self.has_no_buck_check = (os.path.exists(os.path.join(
@@ -66,9 +64,6 @@ class BuckProject:
         self.buck_javaargs_local = get_file_contents_if_exists(
             buck_javaargs_path_local)
 
-    def get_buckd_run_count(self):
-        return int(get_file_contents_if_exists(self.buckd_run_count_file, -1))
-
     def get_buckd_socket_path(self):
         return os.path.join(self.buckd_dir, 'sock')
 
@@ -77,9 +72,6 @@ class BuckProject:
 
     def get_buck_out_log_dir(self):
         return self._buck_out_log
-
-    def update_buckd_run_count(self, new_run_count):
-        write_contents_to_file(self.buckd_run_count_file, new_run_count)
 
     def clean_up_buckd(self):
         with Tracing('BuckProject.clean_up_buckd'):
