@@ -35,7 +35,7 @@ import java.nio.file.Path;
 class OcamlStaticLibrary extends NoopBuildRule implements OcamlLibrary {
   private final BuildTarget staticLibraryTarget;
   private final ImmutableList<String> linkerFlags;
-  private final ImmutableList<SourcePath> objFiles;
+  private final ImmutableList<? extends SourcePath> objFiles;
   private final OcamlBuildContext ocamlContext;
   private final BuildRule ocamlLibraryBuild;
   private final ImmutableSortedSet<BuildRule> nativeCompileDeps;
@@ -47,7 +47,7 @@ class OcamlStaticLibrary extends NoopBuildRule implements OcamlLibrary {
       SourcePathResolver resolver,
       BuildRuleParams compileParams,
       ImmutableList<String> linkerFlags,
-      ImmutableList<SourcePath> objFiles,
+      ImmutableList<? extends SourcePath> objFiles,
       OcamlBuildContext ocamlContext,
       BuildRule ocamlLibraryBuild,
       ImmutableSortedSet<BuildRule> nativeCompileDeps,

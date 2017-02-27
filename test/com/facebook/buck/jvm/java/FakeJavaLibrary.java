@@ -27,9 +27,9 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -122,7 +122,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   public FakeJavaLibrary setJavaSrcs(ImmutableSortedSet<Path> srcs) {
     Preconditions.checkNotNull(srcs);
     this.srcs = FluentIterable.from(srcs)
-        .transform(SourcePaths.toSourcePath(new FakeProjectFilesystem()))
+        .transform(p -> (SourcePath) new PathSourcePath(new FakeProjectFilesystem(), p))
         .toSortedSet(Ordering.natural());
     return this;
   }

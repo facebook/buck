@@ -52,13 +52,13 @@ public class PrebuiltNativeLibrary extends AbstractBuildRule
   private final Path libraryPath;
   @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> librarySources;
+  private final ImmutableSortedSet<? extends SourcePath> librarySources;
 
   protected PrebuiltNativeLibrary(
       BuildRuleParams params,
       Path nativeLibsDirectory,
       boolean isAsset,
-      ImmutableSortedSet<SourcePath> librarySources) {
+      ImmutableSortedSet<? extends SourcePath> librarySources) {
     super(params);
     this.isAsset = isAsset;
     this.libraryPath = nativeLibsDirectory;

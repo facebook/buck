@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -138,7 +137,7 @@ public class MultiarchFileInfos {
 
     ImmutableSortedSet<SourcePath> inputs = FluentIterable
         .from(thinRules)
-        .transform(SourcePaths.getToBuildTargetSourcePath())
+        .transform(BuildRule::getSourcePathToOutput)
         .toSortedSet(Ordering.natural());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     MultiarchFile multiarchFile = new MultiarchFile(

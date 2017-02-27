@@ -38,7 +38,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -168,7 +167,7 @@ class SwiftCompile
         Iterables.cycle(INCLUDE_FLAG),
         FluentIterable.from(getDeps())
             .filter(SwiftCompile.class)
-            .transform(SourcePaths.getToBuildTargetSourcePath())
+            .transform(SwiftCompile::getSourcePathToOutput)
             .transform(input -> resolver.getAbsolutePath(input).toString())));
 
     Optional<Iterable<String>> configFlags = swiftBuckConfig.getFlags();

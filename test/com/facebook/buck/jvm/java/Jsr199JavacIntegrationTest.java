@@ -26,10 +26,10 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -321,8 +321,8 @@ public class Jsr199JavacIntegrationTest {
     Path pathToOutputDirectory = Paths.get("out");
     tmp.newFolder(pathToOutputDirectory.toString());
 
-    Optional<SourcePath> jar = javacJar.map(
-        SourcePaths.toSourcePath(new FakeProjectFilesystem())::apply);
+    Optional<SourcePath> jar = javacJar
+        .map(p -> new PathSourcePath(new FakeProjectFilesystem(), p));
     if (jar.isPresent()) {
       return new JarBackedJavac(
           JavacOptions.COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL,

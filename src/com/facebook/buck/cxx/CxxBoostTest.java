@@ -84,7 +84,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
       Tool executable,
       Supplier<ImmutableMap<String, String>> env,
       Supplier<ImmutableList<String>> args,
-      ImmutableSortedSet<SourcePath> resources,
+      ImmutableSortedSet<? extends SourcePath> resources,
       Supplier<ImmutableSortedSet<BuildRule>> additionalDeps,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,

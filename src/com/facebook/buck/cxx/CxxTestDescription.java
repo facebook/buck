@@ -29,9 +29,9 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.HumanReadableException;
@@ -230,7 +230,7 @@ public class CxxTestDescription implements
             testEnv,
             testArgs,
             FluentIterable.from(args.resources)
-                .transform(SourcePaths.toSourcePath(params.getProjectFilesystem()))
+                .transform(p -> new PathSourcePath(params.getProjectFilesystem(), p))
                 .toSortedSet(Ordering.natural()),
             additionalDeps,
             args.labels,
@@ -249,7 +249,7 @@ public class CxxTestDescription implements
             testEnv,
             testArgs,
             FluentIterable.from(args.resources)
-                .transform(SourcePaths.toSourcePath(params.getProjectFilesystem()))
+                .transform(p -> new PathSourcePath(params.getProjectFilesystem(), p))
                 .toSortedSet(Ordering.natural()),
             additionalDeps,
             args.labels,

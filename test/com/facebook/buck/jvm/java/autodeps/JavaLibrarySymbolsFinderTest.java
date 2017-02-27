@@ -30,11 +30,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -79,7 +79,7 @@ public class JavaLibrarySymbolsFinderTest {
         .addAll(
             Stream.of("Example1.java", "Example2.java")
                 .map(Paths::get)
-                .map(SourcePaths.toSourcePath(projectFilesystem)::apply)
+                .map(p -> new PathSourcePath(projectFilesystem, p))
                 .iterator())
         .add(new BuildTargetSourcePath(BuildTargetFactory.newInstance("//foo:bar")))
         .build();
@@ -108,7 +108,7 @@ public class JavaLibrarySymbolsFinderTest {
     final ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
 
     Function<String, SourcePath> convert =
-        src -> SourcePaths.toSourcePath(projectFilesystem).apply(Paths.get(src));
+        src -> new PathSourcePath(projectFilesystem, Paths.get(src));
     SourcePath example1 = convert.apply("Example1.java");
     SourcePath example2 = convert.apply("Example2.java");
     final BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:GenEx.java");

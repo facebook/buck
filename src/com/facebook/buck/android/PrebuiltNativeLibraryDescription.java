@@ -21,8 +21,8 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -48,11 +48,11 @@ public class PrebuiltNativeLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    ImmutableSortedSet<SourcePath> librarySources;
+    ImmutableSortedSet<? extends SourcePath> librarySources;
     try {
       librarySources =
           FluentIterable.from(params.getProjectFilesystem().getFilesUnderPath(args.nativeLibs))
-          .transform(SourcePaths.toSourcePath(params.getProjectFilesystem()))
+          .transform(p -> new PathSourcePath(params.getProjectFilesystem(), p))
           .toSortedSet(Ordering.natural());
     } catch (IOException e) {
       throw new HumanReadableException(e, "Error traversing directory %s.", args.nativeLibs);

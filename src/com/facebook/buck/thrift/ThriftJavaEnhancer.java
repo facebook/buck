@@ -36,7 +36,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -169,7 +168,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
         pathResolver,
         ruleFinder,
         FluentIterable.from(sourceZips)
-            .transform(SourcePaths.getToBuildTargetSourcePath())
+            .transform(BuildRule::getSourcePathToOutput)
             .toSortedSet(Ordering.natural()),
         /* resources */ ImmutableSet.of(),
         templateOptions.getGeneratedSourceFolderName(),

@@ -43,7 +43,6 @@ import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -304,7 +303,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   }
 
   private Optional<SourcePath> sourcePathForOutputJar() {
-    return outputJar.map(SourcePaths.getToBuildTargetSourcePath(getBuildTarget())::apply);
+    return outputJar.map(input -> new BuildTargetSourcePath(getBuildTarget(), input));
   }
 
   static Path getOutputJarPath(BuildTarget target, ProjectFilesystem filesystem) {

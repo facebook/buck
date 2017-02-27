@@ -65,7 +65,7 @@ public abstract class CxxTest
   private final Supplier<ImmutableList<String>> args;
   @AddToRuleKey
   @SuppressWarnings("PMD.UnusedPrivateField")
-  private final ImmutableSortedSet<SourcePath> resources;
+  private final ImmutableSortedSet<? extends SourcePath> resources;
   private final Supplier<ImmutableSortedSet<BuildRule>> additionalDeps;
   private final ImmutableSet<Label> labels;
   private final ImmutableSet<String> contacts;
@@ -77,7 +77,7 @@ public abstract class CxxTest
       final ImmutableMap<String, String> toolEnv,
       final Supplier<ImmutableMap<String, String>> env,
       Supplier<ImmutableList<String>> args,
-      ImmutableSortedSet<SourcePath> resources,
+      ImmutableSortedSet<? extends SourcePath> resources,
       Supplier<ImmutableSortedSet<BuildRule>> additionalDeps,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,

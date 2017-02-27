@@ -48,11 +48,11 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
@@ -1144,9 +1144,9 @@ public class DefaultJavaLibraryTest {
       Optional<AbstractJavacOptions.SpoolMode> spoolMode,
       ImmutableList<String> postprocessClassesCommands) {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    ImmutableSortedSet<SourcePath> srcsAsPaths = FluentIterable.from(srcs)
+    ImmutableSortedSet<? extends SourcePath> srcsAsPaths = FluentIterable.from(srcs)
         .transform(Paths::get)
-        .transform(SourcePaths.toSourcePath(projectFilesystem))
+        .transform(p -> new PathSourcePath(projectFilesystem, p))
         .toSortedSet(Ordering.natural());
 
     BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)

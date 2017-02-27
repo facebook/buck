@@ -29,10 +29,10 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -73,7 +73,7 @@ public class JavaSymbolsRuleTest {
         .addAll(
             Stream.of("Example1.java", "Example2.java")
                 .map(Paths::get)
-                .map(SourcePaths.toSourcePath(projectFilesystem)::apply)
+                .map(p -> new PathSourcePath(projectFilesystem, p))
                 .iterator())
         .add(new BuildTargetSourcePath(BuildTargetFactory.newInstance("//foo:bar")))
         .build();

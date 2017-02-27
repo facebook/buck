@@ -74,7 +74,7 @@ public class ShTest
   private final ImmutableMap<String, Arg> env;
   @AddToRuleKey
   @SuppressWarnings("PMD.UnusedPrivateField")
-  private final ImmutableSortedSet<SourcePath> resources;
+  private final ImmutableSortedSet<? extends SourcePath> resources;
   private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<String> contacts;
   private final boolean runTestSeparately;
@@ -87,7 +87,7 @@ public class ShTest
       SourcePath test,
       ImmutableList<Arg> args,
       ImmutableMap<String, Arg> env,
-      ImmutableSortedSet<SourcePath> resources,
+      ImmutableSortedSet<? extends SourcePath> resources,
       Optional<Long> testRuleTimeoutMs,
       boolean runTestSeparately,
       Set<Label> labels,

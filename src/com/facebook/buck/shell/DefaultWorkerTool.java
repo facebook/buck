@@ -31,7 +31,6 @@ import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.MoreCollectors;
@@ -82,7 +81,7 @@ public class DefaultWorkerTool extends NoopBuildRule implements
     CommandTool.Builder builder = new CommandTool.Builder(baseTool)
         .addInputs(
             this.getDeps().stream()
-                .map(SourcePaths.getToBuildTargetSourcePath()::apply)
+                .map(BuildRule::getSourcePathToOutput)
                 .collect(MoreCollectors.toImmutableList()));
     for (Map.Entry<String, String> e : env.entrySet()) {
       builder.addEnv(e.getKey(), e.getValue());

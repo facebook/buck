@@ -24,7 +24,6 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
@@ -344,7 +343,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
         if (rule instanceof JavaLibrary) {
           builder.addAll(
               ((JavaLibrary) rule).getDepsForTransitiveClasspathEntries().stream()
-                  .map(SourcePaths.getToBuildTargetSourcePath()::apply)
+                  .map(BuildRule::getSourcePathToOutput)
                   .collect(MoreCollectors.toImmutableList()));
         } else {
           builder.add(sourcePath);
