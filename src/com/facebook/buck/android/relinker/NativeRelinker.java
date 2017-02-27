@@ -68,8 +68,8 @@ public class NativeRelinker {
   private final ImmutableMap<Pair<TargetCpuType, String>, SourcePath> relinkedLibs;
   private final ImmutableMap<Pair<TargetCpuType, String>, SourcePath> relinkedLibsAssets;
   private final SourcePathRuleFinder ruleFinder;
-  private ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
-  private ImmutableList<RelinkerRule> rules;
+  private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
+  private final ImmutableList<RelinkerRule> rules;
 
   public NativeRelinker(
       BuildRuleParams buildRuleParams,
