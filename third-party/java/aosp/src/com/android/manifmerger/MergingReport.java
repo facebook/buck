@@ -322,6 +322,8 @@ public class MergingReport {
                 case WARNING:
                     mHasWarnings = true;
                     break;
+                default:
+                    // fall out
             }
             mRecordBuilder.add(new Record(sourceFilePosition,  severity, message));
             return this;

@@ -104,10 +104,10 @@ public class DotnetFramework {
       case NET35:
         frameworkDir = baseDir.resolve("v3.5");
         break;
-
-      // All other cases, just fall through
       case NET40:
+        // fall through
       case NET45:
+        // fall through
       case NET46:
         frameworkDir = baseDir.resolve(".NETFramework").resolve(version.getDirName());
         break;
