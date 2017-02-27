@@ -549,7 +549,10 @@ public class BuckConfig implements ConfigPathGetter {
     if (path == null) {
       return path;
     }
+    return resolveNonNullPathOutsideTheProjectFilesystem(path);
+  }
 
+  public Path resolveNonNullPathOutsideTheProjectFilesystem(Path path) {
     if (path.isAbsolute()) {
       return getPathFromVfs(path);
     }

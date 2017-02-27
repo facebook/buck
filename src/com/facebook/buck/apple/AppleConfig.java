@@ -112,7 +112,7 @@ public class AppleConfig {
         "extra_toolchain_paths");
     return ImmutableList.copyOf(Lists.transform(
         extraPathsStrings,
-        string -> Paths.get(string)));
+        string -> delegate.resolveNonNullPathOutsideTheProjectFilesystem(Paths.get(string))));
   }
 
   public ImmutableList<Path> getExtraPlatformPaths() {
@@ -121,7 +121,7 @@ public class AppleConfig {
         "extra_platform_paths");
     return ImmutableList.copyOf(Lists.transform(
         extraPathsStrings,
-        string -> Paths.get(string)));
+        string -> delegate.resolveNonNullPathOutsideTheProjectFilesystem(Paths.get(string))));
   }
 
   public ImmutableMap<AppleSdk, AppleSdkPaths> getAppleSdkPaths(ProcessExecutor processExecutor) {
