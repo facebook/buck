@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -37,12 +38,14 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
+import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -151,17 +154,17 @@ public class DirectHeaderMapTest {
   }
 
   @Test
-  public void testSymlinkTreeRuleKeyChangesIfLinkMapChanges() throws Exception {
+  public void testSymlinkTreeRuleKeysChangeIfLinkMapChanges() throws Exception {
     Path aFile = tmpDir.newFile();
     Files.write(aFile, "hello world".getBytes(Charsets.UTF_8));
+    ImmutableMap.Builder<Path, SourcePath> modifiedLinksBuilder = ImmutableMap.builder();
+    for (Path p : links.keySet()) {
+      modifiedLinksBuilder.put(tmpDir.getRoot().resolve("modified-" + p.toString()), links.get(p));
+    }
     DirectHeaderMap modifiedBuildRule = new DirectHeaderMap(
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
         symlinkTreeRoot,
-        ImmutableMap.of(
-            Paths.get("different/link"),
-            new PathSourcePath(
-                projectFilesystem,
-                MorePaths.relativize(tmpDir.getRoot(), aFile))),
+        modifiedLinksBuilder.build(),
         ruleFinder);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
@@ -170,13 +173,21 @@ public class DirectHeaderMapTest {
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
 
     // Calculate their rule keys and verify they're different.
-    FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
-        ImmutableMap.of());
+    FileHashLoader hashCache = new StackedFileHashCache(ImmutableList.of(
+        DefaultFileHashCache.createDefaultFileHashCache(new ProjectFilesystem(tmpDir.getRoot()))
+    ));
     RuleKey key1 = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(
         buildRule);
     RuleKey key2 = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(
         modifiedBuildRule);
     assertNotEquals(key1, key2);
+
+    key1 = new InputBasedRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(
+        buildRule);
+    key2 = new InputBasedRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(
+        modifiedBuildRule);
+    assertNotEquals(key1, key2);
+
   }
 
   @Test
@@ -187,26 +198,28 @@ public class DirectHeaderMapTest {
     ruleResolver.addToIndex(buildRule);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    // Calculate their rule keys and verify they're different.
+    DefaultFileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(
+        new ProjectFilesystem(tmpDir.getRoot()));
+    FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
 
-    DefaultRuleKeyFactory defaultRuleKeyFactory = new DefaultRuleKeyFactory(
-        0,
-        FakeFileHashCache.createFromStrings(
-            ImmutableMap.of()),
-        resolver,
-        ruleFinder);
+    RuleKey defaultKey1 = new DefaultRuleKeyFactory(0, hashLoader, resolver, ruleFinder)
+        .build(buildRule);
+    RuleKey inputKey1 = new InputBasedRuleKeyFactory(0, hashLoader, resolver, ruleFinder)
+        .build(buildRule);
 
-    // Calculate the rule key
-    RuleKey key1 = defaultRuleKeyFactory.build(buildRule);
+    Files.write(file1, "hello other world".getBytes());
+    hashCache.invalidateAll();
 
-    // Change the contents of the target of the link.
-    Path existingFile = resolver.getAbsolutePath(links.values().asList().get(0));
-    Files.write(existingFile, "something new".getBytes(Charsets.UTF_8));
+    RuleKey defaultKey2 = new DefaultRuleKeyFactory(0, hashLoader, resolver, ruleFinder)
+        .build(buildRule);
+    RuleKey inputKey2 = new InputBasedRuleKeyFactory(0, hashLoader, resolver, ruleFinder)
+        .build(buildRule);
 
-    // Re-calculate the rule key
-    RuleKey key2 = defaultRuleKeyFactory.build(buildRule);
-
-    // Verify that the rules keys are the same.
-    assertEquals(key1, key2);
+    // When the file content changes, the rulekey should change but the input rulekey should be
+    // unchanged. This ensures that a dependent's rulekey changes correctly.
+    assertNotEquals(defaultKey1, defaultKey2);
+    assertEquals(inputKey1, inputKey2);
   }
 
 }

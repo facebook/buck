@@ -163,6 +163,11 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
       return this;
     }
 
+    @Override
+    protected RuleKeyBuilder<Result> setNonHashingSourcePath(SourcePath sourcePath) {
+      return setNonHashingSourcePathDirectly(sourcePath);
+    }
+
     // Input-based rule keys are evaluated after all dependencies for a rule are available on
     // disk, and so we can always resolve the `Path` packaged in a `SourcePath`.  We hash this,
     // rather than the rule key from it's `BuildRule`.

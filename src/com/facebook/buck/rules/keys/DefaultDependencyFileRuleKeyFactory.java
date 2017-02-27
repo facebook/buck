@@ -190,6 +190,11 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
       return this;
     }
 
+    @Override
+    protected RuleKeyBuilder<RuleKey> setNonHashingSourcePath(SourcePath sourcePath) {
+      return setNonHashingSourcePathDirectly(sourcePath);
+    }
+
     // Rules supporting dep-file rule keys should be described entirely by their `SourcePath`
     // inputs.  If we see a `BuildRule` when generating the rule key, this is likely a break in
     // that contract, so check for that.

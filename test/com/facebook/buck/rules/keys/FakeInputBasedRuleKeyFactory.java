@@ -88,6 +88,11 @@ public class FakeInputBasedRuleKeyFactory
       }
 
       @Override
+      protected RuleKeyBuilder<RuleKey> setNonHashingSourcePath(SourcePath sourcePath) {
+        return setNonHashingSourcePathDirectly(sourcePath);
+      }
+
+      @Override
       public RuleKey build() {
         if (oversized.contains(buildRule.getBuildTarget())) {
           throw new SizeLimiter.SizeLimitException();

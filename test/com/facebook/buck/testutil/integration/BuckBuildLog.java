@@ -32,6 +32,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -112,7 +113,7 @@ public class BuckBuildLog {
   }
 
   public ImmutableSet<BuildTarget> getAllTargets() {
-    return ImmutableSet.copyOf(buildLogEntries.keySet());
+    return ImmutableSortedSet.copyOf(buildLogEntries.keySet());
   }
 
   public static BuckBuildLog fromLogContents(Path root, List<String> logContents) {

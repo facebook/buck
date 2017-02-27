@@ -380,29 +380,6 @@ public class RuleKeyTest {
   }
 
   @Test
-  public void setNonHashingSourcePathAndRegularSourcePath() {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    PathSourcePath sourcePathOne = new PathSourcePath(projectFilesystem, Paths.get("something"));
-
-    // Regular source path and non hashable source path should have different keys
-    SourcePathRuleFinder ruleFinder1 = new SourcePathRuleFinder(
-        new BuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-    SourcePathRuleFinder ruleFinder2 = new SourcePathRuleFinder(
-        new BuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-    assertNotEquals(
-        createEmptyRuleKey(
-            new SourcePathResolver(ruleFinder1), ruleFinder1)
-            .setReflectively("key", new NonHashableSourcePathContainer(sourcePathOne))
-            .build(),
-        createEmptyRuleKey(
-            new SourcePathResolver(ruleFinder2), ruleFinder2)
-            .setReflectively("key", sourcePathOne)
-            .build());
-  }
-
-  @Test
   public void setInputBuildTargetSourcePath() {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());

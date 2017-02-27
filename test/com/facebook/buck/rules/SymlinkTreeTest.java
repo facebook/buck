@@ -20,6 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -36,6 +37,8 @@ import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
+import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.base.Charsets;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableBiMap;
@@ -164,11 +167,12 @@ public class SymlinkTreeTest {
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
 
     // Calculate their rule keys and verify they're different.
-    FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
-        ImmutableMap.of());
-    RuleKey key1 = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(
+    DefaultFileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(
+        new ProjectFilesystem(tmpDir.getRoot()));
+    FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
+    RuleKey key1 = new DefaultRuleKeyFactory(0, hashLoader, resolver, ruleFinder).build(
         symlinkTreeBuildRule);
-    RuleKey key2 = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(
+    RuleKey key2 = new DefaultRuleKeyFactory(0, hashLoader, resolver, ruleFinder).build(
         modifiedSymlinkTreeBuildRule);
     assertNotEquals(key1, key2);
   }
@@ -177,7 +181,7 @@ public class SymlinkTreeTest {
   public void testSymlinkTreeRuleKeyDoesNotChangeIfLinkTargetsChangeOnUnix() throws IOException {
     ruleResolver.addToIndex(symlinkTreeBuildRule);
 
-    DefaultRuleKeyFactory ruleKeyFactory = new DefaultRuleKeyFactory(
+    InputBasedRuleKeyFactory ruleKeyFactory = new InputBasedRuleKeyFactory(
         0,
         FakeFileHashCache.createFromStrings(
             ImmutableMap.of()),
@@ -232,6 +236,40 @@ public class SymlinkTreeTest {
     assertEquals(ruleKey1, ruleKey2);
   }
 
+  @Test
+  public void testSymlinkTreeDependentRuleKeyChangesWhenLinkSourceContentChanges()
+      throws Exception {
+    // If a dependent of a symlink tree uses the symlink tree's output as an input, that dependent's
+    // rulekey must change when the link contents change.
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver.addToIndex(symlinkTreeBuildRule);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+
+    Genrule genrule =
+        GenruleBuilder.newGenruleBuilder(
+            BuildTargetFactory.newInstance("//:dep"))
+              .setSrcs(ImmutableList.of(symlinkTreeBuildRule.getSourcePathToOutput()))
+              .setOut("out")
+              .build(ruleResolver);
+
+    DefaultFileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(
+        new ProjectFilesystem(tmpDir.getRoot()));
+    FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
+    RuleKey ruleKey1 = new DefaultRuleKeyFactory(
+        0, hashLoader, pathResolver, ruleFinder).build(genrule);
+
+    Path existingFile = pathResolver.getAbsolutePath(links.values().asList().get(0));
+    Files.write(existingFile, "something new".getBytes(Charsets.UTF_8));
+    hashCache.invalidateAll();
+
+    RuleKey ruleKey2 = new DefaultRuleKeyFactory(
+        0, hashLoader, pathResolver, ruleFinder).build(genrule);
+
+    // Verify that the rules keys are different.
+    assertNotEquals(ruleKey1, ruleKey2);
+  }
 
   @Test
   public void testSymlinkTreeInputBasedRuleKeysAreImmuneToLinkSourceContentChanges()

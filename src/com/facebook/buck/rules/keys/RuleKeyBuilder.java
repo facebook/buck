@@ -353,7 +353,12 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     return this;
   }
 
-  protected RuleKeyBuilder<RULE_KEY> setNonHashingSourcePath(SourcePath sourcePath) {
+  /**
+   * Implementations may just forward to {@link #setNonHashingSourcePathDirectly}.
+   */
+  protected abstract RuleKeyBuilder<RULE_KEY> setNonHashingSourcePath(SourcePath sourcePath);
+
+  protected final RuleKeyBuilder<RULE_KEY> setNonHashingSourcePathDirectly(SourcePath sourcePath) {
     if (sourcePath instanceof BuildTargetSourcePath) {
       hasher.putNonHashingPath(resolver.getRelativePath(sourcePath).toString());
     } else if (sourcePath instanceof PathSourcePath) {

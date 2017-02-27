@@ -112,6 +112,11 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
       }
 
       @Override
+      protected RuleKeyBuilder<RuleKey> setNonHashingSourcePath(SourcePath sourcePath) {
+        return setNonHashingSourcePathDirectly(sourcePath);
+      }
+
+      @Override
       public RuleKey build() {
         return buildRuleKey();
       }

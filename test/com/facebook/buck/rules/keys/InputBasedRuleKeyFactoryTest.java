@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -28,6 +29,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
@@ -57,6 +59,9 @@ import org.junit.rules.ExpectedException;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
 public class InputBasedRuleKeyFactoryTest {
   @Rule
@@ -285,6 +290,41 @@ public class InputBasedRuleKeyFactoryTest {
         Matchers.not(Matchers.equalTo(inputKey2)));
   }
 
+
+  @Test
+  public void ruleKeyDoesNotChangeIfNonHashingSourcePathContentChanges()
+      throws NoSuchBuildTargetException {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    final ProjectFilesystem fileSystem = new FakeProjectFilesystem();
+
+    // Build a rule key with a particular hash set for the output for the above rule.
+    Path filePath = fileSystem.getPath("file.txt");
+    FakeFileHashCache hashCache = new FakeFileHashCache(new HashMap<>());
+
+    hashCache.set(filePath.toAbsolutePath(), HashCode.fromInt(0));
+    PathSourcePath sourcePath = new PathSourcePath(fileSystem, filePath);
+    NonHashableSourcePathContainer nonHashablePath = new NonHashableSourcePathContainer(sourcePath);
+    RuleKey inputKey1 = computeRuleKey(
+        hashCache,
+        pathResolver,
+        ruleFinder,
+        nonHashablePath);
+
+    hashCache.set(filePath.toAbsolutePath(), HashCode.fromInt(1));
+    RuleKey inputKey2 = computeRuleKey(
+        hashCache,
+        pathResolver,
+        ruleFinder,
+        nonHashablePath);
+
+    assertThat(
+        inputKey1,
+        Matchers.equalTo(inputKey2));
+  }
+
   @Test
   public void nestedSizeLimitExceptionHandled() throws Exception {
     BuildRuleResolver resolver =
@@ -495,6 +535,24 @@ public class InputBasedRuleKeyFactoryTest {
       sink.setReflectively("input", appendable);
     }
 
+  }
+
+  RuleKey computeRuleKey(
+      FileHashCache hashCache,
+      SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
+      Object... objects) {
+    return new InputBasedRuleKeyFactory(
+        0,
+        hashCache,
+        resolver,
+        ruleFinder)
+        .build(
+            new FakeBuildRule("//fake:target", resolver) {
+              @AddToRuleKey
+              List<Object> ruleObjects = Arrays.asList(objects);
+            }
+    );
   }
 
 }

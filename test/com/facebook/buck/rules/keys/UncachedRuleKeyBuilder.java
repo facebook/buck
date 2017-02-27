@@ -95,6 +95,11 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder<RuleKey> {
   }
 
   @Override
+  protected RuleKeyBuilder<RuleKey> setNonHashingSourcePath(SourcePath sourcePath) {
+    return setNonHashingSourcePathDirectly(sourcePath);
+  }
+
+  @Override
   public RuleKey build() {
     return buildRuleKey();
   }
