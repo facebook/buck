@@ -382,10 +382,13 @@ public class AppleCxxPlatforms {
     whitelistBuilder.add("^" + Pattern.quote(sdkPaths.getPlatformPath().toString() +
                          "/Developer/Library/Frameworks") + "\\/.*");
     for (Path toolchainPath : sdkPaths.getToolchainPaths()) {
+      LOG.debug("Apple toolchain path: %s", toolchainPath);
       whitelistBuilder.add("^" + Pattern.quote(toolchainPath.toString()) + "\\/.*");
     }
     HeaderVerification headerVerification =
         config.getHeaderVerification().withPlatformWhitelist(whitelistBuilder.build());
+    LOG.debug("Headers verification platform whitelist: %s",
+        headerVerification.getPlatformWhitelist());
 
     CxxPlatform cxxPlatform = CxxPlatforms.build(
         targetFlavor,
