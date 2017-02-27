@@ -21,6 +21,8 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
+import com.facebook.buck.android.redex.ReDexStep;
+import com.facebook.buck.android.redex.RedexOptions;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AccumulateClassNamesStep;
 import com.facebook.buck.jvm.java.HasClasspathEntries;
@@ -200,6 +202,9 @@ public class AndroidBinary
   private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey
   private final Optional<SourcePath> proguardJarOverride;
+  @AddToRuleKey
+  private final Optional<RedexOptions> redexOptions;
+
   private final String proguardMaxHeapSize;
   @AddToRuleKey
   private final Optional<List<String>> proguardJvmArgs;
@@ -265,6 +270,7 @@ public class AndroidBinary
       Optional<Integer> proguardOptimizationPasses,
       Optional<SourcePath> proguardConfig,
       Optional<Boolean> skipProguard,
+      Optional<RedexOptions> redexOptions,
       ResourceCompressionMode resourceCompressionMode,
       Set<NdkCxxPlatforms.TargetCpuType> cpuFilters,
       ResourceFilter resourceFilter,
@@ -287,6 +293,7 @@ public class AndroidBinary
     this.proguardJarOverride = proguardJarOverride;
     this.proguardMaxHeapSize = proguardMaxHeapSize;
     this.proguardJvmArgs = proguardJvmArgs;
+    this.redexOptions = redexOptions;
     this.proguardAgentPath = proguardAgentPath;
     this.keystore = keystore;
     this.keystorePath = keystore.getPathToStore();
@@ -543,6 +550,18 @@ public class AndroidBinary
 
     SourcePathResolver resolver = context.getSourcePathResolver();
     Path signedApkPath = getSignedApkPath();
+    final Path pathToKeystore = resolver.getAbsolutePath(keystorePath);
+    Supplier<KeystoreProperties> keystoreProperties = Suppliers.memoize(() -> {
+      try {
+        return KeystoreProperties.createFromPropertiesFile(
+            pathToKeystore,
+            resolver.getAbsolutePath(keystorePropertiesPath),
+            getProjectFilesystem());
+      } catch (IOException e) {
+        throw new RuntimeException();
+      }
+    });
+
     ApkBuilderStep apkBuilderCommand = new ApkBuilderStep(
         getProjectFilesystem(),
         context.getSourcePathResolver().getAbsolutePath(resourcesApkPath),
@@ -554,8 +573,8 @@ public class AndroidBinary
         packageableCollection.getPathsToThirdPartyJars().stream()
             .map(resolver::getAbsolutePath)
             .collect(MoreCollectors.toImmutableSet()),
-        resolver.getAbsolutePath(keystorePath),
-        resolver.getAbsolutePath(keystorePropertiesPath),
+        pathToKeystore,
+        keystoreProperties,
         /* debugMode */ false,
         javaRuntimeLauncher);
     steps.add(apkBuilderCommand);
@@ -564,11 +583,11 @@ public class AndroidBinary
     // the output non-deterministic.  So use an additional scrubbing step to zero these out.
     steps.add(new ZipScrubberStep(getProjectFilesystem(), signedApkPath));
 
-    Path apkToAlign;
+    Path apkToRedexAndAlign;
     // Optionally, compress the resources file in the .apk.
     if (this.isCompressResources()) {
       Path compressedApkPath = getCompressedResourcesApkPath();
-      apkToAlign = compressedApkPath;
+      apkToRedexAndAlign = compressedApkPath;
       RepackZipEntriesStep arscComp = new RepackZipEntriesStep(
           getProjectFilesystem(),
           signedApkPath,
@@ -576,15 +595,35 @@ public class AndroidBinary
           ImmutableSet.of("resources.arsc"));
       steps.add(arscComp);
     } else {
-      apkToAlign = signedApkPath;
+      apkToRedexAndAlign = signedApkPath;
     }
 
+    boolean applyRedex = redexOptions.isPresent();
     Path apkPath = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
-    ZipalignStep zipalign = new ZipalignStep(
+    Path apkToAlign = apkToRedexAndAlign;
+
+    // redex
+    if (applyRedex) {
+      Path proguardConfigDir = enhancementResult.getAaptPackageResources()
+          .getPathToGeneratedProguardConfigDir();
+      Path redexedApk = apkPath.getParent().resolve(apkPath.getFileName().toString() + ".redex");
+      apkToAlign = redexedApk;
+      ImmutableList<Step> redexSteps = ReDexStep.createSteps(
+          getProjectFilesystem(),
+          resolver,
+          redexOptions.get(),
+          apkToRedexAndAlign,
+          redexedApk,
+          keystoreProperties,
+          proguardConfigDir
+      );
+      steps.addAll(redexSteps);
+    }
+
+    steps.add(new ZipalignStep(
         getProjectFilesystem().getRootPath(),
         apkToAlign,
-        apkPath);
-    steps.add(zipalign);
+        apkPath));
 
     buildableContext.recordArtifact(apkPath);
     return steps.build();

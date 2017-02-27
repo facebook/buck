@@ -47,6 +47,7 @@ public class AndroidBinaryBuilder extends
             new ProGuardConfig(FakeBuckConfig.builder().build()),
             ImmutableMap.of(),
             MoreExecutors.newDirectExecutorService(),
+            FakeBuckConfig.builder().build(),
             CxxPlatformUtils.DEFAULT_CONFIG),
         target);
   }

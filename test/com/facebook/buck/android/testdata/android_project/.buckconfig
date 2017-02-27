@@ -5,3 +5,6 @@
 [scala]
   library = //scala:scala-library
   compiler = //scala:scala-compiler
+
+[android]
+  redex = //tools/redex:redex

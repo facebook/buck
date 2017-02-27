@@ -25,6 +25,8 @@ import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
+import com.facebook.buck.android.redex.RedexOptions;
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.event.PerfEventId;
@@ -43,11 +45,14 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
@@ -57,6 +62,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -66,6 +72,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
@@ -74,11 +81,17 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-public class AndroidBinaryDescription
-    implements Description<AndroidBinaryDescription.Arg>, Flavored {
+public class AndroidBinaryDescription implements
+    Description<AndroidBinaryDescription.Arg>,
+    Flavored,
+    ImplicitDepsInferringDescription<AndroidBinaryDescription.Arg> {
 
   private static final Logger LOG = Logger.get(AndroidBinaryDescription.class);
+
+  private static final String SECTION = "android";
+  private static final String CONFIG_PARAM_REDEX = "redex";
 
   /**
    * By default, assume we have 5MB of linear alloc,
@@ -100,6 +113,7 @@ public class AndroidBinaryDescription
   private final JavaOptions javaOptions;
   private final JavacOptions javacOptions;
   private final ProGuardConfig proGuardConfig;
+  private final BuckConfig buckConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
   private final ListeningExecutorService dxExecutorService;
@@ -110,10 +124,12 @@ public class AndroidBinaryDescription
       ProGuardConfig proGuardConfig,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ListeningExecutorService dxExecutorService,
+      BuckConfig buckConfig,
       CxxBuckConfig cxxBuckConfig) {
     this.javaOptions = javaOptions;
     this.javacOptions = javacOptions;
     this.proGuardConfig = proGuardConfig;
+    this.buckConfig = buckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.nativePlatforms = nativePlatforms;
     this.dxExecutorService = dxExecutorService;
@@ -283,6 +299,7 @@ public class AndroidBinaryDescription
           args.optimizationPasses,
           args.proguardConfig,
           args.skipProguard,
+          getRedexOptions(params.getBuildTarget(), args, resolver),
           compressionMode,
           args.cpuFilters,
           resourceFilter,
@@ -363,6 +380,64 @@ public class AndroidBinaryDescription
     return true;
   }
 
+  @Override
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      Arg constructorArg) {
+    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
+    if (constructorArg.redex.orElse(false) &&
+        getPackageType(constructorArg).isBuildWithObfuscation()) {
+      // If specified, this option may point to either a BuildTarget or a file.
+      Optional<BuildTarget> redexTarget = buckConfig.getMaybeBuildTarget(
+          SECTION,
+          CONFIG_PARAM_REDEX);
+      if (redexTarget.isPresent()) {
+        deps.add(redexTarget.get());
+      }
+    }
+    return deps.build();
+  }
+
+  private Optional<RedexOptions> getRedexOptions(
+      BuildTarget buildTarget,
+      Arg arg,
+      BuildRuleResolver sourcePathResolver) {
+    boolean redexRequested = arg.redex.orElse(false);
+    if (!redexRequested) {
+      return Optional.empty();
+    }
+
+    PackageType packageType = getPackageType(arg);
+    boolean buildWithObfuscation = packageType.isBuildWithObfuscation();
+    if (!buildWithObfuscation) {
+      List<PackageType> supported = Arrays.stream(PackageType.values())
+          .filter(PackageType::isBuildWithObfuscation)
+          .collect(Collectors.toList());
+      throw new HumanReadableException("Requested running ReDex for %s but the package type %s " +
+          "is not compatible with that options. Consider changing it to %s.",
+          buildTarget,
+          packageType,
+          Joiner.on(", ").join(supported));
+    }
+
+    Optional<Tool> redexBinary =
+        buckConfig.getTool(SECTION, CONFIG_PARAM_REDEX, sourcePathResolver);
+    if (!redexBinary.isPresent()) {
+      throw new HumanReadableException("Requested running ReDex for %s but the path to the tool" +
+          "has not been specified in the %s.%s .buckconfig section.",
+          buildTarget,
+          SECTION,
+          CONFIG_PARAM_REDEX);
+    }
+
+    return Optional.of(RedexOptions.builder()
+        .setRedex(redexBinary.get())
+        .setRedexConfig(arg.redexConfig)
+        .setRedexExtraArgs(arg.redexExtraArgs)
+        .build());
+  }
+
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg implements HasTests {
     public SourcePath manifest;
@@ -429,6 +504,10 @@ public class AndroidBinaryDescription
     public Optional<Boolean> enableRelinker;
     public ManifestEntries manifestEntries = ManifestEntries.empty();
     public BuildConfigFields buildConfigValues = BuildConfigFields.empty();
+    public Optional<Boolean> redex;
+    public Optional<SourcePath> redexConfig;
+    public ImmutableList<String> redexExtraArgs = ImmutableList.of();
+
     public Optional<SourcePath> buildConfigValuesFile;
     public Optional<Boolean> skipProguard;
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();

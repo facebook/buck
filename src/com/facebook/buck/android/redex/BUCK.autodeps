@@ -1,0 +1,26 @@
+{
+  "redex" : {
+    "deps" : [
+      "//src/com/facebook/buck/android/redex:options",
+      "//src/com/facebook/buck/android:utils"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/android:steps",
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/shell:steps",
+      "//src/com/facebook/buck/step:step",
+      "//third-party/java/guava:guava"
+    ]
+  },
+  "options" : {
+    "deps" : [
+      "//third-party/java/immutables:immutables"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/util/immutables:immutables",
+      "//third-party/java/guava:guava"
+    ]
+  }
+}

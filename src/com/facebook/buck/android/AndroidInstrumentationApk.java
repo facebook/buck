@@ -70,6 +70,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         apkUnderTest.getOptimizationPasses(),
         apkUnderTest.getProguardConfig(),
         apkUnderTest.getSkipProguard(),
+        Optional.empty(), // RedexOptions
         apkUnderTest.getResourceCompressionMode(),
         apkUnderTest.getCpuFilters(),
         apkUnderTest.getResourceFilter(),

@@ -1,0 +1,18 @@
+standard_java_library(
+  tests = [
+    '//test/com/facebook/buck/android:binary-integration',
+    '//test/com/facebook/buck/android/redex:redex',
+  ],
+)
+
+java_immutables_library(
+  name = 'options',
+  srcs = [
+    'AbstractRedexOptions.java',
+  ],
+  immutable_types = [
+    'RedexOptions',
+  ],
+  autodeps = True,
+  visibility = ['PUBLIC'],
+)

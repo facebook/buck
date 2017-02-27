@@ -51,6 +51,7 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.zip.ZipConstants;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -95,6 +96,7 @@ public class AndroidBinaryIntegrationTest {
 
   private static final String SIMPLE_TARGET = "//apps/multidex:app";
   private static final String RAW_DEX_TARGET = "//apps/multidex:app-art";
+  private static final String APP_REDEX_TARGET = "//apps/sample:app_redex";
 
   @Before
   public void setUp() throws IOException {
@@ -105,7 +107,7 @@ public class AndroidBinaryIntegrationTest {
         "android_project",
         tmpFolder);
     workspace.setUp();
-    workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
+    workspace.runBuckBuild(SIMPLE_TARGET, APP_REDEX_TARGET).assertSuccess();
     filesystem = new ProjectFilesystem(workspace.getDestPath());
   }
 
@@ -877,6 +879,68 @@ public class AndroidBinaryIntegrationTest {
   @Test
   public void testApkEmptyResDirectoriesBuildsCorrectly() throws IOException {
     workspace.runBuckBuild("//apps/sample:app_with_aar_and_no_res").assertSuccess();
+  }
+
+  @Test
+  public void testReDexIsCalledAppropriatelyFromAndroidBinary() throws IOException {
+    Path apk = workspace.buildAndReturnOutput(APP_REDEX_TARGET);
+    Path unzippedApk = unzip(apk.getParent(), apk, "app_redex");
+
+    // We use a fake ReDex binary that writes out the arguments it received as JSON so that we can
+    // verify that it was called in the right way.
+    ObjectMapper mapper = ObjectMappers.newDefaultInstance();
+    @SuppressWarnings("unchecked")
+    Map<String, Object> userData = mapper.readValue(unzippedApk.toFile(), Map.class);
+
+    String androidSdk = (String) userData.get("ANDROID_SDK");
+    assertTrue(
+        "ANDROID_SDK environment variable must be set so ReDex runs with zipalign",
+        androidSdk != null && !androidSdk.isEmpty());
+    assertEquals(
+        workspace.getDestPath().toString(),
+        userData.get("PWD"));
+
+    assertTrue(userData.get("config").toString().endsWith("apps/sample/redex-config.json"));
+    assertEquals(
+        "buck-out/gen/apps/sample/__app_redex#aapt_package__proguard__/.proguard/seeds.txt",
+        userData.get("keep"));
+    assertEquals(
+        "my_alias",
+        userData.get("keyalias"));
+    assertEquals(
+        "android",
+        userData.get("keypass"));
+    assertEquals(
+        workspace.resolve("keystores/debug.keystore").toString(),
+        userData.get("keystore"));
+    assertEquals(
+        "buck-out/gen/apps/sample/app_redex.apk.redex",
+        userData.get("out"));
+    assertEquals(
+        "buck-out/gen/apps/sample/__app_redex#aapt_package__proguard__/.proguard/command-line.txt",
+        userData.get("P"));
+    assertEquals(
+        "buck-out/gen/apps/sample/__app_redex#aapt_package__proguard__/.proguard/mapping.txt",
+        userData.get("proguard-map"));
+    assertTrue((Boolean) userData.get("sign"));
+    assertEquals(
+        "my_param_name={\"foo\": true}",
+        userData.get("J"));
+  }
+
+  @Test
+  public void testEditingRedexToolForcesRebuild() throws IOException {
+    workspace.replaceFileContents(
+        "tools/redex/fake_redex.py",
+        "main()\n",
+        "main() \n");
+
+    workspace.resetBuildLogFile();
+    workspace.runBuckBuild(APP_REDEX_TARGET).assertSuccess();
+
+    BuckBuildLog buildLog = workspace.getBuildLog();
+
+    buildLog.assertTargetBuiltLocally(APP_REDEX_TARGET);
   }
 
   @Test

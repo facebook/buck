@@ -27,6 +27,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
+import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
@@ -70,7 +71,7 @@ public class ApkBuilderStep implements Step {
   private final ImmutableSet<Path> zipFiles;
   private final ImmutableSet<Path> jarFilesThatMayContainResources;
   private final Path pathToKeystore;
-  private final Path pathToKeystorePropertiesFile;
+  private final Supplier<KeystoreProperties> keystorePropertiesSupplier;
   private final boolean debugMode;
   private final JavaRuntimeLauncher javaRuntimeLauncher;
 
@@ -83,9 +84,6 @@ public class ApkBuilderStep implements Step {
    * @param nativeLibraryDirectories List of paths to native directories.
    * @param zipFiles List of paths to zipfiles to be included into the apk.
    * @param debugMode Whether or not to run ApkBuilder with debug mode turned on.
-   * @param pathToKeystore Path to the keystore used to sign the APK.
-   * @param pathToKeystorePropertiesFile Path to a {@code .properties} file that contains
-   *     information about the keystore used to sign the APK.
    */
   public ApkBuilderStep(
       ProjectFilesystem filesystem,
@@ -97,7 +95,7 @@ public class ApkBuilderStep implements Step {
       ImmutableSet<Path> zipFiles,
       ImmutableSet<Path> jarFilesThatMayContainResources,
       Path pathToKeystore,
-      Path pathToKeystorePropertiesFile,
+      Supplier<KeystoreProperties> keystorePropertiesSupplier,
       boolean debugMode,
       JavaRuntimeLauncher javaRuntimeLauncher) {
     this.filesystem = filesystem;
@@ -109,7 +107,7 @@ public class ApkBuilderStep implements Step {
     this.jarFilesThatMayContainResources = jarFilesThatMayContainResources;
     this.zipFiles = zipFiles;
     this.pathToKeystore = pathToKeystore;
-    this.pathToKeystorePropertiesFile = pathToKeystorePropertiesFile;
+    this.keystorePropertiesSupplier = keystorePropertiesSupplier;
     this.debugMode = debugMode;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
   }
@@ -173,11 +171,8 @@ public class ApkBuilderStep implements Step {
           KeyStoreException,
           NoSuchAlgorithmException,
           UnrecoverableKeyException {
-    KeystoreProperties keystoreProperties = KeystoreProperties.createFromPropertiesFile(
-        pathToKeystore,
-        pathToKeystorePropertiesFile,
-        filesystem);
     KeyStore keystore = KeyStore.getInstance(JARSIGNER_KEY_STORE_TYPE);
+    KeystoreProperties keystoreProperties = keystorePropertiesSupplier.get();
     InputStream inputStream = filesystem.getInputStreamForRelativePath(pathToKeystore);
     char[] keystorePassword = keystoreProperties.getStorepass().toCharArray();
     try {

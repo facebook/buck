@@ -65,6 +65,8 @@
   "rules" : {
     "deps" : [
       "//src/com/facebook/buck/android:utils",
+      "//src/com/facebook/buck/android/redex:options",
+      "//src/com/facebook/buck/android/redex:redex",
       "//src/com/facebook/buck/dalvik:dalvik",
       "//src/com/facebook/buck/dalvik:steps",
       "//src/com/facebook/buck/event:event",

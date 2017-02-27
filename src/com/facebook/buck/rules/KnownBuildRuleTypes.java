@@ -627,6 +627,7 @@ public class KnownBuildRuleTypes {
             proGuardConfig,
             ndkCxxPlatforms,
             dxExecutorService,
+            config,
             cxxBuckConfig));
     builder.register(new AndroidBuildConfigDescription(defaultJavacOptions));
     builder.register(
