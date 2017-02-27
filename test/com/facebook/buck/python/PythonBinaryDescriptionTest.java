@@ -353,7 +353,7 @@ public class PythonBinaryDescriptionTest {
         binary.getExecutableCommand().getCommandPrefix(pathResolver),
         Matchers.contains(
             executor.toString(),
-            binary.getBinPath().toAbsolutePath().toString()));
+            pathResolver.getAbsolutePath(binary.getSourcePathToOutput()).toString()));
   }
 
   @Test
@@ -370,7 +370,7 @@ public class PythonBinaryDescriptionTest {
         binary.getExecutableCommand().getCommandPrefix(pathResolver),
         Matchers.contains(
             PythonTestUtils.PYTHON_PLATFORM.getEnvironment().getPythonPath().toString(),
-            binary.getBinPath().toAbsolutePath().toString()));
+            pathResolver.getAbsolutePath(binary.getSourcePathToOutput()).toString()));
   }
 
   @Test

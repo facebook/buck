@@ -24,7 +24,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.CommandTool;
@@ -148,10 +147,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder(pathToPexExecuter)
-        .addArg(
-            new SourcePathArg(
-                getResolver(),
-                new BuildTargetSourcePath(getBuildTarget(), getBinPath())))
+        .addArg(new SourcePathArg(getResolver(), getSourcePathToOutput()))
         .build();
   }
 
@@ -161,7 +157,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
       BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    Path binPath = getBinPath();
+    Path binPath = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
 
     // Make sure the parent directory exists.
     steps.add(new MkdirStep(getProjectFilesystem(), binPath.getParent()));
@@ -203,7 +199,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
             getComponents().isZipSafe().orElse(true)));
 
     // Record the executable package for caching.
-    buildableContext.recordArtifact(getBinPath());
+    buildableContext.recordArtifact(binPath);
 
     return steps.build();
   }
