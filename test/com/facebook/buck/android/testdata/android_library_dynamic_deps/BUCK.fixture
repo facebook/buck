@@ -59,7 +59,24 @@ android_library(
 
 android_library(
   name = 'resources_from_query',
-  srcs = [ 'UsesR.java', ],
-  deps = [ ':top_level', ],
+  srcs = [
+    'UsesR.java',
+  ],
+  deps = [
+    ':top_level',
+  ],
   deps_query = 'kind(android_resource, deps($declared_deps))',
+)
+
+android_library(
+  name = 'provided_only',
+  srcs = [ 'UsesC.java', ],
+  provided_deps = [ ':lib_c', ],
+)
+
+android_library(
+  name = 'no_provided_deps',
+  srcs = [ 'UsesC.java', ],
+  deps = [ ':provided_only', ],
+  deps_query = 'classpath($declared_deps)',
 )

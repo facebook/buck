@@ -66,9 +66,9 @@ public class GenruleDescriptionIntegrationTest {
   @Test
   public void depsFromClasspathMacroAreFilteredByDep() throws Exception {
     expectGenruleOutput(
-        ":echo_with_dep_is_proc",
+        ":echo_with_ap_dep_is_proc",
         ImmutableList.of(
-            "//:lib_a"));
+            "//:lib_b"));
   }
 
   @Test
@@ -85,6 +85,19 @@ public class GenruleDescriptionIntegrationTest {
         ":echo_with_plugin_is_proc",
         ImmutableList.of(
             "//:lib_d"));
+  }
+
+  @Test
+  public void classpathMacroDepthLimited() throws Exception {
+    expectGenruleOutput(
+        ":echo_classpath_0",
+        ImmutableList.of("//:lib_a"));
+    expectGenruleOutput(
+        ":echo_classpath_1",
+        ImmutableList.of("//:lib_a",
+            "//:lib_b",
+            "//:lib_d",
+            "//annotations:proc-lib"));
   }
 
   @Test
@@ -127,7 +140,6 @@ public class GenruleDescriptionIntegrationTest {
     expectGenruleOutput(
         ":echo_with_genrule_deps",
         ImmutableList.of(
-            "//:app",
             "//:echo_with_annotation_processor_is_proc",
             "//:lib_a",
             "//:lib_b",

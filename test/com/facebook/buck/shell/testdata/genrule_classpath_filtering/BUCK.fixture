@@ -1,25 +1,37 @@
 genrule(
   name = 'echo_all',
-  cmd = 'echo $(query_targets "classpath(:app)") > $OUT',
+  cmd = 'echo $(query_targets "classpath(:lib_a)") > $OUT',
   out = 'out',
 )
 
 genrule(
-  name = 'echo_with_dep_is_proc',
-  bash = 'echo $(query_targets "attrfilter(deps, //annotations:proc-lib, classpath(:app))") > $OUT',
-  cmd_exe = 'powershell -Command "echo $(query_targets \"attrfilter(deps, //annotations:proc-lib, classpath(:app))\") | Out-file -Encoding ascii $env:OUT"',
+  name = 'echo_classpath_0',
+  cmd = 'echo $(query_targets "classpath(:lib_a, 0)") > $OUT',
+  out = 'out',
+)
+
+genrule(
+  name = 'echo_classpath_1',
+  cmd = 'echo $(query_targets "classpath(:lib_a, 1)") > $OUT',
+  out = 'out',
+)
+
+genrule(
+  name = 'echo_with_ap_dep_is_proc',
+  bash = 'echo $(query_targets "attrfilter(annotation_processor_deps, //annotations:proc-lib, classpath(:lib_a))") > $OUT',
+  cmd_exe = 'powershell -Command "echo $(query_targets \"attrfilter(annotation_processor_deps, //annotations:proc-lib, classpath(:lib_a))\") | Out-file -Encoding ascii $env:OUT"',
   out = 'out',
 )
 
 genrule(
   name = 'echo_with_annotation_processor_is_proc',
-  cmd = 'echo $(query_targets "attrfilter(annotation_processors, com.example.annotations.Proc, classpath(:app))") > $OUT',
+  cmd = 'echo $(query_targets "attrfilter(annotation_processors, com.example.annotations.Proc, classpath(:lib_a))") > $OUT',
   out = 'out',
 )
 
 genrule(
   name = 'echo_with_plugin_is_proc',
-  cmd = 'echo $(query_targets "attrfilter(plugins, //annotations:proc, classpath(:app))") > $OUT',
+  cmd = 'echo $(query_targets "attrfilter(plugins, //annotations:proc, classpath(:lib_a))") > $OUT',
   out = 'out',
 )
 

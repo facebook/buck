@@ -17,7 +17,7 @@
 
 package com.facebook.buck.rules.query;
 
-import com.facebook.buck.jvm.java.HasClasspathEntries;
+import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetParseException;
@@ -50,6 +50,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A query environment that can be used for graph-enhancement, including macro expansion or
@@ -214,18 +215,17 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
     return targetGraph.get().getOptional(buildTarget).orElse(null);
   }
 
-  public ImmutableSet<QueryTarget> getClasspath(Set<QueryTarget> targets) {
+  public Stream<QueryTarget> getFirstOrderClasspath(Set<QueryTarget> targets) {
     Preconditions.checkArgument(resolver.isPresent());
-    return ImmutableSet.copyOf(targets.stream()
+    return targets.stream()
         .map(queryTarget -> {
           Preconditions.checkArgument(queryTarget instanceof QueryBuildTarget);
           return resolver.get().getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
         })
-        .filter(rule -> rule instanceof HasClasspathEntries)
-        .map(rule -> (HasClasspathEntries) rule)
-        .flatMap(hasClasspathEntries -> hasClasspathEntries.getTransitiveClasspathDeps().stream())
-        .map(dep -> QueryBuildTarget.of(dep.getBuildTarget()))
-        .collect(Collectors.toSet()));
+        .filter(rule -> rule instanceof JavaLibrary)
+        .map(rule -> (JavaLibrary) rule)
+        .flatMap(library -> library.getDepsForTransitiveClasspathEntries().stream())
+        .map(dep -> QueryBuildTarget.of(dep.getBuildTarget()));
   }
 
   @Override

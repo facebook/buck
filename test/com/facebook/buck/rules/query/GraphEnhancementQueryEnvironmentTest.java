@@ -39,6 +39,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -195,13 +196,12 @@ public class GraphEnhancementQueryEnvironmentTest {
   @Test
   public void getClasspath() throws Exception {
     GraphEnhancementQueryEnvironment env = buildQueryEnvironmentWithGraph();
-    ImmutableSet<QueryTarget> classpath = env.getClasspath(
-        ImmutableSet.of(getQueryTarget("//:lib")));
+    ImmutableSet<QueryTarget> classpath = env.getFirstOrderClasspath(
+        ImmutableSet.of(getQueryTarget("//:lib")))
+        .collect(MoreCollectors.toImmutableSet());
     assertThat(classpath,
         Matchers.hasItems(
-            getQueryTarget("//:bottom"),
-            getQueryTarget("//:sublib"),
-            getQueryTarget("//:lib")
+            getQueryTarget("//:sublib")
         ));
   }
 

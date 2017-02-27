@@ -25,12 +25,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
- * A classpath(expression) expression that calculates targets in the classpath of the
+ * A classpath(expression [, depth]) expression that calculates targets in the classpath of the
  * given library or libraries.
  * <pre>expr ::= CLASSPATH '(' expr ')'</pre>
+ * <pre>       | CLASSPATH '(' expr ',' INTEGER ')'</pre>
  */
 public class ClasspathFunction implements QueryEnvironment.QueryFunction {
   @Override
@@ -45,7 +48,9 @@ public class ClasspathFunction implements QueryEnvironment.QueryFunction {
 
   @Override
   public ImmutableList<QueryEnvironment.ArgumentType> getArgumentTypes() {
-    return ImmutableList.of(QueryEnvironment.ArgumentType.EXPRESSION);
+    return ImmutableList.of(
+        QueryEnvironment.ArgumentType.EXPRESSION,
+        QueryEnvironment.ArgumentType.INTEGER);
   }
 
   @Override
@@ -54,7 +59,28 @@ public class ClasspathFunction implements QueryEnvironment.QueryFunction {
       ImmutableList<QueryEnvironment.Argument> args,
       ListeningExecutorService executor) throws QueryException, InterruptedException {
     Preconditions.checkArgument(env instanceof GraphEnhancementQueryEnvironment);
-    Set<QueryTarget> targets = args.get(0).getExpression().eval(env, executor);
-    return ((GraphEnhancementQueryEnvironment) env).getClasspath(targets);
+    Set<QueryTarget> argumentSet = args.get(0).getExpression().eval(env, executor);
+
+    int depthBound = args.size() >= 2 ? args.get(1).getInteger() : Integer.MAX_VALUE;
+    Set<QueryTarget> result = new LinkedHashSet<>(argumentSet);
+    Set<QueryTarget> current = argumentSet;
+
+    for (int i = 0; i < depthBound; i++) {
+      Set<QueryTarget> next = new LinkedHashSet<>();
+      Consumer<? super QueryTarget> consumer =
+          queryTarget -> {
+            boolean added = result.add(queryTarget);
+            if (added) {
+              next.add(queryTarget);
+            }
+          };
+      ((GraphEnhancementQueryEnvironment) env).getFirstOrderClasspath(current)
+          .forEach(consumer);
+      if (next.isEmpty()) {
+        break;
+      }
+      current = next;
+    }
+    return ImmutableSet.copyOf(result);
   }
 }

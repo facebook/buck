@@ -130,4 +130,14 @@ public class AndroidLibraryDescriptionIntegrationTest {
     // Build once to warm cache
     workspace.runBuckCommand("build", "//:resources_from_query").assertSuccess();
   }
+
+  @Test
+  public void testDepQueryWithClasspathDoesNotTraverseProvidedDeps() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    // Should succeed because lib_c is a provided dep
+    workspace.runBuckBuild("build", "//:provided_only");
+
+    // Should fail becuase 'C.class' is not added to the classpath because it's a provided dep
+    workspace.runBuckCommand("build", "//:no_provided_deps").assertFailure();
+  }
 }

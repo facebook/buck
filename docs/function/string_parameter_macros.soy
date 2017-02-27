@@ -77,6 +77,7 @@ The query_* macros accepts a quoted query expression which supports the followin
   <li><code>attrfilter</code></li>
   <li><code>deps</code></li>
   <li><code>except</code></li>
+  <li><code>classpath</code></li>
   <li><code>intersect</code></li>
   <li><code>filter</code></li>
   <li><code>kind</code></li>
@@ -84,6 +85,9 @@ The query_* macros accepts a quoted query expression which supports the followin
   <li><code>union</code></li>
 </ul>
 {/literal}
+
+The <code>classpath</code> function is used to query the classpath of <code>java_library</code>
+rules. It takes an optional second argument to limit the depth of the traversal.
 
 Example queries
 {literal}

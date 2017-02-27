@@ -47,12 +47,14 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 /**
- * A 'deps(x [, depth])' expression, which finds the dependencies of the given argument set 'x'.
- * The optional parameter 'depth' specifies the depth of the search. If the argument is absent,
- * the search is unbounded.
+ * A 'deps(x [, depth, next_expr])' expression, which finds the dependencies of the given argument
+ * set 'x'. The optional parameter 'depth' specifies the depth of the search. If 'depth' is absent,
+ * the search is unbounded. The optional third argument specifies how new edges are added to the
+ * traversal. If the 'next_expr' is absent, the default 'first_order_deps()' function is used.
  *
  * <pre>expr ::= DEPS '(' expr ')'</pre>
- * <pre>       | DEPS '(' expr ',' WORD ')'</pre>
+ * <pre>       | DEPS '(' expr ',' INTEGER ')'</pre>
+ * <pre>       | DEPS '(' expr ',' INTEGER ',' expr ')'</pre>
  */
 public class DepsFunction implements QueryFunction {
 
