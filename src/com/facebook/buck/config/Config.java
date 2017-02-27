@@ -358,11 +358,8 @@ public class Config {
     ImmutableMap<String, ImmutableMap<String, String>> right = other.getSectionToEntries();
     Sets.SetView<String> sections = Sets.union(left.keySet(), right.keySet());
     for (String section : sections) {
-      ImmutableMap<String, String> leftFields = left.get(section);
-      ImmutableMap<String, String> rightFields = right.get(section);
-      if (leftFields == null || rightFields == null) {
-        return false;
-      }
+      ImmutableMap<String, String> leftFields = left.getOrDefault(section, ImmutableMap.of());
+      ImmutableMap<String, String> rightFields = right.getOrDefault(section, ImmutableMap.of());
       Sets.SetView<String> fields = Sets.difference(
           Sets.union(leftFields.keySet(), rightFields.keySet()),
           Optional.ofNullable(ignoredFields.get(section)).orElse(ImmutableSet.of()));
