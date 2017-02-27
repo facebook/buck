@@ -80,7 +80,7 @@ public abstract class JsFile extends AbstractBuildRule {
     return ImmutableList.of(
         new RmStep(
             projectFilesystem,
-            getPathToOutput()),
+            context.getSourcePathResolver().getRelativePath(getSourcePathToOutput())),
         new WorkerShellStep(
             Optional.of(params),
             Optional.empty(),
@@ -112,7 +112,8 @@ public abstract class JsFile extends AbstractBuildRule {
         BuildContext context,
         BuildableContext buildableContext) {
 
-      final Path pathToOutput = getPathToOutput();
+      final Path pathToOutput =
+          context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
       final String jobArgs = String.join(
           " ",
           "transform %s --filename",
@@ -150,8 +151,9 @@ public abstract class JsFile extends AbstractBuildRule {
           " ",
           "optimize %s --platform",
           JsFlavors.getPlatform(buildTarget.getFlavors()),
-          devFile.getPathToOutput().toString(),
-          getPathToOutput().toString());
+          context.getSourcePathResolver().getRelativePath(devFile.getSourcePathToOutput())
+              .toString(),
+          context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()).toString());
 
       return getBuildSteps(context, jobArgs);
     }
