@@ -3632,6 +3632,7 @@ public class ProjectGeneratorTest {
         false,
         Optional.empty(),
         ImmutableSet.of(),
+        ImmutableSet.of(),
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.of(),
         PLATFORMS,
@@ -3742,6 +3743,7 @@ public class ProjectGeneratorTest {
         false,
         Optional.empty(),
         ImmutableSet.of(),
+        ImmutableSet.of(),
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.of(),
         PLATFORMS,
@@ -3826,6 +3828,7 @@ public class ProjectGeneratorTest {
         ImmutableList.of("--flag", "value with spaces"),
         false,
         Optional.empty(),
+        ImmutableSet.of(),
         ImmutableSet.of(),
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.of(),
@@ -4475,6 +4478,7 @@ public class ProjectGeneratorTest {
     BuildTarget lib2Target = BuildTarget.builder(rootPath, "//bar", "lib2").build();
     BuildTarget lib3Target = BuildTarget.builder(rootPath, "//foo", "lib3").build();
     BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "test").build();
+    BuildTarget lib4Target = BuildTarget.builder(rootPath, "//foo", "lib4").build();
 
     TargetNode<?, ?> lib1Node = AppleLibraryBuilder
         .createBuilder(lib1Target)
@@ -4515,11 +4519,22 @@ public class ProjectGeneratorTest {
                 "Default",
                 ImmutableMap.of()))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setDeps(ImmutableSortedSet.of(lib1Target))
+        .setDeps(ImmutableSortedSet.of(lib1Target, lib4Target))
+        .build();
+
+    TargetNode<?, ?> lib4Node = AppleLibraryBuilder
+        .createBuilder(lib4Target)
+        .setConfigs(
+            ImmutableSortedMap.of(
+                "Default",
+                ImmutableMap.of()))
+        .setExportedHeaders(
+            ImmutableSortedSet.of(new FakeSourcePath("lib4.h")))
         .build();
 
     final TargetGraph targetGraph =
-        TargetGraphFactory.newInstance(ImmutableSet.of(lib1Node, lib2Node, lib3Node, testNode));
+        TargetGraphFactory.newInstance(ImmutableSet.of(
+              lib1Node, lib2Node, lib3Node, testNode, lib4Node));
     final AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
 
     ProjectGenerator projectGeneratorLib2 = new ProjectGenerator(
@@ -4535,6 +4550,7 @@ public class ProjectGeneratorTest {
         ImmutableList.of(),
         false, /* isMainProject */
         Optional.of(lib1Target),
+        ImmutableSet.of(lib1Target, lib4Target),
         ImmutableSet.of(),
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.of(),
@@ -4582,6 +4598,7 @@ public class ProjectGeneratorTest {
         ImmutableList.of(),
         true, /* isMainProject */
         Optional.of(lib1Target),
+        ImmutableSet.of(lib1Target, lib4Target),
         ImmutableSet.of(),
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.of(),
@@ -4604,7 +4621,9 @@ public class ProjectGeneratorTest {
             "lib1/lib1.h",
             "buck-out/gen/_p/WNl0jZWMBk-pub/lib1/lib1.h",
             "lib2/lib2.h",
-            "buck-out/gen/_p/YAYFR3hXIb-pub/lib2/lib2.h"));
+            "buck-out/gen/_p/YAYFR3hXIb-pub/lib2/lib2.h",
+            "lib4/lib4.h",
+            "buck-out/gen/_p/nmnbF8ID6C-pub/lib4/lib4.h"));
     // Checks the content of the header search paths.
     PBXProject project1 = projectGeneratorLib1.getGeneratedProject();
 
@@ -4683,6 +4702,7 @@ public class ProjectGeneratorTest {
         ImmutableList.of(),
         false,
         Optional.empty(),
+        ImmutableSet.of(),
         ImmutableSet.of(),
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.of(),

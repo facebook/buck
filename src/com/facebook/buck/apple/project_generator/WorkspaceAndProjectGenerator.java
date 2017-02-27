@@ -385,7 +385,8 @@ public class WorkspaceAndProjectGenerator {
                         projectCell,
                         projectDirectory,
                         rules,
-                        isMainProject);
+                        isMainProject,
+                        targetsInRequiredProjects);
                   // convert the projectPath to relative to the target cell here
                   result = GenerationResult.of(
                       relativeTargetCell.resolve(result.getProjectPath()),
@@ -434,7 +435,9 @@ public class WorkspaceAndProjectGenerator {
       Cell projectCell,
       Path projectDirectory,
       final ImmutableSet<BuildTarget> rules,
-      boolean isMainProject) throws IOException {
+      boolean isMainProject,
+      ImmutableSet<BuildTarget> targetsInRequiredProjects
+  ) throws IOException {
     boolean shouldGenerateProjects = false;
     ProjectGenerator generator;
     synchronized (projectGenerators) {
@@ -471,6 +474,7 @@ public class WorkspaceAndProjectGenerator {
             buildWithBuckFlags,
             isMainProject,
             workspaceArguments.srcTarget,
+            targetsInRequiredProjects,
             focusModules,
             executableFinder,
             environment,
@@ -527,6 +531,7 @@ public class WorkspaceAndProjectGenerator {
         buildWithBuckFlags,
         true,
         workspaceArguments.srcTarget,
+        targetsInRequiredProjects,
         focusModules,
         executableFinder,
         environment,

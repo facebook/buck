@@ -319,6 +319,7 @@ public class ProjectGenerator {
   private final ImmutableSet<UnflavoredBuildTarget> focusModules;
   private final boolean isMainProject;
   private final Optional<BuildTarget> workspaceTarget;
+  ImmutableSet<BuildTarget> targetsInRequiredProjects;
 
   public ProjectGenerator(
       TargetGraph targetGraph,
@@ -333,6 +334,7 @@ public class ProjectGenerator {
       ImmutableList<String> buildWithBuckFlags,
       boolean isMainProject,
       Optional<BuildTarget> workspaceTarget,
+      ImmutableSet<BuildTarget> targetsInRequiredProjects,
       ImmutableSet<UnflavoredBuildTarget> focusModules,
       ExecutableFinder executableFinder,
       ImmutableMap<String, String> environment,
@@ -359,6 +361,7 @@ public class ProjectGenerator {
     this.buildWithBuckFlags = buildWithBuckFlags;
     this.isMainProject = isMainProject;
     this.workspaceTarget = workspaceTarget;
+    this.targetsInRequiredProjects = targetsInRequiredProjects;
     this.executableFinder = executableFinder;
     this.environment = environment;
     this.cxxPlatforms = cxxPlatforms;
@@ -1875,27 +1878,25 @@ public class ProjectGenerator {
 
     Set<TargetNode<? extends CxxLibraryDescription.Arg, ?>> processedNodes =
         new HashSet<TargetNode<? extends CxxLibraryDescription.Arg, ?>>();
-    for (TargetNode<?, ?> targetNode : targetGraph.getNodes()) {
-      // Only considers the targets that are going to be built by the project.
-      if (isBuiltByCurrentProject(targetNode.getBuildTarget())) {
-        Optional<TargetNode<CxxLibraryDescription.Arg, ?>> nativeNode =
-            getAppleNativeNode(targetGraph, targetNode);
-        if (nativeNode.isPresent()) {
-          // Includes the public headers of the dependencies in the merged header map.
-          visitRecursiveHeaderSymlinkTrees(nativeNode.get(), (depNativeNode, headerVisibility) -> {
-            if (processedNodes.contains(depNativeNode)) {
-              return;
-            }
-            if (headerVisibility == HeaderVisibility.PUBLIC) {
-              addToMergedHeaderMap(
-                  depNativeNode,
-                  headerMapBuilder,
-                  pathResolver,
-                  HeaderVisibility.PUBLIC);
-              processedNodes.add(depNativeNode);
-            }
-          });
-        }
+
+    for (TargetNode<?, ?> targetNode : targetGraph.getAll(targetsInRequiredProjects)) {
+      Optional<TargetNode<CxxLibraryDescription.Arg, ?>> nativeNode =
+          getAppleNativeNode(targetGraph, targetNode);
+      if (nativeNode.isPresent()) {
+        // Includes the public headers of the dependencies in the merged header map.
+        visitRecursiveHeaderSymlinkTrees(nativeNode.get(), (depNativeNode, headerVisibility) -> {
+          if (processedNodes.contains(depNativeNode)) {
+            return;
+          }
+          if (headerVisibility == HeaderVisibility.PUBLIC) {
+            addToMergedHeaderMap(
+                depNativeNode,
+                headerMapBuilder,
+                pathResolver,
+                HeaderVisibility.PUBLIC);
+            processedNodes.add(depNativeNode);
+          }
+        });
       }
     }
 
