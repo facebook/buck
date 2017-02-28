@@ -164,8 +164,8 @@ public class CxxTestDescription implements
         flavoredLinkerMapMode);
 
     // Supplier which expands macros in the passed in test environment.
-    Supplier<ImmutableMap<String, String>> testEnv =
-        () -> ImmutableMap.copyOf(
+    ImmutableMap<String, String> testEnv =
+        ImmutableMap.copyOf(
             Maps.transformValues(
                 args.env,
                 CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(

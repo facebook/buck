@@ -466,7 +466,6 @@ public class CxxTestDescriptionTest {
     Path resource = filesystem.getPath("resource");
     filesystem.touch(resource);
     for (CxxTestType framework : CxxTestType.values()) {
-
       // Create a test rule without resources attached.
       BuildRuleResolver resolver =
           new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
@@ -477,7 +476,7 @@ public class CxxTestDescriptionTest {
       CxxTest cxxTestWithoutResources =
           builder
               .build(resolver, filesystem);
-      RuleKey ruleKeyWithoutResource = getRuleKey(cxxTestWithoutResources);
+      RuleKey ruleKeyWithoutResource = getRuleKey(resolver, cxxTestWithoutResources);
 
       // Create a rule with a resource attached.
       resolver =
@@ -490,7 +489,7 @@ public class CxxTestDescriptionTest {
       CxxTest cxxTestWithResources =
           builder
               .build(resolver, filesystem);
-      RuleKey ruleKeyWithResource = getRuleKey(cxxTestWithResources);
+      RuleKey ruleKeyWithResource = getRuleKey(resolver, cxxTestWithResources);
 
       // Verify that their rule keys are different.
       assertThat(ruleKeyWithoutResource, Matchers.not(Matchers.equalTo(ruleKeyWithResource)));
@@ -514,9 +513,7 @@ public class CxxTestDescriptionTest {
     }
   }
 
-  private RuleKey getRuleKey(BuildRule rule) {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+  private RuleKey getRuleKey(BuildRuleResolver resolver, BuildRule rule) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     FileHashCache fileHashCache =

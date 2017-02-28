@@ -30,6 +30,7 @@ import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -60,9 +61,11 @@ public abstract class CxxTest
     implements TestRule, HasRuntimeDeps, BinaryBuildRule {
 
   @AddToRuleKey
-  private final Supplier<ImmutableMap<String, String>> env;
+  private final ImmutableMap<String, String> env;
   @AddToRuleKey
   private final Supplier<ImmutableList<String>> args;
+  @AddToRuleKey
+  private final Tool executable;
   @AddToRuleKey
   @SuppressWarnings("PMD.UnusedPrivateField")
   private final ImmutableSortedSet<? extends SourcePath> resources;
@@ -74,8 +77,8 @@ public abstract class CxxTest
 
   public CxxTest(
       BuildRuleParams params,
-      final ImmutableMap<String, String> toolEnv,
-      final Supplier<ImmutableMap<String, String>> env,
+      Tool executable,
+      ImmutableMap<String, String> env,
       Supplier<ImmutableList<String>> args,
       ImmutableSortedSet<? extends SourcePath> resources,
       Supplier<ImmutableSortedSet<BuildRule>> additionalDeps,
@@ -84,13 +87,8 @@ public abstract class CxxTest
       boolean runTestSeparately,
       Optional<Long> testRuleTimeoutMs) {
     super(params);
-    this.env = Suppliers.memoize(
-        () -> {
-          ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-          builder.putAll(toolEnv);
-          builder.putAll(env.get());
-          return builder.build();
-        });
+    this.executable = executable;
+    this.env = env;
     this.args = Suppliers.memoize(args);
     this.resources = resources;
     this.additionalDeps = Suppliers.memoize(additionalDeps);
@@ -98,6 +96,11 @@ public abstract class CxxTest
     this.contacts = contacts;
     this.runTestSeparately = runTestSeparately;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
+  }
+
+  @Override
+  public Tool getExecutableCommand() {
+    return executable;
   }
 
   @Override
@@ -158,7 +161,7 @@ public abstract class CxxTest
                 .addAll(getShellCommand(pathResolver, getPathToTestResults()))
                 .addAll(args.get())
                 .build(),
-            env.get(),
+            getEnv(),
             getPathToTestExitCode(),
             getPathToTestOutput(),
             testRuleTimeoutMs));
@@ -224,8 +227,11 @@ public abstract class CxxTest
     return additionalDeps.get().stream().map(BuildRule::getBuildTarget);
   }
 
-  protected Supplier<ImmutableMap<String, String>> getEnv() {
-    return env;
+  protected ImmutableMap<String, String> getEnv() {
+    return new ImmutableMap.Builder<String, String>()
+        .putAll(executable.getEnvironment())
+        .putAll(env)
+        .build();
   }
 
   protected Supplier<ImmutableList<String>> getArgs() {

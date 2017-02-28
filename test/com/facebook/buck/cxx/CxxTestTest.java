@@ -63,8 +63,8 @@ public class CxxTestTest {
     public FakeCxxTest() {
       super(
           createBuildParams(),
+          new CommandTool.Builder().build(),
           ImmutableMap.of(),
-          Suppliers.ofInstance(ImmutableMap.of()),
           Suppliers.ofInstance(ImmutableList.of()),
           ImmutableSortedSet.of(),
           Suppliers.ofInstance(ImmutableSortedSet.of()),
@@ -181,12 +181,6 @@ public class CxxTestTest {
             assertEquals(expectedResults, results);
             return ImmutableList.of();
           }
-
-          @Override
-          public Tool getExecutableCommand() {
-            return new CommandTool.Builder().build();
-          }
-
         };
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();

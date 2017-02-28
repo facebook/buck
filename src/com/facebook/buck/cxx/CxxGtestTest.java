@@ -72,7 +72,6 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
 
   private final SourcePathRuleFinder ruleFinder;
   private final BuildRule binary;
-  private final Tool executable;
   private final long maxTestOutputSize;
 
   public CxxGtestTest(
@@ -80,7 +79,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
       SourcePathRuleFinder ruleFinder,
       BuildRule binary,
       Tool executable,
-      Supplier<ImmutableMap<String, String>> env,
+      ImmutableMap<String, String> env,
       Supplier<ImmutableList<String>> args,
       ImmutableSortedSet<? extends SourcePath> resources,
       Supplier<ImmutableSortedSet<BuildRule>> additionalDeps,
@@ -91,7 +90,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
       long maxTestOutputSize) {
     super(
         params,
-        executable.getEnvironment(),
+        executable,
         env,
         args,
         resources,
@@ -102,7 +101,6 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
         testRuleTimeoutMs);
     this.ruleFinder = ruleFinder;
     this.binary = binary;
-    this.executable = executable;
     this.maxTestOutputSize = maxTestOutputSize;
   }
 
@@ -115,15 +113,10 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   @Override
   protected ImmutableList<String> getShellCommand(SourcePathResolver pathResolver, Path output) {
     return ImmutableList.<String>builder()
-        .addAll(executable.getCommandPrefix(pathResolver))
+        .addAll(getExecutableCommand().getCommandPrefix(pathResolver))
         .add("--gtest_color=no")
         .add("--gtest_output=xml:" + getProjectFilesystem().resolve(output).toString())
         .build();
-  }
-
-  @Override
-  public Tool getExecutableCommand() {
-    return executable;
   }
 
   private TestResultSummary getProgramFailureSummary(
@@ -233,7 +226,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   public Stream<BuildTarget> getRuntimeDeps() {
     return Stream.concat(
         super.getRuntimeDeps(),
-        executable.getDeps(ruleFinder).stream()
+        getExecutableCommand().getDeps(ruleFinder).stream()
             .map(BuildRule::getBuildTarget));
   }
 
@@ -245,9 +238,9 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
         .setType("gtest")
-        .addAllCommand(executable.getCommandPrefix(pathResolver))
+        .addAllCommand(getExecutableCommand().getCommandPrefix(pathResolver))
         .addAllCommand(getArgs().get())
-        .putAllEnv(getEnv().get())
+        .putAllEnv(getEnv())
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .build();
