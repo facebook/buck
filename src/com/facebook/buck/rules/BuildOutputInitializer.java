@@ -17,7 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
-import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 
@@ -61,9 +60,10 @@ public class BuildOutputInitializer<T> {
    * @throws IllegalStateException if {@link #setBuildOutput(Object)} has not been invoked yet.
    */
   public T getBuildOutput() throws IllegalStateException {
-    Preconditions.checkState(this.buildOutput != null,
-        "buildOutput must already be set for %s",
-        buildTarget);
+    if (buildOutput == null) {
+      throw new IllegalStateException(
+          String.format("buildOutput must already be set for %s", buildTarget));
+    }
     return buildOutput;
   }
 }
