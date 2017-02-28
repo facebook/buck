@@ -170,6 +170,8 @@ def buck_build_target(args, cwd, targets, log_as_perftest=True):
                 # t16296463
                 '--config',
                 'project.glob_handler=',
+                '--config',
+                'cache._exp_propagation=false',
             ] + targets + ['-v', '5'],
             stdout=tmpFile,
             stderr=tmpFile,
