@@ -17,10 +17,13 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.DirCacheExperimentEvent;
 import com.facebook.buck.event.NetworkEvent.BytesReceivedEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.randomizedtrial.CommonGroups;
+import com.facebook.buck.randomizedtrial.RandomizedTrial;
 import com.facebook.buck.slb.HttpLoadBalancer;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.LoadBalancedService;
@@ -219,10 +222,14 @@ public class ArtifactCaches implements ArtifactCacheFactory {
     ArtifactCache result;
 
     if (artifactCaches.size() == 1) {
-      // Don't bother wrapping a single artifact cache in MultiArtifactCache.
+      // Don't bother wrapping a single artifact cache
       result = artifactCaches.get(0);
     } else {
-      result = new MultiArtifactCache(artifactCaches);
+      result = getDecoratedArtifactCache(
+          buckConfig,
+          buckEventBus,
+          artifactCaches,
+          distributedBuildModeEnabled);
     }
 
     // Always support reading two-level cache stores (in case we performed any in the past).
@@ -235,6 +242,41 @@ public class ArtifactCaches implements ArtifactCacheFactory {
         buckConfig.getTwoLevelCachingMaximumSize());
 
     return result;
+  }
+
+  private static ArtifactCache getDecoratedArtifactCache(
+      ArtifactCacheBuckConfig buckConfig,
+      BuckEventBus buckEventBus,
+      ImmutableList<ArtifactCache> artifactCaches,
+      boolean distributedBuildModeEnabled) {
+    if (!distributedBuildModeEnabled && buckConfig.getDirCacheRunsPropagationExperiment()) {
+      ImmutableList<ArtifactCache> dirCaches = ImmutableList.copyOf(
+          artifactCaches.stream()
+              .filter(cache -> checkArtifactCacheClass(cache, DirArtifactCache.class))
+              .iterator());
+      ImmutableList<ArtifactCache> remoteCaches = ImmutableList.copyOf(
+          artifactCaches.stream()
+              .filter(cache -> checkArtifactCacheClass(cache, AbstractNetworkCache.class))
+              .iterator());
+
+      if (buckConfig.getDirCachePropagationExperimentRandomizedTrialForcedToBeControlGroup() ||
+          RandomizedTrial.getGroup("dirCacheOnlyForPropagation", CommonGroups.class) ==
+          CommonGroups.TEST) {
+        MultiArtifactCache multiDirCache = new MultiArtifactCache(dirCaches);
+        MultiArtifactCache multiRemoteCache = new MultiArtifactCache(remoteCaches);
+        if (!multiDirCache.isStoreSupported()) {
+          buckEventBus.post(DirCacheExperimentEvent.readOnly());
+        } else {
+          buckEventBus.post(DirCacheExperimentEvent.propagateOnly());
+        }
+        return new RemoteArtifactsInLocalCacheArtifactCache(multiDirCache, multiRemoteCache);
+      } else {
+        buckEventBus.post(DirCacheExperimentEvent.readWrite());
+        return new MultiArtifactCache(artifactCaches);
+      }
+    } else {
+      return new MultiArtifactCache(artifactCaches);
+    }
   }
 
   private static void initializeDirCaches(
@@ -419,6 +461,14 @@ public class ArtifactCaches implements ArtifactCacheFactory {
             .setErrorTextTemplate(cacheDescription.getErrorMessageFormat())
             .setDistributedBuildModeEnabled(distributedBuildModeEnabled)
             .build());
+  }
+
+  private static boolean checkArtifactCacheClass(
+      ArtifactCache artifactCache,
+      Class<?> expectedClass) {
+    return expectedClass.isInstance(artifactCache) ||
+        artifactCache instanceof CacheDecorator &&
+            expectedClass.isInstance(((CacheDecorator) artifactCache).getDelegate());
   }
 
   private static String stripNonAscii(String str) {

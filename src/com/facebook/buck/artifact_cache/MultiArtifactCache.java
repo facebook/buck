@@ -19,7 +19,6 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.rules.RuleKey;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -131,8 +130,7 @@ public class MultiArtifactCache implements ArtifactCache {
     }
   }
 
-  @VisibleForTesting
-  ImmutableList<ArtifactCache> getArtifactCaches() {
+  public ImmutableList<ArtifactCache> getArtifactCaches() {
     return artifactCaches;
   }
 }

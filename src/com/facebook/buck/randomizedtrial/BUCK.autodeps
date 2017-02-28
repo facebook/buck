@@ -1,9 +1,10 @@
 {
   "randomizedtrial" : {
     "deps" : [
-      "//src/com/facebook/buck/util:exceptions",
-      "//third-party/java/guava:guava"
+      "//src/com/facebook/buck/util:exceptions"
     ],
-    "exported_deps" : [ ]
+    "exported_deps" : [
+      "//third-party/java/guava:guava"
+    ]
   }
 }

@@ -16,12 +16,14 @@
 
 package com.facebook.buck.artifact_cache;
 
+import static org.hamcrest.junit.MatcherAssume.assumeThat;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import org.hamcrest.Matchers;
@@ -140,6 +142,44 @@ public class ArtifactCachesTest {
         MoreExecutors.newDirectExecutorService(),
         Optional.empty()).newInstance();
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(DirArtifactCache.class));
+  }
+
+  @Test
+  public void testCreateReadOnlyDirCacheExperimentalCache() throws Exception {
+    assumeThat(Platform.detect(), Matchers.not(Matchers.equalTo(Platform.WINDOWS)));
+
+    ArtifactCacheBuckConfig cacheConfig = ArtifactCacheBuckConfigTest.createFromText(
+        "[cache]",
+        "mode = dir, http",
+        "_exp_propagation = true",
+        "_exp_propagation_force_control_group = true");
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
+    ArtifactCache artifactCache = new ArtifactCaches(
+        cacheConfig,
+        buckEventBus,
+        projectFilesystem,
+        Optional.empty(),
+        MoreExecutors.newDirectExecutorService(),
+        Optional.empty()).newInstance();
+    ArtifactCache result = stripDecorators(artifactCache);
+
+    assertThat(result, Matchers.instanceOf(RemoteArtifactsInLocalCacheArtifactCache.class));
+    RemoteArtifactsInLocalCacheArtifactCache experimentalCache =
+        (RemoteArtifactsInLocalCacheArtifactCache) result;
+
+    assertThat(experimentalCache.getLocalCaches(), Matchers.instanceOf(MultiArtifactCache.class));
+    assertThat(
+        experimentalCache.getLocalCaches().getArtifactCaches().get(0),
+        Matchers.instanceOf(CacheDecorator.class));
+    CacheDecorator decorator =
+        (CacheDecorator) experimentalCache.getLocalCaches().getArtifactCaches().get(0);
+    assertThat(decorator.getDelegate(), Matchers.instanceOf(DirArtifactCache.class));
+
+    assertThat(experimentalCache.getRemoteCaches(), Matchers.instanceOf(MultiArtifactCache.class));
+    assertThat(
+        experimentalCache.getRemoteCaches().getArtifactCaches().get(0),
+        Matchers.instanceOf(HttpArtifactCache.class));
   }
 
   private static ArtifactCache stripDecorators(ArtifactCache artifactCache) {

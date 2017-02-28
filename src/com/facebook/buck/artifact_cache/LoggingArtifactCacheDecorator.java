@@ -19,7 +19,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.rules.RuleKey;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -28,7 +27,7 @@ import com.google.common.util.concurrent.ListenableFuture;
  * and finish of each event.
  * The underlying cache must only provide synchronous operations.
  */
-public class LoggingArtifactCacheDecorator implements ArtifactCache {
+public class LoggingArtifactCacheDecorator implements ArtifactCache, CacheDecorator {
   private final BuckEventBus eventBus;
   private final ArtifactCache delegate;
   private final ArtifactCacheEventFactory eventFactory;
@@ -76,8 +75,8 @@ public class LoggingArtifactCacheDecorator implements ArtifactCache {
     delegate.close();
   }
 
-  @VisibleForTesting
-  ArtifactCache getDelegate() {
+  @Override
+  public ArtifactCache getDelegate() {
     return delegate;
   }
 }

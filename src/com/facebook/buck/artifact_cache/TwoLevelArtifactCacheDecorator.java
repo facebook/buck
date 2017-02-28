@@ -52,7 +52,7 @@ import java.util.Optional;
  * different keys but identical outputs require less network bandwidth at the expense of doubling
  * latency for downloading rules whose outputs we had not yet seen.
  */
-public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
+public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecorator {
 
   @VisibleForTesting
   static final String METADATA_KEY = "TWO_LEVEL_CACHE_CONTENT_HASH";
@@ -170,8 +170,8 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
         });
   }
 
-  @VisibleForTesting
-  ArtifactCache getDelegate() {
+  @Override
+  public ArtifactCache getDelegate() {
     return delegate;
   }
 

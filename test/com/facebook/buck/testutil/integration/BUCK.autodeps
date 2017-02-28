@@ -10,6 +10,7 @@
   "util" : {
     "deps" : [
       "//src/com/facebook/buck/android:utils",
+      "//src/com/facebook/buck/apple:platform",
       "//src/com/facebook/buck/apple:rules",
       "//src/com/facebook/buck/apple/device:device",
       "//src/com/facebook/buck/artifact_cache:artifact_cache",

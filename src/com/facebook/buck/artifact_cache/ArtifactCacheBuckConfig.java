@@ -409,6 +409,17 @@ public class ArtifactCacheBuckConfig {
     return false;
   }
 
+  public boolean getDirCacheRunsPropagationExperiment() {
+    return buckConfig.getBooleanValue(CACHE_SECTION_NAME, "_exp_propagation", false);
+  }
+
+  public boolean getDirCachePropagationExperimentRandomizedTrialForcedToBeControlGroup() {
+    return buckConfig.getBooleanValue(
+        CACHE_SECTION_NAME,
+        "_exp_propagation_force_control_group",
+        false);
+  }
+
   public enum ArtifactCacheMode {
     dir,
     http,
