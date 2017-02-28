@@ -65,7 +65,7 @@ public class CxxPrepareForLinkStep extends CompositeStep {
         String.join("", linker.getCommandPrefix(resolver)),
         String.join(" ", CxxWriteArgsToFileStep.stringify(allArgs, currentCellPath)));
 
-    CxxWriteArgsToFileStep createArgFileStep = new CxxWriteArgsToFileStep(
+    CxxWriteArgsToFileStep createArgFileStep = CxxWriteArgsToFileStep.create(
         argFilePath,
         hasLinkArgsToSupportFileList ? allArgs.stream()
             .filter(input -> !(input instanceof FileListableLinkerInputArg))
@@ -78,7 +78,7 @@ public class CxxPrepareForLinkStep extends CompositeStep {
       return new CxxPrepareForLinkStep(ImmutableList.of(createArgFileStep));
     }
 
-    CxxWriteArgsToFileStep createFileListStep = new CxxWriteArgsToFileStep(
+    CxxWriteArgsToFileStep createFileListStep = CxxWriteArgsToFileStep.create(
         fileListPath,
         allArgs.stream()
             .filter(input -> input instanceof FileListableLinkerInputArg)

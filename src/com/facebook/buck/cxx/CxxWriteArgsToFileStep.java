@@ -34,38 +34,31 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 /**
- * This step takes a list of args, stringify, escape them (if {@link #escaper} is present), and
+ * This step takes a list of args, stringify, escape them (if escaper is present), and
  * finally store to a file {@link #argFilePath}.
  */
 public class CxxWriteArgsToFileStep implements Step {
 
   private final Path argFilePath;
-  private final ImmutableList<Arg> args;
-  private final Optional<Function<String, String>> escaper;
-  private final Path currentCellPath;
+  private final ImmutableList<String> argFileContents;
 
-  CxxWriteArgsToFileStep(
+  public static CxxWriteArgsToFileStep create(
       Path argFilePath,
       ImmutableList<Arg> args,
       Optional<Function<String, String>> escaper,
       Path currentCellPath) {
-    this.argFilePath = argFilePath;
-    this.args = args;
-    this.escaper = escaper;
-    this.currentCellPath = currentCellPath;
-  }
-
-  private void createArgFile() throws IOException {
-    if (Files.notExists(argFilePath.getParent())) {
-      Files.createDirectories(argFilePath.getParent());
-    }
     ImmutableList<String> argFileContents = stringify(args, currentCellPath);
     if (escaper.isPresent()) {
       argFileContents = argFileContents.stream()
           .map(escaper.get()::apply)
           .collect(MoreCollectors.toImmutableList());
     }
-    MoreFiles.writeLinesToFile(argFileContents, argFilePath);
+    return new CxxWriteArgsToFileStep(argFilePath, argFileContents);
+  }
+
+  private CxxWriteArgsToFileStep(Path argFilePath, ImmutableList<String> argFileContents) {
+    this.argFilePath = argFilePath;
+    this.argFileContents = argFileContents;
   }
 
   static ImmutableList<String> stringify(
@@ -88,7 +81,10 @@ public class CxxWriteArgsToFileStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    createArgFile();
+    if (Files.notExists(argFilePath.getParent())) {
+      Files.createDirectories(argFilePath.getParent());
+    }
+    MoreFiles.writeLinesToFile(argFileContents, argFilePath);
     return StepExecutionResult.SUCCESS;
   }
 

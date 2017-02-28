@@ -82,7 +82,7 @@ public class CxxWriteArgsToFileStepTest {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     // Create our CxxWriteArgsToFileStep to test.
-    CxxWriteArgsToFileStep step = new CxxWriteArgsToFileStep(
+    CxxWriteArgsToFileStep step = CxxWriteArgsToFileStep.create(
         argFilePath,
         inputArgs,
         escaper,
