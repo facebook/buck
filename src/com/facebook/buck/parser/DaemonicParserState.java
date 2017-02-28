@@ -230,7 +230,8 @@ class DaemonicParserState {
           env =
               ImmutableMap.copyOf(
                   Maps.transformValues(
-                      Preconditions.checkNotNull((Map<String, String>) rawNode.get(ENV_META_RULE)),
+                      Preconditions.<Map<String, String>>checkNotNull(
+                          (Map<String, String>) rawNode.get(ENV_META_RULE)),
                       Optional::ofNullable));
         } else {
           withoutMetaIncludesBuilder.add(rawNode);
