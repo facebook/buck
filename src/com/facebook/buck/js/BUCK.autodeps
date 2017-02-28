@@ -6,7 +6,8 @@
       "//src/com/facebook/buck/shell:worker_job_params",
       "//src/com/facebook/buck/shell:worker_pool_factory",
       "//src/com/facebook/buck/step/fs:fs",
-      "//src/com/facebook/buck/util:exceptions"
+      "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util:util"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/android:packageable",

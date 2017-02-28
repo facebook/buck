@@ -11,6 +11,7 @@
       "//src/com/facebook/buck/event/listener:BroadcastEventListener",
       "//src/com/facebook/buck/file:rules",
       "//src/com/facebook/buck/graph:graph",
+      "//src/com/facebook/buck/hashing:hashing",
       "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/core:packagefinder",

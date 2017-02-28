@@ -10,6 +10,7 @@
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/cxx/elf:elf",
+      "//src/com/facebook/buck/hashing:hashing",
       "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
