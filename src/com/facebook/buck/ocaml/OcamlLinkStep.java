@@ -40,14 +40,14 @@ public class OcamlLinkStep extends ShellStep {
   public final ImmutableList<String> flags;
   public final Optional<String> stdlib;
   public final Path output;
-  public final ImmutableList<Arg> cDepInput;
+  public final ImmutableList<String> cDepInput;
   public final ImmutableList<Path> input;
   public final boolean isLibrary;
   public final boolean isBytecode;
 
   private final ImmutableList<String> ocamlInput;
 
-  public OcamlLinkStep(
+  public static OcamlLinkStep create(
       Path workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> cxxCompiler,
@@ -57,6 +57,51 @@ public class OcamlLinkStep extends ShellStep {
       Path output,
       ImmutableList<Arg> depInput,
       ImmutableList<Arg> cDepInput,
+      ImmutableList<Path> input,
+      boolean isLibrary,
+      boolean isBytecode) {
+    ImmutableList.Builder<String> ocamlInputBuilder = ImmutableList.builder();
+
+    final String linkExt = isBytecode
+        ? OcamlCompilables.OCAML_CMA
+        : OcamlCompilables.OCAML_CMXA;
+
+    for (String linkInput : Arg.stringify(depInput)) {
+      if (isLibrary && linkInput.endsWith(linkExt)) {
+        continue;
+      }
+      ocamlInputBuilder.add(linkInput);
+    }
+
+    ImmutableList<String> ocamlInput = ocamlInputBuilder.build();
+
+    return new OcamlLinkStep(
+        workingDirectory,
+        environment,
+        cxxCompiler,
+        ocamlCompilerCommandPrefix,
+        flags,
+        stdlib,
+        output,
+        ocamlInput,
+        FluentIterable.from(cDepInput)
+            .transformAndConcat(Arg::stringifyList)
+            .toList(),
+        input,
+        isLibrary,
+        isBytecode);
+  }
+
+  private OcamlLinkStep(
+      Path workingDirectory,
+      ImmutableMap<String, String> environment,
+      ImmutableList<String> cxxCompiler,
+      ImmutableList<String> ocamlCompilerCommandPrefix,
+      ImmutableList<String> flags,
+      Optional<String> stdlib,
+      Path output,
+      ImmutableList<String> ocamlInput,
+      ImmutableList<String> cDepInput,
       ImmutableList<Path> input,
       boolean isLibrary,
       boolean isBytecode) {
@@ -71,21 +116,7 @@ public class OcamlLinkStep extends ShellStep {
     this.input = input;
     this.isLibrary = isLibrary;
     this.isBytecode = isBytecode;
-
-    ImmutableList.Builder<String> ocamlInputBuilder = ImmutableList.builder();
-
-    final String linkExt = isBytecode
-        ? OcamlCompilables.OCAML_CMA
-        : OcamlCompilables.OCAML_CMXA;
-
-    for (String linkInput : Arg.stringify(depInput)) {
-      if (isLibrary && linkInput.endsWith(linkExt)) {
-        continue;
-      }
-      ocamlInputBuilder.add(linkInput);
-    }
-
-    ocamlInput = ocamlInputBuilder.build();
+    this.ocamlInput = ocamlInput;
   }
 
   @Override
@@ -118,11 +149,7 @@ public class OcamlLinkStep extends ShellStep {
         .addAll(flags)
         .addAll(ocamlInput)
         .addAll(input.stream().map(Object::toString).iterator())
-        .addAll(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-cclib"),
-                FluentIterable.from(cDepInput)
-                    .transformAndConcat(Arg::stringifyList)))
+        .addAll(MoreIterables.zipAndConcat(Iterables.cycle("-cclib"), cDepInput))
         .build();
   }
 

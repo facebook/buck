@@ -224,7 +224,7 @@ public class OcamlBuildStep implements Step {
     flags.addAll(ocamlContext.getFlags());
     flags.addAll(ocamlContext.getCommonCLinkerFlags());
 
-    OcamlLinkStep linkStep = new OcamlLinkStep(
+    OcamlLinkStep linkStep = OcamlLinkStep.create(
         filesystem.getRootPath(),
         cxxCompilerEnvironment,
         cxxCompiler,
@@ -248,7 +248,7 @@ public class OcamlBuildStep implements Step {
     flags.addAll(ocamlContext.getFlags());
     flags.addAll(ocamlContext.getCommonCLinkerFlags());
 
-    OcamlLinkStep linkStep = new OcamlLinkStep(
+    OcamlLinkStep linkStep = OcamlLinkStep.create(
         filesystem.getRootPath(),
         cxxCompilerEnvironment,
         cxxCompiler,
