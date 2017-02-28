@@ -170,8 +170,10 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
 
       ProvisioningProfileMetadata.Builder provisioningProfileMetadata =
           ProvisioningProfileMetadata.builder();
-      for (Object platform : (Object []) plist.get("Platform").toJavaObject()) {
-        provisioningProfileMetadata.addPlatforms((String) platform);
+      if (plist.get("Platform") != null) {
+        for (Object platform : (Object []) plist.get("Platform").toJavaObject()) {
+          provisioningProfileMetadata.addPlatforms((String) platform);
+        }
       }
       return provisioningProfileMetadata
           .setAppID(ProvisioningProfileMetadata.splitAppID(appID))

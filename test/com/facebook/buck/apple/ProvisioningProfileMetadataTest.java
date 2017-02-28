@@ -90,6 +90,16 @@ public class ProvisioningProfileMetadataTest {
         data.getDeveloperCertificateFingerprints(),
         equalTo(ImmutableSet.of(HashCode.fromString("be16fc419bfb6b59a86bc08755ba0f332ec574fb"))));
 
+    // Test old-style provisioning profile without "Platforms" field
+    data =
+        ProvisioningProfileMetadata.fromProvisioningProfilePath(
+            executor,
+            ProvisioningProfileStore.DEFAULT_READ_COMMAND,
+            testdataDir.resolve("sample_without_platforms.mobileprovision"));
+    assertThat(
+        data.getDeveloperCertificateFingerprints(),
+        equalTo(ImmutableSet.of(HashCode.fromString("be16fc419bfb6b59a86bc08755ba0f332ec574fb"))));
+
     thrown.expect(IOException.class);
     ProvisioningProfileMetadata.fromProvisioningProfilePath(
         executor,
