@@ -43,7 +43,9 @@ public enum Platform {
 
   public static Platform detect() {
     String platformName = System.getProperty("os.name");
-    if (platformName.startsWith("Linux")) {
+    if (platformName == null) {
+      return UNKNOWN;
+    } else if (platformName.startsWith("Linux")) {
       return LINUX;
     } else if (platformName.startsWith("Mac OS")) {
       return MACOS;
