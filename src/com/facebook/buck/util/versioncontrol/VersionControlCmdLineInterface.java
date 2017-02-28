@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.versioncontrol;
 
+import com.facebook.buck.model.Pair;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -49,7 +50,6 @@ public interface VersionControlCmdLineInterface {
   Optional<String> revisionIdOrAbsent(String name) throws InterruptedException;
 
   /**
-   *
    * @return Revision ID for current tip
    * @throws VersionControlCommandFailedException
    * @throws InterruptedException
@@ -57,7 +57,6 @@ public interface VersionControlCmdLineInterface {
   String currentRevisionId() throws VersionControlCommandFailedException, InterruptedException;
 
   /**
-   *
    * @param revisionIdOne
    * @param revisionIdTwo
    * @return Revision ID that is an ancestor for both revisionIdOne and revisionIdTwo
@@ -70,12 +69,37 @@ public interface VersionControlCmdLineInterface {
   /**
    * @param revisionIdOne
    * @param revisionIdTwo
+   * @return A {@link Pair} containing a revision ID and its timestamp that is the common ancestor
+   * of revisionIdOne and revisionIdTwo.
+   * @throws VersionControlCommandFailedException
+   * @throws InterruptedException
+   */
+  Pair<String, Long> commonAncestorAndTS(String revisionIdOne, String revisionIdTwo)
+      throws VersionControlCommandFailedException, InterruptedException;
+
+  /**
+   * @param revisionIdOne
+   * @param revisionIdTwo
    * @return Revision ID that is an ancestor for both revisionIdOne and revisionIdTwo or
    * {@link Optional#empty()} is there is no common ancestor or an error was encountered. If you
    * want to handle the error use {@link #commonAncestor(String, String)}
    * @throws InterruptedException
    */
   Optional<String> commonAncestorOrAbsent(String revisionIdOne, String revisionIdTwo)
+      throws InterruptedException;
+
+  /**
+   * @param revisionIdOne
+   * @param revisionIdTwo
+   * @return A Pair containing a revision ID and its timestamp that is the common ancestor of
+   * revisionIdOne and revisionIdTwo. If there is not a common ancestor or an error is encountered
+   * then {@link Optional#empty()} is returned.If you want to handle the error use
+   * {@link #commonAncestorAndTS(String, String)}.
+   * @throws InterruptedException
+   */
+  Optional<Pair<String, Long>> commonAncestorAndTSOrAbsent(
+      String revisionIdOne,
+      String revisionIdTwo)
       throws InterruptedException;
 
   /**
@@ -98,7 +122,6 @@ public interface VersionControlCmdLineInterface {
       throws InterruptedException;
 
   /**
-   *
    * @param fromRevisionId
    * @return files changed from the given revision.
    * @throws VersionControlCommandFailedException
@@ -108,7 +131,6 @@ public interface VersionControlCmdLineInterface {
       throws VersionControlCommandFailedException, InterruptedException;
 
   /**
-   *
    * @param revisionId
    * @return Unix timestamp of given revisionId (in seconds)
    * @throws VersionControlCommandFailedException

@@ -39,4 +39,6 @@ interface AbstractVersionControlStats {
   @JsonView(JsonViews.MachineReadableLog.class)
   String getBranchedFromMasterRevisionId();
 
+  @JsonView(JsonViews.MachineReadableLog.class)
+  Long getBranchedFromMasterTS();
 }

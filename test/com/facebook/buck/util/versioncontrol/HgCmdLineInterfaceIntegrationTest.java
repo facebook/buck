@@ -26,6 +26,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.TestProcessExecutorFactory;
 import com.facebook.buck.zip.Unzip;
@@ -179,6 +180,16 @@ public class HgCmdLineInterfaceIntegrationTest {
         MASTER_THREE_BOOKMARK)
         .get()
         .startsWith(MASTER_THREE_ID));
+  }
+
+  @Test
+  public void testExistingCommonAncestorAndTSOrAbsentWithBookmarks() throws InterruptedException {
+    Pair<String, Long> res = repoThreeCmdLine.commonAncestorAndTSOrAbsent(
+        BRANCH_FROM_MASTER_THREE_BOOKMARK,
+        MASTER_THREE_BOOKMARK)
+        .get();
+    assertTrue(res.getFirst().startsWith(MASTER_THREE_ID));
+    assertTrue(res.getSecond().equals(1440589283L));
   }
 
   @Test

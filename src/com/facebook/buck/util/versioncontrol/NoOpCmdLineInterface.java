@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.versioncontrol;
 
+import com.facebook.buck.model.Pair;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -56,9 +57,23 @@ public class NoOpCmdLineInterface implements VersionControlCmdLineInterface {
   }
 
   @Override
+  public Pair<String, Long> commonAncestorAndTS(String revisionIdOne, String revisionIdTwo)
+      throws VersionControlCommandFailedException, InterruptedException {
+    return new Pair<>("", 0L);
+  }
+
+  @Override
   public Optional<String> commonAncestorOrAbsent(
       String revisionOne,
       String revisionTwo) throws InterruptedException {
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<Pair<String, Long>> commonAncestorAndTSOrAbsent(
+      String revisionIdOne,
+      String revisionIdTwo)
+      throws InterruptedException {
     return Optional.empty();
   }
 

@@ -17,6 +17,7 @@
       "//third-party/java/immutables:immutables"
     ],
     "exported_deps" : [
+      "//src/com/facebook/buck/model:simple_types",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",
       "//third-party/java/jackson:jackson-annotations"
@@ -32,6 +33,7 @@
     "deps" : [
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/log/views:views",
+      "//src/com/facebook/buck/model:simple_types",
       "//third-party/java/jackson:jackson-annotations"
     ],
     "exported_deps" : [
@@ -47,6 +49,7 @@
       "//src/com/facebook/buck/util:util"
     ],
     "exported_deps" : [
+      "//src/com/facebook/buck/model:simple_types",
       "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
       "//third-party/java/guava:guava",

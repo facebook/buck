@@ -18,6 +18,7 @@ package com.facebook.buck.rage;
 
 import static com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator.TRACKED_BOOKMARKS;
 
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.versioncontrol.VersionControlCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
@@ -54,34 +55,44 @@ public class VcsInfoCollector {
     String currentRevisionId = vcCmdLineInterface.currentRevisionId();
     ImmutableMap<String, String> bookmarksRevisionIds =
         vcCmdLineInterface.bookmarksRevisionsId(TRACKED_BOOKMARKS);
-    String baseRevisionId = vcCmdLineInterface.commonAncestor(
+    Pair<String, Long> baseRevisionInfo = vcCmdLineInterface.commonAncestorAndTS(
         currentRevisionId,
         bookmarksRevisionIds.get("remote/master"));
 
     ImmutableSet.Builder<String> baseBookmarks = ImmutableSet.builder();
     for (Map.Entry<String, String> bookmark : bookmarksRevisionIds.entrySet()) {
-      if (bookmark.getValue().startsWith(baseRevisionId)) {
+      if (bookmark.getValue().startsWith(baseRevisionInfo.getFirst())) {
         baseBookmarks.add(bookmark.getKey());
       }
     }
 
     return SourceControlInfo.builder()
         .setCurrentRevisionId(currentRevisionId)
-        .setRevisionIdOffTracked(baseRevisionId)
+        .setRevisionIdOffTracked(baseRevisionInfo.getFirst())
+        .setRevisionTimestampOffTracked(baseRevisionInfo.getSecond())
         .setBasedOffWhichTracked(baseBookmarks.build())
-        .setDiff(vcCmdLineInterface.diffBetweenRevisionsOrAbsent(baseRevisionId, currentRevisionId))
-        .setDirtyFiles(vcCmdLineInterface.changedFiles(baseRevisionId))
+        .setDiff(vcCmdLineInterface.diffBetweenRevisionsOrAbsent(
+            baseRevisionInfo.getFirst(),
+            currentRevisionId))
+        .setDirtyFiles(vcCmdLineInterface.changedFiles(baseRevisionInfo.getFirst()))
         .build();
   }
 
   @Value.Immutable
   @BuckStyleImmutable
   interface AbstractSourceControlInfo {
+    /* Commit hash of the current revision. */
     String getCurrentRevisionId();
+    /* A list of bookmarks that the current commit is based and also exist in TRACKED_BOOKMARKS */
     ImmutableSet<String> getBasedOffWhichTracked();
+    /* Commit hash of the revision that is the common base between current revision and master. */
     Optional<String> getRevisionIdOffTracked();
+    /* The timestamp of the base revision */
+    Optional<Long> getRevisionTimestampOffTracked();
+    /* The diff between base and current revision if it exists */
     @JsonIgnore
     Optional<String> getDiff();
+    /* A list of all the files that are changed from the base revision. */
     ImmutableSet<String> getDirtyFiles();
   }
 }

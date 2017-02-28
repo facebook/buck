@@ -2,6 +2,7 @@
   "versioncontrol" : {
     "deps" : [
       "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/model:simple_types",
       "//src/com/facebook/buck/util/versioncontrol:impl",
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol_config",

@@ -17,6 +17,7 @@
 package com.facebook.buck.util.versioncontrol;
 
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.ProcessExecutor;
@@ -110,6 +111,15 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
           "--template",
           "'{node|short}'");
 
+  private static final ImmutableList<String> COMMON_ANCESTOR_HASH_TS_COMMAND_TEMPLATE =
+      ImmutableList.of(
+          HG_CMD_TEMPLATE,
+          "log",
+          "--rev",
+          "ancestor(" + REVISION_IDS_TEMPLATE + ")",
+          "--template",
+          "'{node|short}' '{date|hgdate}'");
+
   private static final ImmutableList<String> REVISION_AGE_COMMAND =
       ImmutableList.of(
           HG_CMD_TEMPLATE,
@@ -196,10 +206,34 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   }
 
   @Override
+  public Pair<String, Long> commonAncestorAndTS(String revisionIdOne, String revisionIdTwo)
+      throws VersionControlCommandFailedException, InterruptedException {
+    // The return format is {hash} {timestamp.ns_timestamp}. We only use the 1st part of the TS.
+    String[] results = executeCommand(
+        replaceTemplateValue(
+            COMMON_ANCESTOR_HASH_TS_COMMAND_TEMPLATE,
+            REVISION_IDS_TEMPLATE,
+            (revisionIdOne + "," + revisionIdTwo))).split(" ");
+    return new Pair<>(validateRevisionId(results[0]), Long.parseLong(results[1]));
+  }
+
+  @Override
   public Optional<String> commonAncestorOrAbsent(String revisionIdOne, String revisionIdTwo)
       throws InterruptedException {
     try {
       return Optional.of(commonAncestor(revisionIdOne, revisionIdTwo));
+    } catch (VersionControlCommandFailedException e) {
+      return Optional.empty();
+    }
+  }
+
+  @Override
+  public Optional<Pair<String, Long>> commonAncestorAndTSOrAbsent(
+      String revisionIdOne,
+      String revisionIdTwo)
+      throws InterruptedException {
+    try {
+      return Optional.of(commonAncestorAndTS(revisionIdOne, revisionIdTwo));
     } catch (VersionControlCommandFailedException e) {
       return Optional.empty();
     }

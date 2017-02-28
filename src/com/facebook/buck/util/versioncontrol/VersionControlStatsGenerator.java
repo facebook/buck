@@ -19,6 +19,7 @@ package com.facebook.buck.util.versioncontrol;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.Pair;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -81,7 +82,7 @@ public class VersionControlStatsGenerator {
         // Get the current revision id.
         String currentRevisionId = vcCmdLineInterface.currentRevisionId();
         // Get the common ancestor of master and current revision
-        String branchedFromMasterRevisionId = vcCmdLineInterface.commonAncestor(
+        Pair<String, Long> branchedFromMasterInfo = vcCmdLineInterface.commonAncestorAndTS(
             currentRevisionId,
             bookmarksRevisionIds.get("remote/master"));
         // Get the list of tracked changes files.
@@ -97,9 +98,9 @@ public class VersionControlStatsGenerator {
         versionControlStats
             .setPathsChangedInWorkingDirectory(changedFiles)
             .setCurrentRevisionId(currentRevisionId)
-            .setBranchedFromMasterRevisionId(branchedFromMasterRevisionId)
-            .setBaseBookmarks(baseBookmarks.build())
-            .build();
+            .setBranchedFromMasterRevisionId(branchedFromMasterInfo.getFirst())
+            .setBranchedFromMasterTS(branchedFromMasterInfo.getSecond())
+            .setBaseBookmarks(baseBookmarks.build());
       } catch (VersionControlCommandFailedException e) {
         LOG.warn("Failed to gather source control stats.");
       }
