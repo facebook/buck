@@ -29,7 +29,6 @@
       "//src/com/facebook/buck/httpserver:httpserver",
       "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:io",
-      "//src/com/facebook/buck/io:watchman",
       "//src/com/facebook/buck/json:json",
       "//src/com/facebook/buck/jvm/core:packagefinder",
       "//src/com/facebook/buck/jvm/java:config",
@@ -87,7 +86,6 @@
       "//test/com/facebook/buck/test:testutil",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:util",
-      "//test/com/facebook/buck/timing:testutil",
       "//test/com/facebook/buck/util:testutil",
       "//test/com/facebook/buck/versions:testutil",
       "//third-party/java/args4j:args4j",
@@ -119,6 +117,7 @@
       "//src/com/facebook/buck/artifact_cache:config",
       "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/event/listener:BroadcastEventListener",
+      "//src/com/facebook/buck/io:watchman",
       "//src/com/facebook/buck/parser:config",
       "//src/com/facebook/buck/parser:parser",
       "//src/com/facebook/buck/rules:action_graph_cache",
@@ -158,7 +157,8 @@
       "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/testutil/integration:util",
       "//third-party/java/guava:guava",
-      "//third-party/java/jackson:jackson-databind"
+      "//third-party/java/jackson:jackson-databind",
+      "//third-party/java/junit:junit"
     ]
   }
 }

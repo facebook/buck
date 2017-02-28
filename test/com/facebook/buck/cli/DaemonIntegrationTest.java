@@ -26,20 +26,16 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.io.Watchman;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.TestCellBuilder;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DelegatingInputStream;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
@@ -50,7 +46,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 import org.junit.After;
 import org.junit.Before;
@@ -79,41 +74,20 @@ public class DaemonIntegrationTest {
   public TemporaryPaths tmp = new TemporaryPaths();
 
   @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  public TestWithBuckd testWithBuckd = new TestWithBuckd(tmp);
 
-  private static ImmutableMap<String, String> getWatchmanEnv() {
-    ImmutableMap.Builder<String, String> envBuilder = ImmutableMap.builder();
-    String systemPath = System.getenv("PATH");
-    if (systemPath != null) {
-      envBuilder.put("PATH", systemPath);
-    }
-    return envBuilder.build();
-  }
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void setUp() throws IOException, InterruptedException{
     executorService = Executors.newScheduledThreadPool(5);
-    // In case root_restrict_files is enabled in /etc/watchmanconfig, assume
-    // this is one of the entries so it doesn't give up.
-    tmp.newFolder(".git");
-    tmp.newFile(".arcconfig");
-    Watchman watchman = Watchman.build(
-        ImmutableSet.of(tmp.getRoot()),
-        getWatchmanEnv(),
-        new TestConsole(),
-        new FakeClock(0),
-        Optional.empty());
-
-    // We assume watchman has been installed and configured properly on the system, and that setting
-    // up the watch is successful.
-    assumeFalse(watchman == Watchman.NULL_WATCHMAN);
   }
 
   @After
   public void tearDown() {
     Thread.interrupted(); // Clear interrupted flag, if set.
     executorService.shutdown();
-    Main.resetDaemon();
   }
 
   /**
