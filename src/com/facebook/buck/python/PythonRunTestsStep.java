@@ -28,7 +28,6 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -46,7 +45,7 @@ public class PythonRunTestsStep implements Step {
   private final Path workingDirectory;
   private final String testName;
   private final ImmutableList<String> commandPrefix;
-  private final Supplier<ImmutableMap<String, String>> environment;
+  private final ImmutableMap<String, String> environment;
   private final TestSelectorList testSelectorList;
   private final Optional<Long> testRuleTimeoutMs;
   private final Path resultsOutputPath;
@@ -61,7 +60,7 @@ public class PythonRunTestsStep implements Step {
       Path workingDirectory,
       String testName,
       ImmutableList<String> commandPrefix,
-      Supplier<ImmutableMap<String, String>> environment,
+      ImmutableMap<String, String> environment,
       TestSelectorList testSelectorList,
       Optional<Long> testRuleTimeoutMs,
       Path resultsOutputPath) {
@@ -101,7 +100,7 @@ public class PythonRunTestsStep implements Step {
                 .add("-l", "-L", "buck")
                 .build())
         .setDirectory(workingDirectory)
-        .setEnvironment(environment.get())
+        .setEnvironment(environment)
         .build();
     ProcessExecutor.Result result = context.getProcessExecutor().launchAndExecute(
         params,
@@ -201,7 +200,7 @@ public class PythonRunTestsStep implements Step {
 
       @Override
       public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-        return environment.get();
+        return environment;
       }
 
       @Override

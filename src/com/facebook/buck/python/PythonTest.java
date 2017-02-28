@@ -65,7 +65,8 @@ public class PythonTest
   private final SourcePathRuleFinder ruleFinder;
   private final Supplier<ImmutableSortedSet<BuildRule>> originalDeclaredDeps;
   @AddToRuleKey
-  private final Supplier<ImmutableMap<String, String>> env;
+  private final ImmutableMap<String, String> env;
+  @AddToRuleKey
   private final PythonBinary binary;
   private final ImmutableSet<Label> labels;
   private final Optional<Long> testRuleTimeoutMs;
@@ -76,7 +77,7 @@ public class PythonTest
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       Supplier<ImmutableSortedSet<BuildRule>> originalDeclaredDeps,
-      final Supplier<ImmutableMap<String, String>> env,
+      final ImmutableMap<String, String> env,
       final PythonBinary binary,
       ImmutableSet<Label> labels,
       ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
@@ -96,7 +97,7 @@ public class PythonTest
   public static PythonTest from(
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
-      final Supplier<ImmutableMap<String, String>> env,
+      final ImmutableMap<String, String> env,
       final PythonBinary binary,
       ImmutableSet<Label> labels,
       ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
@@ -108,13 +109,7 @@ public class PythonTest
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         ruleFinder,
         params.getDeclaredDeps(),
-        Suppliers.memoize(
-            () -> {
-              ImmutableMap.Builder<String, String> environment = ImmutableMap.builder();
-              environment.putAll(binary.getExecutableCommand().getEnvironment());
-              environment.putAll(env.get());
-              return environment.build();
-            }),
+        env,
         binary,
         labels,
         neededCoverage,
@@ -146,10 +141,17 @@ public class PythonTest
             getProjectFilesystem().getRootPath(),
             getBuildTarget().getFullyQualifiedName(),
             binary.getExecutableCommand().getCommandPrefix(pathResolver),
-            env,
+            getMergedEnv(),
             options.getTestSelectorList(),
             testRuleTimeoutMs,
             getProjectFilesystem().resolve(getPathToTestOutputResult())));
+  }
+
+  private ImmutableMap<String, String> getMergedEnv() {
+    return new ImmutableMap.Builder<String, String>()
+        .putAll(binary.getExecutableCommand().getEnvironment())
+        .putAll(env)
+        .build();
   }
 
   @Override
@@ -247,7 +249,7 @@ public class PythonTest
         .setType("pyunit")
         .setNeededCoverage(neededCoverage)
         .addAllCommand(binary.getExecutableCommand().getCommandPrefix(pathResolver))
-        .putAllEnv(env.get())
+        .putAllEnv(getMergedEnv())
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .build();
