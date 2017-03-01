@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
@@ -86,7 +86,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
                 builder.addPrefixHeader(headerPath);
               }
               if (sandbox.isPresent()) {
-                BuildTargetSourcePath root = new BuildTargetSourcePath(
+                ExplicitBuildTargetSourcePath root = new ExplicitBuildTargetSourcePath(
                     sandbox.get().getBuildTarget(),
                     sandbox.get().getRoot());
                 builder.addSymlinkTree(root, sandbox.get().getLinks());

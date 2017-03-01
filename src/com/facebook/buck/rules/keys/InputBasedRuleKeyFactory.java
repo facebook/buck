@@ -186,7 +186,7 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     @Override
     protected Builder setSourcePath(SourcePath sourcePath) throws IOException {
       if (sourcePath instanceof BuildTargetSourcePath) {
-        deps.add(ImmutableSet.of(ruleFinder.getRuleOrThrow((BuildTargetSourcePath) sourcePath)));
+        deps.add(ImmutableSet.of(ruleFinder.getRuleOrThrow((BuildTargetSourcePath<?>) sourcePath)));
         // fall through and call setSourcePathDirectly as well
       }
       super.setSourcePathDirectly(sourcePath);

@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -96,24 +96,24 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders {
     CxxSymlinkTreeHeaders.Builder builder = CxxSymlinkTreeHeaders.builder();
     builder.setIncludeType(includeType);
     builder.setRoot(
-        new BuildTargetSourcePath(
+        new ExplicitBuildTargetSourcePath(
             symlinkTree.getBuildTarget(),
             symlinkTree.getRoot()));
 
     if (includeType == CxxPreprocessables.IncludeType.LOCAL) {
       builder.setIncludeRoot(
-          new BuildTargetSourcePath(
+          new ExplicitBuildTargetSourcePath(
               symlinkTree.getBuildTarget(),
               symlinkTree.getIncludePath()));
       if (symlinkTree.getHeaderMap().isPresent()) {
         builder.setHeaderMap(
-            new BuildTargetSourcePath(
+            new ExplicitBuildTargetSourcePath(
                 symlinkTree.getBuildTarget(),
                 symlinkTree.getHeaderMap().get()));
       }
     } else {
       builder.setIncludeRoot(
-          new BuildTargetSourcePath(
+          new ExplicitBuildTargetSourcePath(
               symlinkTree.getBuildTarget(),
               symlinkTree.getRoot()));
     }

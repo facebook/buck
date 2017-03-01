@@ -29,7 +29,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -65,7 +65,7 @@ public class AndroidInstrumentationApkTest {
       @Override
       public ImmutableSet<SourcePath> getTransitiveClasspaths() {
         return ImmutableSet.of(
-            new BuildTargetSourcePath(javaLibrary1Target),
+            new DefaultBuildTargetSourcePath(javaLibrary1Target),
             getSourcePathToOutput());
       }
     };
@@ -80,7 +80,7 @@ public class AndroidInstrumentationApkTest {
       @Override
       public ImmutableSet<SourcePath> getTransitiveClasspaths() {
         return ImmutableSet.of(
-            new BuildTargetSourcePath(javaLibrary3Target),
+            new DefaultBuildTargetSourcePath(javaLibrary3Target),
             getSourcePathToOutput());
       }
     };

@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -549,7 +550,7 @@ public class CxxGenruleDescription
         FilterAndTargets input)
         throws MacroException {
       return input.targets.stream()
-          .map(BuildTargetSourcePath::new)
+          .map(DefaultBuildTargetSourcePath::new)
           .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
     }
 

@@ -29,8 +29,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -142,7 +142,7 @@ public class JvmLibraryArgInterpreterTest {
     PrebuiltJarBuilder.createBuilder(target)
         .setBinaryJar(javacJarPath)
         .build(ruleResolver);
-    SourcePath sourcePath = new BuildTargetSourcePath(target);
+    SourcePath sourcePath = new DefaultBuildTargetSourcePath(target);
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
     arg.compiler = Optional.of(either);
@@ -197,7 +197,7 @@ public class JvmLibraryArgInterpreterTest {
     PrebuiltJarBuilder.createBuilder(target)
         .setBinaryJar(javacJarPath)
         .build(ruleResolver);
-    SourcePath sourcePath = new BuildTargetSourcePath(target);
+    SourcePath sourcePath = new DefaultBuildTargetSourcePath(target);
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
     arg.compiler = Optional.of(either);

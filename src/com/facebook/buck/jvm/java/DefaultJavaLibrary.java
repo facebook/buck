@@ -34,7 +34,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExportDependencies;
@@ -303,7 +303,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   }
 
   private Optional<SourcePath> sourcePathForOutputJar() {
-    return outputJar.map(input -> new BuildTargetSourcePath(getBuildTarget(), input));
+    return outputJar.map(input -> new ExplicitBuildTargetSourcePath(getBuildTarget(), input));
   }
 
   static Path getOutputJarPath(BuildTarget target, ProjectFilesystem filesystem) {
@@ -610,7 +610,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     if (outputJar.isPresent()) {
       collector.addClasspathEntry(
           this,
-          new BuildTargetSourcePath(getBuildTarget(), outputJar.get()));
+          new ExplicitBuildTargetSourcePath(getBuildTarget(), outputJar.get()));
     }
     if (proguardConfig.isPresent()) {
       collector.addProguardConfig(getBuildTarget(), proguardConfig.get());

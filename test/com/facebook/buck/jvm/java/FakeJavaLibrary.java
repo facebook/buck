@@ -24,8 +24,8 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -96,7 +96,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   @Override
   public ImmutableSet<SourcePath> getImmediateClasspaths() {
     return ImmutableSet.of(
-        new BuildTargetSourcePath(getBuildTarget(), getPathToOutput()));
+        new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToOutput()));
   }
 
   @Override

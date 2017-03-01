@@ -24,7 +24,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
@@ -95,7 +95,7 @@ public class CalculateAbiTest {
             target,
             ruleFinder,
             builder.createBuildRuleParams(resolver, filesystem),
-            new BuildTargetSourcePath(javaLibraryTarget));
+            new DefaultBuildTargetSourcePath(javaLibraryTarget));
 
     FileHashCache initialHashCache =
         new StackedFileHashCache(
@@ -177,7 +177,7 @@ public class CalculateAbiTest {
             target,
             ruleFinder,
             builder.createBuildRuleParams(resolver, filesystem),
-            new BuildTargetSourcePath(javaLibraryTarget));
+            new DefaultBuildTargetSourcePath(javaLibraryTarget));
 
     FileHashCache initialHashCache =
         new StackedFileHashCache(

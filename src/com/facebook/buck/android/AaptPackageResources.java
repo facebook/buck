@@ -28,7 +28,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RecordFileSha1Step;
 import com.facebook.buck.rules.SourcePath;
@@ -327,7 +327,7 @@ public class AaptPackageResources extends AbstractBuildRule {
   }
 
   SourcePath getAndroidManifestXmlSourcePath() {
-    return new BuildTargetSourcePath(getBuildTarget(), getAndroidManifestXml());
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getAndroidManifestXml());
   }
 
   /**
@@ -375,7 +375,7 @@ public class AaptPackageResources extends AbstractBuildRule {
     if (!packageType.isBuildWithObfuscation()) {
       return Optional.empty();
     }
-    return Optional.of(new BuildTargetSourcePath(
+    return Optional.of(new ExplicitBuildTargetSourcePath(
         getBuildTarget(), getPathToGeneratedProguardConfigDir()));
   }
 

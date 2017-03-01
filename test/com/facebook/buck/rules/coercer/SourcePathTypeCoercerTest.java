@@ -21,8 +21,8 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeCellPathResolver;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -87,7 +87,7 @@ public class SourcePathTypeCoercerTest {
         "//:hello");
 
     assertEquals(
-        new BuildTargetSourcePath(
+        new DefaultBuildTargetSourcePath(
             BuildTarget.of(
                 UnflavoredBuildTarget.of(
                     projectFilesystem.getRootPath(),
@@ -107,7 +107,7 @@ public class SourcePathTypeCoercerTest {
         ":hello");
 
     assertEquals(
-        new BuildTargetSourcePath(
+        new DefaultBuildTargetSourcePath(
             BuildTarget.of(
                 UnflavoredBuildTarget.of(
                     projectFilesystem.getRootPath(),
@@ -133,7 +133,7 @@ public class SourcePathTypeCoercerTest {
     // the cell name should be absent (otherwise, we'd look for a cell named `@hello` from the
     // `@hello` cell. Yeah. My head hurts a little too.
     assertEquals(
-        new BuildTargetSourcePath(
+        new DefaultBuildTargetSourcePath(
             BuildTarget.of(
                 UnflavoredBuildTarget.of(
                     helloRoot,

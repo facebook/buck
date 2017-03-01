@@ -129,7 +129,7 @@ public class StringRuleKeyHasher implements RuleKeyHasher<String> {
   }
 
   @Override
-  public RuleKeyHasher<String> putBuildTargetSourcePath(BuildTargetSourcePath targetSourcePath) {
+  public RuleKeyHasher<String> putBuildTargetSourcePath(BuildTargetSourcePath<?> targetSourcePath) {
     parts.add(String.format("targetPath(%s)", targetSourcePath.toString()));
     return this;
   }

@@ -23,7 +23,7 @@ import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
@@ -113,8 +113,10 @@ public class GuavaRuleKeyHasherTest {
             .putBuildRuleType(BuildRuleType.of("2")).hash());
     hashes.add(newHasher().putBuildTarget(TARGET_1).hash());
     hashes.add(newHasher().putBuildTarget(TARGET_2).hash());
-    hashes.add(newHasher().putBuildTargetSourcePath(new BuildTargetSourcePath(TARGET_1)).hash());
-    hashes.add(newHasher().putBuildTargetSourcePath(new BuildTargetSourcePath(TARGET_2)).hash());
+    hashes.add(newHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_1))
+        .hash());
+    hashes.add(newHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_2))
+        .hash());
     hashes.add(newHasher().putContainer(RuleKeyHasher.Container.LIST, 0).hash());
     hashes.add(newHasher().putContainer(RuleKeyHasher.Container.LIST, 42).hash());
     hashes.add(newHasher().putContainer(RuleKeyHasher.Container.MAP, 0).hash());
@@ -179,8 +181,8 @@ public class GuavaRuleKeyHasherTest {
         newHasher().putBuildTarget(TARGET_1).hash(),
         newHasher().putBuildTarget(TARGET_1).hash());
     assertEquals(
-        newHasher().putBuildTargetSourcePath(new BuildTargetSourcePath(TARGET_1)).hash(),
-        newHasher().putBuildTargetSourcePath(new BuildTargetSourcePath(TARGET_1)).hash());
+        newHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_1)).hash(),
+        newHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_1)).hash());
   }
 
   private ArchiveMemberPath newArchiveMember(String archivePath, String memberPath) {

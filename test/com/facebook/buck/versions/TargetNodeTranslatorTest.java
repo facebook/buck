@@ -26,8 +26,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeCellPathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetNode;
@@ -186,8 +186,8 @@ public class TargetNodeTranslatorTest {
         translator.translateBuildTargetSourcePath(
             CELL_PATH_RESOLVER,
             PATTERN,
-            new BuildTargetSourcePath(a)),
-        Matchers.equalTo(Optional.of(new BuildTargetSourcePath(b))));
+            new DefaultBuildTargetSourcePath(a)),
+        Matchers.equalTo(Optional.of(new DefaultBuildTargetSourcePath(b))));
   }
 
   @Test
@@ -210,10 +210,12 @@ public class TargetNodeTranslatorTest {
         translator.translateSourceWithFlags(
             CELL_PATH_RESOLVER,
             PATTERN,
-            SourceWithFlags.of(new BuildTargetSourcePath(a), ImmutableList.of("-flag"))),
+            SourceWithFlags.of(new DefaultBuildTargetSourcePath(a), ImmutableList.of("-flag"))),
         Matchers.equalTo(
             Optional.of(
-                SourceWithFlags.of(new BuildTargetSourcePath(b), ImmutableList.of("-flag")))));
+                SourceWithFlags.of(
+                    new DefaultBuildTargetSourcePath(b),
+                    ImmutableList.of("-flag")))));
   }
 
 

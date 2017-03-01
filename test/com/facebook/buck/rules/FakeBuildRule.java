@@ -92,7 +92,7 @@ public class FakeBuildRule extends AbstractBuildRuleWithResolver implements Buil
     if (getPathToOutput() == null) {
       return null;
     }
-    return new BuildTargetSourcePath(getBuildTarget(), getPathToOutput());
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToOutput());
   }
 
   public FakeBuildRule setOutputFile(@Nullable String outputFile) {

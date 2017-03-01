@@ -51,7 +51,7 @@ public class SourcePathArg extends Arg implements HasSourcePath {
       Path cellPath,
       SourcePathResolver pathResolver) {
     if (path instanceof BuildTargetSourcePath &&
-        cellPath.equals(((BuildTargetSourcePath) path).getTarget().getCellPath())) {
+        cellPath.equals(((BuildTargetSourcePath<?>) path).getTarget().getCellPath())) {
       builder.add(pathResolver.getRelativePath(path).toString());
     } else {
       appendToCommandLine(builder, pathResolver);

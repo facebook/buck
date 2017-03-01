@@ -31,7 +31,7 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -115,7 +115,7 @@ public class AndroidPrebuiltAarDescription
           params.getBuildTarget(),
           ruleFinder,
           params,
-          new BuildTargetSourcePath(
+          new ExplicitBuildTargetSourcePath(
               unzipAar.getBuildTarget(),
               unzipAar.getPathToClassesJar()));
     }
@@ -145,7 +145,7 @@ public class AndroidPrebuiltAarDescription
       return new PrebuiltJar(
         /* params */ buildRuleParams,
         /* resolver */ pathResolver,
-        /* binaryJar */ new BuildTargetSourcePath(
+        /* binaryJar */ new ExplicitBuildTargetSourcePath(
           unzipAar.getBuildTarget(),
           unzipAar.getPathToClassesJar()),
         /* sourceJar */ Optional.empty(),
@@ -174,10 +174,10 @@ public class AndroidPrebuiltAarDescription
         androidLibraryParams,
         /* resolver */ pathResolver,
         ruleFinder,
-        /* proguardConfig */ new BuildTargetSourcePath(
+        /* proguardConfig */ new ExplicitBuildTargetSourcePath(
             unzipAar.getBuildTarget(),
             unzipAar.getProguardConfig()),
-        /* nativeLibsDirectory */ new BuildTargetSourcePath(
+        /* nativeLibsDirectory */ new ExplicitBuildTargetSourcePath(
             unzipAar.getBuildTarget(),
             unzipAar.getNativeLibsDirectory()),
         /* prebuiltJar */ prebuiltJar,

@@ -27,7 +27,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -191,13 +191,13 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
           cxxSourcesBuilder.put(
               name,
               SourceWithFlags.of(
-                  new BuildTargetSourcePath(
+                  new ExplicitBuildTargetSourcePath(
                       source.getCompileRule().getBuildTarget(),
                       outputDir.resolve(name))));
         } else if (CxxCompilables.HEADER_EXTENSIONS.contains(extension)) {
           headersBuilder.put(
               name,
-              new BuildTargetSourcePath(
+              new ExplicitBuildTargetSourcePath(
                   source.getCompileRule().getBuildTarget(),
                   outputDir.resolve(name)));
         } else {

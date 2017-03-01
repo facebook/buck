@@ -30,7 +30,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -79,7 +79,7 @@ public class JavaSourceJarTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     ));
     SourcePath fileBased = new FakeSourcePath("some/path/File.java");
-    SourcePath ruleBased = new BuildTargetSourcePath(
+    SourcePath ruleBased = new DefaultBuildTargetSourcePath(
         BuildTargetFactory.newInstance("//cheese:cake"));
 
     JavaPackageFinder finderStub = createNiceMock(JavaPackageFinder.class);

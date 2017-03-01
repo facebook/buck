@@ -27,7 +27,7 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -87,7 +87,7 @@ public class DLibraryDescription implements
         params.getBuildTarget().withAppendedFlavors(DDescriptionUtils.SOURCE_LINK_TREE);
     DIncludes dIncludes =
         DIncludes.builder()
-            .setLinkTree(new BuildTargetSourcePath(sourceTreeTarget))
+            .setLinkTree(new DefaultBuildTargetSourcePath(sourceTreeTarget))
             .setSources(args.srcs.getPaths())
             .build();
 

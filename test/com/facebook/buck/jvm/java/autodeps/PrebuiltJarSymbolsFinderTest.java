@@ -27,7 +27,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
@@ -239,7 +239,7 @@ public class PrebuiltJarSymbolsFinderTest {
 
   private PrebuiltJarSymbolsFinder createFinderForGeneratedJar(String target) {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(target);
-    SourcePath sourcePath = new BuildTargetSourcePath(buildTarget);
+    SourcePath sourcePath = new DefaultBuildTargetSourcePath(buildTarget);
     return new PrebuiltJarSymbolsFinder(sourcePath);
   }
 }

@@ -25,7 +25,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -192,7 +192,7 @@ public class ExportFileTest {
                 BuildTargetFactory.newInstance("//example:one"),
                 pathResolver));
 
-    builder.setSrc(new BuildTargetSourcePath(rule.getBuildTarget()));
+    builder.setSrc(new DefaultBuildTargetSourcePath(rule.getBuildTarget()));
     exportFile = builder.build(resolver, projectFilesystem);
     assertThat(
         pathResolver.filterInputsToCompareToOutput(exportFile.getSource()),

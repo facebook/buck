@@ -38,6 +38,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -101,7 +102,7 @@ public class PythonBinaryDescriptionTest {
             .setSrcs(
                 SourceList.ofUnnamedSources(
                     ImmutableSortedSet.of(
-                        new BuildTargetSourcePath(genruleBuilder.getTarget()))));
+                        new DefaultBuildTargetSourcePath(genruleBuilder.getTarget()))));
     PythonBinaryBuilder binaryBuilder =
         PythonBinaryBuilder.create(BuildTargetFactory.newInstance("//:bin"))
             .setMainModule("main")
@@ -762,7 +763,7 @@ public class PythonBinaryDescriptionTest {
     for (SourcePath path : binary.getComponents().getNativeLibraries().values()) {
       CxxLink link =
           resolver.getRuleOptionalWithType(
-              ((BuildTargetSourcePath) path).getTarget(), CxxLink.class).get();
+              ((BuildTargetSourcePath<?>) path).getTarget(), CxxLink.class).get();
       assertThat(
           Arg.stringify(link.getArgs(), pathResolver),
           Matchers.hasItem("-flag"));

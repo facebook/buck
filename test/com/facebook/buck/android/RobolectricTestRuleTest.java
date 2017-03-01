@@ -27,7 +27,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
@@ -221,7 +221,7 @@ public class RobolectricTestRuleTest {
 
     BuildTarget res2RuleTarget = BuildTargetFactory.newInstance("//:res2");
     TargetNode<?, ?> res2Node = AndroidResourceBuilder.createBuilder(res2RuleTarget)
-        .setRes(new BuildTargetSourcePath(genRuleTarget))
+        .setRes(new DefaultBuildTargetSourcePath(genRuleTarget))
         .setRDotJavaPackage("foo.bar")
         .build();
 

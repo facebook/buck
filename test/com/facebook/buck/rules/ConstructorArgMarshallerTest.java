@@ -186,7 +186,7 @@ public class ConstructorArgMarshallerTest {
         new PathSourcePath(projectFilesystem, Paths.get("example/path/cheese.txt")),
         dto.filePath);
     assertEquals(
-        new BuildTargetSourcePath(rule.getBuildTarget()),
+        new DefaultBuildTargetSourcePath(rule.getBuildTarget()),
         dto.targetPath);
   }
 
@@ -425,7 +425,7 @@ public class ConstructorArgMarshallerTest {
             "yup",
             ImmutableList.of(rule.getBuildTarget().getFullyQualifiedName())));
 
-    BuildTargetSourcePath path = new BuildTargetSourcePath(rule.getBuildTarget());
+    DefaultBuildTargetSourcePath path = new DefaultBuildTargetSourcePath(rule.getBuildTarget());
     assertEquals(ImmutableList.of(path), dto.yup);
   }
 
@@ -483,7 +483,8 @@ public class ConstructorArgMarshallerTest {
     assertEquals(Optional.of(88L), dto.optionalLong);
     assertTrue(dto.needed);
     assertEquals(Optional.empty(), dto.notNeeded);
-    BuildTargetSourcePath expected = new BuildTargetSourcePath(expectedRule.getBuildTarget());
+    DefaultBuildTargetSourcePath expected =
+        new DefaultBuildTargetSourcePath(expectedRule.getBuildTarget());
     assertEquals(expected, dto.aSrcPath);
     assertEquals(Paths.get("example/path/NotFile.java"), dto.notAPath.get());
   }

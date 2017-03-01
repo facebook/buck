@@ -324,7 +324,8 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
    * should be handled as a build rule. This method hashes the given {@link BuildTargetSourcePath}
    * and invokes {@link #setBuildRule(BuildRule)} on the associated rule.
    */
-  protected final RuleKeyBuilder<RULE_KEY> setSourcePathAsRule(BuildTargetSourcePath sourcePath) {
+  protected final RuleKeyBuilder<RULE_KEY> setSourcePathAsRule(
+      BuildTargetSourcePath<?> sourcePath) {
     hasher.putBuildTargetSourcePath(sourcePath);
     return setBuildRule(ruleFinder.getRuleOrThrow(sourcePath));
   }

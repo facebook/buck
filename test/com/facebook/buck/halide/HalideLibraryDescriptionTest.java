@@ -37,7 +37,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -116,7 +116,7 @@ public class HalideLibraryDescriptionTest {
         Matchers.equalTo(
             ImmutableMap.<Path, SourcePath>of(
                 Paths.get(headerName),
-                new BuildTargetSourcePath(
+                new ExplicitBuildTargetSourcePath(
                     flavoredLibTarget,
                     headerPath))));
 

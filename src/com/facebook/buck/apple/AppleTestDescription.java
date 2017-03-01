@@ -39,7 +39,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
@@ -338,7 +338,9 @@ public class AppleTestDescription implements
             });
       }
       return Optional.of(
-          new BuildTargetSourcePath(unzipXctoolTarget, outputDirectory.resolve("bin/xctool")));
+          new ExplicitBuildTargetSourcePath(
+              unzipXctoolTarget,
+              outputDirectory.resolve("bin/xctool")));
     } else if (appleConfig.getXctoolPath().isPresent()) {
       return Optional.of(
           new PathSourcePath(params.getProjectFilesystem(), appleConfig.getXctoolPath().get()));

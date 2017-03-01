@@ -151,7 +151,7 @@ public class CountingRuleKeyHasher<HASH> implements RuleKeyHasher<HASH> {
 
   @Override
   public CountingRuleKeyHasher<HASH> putBuildTargetSourcePath(
-      BuildTargetSourcePath buildTargetSourcePath) {
+      BuildTargetSourcePath<?> buildTargetSourcePath) {
     count++;
     delegate.putBuildTargetSourcePath(buildTargetSourcePath);
     return this;

@@ -74,7 +74,7 @@ public interface BuildRule extends Comparable<BuildRule> {
     if (output == null) {
       return null;
     }
-    return new BuildTargetSourcePath(getBuildTarget());
+    return new DefaultBuildTargetSourcePath(getBuildTarget());
   }
 
   /**

@@ -26,7 +26,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
@@ -238,7 +238,7 @@ public class UnzipAar extends AbstractBuildRule
   }
 
   SourcePath getResDirectory() {
-    return new BuildTargetSourcePath(getBuildTarget(), unpackDirectory.resolve("res"));
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), unpackDirectory.resolve("res"));
   }
 
   String getRDotJavaPackage() {
@@ -250,7 +250,7 @@ public class UnzipAar extends AbstractBuildRule
   }
 
   SourcePath getAssetsDirectory() {
-    return new BuildTargetSourcePath(getBuildTarget(), unpackDirectory.resolve("assets"));
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), unpackDirectory.resolve("assets"));
   }
 
   Path getAndroidManifest() {

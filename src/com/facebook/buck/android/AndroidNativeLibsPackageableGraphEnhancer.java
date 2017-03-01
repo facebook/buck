@@ -356,7 +356,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       // But if we're stripping a cxx_library, use that library as the base of the target
       // to allow sharing the rule between all apps that depend on it.
       if (sourcePath instanceof BuildTargetSourcePath) {
-        baseBuildTarget = ((BuildTargetSourcePath) sourcePath).getTarget();
+        baseBuildTarget = ((BuildTargetSourcePath<?>) sourcePath).getTarget();
       }
 
       String sharedLibrarySoName = entry.getKey().getSecond();

@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -77,7 +77,7 @@ abstract class AbstractCxxSandboxInclude extends CxxHeaders {
     CxxSandboxInclude.Builder builder = CxxSandboxInclude.builder();
     builder.setIncludeType(includeType);
     builder.setRoot(
-        new BuildTargetSourcePath(
+        new ExplicitBuildTargetSourcePath(
             symlinkTree.getBuildTarget(),
             symlinkTree.getRoot().resolve(includeDir)));
     builder.setIncludeDir(includeDir);

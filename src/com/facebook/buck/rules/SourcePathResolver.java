@@ -62,7 +62,7 @@ public class SourcePathResolver {
       return ((PathSourcePath) sourcePath).getFilesystem();
     }
     if (sourcePath instanceof BuildTargetSourcePath) {
-      return ruleFinder.getRuleOrThrow((BuildTargetSourcePath) sourcePath)
+      return ruleFinder.getRuleOrThrow((BuildTargetSourcePath<?>) sourcePath)
           .getProjectFilesystem();
     }
     if (sourcePath instanceof ArchiveMemberSourcePath) {
@@ -82,7 +82,7 @@ public class SourcePathResolver {
     }
 
     if (sourcePath instanceof BuildTargetSourcePath) {
-      BuildRule rule = ruleFinder.getRuleOrThrow((BuildTargetSourcePath) sourcePath);
+      BuildRule rule = ruleFinder.getRuleOrThrow((BuildTargetSourcePath<?>) sourcePath);
       return rule.getProjectFilesystem().resolve(path);
     } else if (sourcePath instanceof PathSourcePath) {
       return ((PathSourcePath) sourcePath).getFilesystem().resolve(path);
@@ -150,18 +150,15 @@ public class SourcePathResolver {
   private Path getPathPrivateImpl(SourcePath sourcePath) {
     if (sourcePath instanceof PathSourcePath) {
       return ((PathSourcePath) sourcePath).getRelativePath();
-    } else if (sourcePath instanceof BuildTargetSourcePath) {
-      BuildTargetSourcePath targetSourcePath = (BuildTargetSourcePath) sourcePath;
-      Optional<Path> resolvedPath = targetSourcePath.getResolvedPath();
-      if (resolvedPath.isPresent()) {
-        return resolvedPath.get();
-      } else {
-        Path path = ruleFinder.getRuleOrThrow(targetSourcePath).getPathToOutput();
-        if (path == null) {
-          throw new HumanReadableException("No known output for: %s", targetSourcePath.getTarget());
-        }
-        return path;
+    } else if (sourcePath instanceof ExplicitBuildTargetSourcePath) {
+      return ((ExplicitBuildTargetSourcePath) sourcePath).getResolvedPath();
+    } else if (sourcePath instanceof DefaultBuildTargetSourcePath) {
+      DefaultBuildTargetSourcePath targetSourcePath = (DefaultBuildTargetSourcePath) sourcePath;
+      Path path = ruleFinder.getRuleOrThrow(targetSourcePath).getPathToOutput();
+      if (path == null) {
+        throw new HumanReadableException("No known output for: %s", targetSourcePath.getTarget());
       }
+      return path;
     } else {
       throw new UnsupportedOperationException(sourcePath.getClass() + " is not supported here!");
     }
@@ -209,38 +206,25 @@ public class SourcePathResolver {
   public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
     Preconditions.checkArgument(!(sourcePath instanceof ArchiveMemberSourcePath));
     if (sourcePath instanceof BuildTargetSourcePath) {
-      return getNameForBuildTargetSourcePath((BuildTargetSourcePath) sourcePath);
+      BuildRule rule = ruleFinder.getRuleOrThrow((BuildTargetSourcePath<?>) sourcePath);
+      if (rule instanceof HasOutputName) {
+        HasOutputName hasOutputName = (HasOutputName) rule;
+        return hasOutputName.getOutputName();
+      }
+      if (sourcePath instanceof ExplicitBuildTargetSourcePath) {
+        Path path = ((ExplicitBuildTargetSourcePath) sourcePath).getResolvedPath();
+        if (path.startsWith(rule.getProjectFilesystem().getBuckPaths().getGenDir())) {
+          path = rule.getProjectFilesystem().getBuckPaths().getGenDir().relativize(path);
+        }
+        if (path.startsWith(rule.getBuildTarget().getBasePath())) {
+          return rule.getBuildTarget().getBasePath().relativize(path).toString();
+        }
+      }
+      return rule.getBuildTarget().getShortName();
     }
     Preconditions.checkArgument(sourcePath instanceof PathSourcePath);
     Path path = ((PathSourcePath) sourcePath).getRelativePath();
     return MorePaths.relativize(target.getBasePath(), path).toString();
-  }
-
-  private String getNameForBuildTargetSourcePath(BuildTargetSourcePath sourcePath) {
-    BuildRule rule = ruleFinder.getRuleOrThrow(sourcePath);
-
-    // If this build rule implements `HasOutputName`, then return the output name
-    // it provides.
-    if (rule instanceof HasOutputName) {
-      HasOutputName hasOutputName = (HasOutputName) rule;
-      return hasOutputName.getOutputName();
-    }
-
-    // If an explicit path is set, use it's relative path to the build rule's output location to
-    // infer a unique name.
-    Optional<Path> explicitPath = sourcePath.getResolvedPath();
-    if (explicitPath.isPresent()) {
-      Path path = explicitPath.get();
-      if (path.startsWith(rule.getProjectFilesystem().getBuckPaths().getGenDir())) {
-        path = rule.getProjectFilesystem().getBuckPaths().getGenDir().relativize(path);
-      }
-      if (path.startsWith(rule.getBuildTarget().getBasePath())) {
-        return rule.getBuildTarget().getBasePath().relativize(path).toString();
-      }
-    }
-
-    // Otherwise, fall back to using the short name of rule's build target.
-    return rule.getBuildTarget().getShortName();
   }
 
   /**

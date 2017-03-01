@@ -23,7 +23,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -108,7 +108,7 @@ public class JavaLibraryBuilder extends
   }
 
   public JavaLibraryBuilder addSrcTarget(BuildTarget target) {
-    return addSrc(new BuildTargetSourcePath(target));
+    return addSrc(new DefaultBuildTargetSourcePath(target));
   }
 
   public JavaLibraryBuilder setProguardConfig(SourcePath proguardConfig) {

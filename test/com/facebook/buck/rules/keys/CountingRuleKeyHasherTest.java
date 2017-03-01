@@ -22,7 +22,7 @@ import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
@@ -223,11 +223,15 @@ public class CountingRuleKeyHasherTest {
         newGuavaHasher().putBuildTarget(TARGET_2).hash(),
         newCountHasher().putBuildTarget(TARGET_2).hash());
     assertEquals(
-        newGuavaHasher().putBuildTargetSourcePath(new BuildTargetSourcePath(TARGET_1)).hash(),
-        newCountHasher().putBuildTargetSourcePath(new BuildTargetSourcePath(TARGET_1)).hash());
+        newGuavaHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_1))
+            .hash(),
+        newCountHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_1))
+            .hash());
     assertEquals(
-        newGuavaHasher().putBuildTargetSourcePath(new BuildTargetSourcePath(TARGET_2)).hash(),
-        newCountHasher().putBuildTargetSourcePath(new BuildTargetSourcePath(TARGET_2)).hash());
+        newGuavaHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_2))
+            .hash(),
+        newCountHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_2))
+            .hash());
     assertEquals(
         newGuavaHasher().putContainer(RuleKeyHasher.Container.LIST, 0).hash(),
         newCountHasher().putContainer(RuleKeyHasher.Container.LIST, 0).hash());
@@ -361,10 +365,10 @@ public class CountingRuleKeyHasherTest {
     assertEquals(++count, hasher.getCount());
     hasher.putBuildTarget(TARGET_2).putBuildTarget(TARGET_1);
     assertEquals(count += 2, hasher.getCount());
-    hasher.putBuildTargetSourcePath(new BuildTargetSourcePath(TARGET_1));
+    hasher.putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_1));
     assertEquals(++count, hasher.getCount());
-    hasher.putBuildTargetSourcePath(new BuildTargetSourcePath(TARGET_2))
-        .putBuildTargetSourcePath(new BuildTargetSourcePath(TARGET_1));
+    hasher.putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_2))
+        .putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_1));
     assertEquals(count += 2, hasher.getCount());
     hasher.putContainer(RuleKeyHasher.Container.LIST, 0);
     assertEquals(++count, hasher.getCount());

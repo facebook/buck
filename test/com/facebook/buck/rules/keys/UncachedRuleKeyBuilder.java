@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
@@ -87,8 +87,8 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder<RuleKey> {
 
   @Override
   protected RuleKeyBuilder<RuleKey> setSourcePath(SourcePath sourcePath) throws IOException {
-    if (sourcePath instanceof BuildTargetSourcePath) {
-      return setSourcePathAsRule((BuildTargetSourcePath) sourcePath);
+    if (sourcePath instanceof ExplicitBuildTargetSourcePath) {
+      return setSourcePathAsRule((ExplicitBuildTargetSourcePath) sourcePath);
     } else {
       return setSourcePathDirectly(sourcePath);
     }

@@ -20,7 +20,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -56,8 +55,7 @@ public class SourcePathArgTest {
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("output")
             .build(resolver);
-    SourcePathArg arg =
-        new SourcePathArg(new BuildTargetSourcePath(rule.getBuildTarget()));
+    SourcePathArg arg = new SourcePathArg(rule.getSourcePathToOutput());
     assertThat(arg.getDeps(ruleFinder), Matchers.contains(rule));
   }
 

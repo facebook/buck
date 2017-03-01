@@ -36,6 +36,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -194,13 +195,13 @@ public class PrebuiltCxxLibraryDescription implements
     }
 
     // If we get here then this is referencing the output from a build rule.
-    // This always return a BuildTargetSourcePath
+    // This always return a ExplicitBuildTargetSourcePath
     Path p = filesystem.resolve(libDirPath);
     if (addedPathString.isPresent()) {
       p = p.resolve(addedPathString.get());
     }
     p = filesystem.relativize(p);
-    return new BuildTargetSourcePath(deps.iterator().next().getBuildTarget(), p);
+    return new ExplicitBuildTargetSourcePath(deps.iterator().next().getBuildTarget(), p);
   }
 
   public static String getSoname(

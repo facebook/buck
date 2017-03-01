@@ -86,7 +86,7 @@ public interface RuleKeyHasher<HASH> {
   RuleKeyHasher<HASH> putRuleKey(RuleKey ruleKey);
   RuleKeyHasher<HASH> putBuildRuleType(BuildRuleType buildRuleType);
   RuleKeyHasher<HASH> putBuildTarget(BuildTarget buildTarget);
-  RuleKeyHasher<HASH> putBuildTargetSourcePath(BuildTargetSourcePath buildTargetSourcePath);
+  RuleKeyHasher<HASH> putBuildTargetSourcePath(BuildTargetSourcePath<?> buildTargetSourcePath);
 
   /** Puts the container signature */
   RuleKeyHasher<HASH> putContainer(Container container, int length);

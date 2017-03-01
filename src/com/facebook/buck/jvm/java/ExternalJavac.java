@@ -161,7 +161,7 @@ public class ExternalJavac implements Javac {
       return pathToJavac.getLeft().toString();
     }
     if (pathToJavac.getRight() instanceof BuildTargetSourcePath) {
-      return ((BuildTargetSourcePath) pathToJavac.getRight()).getTarget().toString();
+      return ((BuildTargetSourcePath<?>) pathToJavac.getRight()).getTarget().toString();
     }
     return ((PathSourcePath) pathToJavac.getRight()).getRelativePath().toString();
   }

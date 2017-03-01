@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.PathSourcePath;
@@ -94,10 +95,10 @@ public class RuleKeyBuilderTest {
       new ArchiveMemberSourcePath(SOURCE_PATH_1, Paths.get("member"));
   private static final ArchiveMemberSourcePath ARCHIVE_PATH_2 =
       new ArchiveMemberSourcePath(SOURCE_PATH_2, Paths.get("member"));
-  private static final BuildTargetSourcePath TARGET_PATH_1 =
-      new BuildTargetSourcePath(TARGET_1);
-  private static final BuildTargetSourcePath TARGET_PATH_2 =
-      new BuildTargetSourcePath(TARGET_2);
+  private static final DefaultBuildTargetSourcePath TARGET_PATH_1 =
+      new DefaultBuildTargetSourcePath(TARGET_1);
+  private static final DefaultBuildTargetSourcePath TARGET_PATH_2 =
+      new DefaultBuildTargetSourcePath(TARGET_2);
 
   @Test
   public void testUniqueness() {
@@ -251,7 +252,7 @@ public class RuleKeyBuilderTest {
       @Override
       protected RuleKeyBuilder<RuleKey> setSourcePath(SourcePath sourcePath) throws IOException {
         if (sourcePath instanceof BuildTargetSourcePath) {
-          return setSourcePathAsRule((BuildTargetSourcePath) sourcePath);
+          return setSourcePathAsRule((BuildTargetSourcePath<?>) sourcePath);
         } else {
           return setSourcePathDirectly(sourcePath);
         }

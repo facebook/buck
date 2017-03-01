@@ -158,7 +158,7 @@ public class LoggingRuleKeyHasher<HASH> implements RuleKeyHasher<HASH> {
 
   @Override
   public LoggingRuleKeyHasher<HASH> putBuildTargetSourcePath(
-      BuildTargetSourcePath buildTargetSourcePath) {
+      BuildTargetSourcePath<?> buildTargetSourcePath) {
     stringHasher.putBuildTargetSourcePath(buildTargetSourcePath);
     delegate.putBuildTargetSourcePath(buildTargetSourcePath);
     return this;

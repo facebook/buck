@@ -23,7 +23,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -87,7 +87,7 @@ public class ApkGenruleDescriptionTest {
   private static class FakeInstallable extends FakeBuildRule implements HasInstallableApk {
 
     Path pathToOutput = Paths.get("buck-out", "app.apk");
-    SourcePath apkPath = new BuildTargetSourcePath(getBuildTarget(), pathToOutput);
+    SourcePath apkPath = new ExplicitBuildTargetSourcePath(getBuildTarget(), pathToOutput);
 
     public FakeInstallable(
         BuildTarget buildTarget,

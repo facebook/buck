@@ -23,7 +23,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -243,7 +243,7 @@ public class HaskellPackageRule extends AbstractBuildRule {
   public HaskellPackage getPackage() {
     return HaskellPackage.builder()
         .setInfo(packageInfo)
-        .setPackageDb(new BuildTargetSourcePath(getBuildTarget(), getPackageDb()))
+        .setPackageDb(new ExplicitBuildTargetSourcePath(getBuildTarget(), getPackageDb()))
         .addAllLibraries(libraries)
         .addAllInterfaces(interfaces)
         .build();

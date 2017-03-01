@@ -24,9 +24,9 @@ import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -132,8 +132,7 @@ public class ShBinary extends AbstractBuildRuleWithResolver
   @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder()
-        .addArg(
-            new SourcePathArg(new BuildTargetSourcePath(getBuildTarget(), output)))
+        .addArg(new SourcePathArg(new ExplicitBuildTargetSourcePath(getBuildTarget(), output)))
         .addInput(main)
         .addInputs(resources)
         .build();

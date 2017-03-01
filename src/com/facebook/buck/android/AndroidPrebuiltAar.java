@@ -22,7 +22,7 @@ import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -75,7 +75,9 @@ public class AndroidPrebuiltAar
         /* resourcesRoot */ Optional.empty(),
         /* mavenCoords */ Optional.empty(),
         Optional.of(
-            new BuildTargetSourcePath(unzipAar.getBuildTarget(), unzipAar.getAndroidManifest())),
+            new ExplicitBuildTargetSourcePath(
+                unzipAar.getBuildTarget(),
+                unzipAar.getAndroidManifest())),
         /* tests */ ImmutableSortedSet.of());
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;
@@ -89,12 +91,14 @@ public class AndroidPrebuiltAar
 
   @Override
   public SourcePath getPathToTextSymbolsFile() {
-    return new BuildTargetSourcePath(unzipAar.getBuildTarget(), unzipAar.getTextSymbolsFile());
+    return new ExplicitBuildTargetSourcePath(
+        unzipAar.getBuildTarget(),
+        unzipAar.getTextSymbolsFile());
   }
 
   @Override
   public SourcePath getPathToRDotJavaPackageFile() {
-    return new BuildTargetSourcePath(
+    return new ExplicitBuildTargetSourcePath(
         unzipAar.getBuildTarget(), unzipAar.getPathToRDotJavaPackageFile());
   }
 

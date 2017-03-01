@@ -24,7 +24,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -195,7 +195,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
 
     @Override
     public SourcePath getSourcePathToOutput() {
-      return new BuildTargetSourcePath(getBuildTarget(), getPathToOutput());
+      return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToOutput());
     }
 
   }

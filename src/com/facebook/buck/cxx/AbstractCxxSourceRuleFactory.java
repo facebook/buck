@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DependencyAggregation;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -646,7 +647,7 @@ abstract class AbstractCxxSourceRuleFactory {
         preprocessorDelegate.getNonIncludePathFlags(/* no pch */ Optional.empty()),
         computeCompilerFlags(source.getType(), source.getFlags()));
 
-    BuildTarget pchTemplateTarget = ((BuildTargetSourcePath) headerTargetPath).getTarget();
+    BuildTarget pchTemplateTarget = ((BuildTargetSourcePath<?>) headerTargetPath).getTarget();
     Optional<CxxPrecompiledHeaderTemplate> pchTemplateRuleOpt =
         getResolver().getRuleOptionalWithType(
             pchTemplateTarget,
@@ -815,8 +816,8 @@ abstract class AbstractCxxSourceRuleFactory {
               source.getPath()));
       Path sandboxPath =  BuildTargets.getGenPath(
           getParams().getProjectFilesystem(), sandboxTree.getBuildTarget(), "%s");
-      BuildTargetSourcePath path =
-          new BuildTargetSourcePath(
+      ExplicitBuildTargetSourcePath path =
+          new ExplicitBuildTargetSourcePath(
               sandboxTree.getBuildTarget(),
               sandboxPath.resolve(sourcePath));
       source = CxxSource.copyOf(source).withPath(path);

@@ -34,9 +34,9 @@ import com.facebook.buck.apple.AppleHeaderVisibilities;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.AppleResourceDescription;
-import com.facebook.buck.apple.AppleWrapperResourceArg;
 import com.facebook.buck.apple.AppleResources;
 import com.facebook.buck.apple.AppleTestDescription;
+import com.facebook.buck.apple.AppleWrapperResourceArg;
 import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.HasAppleBundleFields;
 import com.facebook.buck.apple.SceneKitAssetsDescription;
@@ -163,13 +163,13 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.function.BiConsumer;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -2808,7 +2808,7 @@ public class ProjectGenerator {
       return ((PathSourcePath) sourcePath).getRelativePath();
     }
     Preconditions.checkArgument(sourcePath instanceof BuildTargetSourcePath);
-    BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) sourcePath;
+    BuildTargetSourcePath<?> buildTargetSourcePath = (BuildTargetSourcePath<?>) sourcePath;
     BuildTarget buildTarget = buildTargetSourcePath.getTarget();
     TargetNode<?, ?> node = targetGraph.get(buildTarget);
     Optional<TargetNode<ExportFileDescription.Arg, ?>> exportFileNode = node.castArg(

@@ -21,7 +21,7 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.shell.DefaultShellStep;
@@ -75,7 +75,7 @@ public class CxxInferAnalyze extends AbstractBuildRule {
   private ImmutableSortedSet<SourcePath> getSpecsOfAllDeps() {
     return FluentIterable.from(captureAndAnalyzeRules.aggregatingRules)
         .transform(
-            (Function<CxxInferAnalyze, SourcePath>) input -> new BuildTargetSourcePath(
+            (Function<CxxInferAnalyze, SourcePath>) input -> new ExplicitBuildTargetSourcePath(
                 input.getBuildTarget(), input.getSpecsDir())
         )
         .toSortedSet(Ordering.natural());

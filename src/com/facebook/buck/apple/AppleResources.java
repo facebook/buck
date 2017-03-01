@@ -21,7 +21,7 @@ import com.facebook.buck.js.IosReactNativeLibraryDescription;
 import com.facebook.buck.js.ReactNativeBundle;
 import com.facebook.buck.js.ReactNativeLibraryArgs;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -94,10 +94,10 @@ public class AppleResources {
         Preconditions.checkState(constructorArg instanceof ReactNativeLibraryArgs);
         BuildTarget buildTarget = resourceNode.getBuildTarget();
         builder.addDirsContainingResourceDirs(
-            new BuildTargetSourcePath(
+            new ExplicitBuildTargetSourcePath(
                 buildTarget,
                 ReactNativeBundle.getPathToJSBundleDir(buildTarget, filesystem)),
-            new BuildTargetSourcePath(
+            new ExplicitBuildTargetSourcePath(
                 buildTarget,
                 ReactNativeBundle.getPathToResources(buildTarget, filesystem)));
       }

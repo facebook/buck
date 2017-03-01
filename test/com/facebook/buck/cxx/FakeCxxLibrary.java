@@ -22,7 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -104,8 +104,8 @@ public final class FakeCxxLibrary
                       .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
                       .putNameToPathMap(
                           Paths.get("header.h"),
-                          new BuildTargetSourcePath(publicHeaderTarget))
-                      .setRoot(new BuildTargetSourcePath(publicHeaderSymlinkTreeTarget))
+                          new DefaultBuildTargetSourcePath(publicHeaderTarget))
+                      .setRoot(new DefaultBuildTargetSourcePath(publicHeaderSymlinkTreeTarget))
                       .build())
               .build();
         case PRIVATE:
@@ -113,10 +113,10 @@ public final class FakeCxxLibrary
               .addIncludes(
                   CxxSymlinkTreeHeaders.builder()
                       .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
-                      .setRoot(new BuildTargetSourcePath(privateHeaderSymlinkTreeTarget))
+                      .setRoot(new DefaultBuildTargetSourcePath(privateHeaderSymlinkTreeTarget))
                       .putNameToPathMap(
                           Paths.get("header.h"),
-                          new BuildTargetSourcePath(privateHeaderTarget))
+                          new DefaultBuildTargetSourcePath(privateHeaderTarget))
                       .build())
               .build();
       }

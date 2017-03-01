@@ -16,7 +16,6 @@
 package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.model.BuildTarget;
@@ -28,7 +27,7 @@ import org.junit.Test;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class BuildTargetSourcePathTest {
+public class DefaultBuildTargetSourcePathTest {
 
   private BuildTarget target = BuildTargetFactory.newInstance("//example:target");
 
@@ -40,7 +39,7 @@ public class BuildTargetSourcePathTest {
     FakeBuildRule rule = new FakeBuildRule(target, pathResolver);
     rule.setOutputFile(null);
     resolver.addToIndex(rule);
-    BuildTargetSourcePath path = new BuildTargetSourcePath(rule.getBuildTarget());
+    SourcePath path = new DefaultBuildTargetSourcePath(target);
 
     try {
       pathResolver.getRelativePath(path);
@@ -63,7 +62,7 @@ public class BuildTargetSourcePathTest {
     };
     resolver.addToIndex(rule);
 
-    BuildTargetSourcePath path = new BuildTargetSourcePath(rule.getBuildTarget());
+    SourcePath path = rule.getSourcePathToOutput();
 
     Path resolved = pathResolver.getRelativePath(path);
 
@@ -73,47 +72,9 @@ public class BuildTargetSourcePathTest {
   @Test
   public void shouldReturnTheBuildTarget() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
-    BuildTargetSourcePath path = new BuildTargetSourcePath(target);
+    DefaultBuildTargetSourcePath path = new DefaultBuildTargetSourcePath(target);
 
     assertEquals(target, path.getTarget());
-  }
-
-  @Test
-  public void explicitlySetPath() {
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(
-            new BuildRuleResolver(
-                TargetGraph.EMPTY,
-                new DefaultTargetNodeToBuildRuleTransformer())));
-    BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
-    FakeBuildRule rule = new FakeBuildRule(target, pathResolver);
-    Path path = Paths.get("blah");
-    BuildTargetSourcePath buildTargetSourcePath = new BuildTargetSourcePath(
-        rule.getBuildTarget(),
-        path);
-    assertEquals(target, buildTargetSourcePath.getTarget());
-    assertEquals(path, pathResolver.getRelativePath(buildTargetSourcePath));
-  }
-
-  @Test
-  public void sameBuildTargetsWithDifferentPathsAreDifferent() {
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(
-            new BuildRuleResolver(
-                TargetGraph.EMPTY,
-                new DefaultTargetNodeToBuildRuleTransformer())));
-    BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
-    FakeBuildRule rule = new FakeBuildRule(target, pathResolver);
-    BuildTargetSourcePath path1 =
-        new BuildTargetSourcePath(
-            rule.getBuildTarget(),
-            Paths.get("something"));
-    BuildTargetSourcePath path2 =
-        new BuildTargetSourcePath(
-            rule.getBuildTarget(),
-            Paths.get("something else"));
-    assertNotEquals(path1, path2);
-    assertNotEquals(path1.hashCode(), path2.hashCode());
   }
 
 }

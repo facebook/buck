@@ -23,7 +23,7 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -108,7 +108,7 @@ public class ReactNativeLibraryGraphEnhancer {
               .copyWithExtraDeps(Suppliers.ofInstance(
                       ImmutableSortedSet.of(bundle)));
 
-      SourcePath resources = new BuildTargetSourcePath(
+      SourcePath resources = new ExplicitBuildTargetSourcePath(
           bundle.getBuildTarget(),
           bundle.getResources());
       BuildRule resource = new AndroidResource(

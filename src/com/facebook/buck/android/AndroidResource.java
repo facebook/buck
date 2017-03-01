@@ -28,7 +28,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.InitializableFromDisk;
@@ -351,12 +351,12 @@ public class AndroidResource extends AbstractBuildRule
 
   @Override
   public SourcePath getPathToTextSymbolsFile() {
-    return new BuildTargetSourcePath(getBuildTarget(), pathToTextSymbolsFile);
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), pathToTextSymbolsFile);
   }
 
   @Override
   public SourcePath getPathToRDotJavaPackageFile() {
-    return new BuildTargetSourcePath(getBuildTarget(), pathToRDotJavaPackageFile);
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), pathToRDotJavaPackageFile);
   }
 
   @Override

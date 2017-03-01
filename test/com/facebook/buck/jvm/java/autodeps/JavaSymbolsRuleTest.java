@@ -26,7 +26,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.PathSourcePath;
@@ -75,7 +75,7 @@ public class JavaSymbolsRuleTest {
                 .map(Paths::get)
                 .map(p -> new PathSourcePath(projectFilesystem, p))
                 .iterator())
-        .add(new BuildTargetSourcePath(BuildTargetFactory.newInstance("//foo:bar")))
+        .add(new DefaultBuildTargetSourcePath(BuildTargetFactory.newInstance("//foo:bar")))
         .build();
     JavaFileParser javaFileParser = JavaFileParser.createJavaFileParser(
         JavacOptions.builder()

@@ -37,7 +37,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExopackageInfo;
@@ -444,7 +444,7 @@ public class AndroidBinary
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new BuildTargetSourcePath(getBuildTarget(), getPathToOutput());
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToOutput());
   }
 
   @SuppressWarnings("PMD.PrematureDeclaration")
@@ -1279,7 +1279,7 @@ public class AndroidBinary
   }
 
   private SourcePath getManifestPath() {
-    return new BuildTargetSourcePath(
+    return new ExplicitBuildTargetSourcePath(
         getBuildTarget(),
         BuildTargets.getGenPath(
             getProjectFilesystem(),

@@ -16,24 +16,24 @@
 
 package com.facebook.buck.apple;
 
-import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
 import static com.facebook.buck.apple.AppleResources.APPLE_RESOURCE_DESCRIPTION_CLASSES;
+import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.cxx.NativeLinkable;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -436,7 +436,7 @@ public class AppleBuildRulesTest {
         .newGenruleBuilder(fooGenruleTarget)
         .setOut("foo")
         .setCmd("echo hi > $OUT")
-        .setSrcs(ImmutableList.of(new BuildTargetSourcePath(fooLibTarget)))
+        .setSrcs(ImmutableList.of(new DefaultBuildTargetSourcePath(fooLibTarget)))
         .build();
 
     BuildTarget barLibTarget =
@@ -493,7 +493,7 @@ public class AppleBuildRulesTest {
         .newGenruleBuilder(fooGenruleTarget)
         .setOut("foo")
         .setCmd("echo hi > $OUT")
-        .setSrcs(ImmutableList.of(new BuildTargetSourcePath(fooLibTarget)))
+        .setSrcs(ImmutableList.of(new DefaultBuildTargetSourcePath(fooLibTarget)))
         .build();
 
     BuildTarget barLibTarget =
@@ -550,7 +550,7 @@ public class AppleBuildRulesTest {
         .newGenruleBuilder(fooGenruleTarget)
         .setOut("foo")
         .setCmd("echo hi > $OUT")
-        .setSrcs(ImmutableList.of(new BuildTargetSourcePath(fooLibTarget)))
+        .setSrcs(ImmutableList.of(new DefaultBuildTargetSourcePath(fooLibTarget)))
         .build();
 
     BuildTarget barLibTarget =

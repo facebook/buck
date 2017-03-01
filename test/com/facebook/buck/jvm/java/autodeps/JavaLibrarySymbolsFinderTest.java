@@ -28,7 +28,8 @@ import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
@@ -81,7 +82,7 @@ public class JavaLibrarySymbolsFinderTest {
                 .map(Paths::get)
                 .map(p -> new PathSourcePath(projectFilesystem, p))
                 .iterator())
-        .add(new BuildTargetSourcePath(BuildTargetFactory.newInstance("//foo:bar")))
+        .add(new DefaultBuildTargetSourcePath(BuildTargetFactory.newInstance("//foo:bar")))
         .build();
 
     JavaLibrarySymbolsFinder finder = new JavaLibrarySymbolsFinder(
@@ -112,7 +113,7 @@ public class JavaLibrarySymbolsFinderTest {
     SourcePath example1 = convert.apply("Example1.java");
     SourcePath example2 = convert.apply("Example2.java");
     final BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:GenEx.java");
-    SourcePath generated = new BuildTargetSourcePath(fakeBuildTarget);
+    SourcePath generated = new DefaultBuildTargetSourcePath(fakeBuildTarget);
 
     final boolean shouldRecordRequiredSymbols = true;
     JavaLibrarySymbolsFinder example1Finder = new JavaLibrarySymbolsFinder(
@@ -135,7 +136,7 @@ public class JavaLibrarySymbolsFinderTest {
     expect(ruleFinder.getRule(anyObject(SourcePath.class)))
         .andAnswer(() -> {
           SourcePath input = (SourcePath) EasyMock.getCurrentArguments()[0];
-          if (input instanceof BuildTargetSourcePath) {
+          if (input instanceof ExplicitBuildTargetSourcePath) {
             return Optional.of(new FakeBuildRule(fakeBuildTarget, pathResolver));
           } else {
             return Optional.empty();

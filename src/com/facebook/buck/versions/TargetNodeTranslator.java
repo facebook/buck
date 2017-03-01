@@ -19,8 +19,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetNode;
@@ -152,14 +152,14 @@ public abstract class TargetNodeTranslator {
     return Optional.of(new Pair<>(first.orElse(val.getFirst()), second.orElse(val.getSecond())));
   }
 
-  public Optional<BuildTargetSourcePath> translateBuildTargetSourcePath(
+  public Optional<DefaultBuildTargetSourcePath> translateBuildTargetSourcePath(
       CellPathResolver cellPathResolver,
       BuildTargetPatternParser<BuildTargetPattern> pattern,
-      BuildTargetSourcePath val) {
+      DefaultBuildTargetSourcePath val) {
     BuildTarget target = val.getTarget();
     Optional<BuildTarget> translatedTarget = translate(cellPathResolver, pattern, target);
     return translatedTarget.isPresent() ?
-        Optional.of(new BuildTargetSourcePath(translatedTarget.get())) :
+        Optional.of(new DefaultBuildTargetSourcePath(translatedTarget.get())) :
         Optional.empty();
   }
 
@@ -233,11 +233,11 @@ public abstract class TargetNodeTranslator {
           (ImmutableMap<? extends Comparable<?>, ?>) object);
     } else if (object instanceof Pair) {
       return (Optional<A>) translatePair(cellPathResolver, pattern, (Pair<?, ?>) object);
-    } else if (object instanceof BuildTargetSourcePath) {
+    } else if (object instanceof DefaultBuildTargetSourcePath) {
       return (Optional<A>) translateBuildTargetSourcePath(
           cellPathResolver,
           pattern,
-          (BuildTargetSourcePath) object);
+          (DefaultBuildTargetSourcePath) object);
     } else if (object instanceof SourceWithFlags) {
       return (Optional<A>) translateSourceWithFlags(
           cellPathResolver,

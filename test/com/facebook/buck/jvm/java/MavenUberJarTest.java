@@ -25,7 +25,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.python.PythonLibrary;
 import com.facebook.buck.python.PythonLibraryBuilder;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -57,7 +57,7 @@ public class MavenUberJarTest {
     JavaLibraryBuilder javaLibraryBuilder =
         JavaLibraryBuilder
             .createBuilder(javaTarget)
-            .addResource(new BuildTargetSourcePath(pythonTarget));
+            .addResource(new DefaultBuildTargetSourcePath(pythonTarget));
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(pythonLibraryBuilder.build(), javaLibraryBuilder.build());

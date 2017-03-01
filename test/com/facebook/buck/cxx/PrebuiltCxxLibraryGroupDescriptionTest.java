@@ -22,7 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
@@ -250,7 +250,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
         new PrebuiltCxxLibraryGroupBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setStaticLink(ImmutableList.of("$(lib 0)"))
             .setStaticLibs(
-                ImmutableList.of(new BuildTargetSourcePath(cxxGenruleBuilder.getTarget())));
+                ImmutableList.of(new DefaultBuildTargetSourcePath(cxxGenruleBuilder.getTarget())));
 
     BuildRuleResolver resolver =
         new BuildRuleResolver(

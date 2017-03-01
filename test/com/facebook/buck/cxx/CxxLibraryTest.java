@@ -25,7 +25,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -98,8 +98,8 @@ public class CxxLibraryTest {
                 .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
                 .putNameToPathMap(
                     Paths.get("header.h"),
-                    new BuildTargetSourcePath(publicHeaderTarget))
-                .setRoot(new BuildTargetSourcePath(publicHeaderSymlinkTreeTarget))
+                    new DefaultBuildTargetSourcePath(publicHeaderTarget))
+                .setRoot(new DefaultBuildTargetSourcePath(publicHeaderSymlinkTreeTarget))
                 .build())
         .build();
     assertEquals(
@@ -112,10 +112,10 @@ public class CxxLibraryTest {
         .addIncludes(
             CxxSymlinkTreeHeaders.builder()
                 .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
-                .setRoot(new BuildTargetSourcePath(privateHeaderSymlinkTreeTarget))
+                .setRoot(new DefaultBuildTargetSourcePath(privateHeaderSymlinkTreeTarget))
                 .putNameToPathMap(
                     Paths.get("header.h"),
-                    new BuildTargetSourcePath(privateHeaderTarget))
+                    new DefaultBuildTargetSourcePath(privateHeaderTarget))
                 .build())
         .build();
     assertEquals(
@@ -174,7 +174,7 @@ public class CxxLibraryTest {
 
 
     FrameworkPath frameworkPath = FrameworkPath.ofSourcePath(
-        new BuildTargetSourcePath(BuildTargetFactory.newInstance("//foo:baz")));
+        new DefaultBuildTargetSourcePath(BuildTargetFactory.newInstance("//foo:baz")));
 
     // Construct a CxxLibrary object to test.
     CxxLibrary cxxLibrary = new CxxLibrary(

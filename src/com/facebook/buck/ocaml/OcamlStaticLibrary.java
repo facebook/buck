@@ -21,7 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -75,7 +75,7 @@ class OcamlStaticLibrary extends NoopBuildRule implements OcamlLibrary {
     UnflavoredBuildTarget staticBuildTarget = staticLibraryTarget.getUnflavoredBuildTarget();
     inputBuilder.addArgs(
         new SourcePathArg(
-            new BuildTargetSourcePath(
+            new ExplicitBuildTargetSourcePath(
                 ocamlLibraryBuild.getBuildTarget(),
                 isBytecode
                 ? OcamlBuildContext.getBytecodeOutputPath(

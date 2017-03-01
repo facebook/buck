@@ -28,14 +28,14 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleSuccessType;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -52,18 +52,20 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
+
 import org.hamcrest.CustomTypeSafeMatcher;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
 
 @SuppressWarnings("all")
 public class CxxPrecompiledHeaderRuleTest {
@@ -246,7 +248,7 @@ public class CxxPrecompiledHeaderRuleTest {
     BuildTarget lib1Target = newTarget("//test:lib1");
     BuildRuleParams lib1Params = newParams(lib1Target);
     CxxSourceRuleFactory factory1 = newFactoryBuilder(lib1Params, "-frtti")
-        .setPrecompiledHeader(new BuildTargetSourcePath(pchTarget))
+        .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
         .build();
     CxxPreprocessAndCompile lib1 = factory1.createPreprocessAndCompileBuildRule(
         "lib1.cpp",
@@ -258,7 +260,7 @@ public class CxxPrecompiledHeaderRuleTest {
     BuildTarget lib2Target = newTarget("//test:lib2");
     BuildRuleParams lib2Params = newParams(lib2Target);
     CxxSourceRuleFactory factory2 = newFactoryBuilder(lib2Params, "-frtti")
-        .setPrecompiledHeader(new BuildTargetSourcePath(pchTarget))
+        .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
         .build();
     CxxPreprocessAndCompile lib2 = factory2.createPreprocessAndCompileBuildRule(
         "lib2.cpp",
@@ -270,7 +272,7 @@ public class CxxPrecompiledHeaderRuleTest {
     BuildTarget lib3Target = newTarget("//test:lib3");
     BuildRuleParams lib3Params = newParams(lib3Target);
     CxxSourceRuleFactory factory3 = newFactoryBuilder(lib3Params, "-fno-rtti")
-        .setPrecompiledHeader(new BuildTargetSourcePath(pchTarget))
+        .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
         .build();
     CxxPreprocessAndCompile lib3 = factory3.createPreprocessAndCompileBuildRule(
         "lib3.cpp",
@@ -314,7 +316,7 @@ public class CxxPrecompiledHeaderRuleTest {
     BuildTarget libTarget = newTarget("//test:lib");
     BuildRuleParams libParams = newParams(libTarget);
     CxxSourceRuleFactory factory1 = newFactoryBuilder(libParams, "-flag-for-factory")
-        .setPrecompiledHeader(new BuildTargetSourcePath(pchTarget))
+        .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
         .build();
     CxxPreprocessAndCompile lib = factory1.createPreprocessAndCompileBuildRule(
         "lib.cpp",
@@ -383,7 +385,7 @@ public class CxxPrecompiledHeaderRuleTest {
     BuildTarget lib2Target = newTarget("//test:lib2");
     BuildRuleParams lib2Params = newParams(lib2Target);
     CxxSourceRuleFactory lib2Factory = newFactoryBuilder(lib2Params)
-        .setPrecompiledHeader(new BuildTargetSourcePath(pchTarget))
+        .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
         .build();
     CxxPreprocessAndCompile lib2 = lib2Factory.createPreprocessAndCompileBuildRule(
         "lib2.cpp",

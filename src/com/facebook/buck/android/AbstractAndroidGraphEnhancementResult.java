@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
@@ -55,7 +55,7 @@ interface AbstractAndroidGraphEnhancementResult {
   ImmutableSet<SourcePath> getClasspathEntriesToDex();
 
   default SourcePath getPrimaryResourcesApkPath() {
-    return new BuildTargetSourcePath(
+    return new ExplicitBuildTargetSourcePath(
         getAaptPackageResources().getBuildTarget(),
         getAaptPackageResources().getResourceApkPath());
   }
@@ -78,7 +78,7 @@ interface AbstractAndroidGraphEnhancementResult {
     }
     PackageStringAssets stringAssets = getPackageStringAssets().get();
     return ImmutableList.of(
-        new BuildTargetSourcePath(
+        new ExplicitBuildTargetSourcePath(
             stringAssets.getBuildTarget(), stringAssets.getPathToStringAssetsZip())
     );
   }

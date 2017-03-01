@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -320,7 +321,9 @@ public class OcamlRuleBuilder {
               .transform(pathResolver::getAbsolutePath)
               .filter(OcamlUtil.ext(OcamlCompilables.OCAML_C))
               .transform(ocamlContext::getCOutput)
-              .transform(input -> new BuildTargetSourcePath(compileParams.getBuildTarget(), input))
+              .transform(input -> new ExplicitBuildTargetSourcePath(
+                  compileParams.getBuildTarget(),
+                  input))
               .toList(),
           ocamlContext,
           ocamlLibraryBuild,

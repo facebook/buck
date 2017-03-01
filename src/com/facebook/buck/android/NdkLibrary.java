@@ -24,6 +24,7 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.PathSourcePath;
@@ -196,7 +197,7 @@ public class NdkLibrary extends AbstractBuildRule
    * @param isScratchDir true if this should be the "working directory" where a build rule may write
    *     intermediate files when computing its output. false if this should be the gen/ directory
    *     where the "official" outputs of the build rule should be written. Files of the latter type
-   *     can be referenced via a {@link com.facebook.buck.rules.BuildTargetSourcePath} or somesuch.
+   *     can be referenced via a {@link BuildTargetSourcePath} or somesuch.
    */
   private Path getBuildArtifactsDirectory(BuildTarget target, boolean isScratchDir) {
     Path base =

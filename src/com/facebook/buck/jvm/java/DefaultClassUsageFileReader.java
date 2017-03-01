@@ -20,7 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
@@ -70,7 +70,7 @@ class DefaultClassUsageFileReader {
 
       jarAbsolutePathToAbiJarSourcePathBuilder.put(
           jarAbsolutePath,
-          new BuildTargetSourcePath(depAbiJar.get()));
+          new DefaultBuildTargetSourcePath(depAbiJar.get()));
     }
 
     return jarAbsolutePathToAbiJarSourcePathBuilder.build();

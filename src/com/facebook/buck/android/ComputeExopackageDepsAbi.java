@@ -22,7 +22,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -80,7 +80,7 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule {
   }
 
   public SourcePath getAbiPath() {
-    return new BuildTargetSourcePath(getBuildTarget(), abiPath);
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), abiPath);
   }
 
   @Override

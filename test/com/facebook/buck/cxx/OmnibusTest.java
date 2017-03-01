@@ -23,7 +23,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -163,7 +163,7 @@ public class OmnibusTest {
         b.getNativeLinkableInput(CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED));
     assertThat(
         libs.get(b.getBuildTarget().toString()),
-        Matchers.not(Matchers.instanceOf(BuildTargetSourcePath.class)));
+        Matchers.not(Matchers.instanceOf(ExplicitBuildTargetSourcePath.class)));
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(ruleFinder, libs.get("libomnibus.so")),
         pathResolver,
@@ -233,10 +233,10 @@ public class OmnibusTest {
         c.getNativeLinkableInput(CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED));
     assertThat(
         libs.get(b.getBuildTarget().toString()),
-        Matchers.not(Matchers.instanceOf(BuildTargetSourcePath.class)));
+        Matchers.not(Matchers.instanceOf(ExplicitBuildTargetSourcePath.class)));
     assertThat(
         libs.get(c.getBuildTarget().toString()),
-        Matchers.not(Matchers.instanceOf(BuildTargetSourcePath.class)));
+        Matchers.not(Matchers.instanceOf(ExplicitBuildTargetSourcePath.class)));
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(ruleFinder, libs.get("libomnibus.so")),
         pathResolver,
@@ -305,10 +305,10 @@ public class OmnibusTest {
         root.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM));
     assertThat(
         libs.get(excludedRoot.getBuildTarget().toString()),
-        Matchers.not(Matchers.instanceOf(BuildTargetSourcePath.class)));
+        Matchers.not(Matchers.instanceOf(ExplicitBuildTargetSourcePath.class)));
     assertThat(
         libs.get(b.getBuildTarget().toString()),
-        Matchers.not(Matchers.instanceOf(BuildTargetSourcePath.class)));
+        Matchers.not(Matchers.instanceOf(ExplicitBuildTargetSourcePath.class)));
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(ruleFinder, libs.get("libomnibus.so")),
         pathResolver,
@@ -375,10 +375,10 @@ public class OmnibusTest {
         root.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM));
     assertThat(
         libs.get(excludedRoot.getBuildTarget().toString()),
-        Matchers.not(Matchers.instanceOf(BuildTargetSourcePath.class)));
+        Matchers.not(Matchers.instanceOf(ExplicitBuildTargetSourcePath.class)));
     assertThat(
         libs.get(a.getBuildTarget().toString()),
-        Matchers.not(Matchers.instanceOf(BuildTargetSourcePath.class)));
+        Matchers.not(Matchers.instanceOf(ExplicitBuildTargetSourcePath.class)));
   }
 
   @Test
@@ -451,7 +451,7 @@ public class OmnibusTest {
   }
 
   private CxxLink getCxxLinkRule(SourcePathRuleFinder ruleFinder, SourcePath path) {
-    return ((CxxLink) ruleFinder.getRuleOrThrow((BuildTargetSourcePath) path));
+    return ((CxxLink) ruleFinder.getRuleOrThrow((ExplicitBuildTargetSourcePath) path));
   }
 
   private void assertCxxLinkContainsNativeLinkableInput(

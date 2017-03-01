@@ -147,7 +147,7 @@ public class DefaultRuleKeyFactory implements RuleKeyFactory<RuleKey> {
       protected RuleKeyBuilder<RuleKeyResult<RuleKey>> setSourcePath(SourcePath sourcePath)
           throws IOException {
         if (sourcePath instanceof BuildTargetSourcePath) {
-          return setSourcePathAsRule((BuildTargetSourcePath) sourcePath);
+          return setSourcePathAsRule((BuildTargetSourcePath<?>) sourcePath);
         } else {
 
           // Add `PathSourcePath`s to our tracked inputs.

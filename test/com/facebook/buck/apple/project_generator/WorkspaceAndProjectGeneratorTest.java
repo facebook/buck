@@ -60,8 +60,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.ActionGraphCache;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -511,7 +511,7 @@ public class WorkspaceAndProjectGeneratorTest {
         .setSrcs(
             ImmutableSortedSet.of(
                 SourceWithFlags.of(
-                    new BuildTargetSourcePath(genruleTarget))))
+                    new DefaultBuildTargetSourcePath(genruleTarget))))
         .build();
 
     TargetNode<XcodeWorkspaceConfigDescription.Arg, ?> workspaceNode = XcodeWorkspaceConfigBuilder
@@ -568,7 +568,7 @@ public class WorkspaceAndProjectGeneratorTest {
         .setSrcs(
             ImmutableSortedSet.of(
                 SourceWithFlags.of(
-                    new BuildTargetSourcePath(genruleTarget))))
+                    new DefaultBuildTargetSourcePath(genruleTarget))))
         .build();
 
     TargetNode<XcodeWorkspaceConfigDescription.Arg, ?> workspaceNode = XcodeWorkspaceConfigBuilder

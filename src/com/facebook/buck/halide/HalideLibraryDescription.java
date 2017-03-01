@@ -41,7 +41,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
@@ -226,7 +226,7 @@ public class HalideLibraryDescription
             CxxSourceRuleFactory.PicType.PIC,
             platform.getStaticLibraryExtension()),
         ImmutableList.of(
-            new BuildTargetSourcePath(
+            new ExplicitBuildTargetSourcePath(
                 buildTarget,
                 HalideCompile.objectOutputPath(
                     buildTarget,
@@ -291,7 +291,7 @@ public class HalideLibraryDescription
           args.functionName);
       headersBuilder.put(
           outputPath.getFileName(),
-          new BuildTargetSourcePath(compileTarget, outputPath));
+          new ExplicitBuildTargetSourcePath(compileTarget, outputPath));
       return CxxDescriptionEnhancer.createHeaderSymlinkTree(
           params,
           resolver,

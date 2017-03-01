@@ -39,9 +39,10 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.DependencyAggregationTestUtil;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -59,8 +60,8 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.LocationMacro;
-import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.ExportFile;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.Genrule;
@@ -125,7 +126,7 @@ public class CxxLibraryDescriptionTest {
               cxxPlatform.getFlavor(),
               headerVisibility);
       return Optional.of(
-          new BuildTargetSourcePath(
+          new ExplicitBuildTargetSourcePath(
               headerMapBuildTarget,
               HeaderSymlinkTreeWithHeaderMap.getPath(filesystem, headerMapBuildTarget)));
     } else {
@@ -212,13 +213,13 @@ public class CxxLibraryDescriptionTest {
         .setExportedHeaders(
             ImmutableSortedSet.of(
                 new FakeSourcePath(headerName),
-                new BuildTargetSourcePath(genHeaderTarget)))
+                new DefaultBuildTargetSourcePath(genHeaderTarget)))
         .setHeaders(
             ImmutableSortedSet.of(new FakeSourcePath(privateHeaderName)))
         .setSrcs(
             ImmutableSortedSet.of(
                 SourceWithFlags.of(new FakeSourcePath("test/bar.cpp")),
-                SourceWithFlags.of(new BuildTargetSourcePath(genSourceTarget))))
+                SourceWithFlags.of(new DefaultBuildTargetSourcePath(genSourceTarget))))
         .setFrameworks(
             ImmutableSortedSet.of(
                 FrameworkPath.ofSourcePath(new FakeSourcePath("/some/framework/path/s.dylib")),
@@ -264,7 +265,7 @@ public class CxxLibraryDescriptionTest {
                 Paths.get(headerName),
                 new FakeSourcePath(headerName),
                 Paths.get(genHeaderName),
-                new BuildTargetSourcePath(genHeaderTarget))));
+                new DefaultBuildTargetSourcePath(genHeaderTarget))));
     assertThat(
         publicHeaders.getHeaderMap(),
         equalTo(
@@ -522,11 +523,11 @@ public class CxxLibraryDescriptionTest {
     CxxLibraryBuilder cxxLibraryBuilder = new CxxLibraryBuilder(target, cxxBuckConfig)
         .setExportedHeaders(
             ImmutableSortedMap.of(
-                genHeaderName, new BuildTargetSourcePath(genHeaderTarget)))
+                genHeaderName, new DefaultBuildTargetSourcePath(genHeaderTarget)))
         .setSrcs(
             ImmutableSortedSet.of(
                 SourceWithFlags.of(new FakeSourcePath(sourceName)),
-                SourceWithFlags.of(new BuildTargetSourcePath(genSourceTarget))))
+                SourceWithFlags.of(new DefaultBuildTargetSourcePath(genSourceTarget))))
         .setFrameworks(
             ImmutableSortedSet.of(
                 FrameworkPath.ofSourcePath(new FakeSourcePath("/some/framework/path/s.dylib")),
@@ -570,7 +571,7 @@ public class CxxLibraryDescriptionTest {
         equalTo(
             ImmutableMap.<Path, SourcePath>of(
                 Paths.get(genHeaderName),
-                new BuildTargetSourcePath(genHeaderTarget))));
+                new DefaultBuildTargetSourcePath(genHeaderTarget))));
     assertThat(
         publicHeaders.getHeaderMap(),
         equalTo(

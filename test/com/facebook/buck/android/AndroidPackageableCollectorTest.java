@@ -28,7 +28,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
@@ -176,7 +176,7 @@ public class AndroidPackageableCollectorTest {
         "Because assets directory was passed an AndroidResourceRule it should be added to the " +
             "transitive dependencies",
         ImmutableSet.of(
-            new BuildTargetSourcePath(
+            new DefaultBuildTargetSourcePath(
                 manifestTarget.withAppendedFlavors(
                     AndroidResourceDescription.ASSETS_SYMLINK_TREE_FLAVOR))),
         packageableCollection.getAssetsDirectories());

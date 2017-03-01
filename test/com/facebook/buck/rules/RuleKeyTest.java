@@ -396,7 +396,7 @@ public class RuleKeyTest {
             pathResolver, ruleFinder)
             .setReflectively(
                 "key",
-                new BuildTargetSourcePath(
+                new ExplicitBuildTargetSourcePath(
                     fake1.getBuildTarget(),
                     Paths.get("location")))
             .build(),
@@ -404,7 +404,7 @@ public class RuleKeyTest {
             pathResolver, ruleFinder)
             .setReflectively(
                 "key",
-                new BuildTargetSourcePath(
+                new ExplicitBuildTargetSourcePath(
                     fake1.getBuildTarget(),
                     Paths.get("location")))
             .build());
@@ -415,7 +415,7 @@ public class RuleKeyTest {
             pathResolver, ruleFinder)
             .setReflectively(
                 "key",
-                new BuildTargetSourcePath(
+                new ExplicitBuildTargetSourcePath(
                     fake1.getBuildTarget(),
                     Paths.get("location")))
             .build(),
@@ -423,7 +423,7 @@ public class RuleKeyTest {
             pathResolver, ruleFinder)
             .setReflectively(
                 "key",
-                new BuildTargetSourcePath(
+                new ExplicitBuildTargetSourcePath(
                     fake1.getBuildTarget(),
                     Paths.get("different")))
             .build());
@@ -434,7 +434,7 @@ public class RuleKeyTest {
             pathResolver, ruleFinder)
             .setReflectively(
                 "key",
-                new BuildTargetSourcePath(
+                new ExplicitBuildTargetSourcePath(
                     fake1.getBuildTarget(),
                     Paths.get("location")))
             .build(),
@@ -442,7 +442,7 @@ public class RuleKeyTest {
             pathResolver, ruleFinder)
             .setReflectively(
                 "key",
-                new BuildTargetSourcePath(
+                new ExplicitBuildTargetSourcePath(
                     fake2.getBuildTarget(),
                     Paths.get("location")))
             .build());
@@ -453,7 +453,7 @@ public class RuleKeyTest {
             pathResolver, ruleFinder)
             .setReflectively(
                 "key",
-                new BuildTargetSourcePath(
+                new ExplicitBuildTargetSourcePath(
                     fake1.getBuildTarget(),
                     Paths.get("location")))
             .build(),
@@ -461,7 +461,7 @@ public class RuleKeyTest {
             pathResolver, ruleFinder)
             .setReflectively(
                 "different-key",
-                new BuildTargetSourcePath(
+                new ExplicitBuildTargetSourcePath(
                     fake1.getBuildTarget(),
                     Paths.get("location")))
             .build());
@@ -477,7 +477,7 @@ public class RuleKeyTest {
     final FakeBuildRule fakeBuildRule = new FakeBuildRule("//:fake", pathResolver);
     resolver.addToIndex(fakeBuildRule);
 
-    BuildTargetSourcePath archive1 = new BuildTargetSourcePath(
+    ExplicitBuildTargetSourcePath archive1 = new ExplicitBuildTargetSourcePath(
         fakeBuildRule.getBuildTarget(),
         Paths.get("location"));
     PathSourcePath archive2 = new PathSourcePath(
