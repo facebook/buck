@@ -34,8 +34,8 @@ import java.util.stream.StreamSupport;
  * Encapsulates all the logic to sanitize debug paths in native code.
  */
 public abstract class DebugPathSanitizer {
-  private final int pathSize;
-  private final char separator;
+  protected final int pathSize;
+  protected final char separator;
   protected final Path compilationDirectory;
 
   public DebugPathSanitizer(
@@ -113,6 +113,16 @@ public abstract class DebugPathSanitizer {
   // Construct the replacer, giving the expanded current directory and the desired directory.
   // We use ASCII, since all the relevant debug standards we care about (e.g. DWARF) use it.
   abstract void restoreCompilationDirectory(Path path, Path workingDir) throws IOException;
+
+  /**
+   * Offensive check for cross-cell builds: return a new sanitizer
+   * with the provided ProjectFilesystem
+   */
+  @SuppressWarnings("unused")
+  public DebugPathSanitizer withProjectFilesystem(ProjectFilesystem projectFilesystem) {
+    // Do nothing by default.  Only one subclass uses this right now.
+    return this;
+  }
 
   /**
    * Defensive check for cross-cell builds: asserts that this sanitizer can safely run

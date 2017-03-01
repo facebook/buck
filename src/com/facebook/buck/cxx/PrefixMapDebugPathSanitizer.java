@@ -39,6 +39,10 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
   private boolean isGcc;
   private Path compilationDir;
 
+  // Save so we can make a copy later
+  private final ImmutableBiMap<Path, Path> other;
+  private final CxxToolProvider.Type cxxType;
+
   public PrefixMapDebugPathSanitizer(
       int pathSize,
       char separator,
@@ -53,6 +57,10 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
     this.projectFilesystem = projectFilesystem;
     this.isGcc = cxxType == CxxToolProvider.Type.GCC;
     this.compilationDir = realCompilationDirectory;
+    // Save for later
+    this.other = other;
+    this.cxxType = cxxType;
+
     ImmutableBiMap.Builder<Path, Path> pathsBuilder = ImmutableBiMap.builder();
     // As these replacements are processed one at a time, if one is a prefix (or actually is just
     // contained in) another, it must be processed after that other one. To ensure that we can
@@ -127,6 +135,22 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
     }
     // We need to always sanitize the real workingDir because we add it directly into the flags.
     return allPaths;
+  }
+
+  @Override
+  public DebugPathSanitizer withProjectFilesystem(ProjectFilesystem projectFilesystem) {
+    if (this.projectFilesystem.equals(projectFilesystem)) {
+      return this;
+    }
+    // TODO(mzlee): Do not create a new sanitizer every time
+    return new PrefixMapDebugPathSanitizer(
+        this.pathSize,
+        this.separator,
+        this.compilationDirectory,
+        this.other,
+        projectFilesystem.getRootPath(),
+        this.cxxType,
+        projectFilesystem);
   }
 
   @Override

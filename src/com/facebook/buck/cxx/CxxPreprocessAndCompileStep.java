@@ -102,7 +102,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     this.preprocessorCommand = preprocessorCommand;
     this.compilerCommand = compilerCommand;
     this.headerPathNormalizer = headerPathNormalizer;
-    this.compilerSanitizer = compilerSanitizer;
+    this.compilerSanitizer = compilerSanitizer.withProjectFilesystem(filesystem);
     this.assemblerSanitizer = assemblerSanitizer;
     this.scratchDir = scratchDir;
     this.useArgfile = useArgfile;
