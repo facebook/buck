@@ -190,7 +190,7 @@ public class RustCompileRule
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
+      BuildContext buildContext, BuildableContext buildableContext) {
 
     Path output = getOutput();
 
@@ -244,7 +244,7 @@ public class RustCompileRule
 
           @Override
           public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-            return compiler.getEnvironment();
+            return compiler.getEnvironment(buildContext.getSourcePathResolver());
           }
 
           @Override

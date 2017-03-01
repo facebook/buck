@@ -161,7 +161,7 @@ public abstract class CxxTest
                 .addAll(getShellCommand(pathResolver, getPathToTestResults()))
                 .addAll(args.get())
                 .build(),
-            getEnv(),
+            getEnv(pathResolver),
             getPathToTestExitCode(),
             getPathToTestOutput(),
             testRuleTimeoutMs));
@@ -227,9 +227,9 @@ public abstract class CxxTest
     return additionalDeps.get().stream().map(BuildRule::getBuildTarget);
   }
 
-  protected ImmutableMap<String, String> getEnv() {
+  protected ImmutableMap<String, String> getEnv(SourcePathResolver pathResolver) {
     return new ImmutableMap.Builder<String, String>()
-        .putAll(executable.getEnvironment())
+        .putAll(executable.getEnvironment(pathResolver))
         .putAll(env)
         .build();
   }

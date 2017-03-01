@@ -185,7 +185,7 @@ public class Archive extends AbstractBuildRuleWithResolver implements SupportsIn
         new RmStep(getProjectFilesystem(), output),
         new ArchiveStep(
             getProjectFilesystem(),
-            archiver.getEnvironment(),
+            archiver.getEnvironment(resolver),
             archiver.getCommandPrefix(resolver),
             archiverFlags,
             archiver.getArchiveOptions(contents == Contents.THIN),
@@ -199,7 +199,7 @@ public class Archive extends AbstractBuildRuleWithResolver implements SupportsIn
       builder.add(
           new RanlibStep(
               getProjectFilesystem(),
-              ranlib.getEnvironment(),
+              ranlib.getEnvironment(resolver),
               ranlib.getCommandPrefix(resolver),
               ranlibFlags,
               output));

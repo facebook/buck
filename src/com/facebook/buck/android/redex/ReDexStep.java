@@ -89,7 +89,7 @@ public class ReDexStep extends ShellStep {
     ReDexStep redexStep = new ReDexStep(
         filesystem.getRootPath(),
         redexBinary.getCommandPrefix(resolver),
-        redexBinary.getEnvironment(),
+        redexBinary.getEnvironment(resolver),
         inputApkPath,
         outputApkPath,
         keystorePropertiesSupplier,

@@ -143,7 +143,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
                           .map(Object::toString)
                           .iterator())
                   .build(),
-              nm.getEnvironment()) {
+              nm.getEnvironment(context.getSourcePathResolver())) {
             @Override
             protected void addOptions(
                 ExecutionContext context,

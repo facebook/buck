@@ -103,8 +103,8 @@ public class SceneKitAssets extends AbstractBuildRule {
 
               @Override
               public ImmutableMap<String, String> getEnvironmentVariables(
-                  ExecutionContext context) {
-                return copySceneKitAssets.get().getEnvironment();
+                  ExecutionContext executionContext) {
+                return copySceneKitAssets.get().getEnvironment(context.getSourcePathResolver());
               }
 
               @Override

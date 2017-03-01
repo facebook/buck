@@ -116,7 +116,7 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
         new StripSymbolsStep(
             output,
             strip.getCommandPrefix(context.getSourcePathResolver()),
-            strip.getEnvironment(),
+            strip.getEnvironment(context.getSourcePathResolver()),
             stripStyle.getStripToolArgs(),
             getProjectFilesystem()));
   }

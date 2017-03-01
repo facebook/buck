@@ -178,7 +178,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
   }
 
   public ImmutableMap<String, String> getEnvironment() {
-    return preprocessor.getEnvironment();
+    return preprocessor.getEnvironment(resolver);
   }
 
   public CxxToolFlags getFlagsWithSearchPaths(Optional<CxxPrecompiledHeader> pch) {

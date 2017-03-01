@@ -100,7 +100,7 @@ public abstract class Jsr199Javac implements Javac {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment() {
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
     throw new UnsupportedOperationException("In memory javac may not be used externally");
   }
 

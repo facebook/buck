@@ -144,7 +144,7 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
             getProjectFilesystem(),
             getPathToTestWorkingDirectory(),
             args.build(),
-            testMain.getExecutableCommand().getEnvironment(),
+            testMain.getExecutableCommand().getEnvironment(pathResolver),
             getPathToTestExitCode(),
             processTimeoutMs,
             getPathToTestResults()));
@@ -292,7 +292,7 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
         .setType("go")
-        .putAllEnv(testMain.getExecutableCommand().getEnvironment())
+        .putAllEnv(testMain.getExecutableCommand().getEnvironment(pathResolver))
         .addAllCommand(testMain.getExecutableCommand().getCommandPrefix(pathResolver))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())

@@ -830,7 +830,7 @@ public class AppleBundle
       stepsBuilder.add(
           new IbtoolStep(
               getProjectFilesystem(),
-              ibtool.getEnvironment(),
+              ibtool.getEnvironment(resolver),
               ibtool.getCommandPrefix(resolver),
               ImmutableList.of("--target-device", "watch", "--compile"),
               sourcePath,
@@ -839,7 +839,7 @@ public class AppleBundle
       stepsBuilder.add(
           new IbtoolStep(
               getProjectFilesystem(),
-              ibtool.getEnvironment(),
+              ibtool.getEnvironment(resolver),
               ibtool.getCommandPrefix(resolver),
               ImmutableList.of("--target-device", "watch", "--link"),
               compiledStoryboardPath,
@@ -856,7 +856,7 @@ public class AppleBundle
       stepsBuilder.add(
           new IbtoolStep(
               getProjectFilesystem(),
-              ibtool.getEnvironment(),
+              ibtool.getEnvironment(resolver),
               ibtool.getCommandPrefix(resolver),
               ImmutableList.of("--compile"),
               sourcePath,
@@ -896,7 +896,7 @@ public class AppleBundle
         stepsBuilder.add(
             new IbtoolStep(
                 getProjectFilesystem(),
-                ibtool.getEnvironment(),
+                ibtool.getEnvironment(resolver),
                 ibtool.getCommandPrefix(resolver),
                 ImmutableList.of("--compile"),
                 sourcePath,

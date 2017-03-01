@@ -241,7 +241,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
         .setType("gtest")
         .addAllCommand(getExecutableCommand().getCommandPrefix(pathResolver))
         .addAllCommand(getArgs().get())
-        .putAllEnv(getEnv())
+        .putAllEnv(getEnv(pathResolver))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .build();

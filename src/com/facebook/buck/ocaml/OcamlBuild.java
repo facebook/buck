@@ -78,9 +78,9 @@ public class OcamlBuild extends AbstractBuildRule {
             context.getSourcePathResolver(),
             getProjectFilesystem(),
             ocamlContext,
-            cCompiler.getEnvironment(),
+            cCompiler.getEnvironment(context.getSourcePathResolver()),
             cCompiler.getCommandPrefix(context.getSourcePathResolver()),
-            cxxCompiler.getEnvironment(),
+            cxxCompiler.getEnvironment(context.getSourcePathResolver()),
             cxxCompiler.getCommandPrefix(context.getSourcePathResolver()),
             bytecodeOnly));
   }

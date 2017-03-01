@@ -43,7 +43,8 @@ public interface Tool extends RuleKeyAppendable {
 
   /**
    * @return the list of environment variables to set when running the command.
+   * @param resolver
    */
-  ImmutableMap<String, String> getEnvironment();
+  ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver);
 
 }

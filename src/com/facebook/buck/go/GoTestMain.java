@@ -67,7 +67,7 @@ public class GoTestMain extends AbstractBuildRule {
         new MkdirStep(getProjectFilesystem(), output.getParent()),
         new GoTestMainStep(
             getProjectFilesystem().getRootPath(),
-            testMainGen.getEnvironment(),
+            testMainGen.getEnvironment(context.getSourcePathResolver()),
             testMainGen.getCommandPrefix(context.getSourcePathResolver()),
             /* coverageMode */ "",
             /* coverageVariables */ ImmutableMap.of(),

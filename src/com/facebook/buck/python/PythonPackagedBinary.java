@@ -180,7 +180,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
     steps.add(
         new PexStep(
             getProjectFilesystem(),
-            builder.getEnvironment(),
+            builder.getEnvironment(resolver),
             ImmutableList.<String>builder()
                 .addAll(builder.getCommandPrefix(resolver))
                 .addAll(buildArgs)

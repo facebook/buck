@@ -127,7 +127,7 @@ public class AppleDsym
             RmStep.Mode.RECURSIVE),
         new DsymStep(
             getProjectFilesystem(),
-            dsymutil.getEnvironment(),
+            dsymutil.getEnvironment(context.getSourcePathResolver()),
             dsymutil.getCommandPrefix(context.getSourcePathResolver()),
             unstrippedBinaryPath,
             dsymOutputPath),

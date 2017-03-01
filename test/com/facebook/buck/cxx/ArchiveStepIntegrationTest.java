@@ -77,7 +77,7 @@ public class ArchiveStepIntegrationTest {
     // Build an archive step.
     ArchiveStep archiveStep = new ArchiveStep(
         filesystem,
-        archiver.getEnvironment(),
+        archiver.getEnvironment(sourcePathResolver),
         archiver.getCommandPrefix(sourcePathResolver),
         ImmutableList.of(),
         getArchiveOptions(false),
@@ -128,7 +128,7 @@ public class ArchiveStepIntegrationTest {
     ArchiveStep archiveStep =
         new ArchiveStep(
             filesystem,
-            archiver.getEnvironment(),
+            archiver.getEnvironment(sourcePathResolver),
             archiver.getCommandPrefix(sourcePathResolver),
             ImmutableList.of(),
             getArchiveOptions(false),
@@ -172,7 +172,7 @@ public class ArchiveStepIntegrationTest {
     ArchiveStep archiveStep =
         new ArchiveStep(
             filesystem,
-            archiver.getEnvironment(),
+            archiver.getEnvironment(sourcePathResolver),
             archiver.getCommandPrefix(sourcePathResolver),
             ImmutableList.of(),
             getArchiveOptions(false),
@@ -228,7 +228,7 @@ public class ArchiveStepIntegrationTest {
     ArchiveStep archiveStep =
         new ArchiveStep(
             filesystem,
-            archiver.getEnvironment(),
+            archiver.getEnvironment(sourcePathResolver),
             archiver.getCommandPrefix(sourcePathResolver),
             ImmutableList.of(),
             getArchiveOptions(true),

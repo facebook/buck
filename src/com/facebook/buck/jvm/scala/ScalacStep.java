@@ -94,6 +94,6 @@ public class ScalacStep extends ShellStep {
 
   @Override
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-    return scalac.getEnvironment();
+    return scalac.getEnvironment(resolver);
   }
 }

@@ -201,7 +201,7 @@ public class OcamlBuildRulesGenerator {
           cCompileParams,
           pathResolver,
           new OcamlCCompileStep.Args(
-              cCompiler.getEnvironment(),
+              cCompiler.getEnvironment(pathResolver),
               cCompiler.getCommandPrefix(pathResolver),
               ocamlContext.getOcamlCompiler().get(),
               ocamlContext.getOcamlInteropIncludesDir(),
@@ -292,7 +292,7 @@ public class OcamlBuildRulesGenerator {
     OcamlLink link = new OcamlLink(
         linkParams,
         allInputs,
-        cxxCompiler.getEnvironment(),
+        cxxCompiler.getEnvironment(pathResolver),
         cxxCompiler.getCommandPrefix(pathResolver),
         ocamlContext.getOcamlCompiler().get(),
         flags.build(),
@@ -342,7 +342,7 @@ public class OcamlBuildRulesGenerator {
     OcamlLink link = new OcamlLink(
         linkParams,
         allInputs,
-        cxxCompiler.getEnvironment(),
+        cxxCompiler.getEnvironment(pathResolver),
         cxxCompiler.getCommandPrefix(pathResolver),
         ocamlContext.getOcamlBytecodeCompiler().get(),
         flags.build(),
@@ -526,7 +526,7 @@ public class OcamlBuildRulesGenerator {
         compileParams,
         new OcamlMLCompileStep.Args(
             params.getProjectFilesystem()::resolve,
-            cCompiler.getEnvironment(),
+            cCompiler.getEnvironment(pathResolver),
             cCompiler.getCommandPrefix(pathResolver),
             ocamlContext.getOcamlCompiler().get(),
             ocamlContext.getOcamlInteropIncludesDir(),
@@ -627,7 +627,7 @@ public class OcamlBuildRulesGenerator {
         compileParams,
         new OcamlMLCompileStep.Args(
             params.getProjectFilesystem()::resolve,
-            cCompiler.getEnvironment(),
+            cCompiler.getEnvironment(pathResolver),
             cCompiler.getCommandPrefix(pathResolver),
             ocamlContext.getOcamlBytecodeCompiler().get(),
             ocamlContext.getOcamlInteropIncludesDir(),

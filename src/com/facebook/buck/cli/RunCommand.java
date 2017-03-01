@@ -153,7 +153,7 @@ public final class RunCommand extends AbstractCommand {
             .setEnvironment(
                 ImmutableMap.<String, String>builder()
                     .putAll(params.getEnvironment())
-                    .putAll(executable.getEnvironment())
+                    .putAll(executable.getEnvironment(resolver))
                     .build())
             .setDirectory(params.getCell().getFilesystem().getRootPath())
             .build();

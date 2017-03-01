@@ -84,7 +84,7 @@ public class WorkerMacroArg extends MacroArg {
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     Tool exe = this.workerTool.getTool();
     startupCommand = exe.getCommandPrefix(pathResolver);
-    startupEnvironment = exe.getEnvironment();
+    startupEnvironment = exe.getEnvironment(pathResolver);
     jobArgs = macroHandler.expand(target, cellNames, resolver, unexpanded).trim();
   }
 

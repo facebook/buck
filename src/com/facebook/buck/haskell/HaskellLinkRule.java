@@ -78,7 +78,7 @@ public class HaskellLinkRule extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
+      BuildContext buildContext,
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(getOutput());
     return ImmutableList.of(
@@ -91,14 +91,14 @@ public class HaskellLinkRule extends AbstractBuildRule {
           public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
             return ImmutableMap.<String, String>builder()
                 .putAll(super.getEnvironmentVariables(context))
-                .putAll(linker.getEnvironment())
+                .putAll(linker.getEnvironment(buildContext.getSourcePathResolver()))
                 .build();
           }
 
           @Override
-          protected ImmutableList<String> getShellCommandInternal(ExecutionContext execContext) {
+          protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
             return ImmutableList.<String>builder()
-                .addAll(linker.getCommandPrefix(context.getSourcePathResolver()))
+                .addAll(linker.getCommandPrefix(buildContext.getSourcePathResolver()))
                 .add("-o", getProjectFilesystem().resolve(getOutput()).toString())
                 .addAll(Arg.stringify(args))
                 .addAll(

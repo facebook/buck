@@ -141,15 +141,15 @@ public class PythonTest
             getProjectFilesystem().getRootPath(),
             getBuildTarget().getFullyQualifiedName(),
             binary.getExecutableCommand().getCommandPrefix(pathResolver),
-            getMergedEnv(),
+            getMergedEnv(pathResolver),
             options.getTestSelectorList(),
             testRuleTimeoutMs,
             getProjectFilesystem().resolve(getPathToTestOutputResult())));
   }
 
-  private ImmutableMap<String, String> getMergedEnv() {
+  private ImmutableMap<String, String> getMergedEnv(SourcePathResolver pathResolver) {
     return new ImmutableMap.Builder<String, String>()
-        .putAll(binary.getExecutableCommand().getEnvironment())
+        .putAll(binary.getExecutableCommand().getEnvironment(pathResolver))
         .putAll(env.get())
         .build();
   }
@@ -249,7 +249,7 @@ public class PythonTest
         .setType("pyunit")
         .setNeededCoverage(neededCoverage)
         .addAllCommand(binary.getExecutableCommand().getCommandPrefix(pathResolver))
-        .putAllEnv(getMergedEnv())
+        .putAllEnv(getMergedEnv(pathResolver))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .build();

@@ -100,10 +100,10 @@ public class GoBinary extends AbstractBuildRuleWithResolver implements BinaryBui
     ImmutableList<String> cxxLinkerCommand = ImmutableList.of();
     ImmutableMap.Builder<String, String> environment = ImmutableMap.builder();
     if (cxxLinker.isPresent()) {
-      environment.putAll(cxxLinker.get().getEnvironment());
+      environment.putAll(cxxLinker.get().getEnvironment(context.getSourcePathResolver()));
       cxxLinkerCommand = cxxLinker.get().getCommandPrefix(context.getSourcePathResolver());
     }
-    environment.putAll(linker.getEnvironment());
+    environment.putAll(linker.getEnvironment(context.getSourcePathResolver()));
     return ImmutableList.of(
         new MkdirStep(getProjectFilesystem(), output.getParent()),
         new GoLinkStep(

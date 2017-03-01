@@ -145,7 +145,7 @@ public class GoCompile extends AbstractBuildRule {
     } else {
       steps.add(new GoCompileStep(
           getProjectFilesystem().getRootPath(),
-          compiler.getEnvironment(),
+          compiler.getEnvironment(context.getSourcePathResolver()),
           compiler.getCommandPrefix(context.getSourcePathResolver()),
           compilerFlags,
           packageName,
@@ -189,7 +189,7 @@ public class GoCompile extends AbstractBuildRule {
         steps.add(
             new GoAssembleStep(
                 getProjectFilesystem().getRootPath(),
-                assembler.getEnvironment(),
+                assembler.getEnvironment(context.getSourcePathResolver()),
                 assembler.getCommandPrefix(context.getSourcePathResolver()),
                 assemblerFlags,
                 asmSrc,
@@ -205,7 +205,7 @@ public class GoCompile extends AbstractBuildRule {
 
       steps.add(new GoPackStep(
           getProjectFilesystem().getRootPath(),
-          packer.getEnvironment(),
+          packer.getEnvironment(context.getSourcePathResolver()),
           packer.getCommandPrefix(context.getSourcePathResolver()),
           GoPackStep.Operation.APPEND,
           asmOutputs.build(),

@@ -281,7 +281,7 @@ public class HaskellCompileRule extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
+      BuildContext buildContext,
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(getObjectDir());
     buildableContext.recordArtifact(getInterfaceDir());
@@ -296,13 +296,13 @@ public class HaskellCompileRule extends AbstractBuildRule {
           public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
             return ImmutableMap.<String, String>builder()
                 .putAll(super.getEnvironmentVariables(context))
-                .putAll(compiler.getEnvironment())
+                .putAll(compiler.getEnvironment(buildContext.getSourcePathResolver()))
                 .build();
           }
 
           @Override
-          protected ImmutableList<String> getShellCommandInternal(ExecutionContext execContext) {
-            SourcePathResolver resolver = context.getSourcePathResolver();
+          protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+            SourcePathResolver resolver = buildContext.getSourcePathResolver();
             return ImmutableList.<String>builder()
                 .addAll(compiler.getCommandPrefix(resolver))
                 .addAll(flags)
@@ -316,7 +316,7 @@ public class HaskellCompileRule extends AbstractBuildRule {
                         Iterables.cycle("-main-is"),
                         OptionalCompat.asSet(main)))
                 .addAll(getPackageNameArgs())
-                .addAll(getPreprocessorFlags(context.getSourcePathResolver()))
+                .addAll(getPreprocessorFlags(buildContext.getSourcePathResolver()))
                 .add("-odir", getProjectFilesystem().resolve(getObjectDir()).toString())
                 .add("-hidir", getProjectFilesystem().resolve(getInterfaceDir()).toString())
                 .add("-stubdir", getProjectFilesystem().resolve(getStubDir()).toString())
@@ -325,7 +325,7 @@ public class HaskellCompileRule extends AbstractBuildRule {
                         .map(resolver::getAbsolutePath)
                         .map(Object::toString)
                         .collect(Collectors.joining(":")))
-                .addAll(getPackageArgs(context.getSourcePathResolver()))
+                .addAll(getPackageArgs(buildContext.getSourcePathResolver()))
                 .addAll(
                     sources.getSourcePaths().stream()
                         .map(resolver::getAbsolutePath)

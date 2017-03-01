@@ -249,7 +249,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
         .setType("boost")
         .addAllCommand(getExecutableCommand().getCommandPrefix(pathResolver))
         .addAllCommand(getArgs().get())
-        .putAllEnv(getEnv())
+        .putAllEnv(getEnv(pathResolver))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .build();

@@ -58,8 +58,8 @@ public abstract class AbstractPreprocessor implements Preprocessor {
   }
 
   @Override
-  public final ImmutableMap<String, String> getEnvironment() {
-    return tool.getEnvironment();
+  public final ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+    return tool.getEnvironment(resolver);
   }
 
   @Override

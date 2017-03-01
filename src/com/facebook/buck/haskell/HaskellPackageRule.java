@@ -277,7 +277,7 @@ public class HaskellPackageRule extends AbstractBuildRule {
     public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
       return ImmutableMap.<String, String>builder()
           .putAll(super.getEnvironmentVariables(context))
-          .putAll(ghcPkg.getEnvironment())
+          .putAll(ghcPkg.getEnvironment(resolver))
           .putAll(env)
           .build();
     }

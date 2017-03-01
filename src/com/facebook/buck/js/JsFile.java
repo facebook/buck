@@ -69,7 +69,7 @@ public abstract class JsFile extends AbstractBuildRule {
         worker.getTempDir(),
         tool.getCommandPrefix(context.getSourcePathResolver()),
         worker.getArgs(),
-        tool.getEnvironment(),
+        tool.getEnvironment(context.getSourcePathResolver()),
         String.format(jobArgsFormat, extraArgs.orElse("")),
         worker.getMaxWorkers(),
         worker.isPersistent()

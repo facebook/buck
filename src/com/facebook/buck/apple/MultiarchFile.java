@@ -123,7 +123,7 @@ public class MultiarchFile extends AbstractBuildRule
         new DefaultShellStep(
             getProjectFilesystem().getRootPath(),
             commandBuilder.build(),
-            lipo.getEnvironment()));
+            lipo.getEnvironment(context.getSourcePathResolver())));
   }
 
   @Override

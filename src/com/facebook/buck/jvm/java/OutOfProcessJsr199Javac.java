@@ -58,7 +58,7 @@ public abstract class OutOfProcessJsr199Javac implements Javac {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment() {
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
     throw new UnsupportedOperationException("In memory javac(oop) may not be used externally");
   }
 

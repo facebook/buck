@@ -90,7 +90,7 @@ class CompilerDelegate implements RuleKeyAppendable {
   }
 
   public ImmutableMap<String, String> getEnvironment() {
-    return compiler.getEnvironment();
+    return compiler.getEnvironment(resolver);
   }
 
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {

@@ -122,7 +122,7 @@ public class CxxLink
             context.getSourcePathResolver()),
         new CxxLinkStep(
             getProjectFilesystem().getRootPath(),
-            linker.getEnvironment(),
+            linker.getEnvironment(context.getSourcePathResolver()),
             linker.getCommandPrefix(context.getSourcePathResolver()),
             argFilePath,
             getProjectFilesystem().getRootPath().resolve(scratchDir)),
