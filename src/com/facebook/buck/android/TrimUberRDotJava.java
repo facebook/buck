@@ -23,6 +23,8 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -87,11 +89,13 @@ class TrimUberRDotJava extends AbstractBuildRule {
   }
 
   @Override
-  public Path getPathToOutput() {
-    return BuildTargets.getGenPath(
-        getProjectFilesystem(),
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(
         getBuildTarget(),
-        "%s/_trimmed_r_dot_java.src.zip");
+        BuildTargets.getGenPath(
+            getProjectFilesystem(),
+            getBuildTarget(),
+            "%s/_trimmed_r_dot_java.src.zip"));
   }
 
   private class PerformTrimStep implements Step {

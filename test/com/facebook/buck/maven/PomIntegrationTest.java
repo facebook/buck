@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -251,8 +252,10 @@ public class PomIntegrationTest {
     }
 
     @Override
-    public Path getPathToOutput() {
-      return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.jar");
+    public SourcePath getSourcePathToOutput() {
+      return new ExplicitBuildTargetSourcePath(
+          getBuildTarget(),
+          BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.jar"));
     }
   }
 }

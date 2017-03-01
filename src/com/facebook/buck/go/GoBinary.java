@@ -26,6 +26,8 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.Tool;
@@ -121,8 +123,7 @@ public class GoBinary extends AbstractBuildRuleWithResolver implements BinaryBui
   }
 
   @Override
-  public Path getPathToOutput() {
-    return output;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
   }
-
 }

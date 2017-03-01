@@ -27,8 +27,6 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
-
 import javax.annotation.Nullable;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE,
@@ -66,16 +64,7 @@ public interface BuildRule extends Comparable<BuildRule> {
   ImmutableList<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext);
 
   @Nullable
-  Path getPathToOutput();
-
-  @Nullable
-  default SourcePath getSourcePathToOutput() {
-    Path output = getPathToOutput();
-    if (output == null) {
-      return null;
-    }
-    return new DefaultBuildTargetSourcePath(getBuildTarget());
-  }
+  SourcePath getSourcePathToOutput();
 
   /**
    * @return true if the output of this build rule is compatible with {@code buck build --out}.
@@ -84,7 +73,7 @@ public interface BuildRule extends Comparable<BuildRule> {
    *     (i.e., does not have any dependencies on relative symlinks).
    */
   default boolean outputFileCanBeCopied() {
-    return getPathToOutput() != null;
+    return getSourcePathToOutput() != null;
   }
 
   ProjectFilesystem getProjectFilesystem();

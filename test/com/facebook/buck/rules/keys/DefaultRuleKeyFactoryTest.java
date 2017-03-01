@@ -698,7 +698,7 @@ public class DefaultRuleKeyFactoryTest {
 
     @Nullable
     @Override
-    public Path getPathToOutput() {
+    public SourcePath getSourcePathToOutput() {
       return null;
     }
 

@@ -25,6 +25,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.WorkerJobParams;
@@ -56,8 +57,10 @@ public abstract class JsFile extends AbstractBuildRule {
   }
 
   @Override
-  public Path getPathToOutput() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.json");
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(
+        getBuildTarget(),
+        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.json"));
   }
 
   ImmutableList<Step> getBuildSteps(

@@ -21,6 +21,8 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
@@ -53,8 +55,8 @@ public class OcamlMLCompile extends AbstractBuildRule {
   }
 
   @Override
-  public Path getPathToOutput() {
-    return args.output;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), args.output);
   }
 
   @Override

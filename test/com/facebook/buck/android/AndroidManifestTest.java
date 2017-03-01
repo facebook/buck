@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -57,11 +58,13 @@ public class AndroidManifestTest {
     AndroidManifest androidManifest = createSimpleAndroidManifestRule();
 
     assertEquals(
-        BuildTargets.getGenPath(
-            new FakeProjectFilesystem(),
-            BuildTargetFactory.newInstance(MANIFEST_TARGET),
-            "AndroidManifest__%s__.xml"),
-        androidManifest.getPathToOutput());
+        new ExplicitBuildTargetSourcePath(
+            androidManifest.getBuildTarget(),
+            BuildTargets.getGenPath(
+                new FakeProjectFilesystem(),
+                BuildTargetFactory.newInstance(MANIFEST_TARGET),
+                "AndroidManifest__%s__.xml")),
+        androidManifest.getSourcePathToOutput());
   }
 
   @Test

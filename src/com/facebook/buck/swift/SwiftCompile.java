@@ -215,8 +215,8 @@ class SwiftCompile
   }
 
   @Override
-  public Path getPathToOutput() {
-    return outputPath;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputPath);
   }
 
   /**

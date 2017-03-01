@@ -21,8 +21,8 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -155,8 +155,7 @@ public class CxxInferAnalyze extends AbstractBuildRule {
   }
 
   @Override
-  public Path getPathToOutput() {
-    return this.reportFile;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), reportFile);
   }
-
 }

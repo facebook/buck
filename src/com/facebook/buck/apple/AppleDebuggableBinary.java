@@ -21,26 +21,23 @@ import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Stream;
-
-import javax.annotation.Nullable;
 
 /**
  * This build rule wraps the usual build rule and should be treated as top-level binary rule for
@@ -48,7 +45,7 @@ import javax.annotation.Nullable;
  * or just on stripped binary.
  */
 public class AppleDebuggableBinary
-    extends AbstractBuildRuleWithResolver
+    extends AbstractBuildRule
     implements BuildRuleWithBinary, SupportsInputBasedRuleKey, HasRuntimeDeps {
 
   public static final Flavor RULE_FLAVOR = ImmutableFlavor.of("apple-debuggable-binary");
@@ -60,14 +57,11 @@ public class AppleDebuggableBinary
 
   @AddToRuleKey
   private final SourcePath binarySourcePath;
-  private final SourcePathResolver pathResolver;
 
   public AppleDebuggableBinary(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       BuildRule binaryRule) {
-    super(buildRuleParams, resolver);
-    this.pathResolver = resolver;
+    super(buildRuleParams);
     this.binaryRule = binaryRule;
     this.binarySourcePath = Preconditions.checkNotNull(binaryRule.getSourcePathToOutput());
     performChecks(buildRuleParams, binaryRule);
@@ -143,10 +137,9 @@ public class AppleDebuggableBinary
     return ImmutableList.of();
   }
 
-  @Nullable
   @Override
-  public Path getPathToOutput() {
-    return pathResolver.getRelativePath(binarySourcePath);
+  public SourcePath getSourcePathToOutput() {
+    return new ForwardingBuildTargetSourcePath(getBuildTarget(), binarySourcePath);
   }
 
   @Override

@@ -227,7 +227,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
 
   @Override
   @Nullable
-  public Path getPathToOutput() {
+  public SourcePath getSourcePathToOutput() {
     // A .dex file is not guaranteed to be generated, so we return null to be conservative.
     return null;
   }

@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
+import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
@@ -65,7 +66,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
-
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class AppleTest
@@ -494,8 +494,10 @@ public class AppleTest
   }
 
   @Override
-  public Path getPathToOutput() {
-    return testBundle.getPathToOutput();
+  public SourcePath getSourcePathToOutput() {
+    return new ForwardingBuildTargetSourcePath(
+        getBuildTarget(),
+        testBundle.getSourcePathToOutput());
   }
 
   public boolean isUiTest() {

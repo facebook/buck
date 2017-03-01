@@ -41,6 +41,8 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
@@ -101,6 +103,7 @@ public class LuaBinaryDescriptionTest {
   public void extensionOverride() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     LuaBinary binary =
         new LuaBinaryBuilder(
                 BuildTargetFactory.newInstance("//:rule"),
@@ -108,7 +111,9 @@ public class LuaBinaryDescriptionTest {
                     .withExtension(".override"))
             .setMainModule("main")
             .build(resolver);
-    assertThat(binary.getBinPath().toString(), Matchers.endsWith(".override"));
+    assertThat(
+        pathResolver.getRelativePath(binary.getSourcePathToOutput()).toString(),
+        Matchers.endsWith(".override"));
   }
 
   @Test

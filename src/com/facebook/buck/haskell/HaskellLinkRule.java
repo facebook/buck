@@ -24,6 +24,8 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ShellStep;
@@ -117,13 +119,12 @@ public class HaskellLinkRule extends AbstractBuildRule {
   }
 
   @Override
-  public Path getPathToOutput() {
-    return getOutput();
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getOutput());
   }
 
   @Override
   public boolean isCacheable() {
     return cacheable;
   }
-
 }

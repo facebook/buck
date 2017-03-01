@@ -125,8 +125,8 @@ public class ShBinary extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public Path getPathToOutput() {
-    return output;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
   }
 
   @Override
@@ -147,5 +147,4 @@ public class ShBinary extends AbstractBuildRuleWithResolver
         .flatMap(ImmutableSet::stream)
         .map(BuildRule::getBuildTarget);
   }
-
 }

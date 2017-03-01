@@ -248,7 +248,8 @@ public class JavaTestDescription implements
                   nativeLibsSymlinkTree.getBuildTarget(),
                   Suppliers.ofInstance(ImmutableSortedSet.of()),
                   Suppliers.ofInstance(ImmutableSortedSet.of())),
-              nativeLibsSymlinkTree.getPathToOutput(),
+              nativeLibsSymlinkTree.getProjectFilesystem()
+                  .relativize(nativeLibsSymlinkTree.getRoot()),
               filteredLinks.build(),
               ruleFinder);
         }

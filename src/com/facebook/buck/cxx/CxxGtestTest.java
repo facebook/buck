@@ -21,6 +21,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
+import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
@@ -61,8 +62,6 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-
-import javax.annotation.Nullable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunnerRule {
@@ -105,10 +104,11 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
     this.maxTestOutputSize = maxTestOutputSize;
   }
 
-  @Nullable
   @Override
-  public Path getPathToOutput() {
-    return binary.getPathToOutput();
+  public SourcePath getSourcePathToOutput() {
+    return new ForwardingBuildTargetSourcePath(
+        getBuildTarget(),
+        Preconditions.checkNotNull(binary.getSourcePathToOutput()));
   }
 
   @Override
@@ -246,5 +246,4 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
         .addAllContacts(getContacts())
         .build();
   }
-
 }

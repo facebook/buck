@@ -21,12 +21,12 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
-
-import java.nio.file.Path;
 
 public class OcamlCCompile extends AbstractBuildRuleWithResolver {
   @AddToRuleKey
@@ -51,8 +51,8 @@ public class OcamlCCompile extends AbstractBuildRuleWithResolver {
   }
 
   @Override
-  public Path getPathToOutput() {
-    return args.output;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), args.output);
   }
 
   @Override

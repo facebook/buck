@@ -23,6 +23,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
@@ -33,8 +34,6 @@ import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 import java.util.Optional;
-
-import javax.annotation.Nullable;
 
 /**
  * Controls how strip tool is invoked. To have better understanding please refer to `man strip`.
@@ -125,9 +124,8 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
     return stripStyle;
   }
 
-  @Nullable
   @Override
-  public Path getPathToOutput() {
-    return output;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
   }
 }

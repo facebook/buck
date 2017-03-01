@@ -34,9 +34,9 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
@@ -588,8 +588,8 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
 
   @Override
   @Nullable
-  public Path getPathToOutput() {
-    return outputJar.orElse(null);
+  public SourcePath getSourcePathToOutput() {
+    return outputJar.map(o -> new ExplicitBuildTargetSourcePath(getBuildTarget(), o)).orElse(null);
   }
 
   @Override
@@ -652,5 +652,4 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         Preconditions.checkNotNull(depFileOutputPath),
         deps);
   }
-
 }

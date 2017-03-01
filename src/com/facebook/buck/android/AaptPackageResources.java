@@ -28,8 +28,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.RecordFileSha1Step;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -152,8 +152,8 @@ public class AaptPackageResources extends AbstractBuildRule {
   }
 
   @Override
-  public Path getPathToOutput() {
-    return getResourceApkPath();
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getResourceApkPath());
   }
 
   public Path getPathToRDotTxtDir() {

@@ -24,7 +24,9 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
@@ -85,8 +87,8 @@ public abstract class PythonBinary
   }
 
   @Override
-  public final Path getPathToOutput() {
-    return getBinPath();
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getBinPath());
   }
 
   @VisibleForTesting
@@ -113,5 +115,4 @@ public abstract class PythonBinary
   public Stream<BuildTarget> getRuntimeDeps() {
     return originalDeclaredDeps.get().stream().map(BuildRule::getBuildTarget);
   }
-
 }

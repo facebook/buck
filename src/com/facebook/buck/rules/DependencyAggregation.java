@@ -18,8 +18,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 
-import java.nio.file.Path;
-
 import javax.annotation.Nullable;
 
 /**
@@ -49,7 +47,7 @@ public final class DependencyAggregation extends AbstractBuildRule {
 
   @Nullable
   @Override
-  public Path getPathToOutput() {
+  public SourcePath getSourcePathToOutput() {
     return null;
   }
 

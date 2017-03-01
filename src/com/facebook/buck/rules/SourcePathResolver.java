@@ -156,11 +156,11 @@ public class SourcePathResolver {
       return getPathPrivateImpl(((ForwardingBuildTargetSourcePath) sourcePath).getDelegate());
     } else if (sourcePath instanceof DefaultBuildTargetSourcePath) {
       DefaultBuildTargetSourcePath targetSourcePath = (DefaultBuildTargetSourcePath) sourcePath;
-      Path path = ruleFinder.getRuleOrThrow(targetSourcePath).getPathToOutput();
+      SourcePath path = ruleFinder.getRuleOrThrow(targetSourcePath).getSourcePathToOutput();
       if (path == null) {
         throw new HumanReadableException("No known output for: %s", targetSourcePath.getTarget());
       }
-      return path;
+      return getPathPrivateImpl(path);
     } else {
       throw new UnsupportedOperationException(sourcePath.getClass() + " is not supported here!");
     }

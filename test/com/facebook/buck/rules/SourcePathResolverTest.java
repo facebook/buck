@@ -136,7 +136,7 @@ public class SourcePathResolverTest {
     resolver.addToIndex(rule);
     SourcePath sourcePath = new DefaultBuildTargetSourcePath(rule.getBuildTarget());
 
-    assertEquals(rule.getPathToOutput(), pathResolver.getRelativePath(sourcePath));
+    assertEquals(rule.getOutputFile(), pathResolver.getRelativePath(sourcePath));
   }
 
   @Test
@@ -540,8 +540,8 @@ public class SourcePathResolverTest {
     }
 
     @Override
-    public Path getPathToOutput() {
-      return source;
+    public SourcePath getSourcePathToOutput() {
+      return new ExplicitBuildTargetSourcePath(getBuildTarget(), source);
     }
   }
 }

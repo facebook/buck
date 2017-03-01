@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -193,7 +194,7 @@ public class JarFattener extends AbstractBuildRuleWithResolver implements Binary
     steps.add(
         new JarDirectoryStep(
             getProjectFilesystem(),
-            getOutputPath(),
+            output,
             ImmutableSortedSet.of(zipped),
             /* mainClass */ FatJarMain.class.getName(),
             /* manifestFile */ null));
@@ -241,13 +242,9 @@ public class JarFattener extends AbstractBuildRuleWithResolver implements Binary
     return output.getParent();
   }
 
-  private Path getOutputPath() {
-    return output;
-  }
-
   @Override
-  public Path getPathToOutput() {
-    return getOutputPath();
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
   }
 
   @Override
@@ -258,5 +255,4 @@ public class JarFattener extends AbstractBuildRuleWithResolver implements Binary
         .addArg(new SourcePathArg(getSourcePathToOutput()))
         .build();
   }
-
 }

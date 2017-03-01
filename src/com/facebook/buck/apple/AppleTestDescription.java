@@ -39,10 +39,10 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -332,8 +332,8 @@ public class AppleTestDescription implements
                         outputDirectory));
               }
               @Override
-              public Path getPathToOutput() {
-                return outputDirectory;
+              public SourcePath getSourcePathToOutput() {
+                return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputDirectory);
               }
             });
       }

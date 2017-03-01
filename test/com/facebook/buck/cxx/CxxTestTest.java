@@ -23,8 +23,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeTestRule;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
@@ -87,7 +89,6 @@ public class CxxTestTest {
         throws Exception {
       return ImmutableList.of();
     }
-
   }
 
   @Test
@@ -98,8 +99,8 @@ public class CxxTestTest {
         new FakeCxxTest() {
 
           @Override
-          public Path getPathToOutput() {
-            return Paths.get("output");
+          public SourcePath getSourcePathToOutput() {
+            return new ExplicitBuildTargetSourcePath(getBuildTarget(), Paths.get("output"));
           }
 
           @Override
@@ -151,8 +152,8 @@ public class CxxTestTest {
         new FakeCxxTest() {
 
           @Override
-          public Path getPathToOutput() {
-            return Paths.get("output");
+          public SourcePath getSourcePathToOutput() {
+            return new ExplicitBuildTargetSourcePath(getBuildTarget(), Paths.get("output"));
           }
 
           @Override

@@ -216,7 +216,7 @@ public class HaskellBinaryDescription implements
         ruleFinder,
         deps,
         executable,
-        linkRule.getPathToOutput());
+        linkRule.getSourcePathToOutput());
   }
 
   @Override

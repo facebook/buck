@@ -228,7 +228,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
 
   @Nullable
   @Override
-  public Path getPathToOutput() {
+  public SourcePath getSourcePathToOutput() {
     return null;
   }
 

@@ -23,12 +23,10 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
-
-import java.nio.file.Path;
-
-import javax.annotation.Nullable;
 
 public class AndroidReactNativeLibrary extends AbstractBuildRule implements AndroidPackageable {
 
@@ -59,8 +57,7 @@ public class AndroidReactNativeLibrary extends AbstractBuildRule implements Andr
   }
 
   @Override
-  @Nullable
-  public Path getPathToOutput() {
-    return bundle.getPathToOutput();
+  public SourcePath getSourcePathToOutput() {
+    return new ForwardingBuildTargetSourcePath(getBuildTarget(), bundle.getSourcePathToOutput());
   }
 }

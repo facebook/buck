@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -187,12 +188,14 @@ public class JavaBinary extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public Path getPathToOutput() {
-    return Paths.get(
-        String.format(
-            "%s/%s.jar",
-            getOutputDirectory(),
-            getBuildTarget().getShortNameAndFlavorPostfix()));
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(
+        getBuildTarget(),
+        Paths.get(
+            String.format(
+                "%s/%s.jar",
+                getOutputDirectory(),
+                getBuildTarget().getShortNameAndFlavorPostfix())));
   }
 
   @Override

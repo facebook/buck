@@ -22,6 +22,8 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
@@ -49,8 +51,8 @@ public class SrcZip extends AbstractBuildRule {
   }
 
   @Override
-  public Path getPathToOutput() {
-    return sourceZip;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), sourceZip);
   }
 
   @Override
@@ -72,5 +74,4 @@ public class SrcZip extends AbstractBuildRule {
             ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
             sourceDirectory));
   }
-
 }

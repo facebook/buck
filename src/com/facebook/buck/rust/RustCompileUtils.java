@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -418,10 +419,11 @@ public class RustCompileUtils {
       }
 
       @Override
-      public Path getPathToOutput() {
-        return buildRule.getPathToOutput();
+      public SourcePath getSourcePathToOutput() {
+        return new ForwardingBuildTargetSourcePath(
+            getBuildTarget(),
+            buildRule.getSourcePathToOutput());
       }
-
     };
   }
 

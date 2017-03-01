@@ -151,15 +151,14 @@ public class AndroidPackageableCollectorTest {
     AndroidPackageableCollection packageableCollection =
         binaryRule.getAndroidPackageableCollection();
 
-    assertEquals(
+    assertResolvedEquals(
         "Because guava was passed to no_dx, it should not be in the classpathEntriesToDex list",
+        pathResolver,
         ImmutableSet.of(
-            ruleResolver.getRule(jsr305Target).getPathToOutput(),
-            ruleResolver.getRule(libraryRuleTarget).getPathToOutput()),
-        packageableCollection.getClasspathEntriesToDex().stream()
-            .map(pathResolver::getRelativePath)
-            .collect(MoreCollectors.toImmutableSet()));
-    assertEquals(
+            ruleResolver.getRule(jsr305Target).getSourcePathToOutput(),
+            ruleResolver.getRule(libraryRuleTarget).getSourcePathToOutput()),
+        packageableCollection.getClasspathEntriesToDex());
+    assertResolvedEquals(
         "Because guava was passed to no_dx, it should not be treated as a third-party JAR whose " +
             "resources need to be extracted and repacked in the APK. If this is done, then code " +
             "in the guava-10.0.1.dex.1.jar in the APK's assets/ tmp may try to load the resource " +
@@ -168,29 +167,31 @@ public class AndroidPackageableCollectorTest {
             "longer. Specifically, this was observed to take over one second longer to load " +
             "the resource in fb4a. Because the resource was loaded on startup, this introduced a " +
             "substantial regression in the startup time for the fb4a app.",
-        ImmutableSet.of(ruleResolver.getRule(jsr305Target).getPathToOutput()),
-        packageableCollection.getPathsToThirdPartyJars().stream()
-            .map(pathResolver::getRelativePath)
-            .collect(MoreCollectors.toImmutableSet()));
-    assertEquals(
+        pathResolver,
+        ImmutableSet.of(ruleResolver.getRule(jsr305Target).getSourcePathToOutput()),
+        packageableCollection.getPathsToThirdPartyJars());
+    assertResolvedEquals(
         "Because assets directory was passed an AndroidResourceRule it should be added to the " +
             "transitive dependencies",
+        pathResolver,
         ImmutableSet.of(
             new DefaultBuildTargetSourcePath(
                 manifestTarget.withAppendedFlavors(
                     AndroidResourceDescription.ASSETS_SYMLINK_TREE_FLAVOR))),
         packageableCollection.getAssetsDirectories());
-    assertEquals(
+    assertResolvedEquals(
         "Because a native library was declared as a dependency, it should be added to the " +
             "transitive dependencies.",
+        pathResolver,
         ImmutableSet.<SourcePath>of(
             new PathSourcePath(
                 new FakeProjectFilesystem(),
                 ndkLibraryRule.getLibraryPath())),
         ImmutableSet.copyOf(packageableCollection.getNativeLibsDirectories().values()));
-    assertEquals(
+    assertResolvedEquals(
         "Because a prebuilt native library  was declared as a dependency (and asset), it should " +
             "be added to the transitive dependecies.",
+        pathResolver,
         ImmutableSet.<SourcePath>of(
             new PathSourcePath(
                 new FakeProjectFilesystem(),
@@ -405,6 +406,21 @@ public class AndroidPackageableCollectorTest {
                     "lib__%s__output/")
                 .resolve(androidLibraryTarget.getShortNameAndFlavorPostfix() + ".jar")),
         packageableCollection.getClasspathEntriesToDex().stream()
+            .map(pathResolver::getRelativePath)
+            .collect(MoreCollectors.toImmutableSet()));
+  }
+
+  private void assertResolvedEquals(
+      String message,
+      SourcePathResolver pathResolver,
+      ImmutableSet<SourcePath> expected,
+      ImmutableSet<SourcePath> actual) {
+    assertEquals(
+        message,
+        expected.stream()
+            .map(pathResolver::getRelativePath)
+            .collect(MoreCollectors.toImmutableSet()),
+        actual.stream()
             .map(pathResolver::getRelativePath)
             .collect(MoreCollectors.toImmutableSet()));
   }

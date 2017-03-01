@@ -21,7 +21,9 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.RecordFileSha1Step;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreCollectors;
@@ -34,8 +36,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 
 import java.nio.file.Path;
-
-import javax.annotation.Nullable;
 
 /**
  * Buildable responsible for compiling non-english string resources to {@code .fbstr} files stored
@@ -138,10 +138,9 @@ public class PackageStringAssets extends AbstractBuildRule {
     return getPathToStringAssetsDir().resolve("all_locales_string_assets.zip");
   }
 
-  @Nullable
   @Override
-  public Path getPathToOutput() {
-    return getPathToStringAssetsDir();
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToStringAssetsDir());
   }
 
   private Path getPathToStringAssetsDir() {

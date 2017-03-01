@@ -27,8 +27,10 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
+import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
@@ -59,7 +61,6 @@ import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class RustTest
@@ -287,8 +288,10 @@ public class RustTest
   }
 
   @Override
-  public Path getPathToOutput() {
-    return testExeBuild.getPathToOutput();
+  public SourcePath getSourcePathToOutput() {
+    return new ForwardingBuildTargetSourcePath(
+        getBuildTarget(),
+        testExeBuild.getSourcePathToOutput());
   }
 
   @Override

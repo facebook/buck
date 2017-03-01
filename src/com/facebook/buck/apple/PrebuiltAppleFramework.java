@@ -38,6 +38,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
@@ -136,8 +137,8 @@ public class PrebuiltAppleFramework
   }
 
   @Override
-  public Path getPathToOutput() {
-    return out;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), out);
   }
 
   @Override
@@ -262,5 +263,4 @@ public class PrebuiltAppleFramework
       throws NoSuchBuildTargetException {
     return ImmutableMap.of();
   }
-
 }

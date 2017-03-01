@@ -61,7 +61,7 @@ public class ForwardingBuildTargetSourcePathTest {
         target,
         new DefaultBuildTargetSourcePath(target));
     assertEquals(target, sourcePath.getTarget());
-    assertEquals(rule.getPathToOutput(), pathResolver.getRelativePath(sourcePath));
+    assertEquals(rule.getOutputFile(), pathResolver.getRelativePath(sourcePath));
   }
 
   @Test

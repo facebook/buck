@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RecordFileSha1Step;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -407,7 +408,7 @@ public class PreDexMerge extends AbstractBuildRule
 
   @Nullable
   @Override
-  public Path getPathToOutput() {
+  public SourcePath getSourcePathToOutput() {
     return null;
   }
 

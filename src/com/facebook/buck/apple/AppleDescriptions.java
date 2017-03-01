@@ -507,7 +507,6 @@ public class AppleDescriptions {
                     unstrippedBinaryRule,
                     appleDsym)),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
-        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         buildRuleForDebugFormat);
     return rule;
   }

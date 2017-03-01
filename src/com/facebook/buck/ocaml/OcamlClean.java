@@ -22,6 +22,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
@@ -85,7 +86,7 @@ public class OcamlClean extends AbstractBuildRule {
 
   @Nullable
   @Override
-  public Path getPathToOutput() {
+  public SourcePath getSourcePathToOutput() {
     return null;
   }
 

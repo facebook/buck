@@ -56,8 +56,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
 class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideScheduleRule {
 
   @AddToRuleKey
@@ -207,10 +205,9 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
         });
   }
 
-  @Nullable
   @Override
-  public Path getPathToOutput() {
-    return getLibFilePath();
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getLibFilePath());
   }
 
   @Override

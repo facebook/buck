@@ -905,7 +905,7 @@ public class CachingBuildEngineTest {
 
         @Nullable
         @Override
-        public Path getPathToOutput() {
+        public SourcePath getSourcePathToOutput() {
           return null;
         }
       };
@@ -1261,9 +1261,10 @@ public class CachingBuildEngineTest {
               return ImmutableList.of(
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
+
             @Override
-            public Path getPathToOutput() {
-              return output;
+            public SourcePath getSourcePathToOutput() {
+              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
             }
           };
 
@@ -1463,9 +1464,10 @@ public class CachingBuildEngineTest {
               return ImmutableList.of(
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
+
             @Override
-            public Path getPathToOutput() {
-              return output;
+            public SourcePath getSourcePathToOutput() {
+              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
             }
           };
       resolver.addToIndex(rule);
@@ -1538,9 +1540,10 @@ public class CachingBuildEngineTest {
               }
             });
       }
+
       @Override
-      public Path getPathToOutput() {
-        return Paths.get("output");
+      public SourcePath getSourcePathToOutput() {
+        return new ExplicitBuildTargetSourcePath(getBuildTarget(), Paths.get("output"));
       }
     }
   }
@@ -1602,9 +1605,10 @@ public class CachingBuildEngineTest {
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
               return ImmutableList.of(new PathSourcePath(filesystem, input));
             }
+
             @Override
-            public Path getPathToOutput() {
-              return output;
+            public SourcePath getSourcePathToOutput() {
+              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
             }
           };
 
@@ -1687,9 +1691,10 @@ public class CachingBuildEngineTest {
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
               return ImmutableList.of(new PathSourcePath(filesystem, input));
             }
+
             @Override
-            public Path getPathToOutput() {
-              return output;
+            public SourcePath getSourcePathToOutput() {
+              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
             }
           };
 
@@ -1764,9 +1769,10 @@ public class CachingBuildEngineTest {
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
               return ImmutableList.of(new PathSourcePath(filesystem, input));
             }
+
             @Override
-            public Path getPathToOutput() {
-              return output;
+            public SourcePath getSourcePathToOutput() {
+              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
             }
           };
 
@@ -1842,9 +1848,10 @@ public class CachingBuildEngineTest {
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
               return ImmutableList.of();
             }
+
             @Override
-            public Path getPathToOutput() {
-              return output;
+            public SourcePath getSourcePathToOutput() {
+              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
             }
           };
 
@@ -1933,9 +1940,10 @@ public class CachingBuildEngineTest {
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
               return ImmutableList.of();
             }
+
             @Override
-            public Path getPathToOutput() {
-              return output;
+            public SourcePath getSourcePathToOutput() {
+              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
             }
           };
 
@@ -2016,9 +2024,10 @@ public class CachingBuildEngineTest {
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
               return ImmutableList.of();
             }
+
             @Override
-            public Path getPathToOutput() {
-              return output;
+            public SourcePath getSourcePathToOutput() {
+              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
             }
           };
 
@@ -2156,9 +2165,10 @@ public class CachingBuildEngineTest {
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
               return ImmutableList.of(path);
             }
+
             @Override
-            public Path getPathToOutput() {
-              return output;
+            public SourcePath getSourcePathToOutput() {
+              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
             }
           };
 
@@ -2265,9 +2275,10 @@ public class CachingBuildEngineTest {
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
               return ImmutableList.of(new PathSourcePath(filesystem, input));
             }
+
             @Override
-            public Path getPathToOutput() {
-              return output;
+            public SourcePath getSourcePathToOutput() {
+              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
             }
           };
 
@@ -2388,9 +2399,10 @@ public class CachingBuildEngineTest {
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
               return ImmutableList.of(new PathSourcePath(filesystem, input));
             }
+
             @Override
-            public Path getPathToOutput() {
-              return output;
+            public SourcePath getSourcePathToOutput() {
+              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
             }
           };
 
@@ -2497,9 +2509,10 @@ public class CachingBuildEngineTest {
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
               return ImmutableList.of(input);
             }
+
             @Override
-            public Path getPathToOutput() {
-              return output;
+            public SourcePath getSourcePathToOutput() {
+              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
             }
           };
 
@@ -2750,7 +2763,7 @@ public class CachingBuildEngineTest {
 
       @Nullable
       @Override
-      public Path getPathToOutput() {
+      public SourcePath getSourcePathToOutput() {
         return null;
       }
 
@@ -2771,7 +2784,6 @@ public class CachingBuildEngineTest {
       public boolean hasStarted() {
         return started.availablePermits() == 1;
       }
-
     }
 
   }
@@ -3077,8 +3089,11 @@ public class CachingBuildEngineTest {
 
     @Override
     @Nullable
-    public Path getPathToOutput() {
-      return pathToOutputFile;
+    public SourcePath getSourcePathToOutput() {
+      if (pathToOutputFile == null) {
+        return null;
+      }
+      return new ExplicitBuildTargetSourcePath(getBuildTarget(), pathToOutputFile);
     }
 
     @Override
@@ -3223,10 +3238,12 @@ public class CachingBuildEngineTest {
 
     @Nullable
     @Override
-    public Path getPathToOutput() {
-      return output;
+    public SourcePath getSourcePathToOutput() {
+      if (output == null) {
+        return null;
+      }
+      return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
     }
-
   }
 
   private static class SleepStep extends AbstractExecutionStep {
@@ -3296,9 +3313,8 @@ public class CachingBuildEngineTest {
 
     @Nullable
     @Override
-    public Path getPathToOutput() {
+    public SourcePath getSourcePathToOutput() {
       return null;
     }
-
   }
 }

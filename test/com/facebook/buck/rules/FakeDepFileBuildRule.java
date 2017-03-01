@@ -117,7 +117,10 @@ public class FakeDepFileBuildRule
 
   @Nullable
   @Override
-  public Path getPathToOutput() {
-    return outputPath;
+  public SourcePath getSourcePathToOutput() {
+    if (outputPath == null) {
+      return null;
+    }
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputPath);
   }
 }

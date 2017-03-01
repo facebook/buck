@@ -146,7 +146,7 @@ class PrebuiltOcamlLibrary extends AbstractBuildRuleWithResolver implements Ocam
 
   @Nullable
   @Override
-  public Path getPathToOutput() {
+  public SourcePath getSourcePathToOutput() {
     return null;
   }
 }

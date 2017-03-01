@@ -28,8 +28,10 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
+import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
@@ -125,8 +127,8 @@ public class PythonTest
   }
 
   @Override
-  public Path getPathToOutput() {
-    return binary.getPathToOutput();
+  public SourcePath getSourcePathToOutput() {
+    return new ForwardingBuildTargetSourcePath(getBuildTarget(), binary.getSourcePathToOutput());
   }
 
   @Override
@@ -254,5 +256,4 @@ public class PythonTest
         .addAllContacts(getContacts())
         .build();
   }
-
 }

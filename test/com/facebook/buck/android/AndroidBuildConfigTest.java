@@ -25,6 +25,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -58,8 +59,10 @@ public class AndroidBuildConfigTest {
   public void testGetPathToOutput() {
     AndroidBuildConfig buildConfig = createSimpleBuildConfigRule();
     assertEquals(
-        BuildTargets.getGenPath(filesystem, BUILD_TARGET, "__%s__/BuildConfig.java"),
-        buildConfig.getPathToOutput());
+        new ExplicitBuildTargetSourcePath(
+            BUILD_TARGET,
+            BuildTargets.getGenPath(filesystem, BUILD_TARGET, "__%s__/BuildConfig.java")),
+        buildConfig.getSourcePathToOutput());
   }
 
   @Test

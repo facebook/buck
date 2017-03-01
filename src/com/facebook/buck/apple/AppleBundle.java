@@ -43,6 +43,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -275,8 +276,8 @@ public class AppleBundle
   }
 
   @Override
-  public Path getPathToOutput() {
-    return bundleRoot;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), bundleRoot);
   }
 
   public Path getInfoPlistPath() {
@@ -332,7 +333,8 @@ public class AppleBundle
       stepsBuilder.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
-              coreDataModel.get().getOutputDir(),
+              context.getSourcePathResolver().getRelativePath(
+                  coreDataModel.get().getSourcePathToOutput()),
               resourcesDestinationPath,
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }

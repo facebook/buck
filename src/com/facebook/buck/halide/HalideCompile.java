@@ -24,6 +24,8 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -90,8 +92,10 @@ public class HalideCompile extends AbstractBuildRule {
   }
 
   @Override
-  public Path getPathToOutput() {
-    return pathToOutput(getBuildTarget(), getProjectFilesystem());
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(
+        getBuildTarget(),
+        pathToOutput(getBuildTarget(), getProjectFilesystem()));
   }
 
   private static Path pathToOutput(BuildTarget buildTarget, ProjectFilesystem filesystem) {
@@ -119,5 +123,4 @@ public class HalideCompile extends AbstractBuildRule {
       Optional<String> functionNameOverride) {
     return functionNameOverride.orElse(buildTarget.getShortName());
   }
-
 }

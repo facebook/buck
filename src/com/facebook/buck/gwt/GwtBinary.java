@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.ShellStep;
@@ -199,8 +200,8 @@ public class GwtBinary extends AbstractBuildRule {
    * @return The {@code .zip} file produced by this rule.
    */
   @Override
-  public Path getPathToOutput() {
-    return outputFile;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputFile);
   }
 
   /**

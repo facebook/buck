@@ -26,6 +26,8 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.shell.ShellStep;
@@ -85,11 +87,13 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRule {
   }
 
   @Override
-  public Path getPathToOutput() {
-    return BuildTargets.getGenPath(
-        getProjectFilesystem(),
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(
         getBuildTarget(),
-        "%s/MergedLibraryMapping.java");
+        BuildTargets.getGenPath(
+            getProjectFilesystem(),
+            getBuildTarget(),
+            "%s/MergedLibraryMapping.java"));
   }
 
   private Path getMappingPath() {

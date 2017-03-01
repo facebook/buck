@@ -25,7 +25,9 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -37,10 +39,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
 import java.util.stream.Stream;
-
-import javax.annotation.Nullable;
 
 public class CxxBinary
     extends AbstractBuildRule
@@ -107,10 +106,11 @@ public class CxxBinary
     return ImmutableList.of();
   }
 
-  @Nullable
   @Override
-  public Path getPathToOutput() {
-    return linkRule.getPathToOutput();
+  public SourcePath getSourcePathToOutput() {
+    return new ForwardingBuildTargetSourcePath(
+        getBuildTarget(),
+        Preconditions.checkNotNull(linkRule.getSourcePathToOutput()));
   }
 
   public BuildRule getLinkRule() {
@@ -162,5 +162,4 @@ public class CxxBinary
     return Stream.concat(getDeclaredDeps().stream(), executable.getDeps(ruleFinder).stream())
         .map(BuildRule::getBuildTarget);
   }
-
 }

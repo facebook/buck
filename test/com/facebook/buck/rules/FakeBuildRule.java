@@ -82,22 +82,22 @@ public class FakeBuildRule extends AbstractBuildRuleWithResolver implements Buil
   }
 
   @Override
-  public Path getPathToOutput() {
-    return outputFile;
-  }
-
-  @Override
   @Nullable
   public SourcePath getSourcePathToOutput() {
-    if (getPathToOutput() == null) {
+    if (outputFile == null) {
       return null;
     }
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToOutput());
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputFile);
   }
 
   public FakeBuildRule setOutputFile(@Nullable String outputFile) {
     this.outputFile = outputFile == null ? null : Paths.get(outputFile);
     return this;
+  }
+
+  @Nullable
+  public Path getOutputFile() {
+    return outputFile;
   }
 
   @Override

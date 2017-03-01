@@ -21,6 +21,7 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
@@ -73,7 +74,7 @@ public class MergeAndroidResourceSources extends AbstractBuildRule {
   }
 
   @Override
-  public Path getPathToOutput() {
-    return destinationDirectory;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), destinationDirectory);
   }
 }

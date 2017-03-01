@@ -23,13 +23,14 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 
-import java.nio.file.Path;
 import java.util.stream.Stream;
 
 /**
@@ -41,13 +42,13 @@ public class DBinary extends AbstractBuildRule implements
 
   private final SourcePathRuleFinder ruleFinder;
   private final Tool executable;
-  private final Path output;
+  private final SourcePath output;
 
   public DBinary(
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       Tool executable,
-      Path output) {
+      SourcePath output) {
     super(params);
     this.ruleFinder = ruleFinder;
     this.executable = executable;
@@ -67,8 +68,8 @@ public class DBinary extends AbstractBuildRule implements
   }
 
   @Override
-  public Path getPathToOutput() {
-    return output;
+  public SourcePath getSourcePathToOutput() {
+    return new ForwardingBuildTargetSourcePath(getBuildTarget(), output);
   }
 
   @Override

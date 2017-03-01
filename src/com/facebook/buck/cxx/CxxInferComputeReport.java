@@ -23,7 +23,9 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasPostBuildSteps;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.FluentIterable;
@@ -86,8 +88,8 @@ public class CxxInferComputeReport extends AbstractBuildRule
   }
 
   @Override
-  public Path getPathToOutput() {
-    return reportOutput;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), reportOutput);
   }
 
   @Override

@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -152,13 +153,12 @@ public class ExportFile extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public Path getPathToOutput() {
+  public SourcePath getSourcePathToOutput() {
     // In reference mode, we just return the relative path to the source, as we've already verified
     // that our filesystem matches that of the source.  In copy mode, we return the path we've
     // allocated for the copy.
     return mode == ExportFileDescription.Mode.REFERENCE ?
-        getResolver().getRelativePath(src) :
-        getCopiedPath();
+        src : new ExplicitBuildTargetSourcePath(getBuildTarget(), getCopiedPath());
   }
 
   @Override
@@ -174,5 +174,4 @@ public class ExportFile extends AbstractBuildRuleWithResolver
     return mode == ExportFileDescription.Mode.REFERENCE && rule.isPresent() ?
         Stream.of(rule.get().getBuildTarget()) : Stream.empty();
   }
-
 }

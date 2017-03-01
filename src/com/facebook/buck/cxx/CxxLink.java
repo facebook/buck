@@ -148,11 +148,6 @@ public class CxxLink
   }
 
   @Override
-  public Path getPathToOutput() {
-    return output;
-  }
-
-  @Override
   public SourcePath getSourcePathToOutput() {
     return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
   }

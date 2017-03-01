@@ -35,6 +35,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
+import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
@@ -507,8 +508,12 @@ public class JavaTest
 
   @Nullable
   @Override
-  public Path getPathToOutput() {
-    return compiledTestsLibrary.getPathToOutput();
+  public SourcePath getSourcePathToOutput() {
+    SourcePath output = compiledTestsLibrary.getSourcePathToOutput();
+    if (output == null) {
+      return null;
+    }
+    return new ForwardingBuildTargetSourcePath(getBuildTarget(), output);
   }
 
   @Override
@@ -543,9 +548,9 @@ public class JavaTest
 
     CompiledClassFileFinder(JavaTest rule, SourcePathResolver pathResolver) {
       Path outputPath;
-      Path relativeOutputPath = rule.getPathToOutput();
-      if (relativeOutputPath != null) {
-        outputPath = rule.getProjectFilesystem().resolve(relativeOutputPath);
+      SourcePath outputSourcePath = rule.getSourcePathToOutput();
+      if (outputSourcePath != null) {
+        outputPath = pathResolver.getAbsolutePath(outputSourcePath);
       } else {
         outputPath = null;
       }

@@ -23,8 +23,10 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.HasRuntimeDeps;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
@@ -66,8 +68,8 @@ public class CxxInferCaptureTransitive extends AbstractBuildRule
   }
 
   @Override
-  public Path getPathToOutput() {
-    return outputDirectory;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputDirectory);
   }
 
   @Override

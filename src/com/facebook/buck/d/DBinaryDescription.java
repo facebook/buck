@@ -121,7 +121,7 @@ public class DBinaryDescription implements
             Suppliers.ofInstance(ImmutableSortedSet.of(nativeLinkable))),
         ruleFinder,
         executableBuilder.build(),
-        nativeLinkable.getPathToOutput());
+        nativeLinkable.getSourcePathToOutput());
   }
 
   @Override

@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -191,8 +192,8 @@ public class AndroidBuildConfig extends AbstractBuildRule {
   }
 
   @Override
-  public Path getPathToOutput() {
-    return pathToOutputFile;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), pathToOutputFile);
   }
 
   public String getJavaPackage() {

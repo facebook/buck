@@ -21,6 +21,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
@@ -163,8 +164,8 @@ public class OcamlLink extends AbstractBuildRule {
   }
 
   @Override
-  public Path getPathToOutput() {
-    return outputRelativePath;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputRelativePath);
   }
 
   @Override

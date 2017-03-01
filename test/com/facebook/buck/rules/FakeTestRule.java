@@ -28,6 +28,8 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
+import javax.annotation.Nullable;
+
 public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestRule {
 
   private final ImmutableSet<Label> labels;
@@ -89,7 +91,8 @@ public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestR
   }
 
   @Override
-  public Path getPathToOutput() {
+  @Nullable
+  public SourcePath getSourcePathToOutput() {
     return null;
   }
 

@@ -23,8 +23,8 @@ import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
@@ -256,10 +256,9 @@ public class ReactNativeBundle
   }
 
   @Override
-  public Path getPathToOutput() {
-    return exposeSourceMap
-      ? sourceMapOutputPath
-      : jsOutputDir;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(
+        getBuildTarget(),
+        exposeSourceMap ? sourceMapOutputPath : jsOutputDir);
   }
-
 }

@@ -24,6 +24,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
@@ -98,8 +99,7 @@ public class CalculateAbi extends AbstractBuildRule
   }
 
   @Override
-  public Path getPathToOutput() {
-    return outputPath;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputPath);
   }
-
 }

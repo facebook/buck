@@ -38,7 +38,6 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class ApkGenruleDescriptionTest {
@@ -86,8 +85,9 @@ public class ApkGenruleDescriptionTest {
 
   private static class FakeInstallable extends FakeBuildRule implements HasInstallableApk {
 
-    Path pathToOutput = Paths.get("buck-out", "app.apk");
-    SourcePath apkPath = new ExplicitBuildTargetSourcePath(getBuildTarget(), pathToOutput);
+    SourcePath apkPath = new ExplicitBuildTargetSourcePath(
+        getBuildTarget(),
+        Paths.get("buck-out", "app.apk"));
 
     public FakeInstallable(
         BuildTarget buildTarget,
@@ -101,11 +101,6 @@ public class ApkGenruleDescriptionTest {
           .setApkPath(apkPath)
           .setManifestPath(new FakeSourcePath("nothing"))
           .build();
-    }
-
-    @Override
-    public Path getPathToOutput() {
-      return pathToOutput;
     }
 
     @Override

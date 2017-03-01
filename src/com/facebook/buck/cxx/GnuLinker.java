@@ -244,13 +244,8 @@ public class GnuLinker implements Linker {
     }
 
     @Override
-    public Path getPathToOutput() {
-      return getLinkerScript();
-    }
-
-    @Override
     public SourcePath getSourcePathToOutput() {
-      return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToOutput());
+      return new ExplicitBuildTargetSourcePath(getBuildTarget(), getLinkerScript());
     }
 
   }

@@ -160,8 +160,8 @@ public class SymlinkTree
   }
 
   @Override
-  public Path getPathToOutput() {
-    return root;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), root);
   }
 
   @VisibleForTesting
@@ -212,5 +212,4 @@ public class SymlinkTree
   public ImmutableSortedMap<Path, SourcePath> getLinks() {
     return links;
   }
-
 }

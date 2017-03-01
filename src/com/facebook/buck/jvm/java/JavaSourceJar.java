@@ -26,6 +26,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -41,7 +42,6 @@ import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
-
 
 public class JavaSourceJar extends AbstractBuildRule
     implements HasMavenCoordinates, HasSources {
@@ -116,8 +116,8 @@ public class JavaSourceJar extends AbstractBuildRule
   }
 
   @Override
-  public Path getPathToOutput() {
-    return output;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
   }
 
   @Override

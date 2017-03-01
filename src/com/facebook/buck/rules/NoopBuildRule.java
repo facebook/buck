@@ -20,8 +20,6 @@ import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 
-import java.nio.file.Path;
-
 import javax.annotation.Nullable;
 
 /**
@@ -58,7 +56,7 @@ public class NoopBuildRule
 
   @Nullable
   @Override
-  public final Path getPathToOutput() {
+  public SourcePath getSourcePathToOutput() {
     return null;
   }
 
@@ -67,5 +65,4 @@ public class NoopBuildRule
   public final boolean isCacheable() {
     return false;
   }
-
 }

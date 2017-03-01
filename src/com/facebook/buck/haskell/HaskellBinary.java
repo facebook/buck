@@ -19,24 +19,24 @@ package com.facebook.buck.haskell;
 import com.facebook.buck.rules.BinaryWrapperRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.google.common.collect.ImmutableSet;
-
-import java.nio.file.Path;
 
 public class HaskellBinary extends BinaryWrapperRule {
 
   private final ImmutableSet<BuildRule> deps;
   private final Tool binary;
-  private final Path output;
+  private final SourcePath output;
 
   public HaskellBinary(
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       ImmutableSet<BuildRule> deps,
       Tool binary,
-      Path output) {
+      SourcePath output) {
     super(buildRuleParams, ruleFinder);
     this.deps = deps;
     this.binary = binary;
@@ -49,12 +49,11 @@ public class HaskellBinary extends BinaryWrapperRule {
   }
 
   @Override
-  public Path getPathToOutput() {
-    return output;
+  public SourcePath getSourcePathToOutput() {
+    return new ForwardingBuildTargetSourcePath(getBuildTarget(), output);
   }
 
   public ImmutableSet<BuildRule> getBinaryDeps() {
     return deps;
   }
-
 }

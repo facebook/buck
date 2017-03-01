@@ -293,13 +293,8 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public Path getPathToOutput() {
-    return copiedBinaryJar;
-  }
-
-  @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToOutput());
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), copiedBinaryJar);
   }
 
   @Override

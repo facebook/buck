@@ -176,13 +176,8 @@ public class Genrule extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public Path getPathToOutput() {
-    return pathToOutFile;
-  }
-
-  @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToOutput());
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), pathToOutFile);
   }
 
   protected void addEnvironmentVariables(

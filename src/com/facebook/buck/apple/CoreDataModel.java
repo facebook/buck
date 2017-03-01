@@ -24,11 +24,12 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -36,8 +37,6 @@ import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import javax.annotation.Nullable;
 
 public class CoreDataModel extends AbstractBuildRule {
 
@@ -116,17 +115,12 @@ public class CoreDataModel extends AbstractBuildRule {
             }
           });
     }
-    buildableContext.recordArtifact(getOutputDir());
+    buildableContext.recordArtifact(outputDir);
     return stepsBuilder.build();
   }
 
-  @Nullable
   @Override
-  public Path getPathToOutput() {
-    return outputDir;
-  }
-
-  public Path getOutputDir() {
-    return outputDir;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputDir);
   }
 }
