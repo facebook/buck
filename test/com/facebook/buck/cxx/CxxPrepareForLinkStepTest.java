@@ -65,8 +65,8 @@ public class CxxPrepareForLinkStepTest {
         dummyPath,
         dummyPath,
         ImmutableList.of(
-            new StringArg("-filelist"),
-            new StringArg(dummyPath.toString())),
+            StringArg.of("-filelist"),
+            StringArg.of(dummyPath.toString())),
         dummyPath,
         dummyArgs,
         CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver),
@@ -149,24 +149,24 @@ public class CxxPrepareForLinkStepTest {
 
     // Setup some dummy values for inputs to the CxxLinkStep
     ImmutableList<Arg> args = ImmutableList.of(
-        new StringArg("-rpath"),
-        new StringArg("hello"),
-        new StringArg("a.o"),
+        StringArg.of("-rpath"),
+        StringArg.of("hello"),
+        StringArg.of("a.o"),
         FileListableLinkerInputArg.withSourcePathArg(
             new SourcePathArg(new FakeSourcePath("libb.a"))),
-        new StringArg("-lsysroot"),
-        new StringArg("/Library/Application Support/blabla"),
-        new StringArg("-F/System/Frameworks"),
-        new StringArg("-L/System/libraries"),
-        new StringArg("-lz"));
+        StringArg.of("-lsysroot"),
+        StringArg.of("/Library/Application Support/blabla"),
+        StringArg.of("-F/System/Frameworks"),
+        StringArg.of("-L/System/libraries"),
+        StringArg.of("-lz"));
 
     // Create our CxxLinkStep to test.
     CxxPrepareForLinkStep step = CxxPrepareForLinkStep.create(
         argFilePath,
         fileListPath,
         ImmutableList.of(
-            new StringArg("-filelist"),
-            new StringArg(fileListPath.toString())),
+            StringArg.of("-filelist"),
+            StringArg.of(fileListPath.toString())),
         output,
         args,
         CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver),

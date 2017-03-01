@@ -106,7 +106,7 @@ public class RustCompileUtils {
     Stream.concat(
         rustConfig.getLinkerArgs(cxxPlatform).stream(),
         extraLinkerFlags.stream())
-        .map(StringArg::new)
+        .map(StringArg::of)
         .forEach(linkerArgs::add);
 
     linkerArgs.addAll(linkerInputs);
@@ -127,7 +127,7 @@ public class RustCompileUtils {
             String.format("-Crelocation-model=%s", relocModel)),
         extraFlags.stream())
         .flatMap(x -> x)
-        .map(StringArg::new)
+        .map(StringArg::of)
         .forEach(args::add);
 
     // Find direct and transitive Rust deps. We do this in two passes, since a dependency that's
@@ -182,7 +182,7 @@ public class RustCompileUtils {
       // XXX currently breaks on paths containing commas, which all of ours do: see
       // https://github.com/rust-lang/rust/issues/38795
       if (rpath && depType == Linker.LinkableDepType.SHARED) {
-        args.add(new StringArg("-Crpath"));
+        args.add(StringArg.of("-Crpath"));
       }
 
       linkerArgs.addAll(nativeArgs);
@@ -194,7 +194,7 @@ public class RustCompileUtils {
           .map(sp -> (HasSourcePath) sp)
           .map(sp -> pathResolver.getRelativePath(sp.getPath()).getParent())
           .map(dir -> String.format("-Lnative=%s", dir))
-          .map(StringArg::new)
+          .map(StringArg::of)
           .forEach(args::add);
     }
 
@@ -202,7 +202,7 @@ public class RustCompileUtils {
     // dynamic dependencies (esp to get dynamic dependency on standard libs)
     if (depType == Linker.LinkableDepType.SHARED ||
         crateType == CrateType.DYLIB) {
-      args.add(new StringArg("-Cprefer-dynamic"));
+      args.add(StringArg.of("-Cprefer-dynamic"));
     }
 
     String filename = crateType.filenameFor(crateName, cxxPlatform);

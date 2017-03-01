@@ -145,7 +145,7 @@ public class CommandTool implements Tool {
     }
 
     public Builder addArg(String arg) {
-      return addArg(new StringArg(arg));
+      return addArg(StringArg.of(arg));
     }
 
     /**
@@ -157,7 +157,7 @@ public class CommandTool implements Tool {
     }
 
     public Builder addEnv(String key, String val) {
-      return addEnv(key, new StringArg(val));
+      return addEnv(key, StringArg.of(val));
     }
 
     /**

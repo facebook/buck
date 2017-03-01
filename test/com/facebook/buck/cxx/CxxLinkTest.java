@@ -55,15 +55,15 @@ public class CxxLinkTest {
   private static final Path DEFAULT_OUTPUT = Paths.get("test.exe");
   private static final ImmutableList<Arg> DEFAULT_ARGS =
       ImmutableList.of(
-          new StringArg("-rpath"),
-          new StringArg("/lib"),
-          new StringArg("libc.a"),
+          StringArg.of("-rpath"),
+          StringArg.of("/lib"),
+          StringArg.of("libc.a"),
           new SourcePathArg(new FakeSourcePath("a.o")),
           new SourcePathArg(new FakeSourcePath("b.o")),
           new SourcePathArg(new FakeSourcePath("libc.a")),
-          new StringArg("-L"),
-          new StringArg("/System/Libraries/libz.dynlib"),
-          new StringArg("-llibz.dylib"));
+          StringArg.of("-L"),
+          StringArg.of("/System/Libraries/libz.dynlib"),
+          StringArg.of("-llibz.dylib"));
 
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {

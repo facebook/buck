@@ -317,7 +317,7 @@ public class CxxLinkableEnhancerTest {
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
             .build());
-    assertFalse(executable.getArgs().contains(new StringArg("-shared")));
+    assertFalse(executable.getArgs().contains(StringArg.of("-shared")));
     assertEquals(Collections.indexOfSubList(executable.getArgs(), sonameArgs), -1);
 
     // Construct a CxxLink object which links as a shared lib.
@@ -383,12 +383,12 @@ public class CxxLinkableEnhancerTest {
     // time dependency
     String staticArg = "static";
     NativeLinkableInput staticInput = NativeLinkableInput.of(
-        ImmutableList.of(new StringArg(staticArg)),
+        ImmutableList.of(StringArg.of(staticArg)),
         ImmutableSet.of(),
         ImmutableSet.of());
     String sharedArg = "shared";
     NativeLinkableInput sharedInput = NativeLinkableInput.of(
-        ImmutableList.of(new StringArg(sharedArg)),
+        ImmutableList.of(StringArg.of(sharedArg)),
         ImmutableSet.of(),
         ImmutableSet.of());
     FakeNativeLinkable nativeLinkable = createNativeLinkable("//:dep",
@@ -504,7 +504,7 @@ public class CxxLinkableEnhancerTest {
     // Create a native linkable that sits at the bottom of the dep chain.
     String sentinel = "bottom";
     NativeLinkableInput bottomInput = NativeLinkableInput.of(
-        ImmutableList.of(new StringArg(sentinel)),
+        ImmutableList.of(StringArg.of(sentinel)),
         ImmutableSet.of(),
         ImmutableSet.of());
     BuildRule bottom = createNativeLinkable("//:bottom", pathResolver, bottomInput, bottomInput);

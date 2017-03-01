@@ -49,7 +49,7 @@ class OmnibusRootNode extends OmnibusNode implements NativeLinkTarget, NativeLin
   @Override
   public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform) {
     return NativeLinkableInput.builder()
-        .addArgs(new StringArg(getBuildTarget().toString()))
+        .addArgs(StringArg.of(getBuildTarget().toString()))
         .build();
   }
 

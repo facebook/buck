@@ -92,7 +92,7 @@ public class CxxGtestTestTest {
             Optional.empty(),
             /* cacheable */ true),
         new CommandTool.Builder()
-            .addArg(new StringArg(""))
+            .addArg(StringArg.of(""))
             .build(),
         ImmutableMap.of(),
         Suppliers.ofInstance(ImmutableList.of()),

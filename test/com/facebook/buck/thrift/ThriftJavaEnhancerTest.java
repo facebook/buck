@@ -81,7 +81,7 @@ public class ThriftJavaEnhancerTest {
     return new ThriftCompiler(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target)).build(),
         new CommandTool.Builder()
-            .addArg(new StringArg("compiler"))
+            .addArg(StringArg.of("compiler"))
             .build(),
         ImmutableList.of(),
         Paths.get("output"),

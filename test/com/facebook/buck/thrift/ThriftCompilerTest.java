@@ -54,7 +54,7 @@ import java.nio.file.Paths;
 public class ThriftCompilerTest {
 
   private static final Tool DEFAULT_COMPILER =
-      new CommandTool.Builder().addArg(new StringArg("thrift")).build();
+      new CommandTool.Builder().addArg(StringArg.of("thrift")).build();
   private static final ImmutableList<String> DEFAULT_FLAGS = ImmutableList.of("--allow-64-bits");
   private static final Path DEFAULT_OUTPUT_DIR = Paths.get("output-dir");
   private static final SourcePath DEFAULT_INPUT = new FakeSourcePath("test.thrift");
@@ -110,7 +110,7 @@ public class ThriftCompilerTest {
         .build(
             new ThriftCompiler(
                 params,
-                new CommandTool.Builder().addArg(new StringArg("different")).build(),
+                new CommandTool.Builder().addArg(StringArg.of("different")).build(),
                 DEFAULT_FLAGS,
                 DEFAULT_OUTPUT_DIR,
                 DEFAULT_INPUT,

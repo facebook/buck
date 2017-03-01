@@ -93,9 +93,9 @@ public class GnuLinker implements Linker {
   @Override
   public Iterable<Arg> linkWhole(Arg input) {
     return ImmutableList.of(
-        new StringArg("-Wl,--whole-archive"),
+        StringArg.of("-Wl,--whole-archive"),
         input,
-        new StringArg("-Wl,--no-whole-archive"));
+        StringArg.of("-Wl,--no-whole-archive"));
   }
 
   @Override
@@ -170,7 +170,7 @@ public class GnuLinker implements Linker {
 
   @Override
   public Iterable<Arg> getSharedLibFlag() {
-    return ImmutableList.of(new StringArg("-shared"));
+    return ImmutableList.of(StringArg.of("-shared"));
   }
 
   @Override

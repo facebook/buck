@@ -83,9 +83,9 @@ public class DarwinLinker implements Linker, HasLinkerMap {
   @Override
   public Iterable<Arg> linkWhole(Arg input) {
     return ImmutableList.of(
-        new StringArg("-Xlinker"),
-        new StringArg("-force_load"),
-        new StringArg("-Xlinker"),
+        StringArg.of("-Xlinker"),
+        StringArg.of("-force_load"),
+        StringArg.of("-Xlinker"),
         input);
   }
 
@@ -109,10 +109,10 @@ public class DarwinLinker implements Linker, HasLinkerMap {
   @Override
   public Iterable<Arg> fileList(Path fileListPath) {
     return ImmutableList.of(
-        new StringArg("-Xlinker"),
-        new StringArg("-filelist"),
-        new StringArg("-Xlinker"),
-        new StringArg(fileListPath.toString()));
+        StringArg.of("-Xlinker"),
+        StringArg.of("-filelist"),
+        StringArg.of("-Xlinker"),
+        StringArg.of(fileListPath.toString()));
   }
 
   @Override
@@ -157,7 +157,7 @@ public class DarwinLinker implements Linker, HasLinkerMap {
 
   @Override
   public Iterable<Arg> getSharedLibFlag() {
-    return ImmutableList.of(new StringArg("-shared"));
+    return ImmutableList.of(StringArg.of("-shared"));
   }
 
   @Override

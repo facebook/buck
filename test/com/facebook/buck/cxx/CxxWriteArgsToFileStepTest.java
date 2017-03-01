@@ -51,7 +51,7 @@ public class CxxWriteArgsToFileStepTest {
     runTestForArgFilePathAndOutputPath(
         fileListPath,
         Optional.empty(),
-        ImmutableList.of(new StringArg("-dummy"), new StringArg("\"")),
+        ImmutableList.of(StringArg.of("-dummy"), StringArg.of("\"")),
         ImmutableList.of("-dummy", "\""),
         projectFilesystem.getRootPath());
   }
@@ -66,7 +66,7 @@ public class CxxWriteArgsToFileStepTest {
     runTestForArgFilePathAndOutputPath(
         fileListPath,
         Optional.of(input -> "foo".equals(input) ? "bar" : input),
-        ImmutableList.of(new StringArg("-dummy"), new StringArg("foo")),
+        ImmutableList.of(StringArg.of("-dummy"), StringArg.of("foo")),
         ImmutableList.of("-dummy", "bar"),
         projectFilesystem.getRootPath());
 

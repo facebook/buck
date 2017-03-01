@@ -156,7 +156,7 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
       ImmutableList<Arg> args = ImmutableList.<Arg>builder()
           .addAll(linkerArgs)
           .add(
-              new StringArg(
+              StringArg.of(
                   "-Wl,--version-script=" + getRelativeVersionFilePath().toString()))
           .build();
 

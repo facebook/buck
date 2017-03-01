@@ -130,7 +130,7 @@ public class RustCompileTest {
           Stream.of(
               "--crate-name", target.getShortName(),
               "--crate-type", "rlib")
-              .map(StringArg::new)
+              .map(StringArg::of)
               .collect(MoreCollectors.toImmutableList()),
           /* linkerFlags */ ImmutableList.of(),
           srcs,

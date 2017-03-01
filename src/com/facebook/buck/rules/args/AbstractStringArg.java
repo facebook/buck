@@ -21,26 +21,26 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
+import org.immutables.value.Value;
+
 import java.util.Arrays;
-import java.util.Objects;
 
-public class StringArg extends Arg {
+@Value.Immutable
+@BuckStyleTuple
+abstract class AbstractStringArg extends Arg {
 
-  private final String arg;
-
-  public StringArg(String arg) {
-    this.arg = arg;
-  }
+  abstract String getArg();
 
   @Override
   public void appendToCommandLine(
       ImmutableCollection.Builder<String> builder,
       SourcePathResolver pathResolver) {
-    builder.add(arg);
+    builder.add(getArg());
   }
 
   @Override
@@ -55,36 +55,15 @@ public class StringArg extends Arg {
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("arg", arg);
-  }
-
-  @Override
-  public String toString() {
-    return arg;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (!(o instanceof StringArg)) {
-      return false;
-    }
-    StringArg stringArg = (StringArg) o;
-    return Objects.equals(arg, stringArg.arg);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(arg);
+    sink.setReflectively("arg", getArg());
   }
 
   public static Iterable<Arg> from(Iterable<String> args) {
-    return Iterables.transform(args, StringArg::new);
+    return Iterables.transform(args, StringArg::of);
   }
 
   public static Iterable<Arg> from(String... args) {
     return from(Arrays.asList(args));
   }
+
 }

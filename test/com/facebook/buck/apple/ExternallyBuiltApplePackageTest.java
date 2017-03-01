@@ -65,7 +65,7 @@ public class ExternallyBuiltApplePackageTest {
   private ApplePackageConfigAndPlatformInfo config =
       ApplePackageConfigAndPlatformInfo.of(
           ApplePackageConfig.of("echo $SDKROOT $OUT", "api"),
-          StringArg::new,
+          StringArg::of,
           DEFAULT_IPHONEOS_I386_PLATFORM);
 
   @Before

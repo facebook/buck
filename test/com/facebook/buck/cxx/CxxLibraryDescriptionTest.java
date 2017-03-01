@@ -430,7 +430,7 @@ public class CxxLibraryDescriptionTest {
     // Lookup the link whole flags.
     Linker linker = cxxPlatform.getLd().resolve(resolver);
     ImmutableList<String> linkWholeFlags =
-        FluentIterable.from(linker.linkWhole(new StringArg("sentinel")))
+        FluentIterable.from(linker.linkWhole(StringArg.of("sentinel")))
             .transformAndConcat((input1) -> Arg.stringifyList(input1, pathResolver))
             .filter(Predicates.not("sentinel"::equals))
             .toList();

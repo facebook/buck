@@ -100,9 +100,9 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
         Matchers.equalTo(
             NativeLinkableInput.builder()
                 .addArgs(
-                    new StringArg("--something"),
+                    StringArg.of("--something"),
                     new SourcePathArg(path),
-                    new StringArg("--something-else"))
+                    StringArg.of("--something-else"))
                 .build()));
   }
 
@@ -124,9 +124,9 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
         Matchers.equalTo(
             NativeLinkableInput.builder()
                 .addArgs(
-                    new StringArg("--something"),
+                    StringArg.of("--something"),
                     new SourcePathArg(path),
-                    new StringArg("--something-else"))
+                    StringArg.of("--something-else"))
                 .build()));
   }
 
@@ -155,9 +155,9 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
         Matchers.equalTo(
             NativeLinkableInput.builder()
                 .addArgs(
-                    new StringArg("--something"),
+                    StringArg.of("--something"),
                     new SourcePathArg(lib1),
-                    new StringArg("--something-else"),
+                    StringArg.of("--something-else"),
                     new RelativeLinkArg(lib2))
                 .build()));
   }

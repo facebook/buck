@@ -78,7 +78,7 @@ class OmnibusNode implements NativeLinkable {
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) {
     return NativeLinkableInput.builder()
-        .addArgs(new StringArg(getBuildTarget().toString()))
+        .addArgs(StringArg.of(getBuildTarget().toString()))
         .build();
   }
 

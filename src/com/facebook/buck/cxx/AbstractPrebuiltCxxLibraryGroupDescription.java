@@ -115,7 +115,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
         }
         builder.add(new SourcePathArg(libs.get(index)));
       } else {
-        builder.add(new StringArg(arg));
+        builder.add(StringArg.of(arg));
       }
     }
     return builder.build();
@@ -157,7 +157,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
         }
         builder.add(libArg);
       } else {
-        builder.add(new StringArg(arg));
+        builder.add(StringArg.of(arg));
       }
     }
     return builder.build();

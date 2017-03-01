@@ -126,7 +126,7 @@ public class WindowsLinker implements Linker {
 
   @Override
   public Iterable<Arg> getSharedLibFlag() {
-    return ImmutableList.of(new StringArg("/DLL"));
+    return ImmutableList.of(StringArg.of("/DLL"));
   }
 
   @Override
