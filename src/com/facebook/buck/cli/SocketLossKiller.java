@@ -28,6 +28,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
@@ -43,12 +44,7 @@ class SocketLossKiller {
   private final Path absolutePathToSocket;
   private final Runnable killTask;
 
-  /**
-   * File attribute of the original file used to detect cases where the file was deleted and
-   * recreated across two polling samples.
-   */
-  @GuardedBy("this")
-  private @Nullable BasicFileAttributes socketFileAttributes;
+  private AtomicBoolean isArmed = new AtomicBoolean();
 
   @GuardedBy("this")
   private @Nullable ScheduledFuture<?> checkSocketTask;
@@ -71,26 +67,25 @@ class SocketLossKiller {
    * {@code NailMain}. Repeated calls are no-ops.
    */
   public synchronized void arm() {
-    if (socketFileAttributes != null) {
+    if (isArmed.getAndSet(true)) {
       // Already armed.
       return;
     }
-    // Failed to read the socket when initially arming.
     try {
-      socketFileAttributes = readFileAttributes(absolutePathToSocket);
+      BasicFileAttributes socketFileAttributes = readFileAttributes(absolutePathToSocket);
+      checkSocketTask = scheduledExecutorService.scheduleAtFixedRate(
+          () -> checkSocket(socketFileAttributes),
+          0,
+          5000,
+          TimeUnit.MILLISECONDS);
     } catch (IOException e) {
       LOG.error(e, "Failed to read socket when arming SocketLossKiller.");
       cancelAndKill();
       return;
     }
-    checkSocketTask = scheduledExecutorService.scheduleAtFixedRate(
-        this::checkSocket,
-        0,
-        5000,
-        TimeUnit.MILLISECONDS);
   }
 
-  private void checkSocket() {
+  private void checkSocket(BasicFileAttributes originalAttributes) {
     BasicFileAttributes newAttributes;
     try {
       newAttributes = readFileAttributes(absolutePathToSocket);
@@ -113,11 +108,11 @@ class SocketLossKiller {
       // ("file system tunneling"). This feature is is still enabled in Windows 10.
       // See: https://support.microsoft.com/en-us/kb/172190
       if (newAttributes.fileKey() != null &&
-          !newAttributes.fileKey().equals(socketFileAttributes.fileKey())) {
+          !newAttributes.fileKey().equals(originalAttributes.fileKey())) {
         cancelAndKill();
       } else if (
-          !newAttributes.creationTime().equals(socketFileAttributes.creationTime()) ||
-          !newAttributes.lastModifiedTime().equals(socketFileAttributes.lastModifiedTime())) {
+          !newAttributes.creationTime().equals(originalAttributes.creationTime()) ||
+          !newAttributes.lastModifiedTime().equals(originalAttributes.lastModifiedTime())) {
         cancelAndKill();
       }
     }
