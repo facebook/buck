@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.hashing.FileHashLoader;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DependencyAggregation;
@@ -160,6 +161,17 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
         sizeLimiter.add(fileHashLoader.getSize(absolutePath));
       }
       super.setPath(absolutePath, ideallyRelative);
+      return this;
+    }
+
+    @Override
+    protected Builder setPath(ProjectFilesystem filesystem, Path relativePath) throws IOException {
+      // TODO(plamenko): this check should not be necessary, but otherwise some tests fail due to
+      // FileHashLoader throwing NoSuchFileException which doesn't get correctly propagated.
+      if (inputSizeLimit != Long.MAX_VALUE) {
+        sizeLimiter.add(fileHashLoader.getSize(filesystem, relativePath));
+      }
+      super.setPath(filesystem, relativePath);
       return this;
     }
 
