@@ -140,7 +140,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -183,11 +182,9 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -337,23 +334,6 @@ public final class Main {
     }
   }
 
-  private static void addTransitiveCells(
-      Set<Cell> cellsBuilder,
-      Cell cell) {
-    if (cellsBuilder.add(cell)) {
-      cell.getKnownRoots().stream()
-          .map(cell::getCell)
-          .forEach(c -> addTransitiveCells(cellsBuilder, c));
-    }
-  }
-
-  // Collect all transitive cells.
-  private static ImmutableCollection<Cell> getTransitiveCells(Cell root) {
-    HashSet<Cell> cellsBuilder = new HashSet<>();
-    addTransitiveCells(cellsBuilder, root);
-    return ImmutableList.copyOf(cellsBuilder);
-  }
-
   /**
    * Daemon used to monitor the file system and cache build rules between Main() method
    * invocations is static so that it can outlive Main() objects and survive for the lifetime
@@ -382,7 +362,12 @@ public final class Main {
       this.fileEventBus = new EventBus("file-change-events");
 
       // Collect all transitive cells.
-      ImmutableCollection<Cell> cells = getTransitiveCells(cell);
+      ImmutableList.Builder<Cell> cellsBuilder = ImmutableList.builder();
+      cellsBuilder.add(cell);
+      cell.getCellPathResolver().getCellPaths().values().stream()
+          .map(cell::getCell)
+          .forEach(cellsBuilder::add);
+      ImmutableList<Cell> cells = cellsBuilder.build();
 
       // Setup the stacked file hash cache from all cells.
       ImmutableList.Builder<ProjectFileHashCache> hashCachesBuilder = ImmutableList.builder();
@@ -1042,9 +1027,7 @@ public final class Main {
         if (isDaemon) {
           allCaches.addAll(getFileHashCachesFromDaemon(rootCell));
         } else {
-          getTransitiveCells(rootCell).stream()
-              .map(cell -> DefaultFileHashCache.createDefaultFileHashCache(cell.getFilesystem()))
-              .forEach(allCaches::add);
+          allCaches.add(DefaultFileHashCache.createDefaultFileHashCache(rootCell.getFilesystem()));
           allCaches.add(
               DefaultFileHashCache.createBuckOutFileHashCache(
                   rootCellProjectFilesystem,

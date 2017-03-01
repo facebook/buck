@@ -23,7 +23,6 @@ import static com.facebook.buck.rules.keys.RuleKeyScopedHasher.Scope;
 
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
@@ -296,22 +295,15 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
       SourcePath sourcePath) throws IOException {
     if (sourcePath instanceof BuildTargetSourcePath) {
       return setPath(
-          resolver.getFilesystem(sourcePath),
-          resolver.getRelativePath(sourcePath));
+          resolver.getAbsolutePath(sourcePath),
+          resolver.getIdeallyRelativePath(sourcePath));
     } else if (sourcePath instanceof PathSourcePath) {
-      Path ideallyRelativePath = resolver.getIdeallyRelativePath(sourcePath);
-      if (ideallyRelativePath.isAbsolute()) {
-        return setPath(
-            resolver.getAbsolutePath(sourcePath),
-            resolver.getIdeallyRelativePath(sourcePath));
-      } else {
-        return setPath(
-            resolver.getFilesystem(sourcePath),
-            ideallyRelativePath);
-      }
+      return setPath(
+          resolver.getAbsolutePath(sourcePath),
+          resolver.getIdeallyRelativePath(sourcePath));
     } else if (sourcePath instanceof ArchiveMemberSourcePath) {
       return setArchiveMemberPath(
-          resolver.getFilesystem(sourcePath),
+          resolver.getAbsoluteArchiveMemberPath(sourcePath),
           resolver.getRelativeArchiveMemberPath(sourcePath));
     } else {
       throw new UnsupportedOperationException(
@@ -351,23 +343,14 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     return this;
   }
 
-  protected RuleKeyBuilder<RULE_KEY> setPath(
-      ProjectFilesystem filesystem,
-      Path relativePath)
-      throws IOException {
-    Preconditions.checkArgument(!relativePath.isAbsolute());
-    hasher.putPath(relativePath, hashLoader.get(filesystem, relativePath));
-    return this;
-  }
-
-  private RuleKeyBuilder<RULE_KEY> setArchiveMemberPath(
-      ProjectFilesystem filesystem,
-      ArchiveMemberPath relativeArchiveMemberPath)
-      throws IOException {
-    Preconditions.checkArgument(!relativeArchiveMemberPath.isAbsolute());
+  public RuleKeyBuilder<RULE_KEY> setArchiveMemberPath(
+      ArchiveMemberPath absoluteArchiveMemberPath,
+      ArchiveMemberPath relativeArchiveMemberPath) throws IOException {
+    Preconditions.checkState(absoluteArchiveMemberPath.isAbsolute());
+    Preconditions.checkState(!relativeArchiveMemberPath.isAbsolute());
     hasher.putArchiveMemberPath(
         relativeArchiveMemberPath,
-        hashLoader.get(filesystem, relativeArchiveMemberPath));
+        hashLoader.get(absoluteArchiveMemberPath));
     return this;
   }
 
