@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
@@ -27,7 +26,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -44,12 +43,12 @@ public class NdkLibraryDescriptionTest {
 
   private static class FakeNativeLinkable extends FakeBuildRule implements NativeLinkable {
 
-    private final BuildTargetSourcePath input;
+    private final SourcePath input;
 
     public FakeNativeLinkable(
         String target,
         SourcePathResolver resolver,
-        BuildTargetSourcePath input,
+        SourcePath input,
         BuildRule... deps) {
       super(target, resolver, deps);
       this.input = input;
@@ -103,7 +102,7 @@ public class NdkLibraryDescriptionTest {
             new FakeNativeLinkable(
                 "//:transitive_dep",
                 pathResolver,
-                new BuildTargetSourcePath(transitiveInput.getBuildTarget())));
+                transitiveInput.getSourcePathToOutput()));
     FakeBuildRule firstOrderInput = resolver.addToIndex(
         new FakeBuildRule("//:first_order_input", pathResolver));
     firstOrderInput.setOutputFile("out");
@@ -112,7 +111,7 @@ public class NdkLibraryDescriptionTest {
             new FakeNativeLinkable(
                 "//:first_order_dep",
                 pathResolver,
-                new BuildTargetSourcePath(firstOrderInput.getBuildTarget()),
+                firstOrderInput.getSourcePathToOutput(),
                 transitiveDep));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");

@@ -287,7 +287,7 @@ public class SymlinkTreeTest {
             outputPath,
             ImmutableMap.of(
                 Paths.get("link"),
-                new BuildTargetSourcePath(dep.getBuildTarget())),
+                dep.getSourcePathToOutput()),
             ruleFinder);
 
     // Generate an input-based rule key for the symlink tree with the contents of the link

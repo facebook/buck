@@ -21,14 +21,13 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableCollection;
@@ -61,13 +60,13 @@ public class FrameworkPathArgTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
 
     BuildTarget genruleTarget = BuildTargetFactory.newInstance("//:genrule");
-    BuildRule genrule = GenruleBuilder
+    Genrule genrule = GenruleBuilder
         .newGenruleBuilder(genruleTarget)
         .setOut("foo/bar.o")
         .build(ruleResolver, filesystem);
 
     FrameworkPath sourcePathFrameworkPath = FrameworkPath.ofSourcePath(
-        new BuildTargetSourcePath(genruleTarget));
+        genrule.getSourcePathToOutput());
 
     FrameworkPathArg sourcePathFrameworkPathArg =
         new TestFrameworkPathArg(sourcePathFrameworkPath);

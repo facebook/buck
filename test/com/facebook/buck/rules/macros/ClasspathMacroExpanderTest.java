@@ -27,7 +27,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -189,8 +188,8 @@ public class ClasspathMacroExpanderTest {
             ImmutableList.of(rule.getBuildTarget().toString())),
         Matchers.equalTo(
             ImmutableSortedSet.of(
-                new BuildTargetSourcePath(rule.getBuildTarget()),
-                new BuildTargetSourcePath(dep.getBuildTarget()))));
+                rule.getSourcePathToOutput(),
+                dep.getSourcePathToOutput())));
   }
 
   private void assertExpandsTo(

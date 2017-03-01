@@ -132,7 +132,7 @@ public class PythonBinaryDescriptionTest {
             .build(resolver);
     PythonBinary binary =
         PythonBinaryBuilder.create(BuildTargetFactory.newInstance("//:bin"))
-            .setMain(new BuildTargetSourcePath(genrule.getBuildTarget()))
+            .setMain(genrule.getSourcePathToOutput())
             .build(resolver);
     assertThat(binary.getDeps(), Matchers.hasItem(genrule));
   }
@@ -391,9 +391,7 @@ public class PythonBinaryDescriptionTest {
           @Override
           public Tool getPexTool(BuildRuleResolver resolver) {
             return new CommandTool.Builder()
-                .addArg(
-                    new SourcePathArg(
-                        new BuildTargetSourcePath(pexTool.getBuildTarget())))
+                .addArg(new SourcePathArg(pexTool.getSourcePathToOutput()))
                 .build();
           }
         };

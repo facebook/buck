@@ -1153,16 +1153,12 @@ public class CachingBuildEngineTest {
       BuildRule rule2 =
           GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule2"))
               .setOut("out2")
-              .setSrcs(
-                  ImmutableList.of(
-                      new BuildTargetSourcePath(rule3.getBuildTarget())))
+              .setSrcs(ImmutableList.of(rule3.getSourcePathToOutput()))
               .build(resolver);
       BuildRule rule1 =
           GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule1"))
               .setOut("out1")
-              .setSrcs(
-                  ImmutableList.of(
-                      new BuildTargetSourcePath(rule2.getBuildTarget())))
+              .setSrcs(ImmutableList.of(rule2.getSourcePathToOutput()))
               .build(resolver);
 
       // Create the build engine.
@@ -1583,7 +1579,7 @@ public class CachingBuildEngineTest {
       final DepFileBuildRule rule =
           new DepFileBuildRule(params) {
             @AddToRuleKey
-            private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
+            private final SourcePath path = genrule.getSourcePathToOutput();
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context,
@@ -1745,7 +1741,7 @@ public class CachingBuildEngineTest {
       DepFileBuildRule rule =
           new DepFileBuildRule(params) {
             @AddToRuleKey
-            private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
+            private final SourcePath path = genrule.getSourcePathToOutput();
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context,
@@ -1914,7 +1910,7 @@ public class CachingBuildEngineTest {
       DepFileBuildRule rule =
           new DepFileBuildRule(params) {
             @AddToRuleKey
-            private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
+            private final SourcePath path = genrule.getSourcePathToOutput();
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context,
@@ -1997,7 +1993,7 @@ public class CachingBuildEngineTest {
       DepFileBuildRule rule =
           new DepFileBuildRule(params) {
             @AddToRuleKey
-            private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
+            private final SourcePath path = genrule.getSourcePathToOutput();
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context,
@@ -2138,7 +2134,7 @@ public class CachingBuildEngineTest {
       DepFileBuildRule rule =
           new DepFileBuildRule(params) {
             @AddToRuleKey
-            private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
+            private final SourcePath path = genrule.getSourcePathToOutput();
             @AddToRuleKey
             private final SourcePath otherDep = new PathSourcePath(filesystem, input2);
             @Override
@@ -2249,7 +2245,7 @@ public class CachingBuildEngineTest {
       DepFileBuildRule rule =
           new DepFileBuildRule(params) {
             @AddToRuleKey
-            private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
+            private final SourcePath path = genrule.getSourcePathToOutput();
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context,
@@ -2372,7 +2368,7 @@ public class CachingBuildEngineTest {
       DepFileBuildRule rule =
           new DepFileBuildRule(params) {
             @AddToRuleKey
-            private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
+            private final SourcePath path = genrule.getSourcePathToOutput();
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context,

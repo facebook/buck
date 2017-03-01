@@ -23,7 +23,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -117,8 +116,7 @@ public class WorkerToolTest {
             exportFileRule.getBuildTarget()));
     assertThat(
         workerTool.getArgs(pathResolver), Matchers.containsString(
-            pathResolver.getAbsolutePath(
-                new BuildTargetSourcePath(exportFileRule.getBuildTarget())).toString()));
+            pathResolver.getAbsolutePath(exportFileRule.getSourcePathToOutput()).toString()));
   }
 
   @Test
@@ -144,6 +142,6 @@ public class WorkerToolTest {
 
     assertThat(
         workerTool.getTool().getInputs(),
-        Matchers.hasItem(new BuildTargetSourcePath(exportFileRule.getBuildTarget())));
+        Matchers.hasItem(exportFileRule.getSourcePathToOutput()));
   }
 }

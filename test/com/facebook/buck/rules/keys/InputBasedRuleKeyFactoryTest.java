@@ -25,7 +25,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -93,9 +92,7 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRule rule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("out")
-            .setSrcs(
-                ImmutableList.of(
-                    new BuildTargetSourcePath(dep.getBuildTarget())))
+            .setSrcs(ImmutableList.of(dep.getSourcePathToOutput()))
             .build(resolver, filesystem);
 
     RuleKey inputKey1 =
@@ -167,7 +164,7 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRule rule =
         ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("out")
-            .setSrc(new BuildTargetSourcePath(dep.getBuildTarget()))
+            .setSrc(dep.getSourcePathToOutput())
             .build(resolver, filesystem);
 
     // Build a rule key with a particular hash set for the output for the above rule.
@@ -261,8 +258,7 @@ public class InputBasedRuleKeyFactoryTest {
         new NoopBuildRule(params, pathResolver) {
           @AddToRuleKey
           RuleKeyAppendableWithInput input =
-              new RuleKeyAppendableWithInput(
-                  new BuildTargetSourcePath(dep.getBuildTarget()));
+              new RuleKeyAppendableWithInput(dep.getSourcePathToOutput());
         };
 
     // Build a rule key with a particular hash set for the output for the above rule.

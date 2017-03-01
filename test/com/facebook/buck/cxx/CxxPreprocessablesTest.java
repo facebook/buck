@@ -27,7 +27,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -227,7 +226,7 @@ public class CxxPreprocessablesTest {
         .build();
     Path root = Paths.get("root");
 
-    // Setup a simple genrule we can wrap in a BuildTargetSourcePath to model a input source
+    // Setup a simple genrule we can wrap in a ExplicitBuildTargetSourcePath to model a input source
     // that is built by another rule.
     Genrule genrule = GenruleBuilder
         .newGenruleBuilder(BuildTargetFactory.newInstance(filesystem, "//:genrule"))
@@ -240,7 +239,7 @@ public class CxxPreprocessablesTest {
         Paths.get("link1"),
         new FakeSourcePath("hello"),
         Paths.get("link2"),
-        new BuildTargetSourcePath(genrule.getBuildTarget()));
+        genrule.getSourcePathToOutput());
 
     // Build our symlink tree rule using the helper method.
     HeaderSymlinkTree symlinkTree = CxxPreprocessables.createHeaderSymlinkTreeBuildRule(

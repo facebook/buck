@@ -52,7 +52,7 @@ public class CommandToolTest {
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("output")
             .build(resolver, filesystem);
-    SourcePath path = new BuildTargetSourcePath(rule.getBuildTarget());
+    SourcePath path = rule.getSourcePathToOutput();
 
     // Test command and inputs for just passing the source path.
     CommandTool tool =
@@ -98,9 +98,10 @@ public class CommandToolTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    BuildRule rule = new FakeBuildRule("//some:target", pathResolver);
+    FakeBuildRule rule = new FakeBuildRule("//some:target", pathResolver);
+    rule.setOutputFile("foo");
     ruleResolver.addToIndex(rule);
-    SourcePath path = new BuildTargetSourcePath(rule.getBuildTarget());
+    SourcePath path = rule.getSourcePathToOutput();
 
     CommandTool tool =
         new CommandTool.Builder()

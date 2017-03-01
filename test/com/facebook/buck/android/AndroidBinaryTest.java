@@ -32,7 +32,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -461,7 +460,7 @@ public class AndroidBinaryTest {
 
     BuildRule transitivePrebuiltJarDep =
         PrebuiltJarBuilder.createBuilder(BuildTargetFactory.newInstance("//:transitive_dep"))
-            .setBinaryJar(new BuildTargetSourcePath(prebuiltJarGen.getBuildTarget()))
+            .setBinaryJar(prebuiltJarGen.getSourcePathToOutput())
             .build(resolver);
 
     FakeJavaLibrary immediateDep =

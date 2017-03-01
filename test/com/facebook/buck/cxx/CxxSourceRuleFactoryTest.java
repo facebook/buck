@@ -34,7 +34,6 @@ import com.facebook.buck.rules.BinaryBuildRuleToolProvider;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.DependencyAggregationTestUtil;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -217,8 +216,9 @@ public class CxxSourceRuleFactoryTest {
 
       FakeBuildRule dep = createFakeBuildRule(
           "//:test", new SourcePathResolver(new SourcePathRuleFinder(resolver)));
+      dep.setOutputFile("foo");
       resolver.addToIndex(dep);
-      SourcePath input = new BuildTargetSourcePath(dep.getBuildTarget());
+      SourcePath input = dep.getSourcePathToOutput();
       CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactory.builder()
           .setParams(params)
           .setResolver(resolver)

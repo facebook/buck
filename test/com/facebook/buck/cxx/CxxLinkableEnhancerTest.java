@@ -34,7 +34,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -178,8 +177,8 @@ public class CxxLinkableEnhancerTest {
         NativeLinkableInput.builder()
             .setArgs(SourcePathArg.from(
                 new FakeSourcePath("simple.o"),
-                new BuildTargetSourcePath(genrule1.getBuildTarget()),
-                new BuildTargetSourcePath(genrule2.getBuildTarget())))
+                genrule1.getSourcePathToOutput(),
+                genrule2.getSourcePathToOutput()))
             .build());
 
     // Verify that the archive dependencies include the genrules providing the
@@ -245,14 +244,13 @@ public class CxxLinkableEnhancerTest {
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//:fake");
     FakeBuildRule fakeBuildRule = new FakeBuildRule(
         new FakeBuildRuleParamsBuilder(fakeBuildTarget).build(), pathResolver);
+    fakeBuildRule.setOutputFile("foo");
     resolver.addToIndex(fakeBuildRule);
 
     // Create a native linkable dep and have it list the fake build rule above as a link
     // time dependency.
     NativeLinkableInput nativeLinkableInput = NativeLinkableInput.of(
-        ImmutableList.of(
-            new SourcePathArg(
-                new BuildTargetSourcePath(fakeBuildRule.getBuildTarget()))),
+        ImmutableList.of(new SourcePathArg(fakeBuildRule.getSourcePathToOutput())),
         ImmutableSet.of(),
         ImmutableSet.of());
     FakeNativeLinkable nativeLinkable = createNativeLinkable(
@@ -623,8 +621,7 @@ public class CxxLinkableEnhancerTest {
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
         Optional.empty(),
-        Optional.of(
-            new BuildTargetSourcePath(bundleLoaderRule.getBuildTarget())),
+        Optional.of(bundleLoaderRule.getSourcePathToOutput()),
         ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(SourcePathArg.from(

@@ -30,7 +30,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -199,14 +198,16 @@ public class AndroidLibraryGraphEnhancerTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    FakeBuildRule dep =
-        resolver.addToIndex(
-            new FakeBuildRule(BuildTargetFactory.newInstance("//:dep"), pathResolver));
+    FakeBuildRule dep = new FakeBuildRule(
+        BuildTargetFactory.newInstance("//:dep"),
+        pathResolver);
+    dep.setOutputFile("foo");
+    resolver.addToIndex(dep);
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     JavacOptions options = JavacOptions.builder()
         .setSourceLevel("5")
         .setTargetLevel("5")
-        .setJavacJarPath(new BuildTargetSourcePath(dep.getBuildTarget()))
+        .setJavacJarPath(dep.getSourcePathToOutput())
         .build();
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(

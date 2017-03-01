@@ -34,7 +34,6 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -287,7 +286,7 @@ public class ThriftLibraryDescriptionTest {
         .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
         .setOut(sourceName)
         .build(resolver);
-    SourcePath ruleSourcePath = new BuildTargetSourcePath(genrule.getBuildTarget());
+    SourcePath ruleSourcePath = genrule.getSourcePathToOutput();
 
     // Generate these rules using no deps and the genrule generated source.
     rules =
@@ -444,7 +443,7 @@ public class ThriftLibraryDescriptionTest {
         .newGenruleBuilder(genruleTarget)
         .setOut(thriftSourceName1)
         .build(resolver);
-    SourcePath thriftSource1 = new BuildTargetSourcePath(genrule.getBuildTarget());
+    SourcePath thriftSource1 = genrule.getSourcePathToOutput();
     final ImmutableList<String> thriftServices1 = ImmutableList.of();
 
     // Setup a normal thrift source file.

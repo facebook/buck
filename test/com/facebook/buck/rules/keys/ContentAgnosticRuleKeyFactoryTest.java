@@ -22,7 +22,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
@@ -89,7 +88,7 @@ public class ContentAgnosticRuleKeyFactoryTest {
     BuildRule rule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut(filename)
-            .setSrcs(ImmutableList.of(new BuildTargetSourcePath(dep.getBuildTarget())))
+            .setSrcs(ImmutableList.of(dep.getSourcePathToOutput()))
             .build(resolver, fileSystem);
 
     return new ContentAgnosticRuleKeyFactory(fieldLoader, pathResolver, ruleFinder).build(rule);

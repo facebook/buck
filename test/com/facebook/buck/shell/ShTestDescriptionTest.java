@@ -23,7 +23,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKey;
@@ -68,9 +67,7 @@ public class ShTestDescriptionTest {
         Matchers.contains(dep));
     assertThat(
         Arg.stringify(shTest.getArgs(), pathResolver),
-        Matchers.contains(
-            pathResolver.getAbsolutePath(
-                new BuildTargetSourcePath(dep.getBuildTarget())).toString()));
+        Matchers.contains(pathResolver.getAbsolutePath(dep.getSourcePathToOutput()).toString()));
   }
 
   @Test
@@ -95,9 +92,7 @@ public class ShTestDescriptionTest {
         Arg.stringify(shTest.getEnv(), pathResolver),
         Matchers.equalTo(
             ImmutableMap.of(
-                "LOC",
-                pathResolver.getAbsolutePath(
-                    new BuildTargetSourcePath(dep.getBuildTarget())).toString())));
+                "LOC", pathResolver.getAbsolutePath(dep.getSourcePathToOutput()).toString())));
   }
 
   @Test

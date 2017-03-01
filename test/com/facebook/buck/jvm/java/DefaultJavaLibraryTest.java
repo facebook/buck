@@ -713,7 +713,7 @@ public class DefaultJavaLibraryTest {
         pathResolver.getRelativePath(genSrc.getSourcePathToOutput()));
     JavaLibrary library =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
-            .addSrc(new BuildTargetSourcePath(genSrc.getBuildTarget()))
+            .addSrc(genSrc.getSourcePathToOutput())
             .build(ruleResolver, filesystem);
     FileHashCache originalHashCache =
         new StackedFileHashCache(
@@ -739,7 +739,7 @@ public class DefaultJavaLibraryTest {
             .build(ruleResolver, filesystem);
     library =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
-            .addSrc(new BuildTargetSourcePath(genSrc.getBuildTarget()))
+            .addSrc(genSrc.getSourcePathToOutput())
             .build(ruleResolver, filesystem);
     FileHashCache unaffectedHashCache =
         new StackedFileHashCache(
@@ -767,7 +767,7 @@ public class DefaultJavaLibraryTest {
         pathResolver.getRelativePath(genSrc.getSourcePathToOutput()));
     library =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
-            .addSrc(new BuildTargetSourcePath(genSrc.getBuildTarget()))
+            .addSrc(genSrc.getSourcePathToOutput())
             .build(ruleResolver, filesystem);
     FileHashCache affectedHashCache =
         new StackedFileHashCache(
