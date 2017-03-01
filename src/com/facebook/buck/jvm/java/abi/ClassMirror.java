@@ -16,94 +16,31 @@
 
 package com.facebook.buck.jvm.java.abi;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Sets;
 import com.google.common.io.ByteSource;
 
-import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.TypePath;
-
-import java.util.Set;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.InnerClassNode;
 
 import javax.annotation.Nullable;
 
 class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
 
   private final String fileName;
-  private final Set<AnnotationMirror> annotations;
-  private final Set<TypeAnnotationMirror> typeAnnotations;
-  private final Set<FieldMirror> fields;
-  private final Set<InnerClass> innerClasses;
-  private final Set<MethodMirror> methods;
-  @Nullable
-  private OuterClass outerClass;
-  private int version;
-  private int access;
-  @Nullable
-  private String signature;
-  @Nullable
-  private String[] interfaces;
-  @Nullable
-  private String superName;
-  @Nullable
-  private String name;
+  private final ClassNode node;
 
   public ClassMirror(String name) {
-    super(Opcodes.ASM5);
+    this(name, new ClassNode());
+  }
 
+  private ClassMirror(String name, ClassNode node) {
+    super(Opcodes.ASM5, node);
     this.fileName = name;
-    this.annotations = Sets.newLinkedHashSet();
-    this.typeAnnotations = Sets.newLinkedHashSet();
-    this.fields = Sets.newLinkedHashSet();
-    this.innerClasses = Sets.newLinkedHashSet();
-    this.methods = Sets.newLinkedHashSet();
-  }
-
-  @Override
-  public void visit(
-      int version,
-      int access,
-      String name,
-      String signature,
-      String superName,
-      String[] interfaces) {
-    this.name = name;
-    this.version = version;
-    this.access = access;
-    this.signature = signature;
-    this.interfaces = interfaces;
-    this.superName = superName;
-    super.visit(version, access, name, signature, superName, interfaces);
-  }
-
-  @Override
-  public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-    AnnotationMirror mirror = new AnnotationMirror(
-        desc,
-        visible,
-        super.visitAnnotation(desc, visible));
-    annotations.add(mirror);
-    return mirror;
-  }
-
-  @Override
-  public AnnotationVisitor visitTypeAnnotation(
-      int typeRef, TypePath typePath, String desc, boolean visible) {
-    TypeAnnotationMirror mirror = new TypeAnnotationMirror(
-        typeRef,
-        typePath,
-        desc,
-        visible,
-        super.visitTypeAnnotation(typeRef, typePath, desc, visible));
-    typeAnnotations.add(mirror);
-    return mirror;
+    this.node = node;
   }
 
   @Override
@@ -118,15 +55,7 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
       return null;
     }
 
-    FieldMirror mirror = new FieldMirror(
-        access,
-        name,
-        desc,
-        signature,
-        value,
-        super.visitField(access, name, desc, signature, value));
-    fields.add(mirror);
-    return mirror;
+    return super.visitField(access, name, desc, signature, value);
   }
 
   @Override
@@ -153,22 +82,7 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
     // section 4.7.8 of the JVM spec, which are "<init>" and "Enum.valueOf()" and "Enum.values".
     // None of these are actually harmful to the ABI, so we allow synthetic methods through.
     // http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.8
-    MethodMirror mirror = new MethodMirror(
-        access,
-        name,
-        desc,
-        signature,
-        exceptions,
-        super.visitMethod(access, name, desc, signature, exceptions));
-    methods.add(mirror);
-
-    return mirror;
-  }
-
-  @Override
-  public void visitOuterClass(String owner, String name, String desc) {
-    outerClass = new OuterClass(owner, name, desc);
-    super.visitOuterClass(owner, name, desc);
+    return super.visitMethod(access, name, desc, signature, exceptions);
   }
 
   @Override
@@ -177,14 +91,13 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
       return;
     }
 
-    String currentClassName = Preconditions.checkNotNull(this.name);
+    String currentClassName = node.name;
     if (currentClassName.equals(name) || currentClassName.equals(outerName)) {
       // InnerClasses attributes are normally present for any member class (of any type) that is
       // referenced from code in this class file. However, for stubbing purposes we need only
       // include InnerClasses attributes for the class itself (if it is a member class, so that
       // the compiler can know that), and for the member classes of this class (so that the
       // compiler knows to go looking for them). All of the other ones are only needed at runtime.
-      innerClasses.add(new InnerClass(name, outerName, innerName, access));
       super.visitInnerClass(name, outerName, innerName, access);
     }
   }
@@ -199,107 +112,31 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
   }
 
   public boolean isAnonymousOrLocalClass() {
-    if (outerClass == null) {
+    InnerClassNode innerClass = getInnerClassMetadata();
+    if (innerClass == null) {
       return false;
     }
 
-    for (InnerClass innerClass : innerClasses) {
-      if (innerClass.name.equals(name) && innerClass.outerName == null) {
-        return true;
+    return innerClass.outerName == null;
+  }
+
+  @Nullable
+  private InnerClassNode getInnerClassMetadata() {
+    for (InnerClassNode innerClass : node.innerClasses) {
+      if (innerClass.name.equals(node.name)) {
+        return innerClass;
       }
     }
 
-    return false;
+    return null;
   }
 
   public ByteSource getStubClassBytes() {
     ClassWriter writer = new ClassWriter(0);
-    writer.visit(version, access, name, signature, superName, interfaces);
 
-    if (outerClass != null) {
-      writer.visitOuterClass(outerClass.owner, outerClass.name, outerClass.desc);
-    }
+    node.accept(writer);
 
-    for (InnerClass inner : innerClasses) {
-      writer.visitInnerClass(inner.name, inner.outerName, inner.innerName, inner.access);
-    }
-
-    for (AnnotationMirror annotation : annotations) {
-      annotation.appendTo(writer);
-    }
-
-    for (TypeAnnotationMirror typeAnnotation : typeAnnotations) {
-      typeAnnotation.appendTo(writer);
-    }
-
-    for (FieldMirror field : fields) {
-      field.accept(writer);
-    }
-
-    for (MethodMirror method : methods) {
-      method.appendTo(writer);
-    }
-    writer.visitEnd();
     return ByteSource.wrap(writer.toByteArray());
   }
-
-  private static class InnerClass implements Comparable<InnerClass> {
-
-    private final String name;
-    @Nullable
-    private final String outerName;
-    @Nullable
-    private final String innerName;
-    private final int access;
-
-    public InnerClass(
-        String name,
-        @Nullable String outerName,
-        @Nullable String innerName,
-        int access) {
-      this.name = name;
-      this.outerName = outerName;
-      this.innerName = innerName;
-      this.access = access;
-    }
-
-    @Override
-    public int compareTo(InnerClass o) {
-      if (this == o) {
-        return 0;
-      }
-
-      return ComparisonChain.start()
-          .compare(name, o.name)
-          .compare(Strings.nullToEmpty(outerName), Strings.nullToEmpty(o.outerName))
-          .compare(Strings.nullToEmpty(innerName), Strings.nullToEmpty(o.innerName))
-          .result();
-    }
-  }
-
-  private static class OuterClass implements Comparable<OuterClass> {
-
-    private final String owner;
-    private final String name;
-    private final String desc;
-
-    public OuterClass(String owner, String name, String desc) {
-      this.owner = owner;
-      this.name = name;
-      this.desc = desc;
-    }
-
-    @Override
-    public int compareTo(OuterClass o) {
-      if (this == o) {
-        return 0;
-      }
-
-      return ComparisonChain.start()
-          .compare(owner, o.owner)
-          .compare(name, o.name)
-          .compare(desc, o.desc)
-          .result();
-    }
-  }
 }
+
