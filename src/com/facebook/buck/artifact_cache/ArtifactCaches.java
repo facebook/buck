@@ -260,8 +260,10 @@ public class ArtifactCaches implements ArtifactCacheFactory {
               .iterator());
 
       if (buckConfig.getDirCachePropagationExperimentRandomizedTrialForcedToBeControlGroup() ||
-          RandomizedTrial.getGroup("dirCacheOnlyForPropagation", CommonGroups.class) ==
-          CommonGroups.TEST) {
+          RandomizedTrial.getGroup(
+              "dirCacheOnlyForPropagation",
+              CommonGroups.class,
+              CommonGroups.CONTROL) == CommonGroups.TEST) {
         MultiArtifactCache multiDirCache = new MultiArtifactCache(dirCaches);
         MultiArtifactCache multiRemoteCache = new MultiArtifactCache(remoteCaches);
         if (!multiDirCache.isStoreSupported()) {

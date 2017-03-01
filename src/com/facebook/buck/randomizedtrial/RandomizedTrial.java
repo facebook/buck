@@ -16,7 +16,7 @@
 
 package com.facebook.buck.randomizedtrial;
 
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -40,14 +40,20 @@ public class RandomizedTrial {
     }
   });
 
+  private static final Logger LOG = Logger.get(RandomizedTrial.class);
+
   private RandomizedTrial() {}
 
   /**
    * Returns a group for trial with given name.
    * @param name name of trial.
    * @param enumClass Class of an enum which conforms to {@link WithProbability} interface.
+   * @param defaultValue The value that will be used in case if class can't determine the group.
    */
-  public static <T extends Enum<T> & WithProbability> T getGroup(String name, Class<T> enumClass) {
+  public static <T extends Enum<T> & WithProbability> T getGroup(
+      String name,
+      Class<T> enumClass,
+      T defaultValue) {
     EnumSet<T> enumSet = EnumSet.allOf(enumClass);
 
     double sumOfAllProbabilities = 0;
@@ -66,16 +72,20 @@ public class RandomizedTrial {
     for (T value : enumSet) {
       double groupProbabilityHighPoint = groupProbabilityLowPoint + value.getProbability();
       if (point >= groupProbabilityLowPoint && point < groupProbabilityHighPoint) {
+        LOG.debug("Test %s detected group %s", name, value);
         return value;
       } else {
         groupProbabilityLowPoint = groupProbabilityHighPoint;
       }
     }
 
-    throw new HumanReadableException(
-        "Test %s was unable to detect group. Check that configuration is valid: %s",
+    LOG.error(
+        "Test %s was unable to detect group. Point is: %f. Groups: %s. Will use default value: %s",
         name,
-        enumSet);
+        point,
+        enumSet,
+        defaultValue);
+    return defaultValue;
   }
 
   @VisibleForTesting
@@ -102,7 +112,9 @@ public class RandomizedTrial {
     Long byteValue = Long.valueOf(
         hash.substring(position.intValue() * 2, position.intValue() * 2 + 2),
         16);
-    return byteValue / 255.0;
+    double result = byteValue / 255.0;
+    LOG.debug("Point for key '%s' is: %f", key, result);
+    return result;
   }
 
   private static String getKey(String name) {
@@ -111,7 +123,9 @@ public class RandomizedTrial {
       username = "unknown";
     }
     String hostname = HOSTNAME_SUPPLIER.get();
-    return username + "@" + hostname + "/" + name;
+    String result = username + "@" + hostname + "/" + name;
+    LOG.debug("Determined key: '%s'", result);
+    return result;
   }
 
 }
