@@ -648,8 +648,10 @@ class DaemonicParserState {
 
   @Override
   public String toString() {
-    return String.format(
-        "memoized=%s",
-        cellPathToDaemonicState);
+    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
+      return String.format(
+          "memoized=%s",
+          cellPathToDaemonicState);
+    }
   }
 }
