@@ -141,7 +141,7 @@ public class SimpleProcessListener extends AbstractCharsetProcessListener {
     }
 
     if (stdInToWrite == null) {
-      process.closeStdin(/* force */ false);
+      Preconditions.checkNotNull(process, "Process didn't start yet").closeStdin(/* force */ false);
       nextStdInToWrite = null;
     }
 

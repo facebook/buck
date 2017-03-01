@@ -367,7 +367,10 @@ public class Parser {
             });
         if (!replacements.isEmpty()) {
           // TODO(tophyr): Stop duplicating target lists
-          groups.put(groupTarget, groups.get(groupTarget).withReplacedTargets(replacements));
+          groups.put(
+              groupTarget,
+              Preconditions.checkNotNull(groups.get(groupTarget))
+                  .withReplacedTargets(replacements));
         }
       }
 

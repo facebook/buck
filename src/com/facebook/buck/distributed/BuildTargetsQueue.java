@@ -91,7 +91,7 @@ public class BuildTargetsQueue {
       EnqueuedTarget enqueuedTarget = new EnqueuedTarget(
           target,
           ImmutableList.copyOf(currentRevDeps),
-          numberOfDependencies.get(target));
+          Preconditions.checkNotNull(numberOfDependencies.get(target)));
       allEnqueuedTargets.put(target, enqueuedTarget);
 
       if (enqueuedTarget.areAllDependenciesResolved()) {

@@ -214,7 +214,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
           if (ERROR.matcher(line).matches()) {
             messages.put(currentTest.get(), line);
           } else {
-            stdout.get(currentTest.get()).add(line);
+            Preconditions.checkNotNull(stdout.get(currentTest.get())).add(line);
           }
         }
       }

@@ -177,7 +177,8 @@ public class ThriftArtifactCacheProtocol {
           nextPayloadToBeRead,
           thriftData.getPayloadsSize());
 
-      long payloadSizeBytes = thriftData.getPayloads().get(nextPayloadToBeRead).getSizeBytes();
+      long payloadSizeBytes = Preconditions.checkNotNull(thriftData.getPayloads())
+          .get(nextPayloadToBeRead).getSizeBytes();
       try (HashingOutputStream wrappedOutputStream =
                new HashingOutputStream(MD5_HASH_FUNCTION, outStream)) {
         copyExactly(responseStream, wrappedOutputStream, payloadSizeBytes);

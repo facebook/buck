@@ -35,6 +35,7 @@ import com.facebook.buck.util.ChunkAccumulator;
 import com.facebook.buck.util.XmlDomParser;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -173,7 +174,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
         } else if (END.matcher(line.trim()).matches()) {
           currentTest = Optional.empty();
         } else if (currentTest.isPresent()) {
-          stdout.get(currentTest.get()).append(line);
+          Preconditions.checkNotNull(stdout.get(currentTest.get())).append(line);
         }
       }
     }
