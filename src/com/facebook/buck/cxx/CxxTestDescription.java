@@ -30,7 +30,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.QueryUtils;
@@ -105,18 +104,24 @@ public class CxxTestDescription implements
     Optional<CxxPlatform> platform = cxxPlatforms.getValue(params.getBuildTarget());
     CxxPlatform cxxPlatform = platform.orElse(defaultCxxPlatform);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     if (params.getBuildTarget().getFlavors()
           .contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
-      return CxxDescriptionEnhancer.createCompilationDatabase(
+      BuildRuleParams paramsWithoutFlavor =
+          params.withoutFlavor(CxxCompilationDatabase.COMPILATION_DATABASE);
+      CxxLinkAndCompileRules cxxLinkAndCompileRules = CxxDescriptionEnhancer
+          .createBuildRulesForCxxBinaryDescriptionArg(
+              targetGraph,
+              paramsWithoutFlavor,
+              resolver,
+              cxxBuckConfig,
+              cxxPlatform,
+              args,
+              flavoredStripStyle,
+              flavoredLinkerMapMode);
+      return CxxCompilationDatabase.createCompilationDatabase(
           params,
-          resolver,
-          pathResolver,
-          ruleFinder,
-          cxxBuckConfig,
-          cxxPlatform,
-          args);
+          cxxLinkAndCompileRules.compileRules);
     }
 
     if (params.getBuildTarget().getFlavors()

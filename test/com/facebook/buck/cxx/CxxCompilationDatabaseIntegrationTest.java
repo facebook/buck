@@ -283,14 +283,12 @@ public class CxxCompilationDatabaseIntegrationTest {
         sandboxSources ? "buck-out/gen/test#default,sandbox/test.cpp" : "test.cpp";
     BuildTarget compilationTarget = target.withFlavors(
         ImmutableFlavor.of("default"),
-        ImmutableFlavor.of("compile-pic-" + sanitize("test.cpp.o")));
+        ImmutableFlavor.of("compile-" + sanitize("test.cpp.o")));
     assertHasEntry(
         fileToEntry,
         path,
         new ImmutableList.Builder<String>()
             .add(COMPILER_PATH)
-            .add("-fPIC")
-            .add("-fPIC")
             .add("-I")
             .add(headerSymlinkTreePath(binaryHeaderSymlinkTreeFolder).toString())
             .addAll(getExtraFlagsForHeaderMaps(filesystem))
@@ -346,14 +344,12 @@ public class CxxCompilationDatabaseIntegrationTest {
         sandboxSources ? "buck-out/gen/test#default,sandbox/test.cpp" : "test.cpp";
     BuildTarget compilationTarget = target.withFlavors(
         ImmutableFlavor.of("default"),
-        ImmutableFlavor.of("compile-pic-" + sanitize("test.cpp.o")));
+        ImmutableFlavor.of("compile-" + sanitize("test.cpp.o")));
     assertHasEntry(
         fileToEntry,
         path,
         new ImmutableList.Builder<String>()
             .add(COMPILER_PATH)
-            .add("-fPIC")
-            .add("-fPIC")
             .add("-I")
             .add(headerSymlinkTreePath(binaryHeaderSymlinkTreeFolder).toString())
             .addAll(getExtraFlagsForHeaderMaps(filesystem))
