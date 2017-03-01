@@ -51,12 +51,14 @@ public class DefaultWorkerTool extends NoopBuildRule implements
   @AddToRuleKey
   private final ImmutableList<Arg> args;
   @AddToRuleKey
+  @SuppressWarnings("PMD.UnusedPrivateField")
   private final ImmutableMap<String, String> env;
 
   private final BinaryBuildRule exe;
   private final int maxWorkers;
   private final boolean isPersistent;
   private final BuildOutputInitializer<Data> buildOutputInitializer;
+  private final Tool tool;
 
   protected DefaultWorkerTool(
       BuildRuleParams ruleParams,
@@ -73,10 +75,6 @@ public class DefaultWorkerTool extends NoopBuildRule implements
     this.maxWorkers = maxWorkers;
     this.isPersistent = isPersistent;
     this.buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
-  }
-
-  @Override
-  public Tool getTool() {
     Tool baseTool = this.exe.getExecutableCommand();
     CommandTool.Builder builder = new CommandTool.Builder(baseTool)
         .addInputs(
@@ -86,7 +84,12 @@ public class DefaultWorkerTool extends NoopBuildRule implements
     for (Map.Entry<String, String> e : env.entrySet()) {
       builder.addEnv(e.getKey(), e.getValue());
     }
-    return builder.build();
+    tool = builder.build();
+  }
+
+  @Override
+  public Tool getTool() {
+    return tool;
   }
 
   @Override
