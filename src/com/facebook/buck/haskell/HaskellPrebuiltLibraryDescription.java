@@ -119,11 +119,11 @@ public class HaskellPrebuiltLibraryDescription implements
         builder.addAllArgs(StringArg.from(args.exportedLinkerFlags));
         if (type == Linker.LinkableDepType.SHARED) {
           builder.addAllArgs(
-              SourcePathArg.from(getResolver(),
+              SourcePathArg.from(
                   args.sharedLibs.values()));
         } else {
           builder.addAllArgs(
-              SourcePathArg.from(getResolver(),
+              SourcePathArg.from(
                   args.staticLibs));
         }
         return builder.build();

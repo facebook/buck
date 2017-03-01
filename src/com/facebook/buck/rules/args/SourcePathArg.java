@@ -33,11 +33,9 @@ import java.util.Objects;
  */
 public class SourcePathArg extends Arg implements HasSourcePath {
 
-  private final SourcePathResolver pathResolver;
   private final SourcePath path;
 
-  public SourcePathArg(SourcePathResolver pathResolver, SourcePath path) {
-    this.pathResolver = pathResolver;
+  public SourcePathArg(SourcePath path) {
     this.path = path;
   }
 
@@ -99,26 +97,20 @@ public class SourcePathArg extends Arg implements HasSourcePath {
   }
 
   public static ImmutableList<Arg> from(
-      SourcePathResolver pathResolver,
       Iterable<SourcePath> paths) {
     ImmutableList.Builder<Arg> converted = ImmutableList.builder();
     for (SourcePath path : paths) {
-      converted.add(new SourcePathArg(pathResolver, path));
+      converted.add(new SourcePathArg(path));
     }
     return converted.build();
   }
 
-  public static ImmutableList<Arg> from(SourcePathResolver pathResolver, SourcePath... paths) {
-    return from(pathResolver, ImmutableList.copyOf(paths));
+  public static ImmutableList<Arg> from(SourcePath... paths) {
+    return from(ImmutableList.copyOf(paths));
   }
 
   @Override
   public SourcePath getPath() {
     return path;
-  }
-
-  @Override
-  public SourcePathResolver getPathResolver() {
-    return pathResolver;
   }
 }

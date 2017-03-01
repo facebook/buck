@@ -81,12 +81,10 @@ class PrebuiltOcamlLibrary extends AbstractBuildRuleWithResolver implements Ocam
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
     argsBuilder.add(
         new SourcePathArg(
-            getResolver(),
             sourcePath));
     for (SourcePath staticCLibraryPath : staticCLibraryPaths) {
       argsBuilder.add(
           new SourcePathArg(
-              getResolver(),
               staticCLibraryPath));
     }
     return NativeLinkableInput.of(

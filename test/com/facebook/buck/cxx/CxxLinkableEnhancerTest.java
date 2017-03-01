@@ -71,10 +71,6 @@ public class CxxLinkableEnhancerTest {
   private static final Path DEFAULT_OUTPUT = Paths.get("libblah.a");
   private static final ImmutableList<Arg> DEFAULT_INPUTS =
       SourcePathArg.from(
-          new SourcePathResolver(new SourcePathRuleFinder(
-              new BuildRuleResolver(
-                  TargetGraph.EMPTY,
-                  new DefaultTargetNodeToBuildRuleTransformer()))),
           new FakeSourcePath("a.o"),
           new FakeSourcePath("b.o"),
           new FakeSourcePath("c.o"));
@@ -181,7 +177,6 @@ public class CxxLinkableEnhancerTest {
         ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(SourcePathArg.from(
-                new SourcePathResolver(new SourcePathRuleFinder(resolver)),
                 new FakeSourcePath("simple.o"),
                 new BuildTargetSourcePath(genrule1.getBuildTarget()),
                 new BuildTargetSourcePath(genrule2.getBuildTarget())))
@@ -257,7 +252,6 @@ public class CxxLinkableEnhancerTest {
     NativeLinkableInput nativeLinkableInput = NativeLinkableInput.of(
         ImmutableList.of(
             new SourcePathArg(
-                pathResolver,
                 new BuildTargetSourcePath(fakeBuildRule.getBuildTarget()))),
         ImmutableSet.of(),
         ImmutableSet.of());
@@ -571,7 +565,6 @@ public class CxxLinkableEnhancerTest {
         ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(SourcePathArg.from(
-                pathResolver,
                 new FakeSourcePath("simple.o")))
             .build());
     assertThat(
@@ -610,7 +603,6 @@ public class CxxLinkableEnhancerTest {
         ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(SourcePathArg.from(
-                new SourcePathResolver(new SourcePathRuleFinder(resolver)),
                 new FakeSourcePath("simple.o")))
             .build());
     resolver.addToIndex(bundleLoaderRule);
@@ -636,7 +628,6 @@ public class CxxLinkableEnhancerTest {
         ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(SourcePathArg.from(
-                new SourcePathResolver(new SourcePathRuleFinder(resolver)),
                 new FakeSourcePath("another.o")))
             .build());
 

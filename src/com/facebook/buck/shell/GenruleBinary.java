@@ -47,7 +47,7 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
   @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder()
-        .addArg(new SourcePathArg(getResolver(), getSourcePathToOutput()))
+        .addArg(new SourcePathArg(getSourcePathToOutput()))
         .build();
   }
 

@@ -53,17 +53,14 @@ public class CxxLinkTest {
 
   private static final Linker DEFAULT_LINKER = new GnuLinker(new HashedFileTool(Paths.get("ld")));
   private static final Path DEFAULT_OUTPUT = Paths.get("test.exe");
-  private static final SourcePathResolver DEFAULT_SOURCE_PATH_RESOLVER =
-      new SourcePathResolver(new SourcePathRuleFinder(
-          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
   private static final ImmutableList<Arg> DEFAULT_ARGS =
       ImmutableList.of(
           new StringArg("-rpath"),
           new StringArg("/lib"),
           new StringArg("libc.a"),
-          new SourcePathArg(DEFAULT_SOURCE_PATH_RESOLVER, new FakeSourcePath("a.o")),
-          new SourcePathArg(DEFAULT_SOURCE_PATH_RESOLVER, new FakeSourcePath("b.o")),
-          new SourcePathArg(DEFAULT_SOURCE_PATH_RESOLVER, new FakeSourcePath("libc.a")),
+          new SourcePathArg(new FakeSourcePath("a.o")),
+          new SourcePathArg(new FakeSourcePath("b.o")),
+          new SourcePathArg(new FakeSourcePath("libc.a")),
           new StringArg("-L"),
           new StringArg("/System/Libraries/libz.dynlib"),
           new StringArg("-llibz.dylib"));
@@ -132,7 +129,6 @@ public class CxxLinkTest {
                 DEFAULT_OUTPUT,
                 ImmutableList.of(
                     new SourcePathArg(
-                        pathResolver,
                         new FakeSourcePath("different"))),
                 Optional.empty(),
                 /* cacheable */ true));

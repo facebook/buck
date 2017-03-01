@@ -127,7 +127,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder
         .build(resolver, filesystem, targetGraph);
     PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
@@ -137,7 +136,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableList.of(
             FileListableLinkerInputArg.withSourcePathArg(
                 new SourcePathArg(
-                    pathResolver,
                     new PathSourcePath(filesystem, getStaticLibraryPath(arg))))),
         ImmutableSet.of(),
         ImmutableSet.of());
@@ -149,7 +147,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
         ImmutableList.of(
             new SourcePathArg(
-                pathResolver,
                 new PathSourcePath(filesystem, getSharedLibraryPath(arg)))),
         ImmutableSet.of(),
         ImmutableSet.of());
@@ -196,7 +193,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder
         .build(resolver, filesystem, targetGraph);
     PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
@@ -205,7 +201,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
         ImmutableList.of(
             new SourcePathArg(
-                pathResolver,
                 new PathSourcePath(filesystem, getSharedLibraryPath(arg)))),
         ImmutableSet.of(),
         ImmutableSet.of());

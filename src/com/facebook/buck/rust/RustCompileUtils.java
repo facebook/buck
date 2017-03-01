@@ -191,7 +191,7 @@ public class RustCompileUtils {
       nativeArgs.stream()
           .filter(HasSourcePath.class::isInstance)
           .map(sp -> (HasSourcePath) sp)
-          .map(sp -> sp.getPathResolver().getRelativePath(sp.getPath()).getParent())
+          .map(sp -> pathResolver.getRelativePath(sp.getPath()).getParent())
           .map(dir -> String.format("-Lnative=%s", dir))
           .map(StringArg::new)
           .forEach(args::add);
@@ -366,7 +366,7 @@ public class RustCompileUtils {
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
 
     // Add the binary as the first argument.
-    executableBuilder.addArg(new SourcePathArg(pathResolver, buildRule.getSourcePathToOutput()));
+    executableBuilder.addArg(new SourcePathArg(buildRule.getSourcePathToOutput()));
 
     // Special handling for dynamically linked binaries.
     if (linkStyle == Linker.LinkableDepType.SHARED) {

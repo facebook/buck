@@ -227,7 +227,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                             getCxxPlatform().getLd().resolve(getRuleResolver()).origin(),
                             getRelativeNativeLibsDir().get().toString()))) :
                 ImmutableList.of())
-        .addAllArgs(SourcePathArg.from(getPathResolver(), objects.values()))
+        .addAllArgs(SourcePathArg.from(objects.values()))
         .build();
   }
 

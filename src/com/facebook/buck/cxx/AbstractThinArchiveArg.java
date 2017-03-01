@@ -39,8 +39,6 @@ import org.immutables.value.Value;
 abstract class AbstractThinArchiveArg extends Arg implements HasSourcePath {
 
   @Override
-  public abstract SourcePathResolver getPathResolver();
-  @Override
   public abstract SourcePath getPath();
   protected abstract ImmutableList<SourcePath> getContents();
 
@@ -48,7 +46,7 @@ abstract class AbstractThinArchiveArg extends Arg implements HasSourcePath {
   public void appendToCommandLine(
       ImmutableCollection.Builder<String> builder,
       SourcePathResolver pathResolver) {
-    builder.add(getPathResolver().getAbsolutePath(getPath()).toString());
+    builder.add(pathResolver.getAbsolutePath(getPath()).toString());
   }
 
   @Override

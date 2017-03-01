@@ -238,7 +238,7 @@ public class CxxLibraryDescription implements
                 params.getCellRoots(),
                 ruleResolver,
                 Iterables.concat(linkerFlags, exportedLinkerFlags)))
-        .addAllArgs(SourcePathArg.from(pathResolver, objects.values()))
+        .addAllArgs(SourcePathArg.from(objects.values()))
         .setFrameworks(frameworks)
         .setLibraries(libraries)
         .build();
@@ -326,7 +326,7 @@ public class CxxLibraryDescription implements
                     params.getCellRoots(),
                     ruleResolver,
                     extraLdFlags))
-            .addAllArgs(SourcePathArg.from(pathResolver, objects.values()))
+            .addAllArgs(SourcePathArg.from(objects.values()))
             .setFrameworks(frameworks)
             .setLibraries(libraries)
             .build());
@@ -479,7 +479,6 @@ public class CxxLibraryDescription implements
     return Archive.from(
         staticTarget,
         params,
-        sourcePathResolver,
         ruleFinder,
         cxxPlatform,
         cxxBuckConfig.getArchiveContents(),

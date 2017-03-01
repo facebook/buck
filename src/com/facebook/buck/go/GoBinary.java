@@ -79,7 +79,7 @@ public class GoBinary extends AbstractBuildRuleWithResolver implements BinaryBui
   @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder()
-        .addArg(new SourcePathArg(getResolver(), getSourcePathToOutput()))
+        .addArg(new SourcePathArg(getSourcePathToOutput()))
         .build();
   }
 

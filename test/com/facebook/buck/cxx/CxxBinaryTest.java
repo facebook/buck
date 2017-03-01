@@ -70,7 +70,6 @@ public class CxxBinaryTest {
                 new CommandTool.Builder()
                     .addArg(
                         new SourcePathArg(
-                            pathResolver,
                             new BuildTargetSourcePath(cxxLink.getBuildTarget())))
                     .build(),
                 ImmutableSortedSet.of(),

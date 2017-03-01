@@ -251,7 +251,6 @@ public class PythonTestDescription implements
         PythonUtil.getAllComponents(
             params,
             resolver,
-            pathResolver,
             ruleFinder,
             testComponents,
             pythonPlatform,

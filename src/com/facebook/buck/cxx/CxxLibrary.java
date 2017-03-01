@@ -63,7 +63,6 @@ public class CxxLibrary
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
-  private final SourcePathResolver pathResolver;
   private final Iterable<? extends BuildRule> exportedDeps;
   private final Predicate<CxxPlatform> hasExportedHeaders;
   private final Predicate<CxxPlatform> headerOnly;
@@ -118,7 +117,6 @@ public class CxxLibrary
     super(params, pathResolver);
     this.params = params;
     this.ruleResolver = ruleResolver;
-    this.pathResolver = pathResolver;
     this.exportedDeps = exportedDeps;
     this.hasExportedHeaders = hasExportedHeaders;
     this.headerOnly = headerOnly;
@@ -281,7 +279,6 @@ public class CxxLibrary
                     CxxLibraryDescription.Type.SHARED.getFlavor());
         linkerArgsBuilder.add(
             new SourcePathArg(
-                pathResolver,
                 Preconditions.checkNotNull(rule.getSourcePathToOutput())));
       }
     }

@@ -156,7 +156,6 @@ public class PythonUtil {
   public static PythonPackageComponents getAllComponents(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       final PythonPackageComponents packageComponents,
       final PythonPlatform pythonPlatform,
@@ -230,7 +229,6 @@ public class PythonUtil {
           Omnibus.getSharedLibraries(
               params,
               ruleResolver,
-              pathResolver,
               ruleFinder,
               cxxBuckConfig,
               cxxPlatform,

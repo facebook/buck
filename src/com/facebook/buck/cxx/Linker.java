@@ -22,7 +22,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
@@ -111,7 +110,6 @@ public interface Linker extends Tool {
   ImmutableList<Arg> createUndefinedSymbolsLinkerArgs(
       BuildRuleParams baseParams,
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Iterable<? extends SourcePath> symbolFiles);

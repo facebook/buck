@@ -219,7 +219,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder(python)
-        .addArg(new SourcePathArg(getResolver(), getSourcePathToOutput()))
+        .addArg(new SourcePathArg(getSourcePathToOutput()))
         .addDep(linkTree)
         .addInputs(getComponents().getModules().values())
         .addInputs(getComponents().getResources().values())

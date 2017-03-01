@@ -41,7 +41,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
@@ -221,7 +220,6 @@ public class HaskellDescriptionUtils {
       BuildTarget target,
       BuildRuleParams baseParams,
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       HaskellConfig haskellConfig,
@@ -309,7 +307,6 @@ public class HaskellDescriptionUtils {
             Archive.from(
                 emptyArchiveTarget,
                 baseParams,
-                pathResolver,
                 ruleFinder,
                 cxxPlatform,
                 Archive.Contents.NORMAL,
@@ -319,7 +316,7 @@ public class HaskellDescriptionUtils {
                     "%s/libempty.a"),
                 emptyCompiledModule.getObjects()));
     argsBuilder.add(
-        new SourcePathArg(pathResolver, emptyArchive.getSourcePathToOutput()));
+        new SourcePathArg(emptyArchive.getSourcePathToOutput()));
 
     ImmutableList<Arg> args = argsBuilder.build();
     ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();

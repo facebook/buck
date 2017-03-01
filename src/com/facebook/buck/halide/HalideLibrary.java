@@ -163,7 +163,6 @@ public class HalideLibrary
       return ((Archive) rule).toArg();
     } else {
       return new SourcePathArg(
-          getResolver(),
           Preconditions.checkNotNull(rule.getSourcePathToOutput()));
     }
   }

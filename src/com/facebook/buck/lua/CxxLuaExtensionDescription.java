@@ -200,7 +200,7 @@ public class CxxLuaExtensionDescription implements
                 cxxPlatform)));
 
     // Add object files into the args.
-    argsBuilder.addAll(SourcePathArg.from(pathResolver, picObjects.values()));
+    argsBuilder.addAll(SourcePathArg.from(picObjects.values()));
 
     return argsBuilder.build();
   }

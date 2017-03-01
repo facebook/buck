@@ -167,7 +167,7 @@ abstract class DDescriptionUtils {
         NativeLinkableInput.builder()
             .addAllArgs(StringArg.from(dBuckConfig.getLinkerFlags()))
             .addAllArgs(StringArg.from(linkerFlags))
-            .addAllArgs(SourcePathArg.from(sourcePathResolver, sourcePaths))
+            .addAllArgs(SourcePathArg.from(sourcePaths))
             .build());
   }
 

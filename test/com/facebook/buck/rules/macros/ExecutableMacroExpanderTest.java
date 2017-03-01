@@ -191,11 +191,9 @@ public class ExecutableMacroExpanderTest {
             return new CommandTool.Builder()
                 .addArg(
                     new SourcePathArg(
-                        getResolver(),
                         new BuildTargetSourcePath(dep1.getBuildTarget())))
                 .addArg(
                     new SourcePathArg(
-                        getResolver(),
                         new BuildTargetSourcePath(dep2.getBuildTarget())))
                 .build();
           }

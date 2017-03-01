@@ -96,7 +96,6 @@ public class ArchiveTest {
             Archive.from(
                 target,
                 params,
-                pathResolver,
                 ruleFinder,
                 DEFAULT_ARCHIVER,
                 ImmutableList.of(),
@@ -112,7 +111,6 @@ public class ArchiveTest {
             Archive.from(
                 target,
                 params,
-                pathResolver,
                 ruleFinder,
                 new GnuArchiver(new HashedFileTool(Paths.get("different"))),
                 ImmutableList.of(),
@@ -129,7 +127,6 @@ public class ArchiveTest {
             Archive.from(
                 target,
                 params,
-                pathResolver,
                 ruleFinder,
                 DEFAULT_ARCHIVER,
                 ImmutableList.of(),
@@ -146,7 +143,6 @@ public class ArchiveTest {
             Archive.from(
                 target,
                 params,
-                pathResolver,
                 ruleFinder,
                 DEFAULT_ARCHIVER,
                 ImmutableList.of(),
@@ -163,7 +159,6 @@ public class ArchiveTest {
             Archive.from(
                 target,
                 params,
-                pathResolver,
                 ruleFinder,
                 new BsdArchiver(new HashedFileTool(AR)),
                 ImmutableList.of(),
@@ -186,7 +181,6 @@ public class ArchiveTest {
     Archive archive = Archive.from(
         target,
         params,
-        pathResolver,
         ruleFinder,
         DEFAULT_ARCHIVER,
         ImmutableList.of("-foo"),
@@ -237,7 +231,6 @@ public class ArchiveTest {
         Archive.from(
             target,
             params,
-            new SourcePathResolver(ruleFinder),
             ruleFinder,
             DEFAULT_ARCHIVER,
             ImmutableList.of(),
@@ -280,7 +273,6 @@ public class ArchiveTest {
         Archive.from(
             target,
             params,
-            pathResolver,
             ruleFinder,
             DEFAULT_ARCHIVER,
             ImmutableList.of(),

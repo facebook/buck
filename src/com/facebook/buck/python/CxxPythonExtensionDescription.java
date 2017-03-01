@@ -237,7 +237,7 @@ public class CxxPythonExtensionDescription implements
                 String.format("%s/", cxxPlatform.getLd().resolve(ruleResolver).libOrigin()))));
 
     // Add object files into the args.
-    argsBuilder.addAll(SourcePathArg.from(pathResolver, picObjects.values()));
+    argsBuilder.addAll(SourcePathArg.from(picObjects.values()));
 
     return argsBuilder.build();
   }

@@ -112,7 +112,6 @@ public class DBinaryDescription implements
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
     executableBuilder.addArg(
         new SourcePathArg(
-            pathResolver,
             nativeLinkable.getSourcePathToOutput()));
 
     // Return a BinaryBuildRule implementation, so that this works

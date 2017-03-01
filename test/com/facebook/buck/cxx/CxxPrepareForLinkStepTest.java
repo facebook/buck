@@ -59,7 +59,7 @@ public class CxxPrepareForLinkStepTest {
     // Setup some dummy values for inputs to the CxxLinkStep
     ImmutableList<Arg> dummyArgs = ImmutableList.of(
         FileListableLinkerInputArg.withSourcePathArg(
-            new SourcePathArg(pathResolver, new FakeSourcePath("libb.a"))));
+            new SourcePathArg(new FakeSourcePath("libb.a"))));
 
     CxxPrepareForLinkStep cxxPrepareForLinkStepSupportFileList = CxxPrepareForLinkStep.create(
         dummyPath,
@@ -153,7 +153,7 @@ public class CxxPrepareForLinkStepTest {
         new StringArg("hello"),
         new StringArg("a.o"),
         FileListableLinkerInputArg.withSourcePathArg(
-            new SourcePathArg(pathResolver, new FakeSourcePath("libb.a"))),
+            new SourcePathArg(new FakeSourcePath("libb.a"))),
         new StringArg("-lsysroot"),
         new StringArg("/Library/Application Support/blabla"),
         new StringArg("-F/System/Frameworks"),

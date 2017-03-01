@@ -159,7 +159,6 @@ public class DLibraryDescription implements
     return Archive.from(
         staticTarget,
         params,
-        pathResolver,
         ruleFinder,
         cxxPlatform,
         cxxBuckConfig.getArchiveContents(),

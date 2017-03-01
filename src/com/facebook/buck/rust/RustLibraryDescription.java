@@ -305,7 +305,7 @@ public class RustLibraryDescription implements
             rootModule.get());
 
         SourcePath lib = rule.getSourcePathToOutput();
-        SourcePathArg arg = new SourcePathArg(getResolver(), lib);
+        SourcePathArg arg = new SourcePathArg(lib);
 
         return NativeLinkableInput.builder().addArgs(arg).build();
       }

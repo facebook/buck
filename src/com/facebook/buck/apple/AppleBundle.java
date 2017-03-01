@@ -34,7 +34,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -85,7 +85,7 @@ import java.util.stream.Stream;
  * Creates a bundle: a directory containing files and subdirectories, described by an Info.plist.
  */
 public class AppleBundle
-    extends AbstractBuildRuleWithResolver
+    extends AbstractBuildRule
     implements NativeTestable, BuildRuleWithBinary, HasRuntimeDeps, BinaryBuildRule {
 
   private static final Logger LOG = Logger.get(AppleBundle.class);
@@ -97,7 +97,6 @@ public class AppleBundle
   private static final String CODE_SIGN_DRY_RUN_ENTITLEMENTS_FILE =
       "BUCK_code_sign_entitlements.plist";
 
-  private final SourcePathResolver resolver;
   @AddToRuleKey
   private final String extension;
 
@@ -181,7 +180,6 @@ public class AppleBundle
 
   AppleBundle(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       BuildRuleResolver buildRuleResolver,
       Either<AppleBundleExtension, String> extension,
       Optional<String> productName,
@@ -202,8 +200,7 @@ public class AppleBundle
       ProvisioningProfileStore provisioningProfileStore,
       boolean dryRunCodeSigning,
       boolean cacheable) {
-    super(params, resolver);
-    this.resolver = resolver;
+    super(params);
     this.extension = extension.isLeft() ?
         extension.getLeft().toFileExtension() :
         extension.getRight();
@@ -978,7 +975,6 @@ public class AppleBundle
     return new CommandTool.Builder()
         .addArg(
             new SourcePathArg(
-                resolver,
                 new PathSourcePath(getProjectFilesystem(), bundleBinaryPath)))
         .build();
   }

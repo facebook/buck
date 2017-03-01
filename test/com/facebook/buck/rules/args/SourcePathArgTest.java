@@ -41,7 +41,7 @@ public class SourcePathArgTest {
     SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
      ));
-    SourcePathArg arg = new SourcePathArg(resolver, path);
+    SourcePathArg arg = new SourcePathArg(path);
     assertThat(
         Arg.stringifyList(arg, resolver),
         Matchers.contains(resolver.getAbsolutePath(path).toString()));
@@ -52,13 +52,12 @@ public class SourcePathArgTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     Genrule rule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("output")
             .build(resolver);
     SourcePathArg arg =
-        new SourcePathArg(pathResolver, new BuildTargetSourcePath(rule.getBuildTarget()));
+        new SourcePathArg(new BuildTargetSourcePath(rule.getBuildTarget()));
     assertThat(arg.getDeps(ruleFinder), Matchers.contains(rule));
   }
 

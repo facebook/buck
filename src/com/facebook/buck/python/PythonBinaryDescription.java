@@ -303,7 +303,6 @@ public class PythonBinaryDescription implements
         PythonUtil.getAllComponents(
             params,
             resolver,
-            pathResolver,
             ruleFinder,
             binaryPackageComponents,
             pythonPlatform,

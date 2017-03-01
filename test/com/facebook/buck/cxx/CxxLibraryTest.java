@@ -129,7 +129,6 @@ public class CxxLibraryTest {
     NativeLinkableInput expectedStaticNativeLinkableInput = NativeLinkableInput.of(
         ImmutableList.of(
             new SourcePathArg(
-                pathResolver,
                 new BuildTargetSourcePath(archive.getBuildTarget()))),
         ImmutableSet.of(),
         ImmutableSet.of());
@@ -144,7 +143,6 @@ public class CxxLibraryTest {
     NativeLinkableInput expectedSharedNativeLinkableInput = NativeLinkableInput.of(
         ImmutableList.of(
             new SourcePathArg(
-                pathResolver,
                 new BuildTargetSourcePath(sharedLibrary.getBuildTarget()))),
         ImmutableSet.of(),
         ImmutableSet.of());

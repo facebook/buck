@@ -57,7 +57,7 @@ public class CommandToolTest {
     // Test command and inputs for just passing the source path.
     CommandTool tool =
         new CommandTool.Builder()
-            .addArg(new SourcePathArg(pathResolver, path))
+            .addArg(new SourcePathArg(path))
             .build();
     assertThat(
         tool.getCommandPrefix(pathResolver),
@@ -85,7 +85,7 @@ public class CommandToolTest {
     // Test command and inputs for just passing the source path.
     CommandTool tool =
         new CommandTool.Builder()
-            .addArg(new SourcePathArg(pathResolver, path))
+            .addArg(new SourcePathArg(path))
             .build();
     assertThat(
         tool.getCommandPrefix(pathResolver),
@@ -124,7 +124,7 @@ public class CommandToolTest {
     CommandTool tool =
         new CommandTool.Builder()
             .addArg("runit")
-            .addEnv("PATH", new SourcePathArg(pathResolver, path))
+            .addEnv("PATH", new SourcePathArg(path))
             .build();
 
     assertThat(tool.getEnvironment(pathResolver), Matchers.hasEntry(
@@ -141,7 +141,7 @@ public class CommandToolTest {
     SourcePath path = new FakeSourcePath("input");
     CommandTool tool =
         new CommandTool.Builder()
-            .addArg(new SourcePathArg(pathResolver, path))
+            .addArg(new SourcePathArg(path))
             .build();
 
     FileHashCache hashCache = FakeFileHashCache.createFromStrings(

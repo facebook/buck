@@ -132,7 +132,7 @@ public class HaskellBinaryDescription implements
 
     // Add the binary as the first argument.
     executableBuilder.addArg(
-        new SourcePathArg(pathResolver, new BuildTargetSourcePath(binaryTarget)));
+        new SourcePathArg(new BuildTargetSourcePath(binaryTarget)));
 
     // Special handling for dynamically linked binaries.
     if (depType == Linker.LinkableDepType.SHARED) {
@@ -190,7 +190,7 @@ public class HaskellBinaryDescription implements
                     cxxPlatform,
                     "srcs",
                     args.srcs)));
-    linkArgsBuilder.addAll(SourcePathArg.from(pathResolver, compileRule.getObjects()));
+    linkArgsBuilder.addAll(SourcePathArg.from(compileRule.getObjects()));
 
     ImmutableList<String> linkFlags = linkFlagsBuilder.build();
     ImmutableList<com.facebook.buck.rules.args.Arg> linkArgs = linkArgsBuilder.build();
@@ -201,7 +201,6 @@ public class HaskellBinaryDescription implements
             binaryTarget,
             params,
             resolver,
-            pathResolver,
             ruleFinder,
             cxxPlatform,
             haskellConfig,

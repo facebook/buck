@@ -98,7 +98,6 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
    */
   private Iterable<Arg> getStaticLinkArgs(
       BuildTarget target,
-      SourcePathResolver pathResolver,
       ImmutableList<SourcePath> libs,
       ImmutableList<String> args) {
     ImmutableList.Builder<Arg> builder = ImmutableList.builder();
@@ -114,7 +113,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
         if (index < 0 || index >= libs.size()) {
           throw new HumanReadableException("%s: ", target);
         }
-        builder.add(new SourcePathArg(pathResolver, libs.get(index)));
+        builder.add(new SourcePathArg(libs.get(index)));
       } else {
         builder.add(new StringArg(arg));
       }
@@ -128,7 +127,6 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
    */
   private Iterable<Arg> getSharedLinkArgs(
       BuildTarget target,
-      SourcePathResolver pathResolver,
       ImmutableMap<String, SourcePath> libs,
       ImmutableList<String> args) {
     ImmutableList.Builder<Arg> builder = ImmutableList.builder();
@@ -146,7 +144,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
         }
         Arg libArg;
         if (libRef.get().getFirst().equals(LIB_MACRO)) {
-          libArg = new SourcePathArg(pathResolver, lib);
+          libArg = new SourcePathArg(lib);
         } else if (libRef.get().getFirst().equals(REL_LIB_MACRO)) {
           if (!(lib instanceof PathSourcePath)) {
             throw new HumanReadableException(
@@ -271,7 +269,6 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
             builder.addAllArgs(
                 getStaticLinkArgs(
                     getBuildTarget(),
-                    pathResolver,
                     CxxGenruleDescription.fixupSourcePaths(
                         resolver,
                         ruleFinder,
@@ -283,7 +280,6 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
             builder.addAllArgs(
                 getStaticLinkArgs(
                     getBuildTarget(),
-                    pathResolver,
                     CxxGenruleDescription.fixupSourcePaths(
                         resolver,
                         ruleFinder,
@@ -295,7 +291,6 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
             builder.addAllArgs(
                 getSharedLinkArgs(
                     getBuildTarget(),
-                    pathResolver,
                     CxxGenruleDescription.fixupSourcePaths(
                         resolver,
                         ruleFinder,

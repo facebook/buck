@@ -19,7 +19,6 @@ package com.facebook.buck.file;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.CommandTool;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.hash.HashCode;
@@ -31,24 +30,20 @@ import java.net.URI;
  * {@code buck run}.
  */
 public class RemoteFileBinary extends RemoteFile implements BinaryBuildRule {
-  private final SourcePathResolver resolver;
-
   public RemoteFileBinary(
       BuildRuleParams params,
       Downloader downloader,
       URI uri,
       HashCode sha1,
       String out,
-      Type type,
-      SourcePathResolver resolver) {
+      Type type) {
     super(params, downloader, uri, sha1, out, type);
-    this.resolver = resolver;
   }
 
   @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder()
-        .addArg(new SourcePathArg(resolver, getSourcePathToOutput()))
+        .addArg(new SourcePathArg(getSourcePathToOutput()))
         .build();
   }
 }

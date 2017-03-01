@@ -147,7 +147,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder(pathToPexExecuter)
-        .addArg(new SourcePathArg(getResolver(), getSourcePathToOutput()))
+        .addArg(new SourcePathArg(getSourcePathToOutput()))
         .build();
   }
 

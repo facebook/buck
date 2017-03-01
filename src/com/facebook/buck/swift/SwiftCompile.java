@@ -278,10 +278,8 @@ class SwiftCompile
     return ImmutableSet.<Arg>builder()
         .addAll(StringArg.from("-Xlinker", "-add_ast_path"))
         .add(new SourcePathArg(
-            getResolver(),
             new BuildTargetSourcePath(getBuildTarget(), modulePath)))
         .add(new SourcePathArg(
-            getResolver(),
             new BuildTargetSourcePath(getBuildTarget(), objectPath)))
         .build();
   }

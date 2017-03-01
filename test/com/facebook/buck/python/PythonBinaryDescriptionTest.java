@@ -393,7 +393,6 @@ public class PythonBinaryDescriptionTest {
             return new CommandTool.Builder()
                 .addArg(
                     new SourcePathArg(
-                        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
                         new BuildTargetSourcePath(pexTool.getBuildTarget())))
                 .build();
           }

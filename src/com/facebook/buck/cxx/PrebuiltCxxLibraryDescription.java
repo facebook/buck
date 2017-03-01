@@ -457,7 +457,6 @@ public class PrebuiltCxxLibraryDescription implements
             .addAllArgs(
                 cxxPlatform.getLd().resolve(ruleResolver).linkWhole(
                     new SourcePathArg(
-                        pathResolver,
                         staticLibraryPath)))
             .build());
   }
@@ -894,7 +893,7 @@ public class PrebuiltCxxLibraryDescription implements
               linkerArgsBuilder.add(new RelativeLinkArg((PathSourcePath) sharedLibrary));
             } else {
               linkerArgsBuilder.add(
-                  new SourcePathArg(pathResolver, requireSharedLibrary(cxxPlatform, true)));
+                  new SourcePathArg(requireSharedLibrary(cxxPlatform, true)));
             }
           } else {
             Preconditions.checkState(getPreferredLinkage(cxxPlatform) != Linkage.SHARED);
@@ -912,7 +911,6 @@ public class PrebuiltCxxLibraryDescription implements
                         args.libName);
             SourcePathArg staticLibrary =
                 new SourcePathArg(
-                    pathResolver,
                     staticLibraryPath);
             if (args.linkWhole) {
               Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
@@ -1016,7 +1014,6 @@ public class PrebuiltCxxLibraryDescription implements
                     .addAllArgs(
                         cxxPlatform.getLd().resolve(ruleResolver).linkWhole(
                             new SourcePathArg(
-                                pathResolver,
                                 getStaticPicLibrary(cxxPlatform).get())))
                     .build();
               }

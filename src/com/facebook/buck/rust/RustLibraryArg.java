@@ -132,9 +132,4 @@ public class RustLibraryArg extends Arg implements HasSourcePath {
   public SourcePath getPath() {
     return rlib;
   }
-
-  @Override
-  public SourcePathResolver getPathResolver() {
-    return resolver;
-  }
 }

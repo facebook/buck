@@ -106,9 +106,4 @@ public class FileListableLinkerInputArg extends Arg implements HasSourcePath {
   public SourcePath getPath() {
     return value.getPath();
   }
-
-  @Override
-  public SourcePathResolver getPathResolver() {
-    return value.getPathResolver();
-  }
 }

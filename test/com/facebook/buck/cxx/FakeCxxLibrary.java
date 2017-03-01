@@ -156,14 +156,12 @@ public final class FakeCxxLibrary
         NativeLinkableInput.of(
             ImmutableList.of(
                 new SourcePathArg(
-                    getResolver(),
                     new BuildTargetSourcePath(archive.getBuildTarget()))),
             ImmutableSet.of(),
             ImmutableSet.of()) :
         NativeLinkableInput.of(
             ImmutableList.of(
                 new SourcePathArg(
-                    getResolver(),
                     new BuildTargetSourcePath(sharedLibrary.getBuildTarget()))),
             ImmutableSet.of(),
             ImmutableSet.of());

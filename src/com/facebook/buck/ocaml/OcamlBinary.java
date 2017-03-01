@@ -49,7 +49,6 @@ public class OcamlBinary extends AbstractBuildRuleWithResolver
   public Tool getExecutableCommand() {
     return new CommandTool.Builder()
         .addArg(new SourcePathArg(
-            getResolver(),
             Preconditions.checkNotNull(binary.getSourcePathToOutput())))
         .build();
   }

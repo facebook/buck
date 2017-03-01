@@ -72,7 +72,7 @@ public class NdkLibraryDescriptionTest {
         CxxPlatform cxxPlatform,
         Linker.LinkableDepType type) {
       return NativeLinkableInput.builder()
-          .addArgs(new SourcePathArg(getResolver(), input))
+          .addArgs(new SourcePathArg(input))
           .build();
     }
 

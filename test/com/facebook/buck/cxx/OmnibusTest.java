@@ -80,7 +80,6 @@ public class OmnibusTest {
             Omnibus.getSharedLibraries(
                 new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule")).build(),
                 resolver,
-                pathResolver,
                 ruleFinder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -145,7 +144,6 @@ public class OmnibusTest {
             Omnibus.getSharedLibraries(
                 new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule")).build(),
                 resolver,
-                pathResolver,
                 ruleFinder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -215,7 +213,6 @@ public class OmnibusTest {
             Omnibus.getSharedLibraries(
                 new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule")).build(),
                 resolver,
-                pathResolver,
                 ruleFinder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -289,7 +286,6 @@ public class OmnibusTest {
             Omnibus.getSharedLibraries(
                 new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule")).build(),
                 resolver,
-                pathResolver,
                 ruleFinder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -361,7 +357,6 @@ public class OmnibusTest {
             Omnibus.getSharedLibraries(
                 new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule")).build(),
                 resolver,
-                pathResolver,
                 ruleFinder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -431,7 +426,6 @@ public class OmnibusTest {
             Omnibus.getSharedLibraries(
                 new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule")).build(),
                 resolver,
-                pathResolver,
                 ruleFinder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,

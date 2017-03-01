@@ -216,7 +216,6 @@ public class HalideLibraryDescription
     return Archive.from(
         params.getBuildTarget(),
         params,
-        pathResolver,
         ruleFinder,
         platform,
         cxxBuckConfig.getArchiveContents(),

@@ -139,7 +139,6 @@ public class DarwinLinker implements Linker, HasLinkerMap {
   public ImmutableList<Arg> createUndefinedSymbolsLinkerArgs(
       BuildRuleParams baseParams,
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Iterable<? extends SourcePath> symbolFiles) {

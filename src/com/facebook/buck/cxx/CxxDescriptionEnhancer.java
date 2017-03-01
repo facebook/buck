@@ -840,7 +840,7 @@ public class CxxDescriptionEnhancer {
 
     // Add object files into the args.
     ImmutableList<SourcePathArg> objectArgs =
-        SourcePathArg.from(sourcePathResolver, objects.values()).stream()
+        SourcePathArg.from(objects.values()).stream()
             .map(input -> {
               Preconditions.checkArgument(input instanceof SourcePathArg);
               return (SourcePathArg) input;
@@ -892,7 +892,6 @@ public class CxxDescriptionEnhancer {
     // Add the output of the link as the lone argument needed to invoke this binary as a tool.
     executableBuilder.addArg(
         new SourcePathArg(
-            sourcePathResolver,
             binaryRuleForExecutable.getSourcePathToOutput()));
 
     return new CxxLinkAndCompileRules(

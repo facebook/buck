@@ -255,7 +255,7 @@ public class JarFattener extends AbstractBuildRuleWithResolver implements Binary
     return new CommandTool.Builder()
         .addArg(javaRuntimeLauncher.getCommand())
         .addArg("-jar")
-        .addArg(new SourcePathArg(getResolver(), getSourcePathToOutput()))
+        .addArg(new SourcePathArg(getSourcePathToOutput()))
         .build();
   }
 

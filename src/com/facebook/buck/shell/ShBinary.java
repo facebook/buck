@@ -133,7 +133,7 @@ public class ShBinary extends AbstractBuildRuleWithResolver
   public Tool getExecutableCommand() {
     return new CommandTool.Builder()
         .addArg(
-            new SourcePathArg(getResolver(), new BuildTargetSourcePath(getBuildTarget(), output)))
+            new SourcePathArg(new BuildTargetSourcePath(getBuildTarget(), output)))
         .addInput(main)
         .addInputs(resources)
         .build();
