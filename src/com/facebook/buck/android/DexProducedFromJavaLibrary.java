@@ -90,14 +90,17 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
   private final SourcePath javaLibrarySourcePath;
   private final JavaLibrary javaLibrary;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
+  private final Optional<String> maxHeapSize;
 
   DexProducedFromJavaLibrary(
       BuildRuleParams params,
-      JavaLibrary javaLibrary) {
+      JavaLibrary javaLibrary,
+      Optional<String> maxHeapSize) {
     super(params);
     this.javaLibrary = javaLibrary;
     this.javaLibrarySourcePath = javaLibrary.getSourcePathToOutput();
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
+    this.maxHeapSize = maxHeapSize;
   }
 
   @Override
@@ -139,7 +142,8 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
               DxStep.Option.USE_CUSTOM_DX_IF_AVAILABLE,
               DxStep.Option.RUN_IN_PROCESS,
               DxStep.Option.NO_OPTIMIZE,
-              DxStep.Option.FORCE_JUMBO));
+              DxStep.Option.FORCE_JUMBO),
+          maxHeapSize);
       steps.add(dx);
 
       // The `DxStep` delegates to android tools to build a ZIP with timestamps in it, making

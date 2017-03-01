@@ -217,7 +217,8 @@ public class AndroidBinaryGraphEnhancerTest {
         "//fake:uber_r_dot_java#dex");
     DexProducedFromJavaLibrary fakeUberRDotJavaDex = new DexProducedFromJavaLibrary(
         new FakeBuildRuleParamsBuilder(fakeUberRDotJavaDexTarget).build(),
-        fakeUberRDotJavaCompile);
+        fakeUberRDotJavaCompile,
+        Optional.empty());
     ruleResolver.addToIndex(fakeUberRDotJavaDex);
 
     BuildRule preDexMergeRule = graphEnhancer.createPreDexMergeRule(

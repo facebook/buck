@@ -72,6 +72,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 
 public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
 
@@ -116,7 +117,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
         .setProjectFilesystem(filesystem)
         .build();
     DexProducedFromJavaLibrary preDex =
-        new DexProducedFromJavaLibrary(params, javaLibraryRule);
+        new DexProducedFromJavaLibrary(params, javaLibraryRule, Optional.empty());
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
     AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
@@ -184,7 +185,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     DexProducedFromJavaLibrary preDex =
         new DexProducedFromJavaLibrary(
             params,
-            javaLibrary);
+            javaLibrary,
+            Optional.empty());
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
     Path dexOutput = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s.dex.jar");
@@ -221,7 +223,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     DexProducedFromJavaLibrary preDexWithClasses =
         new DexProducedFromJavaLibrary(
             params,
-            accumulateClassNames);
+            accumulateClassNames,
+            Optional.empty());
     assertNull(preDexWithClasses.getSourcePathToOutput());
     assertEquals(
         BuildTargets.getGenPath(params.getProjectFilesystem(), buildTarget, "%s.dex.jar"),
@@ -250,7 +253,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:target"))
             .build();
     DexProducedFromJavaLibrary dexProducedFromJavaLibrary =
-        new DexProducedFromJavaLibrary(params, javaLibrary);
+        new DexProducedFromJavaLibrary(params, javaLibrary, Optional.empty());
 
     ObjectMapper mapper = ObjectMappers.newDefaultInstance();
     FakeOnDiskBuildInfo onDiskBuildInfo =

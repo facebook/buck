@@ -454,7 +454,7 @@ public class AndroidBinaryGraphEnhancer {
         Suppliers.ofInstance(ImmutableSortedSet.of(compileUberRDotJava)),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
     DexProducedFromJavaLibrary dexUberRDotJava =
-        new DexProducedFromJavaLibrary(paramsForDexUberRDotJava, compileUberRDotJava);
+        new DexProducedFromJavaLibrary(paramsForDexUberRDotJava, compileUberRDotJava, dxConfig.getDxMaxHeapSize());
     ruleResolver.addToIndex(dexUberRDotJava);
 
     Optional<PreDexMerge> preDexMerge = Optional.empty();
@@ -655,7 +655,7 @@ public class AndroidBinaryGraphEnhancer {
               ImmutableSortedSet.of(ruleResolver.getRule(javaLibrary.getBuildTarget()))),
           /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
       DexProducedFromJavaLibrary preDex =
-          new DexProducedFromJavaLibrary(paramsForPreDex, javaLibrary);
+          new DexProducedFromJavaLibrary(paramsForPreDex, javaLibrary, dxConfig.getDxMaxHeapSize());
       ruleResolver.addToIndex(preDex);
       preDexDeps.put(apkModuleGraph.findModuleForTarget(buildTarget), preDex);
     }
