@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -35,13 +34,9 @@ import java.util.Objects;
  */
 public abstract class FrameworkPathArg extends Arg {
 
-  protected final SourcePathResolver resolver;
   protected final ImmutableCollection<FrameworkPath> frameworkPaths;
 
-  public FrameworkPathArg(
-      SourcePathResolver resolver,
-      ImmutableCollection<FrameworkPath> frameworkPaths) {
-    this.resolver = resolver;
+  public FrameworkPathArg(ImmutableCollection<FrameworkPath> frameworkPaths) {
     this.frameworkPaths = frameworkPaths;
   }
 

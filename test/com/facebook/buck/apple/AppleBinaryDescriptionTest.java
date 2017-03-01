@@ -70,7 +70,7 @@ public class AppleBinaryDescriptionTest {
     BuildRule binary = ((CxxBinary) builder.build(resolver)).getLinkRule();
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
-        Arg.stringify(((CxxLink) binary).getArgs()),
+        Arg.stringify(((CxxLink) binary).getArgs(), pathResolver),
         Matchers.hasItem(
             String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
     assertThat(

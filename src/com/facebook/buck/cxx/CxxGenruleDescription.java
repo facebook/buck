@@ -843,7 +843,9 @@ public class CxxGenruleDescription
         Optional<Pattern> filter)
         throws MacroException {
       return shquoteJoin(
-          com.facebook.buck.rules.args.Arg.stringify(getLinkerArgs(resolver, rules, filter)));
+          com.facebook.buck.rules.args.Arg.stringify(
+              getLinkerArgs(resolver, rules, filter),
+              new SourcePathResolver(new SourcePathRuleFinder(resolver))));
     }
 
     @Override

@@ -67,7 +67,7 @@ public class ShTestDescriptionTest {
         shTest.getDeps(),
         Matchers.contains(dep));
     assertThat(
-        Arg.stringify(shTest.getArgs()),
+        Arg.stringify(shTest.getArgs(), pathResolver),
         Matchers.contains(
             pathResolver.getAbsolutePath(
                 new BuildTargetSourcePath(dep.getBuildTarget())).toString()));
@@ -92,7 +92,7 @@ public class ShTestDescriptionTest {
         shTest.getDeps(),
         Matchers.contains(dep));
     assertThat(
-        Arg.stringify(shTest.getEnv()),
+        Arg.stringify(shTest.getEnv(), pathResolver),
         Matchers.equalTo(
             ImmutableMap.of(
                 "LOC",

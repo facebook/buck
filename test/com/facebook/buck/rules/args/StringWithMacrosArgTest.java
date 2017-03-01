@@ -191,7 +191,7 @@ public class StringWithMacrosArgTest {
             CELL_PATH_RESOLVER,
             resolver);
     assertThat(
-        Arg.stringifyList(noMacrosArg),
+        Arg.stringifyList(noMacrosArg, pathResolver),
         Matchers.equalTo(ImmutableList.of("--test")));
 
     // Test one embedded macros.
@@ -205,7 +205,7 @@ public class StringWithMacrosArgTest {
             CELL_PATH_RESOLVER,
             resolver);
     assertThat(
-        Arg.stringifyList(oneMacrosArg),
+        Arg.stringifyList(oneMacrosArg, pathResolver),
         Matchers.equalTo(
             ImmutableList.of(
                 String.format(
@@ -226,7 +226,7 @@ public class StringWithMacrosArgTest {
             CELL_PATH_RESOLVER,
             resolver);
     assertThat(
-        Arg.stringifyList(multipleMacrosArg),
+        Arg.stringifyList(multipleMacrosArg, pathResolver),
         Matchers.equalTo(
             ImmutableList.of(
                 String.format(

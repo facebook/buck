@@ -236,7 +236,8 @@ public class OcamlBuildStep implements Step {
         ocamlContext.getCLinkableInput().getArgs(),
         linkerInputs,
         ocamlContext.isLibrary(),
-        /* isBytecode */ false);
+        /* isBytecode */ false,
+        resolver);
     return linkStep.execute(context);
   }
 
@@ -260,7 +261,8 @@ public class OcamlBuildStep implements Step {
         ocamlContext.getCLinkableInput().getArgs(),
         linkerInputs,
         ocamlContext.isLibrary(),
-        /* isBytecode */ true);
+        /* isBytecode */ true,
+        resolver);
     return linkStep.execute(context);
   }
 

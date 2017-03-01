@@ -235,7 +235,7 @@ public class CxxLinkableEnhancer {
         CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
 
     argsBuilder.add(
-        new FrameworkPathArg(resolver, allLibraries) {
+        new FrameworkPathArg(allLibraries) {
 
           @Override
           public void appendToRuleKey(RuleKeyObjectSink sink) {
@@ -244,7 +244,9 @@ public class CxxLinkableEnhancer {
           }
 
           @Override
-          public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
+          public void appendToCommandLine(
+              ImmutableCollection.Builder<String> builder,
+              SourcePathResolver pathResolver) {
             ImmutableSortedSet<Path> searchPaths = FluentIterable.from(frameworkPaths)
                 .transform(frameworkPathToSearchPath)
                 .filter(Objects::nonNull)
@@ -257,9 +259,11 @@ public class CxxLinkableEnhancer {
         });
 
     // Add all libraries link args
-    argsBuilder.add(new FrameworkPathArg(resolver, allLibraries) {
+    argsBuilder.add(new FrameworkPathArg(allLibraries) {
       @Override
-      public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
+      public void appendToCommandLine(
+          ImmutableCollection.Builder<String> builder,
+          SourcePathResolver pathResolver) {
         for (FrameworkPath frameworkPath : frameworkPaths) {
           String libName = MorePaths.stripPathPrefixAndExtension(
               frameworkPath.getFileName(resolver::getAbsolutePath),
@@ -286,7 +290,7 @@ public class CxxLinkableEnhancer {
         CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
 
     argsBuilder.add(
-        new FrameworkPathArg(resolver, allFrameworks) {
+        new FrameworkPathArg(allFrameworks) {
           @Override
           public void appendToRuleKey(RuleKeyObjectSink sink) {
             super.appendToRuleKey(sink);
@@ -294,7 +298,9 @@ public class CxxLinkableEnhancer {
           }
 
           @Override
-          public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
+          public void appendToCommandLine(
+              ImmutableCollection.Builder<String> builder,
+              SourcePathResolver pathResolver) {
             ImmutableSortedSet<Path> searchPaths = FluentIterable.from(frameworkPaths)
                 .transform(frameworkPathToSearchPath)
                 .toSortedSet(Ordering.natural());
@@ -306,19 +312,19 @@ public class CxxLinkableEnhancer {
         });
 
     // Add all framework link args
-    argsBuilder.add(frameworksToLinkerArg(resolver, allFrameworks));
+    argsBuilder.add(frameworksToLinkerArg(allFrameworks));
   }
 
   @VisibleForTesting
-  static Arg frameworksToLinkerArg(
-      final SourcePathResolver resolver,
-      ImmutableSortedSet<FrameworkPath> frameworkPaths) {
-    return new FrameworkPathArg(resolver, frameworkPaths) {
+  static Arg frameworksToLinkerArg(ImmutableSortedSet<FrameworkPath> frameworkPaths) {
+    return new FrameworkPathArg(frameworkPaths) {
       @Override
-      public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
+      public void appendToCommandLine(
+          ImmutableCollection.Builder<String> builder,
+          SourcePathResolver pathResolver) {
         for (FrameworkPath frameworkPath : frameworkPaths) {
           builder.add("-framework");
-          builder.add(frameworkPath.getName(resolver::getAbsolutePath));
+          builder.add(frameworkPath.getName(pathResolver::getAbsolutePath));
         }
       }
     };

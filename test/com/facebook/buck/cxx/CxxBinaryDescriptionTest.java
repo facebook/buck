@@ -316,7 +316,7 @@ public class CxxBinaryDescriptionTest {
     BuildRule binary = builder.build(resolver).getLinkRule();
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
-        Arg.stringify(((CxxLink) binary).getArgs()),
+        Arg.stringify(((CxxLink) binary).getArgs(), pathResolver),
         Matchers.hasItem(
             String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
     assertThat(
@@ -355,7 +355,7 @@ public class CxxBinaryDescriptionTest {
     BuildRule binary = builder.build(resolver).getLinkRule();
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
-        Arg.stringify(((CxxLink) binary).getArgs()),
+        Arg.stringify(((CxxLink) binary).getArgs(), pathResolver),
         Matchers.hasItem(
             String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
     assertThat(
@@ -392,7 +392,7 @@ public class CxxBinaryDescriptionTest {
     BuildRule binary = builder.build(resolver).getLinkRule();
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
-        Arg.stringify(((CxxLink) binary).getArgs()),
+        Arg.stringify(((CxxLink) binary).getArgs(), pathResolver),
         Matchers.not(
             Matchers.hasItem(
                 String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver)))));
@@ -423,10 +423,11 @@ public class CxxBinaryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(binaryBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     CxxBinary binary = binaryBuilder.build(resolver, filesystem, targetGraph);
     assertThat(binary.getLinkRule(), Matchers.instanceOf(CxxLink.class));
     assertThat(
-        Arg.stringify(((CxxLink) binary.getLinkRule()).getArgs()),
+        Arg.stringify(((CxxLink) binary.getLinkRule()).getArgs(), pathResolver),
         Matchers.hasItems("-L", "/another/path", "/some/path", "-la", "-ls"));
   }
 

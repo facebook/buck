@@ -55,7 +55,9 @@ abstract class AbstractGlobArg extends Arg {
    * Find all files under the given directory and add them to the command line builder.
    */
   @Override
-  public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
+  public void appendToCommandLine(
+      ImmutableCollection.Builder<String> builder,
+      SourcePathResolver pathResolver) {
     final Set<Path> paths = new TreeSet<>();
     ProjectFilesystem filesystem = getPathResolver().getFilesystem(getRoot());
     PathMatcher matcher =  // NOPMD

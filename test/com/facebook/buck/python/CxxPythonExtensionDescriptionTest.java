@@ -44,6 +44,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
@@ -288,6 +289,7 @@ public class CxxPythonExtensionDescriptionTest {
             builder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
 
     python2Builder.build(resolver, filesystem, targetGraph);
     python3Builder.build(resolver, filesystem, targetGraph);
@@ -301,7 +303,7 @@ public class CxxPythonExtensionDescriptionTest {
             py2,
             CxxPlatformUtils.DEFAULT_PLATFORM);
     assertThat(
-        Arg.stringify(py2Ext.getArgs()),
+        Arg.stringify(py2Ext.getArgs(), pathResolver),
         Matchers.allOf(Matchers.hasItem("-lpython2"), Matchers.not(Matchers.hasItem("-lpython3"))));
 
     // Get the py3 extension, and verify it pulled in the py3 lib but not the py2 lib.
@@ -310,7 +312,7 @@ public class CxxPythonExtensionDescriptionTest {
             py3,
             CxxPlatformUtils.DEFAULT_PLATFORM);
     assertThat(
-        Arg.stringify(py3Ext.getArgs()),
+        Arg.stringify(py3Ext.getArgs(), pathResolver),
         Matchers.allOf(Matchers.hasItem("-lpython3"), Matchers.not(Matchers.hasItem("-lpython2"))));
   }
 
@@ -395,12 +397,13 @@ public class CxxPythonExtensionDescriptionTest {
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(builder.build()),
             new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     CxxPythonExtension rule = builder.build(resolver);
     NativeLinkTarget nativeLinkTarget = rule.getNativeLinkTarget(PY2);
     NativeLinkableInput input =
         nativeLinkTarget.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM);
     assertThat(
-        Arg.stringify(input.getArgs()),
+        Arg.stringify(input.getArgs(), pathResolver),
         Matchers.hasItems("--flag"));
   }
 

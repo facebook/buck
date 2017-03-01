@@ -48,6 +48,7 @@ public class WorkerMacroArgTest {
   public void testWorkerMacroArgConstruction() throws MacroException, NoSuchBuildTargetException {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
 
     BuildRule shBinaryRule = new ShBinaryBuilder(
         BuildTargetFactory.newInstance("//:my_exe"))
@@ -78,7 +79,7 @@ public class WorkerMacroArgTest {
             resolver,
             "$(worker //:worker_rule) " + jobArgs);
     assertThat(arg.getJobArgs(), Matchers.equalTo(jobArgs));
-    assertThat(arg.getStartupArgs(), Matchers.equalTo(startupArgs));
+    assertThat(arg.getStartupArgs(pathResolver), Matchers.equalTo(startupArgs));
     assertThat(arg.getMaxWorkers(), Matchers.equalTo(maxWorkers));
   }
 

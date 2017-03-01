@@ -231,8 +231,12 @@ public class Genrule extends AbstractBuildRuleWithResolver
     environmentVariablesBuilder.put("NO_BUCKD", "1");
   }
 
-  private static Optional<String> flattenToSpaceSeparatedString(Optional<Arg> arg) {
-    return arg.map(Arg::stringifyList).map(input -> Joiner.on(' ').join(input));
+  private static Optional<String> flattenToSpaceSeparatedString(
+      Optional<Arg> arg,
+      SourcePathResolver pathResolver) {
+    return arg
+        .map((input1) -> Arg.stringifyList(input1, pathResolver))
+        .map(input -> Joiner.on(' ').join(input));
   }
 
   @VisibleForTesting
@@ -269,9 +273,9 @@ public class Genrule extends AbstractBuildRuleWithResolver
         getProjectFilesystem(),
         getBuildTarget(),
         new CommandString(
-            flattenToSpaceSeparatedString(cmd),
-            flattenToSpaceSeparatedString(bash),
-            flattenToSpaceSeparatedString(cmdExe)),
+            flattenToSpaceSeparatedString(cmd, context.getSourcePathResolver()),
+            flattenToSpaceSeparatedString(bash, context.getSourcePathResolver()),
+            flattenToSpaceSeparatedString(cmdExe, context.getSourcePathResolver())),
         absolutePathToSrcDirectory) {
       @Override
       protected void addEnvironmentVariables(
@@ -287,9 +291,9 @@ public class Genrule extends AbstractBuildRuleWithResolver
 
   public WorkerShellStep createWorkerShellStep(BuildContext context) {
     return new WorkerShellStep(
-        convertToWorkerJobParams(cmd),
-        convertToWorkerJobParams(bash),
-        convertToWorkerJobParams(cmdExe),
+        convertToWorkerJobParams(cmd, context.getSourcePathResolver()),
+        convertToWorkerJobParams(bash, context.getSourcePathResolver()),
+        convertToWorkerJobParams(cmdExe, context.getSourcePathResolver()),
         new WorkerProcessPoolFactory(getProjectFilesystem())) {
       @Override
       protected ImmutableMap<String, String> getEnvironmentVariables(
@@ -302,13 +306,15 @@ public class Genrule extends AbstractBuildRuleWithResolver
     };
   }
 
-  private static Optional<WorkerJobParams> convertToWorkerJobParams(Optional<Arg> arg) {
+  private static Optional<WorkerJobParams> convertToWorkerJobParams(
+      Optional<Arg> arg,
+      SourcePathResolver pathResolver) {
     return arg.map(arg1 -> {
       WorkerMacroArg workerMacroArg = (WorkerMacroArg) arg1;
       return WorkerJobParams.of(
           workerMacroArg.getTempDir(),
           workerMacroArg.getStartupCommand(),
-          workerMacroArg.getStartupArgs(),
+          workerMacroArg.getStartupArgs(pathResolver),
           workerMacroArg.getEnvironment(),
           workerMacroArg.getJobArgs(),
           workerMacroArg.getMaxWorkers(),

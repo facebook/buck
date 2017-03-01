@@ -45,7 +45,9 @@ abstract class AbstractThinArchiveArg extends Arg implements HasSourcePath {
   protected abstract ImmutableList<SourcePath> getContents();
 
   @Override
-  public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
+  public void appendToCommandLine(
+      ImmutableCollection.Builder<String> builder,
+      SourcePathResolver pathResolver) {
     builder.add(getPathResolver().getAbsolutePath(getPath()).toString());
   }
 

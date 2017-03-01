@@ -348,7 +348,7 @@ public class CxxLinkableEnhancerTest {
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
             .build());
-    assertTrue(Arg.stringify(shared.getArgs()).contains("-shared"));
+    assertTrue(Arg.stringify(shared.getArgs(), pathResolver).contains("-shared"));
     assertEquals(Collections.indexOfSubList(shared.getArgs(), sonameArgs), -1);
 
     // Construct a CxxLink object which links as a shared lib with a SONAME.
@@ -371,7 +371,7 @@ public class CxxLinkableEnhancerTest {
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
             .build());
-    ImmutableList<String> args = Arg.stringify(sharedWithSoname.getArgs());
+    ImmutableList<String> args = Arg.stringify(sharedWithSoname.getArgs(), pathResolver);
     assertTrue(args.contains("-shared"));
     assertNotEquals(Collections.indexOfSubList(args, sonameArgs), -1);
   }
@@ -423,7 +423,7 @@ public class CxxLinkableEnhancerTest {
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
             .build());
-    ImmutableList<String> args = Arg.stringify(staticLink.getArgs());
+    ImmutableList<String> args = Arg.stringify(staticLink.getArgs(), pathResolver);
     assertTrue(args.contains(staticArg) ||
         args.contains("-Wl," + staticArg));
     assertFalse(args.contains(sharedArg));
@@ -449,7 +449,7 @@ public class CxxLinkableEnhancerTest {
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
             .build());
-    args = Arg.stringify(sharedLink.getArgs());
+    args = Arg.stringify(sharedLink.getArgs(), pathResolver);
     assertFalse(args.contains(staticArg));
     assertFalse(args.contains("-Wl," + staticArg));
     assertTrue(
@@ -496,7 +496,7 @@ public class CxxLinkableEnhancerTest {
               NativeLinkableInput.builder()
                   .setArgs(DEFAULT_INPUTS)
                   .build());
-      assertThat(Arg.stringify(lib.getArgs()), hasItem(ent.getValue()));
+      assertThat(Arg.stringify(lib.getArgs(), pathResolver), hasItem(ent.getValue()));
     }
   }
 
@@ -537,10 +537,10 @@ public class CxxLinkableEnhancerTest {
             Linker.LinkableDepType.STATIC,
             NativeLinkable.class::isInstance);
     assertThat(
-        Arg.stringify(bottomInput.getArgs()),
+        Arg.stringify(bottomInput.getArgs(), pathResolver),
         hasItem(sentinel));
     assertThat(
-        Arg.stringify(totalInput.getArgs()),
+        Arg.stringify(totalInput.getArgs(), pathResolver),
         not(hasItem(sentinel)));
   }
 
@@ -552,6 +552,7 @@ public class CxxLinkableEnhancerTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     ProjectFilesystem filesystem = params.getProjectFilesystem();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         CxxPlatformUtils.DEFAULT_CONFIG,
         CXX_PLATFORM,
@@ -570,14 +571,14 @@ public class CxxLinkableEnhancerTest {
         ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(SourcePathArg.from(
-                new SourcePathResolver(new SourcePathRuleFinder(resolver)),
+                pathResolver,
                 new FakeSourcePath("simple.o")))
             .build());
     assertThat(
-        Arg.stringify(cxxLink.getArgs()),
+        Arg.stringify(cxxLink.getArgs(), pathResolver),
         hasItem("-bundle"));
     assertThat(
-        Arg.stringify(cxxLink.getArgs()),
+        Arg.stringify(cxxLink.getArgs(), pathResolver),
         hasConsecutiveItems(
             "-bundle_loader",
             filesystem.resolve("path/to/MyBundleLoader").toString()));
@@ -653,7 +654,6 @@ public class CxxLinkableEnhancerTest {
      ));
 
     Arg linkerFlags = CxxLinkableEnhancer.frameworksToLinkerArg(
-        resolver,
         ImmutableSortedSet.of(
             FrameworkPath.ofSourceTreePath(
                 new SourceTreePath(
@@ -667,6 +667,6 @@ public class CxxLinkableEnhancerTest {
         ImmutableList.of(
             "-framework", "XCTest",
             "-framework", "Bar"),
-        Arg.stringifyList(linkerFlags));
+        Arg.stringifyList(linkerFlags, resolver));
   }
 }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -59,14 +60,15 @@ public class OcamlLinkStep extends ShellStep {
       ImmutableList<Arg> cDepInput,
       ImmutableList<Path> input,
       boolean isLibrary,
-      boolean isBytecode) {
+      boolean isBytecode,
+      SourcePathResolver pathResolver) {
     ImmutableList.Builder<String> ocamlInputBuilder = ImmutableList.builder();
 
     final String linkExt = isBytecode
         ? OcamlCompilables.OCAML_CMA
         : OcamlCompilables.OCAML_CMXA;
 
-    for (String linkInput : Arg.stringify(depInput)) {
+    for (String linkInput : Arg.stringify(depInput, pathResolver)) {
       if (isLibrary && linkInput.endsWith(linkExt)) {
         continue;
       }
@@ -85,7 +87,7 @@ public class OcamlLinkStep extends ShellStep {
         output,
         ocamlInput,
         FluentIterable.from(cDepInput)
-            .transformAndConcat(Arg::stringifyList)
+            .transformAndConcat(a -> Arg.stringifyList(a, pathResolver))
             .toList(),
         input,
         isLibrary,

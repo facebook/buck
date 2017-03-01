@@ -22,6 +22,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -45,6 +46,7 @@ public class MacroArgTest {
             ImmutableMap.of("macro", new StringExpander("expanded")));
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     MacroArg arg =
         new MacroArg(
@@ -53,7 +55,7 @@ public class MacroArgTest {
             TestCellBuilder.createCellRoots(filesystem),
             resolver,
             "$(macro)");
-    assertThat(Arg.stringifyList(arg), Matchers.contains("expanded"));
+    assertThat(Arg.stringifyList(arg, pathResolver), Matchers.contains("expanded"));
   }
 
   @Test

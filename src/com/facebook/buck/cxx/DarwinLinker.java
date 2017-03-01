@@ -143,7 +143,7 @@ public class DarwinLinker implements Linker, HasLinkerMap {
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Iterable<? extends SourcePath> symbolFiles) {
-    return ImmutableList.of(new UndefinedSymbolsArg(pathResolver, symbolFiles));
+    return ImmutableList.of(new UndefinedSymbolsArg(symbolFiles));
   }
 
   @Override
@@ -188,13 +188,9 @@ public class DarwinLinker implements Linker, HasLinkerMap {
    */
   private static class UndefinedSymbolsArg extends Arg {
 
-    private final SourcePathResolver pathResolver;
     private final Iterable<? extends SourcePath> symbolFiles;
 
-    public UndefinedSymbolsArg(
-        SourcePathResolver pathResolver,
-        Iterable<? extends SourcePath> symbolFiles) {
-      this.pathResolver = pathResolver;
+    public UndefinedSymbolsArg(Iterable<? extends SourcePath> symbolFiles) {
       this.symbolFiles = symbolFiles;
     }
 
@@ -211,11 +207,14 @@ public class DarwinLinker implements Linker, HasLinkerMap {
     // Open all the symbol files and read in all undefined symbols, passing them to linker using the
     // `-u` command line option.
     @Override
-    public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
+    public void appendToCommandLine(
+        ImmutableCollection.Builder<String> builder,
+        SourcePathResolver pathResolver) {
       Set<String> symbols = new LinkedHashSet<>();
       try {
         for (SourcePath path : symbolFiles) {
-          symbols.addAll(Files.readAllLines(pathResolver.getAbsolutePath(path), Charsets.UTF_8));
+          symbols.addAll(
+              Files.readAllLines(pathResolver.getAbsolutePath(path), Charsets.UTF_8));
         }
       } catch (IOException e) {
         throw new RuntimeException(e);
@@ -239,13 +238,12 @@ public class DarwinLinker implements Linker, HasLinkerMap {
         return false;
       }
       UndefinedSymbolsArg symbolsArg = (UndefinedSymbolsArg) other;
-      return Objects.equals(pathResolver, symbolsArg.pathResolver) &&
-          Objects.equals(symbolFiles, symbolsArg.symbolFiles);
+      return Objects.equals(symbolFiles, symbolsArg.symbolFiles);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(pathResolver, symbolFiles);
+      return Objects.hash(symbolFiles);
     }
 
     @Override

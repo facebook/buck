@@ -90,7 +90,7 @@ public class CommandTool implements Tool {
       command.addAll(baseTool.get().getCommandPrefix(resolver));
     }
     for (Arg arg : args) {
-      arg.appendToCommandLine(command);
+      arg.appendToCommandLine(command, resolver);
     }
     return command.build();
   }
@@ -101,7 +101,7 @@ public class CommandTool implements Tool {
     if (baseTool.isPresent()) {
       env.putAll(baseTool.get().getEnvironment(resolver));
     }
-    env.putAll(Arg.stringify(environment));
+    env.putAll(Arg.stringify(environment, resolver));
     return env.build();
   }
 

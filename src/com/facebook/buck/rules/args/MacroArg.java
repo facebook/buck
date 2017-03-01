@@ -24,6 +24,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.model.MacroException;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
@@ -60,7 +61,9 @@ public class MacroArg extends Arg {
   }
 
   @Override
-  public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
+  public void appendToCommandLine(
+      ImmutableCollection.Builder<String> builder,
+      SourcePathResolver pathResolver) {
     try {
       builder.add(expander.expand(target, cellNames, resolver, unexpanded));
     } catch (MacroException e) {

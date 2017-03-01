@@ -43,7 +43,7 @@ public class SourcePathArgTest {
      ));
     SourcePathArg arg = new SourcePathArg(resolver, path);
     assertThat(
-        Arg.stringifyList(arg),
+        Arg.stringifyList(arg, resolver),
         Matchers.contains(resolver.getAbsolutePath(path).toString()));
   }
 

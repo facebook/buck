@@ -100,8 +100,8 @@ public class WorkerMacroArg extends MacroArg {
     return workerTool.getTempDir();
   }
 
-  public String getStartupArgs() {
-    return workerTool.getArgs();
+  public String getStartupArgs(SourcePathResolver pathResolver) {
+    return workerTool.getArgs(pathResolver);
   }
 
   public Optional<String> getPersistentWorkerKey() {

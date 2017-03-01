@@ -213,7 +213,9 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
           Joiner.on(' ').join(
               escapeForMakefile(
                   params.getProjectFilesystem(),
-                  com.facebook.buck.rules.args.Arg.stringify(nativeLinkableInput.getArgs())));
+                  com.facebook.buck.rules.args.Arg.stringify(
+                      nativeLinkableInput.getArgs(),
+                      pathResolver)));
 
       // Write the relevant lines to the generated makefile.
       if (!localCflags.isEmpty() || !localLdflags.isEmpty()) {

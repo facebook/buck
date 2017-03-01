@@ -131,13 +131,14 @@ public class HaskellLibraryDescriptionTest {
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(builder.build()),
             new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     HaskellLibrary library = builder.build(resolver);
 
     // Lookup the link whole flags.
     Linker linker = CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(resolver);
     ImmutableList<String> linkWholeFlags =
         FluentIterable.from(linker.linkWhole(new StringArg("sentinel")))
-            .transformAndConcat(Arg::stringifyList)
+            .transformAndConcat((input) -> Arg.stringifyList(input, pathResolver))
             .filter(Predicates.not("sentinel"::equals))
             .toList();
 
@@ -147,7 +148,7 @@ public class HaskellLibraryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.STATIC);
     assertThat(
-        Arg.stringify(staticInput.getArgs()),
+        Arg.stringify(staticInput.getArgs(), pathResolver),
         hasItems(linkWholeFlags.toArray(new String[linkWholeFlags.size()])));
 
     // Test static-pic dep type.
@@ -156,7 +157,7 @@ public class HaskellLibraryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.STATIC_PIC);
     assertThat(
-        Arg.stringify(staticPicInput.getArgs()),
+        Arg.stringify(staticPicInput.getArgs(), pathResolver),
         hasItems(linkWholeFlags.toArray(new String[linkWholeFlags.size()])));
 
     // Test shared dep type.
@@ -165,7 +166,7 @@ public class HaskellLibraryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.SHARED);
     assertThat(
-        Arg.stringify(sharedInput.getArgs()),
+        Arg.stringify(sharedInput.getArgs(), pathResolver),
         not(hasItems(linkWholeFlags.toArray(new String[linkWholeFlags.size()]))));
   }
 

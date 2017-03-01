@@ -58,9 +58,15 @@ public class SanitizedArgTest {
 
   @Test
   public void stringify() {
+    SourcePathResolver pathResolver = new SourcePathResolver(
+        new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY,
+                new DefaultTargetNodeToBuildRuleTransformer())));
+
     SanitizedArg arg = new SanitizedArg(Functions.constant("sanitized"), "unsanitized");
     assertThat(
-        Arg.stringifyList(arg),
+        Arg.stringifyList(arg, pathResolver),
         Matchers.contains("unsanitized"));
   }
 

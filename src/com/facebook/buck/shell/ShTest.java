@@ -135,8 +135,8 @@ public class ShTest
         new RunShTestAndRecordResultStep(
             getProjectFilesystem(),
             pathResolver.getAbsolutePath(test),
-            Arg.stringify(args),
-            Arg.stringify(env),
+            Arg.stringify(args, pathResolver),
+            Arg.stringify(env, pathResolver),
             testRuleTimeoutMs,
             getBuildTarget().getFullyQualifiedName(),
             getPathToTestOutputResult());
@@ -221,8 +221,8 @@ public class ShTest
         .setTarget(getBuildTarget())
         .setType("custom")
         .addCommand(pathResolver.getAbsolutePath(test).toString())
-        .addAllCommand(Arg.stringify(args))
-        .setEnv(Arg.stringify(env))
+        .addAllCommand(Arg.stringify(args, pathResolver))
+        .setEnv(Arg.stringify(env, pathResolver))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .build();

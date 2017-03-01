@@ -93,10 +93,10 @@ public class DefaultWorkerTool extends NoopBuildRule implements
   }
 
   @Override
-  public String getArgs() {
+  public String getArgs(SourcePathResolver pathResolver) {
     ImmutableList.Builder<String> command = ImmutableList.builder();
     for (Arg arg : args) {
-      arg.appendToCommandLine(command);
+      arg.appendToCommandLine(command, pathResolver);
     }
     return Joiner.on(' ').join(command.build());
   }

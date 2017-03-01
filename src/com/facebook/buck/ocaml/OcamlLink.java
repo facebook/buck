@@ -119,22 +119,34 @@ public class OcamlLink extends AbstractBuildRule {
                 .map(context.getSourcePathResolver()::getAbsolutePath)
                 .collect(MoreCollectors.toImmutableList()),
             isLibrary,
-            isBytecode));
+            isBytecode,
+            context.getSourcePathResolver()));
     if (isLibrary && buildNativePlugin) {
-        steps.add(new OcamlNativePluginStep(
-            getProjectFilesystem().getRootPath(),
-            cxxCompilerEnvironment,
-            cxxCompiler,
-            ocamlCompiler.getCommandPrefix(context.getSourcePathResolver()),
-            flags,
-            stdlib,
-            getProjectFilesystem().resolve(outputNativePluginPath),
-            depInput,
-            cDepInput,
-            inputs.stream()
-                .map(context.getSourcePathResolver()::getAbsolutePath)
-                .collect(MoreCollectors.toImmutableList())
-        ));
+      ImmutableList.Builder<String> ocamlInputBuilder = ImmutableList.builder();
+
+      final String linkExt = OcamlCompilables.OCAML_CMXS;
+
+      for (String linkInput : Arg.stringify(depInput, context.getSourcePathResolver())) {
+        if (linkInput.endsWith(linkExt)) {
+          ocamlInputBuilder.add(linkInput);
+        }
+      }
+
+      ImmutableList<String> ocamlInput = ocamlInputBuilder.build();
+      steps.add(new OcamlNativePluginStep(
+          getProjectFilesystem().getRootPath(),
+          cxxCompilerEnvironment,
+          cxxCompiler,
+          ocamlCompiler.getCommandPrefix(context.getSourcePathResolver()),
+          flags,
+          stdlib,
+          getProjectFilesystem().resolve(outputNativePluginPath),
+          cDepInput,
+          inputs.stream()
+              .map(context.getSourcePathResolver()::getAbsolutePath)
+              .collect(MoreCollectors.toImmutableList()),
+          ocamlInput
+      ));
     }
     return steps.build();
   }

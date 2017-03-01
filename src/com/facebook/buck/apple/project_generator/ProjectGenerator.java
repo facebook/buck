@@ -1434,7 +1434,15 @@ public class ProjectGenerator {
                             Iterables.concat(
                                 targetNode.getConstructorArg().linkerFlags,
                                 collectRecursiveExportedLinkerFlags(
-                                    ImmutableList.of(targetNode))))))
+                                    ImmutableList.of(targetNode)))),
+                        // Project generation doesn't actually build arbitrary deps, so there isn't
+                        // necessarily a valid SourcePathResolver which can resolve deps.
+                        // If this becomes an issue, we'll need to construct better subgraphs which
+                        // can actually be transformed to ActionGraphs from which we can then
+                        // construct a valid SourcePathResolver.
+                        // Right now, we generate projects from unflavored TargetGraphs, which can't
+                        // actually be transformed into BuildRules.
+                        null))
                 .build();
 
         appendConfigsBuilder
@@ -1488,7 +1496,16 @@ public class ProjectGenerator {
           String sdk = flags.getFirst().pattern().replaceAll("[*.]", "");
           platformLinkerFlagsBuilder.put(
               sdk,
-              Arg.stringify(convertStringWithMacros(targetNode, flags.getSecond())));
+              Arg.stringify(
+                  convertStringWithMacros(targetNode, flags.getSecond()),
+                  // Project generation doesn't actually build arbitrary deps, so there isn't
+                  // necessarily a valid SourcePathResolver which can resolve deps.
+                  // If this becomes an issue, we'll need to construct better subgraphs which
+                  // can actually be transformed to ActionGraphs from which we can then
+                  // construct a valid SourcePathResolver.
+                  // Right now, we generate projects from unflavored TargetGraphs, which can't
+                  // actually be transformed into BuildRules.
+                  null));
         }
         ImmutableMultimap<String, ImmutableList<String>> platformLinkerFlags =
             platformLinkerFlagsBuilder.build();

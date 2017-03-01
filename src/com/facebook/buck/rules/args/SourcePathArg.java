@@ -42,16 +42,21 @@ public class SourcePathArg extends Arg implements HasSourcePath {
   }
 
   @Override
-  public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
+  public void appendToCommandLine(
+      ImmutableCollection.Builder<String> builder,
+      SourcePathResolver pathResolver) {
     builder.add(pathResolver.getAbsolutePath(path).toString());
   }
 
-  public void appendToCommandLineRel(ImmutableCollection.Builder<String> builder, Path cellPath) {
+  public void appendToCommandLineRel(
+      ImmutableCollection.Builder<String> builder,
+      Path cellPath,
+      SourcePathResolver pathResolver) {
     if (path instanceof BuildTargetSourcePath &&
         cellPath.equals(((BuildTargetSourcePath) path).getTarget().getCellPath())) {
       builder.add(pathResolver.getRelativePath(path).toString());
     } else {
-      appendToCommandLine(builder);
+      appendToCommandLine(builder, pathResolver);
     }
 
   }

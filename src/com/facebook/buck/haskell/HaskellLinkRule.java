@@ -100,11 +100,11 @@ public class HaskellLinkRule extends AbstractBuildRule {
             return ImmutableList.<String>builder()
                 .addAll(linker.getCommandPrefix(buildContext.getSourcePathResolver()))
                 .add("-o", getProjectFilesystem().resolve(getOutput()).toString())
-                .addAll(Arg.stringify(args))
+                .addAll(Arg.stringify(args, buildContext.getSourcePathResolver()))
                 .addAll(
                     MoreIterables.zipAndConcat(
                         Iterables.cycle("-optl"),
-                        Arg.stringify(linkerArgs)))
+                        Arg.stringify(linkerArgs, buildContext.getSourcePathResolver())))
                 .build();
           }
 

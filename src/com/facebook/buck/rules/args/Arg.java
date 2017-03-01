@@ -19,6 +19,7 @@ package com.facebook.buck.rules.args;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableCollection;
@@ -48,7 +49,9 @@ public abstract class Arg implements RuleKeyAppendable {
    * of elements (including zero) into the builder. This is only ever safe to call when the
    * rule is running, as it may do things like resolving source paths.
    */
-  public abstract void appendToCommandLine(ImmutableCollection.Builder<String> builder);
+  public abstract void appendToCommandLine(
+      ImmutableCollection.Builder<String> builder,
+      SourcePathResolver pathResolver);
 
   /**
    * @return a {@link String} representation suitable to use for debugging.
@@ -62,25 +65,29 @@ public abstract class Arg implements RuleKeyAppendable {
   @Override
   public abstract int hashCode();
 
-  public static ImmutableList<String> stringifyList(Arg input) {
+  public static ImmutableList<String> stringifyList(Arg input, SourcePathResolver pathResolver) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
-    input.appendToCommandLine(builder);
+    input.appendToCommandLine(builder, pathResolver);
     return builder.build();
   }
 
-  public static ImmutableList<String> stringify(ImmutableCollection<Arg> args) {
+  public static ImmutableList<String> stringify(
+      ImmutableCollection<Arg> args,
+      SourcePathResolver pathResolver) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     for (Arg arg : args) {
-      arg.appendToCommandLine(builder);
+      arg.appendToCommandLine(builder, pathResolver);
     }
     return builder.build();
   }
 
-  public static <K> ImmutableMap<K, String> stringify(ImmutableMap<K, Arg> argMap) {
+  public static <K> ImmutableMap<K, String> stringify(
+      ImmutableMap<K, Arg> argMap,
+      SourcePathResolver pathResolver) {
     ImmutableMap.Builder<K, String> stringMap = ImmutableMap.builder();
     for (Map.Entry<K, Arg> ent : argMap.entrySet()) {
       ImmutableList.Builder<String> builder = ImmutableList.builder();
-      ent.getValue().appendToCommandLine(builder);
+      ent.getValue().appendToCommandLine(builder, pathResolver);
       stringMap.put(ent.getKey(), Joiner.on(" ").join(builder.build()));
     }
     return stringMap.build();

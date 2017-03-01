@@ -56,9 +56,9 @@ public class OcamlNativePluginStep extends ShellStep {
       ImmutableList<String> flags,
       Optional<String> stdlib,
       Path output,
-      ImmutableList<Arg> depInput,
       ImmutableList<Arg> cDepInput,
-      ImmutableList<Path> input) {
+      ImmutableList<Path> input,
+      ImmutableList<String> ocamlInput) {
     super(workingDirectory);
     this.environment = environment;
     this.ocamlCompilerCommandPrefix = ocamlCompilerCommandPrefix;
@@ -68,18 +68,7 @@ public class OcamlNativePluginStep extends ShellStep {
     this.output = output;
     this.cDepInput = cDepInput;
     this.input = input;
-
-    ImmutableList.Builder<String> ocamlInputBuilder = ImmutableList.builder();
-
-    final String linkExt = OcamlCompilables.OCAML_CMXS;
-
-    for (String linkInput : Arg.stringify(depInput)) {
-        if (linkInput.endsWith(linkExt)) {
-            ocamlInputBuilder.add(linkInput);
-        }
-    }
-
-    ocamlInput = ocamlInputBuilder.build();
+    this.ocamlInput = ocamlInput;
   }
 
   @Override

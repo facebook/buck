@@ -32,6 +32,8 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -177,20 +179,22 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     PrebuiltHaskellLibrary library = builder.build(resolver, filesystem, targetGraph);
     NativeLinkableInput staticInput =
         library.getNativeLinkableInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.STATIC);
     assertThat(
-        Arg.stringify(staticInput.getArgs()),
+        Arg.stringify(staticInput.getArgs(),
+            pathResolver),
         Matchers.contains(flag));
     NativeLinkableInput sharedInput =
         library.getNativeLinkableInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.SHARED);
     assertThat(
-        Arg.stringify(sharedInput.getArgs()),
+        Arg.stringify(sharedInput.getArgs(), pathResolver),
         Matchers.contains(flag));
   }
 

@@ -23,6 +23,8 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
@@ -100,14 +102,17 @@ public class CxxGenruleDescriptionTest {
           new BuildRuleResolver(
               targetGraph,
               new DefaultTargetNodeToBuildRuleTransformer());
+      SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
       bBuilder.build(resolver);
       aBuilder.build(resolver);
       Genrule genrule = (Genrule) builder.build(resolver);
       assertThat(
-          Joiner.on(' ').join(Arg.stringify(ImmutableList.of(genrule.getCmd().get()))),
+          Joiner.on(' ').join(
+              Arg.stringify(ImmutableList.of(genrule.getCmd().get()), pathResolver)),
           Matchers.containsString("-a"));
       assertThat(
-          Joiner.on(' ').join(Arg.stringify(ImmutableList.of(genrule.getCmd().get()))),
+          Joiner.on(' ').join(
+              Arg.stringify(ImmutableList.of(genrule.getCmd().get()), pathResolver)),
           Matchers.not(Matchers.containsString("-b")));
     }
   }
@@ -133,9 +138,10 @@ public class CxxGenruleDescriptionTest {
         new BuildRuleResolver(
             targetGraph,
             new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     Genrule genrule = (Genrule) builder.build(resolver);
     assertThat(
-        Joiner.on(' ').join(Arg.stringify(ImmutableList.of(genrule.getCmd().get()))),
+        Joiner.on(' ').join(Arg.stringify(ImmutableList.of(genrule.getCmd().get()), pathResolver)),
         Matchers.containsString("-cppflag -cxxppflag"));
   }
 
@@ -161,10 +167,12 @@ public class CxxGenruleDescriptionTest {
         new BuildRuleResolver(
             targetGraph,
             new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     Genrule genrule = (Genrule) builder.build(resolver);
     for (String expected : ImmutableList.of("-asflag", "-cflag", "-cxxflag")) {
       assertThat(
-          Joiner.on(' ').join(Arg.stringify(ImmutableList.of(genrule.getCmd().get()))),
+          Joiner.on(' ').join(
+              Arg.stringify(ImmutableList.of(genrule.getCmd().get()), pathResolver)),
           Matchers.containsString(expected));
     }
   }

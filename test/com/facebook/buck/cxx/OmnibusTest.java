@@ -92,9 +92,11 @@ public class OmnibusTest {
         Matchers.containsInAnyOrder(root.getBuildTarget().toString(), "libomnibus.so"));
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(ruleFinder, libs.get(root.getBuildTarget().toString())),
+        pathResolver,
         root.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM));
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(ruleFinder, libs.get("libomnibus.so")),
+        pathResolver,
         a.getNativeLinkableInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.STATIC_PIC),
@@ -158,6 +160,7 @@ public class OmnibusTest {
             "libomnibus.so"));
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(ruleFinder, libs.get(root.getBuildTarget().toString())),
+        pathResolver,
         root.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM),
         b.getNativeLinkableInput(CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED));
     assertThat(
@@ -165,6 +168,7 @@ public class OmnibusTest {
         Matchers.not(Matchers.instanceOf(BuildTargetSourcePath.class)));
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(ruleFinder, libs.get("libomnibus.so")),
+        pathResolver,
         a.getNativeLinkableInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.STATIC_PIC));
@@ -227,6 +231,7 @@ public class OmnibusTest {
             "libomnibus.so"));
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(ruleFinder, libs.get(root.getBuildTarget().toString())),
+        pathResolver,
         root.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM),
         c.getNativeLinkableInput(CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED));
     assertThat(
@@ -237,6 +242,7 @@ public class OmnibusTest {
         Matchers.not(Matchers.instanceOf(BuildTargetSourcePath.class)));
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(ruleFinder, libs.get("libomnibus.so")),
+        pathResolver,
         a.getNativeLinkableInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.STATIC_PIC));
@@ -299,6 +305,7 @@ public class OmnibusTest {
             "libomnibus.so"));
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(ruleFinder, libs.get(root.getBuildTarget().toString())),
+        pathResolver,
         root.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM));
     assertThat(
         libs.get(excludedRoot.getBuildTarget().toString()),
@@ -308,6 +315,7 @@ public class OmnibusTest {
         Matchers.not(Matchers.instanceOf(BuildTargetSourcePath.class)));
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(ruleFinder, libs.get("libomnibus.so")),
+        pathResolver,
         a.getNativeLinkableInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.STATIC_PIC));
@@ -368,6 +376,7 @@ public class OmnibusTest {
             a.getBuildTarget().toString()));
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(ruleFinder, libs.get(root.getBuildTarget().toString())),
+        pathResolver,
         root.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM));
     assertThat(
         libs.get(excludedRoot.getBuildTarget().toString()),
@@ -434,12 +443,14 @@ public class OmnibusTest {
         Matchers.containsInAnyOrder(root.getBuildTarget().toString(), "libomnibus.so"));
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(ruleFinder, libs.get(root.getBuildTarget().toString())),
+        pathResolver,
         root.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM),
         a.getNativeLinkableInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.STATIC_PIC));
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(ruleFinder, libs.get("libomnibus.so")),
+        pathResolver,
         b.getNativeLinkableInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.STATIC_PIC));
@@ -451,11 +462,12 @@ public class OmnibusTest {
 
   private void assertCxxLinkContainsNativeLinkableInput(
       CxxLink link,
+      SourcePathResolver pathResolver,
       NativeLinkableInput... inputs) {
     for (NativeLinkableInput input : inputs) {
       assertThat(
-          Arg.stringify(link.getArgs()),
-          Matchers.hasItems(Arg.stringify(input.getArgs()).toArray(new String[1])));
+          Arg.stringify(link.getArgs(), pathResolver),
+          Matchers.hasItems(Arg.stringify(input.getArgs(), pathResolver).toArray(new String[1])));
     }
   }
 

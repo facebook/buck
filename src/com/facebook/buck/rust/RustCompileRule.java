@@ -211,7 +211,8 @@ public class RustCompileRule
         new ShellStep(getProjectFilesystem().getRootPath()) {
 
           @Override
-          protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+          protected ImmutableList<String> getShellCommandInternal(
+              ExecutionContext executionContext) {
             ImmutableList<String> linkerCmd = linker.getCommandPrefix(getResolver());
             ImmutableList.Builder<String> cmd = ImmutableList.builder();
 
@@ -220,12 +221,14 @@ public class RustCompileRule
             cmd
                 .addAll(compiler.getCommandPrefix(getResolver()))
                 .addAll(
-                    context.getAnsi().isAnsiTerminal() ?
+                    executionContext.getAnsi().isAnsiTerminal() ?
                         ImmutableList.of("--color=always") : ImmutableList.of())
                 .add(String.format("-Clinker=%s", linkerCmd.get(0)))
                 .addAll(processLinkerArgs(linkerCmd.subList(1, linkerCmd.size())))
-                .addAll(processLinkerArgs(Arg.stringify(linkerArgs)))
-                .addAll(Arg.stringify(args))
+                .addAll(
+                    processLinkerArgs(
+                        Arg.stringify(linkerArgs, buildContext.getSourcePathResolver())))
+                .addAll(Arg.stringify(args, buildContext.getSourcePathResolver()))
                 .add("-o", output.toString())
                 .add(src.toString());
 

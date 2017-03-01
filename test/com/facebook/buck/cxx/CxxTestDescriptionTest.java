@@ -313,7 +313,7 @@ public class CxxTestDescriptionTest {
                 test.getBuildTarget(),
                 Optional.empty()));
     assertThat(
-        Arg.stringify(binary.getArgs()),
+        Arg.stringify(binary.getArgs(), pathResolver),
         Matchers.hasItem(
             String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
     assertThat(
@@ -365,7 +365,7 @@ public class CxxTestDescriptionTest {
                 Optional.empty()));
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
-        Arg.stringify(binary.getArgs()),
+        Arg.stringify(binary.getArgs(), pathResolver),
         Matchers.hasItem(
             String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
     assertThat(
@@ -410,7 +410,7 @@ public class CxxTestDescriptionTest {
                 test.getBuildTarget(),
                 Optional.empty()));
     assertThat(
-        Arg.stringify(binary.getArgs()),
+        Arg.stringify(binary.getArgs(), pathResolver),
         Matchers.hasItem(
             String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
     assertThat(
@@ -451,7 +451,7 @@ public class CxxTestDescriptionTest {
                 test.getBuildTarget(),
                 Optional.empty()));
     assertThat(
-        Arg.stringify(binary.getArgs()),
+        Arg.stringify(binary.getArgs(), pathResolver),
         Matchers.not(
             Matchers.hasItem(
                 String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver)))));

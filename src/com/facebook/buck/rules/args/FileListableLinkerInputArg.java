@@ -64,14 +64,17 @@ public class FileListableLinkerInputArg extends Arg implements HasSourcePath {
   }
 
   @Override
-  public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
-    value.appendToCommandLine(builder);
+  public void appendToCommandLine(
+      ImmutableCollection.Builder<String> builder,
+      SourcePathResolver pathResolver) {
+    value.appendToCommandLine(builder, pathResolver);
   }
 
   public void appendToCommandLineRel(
       ImmutableCollection.Builder<String> builder,
-      Path currentCellPath) {
-    value.appendToCommandLineRel(builder, currentCellPath);
+      Path currentCellPath,
+      SourcePathResolver pathResolver) {
+    value.appendToCommandLineRel(builder, currentCellPath, pathResolver);
   }
 
   @Override

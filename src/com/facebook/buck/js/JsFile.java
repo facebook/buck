@@ -68,7 +68,7 @@ public abstract class JsFile extends AbstractBuildRule {
     final WorkerJobParams params = WorkerJobParams.of(
         worker.getTempDir(),
         tool.getCommandPrefix(context.getSourcePathResolver()),
-        worker.getArgs(),
+        worker.getArgs(context.getSourcePathResolver()),
         tool.getEnvironment(context.getSourcePathResolver()),
         String.format(jobArgsFormat, extraArgs.orElse("")),
         worker.getMaxWorkers(),

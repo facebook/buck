@@ -16,9 +16,11 @@
 
 package com.facebook.buck.cxx;
 
+import static org.easymock.EasyMock.createMock;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.ExecutionContext;
@@ -86,7 +88,8 @@ public class CxxWriteArgsToFileStepTest {
         argFilePath,
         inputArgs,
         escaper,
-        currentCellPath);
+        currentCellPath,
+        createMock(SourcePathResolver.class));
 
     step.execute(context);
 

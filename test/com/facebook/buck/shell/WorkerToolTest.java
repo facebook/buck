@@ -42,6 +42,7 @@ public class WorkerToolTest {
   public void testCreateWorkerTool() throws NoSuchBuildTargetException {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
 
     BuildRule shBinaryRule = new ShBinaryBuilder(
         BuildTargetFactory.newInstance("//:my_exe"))
@@ -57,7 +58,7 @@ public class WorkerToolTest {
     assertThat(
         "getArgs should return the args string supplied in the definition.",
         "arg1 arg2",
-        Matchers.is(((WorkerTool) workerRule).getArgs()));
+        Matchers.is(((WorkerTool) workerRule).getArgs(pathResolver)));
   }
 
   @Test
@@ -115,7 +116,7 @@ public class WorkerToolTest {
             shBinaryRule.getBuildTarget(),
             exportFileRule.getBuildTarget()));
     assertThat(
-        workerTool.getArgs(), Matchers.containsString(
+        workerTool.getArgs(pathResolver), Matchers.containsString(
             pathResolver.getAbsolutePath(
                 new BuildTargetSourcePath(exportFileRule.getBuildTarget())).toString()));
   }

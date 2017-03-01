@@ -758,6 +758,7 @@ public class PythonBinaryDescriptionTest {
                 cxxBuilder.build(),
                 binaryBuilder.build()),
             new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     cxxDepBuilder.build(resolver);
     cxxBuilder.build(resolver);
     PythonBinary binary = binaryBuilder.build(resolver);
@@ -766,7 +767,7 @@ public class PythonBinaryDescriptionTest {
           resolver.getRuleOptionalWithType(
               ((BuildTargetSourcePath) path).getTarget(), CxxLink.class).get();
       assertThat(
-          Arg.stringify(link.getArgs()),
+          Arg.stringify(link.getArgs(), pathResolver),
           Matchers.hasItem("-flag"));
     }
   }

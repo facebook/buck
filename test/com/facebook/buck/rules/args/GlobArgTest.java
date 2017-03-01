@@ -46,7 +46,7 @@ public class GlobArgTest {
     filesystem.mkdirs(dir);
     Arg arg = GlobArg.of(pathResolver, new PathSourcePath(filesystem, dir), "**");
     assertThat(
-        Arg.stringify(ImmutableList.of(arg)),
+        Arg.stringify(ImmutableList.of(arg), pathResolver),
         Matchers.empty());
   }
 
@@ -62,7 +62,7 @@ public class GlobArgTest {
     filesystem.touch(dir.resolve("file1.dat"));
     Arg arg = GlobArg.of(pathResolver, new PathSourcePath(filesystem, dir), "**");
     assertThat(
-        Arg.stringify(ImmutableList.of(arg)),
+        Arg.stringify(ImmutableList.of(arg), pathResolver),
         Matchers.contains(
             filesystem.resolve("foo/bar/file1.dat").toString(),
             filesystem.resolve("foo/bar/file2.dat").toString()));

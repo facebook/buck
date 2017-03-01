@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -46,8 +47,9 @@ public class CxxWriteArgsToFileStep implements Step {
       Path argFilePath,
       ImmutableList<Arg> args,
       Optional<Function<String, String>> escaper,
-      Path currentCellPath) {
-    ImmutableList<String> argFileContents = stringify(args, currentCellPath);
+      Path currentCellPath,
+      SourcePathResolver pathResolver) {
+    ImmutableList<String> argFileContents = stringify(args, currentCellPath, pathResolver);
     if (escaper.isPresent()) {
       argFileContents = argFileContents.stream()
           .map(escaper.get()::apply)
@@ -63,15 +65,19 @@ public class CxxWriteArgsToFileStep implements Step {
 
   static ImmutableList<String> stringify(
       ImmutableCollection<Arg> args,
-      Path currentCellPath) {
+      Path currentCellPath,
+      SourcePathResolver pathResolver) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     for (Arg arg : args) {
       if (arg instanceof FileListableLinkerInputArg) {
-        ((FileListableLinkerInputArg) arg).appendToCommandLineRel(builder, currentCellPath);
+        ((FileListableLinkerInputArg) arg).appendToCommandLineRel(
+            builder,
+            currentCellPath,
+            pathResolver);
       } else if (arg instanceof SourcePathArg) {
-        ((SourcePathArg) arg).appendToCommandLineRel(builder, currentCellPath);
+        ((SourcePathArg) arg).appendToCommandLineRel(builder, currentCellPath, pathResolver);
       } else {
-        arg.appendToCommandLine(builder);
+        arg.appendToCommandLine(builder, pathResolver);
       }
     }
     return builder.build();
