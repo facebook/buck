@@ -167,6 +167,11 @@ public class AndroidPrebuiltAarDescription
         params.getBuildTarget());
     PrebuiltJar prebuiltJar = (PrebuiltJar) prebuiltJarRule;
 
+    Preconditions.checkArgument(
+        flavors.isEmpty(),
+        "Unexpected flavors for android_prebuilt_aar: %s",
+        flavors);
+
     BuildRuleParams androidLibraryParams = params.copyWithDeps(
         /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(prebuiltJar)),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(unzipAar)));
