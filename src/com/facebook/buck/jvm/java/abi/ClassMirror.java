@@ -16,16 +16,9 @@
 
 package com.facebook.buck.jvm.java.abi;
 
-import com.google.common.io.ByteSource;
-
 import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.InnerClassNode;
-
-import javax.annotation.Nullable;
-
 class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
 
   private final String fileName;
@@ -41,6 +34,10 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
     this.node = node;
   }
 
+  public ClassNode getNode() {
+    return node;
+  }
+
   @Override
   public int compareTo(ClassMirror o) {
     if (this == o) {
@@ -48,34 +45,6 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
     }
 
     return fileName.compareTo(o.fileName);
-  }
-
-  public boolean isAnonymousOrLocalClass() {
-    InnerClassNode innerClass = getInnerClassMetadata();
-    if (innerClass == null) {
-      return false;
-    }
-
-    return innerClass.outerName == null;
-  }
-
-  @Nullable
-  private InnerClassNode getInnerClassMetadata() {
-    for (InnerClassNode innerClass : node.innerClasses) {
-      if (innerClass.name.equals(node.name)) {
-        return innerClass;
-      }
-    }
-
-    return null;
-  }
-
-  public ByteSource getStubClassBytes() {
-    ClassWriter writer = new ClassWriter(0);
-
-    node.accept(new AbiFilteringClassVisitor(writer));
-
-    return ByteSource.wrap(writer.toByteArray());
   }
 }
 

@@ -18,6 +18,9 @@ package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.io.ProjectFilesystem;
 
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.InnerClassNode;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,6 +30,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
+import javax.annotation.Nullable;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
@@ -72,12 +76,32 @@ public class StubJar {
           }
         } else if (input.isClass(path)) {
           ClassMirror stub = input.openClass(path);
-          if (!stub.isAnonymousOrLocalClass()) {
+          if (!isAnonymousOrLocalClass(stub.getNode())) {
             writer.writeClass(path, stub);
           }
         }
       }
     }
+  }
+
+  private static boolean isAnonymousOrLocalClass(ClassNode node) {
+    InnerClassNode innerClass = getInnerClassMetadata(node);
+    if (innerClass == null) {
+      return false;
+    }
+
+    return innerClass.outerName == null;
+  }
+
+  @Nullable
+  private static InnerClassNode getInnerClassMetadata(ClassNode node) {
+    for (InnerClassNode innerClass : node.innerClasses) {
+      if (innerClass.name.equals(node.name)) {
+        return innerClass;
+      }
+    }
+
+    return null;
   }
 
   private boolean isStubbableResource(LibraryReader<?> input, Path path) {
