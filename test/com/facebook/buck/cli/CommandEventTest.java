@@ -30,13 +30,13 @@ public class CommandEventTest {
   @Test
   public void testEquals() throws Exception {
     CommandEvent.Started startedDaemon = configureTestEvent(
-        CommandEvent.started("build", ImmutableList.of("sample-app"), true));
+        CommandEvent.started("build", ImmutableList.of("sample-app"), true, 17L));
     CommandEvent.Started startedDaemonTwo = configureTestEvent(
-        CommandEvent.started("build", ImmutableList.of("sample-app"), true));
+        CommandEvent.started("build", ImmutableList.of("sample-app"), true, 23L));
     CommandEvent.Started startedNoDaemon = configureTestEvent(
-        CommandEvent.started("build", ImmutableList.of("sample-app"), false));
+        CommandEvent.started("build", ImmutableList.of("sample-app"), false, 3L));
     CommandEvent.Started startedDifferentName = configureTestEvent(
-        CommandEvent.started("test", ImmutableList.of("sample-app"), false));
+        CommandEvent.started("test", ImmutableList.of("sample-app"), false, 11L));
     CommandEvent finishedDaemon = configureTestEvent(
         CommandEvent.finished(startedDaemon, 0));
     CommandEvent finishedDaemonFailed = configureTestEvent(

@@ -161,6 +161,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -940,7 +941,6 @@ public final class Main {
       }
 
       if (!command.isReadOnly()) {
-
         Optional<String> currentVersion =
             filesystem.readFileIfItExists(BuckConstant.getCurrentVersionFile());
         BuckPaths unconfiguredPaths =
@@ -1252,7 +1252,8 @@ public final class Main {
           CommandEvent.Started startedEvent = CommandEvent.started(
               args.length > 0 ? args[0] : "",
               remainingArgs,
-              isDaemon);
+              isDaemon,
+              getBuckPID());
           buildEventBus.post(startedEvent);
 
           // Create or get Parser and invalidate cached command parameters.
@@ -1915,6 +1916,19 @@ public final class Main {
         console.getAnsi().isAnsiTerminal() &&
         !console.getVerbosity().shouldPrintCommand() &&
         console.getVerbosity().shouldPrintStandardInformation();
+  }
+
+
+  /**
+   * A helper method to retrieve the process ID of Buck. The return value from the JVM has to match
+   * the following pattern: {PID}@{Hostname}. It it does not match the return value is 0.
+   * @return the PID or 0L.
+   */
+  private static long getBuckPID() {
+    String pid = ManagementFactory.getRuntimeMXBean().getName();
+    return (pid != null && pid.matches("^\\d+@\\w+$"))
+        ? Long.parseLong(pid.split("@")[0])
+        : 0L;
   }
 
   private static BuildId getBuildId(Optional<NGContext> context) {

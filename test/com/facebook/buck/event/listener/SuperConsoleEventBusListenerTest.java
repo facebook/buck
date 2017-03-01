@@ -2195,7 +2195,8 @@ public class SuperConsoleEventBusListenerTest {
         CommandEvent.started(
             "project",
             ImmutableList.of("arg1", "arg2"),
-            false));
+            false,
+            23L));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(

@@ -313,7 +313,7 @@ public class CachingBuildEngineTest {
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
       buckEventBus.post(
           CommandEvent.finished(
-              CommandEvent.started("build", ImmutableList.of(), false), 0));
+              CommandEvent.started("build", ImmutableList.of(), false, 23L), 0));
       verifyAll();
 
       RuleKey ruleToTestKey = defaultRuleKeyFactory.build(ruleToTest);
@@ -448,7 +448,7 @@ public class CachingBuildEngineTest {
           cachingBuildEngine.build(buildContext, TestExecutionContext.newInstance(), buildRule);
       buckEventBus.post(
           CommandEvent.finished(
-              CommandEvent.started("build", ImmutableList.of(), false), 0));
+              CommandEvent.started("build", ImmutableList.of(), false, 23L), 0));
 
       BuildResult result = buildResult.get();
       verifyAll();
@@ -522,7 +522,7 @@ public class CachingBuildEngineTest {
           cachingBuildEngine.build(buildContext, TestExecutionContext.newInstance(), buildRule);
       buckEventBus.post(
           CommandEvent.finished(
-              CommandEvent.started("build", ImmutableList.of(), false), 0));
+              CommandEvent.started("build", ImmutableList.of(), false, 23L), 0));
 
       BuildResult result = buildResult.get();
       verifyAll();

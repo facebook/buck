@@ -200,7 +200,8 @@ public class ChromeTraceBuildListenerTest {
     CommandEvent.Started commandEventStarted = CommandEvent.started(
         "party",
         ImmutableList.of("arg1", "arg2"),
-        /* isDaemon */ true);
+        true,
+        23L);
     eventBus.post(commandEventStarted);
     eventBus.post(new PerfStatsTracking.MemoryPerfStatsEvent(
         /* freeMemoryBytes */ 1024 * 1024L,

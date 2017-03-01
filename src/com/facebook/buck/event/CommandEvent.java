@@ -25,21 +25,25 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
   private final String commandName;
   private final ImmutableList<String> args;
   private final boolean isDaemon;
+  private final long pid;
 
   /**
    * @param commandName The name of the Buck subcommand, such as {@code build} or {@code test}.
    * @param args The arguments passed to the subcommand. These are often build targets.
    * @param isDaemon Whether the daemon was in use.
+   * @param pid The process ID of the process.
    */
   private CommandEvent(
       EventKey eventKey,
       String commandName,
       ImmutableList<String> args,
-      boolean isDaemon) {
+      boolean isDaemon,
+      long pid) {
     super(eventKey);
     this.commandName = commandName;
     this.args = args;
     this.isDaemon = isDaemon;
+    this.pid = pid;
   }
 
   public String getCommandName() {
@@ -55,13 +59,20 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
     return isDaemon;
   }
 
+  public long getPid() {
+    return pid;
+  }
+
   @Override
   protected String getValueString() {
     return String.format("%s, isDaemon: %b", commandName, isDaemon);
   }
 
-  public static Started started(String commandName, ImmutableList<String> args, boolean isDaemon) {
-    return new Started(commandName, args, isDaemon);
+  public static Started started(String commandName,
+      ImmutableList<String> args,
+      boolean isDaemon,
+      long pid) {
+    return new Started(commandName, args, isDaemon, pid);
   }
 
   public static Finished finished(Started started, int exitCode) {
@@ -73,8 +84,8 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
   }
 
   public static class Started extends CommandEvent {
-    private Started(String commandName, ImmutableList<String> args, boolean isDaemon) {
-      super(EventKey.unique(), commandName, args, isDaemon);
+    private Started(String commandName, ImmutableList<String> args, boolean isDaemon, long pid) {
+      super(EventKey.unique(), commandName, args, isDaemon, pid);
     }
 
     @Override
@@ -87,7 +98,11 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
     private final int exitCode;
 
     private Finished(Started started, int exitCode) {
-      super(started.getEventKey(), started.getCommandName(), started.getArgs(), started.isDaemon());
+      super(started.getEventKey(),
+          started.getCommandName(),
+          started.getArgs(),
+          started.isDaemon(),
+          started.getPid());
       this.exitCode = exitCode;
     }
 
@@ -105,7 +120,11 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
     private final int exitCode;
 
     private Interrupted(Started started, int exitCode) {
-      super(started.getEventKey(), started.getCommandName(), started.getArgs(), started.isDaemon());
+      super(started.getEventKey(),
+          started.getCommandName(),
+          started.getArgs(),
+          started.isDaemon(),
+          started.getPid());
       this.exitCode = exitCode;
     }
 
