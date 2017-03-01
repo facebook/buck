@@ -163,7 +163,8 @@ public class SourcePathResolverTest {
         new FakeSourcePath("java/com/facebook/Main.java"),
         new FakeSourcePath("java/com/facebook/BuckConfig.java"),
         new DefaultBuildTargetSourcePath(rule.getBuildTarget()),
-        new ExplicitBuildTargetSourcePath(rule.getBuildTarget(), Paths.get("foo")));
+        new ExplicitBuildTargetSourcePath(rule.getBuildTarget(), Paths.get("foo")),
+        new ForwardingBuildTargetSourcePath(rule.getBuildTarget(), new FakeSourcePath("bar")));
     Iterable<Path> inputs = pathResolver.filterInputsToCompareToOutput(sourcePaths);
     MoreAsserts.assertIterablesEquals(
         "Iteration order should be preserved: results should not be alpha-sorted.",
@@ -187,18 +188,24 @@ public class SourcePathResolverTest {
         BuildTargetFactory.newInstance("//bar:foo"),
         pathResolver);
     resolver.addToIndex(rule2);
+    FakeBuildRule rule3 = new FakeBuildRule(
+        BuildTargetFactory.newInstance("//bar:baz"),
+        pathResolver);
+    resolver.addToIndex(rule3);
 
     Iterable<? extends SourcePath> sourcePaths = ImmutableList.of(
         new FakeSourcePath("java/com/facebook/Main.java"),
         new DefaultBuildTargetSourcePath(rule.getBuildTarget()),
         new FakeSourcePath("java/com/facebook/BuckConfig.java"),
-        new ExplicitBuildTargetSourcePath(rule2.getBuildTarget(), Paths.get("foo")));
+        new ExplicitBuildTargetSourcePath(rule2.getBuildTarget(), Paths.get("foo")),
+        new ForwardingBuildTargetSourcePath(rule3.getBuildTarget(), new FakeSourcePath("bar")));
     Iterable<BuildRule> inputs = ruleFinder.filterBuildRuleInputs(sourcePaths);
     MoreAsserts.assertIterablesEquals(
         "Iteration order should be preserved: results should not be alpha-sorted.",
         ImmutableList.of(
             rule,
-            rule2),
+            rule2,
+            rule3),
         inputs);
   }
 
@@ -293,6 +300,51 @@ public class SourcePathResolverTest {
     resolver.addToIndex(otherFakeBuildRule);
     ExplicitBuildTargetSourcePath buildTargetSourcePath3 = new ExplicitBuildTargetSourcePath(
         otherFakeBuildRule.getBuildTarget(), Paths.get("buck-out/gen/package/foo/bar"));
+    String actual3 = pathResolver.getSourcePathName(
+        BuildTargetFactory.newInstance("//:test"),
+        buildTargetSourcePath3);
+    assertEquals(Paths.get("foo", "bar").toString(), actual3);
+  }
+
+  @Test
+  public void getSourcePathNameOnForwardingBuildTargetSourcePath() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+
+    FakeBuildRule rule = new FakeBuildRule(
+        BuildTargetFactory.newInstance("//package:baz"),
+        pathResolver);
+    resolver.addToIndex(rule);
+
+    // Verify that wrapping a genrule in a ForwardingBuildTargetSourcePath resolves to the output
+    // name of that genrule.
+    String out = "test/blah.txt";
+    Genrule genrule = GenruleBuilder
+        .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
+        .setOut(out)
+        .build(resolver);
+    ForwardingBuildTargetSourcePath buildTargetSourcePath1 = new ForwardingBuildTargetSourcePath(
+        rule.getBuildTarget(), genrule.getSourcePathToOutput());
+    String actual1 = pathResolver.getSourcePathName(
+        BuildTargetFactory.newInstance("//:test"),
+        buildTargetSourcePath1);
+    assertEquals(out, actual1);
+
+    ForwardingBuildTargetSourcePath buildTargetSourcePath2 = new ForwardingBuildTargetSourcePath(
+        rule.getBuildTarget(), new FakeSourcePath("foo/bar"));
+    String actual2 = pathResolver.getSourcePathName(
+        BuildTargetFactory.newInstance("//:test"),
+        buildTargetSourcePath2);
+    assertEquals(Paths.get("foo", "bar").toString(), actual2);
+
+    BuildTarget otherFakeBuildTarget = BuildTargetFactory.newInstance("//package2:fake2");
+    FakeBuildRule otherFakeBuildRule = new FakeBuildRule(
+        new FakeBuildRuleParamsBuilder(otherFakeBuildTarget).build(),
+        pathResolver);
+    resolver.addToIndex(otherFakeBuildRule);
+    ForwardingBuildTargetSourcePath buildTargetSourcePath3 = new ForwardingBuildTargetSourcePath(
+        otherFakeBuildRule.getBuildTarget(), buildTargetSourcePath2);
     String actual3 = pathResolver.getSourcePathName(
         BuildTargetFactory.newInstance("//:test"),
         buildTargetSourcePath3);

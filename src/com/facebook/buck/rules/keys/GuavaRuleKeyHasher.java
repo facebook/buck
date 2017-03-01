@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
@@ -197,6 +198,10 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
       this.putStringified(
           TYPE_TARGET_SOURCE_PATH,
           ((ExplicitBuildTargetSourcePath) targetSourcePath).getResolvedPath().toString());
+    } else if (targetSourcePath instanceof ForwardingBuildTargetSourcePath) {
+      this.putStringified(
+          TYPE_TARGET_SOURCE_PATH,
+          ((ForwardingBuildTargetSourcePath) targetSourcePath).getDelegate().toString());
     }
     return this;
   }

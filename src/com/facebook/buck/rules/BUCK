@@ -97,6 +97,7 @@ java_immutables_library(
     'Description.java',
     'ExplicitBuildTargetSourcePath.java',
     'ExportDependencies.java',
+    'ForwardingBuildTargetSourcePath.java',
     'HasPostBuildSteps.java',
     'HasRuntimeDeps.java',
     'HashedFileTool.java',

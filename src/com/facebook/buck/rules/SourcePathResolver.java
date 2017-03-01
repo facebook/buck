@@ -152,6 +152,8 @@ public class SourcePathResolver {
       return ((PathSourcePath) sourcePath).getRelativePath();
     } else if (sourcePath instanceof ExplicitBuildTargetSourcePath) {
       return ((ExplicitBuildTargetSourcePath) sourcePath).getResolvedPath();
+    } else if (sourcePath instanceof ForwardingBuildTargetSourcePath) {
+      return getPathPrivateImpl(((ForwardingBuildTargetSourcePath) sourcePath).getDelegate());
     } else if (sourcePath instanceof DefaultBuildTargetSourcePath) {
       DefaultBuildTargetSourcePath targetSourcePath = (DefaultBuildTargetSourcePath) sourcePath;
       Path path = ruleFinder.getRuleOrThrow(targetSourcePath).getPathToOutput();
@@ -211,7 +213,10 @@ public class SourcePathResolver {
         HasOutputName hasOutputName = (HasOutputName) rule;
         return hasOutputName.getOutputName();
       }
-      if (sourcePath instanceof ExplicitBuildTargetSourcePath) {
+      if (sourcePath instanceof ForwardingBuildTargetSourcePath) {
+        ForwardingBuildTargetSourcePath castPath = (ForwardingBuildTargetSourcePath) sourcePath;
+        return getSourcePathName(target, castPath.getDelegate());
+      } else if (sourcePath instanceof ExplicitBuildTargetSourcePath) {
         Path path = ((ExplicitBuildTargetSourcePath) sourcePath).getResolvedPath();
         if (path.startsWith(rule.getProjectFilesystem().getBuckPaths().getGenDir())) {
           path = rule.getProjectFilesystem().getBuckPaths().getGenDir().relativize(path);
