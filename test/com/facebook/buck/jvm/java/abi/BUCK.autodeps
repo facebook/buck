@@ -10,6 +10,7 @@
       "//test/com/facebook/buck/jvm/java/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:util",
       "//third-party/java/asm:asm",
+      "//third-party/java/easymock:easymock",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/junit:junit"
