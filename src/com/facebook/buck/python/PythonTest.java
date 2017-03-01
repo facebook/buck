@@ -65,7 +65,7 @@ public class PythonTest
   private final SourcePathRuleFinder ruleFinder;
   private final Supplier<ImmutableSortedSet<BuildRule>> originalDeclaredDeps;
   @AddToRuleKey
-  private final ImmutableMap<String, String> env;
+  private final Supplier<ImmutableMap<String, String>> env;
   @AddToRuleKey
   private final PythonBinary binary;
   private final ImmutableSet<Label> labels;
@@ -77,8 +77,8 @@ public class PythonTest
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       Supplier<ImmutableSortedSet<BuildRule>> originalDeclaredDeps,
-      final ImmutableMap<String, String> env,
-      final PythonBinary binary,
+      Supplier<ImmutableMap<String, String>> env,
+      PythonBinary binary,
       ImmutableSet<Label> labels,
       ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
       Optional<Long> testRuleTimeoutMs,
@@ -97,8 +97,8 @@ public class PythonTest
   public static PythonTest from(
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
-      final ImmutableMap<String, String> env,
-      final PythonBinary binary,
+      Supplier<ImmutableMap<String, String>> env,
+      PythonBinary binary,
       ImmutableSet<Label> labels,
       ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
       Optional<Long> testRuleTimeoutMs,
@@ -150,7 +150,7 @@ public class PythonTest
   private ImmutableMap<String, String> getMergedEnv() {
     return new ImmutableMap.Builder<String, String>()
         .putAll(binary.getExecutableCommand().getEnvironment())
-        .putAll(env)
+        .putAll(env.get())
         .build();
   }
 

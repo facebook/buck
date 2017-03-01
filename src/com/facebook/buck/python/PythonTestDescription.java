@@ -47,6 +47,7 @@ import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionRoot;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -319,8 +320,8 @@ public class PythonTestDescription implements
         }
     }
 
-    ImmutableMap<String, String> testEnv =
-        ImmutableMap.copyOf(
+    Supplier<ImmutableMap<String, String>> testEnv =
+        () -> ImmutableMap.copyOf(
             Maps.transformValues(
                 args.env,
                 MACRO_HANDLER.getExpander(
