@@ -16,6 +16,9 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,7 +30,7 @@ import java.util.stream.Collectors;
 /**
  * A {@link LibraryReader} that reads from a directory (recursively).
  */
-class DirectoryReader implements LibraryReader<InputStream> {
+class DirectoryReader implements LibraryReader {
   private final Path root;
 
   public DirectoryReader(Path root) {
@@ -51,11 +54,15 @@ class DirectoryReader implements LibraryReader<InputStream> {
   }
 
   @Override
-  public InputStream openClass(Path relativePath) throws IOException {
+  public void visitClass(Path relativePath, ClassVisitor cv) throws IOException {
     if (!isClass(relativePath)) {
       throw new IllegalArgumentException();
     }
-    return openInputStream(relativePath);
+
+    try (InputStream inputStream = openInputStream(relativePath)) {
+      ClassReader reader = new ClassReader(inputStream);
+      reader.accept(cv, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+    }
   }
 
   @Override

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 
 import org.objectweb.asm.tree.ClassNode;
@@ -36,11 +37,10 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 
 public class StubJar {
-  private final Supplier<LibraryReader<ClassMirror>> libraryReaderSupplier;
+  private final Supplier<LibraryReader> libraryReaderSupplier;
 
   public StubJar(Path toMirror) {
-    libraryReaderSupplier = () ->
-        new StubbingLibraryReader<>(LibraryReader.of(toMirror), BytecodeStubber::createStub);
+    libraryReaderSupplier = () -> LibraryReader.of(toMirror);
   }
 
   /**
@@ -51,11 +51,7 @@ public class StubJar {
       SourceVersion targetVersion,
       Elements elements,
       Iterable<TypeElement> topLevelTypes) {
-    ClassVisitorDriverFromElement driver =
-        new ClassVisitorDriverFromElement(targetVersion, elements);
-    libraryReaderSupplier = () -> new StubbingLibraryReader<>(
-        LibraryReader.of(elements, topLevelTypes),
-        driver::driveVisitor);
+    libraryReaderSupplier = () -> LibraryReader.of(targetVersion, elements, topLevelTypes);
   }
 
   public void writeTo(ProjectFilesystem filesystem, Path path) throws IOException {
@@ -65,7 +61,7 @@ public class StubJar {
   }
 
   private void writeTo(StubJarWriter writer) throws IOException {
-    try (LibraryReader<ClassMirror> input = libraryReaderSupplier.get()) {
+    try (LibraryReader input = libraryReaderSupplier.get()) {
       List<Path> paths = new ArrayList<>(input.getRelativePaths());
       Collections.sort(paths);
 
@@ -75,7 +71,9 @@ public class StubJar {
             writer.writeResource(path, resourceContents);
           }
         } else if (input.isClass(path)) {
-          ClassMirror stub = input.openClass(path);
+          String fileName = MorePaths.pathWithUnixSeparators(path);
+          ClassMirror stub = new ClassMirror(fileName);
+          input.visitClass(path, stub);
           if (!isAnonymousOrLocalClass(stub.getNode())) {
             writer.writeClass(path, stub);
           }
@@ -104,7 +102,7 @@ public class StubJar {
     return null;
   }
 
-  private boolean isStubbableResource(LibraryReader<?> input, Path path) {
+  private boolean isStubbableResource(LibraryReader input, Path path) {
     return input.isResource(path) && !path.endsWith("META-INF" + File.separator + "MANIFEST.MF");
   }
 }

@@ -16,21 +16,23 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import org.objectweb.asm.ClassVisitor;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 
 /**
  * An interface for reading and listing resources and classes in a library.
- * @param <UnstubbedClass> the type used to work with the unstubbed class
  */
-interface LibraryReader<UnstubbedClass> extends AutoCloseable {
-  static LibraryReader<InputStream> of(Path path) {
+interface LibraryReader extends AutoCloseable {
+  static LibraryReader of(Path path) {
     if (Files.isDirectory(path)) {
       return new DirectoryReader(path);
     } else {
@@ -38,15 +40,18 @@ interface LibraryReader<UnstubbedClass> extends AutoCloseable {
     }
   }
 
-  static LibraryReader<TypeElement> of(Elements elements, Iterable<TypeElement> topLevelTypes) {
-    return new TypeElementsReader(elements, topLevelTypes);
+  static LibraryReader of(
+      SourceVersion targetVersion,
+      Elements elements,
+      Iterable<TypeElement> topLevelTypes) {
+    return new TypeElementsReader(targetVersion, elements, topLevelTypes);
   }
 
   List<Path> getRelativePaths() throws IOException;
 
   InputStream openResourceFile(Path relativePath) throws IOException;
 
-  UnstubbedClass openClass(Path relativePath) throws IOException;
+  void visitClass(Path relativePath, ClassVisitor cv) throws IOException;
 
   @Override
   void close() throws IOException;

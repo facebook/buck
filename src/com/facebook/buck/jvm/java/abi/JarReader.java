@@ -18,6 +18,8 @@ package com.facebook.buck.jvm.java.abi;
 
 import com.google.common.collect.Iterables;
 
+import org.objectweb.asm.ClassVisitor;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystem;
@@ -30,7 +32,7 @@ import javax.annotation.Nullable;
 /**
  * A {@link LibraryReader} that reads from a jar file.
  */
-class JarReader implements LibraryReader<InputStream> {
+class JarReader implements LibraryReader {
   private final Path jarPath;
   @Nullable
   FileSystem fileSystem;
@@ -52,8 +54,8 @@ class JarReader implements LibraryReader<InputStream> {
   }
 
   @Override
-  public InputStream openClass(Path relativePath) throws IOException {
-    return getInner().openClass(relativePath);
+  public void visitClass(Path relativePath, ClassVisitor cv) throws IOException {
+    getInner().visitClass(relativePath, cv);
   }
 
   @Override
