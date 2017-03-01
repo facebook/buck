@@ -59,8 +59,8 @@ class FilesystemStubJarWriter implements StubJarWriter {
   }
 
   @Override
-  public void writeClass(Path relativePath, ClassMirror stub) throws IOException {
-    try (InputStream contents = getStubClassBytes(stub.getNode()).openStream()) {
+  public void writeClass(Path relativePath, ClassNode stub) throws IOException {
+    try (InputStream contents = getStubClassBytes(stub).openStream()) {
       jar.writeEntry(MorePaths.pathWithUnixSeparators(relativePath), contents);
     }
   }

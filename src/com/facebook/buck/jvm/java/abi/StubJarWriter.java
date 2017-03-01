@@ -16,6 +16,8 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import org.objectweb.asm.tree.ClassNode;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -24,7 +26,7 @@ import java.nio.file.Path;
 interface StubJarWriter extends AutoCloseable {
   void writeResource(Path relativePath, InputStream resourceContents) throws IOException;
 
-  void writeClass(Path relativePath, ClassMirror stub) throws IOException;
+  void writeClass(Path relativePath, ClassNode stub) throws IOException;
 
   @Override
   void close() throws IOException;

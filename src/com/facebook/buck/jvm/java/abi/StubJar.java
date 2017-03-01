@@ -16,9 +16,9 @@
 
 package com.facebook.buck.jvm.java.abi;
 
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InnerClassNode;
 
@@ -71,10 +71,9 @@ public class StubJar {
             writer.writeResource(path, resourceContents);
           }
         } else if (input.isClass(path)) {
-          String fileName = MorePaths.pathWithUnixSeparators(path);
-          ClassMirror stub = new ClassMirror(fileName);
-          input.visitClass(path, stub);
-          if (!isAnonymousOrLocalClass(stub.getNode())) {
+          ClassNode stub = new ClassNode(Opcodes.ASM5);
+          input.visitClass(path, new AbiFilteringClassVisitor(stub));
+          if (!isAnonymousOrLocalClass(stub)) {
             writer.writeClass(path, stub);
           }
         }
