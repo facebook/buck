@@ -193,18 +193,22 @@ public class CxxLinkableEnhancer {
     argsBuilder.addAll(linkableInput.getArgs());
 
     // Add all shared libraries
-    addSharedLibrariesLinkerArgs(
-        cxxPlatform,
-        resolver,
-        ImmutableSortedSet.copyOf(linkableInput.getLibraries()),
-        argsBuilder);
+    if (!linkableInput.getLibraries().isEmpty()) {
+      addSharedLibrariesLinkerArgs(
+          cxxPlatform,
+          resolver,
+          ImmutableSortedSet.copyOf(linkableInput.getLibraries()),
+          argsBuilder);
+    }
 
     // Add framework args
-    addFrameworkLinkerArgs(
-        cxxPlatform,
-        resolver,
-        ImmutableSortedSet.copyOf(linkableInput.getFrameworks()),
-        argsBuilder);
+    if (!linkableInput.getFrameworks().isEmpty()) {
+      addFrameworkLinkerArgs(
+          cxxPlatform,
+          resolver,
+          ImmutableSortedSet.copyOf(linkableInput.getFrameworks()),
+          argsBuilder);
+    }
 
     final ImmutableList<Arg> allArgs = argsBuilder.build();
 
