@@ -137,11 +137,11 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
                 /* trackClassUsage */ false,
                 /* additionalClasspathEntries */ ImmutableSet.of(),
                 stepFactory,
-                /* resourcesRoot */ Optional.empty(),
-                /* manifest file */ Optional.empty(),
-                /* mavenCoords */ Optional.empty(),
-                /* tests */ ImmutableSortedSet.of(),
-                /* classesToRemoveFromJar */ ImmutableSet.of()));
+                args.resourcesRoot,
+                args.manifestFile,
+                args.mavenCoords,
+                args.tests,
+                args.removeClasses));
 
     return new JavaTest(
         params.copyWithDeps(

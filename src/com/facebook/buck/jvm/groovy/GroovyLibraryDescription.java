@@ -20,10 +20,10 @@ import static com.facebook.buck.jvm.common.ResourceValidator.validateResources;
 
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
-import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -31,7 +31,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -121,20 +120,15 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
             groovyBuckConfig.getGroovyCompiler().get(),
             Optional.of(args.extraGroovycArguments),
             javacOptions),
-        Optional.empty(),
-        /* manifest file */ Optional.empty(),
-        Optional.empty(),
-        ImmutableSortedSet.of(),
-        /* classesToRemoveFromJar */ ImmutableSet.of());
+        args.resourcesRoot,
+        args.manifestFile,
+        args.mavenCoords,
+        args.tests,
+        args.removeClasses);
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg extends JvmLibraryArg {
-    public ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
-    public ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
+  public static class Arg extends JavaLibraryDescription.Arg {
     public ImmutableList<String> extraGroovycArguments = ImmutableList.of();
-    public ImmutableSortedSet<BuildTarget> providedDeps = ImmutableSortedSet.of();
-    public ImmutableSortedSet<BuildTarget> exportedDeps = ImmutableSortedSet.of();
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
   }
 }

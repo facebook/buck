@@ -173,11 +173,11 @@ public class KotlinLibraryDescription implements
             new KotlincToJarStepFactory(
                 kotlinBuckConfig.getKotlinCompiler().get(),
                 args.extraKotlincArguments),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty(),
-            ImmutableSortedSet.of(),
-            ImmutableSet.of());
+            args.resourcesRoot,
+            args.manifestFile,
+            args.mavenCoords,
+            args.tests,
+            args.removeClasses);
 
     if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
       return defaultKotlinLibrary;
