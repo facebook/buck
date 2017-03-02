@@ -454,7 +454,8 @@ public class AndroidBinaryGraphEnhancer {
         Suppliers.ofInstance(ImmutableSortedSet.of(compileUberRDotJava)),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
     DexProducedFromJavaLibrary dexUberRDotJava =
-        new DexProducedFromJavaLibrary(paramsForDexUberRDotJava, compileUberRDotJava, dxConfig.getDxMaxHeapSize());
+        new DexProducedFromJavaLibrary(paramsForDexUberRDotJava, compileUberRDotJava,
+          dxConfig.getDxMaxHeapSize());
     ruleResolver.addToIndex(dexUberRDotJava);
 
     Optional<PreDexMerge> preDexMerge = Optional.empty();
