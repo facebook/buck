@@ -22,6 +22,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigSetup;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Path;
 
 public interface Command {
@@ -56,5 +57,5 @@ public interface Command {
       Path logDirectoryPath,
       ProjectFilesystem filesystem);
 
-
+  void printUsage(PrintStream stream);
 }

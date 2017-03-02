@@ -131,6 +131,8 @@ public class MainIntegrationTest {
         "  distbuild      attaches to a distributed build (experimental)",
         "  doctor         debug and fix issues of Buck commands",
         "  fetch          downloads remote resources to your local machine",
+        "  help           " +
+            "shows this screen (or the help page of the specified command) and exits.",
         "  install        builds and installs an application",
         "  machoutils     provides some utils for Mach O binary files",
         "  project        generates project configuration files for an IDE",

@@ -40,7 +40,8 @@ public abstract class AbstractContainerCommand implements Command {
 
   protected abstract String getContainerCommandPrefix();
 
-  protected void printUsage(PrintStream stream) {
+  @Override
+  public void printUsage(PrintStream stream) {
     String prefix = getContainerCommandPrefix();
 
     stream.println("buck build tool");

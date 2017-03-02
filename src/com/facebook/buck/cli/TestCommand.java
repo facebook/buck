@@ -663,7 +663,7 @@ public class TestCommand extends BuildCommand {
   }
 
   @Override
-  protected void printUsage(PrintStream stream) {
+  public void printUsage(PrintStream stream) {
     stream.println("Usage:");
     stream.println("  " + "buck test [<targets>] [<options>]");
     stream.println();

@@ -23,6 +23,7 @@ import com.facebook.buck.log.LogConfigSetup;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -84,5 +85,13 @@ public class VersionCommand implements Command {
       Path logDirectoryPath,
       ProjectFilesystem filesystem) {
     return ImmutableList.of();
+  }
+
+  @Override
+  public void printUsage(PrintStream stream) {
+    // Can't get here, because --version is a flag and:
+    // `buck help --version` will just return that `--version` is not a valid option for help
+    // `buck --version --help` and `buck --help --version` will return the version instead
+    throw new IllegalStateException();
   }
 }
