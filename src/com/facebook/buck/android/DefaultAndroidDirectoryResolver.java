@@ -23,7 +23,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -33,9 +32,13 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Collectors;
+
+import javafx.util.Pair;
 
 /**
  * Utility class used for resolving the location of Android specific directories.
@@ -59,6 +62,10 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   @VisibleForTesting
   static final String NDK_NOT_FOUND_MESSAGE = "Android NDK could not be found. Make sure to set " +
       "one of these  environment variables: ANDROID_NDK_REPOSITORY, ANDROID_NDK or NDK_HOME]";
+
+  @VisibleForTesting
+  static final String NDK_TARGET_VERSION_IS_EMPTY_MESSAGE =
+      "buckconfig entry [ndk] ndk_version is an empty string.";
 
   public static final ImmutableSet<String> BUILD_TOOL_PREFIXES =
       ImmutableSet.of("android-", "build-tools-");
@@ -309,49 +316,53 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   }
 
   private Optional<Path> findNdkFromRepository(Path repository) {
-    ImmutableSortedSet<Path> repositoryContents;
+    ImmutableSet<Path> repositoryContents;
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(repository)) {
-      repositoryContents = ImmutableSortedSet.copyOf(stream);
+      repositoryContents = ImmutableSet.copyOf(stream);
     } catch (IOException e) {
       ndkErrorMessage = Optional.of("Unable to read contents of Android ndk.repository or " +
           "ANDROID_NDK_REPOSITORY at " + repository);
       return Optional.empty();
     }
 
-    Optional<Path> ndkPath = Optional.empty();
-    if (!repositoryContents.isEmpty()) {
-      Optional<String> newestVersion = Optional.empty();
-      VersionStringComparator versionComparator = new VersionStringComparator();
-      for (Path potentialNdkPath : repositoryContents) {
-        if (potentialNdkPath.toFile().isDirectory()) {
-          Optional<String> ndkVersion = findNdkVersion(potentialNdkPath);
-          if (ndkVersion.isPresent()) {
-            if (targetNdkVersion.isPresent()) {
-              if (versionsMatch(targetNdkVersion.get(), ndkVersion.get())) {
-                return Optional.of(potentialNdkPath);
-              }
-            } else {
-              if (!newestVersion.isPresent() || versionComparator.compare(
-                  ndkVersion.get(),
-                  newestVersion.get()) > 0) {
-                ndkPath = Optional.of(potentialNdkPath);
-                newestVersion = Optional.of(ndkVersion.get());
-              }
-            }
-          }
-        }
+    VersionStringComparator versionComparator = new VersionStringComparator();
+    List<Pair<Path, Optional<String>>> availableNdks = repositoryContents.stream()
+        .filter(Files::isDirectory)
+        // Pair of path to version number
+        .map(p -> new Pair<>(p, findNdkVersion(p)))
+
+        .filter(pair -> pair.getValue().isPresent())
+        .sorted((o1, o2) -> versionComparator.compare(o2.getValue().get(), o1.getValue().get()))
+        .collect(Collectors.toList());
+
+    if (availableNdks.isEmpty()) {
+      ndkErrorMessage = Optional.of(repository + " does not contain any valid Android NDK. Make" +
+          " sure to specify ANDROID_NDK_REPOSITORY or ndk.repository.");
+      return Optional.empty();
+    }
+
+    if (targetNdkVersion.isPresent()) {
+      if (targetNdkVersion.get().isEmpty()) {
+        ndkErrorMessage = Optional.of(NDK_TARGET_VERSION_IS_EMPTY_MESSAGE);
+        return Optional.empty();
       }
-    }
-    if (!ndkPath.isPresent()) {
-      ndkErrorMessage = Optional.of("Couldn't find a valid NDK under " + repository);
+
+      Optional<Path> targetNdkPath = availableNdks.stream()
+          .filter(p -> versionsMatch(targetNdkVersion.get(), p.getValue().get()))
+          .map(Pair::getKey)
+          .findFirst();
+      if (targetNdkPath.isPresent()) {
+        return targetNdkPath;
+      }
+      ndkErrorMessage = Optional.of("Target NDK version " + targetNdkVersion.get() + " is not " +
+              "available. The following versions are available: " + availableNdks.stream()
+          .map(Pair::getValue)
+          .map(Optional::get)
+          .collect(Collectors.joining(", ")));
       return Optional.empty();
-    } else if (targetNdkVersion.isPresent()) {
-      ndkErrorMessage = Optional.of("Buck is configured to use Android NDK version " +
-          targetNdkVersion.get() + " at ANDROID_NDK_REPOSITORY or ndk.repository but the " +
-          "repository does not contain that version.");
-      return Optional.empty();
     }
-    return ndkPath;
+
+    return Optional.of(availableNdks.get(0).getKey());
   }
 
   /**

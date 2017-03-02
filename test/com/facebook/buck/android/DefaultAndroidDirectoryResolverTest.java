@@ -17,6 +17,7 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.android.DefaultAndroidDirectoryResolver.NDK_POST_R11_VERSION_FILENAME;
 import static com.facebook.buck.android.DefaultAndroidDirectoryResolver.NDK_PRE_R11_VERSION_FILENAME;
+import static com.facebook.buck.android.DefaultAndroidDirectoryResolver.NDK_TARGET_VERSION_IS_EMPTY_MESSAGE;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -171,7 +172,7 @@ public class DefaultAndroidDirectoryResolverTest {
         Optional.of(""));
 
     expectedException.expect(HumanReadableException.class);
-    expectedException.expectMessage("Couldn't find a valid NDK under " + tmpDir.getRoot());
+    expectedException.expectMessage(NDK_TARGET_VERSION_IS_EMPTY_MESSAGE);
     resolver.getNdkOrThrow();
   }
 
@@ -301,6 +302,26 @@ public class DefaultAndroidDirectoryResolverTest {
   }
 
   @Test
+  public void throwAtscanNdkSpecificVersion() throws IOException {
+    createTmpNdkVersions(
+        NDK_PRE_R11_VERSION_FILENAME,
+        "ndk-dir-r9a", "r9a",
+        "ndk-dir-r9b", "r9b",
+        "ndk-dir-r9c", "r9c"
+    );
+    DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
+        tmpDir.getRoot().getFileSystem(),
+        ImmutableMap.of("ANDROID_NDK_REPOSITORY", tmpDir.getRoot().toString()),
+        Optional.empty(),
+        Optional.of("r42z"));
+
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage("Target NDK version r42z is not available. The following " +
+            "versions are available: r9c, r9b, r9a");
+    resolver.getNdkOrThrow();
+  }
+
+  @Test
   public void scanNdkInexactMatchVersion() throws IOException {
     Path expectedPath = createTmpNdkVersions(
         NDK_POST_R11_VERSION_FILENAME,
@@ -377,7 +398,7 @@ public class DefaultAndroidDirectoryResolverTest {
         Optional.of(""));
 
     expectedException.expect(HumanReadableException.class);
-    expectedException.expectMessage("Couldn't find a valid NDK under " + tmpDir.getRoot());
+    expectedException.expectMessage(NDK_TARGET_VERSION_IS_EMPTY_MESSAGE);
     resolver.getNdkOrThrow();
   }
 
