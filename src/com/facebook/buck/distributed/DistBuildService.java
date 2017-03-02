@@ -347,11 +347,12 @@ public class DistBuildService implements Closeable {
         executorService.submit(() -> {
           List<Path> buckDotFilesExceptConfig = Lists.newArrayList();
           for (Path path : filesystem.getDirectoryContents(filesystem.getRootPath())) {
+            String fileName = path.getFileName().toString();
             if (!filesystem.isDirectory(path) &&
                 !filesystem.isSymLink(path) &&
-                path.getFileName().startsWith(".") &&
-                path.getFileName().toString().contains("buck") &&
-                !path.getFileName().startsWith(".buckconfig")) {
+                fileName.startsWith(".") &&
+                fileName.contains("buck") &&
+                !fileName.startsWith(".buckconfig")) {
               buckDotFilesExceptConfig.add(path);
             }
           }
