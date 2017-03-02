@@ -16,10 +16,19 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.rules.SourcePath;
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.common.hash.Hashing;
+
+import java.nio.file.Path;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 public class JsFlavors {
   public static final ImmutableFlavor ANDROID = ImmutableFlavor.of("android");
@@ -28,6 +37,7 @@ public class JsFlavors {
 
   private static final ImmutableSet<Flavor> platforms = ImmutableSet.of(ANDROID, IOS);
   private static final ImmutableSet<Flavor> other = ImmutableSet.of(PROD);
+  private static final String fileFlavorPrefix = "file-";
 
   public static boolean validateFlavors(ImmutableSet<Flavor> flavors) {
     return Sets.intersection(flavors, platforms).size() < 2 &&
@@ -36,6 +46,28 @@ public class JsFlavors {
 
   public static String getPlatform(ImmutableSet<Flavor> flavors) {
     return flavors.contains(IOS) ? "ios" : "android";
+  }
+
+  public static Flavor fileFlavorForSourcePath(final Path path) {
+    final String hash = Hashing.sha1()
+        .hashString(MorePaths.pathWithUnixSeparators(path), Charsets.UTF_8)
+        .toString()
+        .substring(0, 10);
+    final String safeFileName = Flavor.replaceInvalidCharacters(path.getFileName().toString());
+    return ImmutableFlavor.of(fileFlavorPrefix + safeFileName + "-" + hash);
+  }
+
+  public static Optional<SourcePath> extractSourcePath(
+      ImmutableBiMap<Flavor, SourcePath> flavorsToSources,
+      Stream<Flavor> flavors) {
+    return flavors
+        .filter(JsFlavors::isFileFlavor)
+        .findFirst()
+        .map(flavorsToSources::get);
+  }
+
+  public static boolean isFileFlavor(Flavor flavor) {
+    return flavor.toString().startsWith(fileFlavorPrefix);
   }
 
   private JsFlavors() {}

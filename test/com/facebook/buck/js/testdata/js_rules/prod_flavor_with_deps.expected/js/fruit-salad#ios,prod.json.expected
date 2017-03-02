@@ -1,0 +1,21 @@
+library --dep buck-out/gen/js/extras#ios,prod.json --dep buck-out/gen/js/fruit#ios,prod.json
+library
+optimize --arbitrary extra --flags --platform ios
+transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
+var choclateChips;
+optimize --arbitrary extra --flags --platform ios
+transform --arbitrary extra --flags --filename js/extras/yoghurt.js
+var yoghurt;
+library
+optimize --platform ios
+transform --filename js/apple.js
+var apple;
+optimize --platform ios
+transform --filename js/banana.js
+var banana;
+optimize --platform ios
+transform --filename js/pear.js
+var pear;
+optimize --platform ios
+transform --filename js/fruit-salad.js
+var fruitSalad;

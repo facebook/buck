@@ -11,16 +11,22 @@ worker_tool(
     exe = ':packager_worker_exe',
 )
 
-js_file(
-    name = 'a',
-    src = 'a.js',
+js_library(
+    name = 'fruit',
+    srcs = ['apple.js', 'banana.js', 'pear.js'],
     worker = ':packager_worker',
 )
 
-js_file(
-  name = 'b',
-  src = 'a.js',
-  worker = ':packager_worker',
-  virtual_path = 'a/b/c/d.js',
-  extra_args = '--arbitrary extra --flags',
+js_library(
+    name = 'extras',
+    srcs = glob(['extras/*.js']),
+    extra_args = '--arbitrary extra --flags',
+    worker = ':packager_worker',
+)
+
+js_library(
+    name = 'fruit-salad',
+    srcs = ['fruit-salad.js'],
+    deps = [':fruit', ':extras'],
+    worker = ':packager_worker',
 )

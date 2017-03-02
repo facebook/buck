@@ -1,2 +1,0 @@
-transform --arbitrary extra --flags --filename a/b/c/d.js
-contents of a

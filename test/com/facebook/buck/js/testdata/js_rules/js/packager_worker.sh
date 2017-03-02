@@ -32,22 +32,48 @@ read_command() {
   fi
 }
 
+concat() {
+  echo $@
+}
+
 run_command() {
+  local args=
+  local infiles=
   local message_id="$1"
 
   set -- $2
-  local args_string=${@:1:$(($#-2))}
 
-  set -- ${@: -2}
-  local infile="$1"
-  local outfile="$2"
+  while [[ $# -gt 1 ]]; do
+    if [[ "$1" == --* ]]; then
+      args=$(concat $args "$1")
+      if [ "$1" == --dep ]; then
+        args=$(concat $args "${2/*\/buck-out\//buck-out/}")
+        infiles=$(concat $infiles "$2")
+        shift
+      elif [[ "$2" != --* ]]; then
+        args=$(concat $args "$2")
+        shift
+      fi
+    elif [[ "$1" == */* ]]; then
+      infiles=$(concat $infiles "$1")
+    else
+      args=$(concat $args "$1")
+    fi
+    shift
+  done
+
+  local outfile="$1"
   mkdir -p "$(dirname "$outfile")"
 
+
   # first line are arguments passed in
-  echo "$args_string" > "$outfile"
+  echo "$args" > "$outfile"
 
   # append input file contents
-  cat "$infile" >> "$outfile"
+  local infile
+  for infile in $infiles; do
+    cat "$infile" >> "$outfile"
+  done
 
   printf ',{"id": %d, "type": "result", "exit_code": 0}' "$message_id"
 }

@@ -55,29 +55,56 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
-  public void testSimpleFileBuild() throws IOException {
+  public void testSimpleLibraryBuild() throws IOException {
     workspace
-        .runBuckBuild("//js:a")
+        .runBuckBuild("//js:fruit")
         .assertSuccess();
 
-    workspace.verify(Paths.get("simple_file_build.expected"), genPath);
+    workspace.verify(Paths.get("simple_library_build.expected"), genPath);
   }
 
   @Test
-  public void testBuildWithVirtualPathAndExtraArgs() throws IOException {
+  public void testBuildWithExtraArgs() throws IOException {
     workspace
-        .runBuckBuild("//js:b")
+        .runBuckBuild("//js:extras")
         .assertSuccess();
 
-    workspace.verify(Paths.get("virtual_path_and_extra_args.expected"), genPath);
+    workspace.verify(Paths.get("with_extra_args.expected"), genPath);
   }
 
   @Test
   public void testOptimizationBuild() throws IOException {
     workspace
-        .runBuckBuild("//js:b#prod,android")
+        .runBuckBuild("//js:fruit#prod,android")
         .assertSuccess();
 
-    workspace.verify(Paths.get("prod_build.expected"), genPath);
+    workspace.verify(Paths.get("simple_prod_build.expected"), genPath);
+  }
+
+  @Test
+  public void testBuildWithDeps() throws IOException {
+    workspace
+        .runBuckBuild("//js:fruit-salad")
+        .assertSuccess();
+
+    workspace.verify(Paths.get("with_deps.expected"), genPath);
+  }
+
+  @Test
+  public void testProdBuildWithDeps() throws IOException {
+    workspace
+        .runBuckBuild("//js:fruit-salad#prod,ios")
+        .assertSuccess();
+
+    workspace.verify(Paths.get("prod_flavor_with_deps.expected"), genPath);
+  }
+
+  @Test
+  public void testFlavoredAndUnflavoredBuild() throws IOException {
+    workspace
+        .runBuckBuild("//js:fruit#prod,android", "//js:fruit")
+        .assertSuccess();
+
+    workspace.verify(Paths.get("same_target_with_and_without_flavors.expected"), genPath);
   }
 }

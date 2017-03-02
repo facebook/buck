@@ -1,3 +1,0 @@
-optimize --arbitrary extra --flags --platform android
-transform --arbitrary extra --flags --filename a/b/c/d.js
-contents of a
