@@ -49,23 +49,26 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
-
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.TreeMap;
 import org.hamcrest.CustomTypeSafeMatcher;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
 
 @SuppressWarnings("all")
 public class CxxPrecompiledHeaderRuleTest {
@@ -86,12 +89,10 @@ public class CxxPrecompiledHeaderRuleTest {
           .build(CXX_CONFIG_PCH_ENABLED)
           .withCpp(PREPROCESSOR_SUPPORTING_PCH);
 
-  private ProjectFilesystem filesystem;
-
-  private ProjectWorkspace workspace;
-
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
+  private ProjectFilesystem filesystem;
+  private ProjectWorkspace workspace;
 
   @Before
   public void setUp() throws IOException {
@@ -529,6 +530,59 @@ public class CxxPrecompiledHeaderRuleTest {
             .toString())
         .getExitCode(),
         51);
+  }
+
+  private static void getAllFiles(
+      TreeMap<Path, byte[]> out,
+      Path dir) throws Exception {
+    assertTrue(dir.toFile().isDirectory());
+    for (Path relativeEntry : Files.list(dir).collect(Collectors.toList())) {
+      if (relativeEntry.toFile().isDirectory()) {
+        getAllFiles(out, relativeEntry);
+      } else {
+        out.put(relativeEntry, Files.readAllBytes(relativeEntry));
+      }
+    }
+  }
+
+  @Test
+  public void deterministicHashesForSharedPCHs() throws Exception {
+    assumeTrue(platformOkForPCHTests());
+
+    Sha1HashCode pchHashA = null;
+    workspace.runBuckBuild("//determinism/a:main").assertSuccess();
+    BuckBuildLog buildLogA = workspace.getBuildLog();
+    for (BuildTarget target : buildLogA.getAllTargets()) {
+      if (target.toString().startsWith("//determinism/lib:pch#default,pch-cxx-")) {
+        pchHashA = buildLogA.getLogEntry(target).getRuleKey();
+        System.err.println("A: " + pchHashA);
+      }
+    }
+    assertNotNull(pchHashA);
+
+    Sha1HashCode pchHashB = null;
+    workspace.runBuckBuild("//determinism/b:main").assertSuccess();
+    BuckBuildLog buildLogB = workspace.getBuildLog();
+    for (BuildTarget target : buildLogB.getAllTargets()) {
+      if (target.toString().startsWith("//determinism/lib:pch#default,pch-cxx-")) {
+        pchHashB = buildLogB.getLogEntry(target).getRuleKey();
+        System.err.println("B: " + pchHashB);
+      }
+    }
+    assertNotNull(pchHashB);
+    assertEquals(pchHashA, pchHashB);
+
+    Sha1HashCode pchHashC = null;
+    workspace.runBuckBuild("//determinism/c:main").assertSuccess();
+    BuckBuildLog buildLogC = workspace.getBuildLog();
+    for (BuildTarget target : buildLogC.getAllTargets()) {
+      if (target.toString().startsWith("//determinism/lib:pch#default,pch-cxx-")) {
+        pchHashC = buildLogC.getLogEntry(target).getRuleKey();
+        System.err.println("C: " + pchHashC);
+      }
+    }
+    assertNotNull(pchHashC);
+    assertNotEquals(pchHashA, pchHashC);
   }
 
 }

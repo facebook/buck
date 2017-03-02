@@ -17,18 +17,28 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableMap;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.DependencyAggregation;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
+import com.google.common.base.Suppliers;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -42,9 +52,14 @@ public class CxxPrecompiledHeaderTemplate
     extends NoopBuildRule
     implements NativeLinkable, CxxPreprocessorDep {
 
+  private static final Flavor AGGREGATED_PREPROCESS_DEPS_FLAVOR =
+      ImmutableFlavor.of("preprocessor-deps");
+
   public final BuildRuleParams params;
   public final BuildRuleResolver ruleResolver;
   public final SourcePath sourcePath;
+  public final SourcePathResolver pathResolver;
+  public final SourcePathRuleFinder ruleFinder;
 
   /**
    * @param buildRuleParams the params for this PCH rule, <b>including</b> {@code deps}
@@ -57,7 +72,9 @@ public class CxxPrecompiledHeaderTemplate
     super(buildRuleParams, pathResolver);
     this.params = buildRuleParams;
     this.ruleResolver = ruleResolver;
+    this.pathResolver = pathResolver;
     this.sourcePath = sourcePath;
+    this.ruleFinder = new SourcePathRuleFinder(ruleResolver);
   }
 
   private ImmutableSortedSet<BuildRule> getExportedDeps() {
@@ -144,6 +161,98 @@ public class CxxPrecompiledHeaderTemplate
         HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
     return transitiveCxxPreprocessorInputCache.getUnchecked(
         ImmutableCxxPreprocessorInputCacheKey.of(cxxPlatform, headerVisibility));
+  }
+
+  private ImmutableList<CxxPreprocessorInput> getCxxPreprocessorInputs(CxxPlatform cxxPlatform) {
+    ImmutableList.Builder<CxxPreprocessorInput> builder = ImmutableList.builder();
+    try {
+      for (Map.Entry<BuildTarget, CxxPreprocessorInput> entry :
+           getTransitiveCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC).entrySet()) {
+        builder.add(entry.getValue());
+      }
+    } catch (NoSuchBuildTargetException e) {
+      throw new RuntimeException(e);
+    }
+    return builder.build();
+  }
+
+  private ImmutableList<CxxHeaders> getIncludes(CxxPlatform cxxPlatform) {
+    return getCxxPreprocessorInputs(cxxPlatform).stream()
+        .flatMap(input -> input.getIncludes().stream())
+        .collect(MoreCollectors.toImmutableList());
+  }
+
+  private ImmutableSet<FrameworkPath> getFrameworks(CxxPlatform cxxPlatform) {
+    return getCxxPreprocessorInputs(cxxPlatform).stream()
+        .flatMap(input -> input.getFrameworks().stream())
+        .collect(MoreCollectors.toImmutableSet());
+  }
+
+  private ImmutableSortedSet<BuildRule> getPreprocessDeps(CxxPlatform cxxPlatform) {
+    ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
+    for (CxxPreprocessorInput input : getCxxPreprocessorInputs(cxxPlatform)) {
+      builder.addAll(input.getDeps(ruleResolver, ruleFinder));
+    }
+    for (CxxHeaders cxxHeaders : getIncludes(cxxPlatform)) {
+      builder.addAll(cxxHeaders.getDeps(ruleFinder));
+    }
+    for (FrameworkPath frameworkPath : getFrameworks(cxxPlatform)) {
+      builder.addAll(frameworkPath.getDeps(ruleFinder));
+    }
+
+    builder.addAll(getDeps());
+    builder.addAll(getExportedDeps());
+
+    return builder.build();
+  }
+
+  private BuildTarget createAggregatedDepsTarget(CxxPlatform cxxPlatform) {
+    return params.getBuildTarget().withAppendedFlavors(
+        cxxPlatform.getFlavor(),
+        AGGREGATED_PREPROCESS_DEPS_FLAVOR);
+  }
+
+  public DependencyAggregation requireAggregatedDepsRule(CxxPlatform cxxPlatform) {
+    BuildTarget depAggTarget = createAggregatedDepsTarget(cxxPlatform);
+
+    Optional<DependencyAggregation> existingRule =
+        ruleResolver.getRuleOptionalWithType(depAggTarget, DependencyAggregation.class);
+    if (existingRule.isPresent()) {
+      return existingRule.get();
+    }
+
+    BuildRuleParams depAggParams = params.copyWithChanges(
+        depAggTarget,
+        Suppliers.ofInstance(getPreprocessDeps(cxxPlatform)),
+        Suppliers.ofInstance(ImmutableSortedSet.of()));
+
+    DependencyAggregation depAgg = new DependencyAggregation(depAggParams);
+    ruleResolver.addToIndex(depAgg);
+    return depAgg;
+  }
+
+  public PreprocessorDelegate buildPreprocessorDelegate(
+      CxxPlatform cxxPlatform,
+      Preprocessor preprocessor,
+      CxxToolFlags preprocessorFlags) {
+    try {
+      return new PreprocessorDelegate(
+          pathResolver,
+          cxxPlatform.getCompilerDebugPathSanitizer(),
+          cxxPlatform.getHeaderVerification(),
+          params.getProjectFilesystem().getRootPath(),
+          preprocessor,
+          PreprocessorFlags.of(
+              /* getPrefixHeader() */ Optional.empty(),
+              preprocessorFlags,
+              getIncludes(cxxPlatform),
+              getFrameworks(cxxPlatform)),
+          CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver),
+          /* getSandboxTree() */ Optional.empty(),
+          /* leadingIncludePaths */ Optional.empty());
+    } catch (PreprocessorDelegate.ConflictingHeadersException e) {
+      throw new RuntimeException(e);
+    }
   }
 
 }

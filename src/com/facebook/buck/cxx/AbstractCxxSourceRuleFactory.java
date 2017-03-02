@@ -499,7 +499,10 @@ abstract class AbstractCxxSourceRuleFactory {
     if (canUsePrecompiledHeaders(getCxxBuckConfig(), preprocessor, source.getType()) &&
         (getPrefixHeader().isPresent() || getPrecompiledHeader().isPresent())) {
       precompiledHeaderRule = Optional.of(
-          requirePrecompiledHeaderBuildRule(preprocessorDelegateValue, source));
+          requirePrecompiledHeaderBuildRule(
+              preprocessorDelegateValue,
+              source.getType(),
+              source.getFlags()));
       depsBuilder.add(precompiledHeaderRule.get());
       if (getPrecompiledHeader().isPresent()) {
         // For a precompiled header (and not a prefix header), we may need extra include paths.
@@ -554,54 +557,61 @@ abstract class AbstractCxxSourceRuleFactory {
   /**
    * Look up or build a precompiled header build rule which this build rule is requesting.
    *
+   * <p>
    * The PCH is requested either via a {@code prefix_header='<em>pathToHeaderFileOrTarget</em>'},
    * transparently converting the prefix header to a precompiled header, or a precompiled header
    * requested with {@code precompiled_header='<em>//:ruleToPCHTemplate</em>'}.
+   * </p>
+   *
+   * <p>
+   * Compilers only accept precompiled headers generated with the same flags and language options.
+   * As such, each prefix header may generate multiple pch files, and need unique build targets
+   * to be differentiated in the build graph.
+   * </p>
+   *
+   * <p>The {@code sourceType} and {@code sourceFlags} come from one of the source in the rule
+   * which is using the PCH.  This is so we can obtain certain flags (language options and such)
+   * so the PCH is compatible with the rule requesting it.
+   * </p>
    *
    * @param preprocessorDelegateCacheValue
-   * @param source One of the sources belonging to the rule for which we are building this PCH.
-   *        Needed in order to obtain the language type and compiler flags for PCH itself.
-   *        Used in the {@link CxxPreprocessAndCompile} rule which builds that source.
-   * @see #buildPrecompiledHeaderFromPrefixHeader(
-   *          PreprocessorDelegateCacheValue, CxxSource, DepsBuilder, SourcePath)
-   * @see #buildPrecompiledHeaderFromTemplateRule(
-   *          PreprocessorDelegateCacheValue, CxxSource, DepsBuilder, SourcePath)
+   * @param sourceType
+   * @param sourceFlags
    */
   private CxxPrecompiledHeader requirePrecompiledHeaderBuildRule(
       PreprocessorDelegateCacheValue preprocessorDelegateCacheValue,
-      CxxSource source) {
+      CxxSource.Type sourceType,
+      ImmutableList<String> sourceFlags) {
 
+    // This method is called only if one of these is present; guarantee that for the if/else below.
     Preconditions.checkState(getPrefixHeader().isPresent() ^ getPrecompiledHeader().isPresent());
-
-    // Compilers only accept precompiled headers generated with the same flags and language options.
-    // As such, each prefix header may generate multiple pch files, and need unique build targets
-    // to be differentiated in the build graph.
-
-    DepsBuilder depsBuilder = new DepsBuilder(getRuleFinder());
-    depsBuilder.add(preprocessorDelegateCacheValue.getPreprocessorDelegate());
-    depsBuilder.add(requireAggregatedPreprocessDepsRule());
 
     return getPrefixHeader().isPresent()
         ? buildPrecompiledHeaderFromPrefixHeader(
               preprocessorDelegateCacheValue,
-              source,
-              depsBuilder,
+              sourceType,
+              sourceFlags,
               getPrefixHeader().get())
         : buildPrecompiledHeaderFromTemplateRule(
               preprocessorDelegateCacheValue,
-              source,
-              depsBuilder,
+              sourceType,
+              sourceFlags,
               getPrecompiledHeader().get());
   }
 
   private CxxPrecompiledHeader buildPrecompiledHeaderFromPrefixHeader(
       PreprocessorDelegateCacheValue preprocessorDelegateCacheValue,
-      CxxSource source,
-      DepsBuilder depsBuilder,
+      CxxSource.Type sourceType,
+      ImmutableList<String> sourceFlags,
       SourcePath headerPath) {
 
-    CxxSource.Type sourceType = source.getType();
-    CxxToolFlags compilerFlags = computeCompilerFlags(sourceType, source.getFlags());
+    DepsBuilder depsBuilder = new DepsBuilder(getRuleFinder());
+
+    // We need the preprocessor deps for this rule, for its prefix header.
+    depsBuilder.add(preprocessorDelegateCacheValue.getPreprocessorDelegate());
+    depsBuilder.add(requireAggregatedPreprocessDepsRule());
+
+    CxxToolFlags compilerFlags = computeCompilerFlags(sourceType, sourceFlags);
 
     // Language needs to be part of the key, PCHs built under a different language are incompatible.
     // (Replace `c++` with `cxx`; avoid default scrubbing which would make it the cryptic `c__`.)
@@ -636,16 +646,16 @@ abstract class AbstractCxxSourceRuleFactory {
    */
   private CxxPrecompiledHeader buildPrecompiledHeaderFromTemplateRule(
       PreprocessorDelegateCacheValue preprocessorDelegateCacheValue,
-      CxxSource source,
-      DepsBuilder depsBuilder,
+      CxxSource.Type sourceType,
+      ImmutableList<String> sourceFlags,
       SourcePath headerTargetPath) {
 
-    PreprocessorDelegate preprocessorDelegate =
+    DepsBuilder depsBuilder = new DepsBuilder(getRuleFinder());
+
+    PreprocessorDelegate preprocessorDelegateForCxxRule =
         preprocessorDelegateCacheValue.getPreprocessorDelegate();
 
-    CxxToolFlags compilerFlags = CxxToolFlags.concat(
-        preprocessorDelegate.getNonIncludePathFlags(/* no pch */ Optional.empty()),
-        computeCompilerFlags(source.getType(), source.getFlags()));
+    Preprocessor preprocessor = preprocessorDelegateForCxxRule.getPreprocessor();
 
     BuildTarget pchTemplateTarget = ((BuildTargetSourcePath<?>) headerTargetPath).getTarget();
     Optional<CxxPrecompiledHeaderTemplate> pchTemplateRuleOpt =
@@ -655,11 +665,23 @@ abstract class AbstractCxxSourceRuleFactory {
     Preconditions.checkState(pchTemplateRuleOpt.isPresent());
     CxxPrecompiledHeaderTemplate pchTemplate = pchTemplateRuleOpt.get();
 
-    SourcePath headerPath = pchTemplate.sourcePath;
+    // Build compiler flags, taking from the source rule, but leaving out its deps.
+    // We just need the flags pertaining to PCH compatibility: language, PIC, macros, etc.
+    // and nothing related to the deps of this particular rule (hence 'getNonIncludePathFlags').
+    CxxToolFlags compilerFlags = CxxToolFlags.concat(
+        preprocessorDelegateForCxxRule.getNonIncludePathFlags(/* no pch */ Optional.empty()),
+        computeCompilerFlags(sourceType, sourceFlags));
+
+    // Now build a new pp-delegate specially for this PCH rule.
+    PreprocessorDelegate preprocessorDelegate =
+        pchTemplate.buildPreprocessorDelegate(
+            getCxxPlatform(),
+            preprocessor,
+            compilerFlags);
 
     // Language needs to be part of the key, PCHs built under a different language are incompatible.
     // (Replace `c++` with `cxx`; avoid default scrubbing which would make it the cryptic `c__`.)
-    final String langCode = source.getType().getLanguage().replaceAll("c\\+\\+", "cxx");
+    final String langCode = sourceType.getLanguage().replaceAll("c\\+\\+", "cxx");
     final String pchBaseID =
         "pch-" + langCode + "-" + preprocessorDelegateCacheValue.getBaseHash(compilerFlags);
 
@@ -667,11 +689,14 @@ abstract class AbstractCxxSourceRuleFactory {
       depsBuilder.add(rule);
     }
 
+    depsBuilder.add(pchTemplate.requireAggregatedDepsRule(getCxxPlatform()));
+    depsBuilder.add(preprocessorDelegate);
+
     return buildPrecompiledHeader(
-        preprocessorDelegateCacheValue.getPreprocessorDelegate(),
-        source.getType(),
+        preprocessorDelegate,
+        sourceType,
         compilerFlags,
-        headerPath,
+        pchTemplate.sourcePath,
         depsBuilder,
         pchTemplateTarget.getUnflavoredBuildTarget(),
         ImmutableSortedSet.of(

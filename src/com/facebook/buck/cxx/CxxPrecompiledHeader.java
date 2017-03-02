@@ -76,17 +76,23 @@ public class CxxPrecompiledHeader
     extends AbstractBuildRule
     implements SupportsDependencyFileRuleKey, SupportsInputBasedRuleKey {
 
-  private final Path output;
-
+  // Fields that are added to rule key as is.
   @AddToRuleKey
   private final PreprocessorDelegate preprocessorDelegate;
   @AddToRuleKey
   private final CompilerDelegate compilerDelegate;
-  private final CxxToolFlags compilerFlags;
   @AddToRuleKey
   private final SourcePath input;
   @AddToRuleKey
   private final CxxSource.Type inputType;
+
+  // Fields that added to the rule key with some processing.
+  private final CxxToolFlags compilerFlags;
+
+  // Fields that are not added to the rule key.
+  private final DebugPathSanitizer compilerSanitizer;
+  private final DebugPathSanitizer assemblerSanitizer;
+  private final Path output;
 
   /**
    * Cache the loading and processing of the depfile. This data can always be reloaded from disk, so
@@ -94,9 +100,6 @@ public class CxxPrecompiledHeader
    */
   private final Cache<BuildContext, ImmutableList<Path>> depFileCache =
       CacheBuilder.newBuilder().weakKeys().weakValues().build();
-
-  private final DebugPathSanitizer compilerSanitizer;
-  private final DebugPathSanitizer assemblerSanitizer;
 
   public CxxPrecompiledHeader(
       BuildRuleParams buildRuleParams,
