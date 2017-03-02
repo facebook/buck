@@ -68,8 +68,13 @@ public class BuildRuleResolver {
     this.targetGraph = targetGraph;
     this.buildRuleGenerator = buildRuleGenerator;
     this.eventBus = eventBus;
-    this.buildRuleIndex = new ConcurrentHashMap<>();
+
+    // We preallocate our maps to have this amount of slots to get rid of re-allocations
+    final int initialCapacity = (int) (targetGraph.getNodes().size() * 5 * 1.1);
+
+    this.buildRuleIndex = new ConcurrentHashMap<>(initialCapacity);
     this.metadataCache = CacheBuilder.newBuilder()
+        .initialCapacity(initialCapacity)
         .build(
             new CacheLoader<Pair<BuildTarget, Class<?>>, Optional<?>>() {
               @Override
