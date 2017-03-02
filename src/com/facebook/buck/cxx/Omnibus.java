@@ -318,7 +318,7 @@ public class Omnibus {
       // If this dep is another root node, substitute in the custom linked library we built for it.
       if (spec.getRoots().containsKey(target)) {
         argsBuilder.add(
-            new SourcePathArg(
+            SourcePathArg.of(
                 new DefaultBuildTargetSourcePath(
                     getRootTarget(params.getBuildTarget(), target))));
         continue;
@@ -328,7 +328,7 @@ public class Omnibus {
       // libomnibus instead.
       if (spec.getBody().containsKey(target)) { // && linkStyle == Linker.LinkableDepType.SHARED) {
         if (!alreadyAddedOmnibusToArgs) {
-          argsBuilder.add(new SourcePathArg(omnibus));
+          argsBuilder.add(SourcePathArg.of(omnibus));
           alreadyAddedOmnibusToArgs = true;
         }
         continue;
@@ -531,7 +531,7 @@ public class Omnibus {
       NativeLinkTarget root = spec.getRoots().get(target);
       if (root != null) {
         argsBuilder.add(
-            new SourcePathArg(
+            SourcePathArg.of(
                 ((CxxLink) ruleResolver.requireRule(
                     getRootTarget(
                         params.getBuildTarget(),

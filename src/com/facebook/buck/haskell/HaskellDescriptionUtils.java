@@ -316,7 +316,7 @@ public class HaskellDescriptionUtils {
                     "%s/libempty.a"),
                 emptyCompiledModule.getObjects()));
     argsBuilder.add(
-        new SourcePathArg(emptyArchive.getSourcePathToOutput()));
+        SourcePathArg.of(emptyArchive.getSourcePathToOutput()));
 
     ImmutableList<Arg> args = argsBuilder.build();
     ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();

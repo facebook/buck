@@ -69,10 +69,14 @@ public class CxxLibraryTest {
         "//:privatesymlink");
 
     // Setup some dummy values for the library archive info.
-    final BuildRule archive = new FakeBuildRule("//:archive", pathResolver);
+    final BuildRule archive =
+        new FakeBuildRule("//:archive", pathResolver)
+            .setOutputFile("libarchive.a");
 
     // Setup some dummy values for the library archive info.
-    final BuildRule sharedLibrary = new FakeBuildRule("//:shared", pathResolver);
+    final BuildRule sharedLibrary =
+        new FakeBuildRule("//:shared", pathResolver)
+            .setOutputFile("libshared.so");
     final Path sharedLibraryOutput = Paths.get("output/path/lib.so");
     final String sharedLibrarySoname = "lib.so";
 
@@ -127,7 +131,7 @@ public class CxxLibraryTest {
     // Verify that we get the static archive and its build target via the NativeLinkable
     // interface.
     NativeLinkableInput expectedStaticNativeLinkableInput = NativeLinkableInput.of(
-        ImmutableList.of(new SourcePathArg(archive.getSourcePathToOutput())),
+        ImmutableList.of(SourcePathArg.of(archive.getSourcePathToOutput())),
         ImmutableSet.of(),
         ImmutableSet.of());
     assertEquals(
@@ -139,7 +143,7 @@ public class CxxLibraryTest {
     // Verify that we get the static archive and its build target via the NativeLinkable
     // interface.
     NativeLinkableInput expectedSharedNativeLinkableInput = NativeLinkableInput.of(
-        ImmutableList.of(new SourcePathArg(sharedLibrary.getSourcePathToOutput())),
+        ImmutableList.of(SourcePathArg.of(sharedLibrary.getSourcePathToOutput())),
         ImmutableSet.of(),
         ImmutableSet.of());
     assertEquals(

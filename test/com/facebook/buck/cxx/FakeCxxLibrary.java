@@ -154,11 +154,11 @@ public final class FakeCxxLibrary
       Linker.LinkableDepType type) {
     return type == Linker.LinkableDepType.STATIC ?
         NativeLinkableInput.of(
-            ImmutableList.of(new SourcePathArg(archive.getSourcePathToOutput())),
+            ImmutableList.of(SourcePathArg.of(archive.getSourcePathToOutput())),
             ImmutableSet.of(),
             ImmutableSet.of()) :
         NativeLinkableInput.of(
-            ImmutableList.of(new SourcePathArg(sharedLibrary.getSourcePathToOutput())),
+            ImmutableList.of(SourcePathArg.of(sharedLibrary.getSourcePathToOutput())),
             ImmutableSet.of(),
             ImmutableSet.of());
   }

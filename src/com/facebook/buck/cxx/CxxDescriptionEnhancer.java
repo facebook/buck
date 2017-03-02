@@ -891,7 +891,7 @@ public class CxxDescriptionEnhancer {
 
     // Add the output of the link as the lone argument needed to invoke this binary as a tool.
     executableBuilder.addArg(
-        new SourcePathArg(
+        SourcePathArg.of(
             binaryRuleForExecutable.getSourcePathToOutput()));
 
     return new CxxLinkAndCompileRules(

@@ -723,7 +723,7 @@ public class LuaBinaryDescription implements
                 luaConfig.shouldCacheBinaries()));
 
     return new CommandTool.Builder()
-        .addArg(new SourcePathArg(binary.getSourcePathToOutput()))
+        .addArg(SourcePathArg.of(binary.getSourcePathToOutput()))
         .build();
   }
 

@@ -188,8 +188,8 @@ public class ExecutableMacroExpanderTest {
           @Override
           public Tool getExecutableCommand() {
             return new CommandTool.Builder()
-                .addArg(new SourcePathArg(dep1.getSourcePathToOutput()))
-                .addArg(new SourcePathArg(dep2.getSourcePathToOutput()))
+                .addArg(SourcePathArg.of(dep1.getSourcePathToOutput()))
+                .addArg(SourcePathArg.of(dep2.getSourcePathToOutput()))
                 .build();
           }
         });

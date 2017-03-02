@@ -113,7 +113,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
         if (index < 0 || index >= libs.size()) {
           throw new HumanReadableException("%s: ", target);
         }
-        builder.add(new SourcePathArg(libs.get(index)));
+        builder.add(SourcePathArg.of(libs.get(index)));
       } else {
         builder.add(StringArg.of(arg));
       }
@@ -144,7 +144,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
         }
         Arg libArg;
         if (libRef.get().getFirst().equals(LIB_MACRO)) {
-          libArg = new SourcePathArg(lib);
+          libArg = SourcePathArg.of(lib);
         } else if (libRef.get().getFirst().equals(REL_LIB_MACRO)) {
           if (!(lib instanceof PathSourcePath)) {
             throw new HumanReadableException(

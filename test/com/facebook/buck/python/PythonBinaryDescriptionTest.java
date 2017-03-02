@@ -392,7 +392,7 @@ public class PythonBinaryDescriptionTest {
           @Override
           public Tool getPexTool(BuildRuleResolver resolver) {
             return new CommandTool.Builder()
-                .addArg(new SourcePathArg(pexTool.getSourcePathToOutput()))
+                .addArg(SourcePathArg.of(pexTool.getSourcePathToOutput()))
                 .build();
           }
         };

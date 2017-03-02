@@ -22,85 +22,64 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
+import org.immutables.value.Value;
+
 import java.nio.file.Path;
-import java.util.Objects;
 
 /**
  * An {@link Arg} which wraps a {@link SourcePath}.
  */
-public class SourcePathArg extends Arg implements HasSourcePath {
+@Value.Immutable
+@BuckStyleTuple
+abstract class AbstractSourcePathArg extends Arg implements HasSourcePath {
 
-  private final SourcePath path;
-
-  public SourcePathArg(SourcePath path) {
-    this.path = path;
-  }
+  @Override
+  public abstract SourcePath getPath();
 
   @Override
   public void appendToCommandLine(
       ImmutableCollection.Builder<String> builder,
       SourcePathResolver pathResolver) {
-    builder.add(pathResolver.getAbsolutePath(path).toString());
+    builder.add(pathResolver.getAbsolutePath(getPath()).toString());
   }
 
   public void appendToCommandLineRel(
       ImmutableCollection.Builder<String> builder,
       Path cellPath,
       SourcePathResolver pathResolver) {
+    SourcePath path = getPath();
     if (path instanceof BuildTargetSourcePath &&
         cellPath.equals(((BuildTargetSourcePath<?>) path).getTarget().getCellPath())) {
       builder.add(pathResolver.getRelativePath(path).toString());
     } else {
       appendToCommandLine(builder, pathResolver);
     }
-
   }
 
   @Override
   public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ruleFinder.filterBuildRuleInputs(path);
+    return ruleFinder.filterBuildRuleInputs(getPath());
   }
 
   @Override
   public ImmutableCollection<SourcePath> getInputs() {
-    return ImmutableList.of(path);
+    return ImmutableList.of(getPath());
   }
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("arg", path);
-  }
-
-  @Override
-  public String toString() {
-    return path.toString();
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (!(o instanceof SourcePathArg)) {
-      return false;
-    }
-    SourcePathArg that = (SourcePathArg) o;
-    return Objects.equals(path, that.path);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(path);
+    sink.setReflectively("arg", getPath());
   }
 
   public static ImmutableList<Arg> from(
       Iterable<SourcePath> paths) {
     ImmutableList.Builder<Arg> converted = ImmutableList.builder();
     for (SourcePath path : paths) {
-      converted.add(new SourcePathArg(path));
+      converted.add(SourcePathArg.of(path));
     }
     return converted.build();
   }
@@ -109,8 +88,4 @@ public class SourcePathArg extends Arg implements HasSourcePath {
     return from(ImmutableList.copyOf(paths));
   }
 
-  @Override
-  public SourcePath getPath() {
-    return path;
-  }
 }

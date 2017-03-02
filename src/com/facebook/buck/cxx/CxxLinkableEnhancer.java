@@ -181,7 +181,7 @@ public class CxxLinkableEnhancer {
       if (bundleLoader.isPresent()) {
         argsBuilder.add(
             StringArg.of("-bundle_loader"),
-            new SourcePathArg(bundleLoader.get()));
+            SourcePathArg.of(bundleLoader.get()));
       }
     }
     if (soname.isPresent()) {

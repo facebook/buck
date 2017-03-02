@@ -80,11 +80,11 @@ class PrebuiltOcamlLibrary extends AbstractBuildRuleWithResolver implements Ocam
     // {@link NativeLinkable} interface for linking.
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
     argsBuilder.add(
-        new SourcePathArg(
+        SourcePathArg.of(
             sourcePath));
     for (SourcePath staticCLibraryPath : staticCLibraryPaths) {
       argsBuilder.add(
-          new SourcePathArg(
+          SourcePathArg.of(
               staticCLibraryPath));
     }
     return NativeLinkableInput.of(

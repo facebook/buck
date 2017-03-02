@@ -278,7 +278,7 @@ public class CxxLibrary
                     CxxLibraryDescription.Type.SHARED_INTERFACE.getFlavor() :
                     CxxLibraryDescription.Type.SHARED.getFlavor());
         linkerArgsBuilder.add(
-            new SourcePathArg(
+            SourcePathArg.of(
                 Preconditions.checkNotNull(rule.getSourcePathToOutput())));
       }
     }

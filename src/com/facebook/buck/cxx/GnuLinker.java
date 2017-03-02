@@ -151,7 +151,7 @@ public class GnuLinker implements Linker {
                     ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(symbolFiles))),
                 Suppliers.ofInstance(ImmutableSortedSet.of())),
             symbolFiles));
-    return ImmutableList.of(new SourcePathArg(rule.getSourcePathToOutput()));
+    return ImmutableList.of(SourcePathArg.of(rule.getSourcePathToOutput()));
   }
 
   @Override

@@ -74,7 +74,7 @@ class OcamlStaticLibrary extends NoopBuildRule implements OcamlLibrary {
     // Add arg and input for static library.
     UnflavoredBuildTarget staticBuildTarget = staticLibraryTarget.getUnflavoredBuildTarget();
     inputBuilder.addArgs(
-        new SourcePathArg(
+        SourcePathArg.of(
             new ExplicitBuildTargetSourcePath(
                 ocamlLibraryBuild.getBuildTarget(),
                 isBytecode
@@ -89,7 +89,7 @@ class OcamlStaticLibrary extends NoopBuildRule implements OcamlLibrary {
 
     // Add args and inputs for C object files.
     for (SourcePath objFile : objFiles) {
-      inputBuilder.addArgs(new SourcePathArg(objFile));
+      inputBuilder.addArgs(SourcePathArg.of(objFile));
     }
 
     return inputBuilder.build();

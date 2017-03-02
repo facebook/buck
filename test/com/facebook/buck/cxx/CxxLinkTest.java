@@ -58,9 +58,9 @@ public class CxxLinkTest {
           StringArg.of("-rpath"),
           StringArg.of("/lib"),
           StringArg.of("libc.a"),
-          new SourcePathArg(new FakeSourcePath("a.o")),
-          new SourcePathArg(new FakeSourcePath("b.o")),
-          new SourcePathArg(new FakeSourcePath("libc.a")),
+          SourcePathArg.of(new FakeSourcePath("a.o")),
+          SourcePathArg.of(new FakeSourcePath("b.o")),
+          SourcePathArg.of(new FakeSourcePath("libc.a")),
           StringArg.of("-L"),
           StringArg.of("/System/Libraries/libz.dynlib"),
           StringArg.of("-llibz.dylib"));
@@ -128,7 +128,7 @@ public class CxxLinkTest {
                 DEFAULT_LINKER,
                 DEFAULT_OUTPUT,
                 ImmutableList.of(
-                    new SourcePathArg(
+                    SourcePathArg.of(
                         new FakeSourcePath("different"))),
                 Optional.empty(),
                 /* cacheable */ true));

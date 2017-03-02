@@ -214,7 +214,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
   public Arg toArg() {
     SourcePath archive = getSourcePathToOutput();
     return contents == Contents.NORMAL ?
-        new SourcePathArg(archive) :
+        SourcePathArg.of(archive) :
         ThinArchiveArg.of(archive, inputs);
   }
 

@@ -162,7 +162,7 @@ public class HalideLibrary
     if (rule instanceof Archive) {
       return ((Archive) rule).toArg();
     } else {
-      return new SourcePathArg(
+      return SourcePathArg.of(
           Preconditions.checkNotNull(rule.getSourcePathToOutput()));
     }
   }

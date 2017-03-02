@@ -200,7 +200,7 @@ public class ShTest
   @Override
   public Tool getExecutableCommand() {
     CommandTool.Builder builder = new CommandTool.Builder()
-        .addArg(new SourcePathArg(test))
+        .addArg(SourcePathArg.of(test))
         .addDeps(ruleFinder.filterBuildRuleInputs(resources));
 
     for (Arg arg : args) {

@@ -693,7 +693,7 @@ class NativeLibraryMergeEnhancer {
       for (SourcePath sharedLib : sharedLibraries.values()) {
         // If we have a shared library, our dependents should link against it.
         // Might be multiple shared libraries if prebuilts are included.
-        argsBuilder.add(new SourcePathArg(sharedLib));
+        argsBuilder.add(SourcePathArg.of(sharedLib));
       }
 
       // If our constituents have exported linker flags, our dependents should use them.

@@ -67,7 +67,7 @@ public class CxxBinaryTest {
                 ruleFinder,
                 cxxLink,
                 new CommandTool.Builder()
-                    .addArg(new SourcePathArg(cxxLink.getSourcePathToOutput()))
+                    .addArg(SourcePathArg.of(cxxLink.getSourcePathToOutput()))
                     .build(),
                 ImmutableSortedSet.of(),
                 ImmutableList.of(),

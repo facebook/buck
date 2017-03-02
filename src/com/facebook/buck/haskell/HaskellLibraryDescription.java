@@ -509,7 +509,7 @@ public class HaskellLibraryDescription implements
                     args);
             linkArgs =
                 ImmutableList.of(
-                    new SourcePathArg(rule.getSourcePathToOutput()));
+                    SourcePathArg.of(rule.getSourcePathToOutput()));
             break;
           default:
             throw new IllegalStateException();

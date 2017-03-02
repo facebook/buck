@@ -131,7 +131,7 @@ public class HaskellBinaryDescription implements
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
 
     // Add the binary as the first argument.
-    executableBuilder.addArg(new SourcePathArg(new DefaultBuildTargetSourcePath(binaryTarget)));
+    executableBuilder.addArg(SourcePathArg.of(new DefaultBuildTargetSourcePath(binaryTarget)));
 
     // Special handling for dynamically linked binaries.
     if (depType == Linker.LinkableDepType.SHARED) {

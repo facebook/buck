@@ -976,7 +976,7 @@ public class AppleBundle
   public Tool getExecutableCommand() {
     return new CommandTool.Builder()
         .addArg(
-            new SourcePathArg(
+            SourcePathArg.of(
                 new PathSourcePath(getProjectFilesystem(), bundleBinaryPath)))
         .build();
   }

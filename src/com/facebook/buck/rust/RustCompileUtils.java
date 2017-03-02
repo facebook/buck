@@ -367,7 +367,7 @@ public class RustCompileUtils {
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
 
     // Add the binary as the first argument.
-    executableBuilder.addArg(new SourcePathArg(buildRule.getSourcePathToOutput()));
+    executableBuilder.addArg(SourcePathArg.of(buildRule.getSourcePathToOutput()));
 
     // Special handling for dynamically linked binaries.
     if (linkStyle == Linker.LinkableDepType.SHARED) {

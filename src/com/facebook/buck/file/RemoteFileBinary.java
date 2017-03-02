@@ -43,7 +43,7 @@ public class RemoteFileBinary extends RemoteFile implements BinaryBuildRule {
   @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder()
-        .addArg(new SourcePathArg(getSourcePathToOutput()))
+        .addArg(SourcePathArg.of(getSourcePathToOutput()))
         .build();
   }
 }

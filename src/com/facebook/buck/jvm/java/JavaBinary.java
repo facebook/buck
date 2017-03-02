@@ -208,7 +208,7 @@ public class JavaBinary extends AbstractBuildRuleWithResolver
     return new CommandTool.Builder()
         .addArg(javaRuntimeLauncher.getCommand())
         .addArg("-jar")
-        .addArg(new SourcePathArg(getSourcePathToOutput()))
+        .addArg(SourcePathArg.of(getSourcePathToOutput()))
         .build();
   }
 

@@ -101,7 +101,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
             NativeLinkableInput.builder()
                 .addArgs(
                     StringArg.of("--something"),
-                    new SourcePathArg(path),
+                    SourcePathArg.of(path),
                     StringArg.of("--something-else"))
                 .build()));
   }
@@ -125,7 +125,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
             NativeLinkableInput.builder()
                 .addArgs(
                     StringArg.of("--something"),
-                    new SourcePathArg(path),
+                    SourcePathArg.of(path),
                     StringArg.of("--something-else"))
                 .build()));
   }
@@ -156,7 +156,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
             NativeLinkableInput.builder()
                 .addArgs(
                     StringArg.of("--something"),
-                    new SourcePathArg(lib1),
+                    SourcePathArg.of(lib1),
                     StringArg.of("--something-else"),
                     new RelativeLinkArg(lib2))
                 .build()));
@@ -199,8 +199,8 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
         Matchers.equalTo(
             NativeLinkableInput.builder()
                 .addArgs(
-                    new SourcePathArg(lib1),
-                    new SourcePathArg(lib2))
+                    SourcePathArg.of(lib1),
+                    SourcePathArg.of(lib2))
                 .build()));
     assertThat(
         lib.getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM),
@@ -264,7 +264,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.STATIC);
     SourcePath lib = cxxGenrule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM);
-    assertThat(input.getArgs(), Matchers.contains(new SourcePathArg(lib)));
+    assertThat(input.getArgs(), Matchers.contains(SourcePathArg.of(lib)));
   }
 
   @Test

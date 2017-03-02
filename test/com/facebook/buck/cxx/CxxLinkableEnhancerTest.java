@@ -250,7 +250,7 @@ public class CxxLinkableEnhancerTest {
     // Create a native linkable dep and have it list the fake build rule above as a link
     // time dependency.
     NativeLinkableInput nativeLinkableInput = NativeLinkableInput.of(
-        ImmutableList.of(new SourcePathArg(fakeBuildRule.getSourcePathToOutput())),
+        ImmutableList.of(SourcePathArg.of(fakeBuildRule.getSourcePathToOutput())),
         ImmutableSet.of(),
         ImmutableSet.of());
     FakeNativeLinkable nativeLinkable = createNativeLinkable(

@@ -164,7 +164,7 @@ class SwiftLibrary
         throw new IllegalStateException("unhandled linkage type: " + preferredLinkage);
     }
     if (isDynamic) {
-      inputBuilder.addArgs(new SourcePathArg(
+      inputBuilder.addArgs(SourcePathArg.of(
           requireSwiftLinkRule(cxxPlatform.getFlavor()).getSourcePathToOutput()));
     }
     return inputBuilder.build();
