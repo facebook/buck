@@ -99,6 +99,7 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.AsyncCloseable;
 import com.facebook.buck.util.BgProcessKiller;
+import com.facebook.buck.util.BuckArgsMethods;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.BuckIsDyingException;
 import com.facebook.buck.util.Console;
@@ -812,7 +813,7 @@ public final class Main {
    * @param buildId an identifier for this command execution.
    * @param context an optional NGContext that is present if running inside a Nailgun server.
    * @param initTimestamp Value of System.nanoTime() when process got main()/nailMain() invoked.
-   * @param args command line arguments
+   * @param unexpandedCommandLineArgs command line arguments
    * @return an exit code or {@code null} if this is a process that should not exit
    */
   @SuppressWarnings("PMD.PrematureDeclaration")
@@ -824,8 +825,10 @@ public final class Main {
       CommandMode commandMode,
       WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction,
       final long initTimestamp,
-      String... args)
+      String... unexpandedCommandLineArgs)
       throws IOException, InterruptedException {
+
+    String[] args = BuckArgsMethods.expandAtFiles(unexpandedCommandLineArgs);
 
     // Parse the command line args.
     BuckCommand command = new BuckCommand();
