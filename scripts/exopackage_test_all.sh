@@ -14,8 +14,10 @@ EXIT_CODE="0"
 
 DEVICES=`adb devices | sed -Ene '2,$s/^([^[:space:]]+).*/\1/p'`
 for DEV in $DEVICES ; do
-  RESULT="$RESULT$DEV"
-  if ANDROID_SERIAL=$DEV ./scripts/exopackage_test_single.sh ; then
+  export ANDROID_SERIAL=$DEV
+  ANDROID_VERSION=`adb shell getprop ro.build.version.release | tr -d '\r\n'`
+  RESULT="$RESULT$DEV $ANDROID_VERSION"
+  if ./scripts/exopackage_test_single.sh; then
     RESULT="$RESULT SUCCESS^"
   else
     RESULT="$RESULT FAILURE^"
