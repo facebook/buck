@@ -1,0 +1,3 @@
+[ndk]
+  cpu_abis = x86
+  app_platform = android-21
