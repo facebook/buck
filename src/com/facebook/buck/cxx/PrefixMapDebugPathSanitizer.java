@@ -17,7 +17,6 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.infer.annotation.Assertions;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -151,16 +150,5 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
         projectFilesystem.getRootPath(),
         this.cxxType,
         projectFilesystem);
-  }
-
-  @Override
-  public void assertInProjectFilesystem(Object ruleName, ProjectFilesystem projectFilesystem) {
-    Preconditions.checkState(
-        this.projectFilesystem.getRootPath().equals(projectFilesystem.getRootPath()),
-        "When processing %s, tried to use DebugPathSanitizer for " +
-            "ProjectFilesystem rooted at %s for rule rooted at %s",
-        ruleName,
-        this.projectFilesystem.getRootPath(),
-        projectFilesystem.getRootPath());
   }
 }

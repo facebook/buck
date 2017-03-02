@@ -123,13 +123,4 @@ public abstract class DebugPathSanitizer {
     // Do nothing by default.  Only one subclass uses this right now.
     return this;
   }
-
-  /**
-   * Defensive check for cross-cell builds: asserts that this sanitizer can safely run
-   * in the provided ProjectFilesystem.
-   */
-  @SuppressWarnings("unused")
-  public void assertInProjectFilesystem(Object ruleName, ProjectFilesystem projectFilesystem) {
-    // Do nothing by default.  Only one subclass is able to check this for now.
-  }
 }

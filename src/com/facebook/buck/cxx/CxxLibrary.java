@@ -374,9 +374,6 @@ public class CxxLibrary
 
   @Override
   public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform) {
-    cxxPlatform.getCompilerDebugPathSanitizer().assertInProjectFilesystem(
-        this,
-        getProjectFilesystem());
     return linkTargetInput.apply(cxxPlatform);
   }
 
