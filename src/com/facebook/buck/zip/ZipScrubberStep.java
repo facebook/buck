@@ -92,7 +92,9 @@ public class ZipScrubberStep implements Step {
             entry.getShort(ZipEntry.CENEXT) +
             entry.getShort(ZipEntry.CENCOM);
       }
-
+    } catch (RuntimeException e) {
+      context.logError(e, "Error scrubbing non-deterministic metadata from %s", zipPath);
+      throw e;
     } catch (IOException e) {
       context.logError(e, "Error scrubbing non-deterministic metadata from %s", zipPath);
       return StepExecutionResult.ERROR;
@@ -133,6 +135,9 @@ public class ZipScrubberStep implements Step {
           size -= 4;
         }
       } else {
+        if (data.position() + size >= end) {
+          break;
+        }
         data.position(data.position() + size);
       }
     }
