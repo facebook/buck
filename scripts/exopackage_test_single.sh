@@ -7,6 +7,9 @@ set -x
 set -e
 set -o pipefail
 
+# Just check that we can communicate with a device/emulator.
+adb get-state
+
 function sedInPlace() {
   case "$(uname -s)" in
     Darwin)
