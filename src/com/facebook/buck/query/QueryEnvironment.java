@@ -33,7 +33,6 @@ package com.facebook.buck.query;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -288,14 +287,5 @@ public interface QueryEnvironment {
   default ImmutableSet<QueryTarget> resolveTargetVariable(String name) {
     throw new IllegalArgumentException(String.format("unexpected target variable \"%s\"", name));
   }
-
-  /**
-   * @return a new {@link QueryEnvironment} with the additional target variables set.
-   */
-  default QueryEnvironment withTargetVariables(
-      ImmutableMap<String, ImmutableSet<QueryTarget>> variables) {
-    return new TargetVariablesQueryEnvironment(variables, this);
-  }
-
 }
 

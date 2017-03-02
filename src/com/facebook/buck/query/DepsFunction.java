@@ -92,10 +92,9 @@ public class DepsFunction implements QueryFunction {
     for (QueryTarget target : targets) {
       Set<QueryTarget> deps =
           depsExpression.eval(
-              env.withTargetVariables(
-                  ImmutableMap.of(
-                      FirstOrderDepsFunction.NAME,
-                      ImmutableSet.copyOf(env.getFwdDeps(ImmutableList.of(target))))),
+              new TargetVariablesQueryEnvironment(ImmutableMap.of(
+                  FirstOrderDepsFunction.NAME,
+                  ImmutableSet.copyOf(env.getFwdDeps(ImmutableList.of(target)))), env),
               executor);
       deps.forEach(consumer);
     }

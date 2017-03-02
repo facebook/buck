@@ -6,20 +6,13 @@
       "//src/com/facebook/buck/util:util",
       "//test/com/facebook/buck/jvm/java:testutil",
       "//test/com/facebook/buck/model:testutil",
-      "//test/com/facebook/buck/query:testutil",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:util",
+      "//third-party/java/easymock:easymock",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/junit:junit"
     ],
     "exported_deps" : [ ]
-  },
-  "testutil" : {
-    "deps" : [ ],
-    "exported_deps" : [
-      "//src/com/facebook/buck/query:query",
-      "//third-party/java/guava:guava"
-    ]
   }
 }

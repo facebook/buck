@@ -16,6 +16,9 @@
 
 package com.facebook.buck.query;
 
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -25,19 +28,27 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 
 import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class QueryParserTest {
 
-  private FakeQueryEnvironment queryEnvironment = new FakeQueryEnvironment();;
+  private QueryEnvironment queryEnvironment;
 
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
+
+  @Before
+  public void makeEnvironment() {
+    queryEnvironment = createMock(QueryEnvironment.class);
+    expect(queryEnvironment.getFunctions()).andStubReturn(QueryEnvironment.DEFAULT_QUERY_FUNCTIONS);
+    replay(queryEnvironment);
+  }
 
   @Test
   public void testDeps() throws Exception {

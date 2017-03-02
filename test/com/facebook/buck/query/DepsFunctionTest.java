@@ -16,6 +16,10 @@
 
 package com.facebook.buck.query;
 
+import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.createNiceMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -29,10 +33,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import org.easymock.Capture;
+import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.util.Set;
 
 public class DepsFunctionTest {
 
@@ -55,7 +59,7 @@ public class DepsFunctionTest {
             .addDep(b.getBuildTarget())
             .build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(a, b);
-    QueryEnvironment queryEnvironment = new TestQueryEnvironment(targetGraph);
+    QueryEnvironment queryEnvironment = makeFakeQueryEnvironment(targetGraph);
     assertThat(
         DEPS_FUNCTION.eval(
             queryEnvironment,
@@ -84,7 +88,7 @@ public class DepsFunctionTest {
             .addDep(b.getBuildTarget())
             .build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(a, b, c);
-    QueryEnvironment queryEnvironment = new TestQueryEnvironment(targetGraph);
+    QueryEnvironment queryEnvironment = makeFakeQueryEnvironment(targetGraph);
     assertThat(
         DEPS_FUNCTION.eval(
             queryEnvironment,
@@ -102,43 +106,28 @@ public class DepsFunctionTest {
         Matchers.contains(QueryBuildTarget.of(a.getBuildTarget())));
   }
 
-  private static class TestQueryEnvironment extends FakeQueryEnvironment {
+  private QueryEnvironment makeFakeQueryEnvironment(TargetGraph targetGraph) throws Exception {
+    QueryEnvironment env = createNiceMock(QueryEnvironment.class);
 
-    private final TargetGraph targetGraph;
+    final Capture<String> stringCapture = Capture.newInstance();
+    expect(env.getTargetsMatchingPattern(EasyMock.capture(stringCapture), anyObject()))
+        .andStubAnswer(() -> ImmutableSet.of(
+            QueryBuildTarget.of(BuildTargetFactory.newInstance(stringCapture.getValue()))));
 
-    private TestQueryEnvironment(TargetGraph targetGraph) {
-      this.targetGraph = targetGraph;
-    }
+    final Capture<Iterable<QueryTarget>> targetsCapture = Capture.newInstance();
+    expect(env.getFwdDeps(EasyMock.capture(targetsCapture)))
+        .andStubAnswer(() -> RichStream.from(targetsCapture.getValue())
+            .map(QueryBuildTarget.class::cast)
+            .map(QueryBuildTarget::getBuildTarget)
+            .map(targetGraph::get)
+            .flatMap(n -> targetGraph.getOutgoingNodesFor(n).stream())
+            .map(TargetNode::getBuildTarget)
+            .map(QueryBuildTarget::of)
+            .map(QueryTarget.class::cast)
+            .toImmutableSet());
 
-    @Override
-    public ImmutableSet<QueryTarget> getTargetsMatchingPattern(
-        String pattern,
-        ListeningExecutorService executor)
-        throws QueryException, InterruptedException {
-      return ImmutableSet.of(QueryBuildTarget.of(BuildTargetFactory.newInstance(pattern)));
-    }
+    replay(env);
 
-    @Override
-    public void buildTransitiveClosure(
-        Set<QueryTarget> targetNodes,
-        int maxDepth,
-        ListeningExecutorService executor) {
-    }
-
-    @Override
-    public ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets)
-        throws QueryException, InterruptedException {
-      return RichStream.from(targets)
-          .map(QueryBuildTarget.class::cast)
-          .map(QueryBuildTarget::getBuildTarget)
-          .map(targetGraph::get)
-          .flatMap(n -> targetGraph.getOutgoingNodesFor(n).stream())
-          .map(TargetNode::getBuildTarget)
-          .map(QueryBuildTarget::of)
-          .map(QueryTarget.class::cast)
-          .toImmutableSet();
-    }
-
+    return env;
   }
-
 }
