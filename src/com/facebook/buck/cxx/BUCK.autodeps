@@ -54,7 +54,8 @@
       "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/versions:types",
       "//third-party/java/immutables:immutables",
-      "//third-party/java/jackson:jackson-databind"
+      "//third-party/java/jackson:jackson-databind",
+      "//third-party/java/jsr:jsr305"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/android:packageable",
@@ -87,8 +88,7 @@
       "//src/com/facebook/buck/versions:translator",
       "//src/com/facebook/buck/versions:versions",
       "//third-party/java/guava:guava",
-      "//third-party/java/infer-annotations:infer-annotations",
-      "//third-party/java/jsr:jsr305"
+      "//third-party/java/infer-annotations:infer-annotations"
     ]
   }
 }
