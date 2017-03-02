@@ -51,6 +51,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -639,10 +640,14 @@ public class NdkCxxPlatforms {
     // Add the NDK root path to the white-list so that headers from the NDK won't trigger the
     // verification warnings.  Ideally, long-term, we'd model NDK libs/headers via automatically
     // generated nodes/descriptions so that they wouldn't need to special case it here.
-    HeaderVerification headerVerification = config.getHeaderVerification()
-        .withPlatformWhitelist(
-            ImmutableList.of(
-                "^" + Pattern.quote(ndkRoot.toString() + File.separatorChar) + ".*"));
+    HeaderVerification headerVerification = config.getHeaderVerification();
+    try {
+      headerVerification = headerVerification.withPlatformWhitelist(
+          ImmutableList.of(
+              "^" + Pattern.quote(ndkRoot.toRealPath().toString() + File.separatorChar) + ".*"));
+    } catch (IOException e) {
+      LOG.debug(e, "NDK path could not be resolved: %s", ndkRoot);
+    }
     cxxPlatformBuilder.setHeaderVerification(headerVerification);
     LOG.debug("NDK root: %s", ndkRoot.toString());
     LOG.debug("Headers verification platform whitelist: %s",

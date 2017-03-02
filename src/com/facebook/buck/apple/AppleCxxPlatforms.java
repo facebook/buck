@@ -383,7 +383,11 @@ public class AppleCxxPlatforms {
                          "/Developer/Library/Frameworks") + "\\/.*");
     for (Path toolchainPath : sdkPaths.getToolchainPaths()) {
       LOG.debug("Apple toolchain path: %s", toolchainPath);
-      whitelistBuilder.add("^" + Pattern.quote(toolchainPath.toString()) + "\\/.*");
+      try {
+        whitelistBuilder.add("^" + Pattern.quote(toolchainPath.toRealPath().toString()) + "\\/.*");
+      } catch (IOException e) {
+        LOG.debug(e, "Apple toolchain path could not be resolved: %s", toolchainPath);
+      }
     }
     HeaderVerification headerVerification =
         config.getHeaderVerification().withPlatformWhitelist(whitelistBuilder.build());
