@@ -646,7 +646,7 @@ public class NdkCxxPlatforms {
           ImmutableList.of(
               "^" + Pattern.quote(ndkRoot.toRealPath().toString() + File.separatorChar) + ".*"));
     } catch (IOException e) {
-      LOG.debug(e, "NDK path could not be resolved: %s", ndkRoot);
+      LOG.warn(e, "NDK path could not be resolved: %s", ndkRoot);
     }
     cxxPlatformBuilder.setHeaderVerification(headerVerification);
     LOG.debug("NDK root: %s", ndkRoot.toString());

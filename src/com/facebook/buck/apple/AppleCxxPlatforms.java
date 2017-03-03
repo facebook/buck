@@ -171,7 +171,7 @@ public class AppleCxxPlatforms {
             platformBuilder.setXcodeVersion(xcodeVersion);
           }
         } catch (IOException e) {
-          LOG.debug(
+          LOG.warn(
               "Error reading Xcode's info plist %s; ignoring Xcode versions",
               xcodeInfoPlistPath);
         } catch (
@@ -179,7 +179,7 @@ public class AppleCxxPlatforms {
                 ParseException |
                 ParserConfigurationException |
                 SAXException e) {
-          LOG.debug("Error in parsing %s; ignoring Xcode versions", xcodeInfoPlistPath);
+          LOG.warn("Error in parsing %s; ignoring Xcode versions", xcodeInfoPlistPath);
         }
       }
 
@@ -386,7 +386,7 @@ public class AppleCxxPlatforms {
       try {
         whitelistBuilder.add("^" + Pattern.quote(toolchainPath.toRealPath().toString()) + "\\/.*");
       } catch (IOException e) {
-        LOG.debug(e, "Apple toolchain path could not be resolved: %s", toolchainPath);
+        LOG.warn(e, "Apple toolchain path could not be resolved: %s", toolchainPath);
       }
     }
     HeaderVerification headerVerification =
