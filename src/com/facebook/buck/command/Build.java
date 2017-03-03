@@ -375,6 +375,10 @@ public class Build implements Closeable {
       } catch (ExecutionException | RuntimeException e) {
         // This is likely a checked exception that was caught while building a build rule.
         Throwable cause = e.getCause();
+        if (cause == null) {
+          Throwables.throwIfInstanceOf(e, RuntimeException.class);
+          throw new RuntimeException(e);
+        }
         Throwables.throwIfInstanceOf(cause, IOException.class);
         Throwables.throwIfInstanceOf(cause, StepFailedException.class);
         Throwables.throwIfInstanceOf(cause, InterruptedException.class);
