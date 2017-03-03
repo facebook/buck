@@ -125,6 +125,14 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         }
 
         BuckCacheFetchResponse fetchResponse = cacheResponse.getFetchResponse();
+
+        if (LOG.isDebugEnabled()) {
+          LOG.debug(
+              "Debug info for cache fetch request: request=[%s] response=[%s]",
+              ThriftUtil.thriftToDebugJson(cacheRequest),
+              ThriftUtil.thriftToDebugJson(cacheResponse));
+        }
+
         if (!fetchResponse.isArtifactExists()) {
           LOG.verbose("Artifact did not exist.");
           return CacheResult.miss();
@@ -237,7 +245,8 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
 
       try (ThriftArtifactCacheProtocol.Response response =
                ThriftArtifactCacheProtocol.parseResponse(PROTOCOL, httpResponse.getBody())) {
-        if (!response.getThriftData().isWasSuccessful()) {
+        BuckCacheResponse cacheResponse = response.getThriftData();
+        if (!cacheResponse.isWasSuccessful()) {
           reportFailure(
               "Failed to store artifact with thriftErrorMessage=[%s] " +
                   "url=[%s] artifactSizeBytes=[%d]",
@@ -250,7 +259,14 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
             .getStoreBuilder()
             .setArtifactContentHash(storeRequest.getMetadata().artifactPayloadMd5);
         eventBuilder.getStoreBuilder().setWasStoreSuccessful(
-            response.getThriftData().isWasSuccessful());
+            cacheResponse.isWasSuccessful());
+
+        if (LOG.isDebugEnabled()) {
+          LOG.debug(
+              "Debug info for cache store request: artifactMetadata=[%s] response=[%s]",
+              ThriftUtil.thriftToDebugJson(artifactMetadata),
+              ThriftUtil.thriftToDebugJson(cacheResponse));
+        }
       }
     }
   }

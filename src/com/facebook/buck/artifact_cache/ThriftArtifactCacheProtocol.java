@@ -36,6 +36,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 
 /**
  * All messages generate by this Protocol will be in the following binary format:
@@ -137,6 +138,16 @@ public class ThriftArtifactCacheProtocol {
           }
         }
       }
+    }
+
+    @Override
+    public String toString() {
+      return "Request{" +
+          "serializedThriftData=" + Arrays.toString(serializedThriftData) +
+          ", payloads=" + payloads +
+          ", totalPayloadBytes=" + totalPayloadBytes +
+          ", payloadByteSources=" + Arrays.toString(payloadByteSources) +
+          '}';
     }
   }
 

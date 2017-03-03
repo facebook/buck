@@ -31,6 +31,19 @@ struct ArtifactMetadata {
   8: optional bool distributedBuildModeEnabled;
 }
 
+struct FetchDebugInfo {
+  // All stores used to look up the artifact.
+  1: optional list<string> storesLookedUp;
+
+  // Stores that produced cache hits.
+  2: optional list<string> cacheHitStores;
+}
+
+struct StoreDebugInfo {
+  // All stores used in the write.
+  1: optional list<string> storesWrittenInto;
+}
+
 struct BuckCacheStoreRequest {
   1: optional ArtifactMetadata metadata;
 
@@ -40,6 +53,7 @@ struct BuckCacheStoreRequest {
 }
 
 struct BuckCacheStoreResponse {
+  1: optional StoreDebugInfo debugInfo;
 }
 
 struct BuckCacheFetchRequest {
@@ -52,6 +66,7 @@ struct BuckCacheFetchRequest {
 struct BuckCacheFetchResponse {
   1: optional bool artifactExists;
   2: optional ArtifactMetadata metadata;
+  3: optional FetchDebugInfo debugInfo;
 
   // If this field is not present then the payload is passed via a different
   // out of band method.
