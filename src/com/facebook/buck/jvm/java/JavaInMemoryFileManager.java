@@ -16,6 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
+import static javax.tools.StandardLocation.CLASS_OUTPUT;
+
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.zip.CustomZipEntry;
@@ -25,7 +27,14 @@ import com.google.common.collect.Sets;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.regex.Pattern;
@@ -44,22 +53,25 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     implements StandardJavaFileManager {
   private static final Logger LOG = Logger.get(JavaInMemoryFileManager.class);
 
+  private Path jarPath;
   private CustomZipOutputStream jarOutputStream;
   private StandardJavaFileManager delegate;
   private Semaphore jarFileSemaphore = new Semaphore(1);
   private Set<String> directoryPaths;
-  private Set<String> javaFileForOutputPaths;
+  private Map<String, JavaFileObject> fileForOutputPaths;
   private PatternsMatcher classesToRemoveFromJar;
 
   public JavaInMemoryFileManager(
       StandardJavaFileManager standardManager,
+      Path jarPath,
       CustomZipOutputStream jarOutputStream,
       ImmutableSet<Pattern> classesToRemoveFromJar) {
     super(standardManager);
     this.delegate = standardManager;
+    this.jarPath = jarPath;
     this.jarOutputStream = jarOutputStream;
     this.directoryPaths = new HashSet<>();
-    this.javaFileForOutputPaths = new HashSet<>();
+    this.fileForOutputPaths = new HashMap<>();
     this.classesToRemoveFromJar = new PatternsMatcher(classesToRemoveFromJar);
   }
 
@@ -84,17 +96,23 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     return className.replace('.', '/') + kind.extension;
   }
 
+  private static String getPath(String packageName, String relativeName) {
+    return !packageName.isEmpty() ?
+        packageName.replace('.', '/') + '/' + relativeName :
+        relativeName;
+  }
+
   @Override
   public JavaFileObject getJavaFileForOutput(
       Location location,
       String className,
       JavaFileObject.Kind kind,
       FileObject sibling) throws IOException {
-
     // Use the normal FileObject that writes to the disk for source files.
-    if (kind.equals(JavaFileObject.Kind.SOURCE)) {
+    if (shouldDelegate(location)) {
       return delegate.getJavaFileForOutput(location, className, kind, sibling);
     }
+    String path = getPath(className, kind);
 
     // If the class is to be removed from the Jar create a NoOp FileObject.
     if (classesToRemoveFromJar.hasPatterns() &&
@@ -102,31 +120,34 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
       LOG.info(
           "%s was excluded from the Jar because it matched a remove_classes pattern.",
           className.toString());
-      return createJavaNoOpFileObject(getPath(className, kind), kind);
+      return getJavaNoOpFileObject(path, kind);
     }
 
-    // Create the directories that are part of the class name path
-    for (int i = 0; i < className.length(); ++i) {
-      if (className.charAt(i) == '.') {
-        String directoryPath = getPath(className.substring(0, i + 1));
-        if (directoryPaths.contains(directoryPath)) {
-          continue;
-        }
-        createDirectory(directoryPath);
-        directoryPaths.add(directoryPath);
-      }
+    return getJavaMemoryFileObject(kind, path);
+  }
+
+  @Override
+  public FileObject getFileForOutput(
+      Location location,
+      String packageName,
+      String relativeName,
+      FileObject sibling) throws IOException {
+    if (shouldDelegate(location)) {
+      return delegate.getFileForOutput(location, packageName, relativeName, sibling);
     }
 
-    // Return a FileObject that it will be written in the jar.
-    return createJavaMemoryFileObject(getPath(className, kind), kind);
+    String path = getPath(packageName, relativeName);
+    return getJavaMemoryFileObject(JavaFileObject.Kind.OTHER, path);
   }
 
   @Override
   public boolean isSameFile(FileObject a, FileObject b) {
-    boolean aInMemoryInstance = a instanceof JavaInMemoryFileObject;
-    boolean bInMemoryInstance = b instanceof JavaInMemoryFileObject;
-    if (aInMemoryInstance || bInMemoryInstance) {
-      return aInMemoryInstance && bInMemoryInstance && a.getName().equals(b.getName());
+    boolean aInMemoryJavaFileInstance = a instanceof JavaInMemoryFileObject;
+    boolean bInMemoryJavaFileInstance = b instanceof JavaInMemoryFileObject;
+    if (aInMemoryJavaFileInstance || bInMemoryJavaFileInstance) {
+      return aInMemoryJavaFileInstance &&
+          bInMemoryJavaFileInstance &&
+          a.getName().equals(b.getName());
     }
     return super.isSameFile(a, b);
   }
@@ -164,30 +185,106 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     return delegate.getLocation(location);
   }
 
+  @Override
+  public Iterable<JavaFileObject> list(
+      Location location,
+      String packageName,
+      Set<JavaFileObject.Kind> kinds,
+      boolean recurse)
+      throws IOException {
+    if (shouldDelegate(location)) {
+      return delegate.list(location, packageName, kinds, recurse);
+    }
+
+    ArrayList<JavaFileObject> results = new ArrayList<>();
+    for (JavaFileObject fromSuper : delegate.list(location, packageName, kinds, recurse)) {
+      results.add(fromSuper);
+    }
+
+    String packageDirPath = getPath(packageName) + '/';
+    for (String filepath : fileForOutputPaths.keySet()) {
+      if (recurse && filepath.startsWith(packageDirPath)) {
+        results.add(fileForOutputPaths.get(filepath));
+      } else if (!recurse &&
+          filepath.startsWith(packageDirPath) &&
+          filepath.substring(packageDirPath.length()).indexOf('/') < 0) {
+        results.add(fileForOutputPaths.get(filepath));
+      }
+    }
+
+    return results;
+  }
+
   public ImmutableSet<String> getEntries() {
-    return ImmutableSet.copyOf(Sets.union(directoryPaths, javaFileForOutputPaths));
+    return ImmutableSet.copyOf(Sets.union(directoryPaths, fileForOutputPaths.keySet()));
+  }
+
+  private boolean shouldDelegate(Location location) {
+    return location != CLASS_OUTPUT;
+  }
+
+  private JavaFileObject getJavaMemoryFileObject(
+      JavaFileObject.Kind kind,
+      String path) throws IOException {
+    if (!fileForOutputPaths.containsKey(path)) {
+      ensureDirectories(path);
+      JavaFileObject obj = new JavaInMemoryFileObject(
+          getUriPath(path),
+          path,
+          kind,
+          jarOutputStream,
+          jarFileSemaphore);
+      fileForOutputPaths.put(path, obj);
+    }
+
+    return fileForOutputPaths.get(path);
+  }
+
+  private JavaFileObject getJavaNoOpFileObject(String path, JavaFileObject.Kind kind) {
+    if (!fileForOutputPaths.containsKey(path)) {
+      JavaFileObject obj = new JavaNoOpFileObject(getUriPath(path), path, kind);
+      fileForOutputPaths.put(path, obj);
+    }
+    return fileForOutputPaths.get(path);
+  }
+
+  /*
+   * Creates the directories within the jar file to represent java packages
+   */
+  private void ensureDirectories(String filePath) throws IOException {
+    for (int i = 0; i < filePath.length(); ++i) {
+      if (filePath.charAt(i) == '/') {
+        String directoryPath = getPath(filePath.substring(0, i + 1));
+        if (directoryPaths.contains(directoryPath)) {
+          continue;
+        }
+        createDirectory(directoryPath);
+        directoryPaths.add(directoryPath);
+      }
+    }
   }
 
   private void createDirectory(String name) throws IOException {
-    JavaFileObject fileObject = createJavaMemoryFileObject(name, JavaFileObject.Kind.OTHER);
+    URI uri = URI.create(name);
     jarFileSemaphore.acquireUninterruptibly();
     try {
-      jarOutputStream.putNextEntry(createEntry(fileObject.getName()));
+      jarOutputStream.putNextEntry(createEntry(uri.getPath()));
       jarOutputStream.closeEntry();
     } finally {
       jarFileSemaphore.release();
     }
   }
 
-  private JavaFileObject createJavaMemoryFileObject(String path, JavaFileObject.Kind kind) {
-    JavaFileObject obj = new JavaInMemoryFileObject(path, kind, jarOutputStream, jarFileSemaphore);
-    javaFileForOutputPaths.add(obj.getName());
-    return obj;
+  private String encodeURL(String path) {
+    try {
+      return URLEncoder.encode(path, "UTF-8").replace("%2F", "/");
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException(e);
+    }
   }
 
-  private JavaFileObject createJavaNoOpFileObject(String path, JavaFileObject.Kind kind) {
-    JavaFileObject obj = new JavaNoOpFileObject(path, kind);
-    javaFileForOutputPaths.add(obj.getName());
-    return obj;
+  private URI getUriPath(String relativePath) {
+    return URI.create(
+        "jar:file:" + encodeURL(jarPath.toString()) + "!/" + encodeURL(relativePath));
   }
 }

@@ -125,12 +125,14 @@ public abstract class Jsr199Javac implements Javac {
       Supplier<ImmutableSet<String>> alreadyAddedFilesAvailableAfterCompilation =
           Suppliers.ofInstance(ImmutableSet.of());
       if (context.getDirectToJarOutputSettings().isPresent()) {
+        Path path = context.getProjectFilesystem().getPathForRelativePath(
+            context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath());
         jarOutputStream = ZipOutputStreams.newOutputStream(
-            context.getProjectFilesystem().getPathForRelativePath(
-                context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath()),
+            path,
             ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP);
         inMemoryFileManager = new JavaInMemoryFileManager(
             fileManager,
+            path,
             jarOutputStream,
             context.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar());
         alreadyAddedFilesAvailableAfterCompilation = inMemoryFileManager::getEntries;

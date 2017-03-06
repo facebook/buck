@@ -27,12 +27,16 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.OutputStream;
+import java.net.URI;
+import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.zip.ZipEntry;
 
 import javax.tools.DiagnosticCollector;
-import javax.tools.JavaFileManager.Location;
 import javax.tools.JavaFileObject;
+import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
 
 /**
@@ -49,6 +53,7 @@ public class JavaInMemoryFileManagerTest {
     DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
     inMemoryFileManager = new JavaInMemoryFileManager(
         ToolProvider.getSystemJavaCompiler().getStandardFileManager(diagnostics, null, null),
+        Paths.get(URI.create("file:///tmp/test.jar!/")),
         outputStream,
         /*classesToBeRemovedFromJar */ ImmutableSet.of());
   }
@@ -56,7 +61,7 @@ public class JavaInMemoryFileManagerTest {
   @Test
   public void testJavaFileName() throws Exception {
     JavaFileObject fileObject = inMemoryFileManager.getJavaFileForOutput(
-        locationOf("src"),
+        StandardLocation.CLASS_OUTPUT,
         "com.facebook.buck.jvm.java.JavaFileParser",
         JavaFileObject.Kind.CLASS,
         null);
@@ -68,7 +73,7 @@ public class JavaInMemoryFileManagerTest {
   @Test
   public void testWriteContent() throws Exception {
     JavaFileObject fileObject = inMemoryFileManager.getJavaFileForOutput(
-        locationOf("src"),
+        StandardLocation.CLASS_OUTPUT,
         "JavaFileParser",
         JavaFileObject.Kind.CLASS,
         null);
@@ -85,7 +90,7 @@ public class JavaInMemoryFileManagerTest {
   @Test
   public void testIntermediateDirectoriesAreCreated() throws Exception {
     JavaFileObject fileObject = inMemoryFileManager.getJavaFileForOutput(
-        locationOf("src"),
+        StandardLocation.CLASS_OUTPUT,
         "jvm.java.JavaFileParser",
         JavaFileObject.Kind.CLASS,
         null);
@@ -102,13 +107,13 @@ public class JavaInMemoryFileManagerTest {
   @Test
   public void testMultipleFilesInSamePackage() throws Exception {
     JavaFileObject fileObject1 = inMemoryFileManager.getJavaFileForOutput(
-        locationOf("src"),
+        StandardLocation.CLASS_OUTPUT,
         "jvm.java.JavaFileParser",
         JavaFileObject.Kind.CLASS,
         null);
 
     JavaFileObject fileObject2 = inMemoryFileManager.getJavaFileForOutput(
-        locationOf("src"),
+        StandardLocation.CLASS_OUTPUT,
         "jvm.java.JavaInMemoryFileManager",
         JavaFileObject.Kind.CLASS,
         null);
@@ -127,13 +132,13 @@ public class JavaInMemoryFileManagerTest {
   @Test
   public void testIsNotSameFile() throws Exception {
     JavaFileObject fileObject1 = inMemoryFileManager.getJavaFileForOutput(
-        locationOf("src"),
+        StandardLocation.CLASS_OUTPUT,
         "jvm.java.JavaFileParser",
         JavaFileObject.Kind.CLASS,
         null);
 
     JavaFileObject fileObject2 = inMemoryFileManager.getJavaFileForOutput(
-        locationOf("src"),
+        StandardLocation.CLASS_OUTPUT,
         "jvm.java.JavaInMemoryFileManager",
         JavaFileObject.Kind.CLASS,
         null);
@@ -144,13 +149,13 @@ public class JavaInMemoryFileManagerTest {
   @Test
   public void testIsSameFile() throws Exception {
     JavaFileObject fileObject1 = inMemoryFileManager.getJavaFileForOutput(
-        locationOf("src"),
+        StandardLocation.CLASS_OUTPUT,
         "jvm.java.JavaFileParser",
         JavaFileObject.Kind.CLASS,
         null);
 
     JavaFileObject fileObject2 = inMemoryFileManager.getJavaFileForOutput(
-        locationOf("src"),
+        StandardLocation.CLASS_OUTPUT,
         "jvm.java.JavaFileParser",
         JavaFileObject.Kind.CLASS,
         null);
@@ -158,17 +163,57 @@ public class JavaInMemoryFileManagerTest {
     assertTrue(inMemoryFileManager.isSameFile(fileObject1, fileObject2));
   }
 
-  private static Location locationOf(final String name) {
-    return new Location() {
-      @Override
-      public String getName() {
-        return name;
-      }
+  @Test
+  public void testNonRecursiveListOperationReturnsNewlyCreatedFile() throws Exception {
+    JavaFileObject fileObject1 = inMemoryFileManager.getJavaFileForOutput(
+        StandardLocation.CLASS_OUTPUT,
+        "jvm.java.JavaFileParser",
+        JavaFileObject.Kind.CLASS,
+        null);
+    Iterator<JavaFileObject> nonRecursiveIterable = inMemoryFileManager.list(
+      StandardLocation.CLASS_OUTPUT,
+      "jvm.java",
+      Collections.singleton(JavaFileObject.Kind.CLASS),
+      false)
+      .iterator();
 
-      @Override
-      public boolean isOutputLocation() {
-        return true;
-      }
-    };
+    assertEquals(fileObject1, nonRecursiveIterable.next());
+    assertFalse(nonRecursiveIterable.hasNext());
+  }
+
+  @Test
+  public void testNonRecursiveListOperationDoesntReturnNewlyCreatedFileOnOtherDir()
+      throws Exception {
+    JavaFileObject fileObject1 = inMemoryFileManager.getJavaFileForOutput(
+        StandardLocation.CLASS_OUTPUT,
+        "jvm.java.JavaFileParser",
+        JavaFileObject.Kind.CLASS,
+        null);
+    assertEquals("jvm/java/JavaFileParser.class", fileObject1.getName());
+    Iterator<JavaFileObject> recursiveIterable = inMemoryFileManager.list(
+      StandardLocation.CLASS_OUTPUT,
+      "jvm",
+      Collections.singleton(JavaFileObject.Kind.CLASS),
+      false)
+      .iterator();
+    assertFalse(recursiveIterable.hasNext());
+  }
+
+  @Test
+  public void testRecursiveListOperationReturnsNewlyCreatedFile() throws Exception {
+    JavaFileObject fileObject1 = inMemoryFileManager.getJavaFileForOutput(
+        StandardLocation.CLASS_OUTPUT,
+        "jvm.java.JavaFileParser",
+        JavaFileObject.Kind.CLASS,
+        null);
+    Iterator<JavaFileObject> recursiveIterable = inMemoryFileManager.list(
+      StandardLocation.CLASS_OUTPUT,
+      "jvm",
+      Collections.singleton(JavaFileObject.Kind.CLASS),
+      true)
+      .iterator();
+
+    assertEquals(fileObject1, recursiveIterable.next());
+    assertFalse(recursiveIterable.hasNext());
   }
 }

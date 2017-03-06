@@ -17,20 +17,26 @@
 package com.facebook.buck.jvm.java;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.Writer;
 import java.net.URI;
 
-import javax.tools.SimpleJavaFileObject;
-
 /**
- * A {@link SimpleJavaFileObject} implementation that represents a {@link javax.tools.FileObject}
- * that has no operations and does not write the contents to any form of output. The only content
- * that stores is the path and kind of the {@link javax.tools.FileObject}.
+ * An {@link JarFileObject} implementation that represents a {@link javax.tools.FileObject}
+ * that has no operations and does not write the contents to any form of output.
  */
-public class JavaNoOpFileObject extends SimpleJavaFileObject {
+public class JavaNoOpFileObject extends JarFileObject {
 
-  public JavaNoOpFileObject(String path, Kind kind) {
-    super(URI.create(path), kind);
+  public JavaNoOpFileObject(URI uri, String pathInJar, Kind kind) {
+    super(uri, pathInJar, kind);
+  }
+
+  @Override
+  public InputStream openInputStream() throws IOException {
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -45,7 +51,17 @@ public class JavaNoOpFileObject extends SimpleJavaFileObject {
   }
 
   @Override
+  public Reader openReader(boolean ignoreEncodingErrors) throws IOException {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
     throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Writer openWriter() throws IOException {
+    return new OutputStreamWriter(openOutputStream());
   }
 }
