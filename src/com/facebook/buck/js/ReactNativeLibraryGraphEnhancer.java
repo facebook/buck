@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.google.common.base.Suppliers;
@@ -47,7 +46,6 @@ public class ReactNativeLibraryGraphEnhancer {
   private ReactNativeBundle createReactNativeBundle(
       BuildRuleParams baseParams,
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       ReactNativeLibraryArgs args,
@@ -63,7 +61,6 @@ public class ReactNativeLibraryGraphEnhancer {
                     .addAll(jsPackager.getDeps(ruleFinder))
                     .build()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
-        pathResolver,
         args.entryPath,
         args.srcs,
         ReactNativeFlavors.useUnbundling(baseParams.getBuildTarget()),
@@ -82,13 +79,11 @@ public class ReactNativeLibraryGraphEnhancer {
       AndroidReactNativeLibraryDescription.Args args) {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
     BuildTarget originalBuildTarget = params.getBuildTarget();
     ReactNativeBundle bundle =
         createReactNativeBundle(
             params,
             resolver,
-            sourcePathResolver,
             ruleFinder,
             BuildTarget.builder(originalBuildTarget)
                 .addFlavors(REACT_NATIVE_BUNDLE_FLAVOR)
@@ -139,7 +134,6 @@ public class ReactNativeLibraryGraphEnhancer {
     return createReactNativeBundle(
         params,
         resolver,
-        new SourcePathResolver(ruleFinder),
         ruleFinder,
         params.getBuildTarget(),
         args,

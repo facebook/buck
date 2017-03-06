@@ -19,7 +19,7 @@ package com.facebook.buck.js;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -48,7 +48,7 @@ import java.util.function.Predicate;
  * bundle along with resources referenced by the javascript code.
  */
 public class ReactNativeBundle
-    extends AbstractBuildRuleWithResolver
+    extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, SupportsDependencyFileRuleKey {
 
   public static final String JS_BUNDLE_OUTPUT_DIR_FORMAT = "__%s_js__/";
@@ -91,7 +91,6 @@ public class ReactNativeBundle
 
   protected ReactNativeBundle(
       BuildRuleParams ruleParams,
-      SourcePathResolver resolver,
       SourcePath entryPath,
       ImmutableSortedSet<SourcePath> srcs,
       boolean isUnbundle,
@@ -102,7 +101,7 @@ public class ReactNativeBundle
       Optional<String> packagerFlags,
       Tool jsPackager,
       ReactNativePlatform platform) {
-    super(ruleParams, resolver);
+    super(ruleParams);
     this.entryPath = entryPath;
     this.srcs = srcs;
     this.isUnbundle = isUnbundle;
@@ -236,7 +235,7 @@ public class ReactNativeBundle
 
     // Use the generated depfile to determinate which sources ended up being used.
     ImmutableMap<Path, SourcePath> pathToSourceMap =
-        Maps.uniqueIndex(srcs, getResolver()::getAbsolutePath);
+        Maps.uniqueIndex(srcs, context.getSourcePathResolver()::getAbsolutePath);
     Path depFile = getPathToDepFile(getBuildTarget(), getProjectFilesystem());
     for (String line : getProjectFilesystem().readLines(depFile)) {
       Path path = getProjectFilesystem().getPath(line);
