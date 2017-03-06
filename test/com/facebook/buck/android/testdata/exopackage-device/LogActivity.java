@@ -86,9 +86,8 @@ public class LogActivity extends Activity {
   }
 
   public String getImageString() {
-    // Android pretty reliably returns a bitmap with 2x the width/height of the png.
     Bitmap bitmap = ((BitmapDrawable) getResources().getDrawable(R.drawable.image)).getBitmap();
-    return "png_" + (bitmap.getWidth() / 2) + "_" + (bitmap.getHeight() / 2);
+    return "png_" + bitmap.getWidth() + "_" + bitmap.getHeight();
   }
 
   public native String stringOneFromJNI();
