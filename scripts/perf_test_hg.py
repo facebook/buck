@@ -247,6 +247,10 @@ def set_cache_settings(
     %s
     dir = buck-cache
     dir_mode = %s
+[build]
+    # Some repositories set this to a lower value, which breaks an assumption
+    # in this test: that all rules with correct rule keys will get hits.
+    artifact_cache_size_limit = 2000000000
   ''' % ('mode = dir' if dir_cache_only else '', cache_mode)
     log(buckconfig_contents)
     buckconfig_path = os.path.join(cwd, '.buckconfig.local')
