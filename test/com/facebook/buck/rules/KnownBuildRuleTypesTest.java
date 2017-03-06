@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
@@ -30,7 +31,9 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -46,6 +49,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hashing;
 
+import org.hamcrest.Matchers;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -74,7 +78,7 @@ public class KnownBuildRuleTypesTest {
       implements Description<KnownRuleTestDescription.Arg> {
 
     static class Arg extends AbstractDescriptionArg {
-    };
+    }
 
     private final String value;
 
@@ -294,6 +298,24 @@ public class KnownBuildRuleTypesTest {
         buckConfig,
         filesystem, createExecutor(),
         new FakeAndroidDirectoryResolver()).build();
+  }
+
+  @Test
+  public void canOverrideDefaultHostPlatform() throws Exception {
+    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
+    Flavor flavor = ImmutableFlavor.of("flavor");
+    String flag = "-flag";
+    ImmutableMap<String, ImmutableMap<String, String>> sections =
+        ImmutableMap.of("cxx#" + flavor, ImmutableMap.of("cflags", flag));
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
+    KnownBuildRuleTypes knownBuildRuleTypes =
+        KnownBuildRuleTypes.createBuilder(
+            buckConfig,
+            filesystem, createExecutor(),
+            new FakeAndroidDirectoryResolver()).build();
+    assertThat(
+        knownBuildRuleTypes.getCxxPlatforms().getValue(flavor).getCflags(),
+        Matchers.contains(flag));
   }
 
   private ProcessExecutor createExecutor() throws IOException {

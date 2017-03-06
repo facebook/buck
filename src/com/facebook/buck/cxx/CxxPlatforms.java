@@ -28,6 +28,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.Optional;
 
@@ -205,9 +206,9 @@ public class CxxPlatforms {
     };
   }
 
-  private static ImmutableMap<String, ImmutableFlavor> getHostFlavorMap() {
+  private static ImmutableMap<String, Flavor> getHostFlavorMap() {
     // TODO(Coneko): base the host flavor on architecture, too.
-    return ImmutableMap.<String, ImmutableFlavor>builder()
+    return ImmutableMap.<String, Flavor>builder()
        .put(Platform.LINUX.getAutoconfName(), ImmutableFlavor.of("linux-x86_64"))
        .put(Platform.MACOS.getAutoconfName(), ImmutableFlavor.of("macosx-x86_64"))
        .put(Platform.WINDOWS.getAutoconfName(), ImmutableFlavor.of("windows-x86_64"))
@@ -215,13 +216,13 @@ public class CxxPlatforms {
        .build();
   }
 
-  public static ImmutableList<ImmutableFlavor> getAllPossibleHostFlavors() {
-    return getHostFlavorMap().values().asList();
+  public static ImmutableSet<Flavor> getAllPossibleHostFlavors() {
+    return ImmutableSet.copyOf(getHostFlavorMap().values());
   }
 
-  public static ImmutableFlavor getHostFlavor() {
+  public static Flavor getHostFlavor() {
     String platformName = Platform.detect().getAutoconfName();
-    ImmutableFlavor hostFlavor = getHostFlavorMap().get(platformName);
+    Flavor hostFlavor = getHostFlavorMap().get(platformName);
 
     if (hostFlavor == null) {
       throw new HumanReadableException("Unable to determine the host platform.");
