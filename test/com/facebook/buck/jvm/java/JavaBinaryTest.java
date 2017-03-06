@@ -84,7 +84,6 @@ public class JavaBinaryTest {
         ruleResolver.addToIndex(
             new JavaBinary(
                 params,
-                pathResolver,
                 new ExternalJavaRuntimeLauncher("/foobar/java"),
                 "com.facebook.base.Main",
                 null,

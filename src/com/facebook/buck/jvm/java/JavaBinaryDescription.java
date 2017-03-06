@@ -32,7 +32,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.versions.VersionRoot;
@@ -84,7 +83,6 @@ public class JavaBinaryDescription implements
       A args) throws NoSuchBuildTargetException {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     ImmutableMap<String, SourcePath> nativeLibraries =
         JavaLibraryRules.getNativeLibraries(params.getDeps(), cxxPlatform);
     BuildRuleParams binaryParams = params;
@@ -105,7 +103,6 @@ public class JavaBinaryDescription implements
         JavaLibraryClasspathProvider.getClasspathsFromLibraries(transitiveClasspathDeps);
     BuildRule rule = new JavaBinary(
         binaryParams.appendExtraDeps(transitiveClasspathDeps),
-        pathResolver,
         javaOptions.getJavaRuntimeLauncher(),
         args.mainClass.orElse(null),
         args.manifestFile.orElse(null),

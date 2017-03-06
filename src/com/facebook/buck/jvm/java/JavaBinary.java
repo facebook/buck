@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java;
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -30,7 +30,6 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
@@ -49,8 +48,7 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 @BuildsAnnotationProcessor
-public class JavaBinary extends AbstractBuildRuleWithResolver
-    implements BinaryBuildRule, HasClasspathEntries {
+public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule, HasClasspathEntries {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
 
@@ -80,7 +78,6 @@ public class JavaBinary extends AbstractBuildRuleWithResolver
 
   public JavaBinary(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       JavaRuntimeLauncher javaRuntimeLauncher,
       @Nullable String mainClass,
       @Nullable SourcePath manifestFile,
@@ -90,7 +87,7 @@ public class JavaBinary extends AbstractBuildRuleWithResolver
       ImmutableSet<JavaLibrary> transitiveClasspathDeps,
       ImmutableSet<SourcePath> transitiveClasspaths,
       boolean cache) {
-    super(params, resolver);
+    super(params);
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
