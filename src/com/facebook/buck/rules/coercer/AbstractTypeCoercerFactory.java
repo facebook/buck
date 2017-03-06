@@ -149,7 +149,7 @@ public class AbstractTypeCoercerFactory implements TypeCoercerFactory {
                 "classpath", ClasspathMacro.class,
                 "exe", ExecutableMacro.class,
                 "location", LocationMacro.class,
-                "maver_coords", MavenCoordinatesMacro.class),
+                "maven_coords", MavenCoordinatesMacro.class),
             ImmutableList.of(
                 new ClasspathMacroTypeCoercer(buildTargetTypeCoercer),
                 new ExecutableMacroTypeCoercer(buildTargetTypeCoercer),
