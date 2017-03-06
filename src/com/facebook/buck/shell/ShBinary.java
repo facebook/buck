@@ -18,7 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -29,7 +29,6 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -48,8 +47,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.stream.Stream;
 
-public class ShBinary extends AbstractBuildRuleWithResolver
-    implements BinaryBuildRule, HasRuntimeDeps {
+public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasRuntimeDeps {
 
   private static final Path TEMPLATE = Paths.get(
       System.getProperty(
@@ -68,10 +66,9 @@ public class ShBinary extends AbstractBuildRuleWithResolver
   protected ShBinary(
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
-      SourcePathResolver resolver,
       SourcePath main,
       ImmutableSet<SourcePath> resources) {
-    super(params, resolver);
+    super(params);
     this.ruleFinder = ruleFinder;
     this.main = main;
     this.resources = resources;
