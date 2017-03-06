@@ -242,7 +242,6 @@ public class SwiftLibraryDescription implements
           cxxPlatform,
           swiftBuckConfig,
           params,
-          new SourcePathResolver(new SourcePathRuleFinder(resolver)),
           swiftPlatform.get().getSwift(),
           args.frameworks,
           args.moduleName.orElse(buildTarget.getShortName()),
