@@ -19,7 +19,7 @@ package com.facebook.buck.rust;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -50,9 +50,7 @@ import java.util.stream.Stream;
 /**
  * Generate a rustc command line with all appropriate dependencies in place.
  */
-public class RustCompileRule
-    extends AbstractBuildRuleWithResolver
-    implements SupportsInputBasedRuleKey {
+public class RustCompileRule extends AbstractBuildRule implements SupportsInputBasedRuleKey {
   @AddToRuleKey
   private final Tool compiler;
 
@@ -93,7 +91,6 @@ public class RustCompileRule
    */
   protected RustCompileRule(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       String filename,
       Tool compiler,
       Tool linker,
@@ -101,7 +98,7 @@ public class RustCompileRule
       ImmutableList<Arg> linkerArgs,
       ImmutableSortedSet<SourcePath> srcs,
       SourcePath rootModule) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
 
     this.filename = filename;
     this.compiler = compiler;
@@ -117,7 +114,6 @@ public class RustCompileRule
   public static RustCompileRule from(
       SourcePathRuleFinder ruleFinder,
       BuildRuleParams params,
-      SourcePathResolver resolver,
       String filename,
       Tool compiler,
       Tool linker,
@@ -140,7 +136,6 @@ public class RustCompileRule
                     .addAll(ruleFinder.filterBuildRuleInputs(ImmutableList.of(rootModule)))
                     .addAll(ruleFinder.filterBuildRuleInputs(sources))
                     .build())),
-        resolver,
         filename,
         compiler,
         linker,
@@ -197,13 +192,15 @@ public class RustCompileRule
 
     buildableContext.recordArtifact(output);
 
+    SourcePathResolver resolver = buildContext.getSourcePathResolver();
+
     return ImmutableList.of(
         new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir),
         new SymlinkFilesIntoDirectoryStep(
             getProjectFilesystem(),
             getProjectFilesystem().getRootPath(),
             srcs.stream()
-                .map(getResolver()::getRelativePath)
+                .map(resolver::getRelativePath)
                 .collect(MoreCollectors.toImmutableList()),
             scratchDir),
         new MakeCleanDirectoryStep(
@@ -214,13 +211,13 @@ public class RustCompileRule
           @Override
           protected ImmutableList<String> getShellCommandInternal(
               ExecutionContext executionContext) {
-            ImmutableList<String> linkerCmd = linker.getCommandPrefix(getResolver());
+            ImmutableList<String> linkerCmd = linker.getCommandPrefix(resolver);
             ImmutableList.Builder<String> cmd = ImmutableList.builder();
 
-            Path src = scratchDir.resolve(getResolver().getRelativePath(rootModule));
+            Path src = scratchDir.resolve(resolver.getRelativePath(rootModule));
 
             cmd
-                .addAll(compiler.getCommandPrefix(getResolver()))
+                .addAll(compiler.getCommandPrefix(resolver))
                 .addAll(
                     executionContext.getAnsi().isAnsiTerminal() ?
                         ImmutableList.of("--color=always") : ImmutableList.of())

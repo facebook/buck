@@ -117,13 +117,11 @@ public class RustCompileTest {
 
   static class FakeRustCompileRule extends RustCompileRule {
     private FakeRustCompileRule(
-        SourcePathResolver pathResolver,
         BuildTarget target,
         ImmutableSortedSet<SourcePath> srcs,
         SourcePath rootModule) {
       super(
           new FakeBuildRuleParamsBuilder(target).build(),
-          pathResolver,
           String.format("lib%s.rlib", target),
           fakeTool(),
           fakeTool(),
@@ -160,7 +158,7 @@ public class RustCompileTest {
       if (!root.isPresent()) {
         throw new HumanReadableException("No crate root source identified");
       }
-      return new FakeRustCompileRule(pathResolver, buildTarget, srcs, root.get());
+      return new FakeRustCompileRule(buildTarget, srcs, root.get());
     }
   }
 }

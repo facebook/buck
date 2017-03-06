@@ -211,7 +211,6 @@ public class RustCompileUtils {
         RustCompileRule.from(
             ruleFinder,
             params.copyWithBuildTarget(target),
-            pathResolver,
             filename,
             rustConfig.getRustCompiler().resolve(resolver),
             rustConfig.getLinkerProvider(cxxPlatform, cxxPlatform.getLd().getType())
