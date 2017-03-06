@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <array name="aaa_array">
+    <item>1</item>
+    <item>2</item>
+    <item>3</item>
+  </array>
+  <array name="meta_array">
+    <item>item0</item>
+    <item>item1</item>
+    <item>item2</item>
+  </array>
+  <array name="meta_array2">
+    <item>@id/meta_array_entry</item>
+    <item>@id/meta_array_entry</item>
+    <item>@id/meta_array_entry</item>
+  </array>
+  <item type="id" name="some_id"/>
+  <item type="id" name="meta_array_entry"/>
+</resources>
