@@ -141,9 +141,6 @@ public class CxxBinaryDescription implements
           args);
     }
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-
     if (flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       BuildRuleParams paramsWithoutFlavor =
           params.withoutFlavor(CxxCompilationDatabase.COMPILATION_DATABASE);
@@ -207,7 +204,6 @@ public class CxxBinaryDescription implements
       return CxxInferEnhancer.requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(
           params,
           resolver,
-          pathResolver,
           cxxBuckConfig,
           cxxPlatform,
           args,
@@ -247,6 +243,7 @@ public class CxxBinaryDescription implements
 
     params = CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle);
     params = LinkerMapMode.restoreLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     CxxBinary cxxBinary = new CxxBinary(
         params
             .copyWithDeps(() -> cxxLinkAndCompileRules.deps, params.getExtraDeps())

@@ -31,7 +31,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
@@ -170,8 +169,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
       final BuildRuleResolver resolver,
       final A args) throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    return new CustomPrebuiltCxxLibrary(params, pathResolver) {
+    return new CustomPrebuiltCxxLibrary(params) {
 
       private final LoadingCache<
           CxxPreprocessables.CxxPreprocessorInputCacheKey,
@@ -367,10 +365,8 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
   private abstract static class CustomPrebuiltCxxLibrary
       extends NoopBuildRule
       implements AbstractCxxLibrary {
-    public CustomPrebuiltCxxLibrary(
-        BuildRuleParams params,
-        SourcePathResolver resolver) {
-      super(params, resolver);
+    public CustomPrebuiltCxxLibrary(BuildRuleParams params) {
+      super(params);
     }
   }
 

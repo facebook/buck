@@ -20,14 +20,9 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
 
@@ -54,11 +49,6 @@ public class PythonLibraryTest {
         new FakeBuildRuleParamsBuilder(
             BuildTargetFactory.newInstance("//scripts/python:foo"))
             .build(),
-        new SourcePathResolver(new SourcePathRuleFinder(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        )),
         Functions.constant(srcs),
         Functions.constant(ImmutableMap.of()),
         Optional.empty());

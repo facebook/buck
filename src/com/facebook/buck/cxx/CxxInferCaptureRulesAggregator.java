@@ -18,19 +18,17 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRule;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableSet;
 
 public class CxxInferCaptureRulesAggregator extends NoopBuildRule {
-  private  CxxInferCaptureAndAggregatingRules<CxxInferCaptureRulesAggregator>
+  private CxxInferCaptureAndAggregatingRules<CxxInferCaptureRulesAggregator>
       captureAndTransitiveAggregatingRules;
 
   public CxxInferCaptureRulesAggregator(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       CxxInferCaptureAndAggregatingRules<CxxInferCaptureRulesAggregator>
           captureAndTransitiveAggregatingRules) {
-    super(params, resolver);
+    super(params);
     this.captureAndTransitiveAggregatingRules = captureAndTransitiveAggregatingRules;
   }
 

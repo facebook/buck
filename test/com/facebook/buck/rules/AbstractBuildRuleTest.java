@@ -17,8 +17,6 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.TargetGraphFactory;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -26,13 +24,8 @@ public class AbstractBuildRuleTest {
 
   @Test
   public void getTypeForAnonymousClass() {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(
-            TargetGraphFactory.newInstance(),
-            new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     NoopBuildRule noopBuildRule =
-        new NoopBuildRule(new FakeBuildRuleParamsBuilder("//:rule").build(), pathResolver) {
+        new NoopBuildRule(new FakeBuildRuleParamsBuilder("//:rule").build()) {
         };
     assertThat(noopBuildRule.getType(), Matchers.equalTo("noop_build_rule"));
   }

@@ -629,7 +629,7 @@ public class PrebuiltCxxLibraryDescription implements
         new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
     final boolean headerOnly = args.headerOnly.orElse(false);
     final boolean forceStatic = args.forceStatic.orElse(false);
-    return new PrebuiltCxxLibrary(params, pathResolver) {
+    return new PrebuiltCxxLibrary(params) {
 
       private final Map<Pair<Flavor, Linker.LinkableDepType>, NativeLinkableInput>
           nativeLinkableCache = new HashMap<>();

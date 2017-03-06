@@ -354,7 +354,6 @@ public class ThriftLibraryDescription
       // about this rule from the action graph.
       return new ThriftLibrary(
           params,
-          pathResolver,
           thriftDeps,
           symlinkTree,
           includes);

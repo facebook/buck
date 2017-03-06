@@ -62,13 +62,12 @@ public class DefaultWorkerTool extends NoopBuildRule implements
 
   protected DefaultWorkerTool(
       BuildRuleParams ruleParams,
-      SourcePathResolver resolver,
       BinaryBuildRule exe,
       ImmutableList<Arg> args,
       ImmutableMap<String, String> env,
       int maxWorkers,
       boolean isPersistent) {
-    super(ruleParams, resolver);
+    super(ruleParams);
     this.exe = exe;
     this.args = args;
     this.env = env;

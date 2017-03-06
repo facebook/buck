@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -97,7 +96,6 @@ public class CxxLibrary
   public CxxLibrary(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
       Iterable<? extends BuildRule> exportedDeps,
       Predicate<CxxPlatform> hasExportedHeaders,
       Predicate<CxxPlatform> headerOnly,
@@ -114,7 +112,7 @@ public class CxxLibrary
       ImmutableSortedSet<BuildTarget> tests,
       boolean canBeAsset,
       boolean propagateLinkables) {
-    super(params, pathResolver);
+    super(params);
     this.params = params;
     this.ruleResolver = ruleResolver;
     this.exportedDeps = exportedDeps;

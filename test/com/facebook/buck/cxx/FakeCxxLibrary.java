@@ -26,7 +26,6 @@ import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
@@ -64,7 +63,6 @@ public final class FakeCxxLibrary
 
   public FakeCxxLibrary(
       BuildRuleParams params,
-      SourcePathResolver pathResolver,
       BuildTarget publicHeaderTarget,
       BuildTarget publicHeaderSymlinkTreeTarget,
       BuildTarget privateHeaderTarget,
@@ -74,7 +72,7 @@ public final class FakeCxxLibrary
       Path sharedLibraryOutput,
       String sharedLibrarySoname,
       ImmutableSortedSet<BuildTarget> tests) {
-    super(params, pathResolver);
+    super(params);
     this.publicHeaderTarget = publicHeaderTarget;
     this.publicHeaderSymlinkTreeTarget = publicHeaderSymlinkTreeTarget;
     this.privateHeaderTarget = privateHeaderTarget;

@@ -636,12 +636,10 @@ public class RuleKeyTest {
 
     BuildRule buildRule1 = new TestRuleKeyAppendableBuildRule(
         params,
-        pathResolver,
         "foo",
         "bar");
     BuildRule buildRule2 = new TestRuleKeyAppendableBuildRule(
         params,
-        pathResolver,
         "foo",
         "xyzzy");
 
@@ -668,12 +666,10 @@ public class RuleKeyTest {
 
     BuildRule buildRule1 = new TestRuleKeyAppendableBuildRule(
         params,
-        pathResolver,
         "foo",
         "bar");
     BuildRule buildRule2 = new TestRuleKeyAppendableBuildRule(
         params,
-        pathResolver,
         "foo",
         "xyzzy");
 
@@ -682,11 +678,11 @@ public class RuleKeyTest {
     BuildRuleParams parentParams1 = new FakeBuildRuleParamsBuilder(parentTarget)
         .setDeclaredDeps(ImmutableSortedSet.of(buildRule1))
         .build();
-    BuildRule parentRule1 = new NoopBuildRule(parentParams1, pathResolver);
+    BuildRule parentRule1 = new NoopBuildRule(parentParams1);
     BuildRuleParams parentParams2 = new FakeBuildRuleParamsBuilder(parentTarget)
         .setDeclaredDeps(ImmutableSortedSet.of(buildRule2))
         .build();
-    BuildRule parentRule2 = new NoopBuildRule(parentParams2, pathResolver);
+    BuildRule parentRule2 = new NoopBuildRule(parentParams2);
 
     RuleKey ruleKey1 =
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
@@ -755,26 +751,26 @@ public class RuleKeyTest {
 
     BuildTarget depTarget = BuildTargetFactory.newInstance("//some:dep");
     BuildRuleParams depParams = new FakeBuildRuleParamsBuilder(depTarget).build();
-    NoopBuildRule dep = new NoopBuildRule(depParams, sourcePathResolver);
+    NoopBuildRule dep = new NoopBuildRule(depParams);
 
     BuildRuleParams paramsWithDeclaredDep = new FakeBuildRuleParamsBuilder(target)
         .setDeclaredDeps(ImmutableSortedSet.of(dep))
         .build();
     NoopBuildRule ruleWithDeclaredDep =
-        new NoopBuildRule(paramsWithDeclaredDep, sourcePathResolver);
+        new NoopBuildRule(paramsWithDeclaredDep);
 
     BuildRuleParams paramsWithExtraDep = new FakeBuildRuleParamsBuilder(target)
         .setExtraDeps(ImmutableSortedSet.of(dep))
         .build();
     NoopBuildRule ruleWithExtraDep =
-        new NoopBuildRule(paramsWithExtraDep, sourcePathResolver);
+        new NoopBuildRule(paramsWithExtraDep);
 
     BuildRuleParams paramsWithBothDeps = new FakeBuildRuleParamsBuilder(target)
         .setDeclaredDeps(ImmutableSortedSet.of(dep))
         .setExtraDeps(ImmutableSortedSet.of(dep))
         .build();
     NoopBuildRule ruleWithBothDeps =
-        new NoopBuildRule(paramsWithBothDeps, sourcePathResolver);
+        new NoopBuildRule(paramsWithBothDeps);
 
     assertNotEquals(
         ruleKeyFactory.build(ruleWithDeclaredDep),
@@ -812,10 +808,9 @@ public class RuleKeyTest {
 
     public TestRuleKeyAppendableBuildRule(
         BuildRuleParams buildRuleParams,
-        SourcePathResolver sourcePathResolver,
         String foo,
         String bar) {
-      super(buildRuleParams, sourcePathResolver);
+      super(buildRuleParams);
       this.foo = foo;
       this.bar = bar;
     }

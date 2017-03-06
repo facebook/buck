@@ -184,7 +184,7 @@ public class ExecutableMacroExpanderTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     ruleResolver.addToIndex(
-        new NoopBinaryBuildRule(params, pathResolver) {
+        new NoopBinaryBuildRule(params) {
           @Override
           public Tool getExecutableCommand() {
             return new CommandTool.Builder()
@@ -222,13 +222,11 @@ public class ExecutableMacroExpanderTest {
   public void extractRuleKeyAppendable() throws MacroException {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     final Tool tool = new CommandTool.Builder().addArg("command").build();
     ruleResolver.addToIndex(
-        new NoopBinaryBuildRule(params, pathResolver) {
+        new NoopBinaryBuildRule(params) {
           @Override
           public Tool getExecutableCommand() {
             return tool;
@@ -248,10 +246,8 @@ public class ExecutableMacroExpanderTest {
       extends NoopBuildRule
       implements BinaryBuildRule {
 
-    public NoopBinaryBuildRule(
-        BuildRuleParams params,
-        SourcePathResolver resolver) {
-      super(params, resolver);
+    public NoopBinaryBuildRule(BuildRuleParams params) {
+      super(params);
     }
 
   }

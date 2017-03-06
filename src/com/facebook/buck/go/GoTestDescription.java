@@ -33,7 +33,6 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
@@ -176,14 +175,12 @@ public class GoTestDescription implements
     resolver.addToIndex(testMain);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new GoTest(
         params.copyWithDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(testMain)),
             Suppliers.ofInstance(ImmutableSortedSet.of())
         ),
         ruleFinder,
-        pathResolver,
         testMain,
         args.labels,
         args.contacts,
@@ -202,7 +199,7 @@ public class GoTestDescription implements
     BuildRuleParams testTargetParams = params.copyWithBuildTarget(
         params.getBuildTarget().withAppendedFlavors(TEST_LIBRARY_FLAVOR));
     BuildRule testLibrary = new NoopBuildRule(
-        testTargetParams, new SourcePathResolver(new SourcePathRuleFinder(resolver)));
+        testTargetParams);
     resolver.addToIndex(testLibrary);
 
     BuildRule generatedTestMain = requireTestMainGenRule(

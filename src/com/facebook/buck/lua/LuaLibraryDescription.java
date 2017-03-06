@@ -50,7 +50,7 @@ public class LuaLibraryDescription implements
       final A args) {
     final SourcePathResolver pathResolver =
         new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    return new LuaLibrary(params, pathResolver) {
+    return new LuaLibrary(params) {
       @Override
       public LuaPackageComponents getLuaPackageComponents() {
         return LuaPackageComponents.builder()

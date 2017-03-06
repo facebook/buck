@@ -236,7 +236,6 @@ public class DistBuildFileHashesTest {
           new FakeBuildRuleParamsBuilder("//:with_tool")
               .setProjectFilesystem(projectFilesystem)
               .build(),
-          sourcePathResolver,
           null,
           new ArchiveMemberSourcePath(
               new PathSourcePath(projectFilesystem, archivePath),
@@ -306,7 +305,6 @@ public class DistBuildFileHashesTest {
             new FakeBuildRuleParamsBuilder("//:with_tool")
                 .setProjectFilesystem(projectFilesystem)
                 .build(),
-            sourcePathResolver,
             new HashedFileTool(hashedFileToolPath),
             new PathSourcePath(projectFilesystem, directoryPath)
         ));
@@ -491,10 +489,9 @@ public class DistBuildFileHashesTest {
 
     public BuildRuleWithToolAndPath(
         BuildRuleParams params,
-        SourcePathResolver resolver,
         Tool tool,
         SourcePath sourcePath) {
-      super(params, resolver);
+      super(params);
       this.tool = tool;
       this.sourcePath = sourcePath;
     }

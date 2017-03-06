@@ -24,7 +24,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -40,9 +39,8 @@ public class PrebuiltPythonLibrary extends NoopBuildRule implements PythonPackag
 
   public PrebuiltPythonLibrary(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       SourcePath binarySrc) {
-    super(params, resolver);
+    super(params);
     this.binarySrc = binarySrc;
   }
 

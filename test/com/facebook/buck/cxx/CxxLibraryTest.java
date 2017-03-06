@@ -83,7 +83,6 @@ public class CxxLibraryTest {
     // Construct a CxxLibrary object to test.
     FakeCxxLibrary cxxLibrary = new FakeCxxLibrary(
         params,
-        pathResolver,
         publicHeaderTarget,
         publicHeaderSymlinkTreeTarget,
         privateHeaderTarget,
@@ -184,7 +183,6 @@ public class CxxLibraryTest {
     CxxLibrary cxxLibrary = new CxxLibrary(
         params,
         ruleResolver,
-        pathResolver,
         FluentIterable.from(params.getDeclaredDeps().get()),
         /* hasExportedHeaders */ x -> true,
         /* headerOnly */ x -> true,

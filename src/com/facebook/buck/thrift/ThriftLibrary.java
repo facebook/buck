@@ -20,7 +20,6 @@ import com.facebook.buck.cxx.HeaderSymlinkTree;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -39,11 +38,10 @@ public class ThriftLibrary extends NoopBuildRule {
 
   public ThriftLibrary(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       ImmutableSortedSet<ThriftLibrary> thriftDeps,
       HeaderSymlinkTree includeTreeRule,
       ImmutableMap<Path, SourcePath> includes) {
-    super(params, resolver);
+    super(params);
     this.thriftDeps = thriftDeps;
     this.includeTreeRule = includeTreeRule;
     this.includes = includes;

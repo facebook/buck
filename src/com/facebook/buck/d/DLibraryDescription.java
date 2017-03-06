@@ -109,7 +109,6 @@ public class DLibraryDescription implements
     return new DLibrary(
         params,
         buildRuleResolver,
-        pathResolver,
         dIncludes);
   }
 

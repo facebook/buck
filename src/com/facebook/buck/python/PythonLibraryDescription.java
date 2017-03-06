@@ -59,7 +59,6 @@ public class PythonLibraryDescription
         targetGraph.get(params.getBuildTarget()).getSelectedVersions();
     return new PythonLibrary(
         params,
-        pathResolver,
         pythonPlatform ->
             PythonUtil.getModules(
                 params.getBuildTarget(),

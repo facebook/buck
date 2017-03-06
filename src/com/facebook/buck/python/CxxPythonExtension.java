@@ -23,7 +23,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRule;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.nio.file.Path;
@@ -32,10 +31,8 @@ public abstract class CxxPythonExtension
     extends NoopBuildRule
     implements PythonPackagable, HasRuntimeDeps {
 
-  public CxxPythonExtension(
-      BuildRuleParams params,
-      SourcePathResolver resolver) {
-    super(params, resolver);
+  public CxxPythonExtension(BuildRuleParams params) {
+    super(params);
   }
 
   @VisibleForTesting

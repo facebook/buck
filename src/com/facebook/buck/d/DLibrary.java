@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -41,9 +40,8 @@ public class DLibrary extends NoopBuildRule implements NativeLinkable {
   public DLibrary(
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      SourcePathResolver sourcePathResolver,
       DIncludes includes) {
-    super(params, sourcePathResolver);
+    super(params);
     this.buildRuleResolver = buildRuleResolver;
     this.includes = includes;
   }

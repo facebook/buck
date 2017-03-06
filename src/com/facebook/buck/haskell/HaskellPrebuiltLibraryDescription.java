@@ -34,8 +34,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -64,8 +62,7 @@ public class HaskellPrebuiltLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       final A args) throws NoSuchBuildTargetException {
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    return new PrebuiltHaskellLibrary(params, pathResolver) {
+    return new PrebuiltHaskellLibrary(params) {
 
       private final LoadingCache<
                   CxxPreprocessables.CxxPreprocessorInputCacheKey,

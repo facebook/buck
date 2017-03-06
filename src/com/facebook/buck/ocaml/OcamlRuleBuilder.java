@@ -313,7 +313,6 @@ public class OcamlRuleBuilder {
                       .add(ocamlLibraryBuild)
                       .build()),
               params.getExtraDeps()),
-          pathResolver,
           compileParams,
           linkerFlags,
           FluentIterable.from(srcs)
@@ -470,7 +469,6 @@ public class OcamlRuleBuilder {
                       .addAll(result.getRules())
                       .build()),
               params.getExtraDeps()),
-          pathResolver,
           compileParams,
           linkerFlags,
           result.getObjectFiles(),

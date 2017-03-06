@@ -22,8 +22,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -47,7 +45,6 @@ public class CxxPrecompiledHeaderDescription implements
     return new CxxPrecompiledHeaderTemplate(
         params.appendExtraDeps(ruleResolver.getAllRules(args.deps)),
         ruleResolver,
-        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)),
         args.src);
   }
 

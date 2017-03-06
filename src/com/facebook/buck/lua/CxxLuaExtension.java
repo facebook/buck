@@ -22,14 +22,11 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 
 public abstract class CxxLuaExtension extends NoopBuildRule implements NativeLinkTarget {
 
-  public CxxLuaExtension(
-      BuildRuleParams params,
-      SourcePathResolver resolver) {
-    super(params, resolver);
+  public CxxLuaExtension(BuildRuleParams params) {
+    super(params);
   }
 
   public abstract String getModule(CxxPlatform cxxPlatform);

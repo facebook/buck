@@ -40,11 +40,11 @@ import javax.annotation.Nullable;
  * </ol>
  */
 public class NoopBuildRule
-    extends AbstractBuildRuleWithResolver
+    extends AbstractBuildRule
     implements SupportsInputBasedRuleKey {
 
-  public NoopBuildRule(BuildRuleParams params, SourcePathResolver resolver) {
-    super(params, resolver);
+  public NoopBuildRule(BuildRuleParams params) {
+    super(params);
   }
 
   @Override

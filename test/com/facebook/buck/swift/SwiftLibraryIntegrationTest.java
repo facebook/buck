@@ -80,7 +80,6 @@ public class SwiftLibraryIntegrationTest {
     BuildRuleParams libParams = new FakeBuildRuleParamsBuilder(libTarget).build();
     FakeCxxLibrary depRule = new FakeCxxLibrary(
         libParams,
-        pathResolver,
         BuildTargetFactory.newInstance("//:header"),
         symlinkTarget,
         BuildTargetFactory.newInstance("//:privateheader"),

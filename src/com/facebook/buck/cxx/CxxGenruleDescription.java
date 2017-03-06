@@ -258,8 +258,7 @@ public class CxxGenruleDescription
           resolver,
           args);
     }
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    return new CxxGenrule(params, pathResolver, resolver, args.out);
+    return new CxxGenrule(params, resolver, args.out);
   }
 
   @Override

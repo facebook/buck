@@ -82,7 +82,6 @@ public class ShTest
 
   protected ShTest(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       SourcePath test,
       ImmutableList<Arg> args,
@@ -92,7 +91,7 @@ public class ShTest
       boolean runTestSeparately,
       Set<Label> labels,
       ImmutableSet<String> contacts) {
-    super(params, resolver);
+    super(params);
     this.ruleFinder = ruleFinder;
     this.test = test;
     this.args = args;

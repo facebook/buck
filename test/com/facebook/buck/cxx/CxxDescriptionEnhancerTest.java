@@ -63,7 +63,6 @@ public class CxxDescriptionEnhancerTest {
     BuildRuleParams libParams = new FakeBuildRuleParamsBuilder(libTarget).build();
     FakeCxxLibrary libRule = new FakeCxxLibrary(
         libParams,
-        pathResolver,
         BuildTargetFactory.newInstance("//:header"),
         BuildTargetFactory.newInstance("//:symlink"),
         BuildTargetFactory.newInstance("//:privateheader"),
@@ -119,7 +118,6 @@ public class CxxDescriptionEnhancerTest {
     BuildRuleParams otherlibParams = new FakeBuildRuleParamsBuilder(otherlibTarget).build();
     FakeCxxLibrary otherlibRule = new FakeCxxLibrary(
         otherlibParams,
-        pathResolver,
         BuildTargetFactory.newInstance("//:otherheader"),
         BuildTargetFactory.newInstance("//:othersymlink"),
         BuildTargetFactory.newInstance("//:otherprivateheader"),
@@ -136,7 +134,6 @@ public class CxxDescriptionEnhancerTest {
         .setDeclaredDeps(ImmutableSortedSet.of(otherlibRule)).build();
     FakeCxxLibrary libRule = new FakeCxxLibrary(
         libParams,
-        pathResolver,
         BuildTargetFactory.newInstance("//:header"),
         BuildTargetFactory.newInstance("//:symlink"),
         BuildTargetFactory.newInstance("//:privateheader"),
@@ -197,7 +194,6 @@ public class CxxDescriptionEnhancerTest {
     BuildRuleParams libParams = new FakeBuildRuleParamsBuilder(libTarget).build();
     FakeCxxLibrary libRule = new FakeCxxLibrary(
         libParams,
-        pathResolver,
         BuildTargetFactory.newInstance("//:header"),
         BuildTargetFactory.newInstance("//:symlink"),
         BuildTargetFactory.newInstance("//:privateheader"),

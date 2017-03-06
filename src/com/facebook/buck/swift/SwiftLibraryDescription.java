@@ -260,7 +260,6 @@ public class SwiftLibraryDescription implements
     return new SwiftLibrary(
         params,
         resolver,
-        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         ImmutableSet.of(),
         swiftPlatformFlavorDomain,
         args.frameworks,

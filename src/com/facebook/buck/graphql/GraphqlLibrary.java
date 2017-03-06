@@ -20,7 +20,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class GraphqlLibrary extends NoopBuildRule {
@@ -30,9 +29,8 @@ public class GraphqlLibrary extends NoopBuildRule {
 
   public GraphqlLibrary(
       BuildRuleParams ruleParams,
-      SourcePathResolver resolver,
       ImmutableSortedSet<SourcePath> srcs) {
-    super(ruleParams, resolver);
+    super(ruleParams);
     this.srcs = srcs;
   }
 

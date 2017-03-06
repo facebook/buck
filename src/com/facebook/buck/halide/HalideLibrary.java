@@ -35,7 +35,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.base.Preconditions;
@@ -66,9 +65,8 @@ public class HalideLibrary
   protected HalideLibrary(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
       Optional<Pattern> supportedPlatformsRegex) {
-    super(params, pathResolver);
+    super(params);
     this.params = params;
     this.ruleResolver = ruleResolver;
     this.supportedPlatformsRegex = supportedPlatformsRegex;

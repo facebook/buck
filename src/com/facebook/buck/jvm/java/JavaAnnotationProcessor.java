@@ -31,16 +31,16 @@ public class JavaAnnotationProcessor
 
   public JavaAnnotationProcessor(
       BuildRuleParams params,
-      SourcePathResolver resolver,
+      SourcePathResolver pathResolver,
       JavacPluginProperties properties) {
-    super(params, resolver);
+    super(params);
 
     this.properties = properties;
 
     resolvedProperties = new ResolvedJavacPluginProperties(
         properties,
         getProjectFilesystem(),
-        getResolver());
+        pathResolver);
   }
 
   public JavacPluginProperties getUnresolvedProperties() {

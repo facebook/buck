@@ -284,7 +284,7 @@ public class CxxLuaExtensionDescription implements
     // get the real build rules via querying the action graph.
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    return new CxxLuaExtension(params, pathResolver) {
+    return new CxxLuaExtension(params) {
 
       @Override
       public String getModule(CxxPlatform cxxPlatform) {

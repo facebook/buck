@@ -560,8 +560,7 @@ public class CxxLibraryDescription implements
               Suppliers.ofInstance(ImmutableSortedSet.of()),
               Suppliers.ofInstance(ImmutableSortedSet.of()),
               params.getProjectFilesystem(),
-              params.getCellRoots()),
-          sourcePathResolver);
+              params.getCellRoots()));
     }
 
     Path staticLibraryPath =
@@ -754,7 +753,6 @@ public class CxxLibraryDescription implements
       return CxxInferEnhancer.requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(
           params,
           resolver,
-          new SourcePathResolver(new SourcePathRuleFinder(resolver)),
           cxxBuckConfig,
           platform.orElse(defaultCxxPlatform),
           args,
@@ -856,7 +854,6 @@ public class CxxLibraryDescription implements
     return new CxxLibrary(
         params,
         resolver,
-        pathResolver,
         FluentIterable.from(args.exportedDeps)
             .transform(resolver::getRule),
         hasExportedHeaders,

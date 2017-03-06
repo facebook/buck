@@ -110,7 +110,6 @@ public final class CxxInferEnhancer {
         requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(
             params,
             ruleResolver,
-            new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)),
             cxxBuckConfig,
             cxxPlatform,
             args,
@@ -249,7 +248,6 @@ public final class CxxInferEnhancer {
   requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       CxxConstructorArg args,
@@ -283,7 +281,6 @@ public final class CxxInferEnhancer {
     return createInferCaptureAggregatorRule(
         paramsWithInferCaptureOnlyFlavor,
         resolver,
-        pathResolver,
         cxxInferCaptureAndAnalyzeRules);
   }
 
@@ -489,12 +486,10 @@ public final class CxxInferEnhancer {
   private static CxxInferCaptureRulesAggregator createInferCaptureAggregatorRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
       CxxInferCaptureAndAggregatingRules<CxxInferCaptureRulesAggregator> captureAggregatorRules) {
     return resolver.addToIndex(
         new CxxInferCaptureRulesAggregator(
             params,
-            pathResolver,
             captureAggregatorRules));
   }
 

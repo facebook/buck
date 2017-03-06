@@ -20,16 +20,13 @@ import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRule;
-import com.facebook.buck.rules.SourcePathResolver;
 
 public abstract class PrebuiltHaskellLibrary
     extends NoopBuildRule
     implements HaskellCompileDep, NativeLinkable, CxxPreprocessorDep {
 
-  public PrebuiltHaskellLibrary(
-      BuildRuleParams params,
-      SourcePathResolver resolver) {
-    super(params, resolver);
+  public PrebuiltHaskellLibrary(BuildRuleParams params) {
+    super(params);
   }
 
 }

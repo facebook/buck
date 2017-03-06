@@ -19,16 +19,13 @@ package com.facebook.buck.haskell;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRule;
-import com.facebook.buck.rules.SourcePathResolver;
 
 public abstract class HaskellLibrary
     extends NoopBuildRule
     implements HaskellCompileDep, NativeLinkable {
 
-  public HaskellLibrary(
-      BuildRuleParams params,
-      SourcePathResolver resolver) {
-    super(params, resolver);
+  public HaskellLibrary(BuildRuleParams params) {
+    super(params);
   }
 
 }

@@ -67,7 +67,6 @@ public class ShTestTest extends EasyMockSupport {
         new FakeBuildRuleParamsBuilder("//test/com/example:my_sh_test")
             .setProjectFilesystem(filesystem)
             .build(),
-        new SourcePathResolver(ruleFinder),
         ruleFinder,
         new FakeSourcePath("run_test.sh"),
         /* args */ ImmutableList.of(),
@@ -100,7 +99,6 @@ public class ShTestTest extends EasyMockSupport {
             .setDeclaredDeps(ImmutableSortedSet.of(dep))
             .setExtraDeps(ImmutableSortedSet.of(extraDep))
             .build(),
-        pathResolver,
         ruleFinder,
         new FakeSourcePath("run_test.sh"),
         /* args */ ImmutableList.of(),

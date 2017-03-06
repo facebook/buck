@@ -30,8 +30,6 @@ import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
@@ -132,7 +130,7 @@ public class GoLibraryDescription implements
               .append(args.exportedDeps));
     }
 
-    return new NoopBuildRule(params, new SourcePathResolver(new SourcePathRuleFinder(resolver)));
+    return new NoopBuildRule(params);
   }
 
   @SuppressFieldNotInitialized

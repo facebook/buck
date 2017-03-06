@@ -36,7 +36,6 @@ public class ProjectConfigDescription implements Description<ProjectConfigDescri
       A args) {
     return new ProjectConfig(
         params,
-        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         args.srcTarget.map(resolver::getRule).orElse(null),
         args.srcRoots,
         args.testTarget.map(resolver::getRule).orElse(null),

@@ -204,7 +204,7 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder("//:rule").setProjectFilesystem(filesystem).build();
     BuildRule rule =
-        new NoopBuildRule(params, pathResolver) {
+        new NoopBuildRule(params) {
           @AddToRuleKey
           RuleKeyAppendableWithInput input =
               new RuleKeyAppendableWithInput(new PathSourcePath(filesystem, output));
@@ -255,7 +255,7 @@ public class InputBasedRuleKeyFactoryTest {
             .setProjectFilesystem(filesystem)
             .build();
     BuildRule rule =
-        new NoopBuildRule(params, pathResolver) {
+        new NoopBuildRule(params) {
           @AddToRuleKey
           RuleKeyAppendableWithInput input =
               new RuleKeyAppendableWithInput(dep.getSourcePathToOutput());
@@ -340,7 +340,7 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder("//:rule").setProjectFilesystem(filesystem).build();
     BuildRule rule =
-        new NoopBuildRule(params, pathResolver) {
+        new NoopBuildRule(params) {
           @AddToRuleKey
           NestedRuleKeyAppendableWithInput input =
               new NestedRuleKeyAppendableWithInput(new PathSourcePath(filesystem, inputFile));

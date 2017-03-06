@@ -20,14 +20,13 @@ import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.NoopBuildRule;
-import com.facebook.buck.rules.SourcePathResolver;
 
 public abstract class RustLibrary
     extends NoopBuildRule
     implements RustLinkable, NativeLinkable {
 
-  public RustLibrary(BuildRuleParams params, SourcePathResolver resolver) {
-    super(params, resolver);
+  public RustLibrary(BuildRuleParams params) {
+    super(params);
   }
 
   @Override

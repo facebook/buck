@@ -18,15 +18,14 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRule;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableList;
 
 public abstract class PrebuiltCxxLibrary
     extends NoopBuildRule
     implements AbstractCxxLibrary, CanProvideNativeLinkTarget {
 
-  PrebuiltCxxLibrary(BuildRuleParams params, SourcePathResolver resolver) {
-    super(params, resolver);
+  PrebuiltCxxLibrary(BuildRuleParams params) {
+    super(params);
   }
 
   public abstract ImmutableList<String> getExportedLinkerFlags(CxxPlatform cxxPlatform);

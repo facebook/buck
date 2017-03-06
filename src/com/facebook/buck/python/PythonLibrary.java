@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -46,11 +45,10 @@ public class PythonLibrary extends NoopBuildRule implements PythonPackagable, Ha
 
   public PythonLibrary(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       Function<? super PythonPlatform, ImmutableMap<Path, SourcePath>> srcs,
       Function<? super PythonPlatform, ImmutableMap<Path, SourcePath>> resources,
       Optional<Boolean> zipSafe) {
-    super(params, resolver);
+    super(params);
     this.srcs = srcs;
     this.resources = resources;
     this.zipSafe = zipSafe;

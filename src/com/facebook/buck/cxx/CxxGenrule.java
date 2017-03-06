@@ -22,7 +22,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.Genrule;
 
 public class CxxGenrule extends NoopBuildRule implements HasOutputName {
@@ -32,10 +31,9 @@ public class CxxGenrule extends NoopBuildRule implements HasOutputName {
 
   public CxxGenrule(
       BuildRuleParams params,
-      SourcePathResolver pathResolver,
       BuildRuleResolver resolver,
       String output) {
-    super(params, pathResolver);
+    super(params);
     this.resolver = resolver;
     this.output = output;
   }

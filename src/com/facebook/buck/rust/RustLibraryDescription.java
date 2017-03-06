@@ -157,7 +157,7 @@ public class RustLibraryDescription implements
     }
 
     // Common case - we're being invoked to satisfy some other rule's dependency.
-    return new RustLibrary(params, pathResolver) {
+    return new RustLibrary(params) {
       // RustLinkable
       @Override
       public com.facebook.buck.rules.args.Arg getLinkerArg(
@@ -204,7 +204,7 @@ public class RustLibraryDescription implements
               crate,
               params,
               resolver,
-              getResolver(),
+              pathResolver,
               ruleFinder,
               cxxPlatform,
               rustBuckConfig,
@@ -237,7 +237,7 @@ public class RustLibraryDescription implements
                 crate,
                 params,
                 resolver,
-                getResolver(),
+                pathResolver,
                 ruleFinder,
                 cxxPlatform,
                 rustBuckConfig,
@@ -292,7 +292,7 @@ public class RustLibraryDescription implements
             crate,
             params,
             resolver,
-            getResolver(),
+            pathResolver,
             ruleFinder,
             cxxPlatform,
             rustBuckConfig,
@@ -329,7 +329,7 @@ public class RustLibraryDescription implements
                 crate,
                 params,
                 resolver,
-                getResolver(),
+                pathResolver,
                 ruleFinder,
                 cxxPlatform,
                 rustBuckConfig,

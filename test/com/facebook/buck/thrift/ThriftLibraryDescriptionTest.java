@@ -183,7 +183,6 @@ public class ThriftLibraryDescriptionTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     String language = "fake";
@@ -255,7 +254,6 @@ public class ThriftLibraryDescriptionTest {
         ruleFinder);
     ThriftLibrary lib = new ThriftLibrary(
         unflavoredParams,
-        pathResolver,
         ImmutableSortedSet.of(),
         thriftIncludeSymlinkTree,
         ImmutableMap.of());
@@ -356,7 +354,6 @@ public class ThriftLibraryDescriptionTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildTarget unflavoredTarget = BuildTargetFactory.newInstance("//:thrift");
     BuildRuleParams unflavoredParams =
         new FakeBuildRuleParamsBuilder(unflavoredTarget).build();
@@ -380,7 +377,6 @@ public class ThriftLibraryDescriptionTest {
         createFakeSymlinkTree(depTarget, depIncludeRoot, ruleFinder);
     ThriftLibrary dep = new ThriftLibrary(
         new FakeBuildRuleParamsBuilder(depTarget).build(),
-        pathResolver,
         ImmutableSortedSet.of(),
         depIncludeSymlinkTree,
         ImmutableMap.of());

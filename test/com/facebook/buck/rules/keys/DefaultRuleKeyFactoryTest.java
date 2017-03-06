@@ -507,8 +507,8 @@ public class DefaultRuleKeyFactoryTest {
             new FakeBuildRuleParamsBuilder("//:target")
                 .setProjectFilesystem(filesystem)
                 .setDeclaredDeps(ImmutableSortedSet.of(dep))
-                .build(),
-            pathResolver) {
+                .build()
+        ) {
 
           @AddToRuleKey
           private final SourcePath inputField = input;
@@ -573,8 +573,8 @@ public class DefaultRuleKeyFactoryTest {
         new NoopBuildRule(
             new FakeBuildRuleParamsBuilder("//:target")
                 .setProjectFilesystem(filesystem)
-                .build(),
-            pathResolver) {
+                .build()
+        ) {
 
           @AddToRuleKey
           private final RuleKeyAppendable appendableField = appendable;

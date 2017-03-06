@@ -133,7 +133,6 @@ public class CxxPrecompiledHeaderRuleTest {
     return new CxxPrecompiledHeaderTemplate(
         newParams(target).appendExtraDeps(deps),
         ruleResolver,
-        pathResolver,
         headerSourcePath);
   }
 

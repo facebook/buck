@@ -440,7 +440,7 @@ public class HaskellLibraryDescription implements
               type.get().getValue()));
     }
 
-    return new HaskellLibrary(params, pathResolver) {
+    return new HaskellLibrary(params) {
 
       @Override
       public HaskellCompileInput getCompileInput(

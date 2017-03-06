@@ -88,14 +88,13 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
   public GoTest(
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
-      SourcePathResolver resolver,
       GoBinary testMain,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
       Optional<Long> testRuleTimeoutMs,
       boolean runTestsSeparately,
       ImmutableSortedSet<SourcePath> resources) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.ruleFinder = ruleFinder;
     this.testMain = testMain;
     this.labels = labels;

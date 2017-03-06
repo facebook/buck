@@ -198,15 +198,12 @@ public class HalideLibraryDescription
   private BuildRule createHalideStaticLibrary(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform platform,
       Arg args) throws NoSuchBuildTargetException {
 
     if (!isPlatformSupported(args, platform)) {
-      return new NoopBuildRule(
-          params,
-          pathResolver);
+      return new NoopBuildRule(params);
     }
 
     BuildRule halideCompile = ruleResolver.requireRule(
@@ -337,7 +334,6 @@ public class HalideLibraryDescription
       return createHalideStaticLibrary(
           params,
           resolver,
-          pathResolver,
           ruleFinder,
           cxxPlatform,
           args);
@@ -361,7 +357,6 @@ public class HalideLibraryDescription
     return new HalideLibrary(
         params,
         resolver,
-        pathResolver,
         args.supportedPlatformsRegex);
   }
 

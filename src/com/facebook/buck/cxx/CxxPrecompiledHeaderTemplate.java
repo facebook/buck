@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -26,7 +27,6 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.DependencyAggregation;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+
 import java.util.Map;
 import java.util.Optional;
 
@@ -58,8 +59,8 @@ public class CxxPrecompiledHeaderTemplate
   public final BuildRuleParams params;
   public final BuildRuleResolver ruleResolver;
   public final SourcePath sourcePath;
-  public final SourcePathResolver pathResolver;
   public final SourcePathRuleFinder ruleFinder;
+  public final SourcePathResolver pathResolver;
 
   /**
    * @param buildRuleParams the params for this PCH rule, <b>including</b> {@code deps}
@@ -67,14 +68,13 @@ public class CxxPrecompiledHeaderTemplate
   CxxPrecompiledHeaderTemplate(
       BuildRuleParams buildRuleParams,
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
       SourcePath sourcePath) {
-    super(buildRuleParams, pathResolver);
+    super(buildRuleParams);
     this.params = buildRuleParams;
     this.ruleResolver = ruleResolver;
-    this.pathResolver = pathResolver;
     this.sourcePath = sourcePath;
     this.ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    this.pathResolver = new SourcePathResolver(ruleFinder);
   }
 
   private ImmutableSortedSet<BuildRule> getExportedDeps() {
