@@ -65,7 +65,12 @@ public class DotTest {
             "  B -> D;",
             "  C -> E;",
             "  D -> E;",
-            "  A -> E;"));
+            "  A -> E;",
+            "  A [style=filled,color=\"#C1C1C0\"]",
+            "  B [style=filled,color=\"#C2C1C0\"]",
+            "  C [style=filled,color=\"#C3C1C0\"]",
+            "  D [style=filled,color=\"#C4C1C0\"]",
+            "  E [style=filled,color=\"#C5C1C0\"]"));
 
     assertEquals("}", lines.get(lines.size() - 1));
   }
