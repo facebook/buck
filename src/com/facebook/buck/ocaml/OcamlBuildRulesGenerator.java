@@ -29,6 +29,8 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -284,9 +286,9 @@ public class OcamlBuildRulesGenerator {
         Suppliers.ofInstance(
             ImmutableSortedSet.of()));
 
-    ImmutableList.Builder<String> flags = ImmutableList.builder();
+    ImmutableList.Builder<Arg> flags = ImmutableList.builder();
     flags.addAll(ocamlContext.getFlags());
-    flags.addAll(ocamlContext.getCommonCLinkerFlags());
+    flags.addAll(StringArg.from(ocamlContext.getCommonCLinkerFlags()));
 
     OcamlLink link = new OcamlLink(
         linkParams,
@@ -334,9 +336,9 @@ public class OcamlBuildRulesGenerator {
                 .build()),
     Suppliers.ofInstance(ImmutableSortedSet.of()));
 
-    ImmutableList.Builder<String> flags = ImmutableList.builder();
+    ImmutableList.Builder<Arg> flags = ImmutableList.builder();
     flags.addAll(ocamlContext.getFlags());
-    flags.addAll(ocamlContext.getCommonCLinkerFlags());
+    flags.addAll(StringArg.from(ocamlContext.getCommonCLinkerFlags()));
 
     OcamlLink link = new OcamlLink(
         linkParams,
@@ -357,15 +359,15 @@ public class OcamlBuildRulesGenerator {
     return link;
   }
 
-  private ImmutableList<String> getCompileFlags(boolean isBytecode, boolean excludeDeps) {
+  private ImmutableList<Arg> getCompileFlags(boolean isBytecode, boolean excludeDeps) {
     String output = isBytecode ? ocamlContext.getCompileBytecodeOutputDir().toString() :
         ocamlContext.getCompileNativeOutputDir().toString();
-    ImmutableList.Builder<String> flagBuilder = ImmutableList.builder();
-    flagBuilder.addAll(ocamlContext.getIncludeFlags(isBytecode,  excludeDeps));
+    ImmutableList.Builder<Arg> flagBuilder = ImmutableList.builder();
+    flagBuilder.addAll(StringArg.from(ocamlContext.getIncludeFlags(isBytecode,  excludeDeps)));
     flagBuilder.addAll(ocamlContext.getFlags());
     flagBuilder.add(
-        OcamlCompilables.OCAML_INCLUDE_FLAG,
-        output
+        StringArg.of(OcamlCompilables.OCAML_INCLUDE_FLAG),
+        StringArg.of(output)
     );
     return flagBuilder.build();
   }
@@ -518,7 +520,7 @@ public class OcamlBuildRulesGenerator {
     String outputFileName = getMLNativeOutputName(name);
     Path outputPath = ocamlContext.getCompileNativeOutputDir()
         .resolve(outputFileName);
-    final ImmutableList<String> compileFlags = getCompileFlags(
+    final ImmutableList<Arg> compileFlags = getCompileFlags(
         /* isBytecode */ false,
         /* excludeDeps */ false);
     OcamlMLCompile compile = new OcamlMLCompile(
@@ -619,7 +621,7 @@ public class OcamlBuildRulesGenerator {
     String outputFileName = getMLBytecodeOutputName(name);
     Path outputPath = ocamlContext.getCompileBytecodeOutputDir()
         .resolve(outputFileName);
-    final ImmutableList<String> compileFlags = getCompileFlags(
+    final ImmutableList<Arg> compileFlags = getCompileFlags(
         /* isBytecode */ true,
         /* excludeDeps */ false);
     BuildRule compileBytecode = new OcamlMLCompile(

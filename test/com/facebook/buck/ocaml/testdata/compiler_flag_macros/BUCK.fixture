@@ -1,0 +1,29 @@
+ocaml_binary(
+    name='test',
+    srcs=['test.ml'],
+    compiler_flags=['-I', '+compiler-libs', 'ocamlcommon.cma'],
+    bytecode_only=True,
+)
+
+ocaml_library(
+    name='lib',
+    srcs=[
+        'lib.ml',
+    ],
+    compiler_flags=[
+        '-ppx', '$(exe :test)',
+    ]
+)
+
+ocaml_binary(
+    name='main',
+    srcs=[
+        'main.ml'
+    ],
+    deps=[
+        ':lib'
+    ],
+    compiler_flags=[
+      '-ppx', '$(exe :test)',
+    ],
+)

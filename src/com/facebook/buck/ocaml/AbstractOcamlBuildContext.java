@@ -32,6 +32,7 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.FluentIterable;
@@ -68,7 +69,7 @@ abstract class AbstractOcamlBuildContext implements RuleKeyAppendable {
   public abstract SourcePathResolver getSourcePathResolver();
 
   public abstract boolean isLibrary();
-  public abstract List<String> getFlags();
+  public abstract List<Arg> getFlags();
   public abstract List<SourcePath> getInput();
   public abstract List<String> getNativeIncludes();
   public abstract List<String> getBytecodeIncludes();

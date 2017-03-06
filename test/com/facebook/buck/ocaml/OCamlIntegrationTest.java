@@ -372,6 +372,7 @@ public class OCamlIntegrationTest {
   }
 
   @Test
+  @Ignore("Redesign test so it does not depend on compiler/platform-specific binary artifacts.")
   public void testPrebuiltLibraryBytecodeOnly() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -616,5 +617,49 @@ public class OCamlIntegrationTest {
     BuckBuildLog buildLog = workspace.getBuildLog();
     assertTrue(buildLog.getAllTargets().containsAll(targets));
     buildLog.assertTargetBuiltLocally(binary.toString());
+  }
+
+  @Test
+  public void testCompilerFlagsDependency() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "compiler_flag_macros", tmp);
+    workspace.setUp();
+
+    String ocamlVersion = this.getOcamlVersion(workspace);
+    assumeTrue("Installed ocaml is too old for this test", "4.02.0".compareTo(ocamlVersion) <= 0);
+
+    BuildTarget binary = BuildTargetFactory.newInstance(
+        workspace.getDestPath(),
+        "//:main");
+    BuildTarget lib = BuildTargetFactory.newInstance(
+        workspace.getDestPath(),
+        "//:lib");
+    BuildTarget helper = BuildTargetFactory.newInstance(
+        workspace.getDestPath(),
+        "//:test");
+    ImmutableSet<BuildTarget> targets = ImmutableSet.of(binary, lib, helper);
+
+    // Build the binary.
+    workspace.runBuckCommand("build", binary.toString()).assertSuccess();
+
+    // Make sure the helper target is built as well.
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    assertTrue(buildLog.getAllTargets().containsAll(targets));
+    buildLog.assertTargetBuiltLocally(binary.toString());
+
+    // Make sure the ppx flag worked
+    String out = workspace.runBuckCommand("run", binary.toString()).getStdout();
+    assertEquals("42!\n", out);
+  }
+
+  private String getOcamlVersion(ProjectWorkspace workspace)
+      throws IOException, InterruptedException {
+    Path ocamlc = new ExecutableFinder(Platform.detect()).getExecutable(
+        Paths.get("ocamlc"),
+        ImmutableMap.copyOf(System.getenv()));
+
+    ProcessExecutor.Result result = workspace.runCommand(ocamlc.toString(), "-version");
+    assertEquals(0, result.getExitCode());
+    return result.getStdout().get();
   }
 }

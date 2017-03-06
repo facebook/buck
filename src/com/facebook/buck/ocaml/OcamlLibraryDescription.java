@@ -27,7 +27,9 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.OcamlSource;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
@@ -59,13 +61,18 @@ public class OcamlLibraryDescription implements
       A args) throws NoSuchBuildTargetException {
 
     ImmutableList<OcamlSource> srcs = args.srcs;
-    ImmutableList.Builder<String> flags = ImmutableList.builder();
-    flags.addAll(args.compilerFlags);
+    ImmutableList.Builder<com.facebook.buck.rules.args.Arg> flags = ImmutableList.builder();
+    flags.addAll(OcamlDescriptionEnhancer.toStringWithMacrosArgs(
+            params.getBuildTarget(),
+            params.getCellRoots(),
+            resolver,
+            args.compilerFlags));
     if (ocamlBuckConfig.getWarningsFlags().isPresent() ||
         args.warningsFlags.isPresent()) {
-      flags.add("-w");
-      flags.add(ocamlBuckConfig.getWarningsFlags().orElse("") +
-          args.warningsFlags.orElse(""));
+      flags.addAll(
+          StringArg.from(
+              "-w",
+              ocamlBuckConfig.getWarningsFlags().orElse("") + args.warningsFlags.orElse("")));
     }
     ImmutableList<String> linkerflags = args.linkerFlags;
 
@@ -96,7 +103,7 @@ public class OcamlLibraryDescription implements
   public static class Arg extends AbstractDescriptionArg {
     public ImmutableList<OcamlSource> srcs = ImmutableList.of();
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    public ImmutableList<String> compilerFlags = ImmutableList.of();
+    public ImmutableList<StringWithMacros> compilerFlags = ImmutableList.of();
     public ImmutableList<String> linkerFlags = ImmutableList.of();
     public Optional<String> warningsFlags;
     public Optional<Boolean> bytecodeOnly;

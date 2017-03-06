@@ -37,6 +37,7 @@ import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.OcamlSource;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -114,7 +115,7 @@ public class OcamlRuleBuilder {
       ImmutableList<OcamlSource> srcs,
       boolean isLibrary,
       boolean bytecodeOnly,
-      ImmutableList<String> argFlags,
+      ImmutableList<Arg> argFlags,
       final ImmutableList<String> linkerFlags,
       boolean buildNativePlugin) throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
@@ -200,7 +201,7 @@ public class OcamlRuleBuilder {
       ImmutableList<OcamlSource> srcs,
       boolean isLibrary,
       boolean bytecodeOnly,
-      ImmutableList<String> argFlags,
+      ImmutableList<Arg> argFlags,
       final ImmutableList<String> linkerFlags) throws NoSuchBuildTargetException {
     CxxPreprocessorInput cxxPreprocessorInputFromDeps =
       CxxPreprocessorInput.concat(
@@ -246,6 +247,10 @@ public class OcamlRuleBuilder {
     allDepsBuilder.addAll(
         ruleFinder.filterBuildRuleInputs(
             ocamlBuckConfig.getCxxCompiler().resolve(resolver).getInputs()));
+    allDepsBuilder.addAll(argFlags
+            .stream()
+            .flatMap(arg -> arg.getDeps(ruleFinder).stream())
+            .iterator());
 
     // The bulk rule will do preprocessing on sources, and so needs deps from the preprocessor
     // input object.
@@ -261,7 +266,7 @@ public class OcamlRuleBuilder {
         /* declaredDeps */ Suppliers.ofInstance(allDeps),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
 
-    ImmutableList.Builder<String> flagsBuilder = ImmutableList.builder();
+    ImmutableList.Builder<Arg> flagsBuilder = ImmutableList.builder();
     flagsBuilder.addAll(argFlags);
 
     ImmutableSortedSet.Builder<BuildRule> nativeCompileDepsBuilder =
@@ -349,7 +354,7 @@ public class OcamlRuleBuilder {
       ImmutableList<OcamlSource> srcs,
       boolean isLibrary,
       boolean bytecodeOnly,
-      ImmutableList<String> argFlags,
+      ImmutableList<Arg> argFlags,
       final ImmutableList<String> linkerFlags,
       boolean buildNativePlugin) throws NoSuchBuildTargetException {
     CxxPreprocessorInput cxxPreprocessorInputFromDeps =
@@ -394,6 +399,9 @@ public class OcamlRuleBuilder {
                     .flatMap(arg -> arg.getDeps(ruleFinder).stream())
                     .iterator())
                 .addAll(
+                    argFlags.stream()
+                    .flatMap(arg -> arg.getDeps(ruleFinder).stream()).iterator())
+                .addAll(
                     ruleFinder.filterBuildRuleInputs(
                         ocamlBuckConfig.getCCompiler().resolve(resolver).getInputs()))
                 .addAll(
@@ -402,7 +410,7 @@ public class OcamlRuleBuilder {
                 .build()),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
 
-    ImmutableList.Builder<String> flagsBuilder = ImmutableList.builder();
+    ImmutableList.Builder<Arg> flagsBuilder = ImmutableList.builder();
     flagsBuilder.addAll(argFlags);
 
     ImmutableSortedSet.Builder<BuildRule> nativeCompileDepsBuilder =

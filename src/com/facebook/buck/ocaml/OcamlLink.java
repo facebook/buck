@@ -46,7 +46,7 @@ public class OcamlLink extends AbstractBuildRule {
   @AddToRuleKey
   private final Tool ocamlCompiler;
   @AddToRuleKey
-  private final ImmutableList<String> flags;
+  private final ImmutableList<Arg> flags;
   @AddToRuleKey
   private final Optional<String> stdlib;
   @AddToRuleKey(stringify = true)
@@ -70,7 +70,7 @@ public class OcamlLink extends AbstractBuildRule {
       ImmutableMap<String, String> cxxCompilerEnvironment,
       ImmutableList<String> cxxCompiler,
       Tool ocamlCompiler,
-      ImmutableList<String> flags,
+      ImmutableList<Arg> flags,
       Optional<String> stdlib,
       Path outputRelativePath,
       Path outputNativePluginPath,
@@ -139,7 +139,7 @@ public class OcamlLink extends AbstractBuildRule {
           cxxCompilerEnvironment,
           cxxCompiler,
           ocamlCompiler.getCommandPrefix(context.getSourcePathResolver()),
-          flags,
+          Arg.stringify(flags, context.getSourcePathResolver()),
           stdlib,
           getProjectFilesystem().resolve(outputNativePluginPath),
           cDepInput,

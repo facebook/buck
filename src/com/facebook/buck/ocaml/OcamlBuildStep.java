@@ -20,6 +20,8 @@ import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -220,9 +222,9 @@ public class OcamlBuildStep implements Step {
       ExecutionContext context,
       ImmutableList<Path> linkerInputs) throws IOException, InterruptedException {
 
-    ImmutableList.Builder<String> flags = ImmutableList.builder();
+    ImmutableList.Builder<Arg> flags = ImmutableList.builder();
     flags.addAll(ocamlContext.getFlags());
-    flags.addAll(ocamlContext.getCommonCLinkerFlags());
+    flags.addAll(StringArg.from(ocamlContext.getCommonCLinkerFlags()));
 
     OcamlLinkStep linkStep = OcamlLinkStep.create(
         filesystem.getRootPath(),
@@ -245,9 +247,9 @@ public class OcamlBuildStep implements Step {
       ExecutionContext context,
       ImmutableList<Path> linkerInputs) throws IOException, InterruptedException {
 
-    ImmutableList.Builder<String> flags = ImmutableList.builder();
+    ImmutableList.Builder<Arg> flags = ImmutableList.builder();
     flags.addAll(ocamlContext.getFlags());
-    flags.addAll(ocamlContext.getCommonCLinkerFlags());
+    flags.addAll(StringArg.from(ocamlContext.getCommonCLinkerFlags()));
 
     OcamlLinkStep linkStep = OcamlLinkStep.create(
         filesystem.getRootPath(),
@@ -266,15 +268,16 @@ public class OcamlBuildStep implements Step {
     return linkStep.execute(context);
   }
 
-  private ImmutableList<String> getCompileFlags(boolean isBytecode, boolean excludeDeps) {
+  private ImmutableList<Arg> getCompileFlags(boolean isBytecode, boolean excludeDeps) {
     String output = isBytecode ? ocamlContext.getCompileBytecodeOutputDir().toString() :
         ocamlContext.getCompileNativeOutputDir().toString();
-    ImmutableList.Builder<String> flagBuilder = ImmutableList.builder();
-    flagBuilder.addAll(ocamlContext.getIncludeFlags(isBytecode, /* excludeDeps */ excludeDeps));
+    ImmutableList.Builder<Arg> flagBuilder = ImmutableList.builder();
+    flagBuilder.addAll(
+        StringArg.from(ocamlContext.getIncludeFlags(isBytecode, /* excludeDeps */ excludeDeps)));
     flagBuilder.addAll(ocamlContext.getFlags());
     flagBuilder.add(
-        OcamlCompilables.OCAML_INCLUDE_FLAG,
-        output);
+        StringArg.of(OcamlCompilables.OCAML_INCLUDE_FLAG),
+        StringArg.of(output));
     return flagBuilder.build();
   }
 
@@ -302,7 +305,7 @@ public class OcamlBuildStep implements Step {
       if (!outputFileName.endsWith(OcamlCompilables.OCAML_CMI)) {
         linkerInputs.add(outputPath);
       }
-      final ImmutableList<String> compileFlags = getCompileFlags(
+      final ImmutableList<Arg> compileFlags = getCompileFlags(
           /* isBytecode */ false,
           /* excludeDeps */ false);
       Step compileStep = new OcamlMLCompileStep(
@@ -349,7 +352,7 @@ public class OcamlBuildStep implements Step {
       if (!outputFileName.endsWith(OcamlCompilables.OCAML_CMI)) {
         linkerInputs.add(outputPath);
       }
-      final ImmutableList<String> compileFlags = getCompileFlags(
+      final ImmutableList<Arg> compileFlags = getCompileFlags(
           /* isBytecode */ true,
           /* excludeDeps */ false);
       Step compileBytecodeStep = new OcamlMLCompileStep(

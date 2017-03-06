@@ -20,6 +20,7 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.MoreIterables;
@@ -46,7 +47,7 @@ public class OcamlMLCompileStep extends ShellStep {
     public final ImmutableMap<String, String> environment;
     public final Tool ocamlCompiler;
     public final ImmutableList<String> cCompiler;
-    public final ImmutableList<String> flags;
+    public final ImmutableList<Arg> flags;
     public final Optional<String> stdlib;
     public final Path output;
     public final Path input;
@@ -59,7 +60,7 @@ public class OcamlMLCompileStep extends ShellStep {
         Optional<String> stdlib,
         Path output,
         Path input,
-        ImmutableList<String> flags) {
+        ImmutableList<Arg> flags) {
       this.absolutifier = absolutifier;
       this.environment = environment;
       this.ocamlCompiler = ocamlCompiler;
@@ -155,7 +156,7 @@ public class OcamlMLCompileStep extends ShellStep {
         .add("-annot")
         .add("-bin-annot")
         .add("-o", args.output.toString())
-        .addAll(args.flags);
+        .addAll(Arg.stringify(args.flags, resolver));
 
     if (isReason && isImplementation) {
       cmd.add("-pp").add("refmt")
