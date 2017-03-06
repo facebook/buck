@@ -130,7 +130,6 @@ public class JavaBinaryDescription implements
                           .add(innerJar)
                           .addAll(nativeLibraries.values())
                           .build()))),
-          pathResolver,
           ruleFinder,
           javacOptions,
           innerJar,

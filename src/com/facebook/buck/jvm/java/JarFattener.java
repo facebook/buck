@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -60,7 +59,7 @@ import javax.xml.bind.JAXBException;
 /**
  * Build a fat JAR that packages an inner JAR along with any required native libraries.
  */
-public class JarFattener extends AbstractBuildRuleWithResolver implements BinaryBuildRule {
+public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
 
   private static final String FAT_JAR_INNER_JAR = "inner.jar";
   private static final String FAT_JAR_NATIVE_LIBRARY_RESOURCE_ROOT = "nativelibs";
@@ -85,13 +84,12 @@ public class JarFattener extends AbstractBuildRuleWithResolver implements Binary
 
   public JarFattener(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       JavacOptions javacOptions,
       SourcePath innerJar,
       ImmutableMap<String, SourcePath> nativeLibraries,
       JavaRuntimeLauncher javaRuntimeLauncher) {
-    super(params, resolver);
+    super(params);
     this.ruleFinder = ruleFinder;
     this.javacOptions = javacOptions;
     this.innerJar = innerJar;
