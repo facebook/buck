@@ -93,7 +93,7 @@ public class InMemoryArtifactCache implements ArtifactCache {
     return artifacts.isEmpty();
   }
 
-  public class Artifact {
+  public static class Artifact {
     public ImmutableMap<String, String> metadata;
     public byte[] data;
   }
