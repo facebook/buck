@@ -17,7 +17,7 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -27,7 +27,6 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
@@ -36,13 +35,12 @@ import com.google.common.collect.ImmutableList;
 
 import java.util.stream.Stream;
 
-public class OcamlBinary extends AbstractBuildRuleWithResolver
-    implements BinaryBuildRule, HasRuntimeDeps {
+public class OcamlBinary extends AbstractBuildRule implements BinaryBuildRule, HasRuntimeDeps {
 
   private final BuildRule binary;
 
-  public OcamlBinary(BuildRuleParams params, SourcePathResolver resolver, BuildRule binary) {
-    super(params, resolver);
+  public OcamlBinary(BuildRuleParams params, BuildRule binary) {
+    super(params);
     this.binary = binary;
   }
 

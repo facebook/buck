@@ -338,7 +338,6 @@ public class OcamlRuleBuilder {
                       .add(ocamlLibraryBuild)
                       .build()),
               params.getExtraDeps()),
-          pathResolver,
           ocamlLibraryBuild);
     }
   }
@@ -489,7 +488,6 @@ public class OcamlRuleBuilder {
                       .addAll(result.getRules())
                       .build()),
               params.getExtraDeps()),
-          pathResolver,
           result.getRules().get(0));
     }
   }
