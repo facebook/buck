@@ -34,7 +34,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
@@ -103,7 +102,6 @@ public class RustTestDescription implements
         ));
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     Tool testExe = testExeBuild.getExecutableCommand();
 
@@ -112,7 +110,6 @@ public class RustTestDescription implements
 
     return new RustTest(
         testParams,
-        pathResolver,
         ruleFinder,
         testExeBuild,
         args.labels,

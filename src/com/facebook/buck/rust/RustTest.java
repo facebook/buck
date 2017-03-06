@@ -18,7 +18,7 @@ package com.facebook.buck.rust;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -64,7 +64,7 @@ import java.util.stream.Stream;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class RustTest
-    extends AbstractBuildRuleWithResolver
+    extends AbstractBuildRule
     implements BinaryBuildRule, TestRule, ExternalTestRunnerRule, HasRuntimeDeps {
 
   private final ImmutableSet<Label> labels;
@@ -83,12 +83,11 @@ public class RustTest
 
   protected RustTest(
       BuildRuleParams params,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       BinaryBuildRule testExeBuild,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts) {
-    super(params, pathResolver);
+    super(params);
 
     this.testExeBuild = testExeBuild;
     this.ruleFinder = ruleFinder;
@@ -116,7 +115,7 @@ public class RustTest
             "rust test",
             getProjectFilesystem(),
             Optional.of(workingDirectory),
-            getTestCommand("--logfile", testOutputFile.toString()),
+            getTestCommand(pathResolver, "--logfile", testOutputFile.toString()),
             Optional.empty(), // TODO(StanislavGlebik): environment
             workingDirectory.resolve("exitcode"),
             Optional.empty(),
@@ -180,15 +179,17 @@ public class RustTest
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
         .setType("rust")
-        .addAllCommand(getTestCommand())
+        .addAllCommand(getTestCommand(pathResolver))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .build();
   }
 
-  private ImmutableList<String> getTestCommand(String... additionalArgs) {
+  private ImmutableList<String> getTestCommand(
+      SourcePathResolver pathResolver,
+      String... additionalArgs) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.addAll(testExeBuild.getExecutableCommand().getCommandPrefix(getResolver()));
+    args.addAll(testExeBuild.getExecutableCommand().getCommandPrefix(pathResolver));
     args.add(additionalArgs);
     return args.build();
   }
