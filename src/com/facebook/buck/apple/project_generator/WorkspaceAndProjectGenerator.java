@@ -38,8 +38,8 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.swift.SwiftBuckConfig;
@@ -100,7 +100,7 @@ public class WorkspaceAndProjectGenerator {
   private Optional<ProjectGenerator> combinedProjectGenerator;
   private Map<String, SchemeGenerator> schemeGenerators = new HashMap<>();
   private final String buildFileName;
-  private final Function<TargetNode<?, ?>, SourcePathResolver> sourcePathResolverForNode;
+  private final Function<TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode;
   private final BuckEventBus buckEventBus;
 
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
@@ -126,7 +126,7 @@ public class WorkspaceAndProjectGenerator {
       FlavorDomain<CxxPlatform> cxxPlatforms,
       CxxPlatform defaultCxxPlatform,
       String buildFileName,
-      Function<TargetNode<?, ?>, SourcePathResolver> sourcePathResolverForNode,
+      Function<TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode,
       BuckEventBus buckEventBus,
       HalideBuckConfig halideBuckConfig,
       CxxBuckConfig cxxBuckConfig,
@@ -147,7 +147,7 @@ public class WorkspaceAndProjectGenerator {
     this.cxxPlatforms = cxxPlatforms;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.buildFileName = buildFileName;
-    this.sourcePathResolverForNode = sourcePathResolverForNode;
+    this.buildRuleResolverForNode = buildRuleResolverForNode;
     this.buckEventBus = buckEventBus;
     this.swiftBuckConfig = swiftBuckConfig;
     this.combinedProjectGenerator = Optional.empty();
@@ -484,7 +484,7 @@ public class WorkspaceAndProjectGenerator {
             environment,
             cxxPlatforms,
             defaultCxxPlatform,
-            sourcePathResolverForNode,
+            buildRuleResolverForNode,
             buckEventBus,
             halideBuckConfig,
             cxxBuckConfig,
@@ -541,7 +541,7 @@ public class WorkspaceAndProjectGenerator {
         environment,
         cxxPlatforms,
         defaultCxxPlatform,
-        sourcePathResolverForNode,
+        buildRuleResolverForNode,
         buckEventBus,
         halideBuckConfig,
         cxxBuckConfig,

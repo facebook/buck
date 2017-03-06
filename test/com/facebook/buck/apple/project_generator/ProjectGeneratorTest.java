@@ -100,8 +100,6 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -3637,7 +3635,7 @@ public class ProjectGeneratorTest {
         ImmutableMap.of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
-        getSourcePathResolverForNodeFunction(targetGraph),
+        getBuildRuleResolverNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
@@ -3748,7 +3746,7 @@ public class ProjectGeneratorTest {
         ImmutableMap.of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
-        getSourcePathResolverForNodeFunction(targetGraph),
+        getBuildRuleResolverNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
@@ -3834,7 +3832,7 @@ public class ProjectGeneratorTest {
         ImmutableMap.of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
-        getSourcePathResolverForNodeFunction(targetGraph),
+        getBuildRuleResolverNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
@@ -4399,7 +4397,7 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         nodes,
         ImmutableSet.of(),
-        getSourcePathResolverWithRulesForNodeFunction(targetGraph));
+        getBuildRuleResolverWithRulesForNodeFunction(targetGraph));
     projectGenerator.createXcodeProjects();
     PBXTarget target = assertTargetExistsAndReturnTarget(
         projectGenerator.getGeneratedProject(),
@@ -4556,7 +4554,7 @@ public class ProjectGeneratorTest {
         ImmutableMap.of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
-        getSourcePathResolverForNodeFunction(targetGraph),
+        getBuildRuleResolverNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
@@ -4604,7 +4602,7 @@ public class ProjectGeneratorTest {
         ImmutableMap.of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
-        getSourcePathResolverForNodeFunction(targetGraph),
+        getBuildRuleResolverNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
@@ -4675,14 +4673,14 @@ public class ProjectGeneratorTest {
     return createProjectGeneratorForCombinedProject(
         nodes,
         projectGeneratorOptions,
-        getSourcePathResolverForNodeFunction(targetGraph)
+        getBuildRuleResolverNodeFunction(targetGraph)
     );
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
       Collection<TargetNode<?, ?>> nodes,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions,
-      Function<? super TargetNode<?, ?>, SourcePathResolver> sourcePathResolverForNode) {
+      Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode) {
     ImmutableSet<BuildTarget> initialBuildTargets = nodes.stream()
         .map(TargetNode::getBuildTarget)
         .collect(MoreCollectors.toImmutableSet());
@@ -4708,7 +4706,7 @@ public class ProjectGeneratorTest {
         ImmutableMap.of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
-        sourcePathResolverForNode,
+        buildRuleResolverForNode,
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
@@ -4716,16 +4714,16 @@ public class ProjectGeneratorTest {
         swiftBuckConfig);
   }
 
-  private Function<TargetNode<?, ?>, SourcePathResolver> getSourcePathResolverForNodeFunction(
+  private Function<TargetNode<?, ?>, BuildRuleResolver> getBuildRuleResolverNodeFunction(
       final TargetGraph targetGraph) {
-    return input -> new SourcePathResolver(new SourcePathRuleFinder(
+    return input ->
         new BuildRuleResolver(
             targetGraph,
-            new DefaultTargetNodeToBuildRuleTransformer())));
+            new DefaultTargetNodeToBuildRuleTransformer());
   }
 
-  private Function<TargetNode<?, ?>, SourcePathResolver>
-  getSourcePathResolverWithRulesForNodeFunction(final TargetGraph targetGraph)
+  private Function<TargetNode<?, ?>, BuildRuleResolver>
+  getBuildRuleResolverWithRulesForNodeFunction(final TargetGraph targetGraph)
       throws NoSuchBuildTargetException {
     final BuildRuleResolver ruleResolver = new BuildRuleResolver(
         targetGraph,
@@ -4734,7 +4732,7 @@ public class ProjectGeneratorTest {
       ruleResolver.requireRule(node.getBuildTarget());
       ruleResolver.requireRule(node.getBuildTarget().withFlavors());
     }
-    return input -> new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+    return input -> ruleResolver;
   }
 
   private ImmutableSet<TargetNode<?, ?>> setupSimpleLibraryWithResources(

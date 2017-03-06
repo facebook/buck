@@ -60,11 +60,10 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.ActionGraphCache;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -260,7 +259,7 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getSourcePathResolverForNodeFunction(targetGraph),
+        getBuildRuleResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
@@ -336,7 +335,7 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getSourcePathResolverForNodeFunction(targetGraph),
+        getBuildRuleResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
@@ -396,7 +395,7 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getSourcePathResolverForNodeFunction(targetGraph),
+        getBuildRuleResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
@@ -462,7 +461,7 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getSourcePathResolverForNodeFunction(targetGraph),
+        getBuildRuleResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
@@ -537,7 +536,7 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getSourcePathResolverForNodeFunction(targetGraph),
+        getBuildRuleResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
@@ -594,7 +593,7 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getSourcePathResolverForNodeFunction(targetGraph),
+        getBuildRuleResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
@@ -633,7 +632,7 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getSourcePathResolverForNodeFunction(targetGraph),
+        getBuildRuleResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
@@ -703,7 +702,7 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getSourcePathResolverForNodeFunction(targetGraph),
+        getBuildRuleResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
@@ -862,7 +861,7 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getSourcePathResolverForNodeFunction(targetGraph),
+        getBuildRuleResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
@@ -1021,7 +1020,7 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getSourcePathResolverForNodeFunction(targetGraph),
+        getBuildRuleResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
@@ -1118,7 +1117,7 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getSourcePathResolverForNodeFunction(targetGraph),
+        getBuildRuleResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
@@ -1181,7 +1180,7 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getSourcePathResolverForNodeFunction(targetGraph),
+        getBuildRuleResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
@@ -1225,12 +1224,12 @@ public class WorkspaceAndProjectGeneratorTest {
         });
   }
 
-  private Function<TargetNode<?, ?>, SourcePathResolver> getSourcePathResolverForNodeFunction(
+  private Function<TargetNode<?, ?>, BuildRuleResolver> getBuildRuleResolverForNodeFunction(
       final TargetGraph targetGraph) {
-    return input -> new SourcePathResolver(new SourcePathRuleFinder(
+    return input ->
         ActionGraphCache.getFreshActionGraph(
             BuckEventBusFactory.newInstance(),
-            targetGraph.getSubgraph(ImmutableSet.of(input))).getResolver()));
+            targetGraph.getSubgraph(ImmutableSet.of(input))).getResolver();
   }
 
 }

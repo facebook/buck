@@ -1024,10 +1024,10 @@ public class ProjectCommand extends BuildCommand {
           params.getCell().getKnownBuildRuleTypes().getCxxPlatforms(),
           defaultCxxPlatform,
           params.getBuckConfig().getView(ParserConfig.class).getBuildFileName(),
-          input -> new SourcePathResolver(new SourcePathRuleFinder(
+          input ->
               ActionGraphCache.getFreshActionGraph(params.getBuckEventBus(),
                   targetGraphAndTargets.getTargetGraph().getSubgraph(
-                  ImmutableSet.of(input))).getResolver())),
+                  ImmutableSet.of(input))).getResolver(),
           params.getBuckEventBus(),
           halideBuckConfig,
           cxxBuckConfig,

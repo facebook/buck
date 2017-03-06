@@ -102,6 +102,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.args.Arg;
@@ -301,7 +302,7 @@ public class ProjectGenerator {
   private final List<Path> headerSymlinkTrees;
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
       ImmutableSet.builder();
-  private final Function<? super TargetNode<?, ?>, SourcePathResolver> sourcePathResolverForNode;
+  private final Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode;
   private final BuckEventBus buckEventBus;
 
   /**
@@ -339,7 +340,7 @@ public class ProjectGenerator {
       ImmutableMap<String, String> environment,
       FlavorDomain<CxxPlatform> cxxPlatforms,
       CxxPlatform defaultCxxPlatform,
-      Function<? super TargetNode<?, ?>, SourcePathResolver> sourcePathResolverForNode,
+      Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode,
       BuckEventBus buckEventBus,
       HalideBuckConfig halideBuckConfig,
       CxxBuckConfig cxxBuckConfig,
@@ -363,7 +364,7 @@ public class ProjectGenerator {
     this.environment = environment;
     this.cxxPlatforms = cxxPlatforms;
     this.defaultCxxPlatform = defaultCxxPlatform;
-    this.sourcePathResolverForNode = sourcePathResolverForNode;
+    this.buildRuleResolverForNode = buildRuleResolverForNode;
     this.buckEventBus = buckEventBus;
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
@@ -1585,11 +1586,13 @@ public class ProjectGenerator {
               arg);
       return convertMapKeysToPaths(cxxHeaders);
     } else {
-      SourcePathResolver sourcePathResolver = sourcePathResolverForNode.apply(targetNode);
+      BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+      SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
       return ImmutableSortedMap.copyOf(
           CxxDescriptionEnhancer.parseExportedHeaders(
               targetNode.getBuildTarget(),
-              sourcePathResolver,
+              pathResolver,
               Optional.empty(),
               arg));
     }
@@ -1609,11 +1612,13 @@ public class ProjectGenerator {
               arg);
       return convertMapKeysToPaths(cxxHeaders);
     } else {
-      SourcePathResolver sourcePathResolver = sourcePathResolverForNode.apply(targetNode);
+      BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+      SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
       return ImmutableSortedMap.copyOf(
           CxxDescriptionEnhancer.parseHeaders(
               targetNode.getBuildTarget(),
-              sourcePathResolver,
+              pathResolver,
               Optional.empty(),
               arg));
     }
@@ -2814,8 +2819,10 @@ public class ProjectGenerator {
     Optional<TargetNode<ExportFileDescription.Arg, ?>> exportFileNode = node.castArg(
         ExportFileDescription.Arg.class);
     if (!exportFileNode.isPresent()) {
-      SourcePathResolver sourcePathResolver = sourcePathResolverForNode.apply(node);
-      Path output = sourcePathResolver.getRelativePath(sourcePath);
+      BuildRuleResolver resolver = buildRuleResolverForNode.apply(node);
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+      SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+      Path output = pathResolver.getRelativePath(sourcePath);
       if (output == null) {
         throw new HumanReadableException(
             "The target '%s' does not have an output.",
