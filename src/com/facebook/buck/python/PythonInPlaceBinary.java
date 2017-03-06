@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.Tool;
@@ -74,7 +73,6 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   private PythonInPlaceBinary(
       BuildRuleParams params,
       Supplier<ImmutableSortedSet<BuildRule>> originalDeclareDeps,
-      SourcePathResolver resolver,
       PythonPlatform pythonPlatform,
       String mainModule,
       PythonPackageComponents components,
@@ -88,7 +86,6 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
     super(
         params,
         originalDeclareDeps,
-        resolver,
         pythonPlatform,
         mainModule,
         components,
@@ -104,7 +101,6 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   public static PythonInPlaceBinary from(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
-      SourcePathResolver resolver,
       CxxPlatform cxxPlatform,
       PythonPlatform pythonPlatform,
       String mainModule,
@@ -121,7 +117,6 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
             Suppliers.ofInstance(ImmutableSortedSet.of()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         params.getDeclaredDeps(),
-        resolver,
         pythonPlatform,
         mainModule,
         components,

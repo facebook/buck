@@ -19,7 +19,7 @@ package com.facebook.buck.python;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableCollection;
@@ -37,7 +36,7 @@ import java.nio.file.Path;
 import java.util.stream.Stream;
 
 public abstract class PythonBinary
-    extends AbstractBuildRuleWithResolver
+    extends AbstractBuildRule
     implements BinaryBuildRule, HasRuntimeDeps {
 
   private final Supplier<? extends ImmutableCollection<BuildRule>> originalDeclaredDeps;
@@ -54,14 +53,13 @@ public abstract class PythonBinary
   public PythonBinary(
       BuildRuleParams buildRuleParams,
       Supplier<? extends ImmutableCollection<BuildRule>> originalDeclaredDeps,
-      SourcePathResolver resolver,
       PythonPlatform pythonPlatform,
       String mainModule,
       PythonPackageComponents components,
       ImmutableSet<String> preloadLibraries,
       String pexExtension,
       boolean legacyOutputPath) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.originalDeclaredDeps = originalDeclaredDeps;
     this.pythonPlatform = pythonPlatform;
     this.mainModule = mainModule;

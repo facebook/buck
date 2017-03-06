@@ -67,7 +67,6 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   private PythonPackagedBinary(
       BuildRuleParams params,
       Supplier<ImmutableSortedSet<BuildRule>> originalDeclareDeps,
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       PythonPlatform pythonPlatform,
       Tool builder,
@@ -83,7 +82,6 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
     super(
         params,
         originalDeclareDeps,
-        resolver,
         pythonPlatform,
         mainModule,
         components,
@@ -102,7 +100,6 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
 
   static PythonPackagedBinary from(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       PythonPlatform pythonPlatform,
       Tool builder,
@@ -124,7 +121,6 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
                     .build()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         params.getDeclaredDeps(),
-        resolver,
         ruleFinder,
         pythonPlatform,
         builder,

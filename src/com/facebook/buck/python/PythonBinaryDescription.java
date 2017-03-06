@@ -144,7 +144,6 @@ public class PythonBinaryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       String mainModule,
@@ -186,7 +185,6 @@ public class PythonBinaryDescription implements
     return PythonInPlaceBinary.from(
         params,
         resolver,
-        pathResolver,
         cxxPlatform,
         pythonPlatform,
         mainModule,
@@ -202,7 +200,6 @@ public class PythonBinaryDescription implements
   PythonBinary createPackageRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
@@ -220,7 +217,6 @@ public class PythonBinaryDescription implements
             params,
             resolver,
             ruleFinder,
-            pathResolver,
             pythonPlatform,
             cxxPlatform,
             mainModule,
@@ -231,7 +227,6 @@ public class PythonBinaryDescription implements
       case STANDALONE:
         return PythonPackagedBinary.from(
             params,
-            pathResolver,
             ruleFinder,
             pythonPlatform,
             pythonBuckConfig.getPexTool(resolver),
@@ -320,7 +315,6 @@ public class PythonBinaryDescription implements
     return createPackageRule(
         params,
         resolver,
-        pathResolver,
         ruleFinder,
         pythonPlatform,
         cxxPlatform,

@@ -271,7 +271,6 @@ public class PythonTestDescription implements
         binaryDescription.createPackageRule(
             params.copyWithBuildTarget(getBinaryBuildTarget(params.getBuildTarget())),
             resolver,
-            pathResolver,
             ruleFinder,
             pythonPlatform,
             cxxPlatform,

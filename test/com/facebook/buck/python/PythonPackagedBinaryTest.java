@@ -61,7 +61,6 @@ public class PythonPackagedBinaryTest {
 
   private RuleKey getRuleKeyForModuleLayout(
       DefaultRuleKeyFactory ruleKeyFactory,
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       String main, Path mainSrc,
       String mod1, Path src1,
@@ -71,7 +70,6 @@ public class PythonPackagedBinaryTest {
     // The top-level python binary that lists the above libraries as deps.
     PythonBinary binary = PythonPackagedBinary.from(
         new FakeBuildRuleParamsBuilder("//:bin").build(),
-        resolver,
         ruleFinder,
         PythonTestUtils.PYTHON_PLATFORM,
         PEX,
@@ -127,28 +125,24 @@ public class PythonPackagedBinaryTest {
     // across different python libraries.
     RuleKey pair1 = getRuleKeyForModuleLayout(
         new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder),
-        resolver,
         ruleFinder,
         "main.py", mainRelative,
         "module/one.py", source1Relative,
         "module/two.py", source2Relative);
     RuleKey pair2 = getRuleKeyForModuleLayout(
         new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder),
-        resolver,
         ruleFinder,
         "main.py", mainRelative,
         "module/two.py", source2Relative,
         "module/one.py", source1Relative);
     RuleKey pair3 = getRuleKeyForModuleLayout(
         new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder),
-        resolver,
         ruleFinder,
         "main.py", mainRelative,
         "module/one.py", source2Relative,
         "module/two.py", source1Relative);
     RuleKey pair4 = getRuleKeyForModuleLayout(
         new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder),
-        resolver,
         ruleFinder,
         "main.py", mainRelative,
         "module/two.py", source1Relative,
