@@ -17,13 +17,12 @@
 package com.facebook.buck.graph;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 public class Dot<T> {
@@ -36,14 +35,14 @@ public class Dot<T> {
   private static final Map<String, String> typeColors;
 
   static {
-    HashMap<String, String> _typeColors = new HashMap<>();
-    _typeColors.put("android_aar", "springgreen2");
-    _typeColors.put("android_library", "springgreen3");
-    _typeColors.put("android_resource", "springgreen1");
-    _typeColors.put("android_prebuilt_aar", "olivedrab3");
-    _typeColors.put("java_library", "indianred1");
-    _typeColors.put("prebuilt_jar", "mediumpurple1");
-    typeColors = Collections.unmodifiableMap(_typeColors);
+    typeColors = new ImmutableMap.Builder<String, String>() {{
+      put("android_aar", "springgreen2");
+      put("android_library", "springgreen3");
+      put("android_resource", "springgreen1");
+      put("android_prebuilt_aar", "olivedrab3");
+      put("java_library", "indianred1");
+      put("prebuilt_jar", "mediumpurple1");
+    }}.build();
   }
 
   public Dot(
