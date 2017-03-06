@@ -30,7 +30,6 @@ import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
@@ -72,6 +71,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
 
   protected <A extends T> BuildRule createBuildRule(
       final BuildRuleParams params,
+      @SuppressWarnings("unused")
       final BuildRuleResolver resolver,
       A args,
       Optional<com.facebook.buck.rules.args.Arg> cmd,
@@ -79,7 +79,6 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       Optional<com.facebook.buck.rules.args.Arg> cmdExe) {
     return new Genrule(
         params,
-        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         args.srcs,
         cmd,
         bash,

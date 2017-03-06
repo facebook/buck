@@ -80,7 +80,6 @@ public class ExternallyBuiltApplePackageTest {
         new SourcePathResolver(new SourcePathRuleFinder(this.resolver));
     ExternallyBuiltApplePackage rule = new ExternallyBuiltApplePackage(
         params,
-        pathResolver,
         config,
         new FakeSourcePath(bundleLocation),
         true);
@@ -103,7 +102,6 @@ public class ExternallyBuiltApplePackageTest {
         new SourcePathResolver(new SourcePathRuleFinder(this.resolver));
     ExternallyBuiltApplePackage rule = new ExternallyBuiltApplePackage(
         params,
-        pathResolver,
         config,
         new FakeSourcePath("Fake/Bundle/Location"),
         true);
@@ -120,7 +118,6 @@ public class ExternallyBuiltApplePackageTest {
         new SourcePathResolver(new SourcePathRuleFinder(this.resolver));
     ExternallyBuiltApplePackage rule = new ExternallyBuiltApplePackage(
         params,
-        pathResolver,
         config,
         new FakeSourcePath("Fake/Bundle/Location"),
         true);
@@ -141,7 +138,6 @@ public class ExternallyBuiltApplePackageTest {
     Function<String, ExternallyBuiltApplePackage> packageWithVersion =
         input -> new ExternallyBuiltApplePackage(
             params,
-            new SourcePathResolver(new SourcePathRuleFinder(resolver)),
             config.withPlatform(config.getPlatform().withBuildVersion(input)),
             new FakeSourcePath("Fake/Bundle/Location"),
             true);
@@ -155,7 +151,6 @@ public class ExternallyBuiltApplePackageTest {
     Function<String, ExternallyBuiltApplePackage> packageWithSdkVersion =
         input -> new ExternallyBuiltApplePackage(
             params,
-            new SourcePathResolver(new SourcePathRuleFinder(resolver)),
             config.withPlatform(
                 config.getPlatform().withAppleSdk(
                     config.getPlatform().getAppleSdk().withVersion(input))),

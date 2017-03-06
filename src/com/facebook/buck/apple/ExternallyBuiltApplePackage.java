@@ -42,13 +42,11 @@ public class ExternallyBuiltApplePackage extends Genrule {
 
   public ExternallyBuiltApplePackage(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       ApplePackageConfigAndPlatformInfo packageConfigAndPlatformInfo,
       SourcePath bundle,
       boolean cacheable) {
     super(
         params,
-        resolver,
         ImmutableList.of(bundle),
         Optional.of(packageConfigAndPlatformInfo.getExpandedArg()),
         /* bash */ Optional.empty(),

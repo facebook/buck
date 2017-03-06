@@ -20,7 +20,6 @@ import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -34,14 +33,13 @@ import java.util.Optional;
 public class GenruleBinary extends Genrule implements BinaryBuildRule {
   protected GenruleBinary(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       List<SourcePath> srcs,
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
       Optional<String> type,
       String out) {
-    super(params, resolver, srcs, cmd, bash, cmdExe, type, out);
+    super(params, srcs, cmd, bash, cmdExe, type, out);
   }
 
   @Override

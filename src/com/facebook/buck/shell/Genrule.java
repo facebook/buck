@@ -22,7 +22,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasOutputName;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -98,8 +98,7 @@ import java.util.Optional;
  * <p>
  * Note that the <code>SRCDIR</code> is populated by symlinking the sources.
  */
-public class Genrule extends AbstractBuildRuleWithResolver
-    implements HasOutputName, SupportsInputBasedRuleKey {
+public class Genrule extends AbstractBuildRule implements HasOutputName, SupportsInputBasedRuleKey {
 
   /**
    * The order in which elements are specified in the {@code srcs} attribute of a genrule matters.
@@ -129,14 +128,13 @@ public class Genrule extends AbstractBuildRuleWithResolver
 
   protected Genrule(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       List<SourcePath> srcs,
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
       Optional<String> type,
       String out) {
-    super(params, resolver);
+    super(params);
     this.srcs = ImmutableList.copyOf(srcs);
     this.cmd = cmd;
     this.bash = bash;

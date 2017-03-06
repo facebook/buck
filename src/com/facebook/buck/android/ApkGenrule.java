@@ -60,7 +60,6 @@ public class ApkGenrule extends Genrule implements HasInstallableApk {
 
   ApkGenrule(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       List<SourcePath> srcs,
       Optional<Arg> cmd,
@@ -70,7 +69,6 @@ public class ApkGenrule extends Genrule implements HasInstallableApk {
       SourcePath apk) {
     super(
         params,
-        resolver,
         srcs,
         cmd,
         bash,

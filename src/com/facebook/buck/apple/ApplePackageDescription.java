@@ -31,7 +31,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
@@ -77,7 +76,6 @@ public class ApplePackageDescription implements
     final BuildRule bundle = resolver.getRule(
         propagateFlavorsToTarget(params.getBuildTarget(), args.bundle));
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    final SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
 
     final Optional<ApplePackageConfigAndPlatformInfo> applePackageConfigAndPlatformInfo =
         getApplePackageConfig(
@@ -95,7 +93,6 @@ public class ApplePackageDescription implements
                   applePackageConfigAndPlatformInfo.get().getExpandedArg()
                       .getDeps(ruleFinder))
               .build()),
-          sourcePathResolver,
           applePackageConfigAndPlatformInfo.get(),
           Preconditions.checkNotNull(bundle.getSourcePathToOutput()),
           bundle.isCacheable());
