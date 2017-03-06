@@ -1,0 +1,13 @@
+android_binary(
+  name = 'exometa',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//:debug_keystore',
+  deps = [
+    ':meta-lib',
+  ],
+)
+
+android_library(
+  name = 'meta-lib',
+  srcs = glob(['*.java']),
+)

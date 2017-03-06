@@ -60,13 +60,17 @@ export NO_BUCKD=1
 # Clear out the phone.
 adb uninstall com.facebook.buck.android.agent
 adb uninstall buck.exotest
+adb uninstall buck.exotest.meta
 adb shell 'rm -r /data/local/tmp/exopackage/buck.exotest || rm -f -r /data/local/tmp/exopackage/buck.exotest'
+
+EXP_APP_NAME='Exo Test App'
 
 OUT_COUNT=0
 function installAndLaunch() {
   buck install ${1:-//:exotest} | cat
   adb logcat -c
   adb shell am start -n buck.exotest/exotest.LogActivity
+  adb shell am start -n buck.exotest.meta/.ExoMetaLogActivity
   SECONDARY_DEX_INSTALLED=$(cat buck-out/log/build.trace | \
     jq -r '[ .[] | select(.name == "install_secondary_dex") | select(.ph == "B") ] | length')
   NATIVE_LIBS_INSTALLED=$(cat buck-out/log/build.trace | \
@@ -74,7 +78,7 @@ function installAndLaunch() {
   RESOURCE_APKS_INSTALLED=$(cat buck-out/log/build.trace | \
     jq -r '[ .[] | select(.name == "install_resources") | select(.ph == "B") ] | length')
   sleep 1
-  adb logcat -d '*:S' EXOPACKAGE_TEST:V > out.txt
+  adb logcat -d '*:S' EXOPACKAGE_TEST:V EXOPACKAGE_TEST_META:V > out.txt
   cp out.txt out$((++OUT_COUNT)).txt
 
   # Check for values in the logs.
@@ -85,6 +89,10 @@ function installAndLaunch() {
   grep -q "IMAGE=$EXP_IMAGE" out.txt || (cat out.txt && false)
   grep -q "ASSET=$EXP_ASSET" out.txt || (cat out.txt && false)
   grep -q "ASSET_TWO=$EXP_ASSET2" out.txt || (cat out.txt && false)
+
+  grep -q "META_ICON=.*_.*" out.txt || (cat out.txt && false)
+  grep -q "META_NAME=$EXP_APP_NAME" out.txt || (cat out.txt && false)
+  grep -q "META_DATA=<item0,item1,item2>" out.txt || (cat out.txt && false)
 }
 
 function create_image() {
@@ -123,6 +131,14 @@ function edit_cpp2() {
   EXP_CPP2=two_$1
 }
 
+function change_label() {
+  sedInPlace "s/$EXP_APP_NAME/$1/" res/values/strings.xml
+  sedInPlace "s/$EXP_APP_NAME/$1/" res-real-name/values/strings.xml
+  EXP_APP_NAME=$1
+}
+
+buck install //app-meta-tool:exometa
+
 # Build and do a clean install of the app.  Launch it and capture logs.
 create_image 1
 edit_java '1a'
@@ -132,6 +148,12 @@ installAndLaunch
 # Check for full install.
 test "$SECONDARY_DEX_INSTALLED" = 1
 test "$NATIVE_LIBS_INSTALLED" = 2
+test "$RESOURCE_APKS_INSTALLED" = 0
+
+change_label 'Exo App New Label'
+installAndLaunch
+test "$SECONDARY_DEX_INSTALLED" = 0
+test "$NATIVE_LIBS_INSTALLED" = 0
 test "$RESOURCE_APKS_INSTALLED" = 0
 
 # Change java code and do an incremental install of the app.  Launch it and capture logs.
@@ -222,6 +244,7 @@ test "$RESOURCE_APKS_INSTALLED" = 0
 
 # Clean up after ourselves.
 buck uninstall //:exotest-noexo
+buck uninstall //app-meta-tool:exometa
 adb uninstall com.facebook.buck.android.agent
 
 # Celebrate!  (And show that we succeeded, because grep doesn't print error messages.)

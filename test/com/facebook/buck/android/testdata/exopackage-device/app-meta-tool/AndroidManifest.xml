@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='utf-8'?>
+<manifest
+  xmlns:android='http://schemas.android.com/apk/res/android'
+  package='buck.exotest.meta'
+  >
+  <uses-sdk
+    android:minSdkVersion='9'
+    android:targetSdkVersion='19'
+    />
+
+  <application
+    android:debuggable='true'
+    >
+    <activity
+      android:name='.ExoMetaLogActivity'
+      android:exported='true'/>
+  </application>
+
+</manifest>
