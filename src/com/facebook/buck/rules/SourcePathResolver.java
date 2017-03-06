@@ -65,6 +65,9 @@ public class SourcePathResolver {
       return ruleFinder.getRuleOrThrow((BuildTargetSourcePath<?>) sourcePath)
           .getProjectFilesystem();
     }
+    if (sourcePath instanceof ArchiveMemberSourcePath) {
+      return getFilesystem(((ArchiveMemberSourcePath) sourcePath).getArchiveSourcePath());
+    }
     throw new IllegalStateException();
   }
 
