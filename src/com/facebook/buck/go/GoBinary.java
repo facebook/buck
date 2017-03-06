@@ -18,7 +18,7 @@ package com.facebook.buck.go;
 
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -40,7 +39,7 @@ import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class GoBinary extends AbstractBuildRuleWithResolver implements BinaryBuildRule {
+public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
 
   @AddToRuleKey
   private final Tool linker;
@@ -58,14 +57,13 @@ public class GoBinary extends AbstractBuildRuleWithResolver implements BinaryBui
 
   public GoBinary(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       Optional<Linker> cxxLinker,
       SymlinkTree linkTree,
       GoCompile mainObject,
       Tool linker,
       ImmutableList<String> linkerFlags,
       GoPlatform platform) {
-    super(params, resolver);
+    super(params);
     this.cxxLinker = cxxLinker;
     this.linker = linker;
     this.linkTree = linkTree;

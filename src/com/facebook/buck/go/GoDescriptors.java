@@ -240,7 +240,6 @@ abstract class GoDescriptors {
                     .add(library)
                     .build()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
-        pathResolver,
         platform.getCxxPlatform().map(input -> input.getLd().resolve(resolver)),
         symlinkTree,
         library,
