@@ -17,14 +17,13 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.NativeLinkableInput;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -38,7 +37,7 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
-class PrebuiltOcamlLibrary extends AbstractBuildRuleWithResolver implements OcamlLibrary {
+class PrebuiltOcamlLibrary extends AbstractBuildRule implements OcamlLibrary {
 
   private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey
@@ -57,7 +56,6 @@ class PrebuiltOcamlLibrary extends AbstractBuildRuleWithResolver implements Ocam
 
   public PrebuiltOcamlLibrary(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       Optional<SourcePath> staticNativeLibraryPath,
       SourcePath staticBytecodeLibraryPath,
@@ -65,7 +63,7 @@ class PrebuiltOcamlLibrary extends AbstractBuildRuleWithResolver implements Ocam
       SourcePath bytecodeLibraryPath,
       Path libPath,
       Path includeDir) {
-    super(params, resolver);
+    super(params);
     this.ruleFinder = ruleFinder;
     this.staticNativeLibraryPath = staticNativeLibraryPath;
     this.staticBytecodeLibraryPath = staticBytecodeLibraryPath;
