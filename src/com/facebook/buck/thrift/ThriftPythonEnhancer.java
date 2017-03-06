@@ -135,7 +135,7 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
     // building up a map of them.
     for (ImmutableMap.Entry<String, ThriftSource> ent : sources.entrySet()) {
       ThriftSource source = ent.getValue();
-      Path outputDir = source.getOutputDir();
+      Path outputDir = source.getOutputDir(resolver);
 
       for (String module :
            getGeneratedSources(params.getBuildTarget(), args, ent.getKey(), source.getServices())) {
@@ -144,7 +144,7 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
             .resolve(module);
         modulesBuilder.put(
             Paths.get(module.endsWith(".py") ? module : module + ".py"),
-            new ExplicitBuildTargetSourcePath(source.getCompileRule().getBuildTarget(), path));
+            new ExplicitBuildTargetSourcePath(source.getCompileTarget(), path));
       }
 
     }

@@ -530,21 +530,21 @@ public class ThriftCxxEnhancerTest {
     arg.cpp2Options = ImmutableSet.of();
     arg.cpp2Deps = ImmutableSortedSet.of(argDep.getBuildTarget());
 
-    ThriftCompiler thrift1 = createFakeThriftCompiler("//:thrift_source1");
+    ThriftCompiler thrift1 = createFakeThriftCompiler("//:thrift_source1#cpp");
     resolver.addToIndex(thrift1);
-    ThriftCompiler thrift2 = createFakeThriftCompiler("//:thrift_source2");
+    ThriftCompiler thrift2 = createFakeThriftCompiler("//:thrift_source2#cpp");
     resolver.addToIndex(thrift2);
 
     // Setup up some thrift inputs to pass to the createBuildRule method.
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
         "test1.thrift", new ThriftSource(
-            thrift1,
-            ImmutableList.of(),
-            Paths.get("output1")),
+            "test1.thrift",
+            thrift1.getBuildTarget(),
+            ImmutableList.of()),
         "test2.thrift", new ThriftSource(
-            thrift2,
-            ImmutableList.of(),
-            Paths.get("output2")));
+            "test2.thrift",
+            thrift2.getBuildTarget(),
+            ImmutableList.of()));
 
     // Create a dummy implicit dep to pass in.
     CxxLibrary dep =
@@ -588,15 +588,15 @@ public class ThriftCxxEnhancerTest {
     arg.cppExportedHeaders = SourceList.ofNamedSources(cppHeaders);
     arg.cppSrcs = SourceWithFlagsList.ofNamedSources(cppSrcs);
 
-    ThriftCompiler thrift = createFakeThriftCompiler("//:thrift_source");
+    ThriftCompiler thrift = createFakeThriftCompiler("//:thrift_source#cpp");
     resolver.addToIndex(thrift);
 
     // Setup up some thrift inputs to pass to the createBuildRule method.
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
         "test.thrift", new ThriftSource(
-            thrift,
-            ImmutableList.of(),
-            Paths.get("output")));
+            "test.thrift",
+            thrift.getBuildTarget(),
+            ImmutableList.of()));
 
     // Run the enhancer with a modified C++ description which checks that appropriate args are
     // propagated.

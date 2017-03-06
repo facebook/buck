@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
+import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -60,7 +61,8 @@ public class ThriftLibraryDescription
   implements
     Description<ThriftConstructorArg>,
     Flavored,
-    ImplicitDepsInferringDescription<ThriftConstructorArg> {
+    ImplicitDepsInferringDescription<ThriftConstructorArg>,
+    MetadataProvidingDescription<ThriftConstructorArg> {
 
   private static final Flavor INCLUDE_SYMLINK_TREE_FLAVOR =
       ImmutableFlavor.of("include_symlink_tree");
@@ -115,7 +117,7 @@ public class ThriftLibraryDescription
    * thrift source for the given language.
    */
   @VisibleForTesting
-  protected Path getThriftCompilerOutputDir(
+  protected static Path getThriftCompilerOutputDir(
       ProjectFilesystem filesystem,
       BuildTarget target,
       String name) {
@@ -246,6 +248,59 @@ public class ThriftLibraryDescription
     return libDepsBuilder.build();
   }
 
+  // Build up the map of {@link ThriftSource} objects to pass the language specific enhancer.
+  // They keys in this map are the logical names of the thrift files (e.g as specific in a BUCK
+  // file, such as "test.thrift").
+  private ImmutableMap<String, ThriftSource> getThriftSources(
+      BuildTarget target,
+      BuildRuleResolver resolver,
+      ThriftConstructorArg args) {
+    ImmutableMap.Builder<String, ThriftSource> thriftSourceBuilder = ImmutableMap.builder();
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    ImmutableMap<String, SourcePath> namedSources =
+        pathResolver.getSourcePathNames(target, "srcs", args.srcs.keySet());
+    for (ImmutableMap.Entry<String, SourcePath> ent : namedSources.entrySet()) {
+      ImmutableList<String> services = Preconditions.checkNotNull(args.srcs.get(ent.getValue()));
+      BuildTarget compilerTarget = createThriftCompilerBuildTarget(target, ent.getKey());
+      thriftSourceBuilder.put(
+          ent.getKey(),
+          new ThriftSource(
+              ent.getKey(),
+              compilerTarget,
+              services));
+    }
+    return thriftSourceBuilder.build();
+  }
+
+  private ImmutableSortedSet<BuildRule> getLanguageSpecificDeps(
+      BuildTarget target,
+      BuildRuleResolver resolver,
+      ThriftLanguageSpecificEnhancer enhancer,
+      ThriftConstructorArg args) {
+
+    ImmutableSet<BuildTarget> implicitDeps =
+        enhancer.getImplicitDepsForTargetFromConstructorArg(target, args);
+
+    // The dependencies listed in "deps", which should all be of type "ThriftLibrary".
+    ImmutableSortedSet<ThriftLibrary> thriftDeps =
+        resolveThriftDeps(
+            target,
+            resolver.getAllRules(args.deps));
+
+    // We implicitly pass the language-specific flavors of your thrift lib dependencies as
+    // language specific deps to the language specific enhancer.
+    return BuildRules.toBuildRulesFor(
+        target,
+        resolver,
+        Iterables.concat(
+            BuildTargets.propagateFlavorDomains(
+                target,
+                ImmutableList.of(enhancers),
+                FluentIterable.from(thriftDeps)
+                    .transform(BuildRule::getBuildTarget)),
+            implicitDeps));
+  }
+
   @Override
   public <A extends ThriftConstructorArg> BuildRule createBuildRule(
       TargetGraph targetGraph,
@@ -308,9 +363,6 @@ public class ThriftLibraryDescription
     ThriftLanguageSpecificEnhancer enhancer = enhancerFlavor.get().getValue();
     String language = enhancer.getLanguage();
     ImmutableSet<String> options = enhancer.getOptions(target, args);
-    ImmutableSet<BuildTarget> implicitDeps = enhancer.getImplicitDepsForTargetFromConstructorArg(
-        target,
-        args);
 
     // Lookup the thrift library corresponding to this rule.  We add an implicit dep onto
     // this rule in the findImplicitDepsFromParams method, so this should always exist by
@@ -321,16 +373,8 @@ public class ThriftLibraryDescription
 
     // We implicitly pass the language-specific flavors of your thrift lib dependencies as
     // language specific deps to the language specific enhancer.
-    ImmutableSortedSet<BuildRule> languageSpecificDeps = BuildRules.toBuildRulesFor(
-        target,
-        resolver,
-        Iterables.concat(
-            BuildTargets.propagateFlavorDomains(
-                target,
-                ImmutableList.of(enhancers),
-                FluentIterable.from(thriftDeps)
-                    .transform(BuildRule::getBuildTarget)),
-            implicitDeps));
+    ImmutableSortedSet<BuildRule> languageSpecificDeps =
+        getLanguageSpecificDeps(params.getBuildTarget(), resolver, enhancer, args);
 
     // Form the set of generated sources, so that compiler rules know what output paths to record.
     ImmutableMap.Builder<String, ImmutableSortedSet<String>> generatedSourcesBuilder =
@@ -364,21 +408,8 @@ public class ThriftLibraryDescription
             generatedSources);
     resolver.addAllToIndex(compilerRules.values());
 
-    // Build up the map of {@link ThriftSource} objects to pass the language specific enhancer.
-    // They keys in this map are the logical names of the thrift files (e.g as specific in a BUCK
-    // file, such as "test.thrift").
-    ImmutableMap.Builder<String, ThriftSource> thriftSourceBuilder = ImmutableMap.builder();
-    for (ImmutableMap.Entry<String, SourcePath> ent : namedSources.entrySet()) {
-      ImmutableList<String> services = Preconditions.checkNotNull(args.srcs.get(ent.getValue()));
-      ThriftCompiler compilerRule = Preconditions.checkNotNull(compilerRules.get(ent.getKey()));
-      thriftSourceBuilder.put(
-          ent.getKey(),
-          new ThriftSource(
-              compilerRule,
-              services,
-              getThriftCompilerOutputDir(params.getProjectFilesystem(), target, ent.getKey())));
-    }
-    ImmutableMap<String, ThriftSource> thriftSources = thriftSourceBuilder.build();
+    ImmutableMap<String, ThriftSource> thriftSources =
+        getThriftSources(params.getBuildTarget(), resolver, args);
 
     // Generate language specific rules.
     return enhancer.createBuildRule(
@@ -444,6 +475,30 @@ public class ThriftLibraryDescription
     deps.addAll(implicitDeps);
 
     return deps;
+  }
+
+  @Override
+  public <A extends ThriftConstructorArg, U> Optional<U> createMetadata(
+      BuildTarget buildTarget,
+      BuildRuleResolver resolver,
+      A args,
+      Class<U> metadataClass)
+      throws NoSuchBuildTargetException {
+    ThriftLanguageSpecificEnhancer enhancer = enhancers.getRequiredValue(buildTarget);
+    return enhancer.createMetadata(
+        buildTarget,
+        resolver,
+        args,
+        getThriftSources(
+            buildTarget.withFlavors(enhancer.getFlavor()),
+            resolver,
+            args),
+        getLanguageSpecificDeps(
+            buildTarget.withFlavors(enhancer.getFlavor()),
+            resolver,
+            enhancer,
+            args),
+        metadataClass);
   }
 
   // The version of thrift compiler to use.

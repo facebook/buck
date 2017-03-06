@@ -16,36 +16,42 @@
 
 package com.facebook.buck.thrift;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 
 public class ThriftSource {
 
-  private final ThriftCompiler compileRule;
+  private final String name;
+  private final BuildTarget compileTarget;
   private final ImmutableList<String> services;
-  private final Path outputDir;
 
   public ThriftSource(
-      ThriftCompiler compileRule,
-      ImmutableList<String> services,
-      Path outputDir) {
-
-    this.compileRule = compileRule;
+      String name,
+      BuildTarget compileTarget,
+      ImmutableList<String> services) {
+    this.name = name;
+    this.compileTarget = compileTarget;
     this.services = services;
-    this.outputDir = outputDir;
   }
 
-  public ThriftCompiler getCompileRule() {
-    return compileRule;
+  BuildTarget getCompileTarget() {
+    return compileTarget;
   }
 
   public ImmutableList<String> getServices() {
     return services;
   }
 
-  public Path getOutputDir() {
-    return outputDir;
+  public Path getOutputDir(BuildRuleResolver ruleResolver) {
+    BuildRule rule = ruleResolver.getRule(compileTarget);
+    return ThriftLibraryDescription.getThriftCompilerOutputDir(
+        rule.getProjectFilesystem(),
+        compileTarget,
+        name);
   }
 
 }

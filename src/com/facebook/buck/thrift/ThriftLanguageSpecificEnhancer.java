@@ -29,6 +29,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.util.Optional;
+
 /**
  * Interface used to implement thrift support for a language.  {@link ThriftLibraryDescription}
  * objects will use these for the various languages it supports.
@@ -85,5 +87,17 @@ public interface ThriftLanguageSpecificEnhancer extends FlavorConvertible {
    * @return which thrift compiler to use.
    */
   ThriftLibraryDescription.CompilerType getCompilerType();
+
+  @SuppressWarnings("unused")
+  default <U> Optional<U> createMetadata(
+      BuildTarget buildTarget,
+      BuildRuleResolver resolver,
+      ThriftConstructorArg args,
+      ImmutableMap<String, ThriftSource> sources,
+      ImmutableSortedSet<BuildRule> deps,
+      Class<U> metadataClass)
+      throws NoSuchBuildTargetException {
+    return Optional.empty();
+  }
 
 }

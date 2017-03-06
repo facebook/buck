@@ -244,13 +244,13 @@ public class ThriftPythonEnhancerTest {
     // Setup up some thrift inputs to pass to the createBuildRule method.
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
         "test1.thrift", new ThriftSource(
-            createFakeThriftCompiler("//:thrift_source1"),
-            ImmutableList.of(),
-            Paths.get("output1")),
+            "test1.thrift",
+            resolver.addToIndex(createFakeThriftCompiler("//:thrift_source1#py")).getBuildTarget(),
+            ImmutableList.of()),
         "test2.thrift", new ThriftSource(
-            createFakeThriftCompiler("//:thrift_source2"),
-            ImmutableList.of(),
-            Paths.get("output2")));
+            "test2.thrift",
+            resolver.addToIndex(createFakeThriftCompiler("//:thrift_source2#py")).getBuildTarget(),
+            ImmutableList.of()));
 
     // Create a dummy implicit dep to pass in.
     ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of(
@@ -279,9 +279,9 @@ public class ThriftPythonEnhancerTest {
     // Setup up some thrift inputs to pass to the createBuildRule method.
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
         "test.thrift", new ThriftSource(
-            createFakeThriftCompiler("//:thrift_source"),
-            ImmutableList.of(),
-            Paths.get("output")));
+            "test.thrift",
+            resolver.addToIndex(createFakeThriftCompiler("//:thrift_source#py")).getBuildTarget(),
+            ImmutableList.of()));
 
     // Verify that not setting the base module parameter defaults to the build target base path.
     arg.pyBaseModule = Optional.empty();
@@ -329,9 +329,9 @@ public class ThriftPythonEnhancerTest {
     // Setup up some thrift inputs to pass to the createBuildRule method.
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
         "test.thrift", new ThriftSource(
-            createFakeThriftCompiler("//:thrift_source"),
-            ImmutableList.of(),
-            Paths.get("output")));
+            "test.thrift",
+            resolver.addToIndex(createFakeThriftCompiler("//:thrift_source#py")).getBuildTarget(),
+            ImmutableList.of()));
 
     // Verify that not setting the base module parameter defaults to the build target base path.
     arg.pyTwistedBaseModule = Optional.empty();
@@ -379,9 +379,9 @@ public class ThriftPythonEnhancerTest {
     // Setup up some thrift inputs to pass to the createBuildRule method.
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
         "test.thrift", new ThriftSource(
-            createFakeThriftCompiler("//:thrift_source"),
-            ImmutableList.of(),
-            Paths.get("output")));
+            "test.thrift",
+            resolver.addToIndex(createFakeThriftCompiler("//:thrift_source#py")).getBuildTarget(),
+            ImmutableList.of()));
 
     // Verify that not setting the base module parameter defaults to the build target base path.
     arg.pyAsyncioBaseModule = Optional.empty();

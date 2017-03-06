@@ -499,13 +499,13 @@ public class ThriftLibraryDescriptionTest {
                     genrule,
                     thriftRule,
                     thriftIncludeSymlinkTree),
-                src1.getCompileRule().getDeps());
+                resolver.getRule(src1.getCompileTarget()).getDeps());
             assertEquals(
                 ImmutableSortedSet.of(
                     genrule,
                     thriftRule,
                     thriftIncludeSymlinkTree),
-                src2.getCompileRule().getDeps());
+                resolver.getRule(src2.getCompileTarget()).getDeps());
 
             // Verify the language specific implicit rules are added correctly.
             assertEquals(

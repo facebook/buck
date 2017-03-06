@@ -42,10 +42,12 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -152,13 +154,15 @@ public class ThriftJavaEnhancerTest {
     // Setup up some thrift inputs to pass to the createBuildRule method.
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
         "test1.thrift", new ThriftSource(
-            createFakeThriftCompiler("//:thrift_source1"),
-            ImmutableList.of(),
-            Paths.get("output1")),
+            "test1.thrift",
+            resolver.addToIndex(createFakeThriftCompiler("//:thrift_source1#java"))
+                .getBuildTarget(),
+            ImmutableList.of()),
         "test2.thrift", new ThriftSource(
-            createFakeThriftCompiler("//:thrift_source2"),
-            ImmutableList.of(),
-            Paths.get("output2")));
+            "test2.thrift",
+            resolver.addToIndex(createFakeThriftCompiler("//:thrift_source2#java"))
+                .getBuildTarget(),
+            ImmutableList.of()));
 
     // Create a dummy implicit dep to pass in.
     ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of(
@@ -174,8 +178,10 @@ public class ThriftJavaEnhancerTest {
     assertNotNull(srcZip1);
     assertTrue(srcZip1 instanceof SrcZip);
     assertEquals(
-        ImmutableSortedSet.<BuildRule>of(sources.get("test1.thrift").getCompileRule()),
-        srcZip1.getDeps());
+        ImmutableSortedSet.of(sources.get("test1.thrift").getCompileTarget()),
+        RichStream.from(srcZip1.getDeps())
+            .map(BuildRule::getBuildTarget)
+            .toImmutableSortedSet(Ordering.natural()));
 
     // Verify that the second thrift source created a source zip rule with correct deps.
     BuildRule srcZip2 = resolver.getRule(
@@ -183,8 +189,10 @@ public class ThriftJavaEnhancerTest {
     assertNotNull(srcZip2);
     assertTrue(srcZip2 instanceof SrcZip);
     assertEquals(
-        ImmutableSortedSet.<BuildRule>of(sources.get("test2.thrift").getCompileRule()),
-        srcZip2.getDeps());
+        ImmutableSortedSet.of(sources.get("test2.thrift").getCompileTarget()),
+        RichStream.from(srcZip2.getDeps())
+            .map(BuildRule::getBuildTarget)
+            .toImmutableSortedSet(Ordering.natural()));
 
     // Verify that the top-level default java lib has correct deps.
     assertEquals(
@@ -210,9 +218,10 @@ public class ThriftJavaEnhancerTest {
     // Setup up some thrift inputs to pass to the createBuildRule method.
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
         "test.thrift", new ThriftSource(
-            createFakeThriftCompiler("//:thrift_source"),
-            ImmutableList.of(),
-            Paths.get("output")));
+            "test.thrift",
+            resolver.addToIndex(createFakeThriftCompiler("//:thrift_source#java"))
+                .getBuildTarget(),
+            ImmutableList.of()));
 
     // Create a dep chain with an exported dep.
     FakeBuildRule exportedRule =

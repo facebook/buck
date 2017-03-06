@@ -128,8 +128,8 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
         params.getBuildTarget().getUnflavoredBuildTarget();
     for (ImmutableMap.Entry<String, ThriftSource> ent : sources.entrySet()) {
       String name = ent.getKey();
-      BuildRule compilerRule = ent.getValue().getCompileRule();
-      Path sourceDirectory = ent.getValue().getOutputDir().resolve("gen-java");
+      BuildTarget compilerTarget = ent.getValue().getCompileTarget();
+      Path sourceDirectory = ent.getValue().getOutputDir(resolver).resolve("gen-java");
 
       BuildTarget sourceZipTarget = getSourceZipBuildTarget(unflavoredBuildTarget, name);
       Path sourceZip =
@@ -139,7 +139,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
           new SrcZip(
               params.copyWithChanges(
                   sourceZipTarget,
-                  Suppliers.ofInstance(ImmutableSortedSet.of(compilerRule)),
+                  Suppliers.ofInstance(ImmutableSortedSet.of(resolver.getRule(compilerTarget))),
                   Suppliers.ofInstance(ImmutableSortedSet.of())),
               sourceZip,
               sourceDirectory));
