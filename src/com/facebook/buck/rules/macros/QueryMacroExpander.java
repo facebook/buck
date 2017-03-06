@@ -28,6 +28,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
 import com.facebook.buck.rules.query.Query;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -58,8 +59,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro> extends AbstractM
       BuildTarget target,
       CellPathResolver cellNames,
       Optional<BuildRuleResolver> resolver,
-      T input)
-      throws MacroException {
+      T input) {
     String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.getQuery().getQuery());
     final GraphEnhancementQueryEnvironment env = new GraphEnhancementQueryEnvironment(
         resolver,
@@ -76,7 +76,11 @@ public abstract class QueryMacroExpander<T extends QueryMacro> extends AbstractM
             try {
               return env.getTargetsMatchingPattern(pattern, executorService).stream();
             } catch (Exception e) {
-              throw new RuntimeException(new MacroException("Error parsing target expression", e));
+              throw new HumanReadableException(
+                  e,
+                  "Error parsing target expression %s for target %",
+                  pattern,
+                  target);
             }
           })
           .map(queryTarget -> {
@@ -84,11 +88,11 @@ public abstract class QueryMacroExpander<T extends QueryMacro> extends AbstractM
             return ((QueryBuildTarget) queryTarget).getBuildTarget();
           });
     } catch (QueryException e) {
-      throw new MacroException("Error parsing query from macro", e);
+      throw new HumanReadableException("Error executing query in macro for target %s", target, e);
     }
   }
 
-  protected Stream<QueryTarget> resolveQuery(
+  Stream<QueryTarget> resolveQuery(
       BuildTarget target,
       CellPathResolver cellNames,
       final BuildRuleResolver resolver,
@@ -129,8 +133,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro> extends AbstractM
   public ImmutableList<BuildTarget> extractParseTimeDepsFrom(
       BuildTarget target,
       CellPathResolver cellNames,
-      T input)
-      throws MacroException {
+      T input) {
     return ImmutableList.copyOf(extractTargets(target, cellNames, Optional.empty(), input)
         .collect(Collectors.toList()));
   }
