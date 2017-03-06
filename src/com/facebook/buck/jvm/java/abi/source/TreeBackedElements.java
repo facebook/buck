@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
+import com.sun.source.util.Trees;
 
 import java.io.Writer;
 import java.util.HashMap;
@@ -27,10 +28,12 @@ import java.util.Map;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.util.Elements;
 
 /**
@@ -41,18 +44,90 @@ import javax.lang.model.util.Elements;
  */
 class TreeBackedElements implements Elements {
   private final Elements javacElements;
+  private final Trees javacTrees;
+  private final Map<Element, TreeBackedElement> treeBackedElements = new HashMap<>();
   private final Map<Name, TypeElement> knownTypes = new HashMap<>();
   private final Map<Name, TreeBackedPackageElement> knownPackages = new HashMap<>();
 
   @Nullable
   private TypeResolverFactory resolverFactory;
 
-  public TreeBackedElements(Elements javacElements) {
+  public TreeBackedElements(Elements javacElements, Trees javacTrees) {
     this.javacElements = javacElements;
+    this.javacTrees = javacTrees;
   }
 
   /* package */ void setResolverFactory(TypeResolverFactory resolverFactory) {
     this.resolverFactory = resolverFactory;
+  }
+
+  public TreeBackedElement enterElement(Element underlyingElement) {
+    TreeBackedElement result = treeBackedElements.get(underlyingElement);
+    if (result != null) {
+      return result;
+    }
+
+    ElementKind kind = underlyingElement.getKind();
+    switch (kind) {
+      case PACKAGE:
+        result = newTreeBackedPackage((PackageElement) underlyingElement);
+        break;
+      case ANNOTATION_TYPE:
+      case CLASS:
+      case ENUM:
+      case INTERFACE:
+        result = newTreeBackedType((TypeElement) underlyingElement);
+        break;
+      case TYPE_PARAMETER:
+        result = newTreeBackedTypeParameter((TypeParameterElement) underlyingElement);
+        break;
+      // $CASES-OMITTED$
+      default:
+        throw new UnsupportedOperationException(String.format("Element kind %s NYI", kind));
+    }
+
+    treeBackedElements.put(underlyingElement, result);
+
+    return result;
+  }
+
+  private TreeBackedPackageElement newTreeBackedPackage(PackageElement underlyingPackage) {
+    TreeBackedPackageElement treeBackedPackage =
+        new TreeBackedPackageElement(
+            underlyingPackage,
+            Preconditions.checkNotNull(resolverFactory));
+
+    knownPackages.put(treeBackedPackage.getQualifiedName(), treeBackedPackage);
+
+    return treeBackedPackage;
+  }
+
+  private TreeBackedTypeElement newTreeBackedType(TypeElement underlyingType) {
+    TreeBackedTypeElement treeBackedType =
+        new TreeBackedTypeElement(
+            underlyingType,
+            enterElement(underlyingType.getEnclosingElement()),
+            Preconditions.checkNotNull(javacTrees.getPath(underlyingType)),
+            Preconditions.checkNotNull(resolverFactory));
+
+    knownTypes.put(treeBackedType.getQualifiedName(), treeBackedType);
+
+    return treeBackedType;
+  }
+
+  private TreeBackedTypeParameterElement newTreeBackedTypeParameter(
+      TypeParameterElement underlyingTypeParameter) {
+    TreeBackedTypeElement enclosingElement =
+        (TreeBackedTypeElement) enterElement(underlyingTypeParameter.getEnclosingElement());
+    return new TreeBackedTypeParameterElement(
+        underlyingTypeParameter,
+        Preconditions.checkNotNull(javacTrees.getPath(underlyingTypeParameter)),
+        enclosingElement,
+        Preconditions.checkNotNull(resolverFactory));
+  }
+
+  public TreeBackedElement getTreeBackedElement(Element underlyingElement) {
+    return Preconditions.checkNotNull(treeBackedElements.get(underlyingElement));
   }
 
   /**
@@ -68,38 +143,11 @@ class TreeBackedElements implements Elements {
     if (!knownPackages.containsKey(qualifiedName)) {
       PackageElement javacPackageElement = javacElements.getPackageElement(qualifiedName);
       if (javacPackageElement != null) {
-        // We can lazily discover packages that are known to javac
-        return getOrCreatePackageElement(qualifiedNameString);
+        enterElement(javacPackageElement);
       }
     }
 
     return knownPackages.get(qualifiedName);
-  }
-
-  /* package */ TreeBackedPackageElement getOrCreatePackageElement(
-      CharSequence qualifiedNameString) {
-    Name qualifiedName = getName(qualifiedNameString);
-    if (!knownPackages.containsKey(qualifiedName)) {
-      knownPackages.put(
-          qualifiedName,
-          new TreeBackedPackageElement(
-              getSimpleName(qualifiedName),
-              qualifiedName,
-              javacElements.getPackageElement(qualifiedName),
-              Preconditions.checkNotNull(resolverFactory)));
-    }
-
-    return Preconditions.checkNotNull(knownPackages.get(qualifiedName));
-  }
-
-  private Name getSimpleName(Name qualifiedName) {
-    for (int i = qualifiedName.length() - 1; i >= 0; i--) {
-      if (qualifiedName.charAt(i) == '.') {
-        return javacElements.getName(qualifiedName.subSequence(i, qualifiedName.length()));
-      }
-    }
-
-    return qualifiedName;
   }
 
   /**
@@ -124,15 +172,6 @@ class TreeBackedElements implements Elements {
     }
 
     return knownTypes.get(fullyQualifiedName);
-  }
-
-  /* package */ void enterTypeElement(TreeBackedTypeElement element) {
-    Name name = element.getQualifiedName();
-
-    if (knownTypes.containsKey(name)) {
-      throw new AssertionError(String.format("Type collision for %s", name));
-    }
-    knownTypes.put(name, element);
   }
 
   @Override

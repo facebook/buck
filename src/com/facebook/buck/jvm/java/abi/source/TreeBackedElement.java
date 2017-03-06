@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
+import com.sun.source.util.TreePath;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -37,8 +38,7 @@ import javax.lang.model.element.Name;
  * for individual methods and {@link com.facebook.buck.jvm.java.abi.source} for more information.
  */
 abstract class TreeBackedElement implements Element {
-  private final ElementKind kind;
-  private final Name simpleName;
+  private final Element underlyingElement;
   @Nullable
   private final TreeBackedElement enclosingElement;
   private final List<Element> enclosedElements = new ArrayList<>();
@@ -46,19 +46,24 @@ abstract class TreeBackedElement implements Element {
 
   @Nullable
   private TypeResolver resolver;
+  @Nullable
+  private final TreePath path;
 
   public TreeBackedElement(
-      ElementKind kind,
-      Name simpleName,
+      Element underlyingElement,
       @Nullable TreeBackedElement enclosingElement,
+      @Nullable TreePath path,
       TypeResolverFactory resolverFactory) {
-    this.kind = kind;
-    this.simpleName = simpleName;
+    this.underlyingElement = underlyingElement;
     this.enclosingElement = enclosingElement;
     // Some element types don't appear as members of enclosingElement.getEnclosedElements, so
     // it's up to each subtype's constructor to decide whether to add itself or not.
-
+    this.path = path;
     this.resolverFactory = resolverFactory;
+  }
+
+  /* package */ Element getUnderlyingElement() {
+    return underlyingElement;
   }
 
   protected final TypeResolver getResolver() {
@@ -69,19 +74,24 @@ abstract class TreeBackedElement implements Element {
     return resolver;
   }
 
+  @Nullable
+  /* package */ TreePath getTreePath() {
+    return path;
+  }
+
   @Override
   public ElementKind getKind() {
-    return kind;
+    return underlyingElement.getKind();
   }
 
   @Override
   public Set<Modifier> getModifiers() {
-    throw new UnsupportedOperationException();
+    return underlyingElement.getModifiers();
   }
 
   @Override
   public Name getSimpleName() {
-    return simpleName;
+    return underlyingElement.getSimpleName();
   }
 
   @Override
@@ -105,6 +115,7 @@ abstract class TreeBackedElement implements Element {
   }
 
   @Override
+  @Nullable
   public <A extends Annotation> A getAnnotation(Class<A> annotationType) {
     throw new UnsupportedOperationException();
   }
@@ -117,5 +128,10 @@ abstract class TreeBackedElement implements Element {
   @Override
   public <R, P> R accept(ElementVisitor<R, P> v, P p) {
     throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public String toString() {
+    return underlyingElement.toString();
   }
 }

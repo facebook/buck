@@ -25,6 +25,7 @@ import com.sun.source.util.TaskListener;
 import com.sun.source.util.Trees;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -34,6 +35,7 @@ import javax.annotation.processing.Processor;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
 import javax.tools.JavaFileObject;
 
 /**
@@ -48,6 +50,8 @@ import javax.tools.JavaFileObject;
 public class FrontendOnlyJavacTask extends JavacTask {
   private static final BuckTracing BUCK_TRACING = BuckTracing.getInstance("TreeResolver");
   private final JavacTask javacTask;
+  private final Elements javacElements;
+  private final Trees javacTrees;
   private final TreeBackedElements elements;
   private final TreeBackedTrees trees;
   private final TreeBackedTypes types;
@@ -60,8 +64,10 @@ public class FrontendOnlyJavacTask extends JavacTask {
 
   public FrontendOnlyJavacTask(JavacTask javacTask) {
     this.javacTask = javacTask;
-    elements = new TreeBackedElements(javacTask.getElements());
-    trees = new TreeBackedTrees(Trees.instance(javacTask), elements);
+    javacElements = javacTask.getElements();
+    javacTrees = Trees.instance(javacTask);
+    elements = new TreeBackedElements(javacElements, javacTrees);
+    trees = new TreeBackedTrees(javacTrees, elements);
     types = new TreeBackedTypes();
     resolverFactory = new TypeResolverFactory(elements, types, trees);
     elements.setResolverFactory(resolverFactory);
@@ -78,7 +84,15 @@ public class FrontendOnlyJavacTask extends JavacTask {
 
   public Iterable<? extends TypeElement> enter() throws IOException {
     if (topLevelElements == null) {
-      topLevelElements = StreamSupport.stream(parse().spliterator(), false)
+      Iterable<? extends CompilationUnitTree> compilationUnits;
+      try {
+        compilationUnits = parse();
+        javacTask.getClass().getMethod("enter").invoke(javacTask);
+      } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+        throw new AssertionError(e);
+      }
+
+      topLevelElements = StreamSupport.stream(compilationUnits.spliterator(), false)
           .map(this::enterTree)
           .flatMap(List::stream)
           .collect(Collectors.toList());
@@ -147,7 +161,7 @@ public class FrontendOnlyJavacTask extends JavacTask {
 
   List<TreeBackedTypeElement> enterTree(CompilationUnitTree compilationUnit) {
     try (BuckTracing.TraceSection t = BUCK_TRACING.traceSection("buck.abi.enterTree")) {
-      return trees.enterTree(compilationUnit, resolverFactory);
+      return trees.enterTree(compilationUnit);
     }
   }
 

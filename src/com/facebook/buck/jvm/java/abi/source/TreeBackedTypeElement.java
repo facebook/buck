@@ -20,12 +20,12 @@ import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.util.TreePath;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.NestingKind;
@@ -39,43 +39,27 @@ import javax.lang.model.type.TypeMirror;
  * methods and {@link com.facebook.buck.jvm.java.abi.source} for more information.
  */
 class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
+  private final TypeElement underlyingElement;
   private final ClassTree tree;
-  private final Name qualifiedName;
   private final List<TreeBackedTypeParameterElement> typeParameters = new ArrayList<>();
   private StandaloneDeclaredType typeMirror;
   @Nullable
   private TypeMirror superclass;
 
   TreeBackedTypeElement(
+      TypeElement underlyingElement,
       TreeBackedElement enclosingElement,
-      ClassTree tree,
-      Name qualifiedName,
+      TreePath path,
       TypeResolverFactory resolverFactory) {
-    super(getElementKind(tree), tree.getSimpleName(), enclosingElement, resolverFactory);
-    this.tree = tree;
-    this.qualifiedName = qualifiedName;
+    super(underlyingElement, enclosingElement, path, resolverFactory);
+    this.underlyingElement = underlyingElement;
+    this.tree = (ClassTree) path.getLeaf();
     typeMirror = new StandaloneDeclaredType(this);
     enclosingElement.addEnclosedElement(this);
   }
 
   /* package */ void addTypeParameter(TreeBackedTypeParameterElement typeParameter) {
     typeParameters.add(typeParameter);
-  }
-
-  private static ElementKind getElementKind(ClassTree tree) {
-    switch (tree.getKind()) {
-      case ANNOTATION_TYPE:
-        return ElementKind.ANNOTATION_TYPE;
-      case CLASS:
-        return ElementKind.CLASS;
-      case ENUM:
-        return ElementKind.ENUM;
-      case INTERFACE:
-        return ElementKind.INTERFACE;
-      // $CASES-OMITTED$
-      default:
-        throw new IllegalArgumentException(String.format("Unexpected kind: %s", tree.getKind()));
-    }
   }
 
   @Override
@@ -85,17 +69,12 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
 
   @Override
   public NestingKind getNestingKind() {
-    if (getEnclosingElement().getKind() == ElementKind.PACKAGE) {
-      return NestingKind.TOP_LEVEL;
-    }
-
-    // Note that anonymous and local classes do not appear in tree-backed elements
-    return NestingKind.MEMBER;
+    return underlyingElement.getNestingKind();
   }
 
   @Override
   public Name getQualifiedName() {
-    return qualifiedName;
+    return underlyingElement.getQualifiedName();
   }
 
   @Override
@@ -135,10 +114,5 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
   @Override
   public <R, P> R accept(ElementVisitor<R, P> v, P p) {
     return v.visitType(this, p);
-  }
-
-  @Override
-  public String toString() {
-    return getQualifiedName().toString();
   }
 }

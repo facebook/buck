@@ -19,13 +19,13 @@ package com.facebook.buck.jvm.java.abi.source;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.TypeParameterTree;
+import com.sun.source.util.TreePath;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeMirror;
@@ -43,12 +43,12 @@ class TreeBackedTypeParameterElement extends TreeBackedElement implements TypePa
   private List<TypeMirror> bounds;
 
   public TreeBackedTypeParameterElement(
-      TypeParameterTree tree,
+      TypeParameterElement underlyingElement,
+      TreePath path,
       TreeBackedElement enclosingElement,
       TypeResolverFactory resolverFactory) {
-    super(ElementKind.TYPE_PARAMETER, tree.getName(), enclosingElement, resolverFactory);
-
-    this.tree = tree;
+    super(underlyingElement, enclosingElement, path, resolverFactory);
+    this.tree = (TypeParameterTree) path.getLeaf();
     typeVar = new StandaloneTypeVariable(this);
 
     // In javac's implementation, enclosingElement does not have type parameters in the return
@@ -86,10 +86,5 @@ class TreeBackedTypeParameterElement extends TreeBackedElement implements TypePa
   @Override
   public <R, P> R accept(ElementVisitor<R, P> v, P p) {
     return v.visitTypeParameter(this, p);
-  }
-
-  @Override
-  public String toString() {
-    return getSimpleName().toString();
   }
 }

@@ -34,8 +34,6 @@ import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,7 +44,6 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ErrorType;
@@ -61,7 +58,6 @@ class TreeBackedTrees extends Trees {
   private final TreeBackedElements elements;
   private final Trees javacTrees;
   private final Map<Tree, TreeBackedElement> treeBackedElements = new HashMap<>();
-  private final Map<TreeBackedElement, TreePath> elementPaths = new HashMap<>();
   private final Map<Tree, TreeBackedScope> treeBackedScopes = new HashMap<>();
 
   public static TreeBackedTrees instance(JavaCompiler.CompilationTask task) {
@@ -75,71 +71,40 @@ class TreeBackedTrees extends Trees {
     this.elements = elements;
   }
 
-  /* package */ List<TreeBackedTypeElement> enterTree(
-      CompilationUnitTree compilationUnit,
-      TypeResolverFactory resolverFactory) {
-    List<TreeBackedTypeElement> topLevelElements = new ArrayList<>();
+  /* package */ List<TreeBackedTypeElement> enterTree(CompilationUnitTree compilationUnit) {
+    List<TreeBackedTypeElement> topLevelTypes = new ArrayList<>();
 
     new TreePathScanner<Void, Void>() {
-      TreeBackedScope enclosingScope = getScope(getPath(
-          compilationUnit,
-          compilationUnit));
-
-      @Override
-      public Void visitCompilationUnit(CompilationUnitTree node, Void aVoid) {
-        Path sourcePath = Paths.get(node.getSourceFile().getName());
-        if (sourcePath.getFileName().toString().equals("package-info.java")) {
-          elements.getOrCreatePackageElement(
-              TreeBackedTrees.treeToName(compilationUnit.getPackageName()));
-        }
-
-        return super.visitCompilationUnit(node, aVoid);
-      }
+      @Nullable
+      TreeBackedTypeElement currentClass;
 
       @Override
       public Void visitClass(ClassTree node, Void aVoid) {
-        // Match javac: create a package element only once we know a class exists in it
-        elements.getOrCreatePackageElement(
-            TreeBackedTrees.treeToName(compilationUnit.getPackageName()));
-
-        Name qualifiedName = enclosingScope.buildQualifiedName(node.getSimpleName());
-
-        TreeBackedScope classScope = getScope(getCurrentPath());
-        TreeBackedTypeElement typeElement =
-            new TreeBackedTypeElement(
-                enclosingScope.getEnclosingElement(),
-                node,
-                qualifiedName,
-                resolverFactory);
-
-        if (enclosingScope.getEnclosingClass() == null) {
-          topLevelElements.add(typeElement);
-        }
-        elements.enterTypeElement(typeElement);
-        enterElement(getCurrentPath(), typeElement);
-
-        TreeBackedScope oldScope = enclosingScope;
-        enclosingScope = classScope;
+        TreePath path = getCurrentPath();
+        TreeBackedTypeElement previousClass = currentClass;
+        currentClass = (TreeBackedTypeElement) elements.enterElement(
+            Preconditions.checkNotNull(javacTrees.getElement(path)));
         try {
+          if (previousClass == null) {
+            topLevelTypes.add(currentClass);
+          }
+          treeBackedElements.put(path.getLeaf(), currentClass);
           return super.visitClass(node, aVoid);
         } finally {
-          enclosingScope = oldScope;
+          currentClass = previousClass;
         }
       }
 
       @Override
       public Void visitTypeParameter(TypeParameterTree node, Void aVoid) {
-        TreeBackedTypeElement enclosingClass =
-            Preconditions.checkNotNull(enclosingScope.getEnclosingClass());
+        TreePath path = getCurrentPath();
+        TreeBackedTypeParameterElement typeParameter =
+            (TreeBackedTypeParameterElement) elements.enterElement(
+                Preconditions.checkNotNull(javacTrees.getElement(path)));
 
-        TreeBackedTypeParameterElement typeParameter = new TreeBackedTypeParameterElement(
-            node,
-            enclosingClass,
-            resolverFactory);
-        enclosingClass.addTypeParameter(typeParameter);
-        enterElement(getCurrentPath(), typeParameter);
-
-        return null;
+        Preconditions.checkNotNull(currentClass).addTypeParameter(typeParameter);
+        treeBackedElements.put(path.getLeaf(), typeParameter);
+        return super.visitTypeParameter(node, aVoid);
       }
 
       @Override
@@ -161,19 +126,7 @@ class TreeBackedTrees extends Trees {
       }
     }.scan(compilationUnit, null);
 
-    return topLevelElements;
-  }
-
-  /* package */ void enterElement(TreePath path, TreeBackedElement element) {
-    if (treeBackedElements.containsKey(path.getLeaf())) {
-      throw new AssertionError();
-    }
-    treeBackedElements.put(path.getLeaf(), element);
-
-    if (elementPaths.containsKey(element)) {
-      throw new AssertionError();
-    }
-    elementPaths.put(element, path);
+    return topLevelTypes;
   }
 
   @Override
@@ -227,7 +180,7 @@ class TreeBackedTrees extends Trees {
   @Nullable
   public TreePath getPath(Element e) {
     if (e instanceof TreeBackedElement) {
-      return Preconditions.checkNotNull(elementPaths.get(e));
+      return ((TreeBackedElement) e).getTreePath();
     }
 
     TreePath result = javacTrees.getPath(e);
