@@ -37,8 +37,6 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -100,8 +98,6 @@ public class TrimUberRDotJavaTest {
         null,
         new IdentityResourcesProvider(ImmutableList.of()),
         ImmutableList.of(),
-        ImmutableSortedSet.of(),
-        ImmutableSet.of(),
         Optional.empty(),
         null,
         false,

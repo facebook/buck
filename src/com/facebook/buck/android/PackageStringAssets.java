@@ -130,7 +130,7 @@ public class PackageStringAssets extends AbstractBuildRule {
     return steps.build();
   }
 
-  public Path getPathToStringAssetsZip() {
+  Path getPathToStringAssetsZip() {
     return getPathToStringAssetsDir().resolve("string_assets.zip");
   }
 
@@ -148,5 +148,9 @@ public class PackageStringAssets extends AbstractBuildRule {
         getProjectFilesystem(),
         getBuildTarget(),
         STRING_ASSETS_DIR_FORMAT);
+  }
+
+  SourcePath getSourcePathToStringAssetsZip() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToStringAssetsZip());
   }
 }

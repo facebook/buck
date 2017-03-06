@@ -81,6 +81,8 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableFlavor.of("compile_uber_r_dot_java");
   private static final Flavor DEX_UBER_R_DOT_JAVA_FLAVOR =
       ImmutableFlavor.of("dex_uber_r_dot_java");
+  private static final Flavor MERGE_ASSETS_FLAVOR =
+      ImmutableFlavor.of("merge_assets");
   private static final Flavor GENERATE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR =
       ImmutableFlavor.of("generate_native_lib_merge_map_generated_code");
   private static final Flavor COMPILE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR =
@@ -332,8 +334,6 @@ public class AndroidBinaryGraphEnhancer {
         manifest,
         filteredResourcesProvider,
         getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
-        getTargetsAsRules(resourceDetails.getResourcesWithEmptyResButNonEmptyAssetsDir()),
-        packageableCollection.getAssetsDirectories(),
         resourceUnionPackage,
         packageType,
         shouldBuildStringSourceMap,
@@ -472,6 +472,9 @@ public class AndroidBinaryGraphEnhancer {
         ruleFinder.filterBuildRuleInputs(packageableCollection.getPathsToThirdPartyJars()));
 
     Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi = Optional.empty();
+    Optional<MergeAssets> mergeAssets = Optional.of(
+        createMergeAssetsRule(packageableCollection.getAssetsDirectories()));
+    enhancedDeps.add(mergeAssets.get());
     if (!exopackageModes.isEmpty()) {
       BuildRuleParams paramsForComputeExopackageAbi = buildRuleParams.copyWithChanges(
           createBuildTargetWithFlavor(CALCULATE_ABI_FLAVOR),
@@ -495,6 +498,7 @@ public class AndroidBinaryGraphEnhancer {
         .setCompiledUberRDotJava(compileUberRDotJava)
         .setCopyNativeLibraries(copyNativeLibraries)
         .setPackageStringAssets(packageStringAssets)
+        .setMergeAssets(mergeAssets)
         .setPreDexMerge(preDexMerge)
         .setComputeExopackageDepsAbi(computeExopackageDepsAbi)
         .setClasspathEntriesToDex(
@@ -601,6 +605,19 @@ public class AndroidBinaryGraphEnhancer {
     ruleResolver.addToIndex(preDexMerge);
 
     return preDexMerge;
+  }
+
+  private MergeAssets createMergeAssetsRule(ImmutableSet<SourcePath> assetsDirectories) {
+    MergeAssets mergeAssets = new MergeAssets(
+        buildRuleParams
+            .copyWithChanges(
+                createBuildTargetWithFlavor(MERGE_ASSETS_FLAVOR),
+                Suppliers.ofInstance(ImmutableSortedSet.of()),
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
+        ruleFinder,
+        ImmutableSortedSet.copyOf(assetsDirectories));
+    ruleResolver.addToIndex(mergeAssets);
+    return mergeAssets;
   }
 
   @VisibleForTesting

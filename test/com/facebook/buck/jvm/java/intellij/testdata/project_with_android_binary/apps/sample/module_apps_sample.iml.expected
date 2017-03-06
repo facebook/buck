@@ -39,9 +39,9 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="module_java_com_sample_lib" />
     <orderEntry type="module" module-name="module_res_com_sample_base" />
-    <orderEntry type="module" module-name="module_res_com_sample_asset_only" />
     <orderEntry type="module" module-name="module_res_com_sample_title" />
     <orderEntry type="module" module-name="module_res_com_sample_top" />
+    <orderEntry type="module" module-name="module_res_com_sample_asset_only" />
     <orderEntry type="inheritedJdk" />
   </component>
 </module>

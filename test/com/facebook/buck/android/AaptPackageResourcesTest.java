@@ -23,7 +23,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -66,7 +65,6 @@ public class AaptPackageResourcesTest {
 
   private AndroidResource resource1;
   private AndroidResource resource2;
-  private AndroidResource justAssets;
 
   private FakeFileHashCache hashCache;
 
@@ -99,24 +97,14 @@ public class AaptPackageResourcesTest {
             .setAssets(new PathSourcePath(filesystem, Paths.get("asset2")))
             .build();
 
-    TargetNode<?, ?> assetsNode =
-        AndroidResourceBuilder
-            .createBuilder(
-                BuildTargetFactory.newInstance("//:assets"),
-                filesystem)
-            .setAssets(new PathSourcePath(filesystem, Paths.get("justAssets")))
-            .build();
-
     TargetGraph targetGraph =
-        TargetGraphFactory.newInstance(resourceNode, resourceNode2, assetsNode);
+        TargetGraphFactory.newInstance(resourceNode, resourceNode2);
     ruleResolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     resource1 =
         (AndroidResource) ruleResolver.requireRule(resourceNode.getBuildTarget());
     resource2 =
         (AndroidResource) ruleResolver.requireRule(resourceNode2.getBuildTarget());
-    justAssets =
-        (AndroidResource) ruleResolver.requireRule(assetsNode.getBuildTarget());
 
     ruleFinder = new SourcePathRuleFinder(ruleResolver);
     pathResolver = new SourcePathResolver(ruleFinder);
@@ -139,8 +127,6 @@ public class AaptPackageResourcesTest {
     ImmutableList<HasAndroidResourceDeps> hasAndroidResourceDeps;
     AndroidBinary.PackageType packageType;
     ManifestEntries manifestEntries;
-    ImmutableSet<SourcePath> assetsDirectories;
-    ImmutableSortedSet<BuildRule> extraDeps;
 
     AaptConstructorArgs() {
       manifest = createPathSourcePath("AndroidManifest.xml", "content");
@@ -148,8 +134,6 @@ public class AaptPackageResourcesTest {
       hasAndroidResourceDeps = ImmutableList.of();
       packageType = AndroidBinary.PackageType.DEBUG;
       manifestEntries = ManifestEntries.empty();
-      assetsDirectories = ImmutableSet.of();
-      extraDeps = ImmutableSortedSet.of();
     }
   }
 
@@ -221,29 +205,6 @@ public class AaptPackageResourcesTest {
     previousRuleKey = assertKeyChanged(previousRuleKey, args);
 
     createPathSourcePath("res1", "different_value");
-    previousRuleKey = assertKeyChanged(previousRuleKey, args);
-  }
-
-
-  @Test
-  public void testThatChangingAssetsChangesRuleKey() {
-    // Generate a rule key for the defaults.
-    AaptConstructorArgs args = new AaptConstructorArgs();
-
-    RuleKey previousRuleKey = calculateRuleKey(args);
-
-    args.hasAndroidResourceDeps = ImmutableList.of(resource1);
-    args.assetsDirectories = ImmutableSet.of(
-        resource1.getAssets(), justAssets.getAssets());
-    // AndroidBinaryGraphEnhancer directly adds resource deps that have assets and no resources to
-    // extraDeps.
-    args.extraDeps = ImmutableSortedSet.of(justAssets);
-    previousRuleKey = assertKeyChanged(previousRuleKey, args);
-
-    createPathSourcePath("asset1", "different_value");
-    previousRuleKey = assertKeyChanged(previousRuleKey, args);
-
-    createPathSourcePath("justAssets", "different_value");
     previousRuleKey = assertKeyChanged(previousRuleKey, args);
   }
 
@@ -320,8 +281,6 @@ public class AaptPackageResourcesTest {
             constructorArgs.manifest,
             constructorArgs.filteredResourcesProvider,
             constructorArgs.hasAndroidResourceDeps,
-            constructorArgs.extraDeps,
-            constructorArgs.assetsDirectories,
             Optional.empty(),
             constructorArgs.packageType,
             false,
