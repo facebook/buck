@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.android;
 
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.VersionStringComparator;
@@ -37,8 +38,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Collectors;
-
-import javafx.util.Pair;
 
 /**
  * Utility class used for resolving the location of Android specific directories.
@@ -331,8 +330,8 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
         // Pair of path to version number
         .map(p -> new Pair<>(p, findNdkVersion(p)))
 
-        .filter(pair -> pair.getValue().isPresent())
-        .sorted((o1, o2) -> versionComparator.compare(o2.getValue().get(), o1.getValue().get()))
+        .filter(pair -> pair.getSecond().isPresent())
+        .sorted((o1, o2) -> versionComparator.compare(o2.getSecond().get(), o1.getSecond().get()))
         .collect(Collectors.toList());
 
     if (availableNdks.isEmpty()) {
@@ -348,21 +347,21 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
       }
 
       Optional<Path> targetNdkPath = availableNdks.stream()
-          .filter(p -> versionsMatch(targetNdkVersion.get(), p.getValue().get()))
-          .map(Pair::getKey)
+          .filter(p -> versionsMatch(targetNdkVersion.get(), p.getSecond().get()))
+          .map(Pair::getFirst)
           .findFirst();
       if (targetNdkPath.isPresent()) {
         return targetNdkPath;
       }
       ndkErrorMessage = Optional.of("Target NDK version " + targetNdkVersion.get() + " is not " +
               "available. The following versions are available: " + availableNdks.stream()
-          .map(Pair::getValue)
+          .map(Pair::getSecond)
           .map(Optional::get)
           .collect(Collectors.joining(", ")));
       return Optional.empty();
     }
 
-    return Optional.of(availableNdks.get(0).getKey());
+    return Optional.of(availableNdks.get(0).getFirst());
   }
 
   /**
