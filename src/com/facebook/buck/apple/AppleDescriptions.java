@@ -383,6 +383,8 @@ public class AppleDescriptions {
     if (assetCatalogDirs.isEmpty()) {
       return Optional.empty();
     }
+    Preconditions.checkNotNull(optimization,
+        "optimization was null even though assetCatalogArgs was not empty");
 
     for (SourcePath assetCatalogDir : assetCatalogDirs) {
       Path baseName = sourcePathResolver.getRelativePath(assetCatalogDir).getFileName();

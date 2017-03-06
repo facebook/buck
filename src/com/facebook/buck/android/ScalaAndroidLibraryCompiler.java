@@ -29,10 +29,12 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.OptionalCompat;
 import com.google.common.collect.ImmutableList;
 
+import javax.annotation.Nullable;
+
 public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
 
   private final ScalaBuckConfig scalaBuckConfig;
-  private Tool scalac;
+  private @Nullable Tool scalac;
 
   public ScalaAndroidLibraryCompiler(ScalaBuckConfig config) {
     this.scalaBuckConfig = config;

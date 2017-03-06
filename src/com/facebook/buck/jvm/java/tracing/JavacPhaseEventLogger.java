@@ -38,7 +38,7 @@ public class JavacPhaseEventLogger {
     this.eventSink = eventSink;
   }
 
-  public void beginParse(String filename) {
+  public void beginParse(@Nullable String filename) {
     postStartedEvent(JavacPhaseEvent.Phase.PARSE, getArgs(filename, null));
   }
 

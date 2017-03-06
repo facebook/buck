@@ -19,6 +19,8 @@ package com.facebook.buck.jvm.java;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 public interface OutOfProcessJavacConnectionInterface {
   /**
    * This is interface that will be used to perform out of process compilation.
@@ -36,7 +38,7 @@ public interface OutOfProcessJavacConnectionInterface {
    * @return Resulting code, 0 if build finished without issues, non-zero otherwise.
    */
   int buildWithClasspath(
-      String compilerClassNameForJarBackedJavacMode,
+      @Nullable String compilerClassNameForJarBackedJavacMode,
       Map<String, Object> serializedJavacExecutionContext,
       String invokingRuleBuildTargetAsString,
       List<String> options,

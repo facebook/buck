@@ -29,6 +29,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.NamedTemporaryFile;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -140,7 +141,8 @@ public class DistBuildLogStateTracker implements Closeable {
       seenSlaveLogs.put(streamLogs.slaveStream, new SlaveStreamState());
     }
 
-    SlaveStreamState seenStreamState = seenSlaveLogs.get(streamLogs.slaveStream);
+    SlaveStreamState seenStreamState =
+        Preconditions.checkNotNull(seenSlaveLogs.get(streamLogs.slaveStream));
 
 
     LogLineBatch lastReceivedBatch =

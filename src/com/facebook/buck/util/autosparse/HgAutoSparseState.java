@@ -19,6 +19,7 @@ package com.facebook.buck.util.autosparse;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.versioncontrol.HgCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.BufferedReader;
@@ -86,7 +87,7 @@ public class HgAutoSparseState implements AutoSparseState {
 
   @Override
   public Path getSCRoot() {
-    return hgCmdLine.getHgRoot();
+    return Preconditions.checkNotNull(hgCmdLine.getHgRoot());
   }
 
   @Override

@@ -52,9 +52,9 @@ public class ProcessExecutorSerializer {
   public static ProcessExecutor deserialize(Map<String, Object> data, Console console) {
     String type = (String) data.get(TYPE);
     Preconditions.checkNotNull(type, "Cannot deserialize without `%s` field", TYPE);
-    if (type.equals(TYPE_DEFAULT)) {
+    if (TYPE_DEFAULT.equals(type)) {
       return new DefaultProcessExecutor(console);
-    } else if (type.equals(TYPE_CONTEXTUAL)) {
+    } else if (TYPE_CONTEXTUAL.equals(type)) {
       Map<String, Object> delegateData = (Map<String, Object>) data.get(DELEGATE);
       Preconditions.checkNotNull(
           delegateData,

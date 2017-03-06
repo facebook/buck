@@ -54,8 +54,9 @@ public class CellPathResolverSerializer {
 
   @SuppressWarnings("unchecked")
   public static CellPathResolver deserialize(Map<String, Object> data) {
-    String type = (String) data.get(TYPE);
-    Preconditions.checkNotNull(type, "Expected to have value for key %s", TYPE);
+    String type = (String) Preconditions.checkNotNull(
+        data.get(TYPE),
+        "Expected to have value for key %s", TYPE);
     Preconditions.checkArgument(
         type.equals(TYPE_DEFAULT),
         "Only CellPathResolver with type '%s' are supported, but found '%s' type",

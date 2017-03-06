@@ -113,7 +113,7 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoClosea
   }
 
   @Override
-  public void beginParse(String filename) {
+  public void beginParse(@Nullable String filename) {
     logger.beginParse(filename);
   }
 
@@ -168,7 +168,7 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoClosea
   }
 
   @Override
-  public void beginGenerate(String filename, String typename) {
+  public void beginGenerate(@Nullable String filename, @Nullable String typename) {
     logger.beginGenerate(filename, typename);
   }
 

@@ -32,6 +32,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 public class ArtifactConfig {
 
   @VisibleForTesting
@@ -63,8 +65,8 @@ public class ArtifactConfig {
 
   public static class Repository {
     public String url;
-    public String user;
-    public String password;
+    public @Nullable String user;
+    public @Nullable String password;
 
     public Repository() {}
 
