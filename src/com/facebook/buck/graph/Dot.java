@@ -70,7 +70,7 @@ public class Dot<T> {
 
         try {
           output.append(String.format(
-              "  %s [style=filled,color=%s]\n",
+              "  %s [style=filled,color=%s];\n",
               source,
               Dot.colorFromType(sourceType)));
         } catch (IOException e) {
@@ -115,7 +115,7 @@ public class Dot<T> {
             String source = nodeToName.apply(node);
             String sourceType = nodeToTypeName.apply(node);
             builder.add(String.format(
-                "  %s [style=filled,color=%s]",
+                "  %s [style=filled,color=%s];\n",
                 source,
                 Dot.colorFromType(sourceType)));
             ImmutableSortedSet<T> nodes = ImmutableSortedSet.copyOf(
@@ -142,7 +142,7 @@ public class Dot<T> {
           String source = nodeToName.apply(node);
           String sourceType = nodeToTypeName.apply(node);
           sortedSetBuilder.add(String.format(
-              "  %s [style=filled,color=%s]\n",
+              "  %s [style=filled,color=%s];\n",
               source,
               Dot.colorFromType(sourceType)));
           for (T sink : Sets.filter(graph.getOutgoingNodesFor(node), nodesToFilter::contains)) {

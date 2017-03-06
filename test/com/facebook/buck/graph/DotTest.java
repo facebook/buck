@@ -66,11 +66,11 @@ public class DotTest {
             "  C -> E;",
             "  D -> E;",
             "  A -> E;",
-            "  A [style=filled,color=\"#C1C1C0\"]",
-            "  B [style=filled,color=\"#C2C1C0\"]",
-            "  C [style=filled,color=\"#C3C1C0\"]",
-            "  D [style=filled,color=\"#C4C1C0\"]",
-            "  E [style=filled,color=\"#C5C1C0\"]"));
+            "  A [style=filled,color=\"#C1C1C0\"];",
+            "  B [style=filled,color=\"#C2C1C0\"];",
+            "  C [style=filled,color=\"#C3C1C0\"];",
+            "  D [style=filled,color=\"#C4C1C0\"];",
+            "  E [style=filled,color=\"#C5C1C0\"];"));
 
     assertEquals("}", lines.get(lines.size() - 1));
   }
@@ -100,8 +100,8 @@ public class DotTest {
         edges,
         ImmutableSet.of(
             "  A -> B;",
-            "  A [style=filled,color=springgreen3]",
-            "  B [style=filled,color=indianred1]"));
+            "  A [style=filled,color=springgreen3];",
+            "  B [style=filled,color=indianred1];"));
 
     assertEquals("}", lines.get(lines.size() - 1));
   }
