@@ -37,6 +37,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.versions.Version;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -85,6 +86,7 @@ public class GoTestDescription implements
       BuildTarget buildTarget,
       final BuildRuleResolver resolver,
       A args,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) throws NoSuchBuildTargetException {
     Optional<GoPlatform> platform =
         goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget);

@@ -31,6 +31,7 @@ import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.versions.Version;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -70,6 +71,7 @@ public class GoLibraryDescription implements
       BuildTarget buildTarget,
       final BuildRuleResolver resolver,
       A args,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) throws NoSuchBuildTargetException {
     Optional<GoPlatform> platform =
         goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget);

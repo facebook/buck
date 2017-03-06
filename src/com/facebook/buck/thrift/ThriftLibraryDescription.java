@@ -41,6 +41,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.versions.Version;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -481,12 +482,14 @@ public class ThriftLibraryDescription
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
       A args,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass)
       throws NoSuchBuildTargetException {
     ThriftLanguageSpecificEnhancer enhancer = enhancers.getRequiredValue(buildTarget);
     return enhancer.createMetadata(
         buildTarget,
         resolver,
+        selectedVersions,
         args,
         getThriftSources(
             buildTarget.withFlavors(enhancer.getFlavor()),

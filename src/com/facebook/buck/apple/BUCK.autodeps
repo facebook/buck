@@ -60,6 +60,7 @@
       "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/immutables:immutables",
+      "//src/com/facebook/buck/versions:types",
       "//third-party/java/dd-plist:dd-plist",
       "//third-party/java/guava:guava",
       "//third-party/java/infer-annotations:infer-annotations",

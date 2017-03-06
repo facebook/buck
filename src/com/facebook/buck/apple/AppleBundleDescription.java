@@ -39,6 +39,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.versions.Version;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -272,6 +273,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
       A args,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) throws NoSuchBuildTargetException {
     return resolver.requireMetadata(args.binary, metadataClass);
   }

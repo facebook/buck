@@ -53,6 +53,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.versions.Version;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -426,6 +427,7 @@ public class AppleLibraryDescription implements
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
       A args,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) throws NoSuchBuildTargetException {
     if (!metadataClass.isAssignableFrom(FrameworkDependencies.class) ||
         !buildTarget.getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
@@ -435,7 +437,12 @@ public class AppleLibraryDescription implements
           delegateArg,
           args,
           buildTarget);
-      return delegate.createMetadata(buildTarget, resolver, delegateArg, metadataClass);
+      return delegate.createMetadata(
+          buildTarget,
+          resolver,
+          delegateArg,
+          selectedVersions,
+          metadataClass);
     }
     Optional<Flavor> cxxPlatformFlavor = delegate.getCxxPlatforms().getFlavor(buildTarget);
     Preconditions.checkState(

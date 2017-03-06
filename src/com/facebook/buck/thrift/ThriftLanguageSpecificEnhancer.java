@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -92,6 +93,7 @@ public interface ThriftLanguageSpecificEnhancer extends FlavorConvertible {
   default <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       ThriftConstructorArg args,
       ImmutableMap<String, ThriftSource> sources,
       ImmutableSortedSet<BuildRule> deps,

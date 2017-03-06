@@ -35,6 +35,7 @@ import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.versions.Version;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -404,6 +405,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       ThriftConstructorArg args,
       ImmutableMap<String, ThriftSource> sources,
       ImmutableSortedSet<BuildRule> deps,
@@ -418,6 +420,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
             args,
             sources,
             deps),
+        selectedVersions,
         metadataClass);
   }
 

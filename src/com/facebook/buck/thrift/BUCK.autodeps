@@ -26,6 +26,7 @@
       "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/util:process_executor",
+      "//src/com/facebook/buck/versions:types",
       "//third-party/java/guava:guava",
       "//third-party/java/infer-annotations:infer-annotations",
       "//third-party/java/jsr:jsr305"

@@ -102,6 +102,7 @@ public class BuildRuleResolver {
                     node.getBuildTarget(),
                     BuildRuleResolver.this,
                     arg,
+                    node.getSelectedVersions(),
                     metadataClass);
               }
             });
