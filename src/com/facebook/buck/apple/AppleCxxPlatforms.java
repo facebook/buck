@@ -485,12 +485,18 @@ public class AppleCxxPlatforms {
         "-target",
         targetArchitectureName);
 
-    ImmutableList<String> swiftStdlibToolParams = ImmutableList.of(
-        "--copy",
-        "--verbose",
-        "--strip-bitcode",
-        "--platform",
-        platformName);
+    ImmutableList.Builder<String> swiftStdlibToolParamsBuilder = ImmutableList.builder();
+    swiftStdlibToolParamsBuilder
+      .add("--copy")
+      .add("--verbose")
+      .add("--strip-bitcode")
+      .add("--platform")
+      .add(platformName);
+    for (Path toolchainPath : sdkPaths.getToolchainPaths()) {
+      swiftStdlibToolParamsBuilder
+        .add("--toolchain")
+        .add(toolchainPath.toString());
+    }
 
     Optional<Tool> swift = getOptionalToolWithParams(
         "swift",
@@ -503,7 +509,7 @@ public class AppleCxxPlatforms {
         toolSearchPaths,
         executableFinder,
         version,
-        swiftStdlibToolParams);
+        swiftStdlibToolParamsBuilder.build());
 
     if (swift.isPresent() && swiftStdLibTool.isPresent()) {
       return Optional.of(
