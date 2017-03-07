@@ -19,12 +19,10 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -35,7 +33,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -81,21 +78,15 @@ public class CxxTestDescriptionTest {
     );
   }
 
-  private final boolean sandboxSources;
-
+  private final ImmutableMap<String, ImmutableMap<String, String>> rawConfig;
   private final CxxBuckConfig cxxBuckConfig;
 
   public CxxTestDescriptionTest(boolean sandboxSources) {
-    this.sandboxSources = sandboxSources;
-    this.cxxBuckConfig = new CxxBuckConfig(
-        FakeBuckConfig.builder().setSections(
-            ImmutableMap.of(
-                "cxx",
-                ImmutableMap.of(
-                    "sandbox_sources", Boolean.toString(sandboxSources),
-                    "gtest_dep", "//:framework_rule",
-                    "gtest_default_test_main_dep", "//:framework_rule",
-                    "boost_test_dep", "//:framework_rule"))).build());
+    this.rawConfig =
+        ImmutableMap.of(
+            "cxx",
+            ImmutableMap.of("sandbox_sources", Boolean.toString(sandboxSources)));
+    this.cxxBuckConfig = new CxxBuckConfig(FakeBuckConfig.builder().setSections(rawConfig).build());
   }
 
   private void addSandbox(BuildRuleResolver resolver,
@@ -134,34 +125,24 @@ public class CxxTestDescriptionTest {
     BuildTarget gtest = BuildTargetFactory.newInstance("//:gtest");
     BuildTarget gtestMain = BuildTargetFactory.newInstance("//:gtest_main");
 
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
-        ImmutableMap.of(
-            "cxx",
-            ImmutableMap.of(
-                "gtest_dep", gtest.toString(),
-                "gtest_default_test_main_dep", gtestMain.toString()
-            )
-        )).build();
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(new CxxBuckConfig(buckConfig));
-    CxxTestDescription desc = new CxxTestDescription(
-        cxxBuckConfig,
-        cxxPlatform,
-        FlavorDomain.of("platform"),
-        /* testRuleTimeoutMs */ Optional.empty());
+    CxxBuckConfig cxxBuckConfig =
+        new CxxBuckConfig(
+            FakeBuckConfig.builder()
+                .setSections(rawConfig)
+                .setSections(
+                    ImmutableMap.of(
+                        "cxx",
+                        ImmutableMap.of(
+                            "gtest_dep", gtest.toString(),
+                            "gtest_default_test_main_dep", gtestMain.toString())))
+                .build());
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
-    CxxTestDescription.Arg constructorArg = desc.createUnpopulatedConstructorArg();
-    constructorArg.framework = Optional.of(CxxTestType.GTEST);
-    constructorArg.env = ImmutableMap.of();
-    constructorArg.args = ImmutableList.of();
-    constructorArg.useDefaultTestMain = Optional.of(true);
-    constructorArg.linkerFlags = ImmutableList.of();
-    constructorArg.platformLinkerFlags = PatternMatchedCollection.of();
-    Iterable<BuildTarget> implicit = desc.findDepsForTargetFromConstructorArgs(
-        target,
-        TestCellBuilder.createCellRoots(new FakeProjectFilesystem()),
-        constructorArg);
+    CxxTestBuilder builder =
+        new CxxTestBuilder(target, cxxBuckConfig)
+            .setFramework(CxxTestType.GTEST)
+            .setUseDefaultTestMain(true);
+    Iterable<BuildTarget> implicit = builder.findImplicitDeps();
 
     assertTrue(Iterables.contains(implicit, gtest));
     assertTrue(Iterables.contains(implicit, gtestMain));
@@ -323,29 +304,17 @@ public class CxxTestDescriptionTest {
 
   @Test
   public void linkerFlagsLocationMacro() throws Exception {
-    BuildTarget gtestTarget = BuildTargetFactory.newInstance("//:gtest_dep");
-    TargetNode<?, ?> gtest = new CxxLibraryBuilder(gtestTarget).build();
     BuildRuleResolver resolver =
         new BuildRuleResolver(
-            TargetGraphFactory.newInstance(gtest),
+            TargetGraph.EMPTY,
             new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    new CxxLibraryBuilder(gtestTarget).build(resolver);
     Genrule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
             .build(resolver);
-    CxxBuckConfig config = new CxxBuckConfig(
-        FakeBuckConfig.builder()
-            .setSections(
-                ImmutableMap.of(
-                    "cxx",
-                    ImmutableMap.of(
-                        "gtest_dep", "//:gtest_dep",
-                        "sandbox_sources", Boolean.toString(sandboxSources))))
-            .build());
     CxxTestBuilder builder =
-        new CxxTestBuilder(BuildTargetFactory.newInstance("//:rule"), config)
+        createTestBuilder("//:rule")
             .setLinkerFlags(
                 ImmutableList.of(
                     StringWithMacrosUtils.format(
