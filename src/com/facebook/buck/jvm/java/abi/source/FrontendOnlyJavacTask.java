@@ -32,6 +32,7 @@ import java.util.stream.StreamSupport;
 
 import javax.annotation.processing.Processor;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.JavaFileObject;
 
@@ -44,7 +45,7 @@ import javax.tools.JavaFileObject;
  * about references to symbols defined in those dependencies. See the documentation of
  * {@link com.facebook.buck.jvm.java.abi.source} for details.
  */
-class FrontendOnlyJavacTask extends JavacTask {
+public class FrontendOnlyJavacTask extends JavacTask {
   private static final BuckTracing BUCK_TRACING = BuckTracing.getInstance("TreeResolver");
   private final JavacTask javacTask;
   private final TreeBackedElements elements;
@@ -54,6 +55,8 @@ class FrontendOnlyJavacTask extends JavacTask {
 
   @Nullable
   private Iterable<? extends CompilationUnitTree> parsedCompilationUnits;
+  @Nullable
+  private List<TreeBackedTypeElement> topLevelElements;
 
   public FrontendOnlyJavacTask(JavacTask javacTask) {
     this.javacTask = javacTask;
@@ -73,21 +76,20 @@ class FrontendOnlyJavacTask extends JavacTask {
     return parsedCompilationUnits;
   }
 
-  /**
-   * This implementation of analyze just does what javac calls "enter" (resolving and entering the
-   * symbols in the interface of each class into the symbol tables). javac's implementation also
-   * goes into the bodies of methods and anonymous classes. That is not needed for this class for
-   * its current intended uses.
-   */
+  public Iterable<? extends TypeElement> enter() throws IOException {
+    if (topLevelElements == null) {
+      topLevelElements = StreamSupport.stream(parse().spliterator(), false)
+          .map(this::enterTree)
+          .flatMap(List::stream)
+          .collect(Collectors.toList());
+    }
+
+    return topLevelElements;
+  }
+
   @Override
   public Iterable<? extends Element> analyze() throws IOException {
-    List<Element> foundElements = StreamSupport.stream(parse().spliterator(), false)
-        .map(this::enterTree)
-        .flatMap(List::stream)
-        .collect(Collectors.toList());
-
-
-    return foundElements;
+    throw new UnsupportedOperationException("Code analysis not supported");
   }
 
   @Override
@@ -143,7 +145,7 @@ class FrontendOnlyJavacTask extends JavacTask {
     return types;
   }
 
-  List<Element> enterTree(CompilationUnitTree compilationUnit) {
+  List<TreeBackedTypeElement> enterTree(CompilationUnitTree compilationUnit) {
     try (BuckTracing.TraceSection t = BUCK_TRACING.traceSection("buck.abi.enterTree")) {
       return trees.enterTree(compilationUnit, resolverFactory);
     }

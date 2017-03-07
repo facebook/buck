@@ -47,7 +47,6 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
-import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ErrorType;
@@ -76,10 +75,10 @@ class TreeBackedTrees extends Trees {
     this.elements = elements;
   }
 
-  /* package */ List<Element> enterTree(
+  /* package */ List<TreeBackedTypeElement> enterTree(
       CompilationUnitTree compilationUnit,
       TypeResolverFactory resolverFactory) {
-    List<Element> topLevelElements = new ArrayList<>();
+    List<TreeBackedTypeElement> topLevelElements = new ArrayList<>();
 
     new TreePathScanner<Void, Void>() {
       TreeBackedScope enclosingScope = getScope(getPath(
@@ -90,10 +89,8 @@ class TreeBackedTrees extends Trees {
       public Void visitCompilationUnit(CompilationUnitTree node, Void aVoid) {
         Path sourcePath = Paths.get(node.getSourceFile().getName());
         if (sourcePath.getFileName().toString().equals("package-info.java")) {
-          PackageElement packageElement = elements.getOrCreatePackageElement(
+          elements.getOrCreatePackageElement(
               TreeBackedTrees.treeToName(compilationUnit.getPackageName()));
-
-          topLevelElements.add(packageElement);
         }
 
         return super.visitCompilationUnit(node, aVoid);

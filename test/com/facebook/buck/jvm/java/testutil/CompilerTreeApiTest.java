@@ -34,6 +34,7 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -176,19 +177,16 @@ public abstract class CompilerTreeApiTest {
     // Suppress processor auto-discovery; it was picking up the immutables processor unnecessarily
     javacTask.setProcessors(Collections.emptyList());
 
-    final Iterable<? extends CompilationUnitTree> compilationUnits = javacTask.parse();
+    try {
+      final Iterable<? extends CompilationUnitTree> compilationUnits = javacTask.parse();
 
-    // Make sure we've got elements for things. Technically this is going a little further than
-    // the compiler ordinarily would by the time annotation processors get involved, but this
-    // shouldn't matter for interface-level things. If need be there's a private method we can
-    // reflect to to get more exact behavior.
-    //
-    // Also, right now the implementation of analyze in the TreeBacked version of javacTask
-    // (FrontendOnlyJavacTask) just does enter. So when these tests are run against one of those
-    // we are actually going exactly as far as the compiler would.
-    javacTask.analyze();
+      // Make sure we've got elements for things.
+      javacTask.getClass().getMethod("enter").invoke(javacTask);
 
-    return compilationUnits;
+      return compilationUnits;
+    } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+      throw new AssertionError(e);
+    }
   }
 
   protected void withClasspath(

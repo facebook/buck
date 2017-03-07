@@ -57,7 +57,7 @@ public class FrontendOnlyJavacTaskTest extends CompilerTreeApiParameterizedTest 
   }
 
   @Test
-  public void testAnalyzeReturnsTopLevelTypesAndPackagesWithInfoFilesOnly() throws IOException {
+  public void testEnterReturnsTopLevelTypesOnly() throws Exception {
     initCompiler(ImmutableMap.of(
         "Foo.java",
         Joiner.on('\n').join(
@@ -80,10 +80,12 @@ public class FrontendOnlyJavacTaskTest extends CompilerTreeApiParameterizedTest 
         "package com.facebook.foo;"
     ));
 
-    Iterable<? extends Element> actualElements = javacTask.analyze();
+    @SuppressWarnings("unchecked")
+    Iterable<? extends Element> actualElements =
+        (Iterable<? extends Element>) javacTask.getClass().getMethod("enter")
+            .invoke(javacTask);
 
     assertThat(actualElements, Matchers.containsInAnyOrder(
-        elements.getPackageElement("com.facebook.foo"),
         elements.getTypeElement("com.facebook.foo.Foo"),
         elements.getTypeElement("com.facebook.foo.Extra"),
         elements.getTypeElement("com.facebook.bar.Bar")));
