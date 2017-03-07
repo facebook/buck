@@ -70,10 +70,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
+import org.immutables.value.Value;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
-import org.immutables.value.Value;
 
 public class AppleTestDescription
     implements Description<AppleTestDescriptionArg>,
@@ -208,8 +208,9 @@ public class AppleTestDescription
       }
     }
 
+    // UI test bundles do not use the test host as their bundle_loader, but instead a stub app
     Optional<TestHostInfo> testHostInfo;
-    if (args.getTestHostApp().isPresent()) {
+    if (args.getTestHostApp().isPresent()  && !args.getIsUiTest()) {
       testHostInfo =
           Optional.of(
               createTestHostInfo(
