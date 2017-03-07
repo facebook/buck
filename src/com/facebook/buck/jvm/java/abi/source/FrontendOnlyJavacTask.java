@@ -18,22 +18,13 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
-import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
-import com.sun.source.tree.TypeParameterTree;
-import com.sun.source.tree.VariableTree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskListener;
-import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -41,8 +32,6 @@ import java.util.stream.StreamSupport;
 
 import javax.annotation.processing.Processor;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.Name;
-import javax.lang.model.element.PackageElement;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.JavaFileObject;
 
@@ -155,94 +144,9 @@ class FrontendOnlyJavacTask extends JavacTask {
   }
 
   List<Element> enterTree(CompilationUnitTree compilationUnit) {
-    List<Element> topLevelElements = new ArrayList<>();
-
     try (BuckTracing.TraceSection t = BUCK_TRACING.traceSection("buck.abi.enterTree")) {
-      new TreePathScanner<Void, Void>() {
-        TreeBackedScope enclosingScope = trees.getScope(trees.getPath(
-            compilationUnit,
-            compilationUnit));
-
-        @Override
-        public Void visitCompilationUnit(CompilationUnitTree node, Void aVoid) {
-          Path sourcePath = Paths.get(node.getSourceFile().getName());
-          if (sourcePath.getFileName().toString().equals("package-info.java")) {
-            PackageElement packageElement = elements.getOrCreatePackageElement(
-                TreeBackedTrees.treeToName(compilationUnit.getPackageName()));
-
-            topLevelElements.add(packageElement);
-          }
-
-          return super.visitCompilationUnit(node, aVoid);
-        }
-
-        @Override
-        public Void visitClass(ClassTree node, Void aVoid) {
-          // Match javac: create a package element only once we know a class exists in it
-          elements.getOrCreatePackageElement(
-              TreeBackedTrees.treeToName(compilationUnit.getPackageName()));
-
-          Name qualifiedName = enclosingScope.buildQualifiedName(node.getSimpleName());
-
-          TreeBackedScope classScope = trees.getScope(getCurrentPath());
-          TreeBackedTypeElement typeElement =
-              new TreeBackedTypeElement(
-                  enclosingScope.getEnclosingElement(),
-                  node,
-                  qualifiedName,
-                  resolverFactory);
-
-          if (enclosingScope.getEnclosingClass() == null) {
-            topLevelElements.add(typeElement);
-          }
-          elements.enterTypeElement(typeElement);
-          trees.enterElement(getCurrentPath(), typeElement);
-
-          TreeBackedScope oldScope = enclosingScope;
-          enclosingScope = classScope;
-          try {
-            return super.visitClass(node, aVoid);
-          } finally {
-            enclosingScope = oldScope;
-          }
-        }
-
-        @Override
-        public Void visitTypeParameter(TypeParameterTree node, Void aVoid) {
-          TreeBackedTypeElement enclosingClass =
-              Preconditions.checkNotNull(enclosingScope.getEnclosingClass());
-
-          TreeBackedTypeParameterElement typeParameter = new TreeBackedTypeParameterElement(
-              node,
-              enclosingClass,
-              resolverFactory);
-          enclosingClass.addTypeParameter(typeParameter);
-          trees.enterElement(getCurrentPath(), typeParameter);
-
-          return null;
-        }
-
-        @Override
-        public Void visitMethod(MethodTree node, Void aVoid) {
-          // TODO(jkeljo): Construct an ExecutableElement
-
-          // The body of a method is not part of the ABI, so don't recurse into them
-          return null;
-        }
-
-        @Override
-        public Void visitVariable(VariableTree node, Void aVoid) {
-          // TODO(jkeljo): Construct a VariableElement
-          // TODO(jkeljo): Evaluate constants
-
-          // Except for constants, we shouldn't look at the next part of a variable decl, because
-          // there might be anonymous classes there and those are not part of the ABI
-          return null;
-        }
-      }.scan(compilationUnit, null);
+      return trees.enterTree(compilationUnit, resolverFactory);
     }
-
-    return topLevelElements;
   }
 
   @Override
