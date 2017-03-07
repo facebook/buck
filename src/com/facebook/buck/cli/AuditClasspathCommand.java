@@ -28,6 +28,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -151,6 +152,7 @@ public class AuditClasspathCommand extends AbstractCommand {
         targetGraph,
         "target_graph",
         targetNode -> "\"" + targetNode.getBuildTarget().getFullyQualifiedName() + "\"",
+        targetNode -> Description.getBuildRuleType(targetNode.getDescription()).getName(),
         params.getConsole().getStdOut());
     try {
       dot.writeOutput();
