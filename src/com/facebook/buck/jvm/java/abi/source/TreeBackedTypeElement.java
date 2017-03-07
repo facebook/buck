@@ -32,7 +32,6 @@ import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.SimpleElementVisitor8;
 
 /**
  * An implementation of {@link TypeElement} that uses only the information available from a
@@ -79,42 +78,6 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
     }
   }
 
-  /* package */ void resolve() {
-    // Need to resolve type parameters first, because the superclass definition might reference them
-    resolveTypeParameters();
-    resolveSuperclass();
-    resolveInnerTypes();
-  }
-
-  private void resolveSuperclass() {
-    final TypeResolver resolver = getResolver();
-    final Tree extendsClause = tree.getExtendsClause();
-    if (extendsClause == null) {
-      if (tree.getKind() == Tree.Kind.INTERFACE) {
-        superclass = StandaloneNoType.KIND_NONE;
-      } else {
-        superclass = resolver.getJavaLangObject();
-      }
-    } else {
-      superclass = resolver.resolveType(extendsClause);
-    }
-  }
-
-  private void resolveTypeParameters() {
-    typeParameters.forEach(typeParam -> typeParam.resolve());
-  }
-
-  private void resolveInnerTypes() {
-    getEnclosedElements().forEach(
-        element -> element.accept(new SimpleElementVisitor8<Void, Void>() {
-          @Override
-          public Void visitType(TypeElement e, Void aVoid) {
-            ((TreeBackedTypeElement) e).resolve();
-            return null;
-          }
-        }, null));
-  }
-
   @Override
   public TreeBackedElement getEnclosingElement() {
     return Preconditions.checkNotNull(super.getEnclosingElement());
@@ -142,7 +105,21 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
 
   @Override
   public TypeMirror getSuperclass() {
-    return Preconditions.checkNotNull(superclass);  // Don't call this before resolving the element
+    if (superclass == null) {
+      TypeResolver resolver = getResolver();
+      final Tree extendsClause = tree.getExtendsClause();
+      if (extendsClause == null) {
+        if (tree.getKind() == Tree.Kind.INTERFACE) {
+          superclass = StandaloneNoType.KIND_NONE;
+        } else {
+          superclass = resolver.getJavaLangObject();
+        }
+      } else {
+        superclass = resolver.resolveType(extendsClause);
+      }
+    }
+
+    return superclass;
   }
 
   @Override

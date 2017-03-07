@@ -55,18 +55,6 @@ class TreeBackedTypeParameterElement extends TreeBackedElement implements TypePa
     // value of getEnclosedElements
   }
 
-  /* package */ void resolve() {
-    TypeResolver resolver = getResolver();
-    if (tree.getBounds().isEmpty()) {
-      bounds = Collections.singletonList(resolver.getJavaLangObject());
-    } else {
-      bounds = Collections.unmodifiableList(
-          tree.getBounds().stream()
-              .map(boundTree -> resolver.resolveType(boundTree))
-              .collect(Collectors.toList()));
-    }
-  }
-
   @Override
   public TypeMirror asType() {
     return typeVar;
@@ -80,7 +68,19 @@ class TreeBackedTypeParameterElement extends TreeBackedElement implements TypePa
 
   @Override
   public List<? extends TypeMirror> getBounds() {
-    return Preconditions.checkNotNull(bounds);
+    if (bounds == null) {
+      TypeResolver resolver = getResolver();
+      if (tree.getBounds().isEmpty()) {
+        bounds = Collections.singletonList(resolver.getJavaLangObject());
+      } else {
+        bounds = Collections.unmodifiableList(
+            tree.getBounds().stream()
+                .map(boundTree -> resolver.resolveType(boundTree))
+                .collect(Collectors.toList()));
+      }
+    }
+
+    return bounds;
   }
 
   @Override

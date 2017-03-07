@@ -43,9 +43,7 @@ import javax.annotation.processing.Processor;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.SimpleElementVisitor8;
 import javax.tools.JavaFileObject;
 
 /**
@@ -99,13 +97,6 @@ class FrontendOnlyJavacTask extends JavacTask {
         .flatMap(List::stream)
         .collect(Collectors.toList());
 
-    foundElements.forEach(element -> element.accept(new SimpleElementVisitor8<Void, Void>() {
-      @Override
-      public Void visitType(TypeElement e, Void aVoid) {
-        ((TreeBackedTypeElement) e).resolve();
-        return null;
-      }
-    }, null));
 
     return foundElements;
   }
