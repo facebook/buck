@@ -43,7 +43,12 @@ public class DotTest {
     DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<>(mutableGraph);
 
     StringBuilder output = new StringBuilder();
-    Dot<String> dot = new Dot<String>(graph, "the_graph", Functions.identity(), output);
+    Dot<String> dot = new Dot<String>(
+        graph,
+        "the_graph",
+        Functions.identity(),
+        Functions.identity(),
+        output);
     dot.writeOutput();
 
     String dotGraph = output.toString();
@@ -60,7 +65,43 @@ public class DotTest {
             "  B -> D;",
             "  C -> E;",
             "  D -> E;",
-            "  A -> E;"));
+            "  A -> E;",
+            "  A [style=filled,color=\"#C1C1C0\"];",
+            "  B [style=filled,color=\"#C2C1C0\"];",
+            "  C [style=filled,color=\"#C3C1C0\"];",
+            "  D [style=filled,color=\"#C4C1C0\"];",
+            "  E [style=filled,color=\"#C5C1C0\"];"));
+
+    assertEquals("}", lines.get(lines.size() - 1));
+  }
+
+  @Test
+  public void testGenerateDotOutputWithColors() throws IOException {
+    MutableDirectedGraph<String> mutableGraph = new MutableDirectedGraph<>();
+    mutableGraph.addEdge("A", "B");
+    DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<>(mutableGraph);
+
+    StringBuilder output = new StringBuilder();
+    Dot<String> dot = new Dot<String>(
+        graph,
+        "the_graph",
+        Functions.identity(),
+        name -> name.equals("A") ? "android_library" : "java_library",
+        output);
+    dot.writeOutput();
+
+    String dotGraph = output.toString();
+    List<String> lines = ImmutableList.copyOf(Splitter.on('\n').omitEmptyStrings().split(dotGraph));
+
+    assertEquals("digraph the_graph {", lines.get(0));
+
+    Set<String> edges = ImmutableSet.copyOf(lines.subList(1, lines.size() - 1));
+    assertEquals(
+        edges,
+        ImmutableSet.of(
+            "  A -> B;",
+            "  A [style=filled,color=springgreen3];",
+            "  B [style=filled,color=indianred1];"));
 
     assertEquals("}", lines.get(lines.size() - 1));
   }

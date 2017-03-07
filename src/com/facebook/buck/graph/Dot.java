@@ -17,27 +17,44 @@
 package com.facebook.buck.graph;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
+import java.util.Map;
 
 public class Dot<T> {
 
   private final DirectedAcyclicGraph<T> graph;
   private final String graphName;
   private final Function<T, String> nodeToName;
+  private final Function<T, String> nodeToTypeName;
   private final Appendable output;
+  private static final Map<String, String> typeColors;
+
+  static {
+    typeColors = new ImmutableMap.Builder<String, String>() {{
+      put("android_aar", "springgreen2");
+      put("android_library", "springgreen3");
+      put("android_resource", "springgreen1");
+      put("android_prebuilt_aar", "olivedrab3");
+      put("java_library", "indianred1");
+      put("prebuilt_jar", "mediumpurple1");
+    }}.build();
+  }
 
   public Dot(
       DirectedAcyclicGraph<T> graph,
       String graphName,
       Function<T, String> nodeToName,
+      Function<T, String> nodeToTypeName,
       Appendable output) {
     this.graph = graph;
     this.graphName = graphName;
     this.nodeToName = nodeToName;
+    this.nodeToTypeName = nodeToTypeName;
     this.output = output;
   }
 
@@ -49,6 +66,16 @@ public class Dot<T> {
       @Override
       public void visit(T node) {
         String source = nodeToName.apply(node);
+        String sourceType = nodeToTypeName.apply(node);
+
+        try {
+          output.append(String.format(
+              "  %s [style=filled,color=%s];\n",
+              source,
+              Dot.colorFromType(sourceType)));
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
         for (T sink : graph.getOutgoingNodesFor(node)) {
           String sinkName = nodeToName.apply(sink);
           try {
@@ -68,6 +95,7 @@ public class Dot<T> {
       final String graphName,
       final ImmutableSet<T> nodesToFilter,
       final Function<T, String> nodeToName,
+      final Function<T, String> nodeToTypeName,
       final Appendable output,
       final boolean bfsSorted)
       throws IOException {
@@ -85,6 +113,11 @@ public class Dot<T> {
               return ImmutableSet.<T>of();
             }
             String source = nodeToName.apply(node);
+            String sourceType = nodeToTypeName.apply(node);
+            builder.add(String.format(
+                "  %s [style=filled,color=%s];\n",
+                source,
+                Dot.colorFromType(sourceType)));
             ImmutableSortedSet<T> nodes = ImmutableSortedSet.copyOf(
                 Sets.filter(
                     graph.getOutgoingNodesFor(node),
@@ -107,6 +140,11 @@ public class Dot<T> {
             return;
           }
           String source = nodeToName.apply(node);
+          String sourceType = nodeToTypeName.apply(node);
+          sortedSetBuilder.add(String.format(
+              "  %s [style=filled,color=%s];\n",
+              source,
+              Dot.colorFromType(sourceType)));
           for (T sink : Sets.filter(graph.getOutgoingNodesFor(node), nodesToFilter::contains)) {
             String sinkName = nodeToName.apply(sink);
             sortedSetBuilder.add(String.format("  %s -> %s;\n", source, sinkName));
@@ -121,5 +159,15 @@ public class Dot<T> {
       output.append(line);
     }
     output.append("}\n");
+  }
+
+  public static String colorFromType(String type) {
+    if (Dot.typeColors.containsKey(type)) {
+      return Dot.typeColors.get(type);
+    }
+    int r = 192 + (type.hashCode() % 64);
+    int g = 192 + (type.hashCode() / 64 % 64);
+    int b = 192 + (type.hashCode() / 4096 % 64);
+    return String.format("\"#%02X%02X%02X\"", r, g, b);
   }
 }

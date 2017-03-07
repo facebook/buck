@@ -26,6 +26,7 @@ import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryTarget;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PatternsMatcher;
@@ -259,6 +260,7 @@ public class QueryCommand extends AbstractCommand {
         "result_graph",
         env.getNodesFromQueryTargets(queryResult),
         targetNode -> "\"" + targetNode.getBuildTarget().getFullyQualifiedName() + "\"",
+        targetNode -> Description.getBuildRuleType(targetNode.getDescription()).getName(),
         params.getConsole().getStdOut(),
         shouldGenerateBFSOutput());
   }
