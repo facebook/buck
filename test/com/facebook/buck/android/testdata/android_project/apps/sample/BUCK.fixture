@@ -421,6 +421,10 @@ android_binary(
   redex_config = 'redex-config.json',
   redex_extra_args = [
     '-Jmy_param_name={"foo": true}',
+    '--redex-binary',
+    'redex-binary',
+    '-j $(location //java/com/sample/lib:lib)',
+    '-S $(location //java/com/sample2:lib)',
   ],
   deps = [
     '//java/com/sample/lib:lib',

@@ -20,6 +20,7 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 
@@ -32,7 +33,7 @@ import java.util.Optional;
 abstract class AbstractRedexOptions implements RuleKeyAppendable {
   public abstract Tool getRedex();
   public abstract Optional<SourcePath> getRedexConfig();
-  public abstract ImmutableList<String> getRedexExtraArgs();
+  public abstract ImmutableList<Arg> getRedexExtraArgs();
 
 
   @Override

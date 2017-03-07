@@ -612,7 +612,8 @@ public class AndroidBinary
           apkToRedexAndAlign,
           redexedApk,
           keystoreProperties,
-          proguardConfigDir
+          proguardConfigDir,
+          context.getSourcePathResolver()
       );
       steps.addAll(redexSteps);
     }

@@ -21,6 +21,7 @@ import com.facebook.buck.android.KeystoreProperties;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -44,10 +45,11 @@ public class ReDexStep extends ShellStep {
   private final Path outputApkPath;
   private final Supplier<KeystoreProperties> keystorePropertiesSupplier;
   private final Optional<Path> redexConfig;
-  private final List<String> redexExtraArgs;
+  private final ImmutableList<Arg> redexExtraArgs;
   private final Path proguardMap;
   private final Path proguardCommandLine;
   private final Path seeds;
+  private final SourcePathResolver pathResolver;
 
   @VisibleForTesting
   ReDexStep(
@@ -58,10 +60,11 @@ public class ReDexStep extends ShellStep {
       Path outputApkPath,
       Supplier<KeystoreProperties> keystorePropertiesSupplier,
       Optional<Path> redexConfig,
-      List<String> redexExtraArgs,
+      ImmutableList<Arg> redexExtraArgs,
       Path proguardMap,
       Path proguardCommandLine,
-      Path seeds) {
+      Path seeds,
+      SourcePathResolver pathResolver) {
     super(workingDirectory);
     this.redexBinaryArgs = ImmutableList.copyOf(redexBinaryArgs);
     this.redexEnvironmentVariables = ImmutableMap.copyOf(redexEnvironmentVariables);
@@ -73,6 +76,7 @@ public class ReDexStep extends ShellStep {
     this.proguardMap = proguardMap;
     this.proguardCommandLine = proguardCommandLine;
     this.seeds = seeds;
+    this.pathResolver = pathResolver;
   }
 
   public static ImmutableList<Step> createSteps(
@@ -82,7 +86,8 @@ public class ReDexStep extends ShellStep {
       Path inputApkPath,
       Path outputApkPath,
       Supplier<KeystoreProperties> keystorePropertiesSupplier,
-      Path proguardConfigDir) {
+      Path proguardConfigDir,
+      SourcePathResolver pathResolver) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     Tool redexBinary = redexOptions.getRedex();
@@ -97,7 +102,8 @@ public class ReDexStep extends ShellStep {
         redexOptions.getRedexExtraArgs(),
         proguardConfigDir.resolve("mapping.txt"),
         proguardConfigDir.resolve("command-line.txt"),
-        proguardConfigDir.resolve("seeds.txt"));
+        proguardConfigDir.resolve("seeds.txt"),
+        pathResolver);
     steps.add(redexStep);
 
     return steps.build();
@@ -138,7 +144,7 @@ public class ReDexStep extends ShellStep {
 
     args.add("--out", outputApkPath.toString());
 
-    args.addAll(redexExtraArgs);
+    args.addAll(Arg.stringify(redexExtraArgs, pathResolver));
 
     args.add(inputApkPath.toString());
     return args.build();

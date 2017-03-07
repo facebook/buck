@@ -20,6 +20,13 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.KeystoreProperties;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.base.Supplier;
@@ -54,10 +61,16 @@ public class ReDexStepTest {
         keystoreProperties);
     Path redexConfigPath = Paths.get("redex/redex-config.json");
     Optional<Path> redexConfig = Optional.of(redexConfigPath);
-    List<String> redexExtraArgs = ImmutableList.of("foo", "bar");
+    ImmutableList<Arg> redexExtraArgs = ImmutableList.of(
+        StringArg.of("foo"), StringArg.of("bar")
+    );
     Path proguardMap = Paths.get("buck-out/gen/app/__proguard__/mapping.txt");
     Path proguardConfig = Paths.get("app.proguard.config");
     Path seeds = Paths.get("buck-out/gen/app/__proguard__/seeds.txt");
+
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    ));
 
     ReDexStep redex = new ReDexStep(
         workingDirectory,
@@ -70,7 +83,8 @@ public class ReDexStepTest {
         redexExtraArgs,
         proguardMap,
         proguardConfig,
-        seeds
+        seeds,
+        pathResolver
     );
 
     assertEquals("redex", redex.getShortName());

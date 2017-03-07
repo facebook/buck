@@ -18,36 +18,43 @@ def main():
     parser.add_option('--proguard-config')
     parser.add_option('--proguard-map')
     parser.add_option('--sign', action='store_true')
-    parser.add_option('-J')
+    parser.add_option('--redex-binary')
     parser.add_option('-P')
+    parser.add_option('-J')
+    parser.add_option('-j')
+    parser.add_option('-S')
 
     (options, args) = parser.parse_args()
 
     values = {
-      # Environment variables.
-      'ANDROID_SDK': os.environ['ANDROID_SDK'],
-      'PWD': os.environ['PWD'],
+        # Environment variables.
+        'ANDROID_SDK': os.environ['ANDROID_SDK'],
+        'PWD': os.environ['PWD'],
 
-      # Flag values.
-      'config': options.config,
-      'keep': options.keep,
-      'keyalias': options.keyalias,
-      'keypass': options.keypass,
-      'keystore': options.keystore,
-      'out': options.out,
-      'proguard-config': options.proguard_config,
-      'proguard-map': options.proguard_map,
-      'sign': options.sign,
-      'J': options.J,
-      'P': options.P,
+        # Flag values.
+        'config': options.config,
+        'keep': options.keep,
+        'keyalias': options.keyalias,
+        'keypass': options.keypass,
+        'keystore': options.keystore,
+        'out': options.out,
+        'proguard-config': options.proguard_config,
+        'proguard-map': options.proguard_map,
+        'sign': options.sign,
+        'P': options.P,
+        # extra args
+        'redex-binary': options.redex_binary,
+        'J': options.J,
+        'j': options.j,
+        'S': options.S,
     }
 
-    tmpout = options.out + '.tmp'
-    with open(tmpout, 'w') as f:
+    tmp_out = options.out + '.tmp'
+    with open(tmp_out, 'w') as f:
         json.dump(values, f)
 
     with ZipFile(options.out, 'w') as zf:
-        zf.write(tmpout, arcname='app_redex')
+        zf.write(tmp_out, arcname='app_redex')
 
 
 if __name__ == '__main__':

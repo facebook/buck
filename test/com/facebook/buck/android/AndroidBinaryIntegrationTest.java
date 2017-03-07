@@ -1009,6 +1009,12 @@ public class AndroidBinaryIntegrationTest {
     assertEquals(
         "my_param_name={\"foo\": true}",
         userData.get("J"));
+    assertTrue(
+        "redex_extra_args: -j $(location ...) is not properly expanded!",
+        userData.get("j").toString().endsWith(".jar"));
+    assertTrue(
+        "redex_extra_args: -S $(location ...) is not properly expanded!",
+        userData.get("S").toString().endsWith(".jar"));
   }
 
   @Test

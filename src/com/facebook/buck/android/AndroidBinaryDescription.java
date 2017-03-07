@@ -40,6 +40,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasTests;
+import com.facebook.buck.model.MacroException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
@@ -53,6 +54,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
@@ -62,7 +64,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -72,7 +73,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
@@ -279,13 +279,23 @@ public class AndroidBinaryDescription implements
               .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
 
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+      Optional<RedexOptions> redexOptions = getRedexOptions(params, resolver, args);
+
+      ImmutableSortedSet<BuildRule> redexExtraDeps = redexOptions
+          .map(a -> a.getRedexExtraArgs()
+              .stream()
+              .flatMap(arg -> arg.getDeps(ruleFinder).stream())
+              .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()))
+          ).orElse(ImmutableSortedSet.of());
+
       return new AndroidBinary(
           params
               .copyWithExtraDeps(Suppliers.ofInstance(result.getFinalDeps()))
               .appendExtraDeps(
                   ruleFinder.filterBuildRuleInputs(
                       result.getPackageableCollection().getProguardConfigs()))
-              .appendExtraDeps(rulesToExcludeFromDex),
+              .appendExtraDeps(rulesToExcludeFromDex)
+              .appendExtraDeps(redexExtraDeps),
           ruleFinder,
           proGuardConfig.getProguardJarOverride(),
           proGuardConfig.getProguardMaxHeapSize(),
@@ -299,7 +309,7 @@ public class AndroidBinaryDescription implements
           args.optimizationPasses,
           args.proguardConfig,
           args.skipProguard,
-          getRedexOptions(params.getBuildTarget(), args, resolver),
+          redexOptions,
           compressionMode,
           args.cpuFilters,
           resourceFilter,
@@ -386,8 +396,7 @@ public class AndroidBinaryDescription implements
       CellPathResolver cellRoots,
       Arg constructorArg) {
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
-    if (constructorArg.redex.orElse(false) &&
-        getPackageType(constructorArg).isBuildWithObfuscation()) {
+    if (constructorArg.redex.orElse(false)) {
       // If specified, this option may point to either a BuildTarget or a file.
       Optional<BuildTarget> redexTarget = buckConfig.getMaybeBuildTarget(
           SECTION,
@@ -395,46 +404,59 @@ public class AndroidBinaryDescription implements
       if (redexTarget.isPresent()) {
         deps.add(redexTarget.get());
       }
+
+      constructorArg.redexExtraArgs.forEach(a ->
+        addDepsFromParam(buildTarget, cellRoots, a, deps)
+      );
     }
     return deps.build();
   }
 
+  private void addDepsFromParam(
+      BuildTarget target,
+      CellPathResolver cellNames,
+      String paramValue,
+      ImmutableSet.Builder<BuildTarget> targets) {
+    try {
+      targets.addAll(MACRO_HANDLER.extractParseTimeDeps(target, cellNames, paramValue));
+    } catch (MacroException e) {
+      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
+    }
+  }
+
   private Optional<RedexOptions> getRedexOptions(
-      BuildTarget buildTarget,
-      Arg arg,
-      BuildRuleResolver sourcePathResolver) {
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      Arg arg) {
     boolean redexRequested = arg.redex.orElse(false);
     if (!redexRequested) {
       return Optional.empty();
     }
 
-    PackageType packageType = getPackageType(arg);
-    boolean buildWithObfuscation = packageType.isBuildWithObfuscation();
-    if (!buildWithObfuscation) {
-      List<PackageType> supported = Arrays.stream(PackageType.values())
-          .filter(PackageType::isBuildWithObfuscation)
-          .collect(Collectors.toList());
-      throw new HumanReadableException("Requested running ReDex for %s but the package type %s " +
-          "is not compatible with that options. Consider changing it to %s.",
-          buildTarget,
-          packageType,
-          Joiner.on(", ").join(supported));
-    }
-
     Optional<Tool> redexBinary =
-        buckConfig.getTool(SECTION, CONFIG_PARAM_REDEX, sourcePathResolver);
+        buckConfig.getTool(SECTION, CONFIG_PARAM_REDEX, resolver);
     if (!redexBinary.isPresent()) {
       throw new HumanReadableException("Requested running ReDex for %s but the path to the tool" +
           "has not been specified in the %s.%s .buckconfig section.",
-          buildTarget,
+          params.getBuildTarget(),
           SECTION,
           CONFIG_PARAM_REDEX);
     }
 
+    java.util.function.Function<String, com.facebook.buck.rules.args.Arg> macroArgFunction =
+        MacroArg.toMacroArgFunction(
+            MACRO_HANDLER,
+            params.getBuildTarget(),
+            params.getCellRoots(),
+            resolver)::apply;
+    List<com.facebook.buck.rules.args.Arg> redexExtraArgs = arg.redexExtraArgs.stream()
+        .map(macroArgFunction)
+        .collect(Collectors.toList());
+
     return Optional.of(RedexOptions.builder()
         .setRedex(redexBinary.get())
         .setRedexConfig(arg.redexConfig)
-        .setRedexExtraArgs(arg.redexExtraArgs)
+        .setRedexExtraArgs(redexExtraArgs)
         .build());
   }
 
