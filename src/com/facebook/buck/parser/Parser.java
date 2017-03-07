@@ -359,11 +359,10 @@ public class Parser {
             groupExpander.findChildren(groupTarget),
             target -> {
               TargetGroup group = groups.get(target);
-              Preconditions.checkNotNull(
+              return Preconditions.checkNotNull(
                   group,
                   "SANITY FAILURE: Tried to expand group %s but it doesn't exist.",
                   target);
-              return group;
             });
         if (!replacements.isEmpty()) {
           // TODO(tophyr): Stop duplicating target lists

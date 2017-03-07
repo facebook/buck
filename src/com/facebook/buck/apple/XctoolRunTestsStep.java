@@ -61,6 +61,8 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.annotation.Nullable;
+
 /**
  * Runs {@code xctool} on one or more logic tests and/or application
  * tests (each paired with a host application).
@@ -104,7 +106,7 @@ class XctoolRunTestsStep implements Step {
   // We need to remember both the target name and the test class/method names, since
   // `xctool -only` requires the format `TARGET:className/methodName,...`
   private static class ListTestsOnlyHandler implements XctoolOutputParsing.XctoolEventCallback {
-    private String currentTestTarget;
+    private @Nullable String currentTestTarget;
     public Multimap<String, TestDescription> testTargetsToDescriptions;
 
     public ListTestsOnlyHandler() {

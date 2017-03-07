@@ -218,7 +218,7 @@ public class AuditRulesCommand extends AbstractCommand {
     out.printf(")\n\n");
   }
 
-  private boolean shouldInclude(Object rawValue) {
+  private boolean shouldInclude(@Nullable Object rawValue) {
     if (includeEmpties) {
       return true;
     }

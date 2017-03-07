@@ -241,11 +241,9 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
   }
 
   private JavaFileObject getJavaNoOpFileObject(String path, JavaFileObject.Kind kind) {
-    if (!fileForOutputPaths.containsKey(path)) {
-      JavaFileObject obj = new JavaNoOpFileObject(getUriPath(path), path, kind);
-      fileForOutputPaths.put(path, obj);
-    }
-    return fileForOutputPaths.get(path);
+    return fileForOutputPaths.computeIfAbsent(
+        path,
+        p -> new JavaNoOpFileObject(getUriPath(p), p, kind));
   }
 
   /*

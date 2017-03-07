@@ -112,8 +112,6 @@ public class JavacExecutionContextSerializer {
     ClassUsageFileWriter classUsageFileWriter = ClassUsageFileWriterSerializer.deserialize(
         (Map<String, Object>) data.get(CLASS_USAGE_FILE_WRITER));
 
-    Preconditions.checkArgument(data.containsKey(ENVIRONMENT));
-
     Preconditions.checkArgument(data.containsKey(PROCESS_EXECUTOR));
     ProcessExecutor processExecutor = ProcessExecutorSerializer.deserialize(
         (Map<String, Object>) data.get(PROCESS_EXECUTOR),
@@ -142,7 +140,9 @@ public class JavacExecutionContextSerializer {
         javaPackageFinder,
         projectFilesystem,
         classUsageFileWriter,
-        (Map<String, String>) data.get(ENVIRONMENT),
+        (Map<String, String>) Preconditions.checkNotNull(
+            data.get(ENVIRONMENT),
+            "Missing environment when deserializing JavacExectionContext"),
         processExecutor,
         absolutePathsForInputs,
         directToJarOutputSettings);

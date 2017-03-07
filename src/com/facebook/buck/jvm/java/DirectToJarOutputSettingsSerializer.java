@@ -83,12 +83,14 @@ public class DirectToJarOutputSettingsSerializer {
     ImmutableSet.Builder<Pattern> classesToRemove = ImmutableSet.builder();
     for (Map<String, Object> patternData :
         (List<Map<String, Object>>) data.get(CLASSES_TO_REMOVE)) {
-      Preconditions.checkArgument(patternData.containsKey(CLASSES_TO_REMOVE_PATTERN));
-      Preconditions.checkArgument(patternData.containsKey(CLASSES_TO_REMOVE_PATTERN_FLAGS));
       classesToRemove.add(
           Pattern.compile(
-              (String) patternData.get(CLASSES_TO_REMOVE_PATTERN),
-              (int) patternData.get(CLASSES_TO_REMOVE_PATTERN_FLAGS)));
+              (String) Preconditions.checkNotNull(
+                  patternData.get(CLASSES_TO_REMOVE_PATTERN),
+                  "Didn't find classes to remove pattern in serialized DirectToJarOutputSettings"),
+              (int) Preconditions.checkNotNull(
+                  patternData.get(CLASSES_TO_REMOVE_PATTERN_FLAGS),
+                  "Didn't find flags in serialized DirectToJarOutputSettings")));
     }
 
     ImmutableSortedSet.Builder<Path> entries = ImmutableSortedSet.naturalOrder();

@@ -106,7 +106,8 @@ abstract class AbstractBuildFileSpec {
         watchman.getProjectWatches().containsKey(filesystem.getRootPath());
     boolean walkComplete = false;
     if (tryWatchman) {
-      ProjectWatch projectWatch = watchman.getProjectWatches().get(filesystem.getRootPath());
+      ProjectWatch projectWatch =
+          Preconditions.checkNotNull(watchman.getProjectWatches().get(filesystem.getRootPath()));
       LOG.debug(
           "Searching for %s files (watch root %s, project prefix %s, base path %s) with Watchman",
           buildFileName,

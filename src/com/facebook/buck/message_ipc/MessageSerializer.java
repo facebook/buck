@@ -72,9 +72,8 @@ public class MessageSerializer {
     Map<String, Object> rep = objectMapper.readValue(
         data,
         new TypeReference<Map<String, Object>>() {});
-    String type = (String) rep.get(TYPE);
-    Preconditions.checkNotNull(
-        type,
+    String type = (String) Preconditions.checkNotNull(
+        rep.get(TYPE),
         "Unable to deserialize %s: no field %s in data (%s)",
         ReturnResultMessage.class.getSimpleName(), TYPE, data);
     Preconditions.checkArgument(type.equals(ReturnResultMessage.class.getSimpleName()));

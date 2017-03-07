@@ -307,6 +307,7 @@ public class DalvikStatsTool {
         footprint += 16;
       }
 
+      Preconditions.checkNotNull(className, "Must not call visitField before visit");
       fieldReferenceBuilder.add(new FieldReference(className, name, desc));
 
       return null;
@@ -328,7 +329,7 @@ public class DalvikStatsTool {
           footprint += 4;
         }
       }
-      Preconditions.checkNotNull(className);
+      Preconditions.checkNotNull(className, "Must not call visitMethod before visit");
       methodReferenceBuilder.add(new MethodReference(className, name, desc));
       return methodVisitor;
     }
@@ -337,7 +338,7 @@ public class DalvikStatsTool {
     public void visitOuterClass(String owner, String name, String desc) {
       super.visitOuterClass(owner, name, desc);
       if (name != null) {
-        Preconditions.checkNotNull(className);
+        Preconditions.checkNotNull(className, "Must not call visitOuterClass before visit");
         methodReferenceBuilder.add(new MethodReference(className, name, desc));
       }
     }
