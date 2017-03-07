@@ -16,10 +16,13 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import java.util.Collections;
+import java.util.List;
+
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.TypeVisitor;
 
 /**
  * An implementation of {@link ArrayType} that is not dependent on any particular compiler
@@ -30,13 +33,14 @@ class StandaloneArrayType extends StandaloneTypeMirror implements ArrayType {
   private final TypeMirror componentType;
 
   public StandaloneArrayType(TypeMirror componentType) {
-    super(TypeKind.ARRAY);
-    this.componentType = componentType;
+    this(componentType, Collections.emptyList());
   }
 
-  @Override
-  public <R, P> R accept(TypeVisitor<R, P> v, P p) {
-    throw new UnsupportedOperationException();
+  public StandaloneArrayType(
+      TypeMirror componentType,
+      List<? extends AnnotationMirror> annotations) {
+    super(TypeKind.ARRAY, annotations);
+    this.componentType = componentType;
   }
 
   @Override

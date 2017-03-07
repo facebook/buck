@@ -17,11 +17,25 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.type.ArrayType;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.ErrorType;
+import javax.lang.model.type.ExecutableType;
+import javax.lang.model.type.IntersectionType;
+import javax.lang.model.type.NoType;
+import javax.lang.model.type.NullType;
+import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
+import javax.lang.model.type.TypeVisitor;
+import javax.lang.model.type.UnionType;
+import javax.lang.model.type.WildcardType;
 
 /**
  * An implementation of {@link TypeMirror} that is not dependent on any particular compiler
@@ -31,9 +45,15 @@ import javax.lang.model.type.TypeMirror;
  */
 abstract class StandaloneTypeMirror implements TypeMirror {
   private final TypeKind kind;
+  private final List<? extends AnnotationMirror> annotations;
 
   protected StandaloneTypeMirror(TypeKind kind) {
+    this(kind, Collections.emptyList());
+  }
+
+  protected StandaloneTypeMirror(TypeKind kind, List<? extends AnnotationMirror> annotations) {
     this.kind = kind;
+    this.annotations = Collections.unmodifiableList(new ArrayList<>(annotations));
   }
 
   @Override
@@ -42,17 +62,60 @@ abstract class StandaloneTypeMirror implements TypeMirror {
   }
 
   @Override
+  public <R, P> R accept(TypeVisitor<R, P> v, P p) {
+    switch (kind) {
+      case BOOLEAN:
+      case BYTE:
+      case SHORT:
+      case INT:
+      case LONG:
+      case CHAR:
+      case FLOAT:
+      case DOUBLE:
+        return v.visitPrimitive((PrimitiveType) this, p);
+      case PACKAGE:
+      case VOID:
+      case NONE:
+        return v.visitNoType((NoType) this, p);
+      case NULL:
+        return v.visitNull((NullType) this, p);
+      case ARRAY:
+        return v.visitArray((ArrayType) this, p);
+      case DECLARED:
+        return v.visitDeclared((DeclaredType) this, p);
+      case ERROR:
+        return v.visitError((ErrorType) this, p);
+      case TYPEVAR:
+        return v.visitTypeVariable((TypeVariable) this, p);
+      case WILDCARD:
+        return v.visitWildcard((WildcardType) this, p);
+      case EXECUTABLE:
+        return v.visitExecutable((ExecutableType) this, p);
+      case OTHER:
+        return v.visit(this, p);
+      case UNION:
+        return v.visitUnion((UnionType) this, p);
+      case INTERSECTION:
+        return v.visitIntersection((IntersectionType) this, p);
+      default:
+        throw new AssertionError(String.format("Unknown TypeKind: %s", kind));
+    }
+  }
+
+  @Override
   public List<? extends AnnotationMirror> getAnnotationMirrors() {
-    throw new UnsupportedOperationException();
+    return this.annotations;
   }
 
   @Override
   public <A extends Annotation> A getAnnotation(Class<A> annotationType) {
+    // This one is really difficult to implement, and also generally a bad thing to use anyway
     throw new UnsupportedOperationException();
   }
 
   @Override
   public <A extends Annotation> A[] getAnnotationsByType(Class<A> annotationType) {
+    // This one is really difficult to implement, and also generally a bad thing to use anyway
     throw new UnsupportedOperationException();
   }
 }

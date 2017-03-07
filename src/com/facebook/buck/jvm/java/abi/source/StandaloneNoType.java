@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeVisitor;
 
 /**
  * An implementation of {@link NoType} that does not depend on any particular compiler
@@ -26,15 +25,9 @@ import javax.lang.model.type.TypeVisitor;
  */
 class StandaloneNoType extends StandaloneTypeMirror implements NoType {
   public static final StandaloneNoType KIND_NONE = new StandaloneNoType(TypeKind.NONE);
-  public static final StandaloneNoType KIND_PACKAGE = new StandaloneNoType(TypeKind.PACKAGE);
   public static final StandaloneNoType KIND_VOID = new StandaloneNoType(TypeKind.VOID);
 
-  private StandaloneNoType(TypeKind kind) {
+  protected StandaloneNoType(TypeKind kind) {
     super(kind);
-  }
-
-  @Override
-  public <R, P> R accept(TypeVisitor<R, P> v, P p) {
-    throw new UnsupportedOperationException();
   }
 }

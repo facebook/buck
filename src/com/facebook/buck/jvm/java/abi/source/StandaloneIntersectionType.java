@@ -24,7 +24,6 @@ import java.util.List;
 import javax.lang.model.type.IntersectionType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.TypeVisitor;
 
 /**
  * An implementation of {@link IntersectionType} that is not dependent on any particular compiler
@@ -43,11 +42,6 @@ class StandaloneIntersectionType extends StandaloneTypeMirror implements Interse
   @Override
   public List<? extends TypeMirror> getBounds() {
     return bounds;
-  }
-
-  @Override
-  public <R, P> R accept(TypeVisitor<R, P> v, P p) {
-    throw new UnsupportedOperationException();
   }
 
   @Override

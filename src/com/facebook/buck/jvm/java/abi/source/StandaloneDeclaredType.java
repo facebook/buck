@@ -20,12 +20,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.TypeVisitor;
 
 /**
  * An implementation of {@link DeclaredType} that is not dependent on any particular compiler
@@ -34,7 +34,7 @@ import javax.lang.model.type.TypeVisitor;
  */
 class StandaloneDeclaredType extends StandaloneTypeMirror implements DeclaredType {
   private final TypeElement typeElement;
-  private final TypeMirror enclosingType = StandaloneNoType.KIND_NONE;
+  private final TypeMirror enclosingType;
   private final List<TypeMirror> typeArguments;
 
   public StandaloneDeclaredType(TypeElement typeElement) {
@@ -42,10 +42,26 @@ class StandaloneDeclaredType extends StandaloneTypeMirror implements DeclaredTyp
   }
 
   public StandaloneDeclaredType(TypeElement typeElement, List<TypeMirror> typeArguments) {
-    super(TypeKind.DECLARED);
+    this(typeElement, typeArguments, StandaloneNoType.KIND_NONE);
+  }
+
+  public StandaloneDeclaredType(
+      TypeElement typeElement,
+      List<TypeMirror> typeArguments,
+      TypeMirror enclosingType) {
+    this(typeElement, typeArguments, enclosingType, Collections.emptyList());
+  }
+
+  public StandaloneDeclaredType(
+      TypeElement typeElement,
+      List<TypeMirror> typeArguments,
+      TypeMirror enclosingType,
+      List<? extends AnnotationMirror> annotations) {
+    super(TypeKind.DECLARED, annotations);
     this.typeElement = typeElement;
     this.typeArguments =
         Collections.unmodifiableList(new ArrayList<>(typeArguments));
+    this.enclosingType = enclosingType;
   }
 
   @Override
@@ -79,10 +95,5 @@ class StandaloneDeclaredType extends StandaloneTypeMirror implements DeclaredTyp
       builder.append('>');
     }
     return builder.toString();
-  }
-
-  @Override
-  public <R, P> R accept(TypeVisitor<R, P> v, P p) {
-    throw new UnsupportedOperationException();
   }
 }

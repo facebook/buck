@@ -20,7 +20,6 @@ import com.facebook.buck.util.liteinfersupport.Nullable;
 
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.TypeVisitor;
 import javax.lang.model.type.WildcardType;
 
 /**
@@ -51,11 +50,6 @@ class StandaloneWildcardType extends StandaloneTypeMirror implements WildcardTyp
   @Nullable
   public TypeMirror getSuperBound() {
     return superBound;
-  }
-
-  @Override
-  public <R, P> R accept(TypeVisitor<R, P> v, P p) {
-    throw new UnsupportedOperationException();
   }
 
   @Override

@@ -18,14 +18,15 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
 
+import java.util.Collections;
 import java.util.List;
 
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
-import javax.lang.model.type.TypeVisitor;
 
 /**
  * An implementation of {@link TypeVariable} that is not dependent on any particular compiler
@@ -39,7 +40,13 @@ class StandaloneTypeVariable extends StandaloneTypeMirror implements TypeVariabl
   private TypeMirror upperBound;
 
   public StandaloneTypeVariable(TypeParameterElement element) {
-    super(TypeKind.TYPEVAR);
+    this(element, Collections.emptyList());
+  }
+
+  public StandaloneTypeVariable(
+      TypeParameterElement element,
+      List<? extends AnnotationMirror> annotations) {
+    super(TypeKind.TYPEVAR, annotations);
     this.element = element;
   }
 
@@ -66,11 +73,6 @@ class StandaloneTypeVariable extends StandaloneTypeMirror implements TypeVariabl
   public TypeMirror getLowerBound() {
     // TODO(jkeljo): Capture conversion can create a non-null lower bound, but we don't need it yet.
     return StandaloneNullType.INSTANCE;
-  }
-
-  @Override
-  public <R, P> R accept(TypeVisitor<R, P> v, P p) {
-    throw new UnsupportedOperationException();
   }
 
   @Override

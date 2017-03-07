@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import javax.lang.model.type.NullType;
 import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeVisitor;
 
 /**
  * An implementation of {@link NullType} that does not depend on the compiler.
@@ -28,11 +27,6 @@ class StandaloneNullType extends StandaloneTypeMirror implements NullType {
 
   private StandaloneNullType() {
     super(TypeKind.NULL);
-  }
-
-  @Override
-  public <R, P> R accept(TypeVisitor<R, P> v, P p) {
-    throw new UnsupportedOperationException();
   }
 
   @Override

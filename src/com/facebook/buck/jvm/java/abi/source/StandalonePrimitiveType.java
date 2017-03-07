@@ -18,11 +18,12 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeVisitor;
 
 /**
  * An implementation of {@link PrimitiveType} that does not depend on the compiler.
@@ -39,16 +40,15 @@ class StandalonePrimitiveType extends StandaloneTypeMirror implements PrimitiveT
           }});
 
   private StandalonePrimitiveType(TypeKind kind) {
-    super(kind);
+    this(kind, Collections.emptyList());
+  }
+
+  public StandalonePrimitiveType(TypeKind kind, List<? extends AnnotationMirror> annotations) {
+    super(kind, annotations);
 
     if (!kind.isPrimitive()) {
       throw new IllegalArgumentException();
     }
-  }
-
-  @Override
-  public <R, P> R accept(TypeVisitor<R, P> v, P p) {
-    throw new UnsupportedOperationException();
   }
 
   @Override
