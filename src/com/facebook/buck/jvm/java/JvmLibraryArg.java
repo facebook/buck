@@ -56,7 +56,9 @@ public class JvmLibraryArg extends AbstractDescriptionArg {
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver,
       Set<String> safeAnnotationProcessors) {
-    if (annotationProcessors.isEmpty() && plugins.isEmpty()) {
+    if (annotationProcessors.isEmpty() &&
+        plugins.isEmpty() &&
+        annotationProcessorDeps.isEmpty()) {
       return AnnotationProcessingParams.EMPTY;
     }
 
