@@ -119,3 +119,11 @@ class BuckPackage(BuckTool):
 
     def _get_java_classpath(self):
         return self._get_resource(SERVER)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._lock_file:
+            self._lock_file.close()
+            self._lock_file = None

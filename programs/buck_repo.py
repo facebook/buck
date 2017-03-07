@@ -367,3 +367,9 @@ class BuckRepo(BuckTool):
 
     def _get_java_classpath(self):
         return self._pathsep.join([self._join_buck_dir(p) for p in JAVA_CLASSPATHS])
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass

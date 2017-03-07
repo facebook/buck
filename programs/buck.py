@@ -16,6 +16,16 @@ THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
 def main(argv):
+    def get_repo(p):
+        # Try to detect if we're running a PEX by checking if we were invoked
+        # via a zip file.
+        if zipfile.is_zipfile(argv[0]):
+            from buck_package import BuckPackage
+            return BuckPackage(p)
+        else:
+            from buck_repo import BuckRepo
+            return BuckRepo(THIS_DIR, p)
+
     install_signal_handlers()
     try:
         tracing_dir = None
@@ -24,21 +34,12 @@ def main(argv):
             with BuckProject.from_current_dir() as project:
                 tracing_dir = os.path.join(project.get_buck_out_log_dir(), 'traces')
 
-                # Try to detect if we're running a PEX by checking if we were invoked
-                # via a zip file.
-                if zipfile.is_zipfile(argv[0]):
-                    from buck_package import BuckPackage
-                    buck_repo = BuckPackage(project)
-                else:
-                    from buck_repo import BuckRepo
-                    buck_repo = BuckRepo(THIS_DIR, project)
-
-                # If 'kill' is the second argument, shut down the buckd process.
-                if sys.argv[1:] == ['kill']:
-                    buck_repo.kill_buckd()
-                    return 0
-
-                return buck_repo.launch_buck(build_id)
+                with get_repo(project) as buck_repo:
+                    # If 'kill' is the second argument, shut down the buckd process.
+                    if sys.argv[1:] == ['kill']:
+                        buck_repo.kill_buckd()
+                        return 0
+                    return buck_repo.launch_buck(build_id)
     finally:
         if tracing_dir:
             Tracing.write_to_dir(tracing_dir, build_id)
