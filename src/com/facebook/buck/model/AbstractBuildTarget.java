@@ -198,7 +198,9 @@ abstract class AbstractBuildTarget implements Comparable<AbstractBuildTarget> {
   }
 
   public BuildTarget withAppendedFlavors(Flavor... flavors) {
-    return withAppendedFlavors(ImmutableSet.copyOf(flavors));
+    BuildTarget.Builder builder = BuildTarget.builder(BuildTarget.copyOf(this));
+    builder.addFlavors(flavors);
+    return builder.build();
   }
 
   public BuildTarget withoutCell() {

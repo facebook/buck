@@ -17,10 +17,11 @@
 package com.facebook.buck.model;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.string.StringsUtils;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
+import com.google.common.primitives.Booleans;
 
 import org.immutables.value.Value;
 
@@ -146,15 +147,20 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
     if (this == o) {
       return 0;
     }
-
-    ComparisonChain comparison = ComparisonChain.start()
-        .compareTrueFirst(getCell().isPresent(), o.getCell().isPresent());
-    if (getCell().isPresent() && o.getCell().isPresent()) {
-      comparison = comparison.compare(getCell().get(), o.getCell().get());
+    int cmp = Booleans.compare(o.getCell().isPresent(), getCell().isPresent());
+    if (cmp != 0) {
+      return cmp;
     }
-    return comparison
-        .compare(getBaseName(), o.getBaseName())
-        .compare(getShortName(), o.getShortName())
-        .result();
+    if (getCell().isPresent() && o.getCell().isPresent()) {
+      cmp = StringsUtils.compareStrings(getCell().get(), o.getCell().get());
+      if (cmp != 0) {
+        return cmp;
+      }
+    }
+    cmp = StringsUtils.compareStrings(getBaseName(), o.getBaseName());
+    if (cmp != 0) {
+      return cmp;
+    }
+    return StringsUtils.compareStrings(getShortName(), o.getShortName());
   }
 }
