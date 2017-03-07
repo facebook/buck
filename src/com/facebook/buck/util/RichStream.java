@@ -112,6 +112,10 @@ public interface RichStream<T> extends Stream<T> {
     return collect(MoreCollectors.toImmutableSortedSet(ordering));
   }
 
+  default Iterable<T> toOnceIterable() {
+    return this::iterator;
+  }
+
   // More specific return types for Stream methods that return Streams.
 
   @Override
