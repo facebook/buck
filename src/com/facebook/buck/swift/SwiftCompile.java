@@ -35,8 +35,8 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
@@ -168,7 +168,7 @@ class SwiftCompile extends AbstractBuildRule {
             .filter(SwiftCompile.class::isInstance)
             .map(BuildRule::getSourcePathToOutput)
             .map(input -> resolver.getAbsolutePath(input).toString())
-        .collect(MoreCollectors.toImmutableSet())));
+            .collect(MoreCollectors.toImmutableSet())));
 
     Optional<Iterable<String>> configFlags = swiftBuckConfig.getFlags();
     if (configFlags.isPresent()) {
