@@ -421,16 +421,15 @@ public class AppleLibraryDescription implements
     return AppleDebuggableBinary.isBuildRuleDebuggable(buildRule);
   }
 
-
-  @Override
-  public <A extends Arg, U> Optional<U> createMetadata(
+  <U> Optional<U> createMetadataForLibrary(
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
-      A args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
+      AppleNativeTargetDescriptionArg args,
       Class<U> metadataClass) throws NoSuchBuildTargetException {
-    if (!metadataClass.isAssignableFrom(FrameworkDependencies.class) ||
-        !buildTarget.getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
+
+    // Forward to C/C++ library description.
+    if (CxxLibraryDescription.METADATA_TYPE.containsAnyOf(buildTarget.getFlavors())) {
       CxxLibraryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
       AppleDescriptions.populateCxxLibraryDescriptionArg(
           new SourcePathResolver(new SourcePathRuleFinder(resolver)),
@@ -444,30 +443,47 @@ public class AppleLibraryDescription implements
           selectedVersions,
           metadataClass);
     }
-    Optional<Flavor> cxxPlatformFlavor = delegate.getCxxPlatforms().getFlavor(buildTarget);
-    Preconditions.checkState(
-        cxxPlatformFlavor.isPresent(),
-        "Could not find cxx platform in:\n%s",
-        Joiner.on(", ").join(buildTarget.getFlavors()));
-    ImmutableSet.Builder<SourcePath> sourcePaths = ImmutableSet.builder();
-    for (BuildTarget dep : args.deps) {
-      Optional<FrameworkDependencies> frameworks =
-          resolver.requireMetadata(
-              BuildTarget.builder(dep)
-                  .addFlavors(AppleDescriptions.FRAMEWORK_FLAVOR)
-                  .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
-                  .addFlavors(cxxPlatformFlavor.get())
-                  .build(),
-              FrameworkDependencies.class);
-      if (frameworks.isPresent()) {
-        sourcePaths.addAll(frameworks.get().getSourcePaths());
+
+    if (metadataClass.isAssignableFrom(FrameworkDependencies.class) &&
+        buildTarget.getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
+      Optional<Flavor> cxxPlatformFlavor = delegate.getCxxPlatforms().getFlavor(buildTarget);
+      Preconditions.checkState(
+          cxxPlatformFlavor.isPresent(),
+          "Could not find cxx platform in:\n%s",
+          Joiner.on(", ").join(buildTarget.getFlavors()));
+      ImmutableSet.Builder<SourcePath> sourcePaths = ImmutableSet.builder();
+      for (BuildTarget dep : args.deps) {
+        Optional<FrameworkDependencies> frameworks =
+            resolver.requireMetadata(
+                BuildTarget.builder(dep)
+                    .addFlavors(AppleDescriptions.FRAMEWORK_FLAVOR)
+                    .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                    .addFlavors(cxxPlatformFlavor.get())
+                    .build(),
+                FrameworkDependencies.class);
+        if (frameworks.isPresent()) {
+          sourcePaths.addAll(frameworks.get().getSourcePaths());
+        }
       }
+      // Not all parts of Buck use require yet, so require the rule here so it's available in the
+      // resolver for the parts that don't.
+      BuildRule buildRule = resolver.requireRule(buildTarget);
+      sourcePaths.add(buildRule.getSourcePathToOutput());
+      return Optional.of(metadataClass.cast(FrameworkDependencies.of(sourcePaths.build())));
     }
-    // Not all parts of Buck use require yet, so require the rule here so it's available in the
-    // resolver for the parts that don't.
-    BuildRule buildRule = resolver.requireRule(buildTarget);
-    sourcePaths.add(buildRule.getSourcePathToOutput());
-    return Optional.of(metadataClass.cast(FrameworkDependencies.of(sourcePaths.build())));
+
+    return Optional.empty();
+  }
+
+  @Override
+  public <A extends Arg, U> Optional<U> createMetadata(
+      BuildTarget buildTarget,
+      BuildRuleResolver resolver,
+      A args,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
+      Class<U> metadataClass)
+      throws NoSuchBuildTargetException {
+    return createMetadataForLibrary(buildTarget, resolver, selectedVersions, args, metadataClass);
   }
 
   @Override

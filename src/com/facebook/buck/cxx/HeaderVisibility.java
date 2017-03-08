@@ -16,7 +16,25 @@
 
 package com.facebook.buck.cxx;
 
-public enum HeaderVisibility {
-  PUBLIC,
-  PRIVATE,
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorConvertible;
+import com.facebook.buck.model.ImmutableFlavor;
+
+public enum HeaderVisibility implements FlavorConvertible {
+
+  PUBLIC(ImmutableFlavor.of("public-header-visibility")),
+  PRIVATE(ImmutableFlavor.of("private-header-visibility")),
+  ;
+
+  private final Flavor flavor;
+
+  HeaderVisibility(Flavor flavor) {
+    this.flavor = flavor;
+  }
+
+  @Override
+  public Flavor getFlavor() {
+    return flavor;
+  }
+
 }
