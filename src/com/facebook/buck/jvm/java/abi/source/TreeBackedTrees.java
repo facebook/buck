@@ -48,6 +48,7 @@ import javax.tools.JavaCompiler;
 class TreeBackedTrees extends Trees {
   private final TreeBackedElements elements;
   private final Trees javacTrees;
+  private final TreeResolver resolver;
 
   public static TreeBackedTrees instance(JavaCompiler.CompilationTask task) {
     return ((FrontendOnlyJavacTask) task).getTrees();
@@ -55,9 +56,11 @@ class TreeBackedTrees extends Trees {
 
   /* package */ TreeBackedTrees(
       Trees javacTrees,
-      TreeBackedElements elements) {
+      TreeBackedElements elements,
+      TreeBackedTypes types) {
     this.javacTrees = javacTrees;
     this.elements = elements;
+    resolver = new TreeResolver(elements, javacTrees, types);
   }
 
   @Override
@@ -143,8 +146,9 @@ class TreeBackedTrees extends Trees {
   }
 
   @Override
+  @Nullable
   public TypeMirror getTypeMirror(TreePath path) {
-    throw new UnsupportedOperationException();
+    return resolver.getType(path);
   }
 
   @Override
