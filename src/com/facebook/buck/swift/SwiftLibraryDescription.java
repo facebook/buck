@@ -46,15 +46,14 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.RichStream;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
@@ -159,10 +158,13 @@ public class SwiftLibraryDescription implements
         buildTarget);
     final ImmutableSortedSet<Flavor> buildFlavors = buildTarget.getFlavors();
     ImmutableSortedSet<BuildRule> filteredExtraDeps =
-        FluentIterable.from(params.getExtraDeps().get())
-            .filter(input -> !input.getBuildTarget().getUnflavoredBuildTarget()
-                .equals(buildTarget.getUnflavoredBuildTarget()))
-            .toSortedSet(Ordering.natural());
+        params.getExtraDeps().get()
+            .stream()
+            .filter(input ->
+                !input.getBuildTarget()
+                    .getUnflavoredBuildTarget()
+                    .equals(buildTarget.getUnflavoredBuildTarget()))
+            .collect(MoreCollectors.toImmutableSortedSet());
     params = params.copyWithExtraDeps(Suppliers.ofInstance(filteredExtraDeps));
 
     if (!buildFlavors.contains(SWIFT_COMPANION_FLAVOR) && platform.isPresent()) {
@@ -226,17 +228,17 @@ public class SwiftLibraryDescription implements
               .collect(MoreCollectors.toImmutableSet()));
 
       params = params.appendExtraDeps(
-          FluentIterable.from(params.getDeps())
-              .filter(CxxLibrary.class)
-              .transform(input -> {
+          params.getDeps().stream()
+              .filter(CxxLibrary.class::isInstance)
+              .map(input -> {
                 BuildTarget companionTarget = input.getBuildTarget().withAppendedFlavors(
                     SWIFT_COMPANION_FLAVOR);
                 return resolver.getRuleOptional(companionTarget)
                     .map(requireSwiftCompile);
               })
               .filter(Optional::isPresent)
-              .transform(Optional::get)
-              .toSortedSet(Ordering.natural()));
+              .map(Optional::get)
+              .collect(MoreCollectors.toImmutableSortedSet()));
 
       return new SwiftCompile(
           cxxPlatform,
@@ -311,9 +313,10 @@ public class SwiftLibraryDescription implements
         Optional.of(sharedLibrarySoname),
         sharedLibOutput,
         Linker.LinkableDepType.SHARED,
-        FluentIterable.from(params.getDeps())
+        RichStream.from(params.getDeps())
             .filter(NativeLinkable.class)
-            .append(swiftRuntimeLinkable),
+            .concat(RichStream.of(swiftRuntimeLinkable))
+            .collect(MoreCollectors.toImmutableSet()),
         Optional.empty(),
         Optional.empty(),
         ImmutableSet.of(),

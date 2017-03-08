@@ -33,9 +33,10 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
@@ -45,11 +46,11 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -163,18 +164,19 @@ class SwiftCompile extends AbstractBuildRule {
             getSwiftIncludeArgs(resolver)));
     compilerCommand.addAll(MoreIterables.zipAndConcat(
         Iterables.cycle(INCLUDE_FLAG),
-        FluentIterable.from(getDeps())
-            .filter(SwiftCompile.class)
-            .transform(SwiftCompile::getSourcePathToOutput)
-            .transform(input -> resolver.getAbsolutePath(input).toString())));
+        getDeps().stream()
+            .filter(SwiftCompile.class::isInstance)
+            .map(BuildRule::getSourcePathToOutput)
+            .map(input -> resolver.getAbsolutePath(input).toString())
+            .collect(MoreCollectors.toImmutableSet())));
 
     Optional<Iterable<String>> configFlags = swiftBuckConfig.getFlags();
     if (configFlags.isPresent()) {
       compilerCommand.addAll(configFlags.get());
     }
-    boolean hasMainEntry = FluentIterable.from(srcs).firstMatch(
-        input -> SWIFT_MAIN_FILENAME.equalsIgnoreCase(
-            resolver.getAbsolutePath(input).getFileName().toString())).isPresent();
+    boolean hasMainEntry = srcs.stream()
+        .map(input -> resolver.getAbsolutePath(input).getFileName().toString())
+        .anyMatch(SWIFT_MAIN_FILENAME::equalsIgnoreCase);
 
     compilerCommand.add(
         "-enable-testing",
