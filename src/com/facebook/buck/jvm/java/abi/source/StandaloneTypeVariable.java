@@ -24,9 +24,11 @@ import java.util.List;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.type.NullType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
+import javax.lang.model.util.Types;
 
 /**
  * An implementation of {@link TypeVariable} that is not dependent on any particular compiler
@@ -36,18 +38,21 @@ import javax.lang.model.type.TypeVariable;
 class StandaloneTypeVariable extends StandaloneTypeMirror implements TypeVariable {
 
   private final TypeParameterElement element;
+  private final NullType lowerBound;
   @Nullable
   private TypeMirror upperBound;
 
-  public StandaloneTypeVariable(TypeParameterElement element) {
-    this(element, Collections.emptyList());
+  public StandaloneTypeVariable(Types types, TypeParameterElement element) {
+    this(types, element, Collections.emptyList());
   }
 
   public StandaloneTypeVariable(
+      Types types,
       TypeParameterElement element,
       List<? extends AnnotationMirror> annotations) {
     super(TypeKind.TYPEVAR, annotations);
     this.element = element;
+    lowerBound = types.getNullType();
   }
 
   @Override
@@ -72,7 +77,7 @@ class StandaloneTypeVariable extends StandaloneTypeMirror implements TypeVariabl
   @Override
   public TypeMirror getLowerBound() {
     // TODO(jkeljo): Capture conversion can create a non-null lower bound, but we don't need it yet.
-    return StandaloneNullType.INSTANCE;
+    return lowerBound;
   }
 
   @Override

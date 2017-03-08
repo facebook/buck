@@ -30,6 +30,7 @@ import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
+import javax.lang.model.util.Types;
 
 /**
  * An implementation of {@link TypeParameterElement} that uses only the information available from a
@@ -46,10 +47,11 @@ class TreeBackedTypeParameterElement extends TreeBackedElement implements TypePa
       TypeParameterElement underlyingElement,
       TreePath path,
       TreeBackedElement enclosingElement,
-      TypeResolverFactory resolverFactory) {
+      TypeResolverFactory resolverFactory,
+      Types types) {
     super(underlyingElement, enclosingElement, path, resolverFactory);
     this.tree = (TypeParameterTree) path.getLeaf();
-    typeVar = new StandaloneTypeVariable(this);
+    typeVar = new StandaloneTypeVariable(types, this);
 
     // In javac's implementation, enclosingElement does not have type parameters in the return
     // value of getEnclosedElements

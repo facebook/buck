@@ -29,6 +29,8 @@ import com.sun.source.util.SimpleTreeVisitor;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.type.NoType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 /**
@@ -138,5 +140,9 @@ class TypeResolver {
 
   /* package */ TypeMirror getJavaLangObject() {
     return Preconditions.checkNotNull(elements.getTypeElement("java.lang.Object")).asType();
+  }
+
+  /* package */ NoType getNoneType() {
+    return types.getNoType(TypeKind.NONE);
   }
 }

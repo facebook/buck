@@ -44,6 +44,7 @@ import javax.lang.model.util.Elements;
  */
 class TreeBackedElements implements Elements {
   private final Elements javacElements;
+  private final TreeBackedTypes treeBackedTypes;
   private final Trees javacTrees;
   private final Map<Element, TreeBackedElement> treeBackedElements = new HashMap<>();
   private final Map<Name, TypeElement> knownTypes = new HashMap<>();
@@ -52,9 +53,13 @@ class TreeBackedElements implements Elements {
   @Nullable
   private TypeResolverFactory resolverFactory;
 
-  public TreeBackedElements(Elements javacElements, Trees javacTrees) {
+  public TreeBackedElements(
+      Elements javacElements,
+      Trees javacTrees,
+      TreeBackedTypes treeBackedTypes) {
     this.javacElements = javacElements;
     this.javacTrees = javacTrees;
+    this.treeBackedTypes = treeBackedTypes;
   }
 
   /* package */ void setResolverFactory(TypeResolverFactory resolverFactory) {
@@ -108,7 +113,8 @@ class TreeBackedElements implements Elements {
             underlyingType,
             enterElement(underlyingType.getEnclosingElement()),
             Preconditions.checkNotNull(javacTrees.getPath(underlyingType)),
-            Preconditions.checkNotNull(resolverFactory));
+            Preconditions.checkNotNull(resolverFactory),
+            treeBackedTypes);
 
     knownTypes.put(treeBackedType.getQualifiedName(), treeBackedType);
 
@@ -123,7 +129,8 @@ class TreeBackedElements implements Elements {
         underlyingTypeParameter,
         Preconditions.checkNotNull(javacTrees.getPath(underlyingTypeParameter)),
         enclosingElement,
-        Preconditions.checkNotNull(resolverFactory));
+        Preconditions.checkNotNull(resolverFactory),
+        treeBackedTypes);
   }
 
   public TreeBackedElement getTreeBackedElement(Element underlyingElement) {

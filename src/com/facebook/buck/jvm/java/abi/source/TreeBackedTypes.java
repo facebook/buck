@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 
 import java.util.Arrays;
 import java.util.List;
@@ -44,6 +43,12 @@ import javax.lang.model.util.Types;
  * methods and {@link com.facebook.buck.jvm.java.abi.source} for more information.
  */
 class TreeBackedTypes implements Types {
+  private final Types javacTypes;
+
+  TreeBackedTypes(Types javacTypes) {
+    this.javacTypes = javacTypes;
+  }
+
   @Override
   @Nullable
   public Element asElement(TypeMirror t) {
@@ -58,13 +63,21 @@ class TreeBackedTypes implements Types {
 
   @Override
   public boolean isSameType(TypeMirror t1, TypeMirror t2) {
+    boolean t1Artificial = isArtificialType(t1);
+    boolean t2Artificial = isArtificialType(t2);
+
+    if (!t1Artificial && !t2Artificial) {
+      return javacTypes.isSameType(t1, t2);
+    }
 
     // IMPORTANT: We can't early-out on reference equality, because wildcard types are never
     // considered the same type as one another.
 
-    if (t1.getKind() != t2.getKind()) {
+    if (t1Artificial != t2Artificial || t1.getKind() != t2.getKind()) {
       return false;
     }
+
+    assert t1Artificial && t2Artificial;
 
     switch (t1.getKind()) {
       case BOOLEAN:
@@ -80,11 +93,11 @@ class TreeBackedTypes implements Types {
       case WILDCARD:
         return false;  // Wildcard types are never the same as one another; see docs
       case DECLARED:
-        return isSameType((DeclaredType) t1, (DeclaredType) t2);
+        return isSameDeclaredType((DeclaredType) t1, (DeclaredType) t2);
       case TYPEVAR:
-        return isSameType((TypeVariable) t1, (TypeVariable) t2);
+        return isSameTypeVariable((TypeVariable) t1, (TypeVariable) t2);
       case INTERSECTION:
-        return isSameType((IntersectionType) t1, (IntersectionType) t2);
+        return isSameIntersectionType((IntersectionType) t1, (IntersectionType) t2);
       case ARRAY:
         return isSameType(((ArrayType) t1).getComponentType(), ((ArrayType) t2).getComponentType());
       //$CASES-OMITTED$
@@ -94,7 +107,7 @@ class TreeBackedTypes implements Types {
     }
   }
 
-  private boolean isSameType(DeclaredType t1, DeclaredType t2) {
+  private boolean isSameDeclaredType(DeclaredType t1, DeclaredType t2) {
     if (!t1.asElement().equals(t2.asElement())) {
       return false;
     }
@@ -118,7 +131,7 @@ class TreeBackedTypes implements Types {
     return true;
   }
 
-  private boolean isSameType(TypeVariable t1, TypeVariable t2) {
+  private boolean isSameTypeVariable(TypeVariable t1, TypeVariable t2) {
     if (!t1.asElement().equals(t2.asElement())) {
       return false;
     }
@@ -129,7 +142,7 @@ class TreeBackedTypes implements Types {
     return true;
   }
 
-  private boolean isSameType(IntersectionType t1, IntersectionType t2) {
+  private boolean isSameIntersectionType(IntersectionType t1, IntersectionType t2) {
     List<? extends TypeMirror> t1Bounds = t1.getBounds();
     List<? extends TypeMirror> t2Bounds = t2.getBounds();
     if (t1Bounds.size() != t2Bounds.size()) {
@@ -204,38 +217,74 @@ class TreeBackedTypes implements Types {
 
   @Override
   public PrimitiveType getPrimitiveType(TypeKind kind) {
-    return Preconditions.checkNotNull(StandalonePrimitiveType.INSTANCES.get(kind));
+    return javacTypes.getPrimitiveType(kind);
   }
 
   @Override
   public NullType getNullType() {
-    return StandaloneNullType.INSTANCE;
+    return javacTypes.getNullType();
   }
 
   @Override
   public NoType getNoType(TypeKind kind) {
-    throw new UnsupportedOperationException();
+    return javacTypes.getNoType(kind);
   }
 
   @Override
   public ArrayType getArrayType(TypeMirror componentType) {
-    return new StandaloneArrayType(componentType);
+    if (isArtificialType(componentType)) {
+      return new StandaloneArrayType(componentType);
+    }
+
+    return javacTypes.getArrayType(componentType);
   }
 
   @Override
   public WildcardType getWildcardType(TypeMirror extendsBound, TypeMirror superBound) {
-    return new StandaloneWildcardType(extendsBound, superBound);
+    if (containsArtificialTypes(extendsBound, superBound)) {
+      return new StandaloneWildcardType(extendsBound, superBound);
+    }
+
+    return javacTypes.getWildcardType(extendsBound, superBound);
   }
 
   @Override
   public DeclaredType getDeclaredType(TypeElement typeElem, TypeMirror... typeArgs) {
-    return new StandaloneDeclaredType(typeElem, Arrays.asList(typeArgs));
+    if (isArtificialElement(typeElem) || containsArtificialTypes(typeArgs)) {
+      return new StandaloneDeclaredType(this, typeElem, Arrays.asList(typeArgs));
+    }
+
+    return javacTypes.getDeclaredType(typeElem, typeArgs);
   }
 
   @Override
   public DeclaredType getDeclaredType(
       DeclaredType containing, TypeElement typeElem, TypeMirror... typeArgs) {
-    throw new UnsupportedOperationException();
+    if (isArtificialType(containing) ||
+        isArtificialElement(typeElem) ||
+        containsArtificialTypes(typeArgs)) {
+      return new StandaloneDeclaredType(typeElem, Arrays.asList(typeArgs), containing);
+    }
+
+    return javacTypes.getDeclaredType(containing, typeElem, typeArgs);
+  }
+
+  private boolean isArtificialElement(Element element) {
+    return element instanceof TreeBackedElement;
+  }
+
+  private boolean isArtificialType(TypeMirror typeMirror) {
+    return typeMirror instanceof StandaloneTypeMirror;
+  }
+
+  private boolean containsArtificialTypes(TypeMirror... typeMirrors) {
+    for (TypeMirror typeMirror : typeMirrors) {
+      if (isArtificialType(typeMirror)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   @Override

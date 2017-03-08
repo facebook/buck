@@ -26,6 +26,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Types;
 
 /**
  * An implementation of {@link DeclaredType} that is not dependent on any particular compiler
@@ -35,26 +36,29 @@ import javax.lang.model.type.TypeMirror;
 class StandaloneDeclaredType extends StandaloneTypeMirror implements DeclaredType {
   private final TypeElement typeElement;
   private final TypeMirror enclosingType;
-  private final List<TypeMirror> typeArguments;
+  private final List<? extends TypeMirror> typeArguments;
 
-  public StandaloneDeclaredType(TypeElement typeElement) {
-    this(typeElement, Collections.emptyList());
+  public StandaloneDeclaredType(Types types, TypeElement typeElement) {
+    this(types, typeElement, Collections.emptyList());
   }
 
-  public StandaloneDeclaredType(TypeElement typeElement, List<TypeMirror> typeArguments) {
-    this(typeElement, typeArguments, StandaloneNoType.KIND_NONE);
+  public StandaloneDeclaredType(
+      Types types,
+      TypeElement typeElement,
+      List<? extends TypeMirror> typeArguments) {
+    this(typeElement, typeArguments, types.getNoType(TypeKind.NONE));
   }
 
   public StandaloneDeclaredType(
       TypeElement typeElement,
-      List<TypeMirror> typeArguments,
+      List<? extends TypeMirror> typeArguments,
       TypeMirror enclosingType) {
     this(typeElement, typeArguments, enclosingType, Collections.emptyList());
   }
 
   public StandaloneDeclaredType(
       TypeElement typeElement,
-      List<TypeMirror> typeArguments,
+      List<? extends TypeMirror> typeArguments,
       TypeMirror enclosingType,
       List<? extends AnnotationMirror> annotations) {
     super(TypeKind.DECLARED, annotations);
