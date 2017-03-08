@@ -25,6 +25,8 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.FrameworkDependencies;
+import com.facebook.buck.cxx.HeaderSymlinkTree;
+import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
@@ -58,12 +60,14 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -94,7 +98,7 @@ public class AppleLibraryDescription implements
       LinkerMapMode.NO_LINKER_MAP.getFlavor(),
       ImmutableFlavor.of("default"));
 
-  private enum Type implements FlavorConvertible {
+  public enum Type implements FlavorConvertible {
     HEADERS(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
     EXPORTED_HEADERS(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
     SANDBOX(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR),
@@ -258,6 +262,8 @@ public class AppleLibraryDescription implements
       Optional<Linker.LinkableDepType> linkableDepType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist) throws NoSuchBuildTargetException {
+    params = params.appendExtraDeps(requireHeaderSymlinkTree(params, resolver, args));
+
     Optional<BuildRule> swiftCompanionBuildRule = swiftDelegate.createCompanionBuildRule(
         targetGraph, params, resolver, args);
     if (swiftCompanionBuildRule.isPresent()) {
@@ -368,6 +374,55 @@ public class AppleLibraryDescription implements
           blacklist,
           pathResolver);
     }
+  }
+
+  private <A extends AppleNativeTargetDescriptionArg> ImmutableList<HeaderSymlinkTree>
+  requireHeaderSymlinkTree(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args
+  ) {
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    CxxLibraryDescription.Arg cxxDelegateArgs = CxxLibraryDescription.createEmptyConstructorArg();
+    AppleDescriptions.populateCxxLibraryDescriptionArg(
+        pathResolver,
+        cxxDelegateArgs,
+        args,
+        params.getBuildTarget());
+
+    ImmutableMap<Path, SourcePath> publicHeaders =  CxxDescriptionEnhancer.parseExportedHeaders(
+        params.getBuildTarget(),
+        pathResolver,
+        Optional.of(defaultCxxPlatform),
+        cxxDelegateArgs);
+    ImmutableMap<Path, SourcePath> privateHeaders =  CxxDescriptionEnhancer.parseHeaders(
+        params.getBuildTarget(),
+        pathResolver,
+        Optional.of(defaultCxxPlatform),
+        cxxDelegateArgs);
+
+    BuildRuleParams untypedParams = params
+        .withoutFlavor(SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR)
+        .withoutFlavor(SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR);
+
+    HeaderSymlinkTree publicHeaderSymlinkTree = CxxDescriptionEnhancer.requireHeaderSymlinkTree(
+        untypedParams,
+        resolver,
+        defaultCxxPlatform,
+        publicHeaders,
+        HeaderVisibility.PUBLIC,
+        true
+    );
+    HeaderSymlinkTree privateHeaderSymlinkTree = CxxDescriptionEnhancer.requireHeaderSymlinkTree(
+        untypedParams,
+        resolver,
+        defaultCxxPlatform,
+        privateHeaders,
+        HeaderVisibility.PRIVATE,
+        true
+    );
+
+    return ImmutableList.of(publicHeaderSymlinkTree, privateHeaderSymlinkTree);
   }
 
   private <A extends AppleNativeTargetDescriptionArg> BuildRule
