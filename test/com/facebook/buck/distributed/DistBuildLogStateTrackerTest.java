@@ -175,8 +175,8 @@ public class DistBuildLogStateTrackerTest {
     LogLineBatch runOneStdErrLogsBatchOne = new LogLineBatch();
     runOneStdErrLogsBatchOne.setBatchNumber(1);
     runOneStdErrLogsBatchOne.setLines(ImmutableList.of(
-        "runOneStdErrLine1",
-        "runOneStdErrLine2"
+        "runOneStdErrLine1\n",
+        "runOneStdErrLine2\n"
     ));
     runOneStdErrLogs.setLogLineBatches(ImmutableList.of(
         runOneStdErrLogsBatchOne
@@ -187,13 +187,13 @@ public class DistBuildLogStateTrackerTest {
     LogLineBatch runTwoStdOutLogsBatchOne = new LogLineBatch();
     runTwoStdOutLogsBatchOne.setBatchNumber(1);
     runTwoStdOutLogsBatchOne.setLines(ImmutableList.of(
-        "runTwoStdOutLine1"
+        "runTwoStdOutLine1\n"
     ));
     LogLineBatch runTwoStdOutLogsBatchTwo = new LogLineBatch();
     runTwoStdOutLogsBatchTwo.setBatchNumber(2);
     runTwoStdOutLogsBatchTwo.setLines(ImmutableList.of(
-        "runTwoStdOutLine2",
-        "runTwoStdOutLine3"
+        "runTwoStdOutLine2\n",
+        "runTwoStdOutLine3\n"
     ));
     runTwoStdOutLogs.setLogLineBatches(ImmutableList.of(
         runTwoStdOutLogsBatchOne,
@@ -247,9 +247,9 @@ public class DistBuildLogStateTrackerTest {
     runTwoStdOutLogsBatchTwo = new LogLineBatch();
     runTwoStdOutLogsBatchTwo.setBatchNumber(2);
     runTwoStdOutLogsBatchTwo.setLines(ImmutableList.of(
-        "runTwoStdOutLine2",
-        "runTwoStdOutLine3",
-        "runTwoStdOutLine4"
+        "runTwoStdOutLine2\n",
+        "runTwoStdOutLine3\n",
+        "runTwoStdOutLine4\n"
     ));
 
     runTwoStdOutLogs.setLogLineBatches(ImmutableList.of(
@@ -320,14 +320,14 @@ public class DistBuildLogStateTrackerTest {
     runOneStdErrLogsBatchOne = new LogLineBatch();
     runOneStdErrLogsBatchOne.setBatchNumber(1);
     runOneStdErrLogsBatchOne.setLines(ImmutableList.of(
-        "runOneStdErrLine1",
-        "runOneStdErrLine2",
-        "runOneStdErrLine3"
+        "runOneStdErrLine1\n",
+        "runOneStdErrLine2\n",
+        "runOneStdErrLine3\n"
     ));
     LogLineBatch runOneStdErrLogsBatchTwo = new LogLineBatch();
     runOneStdErrLogsBatchTwo.setBatchNumber(2);
     runOneStdErrLogsBatchTwo.setLines(ImmutableList.of(
-        "runOneStdErrLine4"
+        "runOneStdErrLine4\n"
     ));
     runOneStdErrLogs.setLogLineBatches(ImmutableList.of(
         runOneStdErrLogsBatchOne,
@@ -340,14 +340,14 @@ public class DistBuildLogStateTrackerTest {
     LogLineBatch runOneStdOutLogsBatchOne = new LogLineBatch();
     runOneStdOutLogsBatchOne.setBatchNumber(1);
     runOneStdOutLogsBatchOne.setLines(ImmutableList.of(
-        "runOneStdOutLine1",
-        "runOneStdOutLine2"
+        "runOneStdOutLine1\n",
+        "runOneStdOutLine2\n"
     ));
     LogLineBatch runOneStdOutLogsBatchTwo = new LogLineBatch();
     runOneStdOutLogsBatchTwo.setBatchNumber(2);
     runOneStdOutLogsBatchTwo.setLines(ImmutableList.of(
-        "runOneStdOutLine3",
-        "runOneStdOutLine4"
+        "runOneStdOutLine3\n",
+        "runOneStdOutLine4\n"
     ));
     runOneStdOutLogs.setLogLineBatches(ImmutableList.of(
         runOneStdOutLogsBatchOne,
@@ -360,15 +360,15 @@ public class DistBuildLogStateTrackerTest {
     runTwoStdOutLogsBatchTwo = new LogLineBatch();
     runTwoStdOutLogsBatchTwo.setBatchNumber(2);
     runTwoStdOutLogsBatchTwo.setLines(ImmutableList.of(
-        "runTwoStdOutLine2",
-        "runTwoStdOutLine3",
-        "runTwoStdOutLine4"
+        "runTwoStdOutLine2\n",
+        "runTwoStdOutLine3\n",
+        "runTwoStdOutLine4\n"
     ));
     LogLineBatch runTwoStdOutLogsBatchThree = new LogLineBatch();
     runTwoStdOutLogsBatchThree.setBatchNumber(3);
     runTwoStdOutLogsBatchThree.setLines(ImmutableList.of(
-        "runTwoStdOutLine5",
-        "runTwoStdOutLine6"
+        "runTwoStdOutLine5\n",
+        "runTwoStdOutLine6\n"
     ));
     runTwoStdOutLogs.setLogLineBatches(ImmutableList.of(
         runTwoStdOutLogsBatchTwo,

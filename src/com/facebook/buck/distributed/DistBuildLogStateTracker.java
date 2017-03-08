@@ -49,7 +49,6 @@ import java.util.Set;
 
 public class DistBuildLogStateTracker implements Closeable {
   private static final Logger LOG = Logger.get(DistBuildLogStateTracker.class);
-  private static final byte[] NEWLINE = "\n".getBytes(Charsets.UTF_8);
   private static final List<LogStreamType> SUPPORTED_STREAM_TYPES =
       ImmutableList.of(LogStreamType.STDOUT, LogStreamType.STDERR);
 
@@ -298,8 +297,7 @@ public class DistBuildLogStateTracker implements Closeable {
             outputLogFilePath.toFile(),
             true))) {
       for (String logLine : newLines) {
-        outputStream.write((logLine.getBytes(Charsets.UTF_8)));
-        outputStream.write(NEWLINE);
+        outputStream.write(logLine.getBytes(Charsets.UTF_8));
       }
       outputStream.flush();
     } catch (IOException e) {
