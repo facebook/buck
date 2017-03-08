@@ -16,6 +16,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.infer.annotation.Assertions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableBiMap;
@@ -33,6 +34,7 @@ import java.util.Optional;
  * that the output only contains references to the mapped-to paths (i.e. the fake paths).
  */
 public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
+  private static final Logger LOG = Logger.get(PrefixMapDebugPathSanitizer.class);
   protected final ImmutableBiMap<Path, Path> allPaths;
   private final ProjectFilesystem projectFilesystem;
   private boolean isGcc;
@@ -141,6 +143,9 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
     if (this.projectFilesystem.equals(projectFilesystem)) {
       return this;
     }
+    LOG.debug(
+        "Creating a new PrefixMapDebugPathSanitizer with projectFilesystem %s",
+        projectFilesystem.getRootPath());
     // TODO(mzlee): Do not create a new sanitizer every time
     return new PrefixMapDebugPathSanitizer(
         this.pathSize,
