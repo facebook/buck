@@ -32,7 +32,7 @@ public abstract class ManagedRunnable implements AutoCloseable {
 
   private final Runnable runnable;
   private final ExecutorService threadPool;
-  private Future<?> runnableFuture;
+  private @Nullable Future<?> runnableFuture;
 
   @Nullable
   private Exception exception;
@@ -60,13 +60,18 @@ public abstract class ManagedRunnable implements AutoCloseable {
    * Wait for the backing thread to terminate.
    */
   public void waitFor() throws InterruptedException, ExecutionException {
-
+    if (runnableFuture == null) {
+      throw new IllegalStateException("Cannot call waitFor on unstarted ManagedRunnable");
+    }
     // Wait for the thread to finish.
     this.runnableFuture.get();
   }
 
   @Override
   public void close() throws Exception {
+    if (runnableFuture == null) {
+      throw new IllegalStateException("Cannot close unstarted ManagedRunnable");
+    }
 
     // Stop the thread and wait for it to finish.
     this.runnableFuture.cancel(true);

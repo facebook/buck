@@ -152,7 +152,7 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoClosea
   }
 
   @Override
-  public void beginAnalyze(String filename, String typename) {
+  public void beginAnalyze(@Nullable String filename, @Nullable String typename) {
     if (isProcessingAnnotations) {
       logger.endAnnotationProcessingRound(true);
       logger.endAnnotationProcessing();

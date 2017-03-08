@@ -936,7 +936,7 @@ public class BuckConfig implements ConfigPathGetter {
       // If none of this section's entries are ignored, then add it as-is.
       ImmutableMap<String, String> fields = sectionEnt.getValue();
       ImmutableSet<String> ignoredFieldNames =
-          IGNORE_FIELDS_FOR_DAEMON_RESTART.get(sectionName);
+          IGNORE_FIELDS_FOR_DAEMON_RESTART.getOrDefault(sectionName, ImmutableSet.of());
       if (Sets.intersection(fields.keySet(), ignoredFieldNames).isEmpty()) {
         filtered.put(sectionEnt);
         continue;

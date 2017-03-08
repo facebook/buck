@@ -320,9 +320,8 @@ public class Parser {
     };
 
     GraphTraversable<BuildTarget> groupExpander = target -> {
-      TargetGroup group = groups.get(target);
-      Preconditions.checkNotNull(
-          group,
+      TargetGroup group = Preconditions.checkNotNull(
+          groups.get(target),
           "SANITY FAILURE: Tried to expand group %s but it doesn't exist.",
           target);
       return Iterators.filter(group.iterator(), groups::containsKey);

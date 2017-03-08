@@ -93,41 +93,36 @@ public class JavacExecutionContextSerializer {
       ObjectMapper objectMapper,
       Console console) {
 
-    Preconditions.checkArgument(data.containsKey(VERBOSITY));
-    Verbosity verbosity = Verbosity.valueOf((String) data.get(VERBOSITY));
+    Verbosity verbosity =
+        Verbosity.valueOf((String) Preconditions.checkNotNull(data.get(VERBOSITY)));
 
-    Preconditions.checkArgument(data.containsKey(CELL_PATH_RESOLVER));
     CellPathResolver cellPathResolver = CellPathResolverSerializer.deserialize(
-        (Map<String, Object>) data.get(CELL_PATH_RESOLVER));
+        (Map<String, Object>) Preconditions.checkNotNull(data.get(CELL_PATH_RESOLVER)));
 
-    Preconditions.checkArgument(data.containsKey(JAVA_PACKAGE_FINDER));
     JavaPackageFinder javaPackageFinder = JavaPackageFinderSerializer.deserialize(
-        (Map<String, Object>) data.get(JAVA_PACKAGE_FINDER));
+        (Map<String, Object>) Preconditions.checkNotNull(data.get(JAVA_PACKAGE_FINDER)));
 
-    Preconditions.checkArgument(data.containsKey(PROJECT_FILE_SYSTEM_ROOT));
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get(
-        (String) data.get(PROJECT_FILE_SYSTEM_ROOT)));
+        (String) Preconditions.checkNotNull(data.get(PROJECT_FILE_SYSTEM_ROOT))));
 
-    Preconditions.checkArgument(data.containsKey(CLASS_USAGE_FILE_WRITER));
     ClassUsageFileWriter classUsageFileWriter = ClassUsageFileWriterSerializer.deserialize(
-        (Map<String, Object>) data.get(CLASS_USAGE_FILE_WRITER));
+        (Map<String, Object>) Preconditions.checkNotNull(data.get(CLASS_USAGE_FILE_WRITER)));
 
-    Preconditions.checkArgument(data.containsKey(PROCESS_EXECUTOR));
     ProcessExecutor processExecutor = ProcessExecutorSerializer.deserialize(
-        (Map<String, Object>) data.get(PROCESS_EXECUTOR),
+        (Map<String, Object>) Preconditions.checkNotNull(data.get(PROCESS_EXECUTOR)),
         console);
 
-    Preconditions.checkArgument(data.containsKey(ABSOLUTE_PATHS_FOR_INPUTS));
     ImmutableList<Path> absolutePathsForInputs =
         ImmutableList.copyOf(
-            ((List<String>) data.get(ABSOLUTE_PATHS_FOR_INPUTS)).stream()
+            ((List<String>) Preconditions.checkNotNull(data.get(ABSOLUTE_PATHS_FOR_INPUTS)))
+                .stream()
                 .map(s -> Paths.get(s)).iterator());
 
     Optional<DirectToJarOutputSettings> directToJarOutputSettings = Optional.empty();
     if (data.containsKey(DIRECT_TO_JAR_SETTINGS)) {
       directToJarOutputSettings = Optional.of(
           DirectToJarOutputSettingsSerializer.deserialize(
-              (Map<String, Object>) data.get(DIRECT_TO_JAR_SETTINGS)));
+              (Map<String, Object>) Preconditions.checkNotNull(data.get(DIRECT_TO_JAR_SETTINGS))));
     }
 
     return JavacExecutionContext.of(

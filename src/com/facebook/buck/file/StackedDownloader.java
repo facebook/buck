@@ -60,7 +60,7 @@ public class StackedDownloader implements Downloader {
     HttpDownloader httpDownloader = new HttpDownloader(proxy);
 
     for (Map.Entry<String, String> kv : downloadConfig.getAllMavenRepos().entrySet()) {
-      String repo = kv.getValue();
+      String repo = Preconditions.checkNotNull(kv.getValue());
       // Check the type.
       if (repo.startsWith("http:") || repo.startsWith("https://")) {
         String repoName = kv.getKey();
@@ -87,7 +87,8 @@ public class StackedDownloader implements Downloader {
         try {
           downloaders.add(
               new OnDiskMavenDownloader(
-                  config.resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get(repo))));
+                  Preconditions.checkNotNull(
+                      config.resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get(repo)))));
         } catch (FileNotFoundException e) {
           throw new HumanReadableException(e, "Error occurred when attempting to use %s " +
               "as a local Maven repository as configured in .buckconfig.  See " +

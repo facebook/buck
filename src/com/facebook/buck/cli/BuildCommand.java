@@ -492,9 +492,8 @@ public class BuildCommand extends AbstractCommand {
             loneTarget));
         return 1;
       } else {
-        SourcePath output = rule.getSourcePathToOutput();
-        Preconditions.checkNotNull(
-            output,
+        SourcePath output = Preconditions.checkNotNull(
+            rule.getSourcePathToOutput(),
             "%s specified a build target that does not have an output file: %s",
             OUT_LONG_ARG,
             loneTarget);

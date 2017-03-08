@@ -129,8 +129,7 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule, Ha
 
       MkdirAndSymlinkFileStep link = new MkdirAndSymlinkFileStep(
           getProjectFilesystem(),
-          metaInfDirectory != null ?
-              context.getSourcePathResolver().getAbsolutePath(metaInfDirectory) : null,
+          context.getSourcePathResolver().getAbsolutePath(metaInfDirectory),
           stagingTarget);
       commands.add(link);
 
