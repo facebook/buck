@@ -174,6 +174,8 @@ public class AndroidBinaryGraphEnhancerTest {
         /* manifest */ new FakeSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
         new IdentityResourcesProvider(ImmutableList.of()),
         ImmutableList.of(),
+        ImmutableSortedSet.of(),
+        ImmutableSet.of(),
         /* resourceUnionPackage */ Optional.empty(),
         AndroidBinary.PackageType.DEBUG,
         false,
