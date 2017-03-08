@@ -22,28 +22,24 @@ import com.facebook.buck.event.BuckEventBus;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.annotation.concurrent.GuardedBy;
+import javax.annotation.concurrent.ThreadSafe;
+
+@ThreadSafe
 public class BroadcastEventListener {
 
+  @GuardedBy("this")
   private Set<BuckEventBus> eventBuses;
 
   public BroadcastEventListener() {
     eventBuses = new HashSet<>();
   }
 
-  public void broadcast(BroadcastEvent event) {
+  public synchronized void broadcast(BroadcastEvent event) {
     if (eventBuses.isEmpty()) {
       throw new RuntimeException("No available eventBus to broadcast event: " +
           event.getEventName());
     }
-    postToAllBuses(event);
-  }
-
-  public BroadcastEventBusClosable addEventBus(BuckEventBus eventBus) {
-    eventBuses.add(eventBus);
-    return new BroadcastEventBusClosable(this, eventBus);
-  }
-
-  private void postToAllBuses(BroadcastEvent event) {
     for (BuckEventBus eventBus : eventBuses) {
       if (event.isConfigured()) {
         eventBus.postWithoutConfiguring(event);
@@ -53,7 +49,12 @@ public class BroadcastEventListener {
     }
   }
 
-  private void removeEventBus(BuckEventBus eventBus) {
+  public synchronized BroadcastEventBusClosable addEventBus(BuckEventBus eventBus) {
+    eventBuses.add(eventBus);
+    return new BroadcastEventBusClosable(this, eventBus);
+  }
+
+  private synchronized void removeEventBus(BuckEventBus eventBus) {
     eventBuses.remove(eventBus);
   }
 
