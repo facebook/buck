@@ -28,8 +28,12 @@ public class DefaultClock implements Clock {
   private final boolean userNanoTimeEnabled;
 
   public DefaultClock() {
+    this(true);
+  }
+
+  public DefaultClock(boolean enableThreadCpuTime) {
     threadMXBean = ManagementFactory.getThreadMXBean();
-    userNanoTimeEnabled = threadMXBean.isThreadCpuTimeEnabled();
+    userNanoTimeEnabled = enableThreadCpuTime && threadMXBean.isThreadCpuTimeEnabled();
   }
 
   @Override

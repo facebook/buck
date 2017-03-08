@@ -982,12 +982,16 @@ public final class Main {
       ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
 
       Clock clock;
+      boolean enableThreadCpuTime = buckConfig.getBooleanValue(
+          "build",
+          "enable_thread_cpu_time",
+          true);
       if (BUCKD_LAUNCH_TIME_NANOS.isPresent()) {
         long nanosEpoch = Long.parseLong(BUCKD_LAUNCH_TIME_NANOS.get(), 10);
         LOG.verbose("Using nanos epoch: %d", nanosEpoch);
-        clock = new NanosAdjustedClock(nanosEpoch);
+        clock = new NanosAdjustedClock(nanosEpoch, enableThreadCpuTime);
       } else {
-        clock = new DefaultClock();
+        clock = new DefaultClock(enableThreadCpuTime);
       }
 
       ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);

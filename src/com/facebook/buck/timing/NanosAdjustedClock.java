@@ -24,6 +24,11 @@ public class NanosAdjustedClock extends DefaultClock {
   private final long nanosEpoch;
 
   public NanosAdjustedClock(long nanosEpoch) {
+    this(nanosEpoch, true);
+  }
+
+  public NanosAdjustedClock(long nanosEpoch, boolean enableThreadCpuTime) {
+    super(enableThreadCpuTime);
     this.nanosEpoch = nanosEpoch - System.nanoTime();
   }
 
