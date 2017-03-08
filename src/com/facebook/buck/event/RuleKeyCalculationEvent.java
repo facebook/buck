@@ -75,17 +75,20 @@ public interface RuleKeyCalculationEvent extends LeafEvent, WorkAdvanceEvent {
 
   }
 
-  class Started extends Event {
+  interface Started extends RuleKeyCalculationEvent {}
+  interface Finished extends RuleKeyCalculationEvent {}
 
-    public Started(EventKey eventKey, Type type) {
+  class DefaultStarted extends Event implements Started {
+
+    private DefaultStarted(EventKey eventKey, Type type) {
       super(eventKey, type);
     }
 
   }
 
-  class Finished extends Event {
+  class DefaultFinished extends Event implements Finished {
 
-    public Finished(EventKey eventKey, Type type) {
+    private DefaultFinished(EventKey eventKey, Type type) {
       super(eventKey, type);
     }
 
@@ -95,8 +98,8 @@ public interface RuleKeyCalculationEvent extends LeafEvent, WorkAdvanceEvent {
       BuckEventBus buckEventBus,
       Type type) {
     EventKey eventKey = EventKey.unique();
-    buckEventBus.post(new Started(eventKey, type));
-    return new Scope(buckEventBus, () -> new Finished(eventKey, type));
+    buckEventBus.post(new DefaultStarted(eventKey, type));
+    return new Scope(buckEventBus, () -> new DefaultFinished(eventKey, type));
   }
 
 }

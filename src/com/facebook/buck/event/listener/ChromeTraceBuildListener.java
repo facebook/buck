@@ -762,7 +762,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   }
 
   @Subscribe
-  public void compilerPluginDurationEventFinished(RuleKeyCalculationEvent.Finished finished) {
+  public void ruleKeyCalculationFinished(RuleKeyCalculationEvent.Finished finished) {
     writeChromeTraceEvent(
         "buck",
         finished.getCategory(),
