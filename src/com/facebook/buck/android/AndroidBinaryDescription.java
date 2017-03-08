@@ -152,7 +152,7 @@ public class AndroidBinaryDescription implements
         "target", params.getBuildTarget().toString())) {
 
       if (args.useLinearAllocSplitDex.isPresent()) {
-        LOG.warn(
+        LOG.error(
             "Target %s specified use_linear_alloc_split_dex, which is now always enabled.",
             params.getBuildTarget());
       }
@@ -195,6 +195,10 @@ public class AndroidBinaryDescription implements
             !args.androidSdkProguardConfig.isPresent(),
             "The deprecated use_android_proguard_config_with_optimizations parameter" +
                 " cannot be used with android_sdk_proguard_config.");
+        LOG.error(
+            "Target %s specified use_android_proguard_config_with_optimizations, " +
+                "which is deprecated. Use android_sdk_proguard_config.",
+            params.getBuildTarget());
         androidSdkProguardConfig = args.useAndroidProguardConfigWithOptimizations.orElse(false)
             ? ProGuardObfuscateStep.SdkProguardType.OPTIMIZED
             : ProGuardObfuscateStep.SdkProguardType.DEFAULT;
@@ -204,6 +208,9 @@ public class AndroidBinaryDescription implements
       if (!args.exopackageModes.isEmpty()) {
         exopackageModes = EnumSet.copyOf(args.exopackageModes);
       } else if (args.exopackage.orElse(false)) {
+        LOG.error(
+            "Target %s specified exopackage=True, which is deprecated. Use exopackage_modes.",
+            params.getBuildTarget());
         exopackageModes = EnumSet.of(ExopackageMode.SECONDARY_DEX);
       }
 
