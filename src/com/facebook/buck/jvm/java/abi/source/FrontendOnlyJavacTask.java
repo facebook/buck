@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
-import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
@@ -28,8 +27,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import javax.annotation.processing.Processor;
 import javax.lang.model.element.Element;
@@ -48,7 +45,6 @@ import javax.tools.JavaFileObject;
  * {@link com.facebook.buck.jvm.java.abi.source} for details.
  */
 public class FrontendOnlyJavacTask extends JavacTask {
-  private static final BuckTracing BUCK_TRACING = BuckTracing.getInstance("TreeResolver");
   private final JavacTask javacTask;
   private final Elements javacElements;
   private final Trees javacTrees;
@@ -92,10 +88,7 @@ public class FrontendOnlyJavacTask extends JavacTask {
         throw new AssertionError(e);
       }
 
-      topLevelElements = StreamSupport.stream(compilationUnits.spliterator(), false)
-          .map(this::enterTree)
-          .flatMap(List::stream)
-          .collect(Collectors.toList());
+      topLevelElements = new TreeBackedEnter(elements, javacTrees).enter(compilationUnits);
     }
 
     return topLevelElements;
@@ -157,12 +150,6 @@ public class FrontendOnlyJavacTask extends JavacTask {
   @Override
   public TreeBackedTypes getTypes() {
     return types;
-  }
-
-  List<TreeBackedTypeElement> enterTree(CompilationUnitTree compilationUnit) {
-    try (BuckTracing.TraceSection t = BUCK_TRACING.traceSection("buck.abi.enterTree")) {
-      return trees.enterTree(compilationUnit);
-    }
   }
 
   @Override
