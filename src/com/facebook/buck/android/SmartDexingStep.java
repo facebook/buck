@@ -32,6 +32,7 @@ import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipCompressionLevel;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -205,9 +206,17 @@ public class SmartDexingStep implements Step {
     List<Step> dxSteps = generateDxCommands(filesystem, outputToInputs);
 
     List<Callable<Void>> callables = Lists.transform(dxSteps,
-        step -> () -> {
-          stepRunner.runStepForBuildTarget(context, step, Optional.empty());
-          return null;
+        new Function<Step, Callable<Void>>() {
+          @Override
+          public Callable<Void> apply(final Step step) {
+            return new Callable<Void>() {
+              @Override
+              public Void call() throws Exception {
+                stepRunner.runStepForBuildTarget(context, step, Optional.empty());
+                return null;
+              };
+            };
+          }
         });
 
     try {
