@@ -292,15 +292,18 @@ public class SwiftLibraryDescription implements
     SwiftRuntimeNativeLinkable swiftRuntimeLinkable =
         new SwiftRuntimeNativeLinkable(swiftPlatform);
 
-    NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder()
-        .from(swiftRuntimeLinkable.getNativeLinkableInput(
-                cxxPlatform, Linker.LinkableDepType.SHARED));
     BuildTarget requiredBuildTarget = buildTarget
         .withoutFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .withoutFlavors(LinkerMapMode.FLAVOR_DOMAIN.getFlavors())
         .withAppendedFlavors(SWIFT_COMPILE_FLAVOR);
     SwiftCompile rule = (SwiftCompile) resolver.requireRule(requiredBuildTarget);
-    inputBuilder.addAllArgs(rule.getLinkArgs());
+
+    NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder()
+        .from(swiftRuntimeLinkable.getNativeLinkableInput(
+            cxxPlatform,
+            Linker.LinkableDepType.SHARED))
+        .addAllArgs(rule.getAstLinkArgs())
+        .addArgs(rule.getFileListLinkArg());
     return resolver.addToIndex(CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
