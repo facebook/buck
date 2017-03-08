@@ -466,7 +466,7 @@ public class NdkCxxPlatforms {
             .putCompilerFlags(
                 NdkCxxPlatformCompiler.Type.CLANG,
                 ImmutableList.of(
-                    "-target", "i686-none-linux-android",
+                    "-target", "x86_64-none-linux-android",
                     "-O2"))
             .putLinkerFlags(
                 NdkCxxPlatformCompiler.Type.GCC,
@@ -474,7 +474,7 @@ public class NdkCxxPlatforms {
             .putLinkerFlags(
                 NdkCxxPlatformCompiler.Type.CLANG,
                 ImmutableList.of(
-                    "-target", "i686-none-linux-android"))
+                    "-target", "x86_64-none-linux-android"))
             .build();
       case MIPS:
         break;
