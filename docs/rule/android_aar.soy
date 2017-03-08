@@ -39,6 +39,28 @@ official Android documentation</a> for details about the <code>.aar</code> forma
 {/call}
 
 {call buck.arg}
+  {param name : 'build_config_values' /}
+  {param default : '[]' /}
+  {param desc}
+  See the documentation on the <tt>values</tt> argument for {call buck.android_build_config /}.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'include_build_config_class' /}
+  {param default : 'False' /}
+  {param desc}
+  Whether to include the <code>BuildConfig</code> class files in the final .aar file. Needs
+  to be set to <code>True</code> if any <tt>build_config_values</tt> are specified.
+  This is normally only needed if the build tool that is consuming the .aar file does not generate
+  {sp}<code>BuildConfig</code> classes.
+  Note: the AAR format does not specify a way to pass defaults that should be injected into
+  the final <code>BuildConfig</code> class, therefore that information might need to be replicated
+  manually in the build that's consuming the .aar file.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name : 'deps' /}
   {param default : '[]' /}
   {param desc}
@@ -48,6 +70,8 @@ official Android documentation</a> for details about the <code>.aar</code> forma
     <li><code>android_library()</code> Will be included in the final <code>classes.jar</code>
     <li><code>android_resource()</code> Will be included in the final <code>R.txt</code>,
     {sp}<code>res/</code> and <code>assets/</code>
+    <li><code>android_build_config()</code> Will be included in the final <code>classes.jar</code>
+        {sp}if <code>include_build_config_class</code> is True
     <li><code>groovy_library()</code> Will be included in the final <code>classes.jar</code>
     <li><code>java_library()</code> Will be included in the final <code>classes.jar</code>
     <li><code>prebuilt_jar()</code>  Will be included in the final <code>classes.jar</code>

@@ -42,6 +42,7 @@ import com.facebook.buck.zip.ZipStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.util.Optional;
@@ -59,6 +60,7 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
   private final SourcePath assembledAssetsDirectory;
   private final Optional<Path> assembledNativeLibs;
   private final ImmutableSet<SourcePath> nativeLibAssetsDirectories;
+  private final ImmutableSortedSet<SourcePath> classpathsToIncludeInJar;
 
   public AndroidAar(
       BuildRuleParams params,
@@ -67,7 +69,8 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
       SourcePath assembledResourceDirectory,
       SourcePath assembledAssetsDirectory,
       Optional<Path> assembledNativeLibs,
-      ImmutableSet<SourcePath> nativeLibAssetsDirectories) {
+      ImmutableSet<SourcePath> nativeLibAssetsDirectories,
+      ImmutableSortedSet<SourcePath> classpathsToIncludeInJar) {
     super(params);
     BuildTarget buildTarget = params.getBuildTarget();
     this.pathToOutputFile =
@@ -79,6 +82,7 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
     this.assembledResourceDirectory = assembledResourceDirectory;
     this.assembledNativeLibs = assembledNativeLibs;
     this.nativeLibAssetsDirectories = nativeLibAssetsDirectories;
+    this.classpathsToIncludeInJar = classpathsToIncludeInJar;
   }
 
   @Override
@@ -125,7 +129,7 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
         new JarDirectoryStep(
             getProjectFilesystem(),
             temp.resolve("classes.jar"),
-            context.getSourcePathResolver().getAllAbsolutePaths(getTransitiveClasspaths()),
+            context.getSourcePathResolver().getAllAbsolutePaths(classpathsToIncludeInJar),
             /* mainClass */ null,
             /* manifestFile */ null));
 
@@ -177,7 +181,7 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
 
   @Override
   public ImmutableSet<SourcePath> getTransitiveClasspaths() {
-    return JavaLibraryClasspathProvider.getClasspathsFromLibraries(getTransitiveClasspathDeps());
+    return classpathsToIncludeInJar;
   }
 
   @Override

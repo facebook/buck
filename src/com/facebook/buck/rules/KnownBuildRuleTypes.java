@@ -622,6 +622,7 @@ public class KnownBuildRuleTypes {
         new AndroidAarDescription(
             new AndroidManifestDescription(),
             cxxBuckConfig,
+            defaultJavacOptions,
             ndkCxxPlatforms));
     builder.register(
         new AndroidBinaryDescription(

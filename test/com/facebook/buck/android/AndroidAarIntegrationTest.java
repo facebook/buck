@@ -21,8 +21,8 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.zip.Unzip;
@@ -33,7 +33,12 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 public class AndroidAarIntegrationTest {
@@ -83,6 +88,64 @@ public class AndroidAarIntegrationTest {
       assertThat(classes.getJarEntry("com/example/HelloWorld.class"), Matchers.notNullValue());
     }
 
+  }
+
+  @Test
+  public void testBuildConfigNotIncludedInAarByDefault() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "android_project",
+        tmp);
+    workspace.setUp();
+    String target = "//apps/aar_build_config:app_without_build_config";
+    workspace.runBuckBuild(target).assertSuccess();
+
+    Path aar = workspace.getPath(
+        BuildTargets.getGenPath(
+            filesystem,
+            BuildTargetFactory.newInstance(target),
+            AndroidAar.AAR_FORMAT));
+
+    Path contents = tmp.getRoot().resolve("aar-contents");
+    Unzip.extractZipFile(aar, contents, Unzip.ExistingFileMode.OVERWRITE);
+    try (JarFile classes = new JarFile(contents.resolve("classes.jar").toFile())) {
+      for (JarEntry jarEntry : Collections.list(classes.entries())) {
+        String jarEntryName = jarEntry.getName();
+        assertThat(
+            jarEntryName + " looks like a build_config entry and houldn't be in the jar.",
+            jarEntryName,
+            Matchers.not(Matchers.stringContainsInOrder("BuildConfig")));
+      }
+    }
+  }
+
+  @Test
+  public void testBuildConfigValuesTakenFromAarRule() throws IOException, ClassNotFoundException,
+      NoSuchFieldException, IllegalAccessException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "android_project",
+        tmp);
+    workspace.setUp();
+    String target = "//apps/aar_build_config:app_with_build_config";
+    Path aarLocation = workspace.buildAndReturnOutput(target);
+
+
+    Path contents = tmp.getRoot().resolve("aar-contents");
+    Unzip.extractZipFile(aarLocation, contents, Unzip.ExistingFileMode.OVERWRITE);
+
+    URL jarUrl = contents.resolve("classes.jar").toUri().toURL();
+    try (URLClassLoader loader = new URLClassLoader(new URL[] {jarUrl})) {
+      Class<?> buildConfigClass = loader.loadClass("com.sample.android.BuildConfig");
+      Field overriddenField = buildConfigClass.getField("OVERRIDDEN_FIELD");
+      assertThat(
+          overriddenField.get(buildConfigClass),
+          Matchers.equalTo("android_aar"));
+      Field notOverriddenField = buildConfigClass.getField("NOT_OVERRIDDEN_FIELD");
+      assertThat(
+          notOverriddenField.get(buildConfigClass),
+          Matchers.equalTo("value"));
+    }
   }
 
   @Test

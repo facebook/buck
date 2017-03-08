@@ -18,6 +18,8 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.MergeAndroidResourceSources;
 import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -26,10 +28,12 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Suppliers;
@@ -41,7 +45,9 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.EnumSet;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Description for a {@link BuildRule} that generates an {@code .aar} file.
@@ -66,14 +72,17 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
 
   private final AndroidManifestDescription androidManifestDescription;
   private final CxxBuckConfig cxxBuckConfig;
+  private final JavacOptions javacOptions;
   private final ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms;
 
   public AndroidAarDescription(
       AndroidManifestDescription androidManifestDescription,
       CxxBuckConfig cxxBuckConfig,
+      JavacOptions javacOptions,
       ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms) {
     this.androidManifestDescription = androidManifestDescription;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.javacOptions = javacOptions;
     this.nativePlatforms = nativePlatforms;
   }
 
@@ -184,6 +193,39 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         /* hasWhitelistedStrings */ false);
     aarExtraDepsBuilder.add(resolver.addToIndex(androidResource));
 
+    ImmutableSortedSet.Builder<SourcePath> classpathToIncludeInAar =
+        ImmutableSortedSet.naturalOrder();
+    classpathToIncludeInAar.addAll(packageableCollection.getClasspathEntriesToDex());
+    aarExtraDepsBuilder.addAll(BuildRules.toBuildRulesFor(
+        originalBuildRuleParams.getBuildTarget(),
+        resolver,
+        packageableCollection.getJavaLibrariesToDex()));
+
+    if (!args.buildConfigValues.getNameToField().isEmpty() && !args.includeBuildConfigClass) {
+      throw new HumanReadableException("Rule %s has build_config_values set but does not set " +
+          "include_build_config_class to True. Either indicate you want to include the " +
+          "BuildConfig class in the final .aar or do not specify build config values.",
+          originalBuildRuleParams.getBuildTarget());
+    }
+    if (args.includeBuildConfigClass) {
+      ImmutableSortedSet<JavaLibrary> buildConfigRules =
+          AndroidBinaryGraphEnhancer.addBuildConfigDeps(
+              originalBuildRuleParams,
+              AndroidBinary.PackageType.RELEASE,
+              EnumSet.noneOf(AndroidBinary.ExopackageMode.class),
+              args.buildConfigValues,
+              Optional.empty(),
+              resolver,
+              javacOptions,
+              packageableCollection);
+      resolver.addAllToIndex(buildConfigRules);
+      aarExtraDepsBuilder.addAll(buildConfigRules);
+      classpathToIncludeInAar.addAll(
+          buildConfigRules.stream()
+              .map(BuildRule::getSourcePathToOutput)
+              .collect(Collectors.toList()));
+    }
+
     /* native_libraries */
     AndroidNativeLibsPackageableGraphEnhancer packageableGraphEnhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
@@ -223,11 +265,14 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         assembleResourceDirectories.getSourcePathToOutput(),
         assembleAssetsDirectories.getSourcePathToOutput(),
         assembledNativeLibsDir,
-        ImmutableSet.copyOf(packageableCollection.getNativeLibAssetsDirectories().values()));
+        ImmutableSet.copyOf(packageableCollection.getNativeLibAssetsDirectories().values()),
+        classpathToIncludeInAar.build());
   }
 
   @SuppressFieldNotInitialized
   public static class Arg extends AndroidLibraryDescription.Arg {
     public SourcePath manifestSkeleton;
+    public BuildConfigFields buildConfigValues = BuildConfigFields.empty();
+    public Boolean includeBuildConfigClass = false;
   }
 }

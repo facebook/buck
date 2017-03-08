@@ -376,10 +376,17 @@ public class AndroidBinaryGraphEnhancer {
     // BuildConfig deps should not be added for instrumented APKs because BuildConfig.class has
     // already been added to the APK under test.
     if (packageType != PackageType.INSTRUMENTED) {
-      addBuildConfigDeps(
-          packageableCollection,
-          enhancedDeps,
-          additionalJavaLibrariesBuilder);
+      ImmutableSortedSet<JavaLibrary> buildConfigDepsRules = addBuildConfigDeps(
+          buildRuleParams,
+          packageType,
+          exopackageModes,
+          buildConfigValues,
+          buildConfigValuesFile,
+          ruleResolver,
+          javacOptions,
+          packageableCollection);
+      enhancedDeps.addAll(buildConfigDepsRules);
+      additionalJavaLibrariesBuilder.addAll(buildConfigDepsRules);
     }
 
     ImmutableList<BuildRule> additionalJavaLibraries = additionalJavaLibrariesBuilder.build();
@@ -515,10 +522,16 @@ public class AndroidBinaryGraphEnhancer {
    * generate the production {@code BuildConfig.class} files and ensure that they are included in
    * the list of {@link AndroidPackageableCollection#getClasspathEntriesToDex}.
    */
-  private void addBuildConfigDeps(
-      AndroidPackageableCollection packageableCollection,
-      ImmutableSortedSet.Builder<BuildRule> enhancedDeps,
-      ImmutableList.Builder<BuildRule> compilationRulesBuilder) throws NoSuchBuildTargetException {
+  public static ImmutableSortedSet<JavaLibrary> addBuildConfigDeps(
+      BuildRuleParams originalParams,
+      PackageType packageType,
+      EnumSet<ExopackageMode> exopackageModes,
+      BuildConfigFields buildConfigValues,
+      Optional<SourcePath> buildConfigValuesFile,
+      BuildRuleResolver ruleResolver,
+      JavacOptions javacOptions,
+      AndroidPackageableCollection packageableCollection) throws NoSuchBuildTargetException {
+    ImmutableSortedSet.Builder<JavaLibrary> result = ImmutableSortedSet.naturalOrder();
     BuildConfigFields buildConfigConstants = BuildConfigFields.fromFields(
         ImmutableList.of(
             BuildConfigFields.Field.of(
@@ -545,12 +558,15 @@ public class AndroidBinaryGraphEnhancer {
       // Java package.
       String javaPackage = entry.getKey();
       Flavor flavor = ImmutableFlavor.of("buildconfig_" + javaPackage.replace('.', '_'));
+      BuildTarget buildTargetWithFlavors = BuildTarget.builder(originalParams.getBuildTarget())
+          .addFlavors(flavor)
+          .build();
       BuildRuleParams buildConfigParams = new BuildRuleParams(
-          createBuildTargetWithFlavor(flavor),
+          buildTargetWithFlavors,
           /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()),
           /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()),
-          buildRuleParams.getProjectFilesystem(),
-          buildRuleParams.getCellRoots());
+          originalParams.getProjectFilesystem(),
+          originalParams.getCellRoots());
       JavaLibrary buildConfigJavaLibrary = AndroidBuildConfigDescription.createBuildRule(
           buildConfigParams,
           javaPackage,
@@ -561,13 +577,13 @@ public class AndroidBinaryGraphEnhancer {
           ruleResolver);
       ruleResolver.addToIndex(buildConfigJavaLibrary);
 
-      enhancedDeps.add(buildConfigJavaLibrary);
       Preconditions.checkNotNull(
           buildConfigJavaLibrary.getSourcePathToOutput(),
           "%s must have an output file.",
           buildConfigJavaLibrary);
-      compilationRulesBuilder.add(buildConfigJavaLibrary);
+      result.add(buildConfigJavaLibrary);
     }
+    return result.build();
   }
 
   /**
