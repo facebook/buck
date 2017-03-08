@@ -726,6 +726,7 @@ public class BuildCommand extends AbstractCommand {
         params.getActionGraphCache().getActionGraph(
             params.getBuckEventBus(),
             params.getBuckConfig().isActionGraphCheckingEnabled(),
+            params.getBuckConfig().isSkipActionGraphCache(),
             targetGraphAndBuildTargets.getTargetGraph(),
             params.getBuckConfig().getKeySeed()));
 

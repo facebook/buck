@@ -507,6 +507,7 @@ public class TestCommand extends BuildCommand {
           params.getActionGraphCache().getActionGraph(
               params.getBuckEventBus(),
               params.getBuckConfig().isActionGraphCheckingEnabled(),
+              params.getBuckConfig().isSkipActionGraphCache(),
               targetGraphAndBuildTargets.getTargetGraph(),
               params.getBuckConfig().getKeySeed()));
       // Look up all of the test rules in the action graph.

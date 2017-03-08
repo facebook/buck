@@ -123,7 +123,8 @@ public class BuckConfig implements ConfigPathGetter {
     ignoreFieldsForDaemonRestartBuilder.put("build", ImmutableSet.of("threads", "load_limit"));
     ignoreFieldsForDaemonRestartBuilder.put("cache", ImmutableSet.of(
         "dir", "dir_mode", "http_mode", "http_url", "mode", "slb_server_pool"));
-    ignoreFieldsForDaemonRestartBuilder.put("client", ImmutableSet.of("id"));
+    ignoreFieldsForDaemonRestartBuilder.put("client",
+        ImmutableSet.of("id", "skip-action-graph-cache"));
     ignoreFieldsForDaemonRestartBuilder.put("log", ImmutableSet.of(
         "chrome_trace_generation", "compress_traces", "max_traces", "public_announcements"));
     ignoreFieldsForDaemonRestartBuilder.put("project", ImmutableSet.of(
@@ -722,6 +723,18 @@ public class BuckConfig implements ConfigPathGetter {
 
   public String getClientId() {
     return getValue("client", "id").orElse("buck");
+  }
+
+  /**
+   * @return whether the current invocation of Buck should skip the Action Graph cache, leaving the
+   *     cached Action Graph in memory for the next request and creating a fresh Action Graph for
+   *     the current request (which will be garbage-collected when the current request is complete).
+   *     Commonly, a one-off request, like from a linter, will specify this option so that it does
+   *     not invalidate the primary in-memory Action Graph that the user is likely relying on for
+   *     fast iterative builds.
+   */
+  public boolean isSkipActionGraphCache() {
+    return getBooleanValue("client", "skip-action-graph-cache", false);
   }
 
   /**

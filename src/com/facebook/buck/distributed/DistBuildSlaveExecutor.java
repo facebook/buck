@@ -175,6 +175,7 @@ public class DistBuildSlaveExecutor {
         args.getActionGraphCache().getActionGraph(
             args.getBuckEventBus(),
             /* checkActionGraphs */ false,
+            /* skipActionGraphCache */ false,
             Preconditions.checkNotNull(targetGraph),
             args.getCacheKeySeed()));
     return actionGraphAndResolver;

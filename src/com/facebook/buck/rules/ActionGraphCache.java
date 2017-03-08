@@ -71,16 +71,21 @@ public class ActionGraphCache {
    * it returns a cached version of the {@link ActionGraphAndResolver}, else returns a new one and
    * updates the cache.
    * @param eventBus the {@link BuckEventBus} to post the events of the processing.
+   * @param skipActionGraphCache if true, do not invalidate the {@link ActionGraph} cached in
+   *     memory. Instead, create a new {@link ActionGraph} for this request, which should be
+   *     garbage-collected at the end of the request.
    * @param targetGraph the target graph that the action graph will be based on.
    * @return a {@link ActionGraphAndResolver}
    */
   public ActionGraphAndResolver getActionGraph(
       final BuckEventBus eventBus,
       final boolean checkActionGraphs,
+      final boolean skipActionGraphCache,
       final TargetGraph targetGraph,
       int keySeed) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
+    ActionGraphAndResolver out;
     try {
       RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(keySeed);
       if (lastActionGraph != null && lastActionGraph.getFirst().equals(targetGraph)) {
@@ -89,6 +94,7 @@ public class ActionGraphCache {
         if (checkActionGraphs) {
           compareActionGraphs(eventBus, lastActionGraph.getSecond(), targetGraph, fieldLoader);
         }
+        out = lastActionGraph.getSecond();
       } else {
         eventBus.post(ActionGraphEvent.Cache.miss(lastActionGraph == null));
         LOG.debug("Computing TargetGraph HashCode...");
@@ -102,17 +108,23 @@ public class ActionGraphCache {
           LOG.info("ActionGraph cache miss. TargetGraphs mismatched.");
         }
         lastTargetGraphHash = targetGraphHash;
-        lastActionGraph = new Pair<TargetGraph, ActionGraphAndResolver>(
-            targetGraph,
-            createActionGraph(
-                eventBus,
-                new DefaultTargetNodeToBuildRuleTransformer(),
-                targetGraph));
+        Pair<TargetGraph, ActionGraphAndResolver> freshActionGraph =
+            new Pair<TargetGraph, ActionGraphAndResolver>(
+                targetGraph,
+                createActionGraph(
+                    eventBus,
+                    new DefaultTargetNodeToBuildRuleTransformer(),
+                    targetGraph));
+        out = freshActionGraph.getSecond();
+        if (!skipActionGraphCache) {
+          LOG.info("ActionGraph cache assignment. skipActionGraphCache? %s", skipActionGraphCache);
+          lastActionGraph = freshActionGraph;
+        }
       }
     } finally {
       eventBus.post(ActionGraphEvent.finished(started));
     }
-    return lastActionGraph.getSecond();
+    return out;
   }
 
   /**
