@@ -25,7 +25,6 @@ import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
 
 /**
  * An implementation of {@link TypeElement} that uses only the information available from one or
@@ -35,6 +34,7 @@ import javax.lang.model.type.TypeMirror;
  */
 class TreeBackedPackageElement extends TreeBackedElement implements PackageElement {
   private final PackageElement javacPackage;
+  private final StandalonePackageType typeMirror;
   private boolean resolved = false;
 
   public TreeBackedPackageElement(
@@ -42,6 +42,7 @@ class TreeBackedPackageElement extends TreeBackedElement implements PackageEleme
       TypeResolverFactory resolverFactory) {
     super(javacPackage, null, null, resolverFactory);
     this.javacPackage = javacPackage;
+    typeMirror = new StandalonePackageType(this);
   }
 
   @Override
@@ -90,8 +91,8 @@ class TreeBackedPackageElement extends TreeBackedElement implements PackageEleme
   }
 
   @Override
-  public TypeMirror asType() {
-    throw new UnsupportedOperationException();
+  public StandalonePackageType asType() {
+    return typeMirror;
   }
 
   @Override

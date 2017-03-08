@@ -110,6 +110,9 @@ abstract class TreeBackedElement implements Element {
   }
 
   @Override
+  public abstract StandaloneTypeMirror asType();
+
+  @Override
   public List<? extends AnnotationMirror> getAnnotationMirrors() {
     throw new UnsupportedOperationException();
   }

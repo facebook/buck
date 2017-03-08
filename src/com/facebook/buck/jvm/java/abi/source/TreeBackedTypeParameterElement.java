@@ -29,7 +29,6 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.Types;
 
 /**
@@ -39,7 +38,7 @@ import javax.lang.model.util.Types;
  */
 class TreeBackedTypeParameterElement extends TreeBackedElement implements TypeParameterElement {
   private final TypeParameterTree tree;
-  private final TypeVariable typeVar;
+  private final StandaloneTypeVariable typeVar;
   @Nullable
   private List<TypeMirror> bounds;
 
@@ -58,7 +57,7 @@ class TreeBackedTypeParameterElement extends TreeBackedElement implements TypePa
   }
 
   @Override
-  public TypeMirror asType() {
+  public StandaloneTypeVariable asType() {
     return typeVar;
   }
 
