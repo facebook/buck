@@ -19,6 +19,8 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorConvertible;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -26,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Suppliers;
@@ -52,7 +55,8 @@ public class CxxPreprocessables {
 
   private CxxPreprocessables() {}
 
-  public enum HeaderMode {
+  public enum HeaderMode implements FlavorConvertible {
+
     /**
      * Creates the tree of symbolic links of headers.
      */
@@ -66,6 +70,24 @@ public class CxxPreprocessables {
      * references the symbolic links to the headers.
      */
     SYMLINK_TREE_WITH_HEADER_MAP,
+    ;
+
+    private final Flavor flavor;
+
+    HeaderMode() {
+      this.flavor =
+          ImmutableFlavor.of(
+              String.format(
+                  "%s-%s",
+                  CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_HYPHEN, getClass().getSimpleName()),
+                  CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, toString())));
+    }
+
+    @Override
+    public Flavor getFlavor() {
+      return flavor;
+    }
+
   }
 
   public enum IncludeType {

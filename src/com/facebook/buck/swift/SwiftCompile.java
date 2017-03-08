@@ -255,8 +255,8 @@ class SwiftCompile extends AbstractBuildRule {
         Path headerPath = CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
             getProjectFilesystem(),
             BuildTarget.builder(getBuildTarget().getUnflavoredBuildTarget()).build(),
-            cxxPlatform.getFlavor(),
-            headerVisibility);
+            headerVisibility,
+            cxxPlatform.getFlavor());
 
         headerMaps.add(headerPath.toString());
       }

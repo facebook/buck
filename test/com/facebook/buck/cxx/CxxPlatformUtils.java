@@ -16,17 +16,29 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.Config;
+import com.facebook.buck.config.Configs;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ConstantToolProvider;
+import com.facebook.buck.rules.DefaultCellPathResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class CxxPlatformUtils {
@@ -98,4 +110,33 @@ public class CxxPlatformUtils {
   public static CxxPlatform build(CxxBuckConfig config) {
     return DefaultCxxPlatforms.build(Platform.detect(), new FakeProjectFilesystem(), config);
   }
+
+  public static CxxPlatform getDefaultPlatform(Path root) throws IOException {
+    Config rawConfig = Configs.createDefaultConfig(root);
+    BuckConfig buckConfig =
+        new BuckConfig(
+            rawConfig,
+            new ProjectFilesystem(root),
+            Architecture.detect(),
+            Platform.detect(),
+            ImmutableMap.of(),
+            new DefaultCellPathResolver(root, rawConfig));
+    return DefaultCxxPlatforms.build(
+        Platform.detect(),
+        new ProjectFilesystem(root),
+        new CxxBuckConfig(buckConfig));
+  }
+
+  public static CxxPreprocessables.HeaderMode getHeaderModeForDefaultPlatform(Path root)
+      throws IOException {
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(
+            TargetGraph.EMPTY,
+            new DefaultTargetNodeToBuildRuleTransformer());
+    CxxPlatform defaultPlatform = getDefaultPlatform(root);
+    return defaultPlatform.getCpp().resolve(ruleResolver).supportsHeaderMaps() ?
+        CxxPreprocessables.HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP :
+        CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY;
+  }
+
 }

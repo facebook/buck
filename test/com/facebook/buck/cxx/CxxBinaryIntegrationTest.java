@@ -344,8 +344,8 @@ public class CxxBinaryIntegrationTest {
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             inputBuildTarget,
-            cxxPlatform.getFlavor(),
-            HeaderVisibility.PRIVATE);
+            HeaderVisibility.PRIVATE,
+            cxxPlatform.getFlavor());
     BuildTarget sandboxTreeTarget =
         CxxDescriptionEnhancer.createSandboxSymlinkTreeTarget(
             inputBuildTarget,
@@ -467,8 +467,8 @@ public class CxxBinaryIntegrationTest {
     BuildTarget topHeaderSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             inputBuildTarget,
-            cxxPlatform.getFlavor(),
-            HeaderVisibility.PRIVATE);
+            HeaderVisibility.PRIVATE,
+            cxxPlatform.getFlavor());
 
     // this is flavored, and denotes the analysis step (generates a local report)
     BuildTarget topInferAnalysisTarget = inputBuildTarget
@@ -504,14 +504,14 @@ public class CxxBinaryIntegrationTest {
     BuildTarget depOneHeaderSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             depOneBuildTarget,
-            cxxPlatform.getFlavor(),
-            HeaderVisibility.PRIVATE);
+            HeaderVisibility.PRIVATE,
+            cxxPlatform.getFlavor());
 
     BuildTarget depOneExportedHeaderSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             depOneBuildTarget,
-            cxxPlatform.getFlavor(),
-            HeaderVisibility.PUBLIC);
+            HeaderVisibility.PUBLIC,
+            CxxPlatformUtils.getHeaderModeForDefaultPlatform(tmp.getRoot()).getFlavor());
 
     BuildTarget depOneInferAnalysisTarget =
         depOneCaptureBuildTarget.withFlavors(
@@ -542,14 +542,14 @@ public class CxxBinaryIntegrationTest {
     BuildTarget depTwoHeaderSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             depTwoBuildTarget,
-            cxxPlatform.getFlavor(),
-            HeaderVisibility.PRIVATE);
+            HeaderVisibility.PRIVATE,
+            cxxPlatform.getFlavor());
 
     BuildTarget depTwoExportedHeaderSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             depTwoBuildTarget,
-            cxxPlatform.getFlavor(),
-            HeaderVisibility.PUBLIC);
+            HeaderVisibility.PUBLIC,
+            CxxPlatformUtils.getHeaderModeForDefaultPlatform(tmp.getRoot()).getFlavor());
 
     BuildTarget depTwoInferAnalysisTarget =
         depTwoCaptureBuildTarget.withFlavors(
@@ -560,7 +560,7 @@ public class CxxBinaryIntegrationTest {
         depTwoSourceRuleFactory.createAggregatedPreprocessDepsBuildTarget();
 
     ImmutableSet.Builder<BuildTarget> buildTargets =
-        ImmutableSet.<BuildTarget>builder().add(
+        ImmutableSortedSet.<BuildTarget>naturalOrder().add(
             topAggregatedDepsTarget,
             topCaptureBuildTarget,
             topHeaderSymlinkTreeTarget,
@@ -585,7 +585,7 @@ public class CxxBinaryIntegrationTest {
     // Check all the targets are in the buildLog
     assertEquals(
         buildTargets.build(),
-        workspace.getBuildLog().getAllTargets());
+        ImmutableSet.copyOf(workspace.getBuildLog().getAllTargets()));
 
     /*
      * Check that running a build again results in no builds since nothing has changed.
@@ -1520,8 +1520,8 @@ public class CxxBinaryIntegrationTest {
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             target,
-            cxxPlatform.getFlavor(),
-            HeaderVisibility.PRIVATE);
+            HeaderVisibility.PRIVATE,
+            cxxPlatform.getFlavor());
     BuildTarget aggregatedDepsTarget =
         cxxSourceRuleFactory.createAggregatedPreprocessDepsBuildTarget();
 
@@ -1649,8 +1649,8 @@ public class CxxBinaryIntegrationTest {
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             target,
-            cxxPlatform.getFlavor(),
-            HeaderVisibility.PRIVATE);
+            HeaderVisibility.PRIVATE,
+            cxxPlatform.getFlavor());
     BuildTarget aggregatedDepsTarget =
         cxxSourceRuleFactory.createAggregatedPreprocessDepsBuildTarget();
 
@@ -1734,8 +1734,8 @@ public class CxxBinaryIntegrationTest {
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             target,
-            cxxPlatform.getFlavor(),
-            HeaderVisibility.PRIVATE);
+            HeaderVisibility.PRIVATE,
+            cxxPlatform.getFlavor());
     BuildTarget aggregatedDepsTarget =
         cxxSourceRuleFactory.createAggregatedPreprocessDepsBuildTarget();
 
@@ -1756,13 +1756,13 @@ public class CxxBinaryIntegrationTest {
     BuildTarget depHeaderSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             depTarget,
-            cxxPlatform.getFlavor(),
-            HeaderVisibility.PRIVATE);
+            HeaderVisibility.PRIVATE,
+            cxxPlatform.getFlavor());
     BuildTarget depHeaderExportedSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             depTarget,
-            cxxPlatform.getFlavor(),
-            HeaderVisibility.PUBLIC);
+            HeaderVisibility.PUBLIC,
+            CxxPlatformUtils.getHeaderModeForDefaultPlatform(tmp.getRoot()).getFlavor());
     BuildTarget depSandboxTarget =
         CxxDescriptionEnhancer.createSandboxSymlinkTreeTarget(
             depTarget, cxxPlatform.getFlavor()
