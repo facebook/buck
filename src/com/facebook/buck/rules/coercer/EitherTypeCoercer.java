@@ -69,7 +69,7 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
   private static <T> Type getCoercerType(TypeCoercer<T> coercer) {
     if (coercer instanceof MapTypeCoercer || coercer instanceof SortedMapTypeCoercer) {
       return Type.MAP;
-    } else if (coercer instanceof CollectionTypeCoercer) {
+    } else if (coercer instanceof CollectionTypeCoercer || coercer instanceof PairTypeCoercer) {
       return Type.COLLECTION;
     } else {
       return Type.DEFAULT;
