@@ -24,14 +24,14 @@ import java.util.Set;
 
 public class BroadcastEventListener {
 
-  private Set<BroadcastEventBusClosable> eventBusesClosable;
+  private Set<BuckEventBus> eventBuses;
 
   public BroadcastEventListener() {
-    eventBusesClosable = new HashSet<>();
+    eventBuses = new HashSet<>();
   }
 
   public void broadcast(BroadcastEvent event) {
-    if (eventBusesClosable.isEmpty()) {
+    if (eventBuses.isEmpty()) {
       throw new RuntimeException("No available eventBus to broadcast event: " +
           event.getEventName());
     }
@@ -39,28 +39,22 @@ public class BroadcastEventListener {
   }
 
   public BroadcastEventBusClosable addEventBus(BuckEventBus eventBus) {
-    BroadcastEventBusClosable eventBusClosable = new BroadcastEventBusClosable(this, eventBus);
-    eventBusesClosable.add(eventBusClosable);
-    return eventBusClosable;
+    eventBuses.add(eventBus);
+    return new BroadcastEventBusClosable(this, eventBus);
   }
 
   private void postToAllBuses(BroadcastEvent event) {
-    for (BroadcastEventBusClosable eventBusClosable : eventBusesClosable) {
+    for (BuckEventBus eventBus : eventBuses) {
       if (event.isConfigured()) {
-        eventBusClosable.getBuckEventBus().postWithoutConfiguring(event);
+        eventBus.postWithoutConfiguring(event);
       } else {
-        eventBusClosable.getBuckEventBus().post(event);
+        eventBus.post(event);
       }
     }
   }
 
   private void removeEventBus(BuckEventBus eventBus) {
-    for (BroadcastEventBusClosable eventBusClosable : eventBusesClosable) {
-      if (eventBusClosable.getBuckEventBus().equals(eventBus)) {
-        eventBusesClosable.remove(eventBusClosable);
-        return;
-      }
-    }
+    eventBuses.remove(eventBus);
   }
 
   public class BroadcastEventBusClosable implements AutoCloseable {
