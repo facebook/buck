@@ -17,25 +17,27 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Preconditions;
+import com.sun.source.util.Trees;
 
 class TypeResolverFactory {
   private final TreeBackedElements elements;
   private final TreeBackedTypes types;
-  private final TreeBackedTrees trees;
+  private final Trees javacTrees;
 
   public TypeResolverFactory(
       TreeBackedElements elements,
       TreeBackedTypes types,
-      TreeBackedTrees trees) {
+      Trees javacTrees) {
     this.elements = elements;
     this.types = types;
-    this.trees = trees;
+    this.javacTrees = javacTrees;
   }
 
   public TypeResolver newInstance(TreeBackedElement enclosingElement) {
     return new TypeResolver(
         elements,
+        javacTrees,
         types,
-        trees.getScope(Preconditions.checkNotNull(trees.getPath(enclosingElement))));
+        Preconditions.checkNotNull(enclosingElement.getTreePath()));
   }
 }

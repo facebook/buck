@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.CatchTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
@@ -30,9 +29,6 @@ import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.source.util.SourcePositions;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -52,7 +48,6 @@ import javax.tools.JavaCompiler;
 class TreeBackedTrees extends Trees {
   private final TreeBackedElements elements;
   private final Trees javacTrees;
-  private final Map<Tree, TreeBackedScope> treeBackedScopes = new HashMap<>();
 
   public static TreeBackedTrees instance(JavaCompiler.CompilationTask task) {
     return ((FrontendOnlyJavacTask) task).getTrees();
@@ -153,43 +148,8 @@ class TreeBackedTrees extends Trees {
   }
 
   @Override
-  public TreeBackedScope getScope(TreePath path) {
-    TreePath walker = path;
-
-    while (walker != null) {
-      final Tree leaf = walker.getLeaf();
-      switch (leaf.getKind()) {
-        case ANNOTATION_TYPE:
-        case CLASS:
-        case ENUM:
-        case INTERFACE:
-          if (!treeBackedScopes.containsKey(leaf)) {
-            treeBackedScopes.put(
-                leaf,
-                new TreeBackedClassScope(
-                    elements,
-                    this,
-                    getScope(walker.getParentPath()),
-                    walker));
-          }
-          return Preconditions.checkNotNull(treeBackedScopes.get(leaf));
-        case COMPILATION_UNIT:
-          if (!treeBackedScopes.containsKey(leaf)) {
-            treeBackedScopes.put(
-                leaf,
-                new TreeBackedFileScope(elements, this, walker));
-          }
-          return Preconditions.checkNotNull(treeBackedScopes.get(leaf));
-        // $CASES-OMITTED$
-        default:
-          // Skip over other nodes
-          break;
-      }
-
-      walker = walker.getParentPath();
-    }
-
-    throw new AssertionError("'Unreachable' code");
+  public Scope getScope(TreePath path) {
+    throw new UnsupportedOperationException();
   }
 
   @Override

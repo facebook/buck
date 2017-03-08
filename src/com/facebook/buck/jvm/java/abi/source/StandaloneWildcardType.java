@@ -34,7 +34,9 @@ class StandaloneWildcardType extends StandaloneTypeMirror implements WildcardTyp
   private final TypeMirror superBound;
 
 
-  public StandaloneWildcardType(TypeMirror extendsBound, TypeMirror superBound) {
+  public StandaloneWildcardType(
+      @Nullable TypeMirror extendsBound,
+      @Nullable TypeMirror superBound) {
     super(TypeKind.WILDCARD);
     this.extendsBound = extendsBound;
     this.superBound = superBound;

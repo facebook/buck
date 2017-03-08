@@ -240,7 +240,9 @@ class TreeBackedTypes implements Types {
   }
 
   @Override
-  public WildcardType getWildcardType(TypeMirror extendsBound, TypeMirror superBound) {
+  public WildcardType getWildcardType(
+      @Nullable TypeMirror extendsBound,
+      @Nullable TypeMirror superBound) {
     if (containsArtificialTypes(extendsBound, superBound)) {
       return new StandaloneWildcardType(extendsBound, superBound);
     }
@@ -259,11 +261,19 @@ class TreeBackedTypes implements Types {
 
   @Override
   public DeclaredType getDeclaredType(
-      DeclaredType containing, TypeElement typeElem, TypeMirror... typeArgs) {
+      @Nullable DeclaredType containing, TypeElement typeElem, TypeMirror... typeArgs) {
+    if (containing == null && typeArgs.length == 0) {
+      return (DeclaredType) typeElem.asType();
+    }
+
     if (isArtificialType(containing) ||
         isArtificialElement(typeElem) ||
         containsArtificialTypes(typeArgs)) {
-      return new StandaloneDeclaredType(typeElem, Arrays.asList(typeArgs), containing);
+      if (containing != null) {
+        return new StandaloneDeclaredType(typeElem, Arrays.asList(typeArgs), containing);
+      } else {
+        return new StandaloneDeclaredType(this, typeElem, Arrays.asList(typeArgs));
+      }
     }
 
     return javacTypes.getDeclaredType(containing, typeElem, typeArgs);
@@ -273,7 +283,7 @@ class TreeBackedTypes implements Types {
     return element instanceof TreeBackedElement;
   }
 
-  private boolean isArtificialType(TypeMirror typeMirror) {
+  private boolean isArtificialType(@Nullable TypeMirror typeMirror) {
     return typeMirror instanceof StandaloneTypeMirror;
   }
 
