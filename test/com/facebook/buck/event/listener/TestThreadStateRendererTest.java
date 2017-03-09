@@ -210,11 +210,11 @@ public class TestThreadStateRendererTest {
                 // missing test rule - no output
                 " |=> //:target1...  3.3s", // missing test summary
                 " |=> //:target3...  2.6s", // missing step information
-                " |=> IDLE",
+                " |=> //:target4...  1.2s",
                 " |=> IDLE")))); // missing accumulated time - show as IDLE
     assertThat(
         renderShortStatus(renderer, true),
-        is(equalTo(ImmutableList.of("[:]", "[:]", "[ ]", "[ ]"))));
+        is(equalTo(ImmutableList.of("[:]", "[:]", "[:]", "[ ]"))));
   }
 
   private static Optional<? extends TestRuleEvent> createTestStartedEventOptional(

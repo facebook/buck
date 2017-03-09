@@ -159,12 +159,12 @@ public class BuildThreadStateRendererTest {
             ImmutableList.of(
                 // two missing build rules - no output
                 " |=> //:target3...  2.6s (checking_cache)", // missing step information
-                " |=> IDLE",
+                " |=> //:target4...  1.2s (running step B[0.5s])",
                 " |=> IDLE")))); // missing accumulated time - show as IDLE
     assertThat(
         renderShortStatus(renderer, true),
         is(equalTo(
-            ImmutableList.of("[:]", "[ ]", "[ ]"))));
+            ImmutableList.of("[:]", "[:]", "[ ]"))));
   }
 
   private static BuildRule createFakeRule(BuildTarget target) {

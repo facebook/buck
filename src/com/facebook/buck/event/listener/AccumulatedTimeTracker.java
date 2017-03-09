@@ -62,8 +62,9 @@ public class AccumulatedTimeTracker {
     this.accumulatedRuleTime.putAll(accumulatedRuleTime);
   }
 
-  public AtomicLong getTime(BuildTarget buildTarget) {
-    return accumulatedRuleTime.get(buildTarget);
+  public long getTime(BuildTarget buildTarget) {
+    AtomicLong val = accumulatedRuleTime.get(buildTarget);
+    return (val != null) ? val.get() : 0;
   }
 
   public ConcurrentMap<Long, Optional<? extends BuildRuleEvent>> getBuildEventsByThread() {
@@ -98,7 +99,6 @@ public class AccumulatedTimeTracker {
 
   public void didFinishTestRule(TestRuleEvent.Finished finished) {
     threadsToRunningTestRuleEvent.put(finished.getThreadId(), Optional.empty());
-    accumulatedRuleTime.remove(finished.getBuildTarget());
   }
 
   private void updateAccumulatedBuildTime(BuildRuleEvent buildRuleEvent) {

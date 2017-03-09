@@ -27,7 +27,6 @@ import com.google.common.collect.ImmutableMap;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class BuildThreadStateRenderer implements ThreadStateRenderer {
 
@@ -66,25 +65,12 @@ public class BuildThreadStateRenderer implements ThreadStateRenderer {
         continue;
       }
       Optional<BuildTarget> buildTarget = Optional.empty();
+      long elapsedTimeMs = 0;
       if (buildRuleEvent.isPresent()) {
         buildTarget = Optional.of(buildRuleEvent.get().getBuildRule().getBuildTarget());
+        elapsedTimeMs = currentTimeMs - buildRuleEvent.get().getTimestamp() +
+            accumulatedTimeTracker.getTime(buildTarget.get());
       }
-      AtomicLong accumulatedTime = null;
-      if (buildTarget.isPresent()) {
-        accumulatedTime = accumulatedTimeTracker.getTime(buildTarget.get());
-      }
-      long elapsedTimeMs = 0;
-      if (buildRuleEvent.isPresent() && accumulatedTime != null) {
-        elapsedTimeMs = currentTimeMs - buildRuleEvent.get().getTimestamp() + accumulatedTime.get();
-      } else {
-        buildRuleEvent = Optional.empty();
-        buildTarget = Optional.empty();
-      }
-      Optional<? extends LeafEvent> runningStep = runningStepsByThread.get(threadId);
-      if (runningStep == null) {
-        runningStep = Optional.empty();
-      }
-
       threadInformationMapBuilder.put(
           threadId,
           new ThreadRenderingInformation(
@@ -92,7 +78,7 @@ public class BuildThreadStateRenderer implements ThreadStateRenderer {
               buildRuleEvent,
               Optional.empty(),
               Optional.empty(),
-              runningStep,
+              runningStepsByThread.getOrDefault(threadId, Optional.empty()),
               elapsedTimeMs));
     }
     return threadInformationMapBuilder.build();
@@ -110,17 +96,13 @@ public class BuildThreadStateRenderer implements ThreadStateRenderer {
 
   @Override
   public String renderStatusLine(long threadId, StringBuilder lineBuilder) {
-    ThreadRenderingInformation threadInformation = Preconditions.checkNotNull(
-        threadInformationMap.get(threadId));
-    Optional<String> stepCategory = Optional.empty();
-    if (threadInformation.getRunningStep().isPresent()) {
-      stepCategory = Optional.of(threadInformation.getRunningStep().get().getCategory());
-    }
+    ThreadRenderingInformation threadInformation =
+        Preconditions.checkNotNull(threadInformationMap.get(threadId));
     return commonThreadStateRenderer.renderLine(
         threadInformation.getBuildTarget(),
         threadInformation.getStartEvent(),
         threadInformation.getRunningStep(),
-        stepCategory,
+        threadInformation.getRunningStep().map(LeafEvent::getCategory),
         Optional.of("checking_cache"),
         threadInformation.getElapsedTimeMs(),
         lineBuilder);
@@ -128,8 +110,8 @@ public class BuildThreadStateRenderer implements ThreadStateRenderer {
 
   @Override
   public String renderShortStatus(long threadId) {
-    ThreadRenderingInformation threadInformation = Preconditions.checkNotNull(
-        threadInformationMap.get(threadId));
+    ThreadRenderingInformation threadInformation =
+        Preconditions.checkNotNull(threadInformationMap.get(threadId));
     return commonThreadStateRenderer.renderShortStatus(
         threadInformation.getStartEvent().isPresent(),
         !threadInformation.getRunningStep().isPresent(),
