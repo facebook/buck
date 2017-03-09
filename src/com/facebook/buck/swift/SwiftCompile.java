@@ -90,7 +90,6 @@ class SwiftCompile extends AbstractBuildRule {
   private final CxxPlatform cxxPlatform;
   private final ImmutableSet<FrameworkPath> frameworks;
 
-  private final boolean enableObjcInterop;
   private final Optional<SourcePath> bridgingHeader;
   private final SwiftBuckConfig swiftBuckConfig;
 
@@ -106,7 +105,6 @@ class SwiftCompile extends AbstractBuildRule {
       Path outputPath,
       Iterable<SourcePath> srcs,
       ImmutableList<String> compilerFlags,
-      Optional<Boolean> enableObjcInterop,
       Optional<SourcePath> bridgingHeader) throws NoSuchBuildTargetException {
     super(params);
     this.cxxPlatform = cxxPlatform;
@@ -125,7 +123,6 @@ class SwiftCompile extends AbstractBuildRule {
 
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.compilerFlags = compilerFlags;
-    this.enableObjcInterop = enableObjcInterop.orElse(true);
     this.bridgingHeader = bridgingHeader;
     performChecks(params);
   }
@@ -181,7 +178,6 @@ class SwiftCompile extends AbstractBuildRule {
     compilerCommand.add(
         "-enable-testing",
         "-c",
-        enableObjcInterop ? "-enable-objc-interop" : "",
         hasMainEntry ? "" : "-parse-as-library",
         "-module-name",
         moduleName,

@@ -252,7 +252,6 @@ public class SwiftLibraryDescription implements
               buildTarget, "%s"),
           args.srcs,
           args.compilerFlags,
-          args.enableObjcInterop,
           args.bridgingHeader);
     }
 
@@ -365,7 +364,6 @@ public class SwiftLibraryDescription implements
     public ImmutableList<String> compilerFlags = ImmutableList.of();
     public ImmutableSortedSet<FrameworkPath> frameworks = ImmutableSortedSet.of();
     public ImmutableSortedSet<FrameworkPath> libraries = ImmutableSortedSet.of();
-    public Optional<Boolean> enableObjcInterop;
     public Optional<Pattern> supportedPlatformsRegex;
     public Optional<String> soname;
     public Optional<SourcePath> bridgingHeader;
