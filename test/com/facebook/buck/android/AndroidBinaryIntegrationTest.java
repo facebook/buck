@@ -130,6 +130,31 @@ public class AndroidBinaryIntegrationTest {
     zipInspector.assertFileExists("lib/armeabi/libfakenative.so");
   }
 
+  @Test
+  public void testAppHasAssets() throws IOException {
+    workspace.runBuckCommand("build", SIMPLE_TARGET).assertSuccess();
+
+    Path apkPath = BuildTargets.getGenPath(
+        filesystem,
+        BuildTargetFactory.newInstance(SIMPLE_TARGET),
+        "%s.apk");
+    ZipInspector zipInspector = new ZipInspector(workspace.getPath(apkPath));
+    zipInspector.assertFileExists("assets/asset_file.txt");
+    zipInspector.assertFileExists("assets/hilarity.txt");
+    zipInspector.assertFileContents(
+        "assets/hilarity.txt",
+        workspace.getFileContents(
+            "res/com/sample/base/buck-assets/hilarity.txt"));
+
+    // Test that after changing an asset, the new asset is in the apk.
+    String newContents = "some new contents";
+    workspace.writeContentsToPath(
+        newContents,
+        "res/com/sample/base/buck-assets/hilarity.txt");
+    workspace.runBuckCommand("build", SIMPLE_TARGET).assertSuccess();
+    zipInspector = new ZipInspector(workspace.getPath(apkPath));
+    zipInspector.assertFileContents("assets/hilarity.txt", newContents);
+  }
 
   @Test
   public void testRawSplitDexHasSecondary() throws IOException {

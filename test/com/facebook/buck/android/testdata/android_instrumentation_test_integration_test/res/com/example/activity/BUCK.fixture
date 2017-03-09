@@ -1,6 +1,7 @@
 android_resource(
   name = 'res',
   res = 'res',
+  assets = 'assets',
   package = 'com.example',
   visibility = [
     'PUBLIC',

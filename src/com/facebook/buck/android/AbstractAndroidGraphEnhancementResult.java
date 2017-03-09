@@ -39,6 +39,7 @@ interface AbstractAndroidGraphEnhancementResult {
   Optional<PackageStringAssets> getPackageStringAssets();
   Optional<PreDexMerge> getPreDexMerge();
   Optional<ComputeExopackageDepsAbi> getComputeExopackageDepsAbi();
+  Optional<MergeAssets> getMergeAssets();
   Optional<Boolean> getPackageAssetLibraries();
 
   /**
@@ -73,13 +74,12 @@ interface AbstractAndroidGraphEnhancementResult {
   APKModuleGraph getAPKModuleGraph();
 
   default ImmutableList<SourcePath> getPrimaryApkAssetZips() {
-    if (!getPackageStringAssets().isPresent()) {
-      return ImmutableList.of();
-    }
-    PackageStringAssets stringAssets = getPackageStringAssets().get();
-    return ImmutableList.of(
-        new ExplicitBuildTargetSourcePath(
-            stringAssets.getBuildTarget(), stringAssets.getPathToStringAssetsZip())
-    );
+    ImmutableList.Builder<SourcePath> assetsZipsBuilder = ImmutableList.builder();
+    getPackageStringAssets().ifPresent(strings -> assetsZipsBuilder.add(
+        strings.getSourcePathToStringAssetsZip()));
+    getMergeAssets().ifPresent(assets -> assetsZipsBuilder.add(
+        assets.getSourcePathToOutput()
+    ));
+    return assetsZipsBuilder.build();
   }
 }
