@@ -58,7 +58,7 @@ public abstract class BuildRuleCacheEvent extends AbstractBuckEvent
       CacheStepType cacheType) {
     CacheStepStarted started = new CacheStepStarted(rule, cacheType);
     eventBus.post(started);
-    return new Scope(eventBus, () -> finished(started));
+    return () -> eventBus.post(finished(started));
   }
 
   public static CacheStepStarted started(BuildRule rule, CacheStepType type) {

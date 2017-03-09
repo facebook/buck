@@ -99,7 +99,7 @@ public interface RuleKeyCalculationEvent extends LeafEvent, WorkAdvanceEvent {
       Type type) {
     EventKey eventKey = EventKey.unique();
     buckEventBus.post(new DefaultStarted(eventKey, type));
-    return new Scope(buckEventBus, () -> new DefaultFinished(eventKey, type));
+    return () -> buckEventBus.post(new DefaultFinished(eventKey, type));
   }
 
 }

@@ -335,7 +335,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       RuleKeyFactory<RuleKey> ruleKeyFactory) {
     StartedRuleKeyCalc started = new StartedRuleKeyCalc(rule);
     eventBus.post(started);
-    return new Scope(eventBus, () -> new FinishedRuleKeyCalc(started, ruleKeyFactory));
+    return () -> eventBus.post(new FinishedRuleKeyCalc(started, ruleKeyFactory));
   }
 
   public static Scope resumeSuspendScope(
@@ -343,7 +343,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       BuildRule rule,
       RuleKeyFactory<RuleKey> ruleKeyFactory) {
     eventBus.post(BuildRuleEvent.resumed(rule, ruleKeyFactory));
-    return new Scope(eventBus, () -> BuildRuleEvent.suspended(rule, ruleKeyFactory));
+    return () -> eventBus.post(BuildRuleEvent.suspended(rule, ruleKeyFactory));
   }
 
 }

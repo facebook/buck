@@ -21,8 +21,6 @@ import com.facebook.buck.model.BuildId;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.annotations.VisibleForTesting;
 
-import java.util.function.Supplier;
-
 public interface BuckEvent extends BuckEventExternalInterface {
   @VisibleForTesting
   void configure(
@@ -67,20 +65,11 @@ public interface BuckEvent extends BuckEventExternalInterface {
    */
   EventKey getEventKey();
 
-  class Scope implements AutoCloseable {
-    private final EventBus eventBus;
-    private Supplier<BuckEvent> eventSupplier;
-
-    public Scope(
-        EventBus eventBus,
-        Supplier<BuckEvent> eventBuilder) {
-      this.eventBus = eventBus;
-      this.eventSupplier = eventBuilder;
-    }
-
+  /**
+   * A more specific interface that doesn't throw rather than using {@link AutoCloseable} directly.
+   */
+  interface Scope extends AutoCloseable {
     @Override
-    public final void close() {
-      eventBus.post(eventSupplier.get());
-    }
+    void close();
   }
 }
