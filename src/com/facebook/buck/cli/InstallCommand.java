@@ -457,9 +457,9 @@ public class InstallCommand extends BuildCommand {
 
     String selectedUdid = null;
 
-    if (targetDeviceOptions().hasSerialNumber()) {
+    if (targetDeviceOptions().getSerialNumber().isPresent()) {
       String udidPrefix = Assertions.assertNotNull(
-          targetDeviceOptions().getSerialNumber()).toLowerCase();
+          targetDeviceOptions().getSerialNumber().get()).toLowerCase();
       for (String udid : connectedDevices.keySet()) {
         if (udid.startsWith(udidPrefix)) {
           selectedUdid = udid;
@@ -764,16 +764,16 @@ public class InstallCommand extends BuildCommand {
     Optional<AppleSimulator> simulatorByName = Optional.empty();
     Optional<AppleSimulator> defaultSimulator = Optional.empty();
 
-    boolean wantUdid = deviceOptions.hasSerialNumber();
+    boolean wantUdid = deviceOptions.getSerialNumber().isPresent();
     boolean wantName = deviceOptions.getSimulatorName().isPresent();
 
     for (AppleSimulator simulator : AppleSimulatorDiscovery.discoverAppleSimulators(
              processExecutor,
              simctlPath)) {
       if (wantUdid &&
-          deviceOptions.getSerialNumber().toLowerCase(Locale.US).equals(
+          deviceOptions.getSerialNumber().get().toLowerCase(Locale.US).equals(
               simulator.getUdid().toLowerCase(Locale.US))) {
-        LOG.debug("Got UDID match (%s): %s", deviceOptions.getSerialNumber(), simulator);
+        LOG.debug("Got UDID match (%s): %s", deviceOptions.getSerialNumber().get(), simulator);
         simulatorByUdid = Optional.of(simulator);
         // We shouldn't need to keep looking.
         break;
@@ -796,7 +796,7 @@ public class InstallCommand extends BuildCommand {
       } else {
         LOG.warn(
             "Asked to find simulator with UDID %s, but couldn't find one.",
-            deviceOptions.getSerialNumber());
+            deviceOptions.getSerialNumber().get());
         return Optional.empty();
       }
     } else if (wantName) {

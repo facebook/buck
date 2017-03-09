@@ -371,8 +371,8 @@ public class JavaTest
     } else {
       vmArgsBuilder.add("-Dbuck.device=device");
     }
-    if (device.hasIdentifier()) {
-      vmArgsBuilder.add("-Dbuck.device.id=" + device.getIdentifier());
+    if (device.getIdentifier().isPresent()) {
+      vmArgsBuilder.add("-Dbuck.device.id=" + device.getIdentifier().get());
     }
   }
 

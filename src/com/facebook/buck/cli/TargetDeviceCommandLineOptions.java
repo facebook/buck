@@ -86,13 +86,8 @@ public class TargetDeviceCommandLineOptions {
     return useRealDevicesOnlyMode;
   }
 
-  @Nullable
-  public String getSerialNumber() {
-    return serialNumber;
-  }
-
-  public boolean hasSerialNumber() {
-    return serialNumber != null;
+  public Optional<String> getSerialNumber() {
+    return Optional.ofNullable(serialNumber);
   }
 
   public Optional<String> getSimulatorName() {
@@ -100,7 +95,9 @@ public class TargetDeviceCommandLineOptions {
   }
 
   public Optional<TargetDevice> getTargetDeviceOptional() {
-    if (!hasSerialNumber() && !isEmulatorsOnlyModeEnabled() && !isRealDevicesOnlyModeEnabled()) {
+    if (!getSerialNumber().isPresent() &&
+        !isEmulatorsOnlyModeEnabled() &&
+        !isRealDevicesOnlyModeEnabled()) {
       return Optional.empty();
     }
 
@@ -114,7 +111,7 @@ public class TargetDeviceCommandLineOptions {
     return new TargetDeviceOptions(
         useEmulatorsOnlyMode,
         useRealDevicesOnlyMode,
-        serialNumber);
+        getSerialNumber());
   }
 
 }

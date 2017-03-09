@@ -44,6 +44,7 @@ import org.kohsuke.args4j.CmdLineException;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -147,7 +148,7 @@ public class AdbHelperTest {
   public void testEmulatorAddsGenymotionDevices() throws Throwable {
     AdbHelper adbHelper = createAdbHelper(
         new AdbOptions(),
-        new TargetDeviceOptions(true, false, null));
+        new TargetDeviceOptions(true, false, Optional.empty()));
 
     IDevice[] devices = new IDevice[] {
       TestDevice.createRealDevice("foobarblahblah"),
@@ -165,7 +166,7 @@ public class AdbHelperTest {
   public void testGenymotionIsntARealDevice() throws Throwable {
     AdbHelper adbHelper = createAdbHelper(
         new AdbOptions(),
-        new TargetDeviceOptions(false, true, null));
+        new TargetDeviceOptions(false, true, Optional.empty()));
 
     IDevice[] devices = new IDevice[] {
       TestDevice.createRealDevice("foobar"),
@@ -214,7 +215,7 @@ public class AdbHelperTest {
   public void testDeviceFilterEmulator() throws CmdLineException {
     AdbHelper myAdbHelper = createAdbHelper(
         new AdbOptions(),
-        new TargetDeviceOptions(true, false, null));
+        new TargetDeviceOptions(true, false, Optional.empty()));
 
     IDevice[] devices = new IDevice[] {
         createEmulator("1", IDevice.DeviceState.ONLINE),
@@ -234,7 +235,7 @@ public class AdbHelperTest {
   public void testDeviceFilterRealDevices() throws CmdLineException {
     AdbHelper myAdbHelper = createAdbHelper(
         new AdbOptions(),
-        new TargetDeviceOptions(false, true, null));
+        new TargetDeviceOptions(false, true, Optional.empty()));
 
     IDevice[] devices = new IDevice[] {
         createRealDevice("1", IDevice.DeviceState.ONLINE),
@@ -262,7 +263,7 @@ public class AdbHelperTest {
     for (int i = 0; i < devices.length; i++) {
       AdbHelper myAdbHelper = createAdbHelper(
           new AdbOptions(),
-          new TargetDeviceOptions(false, false, devices[i].getSerialNumber()));
+          new TargetDeviceOptions(false, false, Optional.of(devices[i].getSerialNumber())));
       List<IDevice> filteredDevices = myAdbHelper.filterDevices(devices);
       assertNotNull(filteredDevices);
       assertEquals(1, filteredDevices.size());
@@ -313,7 +314,7 @@ public class AdbHelperTest {
 
     AdbHelper myAdbHelper = createAdbHelper(
         new AdbOptions(),
-        new TargetDeviceOptions(false, false, "invalid-serial"));
+        new TargetDeviceOptions(false, false, Optional.of("invalid-serial")));
     List<IDevice> filteredDevices = myAdbHelper.filterDevices(devices);
     assertNull(filteredDevices);
   }
@@ -338,7 +339,7 @@ public class AdbHelperTest {
     // Filter by serial in "real device" mode with serial number for real device.
     myAdbHelper = createAdbHelper(
         new AdbOptions(),
-        new TargetDeviceOptions(false, true, realDevice1.getSerialNumber()));
+        new TargetDeviceOptions(false, true, Optional.of(realDevice1.getSerialNumber())));
     List<IDevice> filteredDevices = myAdbHelper.filterDevices(
         devices);
     assertNotNull(filteredDevices);
@@ -348,7 +349,7 @@ public class AdbHelperTest {
     // Filter by serial in "real device" mode with serial number for emulator.
     myAdbHelper = createAdbHelper(
         new AdbOptions(),
-        new TargetDeviceOptions(false, true, emulator1.getSerialNumber()));
+        new TargetDeviceOptions(false, true, Optional.of(emulator1.getSerialNumber())));
     filteredDevices = myAdbHelper.filterDevices(
         devices);
     assertNull(filteredDevices);
@@ -356,7 +357,7 @@ public class AdbHelperTest {
     // Filter by serial in "emulator" mode with serial number for real device.
     myAdbHelper = createAdbHelper(
         new AdbOptions(),
-        new TargetDeviceOptions(true, false, realDevice1.getSerialNumber()));
+        new TargetDeviceOptions(true, false, Optional.of(realDevice1.getSerialNumber())));
     filteredDevices = myAdbHelper.filterDevices(
         devices);
     assertNull(filteredDevices);
@@ -364,7 +365,7 @@ public class AdbHelperTest {
     // Filter by serial in "real device" mode with serial number for emulator.
     myAdbHelper = createAdbHelper(
         new AdbOptions(),
-        new TargetDeviceOptions(true, false, emulator1.getSerialNumber()));
+        new TargetDeviceOptions(true, false, Optional.of(emulator1.getSerialNumber())));
     filteredDevices = myAdbHelper.filterDevices(
         devices);
     assertNotNull(filteredDevices);
@@ -374,7 +375,7 @@ public class AdbHelperTest {
     // Filter in both "real device" mode and "emulator mode".
     myAdbHelper = createAdbHelper(
         new AdbOptions(0, true),
-        new TargetDeviceOptions(true, true, null));
+        new TargetDeviceOptions(true, true, Optional.empty()));
     filteredDevices = myAdbHelper.filterDevices(
         devices);
     assertNotNull(filteredDevices);

@@ -137,18 +137,17 @@ public class InstallCommandOptionsTest {
     // Short form.
     TargetDeviceOptions options = getTargetDeviceOptions(
         TargetDeviceCommandLineOptions.SERIAL_NUMBER_SHORT_ARG, serial);
-    assertTrue(options.hasSerialNumber());
-    assertEquals(serial, options.getSerialNumber());
+    assertTrue(options.getSerialNumber().isPresent());
+    assertEquals(serial, options.getSerialNumber().get());
 
     // Long form.
     options = getTargetDeviceOptions(TargetDeviceCommandLineOptions.SERIAL_NUMBER_LONG_ARG, serial);
-    assertTrue(options.hasSerialNumber());
-    assertEquals(serial, options.getSerialNumber());
+    assertTrue(options.getSerialNumber().isPresent());
+    assertEquals(serial, options.getSerialNumber().get());
 
     // Is off by default.
     options = getTargetDeviceOptions();
-    assertFalse(options.hasSerialNumber());
-    assertEquals(null, options.getSerialNumber());
+    assertFalse(options.getSerialNumber().isPresent());
   }
 
   @Test

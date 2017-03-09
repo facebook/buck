@@ -60,7 +60,7 @@ public class JavaTestRuleTest {
     ImmutableList<String> vmArgs = ImmutableList.of("--one");
     JavaTest rule = newRule(vmArgs);
 
-    TargetDevice device = new TargetDevice(TargetDevice.Type.EMULATOR, null);
+    TargetDevice device = new TargetDevice(TargetDevice.Type.EMULATOR, Optional.empty());
     ImmutableList<String> amended = rule.amendVmArgs(
         vmArgs,
         createMock(SourcePathResolver.class),
@@ -75,7 +75,7 @@ public class JavaTestRuleTest {
     ImmutableList<String> vmArgs = ImmutableList.of("--one");
     JavaTest rule = newRule(vmArgs);
 
-    TargetDevice device = new TargetDevice(TargetDevice.Type.REAL_DEVICE, null);
+    TargetDevice device = new TargetDevice(TargetDevice.Type.REAL_DEVICE, Optional.empty());
     ImmutableList<String> amended = rule.amendVmArgs(
         vmArgs,
         createMock(SourcePathResolver.class),
@@ -90,7 +90,7 @@ public class JavaTestRuleTest {
     ImmutableList<String> vmArgs = ImmutableList.of("--one");
     JavaTest rule = newRule(vmArgs);
 
-    TargetDevice device = new TargetDevice(TargetDevice.Type.EMULATOR, "123");
+    TargetDevice device = new TargetDevice(TargetDevice.Type.EMULATOR, Optional.of("123"));
     List<String> amended = rule.amendVmArgs(
         vmArgs,
         createMock(SourcePathResolver.class),

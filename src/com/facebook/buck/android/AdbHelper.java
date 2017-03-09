@@ -171,8 +171,8 @@ public class AdbHelper {
         onlineDevices++;
 
         boolean serialMatches = true;
-        if (deviceOptions.hasSerialNumber()) {
-          serialMatches = device.getSerialNumber().equals(deviceOptions.getSerialNumber());
+        if (deviceOptions.getSerialNumber().isPresent()) {
+          serialMatches = device.getSerialNumber().equals(deviceOptions.getSerialNumber().get());
         } else if (context.getEnvironment().containsKey(SERIAL_NUMBER_ENV)) {
           serialMatches = device.getSerialNumber().equals(
               context.getEnvironment().get(SERIAL_NUMBER_ENV));
