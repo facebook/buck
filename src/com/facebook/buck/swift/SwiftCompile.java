@@ -275,8 +275,8 @@ class SwiftCompile extends AbstractBuildRule {
     return args.build();
   }
 
-  ImmutableSet<Arg> getAstLinkArgs() {
-    return ImmutableSet.<Arg>builder()
+  ImmutableList<Arg> getAstLinkArgs() {
+    return ImmutableList.<Arg>builder()
         .addAll(StringArg.from("-Xlinker", "-add_ast_path"))
         .add(SourcePathArg.of(new ExplicitBuildTargetSourcePath(getBuildTarget(), modulePath)))
         .build();
