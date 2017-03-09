@@ -481,13 +481,13 @@ public class OCamlIntegrationTest {
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             cclib,
-            HeaderVisibility.PRIVATE,
-            cxxPlatform.getFlavor());
+            cxxPlatform.getFlavor(),
+            HeaderVisibility.PRIVATE);
     BuildTarget exportedHeaderSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             cclib,
-            HeaderVisibility.PUBLIC,
-            CxxPlatformUtils.getHeaderModeForDefaultPlatform(tmp.getRoot()).getFlavor());
+            cxxPlatform.getFlavor(),
+            HeaderVisibility.PUBLIC);
 
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();

@@ -132,11 +132,12 @@ public class CxxCompilationDatabaseIntegrationTest {
 
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//:library_with_header");
     Path libraryExportedHeaderSymlinkTreeFolder =
-        CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+        BuildTargets.getGenPath(
             filesystem,
-            libraryTarget,
-            HeaderVisibility.PUBLIC,
-            CxxPlatformUtils.getHeaderModeForDefaultPlatform(tmp.getRoot()).getFlavor());
+            libraryTarget.withFlavors(
+                ImmutableFlavor.of("default"),
+                CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
+            "%s");
 
     // Verify that symlink folders for headers are created and header file is linked.
     assertTrue(Files.exists(rootPath.resolve(libraryExportedHeaderSymlinkTreeFolder)));
@@ -203,12 +204,12 @@ public class CxxCompilationDatabaseIntegrationTest {
                 CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
             "%s");
     Path exportedHeaderSymlinkTreeFolder =
-        CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+        BuildTargets.getGenPath(
             filesystem,
-            target.withFlavors(),
-            HeaderVisibility.PUBLIC,
-            CxxPlatformUtils.getHeaderModeForDefaultPlatform(tmp.getRoot()).getFlavor());
-    System.out.println(workspace.getBuildLog().getAllTargets());
+            target.withFlavors(
+                ImmutableFlavor.of("default"),
+                CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
+            "%s");
 
     // Verify that symlink folders for headers are created.
     assertTrue(Files.exists(rootPath.resolve(headerSymlinkTreeFolder)));
@@ -397,11 +398,12 @@ public class CxxCompilationDatabaseIntegrationTest {
                 CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
             "%s");
     Path exportedHeaderSymlinkTreeFolder =
-        CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+        BuildTargets.getGenPath(
             filesystem,
-            target.withFlavors(),
-            HeaderVisibility.PUBLIC,
-            CxxPlatformUtils.getHeaderModeForDefaultPlatform(tmp.getRoot()).getFlavor());
+            target.withFlavors(
+                ImmutableFlavor.of("default"),
+                CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
+            "%s");
 
     // Validate the symlink tree/header maps
     verifyHeaders(
@@ -475,17 +477,15 @@ public class CxxCompilationDatabaseIntegrationTest {
     workspace.buildAndReturnOutput(target.getFullyQualifiedName());
 
     Path dep1ExportedSymlinkTreeFolder =
-        CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+        BuildTargets.getGenPath(
             filesystem,
-            BuildTargetFactory.newInstance("//dep1:dep1"),
-            HeaderVisibility.PUBLIC,
-            CxxPlatformUtils.getHeaderModeForDefaultPlatform(tmp.getRoot()).getFlavor());
+            BuildTargetFactory.newInstance("//dep1:dep1#default,headers"),
+            "%s");
     Path dep2ExportedSymlinkTreeFolder =
-        CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+        BuildTargets.getGenPath(
             filesystem,
-            BuildTargetFactory.newInstance("//dep2:dep2"),
-            HeaderVisibility.PUBLIC,
-            CxxPlatformUtils.getHeaderModeForDefaultPlatform(tmp.getRoot()).getFlavor());
+            BuildTargetFactory.newInstance("//dep2:dep2#default,headers"),
+            "%s");
 
     // Validate the deps' symlink tree/header maps
     verifyHeaders(

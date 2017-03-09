@@ -104,38 +104,34 @@ public class CxxDescriptionEnhancer {
 
   private CxxDescriptionEnhancer() {}
 
-  public static CxxPreprocessables.HeaderMode getHeaderModeForPlatform(
-      BuildRuleResolver resolver,
-      CxxPlatform cxxPlatform,
-      boolean shouldCreateHeadersSymlinks) {
-    boolean useHeaderMap = (
-        cxxPlatform.getCpp().resolve(resolver).supportsHeaderMaps() &&
-            cxxPlatform.getCxxpp().resolve(resolver).supportsHeaderMaps());
-    return !useHeaderMap
-        ? CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY
-        : (shouldCreateHeadersSymlinks
-            ? CxxPreprocessables.HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP
-            : CxxPreprocessables.HeaderMode.HEADER_MAP_ONLY);
-  }
-
   public static HeaderSymlinkTree createHeaderSymlinkTree(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      CxxPreprocessables.HeaderMode mode,
+      CxxPlatform cxxPlatform,
       ImmutableMap<Path, SourcePath> headers,
       HeaderVisibility headerVisibility,
-      Flavor... flavors) {
+      boolean shouldCreateHeadersSymlinks) {
+
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             params.getBuildTarget(),
-            headerVisibility,
-            flavors);
+            cxxPlatform.getFlavor(),
+            headerVisibility);
     Path headerSymlinkTreeRoot =
         CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
             params.getProjectFilesystem(),
             params.getBuildTarget(),
-            headerVisibility,
-            flavors);
+            cxxPlatform.getFlavor(),
+            headerVisibility);
+    boolean useHeaderMap = (
+        cxxPlatform.getCpp().resolve(resolver).supportsHeaderMaps() &&
+        cxxPlatform.getCxxpp().resolve(resolver).supportsHeaderMaps());
+    CxxPreprocessables.HeaderMode mode = !useHeaderMap
+      ? CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY
+      : (shouldCreateHeadersSymlinks
+        ? CxxPreprocessables.HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP
+        : CxxPreprocessables.HeaderMode.HEADER_MAP_ONLY);
+
     return CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
         headerSymlinkTreeTarget,
         params,
@@ -143,22 +139,6 @@ public class CxxDescriptionEnhancer {
         headers,
         mode,
         new SourcePathRuleFinder(resolver));
-  }
-
-  public static HeaderSymlinkTree createHeaderSymlinkTree(
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      CxxPlatform cxxPlatform,
-      ImmutableMap<Path, SourcePath> headers,
-      HeaderVisibility headerVisibility,
-      boolean shouldCreateHeadersSymlinks) {
-    return createHeaderSymlinkTree(
-        params,
-        resolver,
-        getHeaderModeForPlatform(resolver, cxxPlatform, shouldCreateHeadersSymlinks),
-        headers,
-        headerVisibility,
-        cxxPlatform.getFlavor());
   }
 
   public static SymlinkTree createSandboxSymlinkTree(
@@ -199,8 +179,8 @@ public class CxxDescriptionEnhancer {
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             untypedParams.getBuildTarget(),
-            headerVisibility,
-            cxxPlatform.getFlavor());
+            cxxPlatform.getFlavor(),
+            headerVisibility);
 
     // Check the cache...
     Optional<BuildRule> rule = ruleResolver.getRuleOptional(headerSymlinkTreeTarget);
@@ -245,12 +225,12 @@ public class CxxDescriptionEnhancer {
   @VisibleForTesting
   public static BuildTarget createHeaderSymlinkTreeTarget(
       BuildTarget target,
-      HeaderVisibility headerVisibility,
-      Flavor... flavors) {
+      Flavor platform,
+      HeaderVisibility headerVisibility) {
     return BuildTarget
         .builder(target)
+        .addFlavors(platform)
         .addFlavors(getHeaderSymlinkTreeFlavor(headerVisibility))
-        .addFlavors(flavors)
         .build();
   }
 
@@ -271,11 +251,11 @@ public class CxxDescriptionEnhancer {
   public static Path getHeaderSymlinkTreePath(
       ProjectFilesystem filesystem,
       BuildTarget target,
-      HeaderVisibility headerVisibility,
-      Flavor... flavors) {
+      Flavor platform,
+      HeaderVisibility headerVisibility) {
     return BuildTargets.getGenPath(
         filesystem,
-        createHeaderSymlinkTreeTarget(target, headerVisibility, flavors),
+        createHeaderSymlinkTreeTarget(target, platform, headerVisibility),
         "%s");
   }
 
@@ -349,30 +329,6 @@ public class CxxDescriptionEnhancer {
             "exported_platform_headers",
             buildTarget);
       }
-    }
-    return CxxPreprocessables.resolveHeaderMap(
-        args.headerNamespace.map(Paths::get).orElse(buildTarget.getBasePath()),
-        headers.build());
-  }
-
-  /**
-   * @return a map of header locations to input {@link SourcePath} objects formed by parsing the
-   *    input {@link SourcePath} objects for the "exportedHeaders" parameter.
-   */
-  public static ImmutableMap<Path, SourcePath> parseExportedPlatformHeaders(
-      BuildTarget buildTarget,
-      SourcePathResolver resolver,
-      CxxPlatform cxxPlatform,
-      CxxLibraryDescription.Arg args) {
-    ImmutableMap.Builder<String, SourcePath> headers = ImmutableMap.builder();
-    for (SourceList sourceList :
-             args.exportedPlatformHeaders.getMatchingValues(cxxPlatform.getFlavor().toString())) {
-      putAllHeaders(
-          sourceList,
-          headers,
-          resolver,
-          "exported_platform_headers",
-          buildTarget);
     }
     return CxxPreprocessables.resolveHeaderMap(
         args.headerNamespace.map(Paths::get).orElse(buildTarget.getBasePath()),

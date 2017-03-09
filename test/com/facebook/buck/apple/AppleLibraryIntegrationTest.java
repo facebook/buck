@@ -25,7 +25,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -570,10 +569,9 @@ public class AppleLibraryIntegrationTest {
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance(
-        "//Libraries/TestLibrary:TestLibrary")
+        "//Libraries/TestLibrary:TestLibrary#default")
         .withAppendedFlavors(
-            CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
-            CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor());
+            CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
         buildTarget.getFullyQualifiedName());

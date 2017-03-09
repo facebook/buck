@@ -39,6 +39,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -64,6 +65,8 @@ public class CxxLibrary
   private final Iterable<? extends BuildRule> exportedDeps;
   private final Predicate<CxxPlatform> hasExportedHeaders;
   private final Predicate<CxxPlatform> headerOnly;
+  private final Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
+      exportedPreprocessorFlags;
   private final Function<? super CxxPlatform, Iterable<? extends Arg>> exportedLinkerFlags;
   private final Function<? super CxxPlatform, NativeLinkableInput> linkTargetInput;
   private final Optional<Pattern> supportedPlatformsRegex;
@@ -96,6 +99,8 @@ public class CxxLibrary
       Iterable<? extends BuildRule> exportedDeps,
       Predicate<CxxPlatform> hasExportedHeaders,
       Predicate<CxxPlatform> headerOnly,
+      Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
+          exportedPreprocessorFlags,
       Function<? super CxxPlatform, Iterable<? extends Arg>> exportedLinkerFlags,
       Function<? super CxxPlatform, NativeLinkableInput> linkTargetInput,
       Optional<Pattern> supportedPlatformsRegex,
@@ -113,6 +118,7 @@ public class CxxLibrary
     this.exportedDeps = exportedDeps;
     this.hasExportedHeaders = hasExportedHeaders;
     this.headerOnly = headerOnly;
+    this.exportedPreprocessorFlags = exportedPreprocessorFlags;
     this.exportedLinkerFlags = exportedLinkerFlags;
     this.linkTargetInput = linkTargetInput;
     this.supportedPlatformsRegex = supportedPlatformsRegex;
@@ -146,14 +152,17 @@ public class CxxLibrary
   public CxxPreprocessorInput getCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
-    return ruleResolver
-        .requireMetadata(
-            getBuildTarget().withAppendedFlavors(
-                CxxLibraryDescription.MetadataType.CXX_PREPROCESSOR_INPUT.getFlavor(),
-                cxxPlatform.getFlavor(),
-                headerVisibility.getFlavor()),
-            CxxPreprocessorInput.class)
-        .orElseThrow(IllegalStateException::new);
+    boolean hasHeaderSymlinkTree =
+        headerVisibility != HeaderVisibility.PUBLIC || hasExportedHeaders.apply(cxxPlatform);
+    return CxxPreprocessables.getCxxPreprocessorInput(
+        params,
+        ruleResolver,
+        hasHeaderSymlinkTree,
+        cxxPlatform,
+        headerVisibility,
+        CxxPreprocessables.IncludeType.LOCAL,
+        exportedPreprocessorFlags.apply(cxxPlatform),
+        frameworks);
   }
 
   @Override

@@ -336,11 +336,13 @@ public final class CxxInferEnhancer {
   computePreprocessorInputForCxxLibraryDescriptionArg(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       CxxLibraryDescription.Arg args,
       HeaderSymlinkTree headerSymlinkTree,
       ImmutableList<String> includeDirs,
       Optional<SymlinkTree> sandboxTree) throws NoSuchBuildTargetException {
+    boolean shouldCreatePublicHeadersSymlinks = args.xcodePublicHeadersSymlinks.orElse(true);
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
         params,
         cxxPlatform,
@@ -354,7 +356,19 @@ public final class CxxInferEnhancer {
         CxxLibraryDescription.getTransitiveCxxPreprocessorInput(
             params,
             resolver,
-            cxxPlatform),
+            cxxPlatform,
+            CxxFlags.getLanguageFlags(
+                args.exportedPreprocessorFlags,
+                args.exportedPlatformPreprocessorFlags,
+                args.exportedLangPreprocessorFlags,
+                cxxPlatform),
+            CxxDescriptionEnhancer.parseExportedHeaders(
+                params.getBuildTarget(),
+                pathResolver,
+                Optional.of(cxxPlatform),
+                args),
+            args.frameworks,
+            shouldCreatePublicHeadersSymlinks),
         includeDirs,
         sandboxTree);
   }
@@ -417,6 +431,7 @@ public final class CxxInferEnhancer {
       preprocessorInputs = computePreprocessorInputForCxxLibraryDescriptionArg(
           params,
           resolver,
+          pathResolver,
           cxxPlatform,
           (CxxLibraryDescription.Arg) args,
           headerSymlinkTree,
