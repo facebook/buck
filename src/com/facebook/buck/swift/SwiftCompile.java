@@ -41,6 +41,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -274,11 +275,15 @@ class SwiftCompile extends AbstractBuildRule {
     return args.build();
   }
 
-  ImmutableSet<Arg> getLinkArgs() {
-    return ImmutableSet.<Arg>builder()
+  ImmutableList<Arg> getAstLinkArgs() {
+    return ImmutableList.<Arg>builder()
         .addAll(StringArg.from("-Xlinker", "-add_ast_path"))
         .add(SourcePathArg.of(new ExplicitBuildTargetSourcePath(getBuildTarget(), modulePath)))
-        .add(SourcePathArg.of(new ExplicitBuildTargetSourcePath(getBuildTarget(), objectPath)))
         .build();
+  }
+
+  Arg getFileListLinkArg() {
+    return FileListableLinkerInputArg.withSourcePathArg(
+        SourcePathArg.of(new ExplicitBuildTargetSourcePath(getBuildTarget(), objectPath)));
   }
 }
