@@ -204,8 +204,9 @@ public class SmartDexingStep implements Step {
     // itself to be CPU (and not I/O) bound making it a good candidate for parallelization.
     List<Step> dxSteps = generateDxCommands(filesystem, outputToInputs);
 
-    List<Callable<Void>> callables = Lists.transform(dxSteps,
-        step -> () -> {
+    List<Callable<Void>> callables = Lists.transform(
+        dxSteps,
+        step -> (Callable<Void>) () -> {
           stepRunner.runStepForBuildTarget(context, step, Optional.empty());
           return null;
         });
