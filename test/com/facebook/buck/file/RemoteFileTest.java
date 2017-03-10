@@ -40,7 +40,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
@@ -212,7 +211,6 @@ public class RemoteFileTest {
         try {
           return Arrays.equals(Files.readAllBytes((Path) o), content);
         } catch (IOException e) {
-          Throwables.throwIfUnchecked(e);
           throw new RuntimeException(e);
         }
       }

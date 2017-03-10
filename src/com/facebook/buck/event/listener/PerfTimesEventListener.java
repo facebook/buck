@@ -173,7 +173,7 @@ public class PerfTimesEventListener implements BuckEventListener {
   }
 
 
-  public class PerfTimesEvent extends AbstractBuckEvent {
+  public static class PerfTimesEvent extends AbstractBuckEvent {
 
     @JsonView(JsonViews.MachineReadableLog.class)
     private PerfTimesStats perfTimesStats;

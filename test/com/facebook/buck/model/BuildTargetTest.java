@@ -133,7 +133,8 @@ public class BuildTargetTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void testShortNamesMustNotContainTheFlavorSeparator() {
-      BuildTarget.builder(ROOT, "//foo/bar", "baz#dex").build();
+    @SuppressWarnings("unused") BuildTarget unused =
+        BuildTarget.builder(ROOT, "//foo/bar", "baz#dex").build();
   }
 
   @Test
@@ -157,9 +158,10 @@ public class BuildTargetTest {
 
   @Test
   public void testNumbersAreValidFlavors() {
-    BuildTarget.builder(ROOT, "//foo", "bar")
-        .addFlavors(ImmutableFlavor.of("1234"))
-        .build();
+    @SuppressWarnings("unused") BuildTarget unused =
+        BuildTarget.builder(ROOT, "//foo", "bar")
+            .addFlavors(ImmutableFlavor.of("1234"))
+            .build();
   }
 
   @Test

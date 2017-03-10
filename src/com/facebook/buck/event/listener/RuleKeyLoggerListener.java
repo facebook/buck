@@ -34,11 +34,13 @@ import com.google.common.eventbus.Subscribe;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 public class RuleKeyLoggerListener implements BuckEventListener {
   private static final Logger LOG = Logger.get(RuleKeyLoggerListener.class);
@@ -152,18 +154,16 @@ public class RuleKeyLoggerListener implements BuckEventListener {
 
   private void flushLogLinesIfNeeded() {
     if (logLinesCount > minLinesForAutoFlush) {
-      outputExecutor.submit(new Callable<Void>() {
-        @Override
-        public Void call() throws Exception {
-          try {
-            flushLogLines();
-          } catch (IOException e) {
-            LOG.error(e, "Failed to flush logLines from the outputExecutor.");
-          }
+      @SuppressWarnings("unused") Future<?> unused =
+          outputExecutor.submit(() -> {
+            try {
+              flushLogLines();
+            } catch (IOException e) {
+              LOG.error(e, "Failed to flush logLines from the outputExecutor.");
+            }
 
-          return null;
-        }
-      });
+            return null;
+          });
     }
   }
 
@@ -181,7 +181,8 @@ public class RuleKeyLoggerListener implements BuckEventListener {
     Path logFile = getLogFilePath();
     projectFilesystem.createParentDirs(logFile);
     try (FileOutputStream stream = new FileOutputStream(logFile.toString(), /* append */ true);
-         PrintWriter writer = new PrintWriter(stream)) {
+         OutputStreamWriter streamWriter = new OutputStreamWriter(stream, StandardCharsets.UTF_8);
+         PrintWriter writer = new PrintWriter(streamWriter)) {
       for (String line : linesToFlush) {
         writer.println(line);
       }

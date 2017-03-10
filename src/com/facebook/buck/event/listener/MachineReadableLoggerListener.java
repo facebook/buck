@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.OptionalInt;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public class MachineReadableLoggerListener implements BuckEventListener {
@@ -184,7 +185,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   public void outputTrace(BuildId buildId) throws InterruptedException {
     // IMPORTANT: logging the ExitCode must happen on the executor, otherwise random
     // log lines will be overwritten as outputStream access is not thread safe.
-    executor.submit(() -> {
+    @SuppressWarnings("unused") Future<?> unused = executor.submit(() -> {
       try {
         outputStream.write(
             String.format("ExitCode {\"exitCode\":%d}", exitCode.orElse(-1))

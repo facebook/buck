@@ -36,6 +36,7 @@ import java.net.HttpURLConnection;
 import java.net.PasswordAuthentication;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -95,7 +96,9 @@ public class HttpDownloaderTest {
 
     Matcher m = Pattern.compile("^Basic (.*)$").matcher(capturedAuth.getValue());
     assertTrue(m.matches());
-    assertEquals("foo:bar", new String(BaseEncoding.base64().decode(m.group(1))));
+    assertEquals(
+        "foo:bar",
+        new String(BaseEncoding.base64().decode(m.group(1)), StandardCharsets.UTF_8));
   }
 
   @Test

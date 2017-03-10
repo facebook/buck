@@ -24,22 +24,24 @@ import org.junit.Test;
 
 public class MoreAssertsTest {
 
-  @SuppressWarnings("PMD.EmptyCatchBlock")
-  private void expectFail(Iterable<?> a, Iterable<?> b) {
-    try {
-      MoreAsserts.assertIterablesEquals(a, b);
-      // Must throw something other than an AssertionError:
-      throw new RuntimeException("Expected failure from: a=" + a + "; b=" + b);
-    } catch (AssertionError expected) {
-    }
+  @Test(expected = AssertionError.class)
+  public void testIterablesEqualsFailure1() {
+    MoreAsserts.assertIterablesEquals(ImmutableList.of(), ImmutableList.of(1));
   }
 
-  @Test
-  public void testIterablesEqualsFailure() {
-    expectFail(ImmutableList.of(), ImmutableList.of(1));
-    expectFail(ImmutableList.of(1, 2), ImmutableList.of(2, 1));
-    expectFail(ImmutableList.of(1), ImmutableList.of());
-    expectFail(ImmutableList.of(1), null);
+  @Test(expected = AssertionError.class)
+  public void testIterablesEqualsFailure2() {
+    MoreAsserts.assertIterablesEquals(ImmutableList.of(1, 2), ImmutableList.of(2, 1));
+  }
+
+  @Test(expected = AssertionError.class)
+  public void testIterablesEqualsFailure3() {
+    MoreAsserts.assertIterablesEquals(ImmutableList.of(1), ImmutableList.of());
+  }
+
+  @Test(expected = AssertionError.class)
+  public void testIterablesEqualsFailure4() {
+    MoreAsserts.assertIterablesEquals(ImmutableList.of(1), null);
   }
 
   @Test

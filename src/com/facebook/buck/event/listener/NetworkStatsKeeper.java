@@ -28,6 +28,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.time.Duration;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -58,8 +59,10 @@ public class NetworkStatsKeeper {
     this.totalDownloadTimeMillis = 0;
     this.currentIntervalDownloadTimeMillis = 0;
     this.clock = new DefaultClock();
-    this.scheduler = Executors.newScheduledThreadPool(1,
-        new ThreadFactoryBuilder().setNameFormat(getClass().getSimpleName() + "-%d").build());
+    this.scheduler =
+        Executors.newScheduledThreadPool(
+            1,
+            new ThreadFactoryBuilder().setNameFormat(getClass().getSimpleName() + "-%d").build());
     scheduleDownloadSpeedCalculation();
   }
 
@@ -67,7 +70,7 @@ public class NetworkStatsKeeper {
     long calculationInterval = DOWNLOAD_SPEED_CALCULATION_INTERVAL.toMillis();
     TimeUnit timeUnit = TimeUnit.MILLISECONDS;
 
-    scheduler.scheduleAtFixedRate(
+    @SuppressWarnings("unused") ScheduledFuture<?> unused = scheduler.scheduleAtFixedRate(
         this::calculateDownloadSpeedInLastInterval,
         /* initialDelay */ calculationInterval,
         /* period */ calculationInterval,

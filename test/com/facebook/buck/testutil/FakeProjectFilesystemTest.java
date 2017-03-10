@@ -38,6 +38,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.NoSuchFileException;
@@ -208,7 +209,7 @@ public class FakeProjectFilesystemTest {
     Path filePath = Paths.get("somefile.txt");
 
     try (OutputStream stream = filesystem.newFileOutputStream(filePath)) {
-      stream.write("hello world".getBytes());
+      stream.write("hello world".getBytes(StandardCharsets.UTF_8));
     }
     assertEquals("hello world", filesystem.readFileIfItExists(filePath).get());
   }
@@ -218,7 +219,7 @@ public class FakeProjectFilesystemTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path filePath = Paths.get("somefile.txt");
     OutputStream stream = filesystem.newFileOutputStream(filePath);
-    stream.write("hello world".getBytes());
+    stream.write("hello world".getBytes(StandardCharsets.UTF_8));
     stream.flush();
     stream.close();
     assertEquals("hello world", filesystem.readFileIfItExists(filePath).get());
@@ -393,7 +394,7 @@ public class FakeProjectFilesystemTest {
   public void testCreateZip() throws IOException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
-    byte[] contents = "contents".getBytes();
+    byte[] contents = "contents".getBytes(StandardCharsets.UTF_8);
 
     Path file = Paths.get("file");
     filesystem.writeBytesToPath(contents, file);
