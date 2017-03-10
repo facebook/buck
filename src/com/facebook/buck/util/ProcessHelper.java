@@ -18,6 +18,8 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.Kernel32;
 import com.sun.jna.platform.win32.WinNT;
@@ -29,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 import javax.lang.model.SourceVersion;
@@ -59,10 +62,21 @@ public class ProcessHelper {
     return INSTANCE;
   }
 
-  private static final int PROCESS_TREE_REFRESH_PERIOD_MS = 1000;
-  private final Object processTreeLock = new Object();
-  private long processTreeTimestamp = 0;
-  @Nullable private ProcessTree processTree = null;
+  private Supplier<ProcessTree> processTree = Suppliers.memoizeWithExpiration(() -> {
+    ProcessTree tree = new ProcessTree();
+    try {
+      LOG.verbose("Getting process tree...");
+      OperatingSystem os = OSHI.getOperatingSystem();
+      OSProcess[] processes = os.getProcesses(100, OperatingSystem.ProcessSort.NEWEST);
+      for (OSProcess process : processes) {
+        tree.add(process);
+      }
+      LOG.verbose("Process tree built.");
+    } catch (Exception e) {
+      LOG.warn(e, "Cannot get the process tree!");
+    }
+    return tree;
+  }, 1, TimeUnit.SECONDS);
 
   /**
    * This is a helper singleton.
@@ -76,13 +90,11 @@ public class ProcessHelper {
   @Nullable
   public ProcessResourceConsumption getTotalResourceConsumption(long pid) {
     final ProcessResourceConsumption[] res = new ProcessResourceConsumption[] { null };
-    ProcessTree tree = getProcessTree();
-    if (tree != null) {
-      tree.visitAllDescendants(pid, (childPid, childNode) -> {
-        ProcessResourceConsumption childRes = getProcessResourceConsumptionInternal(childNode.info);
-        res[0] = ProcessResourceConsumption.getTotal(res[0], childRes);
-      });
-    }
+    ProcessTree tree = processTree.get();
+    tree.visitAllDescendants(pid, (childPid, childNode) -> {
+      ProcessResourceConsumption childRes = getProcessResourceConsumptionInternal(childNode.info);
+      res[0] = ProcessResourceConsumption.getTotal(res[0], childRes);
+    });
     // fallback to the root process only if the above fails
     return (res[0] != null) ? res[0] : getProcessResourceConsumption(pid);
   }
@@ -280,34 +292,5 @@ public class ProcessHelper {
         }
       }
     }
-  }
-
-  private ProcessTree getProcessTree() {
-    if (!isProcessTreeFresh()) {
-      synchronized (processTreeLock) {
-        if (!isProcessTreeFresh()) {
-          ProcessTree tree = new ProcessTree();
-          try {
-            LOG.verbose("Getting process tree...");
-            OperatingSystem os = OSHI.getOperatingSystem();
-            OSProcess[] processes = os.getProcesses(100, OperatingSystem.ProcessSort.NEWEST);
-            for (OSProcess process : processes) {
-              tree.add(process);
-            }
-            processTree = tree;
-            processTreeTimestamp = System.nanoTime();
-            LOG.verbose("Process tree built.");
-          } catch (Exception e) {
-            LOG.warn(e, "Cannot get the process tree!");
-          }
-        }
-      }
-    }
-    return processTree;
-  }
-
-  private boolean isProcessTreeFresh() {
-    return (processTree != null) &&
-        (System.nanoTime() - processTreeTimestamp < PROCESS_TREE_REFRESH_PERIOD_MS * 1000000);
   }
 }
