@@ -71,40 +71,40 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
     this.hasher = hasher;
   }
 
-  private RuleKeyHasher<HashCode> putBytes(byte type, byte[] bytes) {
+  private GuavaRuleKeyHasher putBytes(byte type, byte[] bytes) {
     hasher.putBytes(bytes);
     hasher.putInt(bytes.length);
     hasher.putByte(type);
     return this;
   }
 
-  private RuleKeyHasher<HashCode> putStringified(byte type, String val) {
+  private GuavaRuleKeyHasher putStringified(byte type, String val) {
     return putBytes(type, val.getBytes(Charsets.UTF_8));
   }
 
-  private RuleKeyHasher<HashCode> putBuildTarget(byte type, BuildTarget target) {
+  private GuavaRuleKeyHasher putBuildTarget(byte type, BuildTarget target) {
     return putStringified(type, target.getFullyQualifiedName());
   }
 
   @Override
-  public RuleKeyHasher<HashCode> putKey(String key) {
+  public GuavaRuleKeyHasher putKey(String key) {
     return this.putStringified(TYPE_KEY, key);
   }
 
   @Override
-  public RuleKeyHasher<HashCode> putNull() {
+  public GuavaRuleKeyHasher putNull() {
     hasher.putByte(TYPE_NULL);
     return this;
   }
 
   @Override
-  public RuleKeyHasher<HashCode> putBoolean(boolean val) {
+  public GuavaRuleKeyHasher putBoolean(boolean val) {
     hasher.putByte(val ? TYPE_TRUE : TYPE_FALSE);
     return this;
   }
 
   @Override
-  public RuleKeyHasher<HashCode> putNumber(Number val) {
+  public GuavaRuleKeyHasher putNumber(Number val) {
     if (val instanceof Integer) { // most common, so test first
       hasher.putInt((Integer) val);
       hasher.putByte(TYPE_INTEGER);
@@ -130,63 +130,63 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
   }
 
   @Override
-  public RuleKeyHasher<HashCode> putString(String val) {
+  public GuavaRuleKeyHasher putString(String val) {
     return this.putStringified(TYPE_STRING, val);
   }
 
   @Override
-  public RuleKeyHasher<HashCode> putBytes(byte[] bytes) {
+  public GuavaRuleKeyHasher putBytes(byte[] bytes) {
     return putBytes(TYPE_BYTE_ARRAY, bytes);
   }
 
   @Override
-  public RuleKeyHasher<HashCode> putPattern(Pattern pattern) {
+  public GuavaRuleKeyHasher putPattern(Pattern pattern) {
     return this.putStringified(TYPE_PATTERN, pattern.toString());
   }
 
   @Override
-  public RuleKeyHasher<HashCode> putSha1(Sha1HashCode sha1) {
+  public GuavaRuleKeyHasher putSha1(Sha1HashCode sha1) {
     sha1.update(hasher);
     hasher.putByte(TYPE_SHA1);
     return this;
   }
 
   @Override
-  public RuleKeyHasher<HashCode> putPath(Path path, HashCode hash) {
+  public GuavaRuleKeyHasher putPath(Path path, HashCode hash) {
     this.putStringified(TYPE_PATH, path.toString());
     this.putBytes(TYPE_PATH, hash.asBytes());
     return this;
   }
 
   @Override
-  public RuleKeyHasher<HashCode> putArchiveMemberPath(ArchiveMemberPath path, HashCode hash) {
+  public GuavaRuleKeyHasher putArchiveMemberPath(ArchiveMemberPath path, HashCode hash) {
     this.putStringified(TYPE_ARCHIVE_MEMBER_PATH, path.toString());
     this.putBytes(TYPE_ARCHIVE_MEMBER_PATH, hash.asBytes());
     return this;
   }
 
   @Override
-  public RuleKeyHasher<HashCode> putNonHashingPath(String path) {
+  public GuavaRuleKeyHasher putNonHashingPath(String path) {
     return this.putStringified(TYPE_NON_HASHING_PATH, path);
   }
 
   @Override
-  public RuleKeyHasher<HashCode> putSourceRoot(SourceRoot sourceRoot) {
+  public GuavaRuleKeyHasher putSourceRoot(SourceRoot sourceRoot) {
     return this.putStringified(TYPE_SOURCE_ROOT, sourceRoot.getName());
   }
 
   @Override
-  public RuleKeyHasher<HashCode> putRuleKey(RuleKey ruleKey) {
+  public GuavaRuleKeyHasher putRuleKey(RuleKey ruleKey) {
     return this.putBytes(TYPE_RULE_KEY, ruleKey.getHashCode().asBytes());
   }
 
   @Override
-  public RuleKeyHasher<HashCode> putBuildRuleType(BuildRuleType buildRuleType) {
+  public GuavaRuleKeyHasher putBuildRuleType(BuildRuleType buildRuleType) {
     return this.putStringified(TYPE_RULE_TYPE, buildRuleType.toString());
   }
 
   @Override
-  public RuleKeyHasher<HashCode> putBuildTarget(BuildTarget buildTarget) {
+  public GuavaRuleKeyHasher putBuildTarget(BuildTarget buildTarget) {
     return this.putStringified(TYPE_TARGET, buildTarget.getFullyQualifiedName());
   }
 
@@ -207,7 +207,7 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
   }
 
   @Override
-  public RuleKeyHasher<HashCode> putContainer(Container container, int length) {
+  public GuavaRuleKeyHasher putContainer(Container container, int length) {
     switch (container) {
       case LIST:
         hasher.putByte((byte) '[');
@@ -224,7 +224,7 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
   }
 
   @Override
-  public RuleKeyHasher<HashCode> putWrapper(Wrapper wrapper) {
+  public GuavaRuleKeyHasher putWrapper(Wrapper wrapper) {
     switch (wrapper) {
       case SUPPLIER:
         hasher.putByte((byte) 'S');

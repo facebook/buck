@@ -39,91 +39,91 @@ public class StringRuleKeyHasher implements RuleKeyHasher<String> {
   private final List<String> parts = new ArrayList<>();
 
   @Override
-  public RuleKeyHasher<String> putKey(String key) {
+  public StringRuleKeyHasher putKey(String key) {
     parts.add(String.format("key(%s)", key));
     return this;
   }
 
   @Override
-  public RuleKeyHasher<String> putNull() {
+  public StringRuleKeyHasher putNull() {
     parts.add(String.format("null()"));
     return this;
   }
 
   @Override
-  public RuleKeyHasher<String> putBoolean(boolean val) {
+  public StringRuleKeyHasher putBoolean(boolean val) {
     parts.add(String.format("boolean(%s)", val ? "true" : "false"));
     return this;
   }
 
   @Override
-  public RuleKeyHasher<String> putNumber(Number val) {
+  public StringRuleKeyHasher putNumber(Number val) {
     parts.add(String.format("number(%s)", val));
     return this;
   }
 
   @Override
-  public RuleKeyHasher<String> putString(String val) {
+  public StringRuleKeyHasher putString(String val) {
     parts.add(String.format("string(\"%s\")", val));
     return this;
   }
 
   @Override
-  public RuleKeyHasher<String> putPattern(Pattern pattern) {
+  public StringRuleKeyHasher putPattern(Pattern pattern) {
     parts.add(String.format("pattern(%s)", pattern));
     return this;
   }
 
   @Override
-  public RuleKeyHasher<String> putBytes(byte[] bytes) {
+  public StringRuleKeyHasher putBytes(byte[] bytes) {
     parts.add(String.format("byteArray(length=%s)", bytes.length));
     return this;
   }
 
   @Override
-  public RuleKeyHasher<String> putSha1(Sha1HashCode sha1) {
+  public StringRuleKeyHasher putSha1(Sha1HashCode sha1) {
     parts.add(String.format("sha1(%s)", sha1.toString()));
     return this;
   }
 
   @Override
-  public RuleKeyHasher<String> putArchiveMemberPath(ArchiveMemberPath path, HashCode hash) {
+  public StringRuleKeyHasher putArchiveMemberPath(ArchiveMemberPath path, HashCode hash) {
     parts.add(String.format("archiveMember(%s:%s)", path.toString(), hash));
     return this;
   }
 
   @Override
-  public RuleKeyHasher<String> putPath(Path path, HashCode hash) {
+  public StringRuleKeyHasher putPath(Path path, HashCode hash) {
     parts.add(String.format("path(%s:%s)", path, hash));
     return this;
   }
 
   @Override
-  public RuleKeyHasher<String> putNonHashingPath(String path) {
+  public StringRuleKeyHasher putNonHashingPath(String path) {
     parts.add(String.format("path(%s)", path));
     return this;
   }
 
   @Override
-  public RuleKeyHasher<String> putSourceRoot(SourceRoot sourceRoot) {
+  public StringRuleKeyHasher putSourceRoot(SourceRoot sourceRoot) {
     parts.add(String.format("sourceRoot(%s)", sourceRoot.getName()));
     return this;
   }
 
   @Override
-  public RuleKeyHasher<String> putRuleKey(RuleKey ruleKey) {
+  public StringRuleKeyHasher putRuleKey(RuleKey ruleKey) {
     parts.add(String.format("ruleKey(sha1=%s)", ruleKey.toString()));
     return this;
   }
 
   @Override
-  public RuleKeyHasher<String> putBuildRuleType(BuildRuleType buildRuleType) {
+  public StringRuleKeyHasher putBuildRuleType(BuildRuleType buildRuleType) {
     parts.add(String.format("ruleType(%s)", buildRuleType.getName()));
     return this;
   }
 
   @Override
-  public RuleKeyHasher<String> putBuildTarget(BuildTarget buildTarget) {
+  public StringRuleKeyHasher putBuildTarget(BuildTarget buildTarget) {
     parts.add(String.format("target(%s)", buildTarget.getFullyQualifiedName()));
     return this;
   }
@@ -135,13 +135,13 @@ public class StringRuleKeyHasher implements RuleKeyHasher<String> {
   }
 
   @Override
-  public RuleKeyHasher<String> putContainer(Container container, int length) {
+  public StringRuleKeyHasher putContainer(Container container, int length) {
     parts.add(String.format("container(%s,len=%s)", container, length));
     return this;
   }
 
   @Override
-  public RuleKeyHasher<String> putWrapper(Wrapper wrapper) {
+  public StringRuleKeyHasher putWrapper(Wrapper wrapper) {
     parts.add(String.format("wrapper(%s)", wrapper));
     return this;
   }
