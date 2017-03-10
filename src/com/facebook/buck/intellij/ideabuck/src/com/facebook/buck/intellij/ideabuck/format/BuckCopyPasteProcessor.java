@@ -125,7 +125,7 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
    * "/Users/tim/tb/java/com/example/activity/BUCK" -> "//java/com/example/activity:activity"
    *
    * Example 5
-   * //apps/myapp:app -> '//apps/myapp:app',
+   * //apps/myapp:app -> "//apps/myapp:app",
    */
   private String formatPasteText(String text, PsiElement element, Project project) {
     Iterable<String> paths = Splitter.on('\n').trimResults().omitEmptyStrings().split(text);
@@ -146,7 +146,7 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
 
   private String buildSolvedBuckDependency(String path) {
     StringBuilder stringBuilder = new StringBuilder();
-    stringBuilder.append('\'');
+    stringBuilder.append('"');
     if (!(path.startsWith("//") || path.startsWith(":"))) {
       if (path.startsWith("/")) {
         stringBuilder.append('/');
@@ -155,7 +155,7 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
       }
     }
     return stringBuilder.append(path)
-        .append("',")
+        .append("\",")
         .toString();
   }
 
@@ -175,7 +175,7 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
         path += ":" + lastWord;
       }
       if (element.getNode().getElementType() == TokenType.WHITE_SPACE) {
-        path = "'" + path + "',";
+        path = "\"" + path + "\",";
       }
       return path;
     } else {

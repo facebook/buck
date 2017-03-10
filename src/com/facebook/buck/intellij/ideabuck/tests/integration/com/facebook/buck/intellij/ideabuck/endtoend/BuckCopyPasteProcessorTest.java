@@ -35,21 +35,21 @@ public class BuckCopyPasteProcessorTest extends BuckTestCase {
   }
 
   public void testPasteSingleTarget1() {
-    doTest(" \n    //foo:test   \n  \n", "'//foo:test',");
+    doTest(" \n    //foo:test   \n  \n", "\"//foo:test\",");
   }
 
   public void testPasteSingleTarget2() {
-    doTest("//foo:test\n\n\n", "'//foo:test',");
+    doTest("//foo:test\n\n\n", "\"//foo:test\",");
   }
 
   public void testPasteSingleTarget3() {
-    doTest("foo:test", "'//foo:test',");
+    doTest("foo:test", "\"//foo:test\",");
   }
 
   public void testPasteMultiLineTargets() {
     doTest(
         "     //foo:test   \n\n   :another\n foo:bar\n",
-        "'//foo:test',\n':another',\n'//foo:bar',");
+        "\"//foo:test\",\n':another',\n\"//foo:bar\",");
   }
 
   public void testPasteMultiWithInvalidTarget() {

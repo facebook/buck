@@ -44,9 +44,9 @@ public class BuckLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSett
     CommonCodeStyleSettings defaultSettings = new CommonCodeStyleSettings(BuckLanguage.INSTANCE);
     CommonCodeStyleSettings.IndentOptions indentOptions = defaultSettings.initIndentOptions();
 
-    indentOptions.INDENT_SIZE = 2;
-    indentOptions.TAB_SIZE = 2;
-    indentOptions.CONTINUATION_INDENT_SIZE = 2;
+    indentOptions.INDENT_SIZE = 4;
+    indentOptions.TAB_SIZE = 4;
+    indentOptions.CONTINUATION_INDENT_SIZE = 4;
 
     defaultSettings.ALIGN_MULTILINE_PARAMETERS_IN_CALLS = true;
     defaultSettings.KEEP_BLANK_LINES_IN_DECLARATIONS = 1;
