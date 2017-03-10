@@ -24,8 +24,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 
-import java.util.Optional;
-
 /**
  * Arguments common to Apple targets.
  */
@@ -34,7 +32,6 @@ public class AppleNativeTargetDescriptionArg extends CxxLibraryDescription.Arg
   implements HasSwiftCompilerFlags {
   public ImmutableSortedMap<String, ImmutableMap<String, String>> configs = ImmutableSortedMap.of();
   public ImmutableList<SourcePath> extraXcodeSources = ImmutableList.of();
-  public Optional<String> headerPathPrefix;
   public ImmutableList<String> swiftCompilerFlags = ImmutableList.of();
 
   @Override

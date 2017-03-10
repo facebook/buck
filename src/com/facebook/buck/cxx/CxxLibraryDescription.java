@@ -1039,6 +1039,7 @@ public class CxxLibraryDescription implements
     // These fields are passed through to SwiftLibrary for mixed C/Swift targets; they are not
     // used otherwise.
     public Optional<SourcePath> bridgingHeader;
+    public Optional<String> headerPathPrefix;
     public Optional<String> moduleName;
   }
 
