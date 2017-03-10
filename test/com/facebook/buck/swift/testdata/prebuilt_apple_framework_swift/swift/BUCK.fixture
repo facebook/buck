@@ -1,0 +1,10 @@
+apple_binary(
+    name = 'SwiftHello',
+    srcs = ['main.swift'],
+    deps = ['//prebuilt:BuckTest'],
+    frameworks = [
+        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+        '$SDKROOT/System/Library/Frameworks/UIKit.framework',
+    ],
+    visibility = ['PUBLIC'],
+)

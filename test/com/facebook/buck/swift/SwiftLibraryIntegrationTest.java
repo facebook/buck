@@ -16,8 +16,12 @@
 
 package com.facebook.buck.swift;
 
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
+import com.facebook.buck.apple.ApplePlatform;
 import com.facebook.buck.apple.FakeAppleRuleDescriptions;
 import com.facebook.buck.cxx.FakeCxxLibrary;
 import com.facebook.buck.cxx.HeaderSymlinkTreeWithHeaderMap;
@@ -36,7 +40,9 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -45,6 +51,7 @@ import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -117,4 +124,17 @@ public class SwiftLibraryIntegrationTest {
     assertThat(swiftIncludeArgs.get(0), Matchers.endsWith("symlink.hmap"));
   }
 
+  @Test
+  public void testPicksPrebuiltFrameworks() throws IOException {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX),
+        is(true));
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "prebuilt_apple_framework_swift", tmpDir);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult runResult = workspace.runBuckCommand(
+        "build", "//swift:SwiftHello");
+    runResult.assertSuccess();
+  }
 }
