@@ -19,6 +19,8 @@ package com.facebook.buck.haskell;
 import com.facebook.buck.rules.ToolProvider;
 import com.google.common.collect.ImmutableList;
 
+import java.util.Optional;
+
 public interface HaskellConfig {
 
   /**
@@ -55,5 +57,10 @@ public interface HaskellConfig {
    * @return whether to cache haskell link rules.
    */
   boolean shouldCacheLinks();
+
+  /**
+   * @return whether to use the deprecated binary output location.
+   */
+  Optional<Boolean> shouldUsedOldBinaryOutputLocation();
 
 }

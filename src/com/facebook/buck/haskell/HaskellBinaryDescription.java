@@ -110,8 +110,12 @@ public class HaskellBinaryDescription implements
     // The target to use for the link rule.
     BuildTarget binaryTarget =
         params.getBuildTarget().withFlavors(
-            cxxPlatform.getFlavor(),
             ImmutableFlavor.of("binary"));
+
+    // Maintain backwards compatibility to ease upgrade flows.
+    if (haskellConfig.shouldUsedOldBinaryOutputLocation().orElse(true)) {
+      binaryTarget = binaryTarget.withAppendedFlavors(cxxPlatform.getFlavor());
+    }
 
     ImmutableSet.Builder<BuildRule> depsBuilder = ImmutableSet.builder();
     params.getDeclaredDeps().get().stream()

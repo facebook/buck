@@ -141,4 +141,9 @@ public class HaskellBuckConfig implements HaskellConfig {
     return delegate.getBooleanValue(SECTION, "cache_links", true);
   }
 
+  @Override
+  public Optional<Boolean> shouldUsedOldBinaryOutputLocation() {
+    return delegate.getBoolean(SECTION, "old_binary_output_location");
+  }
+
 }
