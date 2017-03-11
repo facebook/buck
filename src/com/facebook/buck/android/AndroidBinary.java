@@ -149,14 +149,14 @@ public class AndroidBinary
     }
   }
 
-  static enum ExopackageMode {
+  enum ExopackageMode {
     SECONDARY_DEX(1),
     NATIVE_LIBRARY(2),
     ;
 
     private final int code;
 
-    private ExopackageMode(int code) {
+    ExopackageMode(int code) {
       this.code = code;
     }
 
