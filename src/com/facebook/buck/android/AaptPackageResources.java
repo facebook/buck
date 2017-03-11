@@ -371,7 +371,7 @@ public class AaptPackageResources extends AbstractBuildRule {
         .resolve(".proguard");
   }
 
-  public Optional<SourcePath> getSourcePathtoGeneratedProguardConfigDir() {
+  public Optional<SourcePath> getSourcePathToGeneratedProguardConfigDir() {
     if (!packageType.isBuildWithObfuscation()) {
       return Optional.empty();
     }
