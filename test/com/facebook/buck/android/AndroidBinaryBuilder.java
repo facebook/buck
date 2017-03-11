@@ -118,7 +118,7 @@ public class AndroidBinaryBuilder extends
   public AndroidBinaryBuilder setIntraDexReorderResources(boolean enableReorder,
       SourcePath reorderTool,
       SourcePath reorderData) {
-    arg.reorderClassesIntraDex = Optional.of(enableReorder);
+    arg.reorderClassesIntraDex = enableReorder;
     arg.dexReorderToolFile = Optional.of(reorderTool);
     arg.dexReorderDataDumpFile = Optional.of(reorderData);
     return this;

@@ -81,13 +81,13 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         rulesToExcludeFromDex,
         enhancementResult,
         // reordering is not supported in instrumentation. TODO(onomatopoeia): add support
-        Optional.empty(),
+        false,
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
         dxExecutorService,
-        Optional.empty(),
-        Optional.empty(),
+        false,
+        false,
         apkUnderTest.getManifestEntries(),
         apkUnderTest.getJavaRuntimeLauncher());
     this.apkUnderTest = apkUnderTest;

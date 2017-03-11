@@ -220,7 +220,7 @@ public class AndroidBinary
   private final Function<String, String> macroExpander;
   @AddToRuleKey
   private final Optional<String> preprocessJavaClassesBash;
-  private final Optional<Boolean> reorderClassesIntraDex;
+  private final boolean reorderClassesIntraDex;
   private final Optional<SourcePath> dexReorderToolFile;
   private final Optional<SourcePath> dexReorderDataDumpFile;
   protected final ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex;
@@ -232,13 +232,13 @@ public class AndroidBinary
   @AddToRuleKey
   private final Optional<Integer> xzCompressionLevel;
   @AddToRuleKey
-  private final Optional<Boolean> packageAssetLibraries;
+  private final boolean packageAssetLibraries;
   @AddToRuleKey
-  private final Optional<Boolean> compressAssetLibraries;
+  private final boolean compressAssetLibraries;
   @AddToRuleKey
   private final ManifestEntries manifestEntries;
   @AddToRuleKey
-  private final Optional<Boolean> skipProguard;
+  private final boolean skipProguard;
   @AddToRuleKey
   private final JavaRuntimeLauncher javaRuntimeLauncher;
   @AddToRuleKey
@@ -269,7 +269,7 @@ public class AndroidBinary
       ProGuardObfuscateStep.SdkProguardType sdkProguardConfig,
       Optional<Integer> proguardOptimizationPasses,
       Optional<SourcePath> proguardConfig,
-      Optional<Boolean> skipProguard,
+      boolean skipProguard,
       Optional<RedexOptions> redexOptions,
       ResourceCompressionMode resourceCompressionMode,
       Set<NdkCxxPlatforms.TargetCpuType> cpuFilters,
@@ -279,13 +279,13 @@ public class AndroidBinary
       Optional<String> preprocessJavaClassesBash,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
       AndroidGraphEnhancementResult enhancementResult,
-      Optional<Boolean> reorderClassesIntraDex,
+      boolean reorderClassesIntraDex,
       Optional<SourcePath> dexReorderToolFile,
       Optional<SourcePath> dexReorderDataDumpFile,
       Optional<Integer> xzCompressionLevel,
       ListeningExecutorService dxExecutorService,
-      Optional<Boolean> packageAssetLibraries,
-      Optional<Boolean> compressAssetLibraries,
+      boolean packageAssetLibraries,
+      boolean compressAssetLibraries,
       ManifestEntries manifestEntries,
       JavaRuntimeLauncher javaRuntimeLauncher) {
     super(params);
@@ -373,7 +373,7 @@ public class AndroidBinary
     return proguardConfig;
   }
 
-  public Optional<Boolean> getSkipProguard() {
+  public boolean getSkipProguard() {
     return skipProguard;
   }
 
@@ -481,7 +481,7 @@ public class AndroidBinary
 
     for (final APKModule module : enhancementResult.getAPKModuleGraph().getAPKModules()) {
       boolean shouldPackageAssetLibraries =
-          packageAssetLibraries.orElse(Boolean.FALSE) || !module.isRootModule();
+          packageAssetLibraries || !module.isRootModule();
 
       if (!ExopackageMode.enabledForNativeLibraries(exopackageModes) &&
           enhancementResult.getCopyNativeLibraries().isPresent() &&
@@ -663,7 +663,7 @@ public class AndroidBinary
           }
         });
 
-    if (packageAssetLibraries.orElse(Boolean.FALSE) || !module.isRootModule()) {
+    if (packageAssetLibraries || !module.isRootModule()) {
       if (enhancementResult.getCopyNativeLibraries().isPresent() &&
           enhancementResult.getCopyNativeLibraries().get().containsKey(module)) {
         // Copy in cxx libraries marked as assets. Filtering and renaming was already done
@@ -727,7 +727,7 @@ public class AndroidBinary
             }
           });
     }
-    if (compressAssetLibraries.orElse(Boolean.FALSE) || !module.isRootModule()) {
+    if (compressAssetLibraries || !module.isRootModule()) {
       final ImmutableList.Builder<Path> outputAssetLibrariesBuilder = ImmutableList.builder();
       steps.add(
           new AbstractExecutionStep("rename_asset_libraries_as_temp_files_" + module.getName()) {
@@ -853,7 +853,7 @@ public class AndroidBinary
           packageableCollection.getProguardConfigs().stream()
               .map(resolver::getAbsolutePath)
               .collect(MoreCollectors.toImmutableSet()),
-          skipProguard.orElse(false),
+          skipProguard,
           steps,
           buildableContext,
           resolver);
@@ -1054,12 +1054,6 @@ public class AndroidBinary
     }
   }
 
-  /** Helper method to check whether intra-dex reordering is enabled
-   */
-  private boolean isReorderingClasses() {
-    return (reorderClassesIntraDex.isPresent() && reorderClassesIntraDex.get());
-  }
-
   /**
    * Create dex artifacts for all of the individual directories of compiled .class files (or
    * the obfuscated jar files if proguard is used).  If split dex is used, multiple dex artifacts
@@ -1151,7 +1145,7 @@ public class AndroidBinary
           additionalDexStoresZipDir,
           proguardFullConfigFile,
           proguardMappingFile,
-          skipProguard.orElse(false),
+          skipProguard,
           dexSplitMode,
           dexSplitMode.getPrimaryDexScenarioFile().map(resolver::getAbsolutePath),
           dexSplitMode.getPrimaryDexClassesFile().map(resolver::getAbsolutePath),
@@ -1164,7 +1158,7 @@ public class AndroidBinary
 
       // Add the secondary dex directory that has yet to be created, but will be by the
       // smart dexing command.  Smart dex will handle "cleaning" this directory properly.
-      if (isReorderingClasses()) {
+      if (reorderClassesIntraDex) {
         secondaryDexDir = Optional.of(secondaryDexParentDir.resolve(
               SMART_DEX_SECONDARY_DEX_SUBDIR));
         Path intraDexReorderSecondaryDexDir = secondaryDexParentDir.resolve(SECONDARY_DEX_SUBDIR);
@@ -1241,7 +1235,7 @@ public class AndroidBinary
         ? EnumSet.of(DxStep.Option.NO_LOCALS)
         : EnumSet.of(DxStep.Option.NO_OPTIMIZE);
     Path selectedPrimaryDexPath = primaryDexPath;
-    if (isReorderingClasses()) {
+    if (reorderClassesIntraDex) {
       String primaryDexFileName = primaryDexPath.getFileName().toString();
       String smartDexPrimaryDexFileName = "smart-dex-" + primaryDexFileName;
       Path smartDexPrimaryDexPath = Paths.get(primaryDexPath.toString().replace(primaryDexFileName,
@@ -1261,7 +1255,7 @@ public class AndroidBinary
         xzCompressionLevel);
     steps.add(smartDexingCommand);
 
-    if (isReorderingClasses()) {
+    if (reorderClassesIntraDex) {
       IntraDexReorderStep intraDexReorderStep = new IntraDexReorderStep(
           getProjectFilesystem(),
           resolver.getAbsolutePath(dexReorderToolFile.get()),

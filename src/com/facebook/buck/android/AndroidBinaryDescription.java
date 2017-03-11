@@ -514,12 +514,12 @@ public class AndroidBinaryDescription implements
     public Set<TargetCpuType> cpuFilters = ImmutableSet.of();
     public ImmutableSortedSet<BuildTarget> preprocessJavaClassesDeps = ImmutableSortedSet.of();
     public Optional<String> preprocessJavaClassesBash;
-    public Optional<Boolean> reorderClassesIntraDex;
+    public boolean reorderClassesIntraDex = false;
     public Optional<SourcePath> dexReorderToolFile;
     public Optional<SourcePath> dexReorderDataDumpFile;
     public Optional<Integer> xzCompressionLevel;
-    public Optional<Boolean> packageAssetLibraries;
-    public Optional<Boolean> compressAssetLibraries;
+    public boolean packageAssetLibraries = false;
+    public boolean compressAssetLibraries = false;
     public Map<String, List<Pattern>> nativeLibraryMergeMap = ImmutableMap.of();
     public Optional<BuildTarget> nativeLibraryMergeGlue;
     public Optional<BuildTarget> nativeLibraryMergeCodeGenerator;
@@ -531,7 +531,7 @@ public class AndroidBinaryDescription implements
     public ImmutableList<String> redexExtraArgs = ImmutableList.of();
 
     public Optional<SourcePath> buildConfigValuesFile;
-    public Optional<Boolean> skipProguard;
+    public boolean skipProguard = false;
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
 
