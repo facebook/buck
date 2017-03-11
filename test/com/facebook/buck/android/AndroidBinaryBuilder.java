@@ -78,7 +78,7 @@ public class AndroidBinaryBuilder extends
   }
 
   public AndroidBinaryBuilder setShouldSplitDex(boolean shouldSplitDex) {
-    arg.useSplitDex = Optional.of(shouldSplitDex);
+    arg.useSplitDex = shouldSplitDex;
     return this;
   }
 
@@ -93,7 +93,7 @@ public class AndroidBinaryBuilder extends
   }
 
   public AndroidBinaryBuilder setPrimaryDexScenarioOverflowAllowed(boolean allowed) {
-    arg.primaryDexScenarioOverflowAllowed = Optional.of(allowed);
+    arg.primaryDexScenarioOverflowAllowed = allowed;
     return this;
   }
 
