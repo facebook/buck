@@ -777,7 +777,9 @@ public class KnownBuildRuleTypes {
     builder.register(new PrebuiltPythonLibraryDescription());
     builder.register(new ProjectConfigDescription());
     builder.register(pythonBinaryDescription);
-    builder.register(new PythonLibraryDescription());
+    PythonLibraryDescription pythonLibraryDescription =
+        new PythonLibraryDescription(pythonPlatforms);
+    builder.register(pythonLibraryDescription);
     builder.register(
         new PythonTestDescription(
             pythonBinaryDescription,
@@ -820,9 +822,18 @@ public class KnownBuildRuleTypes {
                     thriftBuckConfig,
                     cxxLibraryDescription,
                     /* cpp2 */ true),
-                new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.NORMAL),
-                new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.TWISTED),
-                new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.ASYNCIO))));
+                new ThriftPythonEnhancer(
+                    thriftBuckConfig,
+                    ThriftPythonEnhancer.Type.NORMAL,
+                    pythonLibraryDescription),
+                new ThriftPythonEnhancer(
+                    thriftBuckConfig,
+                    ThriftPythonEnhancer.Type.TWISTED,
+                    pythonLibraryDescription),
+                new ThriftPythonEnhancer(
+                    thriftBuckConfig,
+                    ThriftPythonEnhancer.Type.ASYNCIO,
+                    pythonLibraryDescription))));
     builder.register(new WorkerToolDescription(config));
     builder.register(new XcodePostbuildScriptDescription());
     builder.register(new XcodePrebuildScriptDescription());

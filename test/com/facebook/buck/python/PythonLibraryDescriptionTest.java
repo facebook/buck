@@ -28,20 +28,26 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.versions.FixedVersionSelector;
 import com.facebook.buck.versions.Version;
+import com.facebook.buck.versions.VersionedAliasBuilder;
+import com.facebook.buck.versions.VersionedTargetGraphBuilder;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Paths;
+import java.util.concurrent.ForkJoinPool;
 import java.util.regex.Pattern;
 
 public class PythonLibraryDescriptionTest {
@@ -80,7 +86,7 @@ public class PythonLibraryDescriptionTest {
             .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(source)))
             .setBaseModule(baseModule);
     TargetGraph withBaseModuleTargetGraph =
-        TargetGraphFactory.newInstance(normalBuilder.build());
+        TargetGraphFactory.newInstance(withBaseModuleBuilder.build());
     PythonLibrary withBaseModule =
         withBaseModuleBuilder.build(
             new BuildRuleResolver(
@@ -157,13 +163,18 @@ public class PythonLibraryDescriptionTest {
 
   @Test
   public void versionedSrcs() throws Exception {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
     SourcePath matchedSource = new FakeSourcePath("foo/a.py");
     SourcePath unmatchedSource = new FakeSourcePath("foo/b.py");
-    GenruleBuilder depBuilder =
-        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+    GenruleBuilder transitiveDepBuilder =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:tdep"))
             .setOut("out");
+    VersionedAliasBuilder depBuilder =
+        new VersionedAliasBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setVersions(
+                ImmutableMap.of(
+                    Version.of("1.0"), transitiveDepBuilder.getTarget(),
+                    Version.of("2.0"), transitiveDepBuilder.getTarget()));
     AbstractNodeBuilder<?, ?, ?> builder =
         new PythonLibraryBuilder(target)
             .setVersionedSrcs(
@@ -174,15 +185,24 @@ public class PythonLibraryDescriptionTest {
                     .add(
                         ImmutableMap.of(depBuilder.getTarget(), Version.of("2.0")),
                         SourceList.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
-                    .build())
-            .setSelectedVersions(ImmutableMap.of(depBuilder.getTarget(), Version.of("1.0")));
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(depBuilder.build(), builder.build());
+                    .build());
+    TargetGraph targetGraph =
+        VersionedTargetGraphBuilder.transform(
+            new FixedVersionSelector(
+                ImmutableMap.of(
+                    builder.getTarget(),
+                    ImmutableMap.of(depBuilder.getTarget(), Version.of("1.0")))),
+            TargetGraphAndBuildTargets.of(
+                TargetGraphFactory.newInstance(
+                    transitiveDepBuilder.build(),
+                    depBuilder.build(),
+                    builder.build()),
+                ImmutableSet.of(builder.getTarget())),
+            new ForkJoinPool())
+            .getTargetGraph();
     BuildRuleResolver resolver =
-        new BuildRuleResolver(
-            targetGraph,
-            new DefaultTargetNodeToBuildRuleTransformer());
-    depBuilder.build(resolver, filesystem, targetGraph);
-    PythonLibrary library = (PythonLibrary) builder.build(resolver, filesystem, targetGraph);
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    PythonLibrary library = (PythonLibrary) resolver.requireRule(builder.getTarget());
     assertThat(
         library.getSrcs(PythonTestUtils.PYTHON_PLATFORM).values(),
         Matchers.contains(matchedSource));
@@ -190,13 +210,18 @@ public class PythonLibraryDescriptionTest {
 
   @Test
   public void versionedResources() throws Exception {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
     SourcePath matchedSource = new FakeSourcePath("foo/a.py");
     SourcePath unmatchedSource = new FakeSourcePath("foo/b.py");
-    GenruleBuilder depBuilder =
-        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+    GenruleBuilder transitiveDepBuilder =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:tdep"))
             .setOut("out");
+    VersionedAliasBuilder depBuilder =
+        new VersionedAliasBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setVersions(
+                ImmutableMap.of(
+                    Version.of("1.0"), transitiveDepBuilder.getTarget(),
+                    Version.of("2.0"), transitiveDepBuilder.getTarget()));
     AbstractNodeBuilder<?, ?, ?> builder =
         new PythonLibraryBuilder(target)
             .setVersionedResources(
@@ -207,15 +232,24 @@ public class PythonLibraryDescriptionTest {
                     .add(
                         ImmutableMap.of(depBuilder.getTarget(), Version.of("2.0")),
                         SourceList.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
-                    .build())
-            .setSelectedVersions(ImmutableMap.of(depBuilder.getTarget(), Version.of("1.0")));
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(depBuilder.build(), builder.build());
+                    .build());
+    TargetGraph targetGraph =
+        VersionedTargetGraphBuilder.transform(
+            new FixedVersionSelector(
+                ImmutableMap.of(
+                    builder.getTarget(),
+                    ImmutableMap.of(depBuilder.getTarget(), Version.of("1.0")))),
+            TargetGraphAndBuildTargets.of(
+                TargetGraphFactory.newInstance(
+                    transitiveDepBuilder.build(),
+                    depBuilder.build(),
+                    builder.build()),
+                ImmutableSet.of(builder.getTarget())),
+            new ForkJoinPool())
+            .getTargetGraph();
     BuildRuleResolver resolver =
-        new BuildRuleResolver(
-            targetGraph,
-            new DefaultTargetNodeToBuildRuleTransformer());
-    depBuilder.build(resolver, filesystem, targetGraph);
-    PythonLibrary library = (PythonLibrary) builder.build(resolver, filesystem, targetGraph);
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    PythonLibrary library = (PythonLibrary) resolver.requireRule(builder.getTarget());
     assertThat(
         library.getResources(PythonTestUtils.PYTHON_PLATFORM).values(),
         Matchers.contains(matchedSource));

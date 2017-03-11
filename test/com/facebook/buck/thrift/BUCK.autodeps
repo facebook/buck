@@ -1,4 +1,18 @@
 {
+  "testutil" : {
+    "deps" : [
+      "//test/com/facebook/buck/cli:FakeBuckConfig",
+      "//test/com/facebook/buck/python:testutil",
+      "//test/com/facebook/buck/testutil:testutil"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/thrift:thrift",
+      "//test/com/facebook/buck/rules:testutil",
+      "//third-party/java/guava:guava"
+    ]
+  },
   "thrift" : {
     "deps" : [
       "//src/com/facebook/buck/cli:config",
@@ -46,6 +60,7 @@
       "//test/com/facebook/buck/step:testutil",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:util",
+      "//test/com/facebook/buck/thrift:testutil",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:hamcrest-junit",
       "//third-party/java/hamcrest:java-hamcrest",

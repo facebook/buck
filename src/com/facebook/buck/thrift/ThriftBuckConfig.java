@@ -104,16 +104,16 @@ public class ThriftBuckConfig {
     return delegate.getRequiredBuildTarget(SECTION, "cpp_json_library");
   }
 
-  public BuildTarget getPythonDep() {
-    return delegate.getRequiredBuildTarget(SECTION, "python_library");
+  public Optional<BuildTarget> getPythonDep() {
+    return delegate.getBuildTarget(SECTION, "python_library");
   }
 
-  public BuildTarget getPythonTwistedDep() {
-    return delegate.getRequiredBuildTarget(SECTION, "python_twisted_library");
+  public Optional<BuildTarget> getPythonTwistedDep() {
+    return delegate.getBuildTarget(SECTION, "python_twisted_library");
   }
 
-  public BuildTarget getPythonAsyncioDep() {
-    return delegate.getRequiredBuildTarget(SECTION, "python_asyncio_library");
+  public Optional<BuildTarget> getPythonAsyncioDep() {
+    return delegate.getBuildTarget(SECTION, "python_asyncio_library");
   }
 
 }

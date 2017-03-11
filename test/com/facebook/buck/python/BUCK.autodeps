@@ -51,6 +51,7 @@
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/versions:translator",
       "//src/com/facebook/buck/versions:types",
+      "//src/com/facebook/buck/versions:versions",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/cxx:testutil",
       "//test/com/facebook/buck/io:testutil",

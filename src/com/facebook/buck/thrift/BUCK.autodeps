@@ -4,7 +4,6 @@
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/jvm/java:rules",
       "//src/com/facebook/buck/jvm/java:steps",
-      "//src/com/facebook/buck/python:support",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:util",

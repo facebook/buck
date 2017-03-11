@@ -313,12 +313,13 @@ public abstract class TargetNodeTranslator {
     Optional<ImmutableSet<BuildTarget>> extraDeps =
         translateSet(cellPathResolver, pattern, node.getExtraDeps());
 
-    Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
+    Optional<ImmutableMap<BuildTarget, Version>> newSelectedVersions =
         getSelectedVersions(node.getBuildTarget());
     Optional<ImmutableMap<BuildTarget, Version>> oldSelectedVersions = node.getSelectedVersions();
-    if (oldSelectedVersions.equals(selectedVersions)) {
-      selectedVersions = Optional.empty();
-    }
+    Optional<Optional<ImmutableMap<BuildTarget, Version>>> selectedVersions =
+        oldSelectedVersions.equals(newSelectedVersions) ?
+            Optional.empty() :
+            Optional.of(newSelectedVersions);
 
     // If nothing has changed, don't generate a new node.
     if (!target.isPresent() &&
@@ -335,7 +336,7 @@ public abstract class TargetNodeTranslator {
             constructorArg.orElse(node.getConstructorArg()),
             declaredDeps.orElse(node.getDeclaredDeps()),
             extraDeps.orElse(node.getExtraDeps()),
-            selectedVersions));
+            selectedVersions.orElse(oldSelectedVersions)));
   }
 
 }

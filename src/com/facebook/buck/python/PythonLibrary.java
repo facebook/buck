@@ -16,67 +16,59 @@
 
 package com.facebook.buck.python;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
-
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 public class PythonLibrary extends NoopBuildRule implements PythonPackagable, HasRuntimeDeps {
 
-  private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
+  private final BuildRuleResolver resolver;
 
-  private final Function<? super PythonPlatform, ImmutableMap<Path, SourcePath>> srcs;
-  private final Function<? super PythonPlatform, ImmutableMap<Path, SourcePath>> resources;
-  private final Optional<Boolean> zipSafe;
-
-  public PythonLibrary(
+  PythonLibrary(
       BuildRuleParams params,
-      Function<? super PythonPlatform, ImmutableMap<Path, SourcePath>> srcs,
-      Function<? super PythonPlatform, ImmutableMap<Path, SourcePath>> resources,
-      Optional<Boolean> zipSafe) {
+      BuildRuleResolver resolver) {
     super(params);
-    this.srcs = srcs;
-    this.resources = resources;
-    this.zipSafe = zipSafe;
+    this.resolver = resolver;
+  }
+
+  private PythonPackageComponents getPythonPackageComponents(
+      PythonPlatform pythonPlatform)
+      throws NoSuchBuildTargetException {
+    return resolver
+        .requireMetadata(
+            getBuildTarget().withAppendedFlavors(
+                PythonLibraryDescription.MetadataType.PACKAGE_COMPONENTS.getFlavor(),
+                pythonPlatform.getFlavor()),
+            PythonPackageComponents.class)
+        .orElseThrow(IllegalStateException::new);
   }
 
   @Override
   public PythonPackageComponents getPythonPackageComponents(
       PythonPlatform pythonPlatform,
-      CxxPlatform cxxPlatform) {
-    return PythonPackageComponents.of(
-        Preconditions.checkNotNull(srcs.apply(pythonPlatform)),
-        Preconditions.checkNotNull(resources.apply(pythonPlatform)),
-        ImmutableMap.of(),
-        ImmutableSet.of(),
-        zipSafe);
+      CxxPlatform cxxPlatform)
+      throws NoSuchBuildTargetException {
+    return getPythonPackageComponents(pythonPlatform);
   }
 
-  @Override
-  public BuildableProperties getProperties() {
-    return OUTPUT_TYPE;
+  public ImmutableMap<Path, SourcePath> getSrcs(PythonPlatform pythonPlatform)
+      throws NoSuchBuildTargetException {
+    return getPythonPackageComponents(pythonPlatform).getModules();
   }
 
-  public ImmutableMap<Path, SourcePath> getSrcs(PythonPlatform pythonPlatform) {
-    return Preconditions.checkNotNull(srcs.apply(pythonPlatform));
-  }
-
-  public ImmutableMap<Path, SourcePath> getResources(PythonPlatform pythonPlatform) {
-    return Preconditions.checkNotNull(resources.apply(pythonPlatform));
+  public ImmutableMap<Path, SourcePath> getResources(PythonPlatform pythonPlatform)
+      throws NoSuchBuildTargetException {
+    return getPythonPackageComponents(pythonPlatform).getResources();
   }
 
   @Override

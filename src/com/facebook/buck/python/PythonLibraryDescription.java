@@ -17,13 +17,19 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorConvertible;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasTests;
+import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.python.PythonLibraryDescription.Arg;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
+import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -34,13 +40,24 @@ import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Optional;
 
 public class PythonLibraryDescription
-    implements Description<Arg>, VersionPropagator<Arg> {
+    implements Description<Arg>, VersionPropagator<Arg>, MetadataProvidingDescription<Arg> {
+
+  private final FlavorDomain<PythonPlatform> pythonPlatforms;
+
+  private static final FlavorDomain<MetadataType> METADATA_TYPE =
+      FlavorDomain.from("Python Metadata Type", MetadataType.class);
+
+  public PythonLibraryDescription(FlavorDomain<PythonPlatform> pythonPlatforms) {
+    this.pythonPlatforms = pythonPlatforms;
+  }
 
   @Override
   public Arg createUnpopulatedConstructorArg() {
@@ -50,51 +67,97 @@ public class PythonLibraryDescription
   @Override
   public <A extends Arg> PythonLibrary createBuildRule(
       TargetGraph targetGraph,
-      final BuildRuleParams params,
+      BuildRuleParams params,
       BuildRuleResolver resolver,
-      final A args) {
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
-    Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
-        targetGraph.get(params.getBuildTarget()).getSelectedVersions();
-    return new PythonLibrary(
-        params,
-        pythonPlatform ->
-            PythonUtil.getModules(
-                params.getBuildTarget(),
-                pathResolver,
-                "srcs",
-                baseModule,
-                args.srcs,
-                args.platformSrcs,
-                pythonPlatform,
-                args.versionedSrcs,
-                selectedVersions),
-        pythonPlatform ->
-            PythonUtil.getModules(
-                params.getBuildTarget(),
-                pathResolver,
-                "resources",
-                baseModule,
-                args.resources,
-                args.platformResources,
-                pythonPlatform,
-                args.versionedResources,
-                selectedVersions),
-        args.zipSafe);
+      A args) {
+    return new PythonLibrary(params, resolver);
+  }
+
+  @Override
+  public <A extends Arg, U> Optional<U> createMetadata(
+      BuildTarget buildTarget,
+      BuildRuleResolver resolver,
+      A args,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
+      Class<U> metadataClass)
+      throws NoSuchBuildTargetException {
+
+    Map.Entry<Flavor, MetadataType> type =
+        METADATA_TYPE.getFlavorAndValue(buildTarget).orElseThrow(IllegalArgumentException::new);
+    BuildTarget baseTarget = buildTarget.withoutFlavors(type.getKey());
+    switch (type.getValue()) {
+      case PACKAGE_COMPONENTS: {
+        Map.Entry<Flavor, PythonPlatform> pythonPlatform =
+            pythonPlatforms.getFlavorAndValue(baseTarget)
+                .orElseThrow(IllegalArgumentException::new);
+        baseTarget = buildTarget.withoutFlavors(pythonPlatform.getKey());
+
+        SourcePathResolver pathResolver =
+            new SourcePathResolver(new SourcePathRuleFinder(resolver));
+        Path baseModule = PythonUtil.getBasePath(baseTarget, args.baseModule);
+        PythonPackageComponents components =
+            PythonPackageComponents.of(
+                PythonUtil.getModules(
+                    baseTarget,
+                    pathResolver,
+                    "srcs",
+                    baseModule,
+                    args.srcs,
+                    args.platformSrcs,
+                    pythonPlatform.getValue(),
+                    args.versionedSrcs,
+                    selectedVersions),
+                PythonUtil.getModules(
+                    baseTarget,
+                    pathResolver,
+                    "resources",
+                    baseModule,
+                    args.resources,
+                    args.platformResources,
+                    pythonPlatform.getValue(),
+                    args.versionedResources,
+                    selectedVersions),
+                ImmutableMap.of(),
+                ImmutableSet.of(),
+                args.zipSafe);
+
+        return Optional.of(components).map(metadataClass::cast);
+      }
+    }
+
+    throw new IllegalStateException();
+  }
+
+  enum MetadataType implements FlavorConvertible {
+
+    PACKAGE_COMPONENTS(ImmutableFlavor.of("package-components")),
+    ;
+
+    private final Flavor flavor;
+
+    MetadataType(Flavor flavor) {
+      this.flavor = flavor;
+    }
+
+
+    @Override
+    public Flavor getFlavor() {
+      return flavor;
+    }
+
   }
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg implements HasTests {
     public SourceList srcs = SourceList.EMPTY;
-    public Optional<VersionMatchedCollection<SourceList>> versionedSrcs;
+    public Optional<VersionMatchedCollection<SourceList>> versionedSrcs = Optional.empty();
     public PatternMatchedCollection<SourceList> platformSrcs = PatternMatchedCollection.of();
     public SourceList resources = SourceList.EMPTY;
     public Optional<VersionMatchedCollection<SourceList>> versionedResources;
     public PatternMatchedCollection<SourceList> platformResources = PatternMatchedCollection.of();
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    public Optional<String> baseModule;
-    public Optional<Boolean> zipSafe;
+    public Optional<String> baseModule = Optional.empty();
+    public Optional<Boolean> zipSafe = Optional.empty();
     @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
 
     @Override

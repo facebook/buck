@@ -25,6 +25,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.python.PythonLibrary;
+import com.facebook.buck.python.PythonLibraryDescription;
 import com.facebook.buck.python.PythonTestUtils;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -39,6 +40,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -58,15 +60,18 @@ public class ThriftPythonEnhancerTest {
   private static final ThriftPythonEnhancer ENHANCER =
       new ThriftPythonEnhancer(
           THRIFT_BUCK_CONFIG,
-          ThriftPythonEnhancer.Type.NORMAL);
+          ThriftPythonEnhancer.Type.NORMAL,
+          new PythonLibraryDescription(PythonTestUtils.PYTHON_PLATFORMS));
   private static final ThriftPythonEnhancer TWISTED_ENHANCER =
       new ThriftPythonEnhancer(
           THRIFT_BUCK_CONFIG,
-          ThriftPythonEnhancer.Type.TWISTED);
+          ThriftPythonEnhancer.Type.TWISTED,
+          new PythonLibraryDescription(PythonTestUtils.PYTHON_PLATFORMS));
   private static final ThriftPythonEnhancer ASYNCIO_ENHANCER =
       new ThriftPythonEnhancer(
           THRIFT_BUCK_CONFIG,
-          ThriftPythonEnhancer.Type.ASYNCIO);
+          ThriftPythonEnhancer.Type.ASYNCIO,
+          new PythonLibraryDescription(PythonTestUtils.PYTHON_PLATFORMS));
 
   private static FakeBuildRule createFakeBuildRule(
       String target,
@@ -195,15 +200,18 @@ public class ThriftPythonEnhancerTest {
     ThriftPythonEnhancer enhancer =
         new ThriftPythonEnhancer(
             thriftBuckConfig,
-            ThriftPythonEnhancer.Type.NORMAL);
+            ThriftPythonEnhancer.Type.NORMAL,
+            new PythonLibraryDescription(PythonTestUtils.PYTHON_PLATFORMS));
     ThriftPythonEnhancer twistedEnhancer =
         new ThriftPythonEnhancer(
             thriftBuckConfig,
-            ThriftPythonEnhancer.Type.TWISTED);
+            ThriftPythonEnhancer.Type.TWISTED,
+            new PythonLibraryDescription(PythonTestUtils.PYTHON_PLATFORMS));
     ThriftPythonEnhancer asyncioEnhancer =
         new ThriftPythonEnhancer(
             thriftBuckConfig,
-            ThriftPythonEnhancer.Type.ASYNCIO);
+            ThriftPythonEnhancer.Type.ASYNCIO,
+            new PythonLibraryDescription(PythonTestUtils.PYTHON_PLATFORMS));
 
     // With no options we just need to find the python thrift library.
     expectImplicitDeps(
@@ -265,152 +273,113 @@ public class ThriftPythonEnhancerTest {
   }
 
   @Test
-  public void baseModule() {
+  public void baseModule() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//test:test");
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    BuildRuleParams flavoredParams =
-        new FakeBuildRuleParamsBuilder(target).build();
-
-    // Add a dummy dependency to the constructor arg to make sure it gets through.
-    ThriftConstructorArg arg = new ThriftConstructorArg();
-    arg.pyOptions = ImmutableSet.of();
-
-    // Setup up some thrift inputs to pass to the createBuildRule method.
-    ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
-        "test.thrift", new ThriftSource(
-            "test.thrift",
-            resolver.addToIndex(createFakeThriftCompiler("//:thrift_source#py")).getBuildTarget(),
-            ImmutableList.of()));
+    ThriftLibraryBuilder libraryBuilder =
+        ThriftLibraryBuilder.from(target)
+            .setSrcs(ImmutableMap.of(new FakeSourcePath("test/test.thrift"), ImmutableList.of()));
 
     // Verify that not setting the base module parameter defaults to the build target base path.
-    arg.pyBaseModule = Optional.empty();
-    PythonLibrary normal = ENHANCER
-        .createBuildRule(
-            TargetGraph.EMPTY,
-            flavoredParams,
-            resolver,
-            arg,
-            sources,
-            ImmutableSortedSet.of());
-    for (ImmutableMap.Entry<Path, SourcePath> ent :
-         normal.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
-      assertTrue(ent.getKey().toString(), ent.getKey().startsWith(target.getBasePath()));
-    }
-
-    // Verify that setting the base module uses it correctly.
-    arg.pyBaseModule = Optional.of("blah");
-    PythonLibrary baseModule = ENHANCER
-        .createBuildRule(
-            TargetGraph.EMPTY,
-            flavoredParams,
-            resolver,
-            arg,
-            sources,
-            ImmutableSortedSet.of());
-    for (ImmutableMap.Entry<Path, SourcePath> ent :
-         baseModule.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
-      assertTrue(ent.getKey().startsWith(Paths.get(arg.pyBaseModule.get())));
-    }
-  }
-
-  @Test
-  public void twistedBaseModule() {
-    BuildTarget target = BuildTargetFactory.newInstance("//test:test");
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    BuildRuleParams flavoredParams =
-        new FakeBuildRuleParamsBuilder(target).build();
-
-    // Add a dummy dependency to the constructor arg to make sure it gets through.
-    ThriftConstructorArg arg = new ThriftConstructorArg();
-    arg.pyOptions = ImmutableSet.of();
-
-    // Setup up some thrift inputs to pass to the createBuildRule method.
-    ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
-        "test.thrift", new ThriftSource(
-            "test.thrift",
-            resolver.addToIndex(createFakeThriftCompiler("//:thrift_source#py")).getBuildTarget(),
-            ImmutableList.of()));
-
-    // Verify that not setting the base module parameter defaults to the build target base path.
-    arg.pyTwistedBaseModule = Optional.empty();
-    PythonLibrary normal = TWISTED_ENHANCER
-        .createBuildRule(
-            TargetGraph.EMPTY,
-            flavoredParams,
-            resolver,
-            arg,
-            sources,
-            ImmutableSortedSet.of());
-    for (ImmutableMap.Entry<Path, SourcePath> ent :
-         normal.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
-      assertTrue(ent.getKey().toString(), ent.getKey().startsWith(target.getBasePath()));
-    }
-
-    // Verify that setting the base module uses it correctly.
-    arg.pyTwistedBaseModule = Optional.of("blah");
-    PythonLibrary baseModule = TWISTED_ENHANCER
-        .createBuildRule(
-            TargetGraph.EMPTY,
-            flavoredParams,
-            resolver,
-            arg,
-            sources,
-            ImmutableSortedSet.of());
-    for (ImmutableMap.Entry<Path, SourcePath> ent :
-         baseModule.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
-      assertTrue(ent.getKey().startsWith(Paths.get(arg.pyTwistedBaseModule.get())));
-    }
-  }
-
-  @Test
-  public void asyncioBaseModule() {
-    BuildTarget target = BuildTargetFactory.newInstance("//test:test");
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    BuildRuleParams flavoredParams =
-        new FakeBuildRuleParamsBuilder(target).build();
-
-    // Add a dummy dependency to the constructor arg to make sure it gets through.
-    ThriftConstructorArg arg = new ThriftConstructorArg();
-    arg.pyOptions = ImmutableSet.of();
-
-    // Setup up some thrift inputs to pass to the createBuildRule method.
-    ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
-        "test.thrift", new ThriftSource(
-            "test.thrift",
-            resolver.addToIndex(createFakeThriftCompiler("//:thrift_source#py")).getBuildTarget(),
-            ImmutableList.of()));
-
-    // Verify that not setting the base module parameter defaults to the build target base path.
-    arg.pyAsyncioBaseModule = Optional.empty();
+    BuildRuleResolver normalResolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(libraryBuilder.build()),
+            new DefaultTargetNodeToBuildRuleTransformer());
     PythonLibrary normal =
-        ASYNCIO_ENHANCER.createBuildRule(
-            TargetGraph.EMPTY,
-            flavoredParams,
-            resolver,
-            arg,
-            sources,
-            ImmutableSortedSet.of());
+        (PythonLibrary) normalResolver.requireRule(
+            libraryBuilder.getTarget().withAppendedFlavors(
+                ThriftPythonEnhancer.PYTHON_FLAVOR));
     for (ImmutableMap.Entry<Path, SourcePath> ent :
         normal.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
       assertTrue(ent.getKey().toString(), ent.getKey().startsWith(target.getBasePath()));
     }
 
     // Verify that setting the base module uses it correctly.
-    arg.pyAsyncioBaseModule = Optional.of("blah");
+    libraryBuilder.setPyBaseModule("blah");
+    BuildRuleResolver baseModuleResolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(libraryBuilder.build()),
+            new DefaultTargetNodeToBuildRuleTransformer());
     PythonLibrary baseModule =
-        ASYNCIO_ENHANCER.createBuildRule(
-            TargetGraph.EMPTY,
-            flavoredParams,
-            resolver,
-            arg,
-            sources,
-            ImmutableSortedSet.of());
+        (PythonLibrary) baseModuleResolver.requireRule(
+            libraryBuilder.getTarget().withAppendedFlavors(
+                ThriftPythonEnhancer.PYTHON_FLAVOR));
     for (ImmutableMap.Entry<Path, SourcePath> ent :
         baseModule.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
-      assertTrue(ent.getKey().startsWith(Paths.get(arg.pyAsyncioBaseModule.get())));
+      assertTrue(ent.getKey().toString().startsWith("blah"));
+    }
+  }
+
+  @Test
+  public void twistedBaseModule() throws Exception {
+    BuildTarget target = BuildTargetFactory.newInstance("//test:test");
+    ThriftLibraryBuilder libraryBuilder =
+        ThriftLibraryBuilder.from(target)
+            .setSrcs(ImmutableMap.of(new FakeSourcePath("test/test.thrift"), ImmutableList.of()));
+
+    // Verify that not setting the base module parameter defaults to the build target base path.
+    BuildRuleResolver normalResolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(libraryBuilder.build()),
+            new DefaultTargetNodeToBuildRuleTransformer());
+    PythonLibrary normal =
+        (PythonLibrary) normalResolver.requireRule(
+            libraryBuilder.getTarget().withAppendedFlavors(
+                ThriftPythonEnhancer.PYTHON_TWISTED_FLAVOR));
+    for (ImmutableMap.Entry<Path, SourcePath> ent :
+        normal.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
+      assertTrue(ent.getKey().toString(), ent.getKey().startsWith(target.getBasePath()));
+    }
+
+    // Verify that setting the base module uses it correctly.
+    libraryBuilder.setPyTwistedBaseModule("blah");
+    BuildRuleResolver baseModuleResolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(libraryBuilder.build()),
+            new DefaultTargetNodeToBuildRuleTransformer());
+    PythonLibrary baseModule =
+        (PythonLibrary) baseModuleResolver.requireRule(
+            libraryBuilder.getTarget().withAppendedFlavors(
+                ThriftPythonEnhancer.PYTHON_TWISTED_FLAVOR));
+    for (ImmutableMap.Entry<Path, SourcePath> ent :
+        baseModule.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
+      assertTrue(ent.getKey().toString().startsWith("blah"));
+    }
+  }
+
+  @Test
+  public void asyncioBaseModule() throws Exception {
+    BuildTarget target = BuildTargetFactory.newInstance("//test:test");
+    ThriftLibraryBuilder libraryBuilder =
+        ThriftLibraryBuilder.from(target)
+            .setSrcs(ImmutableMap.of(new FakeSourcePath("test/test.thrift"), ImmutableList.of()));
+
+    // Verify that not setting the base module parameter defaults to the build target base path.
+    BuildRuleResolver normalResolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(libraryBuilder.build()),
+            new DefaultTargetNodeToBuildRuleTransformer());
+    PythonLibrary normal =
+        (PythonLibrary) normalResolver.requireRule(
+            libraryBuilder.getTarget().withAppendedFlavors(
+                ThriftPythonEnhancer.PYTHON_ASYNCIO_FLAVOR));
+    for (ImmutableMap.Entry<Path, SourcePath> ent :
+         normal.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
+      assertTrue(ent.getKey().toString(), ent.getKey().startsWith(target.getBasePath()));
+    }
+
+    // Verify that setting the base module uses it correctly.
+    libraryBuilder.setPyAsyncioBaseModule("blah");
+    BuildRuleResolver baseModuleResolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(libraryBuilder.build()),
+            new DefaultTargetNodeToBuildRuleTransformer());
+    PythonLibrary baseModule =
+        (PythonLibrary) baseModuleResolver.requireRule(
+            libraryBuilder.getTarget().withAppendedFlavors(
+                ThriftPythonEnhancer.PYTHON_ASYNCIO_FLAVOR));
+    for (ImmutableMap.Entry<Path, SourcePath> ent :
+         baseModule.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
+      assertTrue(ent.getKey().toString().startsWith("blah"));
     }
   }
 
