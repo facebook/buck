@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.UnmodifiableIterator;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
@@ -40,18 +41,19 @@ public class MacroFinder {
   public Optional<MacroMatchResult> match(ImmutableSet<String> macros, String blob)
       throws MacroException {
 
-    MacroMatchResult result = new MacroFinderAutomaton(blob).next();
-    if (result != null &&
-        !result.isEscaped() &&
-        result.getStartIndex() == 0 &&
-        result.getEndIndex() == blob.length()) {
-      if (!macros.contains(result.getMacroType())) {
-        throw new MacroException(
-            String.format("expanding %s: no such macro \"%s\"", blob, result.getMacroType()));
-      }
-      return Optional.of(result);
+    MacroFinderAutomaton macroFinder = new MacroFinderAutomaton(blob);
+    if (!macroFinder.hasNext()) {
+      return Optional.empty();
     }
-    return Optional.empty();
+    MacroMatchResult result = macroFinder.next();
+    if (!result.isEscaped() &&
+        result.getStartIndex() == 0 &&
+        result.getEndIndex() == blob.length() &&
+        !macros.contains(result.getMacroType())) {
+      throw new MacroException(
+          String.format("expanding %s: no such macro \"%s\"", blob, result.getMacroType()));
+    }
+    return Optional.of(result);
   }
 
   /**
@@ -249,6 +251,9 @@ public class MacroFinder {
     public MacroMatchResult next() {
       MacroMatchResult toReturn = this.next;
       next = find();
+      if (toReturn == null) {
+        throw new NoSuchElementException("No more macro matches");
+      }
       return toReturn;
     }
 
