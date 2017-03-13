@@ -28,7 +28,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
@@ -772,11 +771,11 @@ public class WorkspaceAndProjectGenerator {
               if (castedNode.isPresent()) {
                 testsBuilder.add(castedNode.get());
               } else {
-                buckEventBus.post(ConsoleEvent.warning(
+                LOG.debug(
                     "Test target specified in '%s' is not a apple_test;" +
                         " not including in project: '%s'",
                     node.getBuildTarget(),
-                    explicitTestTarget));
+                    explicitTestTarget);
               }
             } else {
               throw new HumanReadableException(
