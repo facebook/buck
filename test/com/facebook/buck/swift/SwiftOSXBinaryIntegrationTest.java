@@ -19,11 +19,16 @@ package com.facebook.buck.swift;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.ApplePlatform;
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -32,6 +37,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Optional;
 
 public class SwiftOSXBinaryIntegrationTest {
 
@@ -123,4 +130,69 @@ public class SwiftOSXBinaryIntegrationTest {
         containsString("Hello ObjC\n"));
   }
 
+  @Test
+  public void testGeneratedModuleWithUmbrellaHeaderFile() throws IOException, InterruptedException {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX),
+        is(true));
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "modules_import", tmp);
+    workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+
+    BuildTarget target = workspace.newBuildTarget("//:one#macosx-x86_64");
+    ProjectWorkspace.ProcessResult runResult = workspace.runBuckCommand(
+        "build",
+        "--config",
+        "swift.version=2.3",
+        target
+            .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
+            .getFullyQualifiedName());
+    runResult.assertSuccess();
+
+    Path headerMapSymlinkTreePath = workspace.getPath(
+        BuildTargets.getGenPath(
+            filesystem,
+            target.withAppendedFlavors(
+                CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
+            "%s"));
+    Path buckModuleMap = headerMapSymlinkTreePath.resolve("buck.modulemap");
+    Optional<String> fileContent = filesystem.readFileIfItExists(buckModuleMap);
+    assertThat(fileContent.isPresent(), equalTo(true));
+    assertThat(fileContent.get(), containsString("umbrella header \"one/one.h\""));
+  }
+
+  @Test
+  public void testGeneratedModuleWithUmbrellaDirectory() throws IOException, InterruptedException {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX),
+        is(true));
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "modules_import", tmp);
+    workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+
+    BuildTarget target = workspace.newBuildTarget("//:second-one#macosx-x86_64");
+    ProjectWorkspace.ProcessResult runResult = workspace.runBuckCommand(
+        "build",
+        "--config", "swift.version=2.3",
+        target
+            .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
+            .getFullyQualifiedName());
+    runResult.assertSuccess();
+
+    Path headerMapSymlinkTreePath = workspace.getPath(
+        BuildTargets.getGenPath(
+            filesystem,
+            target.withAppendedFlavors(
+                CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
+            "%s"));
+    Path buckModuleMap = headerMapSymlinkTreePath.resolve("buck.modulemap");
+    Optional<String> fileContentOptional = filesystem.readFileIfItExists(buckModuleMap);
+    assertThat(fileContentOptional.isPresent(), equalTo(true));
+    String fileContent = fileContentOptional.get();
+    assertThat(fileContent, containsString("module second_one"));
+    assertThat(fileContent, not(containsString("module second-one")));
+    assertThat(fileContent, containsString("umbrella \"second_one\""));
+  }
 }

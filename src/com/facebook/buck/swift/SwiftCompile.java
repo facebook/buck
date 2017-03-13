@@ -16,10 +16,6 @@
 
 package com.facebook.buck.swift;
 
-import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_MAIN_FILENAME;
-import static com.facebook.buck.swift.SwiftUtil.normalizeSwiftModuleName;
-import static com.facebook.buck.swift.SwiftUtil.toSwiftHeaderName;
-
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxPlatform;
@@ -117,9 +113,9 @@ class SwiftCompile extends AbstractBuildRule {
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, params.getDeps());
     this.swiftCompiler = swiftCompiler;
     this.outputPath = outputPath;
-    this.headerPath = outputPath.resolve(toSwiftHeaderName(moduleName) + ".h");
+    this.headerPath = outputPath.resolve(SwiftDescriptions.toSwiftHeaderName(moduleName) + ".h");
 
-    String escapedModuleName = normalizeSwiftModuleName(moduleName);
+    String escapedModuleName = CxxDescriptionEnhancer.normalizeModuleName(moduleName);
     this.moduleName = escapedModuleName;
     this.modulePath = outputPath.resolve(escapedModuleName + ".swiftmodule");
     this.objectPath = outputPath.resolve(escapedModuleName + ".o");
@@ -177,7 +173,7 @@ class SwiftCompile extends AbstractBuildRule {
     }
     boolean hasMainEntry = srcs.stream()
         .map(input -> resolver.getAbsolutePath(input).getFileName().toString())
-        .anyMatch(SWIFT_MAIN_FILENAME::equalsIgnoreCase);
+        .anyMatch(SwiftDescriptions.SWIFT_MAIN_FILENAME::equalsIgnoreCase);
 
     compilerCommand.add(
         "-enable-testing",

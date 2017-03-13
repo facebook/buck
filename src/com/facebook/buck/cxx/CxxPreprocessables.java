@@ -189,7 +189,7 @@ public class CxxPreprocessables {
 
     switch (headerMode) {
       case SYMLINK_TREE_WITH_HEADER_MAP:
-        return new HeaderSymlinkTreeWithHeaderMap(
+        return HeaderSymlinkTreeWithHeaderMap.create(
             paramsWithoutDeps,
             root,
             links,

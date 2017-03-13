@@ -18,7 +18,6 @@ package com.facebook.buck.swift;
 
 import static com.facebook.buck.cxx.NativeLinkable.Linkage.STATIC;
 import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPANION_FLAVOR;
-import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_EXTENSION;
 
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.io.MorePaths;
@@ -31,7 +30,12 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.Optional;
 
-class SwiftDescriptions {
+public class SwiftDescriptions {
+
+  static final String SWIFT_HEADER_SUFFIX = "-Swift";
+  static final String SWIFT_MAIN_FILENAME = "main.swift";
+  public static final String SWIFT_EXTENSION = "swift";
+
   /**
    * Utility class: do not instantiate.
    */
@@ -73,6 +77,10 @@ class SwiftDescriptions {
 
     boolean isCompanionTarget = buildTarget.getFlavors().contains(SWIFT_COMPANION_FLAVOR);
     output.preferredLinkage = isCompanionTarget ? Optional.of(STATIC) : args.preferredLinkage;
+  }
+
+  static String toSwiftHeaderName(String moduleName) {
+    return moduleName + SWIFT_HEADER_SUFFIX;
   }
 
 }
