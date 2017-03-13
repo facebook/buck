@@ -1270,4 +1270,7 @@ public class CxxDescriptionEnhancer {
     return args.build();
   }
 
+  public static String normalizeModuleName(String moduleName) {
+    return moduleName.replaceAll("[^A-Za-z0-9]", "_");
+  }
 }

@@ -25,6 +25,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -36,7 +37,6 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
@@ -114,7 +114,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     resolver = new SourcePathResolver(ruleFinder);
 
     // Setup the symlink tree buildable.
-    symlinkTreeBuildRule = new HeaderSymlinkTreeWithHeaderMap(
+    symlinkTreeBuildRule = HeaderSymlinkTreeWithHeaderMap.create(
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
         symlinkTreeRoot,
         links,
@@ -157,7 +157,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
   public void testSymlinkTreeRuleKeyChangesIfLinkMapChanges() throws Exception {
     Path aFile = tmpDir.newFile();
     Files.write(aFile, "hello world".getBytes(Charsets.UTF_8));
-    SymlinkTree modifiedSymlinkTreeBuildRule = new HeaderSymlinkTreeWithHeaderMap(
+    AbstractBuildRule modifiedSymlinkTreeBuildRule = HeaderSymlinkTreeWithHeaderMap.create(
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
         symlinkTreeRoot,
         ImmutableMap.of(
