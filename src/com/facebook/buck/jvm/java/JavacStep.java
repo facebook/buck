@@ -221,9 +221,6 @@ public class JavacStep implements Step {
       ExecutionContext context,
       String firstOrderStdout,
       String firstOrderStderr) {
-    Optional<String> returnedStderr;
-    returnedStderr = Optional.of(firstOrderStderr);
-
     ImmutableList.Builder<String> errorMessage = ImmutableList.builder();
     errorMessage.add(firstOrderStderr);
 
@@ -236,10 +233,7 @@ public class JavacStep implements Step {
     if (!firstOrderStdout.isEmpty()) {
       context.postEvent(ConsoleEvent.info("%s", firstOrderStdout));
     }
-    if (!firstOrderStderr.isEmpty()) {
-      context.postEvent(ConsoleEvent.severe("%s", Joiner.on("\n").join(errorMessage.build())));
-    }
-    return returnedStderr;
+    return Optional.of(Joiner.on("\n").join(errorMessage.build()));
   }
 
   private void processGeneralBuildFailure(ExecutionContext context, String firstOrderStderr) {

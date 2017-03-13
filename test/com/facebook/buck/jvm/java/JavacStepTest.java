@@ -175,10 +175,12 @@ public class JavacStepTest {
     executionContext.getBuckEventBus().register(listener);
     StepExecutionResult result = step.execute(executionContext);
 
+    // JavacStep itself writes stdout to the console on error; we expect the Build class to write
+    // the stderr stream returned in the StepExecutionResult
     assertThat(result, equalTo(StepExecutionResult.of(1, Optional.of("javac stderr\n"))));
     assertThat(
         listener.getLogMessages(),
-        equalTo(ImmutableList.of("javac stdout\n", "javac stderr\n")));
+        equalTo(ImmutableList.of("javac stdout\n")));
   }
 
   @Test
