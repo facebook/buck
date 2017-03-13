@@ -153,8 +153,8 @@ public class MachineReadableLogJsonViewTest {
 
   @Test
   public void testPerfTimesStatsEvent() throws IOException {
-    PerfTimesEventListener.PerfTimesEvent event =
-        new PerfTimesEventListener.PerfTimesEvent(
+    PerfTimesEventListener.PerfTimesEvent.Complete event =
+        PerfTimesEventListener.PerfTimesEvent.complete(
             PerfTimesStats.builder()
                 .setPythonTimeMs(4L)
                 .setInitTimeMs(8L)
