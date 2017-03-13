@@ -31,6 +31,7 @@ import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
@@ -100,6 +101,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -565,24 +567,22 @@ public class TestRunning {
 
   private static Callable<TestResults> getCachingCallable(final Callable<TestResults> callable) {
     return new Callable<TestResults>() {
-      private TestResults results = null;
-      private Exception exception = null;
-      private boolean ran = false;
+      @Nullable
+      private Either<TestResults, Exception> result = null;
 
       @Override
       public synchronized TestResults call() throws Exception {
-        if (!ran) {
+        if (result == null) {
           try {
-            results = callable.call();
+            result = Either.ofLeft(callable.call());
           } catch (Exception t) {
-            exception = t;
+            result = Either.ofRight(t);
           }
-          ran = true;
         }
-        if (exception != null) {
-          throw exception;
+        if (result.isRight()) {
+          throw result.getRight();
         }
-        return results;
+        return result.getLeft();
       }
     };
   }

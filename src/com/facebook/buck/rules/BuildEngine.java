@@ -22,6 +22,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.concurrent.ExecutionException;
 
+import javax.annotation.Nullable;
+
 /**
  * A build engine is responsible for building a given build rule, which includes all its transitive
  * dependencies.
@@ -45,6 +47,7 @@ public interface BuildEngine {
    * Returns the build result of the build rule associated with the given build target.
    * Returns {@code null} if the build rule has not yet been built.
    */
+  @Nullable
   BuildResult getBuildRuleResult(BuildTarget buildTarget)
       throws ExecutionException, InterruptedException;
 

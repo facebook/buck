@@ -29,6 +29,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.util.Console;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
@@ -273,7 +274,8 @@ class FineGrainedJavaDependencySuggester {
 
       // Find deps within package.
       for (String requiredSymbol : symbolsDependencies.getOutgoingNodesFor(providedSymbol)) {
-        NamedStronglyConnectedComponent componentDep = namedComponentsIndex.get(requiredSymbol);
+        NamedStronglyConnectedComponent componentDep =
+            Preconditions.checkNotNull(namedComponentsIndex.get(requiredSymbol));
         if (!componentDep.equals(namedComponent)) {
           deps.add(":" + componentDep.name);
         }

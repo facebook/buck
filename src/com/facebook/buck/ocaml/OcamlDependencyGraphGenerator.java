@@ -37,7 +37,8 @@ import javax.annotation.Nullable;
 public class OcamlDependencyGraphGenerator {
   private static final String OCAML_SOURCE_AND_DEPS_SEPARATOR = ":";
   private static final String OCAML_DEPS_SEPARATOR = " ";
-  private static final String LINE_SEPARATOR = System.getProperty("line.separator");
+  private static final String LINE_SEPARATOR =
+      Preconditions.checkNotNull(System.getProperty("line.separator"));
 
   @Nullable
   private MutableDirectedGraph<String> graph;

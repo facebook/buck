@@ -135,7 +135,7 @@ public class Pom {
     updateModel(artifact, deps);
   }
 
-  private Model constructModel(File file, @Nullable Model model) {
+  private Model constructModel(File file, Model model) {
     ModelBuilder modelBuilder = MODEL_BUILDER_FACTORY.newInstance();
 
     try {

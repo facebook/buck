@@ -47,6 +47,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 /**
  * Utility class to bridge native Unix domain socket calls to Java using JNA.
  */
@@ -93,6 +95,7 @@ class UnixDomainSocketLibrary {
      * On other platforms, only {@code sunFamily} will be present.
      */
     public static class SunFamily extends Union {
+      @Nullable
       public SunLenAndFamily sunLenAndFamily;
       public short sunFamily;
     }

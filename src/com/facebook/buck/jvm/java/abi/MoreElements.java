@@ -54,7 +54,13 @@ final class MoreElements {
 
   public static Element getOuterClass(ExecutableElement e) {
     Element innerClass = e.getEnclosingElement();
-    return innerClass.getEnclosingElement();
+    Element outerClass = innerClass.getEnclosingElement();
+    if (outerClass == null) {
+      throw new IllegalArgumentException(
+          String.format(
+              "Cannot get outer class of element which isn't an inner class: %s", e));
+    }
+    return outerClass;
   }
 
   public static boolean isRuntimeRetention(AnnotationMirror annotation) {

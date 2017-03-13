@@ -59,6 +59,7 @@ class XctoolOutputParsing {
 
   public static class BeginOcunitEvent {
     public double timestamp = -1;
+    @Nullable
     public String targetName = null;
   }
 
@@ -67,6 +68,7 @@ class XctoolOutputParsing {
     @Nullable
     public String message = null;
     public boolean succeeded = false;
+    @Nullable
     public String targetName = null;
   }
 

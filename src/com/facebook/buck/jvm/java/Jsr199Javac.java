@@ -28,6 +28,7 @@ import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -169,7 +170,7 @@ public abstract class Jsr199Javac implements Javac {
         return JarDirectoryStepHelper.createJarFile(
             context.getProjectFilesystem(),
             context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath(),
-            jarOutputStream,
+            Preconditions.checkNotNull(jarOutputStream),
             context.getDirectToJarOutputSettings().get().getEntriesToJar(),
             alreadyAddedFilesAvailableAfterCompilation.get(),
             context.getDirectToJarOutputSettings().get().getMainClass(),

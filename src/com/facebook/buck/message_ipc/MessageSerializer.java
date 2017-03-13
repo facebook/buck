@@ -50,15 +50,11 @@ public class MessageSerializer {
     Map<String, Object> rep = objectMapper.readValue(
         data,
         new TypeReference<Map<String, Object>>() {});
-    String type = (String) rep.get(TYPE);
-    Preconditions.checkNotNull(
-        type,
-        "Unable to deserialize %s: no field %s in data (%s)",
-        InvocationMessage.class.getSimpleName(), TYPE, data);
+    String type = (String) checkHasField(rep, TYPE, data);
     Preconditions.checkArgument(type.equals(InvocationMessage.class.getSimpleName()));
     return new InvocationMessage(
-        (String) rep.get(NAME),
-        (List<Object>) rep.get(ARGS));
+        (String) checkHasField(rep, NAME, data),
+        (List<Object>) checkHasField(rep, ARGS, data));
   }
 
   public String serializeResult(ReturnResultMessage message) throws JsonProcessingException {
@@ -72,11 +68,15 @@ public class MessageSerializer {
     Map<String, Object> rep = objectMapper.readValue(
         data,
         new TypeReference<Map<String, Object>>() {});
-    String type = (String) Preconditions.checkNotNull(
-        rep.get(TYPE),
-        "Unable to deserialize %s: no field %s in data (%s)",
-        ReturnResultMessage.class.getSimpleName(), TYPE, data);
+    String type = (String) checkHasField(rep, TYPE, data);
     Preconditions.checkArgument(type.equals(ReturnResultMessage.class.getSimpleName()));
-    return new ReturnResultMessage(rep.get(VALUE));
+    return new ReturnResultMessage(checkHasField(rep, VALUE, data));
+  }
+
+  private static Object checkHasField(Map<String, Object> rep, String field, String rawInput) {
+    return Preconditions.checkNotNull(
+        rep.get(field),
+        "Unable to deserialize %s: no field %s in raw input (%s)",
+        InvocationMessage.class.getSimpleName(), field, rawInput);
   }
 }

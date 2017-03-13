@@ -63,12 +63,16 @@ public class CellPathResolverSerializer {
         TYPE_DEFAULT,
         type);
 
-    String rootPathAsString = (String) data.get(ROOT_PATH);
-    Preconditions.checkNotNull(rootPathAsString, "Expected to have value for key %s", ROOT_PATH);
+    String rootPathAsString = (String) Preconditions.checkNotNull(
+        data.get(ROOT_PATH),
+        "Expected to have value for key %s",
+        ROOT_PATH);
     Path rootPath = Paths.get(rootPathAsString);
 
-    Map<String, String> cellPathsAsStrings = (Map<String, String>) data.get(CELL_PATHS);
-    Preconditions.checkNotNull(cellPathsAsStrings, "Expected to have value for key %s", CELL_PATHS);
+    Map<String, String> cellPathsAsStrings = (Map<String, String>) Preconditions.checkNotNull(
+        data.get(CELL_PATHS),
+        "Expected to have value for key %s",
+        CELL_PATHS);
 
     ImmutableMap.Builder<String, Path> cellPaths = ImmutableMap.builder();
     for (Map.Entry<String, String> entry : cellPathsAsStrings.entrySet()) {

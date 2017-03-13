@@ -408,10 +408,6 @@ public class IjModuleFactory {
 
     Set<Path> generatedSourcePaths = findConfiguredGeneratedSourcePaths(targetNode);
 
-    if (generatedSourcePaths == null) {
-      return;
-    }
-
     for (Path generatedSourcePath : generatedSourcePaths) {
       context.addGeneratedSourceCodeFolder(
           folderFactory.create(
@@ -427,7 +423,7 @@ public class IjModuleFactory {
         projectConfig.getDepToGeneratedSourcesMap();
     BuildTarget buildTarget = targetNode.getBuildTarget();
 
-    Set<Path> generatedSourcePaths = null;
+    Set<Path> generatedSourcePaths = new HashSet<>();
 
     for (BuildTarget dependencyTarget : targetNode.getDeps()) {
       String buildTargetName = dependencyTarget.toString();
@@ -440,10 +436,6 @@ public class IjModuleFactory {
             projectFilesystem,
             buildTarget,
             generatedSource);
-
-        if (generatedSourcePaths == null) {
-          generatedSourcePaths = new HashSet<>();
-        }
 
         generatedSourcePaths.add(generatedSourcePath);
       }

@@ -1298,11 +1298,11 @@ public class AndroidBinary
 
     if (ExopackageMode.enabledForNativeLibraries(exopackageModes) &&
         enhancementResult.getCopyNativeLibraries().isPresent()) {
-      CopyNativeLibraries copyNativeLibraries =
+      CopyNativeLibraries copyNativeLibraries = Preconditions.checkNotNull(
           enhancementResult
               .getCopyNativeLibraries()
               .get()
-              .get(enhancementResult.getAPKModuleGraph().getRootAPKModule());
+              .get(enhancementResult.getAPKModuleGraph().getRootAPKModule()));
       builder.setNativeLibsInfo(
           ExopackageInfo.NativeLibsInfo.of(
               copyNativeLibraries.getPathToMetadataTxt(),

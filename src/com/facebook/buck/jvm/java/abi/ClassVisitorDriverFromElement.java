@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import org.objectweb.asm.AnnotationVisitor;
@@ -113,7 +114,8 @@ class ClassVisitorDriverFromElement {
 
       TypeMirror superclass = e.getSuperclass();
       if (superclass.getKind() == TypeKind.NONE) {
-        superclass = elements.getTypeElement("java.lang.Object").asType();
+        superclass =
+            Preconditions.checkNotNull(elements.getTypeElement("java.lang.Object")).asType();
       }
       // Static never makes it into the file for classes
       int accessFlags = AccessFlags.getAccessFlags(e) & ~Opcodes.ACC_STATIC;

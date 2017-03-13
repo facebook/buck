@@ -50,7 +50,7 @@ public interface TestResultSummaryExternalInterface {
   /**
    * @return the stacktrace of the test failure.
    */
-  String getStacktrace();
+  @Nullable String getStacktrace();
   /**
    * @return the stdout of the test.
    */

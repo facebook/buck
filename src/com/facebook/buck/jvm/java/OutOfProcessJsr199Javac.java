@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.message_ipc.Connection;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -67,6 +68,8 @@ public abstract class OutOfProcessJsr199Javac implements Javac {
   }
 
   public Connection<OutOfProcessJavacConnectionInterface> getConnection() {
-    return connection;
+    return Preconditions.checkNotNull(
+        connection,
+        "Cannot get connection before calling setConnection");
   }
 }

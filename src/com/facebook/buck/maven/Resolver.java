@@ -129,7 +129,6 @@ public class Resolver {
   private final ModelBuilder modelBuilder;
 
   private ImmutableList<RemoteRepository> repos;
-  private ImmutableMap<String, Dependency> specifiedDependencies;
 
   public Resolver(ArtifactConfig config) {
     this.modelBuilder = new DefaultModelBuilderFactory().newInstance()
@@ -171,7 +170,7 @@ public class Resolver {
       }
     }
     repos = repoBuilder.build();
-    specifiedDependencies = dependencyBuilder.build();
+    ImmutableMap<String, Dependency> specifiedDependencies = dependencyBuilder.build();
 
     ImmutableMap<String, Artifact> knownDeps = getRunTimeTransitiveDeps(
         specifiedDependencies.values());
@@ -183,13 +182,16 @@ public class Resolver {
 
     // Now we have the graph, grab the sources and jars for each dependency, as well as the relevant
     // checksums (which are download by default. Yay!)
-    ImmutableSetMultimap<Path, Prebuilt> downloadedArtifacts = downloadArtifacts(graph);
+    ImmutableSetMultimap<Path, Prebuilt> downloadedArtifacts =
+        downloadArtifacts(graph, specifiedDependencies);
 
     createBuckFiles(downloadedArtifacts);
   }
 
   private ImmutableSetMultimap<Path, Prebuilt> downloadArtifacts(
-      final MutableDirectedGraph<Artifact> graph) throws ExecutionException, InterruptedException {
+      final MutableDirectedGraph<Artifact> graph,
+      ImmutableMap<String, Dependency> specifiedDependencies)
+      throws ExecutionException, InterruptedException {
     ListeningExecutorService exec = MoreExecutors.listeningDecorator(
         Executors.newFixedThreadPool(
             Runtime.getRuntime().availableProcessors(),
@@ -200,7 +202,10 @@ public class Resolver {
         (List<ListenableFuture<Map.Entry<Path, Prebuilt>>>) (List<?>)
         exec.invokeAll(graph.getNodes().stream()
             .map(artifact ->
-                (Callable<Map.Entry<Path, Prebuilt>>) () -> downloadArtifact(artifact, graph))
+                (Callable<Map.Entry<Path, Prebuilt>>) () -> downloadArtifact(
+                    artifact,
+                    graph,
+                    specifiedDependencies))
             .collect(MoreCollectors.toImmutableList()));
 
     try {
@@ -215,7 +220,8 @@ public class Resolver {
 
   private Map.Entry<Path, Prebuilt> downloadArtifact(
       final Artifact artifactToDownload,
-      TraversableGraph<Artifact> graph)
+      TraversableGraph<Artifact> graph,
+      ImmutableMap<String, Dependency> specifiedDependencies)
       throws IOException, ArtifactResolutionException {
     String projectName = getProjectName(artifactToDownload);
     Path project = buckRepoRoot.resolve(buckThirdPartyRelativePath).resolve(projectName);

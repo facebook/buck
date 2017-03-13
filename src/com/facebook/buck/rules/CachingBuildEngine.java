@@ -282,10 +282,9 @@ public class CachingBuildEngine implements BuildEngine {
     return resultFuture != null && MoreFutures.isSuccess(resultFuture);
   }
 
-  @Nullable
   @Override
   public RuleKey getRuleKey(BuildTarget buildTarget) {
-    return Futures.getUnchecked(ruleKeys.get(buildTarget));
+    return Preconditions.checkNotNull(Futures.getUnchecked(ruleKeys.get(buildTarget)));
   }
 
   // Dispatch and return a future resolving to a list of all results of this rules dependencies.

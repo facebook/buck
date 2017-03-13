@@ -27,6 +27,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -66,7 +67,8 @@ class DefaultClassUsageFileReader {
         continue;
       }
 
-      Path jarAbsolutePath = pathResolver.getAbsolutePath(dep.getSourcePathToOutput());
+      Path jarAbsolutePath = pathResolver.getAbsolutePath(
+          Preconditions.checkNotNull(dep.getSourcePathToOutput()));
 
       jarAbsolutePathToAbiJarSourcePathBuilder.put(
           jarAbsolutePath,

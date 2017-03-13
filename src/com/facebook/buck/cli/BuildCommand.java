@@ -188,6 +188,7 @@ public class BuildCommand extends AbstractCommand {
   @Option(
       name = OUT_LONG_ARG,
       usage = "Copies the output of the lone build target to this path.")
+  @Nullable
   private Path outputPathForSingleBuildTarget;
 
   @Option(

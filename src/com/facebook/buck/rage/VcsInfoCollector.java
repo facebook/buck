@@ -23,6 +23,7 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.versioncontrol.VersionControlCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -57,7 +58,7 @@ public class VcsInfoCollector {
         vcCmdLineInterface.bookmarksRevisionsId(TRACKED_BOOKMARKS);
     Pair<String, Long> baseRevisionInfo = vcCmdLineInterface.commonAncestorAndTS(
         currentRevisionId,
-        bookmarksRevisionIds.get("remote/master"));
+        Preconditions.checkNotNull(bookmarksRevisionIds.get("remote/master")));
 
     ImmutableSet.Builder<String> baseBookmarks = ImmutableSet.builder();
     for (Map.Entry<String, String> bookmark : bookmarksRevisionIds.entrySet()) {
