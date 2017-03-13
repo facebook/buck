@@ -26,15 +26,14 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-// TODO(plamenko): rename this to BuildRuleThreadTracker
-public class AccumulatedTimeTracker {
+public class BuildRuleThreadTracker {
 
   private final ConcurrentMap<Long, Optional<? extends BuildRuleEvent.BeginningBuildRuleEvent>>
       threadsToRunningBuildRuleEvent;
   private final ConcurrentMap<Long, Optional<? extends TestRuleEvent>>
       threadsToRunningTestRuleEvent;
 
-  public AccumulatedTimeTracker(
+  public BuildRuleThreadTracker(
       ExecutionEnvironment executionEnvironment
   ) {
     this.threadsToRunningBuildRuleEvent = new ConcurrentHashMap<>(
@@ -44,7 +43,7 @@ public class AccumulatedTimeTracker {
   }
 
   @VisibleForTesting
-  AccumulatedTimeTracker(
+  BuildRuleThreadTracker(
       Map<Long, Optional<? extends BuildRuleEvent.BeginningBuildRuleEvent>>
           threadsToRunningBuildRuleEvent,
       Map<Long, Optional<? extends TestRuleEvent>> threadsToRunningTestRuleEvent) {

@@ -268,7 +268,7 @@ public class TestThreadStateRendererTest {
         testSummaries,
         testStatusMessages,
         runningSteps,
-        new AccumulatedTimeTracker(
+        new BuildRuleThreadTracker(
             ImmutableMap.of(),
             testEvents));
   }

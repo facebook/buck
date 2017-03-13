@@ -414,7 +414,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             formatTimeFunction,
             currentTimeMillis,
             threadsToRunningStep,
-            accumulatedTimeTracker);
+            buildRuleThreadTracker);
         renderLines(renderer, lines, maxThreadLines, shouldAlwaysSortThreadsByTime);
       }
 
@@ -436,7 +436,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             threadsToRunningTestSummaryEvent,
             threadsToRunningTestStatusMessageEvent,
             threadsToRunningStep,
-            accumulatedTimeTracker);
+            buildRuleThreadTracker);
         renderLines(renderer, lines, maxThreadLines, shouldAlwaysSortThreadsByTime);
       }
 

@@ -153,7 +153,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   private volatile double distributedBuildProgress = 0;
 
-  protected AccumulatedTimeTracker accumulatedTimeTracker;
+  protected BuildRuleThreadTracker buildRuleThreadTracker;
 
   public AbstractConsoleEventBusListener(
       Console console,
@@ -192,7 +192,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     this.cacheRateStatsKeeper = new CacheRateStatsKeeper();
     this.networkStatsKeeper = new NetworkStatsKeeper();
 
-    this.accumulatedTimeTracker = new AccumulatedTimeTracker(executionEnvironment);
+    this.buildRuleThreadTracker = new BuildRuleThreadTracker(executionEnvironment);
   }
 
   @VisibleForTesting
@@ -616,7 +616,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     if (progressEstimator.isPresent()) {
       progressEstimator.get().didStartRule();
     }
-    accumulatedTimeTracker.didStartBuildRule(started);
+    buildRuleThreadTracker.didStartBuildRule(started);
   }
 
   @Subscribe
@@ -624,7 +624,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     if (progressEstimator.isPresent()) {
       progressEstimator.get().didResumeRule();
     }
-    accumulatedTimeTracker.didResumeBuildRule(resumed);
+    buildRuleThreadTracker.didResumeBuildRule(resumed);
   }
 
   @Subscribe
@@ -632,7 +632,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     if (progressEstimator.isPresent()) {
       progressEstimator.get().didSuspendRule();
     }
-    accumulatedTimeTracker.didSuspendBuildRule(suspended);
+    buildRuleThreadTracker.didSuspendBuildRule(suspended);
   }
 
   @Subscribe
@@ -643,7 +643,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       }
       numRulesCompleted.getAndIncrement();
     }
-    accumulatedTimeTracker.didFinishBuildRule(finished);
+    buildRuleThreadTracker.didFinishBuildRule(finished);
     cacheRateStatsKeeper.buildRuleFinished(finished);
   }
 
@@ -657,12 +657,12 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   @Subscribe
   public void testRuleStarted(TestRuleEvent.Started started) {
-    accumulatedTimeTracker.didStartTestRule(started);
+    buildRuleThreadTracker.didStartTestRule(started);
   }
 
   @Subscribe
   public void testRuleFinished(TestRuleEvent.Finished finished) {
-    accumulatedTimeTracker.didFinishTestRule(finished);
+    buildRuleThreadTracker.didFinishTestRule(finished);
   }
 
   @Subscribe

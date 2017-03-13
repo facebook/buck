@@ -206,7 +206,7 @@ public class BuildThreadStateRendererTest {
         FORMAT_TIME_FUNCTION,
         timeMs,
         runningSteps,
-        new AccumulatedTimeTracker(buildEvents, ImmutableMap.of()));
+        new BuildRuleThreadTracker(buildEvents, ImmutableMap.of()));
   }
 
   private ImmutableList<String> renderLines(BuildThreadStateRenderer renderer, boolean sortByTime) {

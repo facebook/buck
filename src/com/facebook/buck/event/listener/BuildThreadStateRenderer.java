@@ -38,11 +38,11 @@ public class BuildThreadStateRenderer implements ThreadStateRenderer {
       Function<Long, String> formatTimeFunction,
       long currentTimeMs,
       Map<Long, Optional<? extends LeafEvent>> runningStepsByThread,
-      AccumulatedTimeTracker accumulatedTimeTracker) {
+      BuildRuleThreadTracker buildRuleThreadTracker) {
     this.threadInformationMap = getThreadInformationMap(
         currentTimeMs,
         runningStepsByThread,
-        accumulatedTimeTracker);
+        buildRuleThreadTracker);
     this.commonThreadStateRenderer = new CommonThreadStateRenderer(
         ansi,
         formatTimeFunction,
@@ -53,11 +53,11 @@ public class BuildThreadStateRenderer implements ThreadStateRenderer {
   private static ImmutableMap<Long, ThreadRenderingInformation> getThreadInformationMap(
       long currentTimeMs,
       Map<Long, Optional<? extends LeafEvent>> runningStepsByThread,
-      AccumulatedTimeTracker accumulatedTimeTracker) {
+      BuildRuleThreadTracker buildRuleThreadTracker) {
     ImmutableMap.Builder<Long, ThreadRenderingInformation> threadInformationMapBuilder =
         ImmutableMap.builder();
     Map<Long, Optional<? extends BuildRuleEvent.BeginningBuildRuleEvent>> buildEventsByThread =
-        accumulatedTimeTracker.getBuildEventsByThread();
+        buildRuleThreadTracker.getBuildEventsByThread();
     ImmutableList<Long> threadIds = ImmutableList.copyOf(buildEventsByThread.keySet());
     for (long threadId : threadIds) {
       Optional<? extends BuildRuleEvent.BeginningBuildRuleEvent> buildRuleEvent =
