@@ -33,14 +33,28 @@ macros for creating more complex build rules.
 
 {param args}
 
-{call buck.functionArg}
+{call buck.arg}
+  {param name: 'path' /}
   {param desc}
-  The first and only argument is a path, of sorts, to a file containing
+  A path, of sorts, to a file containing
   {sp}<a href="{ROOT}extending/macros.html"><code>macros</code></a> and
   constants. It looks similar to a build target because it starts with
   {sp}<code>//</code> (indicating the root of the project), but is not a
   proper build target because it identifies a file relative to the root of
   the project rather than a build rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'namespace' /}
+  {param default: 'None' /}
+  {param desc}
+  A string representing a namespace in which the bindings from the other file will be stored.
+  When set, an object of the given name that holds the bindings from the other file is put into the
+  global scope of the current file. If unset, the bindings from the other file are injected directly
+  into global scope of the current file.
+  <p>
+  If the name is already in scope, it is simply overwritten.
   {/param}
 {/call}
 
@@ -62,12 +76,12 @@ Then another build file could include the array using
 copy-and-paste definitions across build files:
 
 {literal}<pre class="prettyprint lang-py">
-include_defs('//core/DEFS')
+include_defs('//core/DEFS', 'core')
 
 android_binary(
   name = 'example',
   # ...
-  no_dx = JARS_TO_EXCLUDE_FROM_DX,
+  no_dx = core.JARS_TO_EXCLUDE_FROM_DX,
 )
 </pre>{/literal}
 

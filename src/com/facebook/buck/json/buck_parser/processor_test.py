@@ -12,6 +12,7 @@ from .buck import BuildFileProcessor, Diagnostic, add_rule, process_with_diagnos
 
 
 def foo_rule(name, srcs=[], visibility=[], build_env=None):
+    """A dummy build rule."""
     add_rule({
         'buck.type': 'foo',
         'name': name,
@@ -65,6 +66,13 @@ def with_envs(envs):
 class ProjectFile(object):
 
     def __init__(self, root, path, contents):
+        # type: (str, str, Sequence[str]) -> None
+        """Record of a file that can be written to disk.
+
+        :param root: root.
+        :param path: path to write the file, relative to the root.
+        :param contents: lines of file context
+        """
         self.path = path
         self.name = '//{0}'.format(path)
         self.root = root
@@ -87,10 +95,12 @@ class BuckTest(unittest.TestCase):
         shutil.rmtree(self.project_root, True)
 
     def write_file(self, pfile):
+        # type: (ProjectFile) -> None
         with open(os.path.join(self.project_root, pfile.path), 'w') as f:
             f.write(pfile.contents)
 
     def write_files(self, *pfiles):
+        # type: (*ProjectFile) -> None
         for pfile in pfiles:
             self.write_file(pfile)
 
@@ -800,6 +810,44 @@ class BuckTest(unittest.TestCase):
         self.assertEqual(
             'parse',
             decoded_result['diagnostics'][0]['source'])
+
+    def test_values_from_namespaced_includes_accessible_only_via_namespace(self):
+        defs_file = ProjectFile(
+            root=self.project_root,
+            path='DEFS',
+            contents=(
+                'value = 2',
+            )
+        )
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                'include_defs("//DEFS", "defs")',
+                'foo_rule(name="foo" + str(defs.value), srcs=[])',
+            )
+        )
+        self.write_files(defs_file, build_file)
+        processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        with processor.with_builtins(__builtin__.__dict__):
+            result = processor.process(self.project_root, None, 'BUCK', [])
+        self.assertTrue(
+            [x for x in result if x.get('name', '') == 'foo2'],
+            "result should contain rule with name derived from a value in namespaced defs",
+        )
+        # should not be in global scope
+        self.write_file(ProjectFile(
+            self.project_root,
+            path='BUCK_fail',
+            contents=(
+                'include_defs("//DEFS", "defs")',
+                'foo_rule(name="foo" + str(value), srcs=[])',
+            )
+        ))
+        with processor.with_builtins(__builtin__.__dict__):
+            self.assertRaises(
+                NameError,
+                lambda: processor.process(self.project_root, None, 'BUCK_fail', []))
 
 
 if __name__ == '__main__':

@@ -609,8 +609,8 @@ class BuildFileProcessor(object):
             yield
 
     def _merge_globals(self, mod, dst):
-        """
-        Copy the global definitions from one globals dict to another.
+        # type: (types.ModuleType, Dict[str, Any]) -> None
+        """Copy the global definitions from one globals dict to another.
 
         Ignores special attributes and attributes starting with '_', which
         typically denote module-level private attributes.
@@ -735,7 +735,7 @@ class BuildFileProcessor(object):
         filename = inspect.getframeinfo(frame).filename
         return is_in_dir(filename, self._project_root)
 
-    def _include_defs(self, is_implicit_include, name):
+    def _include_defs(self, is_implicit_include, name, namespace=None):
         # type: (bool, str) -> None
         """Pull the named include into the current caller's context.
 
@@ -753,7 +753,14 @@ class BuildFileProcessor(object):
         # Look up the caller's stack frame and merge the include's globals
         # into it's symbol table.
         frame = get_caller_frame(skip=['_functools', __name__])
-        self._merge_globals(mod, frame.f_globals)
+        if namespace is not None:
+            # If using a fresh namespace, create a fresh module to populate.
+            fresh_module = imp.new_module(namespace)
+            fresh_module.__file__ = mod.__file__
+            self._merge_globals(mod, fresh_module.__dict__)
+            frame.f_globals[namespace] = fresh_module
+        else:
+            self._merge_globals(mod, frame.f_globals)
 
         # Pull in the include's accounting of its own referenced includes
         # into the current build context.
@@ -1064,6 +1071,7 @@ class BuildFileProcessor(object):
                                             format(autodeps_file))
 
     def process(self, watch_root, project_prefix, path, diagnostics):
+        # type: (str, Optional[str], str, List[Diagnostic]) -> List[Dict[str, Any]]
         """Process a build file returning a dict of its rules and includes."""
         build_env, mod = self._process_build_file(watch_root, project_prefix,
                                                   os.path.join(self._project_root, path))
