@@ -662,7 +662,7 @@ public class Parser {
 
   @Subscribe
   public void onFileSystemChange(WatchEvent<?> event) {
-    LOG.debug(
+    LOG.verbose(
         "Parser watched event %s %s",
         event.kind(),
         WatchEvents.createContextString(event));
