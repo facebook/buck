@@ -164,11 +164,12 @@ public class FileClassPathRunner {
       }
     }
 
+    String classpathProperty = System.getProperty("java.class.path");
+    if (classpathProperty == null) {
+      throw new NullPointerException("java.class.path system property must not be null");
+    }
     StringBuilder newClassPath = new StringBuilder();
-    constructNewClassPath(
-        newClassPath,
-        Preconditions.checkNotNull(System.getProperty("java.class.path")),
-        classPathEntries);
+    constructNewClassPath(newClassPath, classpathProperty, classPathEntries);
 
     if (modifySystemClassPathProperty) {
       System.setProperty("java.class.path", newClassPath.toString());
@@ -227,22 +228,5 @@ public class FileClassPathRunner {
       System.exit(-4);
     }
     return main;
-  }
-
-  /**
-   * Since FatJar is going to be embedded in many targets, it cannot have external dependencies, but
-   * we'd like to have {@link javax.annotation.Nullable} and
-   * {@link com.google.common.base.Preconditions#checkNotNull} anyway, so we define these here.
-   */
-  @interface Nullable {}
-  private static class Preconditions {
-    private Preconditions() {}
-
-    public static <T> T checkNotNull(@Nullable T value) {
-      if (value == null) {
-        throw new RuntimeException();
-      }
-      return value;
-    }
   }
 }
