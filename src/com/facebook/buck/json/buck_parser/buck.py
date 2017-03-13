@@ -7,7 +7,7 @@ import __builtin__
 import __future__
 
 import contextlib
-from pathlib import _Accessor, Path, PureWindowsPath, PurePath, PosixPath
+from pathlib import Path, PurePath
 from pywatchman import bser, WatchmanError
 from contextlib import contextmanager, nested
 from .glob_internal import glob_internal
@@ -735,25 +735,20 @@ class BuildFileProcessor(object):
         filename = inspect.getframeinfo(frame).filename
         return is_in_dir(filename, self._project_root)
 
-    def _include_defs(self, name, implicit_includes=None):
-        """
-        Pull the named include into the current caller's context.
+    def _include_defs(self, is_implicit_include, name):
+        # type: (bool, str) -> None
+        """Pull the named include into the current caller's context.
 
         This method is meant to be installed into the globals of any files or
         includes that we process.
         """
-        if implicit_includes is None:
-            implicit_includes = []
-
         # Grab the current build context from the top of the stack.
         build_env = self._current_build_env
 
         # Resolve the named include to its path and process it to get its
         # build context and module.
         path = self._get_include_path(name)
-        inner_env, mod = self._process_include(
-            path,
-            implicit_includes=implicit_includes)
+        inner_env, mod = self._process_include(path, is_implicit_include)
 
         # Look up the caller's stack frame and merge the include's globals
         # into it's symbol table.
@@ -886,18 +881,16 @@ class BuildFileProcessor(object):
             with self._import_whitelist_manager.allow_unsafe_import(False):
                 yield
 
-    def _process(self, build_env, path, implicit_includes=None):
+    def _process(self, build_env, path, is_implicit_include):
+        # type: (AbstractContext, str, bool) -> Tuple[AbstractContext, types.ModuleType]
         """Process a build file or include at the given path.
 
-        :param AbstractContext build_env: context of the file to process.
-        :param str path: target-like path to the file to process.
-        :param list[str] implicit_includes: defs to include first.
+        :param build_env: context of the file to process.
+        :param path: target-like path to the file to process.
+        :param is_implicit_include: whether the file being processed is an implicit include, or was
+            included from an implicit include.
         :returns: build context (potentially different if retrieved from cache) and loaded module.
-        :rtype: Tuple[AbstractContext, module]
         """
-        if implicit_includes is None:
-            implicit_includes = []
-
         # First check the cache.
         cached = self._cache.get(path)
         if cached is not None:
@@ -905,35 +898,25 @@ class BuildFileProcessor(object):
 
         # Install the build context for this input as the current context.
         with self._set_build_env(build_env):
-            # The globals dict that this file will be executed under.
-            default_globals = {}
+            # Set of helpers callable from the child environment.
+            default_globals = {
+                'include_defs': functools.partial(self._include_defs, is_implicit_include),
+                'add_build_file_dep': self._add_build_file_dep,
+                'read_config': self._read_config,
+                'allow_unsafe_import': self._import_whitelist_manager.allow_unsafe_import,
+                'glob': self._glob,
+                'subdir_glob': self._subdir_glob,
+            }
 
-            # Install the 'include_defs' function into our global object.
-            default_globals['include_defs'] = functools.partial(
-                self._include_defs,
-                implicit_includes=implicit_includes)
-
-            # Install the 'add_dependency' function into our global object.
-            default_globals['add_build_file_dep'] = self._add_build_file_dep
-
-            # Install the 'read_config' function into our global object.
-            default_globals['read_config'] = self._read_config
-
-            # Install the 'allow_unsafe_import' function into our global object.
-            default_globals['allow_unsafe_import'] = \
-                self._import_whitelist_manager.allow_unsafe_import
-
-            # Install the 'glob' and 'glob_subdir' functions into our global object.
-            default_globals['glob'] = self._glob
-            default_globals['subdir_glob'] = self._subdir_glob
-
-            # If any implicit includes were specified, process them first.
-            for include in implicit_includes:
-                include_path = self._get_include_path(include)
-                inner_env, mod = self._process_include(include_path)
-                self._merge_globals(mod, default_globals)
-                build_env.includes.add(include_path)
-                build_env.merge(inner_env)
+            # Don't include implicit includes if the current file being
+            # processed is an implicit include
+            if not is_implicit_include:
+                for include in self._implicit_includes:
+                    include_path = self._get_include_path(include)
+                    inner_env, mod = self._process_include(include_path, True)
+                    self._merge_globals(mod, default_globals)
+                    build_env.includes.add(include_path)
+                    build_env.merge(inner_env)
 
             # Build a new module for the given file, using the default globals
             # created above.
@@ -960,29 +943,19 @@ class BuildFileProcessor(object):
         self._cache[path] = build_env, module
         return build_env, module
 
-    def _process_include(self, path, implicit_includes=None):
+    def _process_include(self, path, is_implicit_include):
+        # type: (str, bool) -> Tuple[AbstractContext, types.ModuleType]
         """Process the include file at the given path.
 
-        :param str path: path to the include.
-        :param list[str] implicit_includes: implicit include files that should be included.
-        :rtype: Tuple[AbstractContext, module]
+        :param path: path to the include.
+        :param is_implicit_include: whether the file being processed is an implicit include, or was
+            included from an implicit include.
         """
-        if implicit_includes is None:
-            implicit_includes = []
-
         build_env = IncludeContext()
-        return self._process(
-            build_env,
-            path,
-            implicit_includes=implicit_includes)
+        return self._process(build_env, path, is_implicit_include=is_implicit_include)
 
-    def _process_build_file(self, watch_root, project_prefix, path, implicit_includes=None):
-        """
-        Process the build file at the given path.
-        """
-        if implicit_includes is None:
-            implicit_includes = []
-
+    def _process_build_file(self, watch_root, project_prefix, path):
+        """Process the build file at the given path."""
         # Create the build file context, including the base path and directory
         # name of the given path.
         relative_path_to_build_file = os.path.relpath(path, self._project_root).replace('\\', '/')
@@ -1030,10 +1003,7 @@ class BuildFileProcessor(object):
                     source='autodeps',
                     exception=None))
 
-        return self._process(
-            build_env,
-            path,
-            implicit_includes=implicit_includes)
+        return self._process(build_env, path, is_implicit_include=False)
 
     def _try_parse_autodeps(self, dirname):
         """
@@ -1093,14 +1063,10 @@ class BuildFileProcessor(object):
                 raise InvalidSignatureError('{0} did not contain an autodeps signature'.
                                             format(autodeps_file))
 
-
     def process(self, watch_root, project_prefix, path, diagnostics):
-        """
-        Process a build file returning a dict of its rules and includes.
-        """
+        """Process a build file returning a dict of its rules and includes."""
         build_env, mod = self._process_build_file(watch_root, project_prefix,
-                                                  os.path.join(self._project_root, path),
-                                                  implicit_includes=self._implicit_includes)
+                                                  os.path.join(self._project_root, path))
 
         # Initialize the output object to a map of the parsed rules.
         values = build_env.rules.values()
