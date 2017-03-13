@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -122,6 +123,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
             .setCxxRuntime(NdkCxxPlatforms.CxxRuntime.GNUSTL)
             .setCxxSharedRuntimePath(Paths.get("runtime"))
+            .setObjdump(new CommandTool.Builder().addArg("objdump").build())
             .build();
 
     ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms =

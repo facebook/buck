@@ -25,8 +25,6 @@ import org.immutables.value.Value;
 import java.nio.file.Path;
 import java.util.Optional;
 
-import javax.annotation.Nullable;
-
 /**
  * Adds Android-specific tools to {@link CxxPlatform}.
  */
@@ -38,7 +36,6 @@ interface AbstractNdkCxxPlatform {
 
   NdkCxxPlatforms.CxxRuntime getCxxRuntime();
 
-  @Nullable
   Tool getObjdump();
 
   /**

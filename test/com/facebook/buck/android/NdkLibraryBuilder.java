@@ -19,6 +19,7 @@ import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -38,6 +39,7 @@ public class NdkLibraryBuilder
           .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
           .setCxxRuntime(NdkCxxPlatforms.CxxRuntime.GNUSTL)
           .setCxxSharedRuntimePath(Paths.get("runtime"))
+          .setObjdump(new CommandTool.Builder().addArg("objdump").build())
           .build();
 
   private static final ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> NDK_PLATFORMS =
