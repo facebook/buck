@@ -247,7 +247,6 @@ public class NativeRelinker {
         nativePlatforms.get(cpuType).getObjdump(),
         cxxBuckConfig,
         source,
-        linker != null,
         linker,
         linkerArgs);
   }
