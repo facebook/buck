@@ -17,7 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.MoreStreams;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
@@ -35,8 +35,8 @@ public class SourcePathRuleFinder {
   }
 
   public ImmutableSet<BuildRule> filterBuildRuleInputs(Stream<? extends SourcePath> sources) {
-    return sources
-        .flatMap(MoreStreams.filterCast(BuildTargetSourcePath.class))
+    return RichStream.from(sources)
+        .filter(BuildTargetSourcePath.class)
         .map(input -> ruleResolver.getRule(input.getTarget()))
         .collect(MoreCollectors.toImmutableSet());
   }
