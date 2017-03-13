@@ -39,7 +39,6 @@ import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.VersionPropagatorBuilder;
 import com.facebook.buck.versions.VersionedAliasBuilder;
 import com.facebook.buck.versions.VersionedTargetGraphBuilder;
-import com.facebook.buck.versions.VersionedTargetGraphFactory;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -210,7 +209,7 @@ public class CxxGenruleDescriptionTest {
         new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
             .setCmd("$(ldflags-shared //:versioned)");
     TargetGraph graph =
-        VersionedTargetGraphFactory.newInstance(
+        TargetGraphFactory.newInstance(
             dep.build(),
             versionedDep.build(),
             genruleBuilder.build());
@@ -242,7 +241,7 @@ public class CxxGenruleDescriptionTest {
         new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
             .setCmd("$(ldflags-shared //:dep)");
     TargetGraph graph =
-        VersionedTargetGraphFactory.newInstance(
+        TargetGraphFactory.newInstance(
             transitiveDep.build(),
             versionedDep.build(),
             dep.build(),

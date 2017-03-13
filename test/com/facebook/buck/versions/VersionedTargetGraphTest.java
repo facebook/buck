@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matchers;
@@ -34,7 +35,8 @@ public class VersionedTargetGraphTest {
   @Test
   public void getNodeWithExtraFlavors() {
     TargetNode<?, ?> node = createTargetNode("bar");
-    TargetGraph graph = VersionedTargetGraphFactory.newInstance(node);
+    TargetGraph graph =
+        VersionedTargetGraphFactory.newInstance(ImmutableList.of(node));
     TargetNode<?, ?> result =
         graph.get(node.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("hello")));
     assertThat(result, Matchers.notNullValue());
@@ -47,7 +49,8 @@ public class VersionedTargetGraphTest {
   @Test
   public void getNodeWithExtraFlavorsOnFlavoredNode() {
     TargetNode<?, ?> node = createTargetNode("bar#hello");
-    TargetGraph graph = VersionedTargetGraphFactory.newInstance(node);
+    TargetGraph graph =
+        VersionedTargetGraphFactory.newInstance(ImmutableList.of(node));
     TargetNode<?, ?> result =
         graph.get(node.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("world")));
     assertThat(result, Matchers.notNullValue());
@@ -63,7 +66,7 @@ public class VersionedTargetGraphTest {
   public void getNodeWithExtraFlavorsWithMultipleCandidatesWithSubsetRelation() {
     TargetNode<?, ?> node1 = createTargetNode("bar#hello");
     TargetNode<?, ?> node2 = createTargetNode("bar#hello,bye");
-    TargetGraph graph = VersionedTargetGraphFactory.newInstance(node1, node2);
+    TargetGraph graph = VersionedTargetGraphFactory.newInstance(ImmutableList.of(node1, node2));
     TargetNode<?, ?> result =
         graph.get(node2.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("world")));
     assertThat(result, Matchers.notNullValue());
@@ -80,12 +83,30 @@ public class VersionedTargetGraphTest {
   public void getNodeWithExtraFlavorsWithMultipleAmbiguousCandidates() {
     TargetNode<?, ?> node1 = createTargetNode("bar#one,two");
     TargetNode<?, ?> node2 = createTargetNode("bar#two,three");
-    TargetGraph graph = VersionedTargetGraphFactory.newInstance(node1, node2);
+    TargetGraph graph = VersionedTargetGraphFactory.newInstance(ImmutableList.of(node1, node2));
     graph.get(
         node2.getBuildTarget().withFlavors(
             ImmutableFlavor.of("one"),
             ImmutableFlavor.of("two"),
             ImmutableFlavor.of("three")));
+  }
+
+  @Test
+  public void getNodeWithNonVersionExtraFlavorsFallsBackToUnversioned() {
+    TargetNode<?, ?> node = createTargetNode("bar#hello");
+    TargetNode<?, ?> versionedNode = createTargetNode("bar#version");
+    TargetGraph graph =
+        VersionedTargetGraphFactory.newInstance(
+            ImmutableMap.of(
+                node.getBuildTarget().withFlavors(), node,
+                versionedNode.getBuildTarget(), versionedNode));
+    TargetNode<?, ?> result =
+        graph.get(node.getBuildTarget().withFlavors(ImmutableFlavor.of("world")));
+    assertThat(result, Matchers.notNullValue());
+    assertThat(
+        result.getBuildTarget().getFlavors(),
+        Matchers.containsInAnyOrder(ImmutableFlavor.of("world")));
+    assertNodeCreatedFrom(result, node);
   }
 
   private void assertNodeCreatedFrom(TargetNode<?, ?> node, TargetNode<?, ?> parent) {

@@ -1,7 +1,7 @@
 {
   "testutil" : {
     "deps" : [
-      "//src/com/facebook/buck/graph:graph",
+      "//src/com/facebook/buck/util:util",
       "//test/com/facebook/buck/model:testutil"
     ],
     "exported_deps" : [

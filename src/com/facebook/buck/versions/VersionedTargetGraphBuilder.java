@@ -16,7 +16,6 @@
 
 package com.facebook.buck.versions;
 
-import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -38,6 +37,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
@@ -71,7 +71,7 @@ public class VersionedTargetGraphBuilder {
   /**
    * The resolved version graph being built.
    */
-  private final MutableDirectedGraph<TargetNode<?, ?>> graph;
+  private final VersionedTargetGraph.Builder targetGraphBuilder = VersionedTargetGraph.builder();
 
   /**
    * Map of the build targets to nodes in the resolved graph.
@@ -106,7 +106,6 @@ public class VersionedTargetGraphBuilder {
     this.versionSelector = versionSelector;
     this.unversionedTargetGraphAndBuildTargets = unversionedTargetGraphAndBuildTargets;
 
-    this.graph = MutableDirectedGraph.createConcurrent();
     this.index =
         new ConcurrentHashMap<>(
             unversionedTargetGraphAndBuildTargets.getTargetGraph().getNodes().size() * 4,
@@ -130,22 +129,6 @@ public class VersionedTargetGraphBuilder {
 
   private Optional<TargetNode<?, ?>> getNodeOptional(BuildTarget target) {
     return unversionedTargetGraphAndBuildTargets.getTargetGraph().getOptional(target);
-  }
-
-  private void addNode(TargetNode<?, ?> node) {
-    Preconditions.checkArgument(
-        !TargetGraphVersionTransformations.getVersionedNode(node).isPresent(),
-        "%s",
-        node);
-    graph.addNode(node);
-  }
-
-  private void addEdge(TargetNode<?, ?> src, TargetNode<?, ?> dst) {
-    Preconditions.checkArgument(
-        !TargetGraphVersionTransformations.getVersionedNode(src).isPresent());
-    Preconditions.checkArgument(
-        !TargetGraphVersionTransformations.getVersionedNode(dst).isPresent());
-    graph.addEdge(src, dst);
   }
 
   private TargetNode<?, ?> indexPutIfAbsent(TargetNode<?, ?> node) {
@@ -295,10 +278,7 @@ public class VersionedTargetGraphBuilder {
         index.size(),
         roots.get());
 
-    return new VersionedTargetGraph(
-        graph,
-        ImmutableMap.copyOf(index),
-        ImmutableSet.of());
+    return targetGraphBuilder.build();
   }
 
   public static TargetGraphAndBuildTargets transform(
@@ -347,9 +327,9 @@ public class VersionedTargetGraphBuilder {
       if (oldNode != null) {
         node = oldNode;
       } else {
-        addNode(node);
+        targetGraphBuilder.addNode(node.getBuildTarget().withFlavors(), node);
         for (TargetNode<?, ?> dep : process(node.getDeps())) {
-          addEdge(node, dep);
+          targetGraphBuilder.addEdge(node, dep);
         }
       }
 
@@ -428,10 +408,9 @@ public class VersionedTargetGraphBuilder {
         TargetNodeTranslator targetTranslator)
         throws VersionException {
 
-      BuildTarget newTarget =
-          targetTranslator.translateBuildTarget(node.getBuildTarget())
-              .orElse(node.getBuildTarget());
-      TargetNode<?, ?> processed = index.get(newTarget);
+      Optional<BuildTarget> newTarget =
+          targetTranslator.translateBuildTarget(node.getBuildTarget());
+      TargetNode<?, ?> processed = index.get(newTarget.orElse(node.getBuildTarget()));
       if (processed != null) {
         return processed;
       }
@@ -453,11 +432,18 @@ public class VersionedTargetGraphBuilder {
       if (oldNode != null) {
         newNode = oldNode;
       } else {
-        addNode(newNode);
+        // Insert the node into the graph, indexing it by a base target containing only the version
+        // flavor, if one exists.
+        targetGraphBuilder.addNode(
+            node.getBuildTarget().withFlavors(
+                Sets.difference(
+                    newNode.getBuildTarget().getFlavors(),
+                    node.getBuildTarget().getFlavors())),
+            newNode);
         for (BuildTarget depTarget :
              FluentIterable.from(node.getDeps())
                  .filter(Predicates.or(isVersionPropagator, isVersioned))) {
-          addEdge(
+          targetGraphBuilder.addEdge(
               newNode,
               processVersionSubGraphNode(
                   resolveVersions(getNode(depTarget), selectedVersions),
@@ -468,7 +454,7 @@ public class VersionedTargetGraphBuilder {
              process(
                  FluentIterable.from(node.getDeps())
                      .filter(Predicates.not(Predicates.or(isVersionPropagator, isVersioned))))) {
-          addEdge(newNode, dep);
+          targetGraphBuilder.addEdge(newNode, dep);
         }
       }
 

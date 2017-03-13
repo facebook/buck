@@ -16,40 +16,34 @@
 
 package com.facebook.buck.versions;
 
-import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class VersionedTargetGraphFactory {
 
   private VersionedTargetGraphFactory() {}
 
-  public static VersionedTargetGraph newInstance(Iterable<TargetNode<?, ?>> nodes) {
-    Map<BuildTarget, TargetNode<?, ?>> builder = new HashMap<>();
-    for (TargetNode<?, ?> node : nodes) {
-      builder.put(node.getBuildTarget(), node);
-    }
-    ImmutableMap<BuildTarget, TargetNode<?, ?>> map = ImmutableMap.copyOf(builder);
-
-    MutableDirectedGraph<TargetNode<?, ?>> graph = new MutableDirectedGraph<>();
-    for (TargetNode<?, ?> node : map.values()) {
-      graph.addNode(node);
-      for (BuildTarget dep : node.getDeps()) {
-        graph.addEdge(node, Preconditions.checkNotNull(map.get(dep), dep));
+  public static VersionedTargetGraph newInstance(
+      ImmutableMap<BuildTarget, TargetNode<?, ?>> index) {
+    VersionedTargetGraph.Builder builder = VersionedTargetGraph.builder();
+    for (Map.Entry<BuildTarget, TargetNode<?, ?>> ent : index.entrySet()) {
+      builder.addNode(ent.getKey(), ent.getValue());
+      for (BuildTarget dep : ent.getValue().getDeps()) {
+        builder.addEdge(ent.getValue(), Preconditions.checkNotNull(index.get(dep), dep));
       }
     }
-    return new VersionedTargetGraph(graph, map, ImmutableSet.of());
+    return builder.build();
   }
 
-  public static TargetGraph newInstance(TargetNode<?, ?>... nodes) {
-    return newInstance(ImmutableSet.copyOf(nodes));
+  public static VersionedTargetGraph newInstance(ImmutableList<TargetNode<?, ?>> nodes) {
+    return newInstance(
+        nodes.stream().collect(MoreCollectors.toImmutableMap(TargetNode::getBuildTarget, n -> n)));
   }
 
 }
