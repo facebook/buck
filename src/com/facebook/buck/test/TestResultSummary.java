@@ -125,7 +125,8 @@ public class TestResultSummary implements TestResultSummaryExternalInterface {
   }
 
   @Override
-  @Nullable public String getMessage() {
+  @Nullable
+  public String getMessage() {
     return message;
   }
 

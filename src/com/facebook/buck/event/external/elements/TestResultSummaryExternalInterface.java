@@ -18,6 +18,8 @@ package com.facebook.buck.event.external.elements;
 
 import com.facebook.buck.test.result.type.ResultType;
 
+import javax.annotation.Nullable;
+
 /**
  * Describes the results of a single test.
  * This type is intended to be used by external applications (like the Intellij Buck plugin)
@@ -44,7 +46,7 @@ public interface TestResultSummaryExternalInterface {
   /**
    * @return the reason for the test failure.
    */
-  String getMessage();
+  @Nullable String getMessage();
   /**
    * @return the stacktrace of the test failure.
    */
