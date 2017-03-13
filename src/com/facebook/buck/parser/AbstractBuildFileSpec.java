@@ -204,7 +204,7 @@ abstract class AbstractBuildFileSpec {
       LOG.warn("Watchman warning from query %s: %s", query, warning);
     }
 
-    List<String> files = (List<String>) response.get("files");
+    List<String> files = (List<String>) Preconditions.checkNotNull(response.get("files"));
     LOG.verbose("Query %s -> files %s", query, files);
 
     for (String file : files) {

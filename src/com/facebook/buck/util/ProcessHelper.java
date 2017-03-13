@@ -115,7 +115,8 @@ public class ProcessHelper {
   }
 
   @Nullable
-  static ProcessResourceConsumption getProcessResourceConsumptionInternal(OSProcess process) {
+  static ProcessResourceConsumption getProcessResourceConsumptionInternal(
+      @Nullable OSProcess process) {
     if (process == null) {
       return null;
     }
@@ -245,6 +246,8 @@ public class ProcessHelper {
 
     public static class Node {
       public final long pid;
+      // May be null if it's the parent of a process, and we sampled a subset of processes which
+      // didn't include the parent.
       @Nullable private OSProcess info;
       private final List<Node> children = new ArrayList<>();
 

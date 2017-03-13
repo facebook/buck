@@ -80,13 +80,15 @@ public class PublishCommand extends BuildCommand {
       name = "--username",
       aliases = "-u",
       usage = "User name to use to authenticate with the server")
-  private String username;
+  @Nullable
+  private String username = null;
 
   @Option(
       name = "--password",
       aliases = "-p",
       usage = "Password to use to authenticate with the server")
-  private String password;
+  @Nullable
+  private String password = null;
 
 
   @Override

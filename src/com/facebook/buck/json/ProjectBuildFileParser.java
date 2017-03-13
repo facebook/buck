@@ -519,13 +519,13 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
   private static Optional<BuildFileSyntaxError> parseSyntaxError(Map<String, Object> exceptionMap) {
     String type = (String) exceptionMap.get("type");
-    if (type.equals("SyntaxError")) {
+    if ("SyntaxError".equals(type)) {
       return Optional.of(
           BuildFileSyntaxError.of(
-              Paths.get((String) exceptionMap.get("filename")),
-              (Number) exceptionMap.get("lineno"),
+              Paths.get((String) Preconditions.checkNotNull(exceptionMap.get("filename"))),
+              (Number) Preconditions.checkNotNull(exceptionMap.get("lineno")),
               Optional.ofNullable((Number) exceptionMap.get("offset")),
-              (String) exceptionMap.get("text")));
+              (String) Preconditions.checkNotNull(exceptionMap.get("text"))));
     } else {
       return Optional.empty();
     }
@@ -542,10 +542,10 @@ public class ProjectBuildFileParser implements AutoCloseable {
     for (Map<String, Object> tracebackItem : traceback) {
       stackTraceBuilder.add(
           BuildFileParseExceptionStackTraceEntry.of(
-              Paths.get((String) tracebackItem.get("filename")),
-              (Number) tracebackItem.get("line_number"),
-              (String) tracebackItem.get("function_name"),
-              (String) tracebackItem.get("text")));
+              Paths.get((String) Preconditions.checkNotNull(tracebackItem.get("filename"))),
+              (Number) Preconditions.checkNotNull(tracebackItem.get("line_number")),
+              (String) Preconditions.checkNotNull(tracebackItem.get("function_name")),
+              (String) Preconditions.checkNotNull(tracebackItem.get("text"))));
     }
     return stackTraceBuilder.build();
   }
@@ -554,8 +554,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
   static BuildFileParseExceptionData parseExceptionData(
       Map<String, Object> exceptionMap) {
     return BuildFileParseExceptionData.of(
-        (String) exceptionMap.get("type"),
-        (String) exceptionMap.get("value"),
+        (String) Preconditions.checkNotNull(exceptionMap.get("type")),
+        (String) Preconditions.checkNotNull(exceptionMap.get("value")),
         parseSyntaxError(exceptionMap),
         parseStackTrace(exceptionMap)
     );
