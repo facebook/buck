@@ -25,19 +25,24 @@ import com.facebook.buck.event.TestEventConfigurator;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleDurationTracker;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
 import com.facebook.buck.step.StepEvent;
+import com.facebook.buck.timing.ClockDuration;
 import com.facebook.buck.util.Ansi;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.HashCode;
 
 import org.junit.Test;
 
@@ -46,7 +51,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class BuildThreadStateRendererTest {
 
@@ -70,7 +74,6 @@ public class BuildThreadStateRendererTest {
     BuildThreadStateRenderer renderer = createRenderer(
         2100,
         ImmutableMap.of(),
-        ImmutableMap.of(),
         ImmutableMap.of());
     assertThat(
         renderLines(renderer, true),
@@ -91,22 +94,17 @@ public class BuildThreadStateRendererTest {
     BuildThreadStateRenderer renderer = createRenderer(
         4200,
         ImmutableMap.of(
-            1L, createRuleStartedEventOptional(1, 1200, RULE2),
-            3L, createRuleStartedEventOptional(3, 2300, RULE3),
-            4L, createRuleStartedEventOptional(4, 1100, RULE1),
+            1L, createRuleBeginningEventOptional(1, 1200, 1400, RULE2),
+            3L, createRuleBeginningEventOptional(3, 2300, 700, RULE3),
+            4L, createRuleBeginningEventOptional(4, 1100, 200, RULE1),
             5L, Optional.empty(),
-            8L, createRuleStartedEventOptional(6, 3000, RULE4)),
+            8L, createRuleBeginningEventOptional(6, 3000, 0, RULE4)),
         ImmutableMap.of(
             1L, createStepStartedEventOptional(1, 1500, "step A"),
             3L, Optional.empty(),
             4L, Optional.empty(),
             5L, Optional.empty(),
-            8L, createStepStartedEventOptional(1, 3700, "step B")),
-        ImmutableMap.of(
-            TARGET1, new AtomicLong(200),
-            TARGET2, new AtomicLong(1400),
-            TARGET3, new AtomicLong(700),
-            TARGET4, new AtomicLong(0)));
+            8L, createStepStartedEventOptional(1, 3700, "step B")));
     assertThat(
         renderLines(renderer, true),
         is(equalTo(
@@ -141,23 +139,19 @@ public class BuildThreadStateRendererTest {
     BuildThreadStateRenderer renderer = createRenderer(
         4200,
         ImmutableMap.of(
-            3L, createRuleStartedEventOptional(3, 2300, RULE3),
+            3L, createRuleBeginningEventOptional(3, 2300, 700, RULE3),
             5L, Optional.empty(),
-            8L, createRuleStartedEventOptional(6, 3000, RULE4)),
+            8L, createRuleBeginningEventOptional(6, 3000, 0, RULE4)),
         ImmutableMap.of(
             1L, createStepStartedEventOptional(1, 1500, "step A"),
             4L, Optional.empty(),
             5L, Optional.empty(),
-            8L, createStepStartedEventOptional(1, 3700, "step B")),
-        ImmutableMap.of(
-            TARGET1, new AtomicLong(200),
-            TARGET2, new AtomicLong(1400),
-            TARGET3, new AtomicLong(700)));
+            8L, createStepStartedEventOptional(1, 3700, "step B")));
     assertThat(
         renderLines(renderer, true),
         is(equalTo(
             ImmutableList.of(
-                // two missing build rules - no output
+                // one missing build rule - no output
                 " |=> //:target3...  2.6s (checking_cache)", // missing step information
                 " |=> //:target4...  1.2s (running step B[0.5s])",
                 " |=> IDLE")))); // missing accumulated time - show as IDLE
@@ -171,13 +165,21 @@ public class BuildThreadStateRendererTest {
     return new FakeBuildRule(target, PATH_RESOLVER, ImmutableSortedSet.of());
   }
 
-  private static Optional<? extends BuildRuleEvent> createRuleStartedEventOptional(
+  private static Optional<? extends BuildRuleEvent.BeginningBuildRuleEvent>
+  createRuleBeginningEventOptional(
       long threadId,
       long timeMs,
+      long durationMs,
       BuildRule rule) {
+    BuildRuleDurationTracker durationTracker = new BuildRuleDurationTracker();
+    durationTracker.setDuration(rule, new ClockDuration(durationMs, 0, 0));
+    RuleKey ruleKey = new RuleKey(HashCode.fromString("aa"));
     return Optional.of(
         TestEventConfigurator.configureTestEventAtTime(
-            BuildRuleEvent.started(rule),
+            BuildRuleEvent.resumed(
+                rule,
+                durationTracker,
+                new FakeRuleKeyFactory(ImmutableMap.of(rule.getBuildTarget(), ruleKey))),
             timeMs,
             TimeUnit.MILLISECONDS,
             threadId));
@@ -197,18 +199,14 @@ public class BuildThreadStateRendererTest {
 
   private BuildThreadStateRenderer createRenderer(
       long timeMs,
-      Map<Long, Optional<? extends BuildRuleEvent>> buildEvents,
-      Map<Long, Optional<? extends LeafEvent>> runningSteps,
-      Map<BuildTarget, AtomicLong> accumulatedTimes) {
+      Map<Long, Optional<? extends BuildRuleEvent.BeginningBuildRuleEvent>> buildEvents,
+      Map<Long, Optional<? extends LeafEvent>> runningSteps) {
     return new BuildThreadStateRenderer(
         ANSI,
         FORMAT_TIME_FUNCTION,
         timeMs,
         runningSteps,
-        new AccumulatedTimeTracker(
-            buildEvents,
-            ImmutableMap.of(),
-            accumulatedTimes));
+        new AccumulatedTimeTracker(buildEvents, ImmutableMap.of()));
   }
 
   private ImmutableList<String> renderLines(BuildThreadStateRenderer renderer, boolean sortByTime) {

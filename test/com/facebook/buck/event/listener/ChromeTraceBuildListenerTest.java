@@ -43,6 +43,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.BuildRuleDurationTracker;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -101,6 +102,7 @@ public class ChromeTraceBuildListenerTest {
   public TemporaryFolder tmpDir = new TemporaryFolder();
 
   private InvocationInfo invocationInfo;
+  private BuildRuleDurationTracker durationTracker;
 
   @Before
   public void setUp() throws IOException {
@@ -112,6 +114,7 @@ public class ChromeTraceBuildListenerTest {
         .setIsDaemon(false)
         .setSuperConsoleEnabled(false)
         .build();
+    durationTracker = new BuildRuleDurationTracker();
   }
 
   @Test
@@ -231,7 +234,8 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(artifactCompressionStartedEvent);
     eventBus.post(ArtifactCompressionEvent.finished(artifactCompressionStartedEvent));
 
-    eventBus.post(BuildRuleEvent.started(rule));
+    BuildRuleEvent.Started started = BuildRuleEvent.started(rule, durationTracker);
+    eventBus.post(started);
     eventBus.post(StepEvent.started(stepShortName, stepDescription, stepUuid));
 
 
@@ -288,7 +292,7 @@ public class ChromeTraceBuildListenerTest {
         0));
     eventBus.post(
         BuildRuleEvent.finished(
-            rule,
+            started,
             BuildRuleKeys.of(ruleKey),
             BuildRuleStatus.SUCCESS,
             CacheResult.miss(),

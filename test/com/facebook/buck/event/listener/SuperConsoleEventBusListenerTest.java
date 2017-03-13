@@ -55,6 +55,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleCacheEvent;
+import com.facebook.buck.rules.BuildRuleDurationTracker;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -134,15 +135,17 @@ public class SuperConsoleEventBusListenerTest {
 
   private FileSystem vfs;
   private Path logPath;
+  private BuildRuleDurationTracker durationTracker;
   private SuperConsoleConfig emptySuperConsoleConfig =
       new SuperConsoleConfig(FakeBuckConfig.builder().build());
 
   private final TimeZone timeZone = TimeZone.getTimeZone("UTC");
 
   @Before
-  public void createTestLogFile() {
+  public void setUp() {
     vfs = Jimfs.newFileSystem(Configuration.unix());
     logPath = vfs.getPath("log.txt");
+    durationTracker = new BuildRuleDurationTracker();
   }
 
   @Test
@@ -237,9 +240,10 @@ public class SuperConsoleEventBusListenerTest {
         DOWNLOAD_STRING,
         "[+] BUILDING...0.1s"));
 
+    BuildRuleEvent.Started started = BuildRuleEvent.started(fakeRule, durationTracker);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildRuleEvent.started(fakeRule),
+            started,
             600L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -368,7 +372,7 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             BuildRuleEvent.finished(
-                fakeRule,
+                started,
                 BuildRuleKeys.of(new RuleKey("aaaa")),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
@@ -385,9 +389,10 @@ public class SuperConsoleEventBusListenerTest {
         "[+] BUILDING...0.6s",
         " |=> IDLE"));
 
+    BuildRuleEvent.Started startedCached = BuildRuleEvent.started(cachedRule, durationTracker);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildRuleEvent.started(cachedRule),
+            startedCached,
             1010L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 2L));
@@ -402,7 +407,7 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             BuildRuleEvent.finished(
-                cachedRule,
+                startedCached,
                 BuildRuleKeys.of(new RuleKey("aaaa")),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
@@ -626,9 +631,10 @@ public class SuperConsoleEventBusListenerTest {
         "[+] BUILDING...0.1s" + " [0%] (0/10 JOBS, 0 UPDATED, " +
             "0 [0.0%] CACHE MISS)"));
 
+    BuildRuleEvent.Started started = BuildRuleEvent.started(fakeRule, durationTracker);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildRuleEvent.started(fakeRule),
+            started,
             600L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -668,7 +674,7 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             BuildRuleEvent.finished(
-                fakeRule,
+                started,
                 BuildRuleKeys.of(new RuleKey("aaaa")),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
@@ -685,9 +691,10 @@ public class SuperConsoleEventBusListenerTest {
         "[+] BUILDING...0.6s [10%] (1/10 JOBS, 1 UPDATED, 1 [10.0%] CACHE MISS)",
         " |=> IDLE"));
 
+    BuildRuleEvent.Started startedCached = BuildRuleEvent.started(cachedRule, durationTracker);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildRuleEvent.started(cachedRule),
+            startedCached,
             1010L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 2L));
@@ -702,7 +709,7 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             BuildRuleEvent.finished(
-                cachedRule,
+                startedCached,
                 BuildRuleKeys.of(new RuleKey("aaaa")),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
@@ -1063,9 +1070,10 @@ public class SuperConsoleEventBusListenerTest {
         540L,
         ImmutableList.of(parsingLine, DOWNLOAD_STRING, "[+] BUILDING...0.1s"));
 
+    BuildRuleEvent.Started started = BuildRuleEvent.started(testBuildRule, durationTracker);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildRuleEvent.started(testBuildRule),
+            started,
             600L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1080,7 +1088,7 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             BuildRuleEvent.finished(
-                testBuildRule,
+                started,
                 BuildRuleKeys.of(new RuleKey("aaaa")),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
@@ -1353,9 +1361,10 @@ public class SuperConsoleEventBusListenerTest {
         540L,
         ImmutableList.of(parsingLine, DOWNLOAD_STRING, "[+] BUILDING...0.1s"));
 
+    BuildRuleEvent.Started started = BuildRuleEvent.started(testBuildRule, durationTracker);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildRuleEvent.started(testBuildRule),
+            started,
             600L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1370,7 +1379,7 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             BuildRuleEvent.finished(
-                testBuildRule,
+                started,
                 BuildRuleKeys.of(new RuleKey("aaaa")),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
@@ -1656,9 +1665,10 @@ public class SuperConsoleEventBusListenerTest {
         DOWNLOAD_STRING,
         "[+] BUILDING...0.1s"));
 
+    BuildRuleEvent.Started started = BuildRuleEvent.started(testBuildRule, durationTracker);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildRuleEvent.started(testBuildRule),
+            started,
             600L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1673,7 +1683,7 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             BuildRuleEvent.finished(
-                testBuildRule,
+                started,
                 BuildRuleKeys.of(new RuleKey("aaaa")),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
@@ -1927,9 +1937,10 @@ public class SuperConsoleEventBusListenerTest {
             /* threadId */ 0L));
 
     // Start the rule.
+    BuildRuleEvent.Started started = BuildRuleEvent.started(fakeRule, durationTracker);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildRuleEvent.started(fakeRule),
+            started,
             0L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1951,9 +1962,10 @@ public class SuperConsoleEventBusListenerTest {
             /* threadId */ 0L));
 
     // Suspend the rule.
+    BuildRuleEvent.Suspended suspended = BuildRuleEvent.suspended(started, ruleKeyFactory);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildRuleEvent.suspended(fakeRule, ruleKeyFactory),
+            suspended,
             100L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1969,9 +1981,11 @@ public class SuperConsoleEventBusListenerTest {
             " |=> IDLE"));
 
     // Resume the rule.
+    BuildRuleEvent.Resumed resumed =
+        BuildRuleEvent.resumed(fakeRule, durationTracker, ruleKeyFactory);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildRuleEvent.resumed(fakeRule, ruleKeyFactory),
+            resumed,
             300L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -2017,7 +2031,7 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             BuildRuleEvent.finished(
-                fakeRule,
+                resumed,
                 BuildRuleKeys.of(new RuleKey("aaaa")),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),

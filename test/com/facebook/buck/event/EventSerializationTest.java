@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleDurationTracker;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.BuildRuleStatus;
@@ -59,6 +60,7 @@ public class EventSerializationTest {
   private long threadUserNanoTime;
   private long threadId;
   private BuildId buildId;
+  private BuildRuleDurationTracker durationTracker;
 
   @Before
   public void setUp() {
@@ -69,6 +71,7 @@ public class EventSerializationTest {
     threadUserNanoTime = new Random().nextLong();
     threadId = 0;
     buildId = new BuildId("Test");
+    durationTracker = new BuildRuleDurationTracker();
     EventKey.setSequenceValueForTest(4242L);
   }
 
@@ -150,22 +153,25 @@ public class EventSerializationTest {
   @Test
   public void testBuildRuleEventStarted() throws IOException {
     BuildRule rule = FakeBuildRule.newEmptyInstance("//fake:rule");
-    BuildRuleEvent.Started event = BuildRuleEvent.started(rule);
+    BuildRuleEvent.Started event = BuildRuleEvent.started(rule, durationTracker);
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = MAPPER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,\"buildRule\":{\"type\":\"fake_build_rule\",\"name\":\"//fake:rule\"}," +
-        "\"type\":\"BuildRuleStarted\",\"ruleRunningAfterThisEvent\":true," +
-        "\"eventKey\":{\"value\":1024186770}}",
+        "\"type\":\"BuildRuleStarted\",\"duration\":{\"wallMillisDuration\":0,\"nanoDuration\":0," +
+            "\"threadUserNanoDuration\":0},\"ruleRunningAfterThisEvent\":true," +
+            "\"eventKey\":{\"value\":1024186770}}",
         message);
   }
 
   @Test
   public void testBuildRuleEventFinished() throws IOException {
     BuildRule rule = FakeBuildRule.newEmptyInstance("//fake:rule");
+    BuildRuleEvent.Started started = BuildRuleEvent.started(rule, durationTracker);
+    started.configure(timestamp - 11, nanoTime - 12, threadUserNanoTime - 13, threadId, buildId);
     BuildRuleEvent.Finished event =
         BuildRuleEvent.finished(
-            rule,
+            started,
             BuildRuleKeys.of(new RuleKey("aaaa")),
             BuildRuleStatus.SUCCESS,
             CacheResult.miss(),
@@ -180,7 +186,10 @@ public class EventSerializationTest {
             "\"metadata\":{\"present\":false},\"artifactSizeBytes\":{\"present\":false}}," +
             "\"buildRule\":{\"type\":" +
             "\"fake_build_rule\",\"name\":\"//fake:rule\"}," +
-            "\"type\":\"BuildRuleFinished\",\"ruleRunningAfterThisEvent\":false," +
+            "\"type\":\"BuildRuleFinished\"," +
+            "\"duration\":{" +
+            "\"wallMillisDuration\":11,\"nanoDuration\":12,\"threadUserNanoDuration\":13}," +
+            "\"ruleRunningAfterThisEvent\":false," +
             "\"eventKey\":{\"value\":1024186770}," +
             "\"ruleKeys\":{\"ruleKey\":{\"hashCode\":\"aaaa\"}," +
             "\"inputRuleKey\":{\"present\":false}," +

@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.event.listener;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
@@ -26,17 +25,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicLong;
 
-
+// TODO(plamenko): rename this to BuildRuleThreadTracker
 public class AccumulatedTimeTracker {
 
-  private final ConcurrentMap<Long, Optional<? extends BuildRuleEvent>>
+  private final ConcurrentMap<Long, Optional<? extends BuildRuleEvent.BeginningBuildRuleEvent>>
       threadsToRunningBuildRuleEvent;
   private final ConcurrentMap<Long, Optional<? extends TestRuleEvent>>
       threadsToRunningTestRuleEvent;
-  // Time previously suspended runs of this rule.
-  private final ConcurrentMap<BuildTarget, AtomicLong> accumulatedRuleTime;
 
   public AccumulatedTimeTracker(
       ExecutionEnvironment executionEnvironment
@@ -45,29 +41,22 @@ public class AccumulatedTimeTracker {
         executionEnvironment.getAvailableCores());
     this.threadsToRunningTestRuleEvent = new ConcurrentHashMap<>(
         executionEnvironment.getAvailableCores());
-    this.accumulatedRuleTime = new ConcurrentHashMap<>();
   }
 
   @VisibleForTesting
   AccumulatedTimeTracker(
-      Map<Long, Optional<? extends BuildRuleEvent>> threadsToRunningBuildRuleEvent,
-      Map<Long, Optional<? extends TestRuleEvent>> threadsToRunningTestRuleEvent,
-      Map<BuildTarget, AtomicLong> accumulatedRuleTime) {
+      Map<Long, Optional<? extends BuildRuleEvent.BeginningBuildRuleEvent>>
+          threadsToRunningBuildRuleEvent,
+      Map<Long, Optional<? extends TestRuleEvent>> threadsToRunningTestRuleEvent) {
     this.threadsToRunningBuildRuleEvent = new ConcurrentHashMap<>();
     this.threadsToRunningTestRuleEvent = new ConcurrentHashMap<>();
-    this.accumulatedRuleTime = new ConcurrentHashMap<>();
 
     this.threadsToRunningBuildRuleEvent.putAll(threadsToRunningBuildRuleEvent);
     this.threadsToRunningTestRuleEvent.putAll(threadsToRunningTestRuleEvent);
-    this.accumulatedRuleTime.putAll(accumulatedRuleTime);
   }
 
-  public long getTime(BuildTarget buildTarget) {
-    AtomicLong val = accumulatedRuleTime.get(buildTarget);
-    return (val != null) ? val.get() : 0;
-  }
-
-  public ConcurrentMap<Long, Optional<? extends BuildRuleEvent>> getBuildEventsByThread() {
+  public ConcurrentMap<Long, Optional<? extends BuildRuleEvent.BeginningBuildRuleEvent>>
+  getBuildEventsByThread() {
     return threadsToRunningBuildRuleEvent;
   }
 
@@ -76,45 +65,38 @@ public class AccumulatedTimeTracker {
   }
 
   public void didStartBuildRule(BuildRuleEvent.Started started) {
-    threadsToRunningBuildRuleEvent.put(started.getThreadId(), Optional.of(started));
-    accumulatedRuleTime.put(started.getBuildRule().getBuildTarget(), new AtomicLong(0));
+    handleBeginningEvent(started);
   }
 
   public void didResumeBuildRule(BuildRuleEvent.Resumed resumed) {
-    threadsToRunningBuildRuleEvent.put(resumed.getThreadId(), Optional.of(resumed));
+    handleBeginningEvent(resumed);
   }
 
   public void didSuspendBuildRule(BuildRuleEvent.Suspended suspended) {
-    updateAccumulatedBuildTime(suspended);
+    handleEndingEvent(suspended);
   }
 
   public void didFinishBuildRule(BuildRuleEvent.Finished finished) {
-    updateAccumulatedBuildTime(finished);
+    handleEndingEvent(finished);
   }
 
   public void didStartTestRule(TestRuleEvent.Started started) {
     threadsToRunningTestRuleEvent.put(started.getThreadId(), Optional.of(started));
-    accumulatedRuleTime.put(started.getBuildTarget(), new AtomicLong(0));
   }
 
   public void didFinishTestRule(TestRuleEvent.Finished finished) {
     threadsToRunningTestRuleEvent.put(finished.getThreadId(), Optional.empty());
   }
 
-  private void updateAccumulatedBuildTime(BuildRuleEvent buildRuleEvent) {
-    Optional<? extends BuildRuleEvent> started =
-        Preconditions.checkNotNull(
-            threadsToRunningBuildRuleEvent.put(
-                buildRuleEvent.getThreadId(),
-                Optional.empty()));
-    Preconditions.checkState(started.isPresent());
-    Preconditions.checkState(buildRuleEvent.getBuildRule().equals(started.get().getBuildRule()));
-    AtomicLong current = accumulatedRuleTime.get(buildRuleEvent.getBuildRule().getBuildTarget());
-    // It's technically possible that another thread receives resumed and finished events
-    // while we're processing this one, so we have to check that the current counter exists.
-    if (current != null) {
-      current.getAndAdd(buildRuleEvent.getTimestamp() - started.get().getTimestamp());
-    }
+  private void handleBeginningEvent(BuildRuleEvent.BeginningBuildRuleEvent beginning) {
+    threadsToRunningBuildRuleEvent.put(beginning.getThreadId(), Optional.of(beginning));
+  }
+
+  private void handleEndingEvent(BuildRuleEvent.EndingBuildRuleEvent ending) {
+    Optional<? extends BuildRuleEvent> beginning = Preconditions.checkNotNull(
+            threadsToRunningBuildRuleEvent.put(ending.getThreadId(), Optional.empty()));
+    Preconditions.checkState(beginning.isPresent());
+    Preconditions.checkState(ending.getBuildRule().equals(beginning.get().getBuildRule()));
   }
 
 }

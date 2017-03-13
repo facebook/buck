@@ -56,11 +56,12 @@ public class BuildThreadStateRenderer implements ThreadStateRenderer {
       AccumulatedTimeTracker accumulatedTimeTracker) {
     ImmutableMap.Builder<Long, ThreadRenderingInformation> threadInformationMapBuilder =
         ImmutableMap.builder();
-    Map<Long, Optional<? extends BuildRuleEvent>> buildEventsByThread =
+    Map<Long, Optional<? extends BuildRuleEvent.BeginningBuildRuleEvent>> buildEventsByThread =
         accumulatedTimeTracker.getBuildEventsByThread();
     ImmutableList<Long> threadIds = ImmutableList.copyOf(buildEventsByThread.keySet());
     for (long threadId : threadIds) {
-      Optional<? extends BuildRuleEvent> buildRuleEvent = buildEventsByThread.get(threadId);
+      Optional<? extends BuildRuleEvent.BeginningBuildRuleEvent> buildRuleEvent =
+          buildEventsByThread.get(threadId);
       if (buildRuleEvent == null) {
         continue;
       }
@@ -69,7 +70,7 @@ public class BuildThreadStateRenderer implements ThreadStateRenderer {
       if (buildRuleEvent.isPresent()) {
         buildTarget = Optional.of(buildRuleEvent.get().getBuildRule().getBuildTarget());
         elapsedTimeMs = currentTimeMs - buildRuleEvent.get().getTimestamp() +
-            accumulatedTimeTracker.getTime(buildTarget.get());
+            buildRuleEvent.get().getDuration().getWallMillisDuration();
       }
       threadInformationMapBuilder.put(
           threadId,

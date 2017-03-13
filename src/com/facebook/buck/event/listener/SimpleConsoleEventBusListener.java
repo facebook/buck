@@ -216,8 +216,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       return;
     }
 
-    long elapsedTime = accumulatedTimeTracker.getTime(finished.getBuildRule().getBuildTarget());
-
     String jobsInfo = "";
     if (ruleCount.isPresent()) {
       jobsInfo = String.format(
@@ -231,7 +229,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         "%s %s %s %s",
         finished.getResultString(),
         jobsInfo,
-        formatElapsedTime(elapsedTime),
+        formatElapsedTime(finished.getDuration().getWallMillisDuration()),
         finished.getBuildRule().getFullyQualifiedName());
 
     if (BUILT_LOCALLY.equals(finished.getSuccessType().orElse(null)) ||

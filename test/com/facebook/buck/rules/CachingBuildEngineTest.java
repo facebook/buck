@@ -40,6 +40,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.FakeBuckEventListener;
+import com.facebook.buck.event.TestEventConfigurator;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
@@ -76,6 +77,7 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
@@ -199,6 +201,7 @@ public class CachingBuildEngineTest {
     protected SourcePathResolver pathResolver;
     protected DefaultRuleKeyFactory defaultRuleKeyFactory;
     protected InputBasedRuleKeyFactory inputBasedRuleKeyFactory;
+    protected BuildRuleDurationTracker durationTracker;
 
     @Before
     public void setUp() {
@@ -211,7 +214,7 @@ public class CachingBuildEngineTest {
           .setBuildContext(FakeBuildContext.NOOP_CONTEXT)
           .setArtifactCache(cache)
           .setBuildId(new BuildId())
-          .setClock(new DefaultClock())
+          .setClock(new IncrementingFakeClock())
           .setObjectMapper(ObjectMappers.newDefaultInstance())
           .build();
       buildContext.getEventBus().register(listener);
@@ -227,6 +230,7 @@ public class CachingBuildEngineTest {
           pathResolver,
           ruleFinder,
           NO_INPUT_FILE_SIZE_LIMIT);
+      durationTracker = new BuildRuleDurationTracker();
     }
 
 
@@ -321,13 +325,15 @@ public class CachingBuildEngineTest {
 
       // Verify the events logged to the BuckEventBus.
       List<BuckEvent> events = listener.getEvents();
-      assertThat(events, hasItem(BuildRuleEvent.ruleKeyCalculationStarted(dep)));
+      assertThat(events, hasItem(BuildRuleEvent.ruleKeyCalculationStarted(dep, durationTracker)));
+      BuildRuleEvent.Started started = TestEventConfigurator.configureTestEvent(
+          BuildRuleEvent.ruleKeyCalculationStarted(ruleToTest, durationTracker));
       assertThat(
           listener.getEvents(),
           Matchers.containsInRelativeOrder(
-              BuildRuleEvent.ruleKeyCalculationStarted(ruleToTest),
+              started,
               BuildRuleEvent.finished(
-                  ruleToTest,
+                  started,
                   BuildRuleKeys.of(ruleToTestKey),
                   BuildRuleStatus.SUCCESS,
                   CacheResult.miss(),
@@ -377,12 +383,14 @@ public class CachingBuildEngineTest {
 
       assertTrue(service.shutdownNow().isEmpty());
 
+      BuildRuleEvent.Started started = TestEventConfigurator.configureTestEvent(
+              BuildRuleEvent.ruleKeyCalculationStarted(buildRule, durationTracker));
       assertThat(
           listener.getEvents(),
           Matchers.containsInRelativeOrder(
-              BuildRuleEvent.ruleKeyCalculationStarted(buildRule),
+              started,
               BuildRuleEvent.finished(
-                  buildRule,
+                  started,
                   BuildRuleKeys.of(defaultRuleKeyFactory.build(buildRule)),
                   BuildRuleStatus.SUCCESS,
                   CacheResult.miss(),
@@ -566,13 +574,15 @@ public class CachingBuildEngineTest {
 
       // Verify the events logged to the BuckEventBus.
       List<BuckEvent> events = listener.getEvents();
-      assertThat(events, hasItem(BuildRuleEvent.ruleKeyCalculationStarted(dep)));
+      assertThat(events, hasItem(BuildRuleEvent.ruleKeyCalculationStarted(dep, durationTracker)));
+      BuildRuleEvent.Started started = TestEventConfigurator.configureTestEvent(
+          BuildRuleEvent.ruleKeyCalculationStarted(ruleToTest, durationTracker));
       assertThat(
           events,
           Matchers.containsInRelativeOrder(
-              BuildRuleEvent.ruleKeyCalculationStarted(ruleToTest),
+              started,
               BuildRuleEvent.finished(
-                  ruleToTest,
+                  started,
                   BuildRuleKeys.of(ruleToTestKey),
                   BuildRuleStatus.SUCCESS,
                   CacheResult.localKeyUnchangedHit(),
@@ -622,24 +632,28 @@ public class CachingBuildEngineTest {
 
       // Verify the events logged to the BuckEventBus.
       List<BuckEvent> events = listener.getEvents();
+      BuildRuleEvent.Started startedDep = TestEventConfigurator.configureTestEvent(
+          BuildRuleEvent.ruleKeyCalculationStarted(dep, durationTracker));
       assertThat(
           events,
           Matchers.containsInRelativeOrder(
-              BuildRuleEvent.ruleKeyCalculationStarted(dep),
+              startedDep,
               BuildRuleEvent.finished(
-                  dep,
+                  startedDep,
                   BuildRuleKeys.of(depKey),
                   BuildRuleStatus.SUCCESS,
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.empty(),
                   Optional.empty())));
+      BuildRuleEvent.Started started = TestEventConfigurator.configureTestEvent(
+          BuildRuleEvent.ruleKeyCalculationStarted(ruleToTest, durationTracker));
       assertThat(
           events,
           Matchers.containsInRelativeOrder(
-              BuildRuleEvent.ruleKeyCalculationStarted(ruleToTest),
+              started,
               BuildRuleEvent.finished(
-                  ruleToTest,
+                  started,
                   BuildRuleKeys.of(ruleToTestKey),
                   BuildRuleStatus.SUCCESS,
                   CacheResult.localKeyUnchangedHit(),
@@ -712,36 +726,42 @@ public class CachingBuildEngineTest {
 
       // Verify the events logged to the BuckEventBus.
       List<BuckEvent> events = listener.getEvents();
+      BuildRuleEvent.Started started = TestEventConfigurator.configureTestEvent(
+          BuildRuleEvent.ruleKeyCalculationStarted(ruleToTest, durationTracker));
       assertThat(
           events,
           Matchers.containsInRelativeOrder(
-              BuildRuleEvent.ruleKeyCalculationStarted(ruleToTest),
+              started,
               BuildRuleEvent.finished(
-                  ruleToTest,
+                  started,
                   BuildRuleKeys.of(ruleToTestKey),
                   BuildRuleStatus.SUCCESS,
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.empty(),
                   Optional.empty())));
+      BuildRuleEvent.Started startedDep = TestEventConfigurator.configureTestEvent(
+          BuildRuleEvent.ruleKeyCalculationStarted(runtimeDep, durationTracker));
       assertThat(
           events,
           Matchers.containsInRelativeOrder(
-              BuildRuleEvent.ruleKeyCalculationStarted(runtimeDep),
+              startedDep,
               BuildRuleEvent.finished(
-                  runtimeDep,
+                  startedDep,
                   BuildRuleKeys.of(runtimeDepKey),
                   BuildRuleStatus.SUCCESS,
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.empty(),
                   Optional.empty())));
+      BuildRuleEvent.Started startedTransitive = TestEventConfigurator.configureTestEvent(
+          BuildRuleEvent.ruleKeyCalculationStarted(transitiveRuntimeDep, durationTracker));
       assertThat(
           events,
           Matchers.containsInRelativeOrder(
-              BuildRuleEvent.ruleKeyCalculationStarted(transitiveRuntimeDep),
+              startedTransitive,
               BuildRuleEvent.finished(
-                  transitiveRuntimeDep,
+                  startedTransitive,
                   BuildRuleKeys.of(transitiveRuntimeDepKey),
                   BuildRuleStatus.SUCCESS,
                   CacheResult.localKeyUnchangedHit(),
@@ -2822,8 +2842,9 @@ public class CachingBuildEngineTest {
 
       // Verify that events have correct thread IDs
       assertRelatedBuildRuleEventsOnSameThread(
-          FluentIterable.from(listener.getEvents())
-              .filter(BuildRuleEvent.class));
+          FluentIterable.from(listener.getEvents()).filter(BuildRuleEvent.class));
+      assertRelatedBuildRuleEventsDuration(
+          FluentIterable.from(listener.getEvents()).filter(BuildRuleEvent.class));
     }
 
     @Test
@@ -2862,8 +2883,9 @@ public class CachingBuildEngineTest {
 
       // Verify that events have correct thread IDs
       assertRelatedBuildRuleEventsOnSameThread(
-          FluentIterable.from(listener.getEvents())
-              .filter(BuildRuleEvent.class));
+          FluentIterable.from(listener.getEvents()).filter(BuildRuleEvent.class));
+      assertRelatedBuildRuleEventsDuration(
+          FluentIterable.from(listener.getEvents()).filter(BuildRuleEvent.class));
     }
 
     @Test
@@ -2901,8 +2923,9 @@ public class CachingBuildEngineTest {
 
       // Verify that events have correct thread IDs
       assertRelatedBuildRuleEventsOnSameThread(
-          FluentIterable.from(listener.getEvents())
-              .filter(BuildRuleEvent.class));
+          FluentIterable.from(listener.getEvents()).filter(BuildRuleEvent.class));
+      assertRelatedBuildRuleEventsDuration(
+          FluentIterable.from(listener.getEvents()).filter(BuildRuleEvent.class));
     }
 
     /**
@@ -2912,9 +2935,7 @@ public class CachingBuildEngineTest {
       Map<Long, List<BuildRuleEvent>> grouped = new HashMap<>();
       for (BuildRuleEvent event : events) {
         if (!grouped.containsKey(event.getThreadId())) {
-          grouped.put(
-              event.getThreadId(),
-              new ArrayList<BuildRuleEvent>());
+          grouped.put(event.getThreadId(), new ArrayList<>());
         }
         grouped.get(event.getThreadId()).add(event);
       }
@@ -2948,6 +2969,50 @@ public class CachingBuildEngineTest {
               equalTo(!event2.isRuleRunningAfterThisEvent())
           );
         }
+      }
+    }
+
+    private void assertRelatedBuildRuleEventsDuration(Iterable<BuildRuleEvent> events) {
+      Map<BuildRule, List<BuildRuleEvent>> grouped = new HashMap<>();
+      for (BuildRuleEvent event : events) {
+        if (!grouped.containsKey(event.getBuildRule())) {
+          grouped.put(event.getBuildRule(), new ArrayList<>());
+        }
+        grouped.get(event.getBuildRule()).add(event);
+      }
+      for (List<BuildRuleEvent> queue : grouped.values()) {
+        queue.sort(Comparator.comparingLong(BuildRuleEvent::getNanoTime));
+        long count = 0, wallStart = 0, nanoStart = 0, wall = 0, nano = 0, thread = 0;
+        for (BuildRuleEvent event : queue) {
+          if (event instanceof BuildRuleEvent.BeginningBuildRuleEvent) {
+            if (count++ == 0) {
+              wallStart = event.getTimestamp();
+              nanoStart = event.getNanoTime();
+            }
+            assertEquals(wall + event.getTimestamp() - wallStart,
+                event.getDuration().getWallMillisDuration());
+            assertEquals(nano + event.getNanoTime() - nanoStart,
+                event.getDuration().getNanoDuration());
+            assertEquals(thread, event.getDuration().getThreadUserNanoDuration());
+          } else if (event instanceof BuildRuleEvent.EndingBuildRuleEvent) {
+            BuildRuleEvent.BeginningBuildRuleEvent beginning =
+                ((BuildRuleEvent.EndingBuildRuleEvent) event).getBeginningEvent();
+            thread += event.getThreadUserNanoTime() - beginning.getThreadUserNanoTime();
+            assertEquals(wall + event.getTimestamp() - wallStart,
+                event.getDuration().getWallMillisDuration());
+            assertEquals(nano + event.getNanoTime() - nanoStart,
+                event.getDuration().getNanoDuration());
+            assertEquals(thread, event.getDuration().getThreadUserNanoDuration());
+            if (--count == 0) {
+              wall += event.getTimestamp() - wallStart;
+              nano += event.getNanoTime() - nanoStart;
+            }
+          }
+        }
+        assertEquals(
+            "Different number of beginning and ending events: " + queue,
+            0,
+            count);
       }
     }
 

@@ -19,15 +19,17 @@ package com.facebook.buck.event.listener;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.event.TestEventConfigurator;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleDurationTracker;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.BuildRuleStatus;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.ImmutableSet;
 
-import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -48,8 +50,12 @@ public class CacheRateStatsKeeperTest {
   }
 
   BuildRuleEvent.Finished finishedEvent(CacheResult cacheResult) {
+    BuildRule rule = FakeBuildRule.newEmptyInstance("//fake:rule");
+    BuildRuleDurationTracker durationTracker = new BuildRuleDurationTracker();
+    BuildRuleEvent.Started started = TestEventConfigurator.configureTestEvent(
+        BuildRuleEvent.started(rule, durationTracker));
     return BuildRuleEvent.finished(
-        EasyMock.createMock(BuildRule.class),
+        started,
         BuildRuleKeys.of(new RuleKey("aa")),
         BuildRuleStatus.SUCCESS,
         cacheResult,

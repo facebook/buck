@@ -41,7 +41,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 
 public class TestThreadStateRendererTest {
@@ -58,7 +57,6 @@ public class TestThreadStateRendererTest {
   public void emptyInput() {
     TestThreadStateRenderer renderer = createRenderer(
         2100,
-        ImmutableMap.of(),
         ImmutableMap.of(),
         ImmutableMap.of(),
         ImmutableMap.of(),
@@ -82,7 +80,7 @@ public class TestThreadStateRendererTest {
     TestThreadStateRenderer renderer = createRenderer(
         4200,
         ImmutableMap.of(
-            1L, createTestStartedEventOptional(1, 1200, TARGET2),
+            1L, createTestStartedEventOptional(1, 1000, TARGET2),
             3L, createTestStartedEventOptional(3, 2300, TARGET3),
             4L, createTestStartedEventOptional(4, 1100, TARGET1),
             5L, Optional.empty(),
@@ -99,28 +97,23 @@ public class TestThreadStateRendererTest {
             3L, Optional.empty(),
             4L, Optional.empty(),
             5L, Optional.empty(),
-            8L, createStepStartedEventOptional(1, 3700, "step B")),
-        ImmutableMap.of(
-            TARGET1, new AtomicLong(200),
-            TARGET2, new AtomicLong(1400),
-            TARGET3, new AtomicLong(700),
-            TARGET4, new AtomicLong(0)));
+            8L, createStepStartedEventOptional(1, 3700, "step B")));
     assertThat(
         renderLines(renderer, true),
         is(equalTo(
             ImmutableList.of(
-                " |=> //:target2...  4.4s (running step A[2.7s])",
-                " |=> //:target1...  3.3s",
-                " |=> //:target3...  2.6s (running Test A[2.6s])",
+                " |=> //:target2...  3.2s (running step A[2.7s])",
+                " |=> //:target1...  3.1s",
+                " |=> //:target3...  1.9s (running Test A[2.6s])",
                 " |=> //:target4...  1.2s (running Test B[0.4s])",
                 " |=> IDLE"))));
     assertThat(
         renderLines(renderer, false),
         is(equalTo(
             ImmutableList.of(
-                " |=> //:target2...  4.4s (running step A[2.7s])",
-                " |=> //:target3...  2.6s (running Test A[2.6s])",
-                " |=> //:target1...  3.3s",
+                " |=> //:target2...  3.2s (running step A[2.7s])",
+                " |=> //:target3...  1.9s (running Test A[2.6s])",
+                " |=> //:target1...  3.1s",
                 " |=> IDLE",
                 " |=> //:target4...  1.2s (running Test B[0.4s])"))));
     assertThat(
@@ -136,7 +129,7 @@ public class TestThreadStateRendererTest {
     TestThreadStateRenderer renderer = createRenderer(
         4200,
         ImmutableMap.of(
-            1L, createTestStartedEventOptional(1, 1200, TARGET2),
+            1L, createTestStartedEventOptional(1, 1000, TARGET2),
             3L, createTestStartedEventOptional(3, 2300, TARGET3),
             4L, createTestStartedEventOptional(4, 1100, TARGET1),
             5L, Optional.empty(),
@@ -158,19 +151,14 @@ public class TestThreadStateRendererTest {
             3L, Optional.empty(),
             4L, Optional.empty(),
             5L, Optional.empty(),
-            8L, createStepStartedEventOptional(1, 3700, "step B")),
-        ImmutableMap.of(
-            TARGET1, new AtomicLong(200),
-            TARGET2, new AtomicLong(1400),
-            TARGET3, new AtomicLong(700),
-            TARGET4, new AtomicLong(0)));
+            8L, createStepStartedEventOptional(1, 3700, "step B")));
     assertThat(
         renderLines(renderer, true),
         is(equalTo(
             ImmutableList.of(
-                " |=> //:target2...  4.4s (running step A[2.7s])",
-                " |=> //:target1...  3.3s",
-                " |=> //:target3...  2.6s (running Test A[2.6s])",
+                " |=> //:target2...  3.2s (running step A[2.7s])",
+                " |=> //:target1...  3.1s",
+                " |=> //:target3...  1.9s (running Test A[2.6s])",
                 " |=> //:target4...  1.2s (running Installing Sim[0.4s])",
                 " |=> IDLE"))));
     assertThat(
@@ -198,18 +186,14 @@ public class TestThreadStateRendererTest {
         ImmutableMap.of(
             1L, createStepStartedEventOptional(1, 1500, "step A"),
             3L, Optional.empty(),
-            5L, Optional.empty()),
-        ImmutableMap.of(
-            TARGET1, new AtomicLong(200),
-            TARGET2, new AtomicLong(1400),
-            TARGET3, new AtomicLong(700)));
+            5L, Optional.empty()));
     assertThat(
         renderLines(renderer, true),
         is(equalTo(
             ImmutableList.of(
                 // missing test rule - no output
-                " |=> //:target1...  3.3s", // missing test summary
-                " |=> //:target3...  2.6s", // missing step information
+                " |=> //:target1...  3.1s", // missing test summary
+                " |=> //:target3...  1.9s", // missing step information
                 " |=> //:target4...  1.2s",
                 " |=> IDLE")))); // missing accumulated time - show as IDLE
     assertThat(
@@ -276,8 +260,7 @@ public class TestThreadStateRendererTest {
       Map<Long, Optional<? extends TestRuleEvent>> testEvents,
       Map<Long, Optional<? extends TestSummaryEvent>> testSummaries,
       Map<Long, Optional<? extends TestStatusMessageEvent>> testStatusMessages,
-      Map<Long, Optional<? extends LeafEvent>> runningSteps,
-      Map<BuildTarget, AtomicLong> accumulatedTimes) {
+      Map<Long, Optional<? extends LeafEvent>> runningSteps) {
     return new TestThreadStateRenderer(
         ANSI,
         FORMAT_TIME_FUNCTION,
@@ -287,8 +270,7 @@ public class TestThreadStateRendererTest {
         runningSteps,
         new AccumulatedTimeTracker(
             ImmutableMap.of(),
-            testEvents,
-            accumulatedTimes));
+            testEvents));
   }
 
   private ImmutableList<String> renderLines(TestThreadStateRenderer renderer, boolean sortByTime) {

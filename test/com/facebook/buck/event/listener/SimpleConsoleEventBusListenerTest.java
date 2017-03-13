@@ -32,6 +32,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.BuildRuleDurationTracker;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -72,11 +73,13 @@ public class SimpleConsoleEventBusListenerTest {
 
   private FileSystem vfs;
   private Path logPath;
+  private BuildRuleDurationTracker durationTracker;
 
-    @Before
-    public void createTestLogFile() {
+  @Before
+  public void setUp() {
     vfs = Jimfs.newFileSystem(Configuration.unix());
     logPath = vfs.getPath("log.txt");
+    durationTracker = new BuildRuleDurationTracker();
   }
 
   @Test
@@ -139,9 +142,10 @@ public class SimpleConsoleEventBusListenerTest {
     expectedOutput += "[-] PARSING BUCK FILES...FINISHED 0.4s\n";
     assertOutput(expectedOutput, console);
 
+    BuildRuleEvent.Started started = BuildRuleEvent.started(fakeRule, durationTracker);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildRuleEvent.started(fakeRule),
+            started,
             600L,
             TimeUnit.MILLISECONDS,
             threadId));
@@ -158,7 +162,7 @@ public class SimpleConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             BuildRuleEvent.finished(
-                fakeRule,
+                started,
                 BuildRuleKeys.of(new RuleKey("aaaa")),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),

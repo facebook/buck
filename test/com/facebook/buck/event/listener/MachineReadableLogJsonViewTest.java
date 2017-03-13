@@ -26,6 +26,7 @@ import com.facebook.buck.log.PerfTimesStats;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleDurationTracker;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.BuildRuleStatus;
@@ -59,6 +60,7 @@ public class MachineReadableLogJsonViewTest {
   private long threadUserNanoTime;
   private long threadId;
   private BuildId buildId;
+  private BuildRuleDurationTracker durationTracker;
 
   @Before
   public void setUp() {
@@ -69,6 +71,7 @@ public class MachineReadableLogJsonViewTest {
     threadUserNanoTime = new Random().nextLong();
     threadId = 0;
     buildId = new BuildId("Test");
+    durationTracker = new BuildRuleDurationTracker();
   }
 
   @Test
@@ -122,9 +125,11 @@ public class MachineReadableLogJsonViewTest {
   @Test
   public void testBuildRuleEvent() throws IOException {
     BuildRule rule = FakeBuildRule.newEmptyInstance("//fake:rule");
+    BuildRuleEvent.Started started = BuildRuleEvent.started(rule, durationTracker);
+    started.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     BuildRuleEvent.Finished event =
         BuildRuleEvent.finished(
-            rule,
+            started,
             BuildRuleKeys.builder()
                 .setRuleKey(new RuleKey("aaaa"))
                 .setInputRuleKey(Optional.of(new RuleKey("bbbb")))

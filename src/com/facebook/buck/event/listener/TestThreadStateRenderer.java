@@ -78,8 +78,7 @@ public class TestThreadStateRenderer implements ThreadStateRenderer {
       long elapsedTimeMs = 0;
       if (testRuleEvent.isPresent()) {
         buildTarget = Optional.of(testRuleEvent.get().getBuildTarget());
-        elapsedTimeMs = currentTimeMs - testRuleEvent.get().getTimestamp() +
-            accumulatedTimeTracker.getTime(buildTarget.get());
+        elapsedTimeMs = currentTimeMs - testRuleEvent.get().getTimestamp();
       }
       threadInformationMapBuilder.put(
           threadId,
