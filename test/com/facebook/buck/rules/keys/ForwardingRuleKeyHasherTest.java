@@ -20,6 +20,7 @@ import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.createStrictMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
+import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.model.BuildTarget;
@@ -36,7 +37,7 @@ import org.junit.Test;
 import java.nio.file.Paths;
 import java.util.regex.Pattern;
 
-public class LoggingRuleKeyHasherTest {
+public class ForwardingRuleKeyHasherTest {
 
   private static final RuleKey RULE_KEY_1 = new RuleKey("a002b39af204cdfaa5fdb67816b13867c32ac52c");
   private static final BuildTarget TARGET_1 =
@@ -324,12 +325,41 @@ public class LoggingRuleKeyHasherTest {
         .hash();
   }
 
+  @Test
+  public void testHashAndOnHash() {
+    final String string = "hash";
+    final HashCode hash = createMock(HashCode.class);
+
+    @SuppressWarnings("unchecked")
+    RuleKeyHasher<String> stringHasher = createStrictMock(RuleKeyHasher.class);
+    @SuppressWarnings("unchecked")
+    RuleKeyHasher<HashCode> guavaHasher = createStrictMock(RuleKeyHasher.class);
+
+    expect(guavaHasher.hash()).andReturn(hash);
+    expect(stringHasher.hash()).andReturn(string);
+
+    replay(stringHasher, guavaHasher);
+
+    ForwardingRuleKeyHasher<HashCode, String> hasher =
+        new ForwardingRuleKeyHasher<HashCode, String>(guavaHasher, stringHasher) {
+          @Override
+          protected void onHash(HashCode firstHash, String secondHash) {
+            assertSame(string, secondHash);
+            assertSame(hash, firstHash);
+          }
+        };
+    assertSame(hash, hasher.hash());
+  }
+
   private ArchiveMemberPath newArchiveMember(String archivePath, String memberPath) {
     return ArchiveMemberPath.of(Paths.get(archivePath), Paths.get(memberPath));
   }
 
-  private LoggingRuleKeyHasher<HashCode> newHasher(
+  private ForwardingRuleKeyHasher<HashCode, String> newHasher(
       RuleKeyHasher<HashCode> guavaHasher, RuleKeyHasher<String> stringHasher) {
-    return new LoggingRuleKeyHasher<>(guavaHasher, stringHasher);
+    return new ForwardingRuleKeyHasher<HashCode, String>(guavaHasher, stringHasher) {
+      @Override
+      protected void onHash(HashCode firstHash, String secondHash) {}
+    };
   }
 }

@@ -116,11 +116,20 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver resolver,
       FileHashLoader hashLoader) {
-    this(
-        ruleFinder,
-        resolver,
-        hashLoader,
-        LoggingRuleKeyHasher.of(new GuavaRuleKeyHasher(Hashing.sha1().newHasher())));
+    this(ruleFinder, resolver, hashLoader, createHasher());
+  }
+
+  private static RuleKeyHasher<HashCode> createHasher() {
+    RuleKeyHasher<HashCode> hasher = new GuavaRuleKeyHasher(Hashing.sha1().newHasher());
+    if (logger.isVerboseEnabled()) {
+      hasher = new ForwardingRuleKeyHasher<HashCode, String>(hasher, new StringRuleKeyHasher()) {
+        @Override
+        protected void onHash(HashCode firstHash, String secondHash) {
+          logger.verbose("RuleKey %s=%s", firstHash, secondHash);
+        }
+      };
+    }
+    return hasher;
   }
 
   @Override
