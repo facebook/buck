@@ -35,8 +35,10 @@ struct FetchDebugInfo {
   // All stores used to look up the artifact.
   1: optional list<string> storesLookedUp;
 
-  // Stores that produced cache hits.
-  2: optional list<string> cacheHitStores;
+  // 2: DEPRECATED.
+
+  // Fastest store to return a cache hit.
+  3: optional string fastestCacheHitStore;
 }
 
 struct StoreDebugInfo {
