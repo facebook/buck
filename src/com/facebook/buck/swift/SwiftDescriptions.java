@@ -30,11 +30,11 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.Optional;
 
-class SwiftDescriptions {
+public class SwiftDescriptions {
 
   static final String SWIFT_HEADER_SUFFIX = "-Swift";
   static final String SWIFT_MAIN_FILENAME = "main.swift";
-  private static final String SWIFT_EXTENSION = "swift";
+  public static final String SWIFT_EXTENSION = "swift";
 
   /**
    * Utility class: do not instantiate.
