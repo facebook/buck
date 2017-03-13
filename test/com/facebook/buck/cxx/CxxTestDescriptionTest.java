@@ -179,11 +179,12 @@ public class CxxTestDescriptionTest {
     assertThat(
         testStep.getEnv(),
         Matchers.equalTo(
-            ImmutableMap.of(
-                "TEST",
-                "value " +
-                    pathResolver.getAbsolutePath(
-                        Preconditions.checkNotNull(someRule.getSourcePathToOutput())))));
+            Optional.of(
+                ImmutableMap.of(
+                    "TEST",
+                    "value " +
+                        pathResolver.getAbsolutePath(
+                            Preconditions.checkNotNull(someRule.getSourcePathToOutput()))))));
   }
 
   @Test

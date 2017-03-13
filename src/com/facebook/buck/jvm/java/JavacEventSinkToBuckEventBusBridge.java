@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.infer.annotation.Assertions;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -169,7 +170,7 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
             round,
             isLastRound));
     AnnotationProcessingEvent.Finished finished = new AnnotationProcessingEvent.Finished(
-        startedEventKey,
+        Preconditions.checkNotNull(startedEventKey),
         buildTarget,
         annotationProcessorName,
         AnnotationProcessingEvent.Operation.valueOf(operationAsString),

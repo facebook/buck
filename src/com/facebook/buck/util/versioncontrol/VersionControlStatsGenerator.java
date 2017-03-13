@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -84,7 +85,7 @@ public class VersionControlStatsGenerator {
         // Get the common ancestor of master and current revision
         Pair<String, Long> branchedFromMasterInfo = vcCmdLineInterface.commonAncestorAndTS(
             currentRevisionId,
-            bookmarksRevisionIds.get("remote/master"));
+            Preconditions.checkNotNull(bookmarksRevisionIds.get("remote/master")));
         // Get the list of tracked changes files.
         ImmutableSet<String> changedFiles = vcCmdLineInterface.changedFiles(".");
 

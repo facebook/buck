@@ -77,7 +77,7 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoClosea
       ClassLoaderCache classLoaderCache,
       JavacEventSink eventSink,
       JavaCompiler.CompilationTask task,
-      Object next) {
+      @Nullable Object next) {
     try {
       final ClassLoader tracingTaskListenerClassLoader =
           PluginLoader.getPluginClassLoader(classLoaderCache, task);

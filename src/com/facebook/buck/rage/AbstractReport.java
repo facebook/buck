@@ -279,9 +279,9 @@ public abstract class AbstractReport {
       return Optional.empty();
     }
 
-    Path watchmanDiagReport = null;
+    Optional<Path> watchmanDiagReport = Optional.empty();
     try {
-      watchmanDiagReport = watchmanDiagReportCollector.get().run();
+      watchmanDiagReport = Optional.of(watchmanDiagReportCollector.get().run());
     } catch (ExtraInfoCollector.ExtraInfoExecutionException e) {
       output.printErrorText("There was a problem getting the watchman-diag report: %s. " +
           "The information will be omitted from the report.", e);

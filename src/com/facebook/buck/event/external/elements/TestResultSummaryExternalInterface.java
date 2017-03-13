@@ -54,6 +54,7 @@ public interface TestResultSummaryExternalInterface {
   /**
    * @return the stdout of the test.
    */
+  @Nullable
   String getStdOut();
   /**
    * @return the stderr of the test failure.

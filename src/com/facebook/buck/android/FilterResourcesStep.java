@@ -431,6 +431,7 @@ public class FilterResourcesStep implements Step {
 
   public static class Builder {
 
+    @Nullable
     private ProjectFilesystem filesystem;
     @Nullable
     private ImmutableBiMap<Path, Path> inResDirToOutResDirMap;

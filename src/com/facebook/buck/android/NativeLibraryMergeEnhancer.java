@@ -661,7 +661,7 @@ class NativeLibraryMergeEnhancer {
         for (NativeLinkable dep : depType.apply(linkable)) {
           // Don't try to depend on ourselves.
           if (!constituents.getLinkables().contains(dep)) {
-            builder.add(mergedDepMap.get(dep));
+            builder.add(Preconditions.checkNotNull(mergedDepMap.get(dep)));
           }
         }
       }
