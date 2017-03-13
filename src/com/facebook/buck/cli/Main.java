@@ -64,7 +64,6 @@ import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.WatchmanCursor;
 import com.facebook.buck.io.WatchmanDiagnosticEventListener;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.ConsoleHandlerState;
 import com.facebook.buck.log.GlobalStateManager;
@@ -80,7 +79,6 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellProvider;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.DefaultCellPathResolver;
-import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.rules.RuleKey;
@@ -1201,6 +1199,17 @@ public final class Main {
                       .get()
                       .getEventListeners(invocationInfo.getLogDirectoryPath(), filesystem) :
                   ImmutableList.of();
+
+          Supplier<BuckEventListener> missingSymbolsListenerSupplier = () -> {
+            return MissingSymbolsHandler.createListener(
+              rootCell.getFilesystem(),
+              rootCell.getKnownBuildRuleTypes().getAllDescriptions(),
+              rootCell.getBuckConfig(),
+              buildEventBus,
+              console,
+              buckConfig.getView(JavaBuckConfig.class).getDefaultJavacOptions(),
+              clientEnvironment);
+          };
           eventListeners = addEventListeners(
               buildEventBus,
               rootCell.getFilesystem(),
@@ -1208,10 +1217,8 @@ public final class Main {
               rootCell.getBuckConfig(),
               webServer,
               clock,
-              console,
               consoleListener,
-              rootCell.getKnownBuildRuleTypes(),
-              clientEnvironment,
+              missingSymbolsListenerSupplier,
               counterRegistry,
               commandEventListeners
           );
@@ -1791,10 +1798,8 @@ public final class Main {
       BuckConfig buckConfig,
       Optional<WebServer> webServer,
       Clock clock,
-      Console console,
       AbstractConsoleEventBusListener consoleEventBusListener,
-      KnownBuildRuleTypes knownBuildRuleTypes,
-      ImmutableMap<String, String> environment,
+      Supplier<BuckEventListener> missingSymbolsListenerSupplier,
       CounterRegistry counterRegistry,
       Iterable<BuckEventListener> commandSpecificEventListeners
   ) {
@@ -1848,15 +1853,7 @@ public final class Main {
 
     JavaBuckConfig javaBuckConfig = buckConfig.getView(JavaBuckConfig.class);
     if (!javaBuckConfig.getSkipCheckingMissingDeps()) {
-      JavacOptions javacOptions = javaBuckConfig.getDefaultJavacOptions();
-      eventListenersBuilder.add(MissingSymbolsHandler.createListener(
-          projectFilesystem,
-          knownBuildRuleTypes.getAllDescriptions(),
-          buckConfig,
-          buckEventBus,
-          console,
-          javacOptions,
-          environment));
+      eventListenersBuilder.add(missingSymbolsListenerSupplier.get());
     }
 
     eventListenersBuilder.add(new LoadBalancerEventsListener(counterRegistry));
