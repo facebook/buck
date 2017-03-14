@@ -39,7 +39,6 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.PatternAndMessage;
@@ -701,7 +700,8 @@ public class BuckConfig implements ConfigPathGetter {
    * @return the local cache directory
    */
   public String getLocalCacheDirectory(String dirCacheName) {
-    return getValue(dirCacheName, "dir").orElse(BuckConstant.getDefaultCacheDir());
+    return getValue(dirCacheName, "dir")
+        .orElse(projectFilesystem.getBuckPaths().getCacheDir().toString());
   }
 
   public int getKeySeed() {

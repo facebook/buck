@@ -33,6 +33,7 @@ import com.facebook.buck.cli.TestRunning;
 import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.config.Configs;
+import com.facebook.buck.io.BuckPaths;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePaths;
@@ -289,6 +290,10 @@ public class ProjectWorkspace {
       contents.append("\n");
     }
     writeContentsToPath(contents.toString(), ".buckconfig.local");
+  }
+
+  public BuckPaths getBuckPaths() {
+    return projectFilesystemAndConfig.get().projectFilesystem.getBuckPaths();
   }
 
   public ProcessResult runBuckBuild(String... args) throws IOException {

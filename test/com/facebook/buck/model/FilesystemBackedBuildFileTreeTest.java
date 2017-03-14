@@ -24,7 +24,6 @@ import com.facebook.buck.config.Config;
 import com.facebook.buck.config.ConfigBuilder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Ignore;
@@ -187,7 +186,7 @@ public class FilesystemBackedBuildFileTreeTest {
   public void shouldIgnoreBuckCacheDirectoriesByDefault() throws IOException {
     Path root = tmp.getRoot();
 
-    Path cacheDir = root.resolve(BuckConstant.getDefaultCacheDir());
+    Path cacheDir = root.resolve("buck-out/cache");
     Files.createDirectories(cacheDir);
     touch(cacheDir.resolve("BUCK"));
     Path sibling = cacheDir.resolve("someFile");

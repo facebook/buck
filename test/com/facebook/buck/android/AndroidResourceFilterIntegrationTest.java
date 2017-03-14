@@ -31,7 +31,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.sha1.Sha1HashCode;
@@ -205,7 +204,7 @@ public class AndroidResourceFilterIntegrationTest {
 
     ArtifactCache cache = TestArtifactCaches.createDirCacheForTest(
         workspace.getPath("."),
-        workspace.getPath(BuckConstant.getDefaultCacheDir()));
+        filesystem.getBuckPaths().getCacheDir());
     Path cachedFile = DirArtifactCacheTestUtil.getPathForRuleKey(
         cache,
         new RuleKey(androidBinaryRuleKey.getHash()),

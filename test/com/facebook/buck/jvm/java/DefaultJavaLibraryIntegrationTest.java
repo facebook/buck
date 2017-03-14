@@ -46,7 +46,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -134,7 +133,7 @@ public class DefaultJavaLibraryIntegrationTest {
     workspace.verify();
 
     // Verify the build cache.
-    Path buildCache = workspace.getPath(BuckConstant.getDefaultCacheDir());
+    Path buildCache = workspace.getPath(filesystem.getBuckPaths().getCacheDir());
     assertTrue(Files.isDirectory(buildCache));
 
     ArtifactCache dirCache = TestArtifactCaches.createDirCacheForTest(

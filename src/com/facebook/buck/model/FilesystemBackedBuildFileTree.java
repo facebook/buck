@@ -18,7 +18,6 @@ package com.facebook.buck.model;
 
 import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -173,7 +172,7 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
   private boolean isBuckOutput(Path path) {
     Path sameFsBuckOut =
         path.getFileSystem().getPath(projectFilesystem.getBuckPaths().getBuckOut().toString());
-    Path sameFsBuckCache = path.getFileSystem().getPath(BuckConstant.getDefaultCacheDir());
+    Path sameFsBuckCache = projectFilesystem.getBuckPaths().getCacheDir();
 
     for (Path segment : path) {
       if (sameFsBuckOut.equals(segment) ||
