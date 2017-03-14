@@ -778,7 +778,7 @@ public class KnownBuildRuleTypes {
     builder.register(new ProjectConfigDescription());
     builder.register(pythonBinaryDescription);
     PythonLibraryDescription pythonLibraryDescription =
-        new PythonLibraryDescription(pythonPlatforms);
+        new PythonLibraryDescription(pythonPlatforms, cxxPlatforms);
     builder.register(pythonLibraryDescription);
     builder.register(
         new PythonTestDescription(

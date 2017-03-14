@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -61,17 +62,23 @@ public class ThriftPythonEnhancerTest {
       new ThriftPythonEnhancer(
           THRIFT_BUCK_CONFIG,
           ThriftPythonEnhancer.Type.NORMAL,
-          new PythonLibraryDescription(PythonTestUtils.PYTHON_PLATFORMS));
+          new PythonLibraryDescription(
+              PythonTestUtils.PYTHON_PLATFORMS,
+              CxxPlatformUtils.DEFAULT_PLATFORMS));
   private static final ThriftPythonEnhancer TWISTED_ENHANCER =
       new ThriftPythonEnhancer(
           THRIFT_BUCK_CONFIG,
           ThriftPythonEnhancer.Type.TWISTED,
-          new PythonLibraryDescription(PythonTestUtils.PYTHON_PLATFORMS));
+          new PythonLibraryDescription(
+              PythonTestUtils.PYTHON_PLATFORMS,
+              CxxPlatformUtils.DEFAULT_PLATFORMS));
   private static final ThriftPythonEnhancer ASYNCIO_ENHANCER =
       new ThriftPythonEnhancer(
           THRIFT_BUCK_CONFIG,
           ThriftPythonEnhancer.Type.ASYNCIO,
-          new PythonLibraryDescription(PythonTestUtils.PYTHON_PLATFORMS));
+          new PythonLibraryDescription(
+              PythonTestUtils.PYTHON_PLATFORMS,
+              CxxPlatformUtils.DEFAULT_PLATFORMS));
 
   private static FakeBuildRule createFakeBuildRule(
       String target,
@@ -201,17 +208,23 @@ public class ThriftPythonEnhancerTest {
         new ThriftPythonEnhancer(
             thriftBuckConfig,
             ThriftPythonEnhancer.Type.NORMAL,
-            new PythonLibraryDescription(PythonTestUtils.PYTHON_PLATFORMS));
+            new PythonLibraryDescription(
+                PythonTestUtils.PYTHON_PLATFORMS,
+                CxxPlatformUtils.DEFAULT_PLATFORMS));
     ThriftPythonEnhancer twistedEnhancer =
         new ThriftPythonEnhancer(
             thriftBuckConfig,
             ThriftPythonEnhancer.Type.TWISTED,
-            new PythonLibraryDescription(PythonTestUtils.PYTHON_PLATFORMS));
+            new PythonLibraryDescription(
+                PythonTestUtils.PYTHON_PLATFORMS,
+                CxxPlatformUtils.DEFAULT_PLATFORMS));
     ThriftPythonEnhancer asyncioEnhancer =
         new ThriftPythonEnhancer(
             thriftBuckConfig,
             ThriftPythonEnhancer.Type.ASYNCIO,
-            new PythonLibraryDescription(PythonTestUtils.PYTHON_PLATFORMS));
+            new PythonLibraryDescription(
+                PythonTestUtils.PYTHON_PLATFORMS,
+                CxxPlatformUtils.DEFAULT_PLATFORMS));
 
     // With no options we just need to find the python thrift library.
     expectImplicitDeps(
@@ -289,7 +302,12 @@ public class ThriftPythonEnhancerTest {
             libraryBuilder.getTarget().withAppendedFlavors(
                 ThriftPythonEnhancer.PYTHON_FLAVOR));
     for (ImmutableMap.Entry<Path, SourcePath> ent :
-        normal.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
+         normal
+             .getPythonPackageComponents(
+                 PythonTestUtils.PYTHON_PLATFORM,
+                 CxxPlatformUtils.DEFAULT_PLATFORM)
+             .getModules()
+             .entrySet()) {
       assertTrue(ent.getKey().toString(), ent.getKey().startsWith(target.getBasePath()));
     }
 
@@ -304,7 +322,12 @@ public class ThriftPythonEnhancerTest {
             libraryBuilder.getTarget().withAppendedFlavors(
                 ThriftPythonEnhancer.PYTHON_FLAVOR));
     for (ImmutableMap.Entry<Path, SourcePath> ent :
-        baseModule.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
+         baseModule
+            .getPythonPackageComponents(
+                PythonTestUtils.PYTHON_PLATFORM,
+                CxxPlatformUtils.DEFAULT_PLATFORM)
+            .getModules()
+            .entrySet()) {
       assertTrue(ent.getKey().toString().startsWith("blah"));
     }
   }
@@ -326,7 +349,12 @@ public class ThriftPythonEnhancerTest {
             libraryBuilder.getTarget().withAppendedFlavors(
                 ThriftPythonEnhancer.PYTHON_TWISTED_FLAVOR));
     for (ImmutableMap.Entry<Path, SourcePath> ent :
-        normal.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
+         normal
+            .getPythonPackageComponents(
+                PythonTestUtils.PYTHON_PLATFORM,
+                CxxPlatformUtils.DEFAULT_PLATFORM)
+            .getModules()
+            .entrySet()) {
       assertTrue(ent.getKey().toString(), ent.getKey().startsWith(target.getBasePath()));
     }
 
@@ -341,7 +369,12 @@ public class ThriftPythonEnhancerTest {
             libraryBuilder.getTarget().withAppendedFlavors(
                 ThriftPythonEnhancer.PYTHON_TWISTED_FLAVOR));
     for (ImmutableMap.Entry<Path, SourcePath> ent :
-        baseModule.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
+         baseModule
+            .getPythonPackageComponents(
+                PythonTestUtils.PYTHON_PLATFORM,
+                CxxPlatformUtils.DEFAULT_PLATFORM)
+            .getModules()
+            .entrySet()) {
       assertTrue(ent.getKey().toString().startsWith("blah"));
     }
   }
@@ -363,7 +396,12 @@ public class ThriftPythonEnhancerTest {
             libraryBuilder.getTarget().withAppendedFlavors(
                 ThriftPythonEnhancer.PYTHON_ASYNCIO_FLAVOR));
     for (ImmutableMap.Entry<Path, SourcePath> ent :
-         normal.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
+         normal
+            .getPythonPackageComponents(
+                PythonTestUtils.PYTHON_PLATFORM,
+                CxxPlatformUtils.DEFAULT_PLATFORM)
+            .getModules()
+            .entrySet()) {
       assertTrue(ent.getKey().toString(), ent.getKey().startsWith(target.getBasePath()));
     }
 
@@ -378,7 +416,12 @@ public class ThriftPythonEnhancerTest {
             libraryBuilder.getTarget().withAppendedFlavors(
                 ThriftPythonEnhancer.PYTHON_ASYNCIO_FLAVOR));
     for (ImmutableMap.Entry<Path, SourcePath> ent :
-         baseModule.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
+         baseModule
+            .getPythonPackageComponents(
+                PythonTestUtils.PYTHON_PLATFORM,
+                CxxPlatformUtils.DEFAULT_PLATFORM)
+            .getModules()
+            .entrySet()) {
       assertTrue(ent.getKey().toString().startsWith("blah"));
     }
   }

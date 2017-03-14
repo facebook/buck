@@ -16,6 +16,7 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
@@ -51,12 +52,16 @@ public class PythonLibraryDescription
     implements Description<Arg>, VersionPropagator<Arg>, MetadataProvidingDescription<Arg> {
 
   private final FlavorDomain<PythonPlatform> pythonPlatforms;
+  private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   private static final FlavorDomain<MetadataType> METADATA_TYPE =
       FlavorDomain.from("Python Metadata Type", MetadataType.class);
 
-  public PythonLibraryDescription(FlavorDomain<PythonPlatform> pythonPlatforms) {
+  public PythonLibraryDescription(
+      FlavorDomain<PythonPlatform> pythonPlatforms,
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.pythonPlatforms = pythonPlatforms;
+    this.cxxPlatforms = cxxPlatforms;
   }
 
   @Override
@@ -90,31 +95,40 @@ public class PythonLibraryDescription
         Map.Entry<Flavor, PythonPlatform> pythonPlatform =
             pythonPlatforms.getFlavorAndValue(baseTarget)
                 .orElseThrow(IllegalArgumentException::new);
-        baseTarget = buildTarget.withoutFlavors(pythonPlatform.getKey());
+        Map.Entry<Flavor, CxxPlatform> cxxPlatform =
+            cxxPlatforms.getFlavorAndValue(baseTarget)
+                .orElseThrow(IllegalArgumentException::new);
+        baseTarget = buildTarget.withoutFlavors(pythonPlatform.getKey(), cxxPlatform.getKey());
 
-        SourcePathResolver pathResolver =
-            new SourcePathResolver(new SourcePathRuleFinder(resolver));
+        SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+        SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
         Path baseModule = PythonUtil.getBasePath(baseTarget, args.baseModule);
         PythonPackageComponents components =
             PythonPackageComponents.of(
                 PythonUtil.getModules(
                     baseTarget,
+                    resolver,
+                    ruleFinder,
                     pathResolver,
+                    pythonPlatform.getValue(),
+                    cxxPlatform.getValue(),
                     "srcs",
                     baseModule,
                     args.srcs,
                     args.platformSrcs,
-                    pythonPlatform.getValue(),
                     args.versionedSrcs,
                     selectedVersions),
                 PythonUtil.getModules(
                     baseTarget,
+                    resolver,
+                    ruleFinder,
                     pathResolver,
+                    pythonPlatform.getValue(),
+                    cxxPlatform.getValue(),
                     "resources",
                     baseModule,
                     args.resources,
                     args.platformResources,
-                    pythonPlatform.getValue(),
                     args.versionedResources,
                     selectedVersions),
                 ImmutableMap.of(),

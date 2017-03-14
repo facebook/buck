@@ -17,6 +17,7 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.NativeLinkStrategy;
 import com.facebook.buck.cxx.NativeLinkTarget;
@@ -66,7 +67,7 @@ import java.util.Optional;
 
 public class PythonUtil {
 
-  protected static final MacroHandler MACRO_HANDLER =
+  static final MacroHandler MACRO_HANDLER =
       new MacroHandler(
           ImmutableMap.of(
               "location", new LocationMacroExpander()));
@@ -75,42 +76,50 @@ public class PythonUtil {
 
   public static ImmutableMap<Path, SourcePath> getModules(
       BuildTarget target,
-      SourcePathResolver resolver,
+      BuildRuleResolver resolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver,
+      PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform,
       String parameter,
       Path baseModule,
       SourceList items,
       PatternMatchedCollection<SourceList> platformItems,
-      PythonPlatform pythonPlatform,
       Optional<VersionMatchedCollection<SourceList>> versionItems,
-      Optional<ImmutableMap<BuildTarget, Version>> versions) {
-    return ImmutableMap.<Path, SourcePath>builder()
-        .putAll(
-            PythonUtil.toModuleMap(
-                target,
-                resolver,
-                parameter,
-                baseModule,
-                ImmutableList.of(items)))
-        .putAll(
-            PythonUtil.toModuleMap(
-                target,
-                resolver,
-                "platform" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, parameter),
-                baseModule,
-                platformItems.getMatchingValues(pythonPlatform.getFlavor().toString())))
-        .putAll(
-            PythonUtil.toModuleMap(
-                target,
-                resolver,
-                "versioned" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, parameter),
-                baseModule,
-                versions.isPresent() && versionItems.isPresent() ?
-                    versionItems.get().getMatchingValues(versions.get()) :
-                    ImmutableList.of()))
-        .build();
+      Optional<ImmutableMap<BuildTarget, Version>> versions)
+      throws NoSuchBuildTargetException {
+    return CxxGenruleDescription.fixupSourcePaths(
+        resolver,
+        ruleFinder,
+        cxxPlatform,
+        ImmutableMap.<Path, SourcePath>builder()
+            .putAll(
+                PythonUtil.toModuleMap(
+                    target,
+                    pathResolver,
+                    parameter,
+                    baseModule,
+                    ImmutableList.of(items)))
+            .putAll(
+                PythonUtil.toModuleMap(
+                    target,
+                    pathResolver,
+                    "platform" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, parameter),
+                    baseModule,
+                    platformItems.getMatchingValues(pythonPlatform.getFlavor().toString())))
+            .putAll(
+                PythonUtil.toModuleMap(
+                    target,
+                    pathResolver,
+                    "versioned" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, parameter),
+                    baseModule,
+                    versions.isPresent() && versionItems.isPresent() ?
+                        versionItems.get().getMatchingValues(versions.get()) :
+                        ImmutableList.of()))
+            .build());
   }
 
-  public static ImmutableMap<Path, SourcePath> toModuleMap(
+  static ImmutableMap<Path, SourcePath> toModuleMap(
       BuildTarget target,
       SourcePathResolver resolver,
       String parameter,
@@ -141,7 +150,7 @@ public class PythonUtil {
   }
 
   /** Convert a path to a module to it's module name as referenced in import statements. */
-  public static String toModuleName(BuildTarget target, String name) {
+  static String toModuleName(BuildTarget target, String name) {
     int ext = name.lastIndexOf('.');
     if (ext == -1) {
       throw new HumanReadableException(
@@ -153,7 +162,7 @@ public class PythonUtil {
     return MorePaths.pathWithUnixSeparators(name).replace('/', '.');
   }
 
-  public static PythonPackageComponents getAllComponents(
+  static PythonPackageComponents getAllComponents(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
@@ -315,7 +324,7 @@ public class PythonUtil {
         : target.getBasePath();
   }
 
-  public static ImmutableSet<String> getPreloadNames(
+  static ImmutableSet<String> getPreloadNames(
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       Iterable<BuildTarget> preloadDeps)

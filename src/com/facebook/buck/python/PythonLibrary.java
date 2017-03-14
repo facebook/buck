@@ -24,10 +24,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRule;
-import com.facebook.buck.rules.SourcePath;
-import com.google.common.collect.ImmutableMap;
 
-import java.nio.file.Path;
 import java.util.stream.Stream;
 
 public class PythonLibrary extends NoopBuildRule implements PythonPackagable, HasRuntimeDeps {
@@ -41,34 +38,19 @@ public class PythonLibrary extends NoopBuildRule implements PythonPackagable, Ha
     this.resolver = resolver;
   }
 
-  private PythonPackageComponents getPythonPackageComponents(
-      PythonPlatform pythonPlatform)
-      throws NoSuchBuildTargetException {
-    return resolver
-        .requireMetadata(
-            getBuildTarget().withAppendedFlavors(
-                PythonLibraryDescription.MetadataType.PACKAGE_COMPONENTS.getFlavor(),
-                pythonPlatform.getFlavor()),
-            PythonPackageComponents.class)
-        .orElseThrow(IllegalStateException::new);
-  }
-
   @Override
   public PythonPackageComponents getPythonPackageComponents(
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException {
-    return getPythonPackageComponents(pythonPlatform);
-  }
-
-  public ImmutableMap<Path, SourcePath> getSrcs(PythonPlatform pythonPlatform)
-      throws NoSuchBuildTargetException {
-    return getPythonPackageComponents(pythonPlatform).getModules();
-  }
-
-  public ImmutableMap<Path, SourcePath> getResources(PythonPlatform pythonPlatform)
-      throws NoSuchBuildTargetException {
-    return getPythonPackageComponents(pythonPlatform).getResources();
+    return resolver
+        .requireMetadata(
+            getBuildTarget().withAppendedFlavors(
+                PythonLibraryDescription.MetadataType.PACKAGE_COMPONENTS.getFlavor(),
+                pythonPlatform.getFlavor(),
+                cxxPlatform.getFlavor()),
+            PythonPackageComponents.class)
+        .orElseThrow(IllegalStateException::new);
   }
 
   @Override

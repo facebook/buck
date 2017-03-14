@@ -16,6 +16,8 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
@@ -31,16 +33,17 @@ public class PythonLibraryBuilder extends AbstractNodeBuilder<
     PythonLibraryDescription,
     PythonLibrary> {
 
-  public PythonLibraryBuilder(
+  private PythonLibraryBuilder(
       BuildTarget target,
-      FlavorDomain<PythonPlatform> pythonPlatforms) {
+      FlavorDomain<PythonPlatform> pythonPlatforms,
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
-        new PythonLibraryDescription(pythonPlatforms),
+        new PythonLibraryDescription(pythonPlatforms, cxxPlatforms),
         target);
   }
 
   public PythonLibraryBuilder(BuildTarget target) {
-    this(target, PythonTestUtils.PYTHON_PLATFORMS);
+    this(target, PythonTestUtils.PYTHON_PLATFORMS, CxxPlatformUtils.DEFAULT_PLATFORMS);
   }
 
   public static PythonLibraryBuilder createBuilder(BuildTarget target) {

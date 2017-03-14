@@ -2,6 +2,7 @@
   "testutil" : {
     "deps" : [
       "//test/com/facebook/buck/cli:FakeBuckConfig",
+      "//test/com/facebook/buck/cxx:testutil",
       "//test/com/facebook/buck/python:testutil",
       "//test/com/facebook/buck/testutil:testutil"
     ],

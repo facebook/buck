@@ -187,24 +187,30 @@ public class PythonTestDescription implements
     ImmutableMap<Path, SourcePath> srcs =
         PythonUtil.getModules(
             params.getBuildTarget(),
+            resolver,
+            ruleFinder,
             pathResolver,
+            pythonPlatform,
+            cxxPlatform,
             "srcs",
             baseModule,
             args.srcs,
             args.platformSrcs,
-            pythonPlatform,
             args.versionedSrcs,
             selectedVersions);
 
     ImmutableMap<Path, SourcePath> resources =
         PythonUtil.getModules(
             params.getBuildTarget(),
+            resolver,
+            ruleFinder,
             pathResolver,
+            pythonPlatform,
+            cxxPlatform,
             "resources",
             baseModule,
             args.resources,
             args.platformResources,
-            pythonPlatform,
             args.versionedResources,
             selectedVersions);
 
@@ -296,7 +302,8 @@ public class PythonTestDescription implements
           if (coverageSpec.getPathName().isPresent()) {
             Path path = coverageSpec.getBuildTarget().getBasePath().resolve(
                 coverageSpec.getPathName().get());
-            if (!pythonLibrary.getSrcs(pythonPlatform).keySet().contains(path)) {
+            if (!pythonLibrary.getPythonPackageComponents(pythonPlatform, cxxPlatform)
+                    .getModules().keySet().contains(path)) {
               throw new HumanReadableException(
                   "%s: path %s specified in needed_coverage not found in target %s",
                   params.getBuildTarget(),
@@ -305,7 +312,11 @@ public class PythonTestDescription implements
             }
             paths = ImmutableSortedSet.of(path);
           } else {
-            paths = ImmutableSortedSet.copyOf(pythonLibrary.getSrcs(pythonPlatform).keySet());
+            paths =
+                ImmutableSortedSet.copyOf(
+                    pythonLibrary.getPythonPackageComponents(pythonPlatform, cxxPlatform)
+                        .getModules()
+                        .keySet());
           }
           neededCoverageBuilder.add(
               new Pair<Float, ImmutableSet<Path>>(

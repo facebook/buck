@@ -17,6 +17,7 @@
 package com.facebook.buck.thrift;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.python.PythonLibraryDescription;
 import com.facebook.buck.python.PythonTestUtils;
@@ -51,7 +52,9 @@ public class ThriftLibraryBuilder extends AbstractNodeBuilder<
                 .setFilesystem(new AllExistingProjectFilesystem())
                 .build());
     PythonLibraryDescription pythonLibraryDescription =
-        new PythonLibraryDescription(PythonTestUtils.PYTHON_PLATFORMS);
+        new PythonLibraryDescription(
+            PythonTestUtils.PYTHON_PLATFORMS,
+            CxxPlatformUtils.DEFAULT_PLATFORMS);
     return new ThriftLibraryBuilder(
         new ThriftLibraryDescription(
             thriftBuckConfig,
