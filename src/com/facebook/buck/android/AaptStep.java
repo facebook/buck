@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.util.Optional;
 
 /**
  * Runs the Android Asset Packaging Tool ({@code aapt}), which creates an {@code .apk} file.
@@ -69,7 +68,7 @@ public class AaptStep extends ShellStep {
   private final ImmutableSortedSet<Path> assetsDirectories;
   private final Path pathToOutputApkFile;
   private final Path pathToRDotTxtDir;
-  private final Optional<Path> pathToGeneratedProguardConfig;
+  private final Path pathToGeneratedProguardConfig;
 
   private final boolean isCrunchPngFiles;
   private final boolean includesVectorDrawables;
@@ -82,7 +81,7 @@ public class AaptStep extends ShellStep {
       ImmutableSortedSet<Path> assetsDirectories,
       Path pathToOutputApkFile,
       Path pathToRDotTxtDir,
-      Optional<Path> pathToGeneratedProguardConfig,
+      Path pathToGeneratedProguardConfig,
       boolean isCrunchPngFiles,
       boolean includesVectorDrawables,
       ManifestEntries manifestEntries) {
@@ -114,9 +113,7 @@ public class AaptStep extends ShellStep {
     // Force overwrite of existing files.
     builder.add("-f");
 
-    if (pathToGeneratedProguardConfig.isPresent()) {
-      builder.add("-G", pathToGeneratedProguardConfig.get().toString());
-    }
+    builder.add("-G", pathToGeneratedProguardConfig.toString());
 
     // --no-crunch, if appropriate.
     if (!isCrunchPngFiles) {

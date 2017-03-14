@@ -201,13 +201,10 @@ public class AaptPackageResources extends AbstractBuildRule {
     Path rDotTxtDir = getPathToRDotTxtDir();
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), rDotTxtDir));
 
-    Optional<Path> pathToGeneratedProguardConfig = Optional.empty();
-    if (packageType.isBuildWithObfuscation()) {
-      Path proguardConfigDir = getPathToGeneratedProguardConfigDir();
-      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), proguardConfigDir));
-      pathToGeneratedProguardConfig = Optional.of(proguardConfigDir.resolve("proguard.txt"));
-      buildableContext.recordArtifact(proguardConfigDir);
-    }
+    Path proguardConfigDir = getPathToGeneratedProguardConfigDir();
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), proguardConfigDir));
+    Path pathToGeneratedProguardConfig = proguardConfigDir.resolve("proguard.txt");
+    buildableContext.recordArtifact(proguardConfigDir);
 
     steps.add(
         new AaptStep(

@@ -36,7 +36,6 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 
 /**
  * Test generation of command line flags based on creation parameters
@@ -44,6 +43,7 @@ import java.util.Optional;
 public class AaptStepTest {
 
   private Path basePath = Paths.get("/java/com/facebook/buck/example");
+  private Path proguardConfig = basePath.resolve("mock_proguard.txt");
 
   /**
    * Build an AaptStep that can be used to generate a shell command. Should only
@@ -51,7 +51,7 @@ public class AaptStepTest {
    * directories (so it can't be executed).
    */
   private AaptStep buildAaptStep(
-      Optional<Path> pathToGeneratedProguardConfig,
+      Path pathToGeneratedProguardConfig,
       boolean isCrunchFiles,
       boolean includesVectorDrawables,
       ManifestEntries manifestEntries) {
@@ -92,7 +92,7 @@ public class AaptStepTest {
   @Test
   public void shouldEmitVerbosityFlagWithVerboseContext() throws Exception {
     AaptStep aaptStep =
-        buildAaptStep(Optional.empty(), false, false, ManifestEntries.empty());
+        buildAaptStep(proguardConfig, false, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
@@ -102,7 +102,7 @@ public class AaptStepTest {
   @Test
   public void shouldNotEmitVerbosityFlagWithQuietContext() throws Exception {
     AaptStep aaptStep =
-        buildAaptStep(Optional.empty(), false, false, ManifestEntries.empty());
+        buildAaptStep(proguardConfig, false, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.SILENT);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
@@ -111,9 +111,8 @@ public class AaptStepTest {
 
   @Test
   public void shouldEmitGFlagIfProguardConfigPresent() throws Exception {
-    Path proguardConfig = basePath.resolve("mock_proguard.txt");
     AaptStep aaptStep =
-        buildAaptStep(Optional.of(proguardConfig), false, false, ManifestEntries.empty());
+        buildAaptStep(proguardConfig, false, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
@@ -128,7 +127,7 @@ public class AaptStepTest {
   @Test
   public void shouldEmitNoCrunchFlagIfNotCrunch() throws Exception {
     AaptStep aaptStep =
-        buildAaptStep(Optional.empty(), false,  false, ManifestEntries.empty());
+        buildAaptStep(proguardConfig, false,  false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
@@ -139,7 +138,7 @@ public class AaptStepTest {
   @Test
   public void shouldNotEmitNoCrunchFlagIfCrunch() throws Exception {
     AaptStep aaptStep =
-        buildAaptStep(Optional.empty(), true, false, ManifestEntries.empty());
+        buildAaptStep(proguardConfig, true, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
@@ -150,7 +149,7 @@ public class AaptStepTest {
   @Test
   public void shouldEmitNoVersionVectorsFlagIfRequested() throws Exception {
     AaptStep aaptStep =
-        buildAaptStep(Optional.empty(), false, true, ManifestEntries.empty());
+        buildAaptStep(proguardConfig, false, true, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
@@ -161,7 +160,7 @@ public class AaptStepTest {
   @Test
   public void shouldNotEmitNoVersionVectorsFlagIfNotRequested() throws Exception {
     AaptStep aaptStep =
-        buildAaptStep(Optional.empty(), false, false, ManifestEntries.empty());
+        buildAaptStep(proguardConfig, false, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
@@ -178,7 +177,7 @@ public class AaptStepTest {
         .setVersionName("eleven")
         .setDebugMode(true)
         .build();
-    AaptStep aaptStep = buildAaptStep(Optional.empty(), true, false, entries);
+    AaptStep aaptStep = buildAaptStep(proguardConfig, true, false, entries);
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
 
@@ -202,7 +201,7 @@ public class AaptStepTest {
   @Test
   public void shouldNotEmitFailOnInsertWithoutManifestEntries() throws Exception {
     AaptStep aaptStep =
-        buildAaptStep(Optional.empty(), true, false, ManifestEntries.empty());
+        buildAaptStep(proguardConfig, true, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
     assertFalse(command.contains("--error-on-failed-insert"));
