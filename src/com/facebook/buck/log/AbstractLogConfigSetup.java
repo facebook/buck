@@ -22,7 +22,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -42,7 +41,7 @@ abstract class AbstractLogConfigSetup {
   // temporary directory.
   public static final LogConfigSetup DEFAULT_SETUP =
       LogConfigSetup.builder()
-          .setLogDir(Paths.get(BuckConstant.getBuckOutputDirectory(), "log"))
+          .setLogDir(BuckConstant.getBuckOutputPath().resolve("log"))
           .build();
 
   @Value.Parameter

@@ -43,7 +43,6 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
@@ -57,7 +56,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -84,13 +82,11 @@ public class DoctorCommandIntegrationTest {
   private final AtomicReference<byte[]> requestBody = new AtomicReference<>();
 
   private static final String LOG_PATH =
-      Joiner.on(File.separator).join(
-          ImmutableList.of(
-              BuckConstant.getBuckOutputDirectory(),
-              "log",
-              "2016-06-21_16h16m24s_buildcommand_ac8bd626-6137-4747-84dd-5d4f215c876c",
-              BuckConstant.BUCK_LOG_FILE_NAME));
-
+      BuckConstant.getBuckOutputPath()
+          .resolve("log")
+          .resolve("2016-06-21_16h16m24s_buildcommand_ac8bd626-6137-4747-84dd-5d4f215c876c")
+          .resolve(BuckConstant.BUCK_LOG_FILE_NAME)
+          .toString();
 
   @Before
   public void setUp() throws Exception {

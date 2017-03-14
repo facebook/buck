@@ -25,12 +25,11 @@ public class BuckConstant {
   public static final String DIST_BUILD_SLAVE_LOG_DIR_NAME_TEMPLATE = "dist-build-slave-%s";
   public static final String RULE_KEY_LOGGER_FILE_NAME = "rule_key_logger.tsv";
 
-  private static final String BUCK_OUTPUT_DIRECTORY = "buck-out";
-  private static final Path BUCK_OUTPUT_PATH = Paths.get("buck-out");
+  private static final Path BUCK_OUTPUT_PATH_DEFAULT = Paths.get("buck-out");
   private static final Path CURRENT_VERSION_FILE = getBuckOutputPath().resolve(".currentversion");
 
   private static final Path BUCK_TRACE_DIR = getBuckOutputPath().resolve("log/traces");
-  private static final String DEFAULT_CACHE_DIR = getBuckOutputDirectory() + "/cache";
+  private static final String DEFAULT_CACHE_DIR = getBuckOutputPath().resolve("cache").toString();
 
   // We put a . at the front of the name so Spotlight doesn't try to index the contents on OS X.
   private static final Path TRASH_PATH = getBuckOutputPath().resolve(".trash");
@@ -42,12 +41,8 @@ public class BuckConstant {
    *
    * NOTE: Should only ever be used from there and {@link com.facebook.buck.io.ProjectFilesystem}.
    */
-  public static String getBuckOutputDirectory() {
-    return BUCK_OUTPUT_DIRECTORY;
-  }
-
-  private static Path getBuckOutputPath() {
-    return BUCK_OUTPUT_PATH;
+  public static Path getBuckOutputPath() {
+    return BUCK_OUTPUT_PATH_DEFAULT;
   }
 
   /**

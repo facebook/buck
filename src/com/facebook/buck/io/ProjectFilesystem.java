@@ -245,7 +245,8 @@ public class ProjectFilesystem {
   }
 
   private static BuckPaths getDefaultBuckPaths(Path rootPath) {
-    return BuckPaths.of(rootPath.getFileSystem().getPath(BuckConstant.getBuckOutputDirectory()));
+    return BuckPaths.of(
+        rootPath.getFileSystem().getPath(BuckConstant.getBuckOutputPath().toString()));
   }
 
   private static BuckPaths getConfiguredBuckPaths(Path rootPath, Config config) {
