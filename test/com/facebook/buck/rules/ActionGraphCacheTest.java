@@ -239,9 +239,9 @@ public class ActionGraphCacheTest {
         /* skipActionGraphCache */ false,
         targetGraph,
         keySeed);
-    assertFalse(cache.isEmpty());
+    assertFalse(cache.isCacheEmpty());
     cache.invalidateBasedOn(WatchmanWatcher.createOverflowEvent("testing"));
-    assertTrue(cache.isEmpty());
+    assertTrue(cache.isCacheEmpty());
 
     // Fill the cache. Add a file and ActionGraphCache should be invalidated.
     cache.getActionGraph(
@@ -250,10 +250,10 @@ public class ActionGraphCacheTest {
         /* skipActionGraphCache */ false,
         targetGraph,
         keySeed);
-    assertFalse(cache.isEmpty());
+    assertFalse(cache.isCacheEmpty());
     cache.invalidateBasedOn(
         WatchEventsForTests.createPathEvent(file, StandardWatchEventKinds.ENTRY_CREATE));
-    assertTrue(cache.isEmpty());
+    assertTrue(cache.isCacheEmpty());
 
     //Re-fill cache. Remove a file and ActionGraphCache should be invalidated.
     cache.getActionGraph(
@@ -262,10 +262,10 @@ public class ActionGraphCacheTest {
         /* skipActionGraphCache */ false,
         targetGraph,
         keySeed);
-    assertFalse(cache.isEmpty());
+    assertFalse(cache.isCacheEmpty());
     cache.invalidateBasedOn(
         WatchEventsForTests.createPathEvent(file, StandardWatchEventKinds.ENTRY_DELETE));
-    assertTrue(cache.isEmpty());
+    assertTrue(cache.isCacheEmpty());
 
     // Re-fill cache. Modify contents of a file, ActionGraphCache should NOT be invalidated.
     cache.getActionGraph(
@@ -274,7 +274,7 @@ public class ActionGraphCacheTest {
         /* skipActionGraphCache */ false,
         targetGraph,
         keySeed);
-    assertFalse(cache.isEmpty());
+    assertFalse(cache.isCacheEmpty());
     cache.invalidateBasedOn(
         WatchEventsForTests.createPathEvent(file, StandardWatchEventKinds.ENTRY_MODIFY));
     cache.getActionGraph(
@@ -283,7 +283,7 @@ public class ActionGraphCacheTest {
         /* skipActionGraphCache */ false,
         targetGraph,
         keySeed);
-    assertFalse(cache.isEmpty());
+    assertFalse(cache.isCacheEmpty());
 
     // We should have 4 cache misses and 1 hit from when you request the same graph after a file
     // modification.

@@ -275,7 +275,7 @@ public class ActionGraphCache {
   public void invalidateBasedOn(WatchEvent<?> event) {
     // We invalidate in every case except a modify event.
     if (event.kind() != StandardWatchEventKinds.ENTRY_MODIFY) {
-      if (!isEmpty()) {
+      if (!isCacheEmpty()) {
         LOG.info("ActionGraphCache invalidation due to Watchman event %s.", event);
       }
       invalidateCache();
@@ -297,7 +297,7 @@ public class ActionGraphCache {
   }
 
   @VisibleForTesting
-  boolean isEmpty() {
+  boolean isCacheEmpty() {
     return lastActionGraph == null;
   }
 }
