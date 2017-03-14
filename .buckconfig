@@ -49,4 +49,4 @@
     watchman_cursor = clock_id
 [test]
     ; Maximum timeout of 1 minute per test.
-    timeout = 60000
+    timeout = 90000
