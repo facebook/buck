@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -76,7 +77,6 @@ public class NdkLibrary extends AbstractBuildRule
   private final Path root;
   private final Path makefile;
   private final String makefileContents;
-  private final String lastPathComponent;
   private final Path buildArtifactsDirectory;
   private final Path genDirectory;
 
@@ -106,7 +106,6 @@ public class NdkLibrary extends AbstractBuildRule
     this.root = buildTarget.getBasePath();
     this.makefile = Preconditions.checkNotNull(makefile);
     this.makefileContents = makefileContents;
-    this.lastPathComponent = "__lib" + buildTarget.getShortNameAndFlavorPostfix();
     this.buildArtifactsDirectory = getBuildArtifactsDirectory(buildTarget, true /* isScratchDir */);
     this.genDirectory = getBuildArtifactsDirectory(buildTarget, false /* isScratchDir */);
 
@@ -200,11 +199,9 @@ public class NdkLibrary extends AbstractBuildRule
    *     can be referenced via a {@link BuildTargetSourcePath} or somesuch.
    */
   private Path getBuildArtifactsDirectory(BuildTarget target, boolean isScratchDir) {
-    Path base =
-        isScratchDir ?
-            getProjectFilesystem().getBuckPaths().getScratchDir() :
-            getProjectFilesystem().getBuckPaths().getGenDir();
-    return base.resolve(target.getBasePath()).resolve(lastPathComponent);
+    return isScratchDir
+        ? BuildTargets.getScratchPath(getProjectFilesystem(), target, "__lib%s")
+        : BuildTargets.getGenPath(getProjectFilesystem(), target, "__lib%s");
   }
 
   @Override
