@@ -386,7 +386,7 @@ public class AndroidResource extends AbstractBuildRule
           rDotJavaPackageArgument));
     }
     rDotJavaPackage.set(rDotJavaPackageFromFile);
-    return rDotJavaPackage.get();
+    return rDotJavaPackageFromFile;
   }
 
   @Override

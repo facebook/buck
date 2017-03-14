@@ -542,7 +542,7 @@ public class IjProjectTemplateDataPreparer {
     private IjSourceFolder createSourceFolder(
         IjFolder folder,
         Path moduleLocationBasePath,
-        String packagePrefix) {
+        @Nullable String packagePrefix) {
       return IjSourceFolder.builder()
           .setType(folder.getIjName())
           .setUrl(toModuleDirRelativeString(folder.getPath(), moduleLocationBasePath))

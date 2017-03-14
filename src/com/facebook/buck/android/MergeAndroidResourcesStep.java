@@ -425,7 +425,10 @@ public class MergeAndroidResourcesStep implements Step {
             resource.type));
         List<SourcePath> resourceDirs = new ArrayList<>(paths.size());
         for (Path path : paths) {
-          resourceDirs.add(symbolsFileToResourceDeps.get(path).getRes());
+          SourcePath res = symbolsFileToResourceDeps.get(path).getRes();
+          if (res != null) {
+            resourceDirs.add(res);
+          }
         }
         duplicateResourcesMessage.append(Joiner.on(", ").join(resourceDirs));
         duplicateResourcesMessage.append("\n");

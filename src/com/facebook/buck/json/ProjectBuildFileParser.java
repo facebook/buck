@@ -434,7 +434,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
     Map<String, Object> decodedResult = (Map<String, Object>) deserializedValue;
     List<Map<String, Object>> values;
     try {
-      values = (List<Map<String, Object>>) decodedResult.get("values");
+      values = (List<Map<String, Object>>) Preconditions.checkNotNull(decodedResult.get("values"));
     } catch (ClassCastException e) {
       throw new IOException("Invalid parser values", e);
     }
@@ -536,7 +536,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
       Map<String, Object> exceptionMap
   ) {
     List<Map<String, Object>> traceback =
-        (List<Map<String, Object>>) exceptionMap.get("traceback");
+        (List<Map<String, Object>>) Preconditions.checkNotNull(exceptionMap.get("traceback"));
     ImmutableList.Builder<BuildFileParseExceptionStackTraceEntry> stackTraceBuilder =
         ImmutableList.builder();
     for (Map<String, Object> tracebackItem : traceback) {

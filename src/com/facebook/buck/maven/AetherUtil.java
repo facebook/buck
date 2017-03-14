@@ -70,8 +70,9 @@ public class AetherUtil {
   }
 
   public static RemoteRepository toRemoteRepository(ArtifactConfig.Repository repo) {
-    RemoteRepository.Builder builder = new RemoteRepository.Builder(repo.url, "default", repo.url)
-        .setPolicy(new RepositoryPolicy(true, null, CHECKSUM_POLICY_FAIL));
+    RemoteRepository.Builder builder =
+        new RemoteRepository.Builder(repo.getUrl(), "default", repo.getUrl())
+            .setPolicy(new RepositoryPolicy(true, null, CHECKSUM_POLICY_FAIL));
 
     if (repo.user != null && repo.password != null) {
       builder.setAuthentication(

@@ -23,6 +23,7 @@ import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -112,7 +113,7 @@ class DaemonicCellState {
 
   // TODO(mzlee): Only needed for invalidateBasedOn which does not have access to cell metadata
   Cell getCell() {
-    return cell.get();
+    return Preconditions.checkNotNull(cell.get());
   }
 
   Path getCellRoot() {

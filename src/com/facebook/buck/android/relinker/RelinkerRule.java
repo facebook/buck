@@ -56,6 +56,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideScheduleRule {
 
   @AddToRuleKey
@@ -69,6 +71,7 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
   @AddToRuleKey
   private final ImmutableList<Arg> linkerArgs;
   @AddToRuleKey
+  @Nullable
   private final Linker linker;
 
   private final BuildRuleParams buildRuleParams;
@@ -84,7 +87,7 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
       Tool objdump,
       CxxBuckConfig cxxBuckConfig,
       SourcePath baseLibSourcePath,
-      Linker linker,
+      @Nullable Linker linker,
       ImmutableList<Arg> linkerArgs) {
     super(withDepsFromArgs(buildRuleParams, ruleFinder, linkerArgs), resolver);
     this.pathResolver = resolver;

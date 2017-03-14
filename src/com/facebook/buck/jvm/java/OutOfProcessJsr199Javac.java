@@ -26,9 +26,12 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
+import javax.annotation.Nullable;
+
 public abstract class OutOfProcessJsr199Javac implements Javac {
   private static final JavacVersion VERSION = JavacVersion.of("oop in memory");
 
+  @Nullable
   private Connection<OutOfProcessJavacConnectionInterface> connection;
 
   @Override

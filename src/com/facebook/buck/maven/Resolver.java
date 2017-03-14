@@ -142,8 +142,8 @@ public class Resolver {
     this.localRepo = new LocalRepository(Paths.get(config.mavenLocalRepo).toFile());
     this.session = newSession(repoSys, localRepo);
 
-    this.buckRepoRoot = Paths.get(config.buckRepoRoot);
-    this.buckThirdPartyRelativePath = Paths.get(config.thirdParty);
+    this.buckRepoRoot = Paths.get(Preconditions.checkNotNull(config.buckRepoRoot));
+    this.buckThirdPartyRelativePath = Paths.get(Preconditions.checkNotNull(config.thirdParty));
     this.visibility = config.visibility;
 
     this.repos = config.repositories.stream()

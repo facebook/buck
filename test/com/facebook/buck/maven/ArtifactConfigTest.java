@@ -53,7 +53,7 @@ public class ArtifactConfigTest {
     assertEquals(base.artifacts, Lists.newArrayList("artifact1", "artifact2"));
     assertEquals(base.visibility, Lists.newArrayList("r1", "r2"));
     assertEquals("br", base.buckRepoRoot);
-    assertEquals("https://example.com", base.repositories.get(0).url);
-    assertEquals("http://bar.co", base.repositories.get(1).url);
+    assertEquals("https://example.com", base.repositories.get(0).getUrl());
+    assertEquals("http://bar.co", base.repositories.get(1).getUrl());
   }
 }

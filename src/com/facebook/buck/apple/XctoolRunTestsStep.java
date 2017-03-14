@@ -149,7 +149,9 @@ class XctoolRunTestsStep implements Step {
     public void handleBeginTestEvent(XctoolOutputParsing.BeginTestEvent event) {
       testTargetsToDescriptions.put(
           Preconditions.checkNotNull(this.currentTestTarget),
-          new TestDescription(event.className, event.methodName));
+          new TestDescription(
+              Preconditions.checkNotNull(event.className),
+              Preconditions.checkNotNull(event.methodName)));
     }
 
     @Override

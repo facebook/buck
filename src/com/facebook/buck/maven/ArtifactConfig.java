@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
@@ -67,7 +68,7 @@ public class ArtifactConfig {
   }
 
   public static class Repository {
-    public String url;
+    private @Nullable String url;
     public @Nullable String user;
     public @Nullable String password;
 
@@ -75,6 +76,10 @@ public class ArtifactConfig {
 
     public Repository(String url) {
       this.url = url;
+    }
+
+    public String getUrl() {
+      return Preconditions.checkNotNull(url);
     }
   }
 
