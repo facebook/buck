@@ -105,7 +105,11 @@ public abstract class AbstractCommand implements Command {
       if (key.size() == 2) {
         // Here we explicitly take the whole string as the cell name. We don't support transitive
         // path overrides for cells.
-        cellName = RelativeCellName.of(ImmutableSet.of(key.get(0)));
+        if (key.get(0).length() == 0) {
+          cellName = RelativeCellName.ROOT_CELL_NAME;
+        } else {
+          cellName = RelativeCellName.of(ImmutableSet.of(key.get(0)));
+        }
         configKey = key.get(1);
       }
       int separatorIndex = configKey.lastIndexOf('.');

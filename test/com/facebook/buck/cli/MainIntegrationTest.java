@@ -76,6 +76,8 @@ public class MainIntegrationTest {
     workspace.setUp();
     workspace.runBuckCommand("targets", "--config", "buildfile.includes=//includes.py")
         .assertSuccess();
+    workspace.runBuckCommand("targets", "--config", "//buildfile.includes=//includes.py")
+        .assertSuccess();
   }
 
   @Test
