@@ -263,10 +263,10 @@ public class MergeAndroidResourcesStep implements Step {
 
         ImmutableList.Builder<String> customDrawablesBuilder = ImmutableList.builder();
         ImmutableList.Builder<String> grayscaleImagesBuilder = ImmutableList.builder();
-        RDotTxtEntry.RType lastType = null;
+        RType lastType = null;
 
         for (RDotTxtEntry res : packageToResources.get(rDotJavaPackage)) {
-          RDotTxtEntry.RType type = res.type;
+          RType type = res.type;
           if (!type.equals(lastType)) {
             // If the previous type needs to be closed, close it.
             if (lastType != null) {
@@ -287,10 +287,10 @@ public class MergeAndroidResourcesStep implements Step {
               res.name,
               res.idValue);
 
-          if (type == RDotTxtEntry.RType.DRAWABLE &&
+          if (type == RType.DRAWABLE &&
               res.customType == RDotTxtEntry.CustomDrawableType.CUSTOM) {
             customDrawablesBuilder.add(res.idValue);
-          } else if (type == RDotTxtEntry.RType.DRAWABLE &&
+          } else if (type == RType.DRAWABLE &&
               res.customType == RDotTxtEntry.CustomDrawableType.GRAYSCALE_IMAGE) {
             grayscaleImagesBuilder.add(res.idValue);
           }
@@ -355,9 +355,10 @@ public class MergeAndroidResourcesStep implements Step {
       List<String> linesInSymbolsFile;
       try {
         linesInSymbolsFile =
-            FluentIterable.from(filesystem.readLines(symbolsFile))
+            filesystem.readLines(symbolsFile)
+                .stream()
                 .filter(input -> !Strings.isNullOrEmpty(input))
-                .toList();
+                .collect(Collectors.toList());
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
@@ -530,10 +531,12 @@ public class MergeAndroidResourcesStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    ImmutableList<String> resources =
-        FluentIterable.from(androidResourceDeps)
-            .transform(Object::toString)
-            .toSortedList(natural());
+    List<String> resources =
+        androidResourceDeps
+            .stream()
+            .map(Object::toString)
+            .sorted(natural())
+            .collect(Collectors.toList());
     return getShortName() + " " + Joiner.on(' ').join(resources);
   }
 
@@ -545,7 +548,7 @@ public class MergeAndroidResourcesStep implements Step {
   private static class IntEnumerator {
     private int value;
 
-    public IntEnumerator(int start) {
+    IntEnumerator(int start) {
       value = start;
     }
 

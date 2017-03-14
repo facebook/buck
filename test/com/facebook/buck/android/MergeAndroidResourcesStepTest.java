@@ -111,7 +111,7 @@ public class MergeAndroidResourcesStepTest {
 
     Set<String> uniqueEntries = Sets.newHashSet();
     for (RDotTxtEntry resource : resources) {
-      if (!resource.type.equals(RDotTxtEntry.RType.STYLEABLE)) {
+      if (!resource.type.equals(STYLEABLE)) {
         assertFalse("Duplicate ids should be fixed by renumerate=true; duplicate was: " +
             resource.idValue, uniqueEntries.contains(resource.idValue));
         uniqueEntries.add(resource.idValue);
@@ -771,11 +771,11 @@ public class MergeAndroidResourcesStepTest {
     private final ImmutableMap.Builder<Path, String> filePathToPackageName =
         ImmutableMap.builder();
 
-    public RDotTxtEntryBuilder() {
+    RDotTxtEntryBuilder() {
       this(new FakeProjectFilesystem());
     }
 
-    public RDotTxtEntryBuilder(FakeProjectFilesystem filesystem) {
+    RDotTxtEntryBuilder(FakeProjectFilesystem filesystem) {
       this.filesystem = filesystem;
     }
 
@@ -784,7 +784,7 @@ public class MergeAndroidResourcesStepTest {
       filePathToPackageName.put(entry.filePath, entry.packageName);
     }
 
-    public Map<Path, String> buildFilePathToPackageNameSet() {
+    Map<Path, String> buildFilePathToPackageNameSet() {
       return filePathToPackageName.build();
     }
 
@@ -793,12 +793,13 @@ public class MergeAndroidResourcesStepTest {
     }
   }
 
-  private static class RDotTxtFile {
-    public String packageName;
-    public Path filePath;
+  static class RDotTxtFile {
     public ImmutableList<String> contents;
 
-    public RDotTxtFile(String packageName, String filePath, ImmutableList<String> contents) {
+    String packageName;
+    Path filePath;
+
+    RDotTxtFile(String packageName, String filePath, ImmutableList<String> contents) {
       this.packageName = packageName;
       this.filePath = Paths.get(filePath);
       this.contents = contents;
