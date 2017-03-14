@@ -103,7 +103,6 @@ public class TrimUberRDotJavaTest {
         ImmutableSortedSet.of(),
         ImmutableSet.of(),
         Optional.empty(),
-        null,
         false,
         false,
         /* includesVectorDrawables */ false,

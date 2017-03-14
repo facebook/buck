@@ -64,8 +64,8 @@ interface AbstractAndroidGraphEnhancementResult {
     return getAaptPackageResources().getAndroidManifestXmlSourcePath();
   }
 
-  default Optional<SourcePath> getPathToGeneratedProguardConfigDir() {
-    return getAaptPackageResources().getSourcePathToGeneratedProguardConfigDir();
+  default SourcePath getSourcePathToAaptGeneratedProguardConfigFile() {
+    return getAaptPackageResources().getSourcePathToGeneratedProguardConfigFile();
   }
 
   ImmutableSortedSet<BuildRule> getFinalDeps();

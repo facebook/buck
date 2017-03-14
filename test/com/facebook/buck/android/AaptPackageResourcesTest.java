@@ -323,7 +323,6 @@ public class AaptPackageResourcesTest {
             constructorArgs.extraDeps,
             constructorArgs.assetsDirectories,
             Optional.empty(),
-            constructorArgs.packageType,
             false,
             false,
             false,

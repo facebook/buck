@@ -177,7 +177,6 @@ public class AndroidBinaryGraphEnhancerTest {
         ImmutableSortedSet.of(),
         ImmutableSet.of(),
         /* resourceUnionPackage */ Optional.empty(),
-        AndroidBinary.PackageType.DEBUG,
         false,
         /* skipCrunchPngs */ false,
         /* includesVectorDrawables */ false,

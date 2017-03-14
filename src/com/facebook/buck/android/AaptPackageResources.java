@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -69,8 +68,6 @@ public class AaptPackageResources extends AbstractBuildRule {
   private final ImmutableSet<SourcePath> assetsDirectories;
   @AddToRuleKey
   private final Optional<String> resourceUnionPackage;
-  @AddToRuleKey
-  private final PackageType packageType;
   private final ImmutableList<HasAndroidResourceDeps> resourceDeps;
   @AddToRuleKey
   private final boolean shouldBuildStringSourceMap;
@@ -120,7 +117,6 @@ public class AaptPackageResources extends AbstractBuildRule {
       ImmutableSortedSet<BuildRule> extraDeps,
       ImmutableSet<SourcePath> assetsDirectories,
       Optional<String> resourceUnionPackage,
-      PackageType packageType,
       boolean shouldBuildStringSourceMap,
       boolean skipCrunchPngs,
       boolean includesVectorDrawables,
@@ -143,7 +139,6 @@ public class AaptPackageResources extends AbstractBuildRule {
     this.resourceDeps = resourceDeps;
     this.assetsDirectories = assetsDirectories;
     this.resourceUnionPackage = resourceUnionPackage;
-    this.packageType = packageType;
     this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
     this.skipCrunchPngs = skipCrunchPngs;
     this.includesVectorDrawables = includesVectorDrawables;
@@ -201,10 +196,11 @@ public class AaptPackageResources extends AbstractBuildRule {
     Path rDotTxtDir = getPathToRDotTxtDir();
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), rDotTxtDir));
 
-    Path proguardConfigDir = getPathToGeneratedProguardConfigDir();
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), proguardConfigDir));
-    Path pathToGeneratedProguardConfig = proguardConfigDir.resolve("proguard.txt");
-    buildableContext.recordArtifact(proguardConfigDir);
+    Path pathToGeneratedProguardConfig = getPathToGeneratedProguardConfigFile();
+    steps.add(new MakeCleanDirectoryStep(
+        getProjectFilesystem(),
+        pathToGeneratedProguardConfig.getParent()));
+    buildableContext.recordArtifact(pathToGeneratedProguardConfig);
 
     steps.add(
         new AaptStep(
@@ -350,30 +346,17 @@ public class AaptPackageResources extends AbstractBuildRule {
         "__%s_string_source_map__");
   }
 
-  /**
-   * This is the path to the directory for generated files related to ProGuard. Ultimately, it
-   * should include:
-   * <ul>
-   *   <li>proguard.txt
-   *   <li>dump.txt
-   *   <li>seeds.txt
-   *   <li>usage.txt
-   *   <li>mapping.txt
-   *   <li>obfuscated.jar
-   * </ul>
-   * @return path to directory (will not include trailing slash)
-   */
-  public Path getPathToGeneratedProguardConfigDir() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__proguard__")
-        .resolve(".proguard");
+  private Path getPathToGeneratedProguardConfigFile() {
+    return BuildTargets.getGenPath(
+        getProjectFilesystem(),
+        getBuildTarget(),
+        "%s/proguard/proguard.txt");
   }
 
-  public Optional<SourcePath> getSourcePathToGeneratedProguardConfigDir() {
-    if (!packageType.isBuildWithObfuscation()) {
-      return Optional.empty();
-    }
-    return Optional.of(new ExplicitBuildTargetSourcePath(
-        getBuildTarget(), getPathToGeneratedProguardConfigDir()));
+  public SourcePath getSourcePathToGeneratedProguardConfigFile() {
+    return new ExplicitBuildTargetSourcePath(
+        getBuildTarget(),
+        getPathToGeneratedProguardConfigFile());
   }
 
   @VisibleForTesting

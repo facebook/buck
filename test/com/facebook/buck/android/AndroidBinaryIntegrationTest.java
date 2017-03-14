@@ -357,9 +357,8 @@ public class AndroidBinaryIntegrationTest {
     Path mapping = workspace.getPath(
         BuildTargets.getGenPath(
             filesystem,
-            BuildTargetFactory.newInstance(target)
-                .withFlavors(AndroidBinaryGraphEnhancer.AAPT_PACKAGE_FLAVOR),
-            "__%s__proguard__/.proguard/mapping.txt"));
+            BuildTargetFactory.newInstance(target),
+            "%s/proguard/mapping.txt"));
     assertTrue(Files.exists(mapping));
   }
 
@@ -960,7 +959,7 @@ public class AndroidBinaryIntegrationTest {
 
     assertTrue(userData.get("config").toString().endsWith("apps/sample/redex-config.json"));
     assertEquals(
-        "buck-out/gen/apps/sample/__app_redex#aapt_package__proguard__/.proguard/seeds.txt",
+        "buck-out/gen/apps/sample/app_redex/proguard/seeds.txt",
         userData.get("keep"));
     assertEquals(
         "my_alias",
@@ -975,10 +974,10 @@ public class AndroidBinaryIntegrationTest {
         "buck-out/gen/apps/sample/app_redex.apk.redex",
         userData.get("out"));
     assertEquals(
-        "buck-out/gen/apps/sample/__app_redex#aapt_package__proguard__/.proguard/command-line.txt",
+        "buck-out/gen/apps/sample/app_redex/proguard/command-line.txt",
         userData.get("P"));
     assertEquals(
-        "buck-out/gen/apps/sample/__app_redex#aapt_package__proguard__/.proguard/mapping.txt",
+        "buck-out/gen/apps/sample/app_redex/proguard/mapping.txt",
         userData.get("proguard-map"));
     assertTrue((Boolean) userData.get("sign"));
     assertEquals(

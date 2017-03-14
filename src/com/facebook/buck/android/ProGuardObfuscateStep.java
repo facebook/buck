@@ -24,6 +24,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
@@ -87,6 +88,8 @@ public final class ProGuardObfuscateStep extends ShellStep {
       BuildableContext buildableContext,
       boolean skipProguard,
       ImmutableList.Builder<Step> steps) {
+
+    steps.add(new MakeCleanDirectoryStep(filesystem, proguardDirectory));
 
     Path pathToProGuardCommandLineArgsFile = proguardDirectory.resolve("command-line.txt");
 

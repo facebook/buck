@@ -248,7 +248,7 @@ public class AndroidBinary
   @AddToRuleKey
   private ImmutableList<SourcePath> primaryApkAssetsZips;
   @AddToRuleKey
-  private Optional<SourcePath> pathToGeneratedProguardConfigDir;
+  private SourcePath aaptGeneratedProguardConfigFile;
 
   @AddToRuleKey
   @Nullable
@@ -331,7 +331,8 @@ public class AndroidBinary
     this.resourcesApkPath =
         enhancementResult.getPrimaryResourcesApkPath();
     this.primaryApkAssetsZips = enhancementResult.getPrimaryApkAssetZips();
-    this.pathToGeneratedProguardConfigDir = enhancementResult.getPathToGeneratedProguardConfigDir();
+    this.aaptGeneratedProguardConfigFile =
+        enhancementResult.getSourcePathToAaptGeneratedProguardConfigFile();
 
     if (exopackageModes.isEmpty()) {
       this.abiPath = null;
@@ -601,8 +602,7 @@ public class AndroidBinary
 
     // redex
     if (applyRedex) {
-      Path proguardConfigDir = enhancementResult.getAaptPackageResources()
-          .getPathToGeneratedProguardConfigDir();
+      Path proguardConfigDir = getProguardTextFilesPath();
       Path redexedApk = apkPath.getParent().resolve(apkPath.getFileName().toString() + ".redex");
       apkToAlign = redexedApk;
       ImmutableList<Step> redexSteps = ReDexStep.createSteps(
@@ -973,6 +973,16 @@ public class AndroidBinary
     return BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), format);
   }
 
+  /**
+   * Directory of text files used by proguard.  Unforunately, this contains both inputs and outputs.
+   */
+  private Path getProguardTextFilesPath() {
+    return BuildTargets.getGenPath(
+        getProjectFilesystem(),
+        getBuildTarget(),
+        "%s/proguard");
+  }
+
   @VisibleForTesting
   static Path getProguardOutputFromInputClasspath(Path proguardConfigDir, Path classpathEntry) {
     // Hehe, this is so ridiculously fragile.
@@ -996,7 +1006,6 @@ public class AndroidBinary
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext,
       SourcePathResolver resolver) {
-    Preconditions.checkArgument(pathToGeneratedProguardConfigDir.isPresent());
     ImmutableSet.Builder<Path> additionalLibraryJarsForProguardBuilder = ImmutableSet.builder();
 
     for (JavaLibrary buildRule : rulesToExcludeFromDex) {
@@ -1014,7 +1023,7 @@ public class AndroidBinary
       proguardConfigsBuilder.add(resolver.getAbsolutePath(proguardConfig.get()));
     }
 
-    Path proguardConfigDir = resolver.getRelativePath(pathToGeneratedProguardConfigDir.get());
+    Path proguardConfigDir = getProguardTextFilesPath();
     // Transform our input classpath to a set of output locations for each input classpath.
     // TODO(jasta): the output path we choose is the result of a slicing function against
     // input classpath. This is fragile and should be replaced with knowledge of the BuildTarget.
@@ -1032,7 +1041,7 @@ public class AndroidBinary
             Optional.empty(),
         proguardMaxHeapSize,
         proguardAgentPath,
-        proguardConfigDir.resolve("proguard.txt"),
+        resolver.getRelativePath(aaptGeneratedProguardConfigFile),
         proguardConfigsBuilder.build(),
         sdkProguardConfig,
         optimizationPasses,
@@ -1089,7 +1098,7 @@ public class AndroidBinary
       Optional<Path> proguardFullConfigFile = Optional.empty();
       Optional<Path> proguardMappingFile = Optional.empty();
       if (packageType.isBuildWithObfuscation()) {
-        Path proguardConfigDir = resolver.getRelativePath(pathToGeneratedProguardConfigDir.get());
+        Path proguardConfigDir = getProguardTextFilesPath();
         proguardFullConfigFile = Optional.of(proguardConfigDir.resolve("configuration.txt"));
         proguardMappingFile = Optional.of(proguardConfigDir.resolve("mapping.txt"));
       }

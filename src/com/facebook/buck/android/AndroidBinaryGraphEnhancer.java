@@ -335,7 +335,6 @@ public class AndroidBinaryGraphEnhancer {
         getTargetsAsRules(resourceDetails.getResourcesWithEmptyResButNonEmptyAssetsDir()),
         packageableCollection.getAssetsDirectories(),
         resourceUnionPackage,
-        packageType,
         shouldBuildStringSourceMap,
         skipCrunchPngs,
         includesVectorDrawables,

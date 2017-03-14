@@ -123,11 +123,16 @@ public class AndroidBinaryTest {
 
     BuildTarget aaptPackageTarget = binaryBuildTarget
         .withFlavors(AndroidBinaryGraphEnhancer.AAPT_PACKAGE_FLAVOR);
+    Path aaptProguardDir = BuildTargets.getGenPath(
+        androidBinary.getProjectFilesystem(),
+        aaptPackageTarget,
+        "%s/proguard/");
+
     Path proguardOutputDir =
         BuildTargets.getGenPath(
             androidBinary.getProjectFilesystem(),
-            aaptPackageTarget,
-            "__%s__proguard__/.proguard/");
+            binaryBuildTarget,
+            "%s/proguard/");
     ImmutableSet<Path> expectedRecordedArtifacts = ImmutableSet.of(
         proguardOutputDir.resolve("configuration.txt"),
         proguardOutputDir.resolve("mapping.txt"),
@@ -146,7 +151,7 @@ public class AndroidBinaryTest {
         /* proguardJarOverride */ Optional.empty(),
         /* proguardMaxHeapSize */ "1024M",
         /* proguardAgentPath */ Optional.empty(),
-        proguardOutputDir.resolve("proguard.txt"),
+        aaptProguardDir.resolve("proguard.txt"),
         /* customProguardConfigs */ ImmutableSet.of(),
         ProGuardObfuscateStep.SdkProguardType.DEFAULT,
         /* optimizationPasses */ Optional.empty(),
