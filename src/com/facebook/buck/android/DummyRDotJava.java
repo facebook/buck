@@ -69,6 +69,8 @@ public class DummyRDotJava extends AbstractBuildRule
   @AddToRuleKey
   private final Optional<String> finalRName;
   @AddToRuleKey
+  private final boolean useOldStyleableFormat;
+  @AddToRuleKey
   @SuppressWarnings("PMD.UnusedPrivateField")
   private final ImmutableList<SourcePath> abiInputs;
 
@@ -79,7 +81,8 @@ public class DummyRDotJava extends AbstractBuildRule
       JavacOptions javacOptions,
       boolean forceFinalResourceIds,
       Optional<String> unionPackage,
-      Optional<String> finalRName) {
+      Optional<String> finalRName,
+      boolean useOldStyleableFormat) {
     this(
         params,
         ruleFinder,
@@ -88,6 +91,7 @@ public class DummyRDotJava extends AbstractBuildRule
         forceFinalResourceIds,
         unionPackage,
         finalRName,
+        useOldStyleableFormat,
         abiPaths(androidResourceDeps));
   }
 
@@ -99,6 +103,7 @@ public class DummyRDotJava extends AbstractBuildRule
       boolean forceFinalResourceIds,
       Optional<String> unionPackage,
       Optional<String> finalRName,
+      boolean useOldStyleableFormat,
       ImmutableList<SourcePath> abiInputs) {
     super(params.appendExtraDeps(() -> ruleFinder.filterBuildRuleInputs(abiInputs)));
     this.ruleFinder = ruleFinder;
@@ -106,6 +111,7 @@ public class DummyRDotJava extends AbstractBuildRule
     this.androidResourceDeps = androidResourceDeps.stream()
         .sorted(Comparator.comparing(HasAndroidResourceDeps::getBuildTarget))
         .collect(MoreCollectors.toImmutableList());
+    this.useOldStyleableFormat = useOldStyleableFormat;
     this.outputJar = getOutputJarPath(getBuildTarget(), getProjectFilesystem());
     this.javacOptions = javacOptions.withAnnotationProcessingParams(
         javacOptions.getAnnotationProcessingParams().withoutProcessOnly());
@@ -157,7 +163,8 @@ public class DummyRDotJava extends AbstractBuildRule
           rDotJavaSrcFolder,
           forceFinalResourceIds,
           unionPackage,
-          /* rName */ Optional.empty());
+          /* rName */ Optional.empty(),
+          useOldStyleableFormat);
       steps.add(mergeStep);
 
       if (!finalRName.isPresent()) {
@@ -171,7 +178,8 @@ public class DummyRDotJava extends AbstractBuildRule
                 rDotJavaSrcFolder,
                 /* forceFinalResourceIds */ true,
                 unionPackage,
-                finalRName);
+                finalRName,
+                useOldStyleableFormat);
         steps.add(mergeFinalRStep);
 
         javaSourceFilePaths = ImmutableSortedSet.<Path>naturalOrder()

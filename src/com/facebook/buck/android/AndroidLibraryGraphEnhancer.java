@@ -47,6 +47,7 @@ public class AndroidLibraryGraphEnhancer {
   private final boolean forceFinalResourceIds;
   private final Optional<String> resourceUnionPackage;
   private final Optional<String> finalRName;
+  private final boolean useOldStyleableFormat;
 
   public AndroidLibraryGraphEnhancer(
       BuildTarget buildTarget,
@@ -55,7 +56,8 @@ public class AndroidLibraryGraphEnhancer {
       DependencyMode resourceDependencyMode,
       boolean forceFinalResourceIds,
       Optional<String> resourceUnionPackage,
-      Optional<String> finalRName) {
+      Optional<String> finalRName,
+      boolean useOldStyleableFormat) {
     this.dummyRDotJavaBuildTarget = getDummyRDotJavaTarget(buildTarget);
     this.originalBuildRuleParams = buildRuleParams;
     // Override javacoptions because DummyRDotJava doesn't require annotation processing.
@@ -66,6 +68,7 @@ public class AndroidLibraryGraphEnhancer {
     this.forceFinalResourceIds = forceFinalResourceIds;
     this.resourceUnionPackage = resourceUnionPackage;
     this.finalRName = finalRName;
+    this.useOldStyleableFormat = useOldStyleableFormat;
   }
 
   public static BuildTarget getDummyRDotJavaTarget(BuildTarget buildTarget) {
@@ -124,7 +127,8 @@ public class AndroidLibraryGraphEnhancer {
         javacOptions,
         forceFinalResourceIds,
         resourceUnionPackage,
-        finalRName);
+        finalRName,
+        useOldStyleableFormat);
     ruleResolver.addToIndex(dummyRDotJava);
 
     return Optional.of(dummyRDotJava);

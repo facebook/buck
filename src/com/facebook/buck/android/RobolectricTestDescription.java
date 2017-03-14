@@ -102,7 +102,8 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
         DependencyMode.TRANSITIVE,
         /* forceFinalResourceIds */ true,
         /* resourceUnionPackage */ Optional.empty(),
-        /* rName */ Optional.empty());
+        /* rName */ Optional.empty(),
+        args.useOldStyleableFormat);
 
     if (CalculateAbi.isAbiTarget(params.getBuildTarget())) {
       if (params.getBuildTarget().getFlavors().contains(
@@ -218,5 +219,6 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
   public static class Arg extends JavaTestDescription.Arg {
     public Optional<String> robolectricRuntimeDependency;
     public Optional<SourcePath> robolectricManifest;
+    public boolean useOldStyleableFormat = false;
   }
 }

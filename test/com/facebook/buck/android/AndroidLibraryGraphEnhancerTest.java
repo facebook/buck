@@ -60,7 +60,8 @@ public class AndroidLibraryGraphEnhancerTest {
         DependencyMode.FIRST_ORDER,
         /* forceFinalResourceIds */ false,
         /* unionPackage */ Optional.empty(),
-        /* rName */ Optional.empty());
+        /* rName */ Optional.empty(),
+        false);
     Optional<DummyRDotJava> result = graphEnhancer.getBuildableForAndroidResources(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
         /* createdBuildableIfEmptyDeps */ false);
@@ -77,7 +78,8 @@ public class AndroidLibraryGraphEnhancerTest {
         DependencyMode.FIRST_ORDER,
         /* forceFinalResourceIds */ false,
         /* unionPackage */ Optional.empty(),
-        /* rName */ Optional.empty());
+        /* rName */ Optional.empty(),
+        false);
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     Optional<DummyRDotJava> result = graphEnhancer.getBuildableForAndroidResources(
@@ -121,7 +123,8 @@ public class AndroidLibraryGraphEnhancerTest {
         DependencyMode.FIRST_ORDER,
         /* forceFinalResourceIds */ false,
         /* unionPackage */ Optional.empty(),
-        /* rName */ Optional.empty());
+        /* rName */ Optional.empty(),
+        false);
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.getBuildableForAndroidResources(
         ruleResolver,
         /* createBuildableIfEmptyDeps */ false);
@@ -182,7 +185,8 @@ public class AndroidLibraryGraphEnhancerTest {
                 DependencyMode.FIRST_ORDER,
         /* forceFinalResourceIds */ false,
         /* unionPackage */ Optional.empty(),
-        /* rName */ Optional.empty());
+        /* rName */ Optional.empty(),
+        false);
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.getBuildableForAndroidResources(
         ruleResolver,
         /* createBuildableIfEmptyDeps */ false);
@@ -217,7 +221,8 @@ public class AndroidLibraryGraphEnhancerTest {
             DependencyMode.FIRST_ORDER,
             /* forceFinalResourceIds */ false,
             /* unionPackage */ Optional.empty(),
-            /* rName */ Optional.empty());
+            /* rName */ Optional.empty(),
+            false);
     Optional<DummyRDotJava> result =
         graphEnhancer.getBuildableForAndroidResources(
             resolver,

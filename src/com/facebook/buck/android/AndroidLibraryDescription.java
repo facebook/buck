@@ -129,7 +129,8 @@ public class AndroidLibraryDescription
         DependencyMode.FIRST_ORDER,
         /* forceFinalResourceIds */ false,
         args.resourceUnionPackage,
-        args.finalRName);
+        args.finalRName,
+        false);
 
     boolean hasDummyRDotJavaFlavor =
         params.getBuildTarget().getFlavors().contains(DUMMY_R_DOT_JAVA_FLAVOR);

@@ -88,7 +88,8 @@ public class DummyRDotJavaTest {
         ANDROID_JAVAC_OPTIONS,
         /* forceFinalResourceIds */ false,
         Optional.empty(),
-        Optional.of("R2"));
+        Optional.of("R2"),
+        false);
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     List<Step> steps = dummyRDotJava.getBuildSteps(
@@ -170,7 +171,8 @@ public class DummyRDotJavaTest {
         ANDROID_JAVAC_OPTIONS,
         /* forceFinalResourceIds */ false,
         Optional.empty(),
-        Optional.empty());
+        Optional.empty(),
+        false);
     assertEquals(
         BuildTargets.getScratchPath(
             dummyRDotJava.getProjectFilesystem(),
