@@ -26,7 +26,6 @@ public class BuckConstant {
   public static final String RULE_KEY_LOGGER_FILE_NAME = "rule_key_logger.tsv";
 
   private static final Path BUCK_OUTPUT_PATH_DEFAULT = Paths.get("buck-out");
-  private static final Path CURRENT_VERSION_FILE = getBuckOutputPath().resolve(".currentversion");
 
   private static final Path BUCK_TRACE_DIR = getBuckOutputPath().resolve("log/traces");
   private static final String DEFAULT_CACHE_DIR = getBuckOutputPath().resolve("cache").toString();
@@ -43,13 +42,6 @@ public class BuckConstant {
    */
   public static Path getBuckOutputPath() {
     return BUCK_OUTPUT_PATH_DEFAULT;
-  }
-
-  /**
-   * The version the buck output directory was created for
-   */
-  public static Path getCurrentVersionFile() {
-    return CURRENT_VERSION_FILE;
   }
 
   public static Path getBuckTraceDir() {

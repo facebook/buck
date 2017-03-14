@@ -949,7 +949,7 @@ public final class Main {
 
       if (!command.isReadOnly()) {
         Optional<String> currentVersion =
-            filesystem.readFileIfItExists(BuckConstant.getCurrentVersionFile());
+            filesystem.readFileIfItExists(filesystem.getBuckPaths().getCurrentVersionFile());
         BuckPaths unconfiguredPaths =
             filesystem.getBuckPaths().withConfiguredBuckOut(filesystem.getBuckPaths().getBuckOut());
         if (!currentVersion.isPresent() ||
@@ -968,10 +968,10 @@ public final class Main {
               filesystem.getBuckPaths().getScratchDir(),
               filesystem.getBuckPaths().getResDir());
           shouldCleanUpTrash = true;
-          filesystem.mkdirs(BuckConstant.getCurrentVersionFile().getParent());
+          filesystem.mkdirs(filesystem.getBuckPaths().getCurrentVersionFile().getParent());
           filesystem.writeContentsToPath(
               BuckVersion.getVersion(),
-              BuckConstant.getCurrentVersionFile());
+              filesystem.getBuckPaths().getCurrentVersionFile());
         }
       }
 

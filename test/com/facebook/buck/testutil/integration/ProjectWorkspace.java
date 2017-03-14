@@ -193,7 +193,8 @@ public class ProjectWorkspace {
              new BufferedOutputStream(
                  Channels.newOutputStream(
                      Files.newByteChannel(
-                         destPath.resolve(BuckConstant.getCurrentVersionFile()),
+                         destPath.resolve(
+                             BuckConstant.getBuckOutputPath().resolve(".currentversion")),
                          ImmutableSet.<OpenOption>of(
                              StandardOpenOption.CREATE_NEW,
                              StandardOpenOption.WRITE))))) {
