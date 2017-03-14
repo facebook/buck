@@ -797,9 +797,6 @@ public final class Main {
     } catch (Throwable t) {
       LOG.error(t, "Uncaught exception at top level");
     } finally {
-      if (context.isPresent()) {
-        System.gc(); // Let VM return memory to OS
-      }
       LOG.debug("Done.");
       LogConfig.flushLogs();
       // Exit explicitly so that non-daemon threads (of which we use many) don't
@@ -2058,6 +2055,12 @@ public final class Main {
   public static final class DaemonBootstrap {
     private static @Nullable DaemonKillers daemonKillers;
 
+    /**
+     * Single thread for running short-lived tasks outside the command context.
+     */
+    private static final ScheduledExecutorService housekeepingExecutorService =
+        Executors.newSingleThreadScheduledExecutor();
+
     public static void main(String[] args) throws Exception {
       try {
         daemonizeIfPossible();
@@ -2085,31 +2088,32 @@ public final class Main {
           new NGListeningAddress(socketPath),
           NGServer.DEFAULT_SESSIONPOOLSIZE,
           heartbeatTimeout);
-      daemonKillers = new DaemonKillers(server, Paths.get(socketPath));
+      daemonKillers = new DaemonKillers(housekeepingExecutorService, server, Paths.get(socketPath));
       server.run();
     }
 
-    public static DaemonKillers getDaemonKillers() {
+    static DaemonKillers getDaemonKillers() {
       return Preconditions.checkNotNull(daemonKillers, "Daemon killers should be initialized.");
+    }
+
+    static void scheduleGC() {
+      housekeepingExecutorService.execute(System::gc);
     }
   }
 
   private static class DaemonKillers {
-    private static final ScheduledExecutorService daemonKillerExecutorService =
-        Executors.newSingleThreadScheduledExecutor();
-
     private final NGServer server;
     private final IdleKiller idleKiller;
     private final SocketLossKiller socketLossKiller;
 
-    DaemonKillers(NGServer server, Path socketPath) {
+    DaemonKillers(ScheduledExecutorService executorService, NGServer server, Path socketPath) {
       this.server = server;
       this.idleKiller = new IdleKiller(
-          daemonKillerExecutorService,
+          executorService,
           DAEMON_SLAYER_TIMEOUT,
           this::killServer);
       this.socketLossKiller = new SocketLossKiller(
-          daemonKillerExecutorService,
+          executorService,
           socketPath.toAbsolutePath(),
           this::killServer);
     }
@@ -2164,6 +2168,9 @@ public final class Main {
              DaemonBootstrap.getDaemonKillers().newCommandExecutionScope()) {
       new Main(context.out, context.err, context.in)
           .runMainThenExit(context.getArgs(), Optional.of(context), System.nanoTime());
+    } finally {
+      // Reclaim memory after a command finishes.
+      DaemonBootstrap.scheduleGC();
     }
   }
 }
