@@ -24,6 +24,7 @@ import com.facebook.buck.log.LogConfigSetup;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
+import java.util.OptionalInt;
 
 public interface Command {
 
@@ -31,6 +32,18 @@ public interface Command {
    * @return the appropriate exit code for the command
    */
   int run(CommandRunnerParams params) throws IOException, InterruptedException;
+
+  /**
+   * If the current command is a help command, run the action to print out the appropriate help
+   * message.
+   *
+   * This is an optimization to avoid initializing everything in CommandRunnerParams, in order to
+   * return help strings quickly.
+   *
+   * @param stream stream to output the help text.
+   * @return The exit code of the command, if the command is a help request.
+   */
+  OptionalInt runHelp(PrintStream stream);
 
   /**
    * @return whether the command doesn't modify the state of the filesystem

@@ -42,19 +42,29 @@ public class HelpCommand extends AbstractCommand {
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+    return run(params.getConsole().getStdErr());
+  }
+
+  /**
+   * This overload runs the actual help subcommand.
+   *
+   * Used by {@link BuckCommand#runHelp} to run the help subcommand without initializing
+   * {@link CommandRunnerParams}.
+   */
+  public int run(PrintStream stream) {
     BuckCommand command = new BuckCommand();
     AdditionalOptionsCmdLineParser cmdLineParser = new AdditionalOptionsCmdLineParser(command);
     try {
       cmdLineParser.parseArgument(arguments);
     } catch (CmdLineException e) {
-      command.printUsage(params.getConsole().getStdErr());
+      command.printUsage(stream);
       return 1;
     }
 
     if (command.getSubcommand().isPresent()) {
-      command.getSubcommand().get().printUsage(params.getConsole().getStdErr());
+      command.getSubcommand().get().printUsage(stream);
     } else {
-      command.printUsage(params.getConsole().getStdErr());
+      command.printUsage(stream);
       return 1;
     }
     return 0;

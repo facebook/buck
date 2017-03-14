@@ -22,7 +22,9 @@ import org.kohsuke.args4j.spi.SubCommand;
 import org.kohsuke.args4j.spi.SubCommands;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 import javax.annotation.Nullable;
 
@@ -64,6 +66,14 @@ public class BuckCommand extends AbstractContainerCommand {
       aliases = {"-V"},
       usage = "Show version number.")
   private boolean version;
+
+  @Override
+  public OptionalInt runHelp(PrintStream stream) {
+    if (subcommand != null && subcommand instanceof HelpCommand) {
+      return OptionalInt.of(((HelpCommand) subcommand).run(stream));
+    }
+    return super.runHelp(stream);
+  }
 
   @Override
   public int run(CommandRunnerParams params) throws IOException, InterruptedException {

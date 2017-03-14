@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 public abstract class AbstractContainerCommand implements Command {
 
@@ -48,6 +49,18 @@ public abstract class AbstractContainerCommand implements Command {
   protected abstract Optional<Command> getSubcommand();
 
   protected abstract String getContainerCommandPrefix();
+
+  @Override
+  public OptionalInt runHelp(PrintStream stream) {
+    if (getSubcommand().isPresent()) {
+      return getSubcommand().get().runHelp(stream);
+    } else if (helpScreen) {
+      printUsage(stream);
+      return OptionalInt.of(1);
+    } else {
+      return OptionalInt.empty();
+    }
+  }
 
   @Override
   public int run(CommandRunnerParams params) throws IOException, InterruptedException {

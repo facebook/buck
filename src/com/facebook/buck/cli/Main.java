@@ -185,6 +185,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -841,6 +842,14 @@ public final class Main {
       stdErr.println(e.getLocalizedMessage());
       stdErr.println("For help see 'buck --help'.");
       return 1;
+    }
+
+    {
+      // Return help strings fast if the command is a help request.
+      OptionalInt result = command.runHelp(stdErr);
+      if (result.isPresent()) {
+        return result.getAsInt();
+      }
     }
 
     // Setup logging.

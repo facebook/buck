@@ -52,6 +52,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 import javax.annotation.Nullable;
 
@@ -184,10 +185,6 @@ public abstract class AbstractCommand implements Command {
     return noCache;
   }
 
-  public boolean showHelp() {
-    return help;
-  }
-
   public Optional<Path> getEventsOutputPath() {
     if (eventsOutputPath == null) {
       return Optional.empty();
@@ -204,8 +201,18 @@ public abstract class AbstractCommand implements Command {
   }
 
   @Override
+  public OptionalInt runHelp(PrintStream stream) {
+    if (help) {
+      printUsage(stream);
+      return OptionalInt.of(1);
+    } else {
+      return OptionalInt.empty();
+    }
+  }
+
+  @Override
   public final int run(CommandRunnerParams params) throws IOException, InterruptedException {
-    if (showHelp()) {
+    if (help) {
       printUsage(params.getConsole().getStdErr());
       return 1;
     }

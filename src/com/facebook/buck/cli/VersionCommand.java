@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 public class VersionCommand implements Command {
 
@@ -93,5 +94,10 @@ public class VersionCommand implements Command {
     // `buck help --version` will just return that `--version` is not a valid option for help
     // `buck --version --help` and `buck --help --version` will return the version instead
     throw new IllegalStateException();
+  }
+
+  @Override
+  public OptionalInt runHelp(PrintStream stream) {
+    return OptionalInt.empty();
   }
 }
