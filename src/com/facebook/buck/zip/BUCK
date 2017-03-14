@@ -86,7 +86,8 @@ java_immutables_library(
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/thrift:thrift",
-        "//test/com/facebook/buck/android:integration",
+        "//test/com/facebook/buck/android:integration1",
+        "//test/com/facebook/buck/android:integration2",
         "//test/com/facebook/buck/zip:zip",
     ],
     deps = [
