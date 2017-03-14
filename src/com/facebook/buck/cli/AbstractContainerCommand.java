@@ -23,14 +23,23 @@ import com.facebook.buck.log.LogConfigSetup;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
+import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.SubCommand;
 import org.kohsuke.args4j.spi.SubCommands;
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Optional;
 
 public abstract class AbstractContainerCommand implements Command {
+
+  @Option(
+      name = "--help",
+      aliases = {"-h"},
+      usage = "Shows this screen and exits.")
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  private boolean helpScreen;
 
   protected String getSubcommandsFieldName() {
     return "subcommand";
@@ -39,6 +48,17 @@ public abstract class AbstractContainerCommand implements Command {
   protected abstract Optional<Command> getSubcommand();
 
   protected abstract String getContainerCommandPrefix();
+
+  @Override
+  public int run(CommandRunnerParams params) throws IOException, InterruptedException {
+    Optional<Command> subcommand = getSubcommand();
+    if (subcommand.isPresent()) {
+      return subcommand.get().run(params);
+    } else {
+      printUsage(params.getConsole().getStdErr());
+      return 1;
+    }
+  }
 
   @Override
   public void printUsage(PrintStream stream) {

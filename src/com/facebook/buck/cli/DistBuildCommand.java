@@ -19,11 +19,9 @@ package com.facebook.buck.cli;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 
 import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.SubCommand;
 import org.kohsuke.args4j.spi.SubCommands;
 
-import java.io.IOException;
 import java.util.Optional;
 
 public class DistBuildCommand extends AbstractContainerCommand {
@@ -35,21 +33,6 @@ public class DistBuildCommand extends AbstractContainerCommand {
   })
   @SuppressFieldNotInitialized
   private Command subcommand;
-
-  @Option(
-      name = "--help",
-      usage = "Shows this screen and exits.")
-  @SuppressWarnings("PMD.UnusedPrivateField")
-  private boolean helpScreen;
-
-  @Override
-  public int run(CommandRunnerParams params) throws IOException, InterruptedException {
-    if (subcommand == null) {
-      printUsage(params.getConsole().getStdErr());
-      return 1;
-    }
-    return subcommand.run(params);
-  }
 
   @Override
   protected String getContainerCommandPrefix() {

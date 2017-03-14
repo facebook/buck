@@ -22,7 +22,6 @@ import org.kohsuke.args4j.spi.SubCommand;
 import org.kohsuke.args4j.spi.SubCommands;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
@@ -66,30 +65,14 @@ public class BuckCommand extends AbstractContainerCommand {
       usage = "Show version number.")
   private boolean version;
 
-  @Option(
-      name = "--help",
-      aliases = {"-h"},
-      usage = "Shows this screen and exits.")
-  @SuppressWarnings("PMD.UnusedPrivateField")
-  private boolean helpScreen;
-
-  public boolean showVersion() {
-    return version;
-  }
-
   @Override
   public int run(CommandRunnerParams params) throws IOException, InterruptedException {
-    if (subcommand == null) {
-      if (showVersion()) {
-        return new VersionCommand().run(params);
-      }
-
-      PrintStream stdErr = params.getConsole().getStdErr();
-      printUsage(stdErr);
-
-      return 1;
+    if (subcommand == null && version) {
+      // The --version flag behaves like a subcommand.
+      return new VersionCommand().run(params);
+    } else {
+      return super.run(params);
     }
-    return subcommand.run(params);
   }
 
   @Override
