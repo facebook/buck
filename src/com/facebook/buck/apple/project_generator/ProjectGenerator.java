@@ -105,7 +105,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringWithMacrosArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -1111,22 +1110,26 @@ public class ProjectGenerator {
     return target;
   }
 
-  private ImmutableList<Arg> convertStringWithMacros(
+  private ImmutableList<String> convertStringWithMacros(
       TargetNode<?, ?> node,
       Iterable<StringWithMacros> flags) {
-    ImmutableList.Builder<Arg> result = ImmutableList.builder();
+    ImmutableList.Builder<String> result = new ImmutableList.Builder<>();
     ImmutableList<? extends AbstractMacroExpander<? extends Macro>> expanders =
         ImmutableList.of(new AsIsLocationMacroExpander());
     for (StringWithMacros flag : flags) {
-      result.add(
-          StringWithMacrosArg.of(
+      BuildRuleResolver buildRuleResolver = new BuildRuleResolver(
+          TargetGraph.EMPTY,
+          new DefaultTargetNodeToBuildRuleTransformer());
+      SourcePathResolver pathResolver =
+          new SourcePathResolver(new SourcePathRuleFinder(buildRuleResolver));
+      StringWithMacrosArg
+          .of(
               flag,
               expanders,
               node.getBuildTarget(),
               node.getCellNames(),
-              new BuildRuleResolver(
-                  TargetGraph.EMPTY,
-                  new DefaultTargetNodeToBuildRuleTransformer())));
+              buildRuleResolver)
+          .appendToCommandLine(result, pathResolver);
     }
     return result.build();
   }
@@ -1426,25 +1429,11 @@ public class ProjectGenerator {
                 ImmutableList.of(targetNode)),
             targetNode.getConstructorArg().compilerFlags,
             targetNode.getConstructorArg().preprocessorFlags);
-        ImmutableList<String> otherLdFlags =
-            ImmutableList.<String>builder()
-                .addAll(
-                    Arg.stringify(
-                        convertStringWithMacros(
-                            targetNode,
-                            Iterables.concat(
-                                targetNode.getConstructorArg().linkerFlags,
-                                collectRecursiveExportedLinkerFlags(
-                                    ImmutableList.of(targetNode)))),
-                        // Project generation doesn't actually build arbitrary deps, so there isn't
-                        // necessarily a valid SourcePathResolver which can resolve deps.
-                        // If this becomes an issue, we'll need to construct better subgraphs which
-                        // can actually be transformed to ActionGraphs from which we can then
-                        // construct a valid SourcePathResolver.
-                        // Right now, we generate projects from unflavored TargetGraphs, which can't
-                        // actually be transformed into BuildRules.
-                        null))
-                .build();
+        ImmutableList<String> otherLdFlags = convertStringWithMacros(
+            targetNode,
+            Iterables.concat(
+                targetNode.getConstructorArg().linkerFlags,
+                collectRecursiveExportedLinkerFlags(ImmutableList.of(targetNode))));
 
         appendConfigsBuilder
             .put(
@@ -1497,16 +1486,7 @@ public class ProjectGenerator {
           String sdk = flags.getFirst().pattern().replaceAll("[*.]", "");
           platformLinkerFlagsBuilder.put(
               sdk,
-              Arg.stringify(
-                  convertStringWithMacros(targetNode, flags.getSecond()),
-                  // Project generation doesn't actually build arbitrary deps, so there isn't
-                  // necessarily a valid SourcePathResolver which can resolve deps.
-                  // If this becomes an issue, we'll need to construct better subgraphs which
-                  // can actually be transformed to ActionGraphs from which we can then
-                  // construct a valid SourcePathResolver.
-                  // Right now, we generate projects from unflavored TargetGraphs, which can't
-                  // actually be transformed into BuildRules.
-                  null));
+              convertStringWithMacros(targetNode, flags.getSecond()));
         }
         ImmutableMultimap<String, ImmutableList<String>> platformLinkerFlags =
             platformLinkerFlagsBuilder.build();
