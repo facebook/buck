@@ -18,15 +18,11 @@ package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.CompilerProvider;
-import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.PreprocessorProvider;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -47,16 +43,9 @@ public class OcamlBuckConfig {
   private final BuckConfig delegate;
   private final CxxPlatform cxxPlatform;
 
-  OcamlBuckConfig(BuckConfig delegate, CxxPlatform cxxPlatform) {
+  public OcamlBuckConfig(BuckConfig delegate, CxxPlatform cxxPlatform) {
     this.delegate = delegate;
     this.cxxPlatform = cxxPlatform;
-  }
-
-  public OcamlBuckConfig(
-      Platform platform,
-      ProjectFilesystem filesystem,
-      BuckConfig delegate) {
-    this(delegate, DefaultCxxPlatforms.build(platform, filesystem, new CxxBuckConfig(delegate)));
   }
 
   public Optional<Tool> getOcamlCompiler() {

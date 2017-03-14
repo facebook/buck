@@ -50,6 +50,10 @@ public class OcamlBinaryDescription implements
     this.ocamlBuckConfig = ocamlBuckConfig;
   }
 
+  public OcamlBuckConfig getOcamlBuckConfig() {
+    return ocamlBuckConfig;
+  }
+
   @Override
   public Arg createUnpopulatedConstructorArg() {
     return new Arg();

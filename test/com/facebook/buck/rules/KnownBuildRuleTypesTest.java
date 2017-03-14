@@ -34,6 +34,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.ocaml.OcamlBinaryDescription;
+import com.facebook.buck.ocaml.OcamlLibraryDescription;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -316,6 +318,35 @@ public class KnownBuildRuleTypesTest {
     assertThat(
         knownBuildRuleTypes.getCxxPlatforms().getValue(flavor).getCflags(),
         Matchers.contains(flag));
+  }
+
+  @Test
+  public void ocamlUsesConfiguredDefaultPlatform() throws Exception {
+    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
+    Flavor flavor = ImmutableFlavor.of("flavor");
+    ImmutableMap<String, ImmutableMap<String, String>> sections =
+        ImmutableMap.of(
+            "cxx", ImmutableMap.of("default_platform", flavor.toString()),
+            "cxx#" + flavor, ImmutableMap.of());
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
+    KnownBuildRuleTypes knownBuildRuleTypes =
+        KnownBuildRuleTypes.createBuilder(
+            buckConfig,
+            filesystem,
+            createExecutor(),
+            new FakeAndroidDirectoryResolver()).build();
+    OcamlLibraryDescription ocamlLibraryDescription =
+        (OcamlLibraryDescription) knownBuildRuleTypes.getDescription(
+           knownBuildRuleTypes.getBuildRuleType("ocaml_library"));
+    assertThat(
+        ocamlLibraryDescription.getOcamlBuckConfig().getCxxPlatform(),
+        Matchers.equalTo(knownBuildRuleTypes.getCxxPlatforms().getValue(flavor)));
+    OcamlBinaryDescription ocamlBinaryDescription =
+        (OcamlBinaryDescription) knownBuildRuleTypes.getDescription(
+            knownBuildRuleTypes.getBuildRuleType("ocaml_binary"));
+    assertThat(
+        ocamlBinaryDescription.getOcamlBuckConfig().getCxxPlatform(),
+        Matchers.equalTo(knownBuildRuleTypes.getCxxPlatforms().getValue(flavor)));
   }
 
   private ProcessExecutor createExecutor() throws IOException {
