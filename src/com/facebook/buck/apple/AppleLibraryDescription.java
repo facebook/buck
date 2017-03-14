@@ -258,22 +258,6 @@ public class AppleLibraryDescription implements
       Optional<Linker.LinkableDepType> linkableDepType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist) throws NoSuchBuildTargetException {
-    Optional<BuildRule> swiftCompanionBuildRule = swiftDelegate.createCompanionBuildRule(
-        targetGraph, params, resolver, args);
-    if (swiftCompanionBuildRule.isPresent()) {
-      // when creating a swift target, there is no need to proceed with apple binary rules,
-      // otherwise, add this swift rule as a dependency.
-      if (isSwiftTarget(params.getBuildTarget())) {
-        return swiftCompanionBuildRule.get();
-      } else {
-        args.exportedDeps = ImmutableSortedSet.<BuildTarget>naturalOrder()
-            .addAll(args.exportedDeps)
-            .add(swiftCompanionBuildRule.get().getBuildTarget())
-            .build();
-        params = params.appendExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
-      }
-    }
-
     // We explicitly remove flavors from params to make sure rule
     // has the same output regardless if we will strip or not.
     Optional<StripStyle> flavoredStripStyle =
@@ -285,6 +269,7 @@ public class AppleLibraryDescription implements
     BuildRule unstrippedBinaryRule = requireUnstrippedBuildRule(
         params,
         resolver,
+        targetGraph,
         args,
         linkableDepType,
         bundleLoader,
@@ -330,6 +315,7 @@ public class AppleLibraryDescription implements
   private <A extends AppleNativeTargetDescriptionArg> BuildRule requireUnstrippedBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      TargetGraph targetGraph,
       A args,
       Optional<Linker.LinkableDepType> linkableDepType,
       Optional<SourcePath> bundleLoader,
@@ -344,6 +330,7 @@ public class AppleLibraryDescription implements
             requireSingleArchUnstrippedBuildRule(
                 params.copyWithBuildTarget(thinTarget),
                 resolver,
+                targetGraph,
                 args,
                 linkableDepType,
                 bundleLoader,
@@ -362,6 +349,7 @@ public class AppleLibraryDescription implements
       return requireSingleArchUnstrippedBuildRule(
           params,
           resolver,
+          targetGraph,
           args,
           linkableDepType,
           bundleLoader,
@@ -374,11 +362,28 @@ public class AppleLibraryDescription implements
   requireSingleArchUnstrippedBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      TargetGraph targetGraph,
       A args,
       Optional<Linker.LinkableDepType> linkableDepType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
       SourcePathResolver pathResolver) throws NoSuchBuildTargetException {
+
+    Optional<BuildRule> swiftCompanionBuildRule = swiftDelegate.createCompanionBuildRule(
+        targetGraph, params, resolver, args);
+    if (swiftCompanionBuildRule.isPresent()) {
+      // when creating a swift target, there is no need to proceed with apple binary rules,
+      // otherwise, add this swift rule as a dependency.
+      if (isSwiftTarget(params.getBuildTarget())) {
+        return swiftCompanionBuildRule.get();
+      } else {
+        args.exportedDeps = ImmutableSortedSet.<BuildTarget>naturalOrder()
+            .addAll(args.exportedDeps)
+            .add(swiftCompanionBuildRule.get().getBuildTarget())
+            .build();
+        params = params.appendExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
+      }
+    }
 
     CxxLibraryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
     AppleDescriptions.populateCxxLibraryDescriptionArg(
