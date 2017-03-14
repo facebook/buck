@@ -124,7 +124,7 @@ class BuckTool(object):
         raise NotImplementedError()
 
     def _use_buckd(self):
-        return not os.environ.get('NO_BUCKD') and not self._command_line.is_help()
+        return not os.environ.get('NO_BUCKD')
 
     def _environ_for_buck(self):
         env = os.environ.copy()
