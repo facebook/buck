@@ -347,28 +347,7 @@ public class RustCompileUtils {
             cxxPlatform.getFlavor(),
             RustDescriptionEnhancer.RFBIN);
 
-    final RustCompileRule buildRule = RustCompileUtils.createBuild(
-        binaryTarget,
-        crate,
-        params,
-        resolver,
-        pathResolver,
-        ruleFinder,
-        cxxPlatform,
-        rustBuckConfig,
-        rustcArgs.build(),
-        linkerArgs.build(),
-        /* linkerInputs */ ImmutableList.of(),
-        CrateType.BIN,
-        linkStyle,
-        rpath,
-        rootModuleAndSources.getSecond(),
-        rootModuleAndSources.getFirst());
-
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
-
-    // Add the binary as the first argument.
-    executableBuilder.addArg(SourcePathArg.of(buildRule.getSourcePathToOutput()));
 
     // Special handling for dynamically linked binaries.
     if (linkStyle == Linker.LinkableDepType.SHARED) {
@@ -387,9 +366,9 @@ public class RustCompileUtils {
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
-      Path absBinaryDir =
-          params.getBuildTarget().getCellPath()
-              .resolve(RustCompileRule.getOutputDir(binaryTarget, params.getProjectFilesystem()));
+      Path absBinaryDir = params.getBuildTarget().getCellPath()
+          .resolve(RustCompileRule.getOutputDir(binaryTarget, params.getProjectFilesystem()));
+
       linkerArgs.addAll(
           Linkers.iXlinker(
               "-rpath",
@@ -409,6 +388,27 @@ public class RustCompileUtils {
           getTransitiveRustSharedLibraries(cxxPlatform, params.getDeps());
       executableBuilder.addInputs(rustSharedLibraries.values());
     }
+
+    final RustCompileRule buildRule = RustCompileUtils.createBuild(
+        binaryTarget,
+        crate,
+        params,
+        resolver,
+        pathResolver,
+        ruleFinder,
+        cxxPlatform,
+        rustBuckConfig,
+        rustcArgs.build(),
+        linkerArgs.build(),
+        /* linkerInputs */ ImmutableList.of(),
+        CrateType.BIN,
+        linkStyle,
+        rpath,
+        rootModuleAndSources.getSecond(),
+        rootModuleAndSources.getFirst());
+
+    // Add the binary as the first argument.
+    executableBuilder.addArg(SourcePathArg.of(buildRule.getSourcePathToOutput()));
 
     final CommandTool executable = executableBuilder.build();
 
