@@ -54,7 +54,8 @@
       "//src/com/facebook/buck/util:process_executor",
       "//third-party/java/immutables:immutables",
       "//third-party/java/jackson:jackson-databind",
-      "//third-party/java/jsr:jsr305"
+      "//third-party/java/jsr:jsr305",
+      "//third-party/java/stringtemplate:stringtemplate"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/android:packageable",

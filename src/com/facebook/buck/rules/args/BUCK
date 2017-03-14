@@ -1,6 +1,6 @@
 standard_java_library(
   immutable_types = [
-    'GlobArg',
     'StringArg',
+    'StringWithMacrosArg',
   ],
 )
