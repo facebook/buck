@@ -25,7 +25,6 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.timing.SettableFakeClock;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.trace.BuildTraces.TraceAttributes;
 import com.google.common.base.Strings;
@@ -45,29 +44,31 @@ public class BuildTracesTest {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
         new FakeClock(TimeUnit.MILLISECONDS.toNanos(1000L)));
     projectFilesystem.writeContentsToPath(
-        "[" +
-            "{\n" +
-            "\"cat\" : \"buck\",\n" +
-            "\"pid\" : 0,\n" +
-            "\"ts\" : 0,\n" +
-            "\"ph\" : \"M\",\n" +
-            "\"args\" : {\n" +
-            "\"name\" : \"buck\"\n" +
-            "},\n" +
-            "\"name\" : \"process_name\",\n" +
-            "\"tid\" : 0\n" +
-            "}," +
-            "{" +
-            "\"cat\":\"buck\"," +
-            "\"name\":\"build\"," +
-            "\"ph\":\"B\"," +
-            "\"pid\":0," +
-            "\"tid\":1," +
-            "\"ts\":5621911884918," +
-            "\"args\":{\"command_args\":\"buck\"}" +
-            "}" +
+        "[\n" +
+            "  {\n" +
+            "    \"cat\": \"buck\",\n" +
+            "    \"pid\": 0,\n" +
+            "    \"ts\": 0,\n" +
+            "    \"ph\": \"M\",\n" +
+            "    \"args\": {\n" +
+            "      \"name\": \"buck\"\n" +
+            "    },\n" +
+            "    \"name\": \"process_name\",\n" +
+            "    \"tid\": 0\n" +
+            "  },\n" +
+            "  {\n" +
+            "    \"cat\": \"buck\",\n" +
+            "    \"name\": \"build\",\n" +
+            "    \"ph\": \"B\",\n" +
+            "    \"pid\": 0,\n" +
+            "    \"tid\": 1,\n" +
+            "    \"ts\": 5621911884918,\n" +
+            "    \"args\": {\n" +
+            "      \"command_args\": \"buck\"\n" +
+            "    }\n" +
+            "  }\n" +
             "]",
-        projectFilesystem.getBuckPaths().getLogDir().resolve("build.a.trace"));
+        projectFilesystem.getBuckPaths().getTraceDir().resolve("build.a.trace"));
 
     BuildTraces helper = new BuildTraces(projectFilesystem);
     TraceAttributes traceAttributes = helper.getTraceAttributesFor("a");
@@ -97,7 +98,7 @@ public class BuildTracesTest {
             "\"args\":{\"command_args\":\"buck\"}" +
             "}" +
             "]",
-        BuckConstant.getBuckTraceDir().resolve("build.b.trace"));
+        projectFilesystem.getBuckPaths().getTraceDir().resolve("build.b.trace"));
 
     BuildTraces helper = new BuildTraces(projectFilesystem);
     TraceAttributes traceAttributes = helper.getTraceAttributesFor("b");
@@ -123,7 +124,7 @@ public class BuildTracesTest {
             "\"ts\":5621911884918" +
             "}" +
             "]",
-        BuckConstant.getBuckTraceDir().resolve("build.c.trace"));
+        projectFilesystem.getBuckPaths().getTraceDir().resolve("build.c.trace"));
 
     BuildTraces helper = new BuildTraces(projectFilesystem);
     TraceAttributes traceAttributes = helper.getTraceAttributesFor("c");
@@ -140,26 +141,27 @@ public class BuildTracesTest {
     SettableFakeClock clock = new SettableFakeClock(0L, 0L);
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(clock);
     clock.setCurrentTimeMillis(1);
-    projectFilesystem.touch(BuckConstant.getBuckTraceDir().resolve("build.1.trace"));
+    Path traceDir = projectFilesystem.getBuckPaths().getTraceDir();
+    projectFilesystem.touch(traceDir.resolve("build.1.trace"));
     clock.setCurrentTimeMillis(4);
-    projectFilesystem.touch(BuckConstant.getBuckTraceDir().resolve("build.4.trace"));
+    projectFilesystem.touch(traceDir.resolve("build.4.trace"));
     clock.setCurrentTimeMillis(2);
-    projectFilesystem.touch(BuckConstant.getBuckTraceDir().resolve("build.2.trace"));
+    projectFilesystem.touch(traceDir.resolve("build.2.trace"));
     clock.setCurrentTimeMillis(5);
-    projectFilesystem.touch(BuckConstant.getBuckTraceDir().resolve("build.5.trace"));
+    projectFilesystem.touch(traceDir.resolve("build.5.trace"));
     clock.setCurrentTimeMillis(3);
-    projectFilesystem.touch(BuckConstant.getBuckTraceDir().resolve("build.3.trace"));
-    projectFilesystem.touch(BuckConstant.getBuckTraceDir().resolve("build.3b.trace"));
+    projectFilesystem.touch(traceDir.resolve("build.3.trace"));
+    projectFilesystem.touch(traceDir.resolve("build.3b.trace"));
 
     BuildTraces helper = new BuildTraces(projectFilesystem);
     assertEquals(
         ImmutableList.of(
-            BuckConstant.getBuckTraceDir().resolve("build.5.trace"),
-            BuckConstant.getBuckTraceDir().resolve("build.4.trace"),
-            BuckConstant.getBuckTraceDir().resolve("build.3b.trace"),
-            BuckConstant.getBuckTraceDir().resolve("build.3.trace"),
-            BuckConstant.getBuckTraceDir().resolve("build.2.trace"),
-            BuckConstant.getBuckTraceDir().resolve("build.1.trace")),
+            traceDir.resolve("build.5.trace"),
+            traceDir.resolve("build.4.trace"),
+            traceDir.resolve("build.3b.trace"),
+            traceDir.resolve("build.3.trace"),
+            traceDir.resolve("build.2.trace"),
+            traceDir.resolve("build.1.trace")),
         helper.listTraceFilesByLastModified());
   }
 
@@ -167,7 +169,7 @@ public class BuildTracesTest {
   public void testInputsForTracesThrowsWhenEmpty() throws IOException {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
         new FakeClock(TimeUnit.MILLISECONDS.toNanos(2000L)));
-    projectFilesystem.mkdirs(BuckConstant.getBuckTraceDir());
+    projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getTraceDir());
     BuildTraces helper = new BuildTraces(projectFilesystem);
     helper.getInputsForTraces("nonexistent");
   }
@@ -176,7 +178,7 @@ public class BuildTracesTest {
   public void testTraceAttributesThrowsWhenEmpty() throws IOException {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
         new FakeClock(TimeUnit.MILLISECONDS.toNanos(2000L)));
-    projectFilesystem.mkdirs(BuckConstant.getBuckTraceDir());
+    projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getTraceDir());
     BuildTraces helper = new BuildTraces(projectFilesystem);
     helper.getTraceAttributesFor("nonexistent");
   }

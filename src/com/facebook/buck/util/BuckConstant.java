@@ -27,7 +27,6 @@ public class BuckConstant {
 
   private static final Path BUCK_OUTPUT_PATH_DEFAULT = Paths.get("buck-out");
 
-  private static final Path BUCK_TRACE_DIR = getBuckOutputPath().resolve("log/traces");
   private static final String DEFAULT_CACHE_DIR = getBuckOutputPath().resolve("cache").toString();
 
   private BuckConstant() {}
@@ -39,10 +38,6 @@ public class BuckConstant {
    */
   public static Path getBuckOutputPath() {
     return BUCK_OUTPUT_PATH_DEFAULT;
-  }
-
-  public static Path getBuckTraceDir() {
-    return BUCK_TRACE_DIR;
   }
 
   public static String getDefaultCacheDir() {

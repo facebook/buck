@@ -19,9 +19,9 @@ package com.facebook.buck.httpserver;
 import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.trace.BuildTraces;
 import com.facebook.buck.util.trace.BuildTraces.TraceAttributes;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.collect.ImmutableList;
 
 import org.easymock.EasyMockSupport;
@@ -29,33 +29,35 @@ import org.eclipse.jetty.server.Request;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 
 public class TracesHandlerTest extends EasyMockSupport {
+  private static Path traceDir = BuckConstant.getBuckOutputPath().resolve("log").resolve("traces");
 
   @Test
   public void testHandleGet() throws IOException {
     BuildTraces buildTraces = createMock(BuildTraces.class);
-    expect(buildTraces.getTraceAttributesFor(BuckConstant.getBuckTraceDir().resolve(
+    expect(buildTraces.getTraceAttributesFor(traceDir.resolve(
         "build.a.trace")))
         .andReturn(new TraceAttributes(Optional.of("buck build buck"), 1000L));
-    expect(buildTraces.getTraceAttributesFor(BuckConstant.getBuckTraceDir().resolve(
+    expect(buildTraces.getTraceAttributesFor(traceDir.resolve(
         "build.b.trace")))
         .andReturn(new TraceAttributes(Optional.of("buck test --all --code-coverage"), 4000L));
-    expect(buildTraces.getTraceAttributesFor(BuckConstant.getBuckTraceDir().resolve(
+    expect(buildTraces.getTraceAttributesFor(traceDir.resolve(
         "build.c.trace")))
         .andReturn(new TraceAttributes(Optional.empty(), 2000L));
-    expect(buildTraces.getTraceAttributesFor(BuckConstant.getBuckTraceDir().resolve(
+    expect(buildTraces.getTraceAttributesFor(traceDir.resolve(
         "build.d.trace")))
         .andReturn(
             new TraceAttributes(Optional.of("buck test //test/com/facebook/buck/cli:cli"), 3000L));
 
     expect(buildTraces.listTraceFilesByLastModified()).andReturn(
         ImmutableList.of(
-            BuckConstant.getBuckTraceDir().resolve("build.b.trace"),
-            BuckConstant.getBuckTraceDir().resolve("build.d.trace"),
-            BuckConstant.getBuckTraceDir().resolve("build.c.trace"),
-            BuckConstant.getBuckTraceDir().resolve("build.a.trace")
+            traceDir.resolve("build.b.trace"),
+            traceDir.resolve("build.d.trace"),
+            traceDir.resolve("build.c.trace"),
+            traceDir.resolve("build.a.trace")
         ));
     Request baseRequest = createMock(Request.class);
 

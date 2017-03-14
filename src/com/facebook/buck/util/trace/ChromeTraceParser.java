@@ -113,7 +113,8 @@ public class ChromeTraceParser {
         }
 
         // Verify and extract the name property before invoking any of the matchers.
-        JsonObject event = gson.fromJson(jsonReader, JsonObject.class);
+        JsonElement eventEl = gson.fromJson(jsonReader, JsonElement.class);
+        JsonObject event = eventEl.getAsJsonObject();
         JsonElement nameEl = event.get("name");
         if (nameEl == null || !nameEl.isJsonPrimitive()) {
           continue;
