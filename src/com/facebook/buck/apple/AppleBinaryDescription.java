@@ -198,17 +198,6 @@ public class AppleBinaryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
-    Optional<BuildRule> swiftCompanionBuildRule = swiftDelegate.createCompanionBuildRule(
-        targetGraph, params, resolver, args);
-    if (swiftCompanionBuildRule.isPresent()) {
-      // when creating a swift target, there is no need to proceed with apple binary rules,
-      // otherwise, add this swift rule as a dependency.
-      if (isSwiftTarget(params.getBuildTarget())) {
-        return swiftCompanionBuildRule.get();
-      } else {
-        params = params.appendExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
-      }
-    }
     // remove some flavors so binary will have the same output regardless their values
     BuildTarget unstrippedBinaryBuildTarget = params.getBuildTarget()
         .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
@@ -373,6 +362,18 @@ public class AppleBinaryDescription
     Optional<BuildRule> existingThinRule = resolver.getRuleOptional(params.getBuildTarget());
     if (existingThinRule.isPresent()) {
       return existingThinRule.get();
+    }
+
+    Optional<BuildRule> swiftCompanionBuildRule = swiftDelegate.createCompanionBuildRule(
+        targetGraph, params, resolver, args);
+    if (swiftCompanionBuildRule.isPresent()) {
+      // when creating a swift target, there is no need to proceed with apple binary rules,
+      // otherwise, add this swift rule as a dependency.
+      if (isSwiftTarget(params.getBuildTarget())) {
+        return swiftCompanionBuildRule.get();
+      } else {
+        params = params.appendExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
+      }
     }
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);

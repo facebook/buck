@@ -968,6 +968,29 @@ public class AppleBinaryIntegrationTest {
         equalTo("Hello"));
   }
 
+  @Test
+  public void testAppleBinaryBuildsFatBinariesWithSwift() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "mixed_swift_objc_application_bundle_dwarf_and_dsym", tmp);
+    workspace.setUp();
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//:DemoAppBinary#iphonesimulator-i386,iphonesimulator-x86_64,no-linkermap");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path output = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
+    assertThat(Files.exists(output), is(true));
+    assertThat(
+        workspace.runCommand("file", output.toString()).getStdout().get(),
+        containsString("executable"));
+    ProcessExecutor.Result lipoVerifyResult =
+        workspace.runCommand("lipo", output.toString(), "-verify_arch", "i386", "x86_64");
+    assertEquals(
+        lipoVerifyResult.getStderr().orElse(""),
+        0,
+        lipoVerifyResult.getExitCode());
+  }
+
   private static void assertIsSymbolicLink(
       Path link,
       Path target) throws IOException {
