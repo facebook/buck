@@ -29,6 +29,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasTests;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
@@ -44,7 +45,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.FluentIterable;
@@ -85,6 +85,49 @@ public class RustLibraryDescription implements
     return new Arg();
   }
 
+  private RustCompileRule requireBuild(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
+      CxxPlatform cxxPlatform,
+      RustBuckConfig rustBuckConfig,
+      ImmutableList<String> extraFlags,
+      ImmutableList<String> extraLinkerFlags,
+      Iterable<com.facebook.buck.rules.args.Arg> linkerInputs,
+      String crate,
+      CrateType crateType,
+      Linker.LinkableDepType depType,
+      Arg args)
+      throws NoSuchBuildTargetException {
+    Pair<SourcePath, ImmutableSortedSet<SourcePath>> rootModuleAndSources =
+        RustCompileUtils.getRootModuleAndSources(
+            params.getBuildTarget(),
+            resolver,
+            pathResolver,
+            ruleFinder,
+            cxxPlatform,
+            crate,
+            args.crateRoot,
+            ImmutableSet.of("lib.rs"),
+            args.srcs);
+    return RustCompileUtils.requireBuild(
+        params,
+        resolver,
+        pathResolver,
+        ruleFinder,
+        cxxPlatform,
+        rustBuckConfig,
+        extraFlags,
+        extraLinkerFlags,
+        linkerInputs,
+        crate,
+        crateType,
+        depType,
+        rootModuleAndSources.getSecond(),
+        rootModuleAndSources.getFirst());
+  }
+
   @Override
   public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
@@ -103,19 +146,6 @@ public class RustLibraryDescription implements
     rustcArgs.addAll(rustBuckConfig.getRustLibraryFlags());
 
     String crate = args.crate.orElse(ruleToCrateName(params.getBuildTarget().getShortName()));
-
-    Optional<SourcePath> rootModule = RustCompileUtils.getCrateRoot(
-        pathResolver,
-        crate,
-        args.crateRoot,
-        ImmutableSet.of("lib.rs"),
-        args.srcs.stream());
-
-    if (!rootModule.isPresent()) {
-      throw new HumanReadableException(
-          "Can't find suitable top-level source file for %s",
-          params.getBuildTarget().getShortName());
-    }
 
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
@@ -139,8 +169,7 @@ public class RustLibraryDescription implements
         }
       }
 
-      return RustCompileUtils.requireBuild(
-          crate,
+      return requireBuild(
           params,
           resolver,
           pathResolver,
@@ -150,10 +179,10 @@ public class RustLibraryDescription implements
           rustcArgs.build(),
           /* linkerArgs */ ImmutableList.of(),
           /* linkerInputs */ ImmutableList.of(),
+          crate,
           crateType,
           depType,
-          args.srcs,
-          rootModule.get());
+          args);
     }
 
     // Common case - we're being invoked to satisfy some other rule's dependency.
@@ -200,8 +229,7 @@ public class RustLibraryDescription implements
         }
 
         try {
-          rule = RustCompileUtils.requireBuild(
-              crate,
+          rule = requireBuild(
               params,
               resolver,
               pathResolver,
@@ -211,10 +239,10 @@ public class RustLibraryDescription implements
               rustcArgs.build(),
               /* linkerArgs */ ImmutableList.of(),
               /* linkerInputs */ ImmutableList.of(),
+              crate,
               crateType,
               depType,
-              args.srcs,
-              rootModule.get());
+              args);
         } catch (NoSuchBuildTargetException e) {
           throw new RuntimeException(e);
         }
@@ -233,8 +261,7 @@ public class RustLibraryDescription implements
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
         String sharedLibrarySoname = CrateType.DYLIB.filenameFor(crate, cxxPlatform);
         BuildRule sharedLibraryBuildRule =
-            RustCompileUtils.requireBuild(
-                crate,
+            requireBuild(
                 params,
                 resolver,
                 pathResolver,
@@ -244,10 +271,10 @@ public class RustLibraryDescription implements
                 rustcArgs.build(),
                 /* linkerArgs */ ImmutableList.of(),
                 /* linkerInputs */ ImmutableList.of(),
+                crate,
                 CrateType.DYLIB,
                 Linker.LinkableDepType.SHARED,
-                args.srcs,
-                rootModule.get());
+                args);
         libs.put(
             sharedLibrarySoname,
             sharedLibraryBuildRule.getSourcePathToOutput());
@@ -288,8 +315,7 @@ public class RustLibraryDescription implements
             break;
         }
 
-        BuildRule rule = RustCompileUtils.requireBuild(
-            crate,
+        BuildRule rule = requireBuild(
             params,
             resolver,
             pathResolver,
@@ -297,12 +323,12 @@ public class RustLibraryDescription implements
             cxxPlatform,
             rustBuckConfig,
             rustcArgs.build(),
-              /* linkerArgs */ ImmutableList.of(),
-              /* linkerInputs */ ImmutableList.of(),
+            /* linkerArgs */ ImmutableList.of(),
+            /* linkerInputs */ ImmutableList.of(),
+            crate,
             crateType,
             depType,
-            args.srcs,
-            rootModule.get());
+            args);
 
         SourcePath lib = rule.getSourcePathToOutput();
         SourcePathArg arg = SourcePathArg.of(lib);
@@ -325,8 +351,7 @@ public class RustLibraryDescription implements
                 getBuildTarget(),
                 cxxPlatform);
         BuildRule sharedLibraryBuildRule =
-            RustCompileUtils.requireBuild(
-                crate,
+            requireBuild(
                 params,
                 resolver,
                 pathResolver,
@@ -334,12 +359,12 @@ public class RustLibraryDescription implements
                 cxxPlatform,
                 rustBuckConfig,
                 rustcArgs.build(),
-              /* linkerArgs */ ImmutableList.of(),
-              /* linkerInputs */ ImmutableList.of(),
+                /* linkerArgs */ ImmutableList.of(),
+                /* linkerInputs */ ImmutableList.of(),
+                crate,
                 CrateType.CDYLIB,
                 Linker.LinkableDepType.SHARED,
-                args.srcs,
-                rootModule.get());
+                args);
         libs.put(
             sharedLibrarySoname,
             sharedLibraryBuildRule.getSourcePathToOutput());

@@ -17,6 +17,7 @@
 package com.facebook.buck.rust;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.Linkers;
@@ -26,6 +27,7 @@ import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BinaryWrapperRule;
 import com.facebook.buck.rules.BuildRule;
@@ -217,13 +219,13 @@ public class RustCompileUtils {
                 .resolve(resolver),
             args.build(),
             linkerArgs.build(),
-            sources,
-            rootModule
+            CxxGenruleDescription.fixupSourcePaths(resolver, ruleFinder, cxxPlatform, sources),
+            CxxGenruleDescription.fixupSourcePath(resolver, ruleFinder, cxxPlatform, rootModule)
+
         ));
   }
 
   public static RustCompileRule requireBuild(
-      String crateName,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
@@ -233,6 +235,7 @@ public class RustCompileUtils {
       ImmutableList<String> extraFlags,
       ImmutableList<String> extraLinkerFlags,
       Iterable<Arg> linkerInputs,
+      String crateName,
       CrateType crateType,
       Linker.LinkableDepType depType,
       ImmutableSortedSet<SourcePath> sources,
@@ -323,21 +326,20 @@ public class RustCompileUtils {
 
     String crate = crateName.orElse(ruleToCrateName(buildTarget.getShortName()));
 
-    Optional<SourcePath> rootModule = RustCompileUtils.getCrateRoot(
-        pathResolver,
-        crate,
-        crateRoot,
-        defaultRoots,
-        srcs.stream());
-
-    if (!rootModule.isPresent()) {
-      throw new HumanReadableException(
-          "Can't find suitable top-level source file for %s",
-          buildTarget.getShortName());
-    }
-
     CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget())
         .orElse(defaultCxxPlatform);
+
+    Pair<SourcePath, ImmutableSortedSet<SourcePath>> rootModuleAndSources =
+        getRootModuleAndSources(
+            params.getBuildTarget(),
+            resolver,
+            pathResolver,
+            ruleFinder,
+            cxxPlatform,
+            crate,
+            crateRoot,
+            defaultRoots,
+            srcs);
 
     // The target to use for the link rule.
     BuildTarget binaryTarget =
@@ -360,8 +362,8 @@ public class RustCompileUtils {
         CrateType.BIN,
         linkStyle,
         rpath,
-        srcs,
-        rootModule.get());
+        rootModuleAndSources.getSecond(),
+        rootModuleAndSources.getFirst());
 
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
 
@@ -513,5 +515,41 @@ public class RustCompileUtils {
     }.start();
 
     return libs.build();
+  }
+
+  static Pair<SourcePath, ImmutableSortedSet<SourcePath>> getRootModuleAndSources(
+      BuildTarget target,
+      BuildRuleResolver resolver,
+      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
+      CxxPlatform cxxPlatform,
+      String crate,
+      Optional<SourcePath> crateRoot,
+      ImmutableSet<String> defaultRoots,
+      ImmutableSortedSet<SourcePath> srcs)
+      throws NoSuchBuildTargetException {
+
+    ImmutableSortedSet<SourcePath> fixedSrcs =
+        CxxGenruleDescription.fixupSourcePaths(
+            resolver,
+            ruleFinder,
+            cxxPlatform,
+            srcs);
+
+    Optional<SourcePath> rootModule =
+        getCrateRoot(
+            pathResolver,
+            crate,
+            crateRoot,
+            defaultRoots,
+            fixedSrcs.stream());
+
+    return new Pair<>(
+        rootModule.orElseThrow(
+            () ->
+                new HumanReadableException(
+                    "Can't find suitable top-level source file for %s",
+                    target.getShortName())),
+        fixedSrcs);
   }
 }

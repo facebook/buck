@@ -65,6 +65,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 
@@ -116,6 +117,21 @@ public class CxxGenruleDescription
       ImmutableList<SourcePath> paths)
       throws NoSuchBuildTargetException {
     ImmutableList.Builder<SourcePath> fixed = ImmutableList.builder();
+    for (SourcePath path : paths) {
+      fixed.add(
+          fixupSourcePath(ruleResolver, ruleFinder, cxxPlatform, path));
+    }
+    return fixed.build();
+  }
+
+  public static ImmutableSortedSet<SourcePath> fixupSourcePaths(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      CxxPlatform cxxPlatform,
+      ImmutableSortedSet<SourcePath> paths)
+      throws NoSuchBuildTargetException {
+    ImmutableSortedSet.Builder<SourcePath> fixed =
+        new ImmutableSortedSet.Builder<>(Preconditions.checkNotNull(paths.comparator()));
     for (SourcePath path : paths) {
       fixed.add(
           fixupSourcePath(ruleResolver, ruleFinder, cxxPlatform, path));

@@ -18,17 +18,30 @@ package com.facebook.buck.rust;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.DefaultLinkerProvider;
 import com.facebook.buck.cxx.LinkerProvider;
+import com.facebook.buck.rules.ConstantToolProvider;
+import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.ToolProvider;
 import com.google.common.collect.ImmutableList;
 
+import java.nio.file.Paths;
 import java.util.Optional;
 
 public class FakeRustConfig extends RustBuckConfig {
-  Optional<ToolProvider> compiler = Optional.empty();
-  Optional<ImmutableList<String>> rustcFlags = Optional.empty();
-  Optional<LinkerProvider> linker = Optional.empty();
-  Optional<ImmutableList<String>> linkerFlags = Optional.empty();
+
+  public static final FakeRustConfig FAKE_RUST_CONFIG =
+      new FakeRustConfig()
+          .setCompiler(new ConstantToolProvider(new HashedFileTool(Paths.get("/bin/rustc"))))
+          .setLinker(
+              new DefaultLinkerProvider(
+                  LinkerProvider.Type.GNU,
+                  new ConstantToolProvider(new HashedFileTool(Paths.get("/bin/rustc")))));
+
+  private Optional<ToolProvider> compiler = Optional.empty();
+  private Optional<ImmutableList<String>> rustcFlags = Optional.empty();
+  private Optional<LinkerProvider> linker = Optional.empty();
+  private Optional<ImmutableList<String>> linkerFlags = Optional.empty();
 
   public FakeRustConfig() {
     super(FakeBuckConfig.builder().build());
@@ -36,24 +49,24 @@ public class FakeRustConfig extends RustBuckConfig {
 
   @Override
   ToolProvider getRustCompiler() {
-    return compiler.orElse(super.getRustCompiler());
+    return compiler.orElseGet(super::getRustCompiler);
   }
 
   @Override
   ImmutableList<String> getRustLibraryFlags() {
-    return rustcFlags.orElse(super.getRustLibraryFlags());
+    return rustcFlags.orElseGet(super::getRustLibraryFlags);
   }
 
   @Override
   ImmutableList<String> getRustBinaryFlags() {
-    return rustcFlags.orElse(super.getRustBinaryFlags());
+    return rustcFlags.orElseGet(super::getRustBinaryFlags);
   }
 
   @Override
   LinkerProvider getLinkerProvider(
       CxxPlatform cxxPlatform,
       LinkerProvider.Type defaultType) {
-    return linker.orElse(super.getLinkerProvider(cxxPlatform, defaultType));
+    return linker.orElseGet(() -> super.getLinkerProvider(cxxPlatform, defaultType));
   }
 
   @Override
@@ -61,16 +74,18 @@ public class FakeRustConfig extends RustBuckConfig {
     return linkerFlags.orElse(super.getLinkerArgs(cxxPlatform));
   }
 
-  void setCompiler(ToolProvider compiler) {
+  FakeRustConfig setCompiler(ToolProvider compiler) {
     this.compiler = Optional.of(compiler);
+    return this;
   }
 
   void setCompilerFlags(ImmutableList<String> flags) {
     this.rustcFlags = Optional.of(flags);
   }
 
-  void setLinker(LinkerProvider linker) {
+  FakeRustConfig setLinker(LinkerProvider linker) {
     this.linker = Optional.of(linker);
+    return this;
   }
 
   void setLinkerArgs(ImmutableList<String> args) {
