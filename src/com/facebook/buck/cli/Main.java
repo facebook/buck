@@ -98,7 +98,6 @@ import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.AsyncCloseable;
 import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.BuckArgsMethods;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.BuckIsDyingException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -250,7 +249,7 @@ public final class Main {
   // Ensure we only have one instance of this, so multiple trash cleaning
   // operations are serialized on one queue.
   private static final AsynchronousDirectoryContentsCleaner TRASH_CLEANER =
-      new AsynchronousDirectoryContentsCleaner(BuckConstant.getTrashPath());
+      new AsynchronousDirectoryContentsCleaner();
 
   private final Platform platform;
 
@@ -1014,7 +1013,7 @@ public final class Main {
           // non-buckd read-write command. (We don't bother waiting
           // for it to complete; the thread is a daemon thread which
           // will just be terminated at shutdown time.)
-          TRASH_CLEANER.startCleaningDirectory();
+          TRASH_CLEANER.startCleaningDirectory(filesystem.getBuckPaths().getTrashDir());
         }
 
         KnownBuildRuleTypesFactory factory = new KnownBuildRuleTypesFactory(
@@ -1443,7 +1442,7 @@ public final class Main {
             // read-write command. (We don't bother waiting for it to
             // complete; the cleaner will ensure subsequent cleans are
             // serialized with this one.)
-            TRASH_CLEANER.startCleaningDirectory();
+            TRASH_CLEANER.startCleaningDirectory(filesystem.getBuckPaths().getTrashDir());
           }
           // shut down the cached thread pools
           for (ExecutorPool p : executors.keySet()) {
@@ -1488,7 +1487,7 @@ public final class Main {
       Console console,
       BuildId buildId,
       Path... pathsToMove) throws IOException {
-    Path trashPath = BuckConstant.getTrashPath().resolve(buildId.toString());
+    Path trashPath = filesystem.getBuckPaths().getTrashDir().resolve(buildId.toString());
     filesystem.mkdirs(trashPath);
     for (Path pathToMove : pathsToMove) {
       try {

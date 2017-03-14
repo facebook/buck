@@ -30,9 +30,6 @@ public class BuckConstant {
   private static final Path BUCK_TRACE_DIR = getBuckOutputPath().resolve("log/traces");
   private static final String DEFAULT_CACHE_DIR = getBuckOutputPath().resolve("cache").toString();
 
-  // We put a . at the front of the name so Spotlight doesn't try to index the contents on OS X.
-  private static final Path TRASH_PATH = getBuckOutputPath().resolve(".trash");
-
   private BuckConstant() {}
 
   /**
@@ -52,7 +49,4 @@ public class BuckConstant {
     return DEFAULT_CACHE_DIR;
   }
 
-  public static Path getTrashPath() {
-    return TRASH_PATH;
-  }
 }

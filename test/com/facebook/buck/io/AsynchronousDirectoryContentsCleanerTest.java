@@ -48,14 +48,14 @@ public class AsynchronousDirectoryContentsCleanerTest {
     Files.write(fooBarBlechTxtFile, "hello world\n".getBytes(UTF_8));
 
     AsynchronousDirectoryContentsCleaner cleaner =
-        new AsynchronousDirectoryContentsCleaner(dirToDelete, MoreExecutors.directExecutor());
+        new AsynchronousDirectoryContentsCleaner(MoreExecutors.directExecutor());
 
     assertThat(Files.exists(dirToDelete), is(true));
     assertThat(Files.exists(fooBarDir), is(true));
     assertThat(Files.exists(fooBarBlechTxtFile), is(true));
 
     // This executes synchronously, since we passed in a direct executor above.
-    cleaner.startCleaningDirectory();
+    cleaner.startCleaningDirectory(dirToDelete);
 
     assertThat(Files.exists(dirToDelete), is(true));
     assertThat(Files.exists(fooBarDir), is(false));

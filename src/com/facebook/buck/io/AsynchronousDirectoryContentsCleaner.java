@@ -37,7 +37,6 @@ import java.util.EnumSet;
 public class AsynchronousDirectoryContentsCleaner {
   private static final Logger LOG = Logger.get(AsynchronousDirectoryContentsCleaner.class);
 
-  private final Path pathToClean;
   private final Executor executor;
 
   /**
@@ -61,17 +60,15 @@ public class AsynchronousDirectoryContentsCleaner {
     }
   }
 
-  public AsynchronousDirectoryContentsCleaner(Path pathToClean) {
+  public AsynchronousDirectoryContentsCleaner() {
     this(
-        pathToClean,
         newSingleThreadExecutor(
             new DaemonThreadFactory(
-                "AsynchronousDirectoryContentsCleaner-" + pathToClean.toString())));
+                "AsynchronousDirectoryContentsCleaner")));
   }
 
   @VisibleForTesting
-  AsynchronousDirectoryContentsCleaner(Path pathToClean, Executor executor) {
-    this.pathToClean = pathToClean;
+  AsynchronousDirectoryContentsCleaner(Executor executor) {
     this.executor = executor;
   }
 
@@ -81,7 +78,7 @@ public class AsynchronousDirectoryContentsCleaner {
    * Multiple calls to this method will be serialized, so only one
    * instance of directory cleaning will occur at a time.
    */
-  public void startCleaningDirectory() {
+  public void startCleaningDirectory(final Path pathToClean) {
     executor.execute(
         () -> {
           LOG.debug("Starting to clean %s", pathToClean);
