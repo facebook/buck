@@ -59,18 +59,21 @@ public class AndroidInstrumentationApkDescription
   private final ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms;
   private final ListeningExecutorService dxExecutorService;
   private final CxxBuckConfig cxxBuckConfig;
+  private final DxConfig dxConfig;
 
   public AndroidInstrumentationApkDescription(
       ProGuardConfig proGuardConfig,
       JavacOptions androidJavacOptions,
       ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ListeningExecutorService dxExecutorService,
-      CxxBuckConfig cxxBuckConfig) {
+      CxxBuckConfig cxxBuckConfig,
+      DxConfig dxConfig) {
     this.proGuardConfig = proGuardConfig;
     this.javacOptions = androidJavacOptions;
     this.nativePlatforms = nativePlatforms;
     this.dxExecutorService = dxExecutorService;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.dxConfig = dxConfig;
   }
 
   @Override
@@ -150,7 +153,8 @@ public class AndroidInstrumentationApkDescription
         new APKModuleGraph(
             targetGraph,
             params.getBuildTarget(),
-            Optional.empty()));
+            Optional.empty()),
+        dxConfig);
 
     AndroidGraphEnhancementResult enhancementResult =
         graphEnhancer.createAdditionalBuildables();

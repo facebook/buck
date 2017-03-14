@@ -119,6 +119,7 @@ public class AndroidBinaryGraphEnhancer {
   private final AndroidNativeLibsPackageableGraphEnhancer nativeLibsEnhancer;
   private final APKModuleGraph apkModuleGraph;
   private final ListeningExecutorService dxExecutorService;
+  private final DxConfig dxConfig;
 
   AndroidBinaryGraphEnhancer(
       BuildRuleParams originalParams,
@@ -154,7 +155,8 @@ public class AndroidBinaryGraphEnhancer {
       ListeningExecutorService dxExecutorService,
       ManifestEntries manifestEntries,
       CxxBuckConfig cxxBuckConfig,
-      APKModuleGraph apkModuleGraph) {
+      APKModuleGraph apkModuleGraph,
+      DxConfig dxConfig) {
     this.buildRuleParams = originalParams;
     this.manifestEntries = manifestEntries;
     this.originalBuildTarget = originalParams.getBuildTarget();
@@ -198,6 +200,7 @@ public class AndroidBinaryGraphEnhancer {
             relinkerMode,
             apkModuleGraph);
     this.apkModuleGraph = apkModuleGraph;
+    this.dxConfig = dxConfig;
   }
 
   AndroidGraphEnhancementResult createAdditionalBuildables() throws NoSuchBuildTargetException {
@@ -458,7 +461,8 @@ public class AndroidBinaryGraphEnhancer {
         Suppliers.ofInstance(ImmutableSortedSet.of(compileUberRDotJava)),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
     DexProducedFromJavaLibrary dexUberRDotJava =
-        new DexProducedFromJavaLibrary(paramsForDexUberRDotJava, compileUberRDotJava);
+        new DexProducedFromJavaLibrary(paramsForDexUberRDotJava, compileUberRDotJava,
+          dxConfig.getDxMaxHeapSize());
     ruleResolver.addToIndex(dexUberRDotJava);
 
     Optional<PreDexMerge> preDexMerge = Optional.empty();
@@ -613,7 +617,8 @@ public class AndroidBinaryGraphEnhancer {
         allPreDexDeps,
         dexForUberRDotJava,
         dxExecutorService,
-        xzCompressionLevel);
+        xzCompressionLevel,
+        dxConfig.getDxMaxHeapSize());
     ruleResolver.addToIndex(preDexMerge);
 
     return preDexMerge;
@@ -667,7 +672,7 @@ public class AndroidBinaryGraphEnhancer {
               ImmutableSortedSet.of(ruleResolver.getRule(javaLibrary.getBuildTarget()))),
           /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
       DexProducedFromJavaLibrary preDex =
-          new DexProducedFromJavaLibrary(paramsForPreDex, javaLibrary);
+          new DexProducedFromJavaLibrary(paramsForPreDex, javaLibrary, dxConfig.getDxMaxHeapSize());
       ruleResolver.addToIndex(preDex);
       preDexDeps.put(apkModuleGraph.findModuleForTarget(buildTarget), preDex);
     }

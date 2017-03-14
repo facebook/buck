@@ -130,7 +130,8 @@ public class TrimUberRDotJavaTest {
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dex"))
             .setProjectFilesystem(filesystem)
             .build(),
-        new FakeJavaLibrary(BuildTargetFactory.newInstance("//:lib"), null));
+        new FakeJavaLibrary(BuildTargetFactory.newInstance("//:lib"), null),
+        Optional.empty());
     dexProducedFromJavaLibrary.getBuildOutputInitializer().setBuildOutput(
         dexProducedFromJavaLibrary.initializeFromDisk(new FakeOnDiskBuildInfo()
             .putMetadata(DexProducedFromJavaLibrary.WEIGHT_ESTIMATE, "1")

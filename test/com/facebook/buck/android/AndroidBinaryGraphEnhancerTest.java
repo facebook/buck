@@ -28,6 +28,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.jvm.core.HasJavaClassHashes;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -161,7 +162,8 @@ public class AndroidBinaryGraphEnhancerTest {
         new APKModuleGraph(
             TargetGraph.EMPTY,
             originalParams.getBuildTarget(),
-            Optional.empty()));
+            Optional.empty()),
+        new DxConfig(FakeBuckConfig.builder().build()));
 
     BuildTarget aaptPackageResourcesTarget =
         BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
@@ -215,7 +217,8 @@ public class AndroidBinaryGraphEnhancerTest {
         "//fake:uber_r_dot_java#dex");
     DexProducedFromJavaLibrary fakeUberRDotJavaDex = new DexProducedFromJavaLibrary(
         new FakeBuildRuleParamsBuilder(fakeUberRDotJavaDexTarget).build(),
-        fakeUberRDotJavaCompile);
+        fakeUberRDotJavaCompile,
+        Optional.empty());
     ruleResolver.addToIndex(fakeUberRDotJavaDex);
 
     BuildRule preDexMergeRule = graphEnhancer.createPreDexMergeRule(
@@ -317,7 +320,8 @@ public class AndroidBinaryGraphEnhancerTest {
         new APKModuleGraph(
             TargetGraph.EMPTY,
             originalParams.getBuildTarget(),
-            Optional.empty()));
+            Optional.empty()),
+        new DxConfig(FakeBuckConfig.builder().build()));
     replay(keystore);
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
@@ -465,7 +469,8 @@ public class AndroidBinaryGraphEnhancerTest {
         new APKModuleGraph(
             TargetGraph.EMPTY,
             originalParams.getBuildTarget(),
-            Optional.empty()));
+            Optional.empty()),
+        new DxConfig(FakeBuckConfig.builder().build()));
     graphEnhancer.createAdditionalBuildables();
 
     BuildRule aaptPackageResourcesRule = findRuleOfType(ruleResolver, AaptPackageResources.class);
@@ -525,7 +530,8 @@ public class AndroidBinaryGraphEnhancerTest {
         new APKModuleGraph(
             TargetGraph.EMPTY,
             originalParams.getBuildTarget(),
-            Optional.empty()));
+            Optional.empty()),
+        new DxConfig(FakeBuckConfig.builder().build()));
     graphEnhancer.createAdditionalBuildables();
 
     ResourcesFilter resourcesFilter = findRuleOfType(ruleResolver, ResourcesFilter.class);
@@ -612,7 +618,8 @@ public class AndroidBinaryGraphEnhancerTest {
         new APKModuleGraph(
             TargetGraph.EMPTY,
             originalParams.getBuildTarget(),
-            Optional.empty()));
+            Optional.empty()),
+        new DxConfig(FakeBuckConfig.builder().build()));
     graphEnhancer.createAdditionalBuildables();
 
 
