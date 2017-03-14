@@ -20,6 +20,7 @@
         <SOURCES>
           <root url="file://$MODULE_DIR$/third-party/py/pywatchman" />
           <root url="file://$MODULE_DIR$/third-party/py/pathlib" />
+          <root url="file://$MODULE_DIR$/third-party/py/typing/python2" />
         </SOURCES>
       </library>
     </orderEntry>

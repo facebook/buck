@@ -43,11 +43,12 @@
   <property name="pathlib.dir" value="${third-party.dir}/py/pathlib" />
   <property name="unittest2.dir" value="${third-party.dir}/py/unittest2" />
   <property name="pywatchman.dir" value="${third-party.dir}/py/pywatchman" />
+  <property name="typing.dir" value="${third-party.dir}/py/typing/python2" />
   <property name="nailgun.dir" value="${third-party.dir}/nailgun" />
   <property name="scandir.dir" value="${third-party.dir}/py/scandir" />
   <property name="testutil.integration.dir" value="${test.dir}/com/facebook/buck/testutil/integration" />
 
-  <property name="buck.pythonpath" value="${pathlib.dir}:${pywatchman.dir}:${nailgun.dir}:${scandir.dir}:${testutil.integration.dir}" />
+  <property name="buck.pythonpath" value="${typing.dir}:${pathlib.dir}:${pywatchman.dir}:${nailgun.dir}:${scandir.dir}:${testutil.integration.dir}" />
 
   <property name="immutables-value-standalone.jar" value="${third-party.dir}/java/immutables/value-2.3.8.jar" />
 

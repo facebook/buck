@@ -64,6 +64,7 @@ python_test(
     ':buck_parser',
     '//third-party/py/pathlib:pathlib',
     '//third-party/py/pywatchman:pywatchman',
+    '//third-party/py:typing',
   ],
 )
 

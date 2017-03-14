@@ -7,6 +7,7 @@ import tempfile
 import StringIO
 
 from pywatchman import bser, WatchmanError
+from typing import Sequence
 
 from .buck import BuildFileProcessor, Diagnostic, add_rule, process_with_diagnostics
 

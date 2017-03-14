@@ -47,7 +47,6 @@ import java.nio.file.Paths;
  *  root/
  *    __main__.py
  *    generated_rules.py
- *    python_bundle.zip
  * </pre>
  */
 class BuckPythonProgram implements AutoCloseable {
@@ -57,6 +56,9 @@ class BuckPythonProgram implements AutoCloseable {
 
   private static final Path PATH_TO_PYWATCHMAN =
       Paths.get(System.getProperty("buck.path_to_pywatchman", "third-party/py/pywatchman"));
+
+  private static final Path PATH_TO_TYPING =
+      Paths.get(System.getProperty("buck.path_to_typing", "third-party/py/typing/python2"));
 
   private static final Logger LOG = Logger.get(BuckPythonProgram.class);
 
@@ -123,6 +125,7 @@ class BuckPythonProgram implements AutoCloseable {
 
     String pathlibDir = PATH_TO_PATHLIB_PY.getParent().toString();
     String watchmanDir = PATH_TO_PYWATCHMAN.toString();
+    String typingDir = PATH_TO_TYPING.toString();
     try (Writer out = Files.newBufferedWriter(generatedRoot.resolve("__main__.py"), UTF_8)) {
       out.write(Joiner.on("\n").join(
           "from __future__ import absolute_import",
@@ -131,6 +134,8 @@ class BuckPythonProgram implements AutoCloseable {
               Escaper.escapeAsBashString(MorePaths.pathWithUnixSeparators(pathlibDir)) + "\")",
           "sys.path.insert(0, \"" +
               Escaper.escapeAsBashString(MorePaths.pathWithUnixSeparators(watchmanDir)) + "\")",
+          "sys.path.insert(0, \"" +
+              Escaper.escapeAsBashString(MorePaths.pathWithUnixSeparators(typingDir)) + "\")",
           // Path to the bundled python code.
           "sys.path.insert(0, \"" +
               Escaper.escapeAsBashString(MorePaths.pathWithUnixSeparators(pythonPath)) + "\")",

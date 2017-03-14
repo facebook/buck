@@ -32,6 +32,7 @@ import re
 import sys
 import traceback
 import types
+from typing import Any, Dict, List, Tuple, Optional
 
 try:
     # Python 2.6, 2.7, use iterator filter from Python 3
