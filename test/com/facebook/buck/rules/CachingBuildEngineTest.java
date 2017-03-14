@@ -238,6 +238,16 @@ public class CachingBuildEngineTest {
       return new CachingBuildEngineFactory(resolver)
           .setCachingBuildEngineDelegate(new LocalCachingBuildEngineDelegate(fileHashCache));
     }
+
+    protected BuildInfoRecorder createBuildInfoRecorder(BuildTarget buildTarget) {
+      return new BuildInfoRecorder(
+          buildTarget,
+          filesystem,
+          new DefaultClock(),
+          new BuildId(),
+          new ObjectMapper(),
+          ImmutableMap.of());
+    }
   }
 
   public static class OtherTests extends CommonFixture {
@@ -549,14 +559,11 @@ public class CachingBuildEngineTest {
       FakeBuildRule dep = new FakeBuildRule(depTarget, pathResolver);
       FakeBuildRule ruleToTest = new FakeBuildRule(BUILD_TARGET, filesystem, pathResolver, dep);
       RuleKey ruleToTestKey = defaultRuleKeyFactory.build(ruleToTest);
-      filesystem.writeContentsToPath(
-          ruleToTestKey.toString(),
-          BuildInfo.getPathToMetadataDirectory(BUILD_TARGET, filesystem)
-              .resolve(BuildInfo.MetadataKey.RULE_KEY));
-      filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of()),
-          BuildInfo.getPathToMetadataDirectory(BUILD_TARGET, filesystem)
-              .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
+
+      BuildInfoRecorder recorder = createBuildInfoRecorder(BUILD_TARGET);
+      recorder.addBuildMetadata(BuildInfo.MetadataKey.RULE_KEY, ruleToTestKey.toString());
+      recorder.addMetadata(BuildInfo.MetadataKey.RECORDED_PATHS, ImmutableList.of());
+      recorder.writeMetadataToDisk(true);
 
       // The BuildContext that will be used by the rule's build() method.
       BuildEngineBuildContext context = this.buildContext
@@ -600,24 +607,17 @@ public class CachingBuildEngineTest {
           .build();
       FakeBuildRule dep = new FakeBuildRule(ruleParams, pathResolver);
       RuleKey depKey = defaultRuleKeyFactory.build(dep);
-      filesystem.writeContentsToPath(
-          depKey.toString(),
-          BuildInfo.getPathToMetadataDirectory(depTarget, filesystem)
-              .resolve(BuildInfo.MetadataKey.RULE_KEY));
-      filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of()),
-          BuildInfo.getPathToMetadataDirectory(depTarget, filesystem)
-              .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
+      BuildInfoRecorder depRecorder = createBuildInfoRecorder(depTarget);
+      depRecorder.addBuildMetadata(BuildInfo.MetadataKey.RULE_KEY, depKey.toString());
+      depRecorder.addMetadata(BuildInfo.MetadataKey.RECORDED_PATHS, ImmutableList.of());
+      depRecorder.writeMetadataToDisk(true);
+
       FakeBuildRule ruleToTest = new FakeBuildRule(BUILD_TARGET, filesystem, pathResolver, dep);
       RuleKey ruleToTestKey = defaultRuleKeyFactory.build(ruleToTest);
-      filesystem.writeContentsToPath(
-          ruleToTestKey.toString(),
-          BuildInfo.getPathToMetadataDirectory(BUILD_TARGET, filesystem)
-              .resolve(BuildInfo.MetadataKey.RULE_KEY));
-      filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of()),
-          BuildInfo.getPathToMetadataDirectory(BUILD_TARGET, filesystem)
-              .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
+      BuildInfoRecorder recorder = createBuildInfoRecorder(BUILD_TARGET);
+      recorder.addBuildMetadata(BuildInfo.MetadataKey.RULE_KEY, ruleToTestKey.toString());
+      recorder.addMetadata(BuildInfo.MetadataKey.RECORDED_PATHS, ImmutableList.of());
+      recorder.writeMetadataToDisk(true);
 
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
@@ -672,14 +672,11 @@ public class CachingBuildEngineTest {
           new FakeBuildRule(ruleParams, pathResolver);
       resolver.addToIndex(transitiveRuntimeDep);
       RuleKey transitiveRuntimeDepKey = defaultRuleKeyFactory.build(transitiveRuntimeDep);
-      filesystem.writeContentsToPath(
-          transitiveRuntimeDepKey.toString(),
-          BuildInfo.getPathToMetadataDirectory(transitiveRuntimeDep.getBuildTarget(), filesystem)
-              .resolve(BuildInfo.MetadataKey.RULE_KEY));
-      filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of()),
-          BuildInfo.getPathToMetadataDirectory(transitiveRuntimeDep.getBuildTarget(), filesystem)
-              .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
+
+      BuildInfoRecorder recorder = createBuildInfoRecorder(transitiveRuntimeDep.getBuildTarget());
+      recorder.addBuildMetadata(BuildInfo.MetadataKey.RULE_KEY, transitiveRuntimeDepKey.toString());
+      recorder.addMetadata(BuildInfo.MetadataKey.RECORDED_PATHS, ImmutableList.of());
+      recorder.writeMetadataToDisk(true);
 
       // Setup a runtime dependency that is referenced directly by the top-level rule.
       FakeBuildRule runtimeDep =
@@ -690,14 +687,10 @@ public class CachingBuildEngineTest {
               transitiveRuntimeDep);
       resolver.addToIndex(runtimeDep);
       RuleKey runtimeDepKey = defaultRuleKeyFactory.build(runtimeDep);
-      filesystem.writeContentsToPath(
-          runtimeDepKey.toString(),
-          BuildInfo.getPathToMetadataDirectory(runtimeDep.getBuildTarget(), filesystem)
-              .resolve(BuildInfo.MetadataKey.RULE_KEY));
-      filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of()),
-          BuildInfo.getPathToMetadataDirectory(runtimeDep.getBuildTarget(), filesystem)
-              .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
+      BuildInfoRecorder runtimeDepRec = createBuildInfoRecorder(runtimeDep.getBuildTarget());
+      runtimeDepRec.addBuildMetadata(BuildInfo.MetadataKey.RULE_KEY, runtimeDepKey.toString());
+      runtimeDepRec.addMetadata(BuildInfo.MetadataKey.RECORDED_PATHS, ImmutableList.of());
+      runtimeDepRec.writeMetadataToDisk(true);
 
       // Create a dep for the build rule.
       FakeBuildRule ruleToTest = new FakeHasRuntimeDeps(
@@ -706,14 +699,10 @@ public class CachingBuildEngineTest {
           pathResolver,
           runtimeDep);
       RuleKey ruleToTestKey = defaultRuleKeyFactory.build(ruleToTest);
-      filesystem.writeContentsToPath(
-          ruleToTestKey.toString(),
-          BuildInfo.getPathToMetadataDirectory(ruleToTest.getBuildTarget(), filesystem)
-              .resolve(BuildInfo.MetadataKey.RULE_KEY));
-      filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of()),
-          BuildInfo.getPathToMetadataDirectory(ruleToTest.getBuildTarget(), filesystem)
-              .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
+      BuildInfoRecorder testRec = createBuildInfoRecorder(BUILD_TARGET);
+      testRec.addBuildMetadata(BuildInfo.MetadataKey.RULE_KEY, ruleToTestKey.toString());
+      testRec.addMetadata(BuildInfo.MetadataKey.RECORDED_PATHS, ImmutableList.of());
+      testRec.writeMetadataToDisk(true);
 
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build();
@@ -863,14 +852,12 @@ public class CachingBuildEngineTest {
           /* buildSteps */ ImmutableList.of(),
           /* postBuildSteps */ ImmutableList.of(failingStep),
           /* pathToOutputFile */ null);
-      filesystem.writeContentsToPath(
-          defaultRuleKeyFactory.build(ruleToTest).toString(),
-          BuildInfo.getPathToMetadataDirectory(ruleToTest.getBuildTarget(), filesystem)
-              .resolve(BuildInfo.MetadataKey.RULE_KEY));
-      filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of()),
-          BuildInfo.getPathToMetadataDirectory(ruleToTest.getBuildTarget(), filesystem)
-              .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
+      BuildInfoRecorder recorder = createBuildInfoRecorder(ruleToTest.getBuildTarget());
+
+      recorder.addBuildMetadata(
+          BuildInfo.MetadataKey.RULE_KEY, defaultRuleKeyFactory.build(ruleToTest).toString());
+      recorder.addMetadata(BuildInfo.MetadataKey.RECORDED_PATHS, ImmutableList.of());
+      recorder.writeMetadataToDisk(true);
 
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build();
@@ -1332,18 +1319,16 @@ public class CachingBuildEngineTest {
           pathResolver.getRelativePath(rule.getSourcePathToOutput()));
 
       // Prepopulate the recorded paths metadata.
-      filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(
-              ImmutableList.of(
-                  pathResolver.getRelativePath(rule.getSourcePathToOutput()).toString())),
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
-              .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
+      BuildInfoRecorder recorder = createBuildInfoRecorder(target);
+      recorder.addMetadata(
+          BuildInfo.MetadataKey.RECORDED_PATHS,
+          ImmutableList.of(
+              pathResolver.getRelativePath(rule.getSourcePathToOutput()).toString()));
 
       // Prepopulate the input rule key on disk, so that we avoid a rebuild.
-      filesystem.writeContentsToPath(
-          inputRuleKey.toString(),
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
-              .resolve(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY));
+      recorder.addBuildMetadata(
+          BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY, inputRuleKey.toString());
+      recorder.writeMetadataToDisk(true);
 
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
@@ -1725,20 +1710,16 @@ public class CachingBuildEngineTest {
               fileHashCache));
 
       // Prepopulate the dep file rule key and dep file.
-      filesystem.writeContentsToPath(
-          depFileRuleKey.toString(),
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
-              .resolve(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY));
-      filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of(fileToDepFileEntryString(input))),
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
-              .resolve(BuildInfo.MetadataKey.DEP_FILE));
-
+      BuildInfoRecorder recorder = createBuildInfoRecorder(rule.getBuildTarget());
+      recorder.addBuildMetadata(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY, depFileRuleKey.toString());
+      recorder.addMetadata(
+          BuildInfo.MetadataKey.DEP_FILE,
+          ImmutableList.of(fileToDepFileEntryString(input)));
       // Prepopulate the recorded paths metadata.
-      filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of(output.toString())),
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
-              .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
+      recorder.addMetadata(
+          BuildInfo.MetadataKey.RECORDED_PATHS,
+          ImmutableList.of(output.toString()));
+      recorder.writeMetadataToDisk(true);
 
       // Run the build.
       BuildResult result =
@@ -1804,20 +1785,17 @@ public class CachingBuildEngineTest {
           .getRuleKey();
 
       // Prepopulate the dep file rule key and dep file.
-      filesystem.writeContentsToPath(
-          depFileRuleKey.toString(),
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
-              .resolve(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY));
-      filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of(fileToDepFileEntryString(input))),
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
-              .resolve(BuildInfo.MetadataKey.DEP_FILE));
+      BuildInfoRecorder recorder = createBuildInfoRecorder(rule.getBuildTarget());
+      recorder.addBuildMetadata(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY, depFileRuleKey.toString());
+      recorder.addMetadata(
+          BuildInfo.MetadataKey.DEP_FILE,
+          ImmutableList.of(fileToDepFileEntryString(input)));
 
       // Prepopulate the recorded paths metadata.
-      filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of(output.toString())),
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
-              .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
+      recorder.addMetadata(
+          BuildInfo.MetadataKey.RECORDED_PATHS,
+          ImmutableList.of(output.toString()));
+      recorder.writeMetadataToDisk(true);
 
       // Now modify the input file and invalidate it in the cache.
       filesystem.writeContentsToPath("something else", input);
@@ -2856,14 +2834,12 @@ public class CachingBuildEngineTest {
                   .setProjectFilesystem(filesystem)
                   .build(),
               pathResolver);
-      filesystem.writeContentsToPath(
-          defaultRuleKeyFactory.build(rule).toString(),
-          BuildInfo.getPathToMetadataDirectory(rule.getBuildTarget(), filesystem)
-              .resolve(BuildInfo.MetadataKey.RULE_KEY));
-      filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of()),
-          BuildInfo.getPathToMetadataDirectory(rule.getBuildTarget(), filesystem)
-              .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
+      BuildInfoRecorder recorder = createBuildInfoRecorder(rule.getBuildTarget());
+      recorder.addBuildMetadata(
+          BuildInfo.MetadataKey.RULE_KEY,
+          defaultRuleKeyFactory.build(rule).toString());
+      recorder.addMetadata(BuildInfo.MetadataKey.RECORDED_PATHS, ImmutableList.of());
+      recorder.writeMetadataToDisk(true);
 
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
