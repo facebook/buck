@@ -258,8 +258,16 @@ public class AppleLibraryDescription implements
       Optional<Linker.LinkableDepType> linkableDepType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist) throws NoSuchBuildTargetException {
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    CxxLibraryDescription.Arg cxxDelegateArgs = CxxLibraryDescription.createEmptyConstructorArg();
+    AppleDescriptions.populateCxxLibraryDescriptionArg(
+        pathResolver,
+        cxxDelegateArgs,
+        args,
+        params.getBuildTarget());
+
     Optional<BuildRule> swiftCompanionBuildRule = swiftDelegate.createCompanionBuildRule(
-        targetGraph, params, resolver, args);
+        targetGraph, params, resolver, defaultCxxPlatform, cxxDelegateArgs, args);
     if (swiftCompanionBuildRule.isPresent()) {
       // when creating a swift target, there is no need to proceed with apple binary rules,
       // otherwise, add this swift rule as a dependency.
@@ -279,8 +287,6 @@ public class AppleLibraryDescription implements
     Optional<StripStyle> flavoredStripStyle =
         StripStyle.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
     params = CxxStrip.removeStripStyleFlavorInParams(params, flavoredStripStyle);
-
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
 
     BuildRule unstrippedBinaryRule = requireUnstrippedBuildRule(
         params,

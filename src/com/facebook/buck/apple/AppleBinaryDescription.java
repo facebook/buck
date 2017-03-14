@@ -20,6 +20,7 @@ import static com.facebook.buck.swift.SwiftLibraryDescription.isSwiftTarget;
 
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
+import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.FrameworkDependencies;
@@ -198,8 +199,16 @@ public class AppleBinaryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    CxxLibraryDescription.Arg cxxDelegateArgs = CxxLibraryDescription.createEmptyConstructorArg();
+    AppleDescriptions.populateCxxLibraryDescriptionArg(
+        pathResolver,
+        cxxDelegateArgs,
+        args,
+        params.getBuildTarget());
+
     Optional<BuildRule> swiftCompanionBuildRule = swiftDelegate.createCompanionBuildRule(
-        targetGraph, params, resolver, args);
+        targetGraph, params, resolver, delegate.getDefaultCxxPlatform(), cxxDelegateArgs, args);
     if (swiftCompanionBuildRule.isPresent()) {
       // when creating a swift target, there is no need to proceed with apple binary rules,
       // otherwise, add this swift rule as a dependency.

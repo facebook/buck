@@ -22,6 +22,8 @@ import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.HeaderSymlinkTree;
+import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.NativeLinkable;
@@ -52,6 +54,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -221,6 +224,10 @@ public class SwiftLibraryDescription implements
               "Could not find SwiftCompile with target %s", buildTarget);
         }
       };
+
+      params = params.appendExtraDeps(
+          requireHeaderSymlinkTree(cxxPlatform, params, resolver, args));
+
       params = params.appendExtraDeps(
           params.getDeps().stream()
               .filter(SwiftLibrary.class::isInstance)
@@ -330,6 +337,8 @@ public class SwiftLibraryDescription implements
       final TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform,
+      CxxLibraryDescription.Arg cxxDelegateArgs,
       A args) throws NoSuchBuildTargetException {
     BuildTarget buildTarget = params.getBuildTarget();
     if (!isSwiftTarget(buildTarget)) {
@@ -347,6 +356,15 @@ public class SwiftLibraryDescription implements
         delegateArgs,
         args,
         buildTarget);
+
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    populdateHeadersArg(
+        pathResolver,
+        cxxDelegateArgs,
+        delegateArgs,
+        cxxPlatform,
+        buildTarget);
+
     if (!delegateArgs.srcs.isEmpty()) {
       return Optional.of(
           resolver.addToIndex(
@@ -354,6 +372,56 @@ public class SwiftLibraryDescription implements
     } else {
       return Optional.empty();
     }
+  }
+
+  private <A extends CxxLibraryDescription.Arg> void populdateHeadersArg(
+      SourcePathResolver resolver,
+      CxxLibraryDescription.Arg cxxDelegateArgs,
+      SwiftLibraryDescription.Arg delegateArgs,
+      CxxPlatform cxxPlatform,
+      BuildTarget buildTarget) {
+    delegateArgs.exportedHeaders = CxxDescriptionEnhancer.parseExportedHeaders(
+        buildTarget,
+        resolver,
+        Optional.of(cxxPlatform),
+        cxxDelegateArgs);
+
+    delegateArgs.headers = CxxDescriptionEnhancer.parseHeaders(
+        buildTarget,
+        resolver,
+        Optional.of(cxxPlatform),
+        cxxDelegateArgs);
+  }
+
+  private <A extends SwiftLibraryDescription.Arg> ImmutableList<HeaderSymlinkTree>
+  requireHeaderSymlinkTree(
+      CxxPlatform cxxPlatform,
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A arg
+  ) {
+    BuildRuleParams untypedParams = params
+        .withoutFlavor(SWIFT_COMPANION_FLAVOR)
+        .withoutFlavor(SWIFT_COMPILE_FLAVOR);
+
+    HeaderSymlinkTree publicHeaderSymlinkTree = CxxDescriptionEnhancer.requireHeaderSymlinkTree(
+        untypedParams,
+        resolver,
+        cxxPlatform,
+        arg.exportedHeaders,
+        HeaderVisibility.PUBLIC,
+        true
+    );
+    HeaderSymlinkTree privateHeaderSymlinkTree = CxxDescriptionEnhancer.requireHeaderSymlinkTree(
+        untypedParams,
+        resolver,
+        cxxPlatform,
+        arg.headers,
+        HeaderVisibility.PRIVATE,
+        true
+    );
+
+    return ImmutableList.of(publicHeaderSymlinkTree, privateHeaderSymlinkTree);
   }
 
   public static boolean isSwiftTarget(BuildTarget buildTarget) {
@@ -374,6 +442,9 @@ public class SwiftLibraryDescription implements
     public Optional<SourcePath> bridgingHeader;
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public Optional<NativeLinkable.Linkage> preferredLinkage;
+
+    public ImmutableMap<Path, SourcePath> headers = ImmutableMap.of();
+    public ImmutableMap<Path, SourcePath> exportedHeaders = ImmutableMap.of();
   }
 
 }
