@@ -39,7 +39,6 @@ import com.facebook.buck.step.Step;
 import com.google.common.base.Functions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -186,7 +185,6 @@ public class CxxLibraryTest {
         FluentIterable.from(params.getDeclaredDeps().get()),
         /* hasExportedHeaders */ x -> true,
         /* headerOnly */ x -> true,
-        Functions.constant(ImmutableMultimap.of()),
         Functions.constant(StringArg.from("-ldl")),
         /* linkTargetInput */ Functions.constant(NativeLinkableInput.of()),
         /* supportedPlatformsRegex */ Optional.empty(),

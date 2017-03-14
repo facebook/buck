@@ -44,6 +44,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
+import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -53,6 +54,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.versions.Version;
 import com.facebook.buck.zip.UnzipStep;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
@@ -73,7 +75,8 @@ import java.util.Set;
 public class AppleTestDescription implements
     Description<AppleTestDescription.Arg>,
     Flavored,
-    ImplicitDepsInferringDescription<AppleTestDescription.Arg> {
+    ImplicitDepsInferringDescription<AppleTestDescription.Arg>,
+    MetadataProvidingDescription<AppleTestDescription.Arg> {
 
   /**
    * Flavors for the additional generated build rules.
@@ -441,6 +444,22 @@ public class AppleTestDescription implements
           NativeLinkables.getTransitiveNativeLinkables(platform, roots.values()).keySet());
     }
     return TestHostInfo.of(testHostApp, testHostAppBinarySourcePath, blacklistBuilder.build());
+  }
+
+  @Override
+  public <A extends Arg, U> Optional<U> createMetadata(
+      BuildTarget buildTarget,
+      BuildRuleResolver resolver,
+      A args,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
+      Class<U> metadataClass)
+      throws NoSuchBuildTargetException {
+    return appleLibraryDescription.createMetadataForLibrary(
+        buildTarget,
+        resolver,
+        selectedVersions,
+        args,
+        metadataClass);
   }
 
   @Value.Immutable
