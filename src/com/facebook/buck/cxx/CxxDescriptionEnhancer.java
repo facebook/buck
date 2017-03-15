@@ -409,12 +409,16 @@ public class CxxDescriptionEnhancer {
    */
   public static ImmutableMap<String, CxxSource> parseCxxSources(
       BuildTarget buildTarget,
-      SourcePathResolver resolver,
+      BuildRuleResolver resolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       CxxConstructorArg args) {
     return parseCxxSources(
         buildTarget,
         resolver,
+        ruleFinder,
+        pathResolver,
         cxxPlatform,
         args.srcs,
         args.platformSrcs);
@@ -422,29 +426,55 @@ public class CxxDescriptionEnhancer {
 
   public static ImmutableMap<String, CxxSource> parseCxxSources(
       BuildTarget buildTarget,
-      SourcePathResolver resolver,
+      BuildRuleResolver resolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       ImmutableSortedSet<SourceWithFlags> srcs,
       PatternMatchedCollection<ImmutableSortedSet<SourceWithFlags>> platformSrcs) {
     ImmutableMap.Builder<String, SourceWithFlags> sources = ImmutableMap.builder();
-    putAllSources(srcs, sources, resolver, buildTarget);
+    putAllSources(buildTarget, resolver, ruleFinder, pathResolver, cxxPlatform, srcs, sources);
     for (ImmutableSortedSet<SourceWithFlags> sourcesWithFlags :
         platformSrcs.getMatchingValues(cxxPlatform.getFlavor().toString())) {
-      putAllSources(sourcesWithFlags, sources, resolver, buildTarget);
+      putAllSources(
+          buildTarget,
+          resolver,
+          ruleFinder,
+          pathResolver,
+          cxxPlatform,
+          sourcesWithFlags,
+          sources);
     }
     return resolveCxxSources(sources.build());
   }
 
   private static void putAllSources(
-      ImmutableSortedSet<SourceWithFlags> sourcesWithFlags,
-      ImmutableMap.Builder<String, SourceWithFlags> sources,
+      BuildTarget buildTarget,
+      BuildRuleResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
-      BuildTarget buildTarget) {
+      CxxPlatform cxxPlatform,
+      ImmutableSortedSet<SourceWithFlags> sourcesWithFlags,
+      ImmutableMap.Builder<String, SourceWithFlags> sources) {
     sources.putAll(
         pathResolver.getSourcePathNames(
             buildTarget,
             "srcs",
-            sourcesWithFlags,
+            sourcesWithFlags.stream()
+                .map(
+                    s -> {
+                      try {
+                        return s.withSourcePath(
+                            CxxGenruleDescription.fixupSourcePath(
+                                resolver,
+                                ruleFinder,
+                                cxxPlatform,
+                                Preconditions.checkNotNull(s.getSourcePath())));
+                      } catch (NoSuchBuildTargetException e) {
+                        throw new RuntimeException(e);
+                      }
+                    })
+                .collect(MoreCollectors.toImmutableList()),
             SourceWithFlags::getSourcePath));
   }
 
@@ -684,6 +714,8 @@ public class CxxDescriptionEnhancer {
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     ImmutableMap<String, CxxSource> srcs = parseCxxSources(
         params.getBuildTarget(),
+        resolver,
+        ruleFinder,
         pathResolver,
         cxxPlatform,
         args);
@@ -1232,6 +1264,8 @@ public class CxxDescriptionEnhancer {
         args).values();
     ImmutableCollection<CxxSource> sources = parseCxxSources(
         params.getBuildTarget(),
+        resolver,
+        ruleFinder,
         sourcePathResolver,
         platform,
         args).values();

@@ -267,4 +267,16 @@ public class CxxLibraryIntegrationTest {
         shouldFail.getStderr(),
         containsString("lib1_dep_function"));
   }
+
+  @Test
+  public void sourceFromCxxGenrule() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this,
+            "sources_from_cxx_genrule",
+            tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:lib#default,shared").assertSuccess();
+  }
+
 }

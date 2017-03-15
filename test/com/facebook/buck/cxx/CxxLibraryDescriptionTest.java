@@ -36,8 +36,10 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.DependencyAggregationTestUtil;
@@ -1407,6 +1409,46 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         rule.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
         equalTo(NativeLinkable.Linkage.STATIC));
+  }
+
+  @Test
+  public void srcsFromCxxGenrule() throws Exception {
+    CxxGenruleBuilder srcBuilder =
+        new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:src"))
+            .setOut("foo.cpp");
+    CxxLibraryBuilder libraryBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(
+                        new DefaultBuildTargetSourcePath(srcBuilder.getTarget()))));
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            srcBuilder.build(),
+            libraryBuilder.build());
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(
+            targetGraph,
+            new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver.requireRule(
+        libraryBuilder.getTarget().withAppendedFlavors(
+            CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
+            CxxLibraryDescription.Type.STATIC.getFlavor()));
+    verifySourcePaths(ruleResolver);
+  }
+
+  /**
+   * Verify that all source paths are resolvable, which wouldn't be the case if `cxx_genrule`
+   * outputs were not handled correctly.
+   */
+  private void verifySourcePaths(BuildRuleResolver resolver) {
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
+    BuildableContext buildableContext = new FakeBuildableContext();
+    for (BuildRule rule : resolver.getBuildRules()) {
+      rule.getBuildSteps(buildContext, buildableContext);
+    }
   }
 
 }

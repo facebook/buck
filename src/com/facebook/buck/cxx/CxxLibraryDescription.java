@@ -247,6 +247,8 @@ public class CxxLibraryDescription implements
         args.precompiledHeader,
         CxxDescriptionEnhancer.parseCxxSources(
             params.getBuildTarget(),
+            ruleResolver,
+            ruleFinder,
             sourcePathResolver,
             cxxPlatform,
             args),

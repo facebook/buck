@@ -151,6 +151,8 @@ public class CxxPythonExtensionDescription implements
     ImmutableMap<String, CxxSource> srcs =
         CxxDescriptionEnhancer.parseCxxSources(
             params.getBuildTarget(),
+            ruleResolver,
+            ruleFinder,
             pathResolver,
             cxxPlatform,
             args);

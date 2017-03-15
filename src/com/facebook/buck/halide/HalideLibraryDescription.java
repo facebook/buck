@@ -134,12 +134,15 @@ public class HalideLibraryDescription
     params = CxxStrip.removeStripStyleFlavorInParams(params, flavoredStripStyle);
     params = LinkerMapMode.removeLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode);
 
-    ImmutableMap<String, CxxSource> srcs = CxxDescriptionEnhancer.parseCxxSources(
-        params.getBuildTarget(),
-        pathResolver,
-        cxxPlatform,
-        halideSources,
-        PatternMatchedCollection.of());
+    ImmutableMap<String, CxxSource> srcs =
+        CxxDescriptionEnhancer.parseCxxSources(
+            params.getBuildTarget(),
+            ruleResolver,
+            ruleFinder,
+            pathResolver,
+            cxxPlatform,
+            halideSources,
+            PatternMatchedCollection.of());
 
     ImmutableList<String> preprocessorFlags = ImmutableList.of();
     PatternMatchedCollection<ImmutableList<String>>

@@ -90,9 +90,13 @@ public final class CxxInferEnhancer {
       CxxPlatform cxxPlatform,
       CxxConstructorArg args) {
     InferFlavors.checkNoInferFlavors(buildTarget.getFlavors());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return CxxDescriptionEnhancer.parseCxxSources(
         buildTarget,
-        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)),
+        ruleResolver,
+        ruleFinder,
+        pathResolver,
         cxxPlatform,
         args);
   }
