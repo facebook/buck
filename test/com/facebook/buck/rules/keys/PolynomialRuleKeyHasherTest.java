@@ -16,14 +16,11 @@
 
 package com.facebook.buck.rules.keys;
 
-import com.google.common.hash.HashCode;
-import com.google.common.hash.Hashing;
-
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class GuavaRuleKeyHasherTest extends AbstractRuleKeyHasherTest<HashCode> {
+public class PolynomialRuleKeyHasherTest extends AbstractRuleKeyHasherTest<Integer> {
 
   @Override
-  protected GuavaRuleKeyHasher newHasher() {
-    return new GuavaRuleKeyHasher(Hashing.sha1().newHasher());
+  protected PolynomialRuleKeyHasher newHasher() {
+    return new PolynomialRuleKeyHasher();
   }
 }
