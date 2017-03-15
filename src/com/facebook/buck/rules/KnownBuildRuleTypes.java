@@ -107,11 +107,11 @@ import com.facebook.buck.js.ReactNativeBuckConfig;
 import com.facebook.buck.jvm.groovy.GroovyBuckConfig;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
 import com.facebook.buck.jvm.groovy.GroovyTestDescription;
+import com.facebook.buck.jvm.java.JavaAnnotationProcessorDescription;
 import com.facebook.buck.jvm.java.JavaBinaryDescription;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaOptions;
-import com.facebook.buck.jvm.java.JavaAnnotationProcessorDescription;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.KeystoreDescription;
@@ -808,32 +808,34 @@ public class KnownBuildRuleTypes {
     builder.register(new SceneKitAssetsDescription());
     builder.register(new ShBinaryDescription());
     builder.register(new ShTestDescription(defaultTestRuleTimeoutMs));
-    ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(config);
-    builder.register(
-        new ThriftLibraryDescription(
-            thriftBuckConfig,
-            ImmutableList.of(
-                new ThriftJavaEnhancer(thriftBuckConfig, defaultJavacOptions),
-                new ThriftCxxEnhancer(
-                    thriftBuckConfig,
-                    cxxLibraryDescription,
+    if (config.getThriftTargetTypesEnabled()) {
+      ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(config);
+      builder.register(
+          new ThriftLibraryDescription(
+              thriftBuckConfig,
+              ImmutableList.of(
+                  new ThriftJavaEnhancer(thriftBuckConfig, defaultJavacOptions),
+                  new ThriftCxxEnhancer(
+                      thriftBuckConfig,
+                      cxxLibraryDescription,
                     /* cpp2 */ false),
-                new ThriftCxxEnhancer(
-                    thriftBuckConfig,
-                    cxxLibraryDescription,
+                  new ThriftCxxEnhancer(
+                      thriftBuckConfig,
+                      cxxLibraryDescription,
                     /* cpp2 */ true),
-                new ThriftPythonEnhancer(
-                    thriftBuckConfig,
-                    ThriftPythonEnhancer.Type.NORMAL,
-                    pythonLibraryDescription),
-                new ThriftPythonEnhancer(
-                    thriftBuckConfig,
-                    ThriftPythonEnhancer.Type.TWISTED,
-                    pythonLibraryDescription),
-                new ThriftPythonEnhancer(
-                    thriftBuckConfig,
-                    ThriftPythonEnhancer.Type.ASYNCIO,
-                    pythonLibraryDescription))));
+                  new ThriftPythonEnhancer(
+                      thriftBuckConfig,
+                      ThriftPythonEnhancer.Type.NORMAL,
+                      pythonLibraryDescription),
+                  new ThriftPythonEnhancer(
+                      thriftBuckConfig,
+                      ThriftPythonEnhancer.Type.TWISTED,
+                      pythonLibraryDescription),
+                  new ThriftPythonEnhancer(
+                      thriftBuckConfig,
+                      ThriftPythonEnhancer.Type.ASYNCIO,
+                      pythonLibraryDescription))));
+    }
     builder.register(new WorkerToolDescription(config));
     builder.register(new XcodePostbuildScriptDescription());
     builder.register(new XcodePrebuildScriptDescription());
