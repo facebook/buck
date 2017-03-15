@@ -41,6 +41,9 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.concurrent.GuardedBy;
 
 public class RuleKeyLoggerListener implements BuckEventListener {
   private static final Logger LOG = Logger.get(RuleKeyLoggerListener.class);
@@ -48,13 +51,13 @@ public class RuleKeyLoggerListener implements BuckEventListener {
   private static final int DEFAULT_MIN_LINES_FOR_AUTO_FLUSH = 100;
 
   private final InvocationInfo info;
-  private final Object lock;
   private final ExecutorService outputExecutor;
   private final int minLinesForAutoFlush;
   private final ProjectFilesystem projectFilesystem;
 
+  private final Object lock;
+  @GuardedBy("lock")
   private List<String> logLines;
-  private volatile long logLinesCount;
 
   public RuleKeyLoggerListener(
       ProjectFilesystem projectFilesystem,
@@ -68,7 +71,6 @@ public class RuleKeyLoggerListener implements BuckEventListener {
       InvocationInfo info,
       ExecutorService outputExecutor,
       int minLinesForAutoFlush) {
-    this.logLinesCount = 0;
     this.projectFilesystem = projectFilesystem;
     this.minLinesForAutoFlush = minLinesForAutoFlush;
     this.info = info;
@@ -96,7 +98,6 @@ public class RuleKeyLoggerListener implements BuckEventListener {
 
     synchronized (lock) {
       logLines.addAll(newLogLines);
-      logLinesCount = logLines.size();
     }
 
     flushLogLinesIfNeeded();
@@ -117,8 +118,6 @@ public class RuleKeyLoggerListener implements BuckEventListener {
       if (inputRuleKeyLine != null) {
         logLines.add(inputRuleKeyLine);
       }
-
-      logLinesCount = logLines.size();
     }
 
     flushLogLinesIfNeeded();
@@ -133,59 +132,50 @@ public class RuleKeyLoggerListener implements BuckEventListener {
   }
 
   @Override
-  public void outputTrace(BuildId buildId) {
+  public void outputTrace(BuildId buildId) throws InterruptedException {
+    submitFlushLogLines();
     outputExecutor.shutdown();
-    try {
-      flushLogLines();
-    } catch (IOException exception) {
-      LOG.error(
-          exception,
-          "Failed to flush [%d] logLines to file [%s].",
-          logLines.size(),
-          getLogFilePath().toAbsolutePath());
-    }
+    outputExecutor.awaitTermination(1, TimeUnit.HOURS);
   }
 
   public Path getLogFilePath() {
     Path logDir = projectFilesystem.resolve(info.getLogDirectoryPath());
-    Path logFile = logDir.resolve(BuckConstant.RULE_KEY_LOGGER_FILE_NAME);
-    return logFile;
+    return logDir.resolve(BuckConstant.RULE_KEY_LOGGER_FILE_NAME);
   }
 
   private void flushLogLinesIfNeeded() {
-    if (logLinesCount > minLinesForAutoFlush) {
-      @SuppressWarnings("unused") Future<?> unused =
-          outputExecutor.submit(() -> {
-            try {
-              flushLogLines();
-            } catch (IOException e) {
-              LOG.error(e, "Failed to flush logLines from the outputExecutor.");
-            }
-
-            return null;
-          });
+    synchronized (lock) {
+      if (logLines.size() > minLinesForAutoFlush) {
+        submitFlushLogLines();
+      }
     }
   }
 
-  private void flushLogLines() throws IOException {
+  private void submitFlushLogLines() {
     List<String> linesToFlush;
     synchronized (lock) {
       linesToFlush = logLines;
       logLines = Lists.newArrayList();
-      logLinesCount = logLines.size();
     }
-    if (linesToFlush.isEmpty()) {
-      return;
+    if (!linesToFlush.isEmpty()) {
+      @SuppressWarnings("unused") Future<?> unused =
+          outputExecutor.submit(() -> actuallyFlushLogLines(linesToFlush));
     }
+  }
 
+  private void actuallyFlushLogLines(List<String> linesToFlush) {
     Path logFile = getLogFilePath();
-    projectFilesystem.createParentDirs(logFile);
-    try (FileOutputStream stream = new FileOutputStream(logFile.toString(), /* append */ true);
-         OutputStreamWriter streamWriter = new OutputStreamWriter(stream, StandardCharsets.UTF_8);
-         PrintWriter writer = new PrintWriter(streamWriter)) {
-      for (String line : linesToFlush) {
-        writer.println(line);
+    try {
+      projectFilesystem.createParentDirs(logFile);
+      try (FileOutputStream stream = new FileOutputStream(logFile.toString(), /* append */ true);
+           OutputStreamWriter streamWriter = new OutputStreamWriter(stream, StandardCharsets.UTF_8);
+           PrintWriter writer = new PrintWriter(streamWriter)) {
+        for (String line : linesToFlush) {
+          writer.println(line);
+        }
       }
+    } catch (IOException e) {
+      LOG.error(e, "Failed to flush [%d] logLines to file [%s].", linesToFlush.size(), logFile);
     }
   }
 }
