@@ -38,7 +38,9 @@ public interface BuildRule extends Comparable<BuildRule> {
 
   @JsonProperty("name")
   @JsonView(JsonViews.MachineReadableLog.class)
-  String getFullyQualifiedName();
+  default String getFullyQualifiedName() {
+    return getBuildTarget().getFullyQualifiedName();
+  }
 
   @JsonProperty("type")
   String getType();
@@ -98,4 +100,12 @@ public interface BuildRule extends Comparable<BuildRule> {
   @SuppressWarnings("unused")
   default void appendToRuleKey(RuleKeyObjectSink sink) {}
 
+  @Override
+  default int compareTo(BuildRule that) {
+    if (this == that) {
+      return 0;
+    }
+
+    return this.getBuildTarget().compareTo(that.getBuildTarget());
+  }
 }

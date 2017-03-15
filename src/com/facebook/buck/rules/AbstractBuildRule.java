@@ -60,11 +60,6 @@ public abstract class AbstractBuildRule implements BuildRule {
   }
 
   @Override
-  public final String getFullyQualifiedName() {
-    return buildTarget.getFullyQualifiedName();
-  }
-
-  @Override
   public final ImmutableSortedSet<BuildRule> getDeps() {
     return deps.get();
   }
@@ -96,15 +91,6 @@ public abstract class AbstractBuildRule implements BuildRule {
   @Override
   public final ProjectFilesystem getProjectFilesystem() {
     return projectFilesystem;
-  }
-
-  @Override
-  public final int compareTo(BuildRule that) {
-    if (this == that) {
-      return 0;
-    }
-
-    return this.getBuildTarget().compareTo(that.getBuildTarget());
   }
 
   @Override

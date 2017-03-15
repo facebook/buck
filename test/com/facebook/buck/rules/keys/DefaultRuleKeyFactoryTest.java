@@ -666,11 +666,6 @@ public class DefaultRuleKeyFactoryTest {
     }
 
     @Override
-    public String getFullyQualifiedName() {
-      return target.getFullyQualifiedName();
-    }
-
-    @Override
     public String getType() {
       return "empty";
     }
@@ -700,11 +695,6 @@ public class DefaultRuleKeyFactoryTest {
     @Override
     public SourcePath getSourcePathToOutput() {
       return null;
-    }
-
-    @Override
-    public int compareTo(BuildRule o) {
-      throw new UnsupportedOperationException("compareTo");
     }
 
     @Override

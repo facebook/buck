@@ -138,11 +138,6 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
   }
 
   @Override
-  public String getFullyQualifiedName() {
-    return buildTarget.getFullyQualifiedName();
-  }
-
-  @Override
   public String toString() {
     return getFullyQualifiedName();
   }
@@ -185,15 +180,6 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
   @Override
   public int hashCode() {
     return buildTarget.hashCode();
-  }
-
-  @Override
-  public int compareTo(BuildRule that) {
-    if (this == that) {
-      return 0;
-    } else {
-      return this.getBuildTarget().compareTo(that.getBuildTarget());
-    }
   }
 
   @Override
