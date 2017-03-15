@@ -1082,7 +1082,7 @@ public class BuckConfig implements ConfigPathGetter {
   }
 
   public boolean getThriftTargetTypesEnabled() {
-    return getBooleanValue("project", "thrift_target_types_enabled", true);
+    return getBooleanValue("project", "thrift_target_types_enabled", false);
   }
 
   public Config getConfig() {

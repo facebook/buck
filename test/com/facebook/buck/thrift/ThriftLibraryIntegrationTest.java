@@ -88,7 +88,9 @@ public class ThriftLibraryIntegrationTest {
             "compiler = " + compiler,
             "compiler2 = " + compiler,
             "cpp_library = //thrift:fake",
-            "cpp_reflection_library = //thrift:fake")
+            "cpp_reflection_library = //thrift:fake",
+            "[project]",
+            "thrift_target_types_enabled = true")
         .build();
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
