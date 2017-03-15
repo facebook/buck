@@ -218,7 +218,7 @@ public class CxxGenruleDescription
     CxxPlatform cxxPlatform = cxxPlatforms.getRequiredValue(buildTarget);
     ImmutableMap.Builder<String, MacroExpander> macros = ImmutableMap.builder();
     macros.put("exe", new ExecutableMacroExpander());
-    macros.put("location", new LocationMacroExpander());
+    macros.put("location", new CxxLocationMacroExpander(cxxPlatform));
     macros.put("platform-name", new StringExpander(cxxPlatform.getFlavor().toString()));
     macros.put(
         "location-platform",
