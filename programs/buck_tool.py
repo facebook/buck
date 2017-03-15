@@ -52,7 +52,6 @@ EXPORTED_RESOURCES = [
     Resource("path_to_pex"),
     Resource("path_to_pywatchman"),
     Resource("path_to_typing"),
-    Resource("path_to_scandir_py", basename='scandir.py'),
     Resource("path_to_sh_binary_template"),
     Resource("jacoco_agent_jar"),
     Resource("report_generator_jar"),

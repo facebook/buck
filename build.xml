@@ -45,10 +45,9 @@
   <property name="pywatchman.dir" value="${third-party.dir}/py/pywatchman" />
   <property name="typing.dir" value="${third-party.dir}/py/typing/python2" />
   <property name="nailgun.dir" value="${third-party.dir}/nailgun" />
-  <property name="scandir.dir" value="${third-party.dir}/py/scandir" />
   <property name="testutil.integration.dir" value="${test.dir}/com/facebook/buck/testutil/integration" />
 
-  <property name="buck.pythonpath" value="${typing.dir}:${pathlib.dir}:${pywatchman.dir}:${nailgun.dir}:${scandir.dir}:${testutil.integration.dir}" />
+  <property name="buck.pythonpath" value="${typing.dir}:${pathlib.dir}:${pywatchman.dir}:${nailgun.dir}:${testutil.integration.dir}" />
 
   <property name="immutables-value-standalone.jar" value="${third-party.dir}/java/immutables/value-2.3.8.jar" />
 
@@ -678,7 +677,7 @@
     <fail if="hasFailingTests" />
   </target>
 
-  <target name="py-test" description="runs the Python tests" depends="buck-py-test, class-loader-py-test, log-rotation-py-test, pathlib-py-test, zip-munger-py-test, buck-tool-py-test, scandir-py-test" />
+  <target name="py-test" description="runs the Python tests" depends="buck-py-test, class-loader-py-test, log-rotation-py-test, pathlib-py-test, zip-munger-py-test, buck-tool-py-test" />
 
   <target name="buck-py-test" description="tests the BUCK parser">
     <exec executable="python" failonerror="true" dir="${basedir}/src/com/facebook/buck/json">
@@ -711,14 +710,6 @@
       <!-- Needed on Python 2.6. -->
       <env key="PYTHONPATH" path="${unittest2.dir}" />
       <arg value="test_pathlib.py" />
-    </exec>
-  </target>
-
-  <target name="scandir-py-test" description="tests scandir.py">
-    <exec executable="python" failonerror="true" dir="${scandir.dir}/test">
-      <!-- Needed on Python 2.6. -->
-      <env key="PYTHONPATH" path="${unittest2.dir}" />
-      <arg value="run_tests.py" />
     </exec>
   </target>
 
