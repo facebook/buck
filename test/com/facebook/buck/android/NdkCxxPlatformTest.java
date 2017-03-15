@@ -230,6 +230,7 @@ public class NdkCxxPlatformTest {
                       .setGccVersion("clang-version")
                       .build(),
                   NdkCxxPlatforms.CxxRuntime.GNUSTL,
+                  NdkCxxPlatforms.DEFAULT_CXX_RUNTIME_TYPE,
                   "target-app-platform",
                   ImmutableSet.of("x86"),
                   platform,

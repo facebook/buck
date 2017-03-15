@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 
@@ -69,6 +70,10 @@ public class AndroidBuckConfig {
 
   public Optional<NdkCxxPlatforms.CxxRuntime> getNdkCxxRuntime() {
     return delegate.getEnum("ndk", "cxx_runtime", NdkCxxPlatforms.CxxRuntime.class);
+  }
+
+  public Optional<Linker.CxxRuntimeType> getNdkCxxRuntimeType() {
+    return delegate.getEnum("ndk", "cxx_runtime_type", Linker.CxxRuntimeType.class);
   }
 
   /**

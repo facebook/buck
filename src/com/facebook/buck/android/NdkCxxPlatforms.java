@@ -89,6 +89,8 @@ public class NdkCxxPlatforms {
       ImmutableSet.of("arm", "armv7", "x86");
   public static final NdkCxxPlatforms.CxxRuntime DEFAULT_CXX_RUNTIME =
       NdkCxxPlatforms.CxxRuntime.GNUSTL;
+  public static final Linker.CxxRuntimeType DEFAULT_CXX_RUNTIME_TYPE =
+      Linker.CxxRuntimeType.DYNAMIC;
 
   private static final ImmutableMap<Platform, Host> BUILD_PLATFORMS =
       ImmutableMap.of(
@@ -141,6 +143,7 @@ public class NdkCxxPlatforms {
       Path ndkRoot,
       NdkCxxPlatformCompiler compiler,
       CxxRuntime cxxRuntime,
+      Linker.CxxRuntimeType cxxRuntimeType,
       String androidPlatform,
       Set<String> cpuAbis,
       Platform platform) {
@@ -150,6 +153,7 @@ public class NdkCxxPlatforms {
         ndkRoot,
         compiler,
         cxxRuntime,
+        cxxRuntimeType,
         androidPlatform,
         cpuAbis,
         platform,
@@ -166,6 +170,7 @@ public class NdkCxxPlatforms {
       Path ndkRoot,
       NdkCxxPlatformCompiler compiler,
       CxxRuntime cxxRuntime,
+      Linker.CxxRuntimeType cxxRuntimeType,
       String androidPlatform,
       Set<String> cpuAbis,
       Platform platform,
@@ -189,6 +194,7 @@ public class NdkCxxPlatforms {
               ndkRoot,
               targetConfiguration,
               cxxRuntime,
+              cxxRuntimeType,
               executableFinder,
               strictToolchainPaths);
       ndkCxxPlatformBuilder.put(TargetCpuType.ARM, armeabi);
@@ -209,6 +215,7 @@ public class NdkCxxPlatforms {
               ndkRoot,
               targetConfiguration,
               cxxRuntime,
+              cxxRuntimeType,
               executableFinder,
               strictToolchainPaths);
       ndkCxxPlatformBuilder.put(TargetCpuType.ARMV7, armeabiv7);
@@ -229,6 +236,7 @@ public class NdkCxxPlatforms {
               ndkRoot,
               targetConfiguration,
               cxxRuntime,
+              cxxRuntimeType,
               executableFinder,
               strictToolchainPaths);
       ndkCxxPlatformBuilder.put(TargetCpuType.ARM64, arm64);
@@ -249,6 +257,7 @@ public class NdkCxxPlatforms {
               ndkRoot,
               targetConfiguration,
               cxxRuntime,
+              cxxRuntimeType,
               executableFinder,
               strictToolchainPaths);
       ndkCxxPlatformBuilder.put(TargetCpuType.X86, x86);
@@ -272,6 +281,7 @@ public class NdkCxxPlatforms {
               ndkRoot,
               targetConfiguration,
               cxxRuntime,
+              cxxRuntimeType,
               executableFinder,
               strictToolchainPaths);
       ndkCxxPlatformBuilder.put(TargetCpuType.X86_64, x86_64);
@@ -491,6 +501,7 @@ public class NdkCxxPlatforms {
       Path ndkRoot,
       NdkCxxPlatformTargetConfiguration targetConfiguration,
       CxxRuntime cxxRuntime,
+      Linker.CxxRuntimeType cxxRuntimeType,
       ExecutableFinder executableFinder,
       boolean strictToolchainPaths) {
     // Create a version string to use when generating rule keys via the NDK tools we'll generate
@@ -656,7 +667,10 @@ public class NdkCxxPlatforms {
 
     if (cxxRuntime != CxxRuntime.SYSTEM) {
       cxxPlatformBuilder.putRuntimeLdflags(
-          Linker.LinkableDepType.SHARED, "-l" + cxxRuntime.getSharedName());
+          Linker.LinkableDepType.SHARED, "-l" +
+              (cxxRuntimeType == Linker.CxxRuntimeType.DYNAMIC ?
+                  cxxRuntime.getSharedName() :
+                  cxxRuntime.getStaticName()));
       cxxPlatformBuilder.putRuntimeLdflags(
           Linker.LinkableDepType.STATIC, "-l" + cxxRuntime.getStaticName());
     }

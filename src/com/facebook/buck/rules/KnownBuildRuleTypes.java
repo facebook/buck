@@ -383,6 +383,7 @@ public class KnownBuildRuleTypes {
               ndkRoot.get(),
               compiler,
               androidConfig.getNdkCxxRuntime().orElse(NdkCxxPlatforms.DEFAULT_CXX_RUNTIME),
+              androidConfig.getNdkCxxRuntimeType().orElse(NdkCxxPlatforms.DEFAULT_CXX_RUNTIME_TYPE),
               androidConfig.getNdkAppPlatform().orElse(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM),
               androidConfig.getNdkCpuAbis().orElse(NdkCxxPlatforms.DEFAULT_CPU_ABIS),
               platform));
