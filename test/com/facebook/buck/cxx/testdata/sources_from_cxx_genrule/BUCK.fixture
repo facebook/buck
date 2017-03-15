@@ -10,3 +10,19 @@ cxx_library(
     ':foo',
   ],
 )
+
+cxx_genrule(
+  name = 'foo.h',
+  out = 'foo.h',
+  cmd = 'touch $OUT',
+)
+
+cxx_library(
+  name = 'lib_header',
+  headers = [
+    ':foo.h',
+  ],
+  srcs = [
+    'foo.c',
+  ],
+)

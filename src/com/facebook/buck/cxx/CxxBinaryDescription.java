@@ -77,7 +77,8 @@ public class CxxBinaryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
-      A args) {
+      A args)
+      throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
@@ -86,6 +87,8 @@ public class CxxBinaryDescription implements
         cxxPlatform,
         CxxDescriptionEnhancer.parseHeaders(
             params.getBuildTarget(),
+            resolver,
+            ruleFinder,
             pathResolver,
             Optional.of(cxxPlatform),
             args),

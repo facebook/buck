@@ -91,6 +91,13 @@ public class CxxGenruleDescription
     this.cxxPlatforms = cxxPlatforms;
   }
 
+  public static boolean wrapsCxxGenrule(
+      SourcePathRuleFinder ruleFinder,
+      SourcePath path) {
+    Optional<BuildRule> rule = ruleFinder.getRule(path);
+    return rule.map(CxxGenrule.class::isInstance).orElse(false);
+  }
+
   /**
    * @return a new {@link BuildTargetSourcePath} for an existing {@link BuildTargetSourcePath} which
    *         refers to a {@link CxxGenrule} with the given {@code platform} flavor applied.

@@ -93,6 +93,7 @@ import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Cell;
@@ -1569,12 +1570,18 @@ public class ProjectGenerator {
       BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-      return ImmutableSortedMap.copyOf(
-          CxxDescriptionEnhancer.parseExportedHeaders(
-              targetNode.getBuildTarget(),
-              pathResolver,
-              Optional.empty(),
-              arg));
+      try {
+        return ImmutableSortedMap.copyOf(
+            CxxDescriptionEnhancer.parseExportedHeaders(
+                targetNode.getBuildTarget(),
+                resolver,
+                ruleFinder,
+                pathResolver,
+                Optional.empty(),
+                arg));
+      } catch (NoSuchBuildTargetException e) {
+        throw new RuntimeException(e);
+      }
     }
   }
 
@@ -1595,12 +1602,18 @@ public class ProjectGenerator {
       BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-      return ImmutableSortedMap.copyOf(
-          CxxDescriptionEnhancer.parseHeaders(
-              targetNode.getBuildTarget(),
-              pathResolver,
-              Optional.empty(),
-              arg));
+      try {
+        return ImmutableSortedMap.copyOf(
+            CxxDescriptionEnhancer.parseHeaders(
+                targetNode.getBuildTarget(),
+                resolver,
+                ruleFinder,
+                pathResolver,
+                Optional.empty(),
+                arg));
+      } catch (NoSuchBuildTargetException e) {
+        throw new RuntimeException(e);
+      }
     }
   }
 

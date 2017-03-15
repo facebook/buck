@@ -380,6 +380,8 @@ public final class CxxInferEnhancer {
 
     ImmutableMap<Path, SourcePath> headers = CxxDescriptionEnhancer.parseHeaders(
         params.getBuildTarget(),
+        resolver,
+        ruleFinder,
         pathResolver,
         Optional.of(cxxPlatform),
         args);

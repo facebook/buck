@@ -130,6 +130,8 @@ public class CxxLuaExtensionDescription implements
     ImmutableMap<Path, SourcePath> headers =
         CxxDescriptionEnhancer.parseHeaders(
             params.getBuildTarget(),
+            ruleResolver,
+            ruleFinder,
             pathResolver,
             Optional.of(cxxPlatform),
             args);

@@ -196,6 +196,8 @@ public class CxxLibraryDescription implements
             cxxPlatform,
             CxxDescriptionEnhancer.parseHeaders(
                 params.getBuildTarget(),
+                ruleResolver,
+                ruleFinder,
                 sourcePathResolver,
                 Optional.of(cxxPlatform),
                 args),
@@ -483,15 +485,20 @@ public class CxxLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
-      A args) {
+      A args)
+      throws NoSuchBuildTargetException {
     boolean shouldCreatePrivateHeaderSymlinks = args.xcodePrivateHeadersSymlinks.orElse(true);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
         resolver,
         cxxPlatform,
         CxxDescriptionEnhancer.parseHeaders(
             params.getBuildTarget(),
-            new SourcePathResolver(new SourcePathRuleFinder(resolver)),
+            resolver,
+            ruleFinder,
+            pathResolver,
             Optional.of(cxxPlatform),
             args),
         HeaderVisibility.PRIVATE,
@@ -505,14 +512,19 @@ public class CxxLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPreprocessables.HeaderMode mode,
-      A args) {
+      A args)
+      throws NoSuchBuildTargetException {
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
         resolver,
         mode,
         CxxDescriptionEnhancer.parseExportedHeaders(
             params.getBuildTarget(),
-            new SourcePathResolver(new SourcePathRuleFinder(resolver)),
+            resolver,
+            ruleFinder,
+            pathResolver,
             Optional.empty(),
             args),
         HeaderVisibility.PUBLIC);
@@ -525,15 +537,20 @@ public class CxxLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
-      A args) {
+      A args)
+      throws NoSuchBuildTargetException {
     boolean shouldCreatePublicHeaderSymlinks = args.xcodePublicHeadersSymlinks.orElse(true);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
         resolver,
         cxxPlatform,
         CxxDescriptionEnhancer.parseExportedPlatformHeaders(
             params.getBuildTarget(),
-            new SourcePathResolver(new SourcePathRuleFinder(resolver)),
+            resolver,
+            ruleFinder,
+            pathResolver,
             cxxPlatform,
             args),
         HeaderVisibility.PUBLIC,

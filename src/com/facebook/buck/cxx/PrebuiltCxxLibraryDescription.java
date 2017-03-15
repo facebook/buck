@@ -323,7 +323,8 @@ public class PrebuiltCxxLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
-      A args) {
+      A args)
+      throws NoSuchBuildTargetException {
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
         resolver,
@@ -337,24 +338,29 @@ public class PrebuiltCxxLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
-      A args) {
+      A args)
+      throws NoSuchBuildTargetException {
     ImmutableMap.Builder<String, SourcePath> headers = ImmutableMap.builder();
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    CxxDescriptionEnhancer.putAllHeaders(
-        args.exportedHeaders,
-        headers,
-        pathResolver,
-        "exported_headers",
-        params.getBuildTarget());
-    for (SourceList sourceList :
-        args.exportedPlatformHeaders.getMatchingValues(cxxPlatform.getFlavor().toString())) {
-      CxxDescriptionEnhancer.putAllHeaders(
-          sourceList,
-          headers,
-          pathResolver,
-          "exported_platform_headers",
-          params.getBuildTarget());
-    }
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    headers.putAll(
+        CxxDescriptionEnhancer.parseOnlyHeaders(
+            params.getBuildTarget(),
+            ruleFinder,
+            pathResolver,
+            "exported_headers",
+            args.exportedHeaders));
+    headers.putAll(
+        CxxDescriptionEnhancer.parseOnlyPlatformHeaders(
+            params.getBuildTarget(),
+            resolver,
+            ruleFinder,
+            pathResolver,
+            cxxPlatform,
+            "exported_headers",
+            args.exportedHeaders,
+            "exported_platform, headers",
+            args.exportedPlatformHeaders));
     return CxxPreprocessables.resolveHeaderMap(
         args.headerNamespace.map(Paths::get).orElse(params.getBuildTarget().getBasePath()),
         headers.build());

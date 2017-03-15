@@ -1437,6 +1437,32 @@ public class CxxLibraryDescriptionTest {
     verifySourcePaths(ruleResolver);
   }
 
+  @Test
+  public void headersFromCxxGenrule() throws Exception {
+    CxxGenruleBuilder srcBuilder =
+        new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:src"))
+            .setOut("foo.h");
+    CxxLibraryBuilder libraryBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.cpp"))))
+            .setHeaders(
+                ImmutableSortedSet.of(
+                    new DefaultBuildTargetSourcePath(srcBuilder.getTarget())));
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            srcBuilder.build(),
+            libraryBuilder.build());
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(
+            targetGraph,
+            new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver.requireRule(
+        libraryBuilder.getTarget().withAppendedFlavors(
+            CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
+            CxxLibraryDescription.Type.STATIC.getFlavor()));
+    verifySourcePaths(ruleResolver);
+  }
+
   /**
    * Verify that all source paths are resolvable, which wouldn't be the case if `cxx_genrule`
    * outputs were not handled correctly.

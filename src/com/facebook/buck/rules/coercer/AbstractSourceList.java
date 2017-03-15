@@ -33,7 +33,10 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import org.immutables.value.Value;
 
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -98,21 +101,37 @@ abstract class AbstractSourceList implements TargetTranslatable<SourceList> {
   public ImmutableMap<String, SourcePath> toNameMap(
       BuildTarget buildTarget,
       SourcePathResolver pathResolver,
-      String parameterName) {
+      String parameterName,
+      Predicate<SourcePath> filter,
+      Function<SourcePath, SourcePath> transform) {
+
     ImmutableMap.Builder<String, SourcePath> sources = ImmutableMap.builder();
     switch (getType()) {
       case NAMED:
-        sources.putAll(getNamedSources().get());
+        for (Map.Entry<String, SourcePath> ent : getNamedSources().get().entrySet()) {
+          if (filter.test(ent.getValue())) {
+            sources.put(ent.getKey(), transform.apply(ent.getValue()));
+          }
+        }
         break;
       case UNNAMED:
-        sources.putAll(
-            pathResolver.getSourcePathNames(
-                buildTarget,
-                parameterName,
-                getUnnamedSources().get()));
+        pathResolver.getSourcePathNames(
+            buildTarget,
+            parameterName,
+            getUnnamedSources().get(),
+            filter,
+            transform)
+            .forEach((name, path) -> sources.put(name, transform.apply(path)));
         break;
     }
     return sources.build();
+  }
+
+  public ImmutableMap<String, SourcePath> toNameMap(
+      BuildTarget buildTarget,
+      SourcePathResolver pathResolver,
+      String parameterName) {
+    return toNameMap(buildTarget, pathResolver, parameterName, x -> true, x -> x);
   }
 
   public ImmutableList<SourcePath> getPaths() {

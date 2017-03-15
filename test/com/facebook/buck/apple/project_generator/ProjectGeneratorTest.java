@@ -79,6 +79,7 @@ import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.halide.HalideLibraryBuilder;
 import com.facebook.buck.halide.HalideLibraryDescription;
@@ -4716,10 +4717,27 @@ public class ProjectGeneratorTest {
 
   private Function<TargetNode<?, ?>, BuildRuleResolver> getBuildRuleResolverNodeFunction(
       final TargetGraph targetGraph) {
-    return input ->
+    BuildRuleResolver resolver =
         new BuildRuleResolver(
             targetGraph,
             new DefaultTargetNodeToBuildRuleTransformer());
+    AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException> bottomUpTraversal =
+        new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(targetGraph) {
+          @Override
+          @SuppressWarnings("PMD.EmptyCatchBlock")
+          public void visit(TargetNode<?, ?> node) {
+            try {
+              resolver.requireRule(node.getBuildTarget());
+            } catch (Exception e) {
+              // NOTE(agallagher): A large number of the tests appear to setup their target nodes
+              // incorrectly, causing action graph creation to fail with lots of missing expected
+              // Apple C/C++ platform flavors.  This is gross, but to support tests that need a
+              // complete sub-action graph, just skip over the errors.
+            }
+          }
+        };
+    bottomUpTraversal.traverse();
+    return input -> resolver;
   }
 
   private Function<TargetNode<?, ?>, BuildRuleResolver>

@@ -23,8 +23,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -37,6 +35,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class SourcePathResolver {
 
@@ -174,7 +174,7 @@ public class SourcePathResolver {
       BuildTarget target,
       String parameter,
       Iterable<SourcePath> sourcePaths) {
-    return getSourcePathNames(target, parameter, sourcePaths, Functions.identity());
+    return getSourcePathNames(target, parameter, sourcePaths, x -> true, x -> x);
   }
 
   /**
@@ -185,20 +185,23 @@ public class SourcePathResolver {
       BuildTarget target,
       String parameter,
       Iterable<T> objects,
+      Predicate<T> filter,
       Function<T, SourcePath> objectSourcePathFunction) {
 
     Map<String, T> resolved = Maps.newLinkedHashMap();
 
     for (T object : objects) {
-      SourcePath path = objectSourcePathFunction.apply(object);
-      String name = getSourcePathName(target, path);
-      T old = resolved.put(name, object);
-      if (old != null) {
-        throw new HumanReadableException(String.format(
-            "%s: parameter '%s': duplicate entries for '%s'",
-            target,
-            parameter,
-            name));
+      if (filter.test(object)) {
+        SourcePath path = objectSourcePathFunction.apply(object);
+        String name = getSourcePathName(target, path);
+        T old = resolved.put(name, object);
+        if (old != null) {
+          throw new HumanReadableException(String.format(
+              "%s: parameter '%s': duplicate entries for '%s'",
+              target,
+              parameter,
+              name));
+        }
       }
     }
 
