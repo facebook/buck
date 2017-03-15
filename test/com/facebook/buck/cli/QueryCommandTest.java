@@ -43,16 +43,19 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import org.easymock.EasyMock;
 import org.easymock.EasyMockRule;
+import org.easymock.EasyMockRunner;
 import org.easymock.Mock;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 
+@RunWith(EasyMockRunner.class)
 public class QueryCommandTest {
 
   private QueryCommand queryCommand;

@@ -22,11 +22,13 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -36,6 +38,9 @@ public class JsRulesIntegrationTest {
 
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   private ProjectWorkspace workspace;
   private ProjectFilesystem projectFilesystem;
@@ -106,5 +111,31 @@ public class JsRulesIntegrationTest {
         .assertSuccess();
 
     workspace.verify(Paths.get("same_target_with_and_without_flavors.expected"), genPath);
+  }
+
+  @Test
+  public void testBundleBuild() throws IOException {
+    workspace
+        .runBuckBuild("//js:fruit-salad-in-a-bundle")
+        .assertSuccess();
+
+    workspace.verify(Paths.get("simple_bundle.expected"), genPath);
+  }
+
+  @Test
+  public void testBundleBuildWithName() throws IOException {
+    workspace
+        .runBuckBuild("//js:fruit-with-extras")
+        .assertSuccess();
+
+    workspace.verify(Paths.get("named_flavored_bundle.expected"), genPath);
+  }
+
+  @Test
+  public void testBundleWithNonLibraryDeps() throws IOException {
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage("js_bundle target '//js:bundle-with-genrule-dep' can only depend on " +
+        "js_library targets, but one of its dependencies, '//js:a-genrule', is of type genrule.");
+    workspace.runBuckBuild("//js:bundle-with-genrule-dep");
   }
 }

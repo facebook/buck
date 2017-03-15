@@ -30,11 +30,9 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.WorkerTool;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -65,7 +63,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescription.Ar
     // created JsFile rules.
     // For the JsLibrary case, we want to propagate flavors to library dependencies
     // For the JsFile case, we only want to depend on the worker, not on any libraries
-    params = withWorkerDependencyOnly(params, resolver, args.worker);
+    params = JsUtil.withWorkerDependencyOnly(params, resolver, args.worker);
 
     final WorkerTool worker = resolver.getRuleWithType(args.worker, WorkerTool.class);
     final ImmutableBiMap<SourcePath, Flavor> sourcesToFlavors =
@@ -131,8 +129,9 @@ public class JsLibraryDescription implements Description<JsLibraryDescription.Ar
         ImmutableSortedSet<BuildTarget> libraryDependencies)
         throws NoSuchBuildTargetException {
 
+      BuildTarget buildTarget = baseParams.getBuildTarget();
       final BuildTarget[] targets = libraryDependencies.stream()
-          .map(this::verifyIsJsLibraryTarget)
+          .map(t -> JsUtil.verifyIsJsLibraryTarget(t, buildTarget, targetGraph))
           .map(hasFlavors() ? this::addFlavorsToLibraryTarget : Function.identity())
           .toArray(BuildTarget[]::new);
 
@@ -170,20 +169,6 @@ public class JsLibraryDescription implements Description<JsLibraryDescription.Ar
       final BuildTarget target = baseParams.getBuildTarget().withAppendedFlavors(fileFlavor);
       resolver.requireRule(target);
       return resolver.getRuleWithType(target, JsFile.class);
-    }
-
-    private BuildTarget verifyIsJsLibraryTarget(BuildTarget target) {
-      Description<?> description = targetGraph.get(target).getDescription();
-      if (description.getClass() != JsLibraryDescription.class) {
-        throw new HumanReadableException(
-            "js_library target %s can only depend on other js_library targets, but one of its " +
-                "dependencies, %s, is of type %s",
-            baseParams.getBuildTarget(),
-            target,
-            Description.getBuildRuleType(description).getName());
-      }
-
-      return target;
     }
 
     private BuildTarget addFlavorsToLibraryTarget(BuildTarget unflavored) {
@@ -226,15 +211,6 @@ public class JsLibraryDescription implements Description<JsLibraryDescription.Ar
             .stream()
             .filter(JsFlavors::isFileFlavor)
             .toArray(Flavor[]::new));
-  }
-
-  private static BuildRuleParams withWorkerDependencyOnly(
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      BuildTarget worker) {
-    return params.copyWithDeps(
-        Suppliers.ofInstance(ImmutableSortedSet.of()),
-        Suppliers.ofInstance(ImmutableSortedSet.of(resolver.getRule(worker))));
   }
 
   private static ImmutableBiMap<SourcePath, Flavor> mapSourcesToFlavors(

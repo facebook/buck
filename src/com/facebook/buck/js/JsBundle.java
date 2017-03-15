@@ -16,7 +16,6 @@
 
 package com.facebook.buck.js;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -26,53 +25,59 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.util.stream.Stream;
 
-public class JsLibrary extends AbstractBuildRule {
-
-  @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> libraryDependencies;
+public class JsBundle extends AbstractBuildRule {
 
   @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> sources;
+  private final String bundleName;
+
+  @AddToRuleKey
+  private final ImmutableSet<String> entryPoints;
+
+  @AddToRuleKey
+  private final ImmutableSortedSet<SourcePath> libraries;
 
   @AddToRuleKey
   private final WorkerTool worker;
 
-  protected JsLibrary(
+  protected JsBundle(
       BuildRuleParams params,
-      ImmutableSortedSet<SourcePath> sources,
-      ImmutableSortedSet<SourcePath> libraryDependencies,
+      ImmutableSortedSet<SourcePath> libraries,
+      ImmutableSet<String> entryPoints,
+      String bundleName,
       WorkerTool worker) {
     super(params);
-    this.libraryDependencies = libraryDependencies;
-    this.sources = sources;
+    this.bundleName = bundleName;
+    this.entryPoints = entryPoints;
+    this.libraries = libraries;
     this.worker = worker;
   }
+
 
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
     final SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
-
     final Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
-    final String jobArgs = String.format(
-        "library %s %s %s",
-        JsUtil.resolveMapJoin(libraryDependencies, sourcePathResolver, p -> "--dep " + p),
-        JsUtil.resolveMapJoin(sources, sourcePathResolver, Path::toString),
+
+    String jobArgs = String.format(
+        "bundle %s %s %s",
+        JsUtil.resolveMapJoin(libraries, sourcePathResolver, p -> "--lib " + p),
+        String.join(" ", entryPoints),
         outputPath);
     return ImmutableList.of(
-        new RmStep(getProjectFilesystem(), outputPath),
+        new RmStep(
+            getProjectFilesystem(),
+            outputPath),
         JsUtil.workerShellStep(
             worker,
             jobArgs,
@@ -85,17 +90,9 @@ public class JsLibrary extends AbstractBuildRule {
   public SourcePath getSourcePathToOutput() {
     return new ExplicitBuildTargetSourcePath(
         getBuildTarget(),
-        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.json"));
-  }
-
-  Stream<BuildTarget> getLibraryDependencies(SourcePathRuleFinder ruleFinder) {
-    return libraryDependencies.stream()
-        .map(sourcePath ->
-            ruleFinder.getRule(sourcePath).orElseThrow(() -> new HumanReadableException(
-                "js_library %s has '%s' as a dep, but js_library can only have other " +
-                    "js_library targets as dep",
-                getBuildTarget(),
-                sourcePath)
-            ).getBuildTarget());
+        BuildTargets.getGenPath(
+            getProjectFilesystem(),
+            getBuildTarget(),
+            "%s/" + bundleName));
   }
 }

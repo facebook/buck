@@ -30,3 +30,31 @@ js_library(
     deps = [':fruit', ':extras'],
     worker = ':packager_worker',
 )
+
+js_bundle(
+    name = 'fruit-salad-in-a-bundle',
+    libs = [':fruit-salad'],
+    entry = 'fruit-salad',
+    worker = ':packager_worker',
+)
+
+js_bundle(
+    name = 'fruit-with-extras',
+    bundle_name = 'some-fruit-with-delicious-extras.js',
+    entry = ['yoghurt', 'banana', 'apple'],
+    libs = [':extras', ':fruit'],
+    worker = ':packager_worker',
+)
+
+genrule(
+    name = 'a-genrule',
+    cmd = 'echo',
+    out = 'arbitrary',
+)
+
+js_bundle(
+    name = 'bundle-with-genrule-dep',
+    libs = [':a-genrule'],
+    entry = 'arbitrary',
+    worker = ':packager_worker',
+)

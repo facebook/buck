@@ -46,8 +46,8 @@ run_command() {
   while [[ $# -gt 1 ]]; do
     if [[ "$1" == --* ]]; then
       args=$(concat $args "$1")
-      if [ "$1" == --dep ]; then
-        args=$(concat $args "${2/*\/buck-out\//buck-out/}")
+      if [ "$1" == --dep -o "$1" == --lib ]; then
+        args=$(concat $args "${2/\/*\/buck-out\//@/buck-out/}")
         infiles=$(concat $infiles "$2")
         shift
       elif [[ "$2" != --* ]]; then

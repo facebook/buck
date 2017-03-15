@@ -1,4 +1,4 @@
-library --dep @/buck-out/gen/js/extras.json --dep @/buck-out/gen/js/fruit.json
+bundle --lib @/buck-out/gen/js/extras.json --lib @/buck-out/gen/js/fruit.json yoghurt banana apple
 library
 transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
 var choclateChips;
@@ -11,5 +11,3 @@ transform --filename js/banana.js
 var banana;
 transform --filename js/pear.js
 var pear;
-transform --filename js/fruit-salad.js
-var fruitSalad;
