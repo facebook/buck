@@ -110,7 +110,9 @@ public class BuildTargetParser {
     checkBaseName(baseName, buildTargetName);
 
     UnflavoredBuildTarget.Builder unflavoredBuilder =
-        UnflavoredBuildTarget.builder(baseName, shortName)
+        UnflavoredBuildTarget.builder()
+            .setBaseName(baseName)
+            .setShortName(shortName)
             // Set the cell path correctly. Because the cellNames comes from the owning cell we can
             // be sure that if this doesn't throw an exception the target cell is visible to the
             // owning cell.

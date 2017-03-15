@@ -111,14 +111,6 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
     return getBaseName().equals("//");
   }
 
-  public static Builder builder(String baseName, String shortName) {
-    return UnflavoredBuildTarget
-        .builder()
-        .setCell(Optional.empty())
-        .setBaseName(baseName)
-        .setShortName(shortName);
-  }
-
   public static Builder builder() {
     return new Builder();
   }

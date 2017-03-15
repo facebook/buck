@@ -72,7 +72,9 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
               basePath,
               otherBasePath));
     }
-    return UnflavoredBuildTarget.builder(UnflavoredBuildTarget.BUILD_TARGET_PREFIX + basePath, name)
+    return UnflavoredBuildTarget.builder()
+        .setBaseName(UnflavoredBuildTarget.BUILD_TARGET_PREFIX + basePath)
+        .setShortName(name)
         .setCellPath(cellRoot)
         .build();
   }

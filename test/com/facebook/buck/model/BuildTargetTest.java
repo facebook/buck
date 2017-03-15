@@ -146,8 +146,11 @@ public class BuildTargetTest {
 
   @Test
   public void testGetUnflavoredTarget() {
-    UnflavoredBuildTarget unflavoredTarget =
-        UnflavoredBuildTarget.builder("//foo/bar", "baz").setCellPath(ROOT).build();
+    UnflavoredBuildTarget unflavoredTarget = UnflavoredBuildTarget.builder()
+        .setBaseName("//foo/bar")
+        .setShortName("baz")
+        .setCellPath(ROOT)
+        .build();
 
     BuildTarget flavoredTarget = BuildTarget
         .builder(ROOT, "//foo/bar", "baz")
