@@ -51,7 +51,6 @@ public class FrontendOnlyJavacTask extends JavacTask {
   private final TreeBackedElements elements;
   private final TreeBackedTrees trees;
   private final TreeBackedTypes types;
-  private final TypeResolverFactory resolverFactory;
 
   @Nullable
   private Iterable<? extends CompilationUnitTree> parsedCompilationUnits;
@@ -63,10 +62,9 @@ public class FrontendOnlyJavacTask extends JavacTask {
     javacElements = javacTask.getElements();
     javacTrees = Trees.instance(javacTask);
     types = new TreeBackedTypes(javacTask.getTypes());
-    elements = new TreeBackedElements(javacElements, javacTrees, types);
+    elements = new TreeBackedElements(javacElements, javacTrees);
     trees = new TreeBackedTrees(javacTrees, elements);
-    resolverFactory = new TypeResolverFactory(elements, types, javacTrees);
-    elements.setResolverFactory(resolverFactory);
+    elements.setResolver(new TreeBackedElementResolver(elements, javacTrees, types));
   }
 
   @Override

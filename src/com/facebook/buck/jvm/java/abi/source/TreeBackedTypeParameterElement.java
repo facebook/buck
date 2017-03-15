@@ -29,7 +29,6 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Types;
 
 /**
  * An implementation of {@link TypeParameterElement} that uses only the information available from a
@@ -46,11 +45,10 @@ class TreeBackedTypeParameterElement extends TreeBackedElement implements TypePa
       TypeParameterElement underlyingElement,
       TreePath path,
       TreeBackedElement enclosingElement,
-      TypeResolverFactory resolverFactory,
-      Types types) {
-    super(underlyingElement, enclosingElement, path, resolverFactory);
+      TreeBackedElementResolver resolver) {
+    super(underlyingElement, enclosingElement, path, resolver);
     this.tree = (TypeParameterTree) path.getLeaf();
-    typeVar = new StandaloneTypeVariable(types, this);
+    typeVar = resolver.createType(this);
 
     // In javac's implementation, enclosingElement does not have type parameters in the return
     // value of getEnclosedElements
@@ -70,13 +68,13 @@ class TreeBackedTypeParameterElement extends TreeBackedElement implements TypePa
   @Override
   public List<? extends TypeMirror> getBounds() {
     if (bounds == null) {
-      TypeResolver resolver = getResolver();
+      TreeBackedElementResolver resolver = getResolver();
       if (tree.getBounds().isEmpty()) {
         bounds = Collections.singletonList(resolver.getJavaLangObject());
       } else {
         bounds = Collections.unmodifiableList(
             tree.getBounds().stream()
-                .map(boundTree -> resolver.resolveType(boundTree))
+                .map(boundTree -> resolver.resolveType(this, boundTree))
                 .collect(Collectors.toList()));
       }
     }

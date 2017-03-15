@@ -42,10 +42,8 @@ abstract class TreeBackedElement implements Element {
   @Nullable
   private final TreeBackedElement enclosingElement;
   private final List<Element> enclosedElements = new ArrayList<>();
-  private final TypeResolverFactory resolverFactory;
+  private final TreeBackedElementResolver resolver;
 
-  @Nullable
-  private TypeResolver resolver;
   @Nullable
   private final TreePath path;
 
@@ -53,24 +51,20 @@ abstract class TreeBackedElement implements Element {
       Element underlyingElement,
       @Nullable TreeBackedElement enclosingElement,
       @Nullable TreePath path,
-      TypeResolverFactory resolverFactory) {
+      TreeBackedElementResolver resolver) {
     this.underlyingElement = underlyingElement;
     this.enclosingElement = enclosingElement;
     // Some element types don't appear as members of enclosingElement.getEnclosedElements, so
     // it's up to each subtype's constructor to decide whether to add itself or not.
     this.path = path;
-    this.resolverFactory = resolverFactory;
+    this.resolver = resolver;
   }
 
   /* package */ Element getUnderlyingElement() {
     return underlyingElement;
   }
 
-  protected final TypeResolver getResolver() {
-    if (resolver == null) {
-      resolver = resolverFactory.newInstance(this);
-    }
-
+  protected final TreeBackedElementResolver getResolver() {
     return resolver;
   }
 

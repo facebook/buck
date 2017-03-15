@@ -44,26 +44,21 @@ import javax.lang.model.util.Elements;
  */
 class TreeBackedElements implements Elements {
   private final Elements javacElements;
-  private final TreeBackedTypes treeBackedTypes;
   private final Trees javacTrees;
   private final Map<Element, TreeBackedElement> treeBackedElements = new HashMap<>();
   private final Map<Name, TypeElement> knownTypes = new HashMap<>();
   private final Map<Name, TreeBackedPackageElement> knownPackages = new HashMap<>();
 
   @Nullable
-  private TypeResolverFactory resolverFactory;
+  private TreeBackedElementResolver resolver;
 
-  public TreeBackedElements(
-      Elements javacElements,
-      Trees javacTrees,
-      TreeBackedTypes treeBackedTypes) {
+  public TreeBackedElements(Elements javacElements, Trees javacTrees) {
     this.javacElements = javacElements;
     this.javacTrees = javacTrees;
-    this.treeBackedTypes = treeBackedTypes;
   }
 
-  /* package */ void setResolverFactory(TypeResolverFactory resolverFactory) {
-    this.resolverFactory = resolverFactory;
+  /* package */ void setResolver(TreeBackedElementResolver resolver) {
+    this.resolver = resolver;
   }
 
   public TreeBackedElement enterElement(Element underlyingElement) {
@@ -100,7 +95,7 @@ class TreeBackedElements implements Elements {
     TreeBackedPackageElement treeBackedPackage =
         new TreeBackedPackageElement(
             underlyingPackage,
-            Preconditions.checkNotNull(resolverFactory));
+            Preconditions.checkNotNull(resolver));
 
     knownPackages.put(treeBackedPackage.getQualifiedName(), treeBackedPackage);
 
@@ -113,8 +108,8 @@ class TreeBackedElements implements Elements {
             underlyingType,
             enterElement(underlyingType.getEnclosingElement()),
             Preconditions.checkNotNull(javacTrees.getPath(underlyingType)),
-            Preconditions.checkNotNull(resolverFactory),
-            treeBackedTypes);
+            Preconditions.checkNotNull(resolver)
+        );
 
     knownTypes.put(treeBackedType.getQualifiedName(), treeBackedType);
 
@@ -129,8 +124,8 @@ class TreeBackedElements implements Elements {
         underlyingTypeParameter,
         Preconditions.checkNotNull(javacTrees.getPath(underlyingTypeParameter)),
         enclosingElement,
-        Preconditions.checkNotNull(resolverFactory),
-        treeBackedTypes);
+        Preconditions.checkNotNull(resolver)
+    );
   }
 
   /**

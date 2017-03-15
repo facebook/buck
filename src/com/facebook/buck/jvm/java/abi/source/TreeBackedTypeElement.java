@@ -32,7 +32,6 @@ import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Types;
 
 /**
  * An implementation of {@link TypeElement} that uses only the information available from a
@@ -51,12 +50,11 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
       TypeElement underlyingElement,
       TreeBackedElement enclosingElement,
       TreePath path,
-      TypeResolverFactory resolverFactory,
-      Types types) {
-    super(underlyingElement, enclosingElement, path, resolverFactory);
+      TreeBackedElementResolver resolver) {
+    super(underlyingElement, enclosingElement, path, resolver);
     this.underlyingElement = underlyingElement;
     this.tree = (ClassTree) path.getLeaf();
-    typeMirror = new StandaloneDeclaredType(types, this);
+    typeMirror = resolver.createType(this);
     enclosingElement.addEnclosedElement(this);
   }
 
@@ -87,7 +85,7 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
   @Override
   public TypeMirror getSuperclass() {
     if (superclass == null) {
-      TypeResolver resolver = getResolver();
+      TreeBackedElementResolver resolver = getResolver();
       final Tree extendsClause = tree.getExtendsClause();
       if (extendsClause == null) {
         if (tree.getKind() == Tree.Kind.INTERFACE) {
@@ -96,7 +94,7 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
           superclass = resolver.getJavaLangObject();
         }
       } else {
-        superclass = resolver.resolveType(extendsClause);
+        superclass = resolver.resolveType(this, extendsClause);
       }
     }
 

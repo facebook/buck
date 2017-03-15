@@ -39,10 +39,10 @@ class TreeBackedPackageElement extends TreeBackedElement implements PackageEleme
 
   public TreeBackedPackageElement(
       PackageElement javacPackage,
-      TypeResolverFactory resolverFactory) {
-    super(javacPackage, null, null, resolverFactory);
+      TreeBackedElementResolver resolver) {
+    super(javacPackage, null, null, resolver);
     this.javacPackage = javacPackage;
-    typeMirror = new StandalonePackageType(this);
+    typeMirror = resolver.createType(this);
   }
 
   @Override

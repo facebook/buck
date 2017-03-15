@@ -52,35 +52,41 @@ import javax.lang.model.type.WildcardType;
 /**
  * Resolves type references as {@link Tree}s to {@link TypeMirror}s.
  */
-class TypeResolver {
+class TreeBackedElementResolver {
   private final TypeResolvingVisitor typeResolvingVisitor = new TypeResolvingVisitor();
   private final TreeBackedElements elements;
   private final Trees javacTrees;
   private final TreeBackedTypes types;
   private final Map<Tree, TypeMirror> treesToTypes = new HashMap<>();
-  private final TreePath elementPath;
 
-  /**
-   * @param elementPath {@link TreePath} of the element which will use this resolver
-   */
-  public TypeResolver(
+  public TreeBackedElementResolver(
       TreeBackedElements elements,
       Trees javacTrees,
-      TreeBackedTypes types,
-      TreePath elementPath) {
+      TreeBackedTypes types) {
     this.elements = elements;
     this.javacTrees = javacTrees;
     this.types = types;
-    this.elementPath = elementPath;
   }
 
-  /* package */ TypeMirror resolveType(Tree tree) {
+  /* package */ StandaloneDeclaredType createType(TreeBackedTypeElement element) {
+    return new StandaloneDeclaredType(types, element);
+  }
+
+  /* package */ StandaloneTypeVariable createType(TreeBackedTypeParameterElement element) {
+    return new StandaloneTypeVariable(types, element);
+  }
+
+  /* package */ StandalonePackageType createType(TreeBackedPackageElement element) {
+    return new StandalonePackageType(element);
+  }
+
+  /* package */ TypeMirror resolveType(TreeBackedElement containingElement, Tree tree) {
     TypeMirror result = treesToTypes.get(tree);
     if (result != null) {
       return result;
     }
 
-    treesToTypes.put(tree, resolveType(new TreePath(elementPath, tree)));
+    treesToTypes.put(tree, resolveType(new TreePath(containingElement.getTreePath(), tree)));
 
     return Preconditions.checkNotNull(treesToTypes.get(tree));
   }
@@ -291,7 +297,7 @@ class TypeResolver {
     }
 
     private TypeMirror getType(TreePath parent, Tree tree) {
-      return TypeResolver.this.resolveType(new TreePath(parent, tree));
+      return TreeBackedElementResolver.this.resolveType(new TreePath(parent, tree));
     }
   }
 
