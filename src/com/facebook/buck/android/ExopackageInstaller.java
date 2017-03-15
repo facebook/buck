@@ -627,6 +627,10 @@ public class ExopackageInstaller {
               // Need to wait for client to acknowledge that we've connected.
             }
             if (!wrotePayload && getOutput().contains("z1")) {
+              if (outToDevice == null) {
+                throw new NullPointerException(
+                    "outToDevice was null when protocol says it cannot be");
+              }
               LOG.verbose("Got z1");
               wrotePayload = true;
               outToDevice.write(
