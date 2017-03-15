@@ -104,7 +104,7 @@ public abstract class JsFile extends AbstractBuildRule {
           virtualPath.orElseGet(() ->
               MorePaths.pathWithUnixSeparators(sourcePathResolver.getRelativePath(src))),
           outputPath,
-          src);
+          sourcePathResolver.getAbsolutePath(src));
 
       return getBuildSteps(context, jobArgs, outputPath);
     }

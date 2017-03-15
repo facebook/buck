@@ -31,6 +31,12 @@ js_library(
     worker = ':packager_worker',
 )
 
+js_library(
+    name = 'build-target-output',
+    srcs = ['//external:exported.js'],
+    worker = ':packager_worker',
+)
+
 js_bundle(
     name = 'fruit-salad-in-a-bundle',
     libs = [':fruit-salad'],

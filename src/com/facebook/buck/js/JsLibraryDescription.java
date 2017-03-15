@@ -196,7 +196,9 @@ public class JsLibraryDescription implements Description<JsLibraryDescription.Ar
       );
     } else {
       return new JsFile.JsFileDev(
-          params,
+          new SourcePathRuleFinder(resolver).getRule(sourcePath)
+              .map(params::appendExtraDeps)
+              .orElse(params),
           sourcePath,
           Optional.empty(),
           args.extraArgs,

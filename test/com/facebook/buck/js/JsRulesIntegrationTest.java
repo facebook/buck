@@ -114,6 +114,15 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
+  public void testBuildTargetOutputs() throws IOException {
+    workspace
+        .runBuckBuild("//js:build-target-output")
+        .assertSuccess();
+
+    workspace.verify(Paths.get("with_build_target.expected"), genPath);
+  }
+
+  @Test
   public void testBundleBuild() throws IOException {
     workspace
         .runBuckBuild("//js:fruit-salad-in-a-bundle")
