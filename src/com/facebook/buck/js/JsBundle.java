@@ -70,10 +70,10 @@ public class JsBundle extends AbstractBuildRule {
     final Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
 
     String jobArgs = String.format(
-        "bundle %s %s %s",
+        "bundle %s --out %s %s",
         JsUtil.resolveMapJoin(libraries, sourcePathResolver, p -> "--lib " + p),
-        String.join(" ", entryPoints),
-        outputPath);
+        outputPath,
+        String.join(" ", entryPoints));
     return ImmutableList.of(
         new RmStep(
             getProjectFilesystem(),

@@ -39,32 +39,45 @@ concat() {
 run_command() {
   local args=
   local infiles=
+  local outfile=
   local message_id="$1"
 
   set -- $2
 
-  while [[ $# -gt 1 ]]; do
-    if [[ "$1" == --* ]]; then
-      args=$(concat $args "$1")
-      if [ "$1" == --lib ]; then
-        args=$(concat $args "${2/\/*\/buck-out\//@/buck-out/}")
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --out)
+        outfile="$2"
+        shift
+        ;;
+      --lib)
+        args=$(concat $args "$1" "${2/\/*\/buck-out\//@/buck-out/}")
         infiles=$(concat $infiles "$2")
         shift
-      elif [[ "$2" != --* ]]; then
-        args=$(concat $args "$2")
-        shift
-      fi
-    elif [[ "$1" == */* ]]; then
-      infiles=$(concat $infiles "$1")
-    else
-      args=$(concat $args "$1")
-    fi
+        ;;
+      --*)
+        args=$(concat $args "$1")
+        if [[ "$2" != --* ]]; then
+          args=$(concat $args "$2")
+          shift
+        fi
+        ;;
+      */*)
+        infiles=$(concat $infiles "$1")
+        ;;
+      *)
+        args=$(concat $args "$1")
+        ;;
+    esac
     shift
   done
 
-  local outfile="$1"
-  mkdir -p "$(dirname "$outfile")"
+  if [[ -z "$outfile" ]]; then
+    echo "No output file given" >&2
+    return ',{"id": %d, "type": "error", "exit_code": 1}' "$message_id"
+  fi
 
+  mkdir -p "$(dirname "$outfile")"
 
   # first line are arguments passed in
   echo "$args" > "$outfile"

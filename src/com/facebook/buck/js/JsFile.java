@@ -99,13 +99,12 @@ public abstract class JsFile extends AbstractBuildRule {
 
       final SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
       final Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
-      final String jobArgs = String.join(
-          " ",
-          "transform %s --filename",
+      final String jobArgs = String.format(
+          "transform %%s --filename %s --out %s %s",
           virtualPath.orElseGet(() ->
               MorePaths.pathWithUnixSeparators(sourcePathResolver.getRelativePath(src))),
-          src.toString(),
-          outputPath.toString());
+          outputPath,
+          src);
 
       return getBuildSteps(context, jobArgs, outputPath);
     }
@@ -133,12 +132,11 @@ public abstract class JsFile extends AbstractBuildRule {
       final BuildTarget buildTarget = getBuildTarget();
       final SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
       final Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
-      final String jobArgs = String.join(
-          " ",
-          "optimize %s --platform",
+      final String jobArgs = String.format(
+          "optimize %%s --platform %s --out %s %s",
           JsFlavors.getPlatform(buildTarget.getFlavors()),
-          sourcePathResolver.getAbsolutePath(devFile).toString(),
-          outputPath.toString());
+          outputPath,
+          sourcePathResolver.getAbsolutePath(devFile).toString());
 
       return getBuildSteps(context, jobArgs, outputPath);
     }
