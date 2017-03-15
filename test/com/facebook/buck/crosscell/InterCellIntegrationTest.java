@@ -406,6 +406,39 @@ public class InterCellIntegrationTest {
   }
 
   @Test
+  public void globalCommandLineConfigOverridesShouldWork() throws IOException {
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+
+    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
+        "inter-cell/export-file/primary",
+        "inter-cell/export-file/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+    ProjectWorkspace secondary = cells.getSecond();
+    TestDataHelper.overrideBuckconfig(
+        primary,
+        ImmutableMap.of("cxx", ImmutableMap.of("cc", "/does/not/exist")));
+    TestDataHelper.overrideBuckconfig(
+        secondary,
+        ImmutableMap.of("cxx", ImmutableMap.of("cc", "/does/not/exist")));
+
+    try {
+      primary.runBuckBuild("//:cxxbinary");
+      fail("Did not expect to finish building");
+    } catch (HumanReadableException expected) {
+      assertEquals(
+        expected.getMessage(),
+        "Overridden cxx:cc path not found: /does/not/exist");
+    }
+
+    ProjectWorkspace.ProcessResult result = primary.runBuckBuild(
+        "--config",
+        "cxx.cc=",
+        "//:cxxbinary");
+
+    result.assertSuccess();
+  }
+
+  @Test
   public void buildFilesCanIncludeDefsFromOtherCells() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 

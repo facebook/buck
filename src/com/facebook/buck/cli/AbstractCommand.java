@@ -101,7 +101,7 @@ public abstract class AbstractCommand implements Command {
     // Parse command-line config overrides.
     for (Map.Entry<String, String> entry : configOverrides.entrySet()) {
       List<String> key = Splitter.on("//").limit(2).splitToList(entry.getKey());
-      RelativeCellName cellName = RelativeCellName.ROOT_CELL_NAME;
+      RelativeCellName cellName = CellConfig.ALL_CELLS_OVERRIDE;
       String configKey = key.get(0);
       if (key.size() == 2) {
         // Here we explicitly take the whole string as the cell name. We don't support transitive
