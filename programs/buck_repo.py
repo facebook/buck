@@ -108,7 +108,6 @@ RESOURCES = {
     "native_exopackage_fake_path": "assets/android/native-exopackage-fakes.apk",
     "path_to_asm_jar": "third-party/java/asm/asm-debug-all-5.0.3.jar",
     "path_to_rawmanifest_py": "src/com/facebook/buck/util/versioncontrol/rawmanifest.py",
-    "path_to_buck_py": "src/com/facebook/buck/parser/buck.py",
     "path_to_intellij_py": "src/com/facebook/buck/command/intellij.py",
     "path_to_pex": "src/com/facebook/buck/python/make_pex.py",
     "path_to_sh_binary_template": "src/com/facebook/buck/shell/sh_binary_template",
