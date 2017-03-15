@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.android.AndroidNdkHelper.SymbolGetter;
+import static com.facebook.buck.android.AndroidNdkHelper.SymbolsAndDtNeeded;
 import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -28,7 +30,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.relinker.Symbols;
-import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -39,7 +40,6 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -48,11 +48,8 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.zip.ZipConstants;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -388,7 +385,7 @@ public class AndroidBinaryIntegrationTest {
 
   @Test
   public void testNativeLibraryMerging() throws IOException, InterruptedException {
-    NdkCxxPlatform platform = getNdkCxxPlatform();
+    NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(workspace, filesystem);
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     ));
@@ -546,7 +543,7 @@ public class AndroidBinaryIntegrationTest {
         secondaryFolder);
     secondary.setUp();
 
-    NdkCxxPlatform platform = getNdkCxxPlatform();
+    NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(workspace, filesystem);
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     ));
@@ -595,7 +592,7 @@ public class AndroidBinaryIntegrationTest {
 
   @Test
   public void testNativeRelinker() throws IOException, InterruptedException {
-    NdkCxxPlatform platform = getNdkCxxPlatform();
+    NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(workspace, filesystem);
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     ));
@@ -637,83 +634,6 @@ public class AndroidBinaryIntegrationTest {
 
     sym = syms.getSymbols(apkPath, "lib/x86/libnative_xdsodce_bot.so");
     assertTrue(sym.all.contains("_Z6unusedi"));
-  }
-
-  private NdkCxxPlatform getNdkCxxPlatform() throws IOException, InterruptedException {
-    // TODO(cjhopman): is this really the simplest way to get the objdump tool?
-    AndroidDirectoryResolver androidResolver = new DefaultAndroidDirectoryResolver(
-        workspace.asCell().getRoot().getFileSystem(),
-        ImmutableMap.copyOf(System.getenv()),
-        Optional.empty(),
-        Optional.empty());
-
-    Optional<Path> ndkPath = androidResolver.getNdkOrAbsent();
-    assertTrue(ndkPath.isPresent());
-    Optional<String> ndkVersion =
-      DefaultAndroidDirectoryResolver.findNdkVersionFromDirectory(ndkPath.get());
-    String gccVersion = NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion);
-
-    ImmutableCollection<NdkCxxPlatform> platforms = NdkCxxPlatforms.getPlatforms(
-        CxxPlatformUtils.DEFAULT_CONFIG,
-        filesystem,
-        ndkPath.get(),
-        NdkCxxPlatformCompiler.builder()
-            .setType(NdkCxxPlatforms.DEFAULT_COMPILER_TYPE)
-            .setVersion(gccVersion)
-            .setGccVersion(gccVersion)
-            .build(),
-        NdkCxxPlatforms.DEFAULT_CXX_RUNTIME,
-        NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM,
-        NdkCxxPlatforms.DEFAULT_CPU_ABIS,
-        Platform.detect()).values();
-    assertFalse(platforms.isEmpty());
-    return platforms.iterator().next();
-  }
-
-  private static class SymbolGetter {
-    private final ProcessExecutor executor;
-    private final Path tmpDir;
-    private final Tool objdump;
-    private final SourcePathResolver resolver;
-
-    private SymbolGetter(
-        ProcessExecutor executor,
-        Path tmpDir,
-        Tool objdump,
-        SourcePathResolver resolver) {
-      this.executor = executor;
-      this.tmpDir = tmpDir;
-      this.objdump = objdump;
-      this.resolver = resolver;
-    }
-
-    private Path unpack(Path apkPath, String libName) throws IOException {
-      new ZipInspector(apkPath).assertFileExists(libName);
-      return unzip(tmpDir, apkPath, libName);
-    }
-
-    Symbols getSymbols(Path apkPath, String libName) throws IOException, InterruptedException {
-      Path lib = unpack(apkPath, libName);
-      return Symbols.getSymbols(executor, objdump, resolver, lib);
-    }
-
-    SymbolsAndDtNeeded getSymbolsAndDtNeeded(Path apkPath, String libName)
-        throws IOException, InterruptedException {
-      Path lib = unpack(apkPath, libName);
-      Symbols symbols = Symbols.getSymbols(executor, objdump, resolver, lib);
-      ImmutableSet<String> dtNeeded = Symbols.getDtNeeded(executor, objdump, resolver, lib);
-      return new SymbolsAndDtNeeded(symbols, dtNeeded);
-    }
-  }
-
-  private static class SymbolsAndDtNeeded {
-    final Symbols symbols;
-    final ImmutableSet<String> dtNeeded;
-
-    private SymbolsAndDtNeeded(Symbols symbols, ImmutableSet<String> dtNeeded) {
-      this.symbols = symbols;
-      this.dtNeeded = dtNeeded;
-    }
   }
 
   @Test
