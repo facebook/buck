@@ -51,6 +51,11 @@ public class BuildTargetFactory {
     Optional<String> cellName = Optional.empty();
     if (buildTarget > 0) {
       cellName = Optional.of(fullyQualifiedName.substring(0, buildTarget));
+    } else if (buildTarget < 0) {
+      throw new IllegalArgumentException(
+          String.format(
+              "Fully qualified target %s did not start with // or a cell name then //",
+              fullyQualifiedName));
     }
     String[] parts = fullyQualifiedName.substring(buildTarget).split(":");
     Preconditions.checkArgument(parts.length == 2);

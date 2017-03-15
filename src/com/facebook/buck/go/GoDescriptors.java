@@ -380,14 +380,17 @@ abstract class GoDescriptors {
           params.getBuildTarget().getFullyQualifiedName());
     }
 
-    params = params.appendExtraDeps(ruleFinder.filterBuildRuleInputs(treeMap.values()));
-
     Path root = BuildTargets.getScratchPath(
         params.getProjectFilesystem(),
         params.getBuildTarget(),
         "__%s__tree");
 
-    return new SymlinkTree(params, root, treeMap, ruleFinder);
+    return new SymlinkTree(
+        params.getBuildTarget(),
+        params.getProjectFilesystem(),
+        root,
+        treeMap,
+        ruleFinder);
   }
 
   /**

@@ -525,19 +525,15 @@ public class LuaBinaryDescription implements
 
   private SymlinkTree createSymlinkTree(
       BuildTarget linkTreeTarget,
-      BuildRuleParams params,
+      ProjectFilesystem filesystem,
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
       Path root,
       ImmutableMap<String, SourcePath> components) {
     return resolver.addToIndex(
         new SymlinkTree(
-            params.copyWithChanges(
-                linkTreeTarget,
-                Suppliers.ofInstance(
-                    ImmutableSortedSet.copyOf(
-                        ruleFinder.filterBuildRuleInputs(components.values()))),
-                Suppliers.ofInstance(ImmutableSortedSet.of())),
+            linkTreeTarget,
+            filesystem,
             root,
             MoreMaps.transformKeys(components, MorePaths.toPathFn(root.getFileSystem())),
             ruleFinder));
@@ -592,7 +588,7 @@ public class LuaBinaryDescription implements
         resolver.addToIndex(
             createSymlinkTree(
                 getModulesSymlinkTreeTarget(params.getBuildTarget()),
-                params,
+                params.getProjectFilesystem(),
                 resolver,
                 ruleFinder,
                 getModulesSymlinkTreeRoot(
@@ -619,7 +615,7 @@ public class LuaBinaryDescription implements
           resolver.addToIndex(
               createSymlinkTree(
                   getPythonModulesSymlinkTreeTarget(params.getBuildTarget()),
-                  params,
+                  params.getProjectFilesystem(),
                   resolver,
                   ruleFinder,
                   getPythonModulesSymlinkTreeRoot(
@@ -635,7 +631,7 @@ public class LuaBinaryDescription implements
           resolver.addToIndex(
               createSymlinkTree(
                   getNativeLibsSymlinkTreeTarget(params.getBuildTarget()),
-                  params,
+                  params.getProjectFilesystem(),
                   resolver,
                   ruleFinder,
                   getNativeLibsSymlinkTreeRoot(

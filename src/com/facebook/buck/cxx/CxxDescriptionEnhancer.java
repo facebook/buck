@@ -138,7 +138,7 @@ public class CxxDescriptionEnhancer {
             flavors);
     return CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
         headerSymlinkTreeTarget,
-        params,
+        params.getProjectFilesystem(),
         headerSymlinkTreeRoot,
         headers,
         mode,
@@ -175,14 +175,9 @@ public class CxxDescriptionEnhancer {
             params.getProjectFilesystem(),
             sandboxSymlinkTreeTarget);
 
-    BuildRuleParams paramsWithoutDeps =
-        params.copyWithChanges(
-            sandboxSymlinkTreeTarget,
-            Suppliers.ofInstance(ImmutableSortedSet.of()),
-            Suppliers.ofInstance(ImmutableSortedSet.of()));
-
     return new SymlinkTree(
-        paramsWithoutDeps,
+        sandboxSymlinkTreeTarget,
+        params.getProjectFilesystem(),
         sandboxSymlinkTreeRoot,
         map,
         ruleFinder);
@@ -1263,10 +1258,8 @@ public class CxxDescriptionEnhancer {
       links.put(Paths.get(ent.getKey()), ent.getValue());
     }
     return new SymlinkTree(
-        params.copyWithChanges(
-            symlinkTreeTarget,
-            Suppliers.ofInstance(ImmutableSortedSet.of()),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+        symlinkTreeTarget,
+        params.getProjectFilesystem(),
         symlinkTreeRoot,
         links.build(),
         ruleFinder);

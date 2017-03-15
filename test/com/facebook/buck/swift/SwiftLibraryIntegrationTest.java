@@ -28,7 +28,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -87,8 +86,9 @@ public class SwiftLibraryIntegrationTest {
     // Setup the map representing the link tree.
     ImmutableMap<Path, SourcePath> links = ImmutableMap.of();
 
-    BuildRule symlinkTreeBuildRule = HeaderSymlinkTreeWithHeaderMap.create(
-        new FakeBuildRuleParamsBuilder(symlinkTarget).build(),
+    HeaderSymlinkTreeWithHeaderMap symlinkTreeBuildRule = HeaderSymlinkTreeWithHeaderMap.create(
+        symlinkTarget,
+        projectFilesystem,
         symlinkTreeRoot,
         links,
         ruleFinder);

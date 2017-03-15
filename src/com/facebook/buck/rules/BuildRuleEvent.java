@@ -278,7 +278,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     public String toString() {
       String success = successType.isPresent() ? successType.get().toString() : "MISSING";
       return String.format("BuildRuleFinished(%s): %s %s %s %s%s",
-          getBuildRule(),
+          getBuildRule().getFullyQualifiedName(),
           getStatus(),
           getCacheResult(),
           success,

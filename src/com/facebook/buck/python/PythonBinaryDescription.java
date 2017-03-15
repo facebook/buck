@@ -170,10 +170,8 @@ public class PythonBinaryDescription implements
     SymlinkTree linkTree =
         resolver.addToIndex(
             new SymlinkTree(
-                params.copyWithChanges(
-                    linkTreeTarget,
-                    Suppliers.ofInstance(ImmutableSortedSet.of()),
-                    Suppliers.ofInstance(ImmutableSortedSet.of())),
+                linkTreeTarget,
+                params.getProjectFilesystem(),
                 linkTreeRoot,
                 ImmutableMap.<Path, SourcePath>builder()
                     .putAll(components.getModules())

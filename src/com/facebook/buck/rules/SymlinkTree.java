@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -45,20 +46,22 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 
-public class SymlinkTree
-    extends AbstractBuildRule
-    implements HasRuntimeDeps, SupportsInputBasedRuleKey {
+public class SymlinkTree implements BuildRule, HasRuntimeDeps, SupportsInputBasedRuleKey {
 
   private final Path root;
   private final ImmutableSortedMap<Path, SourcePath> links;
+  private final BuildTarget target;
+  private final ProjectFilesystem filesystem;
   private final SourcePathRuleFinder ruleFinder;
 
   public SymlinkTree(
-      BuildRuleParams params,
+      BuildTarget target,
+      ProjectFilesystem filesystem,
       Path root,
       final ImmutableMap<Path, SourcePath> links,
       SourcePathRuleFinder ruleFinder) {
-    super(params);
+    this.target = target;
+    this.filesystem = filesystem;
     this.ruleFinder = ruleFinder;
 
     Preconditions.checkState(
@@ -134,6 +137,34 @@ public class SymlinkTree
   }
 
   @Override
+  public BuildTarget getBuildTarget() {
+    return target;
+  }
+
+  @Override
+  public String getType() {
+    return "symlink_tree";
+  }
+
+  @Override
+  public BuildableProperties getProperties() {
+    return BuildableProperties.NONE;
+  }
+
+  /**
+   * SymlinkTree never has any compile-time deps, only runtime deps.
+   *
+   * All rules which consume SymlinkTrees are themselves required to have dependencies anything
+   * which may alter the SymlinkTree contents.
+   *
+   * This is to avoid removing and re-creating the same symlinks every build.
+   */
+  @Override
+  public ImmutableSortedSet<BuildRule> getDeps() {
+    return ImmutableSortedSet.of();
+  }
+
+  @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
@@ -162,6 +193,11 @@ public class SymlinkTree
   @Override
   public SourcePath getSourcePathToOutput() {
     return new ExplicitBuildTargetSourcePath(getBuildTarget(), root);
+  }
+
+  @Override
+  public ProjectFilesystem getProjectFilesystem() {
+    return filesystem;
   }
 
   @VisibleForTesting
@@ -211,5 +247,10 @@ public class SymlinkTree
 
   public ImmutableSortedMap<Path, SourcePath> getLinks() {
     return links;
+  }
+
+  @Override
+  public String toString() {
+    return getFullyQualifiedName();
   }
 }

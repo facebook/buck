@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
@@ -31,14 +32,12 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
@@ -197,35 +196,31 @@ public class CxxPreprocessables {
    */
   public static HeaderSymlinkTree createHeaderSymlinkTreeBuildRule(
       BuildTarget target,
-      BuildRuleParams params,
+      ProjectFilesystem filesystem,
       Path root,
       ImmutableMap<Path, SourcePath> links,
       HeaderMode headerMode,
       SourcePathRuleFinder ruleFinder) {
-    // Symlink trees never need to depend on anything.
-    BuildRuleParams paramsWithoutDeps =
-        params.copyWithChanges(
-            target,
-            Suppliers.ofInstance(ImmutableSortedSet.of()),
-            Suppliers.ofInstance(ImmutableSortedSet.of()));
-
     switch (headerMode) {
       case SYMLINK_TREE_WITH_HEADER_MAP:
         return HeaderSymlinkTreeWithHeaderMap.create(
-            paramsWithoutDeps,
+            target,
+            filesystem,
             root,
             links,
             ruleFinder);
       case HEADER_MAP_ONLY:
         return new DirectHeaderMap(
-            paramsWithoutDeps,
+            target,
+            filesystem,
             root,
             links,
             ruleFinder);
       default:
       case SYMLINK_TREE_ONLY:
         return new HeaderSymlinkTree(
-            paramsWithoutDeps,
+            target,
+            filesystem,
             root,
             links,
             ruleFinder);

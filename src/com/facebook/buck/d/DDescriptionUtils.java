@@ -185,10 +185,8 @@ abstract class DDescriptionUtils {
       SourceList sources) {
     Preconditions.checkState(target.getFlavors().contains(SOURCE_LINK_TREE));
     return new SymlinkTree(
-        baseParams.copyWithChanges(
-            target,
-            Suppliers.ofInstance(ImmutableSortedSet.of()),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+        target,
+        baseParams.getProjectFilesystem(),
         BuildTargets.getGenPath(
             baseParams.getProjectFilesystem(),
             baseParams.getBuildTarget(),

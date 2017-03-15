@@ -194,10 +194,12 @@ public class AndroidResourceDescription
         BuildTargets
             .getGenPath(params.getProjectFilesystem(), params.getBuildTarget(), "%s")
             .resolve(outputDirName);
-    params = params.copyWithDeps(
-        Suppliers.ofInstance(ImmutableSortedSet.of()),
-        Suppliers.ofInstance(ImmutableSortedSet.of()));
-    return new SymlinkTree(params, symlinkTreeRoot, links, ruleFinder);
+    return new SymlinkTree(
+        params.getBuildTarget(),
+        params.getProjectFilesystem(),
+        symlinkTreeRoot,
+        links,
+        ruleFinder);
   }
 
   public static Optional<SourcePath> getResDirectoryForProject(

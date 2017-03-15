@@ -111,8 +111,10 @@ public class SymlinkTreeTest {
     pathResolver = new SourcePathResolver(ruleFinder);
 
     // Setup the symlink tree buildable.
-    symlinkTreeBuildRule = new SymlinkTree(
-        new FakeBuildRuleParamsBuilder(buildTarget).build(),
+    symlinkTreeBuildRule =
+        new SymlinkTree(
+        buildTarget,
+        projectFilesystem,
         outputPath,
         links,
         ruleFinder);
@@ -153,7 +155,8 @@ public class SymlinkTreeTest {
     Path aFile = tmpDir.newFile();
     Files.write(aFile, "hello world".getBytes(Charsets.UTF_8));
     SymlinkTree modifiedSymlinkTreeBuildRule = new SymlinkTree(
-        new FakeBuildRuleParamsBuilder(buildTarget).build(),
+        buildTarget,
+        projectFilesystem,
         outputPath,
         ImmutableMap.of(
             Paths.get("different/link"),
@@ -204,39 +207,6 @@ public class SymlinkTreeTest {
   }
 
   @Test
-  public void testSymlinkTreeInputBasedRuleKeysAreImmuneToDependencyChanges() throws Exception {
-    FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
-        ImmutableMap.of());
-    InputBasedRuleKeyFactory inputBasedRuleKeyFactory =
-        new InputBasedRuleKeyFactory(
-            0,
-            hashCache,
-            pathResolver,
-            ruleFinder);
-
-    FakeBuildRule dep = new FakeBuildRule("//:dep", pathResolver);
-    symlinkTreeBuildRule =
-        new SymlinkTree(
-            new FakeBuildRuleParamsBuilder(buildTarget)
-                .setDeclaredDeps(ImmutableSortedSet.of(dep))
-                .build(),
-            outputPath,
-            links,
-            ruleFinder);
-
-    // Generate an input-based rule key for the symlink tree.
-    RuleKey ruleKey1 =
-        inputBasedRuleKeyFactory.build(symlinkTreeBuildRule);
-
-    // Change the dep's rule key and re-calculate the input-based rule key.
-    RuleKey ruleKey2 =
-        inputBasedRuleKeyFactory.build(symlinkTreeBuildRule);
-
-    // Verify that the rules keys are the same.
-    assertEquals(ruleKey1, ruleKey2);
-  }
-
-  @Test
   public void testSymlinkTreeDependentRuleKeyChangesWhenLinkSourceContentChanges()
       throws Exception {
     // If a dependent of a symlink tree uses the symlink tree's output as an input, that dependent's
@@ -281,9 +251,8 @@ public class SymlinkTreeTest {
 
     symlinkTreeBuildRule =
         new SymlinkTree(
-            new FakeBuildRuleParamsBuilder(buildTarget)
-                .setDeclaredDeps(ImmutableSortedSet.of(dep))
-                .build(),
+            buildTarget,
+            projectFilesystem,
             outputPath,
             ImmutableMap.of(
                 Paths.get("link"),
@@ -324,7 +293,8 @@ public class SymlinkTreeTest {
   public void verifyStepFailsIfKeyContainsDotDot() throws Exception {
     SymlinkTree symlinkTree =
         new SymlinkTree(
-            new FakeBuildRuleParamsBuilder(buildTarget).build(),
+            buildTarget,
+            projectFilesystem,
             outputPath,
             ImmutableMap.of(
                 Paths.get("../something"),

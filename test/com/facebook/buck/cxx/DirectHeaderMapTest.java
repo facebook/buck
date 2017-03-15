@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
@@ -117,7 +116,8 @@ public class DirectHeaderMapTest {
     pathResolver = new SourcePathResolver(ruleFinder);
 
     buildRule = new DirectHeaderMap(
-        new FakeBuildRuleParamsBuilder(buildTarget).build(),
+        buildTarget,
+        projectFilesystem,
         symlinkTreeRoot,
         links,
         ruleFinder);
@@ -129,22 +129,21 @@ public class DirectHeaderMapTest {
   @Test
   public void testBuildSteps() throws IOException {
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     ImmutableList<Step> expectedBuildSteps =
         ImmutableList.of(
-            new MkdirStep(filesystem, headerMapPath.getParent()),
-            new RmStep(filesystem, headerMapPath),
+            new MkdirStep(projectFilesystem, headerMapPath.getParent()),
+            new RmStep(projectFilesystem, headerMapPath),
             new HeaderMapStep(
-                filesystem,
+                projectFilesystem,
                 headerMapPath,
                 ImmutableMap.of(
                     Paths.get("file"),
-                    filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
+                    projectFilesystem.resolve(projectFilesystem.getBuckPaths().getBuckOut())
                         .relativize(file1),
                     Paths.get("directory/then/file"),
-                    filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
+                    projectFilesystem.resolve(projectFilesystem.getBuckPaths().getBuckOut())
                         .relativize(file2))));
     ImmutableList<Step> actualBuildSteps =
         buildRule.getBuildSteps(
@@ -162,7 +161,8 @@ public class DirectHeaderMapTest {
       modifiedLinksBuilder.put(tmpDir.getRoot().resolve("modified-" + p.toString()), links.get(p));
     }
     DirectHeaderMap modifiedBuildRule = new DirectHeaderMap(
-        new FakeBuildRuleParamsBuilder(buildTarget).build(),
+        buildTarget,
+        projectFilesystem,
         symlinkTreeRoot,
         modifiedLinksBuilder.build(),
         ruleFinder);

@@ -16,11 +16,12 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -42,14 +43,15 @@ public class DirectHeaderMap extends HeaderSymlinkTree {
   private final Path headerMapPath;
 
   public DirectHeaderMap(
-      BuildRuleParams params,
+      BuildTarget target,
+      ProjectFilesystem filesystem,
       Path root,
       ImmutableMap<Path, SourcePath> links,
       SourcePathRuleFinder ruleFinder) {
-    super(params, root, links, ruleFinder);
+    super(target, filesystem, root, links, ruleFinder);
     this.headerMapPath = BuildTargets.getGenPath(
-        params.getProjectFilesystem(),
-        params.getBuildTarget(),
+        filesystem,
+        target,
         "%s.hmap");
   }
 

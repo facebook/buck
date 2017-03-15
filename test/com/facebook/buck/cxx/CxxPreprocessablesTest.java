@@ -244,7 +244,7 @@ public class CxxPreprocessablesTest {
     // Build our symlink tree rule using the helper method.
     HeaderSymlinkTree symlinkTree = CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
         target,
-        params,
+        params.getProjectFilesystem(),
         root,
         links,
         CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY,

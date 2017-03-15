@@ -246,10 +246,8 @@ public class JavaTestDescription implements
             }
           }
           nativeLibsSymlinkTree = new SymlinkTree(
-              params.copyWithChanges(
-                  nativeLibsSymlinkTree.getBuildTarget(),
-                  Suppliers.ofInstance(ImmutableSortedSet.of()),
-                  Suppliers.ofInstance(ImmutableSortedSet.of())),
+              nativeLibsSymlinkTree.getBuildTarget(),
+              nativeLibsSymlinkTree.getProjectFilesystem(),
               nativeLibsSymlinkTree.getProjectFilesystem()
                   .relativize(nativeLibsSymlinkTree.getRoot()),
               filteredLinks.build(),

@@ -25,7 +25,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -70,27 +69,30 @@ public final class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
   private final boolean shouldCreateModule;
 
   private HeaderSymlinkTreeWithHeaderMap(
-      BuildRuleParams params,
+      BuildTarget target,
+      ProjectFilesystem filesystem,
       Path root,
       ImmutableMap<Path, SourcePath> links,
       SourcePathRuleFinder ruleFinder,
       Path headerMapPath,
       boolean shouldCreateModule) {
-    super(params, root, links, ruleFinder);
+    super(target, filesystem, root, links, ruleFinder);
     this.headerMapPath = headerMapPath;
     this.shouldCreateModule = shouldCreateModule;
   }
 
   public static HeaderSymlinkTreeWithHeaderMap create(
-      BuildRuleParams params,
+      BuildTarget target,
+      ProjectFilesystem filesystem,
       Path root,
       ImmutableMap<Path, SourcePath> links,
       SourcePathRuleFinder ruleFinder) {
-    Path headerMapPath = getPath(params.getProjectFilesystem(), params.getBuildTarget());
-    boolean shouldCreateModule = params.getBuildTarget().getFlavors()
+    Path headerMapPath = getPath(filesystem, target);
+    boolean shouldCreateModule = target.getFlavors()
         .contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
     return new HeaderSymlinkTreeWithHeaderMap(
-        params,
+        target,
+        filesystem,
         root,
         links,
         ruleFinder,
