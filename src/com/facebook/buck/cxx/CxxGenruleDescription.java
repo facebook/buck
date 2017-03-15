@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
@@ -209,11 +210,12 @@ public class CxxGenruleDescription
 
   @Override
   protected <A extends Arg> MacroHandler getMacroHandler(
-      BuildRuleParams params,
+      BuildTarget buildTarget,
+      ProjectFilesystem filesystem,
       BuildRuleResolver resolver,
       TargetGraph targetGraph,
       A args) {
-    CxxPlatform cxxPlatform = cxxPlatforms.getRequiredValue(params.getBuildTarget());
+    CxxPlatform cxxPlatform = cxxPlatforms.getRequiredValue(buildTarget);
     ImmutableMap.Builder<String, MacroExpander> macros = ImmutableMap.builder();
     macros.put("exe", new ExecutableMacroExpander());
     macros.put("location", new LocationMacroExpander());
@@ -254,7 +256,8 @@ public class CxxGenruleDescription
                 depType.toString().toLowerCase().replace('_', '-'),
                 filter == Filter.PARAM ? "-filter" : ""),
             new CxxLinkerFlagsExpander(
-                params,
+                buildTarget,
+                filesystem,
                 cxxPlatform,
                 depType,
                 args.out,
@@ -710,19 +713,22 @@ public class CxxGenruleDescription
    */
   private static class CxxLinkerFlagsExpander extends FilterAndTargetsExpander {
 
-    private final BuildRuleParams params;
+    private final BuildTarget buildTarget;
+    private final ProjectFilesystem filesystem;
     private final CxxPlatform cxxPlatform;
     private final Linker.LinkableDepType depType;
     private final String out;
 
     public CxxLinkerFlagsExpander(
-        BuildRuleParams params,
+        BuildTarget buildTarget,
+        ProjectFilesystem filesystem,
         CxxPlatform cxxPlatform,
         Linker.LinkableDepType depType,
         String out,
         Filter filter) {
       super(filter);
-      this.params = params;
+      this.buildTarget = buildTarget;
+      this.filesystem = filesystem;
       this.cxxPlatform = cxxPlatform;
       this.depType = depType;
       this.out = out;
@@ -743,7 +749,7 @@ public class CxxGenruleDescription
         throws MacroException {
       BuildTarget symlinkTreeTarget =
           CxxDescriptionEnhancer.createSharedLibrarySymlinkTreeTarget(
-              params.getBuildTarget(),
+              buildTarget,
               cxxPlatform.getFlavor());
       SymlinkTree symlinkTree =
           resolver.getRuleOptionalWithType(symlinkTreeTarget, SymlinkTree.class).orElse(null);
@@ -753,7 +759,8 @@ public class CxxGenruleDescription
               resolver.addToIndex(
                   CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
                       new SourcePathRuleFinder(resolver),
-                      params,
+                      buildTarget,
+                      filesystem,
                       cxxPlatform,
                       rules,
                       NativeLinkable.class::isInstance));
@@ -778,9 +785,9 @@ public class CxxGenruleDescription
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
       Path linkOutput =
-          BuildTargets.getGenPath(params.getProjectFilesystem(), params.getBuildTarget(), "%s")
+          BuildTargets.getGenPath(filesystem, buildTarget, "%s")
               .resolve(out);
-      Path absLinkOut = params.getBuildTarget().getCellPath().resolve(linkOutput);
+      Path absLinkOut = buildTarget.getCellPath().resolve(linkOutput);
       SymlinkTree symlinkTree = requireSymlinkTree(resolver, rules);
       return ImmutableList.copyOf(
           StringArg.from(

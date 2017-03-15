@@ -358,7 +358,8 @@ public class RustCompileUtils {
           resolver.addToIndex(
               CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
                   ruleFinder,
-                  params,
+                  params.getBuildTarget(),
+                  params.getProjectFilesystem(),
                   cxxPlatform,
                   params.getDeps(),
                   RustLinkable.class::isInstance,

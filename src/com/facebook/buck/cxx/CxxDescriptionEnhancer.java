@@ -957,7 +957,8 @@ public class CxxDescriptionEnhancer {
       // Create a symlink tree with for all shared libraries needed by this binary.
       SymlinkTree sharedLibraries =
           requireSharedLibrarySymlinkTree(
-              params,
+              params.getBuildTarget(),
+              params.getProjectFilesystem(),
               resolver,
               ruleFinder,
               cxxPlatform,
@@ -1229,7 +1230,8 @@ public class CxxDescriptionEnhancer {
    */
   public static SymlinkTree createSharedLibrarySymlinkTree(
       SourcePathRuleFinder ruleFinder,
-      BuildRuleParams params,
+      BuildTarget baseBuildTarget,
+      ProjectFilesystem filesystem,
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> deps,
       Predicate<Object> traverse,
@@ -1238,12 +1240,12 @@ public class CxxDescriptionEnhancer {
 
     BuildTarget symlinkTreeTarget =
         createSharedLibrarySymlinkTreeTarget(
-            params.getBuildTarget(),
+            baseBuildTarget,
             cxxPlatform.getFlavor());
     Path symlinkTreeRoot =
         getSharedLibrarySymlinkTreePath(
-            params.getProjectFilesystem(),
-            params.getBuildTarget(),
+            filesystem,
+            baseBuildTarget,
             cxxPlatform.getFlavor());
 
     ImmutableSortedMap<String, SourcePath> libraries =
@@ -1259,7 +1261,7 @@ public class CxxDescriptionEnhancer {
     }
     return new SymlinkTree(
         symlinkTreeTarget,
-        params.getProjectFilesystem(),
+        filesystem,
         symlinkTreeRoot,
         links.build(),
         ruleFinder);
@@ -1267,14 +1269,16 @@ public class CxxDescriptionEnhancer {
 
   public static SymlinkTree createSharedLibrarySymlinkTree(
       SourcePathRuleFinder ruleFinder,
-      BuildRuleParams params,
+      BuildTarget baseBuildTarget,
+      ProjectFilesystem filesystem,
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> deps,
       Predicate<Object> traverse)
       throws NoSuchBuildTargetException {
     return createSharedLibrarySymlinkTree(
         ruleFinder,
-        params,
+        baseBuildTarget,
+        filesystem,
         cxxPlatform,
         deps,
         traverse,
@@ -1282,7 +1286,8 @@ public class CxxDescriptionEnhancer {
   }
 
   public static SymlinkTree requireSharedLibrarySymlinkTree(
-      BuildRuleParams params,
+      BuildTarget buildTarget,
+      ProjectFilesystem filesystem,
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
@@ -1290,14 +1295,15 @@ public class CxxDescriptionEnhancer {
       Predicate<Object> traverse)
       throws NoSuchBuildTargetException {
     BuildTarget target =
-        createSharedLibrarySymlinkTreeTarget(params.getBuildTarget(), cxxPlatform.getFlavor());
+        createSharedLibrarySymlinkTreeTarget(buildTarget, cxxPlatform.getFlavor());
     SymlinkTree tree = resolver.getRuleOptionalWithType(target, SymlinkTree.class).orElse(null);
     if (tree == null) {
       tree =
           resolver.addToIndex(
               createSharedLibrarySymlinkTree(
                   ruleFinder,
-                  params,
+                  buildTarget,
+                  filesystem,
                   cxxPlatform,
                   deps,
                   traverse));

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.MacroException;
@@ -91,12 +92,12 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     return PARSE_TIME_MACRO_HANDLER;
   }
 
-  @SuppressWarnings("unused")
   protected <A extends AbstractGenruleDescription.Arg> MacroHandler getMacroHandler(
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
+      @SuppressWarnings("unused") BuildTarget buildTarget,
+      @SuppressWarnings("unused") ProjectFilesystem filesystem,
+      @SuppressWarnings("unused") BuildRuleResolver resolver,
       TargetGraph targetGraph,
-      A args) {
+      @SuppressWarnings("unused") A args) {
     return new MacroHandler(
         ImmutableMap.<String, MacroExpander>builder()
             .put("classpath", new ClasspathMacroExpander())
@@ -119,7 +120,12 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     java.util.function.Function<String, com.facebook.buck.rules.args.Arg> macroArgFunction =
         MacroArg.toMacroArgFunction(
-            getMacroHandler(params, resolver, targetGraph, args),
+            getMacroHandler(
+                params.getBuildTarget(),
+                params.getProjectFilesystem(),
+                resolver,
+                targetGraph,
+                args),
             params.getBuildTarget(),
             params.getCellRoots(),
             resolver)::apply;

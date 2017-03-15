@@ -145,7 +145,8 @@ public class HaskellBinaryDescription implements
           resolver.addToIndex(
               CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
                   ruleFinder,
-                  params,
+                  params.getBuildTarget(),
+                  params.getProjectFilesystem(),
                   cxxPlatform,
                   deps,
                   NativeLinkable.class::isInstance));

@@ -280,7 +280,8 @@ public class JavaTestDescription implements
         CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
       return CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
           ruleFinder,
-          buildRuleParams,
+          buildRuleParams.getBuildTarget(),
+          buildRuleParams.getProjectFilesystem(),
           cxxPlatform,
           buildRuleParams.getDeps(),
           Predicates.or(
