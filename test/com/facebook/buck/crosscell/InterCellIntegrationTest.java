@@ -19,6 +19,7 @@ package com.facebook.buck.crosscell;
 import static com.facebook.buck.util.environment.Platform.WINDOWS;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -187,6 +188,7 @@ public class InterCellIntegrationTest {
     ProjectWorkspace ternary = createWorkspace("inter-cell/multi-cell/ternary");
     registerCell(secondary, "ternary", ternary);
     registerCell(primary, "secondary", secondary);
+    registerCell(primary, "ternary", ternary);
 
     primary.runBuckCommand("targets", "--show-target-hash", "//:cxxbinary");
     secondary.runBuckCommand("targets", "--show-target-hash", "//:cxxlib");
@@ -321,6 +323,7 @@ public class InterCellIntegrationTest {
     ProjectWorkspace primary = cells.getFirst();
     ProjectWorkspace secondary = cells.getSecond();
 
+    registerCell(primary, "primary", primary);
     registerCell(secondary, "primary", primary);
 
     // We could just do a build, but that's a little extreme since all we need is the target graph
@@ -445,6 +448,7 @@ public class InterCellIntegrationTest {
     ProjectWorkspace root = createWorkspace("inter-cell/include-defs/root");
     ProjectWorkspace other = createWorkspace("inter-cell/include-defs/other");
     registerCell(root, "other", other);
+    registerCell(root, "root", root);
     registerCell(other, "root", root);
 
     root.runBuckBuild("//:rule", "other//:rule").assertSuccess();
@@ -513,6 +517,57 @@ public class InterCellIntegrationTest {
         "test",
         "//test:cxxtest",
         "secondary//test:cxxtest");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void childCellWithCellMappingNotInRootCellShouldThrowError() throws IOException {
+    ProjectWorkspace root = createWorkspace("inter-cell/validation/root");
+    ProjectWorkspace second = createWorkspace("inter-cell/validation/root");
+    ProjectWorkspace third = createWorkspace("inter-cell/validation/root");
+    registerCell(root, "second", second);
+    registerCell(second, "third", third);
+
+    // should fail if "third" is not specified in root
+    try {
+      root.runBuckBuild("//:dummy");
+      fail("Should have thrown a HumanReadableException.");
+    } catch (HumanReadableException e) {
+      assertThat(
+          e.getHumanReadableErrorMessage(),
+          containsString("repositories.third must exist in the root cell's cell mappings."));
+    }
+
+    // and succeeds when it is
+    registerCell(root, "third", third);
+    ProjectWorkspace.ProcessResult result = root.runBuckBuild("//:dummy");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void childCellWithCellMappingThatDiffersFromRootCellShouldThrowError() throws IOException {
+    ProjectWorkspace root = createWorkspace("inter-cell/validation/root");
+    ProjectWorkspace second = createWorkspace("inter-cell/validation/root");
+    ProjectWorkspace third = createWorkspace("inter-cell/validation/root");
+    registerCell(root, "second", second);
+    registerCell(second, "third", third);
+
+    // should fail if "third" is not mapped to third in the root.
+    registerCell(root, "third", second);
+    try {
+      root.runBuckBuild("//:dummy");
+      fail("Should have thrown a HumanReadableException.");
+    } catch (HumanReadableException e) {
+      assertThat(
+          e.getHumanReadableErrorMessage(),
+          containsString(
+              "repositories.third must point to the same directory as the root cell's cell " +
+                  "mapping:"));
+    }
+
+    // and succeeds when it is
+    registerCell(root, "third", third);
+    ProjectWorkspace.ProcessResult result = root.runBuckBuild("//:dummy");
     result.assertSuccess();
   }
 

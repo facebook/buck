@@ -94,9 +94,9 @@ public final class CellProvider {
       KnownBuildRuleTypesFactory knownBuildRuleTypesFactory) throws IOException {
 
     DefaultCellPathResolver rootCellCellPathResolver =
-        DefaultCellPathResolver.createWithConfigRepositoriesSection(
+        new DefaultCellPathResolver(
             rootFilesystem.getRootPath(),
-            rootConfig.getEntriesForSection(DefaultCellPathResolver.REPOSITORIES_SECTION));
+            rootConfig.getConfig());
 
     ImmutableMap<RelativeCellName, Path> transitiveCellPathMapping =
         rootCellCellPathResolver.getTransitivePathMapping();
@@ -114,20 +114,45 @@ public final class CellProvider {
         cellProvider -> new CacheLoader<Path, Cell>() {
           @Override
           public Cell load(Path cellPath) throws IOException, InterruptedException {
-            cellPath = cellPath.toRealPath().normalize();
+            Path normalizedCellPath = cellPath.toRealPath().normalize();
 
             Preconditions.checkState(
-                allRoots.contains(cellPath),
+                allRoots.contains(normalizedCellPath),
                 "Cell %s outside of transitive closure of root cell (%s).",
-                cellPath,
+                normalizedCellPath,
                 allRoots);
 
-            RawConfig configOverrides = Optional.ofNullable(pathToConfigOverrides.get(cellPath))
-                .orElse(RawConfig.of(ImmutableMap.of()));
-            Config config = Configs.createDefaultConfig(cellPath, configOverrides);
+            RawConfig configOverrides =
+                Optional.ofNullable(pathToConfigOverrides.get(normalizedCellPath))
+                    .orElse(RawConfig.of(ImmutableMap.of()));
+            Config config = Configs.createDefaultConfig(normalizedCellPath, configOverrides);
+
             DefaultCellPathResolver cellPathResolver =
-                new DefaultCellPathResolver(cellPath, config);
-            ProjectFilesystem cellFilesystem = new ProjectFilesystem(cellPath, config);
+                new DefaultCellPathResolver(
+                    normalizedCellPath,
+                    config);
+            // The cell should only contain a subset of cell mappings of the root cell.
+            cellPathResolver.getCellPaths().forEach((name, path) -> {
+              Path pathInRootResolver = rootCellCellPathResolver.getCellPaths().get(name);
+              if (pathInRootResolver == null) {
+                throw new HumanReadableException(
+                    "In the config of %s:  %s.%s must exist in the root cell's cell mappings.",
+                    cellPath.toString(),
+                    DefaultCellPathResolver.REPOSITORIES_SECTION,
+                    name);
+              } else if (!pathInRootResolver.equals(path)) {
+                throw new HumanReadableException(
+                    "In the config of %s:  %s.%s must point to the same directory as the root " +
+                        "cell's cell mapping: (root) %s != (current) %s",
+                    cellPath.toString(),
+                    DefaultCellPathResolver.REPOSITORIES_SECTION,
+                    name,
+                    pathInRootResolver,
+                    path);
+              }
+            });
+
+            ProjectFilesystem cellFilesystem = new ProjectFilesystem(normalizedCellPath, config);
 
             BuckConfig buckConfig = new BuckConfig(
                 config,

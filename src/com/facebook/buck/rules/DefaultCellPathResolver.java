@@ -53,14 +53,6 @@ public class DefaultCellPathResolver implements CellPathResolver {
     this(root, getCellPathsFromConfigRepositoriesSection(root, config.get(REPOSITORIES_SECTION)));
   }
 
-  public static DefaultCellPathResolver createWithConfigRepositoriesSection(
-      final Path root,
-      ImmutableMap<String, String> repositoriesSection) {
-    return new DefaultCellPathResolver(
-        root,
-        getCellPathsFromConfigRepositoriesSection(root, repositoriesSection));
-  }
-
   private static ImmutableMap<String, Path> getCellPathsFromConfigRepositoriesSection(
       Path root,
       ImmutableMap<String, String> repositoriesSection) {
