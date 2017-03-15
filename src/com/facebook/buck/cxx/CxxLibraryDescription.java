@@ -335,6 +335,7 @@ public class CxxLibraryDescription implements
                 params.getBuildTarget(),
                 params.getCellRoots(),
                 ruleResolver,
+                cxxPlatform,
                 Iterables.concat(linkerFlags, exportedLinkerFlags)))
         .addAllArgs(SourcePathArg.from(objects.values()))
         .setFrameworks(frameworks)
@@ -423,6 +424,7 @@ public class CxxLibraryDescription implements
                     params.getBuildTarget(),
                     params.getCellRoots(),
                     ruleResolver,
+                    cxxPlatform,
                     extraLdFlags))
             .addAllArgs(SourcePathArg.from(objects.values()))
             .setFrameworks(frameworks)
@@ -924,6 +926,7 @@ public class CxxLibraryDescription implements
               params.getBuildTarget(),
               params.getCellRoots(),
               resolver,
+              input,
               flags);
         },
         cxxPlatform -> {

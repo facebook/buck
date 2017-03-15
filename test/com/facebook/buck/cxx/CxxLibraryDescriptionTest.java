@@ -1463,6 +1463,34 @@ public class CxxLibraryDescriptionTest {
     verifySourcePaths(ruleResolver);
   }
 
+  @Test
+  public void locationMacroFromCxxGenrule() throws Exception {
+    CxxGenruleBuilder srcBuilder =
+        new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:src"))
+            .setOut("linker.script");
+    CxxLibraryBuilder libraryBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.cpp"))))
+            .setLinkerFlags(
+                ImmutableList.of(
+                    StringWithMacrosUtils.format(
+                        "%s",
+                        LocationMacro.of(srcBuilder.getTarget()))));
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            srcBuilder.build(),
+            libraryBuilder.build());
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(
+            targetGraph,
+            new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver.requireRule(
+        libraryBuilder.getTarget().withAppendedFlavors(
+            CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
+            CxxLibraryDescription.Type.SHARED.getFlavor()));
+    verifySourcePaths(ruleResolver);
+  }
+
   /**
    * Verify that all source paths are resolvable, which wouldn't be the case if `cxx_genrule`
    * outputs were not handled correctly.

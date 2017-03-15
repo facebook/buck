@@ -228,6 +228,7 @@ public class CxxPythonExtensionDescription implements
             params.getBuildTarget(),
             params.getCellRoots(),
             ruleResolver,
+            cxxPlatform,
             CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
                 args.linkerFlags,
                 args.platformLinkerFlags,

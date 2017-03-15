@@ -11,6 +11,8 @@ PLATFORM_SRCS = [
   'ClangPreprocessor.java',
   'Compiler.java',
   'CompilerProvider.java',
+  'CxxGenrule.java',
+  'CxxLocationMacroExpander.java',
   'CxxToolProvider.java',
   'DebugPathSanitizer.java',
   'DebugSection.java',

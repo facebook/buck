@@ -950,6 +950,7 @@ public class CxxDescriptionEnhancer {
             target,
             params.getCellRoots(),
             resolver,
+            cxxPlatform,
             CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
                 linkerFlags,
                 platformLinkerFlags,
@@ -1415,13 +1416,14 @@ public class CxxDescriptionEnhancer {
       BuildTarget target,
       CellPathResolver cellPathResolver,
       BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform,
       Iterable<StringWithMacros> flags) {
     ImmutableList.Builder<StringWithMacrosArg> args = ImmutableList.builder();
     for (StringWithMacros flag : flags) {
       args.add(
           StringWithMacrosArg.of(
               flag,
-              ImmutableList.of(new LocationMacroExpander()),
+              ImmutableList.of(new CxxLocationMacroExpander(cxxPlatform)),
               target,
               cellPathResolver,
               resolver));
