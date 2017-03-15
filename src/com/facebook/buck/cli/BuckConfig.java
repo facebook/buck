@@ -1081,10 +1081,6 @@ public class BuckConfig implements ConfigPathGetter {
     return getBooleanValue("build", "rule_key_caching", false);
   }
 
-  public boolean getThriftTargetTypesEnabled() {
-    return getBooleanValue("project", "thrift_target_types_enabled", false);
-  }
-
   public Config getConfig() {
     return config;
   }

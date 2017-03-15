@@ -226,7 +226,6 @@
       "//src/com/facebook/buck/shell:worker",
       "//src/com/facebook/buck/swift:platform",
       "//src/com/facebook/buck/swift:swift",
-      "//src/com/facebook/buck/thrift:thrift",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/zip:rules",

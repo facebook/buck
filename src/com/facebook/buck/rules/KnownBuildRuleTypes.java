@@ -156,11 +156,6 @@ import com.facebook.buck.shell.WorkerToolDescription;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.swift.SwiftPlatform;
-import com.facebook.buck.thrift.ThriftBuckConfig;
-import com.facebook.buck.thrift.ThriftCxxEnhancer;
-import com.facebook.buck.thrift.ThriftJavaEnhancer;
-import com.facebook.buck.thrift.ThriftLibraryDescription;
-import com.facebook.buck.thrift.ThriftPythonEnhancer;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
@@ -808,34 +803,6 @@ public class KnownBuildRuleTypes {
     builder.register(new SceneKitAssetsDescription());
     builder.register(new ShBinaryDescription());
     builder.register(new ShTestDescription(defaultTestRuleTimeoutMs));
-    if (config.getThriftTargetTypesEnabled()) {
-      ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(config);
-      builder.register(
-          new ThriftLibraryDescription(
-              thriftBuckConfig,
-              ImmutableList.of(
-                  new ThriftJavaEnhancer(thriftBuckConfig, defaultJavacOptions),
-                  new ThriftCxxEnhancer(
-                      thriftBuckConfig,
-                      cxxLibraryDescription,
-                    /* cpp2 */ false),
-                  new ThriftCxxEnhancer(
-                      thriftBuckConfig,
-                      cxxLibraryDescription,
-                    /* cpp2 */ true),
-                  new ThriftPythonEnhancer(
-                      thriftBuckConfig,
-                      ThriftPythonEnhancer.Type.NORMAL,
-                      pythonLibraryDescription),
-                  new ThriftPythonEnhancer(
-                      thriftBuckConfig,
-                      ThriftPythonEnhancer.Type.TWISTED,
-                      pythonLibraryDescription),
-                  new ThriftPythonEnhancer(
-                      thriftBuckConfig,
-                      ThriftPythonEnhancer.Type.ASYNCIO,
-                      pythonLibraryDescription))));
-    }
     builder.register(new WorkerToolDescription(config));
     builder.register(new XcodePostbuildScriptDescription());
     builder.register(new XcodePrebuildScriptDescription());
