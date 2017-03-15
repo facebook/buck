@@ -107,6 +107,7 @@ public class CxxLibraryDescription implements
   public enum MetadataType implements FlavorConvertible {
 
     COMPILATION_DATABASE_DEPS(ImmutableFlavor.of("compilation-database-deps")),
+    CXX_HEADERS(ImmutableFlavor.of("header-symlink-tree")),
     CXX_PREPROCESSOR_INPUT(ImmutableFlavor.of("cxx-preprocessor-input")),
     ;
 
@@ -128,6 +129,9 @@ public class CxxLibraryDescription implements
 
   private static final FlavorDomain<HeaderVisibility> HEADER_VISIBILITY =
       FlavorDomain.from("C/C++ Header Visibility", HeaderVisibility.class);
+
+  private static final FlavorDomain<CxxPreprocessables.HeaderMode> HEADER_MODE =
+      FlavorDomain.from("C/C++ Header Mode", CxxPreprocessables.HeaderMode.class);
 
   private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform defaultCxxPlatform;
@@ -473,7 +477,7 @@ public class CxxLibraryDescription implements
   /**
    * @return a {@link HeaderSymlinkTree} for the headers of this C/C++ library.
    */
-  public static <A extends Arg> HeaderSymlinkTree createHeaderSymlinkTreeBuildRule(
+  private <A extends Arg> HeaderSymlinkTree createHeaderSymlinkTreeBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
@@ -495,7 +499,27 @@ public class CxxLibraryDescription implements
   /**
    * @return a {@link HeaderSymlinkTree} for the exported headers of this C/C++ library.
    */
-  public static <A extends Arg> HeaderSymlinkTree createExportedHeaderSymlinkTreeBuildRule(
+  private <A extends Arg> HeaderSymlinkTree createExportedHeaderSymlinkTreeBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      CxxPreprocessables.HeaderMode mode,
+      A args) {
+    return CxxDescriptionEnhancer.createHeaderSymlinkTree(
+        params,
+        resolver,
+        mode,
+        CxxDescriptionEnhancer.parseExportedHeaders(
+            params.getBuildTarget(),
+            new SourcePathResolver(new SourcePathRuleFinder(resolver)),
+            Optional.empty(),
+            args),
+        HeaderVisibility.PUBLIC);
+  }
+
+  /**
+   * @return a {@link HeaderSymlinkTree} for the exported headers of this C/C++ library.
+   */
+  private <A extends Arg> HeaderSymlinkTree createExportedPlatformHeaderSymlinkTreeBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
@@ -505,10 +529,10 @@ public class CxxLibraryDescription implements
         params,
         resolver,
         cxxPlatform,
-        CxxDescriptionEnhancer.parseExportedHeaders(
+        CxxDescriptionEnhancer.parseExportedPlatformHeaders(
             params.getBuildTarget(),
             new SourcePathResolver(new SourcePathRuleFinder(resolver)),
-            Optional.of(cxxPlatform),
+            cxxPlatform,
             args),
         HeaderVisibility.PUBLIC,
         shouldCreatePublicHeaderSymlinks);
@@ -753,6 +777,24 @@ public class CxxLibraryDescription implements
           args,
           inferBuckConfig,
           new CxxInferSourceFilter(inferBuckConfig));
+    } else if (type.isPresent() && !platform.isPresent()) {
+      BuildRuleParams untypedParams = getUntypedParams(params);
+      switch (type.get().getValue()) {
+        case EXPORTED_HEADERS:
+          Optional<CxxPreprocessables.HeaderMode> mode =
+              HEADER_MODE.getValue(params.getBuildTarget());
+          if (mode.isPresent()) {
+            return createExportedHeaderSymlinkTreeBuildRule(
+                untypedParams,
+                resolver,
+                mode.get(),
+                args);
+          }
+          break;
+        // $CASES-OMITTED$
+        default:
+      }
+
     } else if (type.isPresent() && platform.isPresent()) {
       // If we *are* building a specific type of this lib, call into the type specific
       // rule builder methods.
@@ -766,7 +808,7 @@ public class CxxLibraryDescription implements
               platform.get(),
               args);
         case EXPORTED_HEADERS:
-          return createExportedHeaderSymlinkTreeBuildRule(
+          return createExportedPlatformHeaderSymlinkTreeBuildRule(
               untypedParams,
               resolver,
               platform.get(),
@@ -955,8 +997,26 @@ public class CxxLibraryDescription implements
 
     Map.Entry<Flavor, MetadataType> type =
         METADATA_TYPE.getFlavorAndValue(buildTarget).orElseThrow(IllegalArgumentException::new);
+    BuildTarget baseTarget = buildTarget.withoutFlavors(type.getKey());
 
     switch (type.getValue()) {
+
+      case CXX_HEADERS: {
+        Optional<CxxHeaders> symlinkTree = Optional.empty();
+        if (!args.exportedHeaders.isEmpty()) {
+          CxxPreprocessables.HeaderMode mode = HEADER_MODE.getRequiredValue(buildTarget);
+          baseTarget = baseTarget.withoutFlavors(mode.getFlavor());
+          symlinkTree =
+              Optional.of(
+                  CxxSymlinkTreeHeaders.from(
+                      (HeaderSymlinkTree) resolver.requireRule(
+                          baseTarget.withAppendedFlavors(
+                              Type.EXPORTED_HEADERS.getFlavor(),
+                              mode.getFlavor())),
+                      CxxPreprocessables.IncludeType.LOCAL));
+        }
+        return symlinkTree.map(metadataClass::cast);
+      }
 
       case CXX_PREPROCESSOR_INPUT: {
         Map.Entry<Flavor, CxxPlatform> platform =
@@ -964,9 +1024,8 @@ public class CxxLibraryDescription implements
         Map.Entry<Flavor, HeaderVisibility> visibility =
             HEADER_VISIBILITY.getFlavorAndValue(buildTarget)
                 .orElseThrow(IllegalArgumentException::new);
-        BuildTarget baseTarget =
-            buildTarget.withoutFlavors(
-                type.getKey(),
+        baseTarget =
+            baseTarget.withoutFlavors(
                 platform.getKey(),
                 visibility.getKey());
 
@@ -993,17 +1052,34 @@ public class CxxLibraryDescription implements
               CxxSymlinkTreeHeaders.from(symlinkTree, CxxPreprocessables.IncludeType.LOCAL));
         }
 
-        if (visibility.getValue() == HeaderVisibility.PUBLIC &&
-            (!args.exportedHeaders.isEmpty() ||
-             !args.exportedPlatformHeaders.getMatchingValues(
-                 platform.getKey().toString()).isEmpty())) {
-          HeaderSymlinkTree symlinkTree =
-              (HeaderSymlinkTree) resolver.requireRule(
+        if (visibility.getValue() == HeaderVisibility.PUBLIC) {
+
+          // Add platform-agnostic headers.
+          boolean shouldCreatePublicHeaderSymlinks = args.xcodePublicHeadersSymlinks.orElse(true);
+          CxxPreprocessables.HeaderMode mode =
+              CxxDescriptionEnhancer.getHeaderModeForPlatform(
+                  resolver,
+                  platform.getValue(),
+                  shouldCreatePublicHeaderSymlinks);
+          Optional<CxxHeaders> exportedHeaders =
+              resolver.requireMetadata(
                   baseTarget.withAppendedFlavors(
-                      platform.getKey(),
-                      Type.EXPORTED_HEADERS.getFlavor()));
-          cxxPreprocessorInputBuilder.addIncludes(
-              CxxSymlinkTreeHeaders.from(symlinkTree, CxxPreprocessables.IncludeType.LOCAL));
+                      MetadataType.CXX_HEADERS.getFlavor(),
+                      mode.getFlavor()),
+                  CxxHeaders.class);
+          exportedHeaders.ifPresent(cxxPreprocessorInputBuilder::addIncludes);
+
+          // Add platform-specific headers.
+          if (!args.exportedPlatformHeaders.getMatchingValues(platform.getKey().toString())
+                  .isEmpty()) {
+            HeaderSymlinkTree symlinkTree =
+                (HeaderSymlinkTree) resolver.requireRule(
+                    baseTarget.withAppendedFlavors(
+                        platform.getKey(),
+                        Type.EXPORTED_HEADERS.getFlavor()));
+            cxxPreprocessorInputBuilder.addIncludes(
+                CxxSymlinkTreeHeaders.from(symlinkTree, CxxPreprocessables.IncludeType.LOCAL));
+          }
         }
 
         CxxPreprocessorInput cxxPreprocessorInput = cxxPreprocessorInputBuilder.build();

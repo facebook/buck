@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNotNull;
 import com.facebook.buck.cxx.CxxCompilationDatabaseEntry;
 import com.facebook.buck.cxx.CxxCompilationDatabaseUtils;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -104,8 +105,8 @@ public class CompilationDatabaseIntegrationTest {
             .getGenPath(
                 filesystem,
                 target.withFlavors(
-                    ImmutableFlavor.of("iphonesimulator-x86_64"),
-                    CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
+                    CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
+                    CxxPlatformUtils.getHeaderModeForDefaultPlatform(tmp.getRoot()).getFlavor()),
                 "%s.hmap")
             .toString();
     Iterable<String> includes = ImmutableList.of(
@@ -179,9 +180,11 @@ public class CompilationDatabaseIntegrationTest {
         BuildTargets
             .getGenPath(
                 filesystem,
-                BuildTargetFactory.newInstance(
-                    "//Libraries/EXExample:EXExample#iphonesimulator-x86_64," +
-                        CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
+                BuildTargetFactory.newInstance("//Libraries/EXExample:EXExample")
+                    .withAppendedFlavors(
+                        CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
+                        CxxPlatformUtils.getHeaderModeForDefaultPlatform(tmp.getRoot())
+                            .getFlavor()),
                 "%s.hmap")
             .toString();
     Iterable<String> includes = ImmutableList.of(

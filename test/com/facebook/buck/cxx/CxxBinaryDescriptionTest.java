@@ -148,7 +148,7 @@ public class CxxBinaryDescriptionTest {
         .build();
     BuildTarget headerSymlinkTreeTarget = BuildTarget.builder(depTarget)
         .addFlavors(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
-        .addFlavors(cxxPlatform.getFlavor())
+        .addFlavors(CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor())
         .build();
 
     // Setup the build params we'll pass to description when generating the build rules.
@@ -221,8 +221,8 @@ public class CxxBinaryDescriptionTest {
             headerSymlinkTreeTarget,
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
-                cxxPlatform.getFlavor(),
-                HeaderVisibility.PRIVATE)));
+                HeaderVisibility.PRIVATE,
+                cxxPlatform.getFlavor())));
 
     // Verify that the compile rule for our genrule-generated source has correct deps setup
     // for the various header rules and the generating genrule.
@@ -239,9 +239,9 @@ public class CxxBinaryDescriptionTest {
             headerSymlinkTreeTarget,
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
-                cxxPlatform.getFlavor(),
-                HeaderVisibility.PRIVATE)));
-  }
+                HeaderVisibility.PRIVATE,
+                cxxPlatform.getFlavor())));
+ }
 
   @Test
   public void staticPicLinkStyle() throws Exception {

@@ -118,8 +118,8 @@ public class CxxLibraryDescriptionTest {
       BuildTarget headerMapBuildTarget =
           CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
               target,
-              cxxPlatform.getFlavor(),
-              headerVisibility);
+              headerVisibility,
+              cxxPlatform.getFlavor());
       return Optional.of(
           new ExplicitBuildTargetSourcePath(
               headerMapBuildTarget,
@@ -168,7 +168,7 @@ public class CxxLibraryDescriptionTest {
         .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test.cpp"))));
     BuildTarget headerSymlinkTreeTarget = BuildTarget.builder(depTarget)
         .addFlavors(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
-        .addFlavors(cxxPlatform.getFlavor())
+        .addFlavors(CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor())
         .build();
 
     // Setup the build params we'll pass to description when generating the build rules.
@@ -305,18 +305,18 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(compileRule1)
             .map(BuildRule::getBuildTarget)
-            ::iterator,
+            .collect(MoreCollectors.toImmutableSet()),
         containsInAnyOrder(
             genHeaderTarget,
             headerSymlinkTreeTarget,
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
-                cxxPlatform.getFlavor(),
-                HeaderVisibility.PRIVATE),
+                HeaderVisibility.PRIVATE,
+                cxxPlatform.getFlavor()),
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
-                cxxPlatform.getFlavor(),
-                HeaderVisibility.PUBLIC)));
+                HeaderVisibility.PUBLIC,
+                CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor())));
 
     // Verify that the compile rule for our genrule-generated source has correct deps setup
     // for the various header rules and the generating genrule.
@@ -326,19 +326,19 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(compileRule2)
             .map(BuildRule::getBuildTarget)
-            ::iterator,
+            .collect(MoreCollectors.toImmutableSet()),
         containsInAnyOrder(
             genHeaderTarget,
             genSourceTarget,
             headerSymlinkTreeTarget,
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
-                cxxPlatform.getFlavor(),
-                HeaderVisibility.PRIVATE),
+                HeaderVisibility.PRIVATE,
+                cxxPlatform.getFlavor()),
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
-                cxxPlatform.getFlavor(),
-                HeaderVisibility.PUBLIC)));
+                HeaderVisibility.PUBLIC,
+                CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor())));
   }
 
   @Test
@@ -482,7 +482,7 @@ public class CxxLibraryDescriptionTest {
         .build();
     BuildTarget headerSymlinkTreeTarget = BuildTarget.builder(depTarget)
         .addFlavors(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
-        .addFlavors(cxxPlatform.getFlavor())
+        .addFlavors(CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor())
         .build();
 
     // Setup the build params we'll pass to description when generating the build rules.
@@ -580,18 +580,18 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(staticCompileRule1)
             .map(BuildRule::getBuildTarget)
-            ::iterator,
+            .collect(MoreCollectors.toImmutableSet()),
         containsInAnyOrder(
             genHeaderTarget,
             headerSymlinkTreeTarget,
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
-                cxxPlatform.getFlavor(),
-                HeaderVisibility.PRIVATE),
+                HeaderVisibility.PRIVATE,
+                cxxPlatform.getFlavor()),
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
-                cxxPlatform.getFlavor(),
-                HeaderVisibility.PUBLIC)));
+                HeaderVisibility.PUBLIC,
+                CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor())));
 
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
@@ -601,19 +601,19 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(staticCompileRule2)
             .map(BuildRule::getBuildTarget)
-            ::iterator,
+            .collect(MoreCollectors.toImmutableSet()),
         containsInAnyOrder(
             genHeaderTarget,
             genSourceTarget,
             headerSymlinkTreeTarget,
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
-                cxxPlatform.getFlavor(),
-                HeaderVisibility.PRIVATE),
+                HeaderVisibility.PRIVATE,
+                cxxPlatform.getFlavor()),
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
-                cxxPlatform.getFlavor(),
-                HeaderVisibility.PUBLIC)));
+                HeaderVisibility.PUBLIC,
+                CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor())));
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
     CxxSourceRuleFactory cxxSourceRuleFactoryPIC = CxxSourceRuleFactoryHelper.of(
@@ -646,18 +646,18 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(sharedCompileRule1)
             .map(BuildRule::getBuildTarget)
-            ::iterator,
+            .collect(MoreCollectors.toImmutableSet()),
         containsInAnyOrder(
             genHeaderTarget,
             headerSymlinkTreeTarget,
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
-                cxxPlatform.getFlavor(),
-                HeaderVisibility.PRIVATE),
+                HeaderVisibility.PRIVATE,
+                cxxPlatform.getFlavor()),
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
-                cxxPlatform.getFlavor(),
-                HeaderVisibility.PUBLIC)));
+                HeaderVisibility.PUBLIC,
+                CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor())));
 
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
@@ -667,19 +667,19 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(sharedCompileRule2)
             .map(BuildRule::getBuildTarget)
-            ::iterator,
+            .collect(MoreCollectors.toImmutableSet()),
         containsInAnyOrder(
             genHeaderTarget,
             genSourceTarget,
             headerSymlinkTreeTarget,
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
-                cxxPlatform.getFlavor(),
-                HeaderVisibility.PRIVATE),
+                HeaderVisibility.PRIVATE,
+                cxxPlatform.getFlavor()),
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
-                cxxPlatform.getFlavor(),
-                HeaderVisibility.PUBLIC)));
+                HeaderVisibility.PUBLIC,
+                CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor())));
   }
 
   @Test
@@ -1324,8 +1324,7 @@ public class CxxLibraryDescriptionTest {
 
     CxxLibraryBuilder libraryBuilder =
         new CxxLibraryBuilder(
-            BuildTargetFactory.newInstance("//:foo")
-                .withFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR),
+            BuildTargetFactory.newInstance("//:foo"),
             cxxBuckConfig);
     libraryBuilder
         .setLibraries(libraries)

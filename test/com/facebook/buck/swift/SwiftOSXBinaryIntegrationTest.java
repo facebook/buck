@@ -26,9 +26,10 @@ import static org.junit.Assume.assumeThat;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.ApplePlatform;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxPreprocessables;
+import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -43,7 +44,7 @@ import java.util.Optional;
 public class SwiftOSXBinaryIntegrationTest {
 
   @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  public TemporaryPaths tmp = new TemporaryPaths(true);
 
   @Test
   public void swiftHelloWorldRunsAndPrintsMessageOnOSX() throws IOException {
@@ -150,12 +151,13 @@ public class SwiftOSXBinaryIntegrationTest {
             .getFullyQualifiedName());
     runResult.assertSuccess();
 
-    Path headerMapSymlinkTreePath = workspace.getPath(
-        BuildTargets.getGenPath(
-            filesystem,
-            target.withAppendedFlavors(
-                CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
-            "%s"));
+    Path headerMapSymlinkTreePath =
+        workspace.getPath(
+            CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+                filesystem,
+                target.withFlavors(),
+                HeaderVisibility.PUBLIC,
+                CxxPreprocessables.HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP.getFlavor()));
     Path buckModuleMap = headerMapSymlinkTreePath.resolve("buck.modulemap");
     Optional<String> fileContent = filesystem.readFileIfItExists(buckModuleMap);
     assertThat(fileContent.isPresent(), equalTo(true));
@@ -181,12 +183,13 @@ public class SwiftOSXBinaryIntegrationTest {
             .getFullyQualifiedName());
     runResult.assertSuccess();
 
-    Path headerMapSymlinkTreePath = workspace.getPath(
-        BuildTargets.getGenPath(
-            filesystem,
-            target.withAppendedFlavors(
-                CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
-            "%s"));
+    Path headerMapSymlinkTreePath =
+        workspace.getPath(
+            CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+                filesystem,
+                target.withFlavors(),
+                HeaderVisibility.PUBLIC,
+                CxxPreprocessables.HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP.getFlavor()));
     Path buckModuleMap = headerMapSymlinkTreePath.resolve("buck.modulemap");
     Optional<String> fileContentOptional = filesystem.readFileIfItExists(buckModuleMap);
     assertThat(fileContentOptional.isPresent(), equalTo(true));
