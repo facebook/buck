@@ -41,52 +41,11 @@ public class PerfTimesEventListener implements BuckEventListener {
 
   private final BuckEventBus eventBus;
 
-  /**
-   * Duration of time we spent in Python, in milliseconds.
-   */
-  private long pythonInitTimeMs = 0;
-
-  /**
-   * Duration of time we spent initializing Buck, in milliseconds.
-   */
-  private long javaInitTimeMs = 0;
-
-  /**
-   * Time from initialization time to when parsing starts, in milliseconds.
-   */
-  private long commandPreFlightTimeMs = 0;
-
-  /**
-   * Duration of parsing and processing of the BUCK files, in milliseconds.
-   */
-  private long parseTimeMs = 0;
-
-  /**
-   * Duration of the action graph generation, in milliseconds.
-   */
-  private long actionGraphTimeMs = 0;
-
-  /**
-   * Duration of the rule keys computation, from the start of rule key calculation to the fetching
-   * of the first artifact from the remote cache, in milliseconds.
-   */
-  private long ruleKeyComputationTimeMs = 0;
-
-  /**
-   * Duration of the fetch operation, from the first fetch event to the start of the local build,
-   * in milliseconds.
-   */
-  private long fetchWithoutLocalBuildTimeInParallelMs = 0;
-
-  /**
-   * Duration of the local build phase, from start of the local build to when the build completes,
-   * in milliseconds.
-   */
-  private long timeToFinishBuildMs = 0;
-
   private final AtomicLong buildPhasesLastEvent = new AtomicLong();
   private final AtomicBoolean firstCacheFetchEvent = new AtomicBoolean(false);
   private final AtomicBoolean firstLocalBuildEvent = new AtomicBoolean(false);
+
+  private PerfTimesStats.Builder perfTimesStatsBuilder = PerfTimesStats.builder();
 
   /**
    * @param eventBus When we finish gather all data points, we will post the result as event back
@@ -98,9 +57,63 @@ public class PerfTimesEventListener implements BuckEventListener {
       BuckEventBus eventBus,
       ExecutionEnvironment executionEnvironment) {
     this.eventBus = eventBus;
-    this.pythonInitTimeMs = Long.valueOf(executionEnvironment.getenv(
-            "BUCK_PYTHON_SPACE_INIT_TIME",
-            "0"));
+    perfTimesStatsBuilder.setPythonTimeMs(Long.valueOf(executionEnvironment.getenv(
+        "BUCK_PYTHON_SPACE_INIT_TIME",
+        "0")));
+    eventBus.post(PerfTimesEvent.update(perfTimesStatsBuilder.build()));
+  }
+
+  @Subscribe
+  public synchronized void initializationFinished(BuckInitializationDurationEvent event) {
+    buildPhasesLastEvent.set(event.getTimestamp());
+    perfTimesStatsBuilder.setInitTimeMs(event.getDuration());
+    eventBus.post(PerfTimesEvent.update(perfTimesStatsBuilder.build()));
+  }
+
+  @Subscribe
+  public synchronized void parseStarted(ParseEvent.Started started) {
+    perfTimesStatsBuilder.setProcessingTimeMs(getTimeDifferenceSinceLastEventToEvent(started));
+    eventBus.post(PerfTimesEvent.update(perfTimesStatsBuilder.build()));
+  }
+
+  @Subscribe
+  public synchronized void parseFinished(ParseEvent.Finished finished) {
+    perfTimesStatsBuilder.setParseTimeMs(getTimeDifferenceSinceLastEventToEvent(finished));
+    eventBus.post(PerfTimesEvent.update(perfTimesStatsBuilder.build()));
+  }
+
+  @Subscribe
+  public void actionGraphFinished(ActionGraphEvent.Finished finished) {
+    perfTimesStatsBuilder.setActionGraphTimeMs(getTimeDifferenceSinceLastEventToEvent(finished));
+    eventBus.post(PerfTimesEvent.update(perfTimesStatsBuilder.build()));
+  }
+
+  @Subscribe
+  public void onHttpArtifactCacheStartedEvent(HttpArtifactCacheEvent.Started event) {
+    if (firstCacheFetchEvent.compareAndSet(false, true)) {
+      perfTimesStatsBuilder.setRulekeyTimeMs(getTimeDifferenceSinceLastEventToEvent(event));
+      eventBus.post(PerfTimesEvent.update(perfTimesStatsBuilder.build()));
+    }
+  }
+
+  @Subscribe
+  public void buildRuleWillBuildLocally(BuildRuleEvent.WillBuildLocally event) {
+    if (firstLocalBuildEvent.compareAndSet(false, true)) {
+      perfTimesStatsBuilder.setFetchTimeMs(getTimeDifferenceSinceLastEventToEvent(event));
+      eventBus.post(PerfTimesEvent.update(perfTimesStatsBuilder.build()));
+    }
+  }
+
+  @Subscribe
+  public synchronized void buildFinished(BuildEvent.Finished finished) {
+    perfTimesStatsBuilder.setBuildTimeMs(getTimeDifferenceSinceLastEventToEvent(finished));
+    eventBus.post(PerfTimesEvent.update(perfTimesStatsBuilder.build()));
+  }
+
+  @Subscribe
+  public synchronized void commandFinished(CommandEvent.Finished finished) {
+    perfTimesStatsBuilder.setInstallTimeMs(getTimeDifferenceSinceLastEventToEvent(finished));
+    eventBus.post(PerfTimesEvent.complete(perfTimesStatsBuilder.build()));
   }
 
   /**
@@ -115,65 +128,6 @@ public class PerfTimesEventListener implements BuckEventListener {
   @Override
   public void outputTrace(BuildId buildId) throws InterruptedException {}
 
-  @Subscribe
-  public synchronized void initializationFinished(BuckInitializationDurationEvent event) {
-    javaInitTimeMs = event.getDuration();
-    buildPhasesLastEvent.set(event.getTimestamp());
-  }
-
-  @Subscribe
-  public synchronized void parseStarted(ParseEvent.Started started) {
-    commandPreFlightTimeMs = getTimeDifferenceSinceLastEventToEvent(started);
-  }
-
-  @Subscribe
-  public synchronized void parseFinished(ParseEvent.Finished finished) {
-    parseTimeMs = getTimeDifferenceSinceLastEventToEvent(finished);
-  }
-
-  @Subscribe
-  public void actionGraphFinished(ActionGraphEvent.Finished finished) {
-    actionGraphTimeMs = getTimeDifferenceSinceLastEventToEvent(finished);
-  }
-
-  @Subscribe
-  public void onHttpArtifactCacheStartedEvent(HttpArtifactCacheEvent.Started event) {
-    if (firstCacheFetchEvent.compareAndSet(false, true)) {
-      ruleKeyComputationTimeMs = getTimeDifferenceSinceLastEventToEvent(event);
-    }
-  }
-
-  @Subscribe
-  public void buildRuleWillBuildLocally(BuildRuleEvent.WillBuildLocally event) {
-    if (firstLocalBuildEvent.compareAndSet(false, true)) {
-      fetchWithoutLocalBuildTimeInParallelMs = getTimeDifferenceSinceLastEventToEvent(event);
-    }
-  }
-
-  @Subscribe
-  public synchronized void buildFinished(BuildEvent.Finished finished) {
-    timeToFinishBuildMs = getTimeDifferenceSinceLastEventToEvent(finished);
-  }
-
-  @Subscribe
-  public synchronized void commandFinished(CommandEvent.Finished finished) {
-    long timeToFinishCommandMs = getTimeDifferenceSinceLastEventToEvent(finished);
-
-    PerfTimesStats stats = PerfTimesStats.builder()
-        .setPythonTimeMs(pythonInitTimeMs)
-        .setInitTimeMs(javaInitTimeMs)
-        .setParseTimeMs(commandPreFlightTimeMs)
-        .setProcessingTimeMs(parseTimeMs)
-        .setActionGraphTimeMs(actionGraphTimeMs)
-        .setRulekeyTimeMs(ruleKeyComputationTimeMs)
-        .setFetchTimeMs(fetchWithoutLocalBuildTimeInParallelMs)
-        .setBuildTimeMs(timeToFinishBuildMs)
-        .setInstallTimeMs(timeToFinishCommandMs)
-        .build();
-    eventBus.post(PerfTimesEvent.complete(stats));
-  }
-
-
   public static class PerfTimesEvent extends AbstractBuckEvent {
     private String eventName;
 
@@ -184,9 +138,25 @@ public class PerfTimesEventListener implements BuckEventListener {
       return new PerfTimesEvent.Complete(stats);
     }
 
+    public static PerfTimesEvent.Update update(PerfTimesStats stats) {
+      return new PerfTimesEvent.Update(stats);
+    }
+
+    /**
+     * This event is to be used when all of the steps of {@link PerfTimesStats} are present.
+     */
     static class Complete extends PerfTimesEvent {
       Complete(PerfTimesStats stats) {
         super(stats, "PerfTimesStatsEvent.Complete");
+      }
+    }
+
+    /**
+     * This event is to be used as an update, expect some of the fields to be empty.
+     */
+    static class Update extends PerfTimesEvent {
+      Update(PerfTimesStats stats) {
+        super(stats, "PerfTimesStatsEvent.Update");
       }
     }
 

@@ -26,54 +26,84 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractPerfTimesStats {
 
+  /**
+   * @return duration of the time spent in python, in milliseconds.
+   */
   @JsonView(JsonViews.MachineReadableLog.class)
   @Value.Default
   public Long getPythonTimeMs() {
     return 0L;
   }
 
+  /**
+   * @return duration Buck spends initializing, in milliseconds.
+   */
   @JsonView(JsonViews.MachineReadableLog.class)
   @Value.Default
   public Long getInitTimeMs() {
     return 0L;
   }
 
+  /**
+   * @return time spent parsing and processing BUCK files, in milliseconds.
+   */
   @JsonView(JsonViews.MachineReadableLog.class)
   @Value.Default
   public Long getParseTimeMs() {
     return 0L;
   }
 
+  /**
+   * @return time spent between initialization and start of parsing, in milliseconds.
+   */
   @JsonView(JsonViews.MachineReadableLog.class)
   @Value.Default
   public Long getProcessingTimeMs() {
     return 0L;
   }
 
+  /**
+   * @return time it takes to generate the action graph, in milliseconds.
+   */
   @JsonView(JsonViews.MachineReadableLog.class)
   @Value.Default
   public Long getActionGraphTimeMs() {
     return 0L;
   }
 
+  /**
+   * @return duration of the rule keys computation, from the start of rule key calculation to the
+   * fetching of the first artifact from the remote cache, in milliseconds.
+   */
   @JsonView(JsonViews.MachineReadableLog.class)
   @Value.Default
   public Long getRulekeyTimeMs() {
     return 0L;
   }
 
+  /**
+   * @return duration of the fetch operation, from the first fetch event to the start of the local
+   * build, in milliseconds.
+   */
   @JsonView(JsonViews.MachineReadableLog.class)
   @Value.Default
   public Long getFetchTimeMs() {
     return 0L;
   }
 
+  /**
+   * @return duration of the local build phase, from start of the local build to when the build
+   * completes, in milliseconds.
+   */
   @JsonView(JsonViews.MachineReadableLog.class)
   @Value.Default
   public Long getBuildTimeMs() {
     return 0L;
   }
 
+  /**
+   * @return time it takes to install to a device, in milliseconds.
+   */
   @JsonView(JsonViews.MachineReadableLog.class)
   @Value.Default
   public Long getInstallTimeMs() {
