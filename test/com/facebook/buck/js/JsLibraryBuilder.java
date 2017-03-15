@@ -36,8 +36,8 @@ public class JsLibraryBuilder extends
     arg.srcs = ImmutableSortedSet.of();
   }
 
-  JsLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = deps;
+  JsLibraryBuilder setLibs(ImmutableSortedSet<BuildTarget> libs) {
+    arg.libs = libs;
     return this;
   }
 

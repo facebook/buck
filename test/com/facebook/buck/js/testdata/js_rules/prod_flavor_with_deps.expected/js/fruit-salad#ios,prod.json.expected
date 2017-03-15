@@ -1,4 +1,4 @@
-library --dep @/buck-out/gen/js/extras#ios,prod.json --dep @/buck-out/gen/js/fruit#ios,prod.json
+library --lib @/buck-out/gen/js/extras#ios,prod.json --lib @/buck-out/gen/js/fruit#ios,prod.json
 library
 optimize --arbitrary extra --flags --platform ios
 transform --arbitrary extra --flags --filename js/extras/choclate-chips.js

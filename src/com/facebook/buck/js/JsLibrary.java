@@ -68,7 +68,7 @@ public class JsLibrary extends AbstractBuildRule {
     final Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
     final String jobArgs = String.format(
         "library %s %s %s",
-        JsUtil.resolveMapJoin(libraryDependencies, sourcePathResolver, p -> "--dep " + p),
+        JsUtil.resolveMapJoin(libraryDependencies, sourcePathResolver, p -> "--lib " + p),
         JsUtil.resolveMapJoin(sources, sourcePathResolver, Path::toString),
         outputPath);
     return ImmutableList.of(
@@ -92,8 +92,8 @@ public class JsLibrary extends AbstractBuildRule {
     return libraryDependencies.stream()
         .map(sourcePath ->
             ruleFinder.getRule(sourcePath).orElseThrow(() -> new HumanReadableException(
-                "js_library %s has '%s' as a dep, but js_library can only have other " +
-                    "js_library targets as dep",
+                "js_library %s has '%s' as a lib, but js_library can only have other " +
+                    "js_library targets as lib",
                 getBuildTarget(),
                 sourcePath)
             ).getBuildTarget());

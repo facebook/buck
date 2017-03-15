@@ -80,7 +80,7 @@ public class JsTestScenario {
       final TargetNode<JsLibraryDescription.Arg, JsLibraryDescription> lib = new JsLibraryBuilder(
           target,
           workerTarget)
-          .setDeps(ImmutableSortedSet.copyOf(libraryDependencies))
+          .setLibs(ImmutableSortedSet.copyOf(libraryDependencies))
           .build();
       nodes.add(lib);
       return this;

@@ -76,7 +76,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescription.Ar
         ? createFileBuildRule(params, resolver, args, filePath.get(), worker)
         : new LibraryBuilder(targetGraph, resolver, params, sourcesToFlavors)
             .setSources(args.srcs)
-            .setLibraryDependencies(args.deps)
+            .setLibraryDependencies(args.libs)
             .build(worker);
   }
 
@@ -89,7 +89,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescription.Ar
   public static class Arg extends AbstractDescriptionArg {
     public Optional<String> extraArgs;
     public ImmutableSortedSet<SourcePath> srcs;
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+    public ImmutableSortedSet<BuildTarget> libs = ImmutableSortedSet.of();
     public BuildTarget worker;
   }
 

@@ -1,4 +1,4 @@
-library --dep @/buck-out/gen/js/extras.json --dep @/buck-out/gen/js/fruit.json
+library --lib @/buck-out/gen/js/extras.json --lib @/buck-out/gen/js/fruit.json
 library
 transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
 var choclateChips;

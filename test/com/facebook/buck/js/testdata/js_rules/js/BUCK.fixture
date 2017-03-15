@@ -27,7 +27,7 @@ js_library(
 js_library(
     name = 'fruit-salad',
     srcs = ['fruit-salad.js'],
-    deps = [':fruit', ':extras'],
+    libs = [':fruit', ':extras'],
     worker = ':packager_worker',
 )
 
