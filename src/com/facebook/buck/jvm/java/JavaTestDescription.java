@@ -116,18 +116,20 @@ public class JavaTestDescription implements
     params = cxxLibraryEnhancement.updatedParams;
 
     BuildRuleParams testsLibraryParams = params.copyWithDeps(
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(params.getDeclaredDeps().get())
-                    .addAll(BuildRules.getExportedRules(
-                        Iterables.concat(
-                            params.getDeclaredDeps().get(),
-                            resolver.getAllRules(args.providedDeps))))
-                    .addAll(ruleFinder.filterBuildRuleInputs(
-                        javacOptions.getInputs(ruleFinder)))
-                    .build()
-            ),
-            params.getExtraDeps())
+        Suppliers.ofInstance(
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(params.getDeclaredDeps().get())
+                .addAll(BuildRules.getExportedRules(
+                    Iterables.concat(
+                        params.getDeclaredDeps().get(),
+                        resolver.getAllRules(args.providedDeps))))
+                .build()),
+        Suppliers.ofInstance(
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(params.getExtraDeps().get())
+                .addAll(ruleFinder.filterBuildRuleInputs(
+                    javacOptions.getInputs(ruleFinder)))
+                .build()))
         .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     JavaLibrary testsLibrary =

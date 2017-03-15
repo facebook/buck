@@ -157,10 +157,13 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                     Iterables.concat(
                         params.getDeclaredDeps().get(),
                         resolver.getAllRules(args.providedDeps))))
+                .build()),
+        Suppliers.ofInstance(
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(params.getExtraDeps().get())
                 .addAll(ruleFinder.filterBuildRuleInputs(
                     javacOptions.getInputs(ruleFinder)))
-                .build()),
-        params.getExtraDeps())
+                .build()))
         .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     JavaLibrary testsLibrary =

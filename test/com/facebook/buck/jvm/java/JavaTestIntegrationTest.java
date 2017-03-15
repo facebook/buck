@@ -45,6 +45,24 @@ public class JavaTestIntegrationTest {
   public TemporaryPaths temp = new TemporaryPaths();
 
   @Test
+  public void shouldNotCompileIfDependsOnCompilerClasspath() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "missing_test_deps",
+        temp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//:no-jsr-305");
+
+    result.assertFailure();
+    String stderr = result.getStderr();
+    assertTrue(
+        stderr,
+        stderr.contains(
+            "cannot find symbol\nimport javax.annotation.Nullable;"));
+  }
+
+  @Test
   public void shouldRefuseToRunJUnitTestsIfHamcrestNotOnClasspath() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,

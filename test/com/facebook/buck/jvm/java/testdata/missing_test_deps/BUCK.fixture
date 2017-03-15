@@ -29,6 +29,23 @@ java_test(
   ],
 )
 
+java_test(
+  name = 'no-jsr-305',
+  srcs = [
+    'UsesNullable.java',
+  ],
+  annotation_processor_deps = [
+    ':load-jsr-305',
+  ],
+)
+
+java_library(
+  name = 'load-jsr-305',
+  deps = [
+    ':jsr-305',
+  ],
+)
+
 prebuilt_jar(
   name = 'hamcrest',
   binary_jar = 'hamcrest.jar',
@@ -42,4 +59,9 @@ prebuilt_jar(
 prebuilt_jar(
   name = 'testng',
   binary_jar = 'testng.jar',
+)
+
+prebuilt_jar(
+  name = 'jsr-305',
+  binary_jar = 'jsr305.jar',
 )
