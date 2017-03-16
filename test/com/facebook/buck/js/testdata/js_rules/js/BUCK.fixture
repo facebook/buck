@@ -45,6 +45,18 @@ js_library(
     worker = ':packager_worker',
 )
 
+js_library(
+    name = 'node_modules',
+    srcs = [
+        ('//external:node-modules-installation', 'a.js'),
+        ('//external:node-modules-installation', 'b/index.js'),
+        ('//external:node-modules-installation', 'c/c.js'),
+        ('//external:node-modules-installation', 'c/package.json'),
+    ],
+    base_path = 'node_modules',
+    worker = ':packager_worker',
+)
+
 js_bundle(
     name = 'fruit-salad-in-a-bundle',
     libs = [':fruit-salad'],

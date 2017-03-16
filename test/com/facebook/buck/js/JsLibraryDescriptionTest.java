@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
@@ -92,9 +93,31 @@ public class JsLibraryDescriptionTest {
         findFileRule(scenario.resolver).getVirtualPath().get());
   }
 
+  @Test
+  public void buildTargetWithSubpathPair() throws NoSuchBuildTargetException {
+    final String basePath = ".";
+    final BuildTarget target = BuildTargetFactory.newInstance("//:node_modules");
+    scenarioBuilder.arbitraryRule(target);
+    final JsTestScenario scenario = buildScenario(
+        basePath,
+        new Pair<>(new DefaultBuildTargetSourcePath(target), "node_modules/left-pad/index.js"));
+
+    assertEquals(
+        "arbitrary/path/node_modules/left-pad/index.js",
+        findFileRule(scenario.resolver).getVirtualPath().get());
+  }
+
   private JsTestScenario buildScenario(
       String basePath,
       SourcePath source) throws NoSuchBuildTargetException {
+    return scenarioBuilder
+        .library(target, basePath, source)
+        .build();
+  }
+
+  private JsTestScenario buildScenario(
+      String basePath,
+      Pair<SourcePath, String> source) throws NoSuchBuildTargetException {
     return scenarioBuilder
         .library(target, basePath, source)
         .build();

@@ -19,6 +19,7 @@ package com.facebook.buck.js;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -28,11 +29,13 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.FakeWorkerBuilder;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
 public class JsTestScenario {
   final TargetGraph targetGraph;
@@ -87,12 +90,30 @@ public class JsTestScenario {
     }
 
     Builder library(BuildTarget target, String basePath, SourcePath... sources) {
+      addLibrary(
+          target,
+          basePath,
+          Stream.of(sources).map(Either::ofLeft));
+      return this;
+    }
+
+    public Builder library(
+        BuildTarget target,
+        String basePath,
+        Pair<SourcePath, String> source) {
+      addLibrary(target, basePath, Stream.of(source).map(Either::ofRight));
+      return this;
+    }
+
+    private void addLibrary(
+        BuildTarget target,
+        String basePath,
+        Stream<Either<SourcePath, Pair<SourcePath, String>>> sources) {
       nodes.add(
           new JsLibraryBuilder(target, workerTarget)
               .setBasePath(basePath)
-              .setSrcs(ImmutableSortedSet.copyOf(sources))
+              .setSrcs(sources.collect(MoreCollectors.toImmutableSet()))
               .build());
-      return this;
     }
 
     Builder arbitraryRule(BuildTarget target) {

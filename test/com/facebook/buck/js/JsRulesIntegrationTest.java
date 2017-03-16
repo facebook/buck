@@ -132,6 +132,15 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
+  public void testSubPathsOfBuildTargets() throws IOException {
+    workspace
+        .runBuckBuild("//js:node_modules")
+        .assertSuccess();
+
+    workspace.verify(Paths.get("subpaths.expected"), genPath);
+  }
+
+  @Test
   public void testBundleBuild() throws IOException {
     workspace
         .runBuckBuild("//js:fruit-salad-in-a-bundle")

@@ -80,16 +80,21 @@ public abstract class JsFile extends AbstractBuildRule {
     private final SourcePath src;
 
     @AddToRuleKey
+    private final Optional<String> subPath;
+
+    @AddToRuleKey
     private final Optional<String> virtualPath;
 
     JsFileDev(
         BuildRuleParams params,
         SourcePath src,
+        Optional<String> subPath,
         Optional<Path> virtualPath,
         Optional<String> extraArgs,
         WorkerTool worker) {
       super(params, extraArgs, worker);
       this.src = src;
+      this.subPath = subPath;
       this.virtualPath = virtualPath.map(MorePaths::pathWithUnixSeparators);
     }
 
@@ -100,12 +105,13 @@ public abstract class JsFile extends AbstractBuildRule {
 
       final SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
       final Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
+      final Path srcPath = sourcePathResolver.getAbsolutePath(src);
       final String jobArgs = String.format(
           "transform %%s --filename %s --out %s %s",
           virtualPath.orElseGet(() ->
               MorePaths.pathWithUnixSeparators(sourcePathResolver.getRelativePath(src))),
           outputPath,
-          sourcePathResolver.getAbsolutePath(src));
+          subPath.map(srcPath::resolve).orElse(srcPath));
 
       return getBuildSteps(context, jobArgs, outputPath);
     }

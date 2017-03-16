@@ -17,8 +17,10 @@
 package com.facebook.buck.js;
 
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableBiMap;
@@ -57,8 +59,8 @@ public class JsFlavors {
     return ImmutableFlavor.of(fileFlavorPrefix + safeFileName + "-" + hash);
   }
 
-  public static Optional<SourcePath> extractSourcePath(
-      ImmutableBiMap<Flavor, SourcePath> flavorsToSources,
+  public static Optional<Either<SourcePath, Pair<SourcePath, String>>> extractSourcePath(
+      ImmutableBiMap<Flavor, Either<SourcePath, Pair<SourcePath, String>>> flavorsToSources,
       Stream<Flavor> flavors) {
     return flavors
         .filter(JsFlavors::isFileFlavor)

@@ -9,3 +9,14 @@ js_library(
     base_path = '../js/node_modules',
     worker = '//js:packager_worker',
 )
+
+export_file(
+    name = 'write-node-modules.sh',
+)
+
+genrule(
+    name = 'node-modules-installation',
+    out = 'node_modules',
+    bash = '$(location :write-node-modules.sh) $OUT',
+    visibility = ['PUBLIC'],
+)
