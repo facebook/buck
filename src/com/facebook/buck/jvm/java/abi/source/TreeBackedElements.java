@@ -34,6 +34,7 @@ import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
 
 /**
@@ -81,6 +82,15 @@ class TreeBackedElements implements Elements {
       case TYPE_PARAMETER:
         result = newTreeBackedTypeParameter((TypeParameterElement) underlyingElement);
         break;
+      case ENUM_CONSTANT:
+      case FIELD:
+      case PARAMETER:
+        result = newTreeBackedVariable((VariableElement) underlyingElement);
+        break;
+      case CONSTRUCTOR:
+      case METHOD:
+        result = newTreeBackedExecutable((ExecutableElement) underlyingElement);
+        break;
       // $CASES-OMITTED$
       default:
         throw new UnsupportedOperationException(String.format("Element kind %s NYI", kind));
@@ -126,6 +136,23 @@ class TreeBackedElements implements Elements {
         enclosingElement,
         Preconditions.checkNotNull(resolver)
     );
+  }
+
+  private TreeBackedExecutableElement newTreeBackedExecutable(
+      ExecutableElement underlyingExecutable) {
+    return new TreeBackedExecutableElement(
+        underlyingExecutable,
+        enterElement(underlyingExecutable.getEnclosingElement()),
+        Preconditions.checkNotNull(javacTrees.getPath(underlyingExecutable)),
+        Preconditions.checkNotNull(resolver));
+  }
+
+  private TreeBackedVariableElement newTreeBackedVariable(VariableElement underlyingVariable) {
+    return new TreeBackedVariableElement(
+        underlyingVariable,
+        enterElement(underlyingVariable.getEnclosingElement()),
+        Preconditions.checkNotNull(javacTrees.getPath(underlyingVariable)),
+        Preconditions.checkNotNull(resolver));
   }
 
   /**

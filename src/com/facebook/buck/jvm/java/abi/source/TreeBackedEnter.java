@@ -117,19 +117,19 @@ class TreeBackedEnter {
 
     @Override
     public Void visitMethod(MethodTree node, Void v) {
-      // TODO(jkeljo): Construct an ExecutableElement
+      TreeBackedExecutableElement method =
+          (TreeBackedExecutableElement) elements.enterElement(getCurrentJavacElement());
 
-      // The body of a method is not part of the ABI, so don't recurse into them
-      return null;
+      try (ElementContext c = new ElementContext(method)) {
+        scan(node.getParameters(), v);
+        return null;
+      }
     }
 
     @Override
     public Void visitVariable(VariableTree node, Void v) {
-      // TODO(jkeljo): Construct a VariableElement
-      // TODO(jkeljo): Evaluate constants
+      elements.enterElement(getCurrentJavacElement());
 
-      // Except for constants, we shouldn't look at the next part of a variable decl, because
-      // there might be anonymous classes there and those are not part of the ABI
       return null;
     }
 

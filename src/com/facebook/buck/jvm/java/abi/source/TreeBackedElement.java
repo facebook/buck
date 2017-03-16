@@ -31,6 +31,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
+import javax.lang.model.type.TypeMirror;
 
 /**
  * An implementation of {@link Element} that uses only the information available from a
@@ -104,7 +105,7 @@ abstract class TreeBackedElement implements Element {
   }
 
   @Override
-  public abstract StandaloneTypeMirror asType();
+  public abstract TypeMirror asType();
 
   @Override
   public List<? extends AnnotationMirror> getAnnotationMirrors() {

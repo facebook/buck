@@ -161,6 +161,19 @@ public abstract class CompilerTreeApiTest {
         name));
   }
 
+  protected VariableElement findParameter(String name, ExecutableElement method) {
+    for (VariableElement parameter : method.getParameters()) {
+      if (parameter.getSimpleName().contentEquals(name)) {
+        return parameter;
+      }
+    }
+
+    throw new IllegalArgumentException(String.format(
+        "No such parameter on %s: %s",
+        method.getSimpleName(),
+        name));
+  }
+
   protected void assertNameEquals(String expected, Name actual) {
     assertEquals(elements.getName(expected), actual);
   }
