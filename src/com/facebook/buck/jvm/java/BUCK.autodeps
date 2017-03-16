@@ -84,7 +84,8 @@
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/zip:constants",
-      "//src/com/facebook/buck/zip:steps"
+      "//src/com/facebook/buck/zip:steps",
+      "//src/com/facebook/buck/zip:unzip"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/android:packageable",

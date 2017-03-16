@@ -40,7 +40,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
@@ -69,7 +68,6 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
@@ -90,8 +88,6 @@ import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 import javax.annotation.Nullable;
 
@@ -613,17 +609,6 @@ public class ProjectFilesystem {
           .filter(input -> !isIgnored(relativize(input)))
           .transform(absolutePath -> MorePaths.relativize(projectRoot, absolutePath))
           .toSortedList(Comparator.naturalOrder());
-    }
-  }
-
-  public ImmutableCollection<Path> getZipMembers(Path archivePath)
-      throws IOException {
-    Path archiveAbsolutePath = getPathForRelativePath(archivePath);
-    try (ZipFile zip = new ZipFile(archiveAbsolutePath.toFile())) {
-      return ImmutableList.copyOf(
-          Iterators.transform(
-              Iterators.forEnumeration(zip.entries()),
-              (Function<ZipEntry, Path>) input -> Paths.get(input.getName())));
     }
   }
 

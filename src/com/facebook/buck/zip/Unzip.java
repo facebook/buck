@@ -21,7 +21,10 @@ import com.facebook.buck.io.MorePosixFilePermissions;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 import com.google.common.io.ByteStreams;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -32,6 +35,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Enumeration;
 import java.util.Set;
@@ -207,6 +211,16 @@ public class Unzip {
         existingFileMode).stream()
         .map(input -> destination.resolve(input).toAbsolutePath())
         .collect(MoreCollectors.toImmutableList());
+  }
+
+  public static ImmutableCollection<Path> getZipMembers(Path archiveAbsolutePath)
+      throws IOException {
+    try (ZipFile zip = new ZipFile(archiveAbsolutePath.toFile())) {
+      return ImmutableList.copyOf(
+          Iterators.transform(
+              Iterators.forEnumeration(zip.getEntries()),
+              (Function<ZipArchiveEntry, Path>) input -> Paths.get(input.getName())));
+    }
   }
 
 }

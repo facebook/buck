@@ -205,9 +205,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         exportedDeps,
         providedDeps,
         trackClassUsage,
-        new JarArchiveDependencySupplier(
-            abiInputs,
-            params.getProjectFilesystem()),
+        new JarArchiveDependencySupplier(abiInputs),
         additionalClasspathEntries,
         compileStepFactory,
         resourcesRoot,

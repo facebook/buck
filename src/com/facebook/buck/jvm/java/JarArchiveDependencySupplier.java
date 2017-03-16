@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -32,10 +31,8 @@ public class JarArchiveDependencySupplier extends ZipArchiveDependencySupplier {
   @Nullable
   private SoftReference<ImmutableSortedSet<SourcePath>> archiveMembers;
 
-  public JarArchiveDependencySupplier(
-      ImmutableSortedSet<SourcePath> jarFiles,
-      ProjectFilesystem filesystem) {
-    super(jarFiles, filesystem);
+  public JarArchiveDependencySupplier(ImmutableSortedSet<SourcePath> jarFiles) {
+    super(jarFiles);
   }
 
   @Override

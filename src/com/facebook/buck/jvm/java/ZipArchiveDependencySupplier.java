@@ -16,11 +16,11 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.ArchiveDependencySupplier;
+import com.facebook.buck.zip.Unzip;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -29,13 +29,9 @@ import java.nio.file.Path;
 
 public class ZipArchiveDependencySupplier implements ArchiveDependencySupplier {
   private final ImmutableSortedSet<SourcePath> zipFiles;
-  private final ProjectFilesystem filesystem;
 
-  public ZipArchiveDependencySupplier(
-      ImmutableSortedSet<SourcePath> zipFiles,
-      ProjectFilesystem filesystem) {
+  public ZipArchiveDependencySupplier(ImmutableSortedSet<SourcePath> zipFiles) {
     this.zipFiles = zipFiles;
-    this.filesystem = filesystem;
   }
 
   @Override
@@ -47,13 +43,13 @@ public class ZipArchiveDependencySupplier implements ArchiveDependencySupplier {
   public ImmutableSortedSet<SourcePath> getArchiveMembers(SourcePathResolver resolver) {
     ImmutableSortedSet.Builder<SourcePath> builder = ImmutableSortedSet.naturalOrder();
     for (SourcePath zipSourcePath : zipFiles) {
-      final Path zipRelativePath = resolver.getRelativePath(zipSourcePath);
+      final Path zipAbsolutePath = resolver.getAbsolutePath(zipSourcePath);
       try {
-        for (Path member : filesystem.getZipMembers(zipRelativePath)) {
+        for (Path member : Unzip.getZipMembers(zipAbsolutePath)) {
           builder.add(new ArchiveMemberSourcePath(zipSourcePath, member));
         }
       } catch (IOException e) {
-        throw new HumanReadableException(e, "Failed to read archive: " + zipRelativePath);
+        throw new HumanReadableException(e, "Failed to read archive: " + zipAbsolutePath);
       }
     }
     return builder.build();
