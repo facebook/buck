@@ -25,6 +25,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
+import java.util.regex.Pattern;
+
 /**
  * A attrfilter(attribute, value, argument) filter expression, which computes the subset
  * of nodes in 'argument' whose 'attribute' contains the given value.
@@ -60,11 +62,20 @@ public class AttrFilterFunction implements QueryFunction {
       ImmutableList<Argument> args,
       ListeningExecutorService executor)
       throws QueryException, InterruptedException {
-    QueryExpression argument = args.get(args.size() - 1).getExpression();
-    String attr = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
-
     final String attrValue = args.get(1).getWord();
-    final Predicate<Object> predicate = input -> attrValue.equals(input.toString());
+    Pattern compiledPattern;
+    try {
+      compiledPattern = Pattern.compile(attrValue);
+    } catch (IllegalArgumentException e) {
+      throw new QueryException(
+        String.format("Illegal pattern regexp '%s': %s", attrValue, e.getMessage()));
+    }
+
+    final Predicate<Object> predicate = input -> compiledPattern.matcher(input.toString()).find();
+
+    final QueryExpression argument = args.get(args.size() - 1).getExpression();
+    final String attr = CaseFormat.LOWER_UNDERSCORE.to(
+        CaseFormat.LOWER_CAMEL, args.get(0).getWord());
 
     ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
     for (QueryTarget target : argument.eval(env, executor)) {

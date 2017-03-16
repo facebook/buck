@@ -646,6 +646,24 @@ public class QueryCommandIntegrationTest {
     assertThat(
         result.getStdout(),
         is(equalToIgnoringPlatformNewlines("//example:four\n")));
+
+    result = workspace.runBuckCommand(
+      "query",
+      "attrfilter(tests, '.*-tests', '//example/...')");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(equalToIgnoringPlatformNewlines(
+             "//example/app:seven\n//example:four\n//example:one\n//example:six\n")));
+
+    result = workspace.runBuckCommand(
+      "query",
+      "attrfilter(tests, '(three|four)-tests', '//example/...')");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(equalToIgnoringPlatformNewlines("//example:four\n")));
+
   }
 
   @Test
