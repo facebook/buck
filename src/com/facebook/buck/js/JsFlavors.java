@@ -30,6 +30,7 @@ import com.google.common.hash.Hashing;
 
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public class JsFlavors {
@@ -73,4 +74,8 @@ public class JsFlavors {
   }
 
   private JsFlavors() {}
+
+  public static String bundleJobArgs(Set<Flavor> flavors) {
+    return flavors.contains(RELEASE) ? "--release" : "";
+  }
 }

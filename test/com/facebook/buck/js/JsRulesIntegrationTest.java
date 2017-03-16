@@ -150,6 +150,15 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
+  public void testBundleBuildWithFlavors() throws IOException {
+    workspace
+        .runBuckBuild("//js:fruit-salad-in-a-bundle#android,release")
+        .assertSuccess();
+
+    workspace.verify(Paths.get("simple_bundle_with_flavors.expected"), genPath);
+  }
+
+  @Test
   public void testBundleBuildWithName() throws IOException {
     workspace
         .runBuckBuild("//js:fruit-with-extras")

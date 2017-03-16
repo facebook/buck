@@ -70,7 +70,8 @@ public class JsBundle extends AbstractBuildRule {
     final Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
 
     String jobArgs = String.format(
-        "bundle %s --out %s %s",
+        "bundle %s %s --out %s %s",
+        JsFlavors.bundleJobArgs(getBuildTarget().getFlavors()),
         JsUtil.resolveMapJoin(libraries, sourcePathResolver, p -> "--lib " + p),
         outputPath,
         String.join(" ", entryPoints));
