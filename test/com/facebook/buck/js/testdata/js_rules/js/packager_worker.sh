@@ -50,6 +50,11 @@ run_command() {
         outfile="$2"
         shift
         ;;
+      --sourcemap)
+        touch "$2"
+        args=$(concat $args "$1" "${2/\/*\/buck-out\//@/buck-out/}")
+        shift
+        ;;
       --lib)
         args=$(concat $args "$1" "${2/\/*\/buck-out\//@/buck-out/}")
         infiles=$(concat $infiles "$2")
