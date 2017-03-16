@@ -26,5 +26,6 @@ java_library(
     '//src/com/facebook/buck/jvm/java/plugin:javac-plugin',
     '//test/com/facebook/buck/jvm/java/abi/source:source',
     '//test/com/facebook/buck/jvm/java/abi/source:testutil',
+    '//test/com/facebook/buck/jvm/java/testutil:testutil',
   ],
 )

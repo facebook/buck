@@ -18,11 +18,9 @@ package com.facebook.buck.jvm.java.testutil;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Files;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskListener;
@@ -30,17 +28,10 @@ import com.sun.source.util.Trees;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -55,11 +46,6 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
 
 /** Base class for tests that want to use the Compiler Tree API exposed by javac. */
 public abstract class CompilerTreeApiTest {
@@ -67,92 +53,36 @@ public abstract class CompilerTreeApiTest {
     TaskListener newTaskListener(JavacTask task);
   }
 
-  /**
-   * When run outside of IntelliJ, tests don't have the compiler (and thus the Compiler Tree API)
-   * on their classpath. To get around that, we have a special test runner
-   * ({@link CompilerTreeApiTestRunner}) that reloads each test with
-   * a hacky custom {@link ClassLoader}.
-   *
-   * However, the test class must be able to successfully load using the default
-   * {@link ClassLoader}, which means any accesses to the Compiler Tree API from the test must be
-   * in places that aren't examined during initial class loading. So having a factory interface
-   * is more than a nice abstraction here; it helps ensure that some of the problematic accesses
-   * are far enough away from the initial class load as to not block it.
-   */
-  public interface CompilerTreeApiFactory {
-    JavacTask newJavacTask(
-        JavaCompiler compiler,
-        StandardJavaFileManager fileManager,
-        DiagnosticCollector<JavaFileObject> diagnostics,
-        Iterable<String> options,
-        Iterable<? extends JavaFileObject> sourceObjects);
-    Trees getTrees(JavacTask task);
-  }
+  @Rule
+  public TestCompiler testCompiler = new TestCompiler();
 
-  @Rule
-  public TemporaryFolder tempFolder = new TemporaryFolder();
-  @Rule
-  public TemporaryFolder classpathSourceFolder = new TemporaryFolder();
-  @Rule
-  public TemporaryFolder classpathClassFolder = new TemporaryFolder();
-  protected StandardJavaFileManager fileManager;
-  protected JavacTask javacTask;
-  private DiagnosticCollector<JavaFileObject> diagnostics;
   protected Elements elements;
   protected Trees trees;
   protected Types types;
 
-  protected CompilerTreeApiFactory newTreeApiFactory() {
-    return new JavacCompilerTreeApiFactory();
+  protected boolean useFrontendOnlyJavacTask() {
+    return false;
   }
 
   protected final void initCompiler() throws IOException {
     initCompiler(Collections.emptyMap());
   }
 
-  protected CompilerTreeApiFactory initCompiler(
+  protected void initCompiler(
       Map<String, String> fileNamesToContents) throws IOException {
-    CompilerTreeApiFactory treeApiFactory = newTreeApiFactory();
 
-    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-    fileManager = compiler.getStandardFileManager(null, null, null);
-    diagnostics = new DiagnosticCollector<>();
-    Iterable<String> options =
-        Arrays.asList(new String[]{"-cp", classpathClassFolder.getRoot().toString()});
-    Iterable<? extends JavaFileObject> sourceObjects =
-        getJavaFileObjects(fileNamesToContents, tempFolder);
-
-    javacTask = treeApiFactory.newJavacTask(
-        compiler,
-        fileManager,
-        diagnostics,
-        options,
-        sourceObjects);
-    trees = treeApiFactory.getTrees(javacTask);
-    elements = javacTask.getElements();
-    types = javacTask.getTypes();
-
-    return treeApiFactory;
-  }
-
-  private Iterable<? extends JavaFileObject> getJavaFileObjects(
-      Map<String, String> fileNamesToContents,
-      TemporaryFolder tempFolder) throws IOException {
-    List<File> sourceFiles = new ArrayList<>(fileNamesToContents.size());
+    if (useFrontendOnlyJavacTask()) {
+      testCompiler.useFrontendOnlyJavacTask();
+    }
     for (Map.Entry<String, String> fileNameToContents : fileNamesToContents.entrySet()) {
-      Path filePath = tempFolder.getRoot().toPath().resolve(fileNameToContents.getKey());
-      File parentDir = filePath.getParent().toFile();
-      if (!parentDir.exists()) {
-        assertTrue(parentDir.mkdirs());
-      }
-
-      String contents = fileNameToContents.getValue();
-      File sourceFile = filePath.toFile();
-      Files.write(contents, sourceFile, StandardCharsets.UTF_8);
-      sourceFiles.add(sourceFile);
+      testCompiler.addSourceFileContents(
+          fileNameToContents.getKey(),
+          fileNameToContents.getValue());
     }
 
-    return fileManager.getJavaFileObjectsFromFiles(sourceFiles);
+    trees = testCompiler.getTrees();
+    elements = testCompiler.getElements();
+    types = testCompiler.getTypes();
   }
 
   protected final Iterable<? extends CompilationUnitTree> compile(String source)
@@ -172,37 +102,29 @@ public abstract class CompilerTreeApiTest {
     initCompiler(fileNamesToContents);
 
     if (taskListenerFactory != null) {
-      javacTask.setTaskListener(taskListenerFactory.newTaskListener(javacTask));
+      testCompiler.setTaskListener(
+          taskListenerFactory.newTaskListener(testCompiler.getJavacTask()));
     }
 
     // Suppress processor auto-discovery; it was picking up the immutables processor unnecessarily
-    javacTask.setProcessors(Collections.emptyList());
+    testCompiler.setProcessors(Collections.emptyList());
 
-    try {
-      final Iterable<? extends CompilationUnitTree> compilationUnits = javacTask.parse();
+    final Iterable<? extends CompilationUnitTree> compilationUnits = testCompiler.parse();
 
-      // Make sure we've got elements for things.
-      javacTask.getClass().getMethod("enter").invoke(javacTask);
+    // Make sure we've got elements for things.
+    testCompiler.enter();
 
-      return compilationUnits;
-    } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-      throw new AssertionError(e);
-    }
+    return compilationUnits;
   }
 
   protected void withClasspath(
       Map<String, String> fileNamesToContents) throws IOException {
-    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
-    fileManager = compiler.getStandardFileManager(null, null, null);
-    Iterable<String> options =
-        Arrays.asList(new String[]{"-d", classpathClassFolder.getRoot().toString()});
-    Iterable<? extends JavaFileObject> sourceObjects =
-        getJavaFileObjects(fileNamesToContents, classpathSourceFolder);
-    diagnostics = new DiagnosticCollector<>();
-
-    compiler.getTask(null, fileManager, diagnostics, options, null, sourceObjects).call();
-    assertNoErrors();
+    for (Map.Entry<String, String> fileNameToContents : fileNamesToContents.entrySet()) {
+      testCompiler.addClasspathFileContents(
+          fileNameToContents.getKey(),
+          fileNameToContents.getValue());
+    }
   }
 
   protected TypeMirror getTypeParameterUpperBound(String typeName, int typeParameterIndex) {
@@ -254,9 +176,8 @@ public abstract class CompilerTreeApiTest {
       fail(String.format("Expected different types, but both were: %s", expected));
     }
   }
-
   protected void assertNoErrors() {
-    assertThat(diagnostics.getDiagnostics(), Matchers.empty());
+    assertThat(testCompiler.getDiagnostics(), Matchers.empty());
   }
 
   protected void assertError(String message) {
@@ -265,7 +186,7 @@ public abstract class CompilerTreeApiTest {
 
   protected void assertErrors(String... messages) {
     assertThat(
-        diagnostics.getDiagnostics()
+        testCompiler.getDiagnostics()
             .stream()
             .map(diagnostic -> {
               String toString = diagnostic.toString();
@@ -273,29 +194,6 @@ public abstract class CompilerTreeApiTest {
             })
             .collect(Collectors.toSet()),
         Matchers.containsInAnyOrder(messages));
-  }
-
-  private static class JavacCompilerTreeApiFactory implements CompilerTreeApiFactory {
-    @Override
-    public JavacTask newJavacTask(
-        JavaCompiler compiler,
-        StandardJavaFileManager fileManager,
-        DiagnosticCollector<JavaFileObject> diagnostics,
-        Iterable<String> options,
-        Iterable<? extends JavaFileObject> sourceObjects) {
-      return (JavacTask) compiler.getTask(
-          null,
-          fileManager,
-          diagnostics,
-          options,
-          null,
-          sourceObjects);
-    }
-
-    @Override
-    public Trees getTrees(JavacTask task) {
-      return Trees.instance(task);
-    }
   }
 
 }

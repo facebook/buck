@@ -1,6 +1,7 @@
 {
   "testutil" : {
     "deps" : [
+      "//src/com/facebook/buck/jvm/java/abi/source:source",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest"
     ],

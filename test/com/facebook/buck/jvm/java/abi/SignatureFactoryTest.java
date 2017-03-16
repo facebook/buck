@@ -362,11 +362,10 @@ public class SignatureFactoryTest extends CompilerTreeApiTest {
   }
 
   @Override
-  protected CompilerTreeApiFactory initCompiler(
+  protected void initCompiler(
       Map<String, String> fileNamesToContents) throws IOException {
-    CompilerTreeApiFactory result = super.initCompiler(fileNamesToContents);
+    super.initCompiler(fileNamesToContents);
     signatureFactory = new SignatureFactory(new DescriptorFactory(elements));
-    return result;
   }
 
   private ExecutableElement getMethod(String name, TypeElement type) {

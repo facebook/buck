@@ -37,13 +37,8 @@ public abstract class CompilerTreeApiParameterizedTest extends CompilerTreeApiTe
   }
 
   @Override
-  protected CompilerTreeApiFactory newTreeApiFactory() {
-    CompilerTreeApiFactory result = super.newTreeApiFactory();
-    if (testingTrees()) {
-      result = new TreesCompilerTreeApiFactory(result);
-    }
-
-    return result;
+  protected boolean useFrontendOnlyJavacTask() {
+    return testingTrees();
   }
 
   protected boolean testingJavac() {

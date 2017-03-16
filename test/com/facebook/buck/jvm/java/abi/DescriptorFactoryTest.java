@@ -21,11 +21,11 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTest;
 import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTestRunner;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.IOException;
+import java.util.Map;
 
 import javax.lang.model.type.TypeKind;
 
@@ -34,59 +34,63 @@ public class DescriptorFactoryTest extends CompilerTreeApiTest {
 
   private DescriptorFactory descriptorFactory;
 
-  @Before
-  public void setUp() throws IOException {
-    initCompiler();
-    descriptorFactory = new DescriptorFactory(elements);
-  }
-
   @Test
-  public void testVoidDescriptor() {
+  public void testVoidDescriptor() throws IOException {
+    initCompiler();
     assertEquals("V", descriptorFactory.getDescriptor(types.getNoType(TypeKind.VOID)));
   }
 
   @Test
-  public void testBooleanDescriptor() {
+  public void testBooleanDescriptor() throws IOException {
+    initCompiler();
     assertEquals("Z", descriptorFactory.getDescriptor(types.getPrimitiveType(TypeKind.BOOLEAN)));
   }
 
   @Test
-  public void testByteDescriptor() {
+  public void testByteDescriptor() throws IOException {
+    initCompiler();
     assertEquals("B", descriptorFactory.getDescriptor(types.getPrimitiveType(TypeKind.BYTE)));
   }
 
   @Test
-  public void testCharDescriptor() {
+  public void testCharDescriptor() throws IOException {
+    initCompiler();
     assertEquals("C", descriptorFactory.getDescriptor(types.getPrimitiveType(TypeKind.CHAR)));
   }
 
   @Test
-  public void testShortDescriptor() {
+  public void testShortDescriptor() throws IOException {
+    initCompiler();
     assertEquals("S", descriptorFactory.getDescriptor(types.getPrimitiveType(TypeKind.SHORT)));
   }
 
   @Test
-  public void testIntDescriptor() {
+  public void testIntDescriptor() throws IOException {
+    initCompiler();
     assertEquals("I", descriptorFactory.getDescriptor(types.getPrimitiveType(TypeKind.INT)));
   }
 
   @Test
-  public void testLongDescriptor() {
+  public void testLongDescriptor() throws IOException {
+    initCompiler();
     assertEquals("J", descriptorFactory.getDescriptor(types.getPrimitiveType(TypeKind.LONG)));
   }
 
   @Test
-  public void testFloatDescriptor() {
+  public void testFloatDescriptor() throws IOException {
+    initCompiler();
     assertEquals("F", descriptorFactory.getDescriptor(types.getPrimitiveType(TypeKind.FLOAT)));
   }
 
   @Test
-  public void testDoubleDescriptor() {
+  public void testDoubleDescriptor() throws IOException {
+    initCompiler();
     assertEquals("D", descriptorFactory.getDescriptor(types.getPrimitiveType(TypeKind.DOUBLE)));
   }
 
   @Test
-  public void testPrimitiveArrayDescriptor() {
+  public void testPrimitiveArrayDescriptor() throws IOException {
+    initCompiler();
     assertEquals(
         "[D",
         descriptorFactory.getDescriptor(
@@ -95,21 +99,24 @@ public class DescriptorFactoryTest extends CompilerTreeApiTest {
   }
 
   @Test
-  public void testTopLevelClassDescriptor() {
+  public void testTopLevelClassDescriptor() throws IOException {
+    initCompiler();
     assertEquals(
         "Ljava/lang/String;",
         descriptorFactory.getDescriptor(elements.getTypeElement("java.lang.String")));
   }
 
   @Test
-  public void testNestedClassDescriptor() {
+  public void testNestedClassDescriptor() throws IOException {
+    initCompiler();
     assertEquals(
         "Ljava/util/Map$Entry;",
         descriptorFactory.getDescriptor(elements.getTypeElement("java.util.Map.Entry")));
   }
 
   @Test
-  public void testObjectArrayDescriptor() {
+  public void testObjectArrayDescriptor() throws IOException {
+    initCompiler();
     assertEquals(
         "[Ljava/lang/Object;",
         descriptorFactory.getDescriptor(
@@ -117,7 +124,8 @@ public class DescriptorFactoryTest extends CompilerTreeApiTest {
   }
 
   @Test
-  public void testMultiDimObjectArrayDescriptor() {
+  public void testMultiDimObjectArrayDescriptor() throws IOException {
+    initCompiler();
     assertEquals(
         "[[Ljava/lang/Object;",
         descriptorFactory.getDescriptor(
@@ -127,7 +135,8 @@ public class DescriptorFactoryTest extends CompilerTreeApiTest {
   }
 
   @Test
-  public void testParameterlessMethodDescriptor() {
+  public void testParameterlessMethodDescriptor() throws IOException {
+    initCompiler();
     assertEquals(
         "()Ljava/lang/String;",
         descriptorFactory.getDescriptor(findMethod(
@@ -136,7 +145,8 @@ public class DescriptorFactoryTest extends CompilerTreeApiTest {
   }
 
   @Test
-  public void testMethodWithParametersDescriptor() {
+  public void testMethodWithParametersDescriptor() throws IOException {
+    initCompiler();
     assertEquals(
         "(II)I",
         descriptorFactory.getDescriptor(findMethod(
@@ -145,7 +155,8 @@ public class DescriptorFactoryTest extends CompilerTreeApiTest {
   }
 
   @Test
-  public void testMethodWithGenericParametersDescriptor() {
+  public void testMethodWithGenericParametersDescriptor() throws IOException {
+    initCompiler();
     assertEquals(
         "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
         descriptorFactory.getDescriptor(findMethod(
@@ -179,5 +190,12 @@ public class DescriptorFactoryTest extends CompilerTreeApiTest {
     assertEquals(
         "Ljava/lang/CharSequence;",
         descriptorFactory.getDescriptor(elements.getTypeElement("Foo").getTypeParameters().get(0)));
+  }
+
+  @Override
+  protected void initCompiler(
+      Map<String, String> fileNamesToContents) throws IOException {
+    super.initCompiler(fileNamesToContents);
+    descriptorFactory = new DescriptorFactory(elements);
   }
 }

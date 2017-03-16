@@ -20,16 +20,19 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.jvm.java.testutil.Classes;
 import com.facebook.buck.jvm.java.testutil.TestCompiler;
+import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTestRunner;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
 import org.objectweb.asm.ClassReader;
 
 import java.io.IOException;
 import java.util.SortedSet;
 
+@RunWith(CompilerTreeApiTestRunner.class)
 public class ClassReferenceTrackerTest {
   @Rule
   public TestCompiler testCompiler = new TestCompiler();

@@ -46,7 +46,7 @@ public class FrontendOnlyJavacTaskTest extends CompilerTreeApiParameterizedTest 
         "Baz.java",
         "public class Baz { }"));
 
-    Iterable<? extends CompilationUnitTree> compilationUnits = javacTask.parse();
+    Iterable<? extends CompilationUnitTree> compilationUnits = testCompiler.parse();
 
     List<String> fileNames = RichStream.from(compilationUnits)
         .map(compilationUnit ->
@@ -80,11 +80,7 @@ public class FrontendOnlyJavacTaskTest extends CompilerTreeApiParameterizedTest 
         "package com.facebook.foo;"
     ));
 
-    @SuppressWarnings("unchecked")
-    Iterable<? extends Element> actualElements =
-        (Iterable<? extends Element>) javacTask.getClass().getMethod("enter")
-            .invoke(javacTask);
-
+    Iterable<? extends Element> actualElements = testCompiler.enter();
     assertThat(actualElements, Matchers.containsInAnyOrder(
         elements.getTypeElement("com.facebook.foo.Foo"),
         elements.getTypeElement("com.facebook.foo.Extra"),
