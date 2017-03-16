@@ -580,7 +580,7 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
         });
 
     if (!errorsOK) {
-      assertThat(diagnostics.getDiagnostics(), Matchers.empty());
+      assertNoErrors();
     }
   }
 

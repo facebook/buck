@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTest;
 import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTestRunner;
@@ -24,14 +23,11 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.sun.source.tree.CompilationUnitTree;
 
-import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RunWith(CompilerTreeApiTestRunner.class)
 public class InterfaceValidatorTest extends CompilerTreeApiTest {
@@ -360,25 +356,4 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
         // it's NOT a lambda. LoL.
         new ValidatingTaskListenerFactory());
   }
-
-  protected void assertNoErrors() {
-    assertThat(diagnostics.getDiagnostics(), Matchers.empty());
-  }
-
-  protected void assertError(String message) {
-    assertErrors(message);
-  }
-
-  protected void assertErrors(String... messages) {
-    assertThat(
-        diagnostics.getDiagnostics()
-            .stream()
-            .map(diagnostic -> {
-              String toString = diagnostic.toString();
-              return toString.substring(toString.lastIndexOf(File.separatorChar) + 1);
-            })
-            .collect(Collectors.toSet()),
-        Matchers.containsInAnyOrder(messages));
-  }
-
 }

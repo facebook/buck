@@ -17,13 +17,11 @@
 package com.facebook.buck.jvm.java.abi;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTest;
 import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTestRunner;
 import com.google.common.base.Joiner;
 
-import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.objectweb.asm.Opcodes;
@@ -272,7 +270,7 @@ public class AccessFlagsTest extends CompilerTreeApiTest {
       String typeName,
       int expectedFlags) throws IOException {
     compile(content);
-    assertThat(diagnostics.getDiagnostics(), Matchers.empty());
+    assertNoErrors();
     assertEquals(
         expectedFlags,
         AccessFlags.getAccessFlags(elements.getTypeElement(typeName)));
@@ -284,7 +282,7 @@ public class AccessFlagsTest extends CompilerTreeApiTest {
         String.format("  %s void method() { }", modifiers),
         "}"));
 
-    assertThat(diagnostics.getDiagnostics(), Matchers.empty());
+    assertNoErrors();
     assertEquals(
         expectedFlags,
         AccessFlags.getAccessFlags(
@@ -297,7 +295,7 @@ public class AccessFlagsTest extends CompilerTreeApiTest {
         String.format("  %s int field = 0;", modifiers),
         "}"));
 
-    assertThat(diagnostics.getDiagnostics(), Matchers.empty());
+    assertNoErrors();
     assertEquals(
         expectedFlags,
         AccessFlags.getAccessFlags(

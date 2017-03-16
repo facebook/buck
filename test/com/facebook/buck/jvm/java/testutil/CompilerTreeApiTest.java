@@ -42,6 +42,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -96,7 +97,7 @@ public abstract class CompilerTreeApiTest {
   public TemporaryFolder classpathClassFolder = new TemporaryFolder();
   protected StandardJavaFileManager fileManager;
   protected JavacTask javacTask;
-  protected DiagnosticCollector<JavaFileObject> diagnostics;
+  private DiagnosticCollector<JavaFileObject> diagnostics;
   protected Elements elements;
   protected Trees trees;
   protected Types types;
@@ -201,7 +202,7 @@ public abstract class CompilerTreeApiTest {
     diagnostics = new DiagnosticCollector<>();
 
     compiler.getTask(null, fileManager, diagnostics, options, null, sourceObjects).call();
-    assertThat(diagnostics.getDiagnostics(), Matchers.empty());
+    assertNoErrors();
   }
 
   protected TypeMirror getTypeParameterUpperBound(String typeName, int typeParameterIndex) {
@@ -252,6 +253,26 @@ public abstract class CompilerTreeApiTest {
     if (types.isSameType(expected, actual)) {
       fail(String.format("Expected different types, but both were: %s", expected));
     }
+  }
+
+  protected void assertNoErrors() {
+    assertThat(diagnostics.getDiagnostics(), Matchers.empty());
+  }
+
+  protected void assertError(String message) {
+    assertErrors(message);
+  }
+
+  protected void assertErrors(String... messages) {
+    assertThat(
+        diagnostics.getDiagnostics()
+            .stream()
+            .map(diagnostic -> {
+              String toString = diagnostic.toString();
+              return toString.substring(toString.lastIndexOf(File.separatorChar) + 1);
+            })
+            .collect(Collectors.toSet()),
+        Matchers.containsInAnyOrder(messages));
   }
 
   private static class JavacCompilerTreeApiFactory implements CompilerTreeApiFactory {
