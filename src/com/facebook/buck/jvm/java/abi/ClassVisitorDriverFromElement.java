@@ -349,7 +349,7 @@ class ClassVisitorDriverFromElement {
         AnnotationVisitor visitor) {
       visitor.visitEnum(
           name,
-          descriptorFactory.getDescriptor(value.getEnclosingElement()),
+          descriptorFactory.getDescriptor(value.getEnclosingElement().asType()),
           value.getSimpleName().toString());
     }
 

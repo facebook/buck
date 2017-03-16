@@ -22,10 +22,11 @@ import org.objectweb.asm.Type;
 
 import java.util.stream.Stream;
 
+import javax.annotation.Nullable;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
@@ -53,7 +54,12 @@ class DescriptorFactory {
     return getType(type).getDescriptor();
   }
 
+  @Nullable
   public String getDescriptor(Element element) {
+    ElementKind kind = element.getKind();
+    if (kind.isClass() || kind.isInterface()) {
+      return null;
+    }
     return getType(element).getDescriptor();
   }
 
@@ -63,11 +69,6 @@ class DescriptorFactory {
       protected Type defaultAction(Element e, Void aVoid) {
         throw new IllegalArgumentException(
             String.format("Unexpected element kind: %s", element.getKind()));
-      }
-
-      @Override
-      public Type visitType(TypeElement e, Void aVoid) {
-        return Type.getObjectType(getInternalName(e));
       }
 
       @Override
@@ -90,11 +91,6 @@ class DescriptorFactory {
 
       @Override
       public Type visitVariable(VariableElement e, Void aVoid) {
-        return getType(e.asType());
-      }
-
-      @Override
-      public Type visitTypeParameter(TypeParameterElement e, Void aVoid) {
         return getType(e.asType());
       }
     }, null));

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.jvm.java.abi.source.FrontendOnlyJavacTask;
 import com.google.common.base.Joiner;
+import com.google.common.io.ByteStreams;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskListener;
@@ -56,9 +57,9 @@ import javax.tools.ToolProvider;
 
 /**
  * A {@link org.junit.Rule} for working with javac in tests.
- *
+ * <p>
  * Add it as a public field like this:
- *
+ * <p>
  * <pre>
  * &#64;Rule
  * public TestCompiler testCompiler = new TestCompiler();
@@ -116,6 +117,15 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
     Files.write(sourceFilePath, Arrays.asList(lines), StandardCharsets.UTF_8);
 
     fileManager.getJavaFileObjects(sourceFilePath.toFile()).forEach(sourceFiles::add);
+  }
+
+  public void addSourceFile(Path file) throws IOException {
+    Path outputFile = outputFolder.getRoot().toPath().resolve(file.getFileName());
+    ByteStreams.copy(
+        Files.newInputStream(file),
+        Files.newOutputStream(outputFile));
+
+    fileManager.getJavaFileObjects(outputFile.toFile()).forEach(sourceFiles::add);
   }
 
   public void useFrontendOnlyJavacTask() {

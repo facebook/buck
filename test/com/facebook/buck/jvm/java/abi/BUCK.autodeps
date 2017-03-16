@@ -1,7 +1,6 @@
 {
   "abi" : {
     "deps" : [
-      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/java/abi:abi",
       "//src/com/facebook/buck/util/sha1:sha1",
@@ -19,10 +18,12 @@
   },
   "testutil" : {
     "deps" : [
-      "//third-party/java/junit:junit"
+      "//test/com/facebook/buck/testutil/integration:util"
     ],
     "exported_deps" : [
-      "//third-party/java/asm:asm"
+      "//test/com/facebook/buck/jvm/java/testutil:testutil",
+      "//third-party/java/asm:asm",
+      "//third-party/java/junit:junit"
     ]
   }
 }
