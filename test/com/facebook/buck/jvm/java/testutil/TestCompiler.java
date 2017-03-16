@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.jvm.java.abi.source.FrontendOnlyJavacTask;
+import com.google.common.base.Joiner;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskListener;
@@ -29,6 +30,7 @@ import org.hamcrest.Matchers;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.TemporaryFolder;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
@@ -36,7 +38,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.processing.Processor;
 import javax.lang.model.element.TypeElement;
@@ -59,7 +64,7 @@ import javax.tools.ToolProvider;
  * public TestCompiler testCompiler = new TestCompiler();
  * </pre>
  */
-public class TestCompiler extends ExternalResource {
+public class TestCompiler extends ExternalResource implements AutoCloseable {
   private final TemporaryFolder inputFolder = new TemporaryFolder();
   private final TemporaryFolder outputFolder = new TemporaryFolder();
   private final Classes classes = new ClassesImpl(outputFolder);
@@ -72,6 +77,7 @@ public class TestCompiler extends ExternalResource {
   private TestCompiler classpathCompiler;
   private JavacTask javacTask;
   private boolean useFrontendOnlyJavacTask = false;
+  private Set<String> classpath = new LinkedHashSet<>();
 
   public void addClasspathFileContents(String fileName, String contents) throws IOException {
     if (javacTask != null) {
@@ -87,6 +93,13 @@ public class TestCompiler extends ExternalResource {
       }
     }
     classpathCompiler.addSourceFileContents(fileName, contents);
+    classpath.add(classpathCompiler.getOutputDir());
+  }
+
+  public void addClasspath(Collection<Path> paths) {
+    paths.stream()
+        .map(Path::toString)
+        .forEach(classpath::add);
   }
 
   public void addSourceFileContents(String fileName, String contents) throws IOException {
@@ -181,9 +194,9 @@ public class TestCompiler extends ExternalResource {
       List<String> options = new ArrayList<>();
       options.add("-d");
       options.add(outputFolder.getRoot().toString());
-      if (classpathCompiler != null) {
+      if (!classpath.isEmpty()) {
         options.add("-cp");
-        options.add(classpathCompiler.getOutputDir());
+        options.add(Joiner.on(File.pathSeparatorChar).join(classpath));
       }
 
       javacTask = (JavacTask) javaCompiler.getTask(
@@ -215,6 +228,14 @@ public class TestCompiler extends ExternalResource {
     assertThat(classpathCompiler.getDiagnostics(), Matchers.empty());
   }
 
+  public void init() {
+    try {
+      before();
+    } catch (Throwable throwable) {
+      throw new AssertionError(throwable);
+    }
+  }
+
   @Override
   protected void before() throws Throwable {
     inputFolder.create();
@@ -228,5 +249,10 @@ public class TestCompiler extends ExternalResource {
     }
     outputFolder.delete();
     inputFolder.delete();
+  }
+
+  @Override
+  public void close() {
+    after();
   }
 }
