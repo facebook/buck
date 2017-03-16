@@ -30,6 +30,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.RmStep;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -84,12 +85,12 @@ public abstract class JsFile extends AbstractBuildRule {
     JsFileDev(
         BuildRuleParams params,
         SourcePath src,
-        Optional<String> virtualPath,
+        Optional<Path> virtualPath,
         Optional<String> extraArgs,
         WorkerTool worker) {
       super(params, extraArgs, worker);
       this.src = src;
-      this.virtualPath = virtualPath;
+      this.virtualPath = virtualPath.map(MorePaths::pathWithUnixSeparators);
     }
 
     @Override
@@ -107,6 +108,11 @@ public abstract class JsFile extends AbstractBuildRule {
           sourcePathResolver.getAbsolutePath(src));
 
       return getBuildSteps(context, jobArgs, outputPath);
+    }
+
+    @VisibleForTesting
+    Optional<String> getVirtualPath() {
+      return virtualPath;
     }
   }
 

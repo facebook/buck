@@ -34,6 +34,7 @@ public class JsLibraryBuilder extends
     arg.extraArgs = Optional.empty();
     arg.worker = worker;
     arg.srcs = ImmutableSortedSet.of();
+    arg.basePath = Optional.empty();
   }
 
   JsLibraryBuilder setLibs(ImmutableSortedSet<BuildTarget> libs) {
@@ -48,6 +49,11 @@ public class JsLibraryBuilder extends
 
   JsLibraryBuilder setSrcs(ImmutableSortedSet<SourcePath> srcs) {
     arg.srcs = srcs;
+    return this;
+  }
+
+  JsLibraryBuilder setBasePath(String basePath) {
+    arg.basePath = Optional.of(basePath);
     return this;
   }
 }

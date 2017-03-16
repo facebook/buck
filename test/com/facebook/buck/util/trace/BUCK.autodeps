@@ -4,7 +4,6 @@
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/log:log",
       "//src/com/facebook/buck/model:build_id",
-      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util/trace:trace",
       "//test/com/facebook/buck/testutil:testutil",

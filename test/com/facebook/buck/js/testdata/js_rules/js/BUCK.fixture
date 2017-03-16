@@ -9,6 +9,7 @@ sh_binary(
 worker_tool(
     name = 'packager_worker',
     exe = ':packager_worker_exe',
+    visibility = ['PUBLIC'],
 )
 
 js_library(
@@ -34,6 +35,13 @@ js_library(
 js_library(
     name = 'build-target-output',
     srcs = ['//external:exported.js'],
+    worker = ':packager_worker',
+)
+
+js_library(
+    name = 'replace-build-target-prefix',
+    srcs = ['//external:exported.js'],
+    base_path = 'node_modules/exported.js',
     worker = ':packager_worker',
 )
 

@@ -123,6 +123,15 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
+  public void testReplacePrefixes() throws IOException {
+    workspace
+        .runBuckBuild("//external:replace-file-prefix", "//js:replace-build-target-prefix")
+        .assertSuccess();
+
+    workspace.verify(Paths.get("replace_path_prefix.expected"), genPath);
+  }
+
+  @Test
   public void testBundleBuild() throws IOException {
     workspace
         .runBuckBuild("//js:fruit-salad-in-a-bundle")

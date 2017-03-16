@@ -22,8 +22,10 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.FakeWorkerBuilder;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSet;
@@ -77,12 +79,24 @@ public class JsTestScenario {
     }
 
     Builder library(BuildTarget target, BuildTarget... libraryDependencies) {
-      final TargetNode<JsLibraryDescription.Arg, JsLibraryDescription> lib = new JsLibraryBuilder(
-          target,
-          workerTarget)
-          .setLibs(ImmutableSortedSet.copyOf(libraryDependencies))
-          .build();
-      nodes.add(lib);
+      nodes.add(
+          new JsLibraryBuilder(target, workerTarget)
+              .setLibs(ImmutableSortedSet.copyOf(libraryDependencies))
+              .build());
+      return this;
+    }
+
+    Builder library(BuildTarget target, String basePath, SourcePath... sources) {
+      nodes.add(
+          new JsLibraryBuilder(target, workerTarget)
+              .setBasePath(basePath)
+              .setSrcs(ImmutableSortedSet.copyOf(sources))
+              .build());
+      return this;
+    }
+
+    Builder arbitraryRule(BuildTarget target) {
+      nodes.add(ExportFileBuilder.newExportFileBuilder(target).build());
       return this;
     }
 

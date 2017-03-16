@@ -9,6 +9,7 @@
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/halide:halide",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
