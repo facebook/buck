@@ -143,7 +143,7 @@ expr ::= word
        | expr except expr
        | expr - expr
        | allpaths(expr, expr)
-       | attrfilter(pattern, word, expr)
+       | attrfilter(word, word, expr)
        | buildfile(expr)
        | deps(expr)
        | deps(expr, depth)
@@ -346,21 +346,21 @@ $ dot -Tpng result.dot -o image.png
 
 <p><pre>
 {literal}
-expr ::= attrfilter(word, pattern, expr)
+expr ::= attrfilter(word, word, expr)
 {/literal}
 </pre></p>
 
 <p>
-The <code>attrfilter(attribute, pattern, expression)</code> operator evaluates
+The <code>attrfilter(attribute, value, expression)</code> operator evaluates
 the given <code>expression</code> and filters the resulting build targets
-whose <code>attribute</code> match the given <code>pattern</code>.
+whose <code>attribute</code> contain the given <code>value</code>.
 </p>
 
 <p>
 If the attribute is just a value, say <code>name</code>, it is compared to the
-given <code>pattern</code>. If it's a list, the target is filtered if the
-given <code>pattern</code> is contained in the list. If it's a dictionary,
-the <code>pattern</code> is searched both in the keys and values of the
+given <code>value</code>. If it's a list, the target is filtered if the
+given <code>value</code> is contained in the list. If it's a dictionary,
+the <code>value</code> is searched both in the keys and values of the
 dictionary.
 </p>
 
@@ -446,7 +446,7 @@ equivalent to <code>deps(//foo:bar, 1)</code>.
 
 <p><pre>
 {literal}
-expr ::= filter(pattern, expr)
+expr ::= filter(word, expr)
 {/literal}
 </pre></p>
 
