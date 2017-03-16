@@ -84,8 +84,8 @@ public class JsLibraryDescription implements Description<JsLibraryDescription.Ar
             params.getBuildTarget().getFlavors().stream());
 
     if (file.isPresent()) {
-      return params.getBuildTarget().getFlavors().contains(JsFlavors.PROD)
-          ? createProdFileRule(
+      return params.getBuildTarget().getFlavors().contains(JsFlavors.RELEASE)
+          ? createReleaseFileRule(
                 params,
                 resolver,
                 args,
@@ -206,14 +206,14 @@ public class JsLibraryDescription implements Description<JsLibraryDescription.Ar
     }
   }
 
-  private static <A extends Arg> BuildRule createProdFileRule(
+  private static <A extends Arg> BuildRule createReleaseFileRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args,
       WorkerTool worker) throws NoSuchBuildTargetException {
     final BuildTarget devTarget = withFileFlavorOnly(params.getBuildTarget());
     final BuildRule devFile = resolver.requireRule(devTarget);
-    return new JsFile.JsFileProd(
+    return new JsFile.JsFileRelease(
         params.appendExtraDeps(devFile),
         resolver.getRuleWithType(devTarget, JsFile.class).getSourcePathToOutput(),
         args.extraArgs,

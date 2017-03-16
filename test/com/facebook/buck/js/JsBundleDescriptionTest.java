@@ -80,11 +80,11 @@ public class JsBundleDescriptionTest {
     JsTestScenario scenario = scenarioBuilder.build();
 
     JsBundle jsBundle = scenario.createBundle(
-        "//arbitrary:target#ios,prod",
+        "//arbitrary:target#ios,release",
         ImmutableSortedSet.of(directDependencyTarget));
 
     assertThat(
-        allLibaryTargets(JsFlavors.IOS, JsFlavors.PROD),
+        allLibaryTargets(JsFlavors.IOS, JsFlavors.RELEASE),
         everyItem(in(dependencyTargets(jsBundle))));
   }
 
@@ -93,7 +93,7 @@ public class JsBundleDescriptionTest {
     JsTestScenario scenario = scenarioBuilder.build();
 
     JsBundle jsBundle = scenario.createBundle(
-        "//arbitrary:target#ios,prod",
+        "//arbitrary:target#ios,release",
         ImmutableSortedSet.of(directDependencyTarget));
 
     assertThat(

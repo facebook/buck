@@ -35,10 +35,10 @@ import java.util.stream.Stream;
 public class JsFlavors {
   public static final ImmutableFlavor ANDROID = ImmutableFlavor.of("android");
   public static final ImmutableFlavor IOS = ImmutableFlavor.of("ios");
-  public static final ImmutableFlavor PROD = ImmutableFlavor.of("prod");
+  public static final ImmutableFlavor RELEASE = ImmutableFlavor.of("release");
 
   private static final ImmutableSet<Flavor> platforms = ImmutableSet.of(ANDROID, IOS);
-  private static final ImmutableSet<Flavor> other = ImmutableSet.of(PROD);
+  private static final ImmutableSet<Flavor> other = ImmutableSet.of(RELEASE);
   private static final String fileFlavorPrefix = "file-";
 
   public static boolean validateFlavors(ImmutableSet<Flavor> flavors) {

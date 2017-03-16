@@ -80,10 +80,10 @@ public class JsRulesIntegrationTest {
   @Test
   public void testOptimizationBuild() throws IOException {
     workspace
-        .runBuckBuild("//js:fruit#prod,android")
+        .runBuckBuild("//js:fruit#release,android")
         .assertSuccess();
 
-    workspace.verify(Paths.get("simple_prod_build.expected"), genPath);
+    workspace.verify(Paths.get("simple_release_build.expected"), genPath);
   }
 
   @Test
@@ -96,18 +96,18 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
-  public void testProdBuildWithDeps() throws IOException {
+  public void testReleaseBuildWithDeps() throws IOException {
     workspace
-        .runBuckBuild("//js:fruit-salad#prod,ios")
+        .runBuckBuild("//js:fruit-salad#release,ios")
         .assertSuccess();
 
-    workspace.verify(Paths.get("prod_flavor_with_deps.expected"), genPath);
+    workspace.verify(Paths.get("release_flavor_with_deps.expected"), genPath);
   }
 
   @Test
   public void testFlavoredAndUnflavoredBuild() throws IOException {
     workspace
-        .runBuckBuild("//js:fruit#prod,android", "//js:fruit")
+        .runBuckBuild("//js:fruit#release,android", "//js:fruit")
         .assertSuccess();
 
     workspace.verify(Paths.get("same_target_with_and_without_flavors.expected"), genPath);

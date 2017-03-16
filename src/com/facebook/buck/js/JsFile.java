@@ -122,12 +122,12 @@ public abstract class JsFile extends AbstractBuildRule {
     }
   }
 
-  static class JsFileProd extends JsFile {
+  static class JsFileRelease extends JsFile {
 
     @AddToRuleKey
     private final SourcePath devFile;
 
-    JsFileProd(
+    JsFileRelease(
         BuildRuleParams buildRuleParams,
         SourcePath devFile,
         Optional<String> extraArgs,
