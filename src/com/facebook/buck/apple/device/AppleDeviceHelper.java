@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
 public class AppleDeviceHelper {
   private static final Logger LOG = Logger.get(AppleDeviceHelper.class);
   private static final Pattern DEVICE_DESCRIPTION_PATTERN =
-      Pattern.compile("([a-f0-9]{40}) : (.*)$");
+      Pattern.compile("([a-f0-9]{40}) \\| (.*)");
 
 
   private final ProcessExecutor processExecutor;
@@ -59,7 +59,7 @@ public class AppleDeviceHelper {
         ProcessExecutorParams.builder()
             .setCommand(
                 ImmutableList.of(
-                    deviceHelperPath.toString(), "-l"))
+                    deviceHelperPath.toString(), "list"))
             .build();
     // Must specify that stdout is expected or else output may be wrapped in Ansi escape chars.
     Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
@@ -107,7 +107,7 @@ public class AppleDeviceHelper {
         ProcessExecutorParams.builder()
             .setCommand(
                 ImmutableList.of(
-                    deviceHelperPath.toString(), "-d", udid, "-t", bundlePath.toString()))
+                    deviceHelperPath.toString(), "--json", udid, "install", bundlePath.toString()))
             .build();
     Set<ProcessExecutor.Option> options = EnumSet.of(
         ProcessExecutor.Option.PRINT_STD_OUT,
@@ -144,7 +144,7 @@ public class AppleDeviceHelper {
         ProcessExecutorParams.builder()
             .setCommand(
                 ImmutableList.of(
-                    deviceHelperPath.toString(), "-d", udid, "--run", bundleID))
+                    deviceHelperPath.toString(), "--json", udid, "launch", bundleID))
             .build();
     Set<ProcessExecutor.Option> options = EnumSet.of(
         ProcessExecutor.Option.PRINT_STD_OUT,

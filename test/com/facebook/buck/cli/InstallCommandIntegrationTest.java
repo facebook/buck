@@ -36,10 +36,12 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -182,8 +184,9 @@ public class InstallCommandIntegrationTest {
         this, "apple_app_bundle", tmp);
     workspace.setUp();
 
+    assumeTrue(Files.exists(workspace.getPath("fbsimctl/fbsimctl")));
     assumeTrue(FakeAppleDeveloperEnvironment.hasDeviceCurrentlyConnected(workspace.getPath(
-                "iOSConsole/iOSConsole"
+                "fbsimctl/fbsimctl"
             )));
 
 
@@ -193,6 +196,8 @@ public class InstallCommandIntegrationTest {
     result.assertSuccess();
   }
 
+  // Disabled until fbsimctl builds properly with Buck
+  @Ignore
   @Test
   public void appleBundleInstallsInDeviceWithHelperAsTarget() throws IOException,
       InterruptedException {
@@ -204,7 +209,7 @@ public class InstallCommandIntegrationTest {
     workspace.setUp();
 
     assumeTrue(FakeAppleDeveloperEnvironment.hasDeviceCurrentlyConnected(workspace.getPath(
-                "iOSConsole/iOSConsole"
+                "fbsimctl/fbsimctl"
             )));
 
 
