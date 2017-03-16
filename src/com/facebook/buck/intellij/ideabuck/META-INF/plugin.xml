@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>intellij.buck.plugin</id>
   <name>Buck for IDEA</name>
-  <version>2.7.5</version>
+  <version>2.7.6</version>
   <category>Build</category>
   <vendor email="fb-plugins@fb.com" url="www.facebook.com">Facebook, Inc.</vendor>
 
@@ -23,6 +23,9 @@
 
   <ul>
       <li>
+	<b>2.7.6</b>
+	  Change pasting formatting to have double-quotes and four-space indents.
+      </li>	
         <b>2.7.5</b>
           Fix go-to-definition to recognize both single- and double-quoted strings.
           Fix how the icon gets initialized for the buck tool window.
