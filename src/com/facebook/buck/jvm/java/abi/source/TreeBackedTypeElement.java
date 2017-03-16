@@ -22,15 +22,12 @@ import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeMirror;
 
 /**
@@ -38,10 +35,9 @@ import javax.lang.model.type.TypeMirror;
  * {@link ClassTree}. This results in an incomplete implementation; see documentation for individual
  * methods and {@link com.facebook.buck.jvm.java.abi.source} for more information.
  */
-class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
+class TreeBackedTypeElement extends TreeBackedParameterizable implements TypeElement {
   private final TypeElement underlyingElement;
   private final ClassTree tree;
-  private final List<TreeBackedTypeParameterElement> typeParameters = new ArrayList<>();
   private StandaloneDeclaredType typeMirror;
   @Nullable
   private TypeMirror superclass;
@@ -56,10 +52,6 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
     this.tree = (ClassTree) path.getLeaf();
     typeMirror = resolver.createType(this);
     enclosingElement.addEnclosedElement(this);
-  }
-
-  /* package */ void addTypeParameter(TreeBackedTypeParameterElement typeParameter) {
-    typeParameters.add(typeParameter);
   }
 
   @Override
@@ -104,11 +96,6 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
   @Override
   public List<? extends TypeMirror> getInterfaces() {
     throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public List<? extends TypeParameterElement> getTypeParameters() {
-    return Collections.unmodifiableList(typeParameters);
   }
 
   @Override

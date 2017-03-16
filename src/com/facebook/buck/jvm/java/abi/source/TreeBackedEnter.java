@@ -106,8 +106,9 @@ class TreeBackedEnter {
       TreeBackedTypeParameterElement typeParameter =
           (TreeBackedTypeParameterElement) elements.enterElement(getCurrentJavacElement());
 
-      TreeBackedTypeElement currentClass = (TreeBackedTypeElement) getCurrentContext();
-      currentClass.addTypeParameter(typeParameter);
+      TreeBackedParameterizable currentParameterizable =
+          (TreeBackedParameterizable) getCurrentContext();
+      currentParameterizable.addTypeParameter(typeParameter);
 
       try (ElementContext c = new ElementContext(typeParameter)) {
         return super.visitTypeParameter(node, v);
