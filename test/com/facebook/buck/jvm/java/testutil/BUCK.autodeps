@@ -5,6 +5,7 @@
       "//third-party/java/hamcrest:java-hamcrest"
     ],
     "exported_deps" : [
+      "//third-party/java/asm:asm",
       "//third-party/java/junit:junit"
     ]
   }

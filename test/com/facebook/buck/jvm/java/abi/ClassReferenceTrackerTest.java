@@ -17,10 +17,9 @@
 package com.facebook.buck.jvm.java.abi;
 
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableSet;
+import com.facebook.buck.jvm.java.testutil.Classes;
+import com.facebook.buck.jvm.java.testutil.TestCompiler;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -28,19 +27,12 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.objectweb.asm.ClassReader;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.SortedSet;
 
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
-
 public class ClassReferenceTrackerTest {
+  @Rule
+  public TestCompiler testCompiler = new TestCompiler();
   @Rule
   public TemporaryFolder temp = new TemporaryFolder();
 
@@ -388,31 +380,15 @@ public class ClassReferenceTrackerTest {
   }
 
   private SortedSet<String> getReferencedClassNames(String... sourceLines) throws IOException {
-    File sourceDir = temp.newFolder();
-    File sourceFile = new File(sourceDir, "Foo.java");
-    Files.write(
-        sourceFile.toPath(),
-        Joiner.on('\n').join(sourceLines).getBytes(StandardCharsets.UTF_8));
+    testCompiler.addSourceFileLines("Foo.java", sourceLines);
+    testCompiler.compile();
 
-    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-    StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
-    Iterable<? extends JavaFileObject> sourceObjects =
-        fileManager.getJavaFileObjectsFromFiles(ImmutableSet.of(sourceFile));
-
-    JavaCompiler.CompilationTask compilation =
-        compiler.getTask(null, fileManager, null, null, null, sourceObjects);
-
-    boolean compilationSucceeded = compilation.call();
-    assertTrue(compilationSucceeded);
-
+    Classes classes = testCompiler.getClasses();
     ClassReferenceTracker tracker = new ClassReferenceTracker();
-    File classFile = new File(sourceDir, "Foo.class");
-    try (FileInputStream classFileStream = new FileInputStream(classFile)) {
-      ClassReader reader = new ClassReader(classFileStream);
-      reader.accept(
-          tracker,
-          ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
-    }
+    classes.acceptClassVisitor(
+        "Foo",
+        ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES,
+        tracker);
 
     return tracker.getReferencedClassNames();
   }
