@@ -41,7 +41,7 @@ public interface Description<T> {
         new CacheLoader<Class<? extends Description<?>>, BuildRuleType>() {
           @Override
           public BuildRuleType load(Class<? extends Description<?>> key) throws Exception {
-            return getBuildRuleType(key.getSimpleName());
+            return Description.getBuildRuleType(key.getSimpleName());
           }
         });
 
