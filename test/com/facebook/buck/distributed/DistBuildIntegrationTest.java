@@ -20,7 +20,9 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Platform;
 
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -80,6 +82,37 @@ public class DistBuildIntegrationTest {
 
 
     mainCellWorkspace.runBuckBuild(
+        "//:libA",
+        "--distributed",
+        "--build-state-file",
+        stateFilePath.toString())
+        .assertSuccess();
+
+    ProjectWorkspace destinationWorkspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "empty",
+        destinationFolderPath);
+    destinationWorkspace.setUp();
+
+    destinationWorkspace.runBuckDistBuildRun(
+        "--build-state-file",
+        stateFilePath.toString())
+        .assertSuccess();
+  }
+  @Test
+  public void preloadingMaterializesWhitelist() throws Exception {
+    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
+    final Path sourceFolderPath = temporaryFolder.newFolder("source");
+    Path stateFilePath = temporaryFolder.getRoot().resolve("state_dump.bin");
+    final Path destinationFolderPath = temporaryFolder.newFolder("destination");
+
+    ProjectWorkspace sourceWorkspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "preloading_whitelist",
+        sourceFolderPath);
+    sourceWorkspace.setUp();
+
+    sourceWorkspace.runBuckBuild(
         "//:libA",
         "--distributed",
         "--build-state-file",

@@ -26,7 +26,6 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.cache.LoadingCache;
 
-import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -34,46 +33,24 @@ import java.util.concurrent.ExecutionException;
  * in distributed build.
  */
 public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegate {
-
-
   private final StackedFileHashCache remoteStackedFileHashCache;
-  private final StackedFileHashCache materializingStackedFileHashCache;
 
-  private final LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory> ruleKeyFactories;
+  private final LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory>
+      materializingRuleKeyFactories;
 
   /**
-   *
    * @param sourcePathResolver Distributed build source parse resolver.
-   * @param ruleFinder Used by the distributed build rule key factories.
-   * @param remoteState The distributed build remote state.
-   * @param fileHashCacheStack Can compute file hashes for all cells in the dist build.
-   * @param provider Fetches the contents of files on demand.
+   * @param ruleFinder         Used by the distributed build rule key factories.
+   * @param remoteStackedFileHashCache Cache that only requires SHA1.
+   * @param materializingStackedFileHashCache Cache that writes the files to the disk.
    */
   public DistBuildCachingEngineDelegate(
       SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
-      DistBuildState remoteState,
-      StackedFileHashCache fileHashCacheStack,
-      FileContentsProvider provider) {
-
-    // Used for rule key computations.
-    this.remoteStackedFileHashCache = fileHashCacheStack.newDecoratedFileHashCache(
-        cache -> remoteState.createRemoteFileHashCache(cache));
-
-    // Used for the real build.
-    this.materializingStackedFileHashCache = remoteStackedFileHashCache.newDecoratedFileHashCache(
-        cache -> {
-          try {
-            return remoteState.createMaterializer(cache, provider);
-          } catch (IOException exception) {
-            throw new RuntimeException(
-                String.format(
-                    "Failed to create the Materializer for file system [%s]",
-                    cache.getFilesystem()),
-                exception);
-          }
-        });
-    ruleKeyFactories = DistBuildFileHashes.createRuleKeyFactories(
+      StackedFileHashCache remoteStackedFileHashCache,
+      StackedFileHashCache materializingStackedFileHashCache) {
+    this.remoteStackedFileHashCache = remoteStackedFileHashCache;
+    materializingRuleKeyFactories = DistBuildFileHashes.createRuleKeyFactories(
         sourcePathResolver,
         ruleFinder,
         materializingStackedFileHashCache,
@@ -88,7 +65,7 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
   @Override
   public void onRuleAboutToBeBuilt(BuildRule buildRule) {
     try {
-      ruleKeyFactories.get(buildRule.getProjectFilesystem()).build(buildRule);
+      materializingRuleKeyFactories.get(buildRule.getProjectFilesystem()).build(buildRule);
     } catch (ExecutionException e) {
       throw new RuntimeException(e);
     }

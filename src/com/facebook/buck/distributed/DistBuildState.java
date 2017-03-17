@@ -224,7 +224,7 @@ public class DistBuildState {
     return remoteCache;
   }
 
-  public ProjectFileHashCache createMaterializer(
+  public ProjectFileHashCache createMaterializerAndPreload(
       ProjectFileHashCache decoratedCache,
       FileContentsProvider provider) throws IOException {
     BuildJobStateFileHashes remoteFileHashes = fileHashes.get(decoratedCache.getFilesystem());

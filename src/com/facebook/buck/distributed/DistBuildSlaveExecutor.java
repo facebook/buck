@@ -187,7 +187,7 @@ public class DistBuildSlaveExecutor {
       return cachingBuildEngineDelegate;
     }
 
-    StackedFileHashCache stackedFileHashCache = createStackOfDefaultFileHashCache();
+    StackedFileHashCaches caches = createStackedFileHashesAndPreload();
     createActionGraphAndResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(Preconditions.checkNotNull(
         actionGraphAndResolver).getResolver());
@@ -195,9 +195,8 @@ public class DistBuildSlaveExecutor {
         new DistBuildCachingEngineDelegate(
             new SourcePathResolver(ruleFinder),
             ruleFinder,
-            args.getState(),
-            stackedFileHashCache,
-            args.getProvider());
+            caches.remoteStateCache,
+            caches.materializingCache);
     return cachingBuildEngineDelegate;
   }
 
@@ -341,5 +340,43 @@ public class DistBuildSlaveExecutor {
             Optional.empty());
       }
     }
+  }
+
+  private static class StackedFileHashCaches {
+    public final StackedFileHashCache remoteStateCache;
+    public final StackedFileHashCache materializingCache;
+
+    private StackedFileHashCaches(
+        StackedFileHashCache remoteStateCache, StackedFileHashCache materializingCache) {
+      this.remoteStateCache = remoteStateCache;
+      this.materializingCache = materializingCache;
+    }
+  }
+
+  private StackedFileHashCaches createStackedFileHashesAndPreload() throws IOException {
+    StackedFileHashCache stackedFileHashCache = createStackOfDefaultFileHashCache();
+    // Used for rule key computations.
+    StackedFileHashCache remoteStackedFileHashCache =
+        stackedFileHashCache.newDecoratedFileHashCache(
+            cache -> args.getState().createRemoteFileHashCache(cache));
+
+    // Used for the real build.
+    StackedFileHashCache materializingStackedFileHashCache =
+        stackedFileHashCache.newDecoratedFileHashCache(
+            cache -> {
+              try {
+                return args.getState().createMaterializerAndPreload(cache, args.getProvider());
+              } catch (IOException exception) {
+                throw new RuntimeException(
+                    String.format(
+                        "Failed to create the Materializer for file system [%s]",
+                        cache.getFilesystem()),
+                    exception);
+              }
+            });
+
+    return new StackedFileHashCaches(
+        remoteStackedFileHashCache,
+        materializingStackedFileHashCache);
   }
 }
