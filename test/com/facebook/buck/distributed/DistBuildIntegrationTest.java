@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -23,6 +24,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 public class DistBuildIntegrationTest {
@@ -58,5 +60,54 @@ public class DistBuildIntegrationTest {
         "--build-state-file",
         stateFilePath.toString())
         .assertSuccess();
+  }
+
+  @Test
+  public void canBuildCrossCellWithSymlinksAndAbsPathTools() throws Exception {
+    final Path sourceFolderPath = temporaryFolder.newFolder("source");
+    final Path destinationFolderPath = temporaryFolder.newFolder("destination");
+    final String scenario = "multi_cell_java_target";
+    Path stateFilePath = temporaryFolder.getRoot().resolve("state_dump.bin");
+
+    ProjectWorkspace mainCellWorkspace = setupCell(scenario, "main_cell", sourceFolderPath);
+    setupCell(scenario, "secondary_cell", sourceFolderPath);
+    ProjectWorkspace  absPathWorkspace = setupCell(scenario, "abs_path_dir", sourceFolderPath);
+    Cell mainCell = mainCellWorkspace.asCell();
+
+    Path dJavaFileAbsPath = absPathWorkspace.asCell().getFilesystem().resolve("D.java");
+    Path dJavaFileSymlinkAbsPath = mainCell.getFilesystem().resolve("D.java");
+    mainCell.getFilesystem().createSymLink(dJavaFileSymlinkAbsPath, dJavaFileAbsPath, false);
+
+
+    mainCellWorkspace.runBuckBuild(
+        "//:libA",
+        "--distributed",
+        "--build-state-file",
+        stateFilePath.toString())
+        .assertSuccess();
+
+    ProjectWorkspace destinationWorkspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "empty",
+        destinationFolderPath);
+    destinationWorkspace.setUp();
+
+    destinationWorkspace.runBuckDistBuildRun(
+        "--build-state-file",
+        stateFilePath.toString())
+        .assertSuccess();
+  }
+
+  private ProjectWorkspace setupCell(
+      String scenario,
+      String cellSubDir,
+      Path outputDir) throws IOException {
+    Path cellPath = outputDir.resolve(cellSubDir);
+    ProjectWorkspace sourceWorkspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        scenario + "/" + cellSubDir,
+        cellPath);
+    sourceWorkspace.setUp();
+    return sourceWorkspace;
   }
 }
