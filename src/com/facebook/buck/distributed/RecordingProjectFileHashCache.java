@@ -48,8 +48,6 @@ import javax.annotation.concurrent.GuardedBy;
 public class RecordingProjectFileHashCache implements ProjectFileHashCache {
   private static final Logger LOG = Logger.get(RecordingProjectFileHashCache.class);
 
-  private static final long MAX_ROOT_FILE_SIZE_BYTES = 1024 * 1024;
-
   private final ProjectFileHashCache delegate;
   private final ProjectFilesystem projectFilesystem;
   @GuardedBy("this")
@@ -88,7 +86,6 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
     if (distBuildConfig.isPresent()) {
       extractBuckConfigFileHashes(distBuildConfig.get());
     }
-    extractFilesAtRoot();
   }
 
   @Override
@@ -306,27 +303,6 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
 
         // Record this path immediately.
         get(relPathOpt.get());
-      }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    } finally {
-      materializeCurrentFileDuringPreloading = false;
-    }
-  }
-
-  private synchronized void extractFilesAtRoot() {
-    // We want to materialize files at the root of the repo during pre-loading
-    materializeCurrentFileDuringPreloading = true;
-
-    try {
-      for (Path path : projectFilesystem.getDirectoryContents(projectFilesystem.getRootPath())) {
-        if (projectFilesystem.isFile(path) &&
-            !projectFilesystem.isSymLink(path) &&
-            path.getFileName().startsWith(".") &&
-            projectFilesystem.getFileSize(path) < MAX_ROOT_FILE_SIZE_BYTES) {
-          // Force the calculation of the hash which will record the file.
-          get(path);
-        }
       }
     } catch (IOException e) {
       throw new RuntimeException(e);
