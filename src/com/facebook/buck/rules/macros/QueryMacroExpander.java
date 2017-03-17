@@ -78,7 +78,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro> extends AbstractM
             } catch (Exception e) {
               throw new HumanReadableException(
                   e,
-                  "Error parsing target expression %s for target %",
+                  "Error parsing target expression %s for target %s",
                   pattern,
                   target);
             }
