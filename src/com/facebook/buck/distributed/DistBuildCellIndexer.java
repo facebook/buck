@@ -56,7 +56,8 @@ public class DistBuildCellIndexer implements Function<Path, Integer> {
 
   @Override
   public Integer apply(Path input) {
-    Integer i = index.get(input);
+    // Non-cell Paths are just stored in the root cell data marked as absolute paths.
+    Integer i = rootCell.getKnownRoots().contains(input) ? index.get(input) : ROOT_CELL_INDEX;
     if (i == null) {
       i = index.size();
       index.put(input, i);

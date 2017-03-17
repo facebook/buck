@@ -19,7 +19,6 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
-import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -30,7 +29,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
@@ -55,6 +53,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 /**
  * Responsible for extracting file hash and {@link RuleKey} information from the {@link ActionGraph}
@@ -62,7 +61,6 @@ import java.util.concurrent.ExecutionException;
  */
 public class DistBuildFileHashes {
   private final LoadingCache<ProjectFilesystem, BuildJobStateFileHashes> remoteFileHashes;
-  private final LoadingCache<ProjectFilesystem, FileHashLoader> fileHashLoaders;
   private final LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory> ruleKeyFactories;
 
   private final ListenableFuture<ImmutableList<BuildJobStateFileHashes>> fileHashes;
@@ -71,60 +69,62 @@ public class DistBuildFileHashes {
 
   public DistBuildFileHashes(
       ActionGraph actionGraph,
-      final SourcePathResolver sourcePathResolver,
+      SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
-      final ImmutableList<? extends ProjectFileHashCache> rootCellFileHashCaches,
+      StackedFileHashCache originalHashCache,
       final Function<? super Path, Integer> cellIndexer,
       ListeningExecutorService executorService,
-      final int keySeed,
-      final BuckConfig buckConfig) {
+      int keySeed,
+      BuckConfig buckConfig) {
 
     this.remoteFileHashes = CacheBuilder.newBuilder().build(
         new CacheLoader<ProjectFilesystem, BuildJobStateFileHashes>() {
           @Override
-          public BuildJobStateFileHashes load(ProjectFilesystem filesystem) throws Exception {
+          public BuildJobStateFileHashes load(ProjectFilesystem filesystem) {
             BuildJobStateFileHashes fileHashes = new BuildJobStateFileHashes();
             fileHashes.setCellIndex(cellIndexer.apply(filesystem.getRootPath()));
             return fileHashes;
           }
         });
-    this.fileHashLoaders = CacheBuilder.newBuilder().build(
-        new CacheLoader<ProjectFilesystem, FileHashLoader>() {
-          @Override
-          public FileHashLoader load(ProjectFilesystem key) throws Exception {
-            return new RecordingFileHashLoader(
-                new StackedFileHashCache(
-                    ImmutableList.<ProjectFileHashCache>builder()
-                        .addAll(rootCellFileHashCaches)
-                        .add(DefaultFileHashCache.createDefaultFileHashCache(key))
-                        .build()),
-                key,
-                remoteFileHashes.get(key),
-                new DistBuildConfig(buckConfig));
-          }
-        });
+
+    StackedFileHashCache recordingHashCache = originalHashCache.newDecoratedFileHashCache(
+        originalCache -> new RecordingFileHashLoader(
+            originalCache,
+            remoteFileHashes.getUnchecked(originalCache.getFilesystem()),
+            new DistBuildConfig(buckConfig)));
+
     this.ruleKeyFactories =
-        createRuleKeyFactories(sourcePathResolver, ruleFinder, fileHashLoaders, keySeed);
-    this.ruleKeys = ruleKeyComputation(actionGraph, this.ruleKeyFactories, executorService);
-    this.fileHashes = fileHashesComputation(
-        Futures.transform(this.ruleKeys, Functions.constant(null)),
-        this.remoteFileHashes,
-        executorService);
+
+        createRuleKeyFactories(
+            sourcePathResolver,
+            ruleFinder,
+            recordingHashCache,
+            keySeed);
+    this.ruleKeys =
+
+        ruleKeyComputation(actionGraph, this.ruleKeyFactories, executorService);
+    this.fileHashes =
+
+        fileHashesComputation(
+            Futures.transform(this.ruleKeys, Functions.constant(null)),
+            this.remoteFileHashes,
+            executorService);
   }
 
   public static LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory>
   createRuleKeyFactories(
       final SourcePathResolver sourcePathResolver,
       final SourcePathRuleFinder ruleFinder,
-      final LoadingCache<ProjectFilesystem, ? extends FileHashLoader> fileHashLoaders,
+      final FileHashCache fileHashCache,
       final int keySeed) {
+
     return CacheBuilder.newBuilder().build(
         new CacheLoader<ProjectFilesystem, DefaultRuleKeyFactory>() {
           @Override
           public DefaultRuleKeyFactory load(ProjectFilesystem key) throws Exception {
             return new DefaultRuleKeyFactory(
                 new RuleKeyFieldLoader(keySeed),
-                fileHashLoaders.get(key),
+                fileHashCache,
                 sourcePathResolver,
                 ruleFinder
             );
@@ -157,8 +157,7 @@ public class DistBuildFileHashes {
         executorService);
   }
 
-  private static
-  ListenableFuture<ImmutableList<BuildJobStateFileHashes>> fileHashesComputation(
+  private static ListenableFuture<ImmutableList<BuildJobStateFileHashes>> fileHashesComputation(
       ListenableFuture<Void> ruleKeyComputationForSideEffect,
       final LoadingCache<ProjectFilesystem, BuildJobStateFileHashes> remoteFileHashes,
       ListeningExecutorService executorService) {
@@ -176,7 +175,10 @@ public class DistBuildFileHashes {
   public List<BuildJobStateFileHashes> getFileHashes()
       throws IOException, InterruptedException {
     try {
-      return fileHashes.get();
+      return fileHashes.get()
+          .stream()
+          .filter(x -> x.getEntriesSize() > 0)
+          .collect(Collectors.toList());
     } catch (ExecutionException e) {
       Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
       Throwables.throwIfInstanceOf(e.getCause(), InterruptedException.class);
@@ -191,7 +193,7 @@ public class DistBuildFileHashes {
    *                          only contains relative path, therefore this is needed to indicate
    *                          where on the local machine we wish to transplant the files from the
    *                          remote to.
-   * @param remoteFileHashes the serialized state.
+   * @param remoteFileHashes  the serialized state.
    * @return the cache.
    */
   public static ProjectFileHashCache createFileHashCache(

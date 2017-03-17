@@ -16,9 +16,9 @@
 
 package com.facebook.buck.distributed;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
@@ -66,6 +66,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
+import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -318,7 +319,7 @@ public class DistBuildStateTest {
         Matchers.equalTo("http://someserver:8080"));
   }
 
-  private DistBuildFileHashes emptyActionGraph() throws IOException {
+  private DistBuildFileHashes emptyActionGraph() throws IOException, InterruptedException {
     ActionGraph actionGraph = new ActionGraph(ImmutableList.of());
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
@@ -329,14 +330,15 @@ public class DistBuildStateTest {
         actionGraph,
         sourcePathResolver,
         ruleFinder,
-        ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem)),
+        new StackedFileHashCache(ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(
+            projectFilesystem))),
         Functions.constant(0),
         MoreExecutors.newDirectExecutorService(),
         /* keySeed */ 0,
         FakeBuckConfig.builder().build());
   }
 
-  private static DistBuildTargetGraphCodec createDefaultCodec(
+  public static DistBuildTargetGraphCodec createDefaultCodec(
       final Cell cell,
       final Optional<Parser> parser) {
     ObjectMapper objectMapper = ObjectMappers.newDefaultInstance(); // NOPMD confused by lambda
@@ -344,18 +346,18 @@ public class DistBuildStateTest {
 
     Function<? super TargetNode<?, ?>, ? extends Map<String, Object>> nodeToRawNode;
     if (parser.isPresent()) {
-     nodeToRawNode = (Function<TargetNode<?, ?>, Map<String, Object>>) input -> {
-       try {
-         return parser.get().getRawTargetNode(
-             eventBus,
-             cell.getCell(input.getBuildTarget()),
+      nodeToRawNode = (Function<TargetNode<?, ?>, Map<String, Object>>) input -> {
+        try {
+          return parser.get().getRawTargetNode(
+              eventBus,
+              cell.getCell(input.getBuildTarget()),
              /* enableProfiling */ false,
-             MoreExecutors.listeningDecorator(MoreExecutors.newDirectExecutorService()),
-             input);
-       } catch (BuildFileParseException e) {
-         throw new RuntimeException(e);
-       }
-     };
+              MoreExecutors.listeningDecorator(MoreExecutors.newDirectExecutorService()),
+              input);
+        } catch (BuildFileParseException e) {
+          throw new RuntimeException(e);
+        }
+      };
     } else {
       nodeToRawNode = Functions.constant(ImmutableMap.<String, Object>of());
     }
@@ -395,10 +397,10 @@ public class DistBuildStateTest {
             target,
             cellTwoFilesystem)
             .build()
-        );
+    );
   }
 
-  private static ProjectFilesystem createJavaOnlyFilesystem(String rootPath) throws IOException {
+  public static ProjectFilesystem createJavaOnlyFilesystem(String rootPath) throws IOException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem(rootPath);
     filesystem.mkdirs(filesystem.getBuckPaths().getBuckOut());
     return filesystem;

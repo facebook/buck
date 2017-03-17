@@ -16,11 +16,13 @@
 
 package com.facebook.buck.distributed;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
@@ -289,6 +291,7 @@ public class DistBuildFileHashesTest {
     }
   }
 
+  // TODO(ruibm): This is working but it is incorrect. Fixing absolute paths in a separate diff.
   @Test
   public void recordsAbsoluteFileHashes() throws Exception {
     Fixture f = new Fixture(tempDir) {
@@ -313,23 +316,26 @@ public class DistBuildFileHashesTest {
 
     List<BuildJobStateFileHashes> recordedHashes = f.distributedBuildFileHashes.getFileHashes();
 
-    assertThat(recordedHashes, Matchers.hasSize(1));
-    BuildJobStateFileHashes hashes = recordedHashes.get(0);
-    assertThat(hashes.entries, Matchers.hasSize(2));
+    assertThat(recordedHashes, Matchers.hasSize(2));
+    BuildJobStateFileHashes rootCellHashes = recordedHashes.stream()
+        .filter(x -> x.getCellIndex() == 0)
+        .findFirst()
+        .get();
+    assertThat(rootCellHashes.entries, Matchers.hasSize(1));
+    BuildJobStateFileHashEntry rootCellEntry = rootCellHashes.entries.get(0);
+    assertThat(rootCellEntry, Matchers.notNullValue());
+    assertFalse(rootCellEntry.isPathIsAbsolute());
+    assertTrue(rootCellEntry.isIsDirectory());
 
-    for (BuildJobStateFileHashEntry entry : hashes.entries) {
-      if (entry.getPath().getPath().toString().endsWith("tool")) {
-        assertThat(entry, Matchers.notNullValue());
-        assertTrue(entry.isPathIsAbsolute());
-        assertFalse(entry.isIsDirectory());
-      } else if (entry.getPath().equals(new PathWithUnixSeparators("directory"))) {
-        assertThat(entry, Matchers.notNullValue());
-        assertFalse(entry.isPathIsAbsolute());
-        assertTrue(entry.isIsDirectory());
-      } else {
-        fail("Unknown path: " + entry.getPath().getPath());
-      }
-    }
+    BuildJobStateFileHashes secondaryCellHashes = recordedHashes.stream()
+        .filter(x -> x.getCellIndex() != 0)
+        .findFirst()
+        .get();
+    assertThat(rootCellHashes.entries, Matchers.hasSize(1));
+    BuildJobStateFileHashEntry secondaryCellEntry = secondaryCellHashes.entries.get(0);
+    assertThat(secondaryCellEntry, Matchers.notNullValue());
+    assertFalse(secondaryCellEntry.isPathIsAbsolute());
+    assertFalse(secondaryCellEntry.isIsDirectory());
   }
 
   @Test
@@ -349,15 +355,25 @@ public class DistBuildFileHashesTest {
         secondProjectFilesystem.writeContentsToPath("public class B {}", secondPath);
 
         JavaLibraryBuilder.createBuilder(
-            BuildTargetFactory.newInstance(projectFilesystem, "//:java_lib"), projectFilesystem)
+            BuildTargetFactory.newInstance(projectFilesystem, "//:java_lib_at_root"),
+            projectFilesystem)
             .addSrc(firstPath)
             .build(resolver, projectFilesystem);
 
         JavaLibraryBuilder.createBuilder(
-            BuildTargetFactory.newInstance(secondProjectFilesystem, "//:other_cell"),
+            BuildTargetFactory.newInstance(secondProjectFilesystem, "//:java_lib_at_secondary"),
             secondProjectFilesystem)
             .addSrc(secondPath)
             .build(resolver, secondProjectFilesystem);
+      }
+
+      @Override
+      protected BuckConfig createBuckConfig() {
+        return FakeBuckConfig.builder()
+            .setSections(
+                "[repositories]",
+                "second_repo = " + secondProjectFilesystem.getRootPath().toAbsolutePath())
+            .build();
       }
     };
 
@@ -377,6 +393,11 @@ public class DistBuildFileHashesTest {
             Matchers.hasKey(new PathWithUnixSeparators("B.java")));
       } else {
         fail("Unknown filesystem root:" + cellPath);
+      }
+
+      assertEquals(hashes.getEntriesSize(), 1);
+      for (BuildJobStateFileHashEntry hashEntry : hashes.getEntries()) {
+        assertFalse(hashEntry.isPathIsAbsolute());
       }
     }
   }
@@ -440,21 +461,27 @@ public class DistBuildFileHashesTest {
       setUpRules(buildRuleResolver, sourcePathResolver);
       actionGraph = new ActionGraph(buildRuleResolver.getBuildRules());
       cellIndexer = new FakeIndexer();
+      BuckConfig buckConfig = createBuckConfig();
 
       distributedBuildFileHashes = new DistBuildFileHashes(
           actionGraph,
           sourcePathResolver,
           ruleFinder,
-          createFileHashCache().getCaches(),
+          createFileHashCache(),
           cellIndexer,
           MoreExecutors.newDirectExecutorService(),
           /* keySeed */ 0,
-          FakeBuckConfig.builder().build());
+          buckConfig);
     }
 
     public Fixture(TemporaryFolder tempDir) throws Exception {
-      this(new ProjectFilesystem(tempDir.newFolder("first").toPath().toRealPath()),
+      this(
+          new ProjectFilesystem(tempDir.newFolder("first").toPath().toRealPath()),
           new ProjectFilesystem(tempDir.newFolder("second").toPath().toRealPath()));
+    }
+
+    protected BuckConfig createBuckConfig() {
+      return FakeBuckConfig.builder().build();
     }
 
     protected abstract void setUpRules(
@@ -463,14 +490,14 @@ public class DistBuildFileHashesTest {
 
     private StackedFileHashCache createFileHashCache() {
       ImmutableList.Builder<ProjectFileHashCache> cacheList = ImmutableList.builder();
+      cacheList.add(DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem));
+      cacheList.add(DefaultFileHashCache.createDefaultFileHashCache(secondProjectFilesystem));
       for (Path path : javaFs.getRootDirectories()) {
         if (Files.isDirectory(path)) {
           cacheList.add(
               DefaultFileHashCache.createDefaultFileHashCache(new ProjectFilesystem(path)));
         }
       }
-      cacheList.add(DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem));
-      cacheList.add(DefaultFileHashCache.createDefaultFileHashCache(secondProjectFilesystem));
       return new StackedFileHashCache(cacheList.build());
     }
 

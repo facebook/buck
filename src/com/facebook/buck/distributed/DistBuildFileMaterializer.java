@@ -19,12 +19,13 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
-import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
+import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.google.common.hash.HashCode;
 
 import java.io.IOException;
@@ -41,9 +42,15 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-class DistBuildFileMaterializer implements FileHashLoader {
+class DistBuildFileMaterializer implements ProjectFileHashCache {
+
   private static final Logger LOG = Logger.get(DistBuildFileMaterializer.class);
-  private final Map<Path, BuildJobStateFileHashEntry> remoteFileHashesByPath;
+  private static final String UNSUPPORTED_EXCEPTION_MSG =
+      "DistBuildFileMaterializer should only be used as a " +
+          "ProjectFileHashCache and ProjectFileHashCache.willGet(..). " +
+          "It has to implement ProjectFileHashCache so a StackedFileHashCache can be used.";
+
+  private final Map<Path, BuildJobStateFileHashEntry> remoteFileHashesByAbsPath;
   private final Set<Path> symlinkedPaths;
   private final Set<Path> materializedPaths;
   private final FileContentsProvider provider;
@@ -51,12 +58,12 @@ class DistBuildFileMaterializer implements FileHashLoader {
   private final FileHashCache directFileHashCacheDelegate;
 
   public DistBuildFileMaterializer(
-      final ProjectFilesystem projectFilesystem,
+      ProjectFilesystem projectFilesystem,
       BuildJobStateFileHashes remoteFileHashes,
       FileContentsProvider provider,
       FileHashCache directFileHashCacheDelegate) {
     this.directFileHashCacheDelegate = directFileHashCacheDelegate;
-    this.remoteFileHashesByPath = DistBuildFileHashes.indexEntriesByPath(
+    this.remoteFileHashesByAbsPath = DistBuildFileHashes.indexEntriesByPath(
         projectFilesystem,
         remoteFileHashes);
     this.symlinkedPaths = Collections.newSetFromMap(new ConcurrentHashMap<Path, Boolean>());
@@ -66,55 +73,56 @@ class DistBuildFileMaterializer implements FileHashLoader {
   }
 
   public void preloadAllFiles() throws IOException {
-    for (Path path : remoteFileHashesByPath.keySet()) {
-      LOG.info("Preloading: [%s]", path.toString());
-      BuildJobStateFileHashEntry fileHashEntry = remoteFileHashesByPath.get(path);
+    for (Path absPath : remoteFileHashesByAbsPath.keySet()) {
+      LOG.info("Preloading: [%s]", absPath.toString());
+      BuildJobStateFileHashEntry fileHashEntry = remoteFileHashesByAbsPath.get(absPath);
       if (fileHashEntry == null || fileHashEntry.isPathIsAbsolute()) {
         continue;
       } else if (fileHashEntry.isSetMaterializeDuringPreloading() &&
           fileHashEntry.isMaterializeDuringPreloading()) {
-        get(path);
+        get(absPath);
       } else if (fileHashEntry.isSetRootSymLink()) {
         materializeSymlink(fileHashEntry, symlinkedPaths);
-        symlinkedPaths.add(path);
+        symlinkedPaths.add(absPath);
       } else if (!fileHashEntry.isDirectory) {
         // Touch file
-        projectFilesystem.createParentDirs(path);
-        projectFilesystem.touch(path);
+        projectFilesystem.createParentDirs(absPath);
+        projectFilesystem.touch(absPath);
       } else {
         // Create directory
         // No need to materialize sub-dirs/files here, as there will be separate entries for those.
-        projectFilesystem.mkdirs(path);
+        projectFilesystem.mkdirs(absPath);
       }
     }
   }
 
-  private void materializeIfNeeded(Path path, Queue<Path> remainingPaths) throws IOException {
-    if (materializedPaths.contains(path)) {
+  private void materializeIfNeeded(Path relPath, Queue<Path> remainingRelPaths) throws IOException {
+    if (materializedPaths.contains(relPath)) {
       return;
     }
 
-    LOG.info("Materializing: [%s]", path.toString());
+    LOG.info("Materializing: [%s]", relPath.toString());
 
-    BuildJobStateFileHashEntry fileHashEntry = remoteFileHashesByPath.get(path);
+    Path absPath = projectFilesystem.resolve(relPath).toAbsolutePath();
+    BuildJobStateFileHashEntry fileHashEntry = remoteFileHashesByAbsPath.get(absPath);
     if (fileHashEntry == null || fileHashEntry.isPathIsAbsolute()) {
-      materializedPaths.add(path);
+      materializedPaths.add(relPath);
       return;
     }
 
     if (fileHashEntry.isSetRootSymLink()) {
-      if (!symlinkedPaths.contains(path)) {
+      if (!symlinkedPaths.contains(relPath)) {
         materializeSymlink(fileHashEntry, materializedPaths);
       }
       symlinkIntegrityCheck(fileHashEntry);
-      materializedPaths.add(path);
+      materializedPaths.add(relPath);
       return;
     }
 
     // TODO(alisdair04,ruibm,shivanker): materialize directories
     if (fileHashEntry.isIsDirectory()) {
-      materializeDirectory(path, fileHashEntry, remainingPaths);
-      materializedPaths.add(path);
+      materializeDirectory(relPath, fileHashEntry, remainingRelPaths);
+      materializedPaths.add(relPath);
       return;
     }
 
@@ -125,11 +133,11 @@ class DistBuildFileMaterializer implements FileHashLoader {
     synchronized (this) {
       // Double check this path hasn't been materialized,
       // as previous check wasn't inside sync block.
-      if (materializedPaths.contains(path)) {
+      if (materializedPaths.contains(relPath)) {
         return;
       }
 
-      projectFilesystem.createParentDirs(projectFilesystem.resolve(path));
+      projectFilesystem.createParentDirs(projectFilesystem.resolve(relPath));
 
       // Write the actual file contents.
       if (!fileContents.isPresent()) {
@@ -140,11 +148,11 @@ class DistBuildFileMaterializer implements FileHashLoader {
       }
 
       try (InputStream sourceStream = fileContents.get()) {
-        Files.copy(sourceStream, path, StandardCopyOption.REPLACE_EXISTING);
-        path.toFile().setExecutable(fileHashEntry.isExecutable);
+        Files.copy(sourceStream, absPath, StandardCopyOption.REPLACE_EXISTING);
+        absPath.toFile().setExecutable(fileHashEntry.isExecutable);
       }
 
-      materializedPaths.add(path);
+      materializedPaths.add(relPath);
     }
   }
 
@@ -233,5 +241,44 @@ class DistBuildFileMaterializer implements FileHashLoader {
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
     materializeIfNeeded(archiveMemberPath.getArchivePath(), new LinkedList<>());
     return HashCode.fromInt(0);
+  }
+
+  @Override
+  public ProjectFilesystem getFilesystem() {
+    return projectFilesystem;
+  }
+
+  @Override
+  public boolean willGet(Path relPath) {
+    // DistBuildCellIndex makes sure only relative paths to the materializer's filesystem are
+    // passed here so we can safely accept all paths here.
+    return true;
+  }
+
+  @Override
+  public boolean willGet(ArchiveMemberPath archiveMemberRelPath) {
+    // DistBuildCellIndex makes sure only relative paths to the materializer's filesystem are
+    // passed here so we can safely accept all paths here.
+    return true;
+  }
+
+  @Override
+  public void invalidate(Path path) {
+    throw new UnsupportedOperationException(UNSUPPORTED_EXCEPTION_MSG);
+  }
+
+  @Override
+  public void invalidateAll() {
+    throw new UnsupportedOperationException(UNSUPPORTED_EXCEPTION_MSG);
+  }
+
+  @Override
+  public void set(Path path, HashCode hashCode) throws IOException {
+    throw new UnsupportedOperationException(UNSUPPORTED_EXCEPTION_MSG);
+  }
+
+  @Override
+  public FileHashCacheVerificationResult verify() throws IOException {
+    throw new UnsupportedOperationException(UNSUPPORTED_EXCEPTION_MSG);
   }
 }

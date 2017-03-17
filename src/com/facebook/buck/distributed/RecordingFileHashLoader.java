@@ -19,22 +19,22 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
-import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
+import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -44,12 +44,16 @@ import java.util.Set;
 
 import javax.annotation.concurrent.GuardedBy;
 
-public class RecordingFileHashLoader implements FileHashLoader {
+/**
+ * Decorator class the records information about the paths being hashed as a side effect of
+ * producing file hashes required for rule key computation.
+ */
+public class RecordingFileHashLoader implements ProjectFileHashCache {
   private static final Logger LOG = Logger.get(RecordingFileHashLoader.class);
 
   private static final long MAX_ROOT_FILE_SIZE_BYTES = 1024 * 1024;
 
-  private final FileHashLoader delegate;
+  private final ProjectFileHashCache delegate;
   private final ProjectFilesystem projectFilesystem;
   @GuardedBy("this")
   private final BuildJobStateFileHashes remoteFileHashes;
@@ -61,12 +65,11 @@ public class RecordingFileHashLoader implements FileHashLoader {
   private boolean materializeCurrentFileDuringPreloading = false;
 
   public RecordingFileHashLoader(
-      FileHashLoader delegate,
-      ProjectFilesystem projectFilesystem,
+      ProjectFileHashCache delegate,
       BuildJobStateFileHashes remoteFileHashes,
       DistBuildConfig distBuildConfig) {
     this.delegate = delegate;
-    this.projectFilesystem = projectFilesystem;
+    this.projectFilesystem = delegate.getFilesystem();
     this.remoteFileHashes = remoteFileHashes;
     this.distBuildConfig = distBuildConfig;
     this.seenPaths = new HashSet<>();
@@ -77,9 +80,10 @@ public class RecordingFileHashLoader implements FileHashLoader {
   }
 
   @Override
-  public HashCode get(Path rootPath) throws IOException {
+  public HashCode get(Path relPath) throws IOException {
+    checkIsRelative(relPath);
     Queue<Path> remainingPaths = new LinkedList<>();
-    remainingPaths.add(rootPath);
+    remainingPaths.add(relPath);
     while (remainingPaths.size() > 0) {
       Path nextPath = remainingPaths.remove();
       HashCode hashCode = delegate.get(nextPath);
@@ -95,7 +99,7 @@ public class RecordingFileHashLoader implements FileHashLoader {
       }
     }
 
-    return delegate.get(rootPath);
+    return delegate.get(relPath);
   }
 
   private List<PathWithUnixSeparators> processDirectory(Path path, Queue<Path> remainingPaths)
@@ -104,7 +108,7 @@ public class RecordingFileHashLoader implements FileHashLoader {
     for (Path relativeChildPath : projectFilesystem.getDirectoryContents(path)) {
       childrenRelativePaths.add(
           new PathWithUnixSeparators(MorePaths.pathWithUnixSeparators(relativeChildPath)));
-      remainingPaths.add(projectFilesystem.resolve(relativeChildPath));
+      remainingPaths.add(relativeChildPath);
     }
 
     return childrenRelativePaths;
@@ -115,9 +119,16 @@ public class RecordingFileHashLoader implements FileHashLoader {
     return delegate.getSize(path);
   }
 
+  private static void checkIsRelative(Path path) {
+    Preconditions.checkArgument(
+        !path.isAbsolute(),
+        "Path must be relative. Found [%s] instead.",
+        path);
+  }
+
   private Path findRealPath(Path path) {
     try {
-      Path realPath = path.toRealPath();
+      Path realPath = projectFilesystem.resolve(path).toRealPath();
       boolean pathContainedSymLinks =
           !path.toAbsolutePath().normalize().equals(realPath.normalize());
 
@@ -172,20 +183,21 @@ public class RecordingFileHashLoader implements FileHashLoader {
   }
 
   private synchronized void record(
-      Path path,
-      Optional<String> memberPath,
+      Path relPath,
+      Optional<String> memRelPath,
       HashCode hashCode,
       List<PathWithUnixSeparators> children) {
-    LOG.info("Recording path: %s", path.toAbsolutePath());
+    LOG.verbose("Recording path: [%s]", projectFilesystem.resolve(relPath).toAbsolutePath());
 
     Optional<Path> pathRelativeToProjectRoot =
-        projectFilesystem.getPathRelativeToProjectRoot(path);
+        projectFilesystem.getPathRelativeToProjectRoot(relPath);
     BuildJobStateFileHashEntry fileHashEntry = new BuildJobStateFileHashEntry();
+    // TODO(ruibm): This needs to be done relative to the cells.
     boolean pathIsAbsolute = !pathRelativeToProjectRoot.isPresent();
     fileHashEntry.setPathIsAbsolute(pathIsAbsolute);
-    Path entryKey = pathIsAbsolute ? path : pathRelativeToProjectRoot.get();
-    boolean isDirectory = projectFilesystem.isDirectory(path);
-    Path realPath = findRealPath(path);
+    Path entryKey = pathIsAbsolute ? relPath : pathRelativeToProjectRoot.get();
+    boolean isDirectory = projectFilesystem.isDirectory(relPath);
+    Path realPath = findRealPath(relPath);
     boolean realPathInsideProject =
         projectFilesystem.getPathRelativeToProjectRoot(realPath).isPresent();
 
@@ -196,7 +208,8 @@ public class RecordingFileHashLoader implements FileHashLoader {
     // - We find the highest level part of the path that points outside the project and upload
     // meta-data about this before it is re-materialized. See findSymlinkRoot() for more details.
     if (!realPathInsideProject && !pathIsAbsolute) {
-      Pair<Path, Path> symLinkRootAndTarget = findSymlinkRoot(path);
+      Pair<Path, Path> symLinkRootAndTarget =
+          findSymlinkRoot(projectFilesystem.resolve(relPath).toAbsolutePath());
 
       Path symLinkRoot =
           projectFilesystem.getPathRelativeToProjectRoot(symLinkRootAndTarget.getFirst()).get();
@@ -211,14 +224,15 @@ public class RecordingFileHashLoader implements FileHashLoader {
     fileHashEntry.setHashCode(hashCode.toString());
     fileHashEntry.setPath(
         new PathWithUnixSeparators(MorePaths.pathWithUnixSeparators(entryKey)));
-    if (memberPath.isPresent()) {
-      fileHashEntry.setArchiveMemberPath(memberPath.get().toString());
+    if (memRelPath.isPresent()) {
+      fileHashEntry.setArchiveMemberPath(memRelPath.get().toString());
     }
     if (!isDirectory && !pathIsAbsolute && realPathInsideProject) {
       try {
         // TODO(shivanker, ruibm): Don't read everything in memory right away.
-        fileHashEntry.setContents(Files.readAllBytes(path));
-        fileHashEntry.setIsExecutable(path.toFile().canExecute());
+        Path absPath = projectFilesystem.resolve(relPath).toAbsolutePath();
+        fileHashEntry.setContents(Files.readAllBytes(absPath));
+        fileHashEntry.setIsExecutable(absPath.toFile().canExecute());
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
@@ -232,16 +246,16 @@ public class RecordingFileHashLoader implements FileHashLoader {
     remoteFileHashes.addToEntries(fileHashEntry);
   }
 
-
   @Override
-  public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
-    HashCode hashCode = delegate.get(archiveMemberPath);
+  public HashCode get(ArchiveMemberPath relPath) throws IOException {
+    checkIsRelative(relPath.getArchivePath());
+    HashCode hashCode = delegate.get(relPath);
     synchronized (this) {
-      if (!seenArchives.contains(archiveMemberPath)) {
-        seenArchives.add(archiveMemberPath);
+      if (!seenArchives.contains(relPath)) {
+        seenArchives.add(relPath);
         record(
-            archiveMemberPath.getArchivePath(),
-            Optional.of(archiveMemberPath.getMemberPath().toString()),
+            relPath.getArchivePath(),
+            Optional.of(relPath.getMemberPath().toString()),
             hashCode,
             new LinkedList<>());
       }
@@ -278,7 +292,8 @@ public class RecordingFileHashLoader implements FileHashLoader {
     // TODO(alisdair04,ruibm): capture all .buckconfig dependencies automatically.
 
     Optional<ImmutableList<Path>> whitelist = distBuildConfig.getOptionalPathWhitelist();
-    LOG.info("Stampede always materialize whitelist: [%s]",
+    LOG.info(
+        "Stampede always materialize whitelist: [%s].",
         whitelist.isPresent() ? Joiner.on(", ").join(whitelist.get()) : "");
     addAllPresent(paths, whitelist);
 
@@ -298,20 +313,54 @@ public class RecordingFileHashLoader implements FileHashLoader {
     materializeCurrentFileDuringPreloading = true;
 
     try {
-      Path[] rootFiles = Arrays.stream(projectFilesystem.listFiles(Paths.get(".")))
-          .filter(f -> f.isFile())
-          .filter(f -> !Files.isSymbolicLink(f.toPath()))
-          .filter(f -> f.getName().startsWith("."))
-          .filter(f -> f.length() < MAX_ROOT_FILE_SIZE_BYTES)
-          .map(f -> f.toPath().toAbsolutePath())
-          .toArray(Path[]::new);
-      for (Path p : rootFiles) {
-        get(p);
+      for (Path path : projectFilesystem.getDirectoryContents(projectFilesystem.getRootPath())) {
+        if (projectFilesystem.isFile(path) &&
+            !projectFilesystem.isSymLink(path) &&
+            path.getFileName().startsWith(".") &&
+            projectFilesystem.getFileSize(path) < MAX_ROOT_FILE_SIZE_BYTES) {
+          // Force the calculation of the hash which will record the file.
+          get(path);
+        }
       }
     } catch (IOException e) {
       throw new RuntimeException(e);
     } finally {
       materializeCurrentFileDuringPreloading = false;
     }
+  }
+
+  @Override
+  public ProjectFilesystem getFilesystem() {
+    return projectFilesystem;
+  }
+
+  @Override
+  public boolean willGet(Path path) {
+    return delegate.willGet(path);
+  }
+
+  @Override
+  public boolean willGet(ArchiveMemberPath archiveMemberPath) {
+    return delegate.willGet(archiveMemberPath);
+  }
+
+  @Override
+  public void invalidate(Path path) {
+    delegate.invalidate(path);
+  }
+
+  @Override
+  public void invalidateAll() {
+    delegate.invalidateAll();
+  }
+
+  @Override
+  public void set(Path path, HashCode hashCode) throws IOException {
+    delegate.set(path, hashCode);
+  }
+
+  @Override
+  public FileHashCacheVerificationResult verify() throws IOException {
+    return delegate.verify();
   }
 }

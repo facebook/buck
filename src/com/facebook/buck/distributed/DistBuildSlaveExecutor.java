@@ -19,7 +19,6 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.command.Build;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.Logger;
@@ -44,24 +43,23 @@ import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyFactoryManager;
 import com.facebook.buck.step.DefaultStepRunner;
+import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
 
@@ -187,24 +185,24 @@ public class DistBuildSlaveExecutor {
       return cachingBuildEngineDelegate;
     }
 
-    LoadingCache<ProjectFilesystem, DistBuildFileMaterializer> fileHashLoaders =
-        CacheBuilder.newBuilder().build(
-            new CacheLoader<ProjectFilesystem, DistBuildFileMaterializer>() {
-              @Override
-              public DistBuildFileMaterializer load(ProjectFilesystem filesystem) throws Exception {
-                return args.getState().createMaterializingLoader(filesystem, args.getProvider());
-              }
-            });
+    ImmutableList.Builder<DistBuildFileMaterializer> allCachesBuilder = ImmutableList.builder();
+    Cell rootCell = args.getState().getRootCell();
+    for (Path cellPath : rootCell.getKnownRoots()) {
+      Cell cell = rootCell.getCell(cellPath);
+      allCachesBuilder.add(args.getState().createMaterializingLoader(
+          cell.getFilesystem(),
+          args.getProvider()));
+    }
+    allCachesBuilder.add(args.getState().createMaterializingLoader(
+        rootCell.getFilesystem(),
+        args.getProvider()));
+    ImmutableList<DistBuildFileMaterializer> allCaches = allCachesBuilder.build();
+    StackedFileHashCache stackedFileHashCache = new StackedFileHashCache(allCaches);
 
     // Create all symlinks and touch all other files.
     // TODO(alisdair04): remove this once action graph doesn't read from file system.
-    for (Cell cell : args.getState().getCells().values()) {
-      try {
-        fileHashLoaders.get(cell.getFilesystem()).preloadAllFiles();
-      } catch (ExecutionException e) {
-        LOG.error(e);
-        throw new RuntimeException(e);
-      }
+    for (DistBuildFileMaterializer materializer : allCaches) {
+      materializer.preloadAllFiles();
     }
 
     createActionGraphAndResolver();
@@ -215,7 +213,7 @@ public class DistBuildSlaveExecutor {
             new SourcePathResolver(ruleFinder),
             ruleFinder,
             args.getState(),
-            fileHashLoaders);
+            stackedFileHashCache);
     return cachingBuildEngineDelegate;
   }
 

@@ -524,11 +524,13 @@ public class BuildCommand extends AbstractCommand {
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+
+
     DistBuildFileHashes distributedBuildFileHashes = new DistBuildFileHashes(
         actionGraphAndResolver.getActionGraph(),
         pathResolver,
         ruleFinder,
-        params.getFileHashCache().getCaches(),
+        params.getFileHashCache(),
         cellIndexer,
         executorService,
         params.getBuckConfig().getKeySeed(),

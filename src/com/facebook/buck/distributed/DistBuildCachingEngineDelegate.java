@@ -16,7 +16,6 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CachingBuildEngineDelegate;
@@ -43,8 +42,8 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
   public DistBuildCachingEngineDelegate(
       SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
-      final DistBuildState remoteState,
-      final LoadingCache<ProjectFilesystem, ? extends FileHashLoader> fileHashLoaders) {
+      DistBuildState remoteState,
+      FileHashCache fileHashCache) {
     this.fileHashCacheLoader = CacheBuilder.newBuilder()
         .build(new CacheLoader<ProjectFilesystem, FileHashCache>() {
           @Override
@@ -55,7 +54,7 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
     ruleKeyFactories = DistBuildFileHashes.createRuleKeyFactories(
         sourcePathResolver,
         ruleFinder,
-        fileHashLoaders,
+        fileHashCache,
         /* keySeed */ 0);
   }
 

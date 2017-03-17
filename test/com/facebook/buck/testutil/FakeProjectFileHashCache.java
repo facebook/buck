@@ -35,7 +35,7 @@ public class FakeProjectFileHashCache implements ProjectFileHashCache {
   private final ProjectFilesystem filesystem;
   private final Map<Path, HashCode> pathsToHashes;
 
-  private FakeProjectFileHashCache(
+  public FakeProjectFileHashCache(
       ProjectFilesystem filesystem,
       Map<Path, HashCode> pathsToHashes) {
     this.filesystem = filesystem;
