@@ -62,12 +62,22 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
   private final Set<Path> seenPaths;
   @GuardedBy("this")
   private final Set<ArchiveMemberPath> seenArchives;
+  private final boolean allRecordedPathsAreAbsolute;
   private boolean materializeCurrentFileDuringPreloading = false;
 
   public RecordingProjectFileHashCache(
       ProjectFileHashCache delegate,
       BuildJobStateFileHashes remoteFileHashes,
       DistBuildConfig distBuildConfig) {
+    this(delegate, remoteFileHashes, distBuildConfig, false);
+  }
+
+  public RecordingProjectFileHashCache(
+      ProjectFileHashCache delegate,
+      BuildJobStateFileHashes remoteFileHashes,
+      DistBuildConfig distBuildConfig,
+      boolean allRecordedPathsAreAbsolute) {
+    this.allRecordedPathsAreAbsolute = allRecordedPathsAreAbsolute;
     this.delegate = delegate;
     this.projectFilesystem = delegate.getFilesystem();
     this.remoteFileHashes = remoteFileHashes;
@@ -193,9 +203,11 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
         projectFilesystem.getPathRelativeToProjectRoot(relPath);
     BuildJobStateFileHashEntry fileHashEntry = new BuildJobStateFileHashEntry();
     // TODO(ruibm): This needs to be done relative to the cells.
-    boolean pathIsAbsolute = !pathRelativeToProjectRoot.isPresent();
+    boolean pathIsAbsolute = allRecordedPathsAreAbsolute;
     fileHashEntry.setPathIsAbsolute(pathIsAbsolute);
-    Path entryKey = pathIsAbsolute ? relPath : pathRelativeToProjectRoot.get();
+    Path entryKey = pathIsAbsolute ?
+        projectFilesystem.resolve(relPath).toAbsolutePath() :
+        pathRelativeToProjectRoot.get();
     boolean isDirectory = projectFilesystem.isDirectory(relPath);
     Path realPath = findRealPath(relPath);
     boolean realPathInsideProject =

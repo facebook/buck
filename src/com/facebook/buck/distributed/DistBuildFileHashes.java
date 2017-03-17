@@ -16,7 +16,6 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.io.ArchiveMemberPath;
@@ -24,6 +23,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -60,7 +60,8 @@ import java.util.stream.Collectors;
  * and presenting it as a Thrift data structure.
  */
 public class DistBuildFileHashes {
-  private final LoadingCache<ProjectFilesystem, BuildJobStateFileHashes> remoteFileHashes;
+  // Map<CellIndex, BuildJobStateFileHashes>.
+  private final Map<Integer, BuildJobStateFileHashes> remoteFileHashes;
   private final LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory> ruleKeyFactories;
 
   private final ListenableFuture<ImmutableList<BuildJobStateFileHashes>> fileHashes;
@@ -72,26 +73,22 @@ public class DistBuildFileHashes {
       SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
       StackedFileHashCache originalHashCache,
-      final Function<? super Path, Integer> cellIndexer,
+      Function<? super Path, Integer> cellIndexer,
       ListeningExecutorService executorService,
       int keySeed,
-      BuckConfig buckConfig) {
+      final Cell rootCell) {
 
-    this.remoteFileHashes = CacheBuilder.newBuilder().build(
-        new CacheLoader<ProjectFilesystem, BuildJobStateFileHashes>() {
-          @Override
-          public BuildJobStateFileHashes load(ProjectFilesystem filesystem) {
-            BuildJobStateFileHashes fileHashes = new BuildJobStateFileHashes();
-            fileHashes.setCellIndex(cellIndexer.apply(filesystem.getRootPath()));
-            return fileHashes;
-          }
-        });
+    this.remoteFileHashes = Maps.newHashMap();
 
     StackedFileHashCache recordingHashCache = originalHashCache.newDecoratedFileHashCache(
-        originalCache -> new RecordingProjectFileHashCache(
+        originalCache -> {
+          Path fsRootPath = originalCache.getFilesystem().getRootPath();
+          return new RecordingProjectFileHashCache(
             originalCache,
-            remoteFileHashes.getUnchecked(originalCache.getFilesystem()),
-            new DistBuildConfig(buckConfig)));
+            getRemoteFileHashes(cellIndexer.apply(fsRootPath)),
+            new DistBuildConfig(rootCell.getBuckConfig()),
+            !rootCell.getKnownRoots().contains(fsRootPath));
+        });
 
     this.ruleKeyFactories =
 
@@ -107,8 +104,18 @@ public class DistBuildFileHashes {
 
         fileHashesComputation(
             Futures.transform(this.ruleKeys, Functions.constant(null)),
-            this.remoteFileHashes,
+            ImmutableList.copyOf(this.remoteFileHashes.values()),
             executorService);
+  }
+
+  public BuildJobStateFileHashes getRemoteFileHashes(Integer cellIndex) {
+    if (!remoteFileHashes.containsKey(cellIndex)) {
+      BuildJobStateFileHashes fileHashes = new BuildJobStateFileHashes();
+      fileHashes.setCellIndex(cellIndex);
+      remoteFileHashes.put(cellIndex, fileHashes);
+    }
+
+    return remoteFileHashes.get(cellIndex);
   }
 
   public static LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory>
@@ -159,14 +166,14 @@ public class DistBuildFileHashes {
 
   private static ListenableFuture<ImmutableList<BuildJobStateFileHashes>> fileHashesComputation(
       ListenableFuture<Void> ruleKeyComputationForSideEffect,
-      final LoadingCache<ProjectFilesystem, BuildJobStateFileHashes> remoteFileHashes,
+      final ImmutableList<BuildJobStateFileHashes> remoteFileHashes,
       ListeningExecutorService executorService) {
     return Futures.transform(
         ruleKeyComputationForSideEffect,
         new Function<Void, ImmutableList<BuildJobStateFileHashes>>() {
           @Override
           public ImmutableList<BuildJobStateFileHashes> apply(Void input) {
-            return ImmutableList.copyOf(remoteFileHashes.asMap().values());
+            return ImmutableList.copyOf(remoteFileHashes);
           }
         },
         executorService);

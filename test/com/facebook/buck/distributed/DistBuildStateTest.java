@@ -326,6 +326,10 @@ public class DistBuildStateTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
     ProjectFilesystem projectFilesystem = createJavaOnlyFilesystem("/opt/buck");
+    Cell rootCell = new TestCellBuilder()
+        .setFilesystem(projectFilesystem)
+        .setBuckConfig(FakeBuckConfig.builder().build())
+        .build();
     return new DistBuildFileHashes(
         actionGraph,
         sourcePathResolver,
@@ -335,7 +339,7 @@ public class DistBuildStateTest {
         Functions.constant(0),
         MoreExecutors.newDirectExecutorService(),
         /* keySeed */ 0,
-        FakeBuckConfig.builder().build());
+        rootCell);
   }
 
   public static DistBuildTargetGraphCodec createDefaultCodec(

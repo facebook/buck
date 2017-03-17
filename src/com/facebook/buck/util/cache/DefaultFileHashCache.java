@@ -26,12 +26,14 @@ import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
 import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -92,6 +94,30 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   public static DefaultFileHashCache createDefaultFileHashCache(
       ProjectFilesystem projectFilesystem) {
     return new DefaultFileHashCache(projectFilesystem, Optional.empty());
+  }
+
+  public static ImmutableList<? extends ProjectFileHashCache> createOsRootDirectoriesCaches() {
+    ImmutableList.Builder<ProjectFileHashCache> allCaches = ImmutableList.builder();
+    for (Path root : FileSystems.getDefault().getRootDirectories()) {
+      if (!root.toFile().exists()) {
+        // On Windows, it is possible that the system will have a
+        // drive for something that does not exist such as a floppy
+        // disk or SD card.  The drive exists, but it does not
+        // contain anything useful, so Buck should not consider it
+        // as a cacheable location.
+        continue;
+      }
+
+      ProjectFilesystem projectFilesystem =
+          ProjectFilesystem.createNewOrThrowHumanReadableException(root);
+      // A cache which caches hashes of absolute paths which my be accessed by certain
+      // rules (e.g. /usr/bin/gcc), and only serves to prevent rehashing the same file
+      // multiple times in a single run.
+      allCaches.add(
+          DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem));
+    }
+
+    return allCaches.build();
   }
 
   private void checkNotIgnored(Path relativePath) {

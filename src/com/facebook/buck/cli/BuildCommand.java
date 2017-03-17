@@ -534,7 +534,7 @@ public class BuildCommand extends AbstractCommand {
         cellIndexer,
         executorService,
         params.getBuckConfig().getKeySeed(),
-        params.getBuckConfig());
+        params.getCell());
 
     return DistBuildState.dump(
         cellIndexer,

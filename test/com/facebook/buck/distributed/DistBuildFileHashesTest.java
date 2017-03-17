@@ -38,15 +38,16 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -291,53 +292,6 @@ public class DistBuildFileHashesTest {
     }
   }
 
-  // TODO(ruibm): This is working but it is incorrect. Fixing absolute paths in a separate diff.
-  @Test
-  public void recordsAbsoluteFileHashes() throws Exception {
-    Fixture f = new Fixture(tempDir) {
-      @Override
-      protected void setUpRules(
-          BuildRuleResolver resolver,
-          SourcePathResolver sourcePathResolver) throws Exception {
-        Path hashedFileToolPath = projectFilesystem.resolve("../tool").toAbsolutePath();
-        Path directoryPath = getPath("directory");
-        projectFilesystem.writeContentsToPath("it's a tool, I promise", hashedFileToolPath);
-        projectFilesystem.mkdirs(directoryPath);
-
-        resolver.addToIndex(new BuildRuleWithToolAndPath(
-            new FakeBuildRuleParamsBuilder("//:with_tool")
-                .setProjectFilesystem(projectFilesystem)
-                .build(),
-            new HashedFileTool(hashedFileToolPath),
-            new PathSourcePath(projectFilesystem, directoryPath)
-        ));
-      }
-    };
-
-    List<BuildJobStateFileHashes> recordedHashes = f.distributedBuildFileHashes.getFileHashes();
-
-    assertThat(recordedHashes, Matchers.hasSize(2));
-    BuildJobStateFileHashes rootCellHashes = recordedHashes.stream()
-        .filter(x -> x.getCellIndex() == 0)
-        .findFirst()
-        .get();
-    assertThat(rootCellHashes.entries, Matchers.hasSize(1));
-    BuildJobStateFileHashEntry rootCellEntry = rootCellHashes.entries.get(0);
-    assertThat(rootCellEntry, Matchers.notNullValue());
-    assertFalse(rootCellEntry.isPathIsAbsolute());
-    assertTrue(rootCellEntry.isIsDirectory());
-
-    BuildJobStateFileHashes secondaryCellHashes = recordedHashes.stream()
-        .filter(x -> x.getCellIndex() != 0)
-        .findFirst()
-        .get();
-    assertThat(rootCellHashes.entries, Matchers.hasSize(1));
-    BuildJobStateFileHashEntry secondaryCellEntry = secondaryCellHashes.entries.get(0);
-    assertThat(secondaryCellEntry, Matchers.notNullValue());
-    assertFalse(secondaryCellEntry.isPathIsAbsolute());
-    assertFalse(secondaryCellEntry.isIsDirectory());
-  }
-
   @Test
   public void worksCrossCell() throws Exception {
     final Fixture f = new Fixture(tempDir) {
@@ -462,6 +416,10 @@ public class DistBuildFileHashesTest {
       actionGraph = new ActionGraph(buildRuleResolver.getBuildRules());
       cellIndexer = new FakeIndexer();
       BuckConfig buckConfig = createBuckConfig();
+      Cell rootCell = new TestCellBuilder()
+          .setFilesystem(projectFilesystem)
+          .setBuckConfig(buckConfig)
+          .build();
 
       distributedBuildFileHashes = new DistBuildFileHashes(
           actionGraph,
@@ -471,7 +429,7 @@ public class DistBuildFileHashesTest {
           cellIndexer,
           MoreExecutors.newDirectExecutorService(),
           /* keySeed */ 0,
-          buckConfig);
+          rootCell);
     }
 
     public Fixture(TemporaryFolder tempDir) throws Exception {

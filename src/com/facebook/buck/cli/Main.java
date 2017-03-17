@@ -168,7 +168,6 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.AtomicMoveNotSupportedException;
-import java.nio.file.FileSystems;
 import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -319,21 +318,6 @@ public final class Main {
 
   private static final NonReentrantSystemExit NON_REENTRANT_SYSTEM_EXIT =
       new NonReentrantSystemExit();
-
-  private static ProjectFilesystem createProjectFilesystem(Path path) {
-    try {
-      // toRealPath() is necessary to resolve symlinks, allowing us to later
-      // check whether files are inside or outside of the project without issue.
-      return new ProjectFilesystem(path.toRealPath().normalize());
-    } catch (IOException e) {
-      throw new HumanReadableException(
-          String.format(
-              ("Failed to resolve project root [%s]." +
-                  "Check if it exists and has the right permissions."),
-              path.toAbsolutePath()),
-          e);
-    }
-  }
 
   private static void addTransitiveCells(
       Set<Cell> cellsBuilder,
@@ -1045,7 +1029,8 @@ public final class Main {
         // ImmutableSet<PathOrGlobMatcher> and BuckPaths for the ProjectFilesystem, whereas this one
         // uses the defaults.
         ProjectFilesystem rootCellProjectFilesystem =
-            createProjectFilesystem(rootCell.getFilesystem().getRootPath());
+            ProjectFilesystem.createNewOrThrowHumanReadableException(
+                rootCell.getFilesystem().getRootPath());
         if (isDaemon) {
           allCaches.addAll(getFileHashCachesFromDaemon(rootCell));
         } else {
@@ -1062,21 +1047,7 @@ public final class Main {
         // the main cell cache, and only serves to prevent rehashing the same file multiple
         // times in a single run.
         allCaches.add(DefaultFileHashCache.createDefaultFileHashCache(rootCellProjectFilesystem));
-        for (Path root : FileSystems.getDefault().getRootDirectories()) {
-          if (!root.toFile().exists()) {
-            // On Windows, it is possible that the system will have a
-            // drive for something that does not exist such as a floppy
-            // disk or SD card.  The drive exists, but it does not
-            // contain anything useful, so Buck should not consider it
-            // as a cacheable location.
-            continue;
-          }
-          // A cache which caches hashes of absolute paths which my be accessed by certain
-          // rules (e.g. /usr/bin/gcc), and only serves to prevent rehashing the same file
-          // multiple times in a single run.
-          allCaches.add(
-              DefaultFileHashCache.createDefaultFileHashCache(createProjectFilesystem(root)));
-        }
+        allCaches.addAll(DefaultFileHashCache.createOsRootDirectoriesCaches());
 
         StackedFileHashCache fileHashCache = new StackedFileHashCache(allCaches.build());
 

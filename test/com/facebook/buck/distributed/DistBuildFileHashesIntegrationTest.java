@@ -22,9 +22,11 @@ import static org.junit.Assert.assertNotNull;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobState;
+import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.listener.BroadcastEventListener;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.Parser;
@@ -47,10 +49,12 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -64,10 +68,93 @@ import java.util.stream.Collectors;
 
 public class DistBuildFileHashesIntegrationTest {
 
+  private static final String SYMLINK_FILE_NAME = "SymlinkSourceFile.java";
+
   private static final int KEY_SEED = 0;
 
   @Rule
   public TemporaryPaths temporaryFolder = new TemporaryPaths();
+
+  @Test
+  public void symlinkPathsRecordedInRootCell() throws Exception {
+    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "symlink",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProjectFilesystem rootFs = new ProjectFilesystem(
+        temporaryFolder.getRoot().toAbsolutePath().resolve("root_cell"));
+
+    Path absSymlinkFilePath = rootFs.resolve("../" + SYMLINK_FILE_NAME);
+    Path symLinkPath = rootFs.resolve(SYMLINK_FILE_NAME);
+    rootFs.createSymLink(symLinkPath, absSymlinkFilePath, false);
+
+    BuckConfig rootCellConfig = FakeBuckConfig.builder()
+        .setFilesystem(rootFs)
+        .build();
+    Cell rootCell = new TestCellBuilder()
+        .setBuckConfig(rootCellConfig)
+        .setFilesystem(rootFs)
+        .build();
+
+    TypeCoercerFactory typeCoercerFactory =
+        new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance());
+    ConstructorArgMarshaller constructorArgMarshaller =
+        new ConstructorArgMarshaller(typeCoercerFactory);
+    Parser parser = new Parser(
+        new BroadcastEventListener(),
+        rootCellConfig.getView(ParserConfig.class),
+        typeCoercerFactory,
+        constructorArgMarshaller);
+    TargetGraph targetGraph = parser.buildTargetGraph(
+        BuckEventBusFactory.newInstance(),
+        rootCell,
+        /* enableProfiling */ false,
+        MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
+        ImmutableSet.of(
+            BuildTargetFactory.newInstance(rootFs.getRootPath(), "//:libA")));
+
+
+    DistBuildTargetGraphCodec targetGraphCodec =
+        DistBuildStateTest.createDefaultCodec(rootCell, Optional.of(parser));
+    BuildJobState dump = DistBuildState.dump(
+        new DistBuildCellIndexer(rootCell),
+        createDistBuildFileHashes(targetGraph, rootCell),
+        targetGraphCodec,
+        targetGraph,
+        ImmutableSet.of(
+            BuildTargetFactory.newInstance(rootFs.getRootPath(), "//:libA")));
+
+    assertNotNull(dump);
+    assertEquals(1, dump.getFileHashesSize());
+    BuildJobStateFileHashes rootCellHashes = dump.getFileHashes().get(0);
+    assertEquals(2, rootCellHashes.getEntriesSize());
+
+    BuildJobStateFileHashEntry symLinkEntry = rootCellHashes.getEntries()
+        .stream()
+        .filter(x -> x.isSetRootSymLink())
+        .findFirst()
+        .get();
+    String expectedPath = temporaryFolder.getRoot()
+        .resolve(SYMLINK_FILE_NAME)
+        .toAbsolutePath()
+        .toString();
+    assertEquals(
+        MorePaths.pathWithUnixSeparators(expectedPath),
+        symLinkEntry.getRootSymLinkTarget().getPath());
+    assertEquals(
+        SYMLINK_FILE_NAME,
+        symLinkEntry.getRootSymLink().getPath());
+
+    BuildJobStateFileHashEntry relPathEntry = rootCellHashes.getEntries()
+        .stream()
+        .filter(x -> !x.isPathIsAbsolute())
+        .findFirst()
+        .get();
+    assertEquals("A.java", relPathEntry.getPath().getPath());
+  }
 
   @Test
   public void crossCellDoesNotCauseAbsolutePathSrcs() throws Exception {
@@ -161,6 +248,7 @@ public class DistBuildFileHashesIntegrationTest {
       Cell cell = rootCell.getCell(cellPath);
       allCaches.add(DefaultFileHashCache.createDefaultFileHashCache(cell.getFilesystem()));
     }
+    allCaches.addAll(DefaultFileHashCache.createOsRootDirectoriesCaches());
     StackedFileHashCache stackedCache = new StackedFileHashCache(allCaches.build());
 
     return new DistBuildFileHashes(
@@ -171,6 +259,6 @@ public class DistBuildFileHashesIntegrationTest {
         cellIndexer,
         MoreExecutors.newDirectExecutorService(),
         /* keySeed */ KEY_SEED,
-        rootCell.getBuckConfig());
+        rootCell);
   }
 }

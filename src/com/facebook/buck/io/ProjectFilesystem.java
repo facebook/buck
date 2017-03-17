@@ -19,6 +19,7 @@ package com.facebook.buck.io;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.event.EventBus;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.autosparse.AutoSparseConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
@@ -143,6 +144,21 @@ public class ProjectFilesystem {
 
   public ProjectFilesystem(Path root) {
     this(root, new Config());
+  }
+
+  public static ProjectFilesystem createNewOrThrowHumanReadableException(Path path) {
+    try {
+      // toRealPath() is necessary to resolve symlinks, allowing us to later
+      // check whether files are inside or outside of the project without issue.
+      return new ProjectFilesystem(path.toRealPath().normalize());
+    } catch (IOException e) {
+      throw new HumanReadableException(
+          String.format(
+              ("Failed to resolve project root [%s]." +
+                  "Check if it exists and has the right permissions."),
+              path.toAbsolutePath()),
+          e);
+    }
   }
 
   /**
