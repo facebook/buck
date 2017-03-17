@@ -202,7 +202,6 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
     Optional<Path> pathRelativeToProjectRoot =
         projectFilesystem.getPathRelativeToProjectRoot(relPath);
     BuildJobStateFileHashEntry fileHashEntry = new BuildJobStateFileHashEntry();
-    // TODO(ruibm): This needs to be done relative to the cells.
     boolean pathIsAbsolute = allRecordedPathsAreAbsolute;
     fileHashEntry.setPathIsAbsolute(pathIsAbsolute);
     Path entryKey = pathIsAbsolute ?
@@ -347,13 +346,13 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
   }
 
   @Override
-  public boolean willGet(Path path) {
-    return delegate.willGet(path);
+  public boolean willGet(Path relPath) {
+    return delegate.willGet(relPath);
   }
 
   @Override
-  public boolean willGet(ArchiveMemberPath archiveMemberPath) {
-    return delegate.willGet(archiveMemberPath);
+  public boolean willGet(ArchiveMemberPath archiveMemberRelPath) {
+    return delegate.willGet(archiveMemberRelPath);
   }
 
   @Override

@@ -47,7 +47,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.base.Charsets;
@@ -134,8 +133,11 @@ public class DistBuildFileHashesTest {
 
     ProjectFilesystem readProjectFilesystem =
         new ProjectFilesystem(tempDir.newFolder("read_hashes").toPath().toRealPath());
+    ProjectFileHashCache mockCache = EasyMock.createMock(ProjectFileHashCache.class);
+    EasyMock.expect(mockCache.getFilesystem()).andReturn(readProjectFilesystem).anyTimes();
+    EasyMock.replay(mockCache);
     ProjectFileHashCache fileHashCache = DistBuildFileHashes.createFileHashCache(
-        readProjectFilesystem,
+        mockCache,
         fileHashes.get(0));
 
     assertThat(
@@ -156,13 +158,17 @@ public class DistBuildFileHashesTest {
     ProjectFilesystem materializeProjectFilesystem =
         new ProjectFilesystem(tempDir.newFolder("read_hashes").getCanonicalFile().toPath());
 
-    FileHashCache fileHashLoader = EasyMock.createMock(FileHashCache.class);
+    ProjectFileHashCache mockCache = EasyMock.createMock(ProjectFileHashCache.class);
+    EasyMock.expect(mockCache.getFilesystem())
+        .andReturn(materializeProjectFilesystem)
+        .atLeastOnce();
+    EasyMock.expect(mockCache.get(EasyMock.<Path>notNull())).andReturn(HashCode.fromInt(42)).once();
+    EasyMock.replay(mockCache);
     MaterializerProjectFileHashCache materializer =
         new MaterializerProjectFileHashCache(
-            materializeProjectFilesystem,
+            mockCache,
             fileHashes.get(0),
-            new InlineContentsProvider(),
-            fileHashLoader);
+            new InlineContentsProvider());
 
     materializer.get(materializeProjectFilesystem.resolve(f.javaSrcPath));
     assertThat(
@@ -178,8 +184,11 @@ public class DistBuildFileHashesTest {
 
     ProjectFilesystem readProjectFilesystem =
         new ProjectFilesystem(tempDir.newFolder("read_hashes").toPath().toRealPath());
+    ProjectFileHashCache mockCache = EasyMock.createMock(ProjectFileHashCache.class);
+    EasyMock.expect(mockCache.getFilesystem()).andReturn(readProjectFilesystem).anyTimes();
+    EasyMock.replay(mockCache);
     ProjectFileHashCache fileHashCache = DistBuildFileHashes.createFileHashCache(
-        readProjectFilesystem,
+        mockCache,
         fileHashes.get(0));
 
     assertThat(
@@ -272,8 +281,11 @@ public class DistBuildFileHashesTest {
 
       ProjectFilesystem readProjectFilesystem =
           new ProjectFilesystem(tempDir.newFolder("read_hashes").toPath().toRealPath());
+      ProjectFileHashCache mockCache = EasyMock.createMock(ProjectFileHashCache.class);
+      EasyMock.expect(mockCache.getFilesystem()).andReturn(readProjectFilesystem).anyTimes();
+      EasyMock.replay(mockCache);
       ProjectFileHashCache fileHashCache = DistBuildFileHashes.createFileHashCache(
-          readProjectFilesystem,
+          mockCache,
           recordedHashes.get(0));
 
       ArchiveMemberPath archiveMemberPath = ArchiveMemberPath.of(
@@ -282,6 +294,7 @@ public class DistBuildFileHashesTest {
       assertThat(
           fileHashCache.willGet(archiveMemberPath),
           Matchers.is(true));
+
       assertThat(
           fileHashCache.get(archiveMemberPath),
           Matchers.is(f.archiveMemberHash));

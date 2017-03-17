@@ -187,22 +187,7 @@ public class DistBuildSlaveExecutor {
       return cachingBuildEngineDelegate;
     }
 
-    ImmutableList.Builder<ProjectFileHashCache> allCachesBuilder =
-        ImmutableList.builder();
-    Cell rootCell = args.getState().getRootCell();
-
-    // 1. Add all cells.
-    for (Path cellPath : rootCell.getKnownRoots()) {
-      Cell cell = rootCell.getCell(cellPath);
-      allCachesBuilder.add(args.getState().createMaterializer(
-          cell.getFilesystem(),
-          args.getProvider()));
-    }
-
-    // 2. Add the Operating System roots.
-    allCachesBuilder.addAll(DefaultFileHashCache.createOsRootDirectoriesCaches());
-
-    StackedFileHashCache stackedFileHashCache = new StackedFileHashCache(allCachesBuilder.build());
+    StackedFileHashCache stackedFileHashCache = createStackOfDefaultFileHashCache();
     createActionGraphAndResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(Preconditions.checkNotNull(
         actionGraphAndResolver).getResolver());
@@ -211,8 +196,26 @@ public class DistBuildSlaveExecutor {
             new SourcePathResolver(ruleFinder),
             ruleFinder,
             args.getState(),
-            stackedFileHashCache);
+            stackedFileHashCache,
+            args.getProvider());
     return cachingBuildEngineDelegate;
+  }
+
+  private StackedFileHashCache createStackOfDefaultFileHashCache() throws IOException {
+    ImmutableList.Builder<ProjectFileHashCache> allCachesBuilder =
+        ImmutableList.builder();
+    Cell rootCell = args.getState().getRootCell();
+
+    // 1. Add all cells (including the root cell).
+    for (Path cellPath : rootCell.getKnownRoots()) {
+      Cell cell = rootCell.getCell(cellPath);
+      allCachesBuilder.add(DefaultFileHashCache.createDefaultFileHashCache(cell.getFilesystem()));
+    }
+
+    // 2. Add the Operating System roots.
+    allCachesBuilder.addAll(DefaultFileHashCache.createOsRootDirectoriesCaches());
+
+    return new StackedFileHashCache(allCachesBuilder.build());
   }
 
   private Supplier<AndroidPlatformTarget> getExplodingAndroidSupplier() {

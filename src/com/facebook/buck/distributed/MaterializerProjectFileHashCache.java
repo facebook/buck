@@ -22,7 +22,6 @@ import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.google.common.base.Preconditions;
@@ -41,31 +40,26 @@ import java.util.concurrent.ConcurrentHashMap;
 class MaterializerProjectFileHashCache implements ProjectFileHashCache {
 
   private static final Logger LOG = Logger.get(MaterializerProjectFileHashCache.class);
-  private static final String UNSUPPORTED_EXCEPTION_MSG =
-      "MaterializerProjectFileHashCache should only be used as a " +
-          "ProjectFileHashCache and ProjectFileHashCache.willGet(..). " +
-          "It has to implement ProjectFileHashCache so a StackedFileHashCache can be used.";
 
   private final Map<Path, BuildJobStateFileHashEntry> remoteFileHashesByAbsPath;
   private final Set<Path> symlinkedPaths;
   private final Set<Path> materializedPaths;
   private final FileContentsProvider provider;
   private final ProjectFilesystem projectFilesystem;
-  private final FileHashCache directFileHashCacheDelegate;
+  private final ProjectFileHashCache delegate;
 
   public MaterializerProjectFileHashCache(
-      ProjectFilesystem projectFilesystem,
+      ProjectFileHashCache delegate,
       BuildJobStateFileHashes remoteFileHashes,
-      FileContentsProvider provider,
-      FileHashCache directFileHashCacheDelegate) {
-    this.directFileHashCacheDelegate = directFileHashCacheDelegate;
+      FileContentsProvider provider) {
+    this.delegate = delegate;
     this.remoteFileHashesByAbsPath = DistBuildFileHashes.indexEntriesByPath(
-        projectFilesystem,
+        delegate.getFilesystem(),
         remoteFileHashes);
     this.symlinkedPaths = Collections.newSetFromMap(new ConcurrentHashMap<Path, Boolean>());
     this.materializedPaths = Collections.newSetFromMap(new ConcurrentHashMap<Path, Boolean>());
     this.provider = provider;
-    this.projectFilesystem = projectFilesystem;
+    this.projectFilesystem = delegate.getFilesystem();
   }
 
   public void preloadAllFiles() throws IOException {
@@ -162,7 +156,7 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
   private void symlinkIntegrityCheck(BuildJobStateFileHashEntry fileHashEntry) throws IOException {
     Path symlink = projectFilesystem.resolve(fileHashEntry.getPath().getPath());
     HashCode expectedHash = HashCode.fromString(fileHashEntry.getHashCode());
-    HashCode actualHash = directFileHashCacheDelegate.get(symlink);
+    HashCode actualHash = delegate.get(symlink);
     if (!expectedHash.equals(actualHash)) {
       throw new RuntimeException(String.format(
           "Symlink [%s] had hashcode [%s] during scheduling, but [%s] during build.",
@@ -211,24 +205,25 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
   }
 
   @Override
-  public HashCode get(Path path) throws IOException {
+  public HashCode get(Path relPath) throws IOException {
     Queue<Path> remainingPaths = new LinkedList<>();
-    remainingPaths.add(path);
+    remainingPaths.add(relPath);
     while (remainingPaths.size() > 0) {
       materializeIfNeeded(remainingPaths.remove(), remainingPaths);
     }
-    return HashCode.fromInt(0);
+
+    return delegate.get(relPath);
   }
 
   @Override
-  public long getSize(Path path) throws IOException {
-    throw new UnsupportedOperationException();
+  public long getSize(Path relPath) throws IOException {
+    return delegate.getSize(relPath);
   }
 
   @Override
-  public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
-    materializeIfNeeded(archiveMemberPath.getArchivePath(), new LinkedList<>());
-    return HashCode.fromInt(0);
+  public HashCode get(ArchiveMemberPath archiveMemberRelPath) throws IOException {
+    materializeIfNeeded(archiveMemberRelPath.getArchivePath(), new LinkedList<>());
+    return delegate.get(archiveMemberRelPath);
   }
 
   @Override
@@ -251,22 +246,22 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
   }
 
   @Override
-  public void invalidate(Path path) {
-    throw new UnsupportedOperationException(UNSUPPORTED_EXCEPTION_MSG);
+  public void invalidate(Path relPath) {
+    delegate.invalidate(relPath);
   }
 
   @Override
   public void invalidateAll() {
-    throw new UnsupportedOperationException(UNSUPPORTED_EXCEPTION_MSG);
+    delegate.invalidateAll();
   }
 
   @Override
-  public void set(Path path, HashCode hashCode) throws IOException {
-    throw new UnsupportedOperationException(UNSUPPORTED_EXCEPTION_MSG);
+  public void set(Path relPath, HashCode hashCode) throws IOException {
+    delegate.set(relPath, hashCode);
   }
 
   @Override
   public FileHashCacheVerificationResult verify() throws IOException {
-    throw new UnsupportedOperationException(UNSUPPORTED_EXCEPTION_MSG);
+    return delegate.verify();
   }
 }

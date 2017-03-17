@@ -191,18 +191,11 @@ public class DistBuildFileHashes {
 
   /**
    * Creates a {@link FileHashCache} that returns the hash codes cached on the remote end.
-   *
-   * @param projectFilesystem filesystem in which the new cache will be rooted. The serialized state
-   *                          only contains relative path, therefore this is needed to indicate
-   *                          where on the local machine we wish to transplant the files from the
-   *                          remote to.
-   * @param remoteFileHashes  the serialized state.
-   * @return the cache.
    */
   public static ProjectFileHashCache createFileHashCache(
-      ProjectFilesystem projectFilesystem,
+      ProjectFileHashCache decoratedFileHashCache,
       BuildJobStateFileHashes remoteFileHashes) {
-    return new RemoteStateBasedFileHashCache(projectFilesystem, remoteFileHashes);
+    return new RemoteStateBasedFileHashCache(decoratedFileHashCache, remoteFileHashes);
   }
 
   public static ImmutableMap<Path, BuildJobStateFileHashEntry> indexEntriesByPath(

@@ -28,7 +28,7 @@ import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
@@ -142,10 +142,12 @@ public class MaterializerProjectFileHashCacheTest {
     fileHashes.addToEntries(fileAeFileHashEntry);
 
     InlineContentsProvider inlineProvider = new InlineContentsProvider();
-    FileHashCache mockFileHashCache = EasyMock.createMock(FileHashCache.class);
+    ProjectFileHashCache mockFileHashCache = EasyMock.createNiceMock(ProjectFileHashCache.class);
+    expect(mockFileHashCache.getFilesystem()).andReturn(projectFilesystem).atLeastOnce();
+    replay(mockFileHashCache);
 
     MaterializerProjectFileHashCache fileMaterializer = new MaterializerProjectFileHashCache(
-        projectFilesystem, fileHashes, inlineProvider, mockFileHashCache);
+        mockFileHashCache, fileHashes, inlineProvider);
 
     assertFalse(pathDirA.toFile().exists());
     assertFalse(pathDirAb.toFile().exists());
@@ -240,9 +242,11 @@ public class MaterializerProjectFileHashCacheTest {
 
     InlineContentsProvider inlineProvider = new InlineContentsProvider();
 
-    FileHashCache mockFileHashCache = EasyMock.createMock(FileHashCache.class);
+    ProjectFileHashCache mockFileHashCache = EasyMock.createNiceMock(ProjectFileHashCache.class);
+    expect(mockFileHashCache.getFilesystem()).andReturn(projectFilesystem).atLeastOnce();
+    replay(mockFileHashCache);
     MaterializerProjectFileHashCache fileMaterializer = new MaterializerProjectFileHashCache(
-        projectFilesystem, fileHashes, inlineProvider, mockFileHashCache);
+        mockFileHashCache, fileHashes, inlineProvider);
     materializeFunction.execute(fileMaterializer, realFileAbsPath);
 
     return realFileAbsPath;
@@ -327,13 +331,13 @@ public class MaterializerProjectFileHashCacheTest {
     fileHashes.addToEntries(symlinkFileHashEntry);
 
     FileContentsProvider mockFileProvider = EasyMock.createMock(FileContentsProvider.class);
-    FileHashCache mockFileHashCache = EasyMock.createMock(FileHashCache.class);
+    ProjectFileHashCache mockFileHashCache = EasyMock.createNiceMock(ProjectFileHashCache.class);
+    expect(mockFileHashCache.getFilesystem()).andReturn(projectFilesystem).atLeastOnce();
     expect(mockFileHashCache.get(symlink)).andReturn(actualHashCode);
     replay(mockFileHashCache);
 
     MaterializerProjectFileHashCache fileMaterializer = new MaterializerProjectFileHashCache(
-        projectFilesystem, fileHashes, mockFileProvider,
-        mockFileHashCache);
+        mockFileHashCache, fileHashes, mockFileProvider);
 
     assertFalse(symlink.toFile().exists());
 

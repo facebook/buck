@@ -22,7 +22,6 @@ import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.hash.HashCode;
 
@@ -35,71 +34,79 @@ public class RemoteStateBasedFileHashCache implements ProjectFileHashCache {
       HASH_CODE_FROM_FILE_HASH_ENTRY =
       input -> HashCode.fromString(input.getHashCode());
 
+  private final ProjectFileHashCache delegate;
   private final ProjectFilesystem filesystem;
   private final Map<Path, HashCode> remoteFileHashes;
   private final Map<ArchiveMemberPath, HashCode> remoteArchiveHashes;
 
   public RemoteStateBasedFileHashCache(
-      final ProjectFilesystem projectFilesystem,
+      ProjectFileHashCache delegate,
       BuildJobStateFileHashes remoteFileHashes) {
-    this.filesystem = projectFilesystem;
+    this.delegate = delegate;
+    this.filesystem = delegate.getFilesystem();
     this.remoteFileHashes =
         Maps.transformValues(
-            DistBuildFileHashes.indexEntriesByPath(projectFilesystem, remoteFileHashes),
+            DistBuildFileHashes.indexEntriesByPath(filesystem, remoteFileHashes),
             HASH_CODE_FROM_FILE_HASH_ENTRY);
     this.remoteArchiveHashes =
         Maps.transformValues(
-            DistBuildFileHashes.indexEntriesByArchivePath(projectFilesystem, remoteFileHashes),
+            DistBuildFileHashes.indexEntriesByArchivePath(filesystem, remoteFileHashes),
             HASH_CODE_FROM_FILE_HASH_ENTRY);
   }
 
   @Override
-  public HashCode get(Path path) throws IOException {
-    return Preconditions.checkNotNull(
-        remoteFileHashes.get(filesystem.resolve(path)),
-        "Path %s not in remote file hash.",
-        path);
+  public HashCode get(Path relPath) throws IOException {
+    HashCode hashCode = remoteFileHashes.get(filesystem.resolve(relPath));
+    if (hashCode != null) {
+      return hashCode;
+    }
+
+    return delegate.get(relPath);
   }
 
   @Override
-  public long getSize(Path path) throws IOException {
-    return 0;
+  public long getSize(Path relPath) throws IOException {
+    return delegate.getSize(relPath);
   }
 
   @Override
-  public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
-    return Preconditions.checkNotNull(
-        remoteArchiveHashes.get(
-            archiveMemberPath.withArchivePath(
-                filesystem.resolve(archiveMemberPath.getArchivePath()))),
-        "Archive path %s not in remote file hash.",
-        archiveMemberPath);
+  public HashCode get(ArchiveMemberPath archiveMemberRelPath) throws IOException {
+    HashCode hashCode = remoteArchiveHashes.get(
+        archiveMemberRelPath.withArchivePath(
+            filesystem.resolve(archiveMemberRelPath.getArchivePath())));
+    if (hashCode != null) {
+      return hashCode;
+    }
+
+    return delegate.get(archiveMemberRelPath);
   }
 
   @Override
-  public boolean willGet(Path path) {
-    return remoteFileHashes.containsKey(filesystem.resolve(path));
+  public boolean willGet(Path relPath) {
+    return remoteFileHashes.containsKey(filesystem.resolve(relPath)) ||
+        delegate.willGet(relPath);
   }
 
   @Override
-  public boolean willGet(ArchiveMemberPath archiveMemberPath) {
+  public boolean willGet(ArchiveMemberPath relPath) {
     return remoteArchiveHashes.containsKey(
-        archiveMemberPath.withArchivePath(filesystem.resolve(archiveMemberPath.getArchivePath())));
+        relPath.withArchivePath(filesystem.resolve(relPath.getArchivePath()))) ||
+        delegate.willGet(relPath);
   }
 
   @Override
-  public void invalidate(Path path) {
-    throw new UnsupportedOperationException();
+  public void invalidate(Path relPath) {
+    delegate.invalidate(relPath);
   }
 
   @Override
   public void invalidateAll() {
-    throw new UnsupportedOperationException();
+    delegate.invalidateAll();
   }
 
   @Override
-  public void set(Path path, HashCode hashCode) throws IOException {
-    throw new UnsupportedOperationException();
+  public void set(Path relPath, HashCode hashCode) throws IOException {
+    delegate.set(relPath, hashCode);
   }
 
   @Override
