@@ -16,16 +16,14 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.google.common.cache.LoadingCache;
 
 /**
  * Functionality used in the {@link CachingBuildEngine} when running a distributed build.
  */
 public interface CachingBuildEngineDelegate {
 
-  LoadingCache<ProjectFilesystem, FileHashCache> createFileHashCacheLoader();
+  FileHashCache getFileHashCache();
 
   /**
    * Called right before the rule is going to be built. This is when direct inputs to the rule would

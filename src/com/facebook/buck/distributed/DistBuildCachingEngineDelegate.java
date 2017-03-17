@@ -24,14 +24,10 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
-
-import javax.annotation.Nonnull;
 
 /**
  * Implementation of {@link CachingBuildEngineDelegate} for use when building from a state file
@@ -43,7 +39,6 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
   private final StackedFileHashCache remoteStackedFileHashCache;
   private final StackedFileHashCache materializingStackedFileHashCache;
 
-  private final LoadingCache<ProjectFilesystem, FileHashCache> fileHashCacheLoader;
   private final LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory> ruleKeyFactories;
 
   /**
@@ -64,13 +59,6 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
     // Used for rule key computations.
     this.remoteStackedFileHashCache = fileHashCacheStack.newDecoratedFileHashCache(
         cache -> remoteState.createRemoteFileHashCache(cache));
-    this.fileHashCacheLoader = CacheBuilder.newBuilder()
-        .build(new CacheLoader<ProjectFilesystem, FileHashCache>() {
-          @Override
-          public FileHashCache load(@Nonnull ProjectFilesystem filesystem) {
-            return remoteStackedFileHashCache;
-          }
-        });
 
     // Used for the real build.
     this.materializingStackedFileHashCache = remoteStackedFileHashCache.newDecoratedFileHashCache(
@@ -92,10 +80,9 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
         /* keySeed */ 0);
   }
 
-  // TODO(ruibm): Change signature of this method to return the StackedFileHashCache directly.
   @Override
-  public LoadingCache<ProjectFilesystem, FileHashCache> createFileHashCacheLoader() {
-    return fileHashCacheLoader;
+  public FileHashCache getFileHashCache() {
+    return remoteStackedFileHashCache;
   }
 
   @Override

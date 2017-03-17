@@ -16,13 +16,7 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-
-import javax.annotation.Nonnull;
 
 /**
  */
@@ -34,14 +28,8 @@ public class LocalCachingBuildEngineDelegate implements CachingBuildEngineDelega
   }
 
   @Override
-  public LoadingCache<ProjectFilesystem, FileHashCache> createFileHashCacheLoader() {
-    return CacheBuilder.newBuilder()
-        .build(new CacheLoader<ProjectFilesystem, FileHashCache>() {
-          @Override
-          public FileHashCache load(@Nonnull ProjectFilesystem filesystem) {
-            return defaultFileHashCache;
-          }
-        });
+  public FileHashCache getFileHashCache() {
+    return defaultFileHashCache;
   }
 
   @Override

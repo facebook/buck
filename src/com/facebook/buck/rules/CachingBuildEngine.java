@@ -63,7 +63,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -157,7 +156,7 @@ public class CachingBuildEngine implements BuildEngine {
   private final SourcePathRuleFinder ruleFinder;
   private final SourcePathResolver pathResolver;
   private final Optional<Long> artifactCacheSizeLimit;
-  private final LoadingCache<ProjectFilesystem, FileHashCache> fileHashCaches;
+  private final FileHashCache fileHashCache;
   private final java.util.function.Function<ProjectFilesystem, RuleKeyFactories> ruleKeyFactories;
   private final ResourceAwareSchedulingInfo resourceAwareSchedulingInfo;
 
@@ -192,7 +191,7 @@ public class CachingBuildEngine implements BuildEngine {
     this.ruleFinder = new SourcePathRuleFinder(resolver);
     this.pathResolver = new SourcePathResolver(ruleFinder);
 
-    this.fileHashCaches = cachingBuildEngineDelegate.createFileHashCacheLoader();
+    this.fileHashCache = cachingBuildEngineDelegate.getFileHashCache();
     this.ruleKeyFactories = ruleKeyFactoryManager.getProvider();
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
 
@@ -232,7 +231,7 @@ public class CachingBuildEngine implements BuildEngine {
     this.ruleFinder = ruleFinder;
     this.pathResolver = pathResolver;
 
-    this.fileHashCaches = cachingBuildEngineDelegate.createFileHashCacheLoader();
+    this.fileHashCache = cachingBuildEngineDelegate.getFileHashCache();
     this.ruleKeyFactories = ruleKeyFactoriesFunction::apply;
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
 
@@ -662,7 +661,6 @@ public class CachingBuildEngine implements BuildEngine {
       ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks) {
 
     final RuleKeyFactories keyFactories = ruleKeyFactories.apply(rule.getProjectFilesystem());
-    final FileHashCache fileHashCache = fileHashCaches.getUnchecked(rule.getProjectFilesystem());
     final OnDiskBuildInfo onDiskBuildInfo =
         buildContext.createOnDiskBuildInfoFor(
             rule.getBuildTarget(),
@@ -732,9 +730,8 @@ public class CachingBuildEngine implements BuildEngine {
             }
 
             // Invalidate any cached hashes for the output paths, since we've updated them.
-            FileHashCache fileHashCache1 = fileHashCaches.get(rule.getProjectFilesystem());
             for (Path path : buildInfoRecorder.getRecordedPaths()) {
-              fileHashCache1.invalidate(rule.getProjectFilesystem().resolve(path));
+              fileHashCache.invalidate(rule.getProjectFilesystem().resolve(path));
             }
           }
 
@@ -1656,7 +1653,7 @@ public class CachingBuildEngine implements BuildEngine {
 
     // Update the manifest with the new output rule key.
     manifest.addEntry(
-        fileHashCaches.getUnchecked(rule.getProjectFilesystem()),
+        fileHashCache,
         key,
         pathResolver,
         manifestKey.getInputs(),
@@ -1760,7 +1757,7 @@ public class CachingBuildEngine implements BuildEngine {
     // Lookup the rule for the current state of our inputs.
     Optional<RuleKey> ruleKey =
         manifest.lookup(
-            fileHashCaches.getUnchecked(rule.getProjectFilesystem()),
+            fileHashCache,
             pathResolver,
             manifestKey.getInputs());
     if (!ruleKey.isPresent()) {

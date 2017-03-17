@@ -134,7 +134,7 @@ public class FetchCommand extends BuildCommand {
                    cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
                    new RuleKeyFactoryManager(
                        params.getBuckConfig().getKeySeed(),
-                       localCachingBuildEngineDelegate.createFileHashCacheLoader()::getUnchecked,
+                       fs -> localCachingBuildEngineDelegate.getFileHashCache(),
                        actionGraphAndResolver.getResolver(),
                        cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
                        ruleKeyCacheScope.getCache())),
