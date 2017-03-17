@@ -107,7 +107,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescription.Ar
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return JsFlavors.validateFlavors(flavors);
+    return JsFlavors.validateLibraryFlavors(flavors);
   }
 
   @SuppressFieldNotInitialized

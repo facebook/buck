@@ -29,22 +29,37 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class JsFlavors {
   public static final ImmutableFlavor ANDROID = ImmutableFlavor.of("android");
   public static final ImmutableFlavor IOS = ImmutableFlavor.of("ios");
   public static final ImmutableFlavor RELEASE = ImmutableFlavor.of("release");
+  public static final ImmutableFlavor RAM_BUNDLE_FILES = ImmutableFlavor.of("rambundle-files");
+  public static final ImmutableFlavor RAM_BUNDLE_INDEXED = ImmutableFlavor.of("rambundle-indexed");
 
+  private static final ImmutableSet<Flavor> libraryFlavors = ImmutableSet.of(RELEASE);
+  private static final ImmutableSet<Flavor> bundleFlavors =
+      ImmutableSet.of(RAM_BUNDLE_FILES, RAM_BUNDLE_INDEXED, RELEASE);
   private static final ImmutableSet<Flavor> platforms = ImmutableSet.of(ANDROID, IOS);
-  private static final ImmutableSet<Flavor> other = ImmutableSet.of(RELEASE);
   private static final String fileFlavorPrefix = "file-";
 
-  public static boolean validateFlavors(ImmutableSet<Flavor> flavors) {
+  public static boolean validateLibraryFlavors(ImmutableSet<Flavor> flavors) {
+    return validateFlavors(flavors, libraryFlavors);
+  }
+
+  public static boolean validateBundleFlavors(ImmutableSet<Flavor> flavors) {
+    return validateFlavors(flavors, bundleFlavors);
+  }
+
+  private static boolean validateFlavors(
+      ImmutableSet<Flavor> flavors, ImmutableSet<Flavor> allowableNonPlatformFlavors) {
     return Sets.intersection(flavors, platforms).size() < 2 &&
-           other.containsAll(Sets.difference(flavors, platforms));
+        allowableNonPlatformFlavors.containsAll(Sets.difference(flavors, platforms));
   }
 
   public static String getPlatform(ImmutableSet<Flavor> flavors) {
@@ -76,6 +91,14 @@ public class JsFlavors {
   private JsFlavors() {}
 
   public static String bundleJobArgs(Set<Flavor> flavors) {
-    return flavors.contains(RELEASE) ? "--release" : "";
+    final String ramFlag =
+        flavors.contains(RAM_BUNDLE_INDEXED) ? "--indexed-rambundle" :
+        flavors.contains(RAM_BUNDLE_FILES) ? "--files-rambundle" :
+        null;
+    final String releaseFlag = flavors.contains(RELEASE) ? "--release" : null;
+
+    return Stream.of(ramFlag, releaseFlag)
+        .filter(Objects::nonNull)
+        .collect(Collectors.joining(" "));
   }
 }

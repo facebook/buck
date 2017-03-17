@@ -33,6 +33,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 public class JsBundle extends AbstractBuildRule {
 
   @AddToRuleKey
@@ -68,14 +71,19 @@ public class JsBundle extends AbstractBuildRule {
     final SourcePath jsOutputDir = getSourcePathToOutput();
     final SourcePath sourceMapFile = getSourcePathToSourceMap();
 
-    String jobArgs = String.format(
-        "bundle %s %s --sourcemap %s --out %s/%s %s",
-        JsFlavors.bundleJobArgs(getBuildTarget().getFlavors()),
-        JsUtil.resolveMapJoin(libraries, sourcePathResolver, p -> "--lib " + p),
-        sourcePathResolver.getAbsolutePath(sourceMapFile),
-        sourcePathResolver.getAbsolutePath(jsOutputDir),
-        bundleName,
-        String.join(" ", entryPoints));
+    String jobArgs = Stream.concat(
+        Stream.of(
+            "bundle",
+            JsFlavors.bundleJobArgs(getBuildTarget().getFlavors()),
+            JsUtil.resolveMapJoin(libraries, sourcePathResolver, p -> "--lib " + p),
+            String.format("--sourcemap %s", sourcePathResolver.getAbsolutePath(sourceMapFile)),
+            String.format(
+                "--out %s/%s",
+                sourcePathResolver.getAbsolutePath(jsOutputDir),
+                bundleName)),
+        entryPoints.stream())
+        .filter(s -> !s.isEmpty())
+        .collect(Collectors.joining(" "));
 
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(jsOutputDir));
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(sourceMapFile));

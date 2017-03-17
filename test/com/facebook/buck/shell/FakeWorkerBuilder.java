@@ -24,9 +24,15 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
@@ -47,13 +53,15 @@ public class FakeWorkerBuilder extends AbstractNodeBuilder<
   }
 
   public static class FakeWorkerTool extends NoopBuildRule implements WorkerTool {
+    private final Tool tool = new FakeTool();
+    private final HashCode hashCode = HashCode.fromString("0123456789abcdef");
 
     public FakeWorkerTool(BuildRuleParams params) {
       super(params);
     }
     @Override
     public Tool getTool() {
-      return null;
+      return tool;
     }
 
     @Override
@@ -78,9 +86,36 @@ public class FakeWorkerBuilder extends AbstractNodeBuilder<
 
     @Override
     public HashCode getInstanceKey() {
-      return null;
+      return hashCode;
     }
 
+  }
+
+  private static class FakeTool implements Tool {
+    @Override
+    public void appendToRuleKey(RuleKeyObjectSink sink) {
+      // Do nothing
+    }
+
+    @Override
+    public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+      return ImmutableList.of();
+    }
+
+    @Override
+    public ImmutableCollection<SourcePath> getInputs() {
+      return ImmutableList.of();
+    }
+
+    @Override
+    public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+      return ImmutableList.of();
+    }
+
+    @Override
+    public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+      return ImmutableMap.of();
+    }
   }
 
   public static class FakeWorkerDescription implements Description<Object> {
@@ -103,7 +138,6 @@ public class FakeWorkerBuilder extends AbstractNodeBuilder<
         A args) throws NoSuchBuildTargetException {
       return create.apply(params);
     }
-
   }
 }
 

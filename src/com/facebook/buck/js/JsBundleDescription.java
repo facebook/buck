@@ -44,7 +44,7 @@ public class JsBundleDescription implements Description<JsBundleDescription.Arg>
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return JsFlavors.validateFlavors(flavors);
+    return JsFlavors.validateBundleFlavors(flavors);
   }
 
   @Override

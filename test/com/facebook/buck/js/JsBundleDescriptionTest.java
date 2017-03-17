@@ -47,6 +47,7 @@ public class JsBundleDescriptionTest {
       BuildTargetFactory.newInstance("//libs:level1.2");
 
   private JsTestScenario.Builder scenarioBuilder;
+  private JsTestScenario scenario;
 
   static Collection<BuildTarget> allLibaryTargets(Flavor... flavors) {
     return Stream.of(level2, level1_1, level1_2, directDependencyTarget)
@@ -55,19 +56,18 @@ public class JsBundleDescriptionTest {
   }
 
   @Before
-  public void setUp() {
+  public void setUp() throws NoSuchBuildTargetException {
     scenarioBuilder = JsTestScenario.builder();
     scenarioBuilder
         .library(level2)
         .library(level1_1, level2)
         .library(level1_2, level2)
-        .library(JsBundleDescriptionTest.directDependencyTarget, level1_1, level1_2);
+        .library(directDependencyTarget, level1_1, level1_2);
+    scenario = scenarioBuilder.build();
   }
 
   @Test
   public void testTransitiveLibraryDependencies() throws NoSuchBuildTargetException {
-    JsTestScenario scenario = scenarioBuilder.build();
-
     JsBundle jsBundle = scenario.createBundle(
         "//arbitrary:target",
         ImmutableSortedSet.of(directDependencyTarget));
@@ -77,8 +77,6 @@ public class JsBundleDescriptionTest {
 
   @Test
   public void testTransitiveLibraryDependenciesWithFlavors() throws NoSuchBuildTargetException {
-    JsTestScenario scenario = scenarioBuilder.build();
-
     JsBundle jsBundle = scenario.createBundle(
         "//arbitrary:target#ios,release",
         ImmutableSortedSet.of(directDependencyTarget));
@@ -89,9 +87,8 @@ public class JsBundleDescriptionTest {
   }
 
   @Test
-  public void testFlavoredBundleDoesNotDependOnUnflavoredLibs() throws NoSuchBuildTargetException {
-    JsTestScenario scenario = scenarioBuilder.build();
-
+  public void testFlavoredBundleDoesNotDependOnUnflavoredLibs()
+      throws NoSuchBuildTargetException {
     JsBundle jsBundle = scenario.createBundle(
         "//arbitrary:target#ios,release",
         ImmutableSortedSet.of(directDependencyTarget));
@@ -107,4 +104,5 @@ public class JsBundleDescriptionTest {
         .map(BuildRule::getBuildTarget)
         .collect(Collectors.toSet());
   }
+
 }

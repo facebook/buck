@@ -113,7 +113,7 @@ public class WorkerShellStep implements Step {
   }
 
   @VisibleForTesting
-  WorkerJobParams getWorkerJobParamsToUse(Platform platform) {
+  public WorkerJobParams getWorkerJobParamsToUse(Platform platform) {
     if (platform == Platform.WINDOWS) {
       if (cmdExeParams.isPresent()) {
         return cmdExeParams.get();
