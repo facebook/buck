@@ -120,7 +120,7 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
                 .build()
             ),
             params.getExtraDeps())
-         .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+         .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
         JavaLibrary testsLibrary =
         resolver.addToIndex(

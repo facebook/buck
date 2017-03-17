@@ -225,9 +225,9 @@ public class NativeRelinker {
     Function<RelinkerRule, SourcePath> getSymbolsNeeded = RelinkerRule::getSymbolsNeededPath;
     String libname = resolver.getAbsolutePath(source).getFileName().toString();
     BuildRuleParams relinkerParams = buildRuleParams
-        .withFlavor(ImmutableFlavor.of("xdso-dce"))
-        .withFlavor(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(cpuType.toString())))
-        .withFlavor(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(libname)))
+        .withAppendedFlavor(ImmutableFlavor.of("xdso-dce"))
+        .withAppendedFlavor(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(cpuType.toString())))
+        .withAppendedFlavor(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(libname)))
         .copyAppendingExtraDeps(relinkerDeps);
     BuildRule baseRule = ruleFinder.getRule(source).orElse(null);
     ImmutableList<Arg> linkerArgs = ImmutableList.of();

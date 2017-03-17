@@ -1022,7 +1022,7 @@ public class CxxDescriptionEnhancer {
     if (stripStyle.isPresent()) {
       BuildRuleParams cxxParams = params;
       if (flavoredLinkerMapMode.isPresent()) {
-        cxxParams = params.withFlavor(flavoredLinkerMapMode.get().getFlavor());
+        cxxParams = params.withAppendedFlavor(flavoredLinkerMapMode.get().getFlavor());
       }
       CxxStrip stripRule = createCxxStripRule(
           cxxParams,
@@ -1138,7 +1138,7 @@ public class CxxDescriptionEnhancer {
         ruleResolver.requireMetadata(
             params
                 .withoutFlavor(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)
-                .withFlavor(CxxCompilationDatabase.COMPILATION_DATABASE)
+                .withAppendedFlavor(CxxCompilationDatabase.COMPILATION_DATABASE)
                 .getBuildTarget(),
             CxxCompilationDatabaseDependencies.class);
     Preconditions.checkState(compilationDatabases.isPresent());

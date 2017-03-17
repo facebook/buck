@@ -90,7 +90,7 @@ public class JavaBinaryDescription implements
     // If we're packaging native libraries, we'll build the binary JAR in a separate rule and
     // package it into the final fat JAR, so adjust it's params to use a flavored target.
     if (!nativeLibraries.isEmpty()) {
-      binaryParams = params.withFlavor(FAT_JAR_INNER_JAR_FLAVOR);
+      binaryParams = params.withAppendedFlavor(FAT_JAR_INNER_JAR_FLAVOR);
     }
 
     // Construct the build rule to build the binary JAR.

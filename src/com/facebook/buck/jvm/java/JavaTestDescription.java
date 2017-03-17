@@ -130,7 +130,7 @@ public class JavaTestDescription implements
                 .addAll(ruleFinder.filterBuildRuleInputs(
                     javacOptions.getInputs(ruleFinder)))
                 .build()))
-        .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+        .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     JavaLibrary testsLibrary =
         resolver.addToIndex(

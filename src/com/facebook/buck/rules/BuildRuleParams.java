@@ -121,7 +121,7 @@ public class BuildRuleParams {
     return new BuildRuleParams(this, target, projectFilesystem, cellRoots);
   }
 
-  public BuildRuleParams withFlavor(Flavor flavor) {
+  public BuildRuleParams withAppendedFlavor(Flavor flavor) {
     Set<Flavor> flavors = Sets.newHashSet(getBuildTarget().getFlavors());
     flavors.add(flavor);
     BuildTarget target = BuildTarget

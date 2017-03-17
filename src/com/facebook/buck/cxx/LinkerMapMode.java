@@ -62,7 +62,7 @@ public enum LinkerMapMode implements FlavorConvertible {
       BuildRuleParams params,
       Optional<LinkerMapMode> flavoredLinkerMapMode) {
     if (flavoredLinkerMapMode.isPresent()) {
-      params = params.withFlavor(flavoredLinkerMapMode.get().getFlavor());
+      params = params.withAppendedFlavor(flavoredLinkerMapMode.get().getFlavor());
     }
     return params;
   }

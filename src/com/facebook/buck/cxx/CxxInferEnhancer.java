@@ -145,7 +145,8 @@ public final class CxxInferEnhancer {
 
     BuildRuleParams cleanParams = InferFlavors.paramsWithoutAnyInferFlavor(params);
 
-    BuildRuleParams paramsWithInferFlavor = cleanParams.withFlavor(InferFlavors.INFER.get());
+    BuildRuleParams paramsWithInferFlavor =
+        cleanParams.withAppendedFlavor(InferFlavors.INFER.get());
 
     Optional<CxxInferComputeReport> existingRule = resolver.getRuleOptionalWithType(
         paramsWithInferFlavor.getBuildTarget(), CxxInferComputeReport.class);
@@ -221,7 +222,7 @@ public final class CxxInferEnhancer {
 
     BuildRuleParams paramsWithInferAnalyzeFlavor = InferFlavors
         .paramsWithoutAnyInferFlavor(params)
-        .withFlavor(inferAnalyze);
+        .withAppendedFlavor(inferAnalyze);
 
     Optional<CxxInferAnalyze> existingRule = resolver.getRuleOptionalWithType(
         paramsWithInferAnalyzeFlavor.getBuildTarget(), CxxInferAnalyze.class);
@@ -262,7 +263,7 @@ public final class CxxInferEnhancer {
 
     BuildRuleParams paramsWithInferCaptureOnlyFlavor = InferFlavors
         .paramsWithoutAnyInferFlavor(params)
-        .withFlavor(inferCaptureOnly);
+        .withAppendedFlavor(inferCaptureOnly);
 
     Optional<CxxInferCaptureRulesAggregator> existingRule = resolver.getRuleOptionalWithType(
         paramsWithInferCaptureOnlyFlavor.getBuildTarget(), CxxInferCaptureRulesAggregator.class);

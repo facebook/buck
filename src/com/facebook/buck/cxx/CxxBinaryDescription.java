@@ -163,7 +163,7 @@ public class CxxBinaryDescription implements
       return CxxDescriptionEnhancer.createUberCompilationDatabase(
           cxxPlatforms.getValue(flavors).isPresent() ?
               params :
-              params.withFlavor(defaultCxxPlatform.getFlavor()),
+              params.withAppendedFlavor(defaultCxxPlatform.getFlavor()),
           resolver);
     }
 

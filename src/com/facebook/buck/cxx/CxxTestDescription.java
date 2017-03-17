@@ -130,7 +130,7 @@ public class CxxTestDescription implements
       return CxxDescriptionEnhancer.createUberCompilationDatabase(
           platform.isPresent() ?
               params :
-              params.withFlavor(cxxPlatform.getFlavor()),
+              params.withAppendedFlavor(cxxPlatform.getFlavor()),
           resolver
       );
     }

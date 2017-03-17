@@ -116,7 +116,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
                         resolver.getAllRules(args.providedDeps))),
                 ruleFinder.filterBuildRuleInputs(
                     defaultJavacOptions.getInputs(ruleFinder))))
-            .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+            .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
     JavaLibrary testsLibrary =
         resolver.addToIndex(
             new DefaultJavaLibrary(

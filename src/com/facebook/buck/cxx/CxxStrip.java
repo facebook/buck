@@ -98,7 +98,7 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
     if (flavoredStripStyle.isPresent()) {
       // we should not append CxxStrip.RULE_FLAVOR here because it must be appended
       // to CxxStrip rule only. Other users of CxxStrip flavors must not append it.
-      params = params.withFlavor(flavoredStripStyle.get().getFlavor());
+      params = params.withAppendedFlavor(flavoredStripStyle.get().getFlavor());
     }
     return params;
   }

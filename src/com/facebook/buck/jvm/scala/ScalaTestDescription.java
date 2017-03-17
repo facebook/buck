@@ -125,7 +125,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                         params.getDeclaredDeps().get(),
                         resolver.getAllRules(args.providedDeps))),
                 scalac.getDeps(ruleFinder)))
-            .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+            .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
     JavaLibrary testsLibrary =
         resolver.addToIndex(
             new DefaultJavaLibrary(

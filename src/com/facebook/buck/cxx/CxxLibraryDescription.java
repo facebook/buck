@@ -756,7 +756,7 @@ public class CxxLibraryDescription implements
       return CxxDescriptionEnhancer.createUberCompilationDatabase(
           platform.isPresent() ?
               params :
-              params.withFlavor(defaultCxxPlatform.getFlavor()),
+              params.withAppendedFlavor(defaultCxxPlatform.getFlavor()),
           resolver);
     } else if (params.getBuildTarget().getFlavors()
         .contains(CxxInferEnhancer.InferFlavors.INFER.get())) {

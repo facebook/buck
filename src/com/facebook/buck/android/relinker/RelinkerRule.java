@@ -162,7 +162,7 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
       relinkerSteps.addAll(
           new CxxLink(
               buildRuleParams
-                  .withFlavor(ImmutableFlavor.of("cxx-link"))
+                  .withAppendedFlavor(ImmutableFlavor.of("cxx-link"))
                   .withoutFlavor(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
               linker,
               getLibFilePath(),
