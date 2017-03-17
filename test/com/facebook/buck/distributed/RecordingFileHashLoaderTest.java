@@ -80,7 +80,7 @@ public class RecordingFileHashLoaderTest {
             symlinkRelPath,
             EXAMPLE_HASHCODE));
 
-    RecordingFileHashLoader recordingLoader = new RecordingFileHashLoader(
+    RecordingProjectFileHashCache recordingLoader = new RecordingProjectFileHashCache(
         delegateCache,
         fileHashes,
         new DistBuildConfig(FakeBuckConfig.builder().build()));
@@ -125,7 +125,7 @@ public class RecordingFileHashLoaderTest {
             symlink,
             EXAMPLE_HASHCODE));
 
-    RecordingFileHashLoader recordingLoader = new RecordingFileHashLoader(
+    RecordingProjectFileHashCache recordingLoader = new RecordingProjectFileHashCache(
         delegateCache,
         fileHashes,
         new DistBuildConfig(FakeBuckConfig.builder().build()));
@@ -176,7 +176,7 @@ public class RecordingFileHashLoaderTest {
         delegateCacheMock.get(anyObject(Path.class))).andReturn(EXAMPLE_HASHCODE).anyTimes();
     replay(delegateCacheMock);
 
-    RecordingFileHashLoader recordingLoader = new RecordingFileHashLoader(
+    RecordingProjectFileHashCache recordingLoader = new RecordingProjectFileHashCache(
         delegateCacheMock,
         fileHashes,
         new DistBuildConfig(FakeBuckConfig.builder().build()));

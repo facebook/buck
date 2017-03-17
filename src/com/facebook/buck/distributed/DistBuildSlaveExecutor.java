@@ -185,23 +185,24 @@ public class DistBuildSlaveExecutor {
       return cachingBuildEngineDelegate;
     }
 
-    ImmutableList.Builder<DistBuildFileMaterializer> allCachesBuilder = ImmutableList.builder();
+    ImmutableList.Builder<MaterializerProjectFileHashCache> allCachesBuilder =
+        ImmutableList.builder();
     Cell rootCell = args.getState().getRootCell();
     for (Path cellPath : rootCell.getKnownRoots()) {
       Cell cell = rootCell.getCell(cellPath);
-      allCachesBuilder.add(args.getState().createMaterializingLoader(
+      allCachesBuilder.add(args.getState().createMaterializer(
           cell.getFilesystem(),
           args.getProvider()));
     }
-    allCachesBuilder.add(args.getState().createMaterializingLoader(
+    allCachesBuilder.add(args.getState().createMaterializer(
         rootCell.getFilesystem(),
         args.getProvider()));
-    ImmutableList<DistBuildFileMaterializer> allCaches = allCachesBuilder.build();
+    ImmutableList<MaterializerProjectFileHashCache> allCaches = allCachesBuilder.build();
     StackedFileHashCache stackedFileHashCache = new StackedFileHashCache(allCaches);
 
     // Create all symlinks and touch all other files.
     // TODO(alisdair04): remove this once action graph doesn't read from file system.
-    for (DistBuildFileMaterializer materializer : allCaches) {
+    for (MaterializerProjectFileHashCache materializer : allCaches) {
       materializer.preloadAllFiles();
     }
 

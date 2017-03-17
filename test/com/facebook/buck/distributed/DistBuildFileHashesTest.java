@@ -160,8 +160,8 @@ public class DistBuildFileHashesTest {
         new ProjectFilesystem(tempDir.newFolder("read_hashes").getCanonicalFile().toPath());
 
     FileHashCache fileHashLoader = EasyMock.createMock(FileHashCache.class);
-    DistBuildFileMaterializer materializer =
-        new DistBuildFileMaterializer(
+    MaterializerProjectFileHashCache materializer =
+        new MaterializerProjectFileHashCache(
             materializeProjectFilesystem,
             fileHashes.get(0),
             new FileContentsProviders.InlineContentsProvider(),

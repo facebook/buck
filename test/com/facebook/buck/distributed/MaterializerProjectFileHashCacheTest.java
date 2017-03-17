@@ -50,7 +50,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
-public class DistBuildFileMaterializerTest {
+public class MaterializerProjectFileHashCacheTest {
   @Rule
   public TemporaryFolder projectDir = new TemporaryFolder();
 
@@ -66,7 +66,7 @@ public class DistBuildFileMaterializerTest {
   private static final String FILE_CONTENTS_TWO = "filecontentstwo";
 
   interface MaterializeFunction {
-    void execute(DistBuildFileMaterializer materializer, Path path) throws IOException;
+    void execute(MaterializerProjectFileHashCache materializer, Path path) throws IOException;
   }
 
   private void testMaterializeDirectoryHelper(
@@ -155,7 +155,7 @@ public class DistBuildFileMaterializerTest {
 
     FileHashCache mockFileHashCache = EasyMock.createMock(FileHashCache.class);
 
-    DistBuildFileMaterializer fileMaterializer = new DistBuildFileMaterializer(
+    MaterializerProjectFileHashCache fileMaterializer = new MaterializerProjectFileHashCache(
         projectFilesystem, fileHashes, mockFileProvider, mockFileHashCache);
 
     assertFalse(pathDirA.toFile().exists());
@@ -258,7 +258,7 @@ public class DistBuildFileMaterializerTest {
 
     FileHashCache mockFileHashCache = EasyMock.createMock(FileHashCache.class);
 
-    DistBuildFileMaterializer fileMaterializer = new DistBuildFileMaterializer(
+    MaterializerProjectFileHashCache fileMaterializer = new MaterializerProjectFileHashCache(
         projectFilesystem, fileHashes, mockFileProvider, mockFileHashCache);
     materializeFunction.execute(fileMaterializer, realFile);
 
@@ -348,7 +348,7 @@ public class DistBuildFileMaterializerTest {
     expect(mockFileHashCache.get(symlink)).andReturn(actualHashCode);
     replay(mockFileHashCache);
 
-    DistBuildFileMaterializer fileMaterializer = new DistBuildFileMaterializer(
+    MaterializerProjectFileHashCache fileMaterializer = new MaterializerProjectFileHashCache(
         projectFilesystem, fileHashes, mockFileProvider,
         mockFileHashCache);
 

@@ -48,8 +48,8 @@ import javax.annotation.concurrent.GuardedBy;
  * Decorator class the records information about the paths being hashed as a side effect of
  * producing file hashes required for rule key computation.
  */
-public class RecordingFileHashLoader implements ProjectFileHashCache {
-  private static final Logger LOG = Logger.get(RecordingFileHashLoader.class);
+public class RecordingProjectFileHashCache implements ProjectFileHashCache {
+  private static final Logger LOG = Logger.get(RecordingProjectFileHashCache.class);
 
   private static final long MAX_ROOT_FILE_SIZE_BYTES = 1024 * 1024;
 
@@ -64,7 +64,7 @@ public class RecordingFileHashLoader implements ProjectFileHashCache {
   private final Set<ArchiveMemberPath> seenArchives;
   private boolean materializeCurrentFileDuringPreloading = false;
 
-  public RecordingFileHashLoader(
+  public RecordingProjectFileHashCache(
       ProjectFileHashCache delegate,
       BuildJobStateFileHashes remoteFileHashes,
       DistBuildConfig distBuildConfig) {

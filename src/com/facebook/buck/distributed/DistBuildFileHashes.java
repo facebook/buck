@@ -88,7 +88,7 @@ public class DistBuildFileHashes {
         });
 
     StackedFileHashCache recordingHashCache = originalHashCache.newDecoratedFileHashCache(
-        originalCache -> new RecordingFileHashLoader(
+        originalCache -> new RecordingProjectFileHashCache(
             originalCache,
             remoteFileHashes.getUnchecked(originalCache.getFilesystem()),
             new DistBuildConfig(buckConfig)));

@@ -256,14 +256,14 @@ public class DistBuildState {
             .build());
   }
 
-  public DistBuildFileMaterializer createMaterializingLoader(
+  public MaterializerProjectFileHashCache createMaterializer(
       ProjectFilesystem projectFilesystem,
       FileContentsProvider provider) {
     BuildJobStateFileHashes remoteFileHashes = Preconditions.checkNotNull(
         fileHashes.get(projectFilesystem),
         "Don't have file hashes for filesystem %s.",
         projectFilesystem);
-    return new DistBuildFileMaterializer(
+    return new MaterializerProjectFileHashCache(
         projectFilesystem,
         remoteFileHashes,
         provider,

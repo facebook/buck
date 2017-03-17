@@ -42,11 +42,11 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-class DistBuildFileMaterializer implements ProjectFileHashCache {
+class MaterializerProjectFileHashCache implements ProjectFileHashCache {
 
-  private static final Logger LOG = Logger.get(DistBuildFileMaterializer.class);
+  private static final Logger LOG = Logger.get(MaterializerProjectFileHashCache.class);
   private static final String UNSUPPORTED_EXCEPTION_MSG =
-      "DistBuildFileMaterializer should only be used as a " +
+      "MaterializerProjectFileHashCache should only be used as a " +
           "ProjectFileHashCache and ProjectFileHashCache.willGet(..). " +
           "It has to implement ProjectFileHashCache so a StackedFileHashCache can be used.";
 
@@ -57,7 +57,7 @@ class DistBuildFileMaterializer implements ProjectFileHashCache {
   private final ProjectFilesystem projectFilesystem;
   private final FileHashCache directFileHashCacheDelegate;
 
-  public DistBuildFileMaterializer(
+  public MaterializerProjectFileHashCache(
       ProjectFilesystem projectFilesystem,
       BuildJobStateFileHashes remoteFileHashes,
       FileContentsProvider provider,
@@ -198,7 +198,7 @@ class DistBuildFileMaterializer implements ProjectFileHashCache {
     processedPaths.add(rootSymlink);
 
     if (!projectFilesystem.getPathRelativeToProjectRoot(rootSymlink).isPresent()) {
-      // RecordingFileHashLoader stored an absolute path (which was also a sym link).
+      // RecordingProjectFileHashCache stored an absolute path (which was also a sym link).
       throw new RuntimeException(
           "Root symlink is not in project root: " + rootSymlink.toAbsolutePath());
     }
