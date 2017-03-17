@@ -102,11 +102,19 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
             getStampedeIdOptional(),
             getGlobalCacheDirOptional());
         int returnCode = distBuildExecutor.buildAndReturnExitCode();
-        console.printSuccess(String.format(
-            "Successfully ran distributed build [%s] in [%d millis].",
-            buildName,
-            stopwatch.elapsed(
-                TimeUnit.MILLISECONDS)));
+        if (returnCode == 0) {
+          console.printSuccess(String.format(
+              "Successfully ran distributed build [%s] in [%d millis].",
+              buildName,
+              stopwatch.elapsed(
+                  TimeUnit.MILLISECONDS)));
+        } else {
+          console.printErrorText(
+              "Failed distributed build [%s] in [%d millis].",
+              buildName,
+              stopwatch.elapsed(
+                  TimeUnit.MILLISECONDS));
+        }
         return returnCode;
       }
     }
