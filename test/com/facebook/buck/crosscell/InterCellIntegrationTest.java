@@ -26,6 +26,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.listener.BroadcastEventListener;
@@ -568,6 +569,22 @@ public class InterCellIntegrationTest {
     // and succeeds when it is
     registerCell(root, "third", third);
     ProjectWorkspace.ProcessResult result = root.runBuckBuild("//:dummy");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void testCrossCellAndroidLibrary() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+
+    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
+        "inter-cell/android/primary",
+        "inter-cell/android/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+
+    String target = "//apps/sample:app_with_cross_cell_android_lib";
+    ProjectWorkspace.ProcessResult result = primary.runBuckCommand("build", target);
     result.assertSuccess();
   }
 
