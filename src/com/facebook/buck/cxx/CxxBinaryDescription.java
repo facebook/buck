@@ -246,8 +246,9 @@ public class CxxBinaryDescription implements
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     CxxBinary cxxBinary = new CxxBinary(
         params
-            .copyWithDeps(() -> cxxLinkAndCompileRules.deps, params.getExtraDeps())
-            .appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder)),
+            .copyReplacingDeclaredAndExtraDeps(
+                () -> cxxLinkAndCompileRules.deps, params.getExtraDeps())
+            .copyAppendingExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder)),
         resolver,
         ruleFinder,
         cxxLinkAndCompileRules.getBinaryRule(),

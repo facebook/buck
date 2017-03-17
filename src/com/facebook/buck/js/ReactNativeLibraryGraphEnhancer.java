@@ -100,7 +100,7 @@ public class ReactNativeLibraryGraphEnhancer {
               BuildTarget.builder(originalBuildTarget)
                   .addFlavors(REACT_NATIVE_ANDROID_RES_FLAVOR)
                   .build())
-              .copyWithExtraDeps(Suppliers.ofInstance(
+              .copyReplacingExtraDeps(Suppliers.ofInstance(
                       ImmutableSortedSet.of(bundle)));
 
       SourcePath resources = new ExplicitBuildTargetSourcePath(
@@ -122,7 +122,7 @@ public class ReactNativeLibraryGraphEnhancer {
     }
 
     return new AndroidReactNativeLibrary(
-        params.appendExtraDeps(extraDeps.build()),
+        params.copyAppendingExtraDeps(extraDeps.build()),
         bundle);
   }
 

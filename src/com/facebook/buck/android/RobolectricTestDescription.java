@@ -96,7 +96,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         params.getBuildTarget(),
-        params.copyWithExtraDeps(
+        params.copyReplacingExtraDeps(
             Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps))),
         javacOptions,
         DependencyMode.TRANSITIVE,
@@ -133,7 +133,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
           .addAll(params.getExtraDeps().get())
           .add(dummyRDotJava.get())
           .build();
-      params = params.copyWithExtraDeps(Suppliers.ofInstance(newExtraDeps));
+      params = params.copyReplacingExtraDeps(Suppliers.ofInstance(newExtraDeps));
     }
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
@@ -149,7 +149,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
     params = cxxLibraryEnhancement.updatedParams;
 
     // Rewrite dependencies on tests to actually depend on the code which backs the test.
-    BuildRuleParams testsLibraryParams = params.copyWithDeps(
+    BuildRuleParams testsLibraryParams = params.copyReplacingDeclaredAndExtraDeps(
         Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>naturalOrder()
                 .addAll(params.getDeclaredDeps().get())
@@ -194,7 +194,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
 
     return new RobolectricTest(
-        params.copyWithDeps(
+        params.copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         ruleFinder,

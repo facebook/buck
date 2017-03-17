@@ -429,13 +429,13 @@ public class PrebuiltCxxLibraryDescription implements
         cxxBuckConfig,
         cxxPlatform,
         params
-            .appendExtraDeps(
+            .copyAppendingExtraDeps(
                 getBuildRules(
                     params.getBuildTarget(),
                     params.getCellRoots(),
                     ruleResolver,
                     Optionals.toStream(args.libDir).collect(MoreCollectors.toImmutableList())))
-            .appendExtraDeps(
+            .copyAppendingExtraDeps(
                 getBuildRules(
                     params.getBuildTarget(),
                     params.getCellRoots(),

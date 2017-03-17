@@ -178,7 +178,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescription.Ar
       Preconditions.checkNotNull(libraryDependencies, "No library dependencies set");
 
       return new JsLibrary(
-          baseParams.appendExtraDeps(
+          baseParams.copyAppendingExtraDeps(
               Iterables.concat(sourceFiles, libraryDependencies)),
           sourceFiles.stream()
               .map(BuildRule::getSourcePathToOutput)
@@ -214,7 +214,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescription.Ar
     final BuildTarget devTarget = withFileFlavorOnly(params.getBuildTarget());
     final BuildRule devFile = resolver.requireRule(devTarget);
     return new JsFile.JsFileRelease(
-        params.appendExtraDeps(devFile),
+        params.copyAppendingExtraDeps(devFile),
         resolver.getRuleWithType(devTarget, JsFile.class).getSourcePathToOutput(),
         args.extraArgs,
         worker
@@ -244,7 +244,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescription.Ar
 
     return new JsFile.JsFileDev(
         ruleFinder.getRule(sourcePath)
-            .map(params::appendExtraDeps)
+            .map(params::copyAppendingExtraDeps)
             .orElse(params),
         sourcePath,
         subPath,

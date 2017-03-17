@@ -71,13 +71,13 @@ public class BuildRuleParams {
     this.totalDeps = baseForDeps.totalDeps;
   }
 
-  public BuildRuleParams copyWithExtraDeps(Supplier<ImmutableSortedSet<BuildRule>> extraDeps) {
-    return copyWithDeps(declaredDeps, extraDeps);
+  public BuildRuleParams copyReplacingExtraDeps(Supplier<ImmutableSortedSet<BuildRule>> extraDeps) {
+    return copyReplacingDeclaredAndExtraDeps(declaredDeps, extraDeps);
   }
 
-  public BuildRuleParams appendExtraDeps(
+  public BuildRuleParams copyAppendingExtraDeps(
       final Supplier<? extends Iterable<? extends BuildRule>> additional) {
-    return copyWithDeps(
+    return copyReplacingDeclaredAndExtraDeps(
         declaredDeps,
         () -> ImmutableSortedSet.<BuildRule>naturalOrder()
             .addAll(extraDeps.get())
@@ -85,30 +85,25 @@ public class BuildRuleParams {
             .build());
   }
 
-  public BuildRuleParams appendExtraDeps(Iterable<? extends BuildRule> additional) {
-    return appendExtraDeps(Suppliers.ofInstance(additional));
+  public BuildRuleParams copyAppendingExtraDeps(Iterable<? extends BuildRule> additional) {
+    return copyAppendingExtraDeps(Suppliers.ofInstance(additional));
   }
 
-  public BuildRuleParams appendExtraDeps(BuildRule... additional) {
-    return appendExtraDeps(Suppliers.ofInstance(ImmutableList.copyOf(additional)));
+  public BuildRuleParams copyAppendingExtraDeps(BuildRule... additional) {
+    return copyAppendingExtraDeps(Suppliers.ofInstance(ImmutableList.copyOf(additional)));
   }
 
-  public BuildRuleParams copyWithDeps(
+  public BuildRuleParams copyReplacingDeclaredAndExtraDeps(
       Supplier<ImmutableSortedSet<BuildRule>> declaredDeps,
       Supplier<ImmutableSortedSet<BuildRule>> extraDeps) {
-    return copyWithChanges(buildTarget, declaredDeps, extraDeps);
+    return new BuildRuleParams(buildTarget, declaredDeps, extraDeps, projectFilesystem, cellRoots);
   }
 
   public BuildRuleParams copyWithChanges(
       BuildTarget buildTarget,
       Supplier<ImmutableSortedSet<BuildRule>> declaredDeps,
       Supplier<ImmutableSortedSet<BuildRule>> extraDeps) {
-    return new BuildRuleParams(
-        buildTarget,
-        declaredDeps,
-        extraDeps,
-        projectFilesystem,
-        cellRoots);
+    return withBuildTarget(buildTarget).copyReplacingDeclaredAndExtraDeps(declaredDeps, extraDeps);
   }
 
   public BuildRuleParams withBuildTarget(BuildTarget target) {

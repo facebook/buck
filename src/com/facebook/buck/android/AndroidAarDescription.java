@@ -254,7 +254,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
       }
       return copyNativeLibraries.getPathToNativeLibsDir();
     });
-    BuildRuleParams androidAarParams = originalBuildRuleParams.copyWithExtraDeps(
+    BuildRuleParams androidAarParams = originalBuildRuleParams.copyReplacingExtraDeps(
         Suppliers.ofInstance(ImmutableSortedSet.copyOf(aarExtraDepsBuilder.build())));
     return new AndroidAar(
         androidAarParams,

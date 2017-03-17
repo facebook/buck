@@ -59,7 +59,7 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new ApkGenrule(
-        params.copyWithExtraDeps(
+        params.copyReplacingExtraDeps(
             Suppliers.memoize(
                 () -> ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(originalExtraDeps.get())

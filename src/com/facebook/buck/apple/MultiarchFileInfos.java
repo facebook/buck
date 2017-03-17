@@ -141,7 +141,7 @@ public class MultiarchFileInfos {
         .toSortedSet(Ordering.natural());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     MultiarchFile multiarchFile = new MultiarchFile(
-        params.copyWithDeps(
+        params.copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of()),
             Suppliers.ofInstance(thinRules)),
         ruleFinder,

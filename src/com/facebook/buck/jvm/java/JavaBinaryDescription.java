@@ -99,7 +99,7 @@ public class JavaBinaryDescription implements
     ImmutableSet<SourcePath> transitiveClasspaths =
         JavaLibraryClasspathProvider.getClasspathsFromLibraries(transitiveClasspathDeps);
     BuildRule rule = new JavaBinary(
-        binaryParams.appendExtraDeps(transitiveClasspathDeps),
+        binaryParams.copyAppendingExtraDeps(transitiveClasspathDeps),
         javaOptions.getJavaRuntimeLauncher(),
         args.mainClass.orElse(null),
         args.manifestFile.orElse(null),
@@ -117,7 +117,7 @@ public class JavaBinaryDescription implements
       resolver.addToIndex(innerJarRule);
       SourcePath innerJar = innerJarRule.getSourcePathToOutput();
       rule = new JarFattener(
-          params.appendExtraDeps(
+          params.copyAppendingExtraDeps(
               Suppliers.<Iterable<BuildRule>>ofInstance(
                   ruleFinder.filterBuildRuleInputs(
                       ImmutableList.<SourcePath>builder()

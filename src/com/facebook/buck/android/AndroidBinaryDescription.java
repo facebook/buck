@@ -291,12 +291,12 @@ public class AndroidBinaryDescription implements
 
       return new AndroidBinary(
           params
-              .copyWithExtraDeps(Suppliers.ofInstance(result.getFinalDeps()))
-              .appendExtraDeps(
+              .copyReplacingExtraDeps(Suppliers.ofInstance(result.getFinalDeps()))
+              .copyAppendingExtraDeps(
                   ruleFinder.filterBuildRuleInputs(
                       result.getPackageableCollection().getProguardConfigs()))
-              .appendExtraDeps(rulesToExcludeFromDex)
-              .appendExtraDeps(redexExtraDeps),
+              .copyAppendingExtraDeps(rulesToExcludeFromDex)
+              .copyAppendingExtraDeps(redexExtraDeps),
           ruleFinder,
           proGuardConfig.getProguardJarOverride(),
           proGuardConfig.getProguardMaxHeapSize(),

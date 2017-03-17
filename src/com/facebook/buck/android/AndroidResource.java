@@ -163,7 +163,7 @@ public class AndroidResource extends AbstractBuildRule
       boolean resourceUnion,
       boolean isGrayscaleImageProcessingEnabled) {
     super(
-        buildRuleParams.appendExtraDeps(
+        buildRuleParams.copyAppendingExtraDeps(
             Suppliers.compose(ruleFinder::filterBuildRuleInputs, symbolFilesFromDeps)));
     if (res != null && rDotJavaPackageArgument == null && manifestFile == null) {
       throw new HumanReadableException(

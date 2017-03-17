@@ -137,8 +137,8 @@ abstract class GoDescriptors {
 
     return new GoCompile(
         params
-            .appendExtraDeps(linkableDeps)
-            .appendExtraDeps(ImmutableList.of(symlinkTree)),
+            .copyAppendingExtraDeps(linkableDeps)
+            .copyAppendingExtraDeps(ImmutableList.of(symlinkTree)),
         symlinkTree,
         packageName,
         getPackageImportMap(goBuckConfig.getVendorPaths(),
@@ -232,7 +232,7 @@ abstract class GoDescriptors {
     LOG.verbose("Symlink tree for linking of %s: %s", params.getBuildTarget(), symlinkTree);
 
     return new GoBinary(
-        params.copyWithDeps(
+        params.copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(ruleFinder.filterBuildRuleInputs(symlinkTree.getLinks().values()))

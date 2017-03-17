@@ -340,7 +340,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
           params.getBuildTarget().getBasePath());
     }
     return new NdkLibrary(
-        params.appendExtraDeps(
+        params.copyAppendingExtraDeps(
             ImmutableSortedSet.<BuildRule>naturalOrder()
                 .addAll(makefilePair.getSecond())
                 .build()),

@@ -186,7 +186,7 @@ public class HalideLibraryDescription
     params = CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle);
     params = LinkerMapMode.restoreLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode);
     CxxBinary cxxBinary = new CxxBinary(
-        params.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder)),
+        params.copyAppendingExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder)),
         ruleResolver,
         ruleFinder,
         cxxLinkAndCompileRules.getBinaryRule(),
@@ -260,7 +260,7 @@ public class HalideLibraryDescription
         params.getBuildTarget().withFlavors(HALIDE_COMPILER_FLAVOR));
 
     return new HalideCompile(
-        params.copyWithExtraDeps(
+        params.copyReplacingExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(halideCompiler))),
         halideCompiler.getExecutableCommand(),
         halideBuckConfig.getHalideTargetForPlatform(platform),
@@ -346,7 +346,7 @@ public class HalideLibraryDescription
           params.getBuildTarget());
     } else if (flavors.contains(HALIDE_COMPILE_FLAVOR)) {
       return createHalideCompile(
-          params.copyWithDeps(
+          params.copyReplacingDeclaredAndExtraDeps(
               Suppliers.ofInstance(
                   ImmutableSortedSet.of()),
               Suppliers.ofInstance(

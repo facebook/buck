@@ -561,7 +561,7 @@ public class AppleDescriptions {
         MultiarchFileInfos.create(appleCxxPlatforms, unstrippedBinaryBuildRule.getBuildTarget()));
 
     AppleDsym appleDsym = new AppleDsym(
-        params.copyWithDeps(
+        params.copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .add(unstrippedBinaryBuildRule)
@@ -862,7 +862,7 @@ public class AppleDescriptions {
     // Remove the unflavored binary rule and add the flavored one instead.
     final Predicate<BuildRule> notOriginalBinaryRule = Predicates.not(
         BuildRules.isBuildRuleWithTarget(originalBinaryTarget));
-    return params.copyWithDeps(
+    return params.copyReplacingDeclaredAndExtraDeps(
         Suppliers.ofInstance(
             FluentIterable
                 .from(params.getDeclaredDeps().get())

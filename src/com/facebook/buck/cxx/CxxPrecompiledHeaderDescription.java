@@ -43,7 +43,7 @@ public class CxxPrecompiledHeaderDescription implements
         BuildRuleResolver ruleResolver,
         A args) {
     return new CxxPrecompiledHeaderTemplate(
-        params.appendExtraDeps(ruleResolver.getAllRules(args.deps)),
+        params.copyAppendingExtraDeps(ruleResolver.getAllRules(args.deps)),
         ruleResolver,
         args.src);
   }

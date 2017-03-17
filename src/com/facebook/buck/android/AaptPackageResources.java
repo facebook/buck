@@ -122,7 +122,7 @@ public class AaptPackageResources extends AbstractBuildRule {
       boolean includesVectorDrawables,
       EnumSet<RType> bannedDuplicateResourceTypes,
       ManifestEntries manifestEntries) {
-    super(params.copyWithDeps(
+    super(params.copyReplacingDeclaredAndExtraDeps(
         Suppliers.ofInstance(getAllDeps(
             params.getBuildTarget(),
             ruleFinder,

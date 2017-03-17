@@ -115,7 +115,7 @@ public class JavaTestDescription implements
         cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
 
-    BuildRuleParams testsLibraryParams = params.copyWithDeps(
+    BuildRuleParams testsLibraryParams = params.copyReplacingDeclaredAndExtraDeps(
         Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>naturalOrder()
                 .addAll(params.getDeclaredDeps().get())
@@ -160,7 +160,7 @@ public class JavaTestDescription implements
             ));
 
     return new JavaTest(
-        params.copyWithDeps(
+        params.copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver,
@@ -255,7 +255,7 @@ public class JavaTestDescription implements
         }
 
         resolver.addToIndex(nativeLibsSymlinkTree);
-        updatedParams = params.appendExtraDeps(ImmutableList.<BuildRule>builder()
+        updatedParams = params.copyAppendingExtraDeps(ImmutableList.<BuildRule>builder()
             .add(nativeLibsSymlinkTree)
             // Add all the native libraries as first-order dependencies.
             // This has two effects:

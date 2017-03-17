@@ -108,7 +108,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
         javacOptions);
 
     BuildRuleParams testsLibraryParams =
-        params.appendExtraDeps(
+        params.copyAppendingExtraDeps(
             Iterables.concat(
                 BuildRules.getExportedRules(
                     Iterables.concat(
@@ -144,7 +144,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
                 args.removeClasses));
 
     return new JavaTest(
-        params.copyWithDeps(
+        params.copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver,

@@ -251,7 +251,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
           (!nativeLinkableLibs.isEmpty() || !nativeLinkableLibsAssets.isEmpty())) {
         NativeRelinker relinker =
             new NativeRelinker(
-                buildRuleParams.copyWithExtraDeps(
+                buildRuleParams.copyReplacingExtraDeps(
                     Suppliers.ofInstance(
                         ImmutableSortedSet.<BuildRule>naturalOrder()
                             .addAll(

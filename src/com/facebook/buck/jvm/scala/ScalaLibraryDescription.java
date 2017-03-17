@@ -86,7 +86,7 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
     Tool scalac = scalaBuckConfig.getScalac(resolver);
 
     final BuildRule scalaLibrary = resolver.getRule(scalaBuckConfig.getScalaLibraryTarget());
-    BuildRuleParams params = rawParams.copyWithDeps(
+    BuildRuleParams params = rawParams.copyReplacingDeclaredAndExtraDeps(
         () -> ImmutableSortedSet.<BuildRule>naturalOrder()
             .addAll(rawParams.getDeclaredDeps().get())
             .add(scalaLibrary)
@@ -94,7 +94,7 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
         rawParams.getExtraDeps());
 
     BuildRuleParams javaLibraryParams =
-        params.appendExtraDeps(
+        params.copyAppendingExtraDeps(
             Iterables.concat(
                 BuildRules.getExportedRules(
                     Iterables.concat(

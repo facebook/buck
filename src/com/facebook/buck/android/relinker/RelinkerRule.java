@@ -105,7 +105,7 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       ImmutableList<Arg> args) {
-    return params.appendExtraDeps(
+    return params.copyAppendingExtraDeps(
         Iterables.concat(Iterables.transform(args, arg -> arg.getDeps(ruleFinder))));
   }
 

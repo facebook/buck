@@ -62,7 +62,7 @@ public class CxxBinaryTest {
     CxxBinary binary =
         ruleResolver.addToIndex(
             new CxxBinary(
-                params.appendExtraDeps(ImmutableSortedSet.<BuildRule>of(cxxLink)),
+                params.copyAppendingExtraDeps(ImmutableSortedSet.<BuildRule>of(cxxLink)),
                 ruleResolver,
                 ruleFinder,
                 cxxLink,

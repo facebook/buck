@@ -143,7 +143,7 @@ public class KotlinLibraryDescription implements
 
     ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps);
     BuildRuleParams javaLibraryParams =
-        params.appendExtraDeps(
+        params.copyAppendingExtraDeps(
             Iterables.concat(
                 BuildRules.getExportedRules(
                     Iterables.concat(

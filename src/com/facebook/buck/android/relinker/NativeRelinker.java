@@ -228,7 +228,7 @@ public class NativeRelinker {
         .withFlavor(ImmutableFlavor.of("xdso-dce"))
         .withFlavor(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(cpuType.toString())))
         .withFlavor(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(libname)))
-        .appendExtraDeps(relinkerDeps);
+        .copyAppendingExtraDeps(relinkerDeps);
     BuildRule baseRule = ruleFinder.getRule(source).orElse(null);
     ImmutableList<Arg> linkerArgs = ImmutableList.of();
     Linker linker = null;

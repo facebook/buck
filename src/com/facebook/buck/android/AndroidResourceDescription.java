@@ -136,7 +136,7 @@ public class AndroidResourceDescription
             ASSETS_SYMLINK_TREE_FLAVOR,
             args.assets);
 
-    params = params.appendExtraDeps(
+    params = params.copyAppendingExtraDeps(
         Iterables.concat(
             resInputs.getSecond().map(ruleFinder::filterBuildRuleInputs)
                 .orElse(ImmutableSet.of()),
@@ -147,7 +147,7 @@ public class AndroidResourceDescription
         // We only propagate other AndroidResource rule dependencies, as these are
         // the only deps which should control whether we need to re-run the aapt_package
         // step.
-        params.copyWithDeps(
+        params.copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(
                 AndroidResourceHelper.androidResOnly(params.getDeclaredDeps().get())),
             params.getExtraDeps()),

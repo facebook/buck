@@ -117,7 +117,7 @@ public class DBinaryDescription implements
     // Return a BinaryBuildRule implementation, so that this works
     // with buck run etc.
     return new DBinary(
-        params.copyWithExtraDeps(
+        params.copyReplacingExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(nativeLinkable))),
         ruleFinder,
         executableBuilder.build(),

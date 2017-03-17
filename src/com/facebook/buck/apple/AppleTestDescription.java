@@ -281,7 +281,7 @@ public class AppleTestDescription implements
         platformName,
         appleConfig.getXctoolDefaultDestinationSpecifier(),
         Optional.of(args.destinationSpecifier),
-        params.copyWithDeps(
+        params.copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(bundle)),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         bundle,

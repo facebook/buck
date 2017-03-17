@@ -70,7 +70,7 @@ public class JsBundleDescription implements Description<JsBundleDescription.Arg>
             .collect(args.libs);
 
     return new JsBundle(
-        params.appendExtraDeps(libraryDeps),
+        params.copyAppendingExtraDeps(libraryDeps),
         libraryDeps.stream()
             .map(BuildRule::getSourcePathToOutput)
             .collect(MoreCollectors.toImmutableSortedSet()),

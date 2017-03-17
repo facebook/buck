@@ -95,7 +95,7 @@ public class ShTestDescription implements
                 args.env,
                 toArg));
     return new ShTest(
-        params.appendExtraDeps(
+        params.copyAppendingExtraDeps(
             () -> FluentIterable.from(testArgs)
                 .append(testEnv.values())
                 .transformAndConcat(arg -> arg.getDeps(ruleFinder))),

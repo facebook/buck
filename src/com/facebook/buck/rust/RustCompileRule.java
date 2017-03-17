@@ -122,7 +122,7 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
       ImmutableSortedSet<SourcePath> sources,
       SourcePath rootModule) {
     return new RustCompileRule(
-        params.copyWithExtraDeps(
+        params.copyReplacingExtraDeps(
             Suppliers.memoize(
                 () -> ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(compiler.getDeps(ruleFinder))

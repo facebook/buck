@@ -381,7 +381,7 @@ public class AppleLibraryDescription implements
             .addAll(args.exportedDeps)
             .add(swiftCompanionBuildRule.get().getBuildTarget())
             .build();
-        params = params.appendExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
+        params = params.copyAppendingExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
       }
     }
 

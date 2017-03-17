@@ -119,7 +119,7 @@ public class JavaLibraryDescription implements
               .filter(rule -> HasClasspathEntries.class.isAssignableFrom(rule.getClass()))
               .flatMap(rule -> rule.getTransitiveClasspathDeps().stream())
               .iterator());
-      BuildRuleParams emptyParams = params.copyWithDeps(
+      BuildRuleParams emptyParams = params.copyReplacingDeclaredAndExtraDeps(
           Suppliers.ofInstance(deps.build()),
           Suppliers.ofInstance(ImmutableSortedSet.of()));
 
@@ -181,7 +181,7 @@ public class JavaLibraryDescription implements
 
     ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps);
     BuildRuleParams javaLibraryParams =
-        params.appendExtraDeps(
+        params.copyAppendingExtraDeps(
             Iterables.concat(
                 BuildRules.getExportedRules(
                     Iterables.concat(

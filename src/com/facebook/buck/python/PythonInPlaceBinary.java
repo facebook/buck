@@ -113,7 +113,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
       Tool python) {
     return new PythonInPlaceBinary(
         // The actual steps of a in-place binary doesn't actually have any build-time deps.
-        params.copyWithDeps(
+        params.copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         params.getDeclaredDeps(),

@@ -490,7 +490,7 @@ public final class CxxInferEnhancer {
       CxxInferAnalyze analysisToReport) {
     return buildRuleResolver.addToIndex(
         new CxxInferComputeReport(
-            buildRuleParams.copyWithDeps(
+            buildRuleParams.copyReplacingDeclaredAndExtraDeps(
                 Suppliers.ofInstance(
                     ImmutableSortedSet.<BuildRule>naturalOrder()
                         .addAll(analysisToReport.getTransitiveAnalyzeRules())

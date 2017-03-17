@@ -94,7 +94,7 @@ public class AndroidPrebuiltAarDescription
     ImmutableSet<Flavor> flavors = params.getBuildTarget().getFlavors();
     if (flavors.contains(AAR_UNZIP_FLAVOR)) {
       Preconditions.checkState(flavors.size() == 1);
-      BuildRuleParams unzipAarParams = params.copyWithDeps(
+      BuildRuleParams unzipAarParams = params.copyReplacingDeclaredAndExtraDeps(
           Suppliers.ofInstance(ImmutableSortedSet.of()),
           Suppliers.ofInstance(ImmutableSortedSet.copyOf(
               ruleFinder.filterBuildRuleInputs(args.aar))));
@@ -139,7 +139,7 @@ public class AndroidPrebuiltAarDescription
           AAR_PREBUILT_JAR_FLAVOR,
           flavors);
       BuildRuleParams buildRuleParams = params
-          .copyWithDeps(
+          .copyReplacingDeclaredAndExtraDeps(
               Suppliers.ofInstance(ImmutableSortedSet.copyOf(javaDeps)),
               Suppliers.ofInstance(ImmutableSortedSet.of(unzipAar)));
       return new PrebuiltJar(
@@ -172,7 +172,7 @@ public class AndroidPrebuiltAarDescription
         "Unexpected flavors for android_prebuilt_aar: %s",
         flavors);
 
-    BuildRuleParams androidLibraryParams = params.copyWithDeps(
+    BuildRuleParams androidLibraryParams = params.copyReplacingDeclaredAndExtraDeps(
         /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(prebuiltJar)),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(unzipAar)));
     return new AndroidPrebuiltAar(

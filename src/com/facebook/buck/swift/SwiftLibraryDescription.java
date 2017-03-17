@@ -165,7 +165,7 @@ public class SwiftLibraryDescription implements
                     .getUnflavoredBuildTarget()
                     .equals(buildTarget.getUnflavoredBuildTarget()))
             .collect(MoreCollectors.toImmutableSortedSet());
-    params = params.copyWithExtraDeps(Suppliers.ofInstance(filteredExtraDeps));
+    params = params.copyReplacingExtraDeps(Suppliers.ofInstance(filteredExtraDeps));
 
     if (!buildFlavors.contains(SWIFT_COMPANION_FLAVOR) && platform.isPresent()) {
       final CxxPlatform cxxPlatform = platform.get().getValue();
@@ -217,13 +217,13 @@ public class SwiftLibraryDescription implements
               "Could not find SwiftCompile with target %s", buildTarget);
         }
       };
-      params = params.appendExtraDeps(
+      params = params.copyAppendingExtraDeps(
           params.getDeps().stream()
               .filter(SwiftLibrary.class::isInstance)
               .map(requireSwiftCompile)
               .collect(MoreCollectors.toImmutableSet()));
 
-      params = params.appendExtraDeps(
+      params = params.copyAppendingExtraDeps(
           params.getDeps().stream()
               .filter(CxxLibrary.class::isInstance)
               .map(input -> {

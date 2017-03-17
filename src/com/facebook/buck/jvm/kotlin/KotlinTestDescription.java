@@ -107,7 +107,7 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
         kotlinBuckConfig.getKotlinCompiler().get(),
         args.extraKotlincArguments);
 
-    BuildRuleParams testsLibraryParams = params.copyWithDeps(
+    BuildRuleParams testsLibraryParams = params.copyReplacingDeclaredAndExtraDeps(
         Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>naturalOrder()
                 .addAll(params.getDeclaredDeps().get())
@@ -150,7 +150,7 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
             ));
 
     return new KotlinTest(
-        params.copyWithDeps(
+        params.copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver,

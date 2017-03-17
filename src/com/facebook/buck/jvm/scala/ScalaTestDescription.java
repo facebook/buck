@@ -98,7 +98,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     final BuildRule scalaLibrary = resolver.getRule(config.getScalaLibraryTarget());
-    BuildRuleParams params = rawParams.copyWithDeps(
+    BuildRuleParams params = rawParams.copyReplacingDeclaredAndExtraDeps(
         () -> ImmutableSortedSet.<BuildRule>naturalOrder()
             .addAll(rawParams.getDeclaredDeps().get())
             .add(scalaLibrary)
@@ -118,7 +118,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
     Tool scalac = config.getScalac(resolver);
 
     BuildRuleParams javaLibraryParams =
-        params.appendExtraDeps(
+        params.copyAppendingExtraDeps(
             Iterables.concat(
                 BuildRules.getExportedRules(
                     Iterables.concat(
@@ -158,7 +158,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                 /* classesToRemoveFromJar */ ImmutableSet.of()));
 
     return new JavaTest(
-        params.copyWithDeps(
+        params.copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver,

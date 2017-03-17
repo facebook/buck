@@ -74,7 +74,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
     }
 
     return new CxxCompilationDatabase(
-        params.copyWithDeps(
+        params.copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         compileRules.build(),

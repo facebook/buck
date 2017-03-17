@@ -129,7 +129,7 @@ public class JsUtil {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       BuildTarget worker) {
-    return params.copyWithDeps(
+    return params.copyReplacingDeclaredAndExtraDeps(
         Suppliers.ofInstance(ImmutableSortedSet.of()),
         Suppliers.ofInstance(ImmutableSortedSet.of(resolver.getRule(worker))));
   }

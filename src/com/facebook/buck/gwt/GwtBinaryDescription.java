@@ -135,7 +135,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
     }.start();
 
     return new GwtBinary(
-        params.copyWithExtraDeps(Suppliers.ofInstance(extraDeps.build())),
+        params.copyReplacingExtraDeps(Suppliers.ofInstance(extraDeps.build())),
         args.modules,
         javaOptions.getJavaRuntimeLauncher(),
         args.vmArgs,

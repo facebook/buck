@@ -131,7 +131,7 @@ public class CxxPrecompiledHeaderRuleTest {
       SourcePath headerSourcePath,
       ImmutableSortedSet<BuildRule> deps) {
     return new CxxPrecompiledHeaderTemplate(
-        newParams(target).appendExtraDeps(deps),
+        newParams(target).copyAppendingExtraDeps(deps),
         ruleResolver,
         headerSourcePath);
   }

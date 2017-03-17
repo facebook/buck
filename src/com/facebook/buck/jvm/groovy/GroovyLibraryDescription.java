@@ -84,7 +84,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
 
     ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps);
     BuildRuleParams javaLibraryParams =
-        params.appendExtraDeps(
+        params.copyAppendingExtraDeps(
             BuildRules.getExportedRules(
                 Iterables.concat(
                     params.getDeclaredDeps().get(),

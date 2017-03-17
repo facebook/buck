@@ -413,7 +413,7 @@ public class RustCompileUtils {
 
     final CommandTool executable = executableBuilder.build();
 
-    return new BinaryWrapperRule(params.appendExtraDeps(buildRule), ruleFinder) {
+    return new BinaryWrapperRule(params.copyAppendingExtraDeps(buildRule), ruleFinder) {
 
       @Override
       public Tool getExecutableCommand() {

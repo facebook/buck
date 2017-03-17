@@ -70,7 +70,7 @@ public class JavaAnnotationProcessorDescription implements
 
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     return new JavaAnnotationProcessor(
-        params.appendExtraDeps(properties.getClasspathDeps()),
+        params.copyAppendingExtraDeps(properties.getClasspathDeps()),
         pathResolver,
         properties);
   }

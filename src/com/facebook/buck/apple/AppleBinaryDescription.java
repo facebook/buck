@@ -372,7 +372,7 @@ public class AppleBinaryDescription
       if (isSwiftTarget(params.getBuildTarget())) {
         return swiftCompanionBuildRule.get();
       } else {
-        params = params.appendExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
+        params = params.copyAppendingExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
       }
     }
 

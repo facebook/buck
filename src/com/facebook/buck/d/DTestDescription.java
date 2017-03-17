@@ -115,7 +115,7 @@ public class DTestDescription implements
     buildRuleResolver.addToIndex(binaryRule);
 
     return new DTest(
-        params.appendExtraDeps(ImmutableList.of(binaryRule)),
+        params.copyAppendingExtraDeps(ImmutableList.of(binaryRule)),
         binaryRule,
         args.contacts,
         args.labels,

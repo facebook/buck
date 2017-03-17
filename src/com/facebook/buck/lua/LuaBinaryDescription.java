@@ -797,7 +797,7 @@ public class LuaBinaryDescription implements
             components.getComponents(),
             packageStyle);
     return new LuaBinary(
-        params.appendExtraDeps(binary.getDeps(ruleFinder)),
+        params.copyAppendingExtraDeps(binary.getDeps(ruleFinder)),
         ruleFinder,
         getOutputPath(params.getBuildTarget(), params.getProjectFilesystem()),
         binary,

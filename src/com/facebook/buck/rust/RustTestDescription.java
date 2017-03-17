@@ -105,7 +105,7 @@ public class RustTestDescription implements
 
     Tool testExe = testExeBuild.getExecutableCommand();
 
-    BuildRuleParams testParams = params.appendExtraDeps(
+    BuildRuleParams testParams = params.copyAppendingExtraDeps(
         testExe.getDeps(ruleFinder));
 
     return new RustTest(

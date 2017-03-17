@@ -158,8 +158,8 @@ public class AndroidInstrumentationApkDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new AndroidInstrumentationApk(
         params
-            .copyWithExtraDeps(Suppliers.ofInstance(enhancementResult.getFinalDeps()))
-            .appendExtraDeps(rulesToExcludeFromDex),
+            .copyReplacingExtraDeps(Suppliers.ofInstance(enhancementResult.getFinalDeps()))
+            .copyAppendingExtraDeps(rulesToExcludeFromDex),
         ruleFinder,
         proGuardConfig.getProguardJarOverride(),
         proGuardConfig.getProguardMaxHeapSize(),

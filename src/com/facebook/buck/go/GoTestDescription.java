@@ -178,7 +178,7 @@ public class GoTestDescription implements
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new GoTest(
-        params.copyWithDeps(
+        params.copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(testMain)),
             Suppliers.ofInstance(ImmutableSortedSet.of())
         ),
@@ -271,7 +271,7 @@ public class GoTestDescription implements
           args.library.get(), GoLibraryDescription.Arg.class).get();
 
       final BuildRuleParams originalParams = params;
-      BuildRuleParams testTargetParams = params.copyWithDeps(
+      BuildRuleParams testTargetParams = params.copyReplacingDeclaredAndExtraDeps(
           () -> ImmutableSortedSet.<BuildRule>naturalOrder()
               .addAll(originalParams.getDeclaredDeps().get())
               .addAll(resolver.getAllRules(libraryArg.deps))

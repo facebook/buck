@@ -554,7 +554,7 @@ public class AndroidBinaryGraphEnhancerTest {
         ruleResolver.addToIndex(
             new AndroidResource(
                 new FakeBuildRuleParamsBuilder("//:resources").build()
-                    .appendExtraDeps(ImmutableSortedSet.of(resourcesDep)),
+                    .copyAppendingExtraDeps(ImmutableSortedSet.of(resourcesDep)),
                 ruleFinder,
                 ImmutableSortedSet.of(),
                 resourcesDep.getSourcePathToOutput(),
