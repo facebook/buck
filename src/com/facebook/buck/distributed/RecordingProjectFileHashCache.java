@@ -17,7 +17,6 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
-import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.MorePaths;
@@ -35,12 +34,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
-import java.util.Set;
 
 import javax.annotation.concurrent.GuardedBy;
 
@@ -56,36 +53,41 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
   private final ProjectFileHashCache delegate;
   private final ProjectFilesystem projectFilesystem;
   @GuardedBy("this")
-  private final BuildJobStateFileHashes remoteFileHashes;
-  private DistBuildConfig distBuildConfig;
-  @GuardedBy("this")
-  private final Set<Path> seenPaths;
-  @GuardedBy("this")
-  private final Set<ArchiveMemberPath> seenArchives;
+  private final RecordedFileHashes remoteFileHashes;
   private final boolean allRecordedPathsAreAbsolute;
   private boolean materializeCurrentFileDuringPreloading = false;
 
-  public RecordingProjectFileHashCache(
-      ProjectFileHashCache delegate,
-      BuildJobStateFileHashes remoteFileHashes,
+  public static RecordingProjectFileHashCache createForCellRoot(
+      ProjectFileHashCache decoratedCache,
+      RecordedFileHashes remoteFileHashes,
       DistBuildConfig distBuildConfig) {
-    this(delegate, remoteFileHashes, distBuildConfig, false);
+    return new RecordingProjectFileHashCache(
+        decoratedCache,
+        remoteFileHashes,
+        Optional.of(distBuildConfig));
   }
 
-  public RecordingProjectFileHashCache(
+  public static RecordingProjectFileHashCache createForNonCellRoot(
+      ProjectFileHashCache decoratedCache,
+      RecordedFileHashes remoteFileHashes) {
+    return new RecordingProjectFileHashCache(
+        decoratedCache,
+        remoteFileHashes,
+        Optional.empty());
+  }
+
+  private RecordingProjectFileHashCache(
       ProjectFileHashCache delegate,
-      BuildJobStateFileHashes remoteFileHashes,
-      DistBuildConfig distBuildConfig,
-      boolean allRecordedPathsAreAbsolute) {
-    this.allRecordedPathsAreAbsolute = allRecordedPathsAreAbsolute;
+      RecordedFileHashes remoteFileHashes,
+      Optional<DistBuildConfig> distBuildConfig) {
+    this.allRecordedPathsAreAbsolute = !distBuildConfig.isPresent();
     this.delegate = delegate;
     this.projectFilesystem = delegate.getFilesystem();
     this.remoteFileHashes = remoteFileHashes;
-    this.distBuildConfig = distBuildConfig;
-    this.seenPaths = new HashSet<>();
-    this.seenArchives = new HashSet<>();
 
-    extractBuckConfigFileHashes();
+    if (distBuildConfig.isPresent()) {
+      extractBuckConfigFileHashes(distBuildConfig.get());
+    }
     extractFilesAtRoot();
   }
 
@@ -102,8 +104,7 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
         children = processDirectory(nextPath, remainingPaths);
       }
       synchronized (this) {
-        if (!seenPaths.contains(nextPath)) {
-          seenPaths.add(nextPath);
+        if (!remoteFileHashes.containsAndAddPath(nextPath)) {
           record(nextPath, Optional.empty(), hashCode, children);
         }
       }
@@ -254,7 +255,7 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
     fileHashEntry.setMaterializeDuringPreloading(materializeCurrentFileDuringPreloading);
 
     // TODO(alisdair04): handling for symlink to internal directory (including infinite loop).
-    remoteFileHashes.addToEntries(fileHashEntry);
+    remoteFileHashes.addEntry(fileHashEntry);
   }
 
   @Override
@@ -262,8 +263,7 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
     checkIsRelative(relPath.getArchivePath());
     HashCode hashCode = delegate.get(relPath);
     synchronized (this) {
-      if (!seenArchives.contains(relPath)) {
-        seenArchives.add(relPath);
+      if (!remoteFileHashes.containsAndAddPath(relPath)) {
         record(
             relPath.getArchivePath(),
             Optional.of(relPath.getMemberPath().toString()),
@@ -274,26 +274,9 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
     return hashCode;
   }
 
-  private void addIfPresent(Set<Path> paths, Optional<Path> path) {
-    if (path.isPresent() &&
-        projectFilesystem.getPathRelativeToProjectRoot(path.get()).isPresent()) {
-      paths.add(path.get());
-    }
-  }
-
-  private void addAllPresent(Set<Path> pathSet, Optional<ImmutableList<Path>> pathsToAdd) {
-    if (pathsToAdd.isPresent()) {
-      for (Path path : pathsToAdd.get()) {
-        addIfPresent(pathSet, Optional.of(path));
-      }
-    }
-  }
-
-  private synchronized void extractBuckConfigFileHashes() {
+  private synchronized void extractBuckConfigFileHashes(DistBuildConfig distBuildConfig) {
     // We want to materialize files during pre-loading for .buckconfig entries
     materializeCurrentFileDuringPreloading = true;
-
-    Set<Path> paths = new HashSet<>();
 
     // TODO(alisdair04,shivanker): KnownBuildRuleTypes always loads java compilers if they are
     // defined in a .buckconfig, regardless of what type of build is taking place. Unless peforming
@@ -303,14 +286,26 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
     // TODO(alisdair04,ruibm): capture all .buckconfig dependencies automatically.
 
     Optional<ImmutableList<Path>> whitelist = distBuildConfig.getOptionalPathWhitelist();
+    if (!whitelist.isPresent()) {
+      return;
+    }
+
     LOG.info(
-        "Stampede always materialize whitelist: [%s].",
-        whitelist.isPresent() ? Joiner.on(", ").join(whitelist.get()) : "");
-    addAllPresent(paths, whitelist);
+        "Stampede always_materialize_whitelist=[%s] cell=[%s].",
+        whitelist.isPresent() ? Joiner.on(", ").join(whitelist.get()) : "",
+        delegate.getFilesystem().getRootPath().toString());
 
     try {
-      for (Path path : paths) {
-        get(path);
+      for (Path absPath : whitelist.get()) {
+        Optional<Path> relPathOpt = projectFilesystem.getPathRelativeToProjectRoot(absPath);
+        if (!relPathOpt.isPresent() ||
+            !willGet(relPathOpt.get()) ||
+            !projectFilesystem.exists(relPathOpt.get())) {
+          continue;
+        }
+
+        // Record this path immediately.
+        get(relPathOpt.get());
       }
     } catch (IOException e) {
       throw new RuntimeException(e);

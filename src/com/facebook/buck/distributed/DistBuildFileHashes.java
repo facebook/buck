@@ -29,6 +29,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
@@ -60,10 +61,10 @@ import java.util.concurrent.ExecutionException;
  */
 public class DistBuildFileHashes {
   // Map<CellIndex, BuildJobStateFileHashes>.
-  private final Map<Integer, BuildJobStateFileHashes> remoteFileHashes;
+  private final Map<Integer, RecordedFileHashes> remoteFileHashes;
   private final LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory> ruleKeyFactories;
 
-  private final ListenableFuture<ImmutableList<BuildJobStateFileHashes>> fileHashes;
+  private final ListenableFuture<ImmutableList<RecordedFileHashes>> fileHashes;
   private final ListenableFuture<ImmutableMap<BuildRule, RuleKey>>
       ruleKeys;
 
@@ -82,11 +83,18 @@ public class DistBuildFileHashes {
     StackedFileHashCache recordingHashCache = originalHashCache.newDecoratedFileHashCache(
         originalCache -> {
           Path fsRootPath = originalCache.getFilesystem().getRootPath();
-          return new RecordingProjectFileHashCache(
-            originalCache,
-            getRemoteFileHashes(cellIndexer.apply(fsRootPath)),
-            new DistBuildConfig(rootCell.getBuckConfig()),
-            !rootCell.getKnownRoots().contains(fsRootPath));
+          RecordedFileHashes fileHashes = getRemoteFileHashes(cellIndexer.apply(fsRootPath));
+          if (rootCell.getKnownRoots().contains(fsRootPath)) {
+            Cell cell = rootCell.getCell(fsRootPath);
+            return RecordingProjectFileHashCache.createForCellRoot(
+                originalCache,
+                fileHashes,
+                new DistBuildConfig(cell.getBuckConfig()));
+          } else {
+            return RecordingProjectFileHashCache.createForNonCellRoot(
+                originalCache,
+                fileHashes);
+          }
         });
 
     this.ruleKeyFactories =
@@ -97,20 +105,17 @@ public class DistBuildFileHashes {
             recordingHashCache,
             keySeed);
     this.ruleKeys =
-
         ruleKeyComputation(actionGraph, this.ruleKeyFactories, executorService);
     this.fileHashes =
-
         fileHashesComputation(
             Futures.transform(this.ruleKeys, Functions.constant(null)),
             ImmutableList.copyOf(this.remoteFileHashes.values()),
             executorService);
   }
 
-  public BuildJobStateFileHashes getRemoteFileHashes(Integer cellIndex) {
+  public RecordedFileHashes getRemoteFileHashes(Integer cellIndex) {
     if (!remoteFileHashes.containsKey(cellIndex)) {
-      BuildJobStateFileHashes fileHashes = new BuildJobStateFileHashes();
-      fileHashes.setCellIndex(cellIndex);
+      RecordedFileHashes fileHashes = new RecordedFileHashes(cellIndex);
       remoteFileHashes.put(cellIndex, fileHashes);
     }
 
@@ -163,15 +168,15 @@ public class DistBuildFileHashes {
         executorService);
   }
 
-  private static ListenableFuture<ImmutableList<BuildJobStateFileHashes>> fileHashesComputation(
+  private static ListenableFuture<ImmutableList<RecordedFileHashes>> fileHashesComputation(
       ListenableFuture<Void> ruleKeyComputationForSideEffect,
-      final ImmutableList<BuildJobStateFileHashes> remoteFileHashes,
+      final ImmutableList<RecordedFileHashes> remoteFileHashes,
       ListeningExecutorService executorService) {
     return Futures.transform(
         ruleKeyComputationForSideEffect,
-        new Function<Void, ImmutableList<BuildJobStateFileHashes>>() {
+        new Function<Void, ImmutableList<RecordedFileHashes>>() {
           @Override
-          public ImmutableList<BuildJobStateFileHashes> apply(Void input) {
+          public ImmutableList<RecordedFileHashes> apply(Void input) {
             return ImmutableList.copyOf(remoteFileHashes);
           }
         },
@@ -181,11 +186,25 @@ public class DistBuildFileHashes {
   public List<BuildJobStateFileHashes> getFileHashes()
       throws IOException, InterruptedException {
     try {
-      return fileHashes.get();
+
+      ImmutableList<BuildJobStateFileHashes> hashes = fileHashes.get()
+          .stream()
+          .map(recordedHash -> recordedHash.getRemoteFileHashes())
+          .collect(MoreCollectors.toImmutableList());
+      checkNoDuplicates(hashes);
+      return hashes;
     } catch (ExecutionException e) {
       Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
       Throwables.throwIfInstanceOf(e.getCause(), InterruptedException.class);
       throw new RuntimeException(e.getCause());
+    }
+  }
+
+  private void checkNoDuplicates(ImmutableList<BuildJobStateFileHashes> hashes) {
+    for (BuildJobStateFileHashes hash : hashes) {
+      if (hash.isSetEntries()) {
+        Maps.uniqueIndex(hash.entries, entry -> entry.getPath().getPath().toString());
+      }
     }
   }
 

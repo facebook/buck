@@ -73,16 +73,17 @@ public class RecordingFileHashLoaderTest {
     Path symlinkRelPath = projectFilesystem.relativize(symlinkAbsPath);
     Files.createSymbolicLink(symlinkAbsPath, externalFile);
 
-    BuildJobStateFileHashes fileHashes = new BuildJobStateFileHashes();
+    RecordedFileHashes recordedFileHashes = new RecordedFileHashes(0);
+    BuildJobStateFileHashes fileHashes = recordedFileHashes.getRemoteFileHashes();
     FakeProjectFileHashCache delegateCache = new FakeProjectFileHashCache(
         projectFilesystem,
         ImmutableMap.of(
             symlinkRelPath,
             EXAMPLE_HASHCODE));
 
-    RecordingProjectFileHashCache recordingLoader = new RecordingProjectFileHashCache(
+    RecordingProjectFileHashCache recordingLoader = RecordingProjectFileHashCache.createForCellRoot(
         delegateCache,
-        fileHashes,
+        recordedFileHashes,
         new DistBuildConfig(FakeBuckConfig.builder().build()));
 
     recordingLoader.get(symlinkRelPath);
@@ -117,7 +118,8 @@ public class RecordingFileHashLoaderTest {
     Path symlink = projectFilesystem.relativize(symlinkRoot.resolve(
         "externalfile")); // /project/linktoexternaldir/externalfile
 
-    BuildJobStateFileHashes fileHashes = new BuildJobStateFileHashes();
+    RecordedFileHashes recordedFileHashes = new RecordedFileHashes(0);
+    BuildJobStateFileHashes fileHashes = recordedFileHashes.getRemoteFileHashes();
 
     FakeProjectFileHashCache delegateCache = new FakeProjectFileHashCache(
         projectFilesystem,
@@ -125,9 +127,9 @@ public class RecordingFileHashLoaderTest {
             symlink,
             EXAMPLE_HASHCODE));
 
-    RecordingProjectFileHashCache recordingLoader = new RecordingProjectFileHashCache(
+    RecordingProjectFileHashCache recordingLoader = RecordingProjectFileHashCache.createForCellRoot(
         delegateCache,
-        fileHashes,
+        recordedFileHashes,
         new DistBuildConfig(FakeBuckConfig.builder().build()));
 
     recordingLoader.get(symlink);
@@ -167,7 +169,8 @@ public class RecordingFileHashLoaderTest {
     Files.createDirectories(fs.getRootPath().resolve("a/b/d"));
     Files.createFile(fs.getRootPath().resolve("a/e"));
 
-    BuildJobStateFileHashes fileHashes = new BuildJobStateFileHashes();
+    RecordedFileHashes recordedFileHashes = new RecordedFileHashes(0);
+    BuildJobStateFileHashes fileHashes = recordedFileHashes.getRemoteFileHashes();
 
     ProjectFileHashCache delegateCacheMock = EasyMock.createMock(
         ProjectFileHashCache.class);
@@ -176,9 +179,9 @@ public class RecordingFileHashLoaderTest {
         delegateCacheMock.get(anyObject(Path.class))).andReturn(EXAMPLE_HASHCODE).anyTimes();
     replay(delegateCacheMock);
 
-    RecordingProjectFileHashCache recordingLoader = new RecordingProjectFileHashCache(
+    RecordingProjectFileHashCache recordingLoader = RecordingProjectFileHashCache.createForCellRoot(
         delegateCacheMock,
-        fileHashes,
+        recordedFileHashes,
         new DistBuildConfig(FakeBuckConfig.builder().build()));
 
     recordingLoader.get(fs.relativize(pathDirA));
