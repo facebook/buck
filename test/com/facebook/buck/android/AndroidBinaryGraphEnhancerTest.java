@@ -37,7 +37,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -321,7 +321,7 @@ public class AndroidBinaryGraphEnhancerTest {
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
     // Verify that android_build_config() was processed correctly.
-    Flavor flavor = ImmutableFlavor.of("buildconfig_com_example_buck");
+    Flavor flavor = InternalFlavor.of("buildconfig_com_example_buck");
     final SourcePathResolver pathResolver =
         new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
     BuildTarget enhancedBuildConfigTarget = BuildTarget

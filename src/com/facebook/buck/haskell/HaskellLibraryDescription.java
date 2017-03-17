@@ -29,7 +29,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -576,9 +576,9 @@ public class HaskellLibraryDescription implements
 
   protected enum Type implements FlavorConvertible {
 
-    PACKAGE_SHARED(ImmutableFlavor.of("package-shared")),
-    PACKAGE_STATIC(ImmutableFlavor.of("package-static")),
-    PACKAGE_STATIC_PIC(ImmutableFlavor.of("package-static-pic")),
+    PACKAGE_SHARED(InternalFlavor.of("package-shared")),
+    PACKAGE_STATIC(InternalFlavor.of("package-static")),
+    PACKAGE_STATIC_PIC(InternalFlavor.of("package-static-pic")),
 
     SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR),
     STATIC(CxxDescriptionEnhancer.STATIC_FLAVOR),

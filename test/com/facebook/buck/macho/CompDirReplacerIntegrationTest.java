@@ -28,7 +28,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -60,25 +60,25 @@ public class CompDirReplacerIntegrationTest {
 
   @Test
   public void testCompDirReplacerForIntel64Bit() throws Exception {
-    Flavor platformFlavor = ImmutableFlavor.of("iphonesimulator-x86_64");
+    Flavor platformFlavor = InternalFlavor.of("iphonesimulator-x86_64");
     runCompDirReplacerWithPlatformFlavor(platformFlavor);
   }
 
   @Test
   public void testCompDirReplacerForIntel32Bit() throws Exception {
-    Flavor platformFlavor = ImmutableFlavor.of("iphonesimulator-i386");
+    Flavor platformFlavor = InternalFlavor.of("iphonesimulator-i386");
     runCompDirReplacerWithPlatformFlavor(platformFlavor);
   }
 
   @Test
   public void testCompDirReplacerForArm64Bit() throws Exception {
-    Flavor platformFlavor = ImmutableFlavor.of("iphoneos-arm64");
+    Flavor platformFlavor = InternalFlavor.of("iphoneos-arm64");
     runCompDirReplacerWithPlatformFlavor(platformFlavor);
   }
 
   @Test
   public void testCompDirReplacerForArm32Bit() throws Exception {
-    Flavor platformFlavor = ImmutableFlavor.of("iphoneos-armv7");
+    Flavor platformFlavor = InternalFlavor.of("iphoneos-armv7");
     runCompDirReplacerWithPlatformFlavor(platformFlavor);
   }
 
@@ -105,7 +105,7 @@ public class CompDirReplacerIntegrationTest {
                 filesystem,
                 target.withFlavors(
                     platformFlavor,
-                    ImmutableFlavor.of("compile-" + sanitize("main.c.o"))),
+                    InternalFlavor.of("compile-" + sanitize("main.c.o"))),
                 "%s")
             .resolve("main.c.o"));
     Path unsanizitedObjectFilePath = workspace.getPath(

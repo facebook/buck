@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -54,7 +54,7 @@ public class CxxPrecompiledHeaderTemplate
     implements NativeLinkable, CxxPreprocessorDep {
 
   private static final Flavor AGGREGATED_PREPROCESS_DEPS_FLAVOR =
-      ImmutableFlavor.of("preprocessor-deps");
+      InternalFlavor.of("preprocessor-deps");
 
   public final BuildRuleParams params;
   public final BuildRuleResolver ruleResolver;

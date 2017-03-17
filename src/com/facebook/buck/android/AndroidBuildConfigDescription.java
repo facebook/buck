@@ -21,7 +21,7 @@ import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
@@ -45,7 +45,7 @@ import java.util.Optional;
 public class AndroidBuildConfigDescription
     implements Description<AndroidBuildConfigDescription.Arg> {
 
-  private static final Flavor GEN_JAVA_FLAVOR = ImmutableFlavor.of("gen_java_android_build_config");
+  private static final Flavor GEN_JAVA_FLAVOR = InternalFlavor.of("gen_java_android_build_config");
   private final JavacOptions androidJavacOptions;
 
   public AndroidBuildConfigDescription(JavacOptions androidJavacOptions) {
@@ -127,7 +127,7 @@ public class AndroidBuildConfigDescription
       // android_binary() graph enhancement case.
       Preconditions.checkArgument(useConstantExpressions);
       buildConfigBuildTarget = params.getBuildTarget().withFlavors(
-          ImmutableFlavor.of(GEN_JAVA_FLAVOR.getName() + '_' + javaPackage.replace('.', '_')));
+          InternalFlavor.of(GEN_JAVA_FLAVOR.getName() + '_' + javaPackage.replace('.', '_')));
     }
 
     // Create one build rule to generate BuildConfig.java.

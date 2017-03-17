@@ -26,7 +26,7 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -96,7 +96,7 @@ public class APKModuleTest {
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance(
         "//src/com/facebook/test-java-library:test-java-library")
-        .withFlavors(ImmutableFlavor.of("flavor"));
+        .withFlavors(InternalFlavor.of("flavor"));
     nodeBuilder.add(
         JavaLibraryBuilder
             .createBuilder(javaLibraryTarget)

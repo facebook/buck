@@ -132,7 +132,7 @@ import com.facebook.buck.lua.LuaConfig;
 import com.facebook.buck.lua.LuaLibraryDescription;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.ocaml.OcamlBinaryDescription;
 import com.facebook.buck.ocaml.OcamlBuckConfig;
 import com.facebook.buck.ocaml.OcamlLibraryDescription;
@@ -456,7 +456,7 @@ public class KnownBuildRuleTypes {
     hostFlavor = DefaultCxxPlatforms.FLAVOR;
     Optional<String> hostCxxPlatformOverride = cxxBuckConfig.getHostPlatform();
     if (hostCxxPlatformOverride.isPresent()) {
-      Flavor overrideFlavor = ImmutableFlavor.of(hostCxxPlatformOverride.get());
+      Flavor overrideFlavor = InternalFlavor.of(hostCxxPlatformOverride.get());
       if (cxxOverridePlatformsMap.containsKey(overrideFlavor)) {
         hostFlavor = overrideFlavor;
       }

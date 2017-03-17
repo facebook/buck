@@ -22,7 +22,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -48,7 +48,7 @@ public class AppleDsym
     extends AbstractBuildRule
     implements HasPostBuildSteps, SupportsInputBasedRuleKey {
 
-  public static final Flavor RULE_FLAVOR = ImmutableFlavor.of("apple-dsym");
+  public static final Flavor RULE_FLAVOR = InternalFlavor.of("apple-dsym");
   public static final String DSYM_DWARF_FILE_FOLDER = "Contents/Resources/DWARF/";
 
   @AddToRuleKey

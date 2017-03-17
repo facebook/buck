@@ -23,7 +23,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -82,17 +82,17 @@ public class CxxDescriptionEnhancer {
 
   private static final Logger LOG = Logger.get(CxxDescriptionEnhancer.class);
 
-  public static final Flavor SANDBOX_TREE_FLAVOR = ImmutableFlavor.of("sandbox");
-  public static final Flavor HEADER_SYMLINK_TREE_FLAVOR = ImmutableFlavor.of("private-headers");
-  public static final Flavor EXPORTED_HEADER_SYMLINK_TREE_FLAVOR = ImmutableFlavor.of("headers");
-  public static final Flavor STATIC_FLAVOR = ImmutableFlavor.of("static");
-  public static final Flavor STATIC_PIC_FLAVOR = ImmutableFlavor.of("static-pic");
-  public static final Flavor SHARED_FLAVOR = ImmutableFlavor.of("shared");
-  public static final Flavor MACH_O_BUNDLE_FLAVOR = ImmutableFlavor.of("mach-o-bundle");
+  public static final Flavor SANDBOX_TREE_FLAVOR = InternalFlavor.of("sandbox");
+  public static final Flavor HEADER_SYMLINK_TREE_FLAVOR = InternalFlavor.of("private-headers");
+  public static final Flavor EXPORTED_HEADER_SYMLINK_TREE_FLAVOR = InternalFlavor.of("headers");
+  public static final Flavor STATIC_FLAVOR = InternalFlavor.of("static");
+  public static final Flavor STATIC_PIC_FLAVOR = InternalFlavor.of("static-pic");
+  public static final Flavor SHARED_FLAVOR = InternalFlavor.of("shared");
+  public static final Flavor MACH_O_BUNDLE_FLAVOR = InternalFlavor.of("mach-o-bundle");
   public static final Flavor SHARED_LIBRARY_SYMLINK_TREE_FLAVOR =
-      ImmutableFlavor.of("shared-library-symlink-tree");
+      InternalFlavor.of("shared-library-symlink-tree");
 
-  public static final Flavor CXX_LINK_BINARY_FLAVOR = ImmutableFlavor.of("binary");
+  public static final Flavor CXX_LINK_BINARY_FLAVOR = InternalFlavor.of("binary");
 
   protected static final MacroHandler MACRO_HANDLER =
       new MacroHandler(

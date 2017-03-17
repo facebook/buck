@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -98,7 +98,7 @@ public class AndroidExopackageBinaryIntegrationTest {
         BuildTargets.getScratchPath(
             filesystem,
             BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET)
-                .withFlavors(ImmutableFlavor.of("dex_merge")),
+                .withFlavors(InternalFlavor.of("dex_merge")),
             "_%s_output/jarfiles/assets/secondary-program-dex-jars"));
 
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(secondaryDir)) {

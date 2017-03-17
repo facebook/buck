@@ -27,7 +27,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -291,7 +291,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
     CxxPlatform platform =
         CxxPlatformUtils.DEFAULT_PLATFORM
-            .withFlavor(ImmutableFlavor.of("PLATFORM1"));
+            .withFlavor(InternalFlavor.of("PLATFORM1"));
 
     Path path = pathResolver.getAbsolutePath(
         Preconditions.checkNotNull(genRule.getSourcePathToOutput()));
@@ -319,7 +319,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
     CxxPlatform platform =
         CxxPlatformUtils.DEFAULT_PLATFORM
-            .withFlavor(ImmutableFlavor.of("PLATFORM1"));
+            .withFlavor(InternalFlavor.of("PLATFORM1"));
 
     final SourcePath staticLibraryPath = PrebuiltCxxLibraryDescription.getStaticLibraryPath(
         TARGET_TWO,
@@ -399,10 +399,10 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
     CxxPlatform platform1 =
         CxxPlatformUtils.DEFAULT_PLATFORM
-            .withFlavor(ImmutableFlavor.of("PLATFORM1"));
+            .withFlavor(InternalFlavor.of("PLATFORM1"));
     CxxPlatform platform2 =
         CxxPlatformUtils.DEFAULT_PLATFORM
-            .withFlavor(ImmutableFlavor.of("PLATFORM2"));
+            .withFlavor(InternalFlavor.of("PLATFORM2"));
 
     assertEquals(
         filesystem.resolve(

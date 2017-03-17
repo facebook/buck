@@ -21,7 +21,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HashedFileTool;
@@ -88,7 +88,7 @@ public class GoBuckConfig {
       Optional<GoPlatform> platform;
       if (configValue.isPresent()) {
         platform = platformFlavorDomain.get().getValue(
-            ImmutableFlavor.of(configValue.get()));
+            InternalFlavor.of(configValue.get()));
         if (!platform.isPresent()) {
           throw new HumanReadableException(
               "Bad go platform value for %s.default_platform = %s", SECTION, configValue);

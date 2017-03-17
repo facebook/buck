@@ -19,7 +19,7 @@ package com.facebook.buck.versions;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
@@ -199,7 +199,7 @@ public class VersionedTargetGraphBuilder {
       hasher.putString(ent.getKey().toString(), Charsets.UTF_8);
       hasher.putString(ent.getValue().getName(), Charsets.UTF_8);
     }
-    return ImmutableFlavor.of("v" + hasher.hash().toString().substring(0, 7));
+    return InternalFlavor.of("v" + hasher.hash().toString().substring(0, 7));
   }
 
   private TargetNode<?, ?> resolveVersions(

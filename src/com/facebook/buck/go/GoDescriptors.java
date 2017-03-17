@@ -23,7 +23,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
@@ -62,7 +62,7 @@ abstract class GoDescriptors {
 
   private static final String TEST_MAIN_GEN_PATH = "com/facebook/buck/go/testmaingen.go";
   public static final Flavor TRANSITIVE_LINKABLES_FLAVOR =
-      ImmutableFlavor.of("transitive-linkables");
+      InternalFlavor.of("transitive-linkables");
 
   @SuppressWarnings("unchecked")
   public static ImmutableSet<GoLinkable> requireTransitiveGoLinkables(
@@ -199,7 +199,7 @@ abstract class GoDescriptors {
       GoPlatform platform) throws NoSuchBuildTargetException {
     BuildTarget libraryTarget =
         params.getBuildTarget().withAppendedFlavors(
-            ImmutableFlavor.of("compile"), platform.getFlavor());
+            InternalFlavor.of("compile"), platform.getFlavor());
     GoCompile library = GoDescriptors.createGoCompileRule(
         params.withBuildTarget(libraryTarget),
         resolver,
@@ -262,7 +262,7 @@ abstract class GoDescriptors {
     // TODO(mikekap): Make a single test main gen, rather than one per test. The generator itself
     // doesn't vary per test.
     BuildTarget generatorTarget = sourceParams.getBuildTarget()
-        .withFlavors(ImmutableFlavor.of("make-test-main-gen"));
+        .withFlavors(InternalFlavor.of("make-test-main-gen"));
     Optional<BuildRule> generator = resolver.getRuleOptional(generatorTarget);
     if (generator.isPresent()) {
       return ((BinaryBuildRule) generator.get()).getExecutableCommand();
@@ -270,7 +270,7 @@ abstract class GoDescriptors {
 
     BuildTarget generatorSourceTarget =
         sourceParams.getBuildTarget()
-            .withAppendedFlavors(ImmutableFlavor.of("test-main-gen-source"));
+            .withAppendedFlavors(InternalFlavor.of("test-main-gen-source"));
     WriteFile writeFile =
         resolver.addToIndex(
             new WriteFile(
@@ -314,13 +314,13 @@ abstract class GoDescriptors {
 
   private static BuildTarget createSymlinkTreeTarget(BuildTarget source) {
     return BuildTarget.builder(source)
-        .addFlavors(ImmutableFlavor.of("symlink-tree"))
+        .addFlavors(InternalFlavor.of("symlink-tree"))
         .build();
   }
 
   private static BuildTarget createTransitiveSymlinkTreeTarget(BuildTarget source) {
     return BuildTarget.builder(source)
-        .addFlavors(ImmutableFlavor.of("transitive-symlink-tree"))
+        .addFlavors(InternalFlavor.of("transitive-symlink-tree"))
         .build();
   }
 

@@ -39,7 +39,8 @@ import com.facebook.buck.cxx.PreprocessorProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.UserFlavor;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.VersionedTool;
@@ -286,9 +287,10 @@ public class AppleCxxPlatforms {
 
     CxxBuckConfig config = new CxxBuckConfig(buckConfig);
 
-    ImmutableFlavor targetFlavor = ImmutableFlavor.of(
-        ImmutableFlavor.replaceInvalidCharacters(
-            targetSdk.getName() + "-" + targetArchitecture));
+    UserFlavor targetFlavor = UserFlavor.of(
+        Flavor.replaceInvalidCharacters(
+            targetSdk.getName() + "-" + targetArchitecture),
+        String.format("SDK: %s, architecture: %s", targetSdk.getName(), targetArchitecture));
 
     ImmutableBiMap.Builder<Path, Path> sanitizerPaths = ImmutableBiMap.builder();
     sanitizerPaths.put(sdkPaths.getSdkPath(), Paths.get("APPLE_SDKROOT"));

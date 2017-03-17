@@ -20,7 +20,7 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 
 /**
  * Rust-specific flavors.
@@ -28,11 +28,11 @@ import com.facebook.buck.model.ImmutableFlavor;
 public class RustDescriptionEnhancer {
   private RustDescriptionEnhancer() {}
 
-  public static final Flavor RFBIN = ImmutableFlavor.of("binary");
-  public static final Flavor RFLIB = ImmutableFlavor.of("lib");
-  public static final Flavor RFRLIB = ImmutableFlavor.of("rlib");
-  public static final Flavor RFRLIB_PIC = ImmutableFlavor.of("rlib-pic");
-  public static final Flavor RFDYLIB = ImmutableFlavor.of("dylib");
+  public static final Flavor RFBIN = InternalFlavor.of("binary");
+  public static final Flavor RFLIB = InternalFlavor.of("lib");
+  public static final Flavor RFRLIB = InternalFlavor.of("rlib");
+  public static final Flavor RFRLIB_PIC = InternalFlavor.of("rlib-pic");
+  public static final Flavor RFDYLIB = InternalFlavor.of("dylib");
 
   /**
    * Flavor of Rust crate

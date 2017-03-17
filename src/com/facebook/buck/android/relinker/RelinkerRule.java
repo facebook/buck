@@ -22,7 +22,7 @@ import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -162,7 +162,7 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
       relinkerSteps.addAll(
           new CxxLink(
               buildRuleParams
-                  .withAppendedFlavor(ImmutableFlavor.of("cxx-link"))
+                  .withAppendedFlavor(InternalFlavor.of("cxx-link"))
                   .withoutFlavor(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
               linker,
               getLibFilePath(),

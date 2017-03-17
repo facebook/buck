@@ -19,7 +19,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleParams;
 
 import java.util.Optional;
@@ -28,7 +28,7 @@ import java.util.Optional;
  * Defines if linker map should be generated or not.
  */
 public enum LinkerMapMode implements FlavorConvertible {
-  NO_LINKER_MAP(ImmutableFlavor.of("no-linkermap")),
+  NO_LINKER_MAP(InternalFlavor.of("no-linkermap")),
   ;
 
   private final Flavor flavor;

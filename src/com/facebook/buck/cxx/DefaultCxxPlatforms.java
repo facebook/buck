@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.util.environment.Platform;
@@ -41,7 +41,7 @@ public class DefaultCxxPlatforms {
   // Utility class, do not instantiate.
   private DefaultCxxPlatforms() { }
 
-  public static final Flavor FLAVOR = ImmutableFlavor.of("default");
+  public static final Flavor FLAVOR = InternalFlavor.of("default");
 
   private static final Path DEFAULT_C_FRONTEND = Paths.get("/usr/bin/gcc");
   private static final Path DEFAULT_CXX_FRONTEND = Paths.get("/usr/bin/g++");

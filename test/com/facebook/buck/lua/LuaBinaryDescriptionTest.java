@@ -30,7 +30,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.python.CxxPythonExtensionBuilder;
 import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonEnvironment;
@@ -73,7 +73,7 @@ public class LuaBinaryDescriptionTest {
       BuildTargetFactory.newInstance("//:python2_dep");
   private static final PythonPlatform PY2 =
       PythonPlatform.of(
-          ImmutableFlavor.of("py2"),
+          InternalFlavor.of("py2"),
           new PythonEnvironment(Paths.get("python2"), PythonVersion.of("CPython", "2.6")),
           Optional.of(PYTHON2_DEP_TARGET));
 
@@ -81,7 +81,7 @@ public class LuaBinaryDescriptionTest {
       BuildTargetFactory.newInstance("//:python3_dep");
   private static final PythonPlatform PY3 =
       PythonPlatform.of(
-          ImmutableFlavor.of("py3"),
+          InternalFlavor.of("py3"),
           new PythonEnvironment(Paths.get("python3"), PythonVersion.of("CPython", "3.5")),
           Optional.of(PYTHON3_DEP_TARGET));
 

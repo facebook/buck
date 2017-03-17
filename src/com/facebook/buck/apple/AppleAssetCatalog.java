@@ -18,7 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -40,7 +40,7 @@ import javax.annotation.Nullable;
 
 public class AppleAssetCatalog extends AbstractBuildRule {
 
-  public static final Flavor FLAVOR = ImmutableFlavor.of("apple-asset-catalog");
+  public static final Flavor FLAVOR = InternalFlavor.of("apple-asset-catalog");
 
   private static final String BUNDLE_DIRECTORY_EXTENSION = ".bundle";
 

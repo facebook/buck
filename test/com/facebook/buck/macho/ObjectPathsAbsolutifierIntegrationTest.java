@@ -34,7 +34,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.FakeAppleDeveloperEnvironment;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -85,25 +85,25 @@ public class ObjectPathsAbsolutifierIntegrationTest {
 
   @Test
   public void testAbsolutifyingPathsForIntel64Bit() throws IOException, InterruptedException {
-    Flavor platformFlavor = ImmutableFlavor.of("iphonesimulator-x86_64");
+    Flavor platformFlavor = InternalFlavor.of("iphonesimulator-x86_64");
     runAndCheckAbsolutificationWithPlatformFlavor(platformFlavor);
   }
 
   @Test
   public void testAbsolutifyingPathsForIntel32Bit() throws IOException, InterruptedException {
-    Flavor platformFlavor = ImmutableFlavor.of("iphonesimulator-i386");
+    Flavor platformFlavor = InternalFlavor.of("iphonesimulator-i386");
     runAndCheckAbsolutificationWithPlatformFlavor(platformFlavor);
   }
 
   @Test
   public void testAbsolutifyingPathsForArm64Bit() throws IOException, InterruptedException {
-    Flavor platformFlavor = ImmutableFlavor.of("iphoneos-arm64");
+    Flavor platformFlavor = InternalFlavor.of("iphoneos-arm64");
     runAndCheckAbsolutificationWithPlatformFlavor(platformFlavor);
   }
 
   @Test
   public void testAbsolutifyingPathsForArm32Bit() throws IOException, InterruptedException {
-    Flavor platformFlavor = ImmutableFlavor.of("iphoneos-armv7");
+    Flavor platformFlavor = InternalFlavor.of("iphoneos-armv7");
     runAndCheckAbsolutificationWithPlatformFlavor(platformFlavor);
   }
 
@@ -129,7 +129,7 @@ public class ObjectPathsAbsolutifierIntegrationTest {
             filesystem,
             target.withFlavors(
                 platformFlavor,
-                ImmutableFlavor.of("compile-" + sanitize("main.c.o"))),
+                InternalFlavor.of("compile-" + sanitize("main.c.o"))),
             "%s")
         .resolve("main.c.o");
 

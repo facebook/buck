@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -44,23 +44,23 @@ public final class CxxInferEnhancer {
   private CxxInferEnhancer() {}
 
   public enum InferFlavors {
-    INFER(ImmutableFlavor.of("infer")),
-    INFER_ANALYZE(ImmutableFlavor.of("infer-analyze")),
-    INFER_CAPTURE(ImmutableFlavor.of("infer-capture")),
-    INFER_CAPTURE_ALL(ImmutableFlavor.of("infer-capture-all")),
-    INFER_CAPTURE_ONLY(ImmutableFlavor.of("infer-capture-only"));
+    INFER(InternalFlavor.of("infer")),
+    INFER_ANALYZE(InternalFlavor.of("infer-analyze")),
+    INFER_CAPTURE(InternalFlavor.of("infer-capture")),
+    INFER_CAPTURE_ALL(InternalFlavor.of("infer-capture-all")),
+    INFER_CAPTURE_ONLY(InternalFlavor.of("infer-capture-only"));
 
-    private final ImmutableFlavor flavor;
-    InferFlavors(ImmutableFlavor flavor) {
+    private final InternalFlavor flavor;
+    InferFlavors(InternalFlavor flavor) {
       this.flavor = flavor;
     }
 
-    public ImmutableFlavor get() {
+    public InternalFlavor get() {
       return flavor;
     }
 
-    public static ImmutableSet<ImmutableFlavor> getAll() {
-      ImmutableSet.Builder<ImmutableFlavor> builder = ImmutableSet.builder();
+    public static ImmutableSet<InternalFlavor> getAll() {
+      ImmutableSet.Builder<InternalFlavor> builder = ImmutableSet.builder();
       for (InferFlavors f : values()) {
         builder.add(f.get());
       }

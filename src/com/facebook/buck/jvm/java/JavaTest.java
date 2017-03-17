@@ -25,7 +25,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -93,7 +93,7 @@ public class JavaTest
     implements TestRule, HasClasspathEntries, HasRuntimeDeps, HasPostBuildSteps,
         ExternalTestRunnerRule, ExportDependencies {
 
-  public static final Flavor COMPILED_TESTS_LIBRARY_FLAVOR = ImmutableFlavor.of("testsjar");
+  public static final Flavor COMPILED_TESTS_LIBRARY_FLAVOR = InternalFlavor.of("testsjar");
 
   // TODO(#9027062): Migrate this to a PackagedResource so we don't make assumptions
   // about the ant build.

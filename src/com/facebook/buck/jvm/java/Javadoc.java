@@ -21,7 +21,7 @@ import static com.facebook.buck.zip.ZipCompressionLevel.DEFAULT_COMPRESSION_LEVE
 import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -49,7 +49,7 @@ import java.util.Optional;
 
 public class Javadoc extends AbstractBuildRule implements MavenPublishable {
 
-  public static final Flavor DOC_JAR = ImmutableFlavor.of("doc");
+  public static final Flavor DOC_JAR = InternalFlavor.of("doc");
 
   @AddToRuleKey
   private final ImmutableSet<SourcePath> sources;

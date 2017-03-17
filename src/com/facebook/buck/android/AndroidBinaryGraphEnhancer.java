@@ -32,7 +32,7 @@ import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -68,23 +68,23 @@ import java.util.regex.Pattern;
 
 public class AndroidBinaryGraphEnhancer {
 
-  public static final Flavor DEX_FLAVOR = ImmutableFlavor.of("dex");
-  public static final Flavor DEX_MERGE_FLAVOR = ImmutableFlavor.of("dex_merge");
-  public static final Flavor RESOURCES_FILTER_FLAVOR = ImmutableFlavor.of("resources_filter");
-  public static final Flavor AAPT_PACKAGE_FLAVOR = ImmutableFlavor.of("aapt_package");
-  private static final Flavor CALCULATE_ABI_FLAVOR = ImmutableFlavor.of("calculate_exopackage_abi");
+  public static final Flavor DEX_FLAVOR = InternalFlavor.of("dex");
+  public static final Flavor DEX_MERGE_FLAVOR = InternalFlavor.of("dex_merge");
+  public static final Flavor RESOURCES_FILTER_FLAVOR = InternalFlavor.of("resources_filter");
+  public static final Flavor AAPT_PACKAGE_FLAVOR = InternalFlavor.of("aapt_package");
+  private static final Flavor CALCULATE_ABI_FLAVOR = InternalFlavor.of("calculate_exopackage_abi");
   public static final Flavor PACKAGE_STRING_ASSETS_FLAVOR =
-      ImmutableFlavor.of("package_string_assets");
+      InternalFlavor.of("package_string_assets");
   private static final Flavor TRIM_UBER_R_DOT_JAVA_FLAVOR =
-      ImmutableFlavor.of("trim_uber_r_dot_java");
+      InternalFlavor.of("trim_uber_r_dot_java");
   private static final Flavor COMPILE_UBER_R_DOT_JAVA_FLAVOR =
-      ImmutableFlavor.of("compile_uber_r_dot_java");
+      InternalFlavor.of("compile_uber_r_dot_java");
   private static final Flavor DEX_UBER_R_DOT_JAVA_FLAVOR =
-      ImmutableFlavor.of("dex_uber_r_dot_java");
+      InternalFlavor.of("dex_uber_r_dot_java");
   private static final Flavor GENERATE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR =
-      ImmutableFlavor.of("generate_native_lib_merge_map_generated_code");
+      InternalFlavor.of("generate_native_lib_merge_map_generated_code");
   private static final Flavor COMPILE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR =
-      ImmutableFlavor.of("compile_native_lib_merge_map_generated_code");
+      InternalFlavor.of("compile_native_lib_merge_map_generated_code");
 
   private final BuildTarget originalBuildTarget;
   private final ImmutableSortedSet<BuildRule> originalDeps;
@@ -555,7 +555,7 @@ public class AndroidBinaryGraphEnhancer {
       // Each enhanced dep needs a unique build target, so we parameterize the build target by the
       // Java package.
       String javaPackage = entry.getKey();
-      Flavor flavor = ImmutableFlavor.of("buildconfig_" + javaPackage.replace('.', '_'));
+      Flavor flavor = InternalFlavor.of("buildconfig_" + javaPackage.replace('.', '_'));
       BuildTarget buildTargetWithFlavors = BuildTarget.builder(originalParams.getBuildTarget())
           .addFlavors(flavor)
           .build();

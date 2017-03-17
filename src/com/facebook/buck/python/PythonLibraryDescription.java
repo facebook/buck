@@ -22,7 +22,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasTests;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.python.PythonLibraryDescription.Arg;
 import com.facebook.buck.rules.AbstractDescriptionArg;
@@ -144,7 +144,7 @@ public class PythonLibraryDescription
 
   enum MetadataType implements FlavorConvertible {
 
-    PACKAGE_COMPONENTS(ImmutableFlavor.of("package-components")),
+    PACKAGE_COMPONENTS(InternalFlavor.of("package-components")),
     ;
 
     private final Flavor flavor;

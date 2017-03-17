@@ -32,7 +32,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -88,8 +88,8 @@ public class AppleLibraryIntegrationTest {
     result.assertSuccess();
 
     BuildTarget implicitTarget = target.withAppendedFlavors(
-        ImmutableFlavor.of("shared"),
-        ImmutableFlavor.of("iphonesimulator-x86_64")
+        InternalFlavor.of("shared"),
+        InternalFlavor.of("iphonesimulator-x86_64")
     );
     assertTrue(
         Files.exists(workspace.getPath(BuildTargets.getGenPath(filesystem, implicitTarget, "%s"))));
@@ -110,8 +110,8 @@ public class AppleLibraryIntegrationTest {
     result.assertSuccess();
 
     BuildTarget implicitTarget = target.withAppendedFlavors(
-        ImmutableFlavor.of("shared"),
-        ImmutableFlavor.of("iphoneos-arm64")
+        InternalFlavor.of("shared"),
+        InternalFlavor.of("iphoneos-arm64")
     );
     Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, implicitTarget, "%s"));
     assertTrue(Files.exists(outputPath));
@@ -398,7 +398,7 @@ public class AppleLibraryIntegrationTest {
     BuildTarget target =
         BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary")
         .withAppendedFlavors(
-            ImmutableFlavor.of("macosx-x86_64"),
+            InternalFlavor.of("macosx-x86_64"),
             CxxDescriptionEnhancer.SHARED_FLAVOR);
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
@@ -426,7 +426,7 @@ public class AppleLibraryIntegrationTest {
         .withAppendedFlavors(
             CxxDescriptionEnhancer.SHARED_FLAVOR,
             AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
-            ImmutableFlavor.of("macosx-x86_64"));
+            InternalFlavor.of("macosx-x86_64"));
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
@@ -618,8 +618,8 @@ public class AppleLibraryIntegrationTest {
         .getGenPath(
             filesystem,
             target.withFlavors(
-                ImmutableFlavor.of("compile-" + sanitize("TestClass.m.o")),
-                ImmutableFlavor.of("iphonesimulator-x86_64")),
+                InternalFlavor.of("compile-" + sanitize("TestClass.m.o")),
+                InternalFlavor.of("iphonesimulator-x86_64")),
             "%s")
         .resolve("TestClass.m.o");
     MoreAsserts.assertContentsEqual(

@@ -32,7 +32,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
@@ -67,8 +67,8 @@ public class SwiftLibraryDescription implements
     Description<SwiftLibraryDescription.Arg>,
     Flavored {
 
-  static final Flavor SWIFT_COMPANION_FLAVOR = ImmutableFlavor.of("swift-companion");
-  static final Flavor SWIFT_COMPILE_FLAVOR = ImmutableFlavor.of("swift-compile");
+  static final Flavor SWIFT_COMPANION_FLAVOR = InternalFlavor.of("swift-companion");
+  static final Flavor SWIFT_COMPILE_FLAVOR = InternalFlavor.of("swift-compile");
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       SWIFT_COMPANION_FLAVOR,

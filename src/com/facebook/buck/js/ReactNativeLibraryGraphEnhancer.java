@@ -19,7 +19,7 @@ package com.facebook.buck.js;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -34,8 +34,8 @@ import com.google.common.collect.ImmutableSortedSet;
 
 public class ReactNativeLibraryGraphEnhancer {
 
-  private static final Flavor REACT_NATIVE_BUNDLE_FLAVOR = ImmutableFlavor.of("bundle");
-  private static final Flavor REACT_NATIVE_ANDROID_RES_FLAVOR = ImmutableFlavor.of("android_res");
+  private static final Flavor REACT_NATIVE_BUNDLE_FLAVOR = InternalFlavor.of("bundle");
+  private static final Flavor REACT_NATIVE_ANDROID_RES_FLAVOR = InternalFlavor.of("android_res");
 
   private final ReactNativeBuckConfig buckConfig;
 

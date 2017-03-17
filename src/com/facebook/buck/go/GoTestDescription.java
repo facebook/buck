@@ -21,7 +21,7 @@ import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
@@ -58,7 +58,7 @@ public class GoTestDescription implements
     MetadataProvidingDescription<GoTestDescription.Arg>,
     ImplicitDepsInferringDescription<GoTestDescription.Arg> {
 
-  private static final Flavor TEST_LIBRARY_FLAVOR = ImmutableFlavor.of("test-library");
+  private static final Flavor TEST_LIBRARY_FLAVOR = InternalFlavor.of("test-library");
 
   private final GoBuckConfig goBuckConfig;
   private final Optional<Long> defaultTestRuleTimeoutMs;
@@ -139,7 +139,7 @@ public class GoTestDescription implements
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     GoTestMain generatedTestMain = new GoTestMain(
         params
-            .withAppendedFlavor(ImmutableFlavor.of("test-main-src"))
+            .withAppendedFlavor(InternalFlavor.of("test-main-src"))
             .copyReplacingDeclaredAndExtraDeps(
                 Suppliers.ofInstance(ImmutableSortedSet.copyOf(
                     testMainGenerator.getDeps(ruleFinder))),
@@ -207,7 +207,7 @@ public class GoTestDescription implements
         params, resolver, args.srcs, packageName);
     GoBinary testMain = GoDescriptors.createGoBinaryRule(
         params
-            .withAppendedFlavor(ImmutableFlavor.of("test-main"))
+            .withAppendedFlavor(InternalFlavor.of("test-main"))
             .copyReplacingDeclaredAndExtraDeps(
                 Suppliers.ofInstance(ImmutableSortedSet.of(testLibrary)),
                 Suppliers.ofInstance(ImmutableSortedSet.of(generatedTestMain))),

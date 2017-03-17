@@ -18,13 +18,13 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.SourcePath;
 
 import java.util.Optional;
 
 public interface HasJavaAbi {
-  Flavor ABI_FLAVOR = ImmutableFlavor.of("abi");
+  Flavor ABI_FLAVOR = InternalFlavor.of("abi");
 
   BuildTarget getBuildTarget();
 

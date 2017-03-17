@@ -33,7 +33,7 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -76,11 +76,11 @@ public class AppleBinaryDescription
     ImplicitFlavorsInferringDescription,
     MetadataProvidingDescription<AppleBinaryDescription.Arg> {
 
-  public static final Flavor APP_FLAVOR = ImmutableFlavor.of("app");
+  public static final Flavor APP_FLAVOR = InternalFlavor.of("app");
   public static final Sets.SetView<Flavor> NON_DELEGATE_FLAVORS = Sets.union(
       AppleDebugFormat.FLAVOR_DOMAIN.getFlavors(),
       ImmutableSet.of(APP_FLAVOR));
-  public static final Flavor LEGACY_WATCH_FLAVOR = ImmutableFlavor.of("legacy_watch");
+  public static final Flavor LEGACY_WATCH_FLAVOR = InternalFlavor.of("legacy_watch");
 
   @SuppressWarnings("PMD") // PMD doesn't understand method references
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(

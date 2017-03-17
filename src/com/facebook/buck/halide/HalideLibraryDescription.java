@@ -36,7 +36,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -69,8 +69,8 @@ import java.util.regex.Pattern;
 public class HalideLibraryDescription
     implements Description<HalideLibraryDescription.Arg>, Flavored {
 
-  public static final Flavor HALIDE_COMPILER_FLAVOR = ImmutableFlavor.of("halide-compiler");
-  public static final Flavor HALIDE_COMPILE_FLAVOR = ImmutableFlavor.of("halide-compile");
+  public static final Flavor HALIDE_COMPILER_FLAVOR = InternalFlavor.of("halide-compiler");
+  public static final Flavor HALIDE_COMPILE_FLAVOR = InternalFlavor.of("halide-compile");
 
   private final CxxPlatform defaultCxxPlatform;
   private final CxxBuckConfig cxxBuckConfig;

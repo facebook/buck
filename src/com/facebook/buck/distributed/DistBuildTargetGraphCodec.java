@@ -24,7 +24,7 @@ import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.rules.Cell;
@@ -116,7 +116,7 @@ public class DistBuildTargetGraphCodec {
         .build();
 
     ImmutableSet<Flavor> flavors = remoteTarget.flavors.stream()
-        .map(ImmutableFlavor::of)
+        .map(InternalFlavor::of)
         .collect(MoreCollectors.toImmutableSet());
 
     return BuildTarget.builder()

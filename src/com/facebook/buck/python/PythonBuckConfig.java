@@ -23,7 +23,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.PathSourcePath;
@@ -53,7 +53,7 @@ import javax.annotation.Nonnull;
 
 public class PythonBuckConfig {
 
-  public static final Flavor DEFAULT_PYTHON_PLATFORM = ImmutableFlavor.of("py-default");
+  public static final Flavor DEFAULT_PYTHON_PLATFORM = InternalFlavor.of("py-default");
 
   private static final String SECTION = "python";
   private static final String PYTHON_PLATFORM_SECTION_PREFIX = "python#";
@@ -118,7 +118,7 @@ public class PythonBuckConfig {
         builder.add(
             getPythonPlatform(
                 processExecutor,
-                ImmutableFlavor.of(section.substring(PYTHON_PLATFORM_SECTION_PREFIX.length())),
+                InternalFlavor.of(section.substring(PYTHON_PLATFORM_SECTION_PREFIX.length())),
                 delegate.getValue(section, "interpreter"),
                 delegate.getBuildTarget(section, "library")));
       }

@@ -69,7 +69,7 @@ public class BuildTargetFactory {
         BuildTarget.builder(
             UnflavoredBuildTarget.of(root, cellName, parts[0], nameAndFlavor[0]));
     for (String flavor : flavors) {
-      buildTargetBuilder.addFlavors(ImmutableFlavor.of(flavor));
+      buildTargetBuilder.addFlavors(InternalFlavor.of(flavor));
     }
     return buildTargetBuilder.build();
   }

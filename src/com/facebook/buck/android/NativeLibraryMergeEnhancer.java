@@ -30,7 +30,7 @@ import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -620,7 +620,7 @@ class NativeLibraryMergeEnhancer {
       String mergeFlavor = "merge_structure_" + hasher.hash();
 
       return BuildTarget.builder().from(initialTarget)
-          .addFlavors(ImmutableFlavor.of(mergeFlavor))
+          .addFlavors(InternalFlavor.of(mergeFlavor))
           .build();
     }
 

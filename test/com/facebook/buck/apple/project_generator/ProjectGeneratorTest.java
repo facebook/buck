@@ -92,7 +92,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
@@ -162,7 +162,7 @@ public class ProjectGeneratorTest {
       OUTPUT_PROJECT_BUNDLE_PATH.resolve("project.pbxproj");
   private static final FlavorDomain<CxxPlatform> PLATFORMS = FlavorDomain.of("C/C++ platform");
   private static final CxxPlatform DEFAULT_PLATFORM = CxxPlatformUtils.DEFAULT_PLATFORM;
-  private static final Flavor DEFAULT_FLAVOR = ImmutableFlavor.of("default");
+  private static final Flavor DEFAULT_FLAVOR = InternalFlavor.of("default");
   private SettableFakeClock clock;
   private ProjectFilesystem projectFilesystem;
   private Cell projectCell;
@@ -4284,7 +4284,7 @@ public class ProjectGeneratorTest {
         .addFlavors(
             DEFAULT_FLAVOR,
             CxxDescriptionEnhancer.SHARED_FLAVOR,
-            ImmutableFlavor.of("iphoneos-arm64"))
+            InternalFlavor.of("iphoneos-arm64"))
         .build();
     TargetNode<?, ?> framework1FlavoredNode = AppleBundleBuilder
         .createBuilder(framework1FlavoredTarget)

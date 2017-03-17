@@ -23,7 +23,7 @@ import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleDependencyVisitors;
@@ -225,9 +225,9 @@ public class NativeRelinker {
     Function<RelinkerRule, SourcePath> getSymbolsNeeded = RelinkerRule::getSymbolsNeededPath;
     String libname = resolver.getAbsolutePath(source).getFileName().toString();
     BuildRuleParams relinkerParams = buildRuleParams
-        .withAppendedFlavor(ImmutableFlavor.of("xdso-dce"))
-        .withAppendedFlavor(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(cpuType.toString())))
-        .withAppendedFlavor(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(libname)))
+        .withAppendedFlavor(InternalFlavor.of("xdso-dce"))
+        .withAppendedFlavor(InternalFlavor.of(Flavor.replaceInvalidCharacters(cpuType.toString())))
+        .withAppendedFlavor(InternalFlavor.of(Flavor.replaceInvalidCharacters(libname)))
         .copyAppendingExtraDeps(relinkerDeps);
     BuildRule baseRule = ruleFinder.getRule(source).orElse(null);
     ImmutableList<Arg> linkerArgs = ImmutableList.of();

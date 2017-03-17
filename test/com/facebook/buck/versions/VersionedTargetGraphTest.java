@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableList;
@@ -38,11 +38,11 @@ public class VersionedTargetGraphTest {
     TargetGraph graph =
         VersionedTargetGraphFactory.newInstance(ImmutableList.of(node));
     TargetNode<?, ?> result =
-        graph.get(node.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("hello")));
+        graph.get(node.getBuildTarget().withAppendedFlavors(InternalFlavor.of("hello")));
     assertThat(result, Matchers.notNullValue());
     assertThat(
         result.getBuildTarget().getFlavors(),
-        Matchers.containsInAnyOrder(ImmutableFlavor.of("hello")));
+        Matchers.containsInAnyOrder(InternalFlavor.of("hello")));
     assertNodeCreatedFrom(result, node);
   }
 
@@ -52,13 +52,13 @@ public class VersionedTargetGraphTest {
     TargetGraph graph =
         VersionedTargetGraphFactory.newInstance(ImmutableList.of(node));
     TargetNode<?, ?> result =
-        graph.get(node.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("world")));
+        graph.get(node.getBuildTarget().withAppendedFlavors(InternalFlavor.of("world")));
     assertThat(result, Matchers.notNullValue());
     assertThat(
         result.getBuildTarget().getFlavors(),
         Matchers.containsInAnyOrder(
-            ImmutableFlavor.of("hello"),
-            ImmutableFlavor.of("world")));
+            InternalFlavor.of("hello"),
+            InternalFlavor.of("world")));
     assertNodeCreatedFrom(result, node);
   }
 
@@ -68,14 +68,14 @@ public class VersionedTargetGraphTest {
     TargetNode<?, ?> node2 = createTargetNode("bar#hello,bye");
     TargetGraph graph = VersionedTargetGraphFactory.newInstance(ImmutableList.of(node1, node2));
     TargetNode<?, ?> result =
-        graph.get(node2.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("world")));
+        graph.get(node2.getBuildTarget().withAppendedFlavors(InternalFlavor.of("world")));
     assertThat(result, Matchers.notNullValue());
     assertThat(
         result.getBuildTarget().getFlavors(),
         Matchers.containsInAnyOrder(
-            ImmutableFlavor.of("hello"),
-            ImmutableFlavor.of("bye"),
-            ImmutableFlavor.of("world")));
+            InternalFlavor.of("hello"),
+            InternalFlavor.of("bye"),
+            InternalFlavor.of("world")));
     assertNodeCreatedFrom(result, node2);
   }
 
@@ -86,9 +86,9 @@ public class VersionedTargetGraphTest {
     TargetGraph graph = VersionedTargetGraphFactory.newInstance(ImmutableList.of(node1, node2));
     graph.get(
         node2.getBuildTarget().withFlavors(
-            ImmutableFlavor.of("one"),
-            ImmutableFlavor.of("two"),
-            ImmutableFlavor.of("three")));
+            InternalFlavor.of("one"),
+            InternalFlavor.of("two"),
+            InternalFlavor.of("three")));
   }
 
   @Test
@@ -101,11 +101,11 @@ public class VersionedTargetGraphTest {
                 node.getBuildTarget().withFlavors(), node,
                 versionedNode.getBuildTarget(), versionedNode));
     TargetNode<?, ?> result =
-        graph.get(node.getBuildTarget().withFlavors(ImmutableFlavor.of("world")));
+        graph.get(node.getBuildTarget().withFlavors(InternalFlavor.of("world")));
     assertThat(result, Matchers.notNullValue());
     assertThat(
         result.getBuildTarget().getFlavors(),
-        Matchers.containsInAnyOrder(ImmutableFlavor.of("world")));
+        Matchers.containsInAnyOrder(InternalFlavor.of("world")));
     assertNodeCreatedFrom(result, node);
   }
 

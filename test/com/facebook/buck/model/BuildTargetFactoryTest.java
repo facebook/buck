@@ -39,7 +39,7 @@ public class BuildTargetFactoryTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(ROOT, "//example/base:one#two");
     assertEquals(
         BuildTarget.builder(ROOT, "//example/base", "one")
-            .addFlavors(ImmutableFlavor.of("two"))
+            .addFlavors(InternalFlavor.of("two"))
             .build(),
         buildTarget);
   }
@@ -50,9 +50,9 @@ public class BuildTargetFactoryTest {
         .newInstance(ROOT, "//example/base:shortName#one,two,three");
     assertEquals(
         BuildTarget.builder(ROOT, "//example/base", "shortName")
-            .addFlavors(ImmutableFlavor.of("one"))
-            .addFlavors(ImmutableFlavor.of("two"))
-            .addFlavors(ImmutableFlavor.of("three"))
+            .addFlavors(InternalFlavor.of("one"))
+            .addFlavors(InternalFlavor.of("two"))
+            .addFlavors(InternalFlavor.of("three"))
             .build(),
         buildTarget);
   }

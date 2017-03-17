@@ -26,7 +26,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -237,12 +237,12 @@ public class PythonTestDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PythonPlatform platform1 =
         PythonPlatform.of(
-            ImmutableFlavor.of("pyPlat1"),
+            InternalFlavor.of("pyPlat1"),
             new PythonEnvironment(Paths.get("python2.6"), PythonVersion.of("CPython", "2.6")),
             Optional.empty());
     PythonPlatform platform2 =
         PythonPlatform.of(
-            ImmutableFlavor.of("pyPlat2"),
+            InternalFlavor.of("pyPlat2"),
             new PythonEnvironment(Paths.get("python2.7"), PythonVersion.of("CPython", "2.7")),
             Optional.empty());
     PythonTestBuilder builder =

@@ -20,9 +20,9 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.model.UserFlavor;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.Description;
@@ -30,6 +30,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -38,12 +39,10 @@ import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 /**
  * List flavor domains for build targets.
@@ -137,9 +136,21 @@ public class AuditFlavorsCommand extends AbstractCommand {
             ((Flavored) description).flavorDomains();
         if (flavorDomains.isPresent()) {
           for (FlavorDomain<?> domain : flavorDomains.get()) {
+            ImmutableSet<UserFlavor> userFlavors = RichStream.from(domain.getFlavors().stream())
+                .filter(UserFlavor.class)
+                .collect(MoreCollectors.toImmutableSet());
+            if (userFlavors.isEmpty()) {
+              continue;
+            }
             stdout.printf(" %s\n", domain.getName());
-            for (Flavor flavor : domain.getFlavors()) {
-              stdout.printf("  %s\n", flavor.getName());
+            for (UserFlavor flavor : userFlavors) {
+              String flavorLine = String.format("  %s", flavor.getName());
+              String flavorDescription = flavor.getDescription();
+              if (flavorDescription.length() > 0) {
+                flavorLine += String.format(" -> %s", flavorDescription);
+              }
+              flavorLine += "\n";
+              stdout.printf(flavorLine);
             }
           }
         } else {
@@ -155,24 +166,30 @@ public class AuditFlavorsCommand extends AbstractCommand {
       ImmutableList<TargetNode<?, ?>> targetNodes,
       CommandRunnerParams params) throws IOException {
     DirtyPrintStreamDecorator stdout = params.getConsole().getStdOut();
-    SortedMap<String, SortedMap<String, List<String>>> targetsJson = new TreeMap<>();
+    SortedMap<String, SortedMap<String, SortedMap<String, String>>> targetsJson = new TreeMap<>();
     for (TargetNode<?, ?> node : targetNodes) {
       Description<?> description = node.getDescription();
-      SortedMap<String, List<String>> flavorDomainsJson = new TreeMap<>();
+      SortedMap<String, SortedMap<String, String>> flavorDomainsJson = new TreeMap<>();
 
       if (description instanceof Flavored) {
         Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains =
             ((Flavored) description).flavorDomains();
         if (flavorDomains.isPresent()) {
           for (FlavorDomain<?> domain : flavorDomains.get()) {
-            List<String> flavorsJson =
-            domain.getFlavors().stream()
-                .map(Flavor::getName)
-                .collect(Collectors.toList());
+            ImmutableSet<UserFlavor> userFlavors = RichStream.from(domain.getFlavors().stream())
+                .filter(UserFlavor.class)
+                .collect(MoreCollectors.toImmutableSet());
+            if (userFlavors.isEmpty()) {
+              continue;
+            }
+            SortedMap<String, String> flavorsJson =
+            userFlavors.stream()
+                .collect(MoreCollectors.toImmutableSortedMap(
+                    UserFlavor::getName, UserFlavor::getDescription));
             flavorDomainsJson.put(domain.getName(), flavorsJson);
           }
         } else {
-          flavorDomainsJson.put("unknown", new ArrayList<>());
+          flavorDomainsJson.put("unknown", new TreeMap<>());
         }
       }
       String targetName = node.getBuildTarget().getFullyQualifiedName();

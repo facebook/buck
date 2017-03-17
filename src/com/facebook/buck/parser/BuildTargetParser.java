@@ -18,7 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorParser;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.base.Preconditions;
@@ -124,7 +124,7 @@ public class BuildTargetParser {
 
     BuildTarget.Builder builder = BuildTarget.builder(unflavoredBuildTarget);
     for (String flavor : flavorNames) {
-      builder.addFlavors(ImmutableFlavor.of(flavor));
+      builder.addFlavors(InternalFlavor.of(flavor));
     }
     return flavoredTargetCache.intern(builder.build());
   }

@@ -49,7 +49,7 @@ import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
@@ -201,7 +201,7 @@ public class AppleCxxPlatformsTest {
         appleCxxPlatform.getXctest().getCommandPrefix(resolver));
 
     assertEquals(
-        ImmutableFlavor.of("iphoneos8.0-armv7"),
+        InternalFlavor.of("iphoneos8.0-armv7"),
         cxxPlatform.getFlavor());
     assertEquals(
         Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang").toString(),
@@ -304,7 +304,7 @@ public class AppleCxxPlatformsTest {
         appleCxxPlatform.getXctest().getCommandPrefix(resolver));
 
     assertEquals(
-        ImmutableFlavor.of("watchos2.0-armv7k"),
+        InternalFlavor.of("watchos2.0-armv7k"),
         cxxPlatform.getFlavor());
     assertEquals(
         Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang").toString(),
@@ -405,7 +405,7 @@ public class AppleCxxPlatformsTest {
         appleCxxPlatform.getXctest().getCommandPrefix(resolver));
 
     assertEquals(
-        ImmutableFlavor.of("appletvos9.1-arm64"),
+        InternalFlavor.of("appletvos9.1-arm64"),
         cxxPlatform.getFlavor());
     assertEquals(
         Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang").toString(),
@@ -482,7 +482,7 @@ public class AppleCxxPlatformsTest {
             Optional.empty());
 
     assertEquals(
-        ImmutableFlavor.of("__in__va_id_-cha_rs"),
+        InternalFlavor.of("__in__va_id_-cha_rs"),
         appleCxxPlatform.getCxxPlatform().getFlavor());
   }
 

@@ -39,7 +39,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -73,7 +73,7 @@ public class CxxPythonExtensionDescriptionTest {
       BuildTargetFactory.newInstance("//:python2_dep");
   private static final PythonPlatform PY2 =
       PythonPlatform.of(
-          ImmutableFlavor.of("py2"),
+          InternalFlavor.of("py2"),
           new PythonEnvironment(Paths.get("python2"), PythonVersion.of("CPython", "2.6")),
           Optional.empty());
 
@@ -81,7 +81,7 @@ public class CxxPythonExtensionDescriptionTest {
       BuildTargetFactory.newInstance("//:python3_dep");
   private static final PythonPlatform PY3 =
       PythonPlatform.of(
-          ImmutableFlavor.of("py3"),
+          InternalFlavor.of("py3"),
           new PythonEnvironment(Paths.get("python3"), PythonVersion.of("CPython", "3.5")),
           Optional.empty());
 

@@ -22,7 +22,7 @@ import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -62,13 +62,13 @@ import java.util.stream.Collectors;
 public class AndroidAarDescription implements Description<AndroidAarDescription.Arg> {
 
   private static final Flavor AAR_ANDROID_MANIFEST_FLAVOR =
-      ImmutableFlavor.of("aar_android_manifest");
+      InternalFlavor.of("aar_android_manifest");
   private static final Flavor AAR_ASSEMBLE_RESOURCE_FLAVOR =
-      ImmutableFlavor.of("aar_assemble_resource");
+      InternalFlavor.of("aar_assemble_resource");
   private static final Flavor AAR_ASSEMBLE_ASSETS_FLAVOR =
-      ImmutableFlavor.of("aar_assemble_assets");
+      InternalFlavor.of("aar_assemble_assets");
   private static final Flavor AAR_ANDROID_RESOURCE_FLAVOR =
-      ImmutableFlavor.of("aar_android_resource");
+      InternalFlavor.of("aar_android_resource");
 
   private final AndroidManifestDescription androidManifestDescription;
   private final CxxBuckConfig cxxBuckConfig;

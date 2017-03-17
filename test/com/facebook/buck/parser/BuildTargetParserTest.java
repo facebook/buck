@@ -26,7 +26,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.FakeCellPathResolver;
 import com.google.common.collect.ImmutableMap;
@@ -76,7 +76,7 @@ public class BuildTargetParserTest {
     assertEquals("//:lib#bar,foo", buildTarget.getFullyQualifiedName());
     assertThat(
         buildTarget.getFlavors(),
-        hasItems((Flavor) ImmutableFlavor.of("foo"), ImmutableFlavor.of("bar")));
+        hasItems((Flavor) InternalFlavor.of("foo"), InternalFlavor.of("bar")));
   }
 
   @Test

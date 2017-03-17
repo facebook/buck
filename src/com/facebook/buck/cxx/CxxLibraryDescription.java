@@ -22,7 +22,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -83,7 +83,7 @@ public class CxxLibraryDescription implements
     EXPORTED_HEADERS(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
     SANDBOX_TREE(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR),
     SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR),
-    SHARED_INTERFACE(ImmutableFlavor.of("shared-interface")),
+    SHARED_INTERFACE(InternalFlavor.of("shared-interface")),
     STATIC_PIC(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR),
     STATIC(CxxDescriptionEnhancer.STATIC_FLAVOR),
     MACH_O_BUNDLE(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR),
@@ -106,9 +106,9 @@ public class CxxLibraryDescription implements
 
   public enum MetadataType implements FlavorConvertible {
 
-    COMPILATION_DATABASE_DEPS(ImmutableFlavor.of("compilation-database-deps")),
-    CXX_HEADERS(ImmutableFlavor.of("header-symlink-tree")),
-    CXX_PREPROCESSOR_INPUT(ImmutableFlavor.of("cxx-preprocessor-input")),
+    COMPILATION_DATABASE_DEPS(InternalFlavor.of("compilation-database-deps")),
+    CXX_HEADERS(InternalFlavor.of("header-symlink-tree")),
+    CXX_PREPROCESSOR_INPUT(InternalFlavor.of("cxx-preprocessor-input")),
     ;
 
     private final Flavor flavor;

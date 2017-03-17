@@ -20,7 +20,7 @@ import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -48,7 +48,7 @@ public class AppleDebuggableBinary
     extends AbstractBuildRule
     implements BuildRuleWithBinary, SupportsInputBasedRuleKey, HasRuntimeDeps {
 
-  public static final Flavor RULE_FLAVOR = ImmutableFlavor.of("apple-debuggable-binary");
+  public static final Flavor RULE_FLAVOR = InternalFlavor.of("apple-debuggable-binary");
 
   /**
    * Binary rule could be stripped and unstripped, depending on requirements. See AppleDebugFormat.

@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.jvm.core.HasJavaClassHashes;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableSortedMap;
@@ -48,19 +48,19 @@ public interface JavaLibrary extends BuildRule, HasClasspathEntries,
    * the {@link BuildRule} will be the original JAR file, which is why it would contain
    * {@code .class} files.
    */
-  public static final Flavor GWT_MODULE_FLAVOR = ImmutableFlavor.of("gwt_module");
+  public static final Flavor GWT_MODULE_FLAVOR = InternalFlavor.of("gwt_module");
 
   /**
    * It's possible to ask a {@link JavaLibrary} to collect its own sources and build a source jar.
    */
-  public static final Flavor SRC_JAR = ImmutableFlavor.of("src");
+  public static final Flavor SRC_JAR = InternalFlavor.of("src");
 
   /**
    * For maven publishing only dependencies containing maven coordinates will be listed as
    * dependencies. Others will be packaged-in, and their first-order dependencies considered
    * in the same manner
    */
-  public static final Flavor MAVEN_JAR = ImmutableFlavor.of("maven");
+  public static final Flavor MAVEN_JAR = InternalFlavor.of("maven");
 
   // TODO(natthu): This can probably be avoided by using a JavaPackageable interface similar to
   // AndroidPackageable.

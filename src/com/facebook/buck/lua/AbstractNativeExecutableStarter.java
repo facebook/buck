@@ -37,7 +37,7 @@ import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -105,7 +105,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
   private CxxSource getNativeStarterCxxSource() {
     BuildTarget target =
         BuildTarget.builder(getBaseParams().getBuildTarget())
-            .addFlavors(ImmutableFlavor.of("native-starter-cxx-source"))
+            .addFlavors(InternalFlavor.of("native-starter-cxx-source"))
             .build();
     BuildRule rule;
     Optional<BuildRule> maybeRule = getRuleResolver().getRuleOptional(target);
@@ -114,7 +114,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
     } else {
       BuildTarget templateTarget =
           BuildTarget.builder(getBaseParams().getBuildTarget())
-              .addFlavors(ImmutableFlavor.of("native-starter-cxx-source-template"))
+              .addFlavors(InternalFlavor.of("native-starter-cxx-source-template"))
               .build();
       WriteFile templateRule = getRuleResolver().addToIndex(
           new WriteFile(

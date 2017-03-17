@@ -35,7 +35,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -83,11 +83,11 @@ import java.util.Set;
  */
 public class AppleDescriptions {
 
-  public static final Flavor FRAMEWORK_FLAVOR = ImmutableFlavor.of("framework");
+  public static final Flavor FRAMEWORK_FLAVOR = InternalFlavor.of("framework");
 
-  public static final Flavor INCLUDE_FRAMEWORKS_FLAVOR = ImmutableFlavor.of("include-frameworks");
+  public static final Flavor INCLUDE_FRAMEWORKS_FLAVOR = InternalFlavor.of("include-frameworks");
   public static final Flavor NO_INCLUDE_FRAMEWORKS_FLAVOR =
-      ImmutableFlavor.of("no-include-frameworks");
+      InternalFlavor.of("no-include-frameworks");
   public static final FlavorDomain<Boolean> INCLUDE_FRAMEWORKS =
       new FlavorDomain<>(
           "Include frameworks",

@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNotEquals;
 import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -261,7 +261,7 @@ public class AaptPackageResourcesTest {
 
     args.filteredResourcesProvider = new ResourcesFilter(
         params
-            .withBuildTarget(params.getBuildTarget().withFlavors(ImmutableFlavor.of("filter")))
+            .withBuildTarget(params.getBuildTarget().withFlavors(InternalFlavor.of("filter")))
             .copyReplacingDeclaredAndExtraDeps(
                 Suppliers.ofInstance(ImmutableSortedSet.of(resource1, resource2)),
                 Suppliers.ofInstance(ImmutableSortedSet.of())),
@@ -276,7 +276,7 @@ public class AaptPackageResourcesTest {
 
     args.filteredResourcesProvider = new ResourcesFilter(
         params
-            .withBuildTarget(params.getBuildTarget().withFlavors(ImmutableFlavor.of("filter")))
+            .withBuildTarget(params.getBuildTarget().withFlavors(InternalFlavor.of("filter")))
             .copyReplacingDeclaredAndExtraDeps(
                 Suppliers.ofInstance(ImmutableSortedSet.of(resource1, resource2)),
                 Suppliers.ofInstance(ImmutableSortedSet.of())),

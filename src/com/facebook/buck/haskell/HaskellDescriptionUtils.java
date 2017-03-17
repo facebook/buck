@@ -35,7 +35,7 @@ import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -170,7 +170,7 @@ public class HaskellDescriptionUtils {
       Linker.LinkableDepType depType) {
     return target.withFlavors(
         cxxPlatform.getFlavor(),
-        ImmutableFlavor.of("objects-" + depType.toString().toLowerCase().replace('_', '-')));
+        InternalFlavor.of("objects-" + depType.toString().toLowerCase().replace('_', '-')));
   }
 
   public static HaskellCompileRule requireCompileRule(
@@ -269,7 +269,7 @@ public class HaskellDescriptionUtils {
     // Since we use `-optl` to pass all linker inputs directly to the linker, the haskell linker
     // will complain about not having any input files.  So, create a dummy archive with an empty
     // module and pass that in normally to work around this.
-    BuildTarget emptyModuleTarget = target.withAppendedFlavors(ImmutableFlavor.of("empty-module"));
+    BuildTarget emptyModuleTarget = target.withAppendedFlavors(InternalFlavor.of("empty-module"));
     WriteFile emptyModule =
         resolver.addToIndex(
             new WriteFile(
@@ -283,7 +283,7 @@ public class HaskellDescriptionUtils {
     HaskellCompileRule emptyCompiledModule =
         resolver.addToIndex(
             createCompileRule(
-                target.withAppendedFlavors(ImmutableFlavor.of("empty-compiled-module")),
+                target.withAppendedFlavors(InternalFlavor.of("empty-compiled-module")),
                 baseParams,
                 resolver,
                 ruleFinder,
@@ -301,7 +301,7 @@ public class HaskellDescriptionUtils {
                     .putModuleMap("Unused", emptyModule.getSourcePathToOutput())
                     .build()));
     BuildTarget emptyArchiveTarget =
-        target.withAppendedFlavors(ImmutableFlavor.of("empty-archive"));
+        target.withAppendedFlavors(InternalFlavor.of("empty-archive"));
     Archive emptyArchive =
         resolver.addToIndex(
             Archive.from(

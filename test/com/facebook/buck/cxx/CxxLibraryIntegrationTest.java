@@ -30,7 +30,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.InferHelper;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -229,8 +229,8 @@ public class CxxLibraryIntegrationTest {
     result.assertSuccess();
 
     BuildTarget implicitTarget = target.withAppendedFlavors(
-        ImmutableFlavor.of("static-pic"),
-        ImmutableFlavor.of("android-armv7")
+        InternalFlavor.of("static-pic"),
+        InternalFlavor.of("android-armv7")
     );
     workspace.getBuildLog().assertTargetBuiltLocally(implicitTarget.getFullyQualifiedName());
   }

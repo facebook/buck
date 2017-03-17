@@ -23,7 +23,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -296,7 +296,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
           ruleResolver,
           packageableCollection.getNativeLibsTargets().get(module));
       BuildRuleParams paramsForCopyNativeLibraries = buildRuleParams
-          .withAppendedFlavor(ImmutableFlavor.of(COPY_NATIVE_LIBS + "_" + module.getName()))
+          .withAppendedFlavor(InternalFlavor.of(COPY_NATIVE_LIBS + "_" + module.getName()))
           .copyReplacingDeclaredAndExtraDeps(
               Suppliers.ofInstance(
                   ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -359,9 +359,9 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
       String sharedLibrarySoName = entry.getKey().getSecond();
       BuildTarget targetForStripRule = BuildTarget.builder(baseBuildTarget)
-          .addFlavors(ImmutableFlavor.of("android-strip"))
-          .addFlavors(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(sharedLibrarySoName)))
-          .addFlavors(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(targetCpuType.name())))
+          .addFlavors(InternalFlavor.of("android-strip"))
+          .addFlavors(InternalFlavor.of(Flavor.replaceInvalidCharacters(sharedLibrarySoName)))
+          .addFlavors(InternalFlavor.of(Flavor.replaceInvalidCharacters(targetCpuType.name())))
           .build();
 
       Optional<BuildRule> previouslyCreated = ruleResolver.getRuleOptional(targetForStripRule);

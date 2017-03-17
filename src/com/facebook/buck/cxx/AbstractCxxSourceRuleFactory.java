@@ -20,7 +20,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -71,7 +71,7 @@ abstract class AbstractCxxSourceRuleFactory {
   private static final Logger LOG = Logger.get(AbstractCxxSourceRuleFactory.class);
   private static final String COMPILE_FLAVOR_PREFIX = "compile-";
   private static final Flavor AGGREGATED_PREPROCESS_DEPS_FLAVOR =
-      ImmutableFlavor.of("preprocessor-deps");
+      InternalFlavor.of("preprocessor-deps");
 
   @Value.Parameter
   protected abstract BuildRuleParams getParams();
@@ -233,7 +233,7 @@ abstract class AbstractCxxSourceRuleFactory {
         .builder(getParams().getBuildTarget())
         .addFlavors(getCxxPlatform().getFlavor())
         .addFlavors(
-            ImmutableFlavor.of(
+            InternalFlavor.of(
                 String.format(
                     COMPILE_FLAVOR_PREFIX + "%s%s",
                     getPicType() == PicType.PIC ? "pic-" : "",
@@ -247,7 +247,7 @@ abstract class AbstractCxxSourceRuleFactory {
         .builder(getParams().getBuildTarget())
         .addAllFlavors(getParams().getBuildTarget().getFlavors())
         .addFlavors(getCxxPlatform().getFlavor())
-        .addFlavors(ImmutableFlavor.of(String.format("%s-%s",
+        .addFlavors(InternalFlavor.of(String.format("%s-%s",
                     CxxInferEnhancer.InferFlavors.INFER_CAPTURE.get().toString(),
                     outputName)))
         .build();
@@ -635,7 +635,7 @@ abstract class AbstractCxxSourceRuleFactory {
         getParams().getBuildTarget().getUnflavoredBuildTarget(),
         ImmutableSortedSet.of(
             getCxxPlatform().getFlavor(),
-            ImmutableFlavor.of(Flavor.replaceInvalidCharacters(pchFullID))));
+            InternalFlavor.of(Flavor.replaceInvalidCharacters(pchFullID))));
   }
 
   /**
@@ -705,7 +705,7 @@ abstract class AbstractCxxSourceRuleFactory {
         pchTemplateTarget.getUnflavoredBuildTarget(),
         ImmutableSortedSet.of(
             getCxxPlatform().getFlavor(),
-            ImmutableFlavor.of(Flavor.replaceInvalidCharacters(pchBaseID))));
+            InternalFlavor.of(Flavor.replaceInvalidCharacters(pchBaseID))));
   }
 
   /**

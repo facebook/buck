@@ -26,7 +26,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
@@ -410,7 +410,7 @@ public class CxxBinaryDescriptionTest {
         new CxxBinaryBuilder(
             BuildTargetFactory
                 .newInstance("//:foo")
-                .withFlavors(platform.getFlavor(), ImmutableFlavor.of("shared")),
+                .withFlavors(platform.getFlavor(), InternalFlavor.of("shared")),
             cxxBuckConfig);
     binaryBuilder
         .setLibraries(
@@ -442,7 +442,7 @@ public class CxxBinaryDescriptionTest {
                 .newInstance("//:foo")
                 .withFlavors(
                     platform.getFlavor(),
-                    ImmutableFlavor.of("shared"),
+                    InternalFlavor.of("shared"),
                     StripStyle.ALL_SYMBOLS.getFlavor()),
             cxxBuckConfig);
     binaryBuilder

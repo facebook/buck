@@ -17,7 +17,7 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -28,7 +28,7 @@ public class PythonTestUtils {
 
   public static final PythonPlatform PYTHON_PLATFORM =
       PythonPlatform.of(
-          ImmutableFlavor.of("default"),
+          InternalFlavor.of("default"),
           new PythonEnvironment(
               Paths.get("python"),
               PythonVersion.of("CPython", "2.6")),

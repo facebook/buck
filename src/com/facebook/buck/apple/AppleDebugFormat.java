@@ -19,23 +19,29 @@ package com.facebook.buck.apple;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.UserFlavor;
 
 public enum AppleDebugFormat implements FlavorConvertible {
   /**
    * Produces a binary with the debug map stripped.
    */
-  NONE(ImmutableFlavor.of("no-debug")),
+  NONE(UserFlavor.of(
+      "no-debug",
+      "Produces a binary with the debug map stripped")),
 
   /**
    * Produces an unstripped binary.
    */
-  DWARF(ImmutableFlavor.of("dwarf")),
+  DWARF(UserFlavor.of(
+      "dwarf",
+      "Produces an unstripped binary")),
 
   /**
    * Generate a .dSYM file from the binary and its constituent object files.
    */
-  DWARF_AND_DSYM(ImmutableFlavor.of("dwarf-and-dsym")),
+  DWARF_AND_DSYM(UserFlavor.of(
+      "dwarf-and-dsym",
+      "Generate a .dSYM file from the binary and its constituent object files")),
   ;
 
   private final Flavor flavor;

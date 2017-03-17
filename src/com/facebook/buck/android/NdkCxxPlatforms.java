@@ -35,7 +35,7 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
@@ -184,7 +184,7 @@ public class NdkCxxPlatforms {
           build(
               config,
               filesystem,
-              ImmutableFlavor.of("android-arm"),
+              InternalFlavor.of("android-arm"),
               platform,
               ndkRoot,
               targetConfiguration,
@@ -204,7 +204,7 @@ public class NdkCxxPlatforms {
           build(
               config,
               filesystem,
-              ImmutableFlavor.of("android-armv7"),
+              InternalFlavor.of("android-armv7"),
               platform,
               ndkRoot,
               targetConfiguration,
@@ -224,7 +224,7 @@ public class NdkCxxPlatforms {
           build(
               config,
               filesystem,
-              ImmutableFlavor.of("android-arm64"),
+              InternalFlavor.of("android-arm64"),
               platform,
               ndkRoot,
               targetConfiguration,
@@ -244,7 +244,7 @@ public class NdkCxxPlatforms {
           build(
               config,
               filesystem,
-              ImmutableFlavor.of("android-x86"),
+              InternalFlavor.of("android-x86"),
               platform,
               ndkRoot,
               targetConfiguration,
@@ -267,7 +267,7 @@ public class NdkCxxPlatforms {
           build(
               config,
               filesystem,
-              ImmutableFlavor.of("android-x86_64"),
+              InternalFlavor.of("android-x86_64"),
               platform,
               ndkRoot,
               targetConfiguration,

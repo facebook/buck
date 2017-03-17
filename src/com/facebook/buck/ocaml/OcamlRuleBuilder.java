@@ -26,7 +26,7 @@ import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleDependencyVisitors;
@@ -67,8 +67,8 @@ import java.util.stream.Stream;
  */
 public class OcamlRuleBuilder {
 
-  private static final Flavor OCAML_STATIC_FLAVOR = ImmutableFlavor.of("static");
-  private static final Flavor OCAML_LINK_BINARY_FLAVOR = ImmutableFlavor.of("binary");
+  private static final Flavor OCAML_STATIC_FLAVOR = InternalFlavor.of("static");
+  private static final Flavor OCAML_LINK_BINARY_FLAVOR = InternalFlavor.of("binary");
 
   private OcamlRuleBuilder() {
   }

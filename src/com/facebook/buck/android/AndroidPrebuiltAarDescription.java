@@ -25,7 +25,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
@@ -61,8 +61,8 @@ import java.util.Optional;
 public class AndroidPrebuiltAarDescription
     implements Description<AndroidPrebuiltAarDescription.Arg>, Flavored {
 
-  private static final Flavor AAR_PREBUILT_JAR_FLAVOR = ImmutableFlavor.of("aar_prebuilt_jar");
-  public static final Flavor AAR_UNZIP_FLAVOR = ImmutableFlavor.of("aar_unzip");
+  private static final Flavor AAR_PREBUILT_JAR_FLAVOR = InternalFlavor.of("aar_prebuilt_jar");
+  public static final Flavor AAR_UNZIP_FLAVOR = InternalFlavor.of("aar_unzip");
 
   private static final ImmutableSet<Flavor> KNOWN_FLAVORS =
       ImmutableSet.of(AAR_PREBUILT_JAR_FLAVOR, AAR_UNZIP_FLAVOR);

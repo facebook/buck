@@ -20,7 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
@@ -70,8 +70,8 @@ public class JsFlavorValidationCommonTest {
 
   @Test
   public void testUnknownFlavors() {
-    assertFalse(description.hasFlavors(ImmutableSet.of(ImmutableFlavor.of("unknown"))));
+    assertFalse(description.hasFlavors(ImmutableSet.of(InternalFlavor.of("unknown"))));
     assertFalse(description.hasFlavors(
-        ImmutableSet.of(ImmutableFlavor.of("unknown"), JsFlavors.RELEASE)));
+        ImmutableSet.of(InternalFlavor.of("unknown"), JsFlavors.RELEASE)));
   }
 }

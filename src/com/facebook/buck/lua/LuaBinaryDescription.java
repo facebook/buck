@@ -35,7 +35,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.python.CxxPythonExtension;
 import com.facebook.buck.python.PythonBinaryDescription;
@@ -92,7 +92,7 @@ public class LuaBinaryDescription implements
     ImplicitDepsInferringDescription<LuaBinaryDescription.Arg>,
     VersionRoot<LuaBinaryDescription.Arg> {
 
-  private static final Flavor BINARY_FLAVOR = ImmutableFlavor.of("binary");
+  private static final Flavor BINARY_FLAVOR = InternalFlavor.of("binary");
 
   private final LuaConfig luaConfig;
   private final CxxBuckConfig cxxBuckConfig;
@@ -120,7 +120,7 @@ public class LuaBinaryDescription implements
 
   @VisibleForTesting
   protected static BuildTarget getNativeLibsSymlinkTreeTarget(BuildTarget target) {
-    return target.withAppendedFlavors(ImmutableFlavor.of("native-libs-link-tree"));
+    return target.withAppendedFlavors(InternalFlavor.of("native-libs-link-tree"));
   }
 
   private static Path getNativeLibsSymlinkTreeRoot(
@@ -130,7 +130,7 @@ public class LuaBinaryDescription implements
   }
 
   private static BuildTarget getModulesSymlinkTreeTarget(BuildTarget target) {
-    return target.withAppendedFlavors(ImmutableFlavor.of("modules-link-tree"));
+    return target.withAppendedFlavors(InternalFlavor.of("modules-link-tree"));
   }
 
   private static Path getModulesSymlinkTreeRoot(
@@ -140,7 +140,7 @@ public class LuaBinaryDescription implements
   }
 
   private static BuildTarget getPythonModulesSymlinkTreeTarget(BuildTarget target) {
-    return target.withAppendedFlavors(ImmutableFlavor.of("python-modules-link-tree"));
+    return target.withAppendedFlavors(InternalFlavor.of("python-modules-link-tree"));
   }
 
   private static Path getPythonModulesSymlinkTreeRoot(
@@ -283,7 +283,7 @@ public class LuaBinaryDescription implements
         cxxPlatform,
         baseParams.getBuildTarget().withAppendedFlavors(
             packageStyle == LuaConfig.PackageStyle.STANDALONE ?
-                ImmutableFlavor.of("starter") :
+                InternalFlavor.of("starter") :
                 BINARY_FLAVOR),
         packageStyle == LuaConfig.PackageStyle.STANDALONE ?
             output.resolveSibling(output.getFileName() + "-starter") :
@@ -772,7 +772,7 @@ public class LuaBinaryDescription implements
     PythonPlatform pythonPlatform =
         pythonPlatforms.getValue(params.getBuildTarget()).orElse(
             pythonPlatforms.getValue(
-                args.pythonPlatform.<Flavor>map(ImmutableFlavor::of).orElse(
+                args.pythonPlatform.<Flavor>map(InternalFlavor::of).orElse(
                     pythonPlatforms.getFlavors().iterator().next())));
     LuaBinaryPackageComponents components =
         getPackageComponentsFromDeps(

@@ -32,7 +32,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
@@ -88,7 +88,7 @@ public class PythonBinaryDescriptionTest {
       BuildTargetFactory.newInstance("//:python2_dep");
   private static final PythonPlatform PY2 =
       PythonPlatform.of(
-          ImmutableFlavor.of("py2"),
+          InternalFlavor.of("py2"),
           new PythonEnvironment(Paths.get("python2"), PythonVersion.of("CPython", "2.6")),
           Optional.of(PYTHON2_DEP_TARGET));
 
@@ -259,12 +259,12 @@ public class PythonBinaryDescriptionTest {
   public void explicitPythonHome() throws Exception {
     PythonPlatform platform1 =
         PythonPlatform.of(
-            ImmutableFlavor.of("pyPlat1"),
+            InternalFlavor.of("pyPlat1"),
             new PythonEnvironment(Paths.get("python2.6"), PythonVersion.of("CPython", "2.6.9")),
             Optional.empty());
     PythonPlatform platform2 =
         PythonPlatform.of(
-            ImmutableFlavor.of("pyPlat2"),
+            InternalFlavor.of("pyPlat2"),
             new PythonEnvironment(Paths.get("python2.7"), PythonVersion.of("CPython", "2.7.11")),
             Optional.empty());
     PythonBinaryBuilder builder =

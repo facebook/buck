@@ -24,7 +24,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.model.MacroFinder;
 import com.facebook.buck.model.Pair;
@@ -86,7 +86,7 @@ public class PrebuiltCxxLibraryDescription implements
   enum Type implements FlavorConvertible {
     EXPORTED_HEADERS(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
     SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR),
-    SHARED_INTERFACE(ImmutableFlavor.of("shared-interface"))
+    SHARED_INTERFACE(InternalFlavor.of("shared-interface"))
     ;
 
     private final Flavor flavor;

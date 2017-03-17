@@ -24,7 +24,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -64,7 +64,7 @@ public class PythonTestDescription implements
     ImplicitDepsInferringDescription<PythonTestDescription.Arg>,
     VersionRoot<PythonTestDescription.Arg> {
 
-  private static final Flavor BINARY_FLAVOR = ImmutableFlavor.of("binary");
+  private static final Flavor BINARY_FLAVOR = InternalFlavor.of("binary");
 
   private static final MacroHandler MACRO_HANDLER =
       new MacroHandler(
@@ -152,7 +152,7 @@ public class PythonTestDescription implements
         .withBuildTarget(
             BuildTargets.createFlavoredBuildTarget(
                 params.getBuildTarget().checkUnflavored(),
-                ImmutableFlavor.of("test_module")))
+                InternalFlavor.of("test_module")))
         .copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of()),
             Suppliers.ofInstance(ImmutableSortedSet.of()));
@@ -176,7 +176,7 @@ public class PythonTestDescription implements
     PythonPlatform pythonPlatform =
         pythonPlatforms.getValue(params.getBuildTarget()).orElse(
             pythonPlatforms.getValue(
-                args.platform.<Flavor>map(ImmutableFlavor::of).orElse(
+                args.platform.<Flavor>map(InternalFlavor::of).orElse(
                     pythonPlatforms.getFlavors().iterator().next())));
     CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).orElse(
         defaultCxxPlatform);

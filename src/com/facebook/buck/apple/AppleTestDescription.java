@@ -32,7 +32,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -81,9 +81,9 @@ public class AppleTestDescription implements
   /**
    * Flavors for the additional generated build rules.
    */
-  static final Flavor LIBRARY_FLAVOR = ImmutableFlavor.of("apple-test-library");
-  static final Flavor BUNDLE_FLAVOR = ImmutableFlavor.of("apple-test-bundle");
-  private static final Flavor UNZIP_XCTOOL_FLAVOR = ImmutableFlavor.of("unzip-xctool");
+  static final Flavor LIBRARY_FLAVOR = InternalFlavor.of("apple-test-library");
+  static final Flavor BUNDLE_FLAVOR = InternalFlavor.of("apple-test-bundle");
+  private static final Flavor UNZIP_XCTOOL_FLAVOR = InternalFlavor.of("unzip-xctool");
 
   private static final ImmutableSet<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       LIBRARY_FLAVOR, BUNDLE_FLAVOR);

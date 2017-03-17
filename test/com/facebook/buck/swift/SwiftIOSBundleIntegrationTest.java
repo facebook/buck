@@ -31,7 +31,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -129,7 +129,7 @@ public class SwiftIOSBundleIntegrationTest {
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget parentDynamicTarget = BuildTargetFactory.newInstance("//:ios-parent-dynamic")
-        .withAppendedFlavors(ImmutableFlavor.of("iphonesimulator-x86_64"));
+        .withAppendedFlavors(InternalFlavor.of("iphonesimulator-x86_64"));
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
@@ -173,7 +173,7 @@ public class SwiftIOSBundleIntegrationTest {
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget parentDynamicTarget = BuildTargetFactory.newInstance("//:ios-parent-dynamic")
-        .withAppendedFlavors(ImmutableFlavor.of("iphonesimulator-x86_64"));
+        .withAppendedFlavors(InternalFlavor.of("iphonesimulator-x86_64"));
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
@@ -207,7 +207,7 @@ public class SwiftIOSBundleIntegrationTest {
 
     BuildTarget iosdep1Target = BuildTargetFactory.newInstance("//:iosdep1")
         .withAppendedFlavors(
-            ImmutableFlavor.of("iphonesimulator-x86_64"));
+            InternalFlavor.of("iphonesimulator-x86_64"));
     Path iosdep1TargetOutput = workspace.resolve(
         BuildTargets.getGenPath(
             filesystem,

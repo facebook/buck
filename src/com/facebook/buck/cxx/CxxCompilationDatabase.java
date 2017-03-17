@@ -21,7 +21,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -52,9 +52,9 @@ import java.util.stream.Stream;
 
 public class CxxCompilationDatabase extends AbstractBuildRule implements HasRuntimeDeps {
   private static final Logger LOG = Logger.get(CxxCompilationDatabase.class);
-  public static final Flavor COMPILATION_DATABASE = ImmutableFlavor.of("compilation-database");
+  public static final Flavor COMPILATION_DATABASE = InternalFlavor.of("compilation-database");
   public static final Flavor UBER_COMPILATION_DATABASE =
-      ImmutableFlavor.of("uber-compilation-database");
+      InternalFlavor.of("uber-compilation-database");
 
   @AddToRuleKey
   private final ImmutableSortedSet<CxxPreprocessAndCompile> compileRules;

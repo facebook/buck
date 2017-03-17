@@ -27,7 +27,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasTests;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -58,10 +58,10 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       CxxDescriptionEnhancer.STATIC_FLAVOR,
       CxxDescriptionEnhancer.SHARED_FLAVOR);
 
-  public static final Flavor WATCH_OS_FLAVOR = ImmutableFlavor.of("watchos-armv7k");
-  public static final Flavor WATCH_SIMULATOR_FLAVOR = ImmutableFlavor.of("watchsimulator-i386");
+  public static final Flavor WATCH_OS_FLAVOR = InternalFlavor.of("watchos-armv7k");
+  public static final Flavor WATCH_SIMULATOR_FLAVOR = InternalFlavor.of("watchsimulator-i386");
 
-  private static final Flavor WATCH = ImmutableFlavor.of("watch");
+  private static final Flavor WATCH = InternalFlavor.of("watch");
 
   private final AppleBinaryDescription appleBinaryDescription;
   private final AppleLibraryDescription appleLibraryDescription;
@@ -205,7 +205,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         platformName.startsWith(ApplePlatform.WATCHOS.getName())) {
       actualWatchFlavor = WATCH_OS_FLAVOR;
     } else {
-      actualWatchFlavor = ImmutableFlavor.of(platformName);
+      actualWatchFlavor = InternalFlavor.of(platformName);
     }
 
     FluentIterable<BuildTarget> depsExcludingBinary = FluentIterable.from(constructorArg.deps)

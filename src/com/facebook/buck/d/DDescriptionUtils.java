@@ -28,7 +28,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -59,7 +59,7 @@ import java.util.TreeMap;
  */
 abstract class DDescriptionUtils {
 
-  public static final Flavor SOURCE_LINK_TREE = ImmutableFlavor.of("source-link-tree");
+  public static final Flavor SOURCE_LINK_TREE = InternalFlavor.of("source-link-tree");
 
   /**
    * Creates a BuildTarget, based on an existing build target, but flavored with a CxxPlatform
@@ -79,7 +79,7 @@ abstract class DDescriptionUtils {
     return BuildTarget.builder(existingTarget)
         .addFlavors(
             cxxPlatform.getFlavor(),
-            ImmutableFlavor.of(
+            InternalFlavor.of(
                 flavorPrefix + Flavor.replaceInvalidCharacters(fileName)))
         .build();
   }

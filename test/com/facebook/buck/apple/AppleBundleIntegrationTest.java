@@ -37,7 +37,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.FakeAppleDeveloperEnvironment;
@@ -856,8 +856,8 @@ public class AppleBundleIntegrationTest {
         ImmutableSet.of("//:DemoAppWithExtension", "//:DemoExtension");
 
     ImmutableSet<Flavor> includeFrameworkFlavors = ImmutableSet.of(
-        ImmutableFlavor.of("no-include-frameworks"),
-        ImmutableFlavor.of("include-frameworks"));
+        InternalFlavor.of("no-include-frameworks"),
+        InternalFlavor.of("include-frameworks"));
 
     for (BuildTarget builtTarget : buckBuildLog.getAllTargets()) {
       if (Sets.intersection(builtTarget.getFlavors(), includeFrameworkFlavors).isEmpty()) {

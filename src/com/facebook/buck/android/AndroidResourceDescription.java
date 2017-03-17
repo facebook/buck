@@ -24,7 +24,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
@@ -80,11 +80,11 @@ public class AndroidResourceDescription
 
   @VisibleForTesting
   static final Flavor RESOURCES_SYMLINK_TREE_FLAVOR =
-      ImmutableFlavor.of("resources-symlink-tree");
+      InternalFlavor.of("resources-symlink-tree");
 
   @VisibleForTesting
   static final Flavor ASSETS_SYMLINK_TREE_FLAVOR =
-      ImmutableFlavor.of("assets-symlink-tree");
+      InternalFlavor.of("assets-symlink-tree");
 
   public AndroidResourceDescription(boolean enableGrayscaleImageProcessing) {
     isGrayscaleImageProcessingEnabled = enableGrayscaleImageProcessing;

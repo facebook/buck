@@ -20,7 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -65,7 +65,7 @@ public class CxxPlatformXcodeConfigGeneratorTest {
   public void testResultHasIphoneOsSdkRootTakenFromIphoneSimulatorFlavor() {
     CxxPlatform platform = CxxPlatform.builder()
         .from(DEFAULT_PLATFORM)
-        .setFlavor(ImmutableFlavor.of("iphonesimulator-x86_64"))
+        .setFlavor(InternalFlavor.of("iphonesimulator-x86_64"))
         .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
@@ -81,7 +81,7 @@ public class CxxPlatformXcodeConfigGeneratorTest {
   public void testResultHasIphoneOsSdkRootTakenFromIphoneOsFlavor() {
     CxxPlatform platform = CxxPlatform.builder()
         .from(DEFAULT_PLATFORM)
-        .setFlavor(ImmutableFlavor.of("iphoneos-9.1"))
+        .setFlavor(InternalFlavor.of("iphoneos-9.1"))
         .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
@@ -97,7 +97,7 @@ public class CxxPlatformXcodeConfigGeneratorTest {
   public void testResultHasMacOsxSdkRootTakenFromMacOsxFlavor() {
     CxxPlatform platform = CxxPlatform.builder()
         .from(DEFAULT_PLATFORM)
-        .setFlavor(ImmutableFlavor.of("macosx-12.0"))
+        .setFlavor(InternalFlavor.of("macosx-12.0"))
         .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
@@ -113,7 +113,7 @@ public class CxxPlatformXcodeConfigGeneratorTest {
   public void testResultHasDeploymentTargetValueTakenFromPlatformCxxflags() {
     CxxPlatform platform = CxxPlatform.builder()
         .from(DEFAULT_PLATFORM)
-        .setFlavor(ImmutableFlavor.of("macosx-12.0"))
+        .setFlavor(InternalFlavor.of("macosx-12.0"))
         .setCxxflags(ImmutableList.of("-mmacosx-version-min=10.8"))
         .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
@@ -277,7 +277,7 @@ public class CxxPlatformXcodeConfigGeneratorTest {
 
     CxxPlatform platform = CxxPlatform.builder()
         .from(DEFAULT_PLATFORM)
-        .setFlavor(ImmutableFlavor.of("macosx-12.0"))
+        .setFlavor(InternalFlavor.of("macosx-12.0"))
         .setCxxflags(ImmutableList.of(
                 "-Wno-warning",
                 "-someflag",

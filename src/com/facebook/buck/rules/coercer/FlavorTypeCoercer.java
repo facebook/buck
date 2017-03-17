@@ -18,7 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.CellPathResolver;
 
 import java.nio.file.Path;
@@ -36,7 +36,7 @@ public class FlavorTypeCoercer extends LeafTypeCoercer<Flavor> {
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {
     if (object instanceof String) {
-      return ImmutableFlavor.of((String) object);
+      return InternalFlavor.of((String) object);
     }
     throw CoerceFailedException.simple(object, getOutputClass());
   }

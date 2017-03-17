@@ -22,7 +22,7 @@ import com.facebook.buck.cxx.Compiler;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -51,7 +51,7 @@ import java.util.stream.Stream;
  */
 public class OcamlBuildRulesGenerator {
 
-  private static final Flavor DEBUG_FLAVOR = ImmutableFlavor.of("debug");
+  private static final Flavor DEBUG_FLAVOR = InternalFlavor.of("debug");
 
   private final BuildRuleParams params;
   private final BuildRuleResolver resolver;
@@ -154,7 +154,7 @@ public class OcamlBuildRulesGenerator {
     return BuildTarget
         .builder(target)
         .addFlavors(
-            ImmutableFlavor.of(
+            InternalFlavor.of(
                 String.format(
                     "compile-%s",
                     getCOutputName(name)
@@ -223,7 +223,7 @@ public class OcamlBuildRulesGenerator {
     BuildTarget cleanTarget =
       BuildTarget.builder(params.getBuildTarget())
         .addFlavors(
-            ImmutableFlavor.of(
+            InternalFlavor.of(
                 String.format(
                     "clean-%s",
                     params.getBuildTarget().getShortName())))
@@ -303,7 +303,7 @@ public class OcamlBuildRulesGenerator {
     return link;
   }
 
-  private static final Flavor BYTECODE_FLAVOR = ImmutableFlavor.of("bytecode");
+  private static final Flavor BYTECODE_FLAVOR = InternalFlavor.of("bytecode");
 
   public static BuildTarget addBytecodeFlavor(BuildTarget target) {
     return BuildTarget.builder(target).addFlavors(BYTECODE_FLAVOR).build();
@@ -415,7 +415,7 @@ public class OcamlBuildRulesGenerator {
     return BuildTarget
         .builder(target)
         .addFlavors(
-            ImmutableFlavor.of(
+            InternalFlavor.of(
                 String.format(
                     "ml-compile-%s",
                     getMLNativeOutputName(name)
@@ -432,7 +432,7 @@ public class OcamlBuildRulesGenerator {
     return BuildTarget
         .builder(target)
         .addFlavors(
-            ImmutableFlavor.of(
+            InternalFlavor.of(
                 String.format(
                     "ml-bytecode-compile-%s",
                     getMLBytecodeOutputName(name)

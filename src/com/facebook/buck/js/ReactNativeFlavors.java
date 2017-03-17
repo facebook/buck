@@ -19,7 +19,7 @@ package com.facebook.buck.js;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.google.common.collect.ImmutableSet;
 
 public class ReactNativeFlavors {
@@ -27,13 +27,13 @@ public class ReactNativeFlavors {
   // Utility class, do not instantiate.
   private ReactNativeFlavors() { }
 
-  public static final Flavor UNBUNDLE = ImmutableFlavor.of("unbundle");
+  public static final Flavor UNBUNDLE = InternalFlavor.of("unbundle");
 
-  public static final Flavor INDEXED_UNBUNDLE = ImmutableFlavor.of("indexed_unbundle");
+  public static final Flavor INDEXED_UNBUNDLE = InternalFlavor.of("indexed_unbundle");
 
-  public static final Flavor DEV = ImmutableFlavor.of("dev");
+  public static final Flavor DEV = InternalFlavor.of("dev");
 
-  public static final Flavor SOURCE_MAP = ImmutableFlavor.of("source_map");
+  public static final Flavor SOURCE_MAP = InternalFlavor.of("source_map");
 
   public static boolean validateFlavors(ImmutableSet<Flavor> flavors) {
     return ImmutableSet.of(DEV, UNBUNDLE, INDEXED_UNBUNDLE, SOURCE_MAP).containsAll(flavors);

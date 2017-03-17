@@ -23,7 +23,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -99,7 +99,7 @@ public class CxxCompilationDatabaseTest {
     BuildTarget compileTarget = BuildTarget
         .builder(testBuildRuleParams.getBuildTarget().getUnflavoredBuildTarget())
         .addFlavors(
-            ImmutableFlavor.of("compile-test.cpp"))
+            InternalFlavor.of("compile-test.cpp"))
         .build();
 
     PreprocessorFlags preprocessorFlags = PreprocessorFlags.builder()

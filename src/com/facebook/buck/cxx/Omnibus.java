@@ -23,7 +23,7 @@ import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -58,8 +58,8 @@ import java.util.Set;
 
 public class Omnibus {
 
-  private static final Flavor OMNIBUS_FLAVOR = ImmutableFlavor.of("omnibus");
-  private static final Flavor DUMMY_OMNIBUS_FLAVOR = ImmutableFlavor.of("dummy-omnibus");
+  private static final Flavor OMNIBUS_FLAVOR = InternalFlavor.of("omnibus");
+  private static final Flavor DUMMY_OMNIBUS_FLAVOR = InternalFlavor.of("dummy-omnibus");
 
   private Omnibus() {}
 
@@ -69,12 +69,12 @@ public class Omnibus {
 
   private static BuildTarget getRootTarget(BuildTarget base, BuildTarget root) {
     return BuildTarget.builder(base)
-        .addFlavors(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(root.toString())))
+        .addFlavors(InternalFlavor.of(Flavor.replaceInvalidCharacters(root.toString())))
         .build();
   }
 
   private static BuildTarget getDummyRootTarget(BuildTarget root) {
-    return root.withAppendedFlavors(ImmutableFlavor.of("dummy"));
+    return root.withAppendedFlavors(InternalFlavor.of("dummy"));
   }
 
   private static boolean shouldCreateDummyRoot(NativeLinkTarget target, CxxPlatform cxxPlatform) {
@@ -470,7 +470,7 @@ public class Omnibus {
                 ruleResolver,
                 ruleFinder,
                 params.getBuildTarget().withAppendedFlavors(
-                    ImmutableFlavor.of("omnibus-undefined-symbols-file")),
+                    InternalFlavor.of("omnibus-undefined-symbols-file")),
                 linkerInputs);
     return cxxPlatform.getLd().resolve(ruleResolver)
         .createUndefinedSymbolsLinkerArgs(
@@ -478,7 +478,7 @@ public class Omnibus {
             ruleResolver,
             ruleFinder,
             params.getBuildTarget().withAppendedFlavors(
-                ImmutableFlavor.of("omnibus-undefined-symbols-args")),
+                InternalFlavor.of("omnibus-undefined-symbols-args")),
             ImmutableList.of(undefinedSymbolsFile));
   }
 

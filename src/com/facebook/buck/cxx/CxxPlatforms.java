@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.LazyDelegatingTool;
 import com.facebook.buck.rules.Tool;
@@ -209,10 +209,10 @@ public class CxxPlatforms {
   private static ImmutableMap<String, Flavor> getHostFlavorMap() {
     // TODO(Coneko): base the host flavor on architecture, too.
     return ImmutableMap.<String, Flavor>builder()
-       .put(Platform.LINUX.getAutoconfName(), ImmutableFlavor.of("linux-x86_64"))
-       .put(Platform.MACOS.getAutoconfName(), ImmutableFlavor.of("macosx-x86_64"))
-       .put(Platform.WINDOWS.getAutoconfName(), ImmutableFlavor.of("windows-x86_64"))
-       .put(Platform.FREEBSD.getAutoconfName(), ImmutableFlavor.of("freebsd-x86_64"))
+       .put(Platform.LINUX.getAutoconfName(), InternalFlavor.of("linux-x86_64"))
+       .put(Platform.MACOS.getAutoconfName(), InternalFlavor.of("macosx-x86_64"))
+       .put(Platform.WINDOWS.getAutoconfName(), InternalFlavor.of("windows-x86_64"))
+       .put(Platform.FREEBSD.getAutoconfName(), InternalFlavor.of("freebsd-x86_64"))
        .build();
   }
 
@@ -265,7 +265,7 @@ public class CxxPlatforms {
     Optional<String> defaultPlatform = cxxBuckConfig.getDefaultPlatform();
     if (defaultPlatform.isPresent()) {
       defaultCxxPlatform = cxxPlatformsMap.get(
-          ImmutableFlavor.of(defaultPlatform.get()));
+          InternalFlavor.of(defaultPlatform.get()));
       if (defaultCxxPlatform == null) {
         LOG.warn(
             "Couldn't find default platform %s, falling back to system default",

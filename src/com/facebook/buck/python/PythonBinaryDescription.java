@@ -26,7 +26,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasTests;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -91,7 +91,7 @@ public class PythonBinaryDescription implements
   }
 
   public static BuildTarget getEmptyInitTarget(BuildTarget baseTarget) {
-    return baseTarget.withAppendedFlavors(ImmutableFlavor.of("__init__"));
+    return baseTarget.withAppendedFlavors(InternalFlavor.of("__init__"));
   }
 
   public static SourcePath createEmptyInitModule(
@@ -165,7 +165,7 @@ public class PythonBinaryDescription implements
     components = components.withModules(addMissingInitModules(components.getModules(), emptyInit));
 
     BuildTarget linkTreeTarget =
-        params.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("link-tree"));
+        params.getBuildTarget().withAppendedFlavors(InternalFlavor.of("link-tree"));
     Path linkTreeRoot =
         BuildTargets.getGenPath(params.getProjectFilesystem(), linkTreeTarget, "%s");
     SymlinkTree linkTree =
@@ -289,7 +289,7 @@ public class PythonBinaryDescription implements
     PythonPlatform pythonPlatform =
         pythonPlatforms.getValue(params.getBuildTarget()).orElse(
             pythonPlatforms.getValue(
-                args.platform.<Flavor>map(ImmutableFlavor::of).orElse(
+                args.platform.<Flavor>map(InternalFlavor::of).orElse(
                     pythonPlatforms.getFlavors().iterator().next())));
     CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).orElse(
         defaultCxxPlatform);

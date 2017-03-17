@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BinaryBuildRuleToolProvider;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleScheduleInfo;
@@ -64,7 +64,7 @@ public class CxxBuckConfig {
     ImmutableSet<String> sections = config.getSections();
     for (String section: sections) {
       if (section.startsWith(FLAVORED_CXX_SECTION_PREFIX)) {
-        builder.add(ImmutableFlavor.of(section.substring(FLAVORED_CXX_SECTION_PREFIX.length())));
+        builder.add(InternalFlavor.of(section.substring(FLAVORED_CXX_SECTION_PREFIX.length())));
       }
     }
     return builder.build();
@@ -287,7 +287,7 @@ public class CxxBuckConfig {
     return ImmutableMap.copyOf(
         Maps.transformValues(
             delegate.getEntriesForSection("defaults." + type.getName()),
-            ImmutableFlavor::of));
+            InternalFlavor::of));
   }
 
   public int getDebugPathSanitizerLimit() {

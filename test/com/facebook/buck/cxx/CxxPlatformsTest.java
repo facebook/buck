@@ -25,7 +25,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -61,7 +61,7 @@ public class CxxPlatformsTest {
             Optional.of(CxxToolProvider.Type.GCC));
     CxxPlatform borlandCxx452Platform =
       CxxPlatform.builder()
-          .setFlavor(ImmutableFlavor.of("borland_cxx_452"))
+          .setFlavor(InternalFlavor.of("borland_cxx_452"))
           .setAs(compiler)
           .setAspp(preprocessor)
           .setCc(compiler)

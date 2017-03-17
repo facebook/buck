@@ -21,7 +21,7 @@ import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasTests;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
@@ -52,7 +52,7 @@ public class JavaBinaryDescription implements
     ImplicitDepsInferringDescription<JavaBinaryDescription.Args>,
     VersionRoot<JavaBinaryDescription.Args> {
 
-  private static final Flavor FAT_JAR_INNER_JAR_FLAVOR = ImmutableFlavor.of("inner-jar");
+  private static final Flavor FAT_JAR_INNER_JAR_FLAVOR = InternalFlavor.of("inner-jar");
 
   private final JavacOptions javacOptions;
   private final CxxPlatform cxxPlatform;

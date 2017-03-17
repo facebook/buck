@@ -25,7 +25,7 @@ import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -76,7 +76,7 @@ public class ApplePackageDescriptionTest {
         rule.getDeps(),
         hasItem(
             resolver.getRule(
-                bundleBuildTarget.withFlavors(ImmutableFlavor.of("macosx-x86_64")))));
+                bundleBuildTarget.withFlavors(InternalFlavor.of("macosx-x86_64")))));
   }
 
   @Test

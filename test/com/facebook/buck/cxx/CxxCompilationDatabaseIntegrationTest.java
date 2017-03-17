@@ -29,7 +29,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -125,7 +125,7 @@ public class CxxCompilationDatabaseIntegrationTest {
         BuildTargets.getGenPath(
             filesystem,
             target.withFlavors(
-                ImmutableFlavor.of("default"),
+                InternalFlavor.of("default"),
                 CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
             "%s");
     assertTrue(Files.exists(rootPath.resolve(binaryHeaderSymlinkTreeFolder)));
@@ -149,8 +149,8 @@ public class CxxCompilationDatabaseIntegrationTest {
     String path =
         sandboxSources ? "buck-out/gen/binary_with_dep#default,sandbox/foo.cpp" : "foo.cpp";
     BuildTarget compilationTarget = target.withFlavors(
-        ImmutableFlavor.of("default"),
-        ImmutableFlavor.of("compile-" + sanitize("foo.cpp.o")));
+        InternalFlavor.of("default"),
+        InternalFlavor.of("compile-" + sanitize("foo.cpp.o")));
     assertHasEntry(
         fileToEntry,
         path,
@@ -199,7 +199,7 @@ public class CxxCompilationDatabaseIntegrationTest {
         BuildTargets.getGenPath(
             filesystem,
             target.withFlavors(
-                ImmutableFlavor.of("default"),
+                InternalFlavor.of("default"),
                 CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
             "%s");
     Path exportedHeaderSymlinkTreeFolder =
@@ -220,8 +220,8 @@ public class CxxCompilationDatabaseIntegrationTest {
     String path =
         sandboxSources ? "buck-out/gen/library_with_header#default,sandbox/bar.cpp" : "bar.cpp";
     BuildTarget compilationTarget = target.withFlavors(
-        ImmutableFlavor.of("default"),
-        ImmutableFlavor.of("compile-pic-" + sanitize("bar.cpp.o")));
+        InternalFlavor.of("default"),
+        InternalFlavor.of("compile-pic-" + sanitize("bar.cpp.o")));
     assertHasEntry(
         fileToEntry,
         path,
@@ -271,7 +271,7 @@ public class CxxCompilationDatabaseIntegrationTest {
         BuildTargets.getGenPath(
             filesystem,
             target.withFlavors(
-                ImmutableFlavor.of("default"),
+                InternalFlavor.of("default"),
                 CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
             "%s");
 
@@ -281,8 +281,8 @@ public class CxxCompilationDatabaseIntegrationTest {
     String path =
         sandboxSources ? "buck-out/gen/test#default,sandbox/test.cpp" : "test.cpp";
     BuildTarget compilationTarget = target.withFlavors(
-        ImmutableFlavor.of("default"),
-        ImmutableFlavor.of("compile-" + sanitize("test.cpp.o")));
+        InternalFlavor.of("default"),
+        InternalFlavor.of("compile-" + sanitize("test.cpp.o")));
     assertHasEntry(
         fileToEntry,
         path,
@@ -332,7 +332,7 @@ public class CxxCompilationDatabaseIntegrationTest {
         BuildTargets.getGenPath(
             filesystem,
             target.withFlavors(
-                ImmutableFlavor.of("default"),
+                InternalFlavor.of("default"),
                 CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
             "%s");
 
@@ -342,8 +342,8 @@ public class CxxCompilationDatabaseIntegrationTest {
     String path =
         sandboxSources ? "buck-out/gen/test#default,sandbox/test.cpp" : "test.cpp";
     BuildTarget compilationTarget = target.withFlavors(
-        ImmutableFlavor.of("default"),
-        ImmutableFlavor.of("compile-" + sanitize("test.cpp.o")));
+        InternalFlavor.of("default"),
+        InternalFlavor.of("compile-" + sanitize("test.cpp.o")));
     assertHasEntry(
         fileToEntry,
         path,
@@ -393,7 +393,7 @@ public class CxxCompilationDatabaseIntegrationTest {
         BuildTargets.getGenPath(
             filesystem,
             target.withFlavors(
-                ImmutableFlavor.of("default"),
+                InternalFlavor.of("default"),
                 CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
             "%s");
     Path exportedHeaderSymlinkTreeFolder =

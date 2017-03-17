@@ -30,7 +30,7 @@ import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -75,8 +75,8 @@ public class SwiftTestIOSIntegrationTest {
             filesystem,
             BuildTarget.builder(target)
                 .addFlavors(
-                    ImmutableFlavor.of("iphonesimulator-x86_64"),
-                    ImmutableFlavor.of("apple-test-bundle"),
+                    InternalFlavor.of("iphonesimulator-x86_64"),
+                    InternalFlavor.of("apple-test-bundle"),
                     AppleDebugFormat.DWARF.getFlavor(),
                     LinkerMapMode.NO_LINKER_MAP.getFlavor(),
                     AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)

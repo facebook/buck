@@ -32,7 +32,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -81,7 +81,7 @@ public class MultiarchFileTest {
             "AppleLibraryDescription (static)",
             FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION,
             (NodeBuilderFactory) target -> AppleLibraryBuilder
-                .createBuilder(target.withAppendedFlavors(ImmutableFlavor.of("static")))
+                .createBuilder(target.withAppendedFlavors(InternalFlavor.of("static")))
                 .setSrcs(ImmutableSortedSet.of(
                     SourceWithFlags.of(new FakeSourcePath("foo.c"))))
         },
@@ -89,7 +89,7 @@ public class MultiarchFileTest {
             "AppleLibraryDescription (shared)",
             FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION,
             (NodeBuilderFactory) target -> AppleLibraryBuilder
-                .createBuilder(target.withAppendedFlavors(ImmutableFlavor.of("shared")))
+                .createBuilder(target.withAppendedFlavors(InternalFlavor.of("shared")))
                 .setSrcs(ImmutableSortedSet.of(
                     SourceWithFlags.of(new FakeSourcePath("foo.c"))))
         },
@@ -115,8 +115,8 @@ public class MultiarchFileTest {
     assertTrue(
         ((Flavored) description).hasFlavors(
             ImmutableSet.of(
-                ImmutableFlavor.of("iphoneos-i386"),
-                ImmutableFlavor.of("iphoneos-x86_64"))));
+                InternalFlavor.of("iphoneos-i386"),
+                InternalFlavor.of("iphoneos-x86_64"))));
   }
 
   @SuppressWarnings({"unchecked"})

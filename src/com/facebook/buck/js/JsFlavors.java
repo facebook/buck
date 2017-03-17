@@ -19,7 +19,7 @@ package com.facebook.buck.js;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Charsets;
@@ -36,11 +36,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class JsFlavors {
-  public static final ImmutableFlavor ANDROID = ImmutableFlavor.of("android");
-  public static final ImmutableFlavor IOS = ImmutableFlavor.of("ios");
-  public static final ImmutableFlavor RELEASE = ImmutableFlavor.of("release");
-  public static final ImmutableFlavor RAM_BUNDLE_FILES = ImmutableFlavor.of("rambundle-files");
-  public static final ImmutableFlavor RAM_BUNDLE_INDEXED = ImmutableFlavor.of("rambundle-indexed");
+  public static final InternalFlavor ANDROID = InternalFlavor.of("android");
+  public static final InternalFlavor IOS = InternalFlavor.of("ios");
+  public static final InternalFlavor RELEASE = InternalFlavor.of("release");
+  public static final InternalFlavor RAM_BUNDLE_FILES = InternalFlavor.of("rambundle-files");
+  public static final InternalFlavor RAM_BUNDLE_INDEXED = InternalFlavor.of("rambundle-indexed");
 
   private static final ImmutableSet<Flavor> libraryFlavors = ImmutableSet.of(RELEASE);
   private static final ImmutableSet<Flavor> bundleFlavors =
@@ -72,7 +72,7 @@ public class JsFlavors {
         .toString()
         .substring(0, 10);
     final String safeFileName = Flavor.replaceInvalidCharacters(path.getFileName().toString());
-    return ImmutableFlavor.of(fileFlavorPrefix + safeFileName + "-" + hash);
+    return InternalFlavor.of(fileFlavorPrefix + safeFileName + "-" + hash);
   }
 
   public static Optional<Either<SourcePath, Pair<SourcePath, String>>> extractSourcePath(

@@ -95,10 +95,10 @@ public class BuildTargetTest {
   public void testBuildTargetWithFlavor() {
     BuildTarget target = BuildTarget
         .builder(ROOT, "//foo/bar", "baz")
-        .addFlavors(ImmutableFlavor.of("dex"))
+        .addFlavors(InternalFlavor.of("dex"))
         .build();
     assertEquals("baz#dex", target.getShortNameAndFlavorPostfix());
-    assertEquals(ImmutableSortedSet.of(ImmutableFlavor.of("dex")), target.getFlavors());
+    assertEquals(ImmutableSortedSet.of(InternalFlavor.of("dex")), target.getFlavors());
     assertTrue(target.isFlavored());
   }
 
@@ -113,7 +113,7 @@ public class BuildTargetTest {
   @Test
   public void testFlavorIsValid() {
     try {
-      BuildTarget.builder(ROOT, "//foo/bar", "baz").addFlavors(ImmutableFlavor.of("d!x")).build();
+      BuildTarget.builder(ROOT, "//foo/bar", "baz").addFlavors(InternalFlavor.of("d!x")).build();
       fail("Should have thrown IllegalArgumentException.");
     } catch (IllegalArgumentException e) {
       assertEquals("Invalid characters in flavor name: d!x", e.getMessage());
@@ -124,7 +124,7 @@ public class BuildTargetTest {
   public void testShortNameCannotContainHashWhenFlavorSet() {
     try {
       BuildTarget.builder(ROOT, "//foo/bar", "baz#dex")
-          .addFlavors(ImmutableFlavor.of("src-jar")).build();
+          .addFlavors(InternalFlavor.of("src-jar")).build();
       fail("Should have thrown IllegalArgumentException.");
     } catch (IllegalArgumentException e) {
       assertEquals("Build target name cannot contain '#' but was: baz#dex.", e.getMessage());
@@ -154,7 +154,7 @@ public class BuildTargetTest {
 
     BuildTarget flavoredTarget = BuildTarget
         .builder(ROOT, "//foo/bar", "baz")
-        .addFlavors(ImmutableFlavor.of("biz"))
+        .addFlavors(InternalFlavor.of("biz"))
         .build();
     assertEquals(unflavoredTarget, flavoredTarget.getUnflavoredBuildTarget());
   }
@@ -163,14 +163,14 @@ public class BuildTargetTest {
   public void testNumbersAreValidFlavors() {
     @SuppressWarnings("unused") BuildTarget unused =
         BuildTarget.builder(ROOT, "//foo", "bar")
-            .addFlavors(ImmutableFlavor.of("1234"))
+            .addFlavors(InternalFlavor.of("1234"))
             .build();
   }
 
   @Test
   public void testAppendingFlavors() {
-    Flavor aaa = ImmutableFlavor.of("aaa");
-    Flavor biz = ImmutableFlavor.of("biz");
+    Flavor aaa = InternalFlavor.of("aaa");
+    Flavor biz = InternalFlavor.of("biz");
 
     BuildTarget flavoredTarget = BuildTarget
         .builder(ROOT, "//foo/bar", "baz")

@@ -20,7 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -55,7 +55,7 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
   }
 
   private static final String TYPE = "java_symbols";
-  public static final Flavor JAVA_SYMBOLS = ImmutableFlavor.of(TYPE);
+  public static final Flavor JAVA_SYMBOLS = InternalFlavor.of(TYPE);
 
   private final BuildTarget buildTarget;
 

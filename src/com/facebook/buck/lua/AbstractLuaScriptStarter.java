@@ -20,7 +20,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
@@ -75,7 +75,7 @@ abstract class AbstractLuaScriptStarter implements Starter {
   public SourcePath build() {
     BuildTarget templateTarget =
         BuildTarget.builder(getBaseParams().getBuildTarget())
-            .addFlavors(ImmutableFlavor.of("starter-template"))
+            .addFlavors(InternalFlavor.of("starter-template"))
             .build();
     WriteFile templateRule = getRuleResolver().addToIndex(
         new WriteFile(

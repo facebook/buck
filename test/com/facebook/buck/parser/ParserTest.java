@@ -45,7 +45,7 @@ import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRule;
@@ -398,7 +398,7 @@ public class ParserTest {
   public void shouldThrowAnExceptionWhenAnUnknownFlavorIsSeen()
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     BuildTarget flavored = BuildTarget.builder(cellRoot, "//java/com/facebook", "foo")
-        .addFlavors(ImmutableFlavor.of("doesNotExist"))
+        .addFlavors(InternalFlavor.of("doesNotExist"))
         .build();
 
     thrown.expect(HumanReadableException.class);
@@ -417,7 +417,7 @@ public class ParserTest {
   public void shouldThrowAnExceptionWhenAnUnknownFlavorIsSeenAndShowSuggestionsDefault()
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     BuildTarget flavored = BuildTarget.builder(cellRoot, "//java/com/facebook", "foo")
-        .addFlavors(ImmutableFlavor.of("android-unknown"))
+        .addFlavors(InternalFlavor.of("android-unknown"))
         .build();
 
     thrown.expect(HumanReadableException.class);
@@ -439,7 +439,7 @@ public class ParserTest {
   public void shouldThrowAnExceptionWhenAnUnknownFlavorIsSeenAndShowSuggestionsFromConfig()
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     BuildTarget flavored = BuildTarget.builder(cellRoot, "//java/com/facebook", "foo")
-        .addFlavors(ImmutableFlavor.of("macosx109sdk"))
+        .addFlavors(InternalFlavor.of("macosx109sdk"))
         .build();
 
     thrown.expect(HumanReadableException.class);
@@ -1467,7 +1467,7 @@ public class ParserTest {
     // Fetch //bar:bar#src to put it in cache.
     BuildTarget barTarget = BuildTarget
         .builder(cellRoot, "//bar", "bar")
-        .addFlavors(ImmutableFlavor.of("src"))
+        .addFlavors(InternalFlavor.of("src"))
         .build();
     Iterable<BuildTarget> buildTargets = ImmutableList.of(barTarget);
 
@@ -2292,8 +2292,8 @@ public class ParserTest {
         hasItems(
             BuildTarget.builder(cellRoot, "//lib", "lib")
                 .addFlavors(
-                    ImmutableFlavor.of("iphonesimulator-x86_64"),
-                    ImmutableFlavor.of("static"))
+                    InternalFlavor.of("iphonesimulator-x86_64"),
+                    InternalFlavor.of("static"))
                 .build()));
   }
 
@@ -2342,8 +2342,8 @@ public class ParserTest {
         hasItems(
             BuildTarget.builder(cellRoot, "//lib", "lib")
                 .addFlavors(
-                    ImmutableFlavor.of("iphoneos-arm64"),
-                    ImmutableFlavor.of("shared"))
+                    InternalFlavor.of("iphoneos-arm64"),
+                    InternalFlavor.of("shared"))
                 .build()));
   }
 
@@ -2393,8 +2393,8 @@ public class ParserTest {
         hasItems(
             BuildTarget.builder(cellRoot, "//lib", "lib")
                 .addFlavors(
-                    ImmutableFlavor.of("macosx-x86_64"),
-                    ImmutableFlavor.of("shared"))
+                    InternalFlavor.of("macosx-x86_64"),
+                    InternalFlavor.of("shared"))
                 .build()));
   }
 
