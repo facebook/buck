@@ -161,7 +161,7 @@ public class DistBuildFileHashesTest {
         new MaterializerProjectFileHashCache(
             materializeProjectFilesystem,
             fileHashes.get(0),
-            new FileContentsProviders.InlineContentsProvider(),
+            new InlineContentsProvider(),
             fileHashLoader);
 
     materializer.get(materializeProjectFilesystem.resolve(f.javaSrcPath));

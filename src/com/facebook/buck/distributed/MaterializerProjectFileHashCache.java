@@ -22,22 +22,18 @@ import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
+import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -126,30 +122,22 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
       return;
     }
 
+    projectFilesystem.createParentDirs(projectFilesystem.resolve(relPath));
+
     // Download contents outside of sync block, so that fetches happen in parallel.
     // For a few cases we might get duplicate fetches, but this is much better than single
     // threaded fetches.
-    Optional<InputStream> fileContents = provider.getFileContents(fileHashEntry);
+    Preconditions.checkState(
+        provider.materializeFileContents(fileHashEntry, absPath),
+        "[Stampede] Missing source file [%s] for FileHashEntry=[%s]",
+        absPath,
+        fileHashEntry);
+    absPath.toFile().setExecutable(fileHashEntry.isExecutable);
     synchronized (this) {
       // Double check this path hasn't been materialized,
       // as previous check wasn't inside sync block.
       if (materializedPaths.contains(relPath)) {
         return;
-      }
-
-      projectFilesystem.createParentDirs(projectFilesystem.resolve(relPath));
-
-      // Write the actual file contents.
-      if (!fileContents.isPresent()) {
-        throw new HumanReadableException(
-            String.format(
-                "Input source file is missing from stampede. File=[%s]",
-                fileHashEntry.toString()));
-      }
-
-      try (InputStream sourceStream = fileContents.get()) {
-        Files.copy(sourceStream, absPath, StandardCopyOption.REPLACE_EXISTING);
-        absPath.toFile().setExecutable(fileHashEntry.isExecutable);
       }
 
       materializedPaths.add(relPath);

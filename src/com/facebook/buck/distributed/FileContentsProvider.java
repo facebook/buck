@@ -19,14 +19,15 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Optional;
+import java.nio.file.Path;
 
 public interface FileContentsProvider {
-
   /**
    * @param entry to fetch the contents for.
-   * @return the stream to the file contents or Optional.empty() if the file could not be found.
+   * @param targetAbsPath where the file should be written to.
+   *
+   * @return true if the operation succeed, false otherwise.
    */
-  Optional<InputStream> getFileContents(BuildJobStateFileHashEntry entry) throws IOException;
+  boolean materializeFileContents(BuildJobStateFileHashEntry entry, Path targetAbsPath)
+      throws IOException;
 }

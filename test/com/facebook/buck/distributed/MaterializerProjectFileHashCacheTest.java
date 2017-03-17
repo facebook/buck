@@ -40,15 +40,12 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 
 public class MaterializerProjectFileHashCacheTest {
   @Rule
@@ -123,6 +120,7 @@ public class MaterializerProjectFileHashCacheTest {
     BuildJobStateFileHashEntry fileAbcFileHashEntry = new BuildJobStateFileHashEntry();
     fileAbcFileHashEntry.setPath(unixPath(relativePathFileAbc));
     fileAbcFileHashEntry.setHashCode(EXAMPLE_HASHCODE.toString());
+    fileAbcFileHashEntry.setContents(FILE_CONTENTS.getBytes(StandardCharsets.UTF_8));
     fileAbcFileHashEntry.setIsDirectory(false);
     fileAbcFileHashEntry.setMaterializeDuringPreloading(materializeDuringPreloading);
     fileHashes.addToEntries(fileAbcFileHashEntry);
@@ -138,25 +136,16 @@ public class MaterializerProjectFileHashCacheTest {
     BuildJobStateFileHashEntry fileAeFileHashEntry = new BuildJobStateFileHashEntry();
     fileAeFileHashEntry.setPath(unixPath(relativePathFileAe));
     fileAeFileHashEntry.setHashCode(EXAMPLE_HASHCODE.toString());
+    fileAeFileHashEntry.setContents(FILE_CONTENTS_TWO.getBytes(StandardCharsets.UTF_8));
     fileAeFileHashEntry.setIsDirectory(false);
     fileAeFileHashEntry.setMaterializeDuringPreloading(materializeDuringPreloading);
     fileHashes.addToEntries(fileAeFileHashEntry);
 
-    FileContentsProvider mockFileProvider = EasyMock.createMock(FileContentsProvider.class);
-    InputStream fileAbcContentStream =
-        new ByteArrayInputStream(FILE_CONTENTS.getBytes(StandardCharsets.UTF_8));
-    InputStream fileAeContentStream =
-        new ByteArrayInputStream(FILE_CONTENTS_TWO.getBytes(StandardCharsets.UTF_8));
-    expect(mockFileProvider.getFileContents(fileAbcFileHashEntry))
-        .andReturn(Optional.of(fileAbcContentStream));
-    expect(mockFileProvider.getFileContents(fileAeFileHashEntry))
-        .andReturn(Optional.of(fileAeContentStream));
-    replay(mockFileProvider);
-
+    InlineContentsProvider inlineProvider = new InlineContentsProvider();
     FileHashCache mockFileHashCache = EasyMock.createMock(FileHashCache.class);
 
     MaterializerProjectFileHashCache fileMaterializer = new MaterializerProjectFileHashCache(
-        projectFilesystem, fileHashes, mockFileProvider, mockFileHashCache);
+        projectFilesystem, fileHashes, inlineProvider, mockFileHashCache);
 
     assertFalse(pathDirA.toFile().exists());
     assertFalse(pathDirAb.toFile().exists());
@@ -238,7 +227,7 @@ public class MaterializerProjectFileHashCacheTest {
     assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
 
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath());
-    Path realFile = projectFilesystem.resolve("realfile");
+    Path realFileAbsPath = projectFilesystem.resolve("realfile");
     Path relativeRealFile = Paths.get("realfile");
 
     BuildJobStateFileHashEntry realFileHashEntry = new BuildJobStateFileHashEntry();
@@ -249,20 +238,14 @@ public class MaterializerProjectFileHashCacheTest {
     BuildJobStateFileHashes fileHashes = new BuildJobStateFileHashes();
     fileHashes.addToEntries(realFileHashEntry);
 
-    FileContentsProvider mockFileProvider = EasyMock.createMock(FileContentsProvider.class);
-    InputStream fileContentStream =
-        new ByteArrayInputStream(FILE_CONTENTS.getBytes(StandardCharsets.UTF_8));
-    expect(mockFileProvider.getFileContents(realFileHashEntry))
-        .andReturn(Optional.of(fileContentStream));
-    replay(mockFileProvider);
+    InlineContentsProvider inlineProvider = new InlineContentsProvider();
 
     FileHashCache mockFileHashCache = EasyMock.createMock(FileHashCache.class);
-
     MaterializerProjectFileHashCache fileMaterializer = new MaterializerProjectFileHashCache(
-        projectFilesystem, fileHashes, mockFileProvider, mockFileHashCache);
-    materializeFunction.execute(fileMaterializer, realFile);
+        projectFilesystem, fileHashes, inlineProvider, mockFileHashCache);
+    materializeFunction.execute(fileMaterializer, realFileAbsPath);
 
-    return realFile;
+    return realFileAbsPath;
   }
 
   @Test

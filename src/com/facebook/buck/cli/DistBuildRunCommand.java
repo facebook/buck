@@ -25,14 +25,17 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
@@ -55,6 +58,11 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
   @Option(name = "--build-mode",
       usage = "The mode in which the distributed build is going to run.")
   private DistBuildMode distBuildMode = DistBuildMode.REMOTE_BUILD;
+
+  @Nullable
+  @Option(name = "--global-cache-dir",
+      usage = "Full path to an existing directory that will contain a global cache across builds.")
+  private Path globalCacheDir;
 
   @Override
   public boolean isReadOnly() {
@@ -91,7 +99,8 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
             service,
             Preconditions.checkNotNull(distBuildMode),
             coordinatorPort,
-            getStampedeIdOptional());
+            getStampedeIdOptional(),
+            getGlobalCacheDirOptional());
         int returnCode = distBuildExecutor.buildAndReturnExitCode();
         console.printSuccess(String.format(
             "Successfully ran distributed build [%s] in [%d millis].",
@@ -124,6 +133,25 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
       return new Pair<>(
           service.fetchBuildJobState(stampedeId),
           String.format("DistBuild=[%s]", stampedeId.toString()));
+    }
+  }
+
+  private Optional<Path> getGlobalCacheDirOptional() {
+    if (globalCacheDir == null) {
+      return Optional.empty();
+    } else {
+      if (!Files.isDirectory(globalCacheDir)) {
+        try {
+          Files.createDirectories(globalCacheDir);
+        } catch (IOException exception) {
+          throw new HumanReadableException(
+              exception,
+              "Directory passed for --global-cache-dir cannot be created. value=[%s]",
+              globalCacheDir.toString());
+        }
+      }
+
+      return Optional.of(globalCacheDir);
     }
   }
 }

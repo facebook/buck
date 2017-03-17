@@ -24,8 +24,8 @@ import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.DistBuildState;
-import com.facebook.buck.distributed.FileContentsProviders;
 import com.facebook.buck.distributed.FrontendService;
+import com.facebook.buck.distributed.MultiSourceContentsProvider;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -83,7 +83,8 @@ public abstract class DistBuildFactory {
       DistBuildService service,
       DistBuildMode mode,
       int coordinatorPort,
-      Optional<StampedeId> stampedeId) throws IOException {
+      Optional<StampedeId> stampedeId,
+      Optional<Path> globalCacheDir) throws IOException {
     DistBuildState state = DistBuildState.load(
         Optional.of(params.getBuckConfig()),
         jobState,
@@ -112,7 +113,7 @@ public abstract class DistBuildFactory {
             .setActionGraphCache(params.getActionGraphCache())
             .setCacheKeySeed(params.getBuckConfig().getKeySeed())
             .setConsole(params.getConsole())
-            .setProvider(FileContentsProviders.createDefaultProvider(service))
+            .setProvider(new MultiSourceContentsProvider(service, globalCacheDir))
             .setExecutors(params.getExecutors())
             .setDistBuildMode(mode)
             .setCoordinatorPort(coordinatorPort)

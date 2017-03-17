@@ -42,9 +42,7 @@
     "exported_deps" : [ ]
   },
   "testutil" : {
-    "deps" : [
-      "//src/com/facebook/buck/artifact_cache:impl"
-    ],
+    "deps" : [ ],
     "exported_deps" : [
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
       "//src/com/facebook/buck/io:io",

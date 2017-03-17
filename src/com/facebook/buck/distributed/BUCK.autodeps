@@ -14,7 +14,6 @@
       "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/util:constants",
-      "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/zip:unzip",
       "//third-party/java/immutables:immutables",
