@@ -28,9 +28,14 @@ import java.util.Optional;
 public interface OnDiskBuildInfo {
 
   /**
-   * @return the value associated with the specified key, if it exists.
+   * @return the build rule metadata value associated with the specified key, if it exists.
    */
   Optional<String> getValue(String key);
+
+  /**
+   * @return the build engine metadata value associated with the specified key, if it exists.
+   */
+  Optional<String> getBuildValue(String key);
 
   /**
    * @return the sequence of values associated with the specified key, if it exists.
@@ -43,9 +48,10 @@ public interface OnDiskBuildInfo {
   ImmutableList<String> getValuesOrThrow(String key);
 
   /**
-   * @return the map of strings associated with the specified key, if it exists.
+   * @return the map of strings associated with the specified key in the build engine metadata, if
+   * it exists.
    */
-  Optional<ImmutableMap<String, String>> getMap(String key);
+  Optional<ImmutableMap<String, String>> getBuildMap(String key);
 
   /**
    * @return Assuming the value associated with the specified key is a valid sha1 hash, returns it

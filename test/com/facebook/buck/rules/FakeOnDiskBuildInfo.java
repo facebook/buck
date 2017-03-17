@@ -35,7 +35,7 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
 
   @Override
   public Optional<RuleKey> getRuleKey(String key) {
-    return getValue(key).map(RuleKey::new);
+    return getBuildValue(key).map(RuleKey::new);
   }
 
   /** @return this */
@@ -55,6 +55,11 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
+  public Optional<String> getBuildValue(String key) {
+    return Optional.ofNullable(metadata.get(key));
+  }
+
+  @Override
   public Optional<ImmutableList<String>> getValues(String key) {
     return Optional.ofNullable(metadataValues.get(key));
   }
@@ -65,7 +70,7 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
-  public Optional<ImmutableMap<String, String>> getMap(String key) {
+  public Optional<ImmutableMap<String, String>> getBuildMap(String key) {
     return Optional.empty();
   }
 

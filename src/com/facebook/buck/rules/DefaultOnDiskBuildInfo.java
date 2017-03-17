@@ -61,6 +61,11 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
+  public Optional<String> getBuildValue(String key) {
+    return projectFilesystem.readFileIfItExists(metadataDirectory.resolve(key));
+  }
+
+  @Override
   public Optional<ImmutableList<String>> getValues(String key) {
     Optional<String> value = getValue(key);
     if (!value.isPresent()) {
@@ -112,8 +117,8 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
-  public Optional<ImmutableMap<String, String>> getMap(String key) {
-    Optional<String> value = getValue(key);
+  public Optional<ImmutableMap<String, String>> getBuildMap(String key) {
+    Optional<String> value = getBuildValue(key);
     if (!value.isPresent()) {
       return Optional.empty();
     }
@@ -152,7 +157,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   @Override
   public Optional<RuleKey> getRuleKey(String key) {
     try {
-      return getValue(key).map(RuleKey::new);
+      return getBuildValue(key).map(RuleKey::new);
     } catch (IllegalArgumentException ignored) {
       return Optional.empty();
     }

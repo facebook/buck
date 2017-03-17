@@ -819,7 +819,7 @@ public class CachingBuildEngine implements BuildEngine {
           // the output hashes weren't recorded in the cache we do nothing.
           if (success != BuildRuleSuccessType.BUILT_LOCALLY && success.outputsHaveChanged()) {
             Optional<ImmutableMap<String, String>> hashes =
-                onDiskBuildInfo.getMap(BuildInfo.MetadataKey.RECORDED_PATH_HASHES);
+                onDiskBuildInfo.getBuildMap(BuildInfo.MetadataKey.RECORDED_PATH_HASHES);
 
             // We only seed after first verifying the recorded path hashes.  This prevents the
             // optimization, but is useful to keep in place for a while to verify this optimization

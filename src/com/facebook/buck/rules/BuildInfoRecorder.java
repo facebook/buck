@@ -96,7 +96,8 @@ public class BuildInfoRecorder {
    */
   private final Set<Path> pathsToOutputs;
 
-  BuildInfoRecorder(BuildTarget buildTarget,
+  BuildInfoRecorder(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       Clock clock,
       BuildId buildId,
