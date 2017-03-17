@@ -18,6 +18,7 @@ package com.facebook.buck.distributed;
 
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -301,13 +302,15 @@ public class MaterializerProjectFileHashCacheTest {
     testSymlinkToFileWithinExternalDirectory(
         EXAMPLE_HASHCODE,
         EXAMPLE_HASHCODE,
-        materializeFunction);
+        materializeFunction,
+        1);
   }
 
   public void testSymlinkToFileWithinExternalDirectory(
       HashCode fileHashEntryHashCode,
       HashCode actualHashCode,
-      MaterializeFunction materializeFunction) throws IOException {
+      MaterializeFunction materializeFunction,
+      int expectCallsToGetHashMethod) throws IOException {
     // Scenario:
     //  path: /project/linktoexternaldir/externalfile
     //  symlink root: /project/linktoexternaldir -> /externalDir
@@ -333,7 +336,11 @@ public class MaterializerProjectFileHashCacheTest {
     FileContentsProvider mockFileProvider = EasyMock.createMock(FileContentsProvider.class);
     ProjectFileHashCache mockFileHashCache = EasyMock.createNiceMock(ProjectFileHashCache.class);
     expect(mockFileHashCache.getFilesystem()).andReturn(projectFilesystem).atLeastOnce();
-    expect(mockFileHashCache.get(symlink)).andReturn(actualHashCode);
+    if (expectCallsToGetHashMethod > 0) {
+      expect(mockFileHashCache.get(relativeSymlink))
+          .andReturn(actualHashCode)
+          .times(expectCallsToGetHashMethod);
+    }
     replay(mockFileHashCache);
 
     MaterializerProjectFileHashCache fileMaterializer = new MaterializerProjectFileHashCache(
@@ -341,18 +348,22 @@ public class MaterializerProjectFileHashCacheTest {
 
     assertFalse(symlink.toFile().exists());
 
-    materializeFunction.execute(fileMaterializer, symlink);
+    materializeFunction.execute(fileMaterializer, relativeSymlink);
 
     assertTrue(symlink.toFile().exists());
     assertThat(
         symlink.toRealPath(),
         Matchers.equalTo(externalFile.toPath().toRealPath()));
+    verify(mockFileHashCache);
   }
 
   @Test
   public void testPreloadSymlinkToFileWithinExternalDirectory() throws IOException {
     testSymlinkToFileWithinExternalDirectory(
-        (fileMaterializer, symlink) -> fileMaterializer.preloadAllFiles());
+        EXAMPLE_HASHCODE,
+        EXAMPLE_HASHCODE,
+        (fileMaterializer, symlink) -> fileMaterializer.preloadAllFiles(),
+        0);
   }
 
   @Test
@@ -376,7 +387,8 @@ public class MaterializerProjectFileHashCacheTest {
     testSymlinkToFileWithinExternalDirectory(
         EXAMPLE_HASHCODE, /* fileHashEntryHashCode */
         EXAMPLE_HASHCODE_TWO, /* actualHashCode */
-        (fileMaterializer, symlink) -> fileMaterializer.get(symlink));
+        (fileMaterializer, symlink) -> fileMaterializer.get(symlink),
+        1);
   }
 
   private static PathWithUnixSeparators unixPath(Path path) {

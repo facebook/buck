@@ -70,7 +70,8 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
         continue;
       } else if (fileHashEntry.isSetMaterializeDuringPreloading() &&
           fileHashEntry.isMaterializeDuringPreloading()) {
-        get(absPath);
+        Path relPath = projectFilesystem.getPathRelativeToProjectRoot(absPath).get();
+        get(relPath);
       } else if (fileHashEntry.isSetRootSymLink()) {
         materializeSymlink(fileHashEntry, symlinkedPaths);
         symlinkedPaths.add(absPath);
@@ -149,18 +150,21 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
     projectFilesystem.mkdirs(path);
 
     for (PathWithUnixSeparators unixPath : fileHashEntry.getChildren()) {
-      remainingPaths.add(projectFilesystem.resolve(Paths.get(unixPath.getPath())));
+      Path absPath = projectFilesystem.resolve(Paths.get(unixPath.getPath()));
+      Path relPath = projectFilesystem.getPathRelativeToProjectRoot(absPath).get();
+      remainingPaths.add(relPath);
     }
   }
 
   private void symlinkIntegrityCheck(BuildJobStateFileHashEntry fileHashEntry) throws IOException {
-    Path symlink = projectFilesystem.resolve(fileHashEntry.getPath().getPath());
+    Path symlinkAbsPath = projectFilesystem.resolve(fileHashEntry.getPath().getPath());
     HashCode expectedHash = HashCode.fromString(fileHashEntry.getHashCode());
-    HashCode actualHash = delegate.get(symlink);
+    Path symlinkRelPath = projectFilesystem.getPathRelativeToProjectRoot(symlinkAbsPath).get();
+    HashCode actualHash = delegate.get(symlinkRelPath);
     if (!expectedHash.equals(actualHash)) {
       throw new RuntimeException(String.format(
           "Symlink [%s] had hashcode [%s] during scheduling, but [%s] during build.",
-          symlink.toAbsolutePath(),
+          symlinkAbsPath,
           expectedHash,
           actualHash));
     }
