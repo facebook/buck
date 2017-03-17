@@ -396,10 +396,11 @@ public class AppleDescriptions {
       }
     }
 
-    BuildRuleParams assetCatalogParams = params.copyWithChanges(
-        params.getBuildTarget().withAppendedFlavors(AppleAssetCatalog.FLAVOR),
-        Suppliers.ofInstance(ImmutableSortedSet.of()),
-        Suppliers.ofInstance(ImmutableSortedSet.of()));
+    BuildRuleParams assetCatalogParams = params
+        .withAppendedFlavor(AppleAssetCatalog.FLAVOR)
+        .copyReplacingDeclaredAndExtraDeps(
+            Suppliers.ofInstance(ImmutableSortedSet.of()),
+            Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     return Optional.of(
         new AppleAssetCatalog(
@@ -427,10 +428,11 @@ public class AppleDescriptions {
             AppleBuildRules.CORE_DATA_MODEL_DESCRIPTION_CLASSES,
             ImmutableList.of(targetNode));
 
-    BuildRuleParams coreDataModelParams = params.copyWithChanges(
-        params.getBuildTarget().withAppendedFlavors(CoreDataModel.FLAVOR),
-        Suppliers.ofInstance(ImmutableSortedSet.of()),
-        Suppliers.ofInstance(ImmutableSortedSet.of()));
+    BuildRuleParams coreDataModelParams = params
+        .withAppendedFlavor(CoreDataModel.FLAVOR)
+        .copyReplacingDeclaredAndExtraDeps(
+            Suppliers.ofInstance(ImmutableSortedSet.of()),
+            Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     if (coreDataModelArgs.isEmpty()) {
       return Optional.empty();
@@ -458,10 +460,11 @@ public class AppleDescriptions {
             AppleBuildRules.SCENEKIT_ASSETS_DESCRIPTION_CLASSES,
             ImmutableList.of(targetNode));
 
-    BuildRuleParams sceneKitAssetsParams = params.copyWithChanges(
-        params.getBuildTarget().withAppendedFlavors(SceneKitAssets.FLAVOR),
-        Suppliers.ofInstance(ImmutableSortedSet.of()),
-        Suppliers.ofInstance(ImmutableSortedSet.of()));
+    BuildRuleParams sceneKitAssetsParams = params
+        .withAppendedFlavor(SceneKitAssets.FLAVOR)
+        .copyReplacingDeclaredAndExtraDeps(
+            Suppliers.ofInstance(ImmutableSortedSet.of()),
+            Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     if (sceneKitAssetsArgs.isEmpty()) {
       return Optional.empty();
@@ -499,16 +502,18 @@ public class AppleDescriptions {
       buildRuleForDebugFormat = strippedBinaryRule;
     }
     AppleDebuggableBinary rule = new AppleDebuggableBinary(
-        params.copyWithChanges(
-            strippedBinaryRule.getBuildTarget()
-                .withAppendedFlavors(AppleDebuggableBinary.RULE_FLAVOR, debugFormat.getFlavor()),
-            Suppliers.ofInstance(
-                AppleDebuggableBinary.getRequiredRuntimeDeps(
-                    debugFormat,
-                    strippedBinaryRule,
-                    unstrippedBinaryRule,
-                    appleDsym)),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+        params.withBuildTarget(strippedBinaryRule.getBuildTarget()
+            .withAppendedFlavors(
+                AppleDebuggableBinary.RULE_FLAVOR,
+                debugFormat.getFlavor()))
+            .copyReplacingDeclaredAndExtraDeps(
+                Suppliers.ofInstance(
+                    AppleDebuggableBinary.getRequiredRuntimeDeps(
+                        debugFormat,
+                        strippedBinaryRule,
+                        unstrippedBinaryRule,
+                        appleDsym)),
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
         buildRuleForDebugFormat);
     return rule;
   }

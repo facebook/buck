@@ -106,11 +106,12 @@ public class WriteStringTemplateRule extends AbstractBuildRule {
       ImmutableMap<String, String> values,
       boolean executable) {
     return new WriteStringTemplateRule(
-        baseParams.copyWithChanges(
-            target,
-            Suppliers.ofInstance(
-                ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(template))),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+        baseParams
+            .withBuildTarget(target)
+            .copyReplacingDeclaredAndExtraDeps(
+                Suppliers.ofInstance(
+                    ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(template))),
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
         output,
         template,
         values,

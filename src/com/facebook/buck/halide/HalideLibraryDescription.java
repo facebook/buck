@@ -314,10 +314,11 @@ public class HalideLibraryDescription
       final ImmutableSortedSet<BuildTarget> compilerDeps =
           args.compilerDeps;
       return createHalideCompiler(
-          params.copyWithChanges(
-              params.getBuildTarget().withFlavors(HALIDE_COMPILER_FLAVOR),
-              Suppliers.ofInstance(resolver.getAllRules(compilerDeps)),
-              Suppliers.ofInstance(ImmutableSortedSet.of())),
+          params
+              .withAppendedFlavor(HALIDE_COMPILER_FLAVOR)
+              .copyReplacingDeclaredAndExtraDeps(
+                  Suppliers.ofInstance(resolver.getAllRules(compilerDeps)),
+                  Suppliers.ofInstance(ImmutableSortedSet.of())),
           resolver,
           pathResolver,
           ruleFinder,

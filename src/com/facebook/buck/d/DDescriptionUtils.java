@@ -261,10 +261,11 @@ abstract class DDescriptionUtils {
 
       return buildRuleResolver.addToIndex(
           new DCompileBuildRule(
-              baseParams.copyWithChanges(
-                  compileTarget,
-                  Suppliers.ofInstance(deps),
-                  Suppliers.ofInstance(ImmutableSortedSet.of())),
+              baseParams
+                  .withBuildTarget(compileTarget)
+                  .copyReplacingDeclaredAndExtraDeps(
+                      Suppliers.ofInstance(deps),
+                      Suppliers.ofInstance(ImmutableSortedSet.of())),
               compiler,
               ImmutableList.<String>builder()
                   .addAll(dBuckConfig.getBaseCompilerFlags())

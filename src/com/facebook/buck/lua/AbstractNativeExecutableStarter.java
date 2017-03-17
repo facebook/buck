@@ -118,10 +118,11 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
               .build();
       WriteFile templateRule = getRuleResolver().addToIndex(
           new WriteFile(
-              getBaseParams().copyWithChanges(
-                  templateTarget,
-                  Suppliers.ofInstance(ImmutableSortedSet.of()),
-                  Suppliers.ofInstance(ImmutableSortedSet.of())),
+              getBaseParams()
+                  .withBuildTarget(templateTarget)
+                  .copyReplacingDeclaredAndExtraDeps(
+                      Suppliers.ofInstance(ImmutableSortedSet.of()),
+                      Suppliers.ofInstance(ImmutableSortedSet.of())),
               getNativeStarterCxxSourceTemplate(),
               BuildTargets.getGenPath(
                   getBaseParams().getProjectFilesystem(),

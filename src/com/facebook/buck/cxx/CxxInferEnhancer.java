@@ -124,8 +124,7 @@ public final class CxxInferEnhancer {
 
     return ruleResolver.addToIndex(
         new CxxInferCaptureTransitive(
-            params.copyWithChanges(
-                params.getBuildTarget(),
+            params.copyReplacingDeclaredAndExtraDeps(
                 Suppliers.ofInstance(
                     ImmutableSortedSet.<BuildRule>naturalOrder()
                         .addAll(captureRules)
@@ -463,8 +462,7 @@ public final class CxxInferEnhancer {
       CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> captureAnalyzeRules) {
     return resolver.addToIndex(
         new CxxInferAnalyze(
-            params.copyWithChanges(
-                params.getBuildTarget(),
+            params.copyReplacingDeclaredAndExtraDeps(
                 Suppliers.ofInstance(
                     ImmutableSortedSet.<BuildRule>naturalOrder()
                         .addAll(captureAnalyzeRules.captureRules)

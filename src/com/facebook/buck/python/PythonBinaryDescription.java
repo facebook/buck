@@ -105,10 +105,11 @@ public class PythonBinaryDescription implements
             "%s/__init__.py");
     WriteFile rule = resolver.addToIndex(
         new WriteFile(
-            params.copyWithChanges(
-                emptyInitTarget,
-                Suppliers.ofInstance(ImmutableSortedSet.of()),
-                Suppliers.ofInstance(ImmutableSortedSet.of())),
+            params
+                .withBuildTarget(emptyInitTarget)
+                .copyReplacingDeclaredAndExtraDeps(
+                    Suppliers.ofInstance(ImmutableSortedSet.of()),
+                    Suppliers.ofInstance(ImmutableSortedSet.of())),
             "",
             emptyInitPath,
             /* executable */ false));

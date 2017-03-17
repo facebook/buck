@@ -313,9 +313,10 @@ public class CxxPythonExtensionDescription implements
         NativeLinkableInput.builder()
         .setArgs(
             getExtensionArgs(
-                params.withBuildTarget(
-                    params.getBuildTarget().withoutFlavors(
-                        LinkerMapMode.FLAVOR_DOMAIN.getFlavors())),
+                params
+                    .withBuildTarget(
+                        params.getBuildTarget().withoutFlavors(
+                            LinkerMapMode.FLAVOR_DOMAIN.getFlavors())),
                 ruleResolver,
                 pathResolver,
                 ruleFinder,
@@ -438,14 +439,19 @@ public class CxxPythonExtensionDescription implements
             return NativeLinkableInput.builder()
                 .addAllArgs(
                     getExtensionArgs(
-                        params.copyWithChanges(
-                            params.getBuildTarget().withAppendedFlavors(
+                        params
+                            .withBuildTarget(params.getBuildTarget().withAppendedFlavors(
                                 pythonPlatform.getFlavor(),
-                                CxxDescriptionEnhancer.SHARED_FLAVOR),
-                            Suppliers.ofInstance(
-                                ImmutableSortedSet.copyOf(
-                                    getPlatformDeps(params, ruleResolver, pythonPlatform, args))),
-                            Suppliers.ofInstance(ImmutableSortedSet.of())),
+                                CxxDescriptionEnhancer.SHARED_FLAVOR))
+                            .copyReplacingDeclaredAndExtraDeps(
+                                Suppliers.ofInstance(
+                                    ImmutableSortedSet.copyOf(
+                                        getPlatformDeps(
+                                            params,
+                                            ruleResolver,
+                                            pythonPlatform,
+                                            args))),
+                                Suppliers.ofInstance(ImmutableSortedSet.of())),
                         ruleResolver,
                         pathResolver,
                         ruleFinder,

@@ -221,10 +221,11 @@ public class CxxPrecompiledHeaderTemplate
       return existingRule.get();
     }
 
-    BuildRuleParams depAggParams = params.copyWithChanges(
-        depAggTarget,
-        Suppliers.ofInstance(getPreprocessDeps(cxxPlatform)),
-        Suppliers.ofInstance(ImmutableSortedSet.of()));
+    BuildRuleParams depAggParams = params
+        .withBuildTarget(depAggTarget)
+        .copyReplacingDeclaredAndExtraDeps(
+            Suppliers.ofInstance(getPreprocessDeps(cxxPlatform)),
+            Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     DependencyAggregation depAgg = new DependencyAggregation(depAggParams);
     ruleResolver.addToIndex(depAgg);

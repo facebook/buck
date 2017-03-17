@@ -112,10 +112,11 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
 
           BuildRule module = resolver.addToIndex(
               new GwtModule(
-                  params.copyWithChanges(
-                      gwtModuleTarget,
-                      Suppliers.ofInstance(deps),
-                      Suppliers.ofInstance(ImmutableSortedSet.of())),
+                  params
+                      .withBuildTarget(gwtModuleTarget)
+                      .copyReplacingDeclaredAndExtraDeps(
+                          Suppliers.ofInstance(deps),
+                          Suppliers.ofInstance(ImmutableSortedSet.of())),
                   ruleFinder,
                   filesForGwtModule));
           gwtModule = Optional.of(module);

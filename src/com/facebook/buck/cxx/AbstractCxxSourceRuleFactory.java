@@ -173,10 +173,11 @@ abstract class AbstractCxxSourceRuleFactory {
     if (existingRule.isPresent()) {
       return existingRule.get();
     } else {
-      BuildRuleParams params = getParams().copyWithChanges(
-          target,
-          Suppliers.ofInstance(getPreprocessDeps()),
-          Suppliers.ofInstance(ImmutableSortedSet.of()));
+      BuildRuleParams params = getParams()
+          .withBuildTarget(target)
+          .copyReplacingDeclaredAndExtraDeps(
+              Suppliers.ofInstance(getPreprocessDeps()),
+              Suppliers.ofInstance(ImmutableSortedSet.of()));
       DependencyAggregation rule = new DependencyAggregation(params);
       getResolver().addToIndex(rule);
       return rule;
@@ -325,10 +326,11 @@ abstract class AbstractCxxSourceRuleFactory {
 
     // Build the CxxCompile rule and add it to our sorted set of build rules.
     CxxPreprocessAndCompile result = CxxPreprocessAndCompile.compile(
-        getParams().copyWithChanges(
-            target,
-            Suppliers.ofInstance(depsBuilder.build()),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+        getParams()
+            .withBuildTarget(target)
+            .copyReplacingDeclaredAndExtraDeps(
+                Suppliers.ofInstance(depsBuilder.build()),
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
         compilerDelegate,
         getCompileOutputPath(target, name),
         source.getPath(),
@@ -433,10 +435,11 @@ abstract class AbstractCxxSourceRuleFactory {
     depsBuilder.add(source);
 
     CxxInferCapture result = new CxxInferCapture(
-        getParams().copyWithChanges(
-            target,
-            Suppliers.ofInstance(depsBuilder.build()),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+        getParams()
+            .withBuildTarget(target)
+            .copyReplacingDeclaredAndExtraDeps(
+                Suppliers.ofInstance(depsBuilder.build()),
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
         ppFlags,
         cFlags,
         source.getPath(),
@@ -520,10 +523,11 @@ abstract class AbstractCxxSourceRuleFactory {
 
     // Build the CxxCompile rule and add it to our sorted set of build rules.
     CxxPreprocessAndCompile result = CxxPreprocessAndCompile.preprocessAndCompile(
-        getParams().copyWithChanges(
-            target,
-            Suppliers.ofInstance(depsBuilder.build()),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+        getParams()
+            .withBuildTarget(target)
+            .copyReplacingDeclaredAndExtraDeps(
+                Suppliers.ofInstance(depsBuilder.build()),
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
         preprocessorDelegate,
         compilerDelegate,
         getCompileOutputPath(target, name),
@@ -754,10 +758,11 @@ abstract class AbstractCxxSourceRuleFactory {
     depsBuilder.add(headerPath);
 
     BuildRuleParams params =
-        getParams().copyWithChanges(
-            target,
-            Suppliers.ofInstance(depsBuilder.build()),
-            Suppliers.ofInstance(ImmutableSortedSet.of()));
+        getParams()
+            .withBuildTarget(target)
+            .copyReplacingDeclaredAndExtraDeps(
+                Suppliers.ofInstance(depsBuilder.build()),
+                Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     CxxPrecompiledHeader rule = new CxxPrecompiledHeader(
         params,

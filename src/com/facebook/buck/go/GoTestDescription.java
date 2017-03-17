@@ -138,12 +138,12 @@ public class GoTestDescription implements
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     GoTestMain generatedTestMain = new GoTestMain(
-        params.copyWithChanges(
-            params.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("test-main-src")),
-            Suppliers.ofInstance(ImmutableSortedSet.copyOf(
-                testMainGenerator.getDeps(ruleFinder))),
-            Suppliers.ofInstance(ImmutableSortedSet.of())
-        ),
+        params
+            .withAppendedFlavor(ImmutableFlavor.of("test-main-src"))
+            .copyReplacingDeclaredAndExtraDeps(
+                Suppliers.ofInstance(ImmutableSortedSet.copyOf(
+                    testMainGenerator.getDeps(ruleFinder))),
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
         testMainGenerator,
         srcs,
         packageName
@@ -198,8 +198,7 @@ public class GoTestDescription implements
       GoPlatform platform) throws NoSuchBuildTargetException {
     Path packageName = getGoPackageName(resolver, params.getBuildTarget(), args);
 
-    BuildRuleParams testTargetParams = params.withBuildTarget(
-        params.getBuildTarget().withAppendedFlavors(TEST_LIBRARY_FLAVOR));
+    BuildRuleParams testTargetParams = params.withAppendedFlavor(TEST_LIBRARY_FLAVOR);
     BuildRule testLibrary = new NoopBuildRule(
         testTargetParams);
     resolver.addToIndex(testLibrary);
@@ -207,10 +206,11 @@ public class GoTestDescription implements
     BuildRule generatedTestMain = requireTestMainGenRule(
         params, resolver, args.srcs, packageName);
     GoBinary testMain = GoDescriptors.createGoBinaryRule(
-        params.copyWithChanges(
-            params.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("test-main")),
-            Suppliers.ofInstance(ImmutableSortedSet.of(testLibrary)),
-            Suppliers.ofInstance(ImmutableSortedSet.of(generatedTestMain))),
+        params
+            .withAppendedFlavor(ImmutableFlavor.of("test-main"))
+            .copyReplacingDeclaredAndExtraDeps(
+                Suppliers.ofInstance(ImmutableSortedSet.of(testLibrary)),
+                Suppliers.ofInstance(ImmutableSortedSet.of(generatedTestMain))),
         resolver,
         goBuckConfig,
         ImmutableSet.of(generatedTestMain.getSourcePathToOutput()),

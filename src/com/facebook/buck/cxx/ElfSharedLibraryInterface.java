@@ -82,14 +82,15 @@ class ElfSharedLibraryInterface
       Tool objcopy,
       SourcePath input) {
     return new ElfSharedLibraryInterface(
-        baseParams.copyWithChanges(
-            target,
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(objcopy.getDeps(ruleFinder))
-                    .addAll(ruleFinder.filterBuildRuleInputs(input))
-                    .build()),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+        baseParams
+            .withBuildTarget(target)
+            .copyReplacingDeclaredAndExtraDeps(
+                Suppliers.ofInstance(
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(objcopy.getDeps(ruleFinder))
+                        .addAll(ruleFinder.filterBuildRuleInputs(input))
+                        .build()),
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
         resolver,
         objcopy,
         input);

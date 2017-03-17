@@ -274,10 +274,11 @@ abstract class GoDescriptors {
     WriteFile writeFile =
         resolver.addToIndex(
             new WriteFile(
-                sourceParams.copyWithChanges(
-                    generatorSourceTarget,
-                    Suppliers.ofInstance(ImmutableSortedSet.of()),
-                    Suppliers.ofInstance(ImmutableSortedSet.of())),
+                sourceParams
+                    .withBuildTarget(generatorSourceTarget)
+                    .copyReplacingDeclaredAndExtraDeps(
+                        Suppliers.ofInstance(ImmutableSortedSet.of()),
+                        Suppliers.ofInstance(ImmutableSortedSet.of())),
                 extractTestMainGenerator(),
                 BuildTargets.getGenPath(
                     sourceParams.getProjectFilesystem(),
@@ -288,10 +289,11 @@ abstract class GoDescriptors {
     GoBinary binary =
         resolver.addToIndex(
             createGoBinaryRule(
-                sourceParams.copyWithChanges(
-                    generatorTarget,
-                    Suppliers.ofInstance(ImmutableSortedSet.of()),
-                    Suppliers.ofInstance(ImmutableSortedSet.of(writeFile))),
+                sourceParams
+                    .withBuildTarget(generatorTarget)
+                    .copyReplacingDeclaredAndExtraDeps(
+                        Suppliers.ofInstance(ImmutableSortedSet.of()),
+                        Suppliers.ofInstance(ImmutableSortedSet.of(writeFile))),
                 resolver,
                 goBuckConfig,
                 ImmutableSet.of(writeFile.getSourcePathToOutput()),

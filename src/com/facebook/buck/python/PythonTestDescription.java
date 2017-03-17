@@ -148,12 +148,14 @@ public class PythonTestDescription implements
       ImmutableSet<String> testModules) {
 
     // Modify the build rule params to change the target, type, and remove all deps.
-    BuildRuleParams newParams = params.copyWithChanges(
-        BuildTargets.createFlavoredBuildTarget(
-            params.getBuildTarget().checkUnflavored(),
-            ImmutableFlavor.of("test_module")),
-        Suppliers.ofInstance(ImmutableSortedSet.of()),
-        Suppliers.ofInstance(ImmutableSortedSet.of()));
+    BuildRuleParams newParams = params
+        .withBuildTarget(
+            BuildTargets.createFlavoredBuildTarget(
+                params.getBuildTarget().checkUnflavored(),
+                ImmutableFlavor.of("test_module")))
+        .copyReplacingDeclaredAndExtraDeps(
+            Suppliers.ofInstance(ImmutableSortedSet.of()),
+            Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     String contents = getTestModulesListContents(testModules);
 

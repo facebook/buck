@@ -52,15 +52,16 @@ public class ReactNativeLibraryGraphEnhancer {
       ReactNativePlatform platform) {
     Tool jsPackager = buckConfig.getPackager(resolver);
     return new ReactNativeBundle(
-        baseParams.copyWithChanges(
-            target,
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(ruleFinder.filterBuildRuleInputs(args.entryPath))
-                    .addAll(ruleFinder.filterBuildRuleInputs(args.srcs))
-                    .addAll(jsPackager.getDeps(ruleFinder))
-                    .build()),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+        baseParams
+            .withBuildTarget(target)
+            .copyReplacingDeclaredAndExtraDeps(
+                Suppliers.ofInstance(
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(ruleFinder.filterBuildRuleInputs(args.entryPath))
+                        .addAll(ruleFinder.filterBuildRuleInputs(args.srcs))
+                        .addAll(jsPackager.getDeps(ruleFinder))
+                        .build()),
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
         args.entryPath,
         args.srcs,
         ReactNativeFlavors.useUnbundling(baseParams.getBuildTarget()),
@@ -96,12 +97,9 @@ public class ReactNativeLibraryGraphEnhancer {
     extraDeps.add(bundle);
     if (args.rDotJavaPackage.isPresent()) {
       BuildRuleParams paramsForResource =
-          params.withBuildTarget(
-              BuildTarget.builder(originalBuildTarget)
-                  .addFlavors(REACT_NATIVE_ANDROID_RES_FLAVOR)
-                  .build())
-              .copyReplacingExtraDeps(Suppliers.ofInstance(
-                      ImmutableSortedSet.of(bundle)));
+          params
+              .withAppendedFlavor(REACT_NATIVE_ANDROID_RES_FLAVOR)
+              .copyReplacingExtraDeps(Suppliers.ofInstance(ImmutableSortedSet.of(bundle)));
 
       SourcePath resources = new ExplicitBuildTargetSourcePath(
           bundle.getBuildTarget(),

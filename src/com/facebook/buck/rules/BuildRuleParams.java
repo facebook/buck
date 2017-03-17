@@ -99,13 +99,6 @@ public class BuildRuleParams {
     return new BuildRuleParams(buildTarget, declaredDeps, extraDeps, projectFilesystem, cellRoots);
   }
 
-  public BuildRuleParams copyWithChanges(
-      BuildTarget buildTarget,
-      Supplier<ImmutableSortedSet<BuildRule>> declaredDeps,
-      Supplier<ImmutableSortedSet<BuildRule>> extraDeps) {
-    return withBuildTarget(buildTarget).copyReplacingDeclaredAndExtraDeps(declaredDeps, extraDeps);
-  }
-
   public BuildRuleParams withBuildTarget(BuildTarget target) {
     return new BuildRuleParams(this, target, projectFilesystem, cellRoots);
   }

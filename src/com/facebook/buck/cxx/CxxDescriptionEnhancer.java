@@ -1107,9 +1107,10 @@ public class CxxDescriptionEnhancer {
       BuildRule unstrippedBinaryRule,
       CxxPlatform cxxPlatform) {
     BuildRuleParams stripRuleParams = params
-        .copyWithChanges(
-            params.getBuildTarget().withAppendedFlavors(
-                CxxStrip.RULE_FLAVOR, stripStyle.getFlavor()),
+        .withBuildTarget(params.getBuildTarget().withAppendedFlavors(
+            CxxStrip.RULE_FLAVOR,
+            stripStyle.getFlavor()))
+        .copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(unstrippedBinaryRule)),
             Suppliers.ofInstance(ImmutableSortedSet.of()));
     Optional<BuildRule> exisitingRule = resolver.getRuleOptional(stripRuleParams.getBuildTarget());

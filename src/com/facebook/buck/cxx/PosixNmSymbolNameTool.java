@@ -76,14 +76,15 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
       Iterable<? extends SourcePath> linkerInputs) {
     UndefinedSymbolsFile rule = ruleResolver.addToIndex(
         new UndefinedSymbolsFile(
-            baseParams.copyWithChanges(
-                target,
-                Suppliers.ofInstance(
-                    ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(nm.getDeps(ruleFinder))
-                        .addAll(ruleFinder.filterBuildRuleInputs(linkerInputs))
-                        .build()),
-                Suppliers.ofInstance(ImmutableSortedSet.of())),
+            baseParams
+                .withBuildTarget(target)
+                .copyReplacingDeclaredAndExtraDeps(
+                    Suppliers.ofInstance(
+                        ImmutableSortedSet.<BuildRule>naturalOrder()
+                            .addAll(nm.getDeps(ruleFinder))
+                            .addAll(ruleFinder.filterBuildRuleInputs(linkerInputs))
+                            .build()),
+                    Suppliers.ofInstance(ImmutableSortedSet.of())),
             nm,
             linkerInputs));
     return rule.getSourcePathToOutput();

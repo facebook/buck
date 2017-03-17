@@ -291,25 +291,23 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
               nativePlatforms,
               nativeLinkableLibsAssets);
 
-      BuildTarget targetForCopyNativeLibraries = BuildTarget.builder(originalBuildTarget)
-          .addFlavors(ImmutableFlavor.of(COPY_NATIVE_LIBS + "_" + module.getName()))
-          .build();
       ImmutableSortedSet<BuildRule> nativeLibsRules = BuildRules.toBuildRulesFor(
           originalBuildTarget,
           ruleResolver,
           packageableCollection.getNativeLibsTargets().get(module));
-      BuildRuleParams paramsForCopyNativeLibraries = buildRuleParams.copyWithChanges(
-          targetForCopyNativeLibraries,
-          Suppliers.ofInstance(
-              ImmutableSortedSet.<BuildRule>naturalOrder()
-                  .addAll(nativeLibsRules)
-                  .addAll(
-                      ruleFinder.filterBuildRuleInputs(
-                          packageableCollection.getNativeLibsDirectories().get(module)))
-                  .addAll(strippedLibsMap.keySet())
-                  .addAll(strippedLibsAssetsMap.keySet())
-                  .build()),
-            /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
+      BuildRuleParams paramsForCopyNativeLibraries = buildRuleParams
+          .withAppendedFlavor(ImmutableFlavor.of(COPY_NATIVE_LIBS + "_" + module.getName()))
+          .copyReplacingDeclaredAndExtraDeps(
+              Suppliers.ofInstance(
+                  ImmutableSortedSet.<BuildRule>naturalOrder()
+                      .addAll(nativeLibsRules)
+                      .addAll(
+                          ruleFinder.filterBuildRuleInputs(
+                              packageableCollection.getNativeLibsDirectories().get(module)))
+                      .addAll(strippedLibsMap.keySet())
+                      .addAll(strippedLibsAssetsMap.keySet())
+                      .build()),
+              Suppliers.ofInstance(ImmutableSortedSet.of()));
       moduleMappedCopyNativeLibriesBuilder.put(
           module,
           new CopyNativeLibraries(
@@ -371,13 +369,14 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       if (previouslyCreated.isPresent()) {
         stripLinkable = (StripLinkable) previouslyCreated.get();
       } else {
-        BuildRuleParams paramsForStripLinkable = buildRuleParams.copyWithChanges(
-            targetForStripRule,
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(ruleFinder.filterBuildRuleInputs(ImmutableList.of(sourcePath)))
-                    .build()),
-            /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
+        BuildRuleParams paramsForStripLinkable = buildRuleParams
+            .withBuildTarget(targetForStripRule)
+            .copyReplacingDeclaredAndExtraDeps(
+                Suppliers.ofInstance(
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(ruleFinder.filterBuildRuleInputs(ImmutableList.of(sourcePath)))
+                        .build()),
+                Suppliers.ofInstance(ImmutableSortedSet.of()));
 
         stripLinkable = new StripLinkable(
             paramsForStripLinkable,

@@ -699,16 +699,17 @@ public class LuaBinaryDescription implements
     LuaStandaloneBinary binary =
         resolver.addToIndex(
             new LuaStandaloneBinary(
-                params.copyWithChanges(
-                    params.getBuildTarget().withAppendedFlavors(BINARY_FLAVOR),
-                    Suppliers.ofInstance(
-                        ImmutableSortedSet.<BuildRule>naturalOrder()
-                            .addAll(ruleFinder.filterBuildRuleInputs(starter))
-                            .addAll(components.getDeps(ruleFinder))
-                            .addAll(lua.getDeps(ruleFinder))
-                            .addAll(packager.getDeps(ruleFinder))
-                            .build()),
-                    Suppliers.ofInstance(ImmutableSortedSet.of())),
+                params
+                    .withAppendedFlavor(BINARY_FLAVOR)
+                    .copyReplacingDeclaredAndExtraDeps(
+                        Suppliers.ofInstance(
+                            ImmutableSortedSet.<BuildRule>naturalOrder()
+                                .addAll(ruleFinder.filterBuildRuleInputs(starter))
+                                .addAll(components.getDeps(ruleFinder))
+                                .addAll(lua.getDeps(ruleFinder))
+                                .addAll(packager.getDeps(ruleFinder))
+                                .build()),
+                        Suppliers.ofInstance(ImmutableSortedSet.of())),
                 packager,
                 ImmutableList.of(),
                 output,

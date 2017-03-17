@@ -112,13 +112,13 @@ public class AndroidLibraryGraphEnhancer {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
 
-    BuildRuleParams dummyRDotJavaParams = originalBuildRuleParams.copyWithChanges(
-        dummyRDotJavaBuildTarget,
-        // Add dependencies from `SourcePaths` in `JavacOptions`.
-        Suppliers.ofInstance(
-            ImmutableSortedSet.copyOf(
-                ruleFinder.filterBuildRuleInputs(javacOptions.getInputs(ruleFinder)))),
-        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
+    BuildRuleParams dummyRDotJavaParams = originalBuildRuleParams
+        .withBuildTarget(dummyRDotJavaBuildTarget)
+        .copyReplacingDeclaredAndExtraDeps(
+            Suppliers.ofInstance(
+                ImmutableSortedSet.copyOf(
+                    ruleFinder.filterBuildRuleInputs(javacOptions.getInputs(ruleFinder)))),
+            Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
         dummyRDotJavaParams,

@@ -36,6 +36,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.base.Joiner;
+import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -102,20 +103,22 @@ public class HaskellPackageRule extends AbstractBuildRule {
       ImmutableSortedSet<String> modules,
       final ImmutableSortedSet<SourcePath> libraries,
       final ImmutableSortedSet<SourcePath> interfaces) {
+    Supplier<ImmutableSortedSet<BuildRule>> declaredDeps = Suppliers.memoize(
+        () -> ImmutableSortedSet.<BuildRule>naturalOrder()
+            .addAll(ghcPkg.getDeps(ruleFinder))
+            .addAll(
+                depPackages.values().stream()
+                    .flatMap(pkg -> pkg.getDeps(ruleFinder))
+                    .iterator())
+            .addAll(
+                ruleFinder.filterBuildRuleInputs(Iterables.concat(libraries, interfaces)))
+            .build());
     return new HaskellPackageRule(
-        baseParams.copyWithChanges(
-            target,
-            Suppliers.memoize(
-                () -> ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(ghcPkg.getDeps(ruleFinder))
-                    .addAll(
-                        depPackages.values().stream()
-                            .flatMap(pkg -> pkg.getDeps(ruleFinder))
-                            .iterator())
-                    .addAll(
-                        ruleFinder.filterBuildRuleInputs(Iterables.concat(libraries, interfaces)))
-                    .build()),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+        baseParams
+            .withBuildTarget(target)
+            .copyReplacingDeclaredAndExtraDeps(
+                declaredDeps,
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
         ghcPkg,
         haskellVersion,
         packageInfo,
