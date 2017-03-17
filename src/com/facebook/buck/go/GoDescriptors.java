@@ -125,7 +125,7 @@ abstract class GoDescriptors {
 
     BuildTarget target = createSymlinkTreeTarget(params.getBuildTarget());
     SymlinkTree symlinkTree = makeSymlinkTree(
-        params.copyWithBuildTarget(target),
+        params.withBuildTarget(target),
         pathResolver,
         ruleFinder,
         linkables);
@@ -201,7 +201,7 @@ abstract class GoDescriptors {
         params.getBuildTarget().withAppendedFlavors(
             ImmutableFlavor.of("compile"), platform.getFlavor());
     GoCompile library = GoDescriptors.createGoCompileRule(
-        params.copyWithBuildTarget(libraryTarget),
+        params.withBuildTarget(libraryTarget),
         resolver,
         goBuckConfig,
         Paths.get("main"),
@@ -217,7 +217,7 @@ abstract class GoDescriptors {
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildTarget target = createTransitiveSymlinkTreeTarget(params.getBuildTarget());
     SymlinkTree symlinkTree = makeSymlinkTree(
-        params.copyWithBuildTarget(target),
+        params.withBuildTarget(target),
         pathResolver,
         ruleFinder,
         requireTransitiveGoLinkables(

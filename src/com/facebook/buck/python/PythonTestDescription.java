@@ -275,7 +275,7 @@ public class PythonTestDescription implements
     // Build the PEX using a python binary rule with the minimum dependencies.
     PythonBinary binary =
         binaryDescription.createPackageRule(
-            params.copyWithBuildTarget(getBinaryBuildTarget(params.getBuildTarget())),
+            params.withBuildTarget(getBinaryBuildTarget(params.getBuildTarget())),
             resolver,
             ruleFinder,
             pythonPlatform,

@@ -212,7 +212,7 @@ public class RustCompileUtils {
     return resolver.addToIndex(
         RustCompileRule.from(
             ruleFinder,
-            params.copyWithBuildTarget(target),
+            params.withBuildTarget(target),
             filename,
             rustConfig.getRustCompiler().resolve(resolver),
             rustConfig.getLinkerProvider(cxxPlatform, cxxPlatform.getLd().getType())

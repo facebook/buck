@@ -132,11 +132,7 @@ public class CxxBinaryDescription implements
           .builder(params.getBuildTarget().getUnflavoredBuildTarget())
           .addAllFlavors(flavors)
           .build();
-      BuildRuleParams typeParams =
-          params.copyWithChanges(
-              target,
-              params.getDeclaredDeps(),
-              params.getExtraDeps());
+      BuildRuleParams typeParams = params.withBuildTarget(target);
 
       return createHeaderSymlinkTreeBuildRule(
           typeParams,

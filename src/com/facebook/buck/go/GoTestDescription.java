@@ -198,7 +198,7 @@ public class GoTestDescription implements
       GoPlatform platform) throws NoSuchBuildTargetException {
     Path packageName = getGoPackageName(resolver, params.getBuildTarget(), args);
 
-    BuildRuleParams testTargetParams = params.copyWithBuildTarget(
+    BuildRuleParams testTargetParams = params.withBuildTarget(
         params.getBuildTarget().withAppendedFlavors(TEST_LIBRARY_FLAVOR));
     BuildRule testLibrary = new NoopBuildRule(
         testTargetParams);

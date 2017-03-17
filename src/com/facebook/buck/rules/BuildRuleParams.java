@@ -58,6 +58,19 @@ public class BuildRuleParams {
             .build());
   }
 
+  private BuildRuleParams(
+      BuildRuleParams baseForDeps,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      CellPathResolver cellRoots) {
+    this.buildTarget = buildTarget;
+    this.projectFilesystem = projectFilesystem;
+    this.cellRoots = cellRoots;
+    this.declaredDeps = baseForDeps.declaredDeps;
+    this.extraDeps = baseForDeps.extraDeps;
+    this.totalDeps = baseForDeps.totalDeps;
+  }
+
   public BuildRuleParams copyWithExtraDeps(Supplier<ImmutableSortedSet<BuildRule>> extraDeps) {
     return copyWithDeps(declaredDeps, extraDeps);
   }
@@ -86,10 +99,6 @@ public class BuildRuleParams {
     return copyWithChanges(buildTarget, declaredDeps, extraDeps);
   }
 
-  public BuildRuleParams copyWithBuildTarget(BuildTarget target) {
-    return copyWithChanges(target, declaredDeps, extraDeps);
-  }
-
   public BuildRuleParams copyWithChanges(
       BuildTarget buildTarget,
       Supplier<ImmutableSortedSet<BuildRule>> declaredDeps,
@@ -102,6 +111,10 @@ public class BuildRuleParams {
         cellRoots);
   }
 
+  public BuildRuleParams withBuildTarget(BuildTarget target) {
+    return new BuildRuleParams(this, target, projectFilesystem, cellRoots);
+  }
+
   public BuildRuleParams withoutFlavor(Flavor flavor) {
     Set<Flavor> flavors = Sets.newHashSet(getBuildTarget().getFlavors());
     flavors.remove(flavor);
@@ -110,10 +123,7 @@ public class BuildRuleParams {
         .addAllFlavors(flavors)
         .build();
 
-    return copyWithChanges(
-        target,
-        declaredDeps,
-        extraDeps);
+    return new BuildRuleParams(this, target, projectFilesystem, cellRoots);
   }
 
   public BuildRuleParams withFlavor(Flavor flavor) {
@@ -124,10 +134,7 @@ public class BuildRuleParams {
         .addAllFlavors(flavors)
         .build();
 
-    return copyWithChanges(
-        target,
-        declaredDeps,
-        extraDeps);
+    return new BuildRuleParams(this, target, projectFilesystem, cellRoots);
   }
 
   public BuildTarget getBuildTarget() {

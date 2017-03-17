@@ -100,7 +100,7 @@ public class DTestDescription implements
 
     BuildRule binaryRule =
         DDescriptionUtils.createNativeLinkable(
-            params.copyWithBuildTarget(binaryTarget),
+            params.withBuildTarget(binaryTarget),
             buildRuleResolver,
             cxxPlatform,
             dBuckConfig,

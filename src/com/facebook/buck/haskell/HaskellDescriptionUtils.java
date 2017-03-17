@@ -273,7 +273,7 @@ public class HaskellDescriptionUtils {
     WriteFile emptyModule =
         resolver.addToIndex(
             new WriteFile(
-                baseParams.copyWithBuildTarget(emptyModuleTarget),
+                baseParams.withBuildTarget(emptyModuleTarget),
                 "module Unused where",
                 BuildTargets.getGenPath(
                     baseParams.getProjectFilesystem(),

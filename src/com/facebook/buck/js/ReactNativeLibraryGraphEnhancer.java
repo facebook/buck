@@ -96,7 +96,7 @@ public class ReactNativeLibraryGraphEnhancer {
     extraDeps.add(bundle);
     if (args.rDotJavaPackage.isPresent()) {
       BuildRuleParams paramsForResource =
-          params.copyWithBuildTarget(
+          params.withBuildTarget(
               BuildTarget.builder(originalBuildTarget)
                   .addFlavors(REACT_NATIVE_ANDROID_RES_FLAVOR)
                   .build())

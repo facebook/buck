@@ -532,7 +532,7 @@ public class AppleDescriptions {
       if (!dsymRule.isPresent()) {
         dsymRule = Optional.of(
             createAppleDsym(
-                params.copyWithBuildTarget(dsymBuildTarget),
+                params.withBuildTarget(dsymBuildTarget),
                 resolver,
                 unstrippedBinaryRule,
                 cxxPlatformFlavorDomain,
@@ -700,7 +700,7 @@ public class AppleDescriptions {
       BuildTarget binaryBuildTarget = getBinaryFromBuildRuleWithBinary(flavoredBinaryRule)
           .getBuildTarget()
           .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors());
-      BuildRuleParams binaryParams = params.copyWithBuildTarget(binaryBuildTarget);
+      BuildRuleParams binaryParams = params.withBuildTarget(binaryBuildTarget);
       targetDebuggableBinaryRule = createAppleDebuggableBinary(
           binaryParams,
           resolver,
@@ -924,7 +924,7 @@ public class AppleDescriptions {
    * rules of the bundle, such as its associated binary, asset catalog, etc.
    */
   private static BuildRuleParams stripBundleSpecificFlavors(BuildRuleParams params) {
-    return params.copyWithBuildTarget(
+    return params.withBuildTarget(
         params.getBuildTarget().withoutFlavors(BUNDLE_SPECIFIC_FLAVORS));
   }
 

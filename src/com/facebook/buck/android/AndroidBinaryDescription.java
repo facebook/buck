@@ -162,7 +162,7 @@ public class AndroidBinaryDescription implements
               "'package_string_assets' flavor does not exist for %s.",
               target.getUnflavoredBuildTarget());
         }
-        params = params.copyWithBuildTarget(BuildTarget.of(target.getUnflavoredBuildTarget()));
+        params = params.withBuildTarget(BuildTarget.of(target.getUnflavoredBuildTarget()));
       }
 
       BuildRule keystore = resolver.getRule(args.keystore);

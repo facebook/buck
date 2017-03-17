@@ -370,7 +370,7 @@ public class AppleTestDescription implements
     } else {
       library = appleLibraryDescription.createLibraryBuildRule(
           targetGraph,
-          params.copyWithBuildTarget(libraryTarget),
+          params.withBuildTarget(libraryTarget),
           resolver,
           args,
           // For now, instead of building all deps as dylibs and fixing up their install_names,

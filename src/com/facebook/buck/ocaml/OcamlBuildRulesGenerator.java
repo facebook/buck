@@ -228,13 +228,7 @@ public class OcamlBuildRulesGenerator {
                     params.getBuildTarget().getShortName())))
         .build();
 
-    BuildRuleParams cleanParams = params.copyWithChanges(
-      cleanTarget,
-      Suppliers.ofInstance(
-        ImmutableSortedSet.<BuildRule>naturalOrder()
-          .addAll(params.getDeclaredDeps().get())
-          .build()),
-      params.getExtraDeps());
+    BuildRuleParams cleanParams = params.withBuildTarget(cleanTarget);
 
     BuildRule cleanRule = new OcamlClean(cleanParams, ocamlContext);
     resolver.addToIndex(cleanRule);

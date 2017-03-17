@@ -110,10 +110,8 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
     androidManifestArgs.skeleton = args.manifestSkeleton;
     androidManifestArgs.deps = args.deps;
 
-    BuildRuleParams androidManifestParams = originalBuildRuleParams.copyWithChanges(
-        BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ANDROID_MANIFEST_FLAVOR),
-        originalBuildRuleParams.getDeclaredDeps(),
-        originalBuildRuleParams.getExtraDeps());
+    BuildRuleParams androidManifestParams = originalBuildRuleParams.withBuildTarget(
+        BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ANDROID_MANIFEST_FLAVOR));
 
     AndroidManifest manifest = androidManifestDescription.createBuildRule(
         targetGraph,

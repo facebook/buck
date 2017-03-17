@@ -982,10 +982,7 @@ public class CxxLibraryDescription implements
         .builder(params.getBuildTarget().getUnflavoredBuildTarget())
         .addAllFlavors(flavors)
         .build();
-    return params.copyWithChanges(
-        target,
-        params.getDeclaredDeps(),
-        params.getExtraDeps());
+    return params.withBuildTarget(target);
   }
 
   @Override

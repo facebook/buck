@@ -313,7 +313,7 @@ public class CxxPythonExtensionDescription implements
         NativeLinkableInput.builder()
         .setArgs(
             getExtensionArgs(
-                params.copyWithBuildTarget(
+                params.withBuildTarget(
                     params.getBuildTarget().withoutFlavors(
                         LinkerMapMode.FLAVOR_DOMAIN.getFlavors())),
                 ruleResolver,

@@ -167,7 +167,7 @@ public class SwiftLibraryIntegrationTest {
     CxxLink linkRule = (CxxLink) FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION
         .createBuildRule(
             TargetGraphFactory.newInstance(FakeTargetNodeBuilder.build(buildRule)),
-            params.copyWithBuildTarget(linkTarget),
+            params.withBuildTarget(linkTarget),
             resolver,
             args);
 
