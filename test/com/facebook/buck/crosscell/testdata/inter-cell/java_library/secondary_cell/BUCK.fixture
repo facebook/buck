@@ -1,0 +1,9 @@
+java_library(
+  name = 'libB',
+  srcs = [
+    'B.java',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

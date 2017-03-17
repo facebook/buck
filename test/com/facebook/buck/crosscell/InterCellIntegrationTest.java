@@ -213,7 +213,7 @@ public class InterCellIntegrationTest {
     ImmutableMap<String, HashCode> firstPrimaryObjectFiles = findObjectFiles(primary);
     ImmutableMap<String, HashCode> firstObjectFiles = findObjectFiles(secondary);
 
-        // Now recreate an identical checkout
+    // Now recreate an identical checkout
     cells = prepare(
         "inter-cell/export-file/primary",
         "inter-cell/export-file/secondary");
@@ -396,9 +396,9 @@ public class InterCellIntegrationTest {
       fail("Did not expect to finish building");
     } catch (HumanReadableException expected) {
       assertEquals(
-        expected.getMessage(),
-        "Couldn't get dependency 'secondary//:cxxlib' of target '//:cxxbinary':\n" +
-        "Overridden cxx:cc path not found: /does/not/exist");
+          expected.getMessage(),
+          "Couldn't get dependency 'secondary//:cxxlib' of target '//:cxxbinary':\n" +
+              "Overridden cxx:cc path not found: /does/not/exist");
     }
 
     ProjectWorkspace.ProcessResult result = primary.runBuckBuild(
@@ -585,6 +585,17 @@ public class InterCellIntegrationTest {
 
     String target = "//apps/sample:app_with_cross_cell_android_lib";
     ProjectWorkspace.ProcessResult result = primary.runBuckCommand("build", target);
+    result.assertSuccess();
+  }
+
+  @Test
+  public void javaLibraryBuildsWithCrossCellLibDependency() throws IOException {
+    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
+        "inter-cell/java_library/main_cell",
+        "inter-cell/java_library/secondary_cell");
+    ProjectWorkspace.ProcessResult result = cells.getFirst().runBuckCommand(
+        "build",
+        "//:libA");
     result.assertSuccess();
   }
 
