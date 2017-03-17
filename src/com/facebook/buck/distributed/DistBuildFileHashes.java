@@ -53,7 +53,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 /**
  * Responsible for extracting file hash and {@link RuleKey} information from the {@link ActionGraph}
@@ -182,10 +181,7 @@ public class DistBuildFileHashes {
   public List<BuildJobStateFileHashes> getFileHashes()
       throws IOException, InterruptedException {
     try {
-      return fileHashes.get()
-          .stream()
-          .filter(x -> x.getEntriesSize() > 0)
-          .collect(Collectors.toList());
+      return fileHashes.get();
     } catch (ExecutionException e) {
       Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
       Throwables.throwIfInstanceOf(e.getCause(), InterruptedException.class);

@@ -258,15 +258,21 @@ public class DistBuildState {
 
   public MaterializerProjectFileHashCache createMaterializer(
       ProjectFilesystem projectFilesystem,
-      FileContentsProvider provider) {
+      FileContentsProvider provider) throws IOException {
     BuildJobStateFileHashes remoteFileHashes = Preconditions.checkNotNull(
         fileHashes.get(projectFilesystem),
         "Don't have file hashes for filesystem %s.",
         projectFilesystem);
-    return new MaterializerProjectFileHashCache(
+    MaterializerProjectFileHashCache materializer = new MaterializerProjectFileHashCache(
         projectFilesystem,
         remoteFileHashes,
         provider,
         new StackedFileHashCache(loadDirectFileHashCache(projectFilesystem)));
+
+    // Create all symlinks and touch all other files.
+    // TODO(alisdair04): remove this once action graph doesn't read from file system.
+    materializer.preloadAllFiles();
+
+    return materializer;
   }
 }

@@ -43,6 +43,8 @@ import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyFactoryManager;
 import com.facebook.buck.step.DefaultStepRunner;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
+import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.versions.VersionException;
@@ -185,27 +187,22 @@ public class DistBuildSlaveExecutor {
       return cachingBuildEngineDelegate;
     }
 
-    ImmutableList.Builder<MaterializerProjectFileHashCache> allCachesBuilder =
+    ImmutableList.Builder<ProjectFileHashCache> allCachesBuilder =
         ImmutableList.builder();
     Cell rootCell = args.getState().getRootCell();
+
+    // 1. Add all cells.
     for (Path cellPath : rootCell.getKnownRoots()) {
       Cell cell = rootCell.getCell(cellPath);
       allCachesBuilder.add(args.getState().createMaterializer(
           cell.getFilesystem(),
           args.getProvider()));
     }
-    allCachesBuilder.add(args.getState().createMaterializer(
-        rootCell.getFilesystem(),
-        args.getProvider()));
-    ImmutableList<MaterializerProjectFileHashCache> allCaches = allCachesBuilder.build();
-    StackedFileHashCache stackedFileHashCache = new StackedFileHashCache(allCaches);
 
-    // Create all symlinks and touch all other files.
-    // TODO(alisdair04): remove this once action graph doesn't read from file system.
-    for (MaterializerProjectFileHashCache materializer : allCaches) {
-      materializer.preloadAllFiles();
-    }
+    // 2. Add the Operating System roots.
+    allCachesBuilder.addAll(DefaultFileHashCache.createOsRootDirectoriesCaches());
 
+    StackedFileHashCache stackedFileHashCache = new StackedFileHashCache(allCachesBuilder.build());
     createActionGraphAndResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(Preconditions.checkNotNull(
         actionGraphAndResolver).getResolver());

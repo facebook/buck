@@ -16,17 +16,14 @@
 
 package com.facebook.buck.distributed;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
-import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.HashingDeterministicJarWriter;
 import com.facebook.buck.io.MoreFiles;
@@ -55,16 +52,15 @@ import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
-import com.google.common.collect.ImmutableBiMap;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -119,10 +115,10 @@ public class DistBuildFileHashesTest {
 
     List<BuildJobStateFileHashes> recordedHashes = f.distributedBuildFileHashes.getFileHashes();
 
-    assertThat(recordedHashes, Matchers.hasSize(1));
-    BuildJobStateFileHashes hashes = recordedHashes.get(0);
-    assertThat(hashes.entries, Matchers.hasSize(1));
-    BuildJobStateFileHashEntry fileHashEntry = hashes.entries.get(0);
+    assertThat(recordedHashes, Matchers.hasSize(3));
+    BuildJobStateFileHashes rootCellHashes = getRootCellHashes(recordedHashes);
+    assertThat(rootCellHashes.entries, Matchers.hasSize(1));
+    BuildJobStateFileHashEntry fileHashEntry = rootCellHashes.entries.get(0);
     // It's intentional that we hardcode the path as a string here as we expect the thrift data
     // to contain unix-formated paths.
     assertThat(fileHashEntry.getPath().getPath(), Matchers.equalTo("src/A.java"));
@@ -257,8 +253,8 @@ public class DistBuildFileHashesTest {
     try (ArchiveFilesFixture f = ArchiveFilesFixture.create(archiveTempDir)) {
       List<BuildJobStateFileHashes> recordedHashes = f.distributedBuildFileHashes.getFileHashes();
 
-      assertThat(recordedHashes, Matchers.hasSize(1));
-      BuildJobStateFileHashes hashes = recordedHashes.get(0);
+      assertThat(recordedHashes, Matchers.hasSize(3));
+      BuildJobStateFileHashes hashes = getRootCellHashes(recordedHashes);
       assertThat(hashes.entries, Matchers.hasSize(1));
       BuildJobStateFileHashEntry fileHashEntry = hashes.entries.get(0);
       assertThat(fileHashEntry.getPath().getPath(), Matchers.equalTo("src/archive.jar"));
@@ -332,35 +328,15 @@ public class DistBuildFileHashesTest {
     };
 
     List<BuildJobStateFileHashes> recordedHashes = f.distributedBuildFileHashes.getFileHashes();
-    ImmutableBiMap<Path, Integer> cellIndex = f.cellIndexer.getIndex();
+    assertThat(recordedHashes, Matchers.hasSize(3));
 
-    assertThat(recordedHashes, Matchers.hasSize(2));
-    for (BuildJobStateFileHashes hashes : recordedHashes) {
-      Path cellPath = cellIndex.inverse().get(hashes.getCellIndex());
-      if (cellPath.equals(f.projectFilesystem.getRootPath())) {
-        assertThat(
-            toFileHashEntryIndex(hashes),
-            Matchers.hasKey(new PathWithUnixSeparators("src/A.java")));
-      } else if (cellPath.equals(f.secondProjectFilesystem.getRootPath())) {
-        assertThat(
-            toFileHashEntryIndex(hashes),
-            Matchers.hasKey(new PathWithUnixSeparators("B.java")));
-      } else {
-        fail("Unknown filesystem root:" + cellPath);
-      }
+    BuildJobStateFileHashes rootCellHash = getRootCellHashes(recordedHashes);
+    Assert.assertEquals(1, rootCellHash.getEntriesSize());
+    Assert.assertEquals("src/A.java", rootCellHash.getEntries().get(0).getPath().getPath());
 
-      assertEquals(hashes.getEntriesSize(), 1);
-      for (BuildJobStateFileHashEntry hashEntry : hashes.getEntries()) {
-        assertFalse(hashEntry.isPathIsAbsolute());
-      }
-    }
-  }
-
-  private static ImmutableMap<PathWithUnixSeparators, BuildJobStateFileHashEntry>
-  toFileHashEntryIndex(BuildJobStateFileHashes hashes) {
-    return Maps.uniqueIndex(
-        hashes.getEntries(),
-        BuildJobStateFileHashEntry::getPath);
+    BuildJobStateFileHashes secondaryCellHashes = getCellHashesByIndex(recordedHashes, 1);
+    Assert.assertEquals(1, secondaryCellHashes.getEntriesSize());
+    Assert.assertEquals("B.java", secondaryCellHashes.getEntries().get(0).getPath().getPath());
   }
 
   private static class FakeIndexer implements Function<Path, Integer> {
@@ -368,10 +344,6 @@ public class DistBuildFileHashesTest {
 
     private FakeIndexer() {
       cache = new HashMap<>();
-    }
-
-    public ImmutableBiMap<Path, Integer> getIndex() {
-      return ImmutableBiMap.copyOf(cache);
     }
 
     @Override
@@ -480,5 +452,21 @@ public class DistBuildFileHashesTest {
       this.tool = tool;
       this.sourcePath = sourcePath;
     }
+  }
+
+  private static BuildJobStateFileHashes getCellHashesByIndex(
+      List<BuildJobStateFileHashes> recordedHashes,
+      int index) {
+    Preconditions.checkArgument(index >= 0);
+    Preconditions.checkArgument(index < recordedHashes.size());
+    return recordedHashes.stream()
+        .filter(hashes -> hashes.getCellIndex() == index)
+        .findFirst()
+        .get();
+  }
+
+  private static BuildJobStateFileHashes getRootCellHashes(
+      List<BuildJobStateFileHashes> recordedHashes) {
+    return getCellHashesByIndex(recordedHashes, DistBuildCellIndexer.ROOT_CELL_INDEX);
   }
 }
