@@ -249,6 +249,8 @@ public class AndroidBinary
   private ImmutableList<SourcePath> primaryApkAssetsZips;
   @AddToRuleKey
   private SourcePath aaptGeneratedProguardConfigFile;
+  @AddToRuleKey
+  private Optional<String> dxMaxHeapSize;
 
   @AddToRuleKey
   @Nullable
@@ -287,7 +289,8 @@ public class AndroidBinary
       boolean packageAssetLibraries,
       boolean compressAssetLibraries,
       ManifestEntries manifestEntries,
-      JavaRuntimeLauncher javaRuntimeLauncher) {
+      JavaRuntimeLauncher javaRuntimeLauncher,
+      Optional<String> dxMaxHeapSize) {
     super(params);
     this.ruleFinder = ruleFinder;
     this.proguardJarOverride = proguardJarOverride;
@@ -333,6 +336,7 @@ public class AndroidBinary
     this.primaryApkAssetsZips = enhancementResult.getPrimaryApkAssetZips();
     this.aaptGeneratedProguardConfigFile =
         enhancementResult.getSourcePathToAaptGeneratedProguardConfigFile();
+    this.dxMaxHeapSize = dxMaxHeapSize;
 
     if (exopackageModes.isEmpty()) {
       this.abiPath = null;
@@ -1261,7 +1265,8 @@ public class AndroidBinary
         successDir,
         dxOptions,
         dxExecutorService,
-        xzCompressionLevel);
+        xzCompressionLevel,
+        dxMaxHeapSize);
     steps.add(smartDexingCommand);
 
     if (reorderClassesIntraDex) {

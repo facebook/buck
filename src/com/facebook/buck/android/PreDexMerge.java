@@ -102,6 +102,7 @@ public class PreDexMerge extends AbstractBuildRule
   private final ListeningExecutorService dxExecutorService;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
   private final Optional<Integer> xzCompressionLevel;
+  private final Optional<String> dxMaxHeapSize;
 
   public PreDexMerge(
       BuildRuleParams params,
@@ -111,7 +112,8 @@ public class PreDexMerge extends AbstractBuildRule
       ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexDeps,
       DexProducedFromJavaLibrary dexForUberRDotJava,
       ListeningExecutorService dxExecutorService,
-      Optional<Integer> xzCompressionLevel) {
+      Optional<Integer> xzCompressionLevel,
+      Optional<String> dxMaxHeapSize) {
     super(params);
     this.primaryDexPath = primaryDexPath;
     this.dexSplitMode = dexSplitMode;
@@ -121,6 +123,7 @@ public class PreDexMerge extends AbstractBuildRule
     this.dxExecutorService = dxExecutorService;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
     this.xzCompressionLevel = xzCompressionLevel;
+    this.dxMaxHeapSize = dxMaxHeapSize;
   }
 
   @Override
@@ -272,7 +275,8 @@ public class PreDexMerge extends AbstractBuildRule
             paths.successDir,
             DX_MERGE_OPTIONS,
             dxExecutorService,
-            xzCompressionLevel));
+            xzCompressionLevel,
+            dxMaxHeapSize));
 
     // Record the primary dex SHA1 so exopackage apks can use it to compute their ABI keys.
     // Single dex apks cannot be exopackages, so they will never need ABI keys.

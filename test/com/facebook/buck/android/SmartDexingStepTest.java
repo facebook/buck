@@ -86,6 +86,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
         outputFile.toPath(),
         outputHashFile,
         EnumSet.of(DxStep.Option.NO_OPTIMIZE),
+        Optional.empty(),
         Optional.empty());
     assertFalse("'dummy' is not a matching input hash", rule.checkIsCached());
 
@@ -112,11 +113,11 @@ public class SmartDexingStepTest extends EasyMockSupport {
         filesToDex,
         outputPath,
         dxOptions,
+        Optional.empty(),
         Optional.empty());
 
     assertTrue("Result should be a CompositeStep.", dxStep instanceof CompositeStep);
     List<Step> steps = ImmutableList.copyOf((CompositeStep) dxStep);
-    String xmx = DxStep.XMX_OVERRIDE.isEmpty() ? "" : DxStep.XMX_OVERRIDE + " ";
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
         ImmutableList.of(
@@ -125,7 +126,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
                 filesystem.getRootPath(),
                 "&&",
                 Paths.get("/usr/bin/dx"),
-                xmx + "--dex --output",
+                "--dex --output",
                 filesystem.resolve("classes.dex.tmp.jar"),
                 filesystem.resolve("foo.dex.jar"),
                 filesystem.resolve("bar.dex.jar") + ")"
@@ -154,11 +155,11 @@ public class SmartDexingStepTest extends EasyMockSupport {
         filesToDex,
         outputPath,
         dxOptions,
-        Optional.of(9));
+        Optional.of(9),
+        Optional.empty());
 
     assertTrue("Result should be a CompositeStep.", dxStep instanceof CompositeStep);
     List<Step> steps = ImmutableList.copyOf((CompositeStep) dxStep);
-    String xmx = DxStep.XMX_OVERRIDE.isEmpty() ? "" : DxStep.XMX_OVERRIDE + " ";
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
         ImmutableList.of(
@@ -167,7 +168,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
                 filesystem.getRootPath(),
                 "&&",
                 Paths.get("/usr/bin/dx"),
-                xmx + "--dex --output",
+                "--dex --output",
                 filesystem.resolve("classes.dex.tmp.jar"),
                 filesystem.resolve("foo.dex.jar"),
                 filesystem.resolve("bar.dex.jar") + ")"
@@ -195,16 +196,16 @@ public class SmartDexingStepTest extends EasyMockSupport {
         filesToDex,
         outputPath,
         dxOptions,
+        Optional.empty(),
         Optional.empty());
 
-    String xmx = DxStep.XMX_OVERRIDE.isEmpty() ? "" : DxStep.XMX_OVERRIDE + " ";
     assertEquals(
         Joiner.on(" ").join(
             "(cd",
             filesystem.getRootPath(),
             "&&",
             Paths.get("/usr/bin/dx"),
-            xmx + "--dex --output",
+            "--dex --output",
             filesystem.resolve("classes.dex"),
             filesystem.resolve("foo.dex.jar"),
             filesystem.resolve("bar.dex.jar") + ")"
@@ -226,16 +227,16 @@ public class SmartDexingStepTest extends EasyMockSupport {
         filesToDex,
         outputPath,
         dxOptions,
+        Optional.empty(),
         Optional.empty());
 
-    String xmx = DxStep.XMX_OVERRIDE.isEmpty() ? "" : DxStep.XMX_OVERRIDE + " ";
     assertEquals(
         Joiner.on(" ").join(
             "(cd",
             filesystem.getRootPath(),
             "&&",
             Paths.get("/usr/bin/dx"),
-            xmx + "--dex --output",
+            "--dex --output",
             filesystem.resolve("classes.dex.jar"),
             filesystem.resolve("foo.dex.jar"),
             filesystem.resolve("bar.dex.jar") + ")",
@@ -259,6 +260,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
         filesToDex,
         outputPath,
         dxOptions,
+        Optional.empty(),
         Optional.empty());
   }
 

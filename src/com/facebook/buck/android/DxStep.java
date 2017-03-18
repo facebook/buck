@@ -35,16 +35,12 @@ import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.Nullable;
 
 public class DxStep extends ShellStep {
-
-  /**
-   */
-  public static final String XMX_OVERRIDE =
-      "";
 
   /** Options to pass to {@code dx}. */
   public enum Option {
@@ -77,6 +73,7 @@ public class DxStep extends ShellStep {
   private final Path outputDexFile;
   private final Set<Path> filesToDex;
   private final Set<Option> options;
+  private final Optional<String> maxHeapSize;
 
   @Nullable
   private Collection<String> resourcesReferencedInCode;
@@ -101,11 +98,28 @@ public class DxStep extends ShellStep {
       Path outputDexFile,
       Iterable<Path> filesToDex,
       EnumSet<Option> options) {
+    this(filesystem, outputDexFile, filesToDex, options, Optional.empty());
+  }
+
+  /**
+   * @param outputDexFile path to the file where the generated classes.dex should go.
+   * @param filesToDex each element in this set is a path to a .class file, a zip file of .class
+   *     files, or a directory of .class files.
+   * @param options to pass to {@code dx}.
+   * @param maxHeapSize The max heap size used for out of process dex.
+   */
+  public DxStep(
+      ProjectFilesystem filesystem,
+      Path outputDexFile,
+      Iterable<Path> filesToDex,
+      EnumSet<Option> options,
+      Optional<String> maxHeapSize) {
     super(filesystem.getRootPath());
     this.filesystem = filesystem;
     this.outputDexFile = outputDexFile;
     this.filesToDex = ImmutableSet.copyOf(filesToDex);
     this.options = Sets.immutableEnumSet(options);
+    this.maxHeapSize = maxHeapSize;
 
     Preconditions.checkArgument(
         !options.contains(Option.RUN_IN_PROCESS) ||
@@ -129,8 +143,8 @@ public class DxStep extends ShellStep {
 
     // Add the Xmx override, but not for in-process dexing, since the dexer won't understand it.
     // Also, if DX works in-process, it probably wouldn't need an enlarged Xmx.
-    if (!XMX_OVERRIDE.isEmpty() && !options.contains(Option.RUN_IN_PROCESS)) {
-      builder.add(XMX_OVERRIDE);
+    if (maxHeapSize.isPresent() && !options.contains(Option.RUN_IN_PROCESS)) {
+      builder.add(String.format("-JXmx%s", maxHeapSize.get()));
     }
 
     builder.add("--dex");

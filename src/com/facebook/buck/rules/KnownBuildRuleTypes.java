@@ -29,6 +29,7 @@ import com.facebook.buck.android.AndroidPrebuiltAarDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.ApkGenruleDescription;
 import com.facebook.buck.android.DefaultAndroidLibraryCompilerFactory;
+import com.facebook.buck.android.DxConfig;
 import com.facebook.buck.android.GenAidlDescription;
 import com.facebook.buck.android.NdkCxxPlatform;
 import com.facebook.buck.android.NdkCxxPlatformCompiler;
@@ -497,6 +498,8 @@ public class KnownBuildRuleTypes {
 
     ProGuardConfig proGuardConfig = new ProGuardConfig(config);
 
+    DxConfig dxConfig = new DxConfig(config);
+
     PythonBuckConfig pyConfig = new PythonBuckConfig(config, executableFinder);
     ImmutableList<PythonPlatform> pythonPlatformsList =
         pyConfig.getPythonPlatforms(processExecutor);
@@ -606,13 +609,17 @@ public class KnownBuildRuleTypes {
         new HaskellBinaryDescription(haskellBuckConfig, cxxPlatforms, defaultCxxPlatform));
     builder.register(new HaskellPrebuiltLibraryDescription());
 
+    if (javaConfig.getDxThreadCount().isPresent()) {
+      LOG.warn("java.dx_threads has been deprecated. Use dx.max_threads instead");
+    }
     // Create an executor service exclusively for the smart dexing step.
     ListeningExecutorService dxExecutorService =
         MoreExecutors.listeningDecorator(
             Executors.newFixedThreadPool(
-                javaConfig.getDxThreadCount().orElse(SmartDexingStep.determineOptimalThreadCount()),
+                dxConfig.getDxMaxThreadCount().orElse(
+                    javaConfig.getDxThreadCount().orElse(
+                        SmartDexingStep.determineOptimalThreadCount())),
                 new CommandThreadFactory("SmartDexing")));
-
 
     builder.register(
         new AndroidAarDescription(
@@ -628,7 +635,8 @@ public class KnownBuildRuleTypes {
             ndkCxxPlatforms,
             dxExecutorService,
             config,
-            cxxBuckConfig));
+            cxxBuckConfig,
+            dxConfig));
     builder.register(new AndroidBuildConfigDescription(defaultJavacOptions));
     builder.register(
         new AndroidInstrumentationApkDescription(
@@ -636,7 +644,8 @@ public class KnownBuildRuleTypes {
             defaultJavacOptions,
             ndkCxxPlatforms,
             dxExecutorService,
-            cxxBuckConfig));
+            cxxBuckConfig,
+            dxConfig));
     builder.register(new AndroidInstrumentationTestDescription(
         defaultJavaOptions,
         defaultTestRuleTimeoutMs));

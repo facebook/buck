@@ -41,7 +41,8 @@ public class AndroidInstrumentationApkBuilder
             ANDROID_JAVAC_OPTIONS,
             ImmutableMap.of(),
             MoreExecutors.newDirectExecutorService(),
-            new CxxBuckConfig(new FakeBuckConfig.Builder().build())),
+            new CxxBuckConfig(new FakeBuckConfig.Builder().build()),
+            new DxConfig(FakeBuckConfig.builder().build())),
         target);
   }
 

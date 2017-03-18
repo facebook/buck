@@ -89,7 +89,8 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         false,
         false,
         apkUnderTest.getManifestEntries(),
-        apkUnderTest.getJavaRuntimeLauncher());
+        apkUnderTest.getJavaRuntimeLauncher(),
+        Optional.empty());
     this.apkUnderTest = apkUnderTest;
   }
 

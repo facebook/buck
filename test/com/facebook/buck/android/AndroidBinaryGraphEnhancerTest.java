@@ -28,6 +28,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.jvm.core.HasJavaClassHashes;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -161,7 +162,8 @@ public class AndroidBinaryGraphEnhancerTest {
         new APKModuleGraph(
             TargetGraph.EMPTY,
             originalParams.getBuildTarget(),
-            Optional.empty()));
+            Optional.empty()),
+        new DxConfig(FakeBuckConfig.builder().build()));
 
     BuildTarget aaptPackageResourcesTarget =
         BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
@@ -316,7 +318,8 @@ public class AndroidBinaryGraphEnhancerTest {
         new APKModuleGraph(
             TargetGraph.EMPTY,
             originalParams.getBuildTarget(),
-            Optional.empty()));
+            Optional.empty()),
+        new DxConfig(FakeBuckConfig.builder().build()));
     replay(keystore);
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
@@ -464,7 +467,8 @@ public class AndroidBinaryGraphEnhancerTest {
         new APKModuleGraph(
             TargetGraph.EMPTY,
             originalParams.getBuildTarget(),
-            Optional.empty()));
+            Optional.empty()),
+        new DxConfig(FakeBuckConfig.builder().build()));
     graphEnhancer.createAdditionalBuildables();
 
     BuildRule aaptPackageResourcesRule = findRuleOfType(ruleResolver, AaptPackageResources.class);
@@ -524,7 +528,8 @@ public class AndroidBinaryGraphEnhancerTest {
         new APKModuleGraph(
             TargetGraph.EMPTY,
             originalParams.getBuildTarget(),
-            Optional.empty()));
+            Optional.empty()),
+        new DxConfig(FakeBuckConfig.builder().build()));
     graphEnhancer.createAdditionalBuildables();
 
     ResourcesFilter resourcesFilter = findRuleOfType(ruleResolver, ResourcesFilter.class);
@@ -611,7 +616,8 @@ public class AndroidBinaryGraphEnhancerTest {
         new APKModuleGraph(
             TargetGraph.EMPTY,
             originalParams.getBuildTarget(),
-            Optional.empty()));
+            Optional.empty()),
+        new DxConfig(FakeBuckConfig.builder().build()));
     graphEnhancer.createAdditionalBuildables();
 
 
