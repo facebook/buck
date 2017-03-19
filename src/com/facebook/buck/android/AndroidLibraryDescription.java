@@ -197,27 +197,28 @@ public class AndroidLibraryDescription
           params.copyReplacingDeclaredAndExtraDeps(
               Suppliers.ofInstance(declaredDeps),
               Suppliers.ofInstance(extraDeps));
-      return new AndroidLibrary(
-          androidLibraryParams,
-          pathResolver,
-          ruleFinder,
-          args.srcs,
-          ResourceValidator.validateResources(
+      return AndroidLibrary.builder()
+          .setParams(androidLibraryParams)
+          .setResolver(pathResolver)
+          .setRuleFinder(ruleFinder)
+          .setSrcs(args.srcs)
+          .setResources(ResourceValidator.validateResources(
               pathResolver,
-              params.getProjectFilesystem(), args.resources),
-          args.proguardConfig,
-          args.postprocessClassesCommands,
-          exportedDeps,
-          resolver.getAllRules(args.providedDeps),
-          JavaLibraryRules.getAbiInputs(resolver, androidLibraryParams.getDeps()),
-          additionalClasspathEntries,
-          javacOptions,
-          compiler.trackClassUsage(javacOptions),
-          compiler.compileToJar(args, javacOptions, resolver),
-          args.resourcesRoot,
-          args.mavenCoords,
-          args.manifest,
-          args.tests);
+              params.getProjectFilesystem(), args.resources))
+          .setProguardConfig(args.proguardConfig)
+          .setPostprocessClassesCommands(args.postprocessClassesCommands)
+          .setExportedDeps(exportedDeps)
+          .setProvidedDeps(resolver.getAllRules(args.providedDeps))
+          .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, androidLibraryParams.getDeps()))
+          .setAdditionalClasspathEntries(additionalClasspathEntries)
+          .setJavacOptions(javacOptions)
+          .setTrackClassUsage(compiler.trackClassUsage(javacOptions))
+          .setCompileStepFactory(compiler.compileToJar(args, javacOptions, resolver))
+          .setResourcesRoot(args.resourcesRoot)
+          .setMavenCoords(args.mavenCoords)
+          .setManifestFile(args.manifest)
+          .setTests(args.tests)
+          .build();
     }
   }
 

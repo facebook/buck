@@ -119,29 +119,30 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
             .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
     JavaLibrary testsLibrary =
         resolver.addToIndex(
-            new DefaultJavaLibrary(
-                testsLibraryParams,
-                pathResolver,
-                ruleFinder,
-                args.srcs,
-                ResourceValidator.validateResources(
+            DefaultJavaLibrary.builder()
+                .setParams(testsLibraryParams)
+                .setResolver(pathResolver)
+                .setRuleFinder(ruleFinder)
+                .setSrcs(args.srcs)
+                .setResources(ResourceValidator.validateResources(
                     pathResolver,
                     params.getProjectFilesystem(),
-                    args.resources),
-                defaultJavacOptions.getGeneratedSourceFolderName(),
-                /* proguardConfig */ Optional.empty(),
-                /* postprocessClassesCommands */ ImmutableList.of(),
-                /* exportDeps */ ImmutableSortedSet.of(),
-                /* providedDeps */ ImmutableSortedSet.of(),
-                JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()),
-                /* trackClassUsage */ false,
-                /* additionalClasspathEntries */ ImmutableSet.of(),
-                stepFactory,
-                args.resourcesRoot,
-                args.manifestFile,
-                args.mavenCoords,
-                args.tests,
-                args.removeClasses));
+                    args.resources))
+                .setGeneratedSourceFolder(defaultJavacOptions.getGeneratedSourceFolderName())
+                .setProguardConfig(Optional.empty())
+                .setPostprocessClassesCommands(ImmutableList.of())
+                .setExportedDeps(ImmutableSortedSet.of())
+                .setProvidedDeps(ImmutableSortedSet.of())
+                .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()))
+                .setTrackClassUsage(false)
+                .setAdditionalClasspathEntries(ImmutableSet.of())
+                .setCompileStepFactory(stepFactory)
+                .setResourcesRoot(args.resourcesRoot)
+                .setManifestFile(args.manifestFile)
+                .setMavenCoords(args.mavenCoords)
+                .setTests(args.tests)
+                .setClassesToRemoveFromJar(args.removeClasses)
+                .build());
 
     return new JavaTest(
         params.copyReplacingDeclaredAndExtraDeps(

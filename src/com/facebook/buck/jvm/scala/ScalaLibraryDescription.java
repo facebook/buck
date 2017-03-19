@@ -101,34 +101,34 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
                         params.getDeclaredDeps().get(),
                         resolver.getAllRules(args.providedDeps))),
                 scalac.getDeps(ruleFinder)));
-    return new DefaultJavaLibrary(
-        javaLibraryParams,
-        pathResolver,
-        ruleFinder,
-        args.srcs,
-        validateResources(
+    return DefaultJavaLibrary.builder()
+        .setParams(javaLibraryParams)
+        .setResolver(pathResolver)
+        .setRuleFinder(ruleFinder)
+        .setSrcs(args.srcs)
+        .setResources(validateResources(
             pathResolver,
             params.getProjectFilesystem(),
-            args.resources),
-        /* generatedSourceFolder */ Optional.empty(),
-        /* proguardConfig */ Optional.empty(),
-        /* postprocessClassesCommands */ ImmutableList.of(),
-        params.getDeclaredDeps().get(),
-        resolver.getAllRules(args.providedDeps),
-        JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()),
-        /* trackClassUsage */ false,
-        /* additionalClasspathEntries */ ImmutableSet.of(),
-        new ScalacToJarStepFactory(
+            args.resources))
+        .setGeneratedSourceFolder(Optional.empty())
+        .setProguardConfig(Optional.empty())
+        .setPostprocessClassesCommands(ImmutableList.of())
+        .setExportedDeps(params.getDeclaredDeps().get())
+        .setProvidedDeps(resolver.getAllRules(args.providedDeps))
+        .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
+        .setTrackClassUsage(false)
+        .setAdditionalClasspathEntries(ImmutableSet.of())
+        .setCompileStepFactory(new ScalacToJarStepFactory(
             scalac,
             scalaBuckConfig.getCompilerFlags(),
             args.extraArguments,
-            resolver.getAllRules(scalaBuckConfig.getCompilerPlugins())
-        ),
-        args.resourcesRoot,
-        args.manifestFile,
-        args.mavenCoords,
-        args.tests,
-        /* classesToRemoveFromJar */ ImmutableSet.of());
+            resolver.getAllRules(scalaBuckConfig.getCompilerPlugins())))
+        .setResourcesRoot(args.resourcesRoot)
+        .setManifestFile(args.manifestFile)
+        .setMavenCoords(args.mavenCoords)
+        .setTests(args.tests)
+        .setClassesToRemoveFromJar(ImmutableSet.of())
+        .build();
   }
 
   @Override

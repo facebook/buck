@@ -1144,9 +1144,9 @@ public class DefaultJavaLibraryTest {
       Optional<AbstractJavacOptions.SpoolMode> spoolMode,
       ImmutableList<String> postprocessClassesCommands) {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    ImmutableSortedSet<? extends SourcePath> srcsAsPaths = FluentIterable.from(srcs)
+    ImmutableSortedSet<SourcePath> srcsAsPaths = FluentIterable.from(srcs)
         .transform(Paths::get)
-        .transform(p -> new PathSourcePath(projectFilesystem, p))
+        .transform(p -> (SourcePath) new PathSourcePath(projectFilesystem, p))
         .toSortedSet(Ordering.natural());
 
     BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
@@ -1158,27 +1158,29 @@ public class DefaultJavaLibraryTest {
         : DEFAULT_JAVAC_OPTIONS;
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    DefaultJavaLibrary defaultJavaLibrary = new DefaultJavaLibrary(
-        buildRuleParams,
-        new SourcePathResolver(ruleFinder),
-        ruleFinder,
-        srcsAsPaths,
-        /* resources */ ImmutableSet.of(),
-        javacOptions.getGeneratedSourceFolderName(),
-        /* proguardConfig */ Optional.empty(),
-        postprocessClassesCommands,
-        exportedDeps,
-        /* providedDeps */ ImmutableSortedSet.of(),
-        ImmutableSortedSet.of(),
-        javacOptions.trackClassUsage(),
-        /* additionalClasspathEntries */ ImmutableSet.of(),
-        new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
-        /* resourcesRoot */ Optional.empty(),
-        /* manifest file */ Optional.empty(),
-        /* mavenCoords */ Optional.empty(),
-        /* tests */ ImmutableSortedSet.of(),
-        /* classesToRemoveFromJar */ ImmutableSet.of()) {
-    };
+    DefaultJavaLibrary defaultJavaLibrary = DefaultJavaLibrary.builder()
+        .setParams(buildRuleParams)
+        .setResolver(new SourcePathResolver(ruleFinder))
+        .setRuleFinder(ruleFinder)
+        .setSrcs(srcsAsPaths)
+        .setResources(ImmutableSortedSet.of())
+        .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
+        .setProguardConfig(Optional.empty())
+        .setPostprocessClassesCommands(postprocessClassesCommands)
+        .setExportedDeps(exportedDeps)
+        .setProvidedDeps(ImmutableSortedSet.of())
+        .setAbiInputs(ImmutableSortedSet.of())
+        .setTrackClassUsage(javacOptions.trackClassUsage())
+        .setAdditionalClasspathEntries(ImmutableSet.of())
+        .setCompileStepFactory(new JavacToJarStepFactory(
+            javacOptions,
+            JavacOptionsAmender.IDENTITY))
+        .setResourcesRoot(Optional.empty())
+        .setManifestFile(Optional.empty())
+        .setMavenCoords(Optional.empty())
+        .setTests(ImmutableSortedSet.of())
+        .setClassesToRemoveFromJar(ImmutableSet.of())
+        .build();
 
     ruleResolver.addToIndex(defaultJavaLibrary);
     return defaultJavaLibrary;
@@ -1453,26 +1455,27 @@ public class DefaultJavaLibraryTest {
           .build();
 
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-      DefaultJavaLibrary javaLibrary = new DefaultJavaLibrary(
-          buildRuleParams,
-          new SourcePathResolver(ruleFinder),
-          ruleFinder,
-          ImmutableSet.of(new FakeSourcePath(src)),
-          /* resources */ ImmutableSet.of(),
-          options.getGeneratedSourceFolderName(),
-          /* proguardConfig */ Optional.empty(),
-          /* postprocessClassesCommands */ ImmutableList.of(),
-          /* exportedDeps */ ImmutableSortedSet.of(),
-          /* providedDeps */ ImmutableSortedSet.of(),
-          ImmutableSortedSet.of(),
-          options.trackClassUsage(),
-          /* additionalClasspathEntries */ ImmutableSet.of(),
-          new JavacToJarStepFactory(options, JavacOptionsAmender.IDENTITY),
-          /* resourcesRoot */ Optional.empty(),
-          /* manifestFile */ Optional.empty(),
-          /* mavenCoords */ Optional.empty(),
-          /* tests */ ImmutableSortedSet.of(),
-          options.getClassesToRemoveFromJar());
+      DefaultJavaLibrary javaLibrary = DefaultJavaLibrary.builder()
+          .setParams(buildRuleParams)
+          .setResolver(new SourcePathResolver(ruleFinder))
+          .setRuleFinder(ruleFinder)
+          .setSrcs(ImmutableSortedSet.of(new FakeSourcePath(src)))
+          .setResources(ImmutableSortedSet.of())
+          .setGeneratedSourceFolder(options.getGeneratedSourceFolderName())
+          .setProguardConfig(Optional.empty())
+          .setPostprocessClassesCommands(ImmutableList.of())
+          .setExportedDeps(ImmutableSortedSet.of())
+          .setProvidedDeps(ImmutableSortedSet.of())
+          .setAbiInputs(ImmutableSortedSet.of())
+          .setTrackClassUsage(options.trackClassUsage())
+          .setAdditionalClasspathEntries(ImmutableSet.of())
+          .setCompileStepFactory(new JavacToJarStepFactory(options, JavacOptionsAmender.IDENTITY))
+          .setResourcesRoot(Optional.empty())
+          .setManifestFile(Optional.empty())
+          .setMavenCoords(Optional.empty())
+          .setTests(ImmutableSortedSet.of())
+          .setClassesToRemoveFromJar(options.getClassesToRemoveFromJar())
+          .build();
 
       ruleResolver.addToIndex(javaLibrary);
       return javaLibrary;

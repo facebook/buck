@@ -125,30 +125,30 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
 
         JavaLibrary testsLibrary =
         resolver.addToIndex(
-            new DefaultJavaLibrary(
-                testsLibraryParams,
-                pathResolver,
-                ruleFinder,
-                args.srcs,
-                ResourceValidator.validateResources(
+            DefaultJavaLibrary.builder()
+                .setParams(testsLibraryParams)
+                .setResolver(pathResolver)
+                .setRuleFinder(ruleFinder)
+                .setSrcs(args.srcs)
+                .setResources(ResourceValidator.validateResources(
                     pathResolver,
                     params.getProjectFilesystem(),
-                    args.resources),
-                templateJavacOptions.getGeneratedSourceFolderName(),
-                Optional.empty(),        /* proguardConfig */
-                ImmutableList.of(),      /* postprocessClassesCommands */
-                ImmutableSortedSet.of(), /* exportedDeps */
-                ImmutableSortedSet.of(), /* providedDeps */
-                JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()),
-                false,                   /* trackClassUsage */
-                ImmutableSet.of(),       /* additionalClasspathEntries */
-                stepFactory,
-                args.resourcesRoot,
-                args.manifestFile,
-                args.mavenCoords,
-                ImmutableSortedSet.of(), /* tests */
-                ImmutableSet.of()        /* classesToRemoveFromJar */
-            ));
+                    args.resources))
+                .setGeneratedSourceFolder(templateJavacOptions.getGeneratedSourceFolderName())
+                .setProguardConfig(Optional.empty())
+                .setPostprocessClassesCommands(ImmutableList.of())
+                .setExportedDeps(ImmutableSortedSet.of())
+                .setProvidedDeps(ImmutableSortedSet.of())
+                .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()))
+                .setTrackClassUsage(false)
+                .setAdditionalClasspathEntries(ImmutableSet.of())
+                .setCompileStepFactory(stepFactory)
+                .setResourcesRoot(args.resourcesRoot)
+                .setManifestFile(args.manifestFile)
+                .setMavenCoords(args.mavenCoords)
+                .setTests(ImmutableSortedSet.of())
+                .setClassesToRemoveFromJar(ImmutableSet.of())
+                .build());
 
     return new KotlinTest(
         params.copyReplacingDeclaredAndExtraDeps(

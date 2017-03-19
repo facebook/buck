@@ -132,6 +132,7 @@ java_library(
     'BuiltInJavac.java',
     'CalculateAbi.java',
     'DefaultJavaLibrary.java',
+    'DefaultJavaLibraryBuilder.java',
     'DefaultSuggestBuildRules.java',
     'ForkMode.java',
     'JarArchiveDependencySupplier.java',

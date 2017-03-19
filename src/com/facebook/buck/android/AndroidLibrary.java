@@ -21,6 +21,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
@@ -39,6 +40,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackageable {
 
@@ -51,8 +53,12 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   @AddToRuleKey
   private final Optional<SourcePath> manifestFile;
 
+  public static Builder builder() {
+    return new Builder();
+  }
+
   @VisibleForTesting
-  public AndroidLibrary(
+  AndroidLibrary(
       BuildRuleParams params,
       SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
@@ -103,4 +109,48 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     return manifestFile;
   }
 
+  public static class Builder extends DefaultJavaLibraryBuilder {
+    @Override
+    protected AndroidLibrary newInstance(
+        BuildRuleParams params,
+        JavacOptions javacOptions,
+        SourcePathResolver resolver,
+        SourcePathRuleFinder ruleFinder,
+        Set<? extends SourcePath> srcs,
+        Set<? extends SourcePath> resources,
+        Optional<Path> generatedSourceFolder,
+        Optional<SourcePath> proguardConfig,
+        ImmutableList<String> postprocessClassesCommands,
+        ImmutableSortedSet<BuildRule> exportedDeps,
+        ImmutableSortedSet<BuildRule> providedDeps,
+        ImmutableSortedSet<SourcePath> abiInputs,
+        boolean trackClassUsage,
+        ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries,
+        CompileToJarStepFactory compileStepFactory,
+        Optional<Path> resourcesRoot,
+        Optional<SourcePath> manifestFile,
+        Optional<String> mavenCoords,
+        ImmutableSortedSet<BuildTarget> tests,
+        ImmutableSet<Pattern> classesToRemoveFromJar) {
+      return new AndroidLibrary(
+          params,
+          resolver,
+          ruleFinder,
+          srcs,
+          resources,
+          proguardConfig,
+          postprocessClassesCommands,
+          exportedDeps,
+          providedDeps,
+          abiInputs,
+          additionalClasspathEntries,
+          javacOptions,
+          trackClassUsage,
+          compileStepFactory,
+          resourcesRoot,
+          mavenCoords,
+          manifestFile,
+          tests);
+    }
+  }
 }

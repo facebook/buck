@@ -153,31 +153,32 @@ public class KotlinLibraryDescription implements
                 ruleFinder.filterBuildRuleInputs(
                     javacOptions.getInputs(ruleFinder))));
     DefaultJavaLibrary defaultKotlinLibrary =
-        new DefaultJavaLibrary(
-            javaLibraryParams,
-            pathResolver,
-            ruleFinder,
-            args.srcs,
-            validateResources(
+        DefaultJavaLibrary.builder()
+            .setParams(javaLibraryParams)
+            .setResolver(pathResolver)
+            .setRuleFinder(ruleFinder)
+            .setSrcs(args.srcs)
+            .setResources(validateResources(
                 pathResolver,
                 params.getProjectFilesystem(),
-                args.resources),
-            Optional.empty(),
-            Optional.empty(),
-            ImmutableList.of(),
-            exportedDeps,
-            resolver.getAllRules(args.providedDeps),
-            JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()),
-            false,
-            ImmutableSet.of(),
-            new KotlincToJarStepFactory(
+                args.resources))
+            .setGeneratedSourceFolder(Optional.empty())
+            .setProguardConfig(Optional.empty())
+            .setPostprocessClassesCommands(ImmutableList.of())
+            .setExportedDeps(exportedDeps)
+            .setProvidedDeps(resolver.getAllRules(args.providedDeps))
+            .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
+            .setTrackClassUsage(false)
+            .setAdditionalClasspathEntries(ImmutableSet.of())
+            .setCompileStepFactory(new KotlincToJarStepFactory(
                 kotlinBuckConfig.getKotlinCompiler().get(),
-                args.extraKotlincArguments),
-            args.resourcesRoot,
-            args.manifestFile,
-            args.mavenCoords,
-            args.tests,
-            args.removeClasses);
+                args.extraKotlincArguments))
+            .setResourcesRoot(args.resourcesRoot)
+            .setManifestFile(args.manifestFile)
+            .setMavenCoords(args.mavenCoords)
+            .setTests(args.tests)
+            .setClassesToRemoveFromJar(args.removeClasses)
+            .build();
 
     if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
       return defaultKotlinLibrary;

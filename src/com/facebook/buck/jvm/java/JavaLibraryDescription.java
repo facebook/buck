@@ -190,29 +190,32 @@ public class JavaLibraryDescription implements
                 ruleFinder.filterBuildRuleInputs(
                     javacOptions.getInputs(ruleFinder))));
     DefaultJavaLibrary defaultJavaLibrary =
-        new DefaultJavaLibrary(
-            javaLibraryParams,
-            pathResolver,
-            ruleFinder,
-            args.srcs,
-            validateResources(
+        DefaultJavaLibrary.builder()
+            .setParams(javaLibraryParams)
+            .setResolver(pathResolver)
+            .setRuleFinder(ruleFinder)
+            .setSrcs(args.srcs)
+            .setResources(validateResources(
                 pathResolver,
                 params.getProjectFilesystem(),
-                args.resources),
-            javacOptions.getGeneratedSourceFolderName(),
-            args.proguardConfig,
-            args.postprocessClassesCommands,
-            exportedDeps,
-            resolver.getAllRules(args.providedDeps),
-            JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()),
-            javacOptions.trackClassUsage(),
-            /* additionalClasspathEntries */ ImmutableSet.of(),
-            new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
-            args.resourcesRoot,
-            args.manifestFile,
-            args.mavenCoords,
-            args.tests,
-            javacOptions.getClassesToRemoveFromJar());
+                args.resources))
+            .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
+            .setProguardConfig(args.proguardConfig)
+            .setPostprocessClassesCommands(args.postprocessClassesCommands)
+            .setExportedDeps(exportedDeps)
+            .setProvidedDeps(resolver.getAllRules(args.providedDeps))
+            .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
+            .setTrackClassUsage(javacOptions.trackClassUsage())
+            .setAdditionalClasspathEntries(ImmutableSet.of())
+            .setCompileStepFactory(new JavacToJarStepFactory(
+                javacOptions,
+                JavacOptionsAmender.IDENTITY))
+            .setResourcesRoot(args.resourcesRoot)
+            .setManifestFile(args.manifestFile)
+            .setMavenCoords(args.mavenCoords)
+            .setTests(args.tests)
+            .setClassesToRemoveFromJar(javacOptions.getClassesToRemoveFromJar())
+            .build();
 
   if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
       return defaultJavaLibrary;

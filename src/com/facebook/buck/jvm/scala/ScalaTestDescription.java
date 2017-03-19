@@ -128,34 +128,34 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
             .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
     JavaLibrary testsLibrary =
         resolver.addToIndex(
-            new DefaultJavaLibrary(
-                javaLibraryParams,
-                pathResolver,
-                ruleFinder,
-                args.srcs,
-                ResourceValidator.validateResources(
+            DefaultJavaLibrary.builder()
+                .setParams(javaLibraryParams)
+                .setResolver(pathResolver)
+                .setRuleFinder(ruleFinder)
+                .setSrcs(args.srcs)
+                .setResources(ResourceValidator.validateResources(
                     pathResolver,
                     params.getProjectFilesystem(),
-                    args.resources),
-                /* generatedSourceFolderName */ Optional.empty(),
-                /* proguardConfig */ Optional.empty(),
-                /* postprocessClassesCommands */ ImmutableList.of(),
-                /* exportDeps */ ImmutableSortedSet.of(),
-                /* providedDeps */ ImmutableSortedSet.of(),
-                JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()),
-                /* trackClassUsage */ false,
-                /* additionalClasspathEntries */ ImmutableSet.of(),
-                new ScalacToJarStepFactory(
+                    args.resources))
+                .setGeneratedSourceFolder(Optional.empty())
+                .setProguardConfig(Optional.empty())
+                .setPostprocessClassesCommands(ImmutableList.of())
+                .setExportedDeps(ImmutableSortedSet.of())
+                .setProvidedDeps(ImmutableSortedSet.of())
+                .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
+                .setTrackClassUsage(false)
+                .setAdditionalClasspathEntries(ImmutableSet.of())
+                .setCompileStepFactory(new ScalacToJarStepFactory(
                     scalac,
                     config.getCompilerFlags(),
                     args.extraArguments,
-                    ImmutableSet.of()
-                ),
-                args.resourcesRoot,
-                args.manifestFile,
-                args.mavenCoords,
-                /* tests */ ImmutableSortedSet.of(),
-                /* classesToRemoveFromJar */ ImmutableSet.of()));
+                    ImmutableSet.of()))
+                .setResourcesRoot(args.resourcesRoot)
+                .setManifestFile(args.manifestFile)
+                .setMavenCoords(args.mavenCoords)
+                .setTests(ImmutableSortedSet.of())
+                .setClassesToRemoveFromJar(ImmutableSet.of())
+                .build());
 
     return new JavaTest(
         params.copyReplacingDeclaredAndExtraDeps(

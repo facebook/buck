@@ -145,6 +145,10 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   @AddToRuleKey
   private final CompileToJarStepFactory compileStepFactory;
 
+  public static DefaultJavaLibraryBuilder builder() {
+    return new DefaultJavaLibraryBuilder();
+  }
+
   @Override
   public ImmutableSortedSet<BuildTarget> getTests() {
     return tests;
@@ -173,7 +177,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         return topLevelSymbolsBuilder.build();
       };
 
-  public DefaultJavaLibrary(
+  protected DefaultJavaLibrary(
       final BuildRuleParams params,
       SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
@@ -215,7 +219,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         classesToRemoveFromJar);
   }
 
-  protected DefaultJavaLibrary(
+  private DefaultJavaLibrary(
       BuildRuleParams params,
       final SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,

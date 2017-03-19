@@ -168,29 +168,32 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
     JavaLibrary testsLibrary =
         resolver.addToIndex(
-            new DefaultJavaLibrary(
-                testsLibraryParams,
-                pathResolver,
-                ruleFinder,
-                args.srcs,
-                validateResources(
+            DefaultJavaLibrary.builder()
+                .setParams(testsLibraryParams)
+                .setResolver(pathResolver)
+                .setRuleFinder(ruleFinder)
+                .setSrcs(args.srcs)
+                .setResources(validateResources(
                     pathResolver,
                     params.getProjectFilesystem(),
-                    args.resources),
-                javacOptions.getGeneratedSourceFolderName(),
-                args.proguardConfig,
-                /* postprocessClassesCommands */ ImmutableList.of(),
-                /* exportDeps */ ImmutableSortedSet.of(),
-                /* providedDeps */ resolver.getAllRules(args.providedDeps),
-                JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()),
-                javacOptions.trackClassUsage(),
-                additionalClasspathEntries,
-                new JavacToJarStepFactory(javacOptions, new BootClasspathAppender()),
-                args.resourcesRoot,
-                args.manifestFile,
-                args.mavenCoords,
-                /* tests */ ImmutableSortedSet.of(),
-                /* classesToRemoveFromJar */ ImmutableSet.of()));
+                    args.resources))
+                .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
+                .setProguardConfig(args.proguardConfig)
+                .setPostprocessClassesCommands(ImmutableList.of())
+                .setExportedDeps(ImmutableSortedSet.of())
+                .setProvidedDeps(resolver.getAllRules(args.providedDeps))
+                .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()))
+                .setTrackClassUsage(javacOptions.trackClassUsage())
+                .setAdditionalClasspathEntries(additionalClasspathEntries)
+                .setCompileStepFactory(new JavacToJarStepFactory(
+                    javacOptions,
+                    new BootClasspathAppender()))
+                .setResourcesRoot(args.resourcesRoot)
+                .setManifestFile(args.manifestFile)
+                .setMavenCoords(args.mavenCoords)
+                .setTests(ImmutableSortedSet.of())
+                .setClassesToRemoveFromJar(ImmutableSet.of())
+                .build());
 
 
     return new RobolectricTest(

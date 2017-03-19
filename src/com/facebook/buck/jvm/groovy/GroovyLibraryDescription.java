@@ -99,32 +99,33 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
           args)
         // groovyc may or may not play nice with generating ABIs from source, so disabling for now
         .withAbiGenerationMode(JavacOptions.AbiGenerationMode.CLASS);
-    return new DefaultJavaLibrary(
-        javaLibraryParams,
-        pathResolver,
-        ruleFinder,
-        args.srcs,
-        validateResources(
+    return DefaultJavaLibrary.builder()
+        .setParams(javaLibraryParams)
+        .setResolver(pathResolver)
+        .setRuleFinder(ruleFinder)
+        .setSrcs(args.srcs)
+        .setResources(validateResources(
             pathResolver,
             params.getProjectFilesystem(),
-            args.resources),
-        Optional.empty(),
-        Optional.empty(),
-        ImmutableList.of(),
-        exportedDeps,
-        resolver.getAllRules(args.providedDeps),
-        JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()),
-        /* trackClassUsage */ false,
-        /* additionalClasspathEntries */ ImmutableSet.of(),
-        new GroovycToJarStepFactory(
+            args.resources))
+        .setGeneratedSourceFolder(Optional.empty())
+        .setProguardConfig(Optional.empty())
+        .setPostprocessClassesCommands(ImmutableList.of())
+        .setExportedDeps(exportedDeps)
+        .setProvidedDeps(resolver.getAllRules(args.providedDeps))
+        .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
+        .setTrackClassUsage(false)
+        .setAdditionalClasspathEntries(ImmutableSet.of())
+        .setCompileStepFactory(new GroovycToJarStepFactory(
             groovyBuckConfig.getGroovyCompiler().get(),
             Optional.of(args.extraGroovycArguments),
-            javacOptions),
-        args.resourcesRoot,
-        args.manifestFile,
-        args.mavenCoords,
-        args.tests,
-        args.removeClasses);
+            javacOptions))
+        .setResourcesRoot(args.resourcesRoot)
+        .setManifestFile(args.manifestFile)
+        .setMavenCoords(args.mavenCoords)
+        .setTests(args.tests)
+        .setClassesToRemoveFromJar(args.removeClasses)
+        .build();
   }
 
   @SuppressFieldNotInitialized
