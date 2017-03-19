@@ -100,10 +100,13 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
                         params.getDeclaredDeps().get(),
                         resolver.getAllRules(args.providedDeps))),
                 scalac.getDeps(ruleFinder)));
-    return DefaultJavaLibrary.builder()
-        .setParams(javaLibraryParams)
-        .setResolver(pathResolver)
-        .setRuleFinder(ruleFinder)
+    ScalacToJarStepFactory compileStepFactory = new ScalacToJarStepFactory(
+        scalac,
+        scalaBuckConfig.getCompilerFlags(),
+        args.extraArguments,
+        resolver.getAllRules(scalaBuckConfig.getCompilerPlugins()));
+    return DefaultJavaLibrary
+        .builder(javaLibraryParams, resolver, compileStepFactory)
         .setSrcs(args.srcs)
         .setResources(validateResources(
             pathResolver,
@@ -112,11 +115,6 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
         .setExportedDeps(params.getDeclaredDeps().get())
         .setProvidedDeps(resolver.getAllRules(args.providedDeps))
         .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
-        .setCompileStepFactory(new ScalacToJarStepFactory(
-            scalac,
-            scalaBuckConfig.getCompilerFlags(),
-            args.extraArguments,
-            resolver.getAllRules(scalaBuckConfig.getCompilerPlugins())))
         .setResourcesRoot(args.resourcesRoot)
         .setManifestFile(args.manifestFile)
         .setMavenCoords(args.mavenCoords)

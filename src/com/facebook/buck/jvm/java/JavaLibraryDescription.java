@@ -189,11 +189,11 @@ public class JavaLibraryDescription implements
                         resolver.getAllRules(args.providedDeps))),
                 ruleFinder.filterBuildRuleInputs(
                     javacOptions.getInputs(ruleFinder))));
+    JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
+        javacOptions,
+        JavacOptionsAmender.IDENTITY);
     DefaultJavaLibrary defaultJavaLibrary =
-        DefaultJavaLibrary.builder()
-            .setParams(javaLibraryParams)
-            .setResolver(pathResolver)
-            .setRuleFinder(ruleFinder)
+        DefaultJavaLibrary.builder(javaLibraryParams, resolver, compileStepFactory)
             .setSrcs(args.srcs)
             .setResources(validateResources(
                 pathResolver,
@@ -206,9 +206,6 @@ public class JavaLibraryDescription implements
             .setProvidedDeps(resolver.getAllRules(args.providedDeps))
             .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
             .setTrackClassUsage(javacOptions.trackClassUsage())
-            .setCompileStepFactory(new JavacToJarStepFactory(
-                javacOptions,
-                JavacOptionsAmender.IDENTITY))
             .setResourcesRoot(args.resourcesRoot)
             .setManifestFile(args.manifestFile)
             .setMavenCoords(args.mavenCoords)

@@ -132,12 +132,13 @@ public class JavaTestDescription implements
                 .build()))
         .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
+    JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
+        javacOptions,
+        JavacOptionsAmender.IDENTITY);
     JavaLibrary testsLibrary =
         resolver.addToIndex(
-            DefaultJavaLibrary.builder()
-                .setParams(testsLibraryParams)
-                .setResolver(pathResolver)
-                .setRuleFinder(ruleFinder)
+            DefaultJavaLibrary
+                .builder(testsLibraryParams, resolver, compileStepFactory)
                 .setSrcs(args.srcs)
                 .setResources(ResourceValidator.validateResources(
                     pathResolver,
@@ -148,9 +149,6 @@ public class JavaTestDescription implements
                 .setProvidedDeps(resolver.getAllRules(args.providedDeps))
                 .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()))
                 .setTrackClassUsage(javacOptions.trackClassUsage())
-                .setCompileStepFactory(new JavacToJarStepFactory(
-                    javacOptions,
-                    JavacOptionsAmender.IDENTITY))
                 .setResourcesRoot(args.resourcesRoot)
                 .setManifestFile(args.manifestFile)
                 .setMavenCoords(args.mavenCoords)

@@ -98,10 +98,12 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
           args)
         // groovyc may or may not play nice with generating ABIs from source, so disabling for now
         .withAbiGenerationMode(JavacOptions.AbiGenerationMode.CLASS);
-    return DefaultJavaLibrary.builder()
-        .setParams(javaLibraryParams)
-        .setResolver(pathResolver)
-        .setRuleFinder(ruleFinder)
+    GroovycToJarStepFactory compileStepFactory = new GroovycToJarStepFactory(
+        groovyBuckConfig.getGroovyCompiler().get(),
+        Optional.of(args.extraGroovycArguments),
+        javacOptions);
+    return DefaultJavaLibrary
+        .builder(javaLibraryParams, resolver, compileStepFactory)
         .setSrcs(args.srcs)
         .setResources(validateResources(
             pathResolver,
@@ -110,10 +112,6 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
         .setExportedDeps(exportedDeps)
         .setProvidedDeps(resolver.getAllRules(args.providedDeps))
         .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
-        .setCompileStepFactory(new GroovycToJarStepFactory(
-            groovyBuckConfig.getGroovyCompiler().get(),
-            Optional.of(args.extraGroovycArguments),
-            javacOptions))
         .setResourcesRoot(args.resourcesRoot)
         .setManifestFile(args.manifestFile)
         .setMavenCoords(args.mavenCoords)

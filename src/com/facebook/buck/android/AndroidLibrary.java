@@ -28,6 +28,7 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -53,8 +54,11 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   @AddToRuleKey
   private final Optional<SourcePath> manifestFile;
 
-  public static Builder builder() {
-    return new Builder();
+  public static Builder builder(
+      BuildRuleParams params,
+      BuildRuleResolver buildRuleResolver,
+      CompileToJarStepFactory compileStepFactory) {
+    return new Builder(params, buildRuleResolver, compileStepFactory);
   }
 
   @VisibleForTesting
@@ -110,6 +114,13 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   }
 
   public static class Builder extends DefaultJavaLibraryBuilder {
+    protected Builder(
+        BuildRuleParams params,
+        BuildRuleResolver buildRuleResolver,
+        CompileToJarStepFactory compileStepFactory) {
+      super(params, buildRuleResolver, compileStepFactory);
+    }
+
     @Override
     protected AndroidLibrary newInstance(
         BuildRuleParams params,

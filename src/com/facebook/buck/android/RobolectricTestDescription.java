@@ -166,12 +166,13 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                 .build()))
         .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
+    JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
+        javacOptions,
+        new BootClasspathAppender());
     JavaLibrary testsLibrary =
         resolver.addToIndex(
-            DefaultJavaLibrary.builder()
-                .setParams(testsLibraryParams)
-                .setResolver(pathResolver)
-                .setRuleFinder(ruleFinder)
+            DefaultJavaLibrary
+                .builder(testsLibraryParams, resolver, compileStepFactory)
                 .setSrcs(args.srcs)
                 .setResources(validateResources(
                     pathResolver,
@@ -183,9 +184,6 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                 .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()))
                 .setTrackClassUsage(javacOptions.trackClassUsage())
                 .setAdditionalClasspathEntries(additionalClasspathEntries)
-                .setCompileStepFactory(new JavacToJarStepFactory(
-                    javacOptions,
-                    new BootClasspathAppender()))
                 .setResourcesRoot(args.resourcesRoot)
                 .setManifestFile(args.manifestFile)
                 .setMavenCoords(args.mavenCoords)

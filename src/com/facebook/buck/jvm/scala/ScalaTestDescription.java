@@ -126,23 +126,21 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                         resolver.getAllRules(args.providedDeps))),
                 scalac.getDeps(ruleFinder)))
             .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+    ScalacToJarStepFactory compileStepFactory = new ScalacToJarStepFactory(
+        scalac,
+        config.getCompilerFlags(),
+        args.extraArguments,
+        ImmutableSet.of());
     JavaLibrary testsLibrary =
         resolver.addToIndex(
-            DefaultJavaLibrary.builder()
-                .setParams(javaLibraryParams)
-                .setResolver(pathResolver)
-                .setRuleFinder(ruleFinder)
+            DefaultJavaLibrary
+                .builder(javaLibraryParams, resolver, compileStepFactory)
                 .setSrcs(args.srcs)
                 .setResources(ResourceValidator.validateResources(
                     pathResolver,
                     params.getProjectFilesystem(),
                     args.resources))
                 .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
-                .setCompileStepFactory(new ScalacToJarStepFactory(
-                    scalac,
-                    config.getCompilerFlags(),
-                    args.extraArguments,
-                    ImmutableSet.of()))
                 .setResourcesRoot(args.resourcesRoot)
                 .setManifestFile(args.manifestFile)
                 .setMavenCoords(args.mavenCoords)

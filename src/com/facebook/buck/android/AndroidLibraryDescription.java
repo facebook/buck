@@ -197,10 +197,10 @@ public class AndroidLibraryDescription
           params.copyReplacingDeclaredAndExtraDeps(
               Suppliers.ofInstance(declaredDeps),
               Suppliers.ofInstance(extraDeps));
-      return AndroidLibrary.builder()
-          .setParams(androidLibraryParams)
-          .setResolver(pathResolver)
-          .setRuleFinder(ruleFinder)
+      return AndroidLibrary.builder(
+          androidLibraryParams,
+          resolver,
+          compiler.compileToJar(args, javacOptions, resolver))
           .setSrcs(args.srcs)
           .setResources(ResourceValidator.validateResources(
               pathResolver,
@@ -213,7 +213,6 @@ public class AndroidLibraryDescription
           .setAdditionalClasspathEntries(additionalClasspathEntries)
           .setJavacOptions(javacOptions)
           .setTrackClassUsage(compiler.trackClassUsage(javacOptions))
-          .setCompileStepFactory(compiler.compileToJar(args, javacOptions, resolver))
           .setResourcesRoot(args.resourcesRoot)
           .setMavenCoords(args.mavenCoords)
           .setManifestFile(args.manifest)

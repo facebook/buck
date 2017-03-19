@@ -125,10 +125,7 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
 
         JavaLibrary testsLibrary =
         resolver.addToIndex(
-            DefaultJavaLibrary.builder()
-                .setParams(testsLibraryParams)
-                .setResolver(pathResolver)
-                .setRuleFinder(ruleFinder)
+            DefaultJavaLibrary.builder(testsLibraryParams, resolver, stepFactory)
                 .setSrcs(args.srcs)
                 .setResources(ResourceValidator.validateResources(
                     pathResolver,
@@ -136,7 +133,6 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
                     args.resources))
                 .setGeneratedSourceFolder(templateJavacOptions.getGeneratedSourceFolderName())
                 .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()))
-                .setCompileStepFactory(stepFactory)
                 .setResourcesRoot(args.resourcesRoot)
                 .setManifestFile(args.manifestFile)
                 .setMavenCoords(args.mavenCoords)

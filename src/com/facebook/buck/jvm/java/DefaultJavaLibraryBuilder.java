@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -33,10 +34,11 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 public class DefaultJavaLibraryBuilder {
-  private BuildRuleParams params;
+  private final BuildRuleParams params;
+  private final SourcePathResolver resolver;
+  private final SourcePathRuleFinder ruleFinder;
+  private final CompileToJarStepFactory compileStepFactory;
   private JavacOptions javacOptions;
-  private SourcePathResolver resolver;
-  private SourcePathRuleFinder ruleFinder;
   private ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
   private ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
   private Optional<Path> generatedSourceFolder = Optional.empty();
@@ -47,35 +49,27 @@ public class DefaultJavaLibraryBuilder {
   private ImmutableSortedSet<SourcePath> abiInputs = ImmutableSortedSet.of();
   private boolean trackClassUsage = false;
   private ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries = ImmutableSet.of();
-  private CompileToJarStepFactory compileStepFactory;
   private Optional<Path> resourcesRoot = Optional.empty();
   private Optional<SourcePath> manifestFile = Optional.empty();
   private Optional<String> mavenCoords = Optional.empty();
   private ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
   private ImmutableSet<Pattern> classesToRemoveFromJar = ImmutableSet.of();
 
-  protected DefaultJavaLibraryBuilder() {
-  }
-
-  public DefaultJavaLibraryBuilder setParams(BuildRuleParams params) {
+  protected DefaultJavaLibraryBuilder(
+      BuildRuleParams params,
+      BuildRuleResolver buildRuleResolver,
+      CompileToJarStepFactory compileStepFactory) {
     this.params = params;
-    return this;
-  }
+    this.compileStepFactory = compileStepFactory;
 
+    ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    resolver = new SourcePathResolver(ruleFinder);
+  }
   public DefaultJavaLibraryBuilder setJavacOptions(JavacOptions javacOptions) {
     this.javacOptions = javacOptions;
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setResolver(SourcePathResolver resolver) {
-    this.resolver = resolver;
-    return this;
-  }
-
-  public DefaultJavaLibraryBuilder setRuleFinder(SourcePathRuleFinder ruleFinder) {
-    this.ruleFinder = ruleFinder;
-    return this;
-  }
 
   public DefaultJavaLibraryBuilder setSrcs(ImmutableSortedSet<SourcePath> srcs) {
     this.srcs = srcs;
@@ -127,12 +121,6 @@ public class DefaultJavaLibraryBuilder {
   public DefaultJavaLibraryBuilder setAdditionalClasspathEntries(
       ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries) {
     this.additionalClasspathEntries = additionalClasspathEntries;
-    return this;
-  }
-
-  public DefaultJavaLibraryBuilder setCompileStepFactory(
-      CompileToJarStepFactory compileStepFactory) {
-    this.compileStepFactory = compileStepFactory;
     return this;
   }
 

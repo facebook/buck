@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
@@ -145,8 +146,11 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   @AddToRuleKey
   private final CompileToJarStepFactory compileStepFactory;
 
-  public static DefaultJavaLibraryBuilder builder() {
-    return new DefaultJavaLibraryBuilder();
+  public static DefaultJavaLibraryBuilder builder(
+      BuildRuleParams params,
+      BuildRuleResolver buildRuleResolver,
+      CompileToJarStepFactory compileStepFactory) {
+    return new DefaultJavaLibraryBuilder(params, buildRuleResolver, compileStepFactory);
   }
 
   @Override

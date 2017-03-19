@@ -119,10 +119,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
             .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
     JavaLibrary testsLibrary =
         resolver.addToIndex(
-            DefaultJavaLibrary.builder()
-                .setParams(testsLibraryParams)
-                .setResolver(pathResolver)
-                .setRuleFinder(ruleFinder)
+            DefaultJavaLibrary.builder(testsLibraryParams, resolver, stepFactory)
                 .setSrcs(args.srcs)
                 .setResources(ResourceValidator.validateResources(
                     pathResolver,
@@ -130,7 +127,6 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
                     args.resources))
                 .setGeneratedSourceFolder(defaultJavacOptions.getGeneratedSourceFolderName())
                 .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()))
-                .setCompileStepFactory(stepFactory)
                 .setResourcesRoot(args.resourcesRoot)
                 .setManifestFile(args.manifestFile)
                 .setMavenCoords(args.mavenCoords)

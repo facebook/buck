@@ -1157,19 +1157,16 @@ public class DefaultJavaLibraryTest {
         ? JavacOptions.builder(DEFAULT_JAVAC_OPTIONS).setSpoolMode(spoolMode.get()).build()
         : DEFAULT_JAVAC_OPTIONS;
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    DefaultJavaLibrary defaultJavaLibrary = DefaultJavaLibrary.builder()
-        .setParams(buildRuleParams)
-        .setResolver(new SourcePathResolver(ruleFinder))
-        .setRuleFinder(ruleFinder)
+    JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
+        javacOptions,
+        JavacOptionsAmender.IDENTITY);
+    DefaultJavaLibrary defaultJavaLibrary = DefaultJavaLibrary
+        .builder(buildRuleParams, ruleResolver, compileStepFactory)
         .setSrcs(srcsAsPaths)
         .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
         .setPostprocessClassesCommands(postprocessClassesCommands)
         .setExportedDeps(exportedDeps)
         .setTrackClassUsage(javacOptions.trackClassUsage())
-        .setCompileStepFactory(new JavacToJarStepFactory(
-            javacOptions,
-            JavacOptionsAmender.IDENTITY))
         .build();
 
     ruleResolver.addToIndex(defaultJavaLibrary);
@@ -1444,11 +1441,11 @@ public class DefaultJavaLibraryTest {
           .setProjectFilesystem(projectFilesystem)
           .build();
 
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-      DefaultJavaLibrary javaLibrary = DefaultJavaLibrary.builder()
-          .setParams(buildRuleParams)
-          .setResolver(new SourcePathResolver(ruleFinder))
-          .setRuleFinder(ruleFinder)
+      JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
+          options,
+          JavacOptionsAmender.IDENTITY);
+      DefaultJavaLibrary javaLibrary = DefaultJavaLibrary
+          .builder(buildRuleParams, ruleResolver, compileStepFactory)
           .setSrcs(ImmutableSortedSet.of(new FakeSourcePath(src)))
           .setResources(ImmutableSortedSet.of())
           .setGeneratedSourceFolder(options.getGeneratedSourceFolderName())
@@ -1459,7 +1456,6 @@ public class DefaultJavaLibraryTest {
           .setAbiInputs(ImmutableSortedSet.of())
           .setTrackClassUsage(options.trackClassUsage())
           .setAdditionalClasspathEntries(ImmutableSet.of())
-          .setCompileStepFactory(new JavacToJarStepFactory(options, JavacOptionsAmender.IDENTITY))
           .setResourcesRoot(Optional.empty())
           .setManifestFile(Optional.empty())
           .setMavenCoords(Optional.empty())

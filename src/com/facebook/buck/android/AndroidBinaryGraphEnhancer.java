@@ -250,21 +250,19 @@ public class AndroidBinaryGraphEnhancer {
           .copyReplacingDeclaredAndExtraDeps(
               Suppliers.ofInstance(ImmutableSortedSet.of(generateCodeForMergedLibraryMap)),
               Suppliers.ofInstance(ImmutableSortedSet.of()));
-      DefaultJavaLibrary compileMergedNativeLibMapGenCode = DefaultJavaLibrary.builder()
-          .setParams(paramsForCompileGenCode)
-          .setResolver(pathResolver)
-          .setRuleFinder(ruleFinder)
+      JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
+          // Kind of a hack: override language level to 7 to allow string switch.
+          // This can be removed once no one who uses this feature sets the level
+          // to 6 in their .buckconfig.
+          javacOptions.withSourceLevel("7").withTargetLevel("7"),
+          JavacOptionsAmender.IDENTITY);
+      DefaultJavaLibrary compileMergedNativeLibMapGenCode = DefaultJavaLibrary
+          .builder(paramsForCompileGenCode, ruleResolver, compileStepFactory)
           .setSrcs(ImmutableSortedSet.of(generateCodeForMergedLibraryMap.getSourcePathToOutput()))
           .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
           .setAbiInputs(JavaLibraryRules.getAbiInputs(
               ruleResolver,
               paramsForCompileGenCode.getDeps()))
-          .setCompileStepFactory(new JavacToJarStepFactory(
-              // Kind of a hack: override language level to 7 to allow string switch.
-              // This can be removed once no one who uses this feature sets the level
-              // to 6 in their .buckconfig.
-              javacOptions.withSourceLevel("7").withTargetLevel("7"),
-              JavacOptionsAmender.IDENTITY))
           .build();
       ruleResolver.addToIndex(compileMergedNativeLibMapGenCode);
       additionalJavaLibrariesBuilder.add(compileMergedNativeLibMapGenCode);
@@ -415,10 +413,11 @@ public class AndroidBinaryGraphEnhancer {
         .copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(trimUberRDotJava)),
             Suppliers.ofInstance(ImmutableSortedSet.of()));
-    JavaLibrary compileUberRDotJava = DefaultJavaLibrary.builder()
-        .setParams(paramsForCompileUberRDotJava)
-        .setResolver(pathResolver)
-        .setRuleFinder(ruleFinder)
+    JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
+        javacOptions.withSourceLevel("7").withTargetLevel("7"),
+        JavacOptionsAmender.IDENTITY);
+    JavaLibrary compileUberRDotJava = DefaultJavaLibrary
+        .builder(paramsForCompileUberRDotJava, ruleResolver, compileStepFactory)
         .setSrcs(ImmutableSortedSet.of(trimUberRDotJava.getSourcePathToOutput()))
         .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
         // Because the Uber R.java has no method bodies or private methods or fields,
@@ -426,9 +425,6 @@ public class AndroidBinaryGraphEnhancer {
         .setAbiInputs(JavaLibraryRules.getAbiInputs(
             ruleResolver,
             paramsForCompileUberRDotJava.getDeps()))
-        .setCompileStepFactory(new JavacToJarStepFactory(
-            javacOptions.withSourceLevel("7").withTargetLevel("7"),
-            JavacOptionsAmender.IDENTITY))
         .build();
     ruleResolver.addToIndex(compileUberRDotJava);
 

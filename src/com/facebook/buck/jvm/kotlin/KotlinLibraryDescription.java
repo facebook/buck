@@ -49,7 +49,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 
-
 public class KotlinLibraryDescription implements
     Description<KotlinLibraryDescription.Arg>, Flavored {
 
@@ -151,11 +150,11 @@ public class KotlinLibraryDescription implements
                         resolver.getAllRules(args.providedDeps))),
                 ruleFinder.filterBuildRuleInputs(
                     javacOptions.getInputs(ruleFinder))));
+    KotlincToJarStepFactory compileStepFactory = new KotlincToJarStepFactory(
+        kotlinBuckConfig.getKotlinCompiler().get(),
+        args.extraKotlincArguments);
     DefaultJavaLibrary defaultKotlinLibrary =
-        DefaultJavaLibrary.builder()
-            .setParams(javaLibraryParams)
-            .setResolver(pathResolver)
-            .setRuleFinder(ruleFinder)
+        DefaultJavaLibrary.builder(javaLibraryParams, resolver, compileStepFactory)
             .setSrcs(args.srcs)
             .setResources(validateResources(
                 pathResolver,
@@ -164,9 +163,6 @@ public class KotlinLibraryDescription implements
             .setExportedDeps(exportedDeps)
             .setProvidedDeps(resolver.getAllRules(args.providedDeps))
             .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
-            .setCompileStepFactory(new KotlincToJarStepFactory(
-                kotlinBuckConfig.getKotlinCompiler().get(),
-                args.extraKotlincArguments))
             .setResourcesRoot(args.resourcesRoot)
             .setManifestFile(args.manifestFile)
             .setMavenCoords(args.mavenCoords)
