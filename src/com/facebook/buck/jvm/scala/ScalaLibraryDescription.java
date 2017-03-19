@@ -41,7 +41,6 @@ import com.facebook.buck.util.OptionalCompat;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
@@ -110,14 +109,9 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
             pathResolver,
             params.getProjectFilesystem(),
             args.resources))
-        .setGeneratedSourceFolder(Optional.empty())
-        .setProguardConfig(Optional.empty())
-        .setPostprocessClassesCommands(ImmutableList.of())
         .setExportedDeps(params.getDeclaredDeps().get())
         .setProvidedDeps(resolver.getAllRules(args.providedDeps))
         .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
-        .setTrackClassUsage(false)
-        .setAdditionalClasspathEntries(ImmutableSet.of())
         .setCompileStepFactory(new ScalacToJarStepFactory(
             scalac,
             scalaBuckConfig.getCompilerFlags(),
@@ -127,7 +121,6 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
         .setManifestFile(args.manifestFile)
         .setMavenCoords(args.mavenCoords)
         .setTests(args.tests)
-        .setClassesToRemoveFromJar(ImmutableSet.of())
         .build();
   }
 

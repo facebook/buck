@@ -37,7 +37,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
@@ -108,14 +107,9 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
             pathResolver,
             params.getProjectFilesystem(),
             args.resources))
-        .setGeneratedSourceFolder(Optional.empty())
-        .setProguardConfig(Optional.empty())
-        .setPostprocessClassesCommands(ImmutableList.of())
         .setExportedDeps(exportedDeps)
         .setProvidedDeps(resolver.getAllRules(args.providedDeps))
         .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
-        .setTrackClassUsage(false)
-        .setAdditionalClasspathEntries(ImmutableSet.of())
         .setCompileStepFactory(new GroovycToJarStepFactory(
             groovyBuckConfig.getGroovyCompiler().get(),
             Optional.of(args.extraGroovycArguments),

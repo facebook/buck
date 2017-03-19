@@ -129,13 +129,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
                     params.getProjectFilesystem(),
                     args.resources))
                 .setGeneratedSourceFolder(defaultJavacOptions.getGeneratedSourceFolderName())
-                .setProguardConfig(Optional.empty())
-                .setPostprocessClassesCommands(ImmutableList.of())
-                .setExportedDeps(ImmutableSortedSet.of())
-                .setProvidedDeps(ImmutableSortedSet.of())
                 .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()))
-                .setTrackClassUsage(false)
-                .setAdditionalClasspathEntries(ImmutableSet.of())
                 .setCompileStepFactory(stepFactory)
                 .setResourcesRoot(args.resourcesRoot)
                 .setManifestFile(args.manifestFile)

@@ -1163,23 +1163,13 @@ public class DefaultJavaLibraryTest {
         .setResolver(new SourcePathResolver(ruleFinder))
         .setRuleFinder(ruleFinder)
         .setSrcs(srcsAsPaths)
-        .setResources(ImmutableSortedSet.of())
         .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
-        .setProguardConfig(Optional.empty())
         .setPostprocessClassesCommands(postprocessClassesCommands)
         .setExportedDeps(exportedDeps)
-        .setProvidedDeps(ImmutableSortedSet.of())
-        .setAbiInputs(ImmutableSortedSet.of())
         .setTrackClassUsage(javacOptions.trackClassUsage())
-        .setAdditionalClasspathEntries(ImmutableSet.of())
         .setCompileStepFactory(new JavacToJarStepFactory(
             javacOptions,
             JavacOptionsAmender.IDENTITY))
-        .setResourcesRoot(Optional.empty())
-        .setManifestFile(Optional.empty())
-        .setMavenCoords(Optional.empty())
-        .setTests(ImmutableSortedSet.of())
-        .setClassesToRemoveFromJar(ImmutableSet.of())
         .build();
 
     ruleResolver.addToIndex(defaultJavaLibrary);

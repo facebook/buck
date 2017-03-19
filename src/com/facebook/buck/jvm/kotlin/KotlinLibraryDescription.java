@@ -48,7 +48,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
-import java.util.Optional;
 
 
 public class KotlinLibraryDescription implements
@@ -162,14 +161,9 @@ public class KotlinLibraryDescription implements
                 pathResolver,
                 params.getProjectFilesystem(),
                 args.resources))
-            .setGeneratedSourceFolder(Optional.empty())
-            .setProguardConfig(Optional.empty())
-            .setPostprocessClassesCommands(ImmutableList.of())
             .setExportedDeps(exportedDeps)
             .setProvidedDeps(resolver.getAllRules(args.providedDeps))
             .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
-            .setTrackClassUsage(false)
-            .setAdditionalClasspathEntries(ImmutableSet.of())
             .setCompileStepFactory(new KotlincToJarStepFactory(
                 kotlinBuckConfig.getKotlinCompiler().get(),
                 args.extraKotlincArguments))

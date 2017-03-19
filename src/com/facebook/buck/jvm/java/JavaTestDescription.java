@@ -145,20 +145,15 @@ public class JavaTestDescription implements
                     args.resources))
                 .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
                 .setProguardConfig(args.proguardConfig)
-                .setPostprocessClassesCommands(ImmutableList.of())
-                .setExportedDeps(ImmutableSortedSet.of())
                 .setProvidedDeps(resolver.getAllRules(args.providedDeps))
                 .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()))
                 .setTrackClassUsage(javacOptions.trackClassUsage())
-                .setAdditionalClasspathEntries(ImmutableSet.of())
                 .setCompileStepFactory(new JavacToJarStepFactory(
                     javacOptions,
                     JavacOptionsAmender.IDENTITY))
                 .setResourcesRoot(args.resourcesRoot)
                 .setManifestFile(args.manifestFile)
                 .setMavenCoords(args.mavenCoords)
-                .setTests(ImmutableSortedSet.of())
-                .setClassesToRemoveFromJar(ImmutableSet.of())
                 .build());
 
     return new JavaTest(

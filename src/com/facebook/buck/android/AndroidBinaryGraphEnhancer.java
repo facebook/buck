@@ -255,28 +255,16 @@ public class AndroidBinaryGraphEnhancer {
           .setResolver(pathResolver)
           .setRuleFinder(ruleFinder)
           .setSrcs(ImmutableSortedSet.of(generateCodeForMergedLibraryMap.getSourcePathToOutput()))
-          .setResources(ImmutableSortedSet.of())
           .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
-          .setProguardConfig(Optional.empty())
-          .setPostprocessClassesCommands(ImmutableList.of())
-          .setExportedDeps(ImmutableSortedSet.of())
-          .setProvidedDeps(ImmutableSortedSet.of())
           .setAbiInputs(JavaLibraryRules.getAbiInputs(
               ruleResolver,
               paramsForCompileGenCode.getDeps()))
-          .setTrackClassUsage(false)
-          .setAdditionalClasspathEntries(ImmutableSet.of())
           .setCompileStepFactory(new JavacToJarStepFactory(
               // Kind of a hack: override language level to 7 to allow string switch.
               // This can be removed once no one who uses this feature sets the level
               // to 6 in their .buckconfig.
               javacOptions.withSourceLevel("7").withTargetLevel("7"),
               JavacOptionsAmender.IDENTITY))
-          .setResourcesRoot(Optional.empty())
-          .setManifestFile(Optional.empty())
-          .setMavenCoords(Optional.empty())
-          .setTests(ImmutableSortedSet.of())
-          .setClassesToRemoveFromJar(ImmutableSet.of())
           .build();
       ruleResolver.addToIndex(compileMergedNativeLibMapGenCode);
       additionalJavaLibrariesBuilder.add(compileMergedNativeLibMapGenCode);
@@ -432,27 +420,15 @@ public class AndroidBinaryGraphEnhancer {
         .setResolver(pathResolver)
         .setRuleFinder(ruleFinder)
         .setSrcs(ImmutableSortedSet.of(trimUberRDotJava.getSourcePathToOutput()))
-        .setResources(ImmutableSortedSet.of())
         .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
-        .setProguardConfig(Optional.empty())
-        .setPostprocessClassesCommands(ImmutableList.of())
-        .setExportedDeps(ImmutableSortedSet.of())
-        .setProvidedDeps(ImmutableSortedSet.of())
         // Because the Uber R.java has no method bodies or private methods or fields,
         // we can just use its output as the ABI.
         .setAbiInputs(JavaLibraryRules.getAbiInputs(
             ruleResolver,
             paramsForCompileUberRDotJava.getDeps()))
-        .setTrackClassUsage(false)
-        .setAdditionalClasspathEntries(ImmutableSet.of())
         .setCompileStepFactory(new JavacToJarStepFactory(
             javacOptions.withSourceLevel("7").withTargetLevel("7"),
             JavacOptionsAmender.IDENTITY))
-        .setResourcesRoot(Optional.empty())
-        .setManifestFile(Optional.empty())
-        .setMavenCoords(Optional.empty())
-        .setTests(ImmutableSortedSet.of())
-        .setClassesToRemoveFromJar(ImmutableSet.of())
         .build();
     ruleResolver.addToIndex(compileUberRDotJava);
 

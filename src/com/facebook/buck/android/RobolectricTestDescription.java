@@ -179,8 +179,6 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                     args.resources))
                 .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
                 .setProguardConfig(args.proguardConfig)
-                .setPostprocessClassesCommands(ImmutableList.of())
-                .setExportedDeps(ImmutableSortedSet.of())
                 .setProvidedDeps(resolver.getAllRules(args.providedDeps))
                 .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()))
                 .setTrackClassUsage(javacOptions.trackClassUsage())
@@ -191,8 +189,6 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                 .setResourcesRoot(args.resourcesRoot)
                 .setManifestFile(args.manifestFile)
                 .setMavenCoords(args.mavenCoords)
-                .setTests(ImmutableSortedSet.of())
-                .setClassesToRemoveFromJar(ImmutableSet.of())
                 .build());
 
 

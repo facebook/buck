@@ -206,7 +206,6 @@ public class JavaLibraryDescription implements
             .setProvidedDeps(resolver.getAllRules(args.providedDeps))
             .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
             .setTrackClassUsage(javacOptions.trackClassUsage())
-            .setAdditionalClasspathEntries(ImmutableSet.of())
             .setCompileStepFactory(new JavacToJarStepFactory(
                 javacOptions,
                 JavacOptionsAmender.IDENTITY))

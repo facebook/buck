@@ -135,19 +135,11 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
                     params.getProjectFilesystem(),
                     args.resources))
                 .setGeneratedSourceFolder(templateJavacOptions.getGeneratedSourceFolderName())
-                .setProguardConfig(Optional.empty())
-                .setPostprocessClassesCommands(ImmutableList.of())
-                .setExportedDeps(ImmutableSortedSet.of())
-                .setProvidedDeps(ImmutableSortedSet.of())
                 .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()))
-                .setTrackClassUsage(false)
-                .setAdditionalClasspathEntries(ImmutableSet.of())
                 .setCompileStepFactory(stepFactory)
                 .setResourcesRoot(args.resourcesRoot)
                 .setManifestFile(args.manifestFile)
                 .setMavenCoords(args.mavenCoords)
-                .setTests(ImmutableSortedSet.of())
-                .setClassesToRemoveFromJar(ImmutableSet.of())
                 .build());
 
     return new KotlinTest(

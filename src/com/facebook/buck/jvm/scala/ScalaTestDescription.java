@@ -137,14 +137,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                     pathResolver,
                     params.getProjectFilesystem(),
                     args.resources))
-                .setGeneratedSourceFolder(Optional.empty())
-                .setProguardConfig(Optional.empty())
-                .setPostprocessClassesCommands(ImmutableList.of())
-                .setExportedDeps(ImmutableSortedSet.of())
-                .setProvidedDeps(ImmutableSortedSet.of())
                 .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
-                .setTrackClassUsage(false)
-                .setAdditionalClasspathEntries(ImmutableSet.of())
                 .setCompileStepFactory(new ScalacToJarStepFactory(
                     scalac,
                     config.getCompilerFlags(),
@@ -153,8 +146,6 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                 .setResourcesRoot(args.resourcesRoot)
                 .setManifestFile(args.manifestFile)
                 .setMavenCoords(args.mavenCoords)
-                .setTests(ImmutableSortedSet.of())
-                .setClassesToRemoveFromJar(ImmutableSet.of())
                 .build());
 
     return new JavaTest(
