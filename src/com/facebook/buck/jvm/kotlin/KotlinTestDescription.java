@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.ForkMode;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryRules;
@@ -124,7 +125,7 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
 
         JavaLibrary testsLibrary =
         resolver.addToIndex(
-            new DefaultKotlinLibrary(
+            new DefaultJavaLibrary(
                 testsLibraryParams,
                 pathResolver,
                 ruleFinder,

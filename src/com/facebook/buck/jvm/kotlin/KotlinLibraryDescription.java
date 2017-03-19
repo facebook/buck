@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.kotlin;
 import static com.facebook.buck.jvm.common.ResourceValidator.validateResources;
 
 import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryRules;
@@ -151,8 +152,8 @@ public class KotlinLibraryDescription implements
                         resolver.getAllRules(args.providedDeps))),
                 ruleFinder.filterBuildRuleInputs(
                     javacOptions.getInputs(ruleFinder))));
-    DefaultKotlinLibrary defaultKotlinLibrary =
-        new DefaultKotlinLibrary(
+    DefaultJavaLibrary defaultKotlinLibrary =
+        new DefaultJavaLibrary(
             javaLibraryParams,
             pathResolver,
             ruleFinder,
