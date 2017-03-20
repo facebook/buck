@@ -1,4 +1,7 @@
 standard_java_library(
+  srcs = [
+    'ReDexStep.java',
+  ],
   tests = [
     '//test/com/facebook/buck/android:binary-integration',
     '//test/com/facebook/buck/android/redex:redex',
