@@ -88,14 +88,14 @@ public class RuleKeyCacheRecycler<V> {
     for (ProjectFilesystem filesystem : watchedFilesystems) {
       if (WatchEvents.isPathChangeEvent(event)) {
         Path path = ((Path) event.context()).normalize();
-        LOG.debug(
+        LOG.verbose(
             "invalidating path \"%s\" from filesystem at \"%s\" due to event (%s)",
             path,
-            filesystem,
+            filesystem.getRootPath(),
             event);
         cache.invalidateInputs(ImmutableList.of(RuleKeyInput.of(filesystem, path)));
       } else {
-        LOG.debug(
+        LOG.verbose(
             "invalidating filesystem at \"%s\" due to event (%s)",
             filesystem.getRootPath(),
             event);
