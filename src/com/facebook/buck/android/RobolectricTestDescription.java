@@ -20,7 +20,6 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibrary;
-import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
@@ -170,7 +169,6 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                 .builder(testsLibraryParams, resolver, compileStepFactory)
                 .setArgs(args)
                 .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
-                .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()))
                 .setTrackClassUsage(javacOptions.trackClassUsage())
                 .setAdditionalClasspathEntries(additionalClasspathEntries)
                 .build());

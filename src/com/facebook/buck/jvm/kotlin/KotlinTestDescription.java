@@ -20,7 +20,6 @@ import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.ForkMode;
 import com.facebook.buck.jvm.java.JavaLibrary;
-import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -127,7 +126,6 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
             DefaultJavaLibrary.builder(testsLibraryParams, resolver, stepFactory)
                 .setArgs(args)
                 .setGeneratedSourceFolder(templateJavacOptions.getGeneratedSourceFolderName())
-                .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()))
                 .build());
 
     return new KotlinTest(

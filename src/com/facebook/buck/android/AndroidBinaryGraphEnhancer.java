@@ -26,7 +26,6 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibrary;
-import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
@@ -260,9 +259,6 @@ public class AndroidBinaryGraphEnhancer {
           .builder(paramsForCompileGenCode, ruleResolver, compileStepFactory)
           .setSrcs(ImmutableSortedSet.of(generateCodeForMergedLibraryMap.getSourcePathToOutput()))
           .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
-          .setAbiInputs(JavaLibraryRules.getAbiInputs(
-              ruleResolver,
-              paramsForCompileGenCode.getDeps()))
           .build();
       ruleResolver.addToIndex(compileMergedNativeLibMapGenCode);
       additionalJavaLibrariesBuilder.add(compileMergedNativeLibMapGenCode);
@@ -420,11 +416,6 @@ public class AndroidBinaryGraphEnhancer {
         .builder(paramsForCompileUberRDotJava, ruleResolver, compileStepFactory)
         .setSrcs(ImmutableSortedSet.of(trimUberRDotJava.getSourcePathToOutput()))
         .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
-        // Because the Uber R.java has no method bodies or private methods or fields,
-        // we can just use its output as the ABI.
-        .setAbiInputs(JavaLibraryRules.getAbiInputs(
-            ruleResolver,
-            paramsForCompileUberRDotJava.getDeps()))
         .build();
     ruleResolver.addToIndex(compileUberRDotJava);
 

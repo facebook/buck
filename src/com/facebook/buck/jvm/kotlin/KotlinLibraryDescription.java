@@ -20,7 +20,6 @@ import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
-import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaSourceJar;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
@@ -151,7 +150,6 @@ public class KotlinLibraryDescription implements
     DefaultJavaLibrary defaultKotlinLibrary =
         DefaultJavaLibrary.builder(javaLibraryParams, resolver, compileStepFactory)
             .setArgs(args)
-            .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
             .build();
 
     if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {

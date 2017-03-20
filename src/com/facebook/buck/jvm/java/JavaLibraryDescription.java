@@ -192,7 +192,6 @@ public class JavaLibraryDescription implements
         DefaultJavaLibrary.builder(javaLibraryParams, resolver, compileStepFactory)
             .setArgs(args)
             .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
-            .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
             .setTrackClassUsage(javacOptions.trackClassUsage())
             .build();
 

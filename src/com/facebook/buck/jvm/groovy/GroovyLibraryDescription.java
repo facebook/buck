@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.groovy;
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
-import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.model.BuildTarget;
@@ -100,7 +99,6 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
     return DefaultJavaLibrary
         .builder(javaLibraryParams, resolver, compileStepFactory)
         .setArgs(args)
-        .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
         .build();
   }
 

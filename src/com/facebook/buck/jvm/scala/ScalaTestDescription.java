@@ -20,7 +20,6 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.ForkMode;
 import com.facebook.buck.jvm.java.JavaLibrary;
-import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
@@ -133,7 +132,6 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
         resolver.addToIndex(
             new ScalaLibraryBuilder(javaLibraryParams, resolver, compileStepFactory)
                 .setArgs(args)
-                .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
                 .build());
 
     return new JavaTest(

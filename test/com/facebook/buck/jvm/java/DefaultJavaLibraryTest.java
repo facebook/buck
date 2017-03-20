@@ -622,7 +622,7 @@ public class DefaultJavaLibraryTest {
   }
 
   @Test
-  public void testStepsPresenceForForDirectJarSpooling() {
+  public void testStepsPresenceForForDirectJarSpooling() throws NoSuchBuildTargetException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:lib");
 
     BuildRule javaLibraryBuildRule = createDefaultJavaLibraryRuleWithAbiKey(
@@ -646,7 +646,8 @@ public class DefaultJavaLibraryTest {
   }
 
   @Test
-  public void testJavacDirectToJarStepIsNotPresentWhenPostprocessClassesCommandsPresent() {
+  public void testJavacDirectToJarStepIsNotPresentWhenPostprocessClassesCommandsPresent()
+      throws NoSuchBuildTargetException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:lib");
 
     BuildRule javaLibraryBuildRule = createDefaultJavaLibraryRuleWithAbiKey(
@@ -670,7 +671,8 @@ public class DefaultJavaLibraryTest {
   }
 
   @Test
-  public void testStepsPresenceForIntermediateOutputToDiskSpooling() {
+  public void testStepsPresenceForIntermediateOutputToDiskSpooling()
+      throws NoSuchBuildTargetException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:lib");
 
     BuildRule javaLibraryBuildRule = createDefaultJavaLibraryRuleWithAbiKey(
@@ -1142,7 +1144,8 @@ public class DefaultJavaLibraryTest {
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSortedSet<BuildRule> exportedDeps,
       Optional<AbstractJavacOptions.SpoolMode> spoolMode,
-      ImmutableList<String> postprocessClassesCommands) {
+      ImmutableList<String> postprocessClassesCommands)
+      throws NoSuchBuildTargetException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     ImmutableSortedSet<SourcePath> srcsAsPaths = FluentIterable.from(srcs)
         .transform(Paths::get)
@@ -1401,7 +1404,8 @@ public class DefaultJavaLibraryTest {
       annotationProcessingParamsBuilder.addProcessorBuildTarget(rule);
     }
 
-    public ImmutableList<String> buildAndGetCompileParameters() throws IOException {
+    public ImmutableList<String> buildAndGetCompileParameters()
+        throws IOException, NoSuchBuildTargetException {
       ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
       BuildRule javaLibrary = createJavaLibraryRule(projectFilesystem);
       BuildContext buildContext = createBuildContext(javaLibrary, /* bootclasspath */ null);
@@ -1423,7 +1427,7 @@ public class DefaultJavaLibraryTest {
 
     // TODO(shs96c): Actually generate a java library rule, rather than an android one.
     private BuildRule createJavaLibraryRule(ProjectFilesystem projectFilesystem)
-        throws IOException {
+        throws IOException, NoSuchBuildTargetException {
       BuildTarget buildTarget = BuildTargetFactory.newInstance(ANNOTATION_SCENARIO_TARGET);
       annotationProcessingParamsBuilder.setOwnerTarget(buildTarget);
       annotationProcessingParamsBuilder.setProjectFilesystem(projectFilesystem);
@@ -1453,7 +1457,6 @@ public class DefaultJavaLibraryTest {
           .setPostprocessClassesCommands(ImmutableList.of())
           .setExportedDeps(ImmutableSortedSet.of())
           .setProvidedDeps(ImmutableSortedSet.of())
-          .setAbiInputs(ImmutableSortedSet.of())
           .setTrackClassUsage(options.trackClassUsage())
           .setAdditionalClasspathEntries(ImmutableSet.of())
           .setResourcesRoot(Optional.empty())

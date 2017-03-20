@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.scala;
 
 
 import com.facebook.buck.jvm.java.CalculateAbi;
-import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
@@ -102,7 +101,6 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
         resolver.getAllRules(scalaBuckConfig.getCompilerPlugins()));
     return new ScalaLibraryBuilder(javaLibraryParams, resolver, compileStepFactory)
         .setArgs(args)
-        .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
         .build();
   }
 

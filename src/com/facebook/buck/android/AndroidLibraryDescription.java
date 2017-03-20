@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
-import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaSourceJar;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
@@ -198,7 +197,6 @@ public class AndroidLibraryDescription
           resolver,
           compiler.compileToJar(args, javacOptions, resolver))
           .setArgs(args)
-          .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, androidLibraryParams.getDeps()))
           .setAdditionalClasspathEntries(additionalClasspathEntries)
           .setJavacOptions(javacOptions)
           .setTrackClassUsage(compiler.trackClassUsage(javacOptions))

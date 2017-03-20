@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -48,7 +49,6 @@ public class DefaultJavaLibraryBuilder {
   private ImmutableList<String> postprocessClassesCommands = ImmutableList.of();
   private ImmutableSortedSet<BuildRule> exportedDeps = ImmutableSortedSet.of();
   private ImmutableSortedSet<BuildRule> providedDeps = ImmutableSortedSet.of();
-  private ImmutableSortedSet<SourcePath> abiInputs = ImmutableSortedSet.of();
   private boolean trackClassUsage = false;
   private ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries = ImmutableSet.of();
   private Optional<Path> resourcesRoot = Optional.empty();
@@ -132,11 +132,6 @@ public class DefaultJavaLibraryBuilder {
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setAbiInputs(ImmutableSortedSet<SourcePath> abiInputs) {
-    this.abiInputs = abiInputs;
-    return this;
-  }
-
   public DefaultJavaLibraryBuilder setTrackClassUsage(boolean trackClassUsage) {
     this.trackClassUsage = trackClassUsage;
     return this;
@@ -174,7 +169,10 @@ public class DefaultJavaLibraryBuilder {
     return this;
   }
 
-  public DefaultJavaLibrary build() {
+  public DefaultJavaLibrary build() throws NoSuchBuildTargetException {
+    ImmutableSortedSet<SourcePath> abiInputs =
+        JavaLibraryRules.getAbiInputs(buildRuleResolver, params.getDeps());
+
     return newInstance(
         params,
         javacOptions,
