@@ -20,10 +20,8 @@ import com.facebook.buck.android.aapt.MergeAndroidResourceSources;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -98,8 +96,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
 
-    UnflavoredBuildTarget originalBuildTarget =
-        originalBuildRuleParams.getBuildTarget().checkUnflavored();
+    originalBuildRuleParams.getBuildTarget().checkUnflavored();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     ImmutableList.Builder<BuildRule> aarExtraDepsBuilder = ImmutableList.<BuildRule>builder()
         .addAll(originalBuildRuleParams.getExtraDeps().get());
@@ -110,8 +107,8 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
     androidManifestArgs.skeleton = args.manifestSkeleton;
     androidManifestArgs.deps = args.deps;
 
-    BuildRuleParams androidManifestParams = originalBuildRuleParams.withBuildTarget(
-        BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ANDROID_MANIFEST_FLAVOR));
+    BuildRuleParams androidManifestParams =
+        originalBuildRuleParams.withAppendedFlavor(AAR_ANDROID_MANIFEST_FLAVOR);
 
     AndroidManifest manifest = androidManifestDescription.createBuildRule(
         targetGraph,
@@ -143,8 +140,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         AndroidResourceHelper.androidResOnly(originalBuildRuleParams.getExtraDeps().get());
 
     BuildRuleParams assembleAssetsParams = originalBuildRuleParams
-        .withBuildTarget(
-            BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ASSEMBLE_ASSETS_FLAVOR))
+        .withAppendedFlavor(AAR_ASSEMBLE_ASSETS_FLAVOR)
         .copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(androidResourceDeclaredDeps),
             Suppliers.ofInstance(androidResourceExtraDeps));
@@ -156,10 +152,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
     aarExtraDepsBuilder.add(resolver.addToIndex(assembleAssetsDirectories));
 
     BuildRuleParams assembleResourceParams = originalBuildRuleParams
-        .withBuildTarget(
-            BuildTargets.createFlavoredBuildTarget(
-                originalBuildTarget,
-                AAR_ASSEMBLE_RESOURCE_FLAVOR))
+        .withAppendedFlavor(AAR_ASSEMBLE_RESOURCE_FLAVOR)
         .copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(androidResourceDeclaredDeps),
             Suppliers.ofInstance(androidResourceExtraDeps));
@@ -172,10 +165,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
 
     /* android_resource */
     BuildRuleParams androidResourceParams = originalBuildRuleParams
-        .withBuildTarget(
-            BuildTargets.createFlavoredBuildTarget(
-                originalBuildTarget,
-                AAR_ANDROID_RESOURCE_FLAVOR))
+        .withAppendedFlavor(AAR_ANDROID_RESOURCE_FLAVOR)
         .copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(
                 ImmutableSortedSet.of(

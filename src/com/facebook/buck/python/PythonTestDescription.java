@@ -118,11 +118,6 @@ public class PythonTestDescription implements
     return BuildTargets.getGenPath(filesystem, buildTarget, "%s").resolve(getTestModulesListName());
   }
 
-  @VisibleForTesting
-  protected static BuildTarget getBinaryBuildTarget(BuildTarget target) {
-    return BuildTargets.createFlavoredBuildTarget(target.checkUnflavored(), BINARY_FLAVOR);
-  }
-
   /**
    * Create the contents of a python source file that just contains a list of
    * the given test modules.
@@ -148,11 +143,9 @@ public class PythonTestDescription implements
       ImmutableSet<String> testModules) {
 
     // Modify the build rule params to change the target, type, and remove all deps.
+    params.getBuildTarget().checkUnflavored();
     BuildRuleParams newParams = params
-        .withBuildTarget(
-            BuildTargets.createFlavoredBuildTarget(
-                params.getBuildTarget().checkUnflavored(),
-                InternalFlavor.of("test_module")))
+        .withAppendedFlavor(InternalFlavor.of("test_module"))
         .copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of()),
             Suppliers.ofInstance(ImmutableSortedSet.of()));
@@ -275,9 +268,10 @@ public class PythonTestDescription implements
             args.preloadDeps);
 
     // Build the PEX using a python binary rule with the minimum dependencies.
+    params.getBuildTarget().checkUnflavored();
     PythonBinary binary =
         binaryDescription.createPackageRule(
-            params.withBuildTarget(getBinaryBuildTarget(params.getBuildTarget())),
+            params.withAppendedFlavor(BINARY_FLAVOR),
             resolver,
             ruleFinder,
             pythonPlatform,

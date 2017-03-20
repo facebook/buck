@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AbstractDescriptionArg;
@@ -81,11 +80,9 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
         args.mavenCoords,
         args.provided.orElse(false));
 
-    UnflavoredBuildTarget prebuiltJarBuildTarget = params.getBuildTarget().checkUnflavored();
-    BuildTarget flavoredBuildTarget = BuildTargets.createFlavoredBuildTarget(
-        prebuiltJarBuildTarget, JavaLibrary.GWT_MODULE_FLAVOR);
+    params.getBuildTarget().checkUnflavored();
     BuildRuleParams gwtParams = params
-        .withBuildTarget(flavoredBuildTarget)
+        .withAppendedFlavor(JavaLibrary.GWT_MODULE_FLAVOR)
         .copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(prebuilt)),
             Suppliers.ofInstance(ImmutableSortedSet.of()));
