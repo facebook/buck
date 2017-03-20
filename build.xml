@@ -114,7 +114,7 @@
     <include name="gson/gson-2.2.4.jar" />
     <include name="icu4j/icu4j-54.1.1.jar" />
     <include name="immutables/value-2.3.8.jar" />
-    <include name="infer-annotations/infer-annotations-1.5.jar" />
+    <include name="infer-annotations/infer-annotations-4.1.jar" />
     <include name="nuprocess/nuprocess-1.1.0.jar" />
     <include name="jacoco/org.jacoco.core-0.7.7.201606060606.jar" />
     <include name="jacoco/org.jacoco.report-0.7.7.201606060606.jar" />

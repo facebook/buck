@@ -53,7 +53,7 @@ JAVA_CLASSPATHS = [
     "third-party/java/httpcomponents/httpclient-4.4.1.jar",
     "third-party/java/httpcomponents/httpcore-4.4.1.jar",
     "third-party/java/icu4j/icu4j-54.1.1.jar",
-    "third-party/java/infer-annotations/infer-annotations-1.5.jar",
+    "third-party/java/infer-annotations/infer-annotations-4.1.jar",
     "third-party/java/ini4j/ini4j-0.5.2.jar",
     "third-party/java/jackson/jackson-annotations-2.7.8.jar",
     "third-party/java/jackson/jackson-core-2.7.8.jar",
