@@ -116,6 +116,7 @@ java_immutables_library(
     'RecordFileSha1Step.java',
     'RuleKeyAppendable.java',
     'RuleKeyObjectSink.java',
+    'RuleKeyFieldCategory.java',
     'SourcePath.java',
     'SourcePathResolver.java',
     'SourcePathRuleFinder.java',

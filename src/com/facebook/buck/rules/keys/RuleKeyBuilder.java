@@ -35,6 +35,7 @@ import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyFieldCategory;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -129,20 +130,30 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
         }
       };
     }
+    // TODO(AsyncDBConnMarkedDownDBException): use other way to enable/disable this, dump to tracker not to logger
+    if (logger.isVerboseEnabled()) {
+      hasher = new ForwardingRuleKeyHasher<HashCode, HashCode>(
+          hasher, new CategorizedRuleKeyHasher()) {
+        @Override
+        public void onHash(HashCode firstHash, HashCode categorizedHash) {
+          logger.verbose("CategorizedKey %s=%s", firstHash, categorizedHash);
+        }
+      };
+    }
     return hasher;
   }
 
   @Override
-  public final RuleKeyBuilder<RULE_KEY> setReflectively(String key, @Nullable Object val) {
-    try (Scope keyScope = scopedHasher.keyScope(key)) {
-      return setReflectively(val);
-    }
+  public RuleKeyBuilder<RULE_KEY> setReflectively(String key, @Nullable Object val) {
+    return setReflectively(key, val, RuleKeyFieldCategory.UNKNOWN);
   }
 
   @Override
-  public final RuleKeyObjectSink setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
+  public final RuleKeyBuilder<RULE_KEY> setReflectively(
+      String key, @Nullable Object val, RuleKeyFieldCategory category) {
+    hasher.selectCategory(category);
     try (Scope keyScope = scopedHasher.keyScope(key)) {
-      return setAppendableRuleKey(appendable);
+      return setReflectively(val);
     }
   }
 

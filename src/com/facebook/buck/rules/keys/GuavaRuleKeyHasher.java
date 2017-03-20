@@ -23,12 +23,13 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyFieldCategory;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
-import com.google.common.base.Charsets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
 
@@ -52,11 +53,17 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
   }
 
   private GuavaRuleKeyHasher putStringified(byte type, String val) {
-    return putBytes(type, val.getBytes(Charsets.UTF_8));
+    return putBytes(type, val.getBytes(StandardCharsets.UTF_8));
   }
 
   private GuavaRuleKeyHasher putBuildTarget(byte type, BuildTarget target) {
     return putStringified(type, target.getFullyQualifiedName());
+  }
+
+  @Override
+  public GuavaRuleKeyHasher selectCategory(RuleKeyFieldCategory category) {
+    // Category is useful for instrumentation purposes, but can be safely ignored here.
+    return this;
   }
 
   @Override

@@ -24,7 +24,7 @@ import javax.annotation.Nullable;
 public interface RuleKeyObjectSink {
 
   RuleKeyObjectSink setReflectively(String key, @Nullable Object val);
-  RuleKeyObjectSink setAppendableRuleKey(String key, RuleKeyAppendable appendable);
+  RuleKeyObjectSink setReflectively(String key, @Nullable Object val, RuleKeyFieldCategory cat);
 
   /**
    * Do not use this method, instead call {@link #setReflectively(String, Object)} with

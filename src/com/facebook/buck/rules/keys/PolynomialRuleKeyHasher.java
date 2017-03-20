@@ -23,9 +23,9 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyFieldCategory;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
-import com.google.common.base.Charsets;
 import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
@@ -57,7 +57,17 @@ public class PolynomialRuleKeyHasher implements RuleKeyHasher<Integer> {
   }
 
   private void feedString(String val) {
-    feedBytes(val.getBytes(Charsets.UTF_8));
+    // We could iterate over chars manually, but {@link String#hashCode()} is already computed as
+    // a polynomial hash, looks stable enough as per Java specification, and is memoized which
+    // means it's going to be computed only once if attempted multiple times.
+    // See http://docs.oracle.com/javase/8/docs/api/java/lang/String.html#hashCode--
+    feed(val.hashCode());
+  }
+
+  @Override
+  public RuleKeyHasher<Integer> selectCategory(RuleKeyFieldCategory category) {
+    // Category is handled outside of this class so it can be safely ignored here.
+    return this;
   }
 
   @Override

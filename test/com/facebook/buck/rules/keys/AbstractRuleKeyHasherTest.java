@@ -18,6 +18,7 @@ package com.facebook.buck.rules.keys;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.model.BuildTarget;
@@ -25,6 +26,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyFieldCategory;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.hash.HashCode;
@@ -191,6 +193,13 @@ public abstract class AbstractRuleKeyHasherTest<HASH>  {
         newHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_1)).hash(),
         newHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_1)).hash());
   }
+
+  @Test
+  public void testSelectCategory() {
+    RuleKeyHasher<HASH> hasher = newHasher();
+    assertSame(hasher, hasher.selectCategory(RuleKeyFieldCategory.UNKNOWN));
+  }
+
 
   protected ArchiveMemberPath newArchiveMember(String archivePath, String memberPath) {
     return ArchiveMemberPath.of(Paths.get(archivePath), Paths.get(memberPath));

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,15 +16,14 @@
 
 package com.facebook.buck.rules;
 
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
-@Retention(RUNTIME)
-@Target(FIELD)
-public @interface AddToRuleKey {
-  RuleKeyFieldCategory category() default RuleKeyFieldCategory.UNKNOWN;
-  boolean stringify() default false;
+/**
+ * A rulekey field category used for instrumentation purposes.
+ */
+public enum RuleKeyFieldCategory {
+    UNKNOWN,
+    SOURCE,
+    DEPENDENCY,
+    PARAMETER,
+    ENVIRONMENT,
+    TOOL,
 }
