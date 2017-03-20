@@ -201,11 +201,14 @@ class BuckTool(object):
             now = int(round(time.time() * 1000))
             env['BUCK_PYTHON_SPACE_INIT_TIME'] = str(now - self._init_timestamp)
             if True:
+                java = which("java")
+                if java is None:
+                    raise BuckToolException('Could not find java on $PATH')
                 with Tracing('buck', args={'command': command}):
                     buck_exit_code = subprocess.call(command,
                                                      cwd=self._buck_project.root,
                                                      env=env,
-                                                     executable=which("java"))
+                                                     executable=java)
             return buck_exit_code
 
 
