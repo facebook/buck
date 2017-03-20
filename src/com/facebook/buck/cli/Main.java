@@ -38,6 +38,7 @@ import com.facebook.buck.event.BuckInitializationDurationEvent;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.DaemonEvent;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.event.listener.CacheRateStatsListener;
@@ -1115,7 +1116,7 @@ public final class Main {
                     locale,
                     filesystem.getBuckPaths().getLogDir().resolve("test.log"));
             AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService);
-            BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
+            DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
             BroadcastEventListener.BroadcastEventBusClosable broadcastEventBusClosable =
                 broadcastEventListener.addEventBus(buildEventBus);
 

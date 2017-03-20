@@ -2,6 +2,7 @@
   "command" : {
     "deps" : [
       "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/io:BuckPaths",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/log:api",
@@ -15,7 +16,7 @@
     "exported_deps" : [
       "//src/com/facebook/buck/android:utils",
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
-      "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/event:interfaces",
       "//src/com/facebook/buck/jvm/core:packagefinder",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",

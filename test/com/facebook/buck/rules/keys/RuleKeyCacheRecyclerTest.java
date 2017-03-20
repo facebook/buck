@@ -20,6 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.ActionGraph;
@@ -40,7 +41,7 @@ public class RuleKeyCacheRecyclerTest {
   private static final ProjectFilesystem FILESYSTEM = new FakeProjectFilesystem();
   private static final EventBus EVENT_BUS = new EventBus();
   private static final BuckEventBus BUCK_EVENT_BUS =
-      new BuckEventBus(new FakeClock(0), new BuildId());
+      new DefaultBuckEventBus(new FakeClock(0), new BuildId());
   private static final int RULE_KEY_SEED = 0;
   private static final ActionGraph ACTION_GRAPH = new ActionGraph(ImmutableList.of());
   private static final RuleKeyCacheRecycler.SettingsAffectingCache SETTINGS =

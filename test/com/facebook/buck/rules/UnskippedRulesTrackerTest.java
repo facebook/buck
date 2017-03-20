@@ -26,6 +26,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
@@ -74,7 +75,7 @@ public class UnskippedRulesTrackerTest {
             "UnskippedRulesTracker", 7));
     RuleDepsCache depsCache = new RuleDepsCache(executor, resolver);
     unskippedRulesTracker = new UnskippedRulesTracker(depsCache, resolver, executor);
-    eventBus = new BuckEventBus(new FakeClock(1), new BuildId());
+    eventBus = new DefaultBuckEventBus(new FakeClock(1), new BuildId());
     eventBus.register(new Object() {
       @Subscribe
       public void onUnskippedRuleCountUpdated(BuckEvent event) {

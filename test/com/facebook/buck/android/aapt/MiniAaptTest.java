@@ -25,10 +25,10 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.android.aapt.MiniAapt.ResourceParseException;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -519,7 +519,7 @@ public class MiniAaptTest {
     aapt.processFileNamesInDirectory(filesystem, Paths.get("res/transition-v19"));
     aapt.processValues(
         filesystem,
-        new BuckEventBus(new FakeClock(0), new BuildId("")),
+        new DefaultBuckEventBus(new FakeClock(0), new BuildId("")),
         Paths.get("res/values"));
 
     assertEquals(

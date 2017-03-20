@@ -19,6 +19,7 @@ package com.facebook.buck.versions;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
@@ -36,7 +37,7 @@ import java.util.concurrent.ForkJoinPool;
 public class VersionedTargetGraphCacheTest {
 
   private static final BuckEventBus BUS =
-      new BuckEventBus(new FakeClock(0), new BuildId());
+      new DefaultBuckEventBus(new FakeClock(0), new BuildId());
   private static final ForkJoinPool POOL = new ForkJoinPool(1);
 
   @Test

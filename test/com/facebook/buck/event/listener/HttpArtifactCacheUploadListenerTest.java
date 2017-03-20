@@ -19,6 +19,7 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.counters.CountersSnapshotEvent;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.timing.FakeClock;
@@ -49,8 +50,7 @@ public class HttpArtifactCacheUploadListenerTest {
     buildId = new BuildId();
     clock = new FakeClock(0);
     events = Lists.newArrayList();
-    eventBus = new BuckEventBus(clock, buildId);
-    eventBus = new BuckEventBus(clock, /* async */ false, buildId, 1000);
+    eventBus = new DefaultBuckEventBus(clock, /* async */ false, buildId, 1000);
     eventBus.register(this);
     lastStartedEvent = null;
   }

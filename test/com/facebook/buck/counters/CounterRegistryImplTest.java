@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.timing.FakeClock;
@@ -130,7 +131,7 @@ public class CounterRegistryImplTest {
 
   @Test
   public void noEventsFlushedIfNoCountersRegistered() throws IOException {
-    BuckEventBus fakeEventBus = new BuckEventBus(
+    BuckEventBus fakeEventBus = new DefaultBuckEventBus(
         new FakeClock(0),
         false,
         new BuildId("12345"),
@@ -158,7 +159,7 @@ public class CounterRegistryImplTest {
 
   @Test
   public void noEventsFlushedIfCounterRegisteredButHasNoData() throws IOException {
-    BuckEventBus fakeEventBus = new BuckEventBus(
+    BuckEventBus fakeEventBus = new DefaultBuckEventBus(
         new FakeClock(0),
         false,
         new BuildId("12345"),
@@ -187,7 +188,7 @@ public class CounterRegistryImplTest {
 
   @Test
   public void eventIsFlushedIfCounterRegisteredWithData() throws IOException {
-    BuckEventBus fakeEventBus = new BuckEventBus(
+    BuckEventBus fakeEventBus = new DefaultBuckEventBus(
         new FakeClock(0),
         false,
         new BuildId("12345"),
@@ -222,7 +223,7 @@ public class CounterRegistryImplTest {
 
   @Test
   public void closingRegistryBeforeTimerFiresFlushesCounters() throws IOException {
-    BuckEventBus fakeEventBus = new BuckEventBus(
+    BuckEventBus fakeEventBus = new DefaultBuckEventBus(
         new FakeClock(0),
         false,
         new BuildId("12345"),

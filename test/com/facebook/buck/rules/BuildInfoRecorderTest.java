@@ -27,6 +27,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactInfo;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -147,7 +148,7 @@ public class BuildInfoRecorderTest {
 
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(filesystem);
-    BuckEventBus bus = new BuckEventBus(new FakeClock(0), new BuildId("BUILD"));
+    BuckEventBus bus = new DefaultBuckEventBus(new FakeClock(0), new BuildId("BUILD"));
 
     final byte[] contents = "contents".getBytes();
 

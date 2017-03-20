@@ -17,7 +17,7 @@
 package com.facebook.buck.io;
 
 import com.facebook.buck.config.Config;
-import com.facebook.buck.event.EventBus;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.autosparse.AutoSparseConfig;
@@ -351,7 +351,7 @@ public class ProjectFilesystem {
    * Hook for virtual filesystems to materialise virtual files as Buck will need to be able to read
    * them past this point.
    */
-  public void ensureConcreteFilesExist(EventBus eventBus) {
+  public void ensureConcreteFilesExist(BuckEventBus eventBus) {
     delegate.ensureConcreteFilesExist(eventBus);
   }
 

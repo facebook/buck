@@ -4,7 +4,7 @@ EVENT_INTERFACES = [
   'BroadcastEvent.java',
   'BuckEvent.java',
   'BuckEventListener.java',
-  'EventBus.java',
+  'BuckEventBus.java',
   'LeafEvent.java',
   'WorkAdvanceEvent.java',
 ]

@@ -997,7 +997,8 @@ public class CachingBuildEngine implements BuildEngine {
                     rule,
                     buildRuleDurationTracker,
                     keyFactories.getDefaultRuleKeyFactory());
-                buildContext.getEventBus().logVerboseAndPost(LOG, resumedEvent);
+                LOG.verbose(resumedEvent.toString());
+                buildContext.getEventBus().post(resumedEvent);
 
                 if (input.getStatus() == BuildRuleStatus.FAIL) {
 
@@ -1068,7 +1069,8 @@ public class CachingBuildEngine implements BuildEngine {
                     successType,
                     outputHash,
                     outputSize);
-                buildContext.getEventBus().logVerboseAndPost(LOG, finished);
+                LOG.verbose(finished.toString());
+                buildContext.getEventBus().post(finished);
               }
 
               @Override

@@ -18,6 +18,7 @@ package com.facebook.buck.event.listener;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -48,7 +49,7 @@ public class ProgressEstimatorTest {
   private static final ObjectMapper MAPPER = ObjectMappers.newDefaultInstance();
 
   public BuckEventBus getBuckEventBus() {
-    return new BuckEventBus(new FakeClock(0), new BuildId(""));
+    return new DefaultBuckEventBus(new FakeClock(0), new BuildId(""));
   }
 
   @Test

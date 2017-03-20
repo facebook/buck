@@ -20,7 +20,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.Watchman;
@@ -92,7 +92,7 @@ public class WatchmanWatcherIntegrationTest {
 
     // Verify we don't get an event for the path.
     watcher.postEvents(
-        new BuckEventBus(new FakeClock(0), new BuildId()),
+        new DefaultBuckEventBus(new FakeClock(0), new BuildId()),
         WatchmanWatcher.FreshInstanceAction.NONE);
     assertThat(watchmanEventCollector.getEvents(), Matchers.empty());
   }
@@ -108,7 +108,7 @@ public class WatchmanWatcherIntegrationTest {
 
     // Verify we still get an event for the created path.
     watcher.postEvents(
-        new BuckEventBus(new FakeClock(0), new BuildId()),
+        new DefaultBuckEventBus(new FakeClock(0), new BuildId()),
         WatchmanWatcher.FreshInstanceAction.NONE);
     ImmutableList<WatchEvent<?>> events = watchmanEventCollector.getEvents();
     assertThat(events.size(), Matchers.equalTo(1));
@@ -140,7 +140,7 @@ public class WatchmanWatcherIntegrationTest {
 
     // Clear out the initial overflow event.
     watcher.postEvents(
-        new BuckEventBus(new FakeClock(0), new BuildId()),
+        new DefaultBuckEventBus(new FakeClock(0), new BuildId()),
         WatchmanWatcher.FreshInstanceAction.NONE);
     watchmanEventCollector.clear();
 

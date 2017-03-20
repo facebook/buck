@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
 import com.facebook.buck.artifact_cache.TestArtifactCaches;
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
@@ -65,7 +65,7 @@ public class BuildInfoRecorderIntegrationTest {
     buildInfoRecorder.performUploadToArtifactCache(
         ImmutableSet.of(new RuleKey(RULE_KEY)),
         artifactCache,
-        new BuckEventBus(new DefaultClock(), new BuildId()));
+        new DefaultBuckEventBus(new DefaultClock(), new BuildId()));
     assertTrue(
         cacheDir.resolve(
             DirArtifactCacheTestUtil

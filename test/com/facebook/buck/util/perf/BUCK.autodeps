@@ -1,7 +1,6 @@
 {
   "perf" : {
     "deps" : [
-      "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/event:interfaces",
       "//src/com/facebook/buck/log:log",
       "//src/com/facebook/buck/util:process_executor",

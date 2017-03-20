@@ -16,14 +16,13 @@
 
 package com.facebook.buck.jvm.java;
 
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.empty;
-
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -35,20 +34,18 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.FakeProcess;
-
+import com.facebook.buck.util.FakeProcessExecutor;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Paths;
-
-import java.util.Optional;
-
 import org.junit.Test;
+
+import java.nio.file.Paths;
+import java.util.Optional;
 
 public class JavacStepTest {
 

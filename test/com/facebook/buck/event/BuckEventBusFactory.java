@@ -55,11 +55,11 @@ public class BuckEventBusFactory {
    * that would not otherwise be noticed.
    */
   public static BuckEventBus newInstance(Clock clock, BuildId buildId) {
-    BuckEventBus buckEventBus = new BuckEventBus(
+    BuckEventBus buckEventBus = new DefaultBuckEventBus(
         clock,
         false,
         buildId,
-        BuckEventBus.DEFAULT_SHUTDOWN_TIMEOUT_MS);
+        DefaultBuckEventBus.DEFAULT_SHUTDOWN_TIMEOUT_MS);
     buckEventBus.register(new ErrorListener());
     return buckEventBus;
   }

@@ -31,13 +31,13 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-public class BuckEventBusTest {
+public class DefaultBuckEventBusTest {
 
   private static final int timeoutMillis = 500;
 
   @Test
   public void testShutdownSuccess() throws Exception {
-    BuckEventBus eb = new BuckEventBus(
+    DefaultBuckEventBus eb = new DefaultBuckEventBus(
         new DefaultClock(),
         false,
         BuckEventBusFactory.BUILD_ID_FOR_TEST,
@@ -54,7 +54,7 @@ public class BuckEventBusTest {
 
   @Test
   public void testShutdownFailure() throws IOException {
-    BuckEventBus eb = new BuckEventBus(
+    DefaultBuckEventBus eb = new DefaultBuckEventBus(
         new DefaultClock(),
         false,
         BuckEventBusFactory.BUILD_ID_FOR_TEST,
@@ -72,7 +72,7 @@ public class BuckEventBusTest {
 
   @Test
   public void whenEventTimestampedThenEventCannotBePosted() throws IOException {
-    BuckEventBus eb = new BuckEventBus(
+    DefaultBuckEventBus eb = new DefaultBuckEventBus(
         new DefaultClock(),
         false,
         BuckEventBusFactory.BUILD_ID_FOR_TEST,
@@ -94,7 +94,7 @@ public class BuckEventBusTest {
 
   @Test
   public void whenEventPostedWithAnotherThenTimestampCopiedToPostedEvent() throws IOException {
-    BuckEventBus eb = new BuckEventBus(
+    DefaultBuckEventBus eb = new DefaultBuckEventBus(
         new DefaultClock(),
         false,
         BuckEventBusFactory.BUILD_ID_FOR_TEST,
@@ -111,7 +111,7 @@ public class BuckEventBusTest {
   @Test
   public void timestampedEventHasSeparateNanosAndMillis() throws IOException {
     SettableFakeClock fakeClock = new SettableFakeClock(49152, 64738);
-    BuckEventBus eb = new BuckEventBus(
+    DefaultBuckEventBus eb = new DefaultBuckEventBus(
         fakeClock,
         false,
         BuckEventBusFactory.BUILD_ID_FOR_TEST,

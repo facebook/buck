@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildId;
@@ -52,7 +53,7 @@ public class TargetGraphHashingTest {
   @Test
   public void emptyTargetGraphHasEmptyHashes()
       throws IOException, InterruptedException, AcyclicDepthFirstPostOrderTraversal.CycleException {
-    BuckEventBus eventBus = new BuckEventBus(new IncrementingFakeClock(), new BuildId());
+    BuckEventBus eventBus = new DefaultBuckEventBus(new IncrementingFakeClock(), new BuildId());
     TargetGraph targetGraph = TargetGraphFactory.newInstance();
 
     assertThat(
@@ -70,7 +71,7 @@ public class TargetGraphHashingTest {
   public void hashChangesWhenSrcContentChanges()
       throws IOException, InterruptedException, AcyclicDepthFirstPostOrderTraversal.CycleException {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuckEventBus eventBus = new BuckEventBus(new IncrementingFakeClock(), new BuildId());
+    BuckEventBus eventBus = new DefaultBuckEventBus(new IncrementingFakeClock(), new BuildId());
 
     TargetNode<?, ?> node = createJavaLibraryTargetNodeWithSrcs(
         BuildTargetFactory.newInstance("//foo:lib"),
@@ -113,7 +114,7 @@ public class TargetGraphHashingTest {
   public void twoNodeIndependentRootsTargetGraphHasExpectedHashes()
       throws IOException, InterruptedException, AcyclicDepthFirstPostOrderTraversal.CycleException {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuckEventBus eventBus = new BuckEventBus(new IncrementingFakeClock(), new BuildId());
+    BuckEventBus eventBus = new DefaultBuckEventBus(new IncrementingFakeClock(), new BuildId());
 
     TargetNode<?, ?> nodeA = createJavaLibraryTargetNodeWithSrcs(
         BuildTargetFactory.newInstance("//foo:lib"),
@@ -189,7 +190,7 @@ public class TargetGraphHashingTest {
   public void hashChangesForDependentNodeWhenDepsChange()
       throws IOException, InterruptedException, AcyclicDepthFirstPostOrderTraversal.CycleException {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuckEventBus eventBus = new BuckEventBus(new IncrementingFakeClock(), new BuildId());
+    BuckEventBus eventBus = new DefaultBuckEventBus(new IncrementingFakeClock(), new BuildId());
 
     BuildTarget nodeTarget = BuildTargetFactory.newInstance("//foo:lib");
     BuildTarget depTarget = BuildTargetFactory.newInstance("//dep:lib");

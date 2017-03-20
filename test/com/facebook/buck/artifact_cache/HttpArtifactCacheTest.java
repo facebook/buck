@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;
@@ -70,7 +71,7 @@ public class HttpArtifactCacheTest {
   private static final String SERVER = "http://localhost";
 
   private static final BuckEventBus BUCK_EVENT_BUS =
-      new BuckEventBus(new IncrementingFakeClock(), new BuildId());
+      new DefaultBuckEventBus(new IncrementingFakeClock(), new BuildId());
   private static final MediaType OCTET_STREAM = MediaType.parse("application/octet-stream");
   private static final ListeningExecutorService DIRECT_EXECUTOR_SERVICE =
       MoreExecutors.newDirectExecutorService();
@@ -497,7 +498,7 @@ public class HttpArtifactCacheTest {
         .setCacheName(cacheName)
         .setProjectFilesystem(filesystem)
         .setBuckEventBus(
-            new BuckEventBus(new IncrementingFakeClock(), new BuildId()) {
+            new DefaultBuckEventBus(new IncrementingFakeClock(), new BuildId()) {
               @Override
               public void post(BuckEvent event) {
                 if (event instanceof ConsoleEvent) {
