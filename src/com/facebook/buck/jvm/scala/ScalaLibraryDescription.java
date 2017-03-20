@@ -102,10 +102,7 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
         resolver.getAllRules(scalaBuckConfig.getCompilerPlugins()));
     return new ScalaLibraryBuilder(javaLibraryParams, resolver, compileStepFactory)
         .setArgs(args)
-        .setExportedDeps(params.getDeclaredDeps().get())
-        .setProvidedDeps(resolver.getAllRules(args.providedDeps))
         .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
-        .setTests(args.tests)
         .build();
   }
 

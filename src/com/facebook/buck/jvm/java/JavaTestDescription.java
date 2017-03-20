@@ -140,8 +140,6 @@ public class JavaTestDescription implements
                 .builder(testsLibraryParams, resolver, compileStepFactory)
                 .setArgs(args)
                 .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
-                .setProguardConfig(args.proguardConfig)
-                .setProvidedDeps(resolver.getAllRules(args.providedDeps))
                 .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()))
                 .setTrackClassUsage(javacOptions.trackClassUsage())
                 .build());

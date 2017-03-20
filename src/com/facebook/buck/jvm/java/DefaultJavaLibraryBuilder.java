@@ -25,18 +25,19 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 public class DefaultJavaLibraryBuilder {
   private final BuildRuleParams params;
-  private final SourcePathResolver resolver;
+  private final BuildRuleResolver buildRuleResolver;
+  private final SourcePathResolver sourcePathResolver;
   private final SourcePathRuleFinder ruleFinder;
   private final CompileToJarStepFactory compileStepFactory;
   private JavacOptions javacOptions;
@@ -61,10 +62,11 @@ public class DefaultJavaLibraryBuilder {
       BuildRuleResolver buildRuleResolver,
       CompileToJarStepFactory compileStepFactory) {
     this.params = params;
+    this.buildRuleResolver = buildRuleResolver;
     this.compileStepFactory = compileStepFactory;
 
     ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-    resolver = new SourcePathResolver(ruleFinder);
+    sourcePathResolver = new SourcePathResolver(ruleFinder);
   }
 
   public DefaultJavaLibraryBuilder setJavacOptions(JavacOptions javacOptions) {
@@ -76,6 +78,10 @@ public class DefaultJavaLibraryBuilder {
     return setSrcs(args.srcs)
         .setResources(args.resources)
         .setResourcesRoot(args.resourcesRoot)
+        .setProguardConfig(args.proguardConfig)
+        .setPostprocessClassesCommands(args.postprocessClassesCommands)
+        .setExportedDeps(args.exportedDeps)
+        .setProvidedDeps(args.providedDeps)
         .setManifestFile(args.manifestFile)
         .setMavenCoords(args.mavenCoords);
   }
@@ -88,7 +94,7 @@ public class DefaultJavaLibraryBuilder {
   public DefaultJavaLibraryBuilder setResources(
       ImmutableSortedSet<SourcePath> resources) {
     this.resources = ResourceValidator.validateResources(
-        resolver,
+        sourcePathResolver,
         params.getProjectFilesystem(),
         resources);
     return this;
@@ -110,13 +116,19 @@ public class DefaultJavaLibraryBuilder {
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setExportedDeps(ImmutableSortedSet<BuildRule> exportedDeps) {
+  public DefaultJavaLibraryBuilder setExportedDeps(ImmutableSortedSet<BuildTarget> exportedDeps) {
+    this.exportedDeps = buildRuleResolver.getAllRules(exportedDeps);
+    return this;
+  }
+
+  @VisibleForTesting
+  public DefaultJavaLibraryBuilder setExportedDepRules(ImmutableSortedSet<BuildRule> exportedDeps) {
     this.exportedDeps = exportedDeps;
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setProvidedDeps(ImmutableSortedSet<BuildRule> providedDeps) {
-    this.providedDeps = providedDeps;
+  public DefaultJavaLibraryBuilder setProvidedDeps(ImmutableSortedSet<BuildTarget> providedDeps) {
+    this.providedDeps = buildRuleResolver.getAllRules(providedDeps);
     return this;
   }
 
@@ -166,7 +178,7 @@ public class DefaultJavaLibraryBuilder {
     return newInstance(
         params,
         javacOptions,
-        resolver,
+        sourcePathResolver,
         ruleFinder,
         srcs,
         resources,
@@ -189,10 +201,10 @@ public class DefaultJavaLibraryBuilder {
   protected DefaultJavaLibrary newInstance(
       BuildRuleParams params,
       @SuppressWarnings("unused") JavacOptions javacOptions,
-      SourcePathResolver resolver,
+      SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
-      Set<? extends SourcePath> srcs,
-      Set<? extends SourcePath> resources,
+      ImmutableSortedSet<? extends SourcePath> srcs,
+      ImmutableSortedSet<? extends SourcePath> resources,
       Optional<Path> generatedSourceFolder,
       Optional<SourcePath> proguardConfig,
       ImmutableList<String> postprocessClassesCommands,
@@ -209,7 +221,7 @@ public class DefaultJavaLibraryBuilder {
       ImmutableSet<Pattern> classesToRemoveFromJar) {
     return new DefaultJavaLibrary(
         params,
-        resolver,
+        sourcePathResolver,
         ruleFinder,
         srcs,
         resources,

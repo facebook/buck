@@ -198,10 +198,6 @@ public class AndroidLibraryDescription
           resolver,
           compiler.compileToJar(args, javacOptions, resolver))
           .setArgs(args)
-          .setProguardConfig(args.proguardConfig)
-          .setPostprocessClassesCommands(args.postprocessClassesCommands)
-          .setExportedDeps(exportedDeps)
-          .setProvidedDeps(resolver.getAllRules(args.providedDeps))
           .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, androidLibraryParams.getDeps()))
           .setAdditionalClasspathEntries(additionalClasspathEntries)
           .setJavacOptions(javacOptions)

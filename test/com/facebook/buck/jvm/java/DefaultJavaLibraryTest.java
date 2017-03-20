@@ -1165,7 +1165,7 @@ public class DefaultJavaLibraryTest {
         .setSrcs(srcsAsPaths)
         .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
         .setPostprocessClassesCommands(postprocessClassesCommands)
-        .setExportedDeps(exportedDeps)
+        .setExportedDepRules(exportedDeps)
         .setTrackClassUsage(javacOptions.trackClassUsage())
         .build();
 

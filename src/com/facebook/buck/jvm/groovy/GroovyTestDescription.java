@@ -122,8 +122,6 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
                 .setArgs(args)
                 .setGeneratedSourceFolder(defaultJavacOptions.getGeneratedSourceFolderName())
                 .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()))
-                .setTests(args.tests)
-                .setClassesToRemoveFromJar(args.removeClasses)
                 .build());
 
     return new JavaTest(

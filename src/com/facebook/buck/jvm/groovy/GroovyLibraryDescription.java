@@ -100,11 +100,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
     return DefaultJavaLibrary
         .builder(javaLibraryParams, resolver, compileStepFactory)
         .setArgs(args)
-        .setExportedDeps(exportedDeps)
-        .setProvidedDeps(resolver.getAllRules(args.providedDeps))
         .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
-        .setTests(args.tests)
-        .setClassesToRemoveFromJar(args.removeClasses)
         .build();
   }
 

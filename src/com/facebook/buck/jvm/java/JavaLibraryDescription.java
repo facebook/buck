@@ -192,14 +192,8 @@ public class JavaLibraryDescription implements
         DefaultJavaLibrary.builder(javaLibraryParams, resolver, compileStepFactory)
             .setArgs(args)
             .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
-            .setProguardConfig(args.proguardConfig)
-            .setPostprocessClassesCommands(args.postprocessClassesCommands)
-            .setExportedDeps(exportedDeps)
-            .setProvidedDeps(resolver.getAllRules(args.providedDeps))
             .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
             .setTrackClassUsage(javacOptions.trackClassUsage())
-            .setTests(args.tests)
-            .setClassesToRemoveFromJar(javacOptions.getClassesToRemoveFromJar())
             .build();
 
   if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {

@@ -30,11 +30,11 @@ public class ScalaLibraryBuilder extends DefaultJavaLibraryBuilder {
   }
 
   public DefaultJavaLibraryBuilder setArgs(ScalaLibraryDescription.Arg args) {
-    setSrcs(args.srcs);
-    setResources(args.resources);
-    setResourcesRoot(args.resourcesRoot);
-    setManifestFile(args.manifestFile);
-    setMavenCoords(args.mavenCoords);
-    return this;
+    return setSrcs(args.srcs)
+        .setResources(args.resources)
+        .setResourcesRoot(args.resourcesRoot)
+        .setProvidedDeps(args.providedDeps)
+        .setManifestFile(args.manifestFile)
+        .setMavenCoords(args.mavenCoords);
   }
 }

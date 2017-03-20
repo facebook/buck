@@ -151,11 +151,7 @@ public class KotlinLibraryDescription implements
     DefaultJavaLibrary defaultKotlinLibrary =
         DefaultJavaLibrary.builder(javaLibraryParams, resolver, compileStepFactory)
             .setArgs(args)
-            .setExportedDeps(exportedDeps)
-            .setProvidedDeps(resolver.getAllRules(args.providedDeps))
             .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
-            .setTests(args.tests)
-            .setClassesToRemoveFromJar(args.removeClasses)
             .build();
 
     if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
