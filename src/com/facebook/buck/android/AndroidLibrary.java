@@ -22,6 +22,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
+import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
@@ -119,6 +120,13 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         BuildRuleResolver buildRuleResolver,
         CompileToJarStepFactory compileStepFactory) {
       super(params, buildRuleResolver, compileStepFactory);
+    }
+
+    @Override
+    public DefaultJavaLibraryBuilder setArgs(JavaLibraryDescription.Arg args) {
+      super.setArgs(args);
+      AndroidLibraryDescription.Arg androidArgs = (AndroidLibraryDescription.Arg) args;
+      return setManifestFile(androidArgs.manifest);
     }
 
     @Override

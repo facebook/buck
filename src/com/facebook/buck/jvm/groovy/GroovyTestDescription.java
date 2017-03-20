@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.groovy;
 
-import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.ForkMode;
@@ -120,16 +119,9 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
     JavaLibrary testsLibrary =
         resolver.addToIndex(
             DefaultJavaLibrary.builder(testsLibraryParams, resolver, stepFactory)
-                .setSrcs(args.srcs)
-                .setResources(ResourceValidator.validateResources(
-                    pathResolver,
-                    params.getProjectFilesystem(),
-                    args.resources))
+                .setArgs(args)
                 .setGeneratedSourceFolder(defaultJavacOptions.getGeneratedSourceFolderName())
                 .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()))
-                .setResourcesRoot(args.resourcesRoot)
-                .setManifestFile(args.manifestFile)
-                .setMavenCoords(args.mavenCoords)
                 .setTests(args.tests)
                 .setClassesToRemoveFromJar(args.removeClasses)
                 .build());

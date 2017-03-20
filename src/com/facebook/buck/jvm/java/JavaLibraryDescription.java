@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.jvm.common.ResourceValidator.validateResources;
 
 import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.model.BuildTarget;
@@ -31,7 +30,6 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.MoreCollectors;
@@ -176,8 +174,6 @@ public class JavaLibraryDescription implements
         ruleFinder,
         args);
 
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-
     ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps);
     BuildRuleParams javaLibraryParams =
         params.copyAppendingExtraDeps(
@@ -194,11 +190,7 @@ public class JavaLibraryDescription implements
         JavacOptionsAmender.IDENTITY);
     DefaultJavaLibrary defaultJavaLibrary =
         DefaultJavaLibrary.builder(javaLibraryParams, resolver, compileStepFactory)
-            .setSrcs(args.srcs)
-            .setResources(validateResources(
-                pathResolver,
-                params.getProjectFilesystem(),
-                args.resources))
+            .setArgs(args)
             .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
             .setProguardConfig(args.proguardConfig)
             .setPostprocessClassesCommands(args.postprocessClassesCommands)
@@ -206,9 +198,6 @@ public class JavaLibraryDescription implements
             .setProvidedDeps(resolver.getAllRules(args.providedDeps))
             .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
             .setTrackClassUsage(javacOptions.trackClassUsage())
-            .setResourcesRoot(args.resourcesRoot)
-            .setManifestFile(args.manifestFile)
-            .setMavenCoords(args.mavenCoords)
             .setTests(args.tests)
             .setClassesToRemoveFromJar(javacOptions.getClassesToRemoveFromJar())
             .build();

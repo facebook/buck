@@ -16,8 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.jvm.common.ResourceValidator.validateResources;
-
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
@@ -39,7 +37,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.DependencyMode;
@@ -136,8 +133,6 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
       params = params.copyReplacingExtraDeps(Suppliers.ofInstance(newExtraDeps));
     }
 
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
         new JavaTestDescription.CxxLibraryEnhancement(
             params,
@@ -173,20 +168,13 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
         resolver.addToIndex(
             DefaultJavaLibrary
                 .builder(testsLibraryParams, resolver, compileStepFactory)
-                .setSrcs(args.srcs)
-                .setResources(validateResources(
-                    pathResolver,
-                    params.getProjectFilesystem(),
-                    args.resources))
+                .setArgs(args)
                 .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
                 .setProguardConfig(args.proguardConfig)
                 .setProvidedDeps(resolver.getAllRules(args.providedDeps))
                 .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()))
                 .setTrackClassUsage(javacOptions.trackClassUsage())
                 .setAdditionalClasspathEntries(additionalClasspathEntries)
-                .setResourcesRoot(args.resourcesRoot)
-                .setManifestFile(args.manifestFile)
-                .setMavenCoords(args.mavenCoords)
                 .build());
 
 

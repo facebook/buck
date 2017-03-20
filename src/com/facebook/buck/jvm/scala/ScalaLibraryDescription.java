@@ -16,10 +16,8 @@
 
 package com.facebook.buck.jvm.scala;
 
-import static com.facebook.buck.jvm.common.ResourceValidator.validateResources;
 
 import com.facebook.buck.jvm.java.CalculateAbi;
-import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -33,7 +31,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
@@ -80,8 +77,6 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
           Preconditions.checkNotNull(libraryRule.getSourcePathToOutput()));
     }
 
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-
     Tool scalac = scalaBuckConfig.getScalac(resolver);
 
     final BuildRule scalaLibrary = resolver.getRule(scalaBuckConfig.getScalaLibraryTarget());
@@ -105,19 +100,11 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
         scalaBuckConfig.getCompilerFlags(),
         args.extraArguments,
         resolver.getAllRules(scalaBuckConfig.getCompilerPlugins()));
-    return DefaultJavaLibrary
-        .builder(javaLibraryParams, resolver, compileStepFactory)
-        .setSrcs(args.srcs)
-        .setResources(validateResources(
-            pathResolver,
-            params.getProjectFilesystem(),
-            args.resources))
+    return new ScalaLibraryBuilder(javaLibraryParams, resolver, compileStepFactory)
+        .setArgs(args)
         .setExportedDeps(params.getDeclaredDeps().get())
         .setProvidedDeps(resolver.getAllRules(args.providedDeps))
         .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
-        .setResourcesRoot(args.resourcesRoot)
-        .setManifestFile(args.manifestFile)
-        .setMavenCoords(args.mavenCoords)
         .setTests(args.tests)
         .build();
   }

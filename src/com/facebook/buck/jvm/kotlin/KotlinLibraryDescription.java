@@ -16,8 +16,6 @@
 
 package com.facebook.buck.jvm.kotlin;
 
-import static com.facebook.buck.jvm.common.ResourceValidator.validateResources;
-
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -37,7 +35,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -137,8 +134,6 @@ public class KotlinLibraryDescription implements
         ruleFinder,
         args);
 
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-
     ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps);
     BuildRuleParams javaLibraryParams =
         params.copyAppendingExtraDeps(
@@ -155,17 +150,10 @@ public class KotlinLibraryDescription implements
         args.extraKotlincArguments);
     DefaultJavaLibrary defaultKotlinLibrary =
         DefaultJavaLibrary.builder(javaLibraryParams, resolver, compileStepFactory)
-            .setSrcs(args.srcs)
-            .setResources(validateResources(
-                pathResolver,
-                params.getProjectFilesystem(),
-                args.resources))
+            .setArgs(args)
             .setExportedDeps(exportedDeps)
             .setProvidedDeps(resolver.getAllRules(args.providedDeps))
             .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
-            .setResourcesRoot(args.resourcesRoot)
-            .setManifestFile(args.manifestFile)
-            .setMavenCoords(args.mavenCoords)
             .setTests(args.tests)
             .setClassesToRemoveFromJar(args.removeClasses)
             .build();

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRule;
@@ -65,11 +66,19 @@ public class DefaultJavaLibraryBuilder {
     ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     resolver = new SourcePathResolver(ruleFinder);
   }
+
   public DefaultJavaLibraryBuilder setJavacOptions(JavacOptions javacOptions) {
     this.javacOptions = javacOptions;
     return this;
   }
 
+  public DefaultJavaLibraryBuilder setArgs(JavaLibraryDescription.Arg args) {
+    return setSrcs(args.srcs)
+        .setResources(args.resources)
+        .setResourcesRoot(args.resourcesRoot)
+        .setManifestFile(args.manifestFile)
+        .setMavenCoords(args.mavenCoords);
+  }
 
   public DefaultJavaLibraryBuilder setSrcs(ImmutableSortedSet<SourcePath> srcs) {
     this.srcs = srcs;
@@ -78,7 +87,10 @@ public class DefaultJavaLibraryBuilder {
 
   public DefaultJavaLibraryBuilder setResources(
       ImmutableSortedSet<SourcePath> resources) {
-    this.resources = resources;
+    this.resources = ResourceValidator.validateResources(
+        resolver,
+        params.getProjectFilesystem(),
+        resources);
     return this;
   }
 

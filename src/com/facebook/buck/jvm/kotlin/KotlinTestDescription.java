@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.kotlin;
 
-import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.ForkMode;
@@ -126,16 +125,9 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
         JavaLibrary testsLibrary =
         resolver.addToIndex(
             DefaultJavaLibrary.builder(testsLibraryParams, resolver, stepFactory)
-                .setSrcs(args.srcs)
-                .setResources(ResourceValidator.validateResources(
-                    pathResolver,
-                    params.getProjectFilesystem(),
-                    args.resources))
+                .setArgs(args)
                 .setGeneratedSourceFolder(templateJavacOptions.getGeneratedSourceFolderName())
                 .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()))
-                .setResourcesRoot(args.resourcesRoot)
-                .setManifestFile(args.manifestFile)
-                .setMavenCoords(args.mavenCoords)
                 .build());
 
     return new KotlinTest(

@@ -17,9 +17,7 @@
 package com.facebook.buck.jvm.scala;
 
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.jvm.java.CalculateAbi;
-import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.ForkMode;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryRules;
@@ -133,17 +131,9 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
         ImmutableSet.of());
     JavaLibrary testsLibrary =
         resolver.addToIndex(
-            DefaultJavaLibrary
-                .builder(javaLibraryParams, resolver, compileStepFactory)
-                .setSrcs(args.srcs)
-                .setResources(ResourceValidator.validateResources(
-                    pathResolver,
-                    params.getProjectFilesystem(),
-                    args.resources))
+            new ScalaLibraryBuilder(javaLibraryParams, resolver, compileStepFactory)
+                .setArgs(args)
                 .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()))
-                .setResourcesRoot(args.resourcesRoot)
-                .setManifestFile(args.manifestFile)
-                .setMavenCoords(args.mavenCoords)
                 .build());
 
     return new JavaTest(

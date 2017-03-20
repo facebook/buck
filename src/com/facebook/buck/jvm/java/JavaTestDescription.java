@@ -20,7 +20,6 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.NativeLinkable;
-import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -139,19 +138,12 @@ public class JavaTestDescription implements
         resolver.addToIndex(
             DefaultJavaLibrary
                 .builder(testsLibraryParams, resolver, compileStepFactory)
-                .setSrcs(args.srcs)
-                .setResources(ResourceValidator.validateResources(
-                    pathResolver,
-                    params.getProjectFilesystem(),
-                    args.resources))
+                .setArgs(args)
                 .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
                 .setProguardConfig(args.proguardConfig)
                 .setProvidedDeps(resolver.getAllRules(args.providedDeps))
                 .setAbiInputs(JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()))
                 .setTrackClassUsage(javacOptions.trackClassUsage())
-                .setResourcesRoot(args.resourcesRoot)
-                .setManifestFile(args.manifestFile)
-                .setMavenCoords(args.mavenCoords)
                 .build());
 
     return new JavaTest(

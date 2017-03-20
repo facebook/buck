@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
@@ -38,7 +37,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.Query;
@@ -191,8 +189,6 @@ public class AndroidLibraryDescription
               .addAll(compiler.getExtraDeps(args, resolver))
               .build();
 
-      SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-
       BuildRuleParams androidLibraryParams =
           params.copyReplacingDeclaredAndExtraDeps(
               Suppliers.ofInstance(declaredDeps),
@@ -201,10 +197,7 @@ public class AndroidLibraryDescription
           androidLibraryParams,
           resolver,
           compiler.compileToJar(args, javacOptions, resolver))
-          .setSrcs(args.srcs)
-          .setResources(ResourceValidator.validateResources(
-              pathResolver,
-              params.getProjectFilesystem(), args.resources))
+          .setArgs(args)
           .setProguardConfig(args.proguardConfig)
           .setPostprocessClassesCommands(args.postprocessClassesCommands)
           .setExportedDeps(exportedDeps)
@@ -213,9 +206,6 @@ public class AndroidLibraryDescription
           .setAdditionalClasspathEntries(additionalClasspathEntries)
           .setJavacOptions(javacOptions)
           .setTrackClassUsage(compiler.trackClassUsage(javacOptions))
-          .setResourcesRoot(args.resourcesRoot)
-          .setMavenCoords(args.mavenCoords)
-          .setManifestFile(args.manifest)
           .setTests(args.tests)
           .build();
     }
