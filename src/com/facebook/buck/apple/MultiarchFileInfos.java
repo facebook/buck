@@ -135,6 +135,12 @@ public class MultiarchFileInfos {
       return existingRule.get();
     }
 
+    for (BuildRule rule : thinRules) {
+      if (rule.getSourcePathToOutput() == null) {
+        throw new HumanReadableException("%s: no output so it cannot be a multiarch input", rule);
+      }
+    }
+
     ImmutableSortedSet<SourcePath> inputs = FluentIterable
         .from(thinRules)
         .transform(BuildRule::getSourcePathToOutput)
