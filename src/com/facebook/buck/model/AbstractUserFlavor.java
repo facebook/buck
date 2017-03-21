@@ -21,6 +21,9 @@ import com.google.common.base.Preconditions;
 
 import org.immutables.value.Value;
 
+/**
+ * A {@link Flavor} visible to the user, with which they can modify output of a target.
+ */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractUserFlavor implements Flavor {

@@ -20,6 +20,10 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
 import org.immutables.value.Value;
 
+/**
+ * A {@link Flavor} passing information between targets, which is irrelevant to the end user.
+ * Historically, all flavors were converted to internal, some need to be moved to UserFlavor.
+ */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractInternalFlavor implements Flavor {
