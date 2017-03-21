@@ -18,7 +18,6 @@ package com.facebook.buck.slb;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.timing.Clock;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -26,7 +25,6 @@ import com.google.common.collect.ImmutableList;
 
 import java.net.URI;
 import java.util.Optional;
-import java.util.concurrent.Executors;
 
 public class SlbBuckConfig {
 
@@ -66,29 +64,19 @@ public class SlbBuckConfig {
     return builder.build();
   }
 
-  public ClientSideSlb createClientSideSlb(
-      Clock clock,
-      BuckEventBus eventBus,
-      CommandThreadFactory threadFactory) {
-    return new ClientSideSlb(createConfig(clock, eventBus, threadFactory));
+  public ClientSideSlb createClientSideSlb(Clock clock, BuckEventBus eventBus) {
+    return new ClientSideSlb(createConfig(clock, eventBus));
   }
 
-  public Optional<ClientSideSlb> tryCreatingClientSideSlb(
-      Clock clock,
-      BuckEventBus eventBus,
-      CommandThreadFactory threadFactory) {
-    ClientSideSlbConfig config = createConfig(clock, eventBus, threadFactory);
+  public Optional<ClientSideSlb> tryCreatingClientSideSlb(Clock clock, BuckEventBus eventBus) {
+    ClientSideSlbConfig config = createConfig(clock, eventBus);
     return ClientSideSlb.isSafeToCreate(config)
         ? Optional.of(new ClientSideSlb(config))
         : Optional.empty();
   }
 
-  private ClientSideSlbConfig createConfig(
-        Clock clock,
-        BuckEventBus eventBus,
-        CommandThreadFactory threadFactory) {
+  private ClientSideSlbConfig createConfig(Clock clock, BuckEventBus eventBus) {
     ClientSideSlbConfig.Builder configBuilder = ClientSideSlbConfig.builder()
-        .setSchedulerService(Executors.newSingleThreadScheduledExecutor(threadFactory))
         .setClock(clock)
         .setServerPool(getServerPool())
         .setEventBus(eventBus);

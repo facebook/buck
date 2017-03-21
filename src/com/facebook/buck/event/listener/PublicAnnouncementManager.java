@@ -23,7 +23,6 @@ import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.LoadBalancedService;
@@ -80,10 +79,7 @@ public class PublicAnnouncementManager {
     final ListenableFuture<ImmutableList<Announcement>> message =
         service.submit(() -> {
           Optional<ClientSideSlb> slb = logConfig.getFrontendConfig()
-              .tryCreatingClientSideSlb(
-                  clock,
-                  eventBus,
-                  new CommandThreadFactory("PublicAnnouncement"));
+              .tryCreatingClientSideSlb(clock, eventBus);
 
           if (slb.isPresent()) {
             try (FrontendService frontendService =

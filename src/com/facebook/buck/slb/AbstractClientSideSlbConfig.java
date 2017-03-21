@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableList;
 import org.immutables.value.Value;
 
 import java.net.URI;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Value.Immutable
@@ -45,7 +44,6 @@ abstract class AbstractClientSideSlbConfig {
   public static final int MAX_ACCEPTABLE_LATENCY_MILLIS = (int) TimeUnit.SECONDS.toMillis(1);
 
   public abstract Clock getClock();
-  public abstract ScheduledExecutorService getSchedulerService();
   public abstract ImmutableList<URI> getServerPool();
   public abstract BuckEventBus getEventBus();
 

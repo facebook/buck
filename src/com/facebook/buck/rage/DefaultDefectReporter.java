@@ -20,7 +20,6 @@ import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.HttpResponse;
@@ -128,10 +127,7 @@ public class DefaultDefectReporter implements DefectReporter {
 
     if (frontendConfig.isPresent()) {
       Optional<ClientSideSlb> slb =
-          frontendConfig.get().tryCreatingClientSideSlb(
-              clock,
-              buckEventBus,
-              new CommandThreadFactory("RemoteLog.HttpLoadBalancer"));
+          frontendConfig.get().tryCreatingClientSideSlb(clock, buckEventBus);
       if (slb.isPresent()) {
         try {
           return uploadReport(defectReport, defectSubmitResult, slb.get());

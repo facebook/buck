@@ -73,7 +73,6 @@ public class ClientSideSlbTest extends EasyMockSupport {
 
     config = ClientSideSlbConfig.builder()
         .setClock(mockClock)
-        .setSchedulerService(mockScheduler)
         .setServerPool(SERVERS)
         .setEventBus(mockBus)
         .build();
@@ -91,10 +90,11 @@ public class ClientSideSlbTest extends EasyMockSupport {
         .andReturn(mockFuture)
         .once();
     EasyMock.expect(mockFuture.cancel(true)).andReturn(true).once();
+    EasyMock.expect(mockScheduler.shutdownNow()).andReturn(ImmutableList.of()).once();
 
     replayAll();
 
-    try (ClientSideSlb slb = new ClientSideSlb(config, mockClient)) {
+    try (ClientSideSlb slb = new ClientSideSlb(config, mockScheduler, mockClient)) {
       Assert.assertTrue(capture.hasCaptured());
     }
 
@@ -137,10 +137,11 @@ public class ClientSideSlbTest extends EasyMockSupport {
     mockBus.post(EasyMock.anyObject(LoadBalancerPingEvent.class));
     EasyMock.expectLastCall();
     EasyMock.expect(mockFuture.cancel(true)).andReturn(true).once();
+    EasyMock.expect(mockScheduler.shutdownNow()).andReturn(ImmutableList.of()).once();
 
     replayAll();
 
-    try (ClientSideSlb slb = new ClientSideSlb(config, mockClient)) {
+    try (ClientSideSlb slb = new ClientSideSlb(config, mockScheduler, mockClient)) {
       Runnable healthCheckLoop = capture.getValue();
       healthCheckLoop.run();
     }

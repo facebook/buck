@@ -22,7 +22,6 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.google.common.collect.ImmutableMap;
@@ -37,13 +36,11 @@ public class RageConfigTest {
 
   private static Clock clock;
   private static BuckEventBus eventBus;
-  private static CommandThreadFactory threadFactory;
 
   @BeforeClass
   public static void setUp() {
     clock = new DefaultClock();
     eventBus = BuckEventBusFactory.newInstance(clock);
-    threadFactory = new CommandThreadFactory("RageConfigTest.Unused");
   }
 
   @Test
@@ -55,10 +52,7 @@ public class RageConfigTest {
         config.getReportUploadPath(),
         Matchers.equalTo(RageConfig.UPLOAD_PATH));
     assertThat(
-        config.getFrontendConfig().get().tryCreatingClientSideSlb(
-            clock,
-            eventBus,
-            threadFactory),
+        config.getFrontendConfig().get().tryCreatingClientSideSlb(clock, eventBus),
         Matchers.equalTo(Optional.empty()));
   }
 
@@ -77,10 +71,7 @@ public class RageConfigTest {
         config.getReportUploadPath(),
         Matchers.equalTo(testPath));
     assertThat(
-        config.getFrontendConfig().get().tryCreatingClientSideSlb(
-            clock,
-            eventBus,
-            threadFactory),
+        config.getFrontendConfig().get().tryCreatingClientSideSlb(clock, eventBus),
         Matchers.not(Matchers.equalTo(Optional.empty())));
   }
 }

@@ -20,7 +20,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DirCacheExperimentEvent;
 import com.facebook.buck.event.NetworkEvent.BytesReceivedEvent;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.randomizedtrial.CommonGroups;
 import com.facebook.buck.randomizedtrial.RandomizedTrial;
@@ -78,8 +77,6 @@ public class ArtifactCaches implements ArtifactCacheFactory {
 
   private static final NetworkCacheFactory HTTP_PROTOCOL = HttpArtifactCache::new;
   private static final NetworkCacheFactory THRIFT_PROTOCOL = ThriftArtifactCache::new;
-  private static final int SLB_THREAD_PRIORITY = Thread.MAX_PRIORITY;
-
 
   /**
    * Creates a new instance of the cache factory for use during a build.
@@ -425,8 +422,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       case CLIENT_SLB:
         HttpLoadBalancer clientSideSlb = config.getSlbConfig().createClientSideSlb(
             new DefaultClock(),
-            buckEventBus,
-            new CommandThreadFactory("ArtifactCaches.HttpLoadBalancer", SLB_THREAD_PRIORITY));
+            buckEventBus);
         fetchService =
             new RetryingHttpService(
                 buckEventBus,

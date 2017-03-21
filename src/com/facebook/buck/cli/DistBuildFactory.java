@@ -29,7 +29,6 @@ import com.facebook.buck.distributed.MultiSourceContentsProvider;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.LoadBalancedService;
@@ -44,8 +43,6 @@ import java.util.Optional;
 import okhttp3.OkHttpClient;
 
 public abstract class DistBuildFactory {
-  private static final int SLB_THREAD_PRIORITY = Thread.MAX_PRIORITY;
-
   private DistBuildFactory() {
     // Do not instantiate.
   }
@@ -65,8 +62,7 @@ public abstract class DistBuildFactory {
     DistBuildConfig config = new DistBuildConfig(params.getBuckConfig());
     ClientSideSlb slb = config.getFrontendConfig().createClientSideSlb(
         params.getClock(),
-        params.getBuckEventBus(),
-        new CommandThreadFactory("StampedeNetworkThreadPool", SLB_THREAD_PRIORITY));
+        params.getBuckEventBus());
     OkHttpClient client = config.createOkHttpClient();
 
     return new FrontendService(
