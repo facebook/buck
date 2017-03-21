@@ -1051,6 +1051,298 @@ public class StubJarTest {
   }
 
   @Test
+  public void staticMethodOfInnerClassInStubsCanBeCompiledAgainst() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "Outer.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class Outer {",
+                "  public static class Inner {",
+                "    public static int testStatic() { return 0; }",
+                "  }",
+                "}")));
+
+    compileToJar(
+        ImmutableSortedSet.of(paths.stubJar),
+        Collections.emptyList(),
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck2;",
+                "import com.example.buck.Outer;",
+                "public class A {",
+                "  public void testMethod() {",
+                "    int test = Outer.Inner.testStatic();",
+                "  }",
+                "}")),
+        temp.newFolder());
+  }
+
+  @Test
+  public void privateFieldInInnerClassInStubsCanBeCompiledAgainst() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "Outer.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class Outer {",
+                "  public String getInnerString() {",
+                "    return new Outer.Inner().innerPrivateString;", // Relies on synthetic method
+                "  }",
+                "  private static final class Inner {",
+                "    private final String innerPrivateString = \"hi!\";",
+                "  }",
+                "}")));
+
+    compileToJar(
+        ImmutableSortedSet.of(paths.stubJar),
+        Collections.emptyList(),
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck2;",
+                "import com.example.buck.Outer;",
+                "public class A {",
+                "  public String testMethod() {",
+                "    Outer test = new Outer();",
+                "    return test.getInnerString();",
+                "  }",
+                "}")),
+        temp.newFolder());
+  }
+
+  @Test
+  public void nestedClassInStubsCanBeCompiledAgainst() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "Outer.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class Outer {",
+                "  public class Inner {",
+                "    public class Nested { }",
+                "  }",
+                "}")));
+
+    compileToJar(
+        ImmutableSortedSet.of(paths.stubJar),
+        Collections.emptyList(),
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck2;",
+                "import com.example.buck.Outer;",
+                "public class A {",
+                "  private Outer.Inner.Nested field;",
+                "}")),
+        temp.newFolder());
+  }
+
+  @Test
+  public void methodReturningPrivateInnerClassInStubsCanBeCompiledAgainst() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "Test.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class Test {",
+                "  public static PrivateInner getPrivateInner() {",
+                "    return new PrivateInner();",
+                "  }",
+                "  private static class PrivateInner { }",
+                "}")));
+
+    compileToJar(
+        ImmutableSortedSet.of(paths.stubJar),
+        Collections.emptyList(),
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck2;",
+                "import com.example.buck.Test;",
+                "public class A {",
+                "  public void test() {",
+                "    Object privateInnerObject = Test.getPrivateInner();",
+                "  }",
+                "}")),
+        temp.newFolder());
+  }
+
+  @Test
+  public void methodOfPrivateSuperClassOfInnerPublicClassInStubsCanBeCompiledAgainst()
+      throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "Test.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class Test {",
+                "  private class PrivateInner { ",
+                "   public void foo() { }",
+                "  }",
+                "  public class PublicInner extends PrivateInner { }",
+                "}")));
+
+    compileToJar(
+        ImmutableSortedSet.of(paths.stubJar),
+        Collections.emptyList(),
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck2;",
+                "import com.example.buck.Test;",
+                "public class A {",
+                "  public void test() {",
+                "    Test test = new Test();",
+                "    Test.PublicInner inner = test.new PublicInner();",
+                "    inner.foo();",
+                "  }",
+                "}")),
+        temp.newFolder());
+  }
+
+  @Test
+  public void bridgeMethodInStubsCanBeCompiledAgainst()
+      throws IOException {
+    notYetImplementedForMissingClasspath();
+
+    JarPaths genericPaths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "TestGenericInterface.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public interface TestGenericInterface<T> {",
+                "  public int compare(T a, T b);",
+                "}")));
+
+    JarPaths paths = createFullAndStubJars(
+        ImmutableSortedSet.of(genericPaths.stubJar),
+        "TestComparator.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "import com.example.buck.TestGenericInterface;",
+                "public class TestComparator implements TestGenericInterface<Integer> {",
+                "  public int compare(Integer a, Integer b) { return 1; }",
+                "}")));
+
+    compileToJar(
+        ImmutableSortedSet.of(paths.stubJar, genericPaths.stubJar),
+        Collections.emptyList(),
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck2;",
+                "import com.example.buck.TestComparator;",
+                "import com.example.buck.TestGenericInterface;",
+                "public class A {",
+                "  public void test() {",
+                "    Object first = 1;",
+                "    Object second = 2;",
+                "    TestGenericInterface com = new TestComparator();",
+                "    int result = com.compare(first, second);", // Relies on bridge method
+                "  }",
+                "}")),
+        temp.newFolder());
+  }
+
+  @Test
+  public void enumInStubsCanBeCompiledAgainst()
+      throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "TestEnum.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public enum TestEnum {",
+                "  Value1,",
+                "  Value2",
+                "}")));
+
+    compileToJar(
+        ImmutableSortedSet.of(paths.stubJar),
+        Collections.emptyList(),
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck2;",
+                "import com.example.buck.TestEnum;",
+                "public class A {",
+                "  TestEnum testEnum = TestEnum.Value1;",
+                "}")),
+        temp.newFolder());
+  }
+
+  @Test
+  public void genericClassInStubsCanBeCompiledAgainst()
+      throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "GenericClass.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class GenericClass<T> {",
+                "  public T theField;",
+                "}")));
+
+    compileToJar(
+        ImmutableSortedSet.of(paths.stubJar),
+        Collections.emptyList(),
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck2;",
+                "import com.example.buck.GenericClass;",
+                "public class A {",
+                "  public void test() {",
+                "    GenericClass<String> field = new GenericClass<>();",
+                "    field.theField = \"facebook\";",
+                "  }",
+                "}")),
+        temp.newFolder());
+  }
+
+  @Test
+  public void classExtendingGenericClassInStubsCanBeCompiledAgainst()
+      throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "GenericClass.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class GenericClass<T> {",
+                "  public T theField;",
+                "}")));
+
+    compileToJar(
+        ImmutableSortedSet.of(paths.stubJar),
+        Collections.emptyList(),
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck2;",
+                "import com.example.buck.GenericClass;",
+                "public class A<T, M> extends GenericClass<T> {",
+                "  public M otherField;",
+                "  public A(T t, M m) {",
+                "    this.theField = t;",
+                "    this.otherField = m;",
+                "  }",
+                "}")),
+        temp.newFolder());
+  }
+
+  @Test
   public void shouldPreserveSynchronizedKeywordOnMethods() throws IOException {
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
