@@ -182,6 +182,7 @@ public class CxxLibraryTest {
     CxxLibrary cxxLibrary = new CxxLibrary(
         params,
         ruleResolver,
+        params.getDeps(),
         FluentIterable.from(params.getDeclaredDeps().get()),
         /* hasExportedHeaders */ x -> true,
         /* headerOnly */ x -> true,

@@ -56,7 +56,6 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -86,13 +85,11 @@ public class CxxLuaExtensionDescription implements
     this.cxxPlatforms = cxxPlatforms;
   }
 
-  @VisibleForTesting
-  protected static String getExtensionName(BuildTarget target, CxxPlatform cxxPlatform) {
+  private String getExtensionName(BuildTarget target, CxxPlatform cxxPlatform) {
     return String.format("%s.%s", target.getShortName(), cxxPlatform.getSharedLibraryExtension());
   }
 
-  @VisibleForTesting
-  protected static BuildTarget getExtensionTarget(
+  private BuildTarget getExtensionTarget(
       BuildTarget target,
       Flavor platform) {
     return BuildTarget.builder(target)
@@ -100,8 +97,7 @@ public class CxxLuaExtensionDescription implements
         .build();
   }
 
-  @VisibleForTesting
-  protected Path getExtensionPath(
+  private Path getExtensionPath(
       ProjectFilesystem filesystem,
       BuildTarget target,
       CxxPlatform cxxPlatform) {
@@ -117,7 +113,8 @@ public class CxxLuaExtensionDescription implements
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
-      Arg args) throws NoSuchBuildTargetException {
+      Arg args)
+      throws NoSuchBuildTargetException {
 
     // Extract all C/C++ sources from the constructor arg.
     ImmutableMap<String, CxxSource> srcs =
@@ -155,10 +152,12 @@ public class CxxLuaExtensionDescription implements
               ruleResolver,
               cxxPlatform);
     }
+    ImmutableSet<BuildRule> deps = params.getDeps();
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput =
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             params,
             cxxPlatform,
+            deps,
             CxxFlags.getLanguageFlags(
                 args.preprocessorFlags,
                 args.platformPreprocessorFlags,
@@ -168,7 +167,7 @@ public class CxxLuaExtensionDescription implements
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 cxxPlatform,
-                params.getDeps()),
+                deps),
             args.includeDirs,
             sandboxTree);
 

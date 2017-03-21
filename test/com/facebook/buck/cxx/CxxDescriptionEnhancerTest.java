@@ -83,6 +83,7 @@ public class CxxDescriptionEnhancerTest {
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             testParams,
             CxxPlatformUtils.DEFAULT_PLATFORM,
+            testParams.getDeps(),
             ImmutableMultimap.of(),
             ImmutableList.of(),
             ImmutableSet.of(),
@@ -154,6 +155,7 @@ public class CxxDescriptionEnhancerTest {
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             testParams,
             CxxPlatformUtils.DEFAULT_PLATFORM,
+            testParams.getDeps(),
             ImmutableMultimap.of(),
             ImmutableList.of(),
             ImmutableSet.of(),
@@ -215,6 +217,7 @@ public class CxxDescriptionEnhancerTest {
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             otherLibDepParams,
             CxxPlatformUtils.DEFAULT_PLATFORM,
+            otherLibDepParams.getDeps(),
             ImmutableMultimap.of(),
             ImmutableList.of(),
             ImmutableSet.of(),

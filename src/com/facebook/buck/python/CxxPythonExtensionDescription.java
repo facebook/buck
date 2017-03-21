@@ -58,11 +58,11 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -109,7 +109,7 @@ public class CxxPythonExtensionDescription implements
   }
 
   @VisibleForTesting
-  protected static BuildTarget getExtensionTarget(
+  static BuildTarget getExtensionTarget(
       BuildTarget target,
       Flavor pythonPlatform,
       Flavor platform) {
@@ -122,13 +122,12 @@ public class CxxPythonExtensionDescription implements
   }
 
   @VisibleForTesting
-  protected static String getExtensionName(String moduleName) {
+  static String getExtensionName(String moduleName) {
     // .so is used on OS X too (as opposed to dylib).
     return String.format("%s.so", moduleName);
   }
 
-  @VisibleForTesting
-  protected Path getExtensionPath(
+  private Path getExtensionPath(
       ProjectFilesystem filesystem,
       BuildTarget target,
       String moduleName,
@@ -146,7 +145,9 @@ public class CxxPythonExtensionDescription implements
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
-      Arg args) throws NoSuchBuildTargetException {
+      Arg args,
+      ImmutableSet<BuildRule> deps)
+      throws NoSuchBuildTargetException {
 
     // Extract all C/C++ sources from the constructor arg.
     ImmutableMap<String, CxxSource> srcs =
@@ -189,6 +190,7 @@ public class CxxPythonExtensionDescription implements
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             params,
             cxxPlatform,
+            deps,
             CxxFlags.getLanguageFlags(
                 args.preprocessorFlags,
                 args.platformPreprocessorFlags,
@@ -196,9 +198,7 @@ public class CxxPythonExtensionDescription implements
                 cxxPlatform),
             ImmutableList.of(headerSymlinkTree),
             ImmutableSet.of(),
-            CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                cxxPlatform,
-                params.getDeps()),
+            CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, deps),
             args.includeDirs,
             sandboxTree);
 
@@ -248,16 +248,15 @@ public class CxxPythonExtensionDescription implements
     return argsBuilder.build();
   }
 
-  private ImmutableList<BuildRule> getPlatformDeps(
-      BuildRuleParams params,
+  private ImmutableSet<BuildRule> getPlatformDeps(
       BuildRuleResolver ruleResolver,
       PythonPlatform pythonPlatform,
       Arg args) {
 
-    ImmutableList.Builder<BuildRule> rules = ImmutableList.builder();
+    ImmutableSet.Builder<BuildRule> rules = ImmutableSet.builder();
 
     // Add declared deps.
-    rules.addAll(params.getDeclaredDeps().get());
+    rules.addAll(ruleResolver.getAllRules(args.deps));
 
     // Add platform specific deps.
     rules.addAll(
@@ -280,7 +279,8 @@ public class CxxPythonExtensionDescription implements
       CellPathResolver cellRoots,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
-      A args) throws NoSuchBuildTargetException {
+      A args)
+      throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     String moduleName = args.moduleName.orElse(params.getBuildTarget().getShortName());
@@ -292,6 +292,7 @@ public class CxxPythonExtensionDescription implements
             moduleName,
             pythonPlatform.getFlavor(),
             cxxPlatform.getFlavor());
+    ImmutableSet<BuildRule> deps = getPlatformDeps(ruleResolver, pythonPlatform, args);
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
@@ -307,8 +308,9 @@ public class CxxPythonExtensionDescription implements
         Optional.of(extensionName),
         extensionPath,
         Linker.LinkableDepType.SHARED,
-        FluentIterable.from(params.getDeps())
-            .filter(NativeLinkable.class),
+        RichStream.from(deps)
+            .filter(NativeLinkable.class)
+            .toImmutableList(),
         args.cxxRuntimeType,
         Optional.empty(),
         ImmutableSet.of(),
@@ -324,7 +326,8 @@ public class CxxPythonExtensionDescription implements
                 ruleFinder,
                 cellRoots,
                 cxxPlatform,
-                args))
+                args,
+                deps))
           .setFrameworks(args.frameworks)
           .setLibraries(args.libraries)
           .build());
@@ -360,15 +363,7 @@ public class CxxPythonExtensionDescription implements
     if (type.isPresent() && platform.isPresent() && pythonPlatform.isPresent()) {
       Preconditions.checkState(type.get().getValue() == Type.EXTENSION);
       return createExtensionBuildRule(
-          params.copyReplacingDeclaredAndExtraDeps(
-              Suppliers.ofInstance(
-                  ImmutableSortedSet.copyOf(
-                      getPlatformDeps(
-                          params,
-                          ruleResolver,
-                          pythonPlatform.get().getValue(),
-                          args))),
-              Suppliers.ofInstance(ImmutableSortedSet.of())),
+          params,
           ruleResolver,
           cellRoots,
           pythonPlatform.get().getValue(),
@@ -434,7 +429,7 @@ public class CxxPythonExtensionDescription implements
           @Override
           public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
               CxxPlatform cxxPlatform) {
-            return FluentIterable.from(getPlatformDeps(params, ruleResolver, pythonPlatform, args))
+            return FluentIterable.from(getPlatformDeps(ruleResolver, pythonPlatform, args))
                 .filter(NativeLinkable.class);
           }
 
@@ -444,25 +439,17 @@ public class CxxPythonExtensionDescription implements
             return NativeLinkableInput.builder()
                 .addAllArgs(
                     getExtensionArgs(
-                        params
-                            .withBuildTarget(params.getBuildTarget().withAppendedFlavors(
+                        params.withBuildTarget(
+                            params.getBuildTarget().withAppendedFlavors(
                                 pythonPlatform.getFlavor(),
-                                CxxDescriptionEnhancer.SHARED_FLAVOR))
-                            .copyReplacingDeclaredAndExtraDeps(
-                                Suppliers.ofInstance(
-                                    ImmutableSortedSet.copyOf(
-                                        getPlatformDeps(
-                                            params,
-                                            ruleResolver,
-                                            pythonPlatform,
-                                            args))),
-                                Suppliers.ofInstance(ImmutableSortedSet.of())),
+                                CxxDescriptionEnhancer.SHARED_FLAVOR)),
                         ruleResolver,
                         pathResolver,
                         ruleFinder,
                         cellRoots,
                         cxxPlatform,
-                        args))
+                        args,
+                        getPlatformDeps(ruleResolver, pythonPlatform, args)))
                 .addAllFrameworks(args.frameworks)
                 .build();
           }

@@ -547,6 +547,7 @@ public class CxxDescriptionEnhancer {
   public static ImmutableList<CxxPreprocessorInput> collectCxxPreprocessorInput(
       BuildRuleParams params,
       CxxPlatform cxxPlatform,
+      Iterable<BuildRule> deps,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
       ImmutableList<HeaderSymlinkTree> headerSymlinkTrees,
       ImmutableSet<FrameworkPath> frameworks,
@@ -561,7 +562,7 @@ public class CxxDescriptionEnhancer {
         params.getBuildTarget().getUnflavoredBuildTarget());
     ImmutableList.Builder<CxxPreprocessorInput> cxxPreprocessorInputFromTestedRulesBuilder =
         ImmutableList.builder();
-    for (BuildRule rule : params.getDeps()) {
+    for (BuildRule rule : deps) {
       if (rule instanceof NativeTestable) {
         NativeTestable testable = (NativeTestable) rule;
         if (testable.isTestedBy(targetWithoutFlavor)) {
@@ -903,6 +904,7 @@ public class CxxDescriptionEnhancer {
         collectCxxPreprocessorInput(
             params,
             cxxPlatform,
+            deps,
             CxxFlags.getLanguageFlags(
                 preprocessorFlags,
                 platformPreprocessorFlags,

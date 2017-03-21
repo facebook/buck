@@ -32,11 +32,11 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -59,9 +59,9 @@ public class CxxLibrary
     extends NoopBuildRule
     implements AbstractCxxLibrary, HasRuntimeDeps, NativeTestable, NativeLinkTarget {
 
-  private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
-  private final Iterable<? extends BuildRule> exportedDeps;
+  private final Iterable<BuildRule> deps;
+  private final Iterable<BuildRule> exportedDeps;
   private final Predicate<CxxPlatform> hasExportedHeaders;
   private final Predicate<CxxPlatform> headerOnly;
   private final Function<? super CxxPlatform, Iterable<? extends Arg>> exportedLinkerFlags;
@@ -93,7 +93,8 @@ public class CxxLibrary
   public CxxLibrary(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
-      Iterable<? extends BuildRule> exportedDeps,
+      Iterable<BuildRule> deps,
+      Iterable<BuildRule> exportedDeps,
       Predicate<CxxPlatform> hasExportedHeaders,
       Predicate<CxxPlatform> headerOnly,
       Function<? super CxxPlatform, Iterable<? extends Arg>> exportedLinkerFlags,
@@ -108,8 +109,8 @@ public class CxxLibrary
       boolean canBeAsset,
       boolean propagateLinkables) {
     super(params);
-    this.params = params;
     this.ruleResolver = ruleResolver;
+    this.deps = deps;
     this.exportedDeps = exportedDeps;
     this.hasExportedHeaders = hasExportedHeaders;
     this.headerOnly = headerOnly;
@@ -138,8 +139,9 @@ public class CxxLibrary
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
-    return FluentIterable.from(getDeps())
-        .filter(CxxPreprocessorDep.class);
+    return RichStream.from(deps)
+        .filter(CxxPreprocessorDep.class)
+        .toImmutableList();
   }
 
   @Override
@@ -182,8 +184,9 @@ public class CxxLibrary
     if (!propagateLinkables) {
       return ImmutableList.of();
     }
-    return FluentIterable.from(getDeclaredDeps())
-        .filter(NativeLinkable.class);
+    return RichStream.from(getDeclaredDeps())
+        .filter(NativeLinkable.class)
+        .toImmutableList();
   }
 
   @Override
@@ -199,8 +202,9 @@ public class CxxLibrary
     if (!propagateLinkables) {
       return ImmutableList.of();
     }
-    return FluentIterable.from(exportedDeps)
-        .filter(NativeLinkable.class);
+    return RichStream.from(exportedDeps)
+        .filter(NativeLinkable.class)
+        .toImmutableList();
   }
 
   @Override
@@ -212,7 +216,7 @@ public class CxxLibrary
     return getNativeLinkableExportedDeps();
   }
 
-  public NativeLinkableInput getNativeLinkableInputUncached(
+  private NativeLinkableInput getNativeLinkableInputUncached(
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) throws NoSuchBuildTargetException {
 
@@ -305,7 +309,7 @@ public class CxxLibrary
 
   @Override
   public Iterable<AndroidPackageable> getRequiredPackageables() {
-    return AndroidPackageableCollector.getPackageableRules(params.getDeps());
+    return AndroidPackageableCollector.getPackageableRules(deps);
   }
 
   @Override

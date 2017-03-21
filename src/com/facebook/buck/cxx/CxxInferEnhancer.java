@@ -28,9 +28,9 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -318,9 +318,11 @@ public final class CxxInferEnhancer {
       CxxBinaryDescription.Arg args,
       HeaderSymlinkTree headerSymlinkTree,
       Optional<SymlinkTree> sandboxTree) throws NoSuchBuildTargetException {
+    ImmutableSet<BuildRule> deps = params.getDeps();
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
         params,
         cxxPlatform,
+        deps,
         CxxFlags.getLanguageFlags(
             args.preprocessorFlags,
             args.platformPreprocessorFlags,
@@ -330,8 +332,9 @@ public final class CxxInferEnhancer {
         args.frameworks,
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
             cxxPlatform,
-            FluentIterable.from(params.getDeps())
-                .filter(CxxPreprocessorDep.class::isInstance)),
+            RichStream.from(deps)
+                .filter(CxxPreprocessorDep.class::isInstance)
+                .toImmutableList()),
         args.includeDirs,
         sandboxTree);
   }
@@ -345,9 +348,11 @@ public final class CxxInferEnhancer {
       HeaderSymlinkTree headerSymlinkTree,
       ImmutableList<String> includeDirs,
       Optional<SymlinkTree> sandboxTree) throws NoSuchBuildTargetException {
+    ImmutableSet<BuildRule> deps = params.getDeps();
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
         params,
         cxxPlatform,
+        deps,
         CxxFlags.getLanguageFlags(
             args.preprocessorFlags,
             args.platformPreprocessorFlags,
@@ -358,7 +363,8 @@ public final class CxxInferEnhancer {
         CxxLibraryDescription.getTransitiveCxxPreprocessorInput(
             params,
             resolver,
-            cxxPlatform),
+            cxxPlatform,
+            deps),
         includeDirs,
         sandboxTree);
   }
