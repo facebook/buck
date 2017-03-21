@@ -63,6 +63,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCConfigurationList;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
@@ -171,6 +172,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Generator for xcode project and associated files from a set of xcode/ios rules.
@@ -1359,16 +1361,10 @@ public class ProjectGenerator {
                     buildTargetNode.getFilesystem().getBuckPaths().getBuckOut()));
 
         ImmutableMap.Builder<String, String> appendConfigsBuilder = ImmutableMap.builder();
-        appendConfigsBuilder
-            .put(
-                "HEADER_SEARCH_PATHS",
-                Joiner.on(' ').join(Iterables.concat(recursiveHeaderSearchPaths, headerMapBases)))
-            .put(
-                "LIBRARY_SEARCH_PATHS",
-                Joiner.on(' ').join(collectRecursiveLibrarySearchPaths(targetNode)))
-            .put(
-                "FRAMEWORK_SEARCH_PATHS",
-                Joiner.on(' ').join(collectRecursiveFrameworkSearchPaths(targetNode)));
+        appendConfigsBuilder.putAll(getFrameworkAndLibrarySearchPathConfigs(targetNode));
+        appendConfigsBuilder.put(
+            "HEADER_SEARCH_PATHS",
+            Joiner.on(' ').join(Iterables.concat(recursiveHeaderSearchPaths, headerMapBases)));
 
         Iterable<String> otherCFlags = Iterables.concat(
             cxxBuckConfig.getFlags("cflags").orElse(DEFAULT_CFLAGS),
@@ -1495,6 +1491,57 @@ public class ProjectGenerator {
     }
 
     return target;
+  }
+
+  private ImmutableMap<String, String> getFrameworkAndLibrarySearchPathConfigs(
+      TargetNode<?, ?> node) {
+    ImmutableSet.Builder<String> frameworkSearchPathsBuilder = ImmutableSet.<String>builder()
+        .add("$BUILT_PRODUCTS_DIR");
+    ImmutableSet.Builder<String> librarySearchPathsBuilder = ImmutableSet.<String>builder()
+        .add("$BUILT_PRODUCTS_DIR");
+
+    Stream.concat(
+        // Collect all the nodes that contribute to linking
+        // ... Which the node includes itself
+        Stream.of(node),
+        // ... And recursive dependencies that gets linked in
+        AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+            targetGraph,
+            Optional.of(dependenciesCache),
+            AppleBuildRules.RecursiveDependenciesMode.LINKING,
+            node,
+            ImmutableSet.of(
+                AppleLibraryDescription.class,
+                CxxLibraryDescription.class)).stream())
+        // Keep only the ones that may have frameworks and libraries fields.
+        .flatMap(input -> RichStream.from(input.castArg(CxxConstructorArg.class)))
+        // Then for each of them
+        .forEach(castedNode -> {
+          // ... Add the framework path strings.
+          castedNode.getConstructorArg().frameworks
+              .stream()
+              .map(frameworkPath ->
+                  FrameworkPath.getUnexpandedSearchPath(
+                      this::resolveSourcePath,
+                      pathRelativizer::outputDirToRootRelative,
+                      frameworkPath).toString())
+              .forEach(frameworkSearchPathsBuilder::add);
+
+          // ... And do the same for libraries.
+          castedNode.getConstructorArg().libraries
+              .stream()
+              .map(frameworkPath ->
+                  FrameworkPath.getUnexpandedSearchPath(
+                      this::resolveSourcePath,
+                      pathRelativizer::outputDirToRootRelative,
+                      frameworkPath).toString())
+              .forEach(librarySearchPathsBuilder::add);
+        });
+
+    return ImmutableMap.<String, String>builder()
+        .put("FRAMEWORK_SEARCH_PATHS", Joiner.on(' ').join(frameworkSearchPathsBuilder.build()))
+        .put("LIBRARY_SEARCH_PATHS", Joiner.on(' ').join(librarySearchPathsBuilder.build()))
+        .build();
   }
 
   public static String getProductName(TargetNode<?, ?> buildTargetNode, BuildTarget buildTarget) {
@@ -2408,24 +2455,6 @@ public class ProjectGenerator {
     return isSourceUnderTest;
   }
 
-  private ImmutableSet<String> collectRecursiveLibrarySearchPaths(TargetNode<?, ?> targetNode) {
-    return new ImmutableSet.Builder<String>()
-        .add("$BUILT_PRODUCTS_DIR")
-        .addAll(
-            collectRecursiveSearchPathsForFrameworkPaths(
-                targetNode,
-                input -> input.libraries)).build();
-  }
-
-  private ImmutableSet<String> collectRecursiveFrameworkSearchPaths(TargetNode<?, ?> targetNode) {
-    return new ImmutableSet.Builder<String>()
-        .add("$BUILT_PRODUCTS_DIR")
-        .addAll(
-            collectRecursiveSearchPathsForFrameworkPaths(
-                targetNode,
-                input -> input.frameworks)).build();
-  }
-
   private Iterable<FrameworkPath> collectRecursiveFrameworkDependencies(
       TargetNode<?, ?> targetNode) {
     return FluentIterable
@@ -2448,28 +2477,6 @@ public class ProjectGenerator {
             return ImmutableList.of();
           }
         });
-  }
-
-  private Iterable<String> collectRecursiveSearchPathsForFrameworkPaths(
-      TargetNode<?, ?> targetNode,
-      final Function<
-          AppleNativeTargetDescriptionArg,
-          ImmutableSortedSet<FrameworkPath>> pathSetExtractor) {
-    return FluentIterable
-        .from(
-            AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-                targetGraph,
-                Optional.of(dependenciesCache),
-                AppleBuildRules.RecursiveDependenciesMode.LINKING,
-                targetNode,
-                ImmutableSet.of(
-                    AppleLibraryDescription.class,
-                    CxxLibraryDescription.class)))
-        .append(targetNode)
-        .transformAndConcat(
-            input -> input.castArg(AppleNativeTargetDescriptionArg.class)
-                .map(castedInput -> getTargetFrameworkSearchPaths(pathSetExtractor, castedInput))
-                .orElse(ImmutableSet.of()));
   }
 
   private Iterable<String> collectRecursiveExportedPreprocessorFlags(TargetNode<?, ?> targetNode) {
@@ -2565,19 +2572,6 @@ public class ProjectGenerator {
         .filter(this::isLibraryWithSourcesToCompile)
         .transform(this::getLibraryFileReference)
         .toSet();
-  }
-
-  private Iterable<String> getTargetFrameworkSearchPaths(
-      Function<AppleNativeTargetDescriptionArg, ImmutableSortedSet<FrameworkPath>> pathSetExtractor,
-      TargetNode<AppleNativeTargetDescriptionArg, ?> input) {
-    return FluentIterable
-        .from(pathSetExtractor.apply(input.getConstructorArg()))
-        .transform(frameworkPath ->
-            FrameworkPath.getUnexpandedSearchPath(
-                this::resolveSourcePath,
-                pathRelativizer::outputDirToRootRelative,
-                frameworkPath))
-        .transform(Object::toString);
   }
 
   private SourceTreePath getProductsSourceTreePath(TargetNode<?, ?> targetNode) {
