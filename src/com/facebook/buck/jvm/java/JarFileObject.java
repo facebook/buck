@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import java.net.URI;
 
+import javax.annotation.Nullable;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.NestingKind;
 import javax.tools.FileObject;
@@ -76,11 +77,13 @@ public abstract class JarFileObject implements JavaFileObject {
   }
 
   @Override
+  @Nullable
   public NestingKind getNestingKind() {
     return null;
   }
 
   @Override
+  @Nullable
   public Modifier getAccessLevel() {
     return null;
   }
