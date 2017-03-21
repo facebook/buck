@@ -130,7 +130,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
         }
       };
     }
-    // TODO(AsyncDBConnMarkedDownDBException): use other way to enable/disable this, dump to tracker not to logger
+    // TODO(plamenko): use other way to enable/disable this, dump to tracker not to logger
     if (logger.isVerboseEnabled()) {
       hasher = new ForwardingRuleKeyHasher<HashCode, HashCode>(
           hasher, new CategorizedRuleKeyHasher()) {
