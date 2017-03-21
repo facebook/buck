@@ -48,6 +48,7 @@ import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
+import com.facebook.infer.annotation.PropagatesNullable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -72,8 +73,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
-
-import javax.annotation.Nullable;
 
 /**
  * Structured representation of data read from a {@code .buckconfig} file.
@@ -544,8 +543,7 @@ public class BuckConfig implements ConfigPathGetter {
     }
   }
 
-  @Nullable
-  public Path resolvePathThatMayBeOutsideTheProjectFilesystem(@Nullable Path path) {
+  public Path resolvePathThatMayBeOutsideTheProjectFilesystem(@PropagatesNullable Path path) {
     if (path == null) {
       return path;
     }

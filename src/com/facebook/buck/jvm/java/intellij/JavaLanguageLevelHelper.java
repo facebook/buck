@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.intellij;
 
-import javax.annotation.Nullable;
+import com.facebook.infer.annotation.PropagatesNullable;
 
 final class JavaLanguageLevelHelper {
 
@@ -34,7 +34,7 @@ final class JavaLanguageLevelHelper {
     }
   }
 
-  public static @Nullable String convertLanguageLevelToIjFormat(@Nullable String languageLevel) {
+  public static String convertLanguageLevelToIjFormat(@PropagatesNullable String languageLevel) {
     if (languageLevel == null) {
       return null;
     }

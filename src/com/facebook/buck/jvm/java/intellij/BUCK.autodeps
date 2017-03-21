@@ -17,7 +17,8 @@
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/sha1:sha1",
-      "//third-party/java/immutables:immutables"
+      "//third-party/java/immutables:immutables",
+      "//third-party/java/infer-annotations:infer-annotations"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/android:rules",
