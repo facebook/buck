@@ -226,6 +226,9 @@ public abstract class BuckCommandHandler {
   public void waitFor() {
     checkStarted();
     if (handler != null) {
+      // handler.waitFor will wait for a semaphore which will be released when the started
+      // process terminates if doStartNotify is true.
+      // If the following call never returns, please check the value of doStartNotify
       handler.waitFor();
     }
   }

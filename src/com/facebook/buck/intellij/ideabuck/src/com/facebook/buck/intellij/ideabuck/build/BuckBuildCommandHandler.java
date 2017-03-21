@@ -34,7 +34,7 @@ public class BuckBuildCommandHandler extends BuckCommandHandler {
       final Project project,
       final VirtualFile root,
       final BuckCommand command) {
-    super(project, VfsUtil.virtualToIoFile(root), command);
+    super(project, VfsUtil.virtualToIoFile(root), command, true);
   }
 
   public BuckBuildCommandHandler(
