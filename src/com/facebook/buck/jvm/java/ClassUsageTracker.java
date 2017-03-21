@@ -38,6 +38,7 @@ import javax.tools.ForwardingJavaFileObject;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
+import javax.tools.StandardLocation;
 
 /**
  * Tracks which classes are actually read by the compiler by providing a special
@@ -184,7 +185,12 @@ class ClassUsageTracker {
         String packageName,
         Set<JavaFileObject.Kind> kinds,
         boolean recurse) throws IOException {
-      return new TrackingIterable(super.list(location, packageName, kinds, recurse));
+      Iterable<JavaFileObject> listIterator = super.list(location, packageName, kinds, recurse);
+      if (location == StandardLocation.ANNOTATION_PROCESSOR_PATH) {
+        return listIterator;
+      } else {
+        return new TrackingIterable(listIterator);
+      }
     }
 
     @Override
@@ -192,7 +198,12 @@ class ClassUsageTracker {
         Location location,
         String className,
         JavaFileObject.Kind kind) throws IOException {
-      return fileTracker.wrap(super.getJavaFileForInput(location, className, kind));
+      JavaFileObject javaFileObject = super.getJavaFileForInput(location, className, kind);
+      if (location == StandardLocation.ANNOTATION_PROCESSOR_PATH) {
+        return javaFileObject;
+      } else {
+        return fileTracker.wrap(javaFileObject);
+      }
     }
 
     @Override
@@ -201,11 +212,16 @@ class ClassUsageTracker {
         String className,
         JavaFileObject.Kind kind,
         FileObject sibling) throws IOException {
-      return fileTracker.wrap(super.getJavaFileForOutput(
+      JavaFileObject javaFileObject = super.getJavaFileForOutput(
           location,
           className,
           kind,
-          sibling));
+          sibling);
+      if (location == StandardLocation.ANNOTATION_PROCESSOR_PATH) {
+        return javaFileObject;
+      } else {
+        return fileTracker.wrap(javaFileObject);
+      }
     }
 
     @Override
@@ -213,7 +229,12 @@ class ClassUsageTracker {
         Location location,
         String packageName,
         String relativeName) throws IOException {
-      return fileTracker.wrap(super.getFileForInput(location, packageName, relativeName));
+      FileObject fileObject = super.getFileForInput(location, packageName, relativeName);
+      if (location == StandardLocation.ANNOTATION_PROCESSOR_PATH) {
+        return fileObject;
+      } else {
+        return fileTracker.wrap(fileObject);
+      }
     }
 
     @Override
@@ -222,11 +243,16 @@ class ClassUsageTracker {
         String packageName,
         String relativeName,
         FileObject sibling) throws IOException {
-      return fileTracker.wrap(super.getFileForOutput(
+      FileObject fileObject = super.getFileForOutput(
           location,
           packageName,
           relativeName,
-          sibling));
+          sibling);
+      if (location == StandardLocation.ANNOTATION_PROCESSOR_PATH) {
+        return fileObject;
+      } else {
+        return fileTracker.wrap(fileObject);
+      }
     }
 
     private class TrackingIterable implements Iterable<JavaFileObject> {
@@ -257,8 +283,7 @@ class ClassUsageTracker {
 
       @Override
       public JavaFileObject next() {
-        JavaFileObject result = fileTracker.wrap(inner.next());
-        return result;
+        return fileTracker.wrap(inner.next());
       }
 
       @Override

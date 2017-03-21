@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import static javax.tools.StandardLocation.ANNOTATION_PROCESSOR_PATH;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -159,6 +160,91 @@ public class ClassUsageTrackerTest {
       javaFileObject.openInputStream();
     }
 
+    assertNoFilesRead();
+  }
+
+  @Test
+  public void readingAnnotationProcessorFilesFromListShouldNotBeTracked() throws IOException {
+    Iterable<JavaFileObject> listIterator = fileManager.list(
+        ANNOTATION_PROCESSOR_PATH,
+        null,
+        null,
+        false);
+    for (JavaFileObject javaFileObject : listIterator) {
+      javaFileObject.openInputStream();
+    }
+
+    assertNoFilesRead();
+  }
+
+  @Test
+  public void readingAnnotationProcessorFileFromGetJavaFileForOutputShouldNotBeTracked()
+      throws IOException {
+    final JavaFileObject javaFileObject =
+        fileManager.getJavaFileForOutput(
+            ANNOTATION_PROCESSOR_PATH,
+            SINGLE_FILE_NAME,
+            JavaFileObject.Kind.CLASS,
+            null);
+
+    javaFileObject.openInputStream();
+    assertNoFilesRead();
+  }
+
+  @Test
+  public void readingAnnotationProcessorFileFromGetJavaFileForInputShouldBeTracked()
+      throws IOException {
+    final JavaFileObject javaFileObject =
+        fileManager.getJavaFileForInput(
+            ANNOTATION_PROCESSOR_PATH,
+            SINGLE_FILE_NAME,
+            JavaFileObject.Kind.CLASS);
+
+    javaFileObject.openInputStream();
+    assertNoFilesRead();
+  }
+
+  @Test
+  public void readingJavaAnnotationProcessorFileFromGetFileForInputShouldNotBeTracked()
+      throws IOException {
+    final FileObject fileObject =
+        fileManager.getFileForInput(ANNOTATION_PROCESSOR_PATH, null, SINGLE_FILE_NAME);
+
+    fileObject.openInputStream();
+    assertNoFilesRead();
+  }
+
+  @Test
+  public void readingJavaAnnotationProcessorFileFromGetFileForOutputShouldNotBeTracked()
+      throws IOException {
+    final FileObject fileObject =
+        fileManager.getFileForOutput(ANNOTATION_PROCESSOR_PATH, null, SINGLE_FILE_NAME, null);
+
+    fileObject.openInputStream();
+    assertNoFilesRead();
+  }
+
+  @Test
+  public void readingNonJavaAnnotationProcessorFileFromGetFileForInputShouldNotBeTracked()
+      throws IOException {
+    final FileObject fileObject =
+        fileManager.getFileForInput(ANNOTATION_PROCESSOR_PATH, null, SINGLE_NON_JAVA_FILE_NAME);
+
+    fileObject.openInputStream();
+    assertNoFilesRead();
+  }
+
+  @Test
+  public void readingNonJavaAnnotationProcessorFileFromGetFileForOutputShouldNotBeTracked()
+      throws IOException {
+    final FileObject fileObject =
+        fileManager.getFileForOutput(
+            ANNOTATION_PROCESSOR_PATH,
+            null,
+            SINGLE_NON_JAVA_FILE_NAME,
+            null);
+
+    fileObject.openInputStream();
     assertNoFilesRead();
   }
 
