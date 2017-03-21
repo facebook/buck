@@ -39,6 +39,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -53,7 +54,13 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.versions.Version;
+import com.facebook.buck.versions.VersionUniverse;
+import com.facebook.buck.versions.VersionUniverseVersionSelector;
+import com.facebook.buck.versions.VersionedAliasBuilder;
+import com.facebook.buck.versions.VersionedTargetGraphBuilder;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -69,6 +76,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ForkJoinPool;
 import java.util.regex.Pattern;
 
 @RunWith(Parameterized.class)
@@ -486,6 +494,49 @@ public class CxxBinaryDescriptionTest {
     assertThat(
         binary.getDeps(),
         Matchers.hasItem(transitiveDep));
+  }
+
+  @Test
+  public void versionUniverse() throws Exception {
+    GenruleBuilder transitiveDepBuilder =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:tdep"))
+            .setOut("out");
+    VersionedAliasBuilder depBuilder =
+        new VersionedAliasBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setVersions(
+                ImmutableMap.of(
+                    Version.of("1.0"), transitiveDepBuilder.getTarget(),
+                    Version.of("2.0"), transitiveDepBuilder.getTarget()));
+    CxxBinaryBuilder builder =
+        new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setVersionUniverse("1")
+            .setDeps(ImmutableSortedSet.of(depBuilder.getTarget()));
+
+    TargetGraph unversionedTargetGraph =
+        TargetGraphFactory.newInstance(
+            transitiveDepBuilder.build(),
+            depBuilder.build(),
+            builder.build());
+
+    VersionUniverse universe1 =
+        VersionUniverse.of(ImmutableMap.of(depBuilder.getTarget(), Version.of("1.0")));
+    VersionUniverse universe2 =
+        VersionUniverse.of(ImmutableMap.of(depBuilder.getTarget(), Version.of("2.0")));
+
+    TargetGraph versionedTargetGraph =
+        VersionedTargetGraphBuilder.transform(
+            new VersionUniverseVersionSelector(
+                unversionedTargetGraph,
+                ImmutableMap.of("1", universe1, "2", universe2)),
+            TargetGraphAndBuildTargets.of(
+                unversionedTargetGraph,
+                ImmutableSet.of(builder.getTarget())),
+            new ForkJoinPool())
+            .getTargetGraph();
+
+    assertThat(
+        versionedTargetGraph.get(builder.getTarget()).getSelectedVersions(),
+        equalTo(Optional.of(universe1.getVersions())));
   }
 
 }

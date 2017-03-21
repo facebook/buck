@@ -396,6 +396,7 @@ public class CxxBinaryDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends LinkableCxxConstructorArg {
     public Optional<Query> depsQuery = Optional.empty();
+    public Optional<String> versionUniverse;
   }
 
 }

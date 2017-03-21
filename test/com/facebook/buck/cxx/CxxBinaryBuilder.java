@@ -74,4 +74,9 @@ public class CxxBinaryBuilder extends AbstractCxxSourceBuilder<
     return this;
   }
 
+  public CxxBinaryBuilder setVersionUniverse(String versionUniverse) {
+    arg.versionUniverse = Optional.of(versionUniverse);
+    return this;
+  }
+
 }
