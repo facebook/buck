@@ -211,6 +211,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
               // We don't need resources in dex jars, so just drop them.
               return;
             }
+            String classPath = relativePath.replaceAll("\\.class$", "");
 
             Preconditions.checkNotNull(primaryOut);
             Preconditions.checkNotNull(classPathToDexStore);
@@ -224,14 +225,13 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
               entriesBuilder.put(relativePath, new BufferedFileLike(entry));
               secondaryTail.add(relativePath);
             } else {
-              ImmutableCollection<APKModule> containingModule =
-                  classPathToDexStore.get(relativePath);
+              ImmutableCollection<APKModule> containingModule = classPathToDexStore.get(classPath);
               if (!containingModule.isEmpty()) {
                 if (containingModule.size() > 1) {
                   throw new IllegalStateException(String.format(
                       "classpath %s is contained in multiple dex stores: %s",
-                      relativePath,
-                      classPathToDexStore.get(relativePath).asList().toString()));
+                      classPath,
+                      classPathToDexStore.get(classPath).asList().toString()));
                 }
                 APKModule dexStore = containingModule.iterator().next();
                 if (!dexStore.equals(apkModuleGraph.getRootAPKModule())) {

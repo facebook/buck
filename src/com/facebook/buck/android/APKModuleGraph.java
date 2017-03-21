@@ -172,9 +172,11 @@ public class APKModuleGraph {
                     return;
                   }
 
+                  String classpath = entry.getRelativePath().replaceAll("\\.class$", "");
+
                   builder.put(
                       dexStore,
-                      translatorFunction.apply(entry.getRelativePath()));
+                      translatorFunction.apply(classpath));
                 }
               });
         }
