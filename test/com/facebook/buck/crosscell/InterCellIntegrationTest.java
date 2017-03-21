@@ -258,9 +258,8 @@ public class InterCellIntegrationTest {
         "inter-cell/java/secondary");
     ProjectWorkspace primary = cells.getFirst();
 
-    ProjectWorkspace.ProcessResult result = primary.runBuckBuild("//:java-binary", "-v", "5");
-
-    result.assertSuccess();
+    primary.runBuckBuild("//:lib").assertSuccess();
+    primary.runBuckBuild("//:java-binary", "-v", "5").assertSuccess();
   }
 
   @Test
@@ -583,17 +582,6 @@ public class InterCellIntegrationTest {
 
     String target = "//apps/sample:app_with_cross_cell_android_lib";
     ProjectWorkspace.ProcessResult result = primary.runBuckCommand("build", target);
-    result.assertSuccess();
-  }
-
-  @Test
-  public void javaLibraryBuildsWithCrossCellLibDependency() throws IOException {
-    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
-        "inter-cell/java_library/main_cell",
-        "inter-cell/java_library/secondary_cell");
-    ProjectWorkspace.ProcessResult result = cells.getFirst().runBuckCommand(
-        "build",
-        "//:libA");
     result.assertSuccess();
   }
 

@@ -1,9 +1,0 @@
-java_library(
-  name = 'libA',
-  srcs = [
-      'A.java',
-  ],
-  deps = [
-      'secondary//:libB',
-  ],
-)
