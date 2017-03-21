@@ -37,19 +37,16 @@ public class BuildRuleParams {
   private final Supplier<ImmutableSortedSet<BuildRule>> extraDeps;
   private final Supplier<ImmutableSortedSet<BuildRule>> totalDeps;
   private final ProjectFilesystem projectFilesystem;
-  private final CellPathResolver cellRoots;
 
   public BuildRuleParams(
       BuildTarget buildTarget,
       final Supplier<ImmutableSortedSet<BuildRule>> declaredDeps,
       final Supplier<ImmutableSortedSet<BuildRule>> extraDeps,
-      ProjectFilesystem projectFilesystem,
-      CellPathResolver cellRoots) {
+      ProjectFilesystem projectFilesystem) {
     this.buildTarget = buildTarget;
     this.declaredDeps = Suppliers.memoize(declaredDeps);
     this.extraDeps = Suppliers.memoize(extraDeps);
     this.projectFilesystem = projectFilesystem;
-    this.cellRoots = cellRoots;
 
     this.totalDeps = Suppliers.memoize(
         () -> ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -61,11 +58,9 @@ public class BuildRuleParams {
   private BuildRuleParams(
       BuildRuleParams baseForDeps,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      CellPathResolver cellRoots) {
+      ProjectFilesystem projectFilesystem) {
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
-    this.cellRoots = cellRoots;
     this.declaredDeps = baseForDeps.declaredDeps;
     this.extraDeps = baseForDeps.extraDeps;
     this.totalDeps = baseForDeps.totalDeps;
@@ -96,11 +91,11 @@ public class BuildRuleParams {
   public BuildRuleParams copyReplacingDeclaredAndExtraDeps(
       Supplier<ImmutableSortedSet<BuildRule>> declaredDeps,
       Supplier<ImmutableSortedSet<BuildRule>> extraDeps) {
-    return new BuildRuleParams(buildTarget, declaredDeps, extraDeps, projectFilesystem, cellRoots);
+    return new BuildRuleParams(buildTarget, declaredDeps, extraDeps, projectFilesystem);
   }
 
   public BuildRuleParams withBuildTarget(BuildTarget target) {
-    return new BuildRuleParams(this, target, projectFilesystem, cellRoots);
+    return new BuildRuleParams(this, target, projectFilesystem);
   }
 
   public BuildRuleParams withoutFlavor(Flavor flavor) {
@@ -111,7 +106,7 @@ public class BuildRuleParams {
         .addAllFlavors(flavors)
         .build();
 
-    return new BuildRuleParams(this, target, projectFilesystem, cellRoots);
+    return new BuildRuleParams(this, target, projectFilesystem);
   }
 
   public BuildRuleParams withAppendedFlavor(Flavor flavor) {
@@ -122,15 +117,11 @@ public class BuildRuleParams {
         .addAllFlavors(flavors)
         .build();
 
-    return new BuildRuleParams(this, target, projectFilesystem, cellRoots);
+    return new BuildRuleParams(this, target, projectFilesystem);
   }
 
   public BuildTarget getBuildTarget() {
     return buildTarget;
-  }
-
-  public CellPathResolver getCellRoots() {
-    return cellRoots;
   }
 
   public ImmutableSortedSet<BuildRule> getDeps() {

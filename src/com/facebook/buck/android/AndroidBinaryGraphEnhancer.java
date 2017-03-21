@@ -534,8 +534,8 @@ public class AndroidBinaryGraphEnhancer {
           buildTargetWithFlavors,
           /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()),
           /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()),
-          originalParams.getProjectFilesystem(),
-          originalParams.getCellRoots());
+          originalParams.getProjectFilesystem()
+      );
       JavaLibrary buildConfigJavaLibrary = AndroidBuildConfigDescription.createBuildRule(
           buildConfigParams,
           javaPackage,

@@ -51,7 +51,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -120,8 +119,8 @@ public class AndroidBinaryGraphEnhancerTest {
         apkTarget,
         Suppliers.ofInstance(originalDeps),
         Suppliers.ofInstance(originalDeps),
-        filesystem,
-        TestCellBuilder.createCellRoots(filesystem));
+        filesystem
+    );
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
         originalParams,
         ruleResolver,

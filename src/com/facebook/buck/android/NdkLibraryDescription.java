@@ -354,7 +354,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
         ndkVersion,
         MACRO_HANDLER.getExpander(
             params.getBuildTarget(),
-            params.getCellRoots(),
+            cellRoots,
             resolver));
   }
 

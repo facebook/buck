@@ -308,6 +308,7 @@ public class CxxLibraryDescription implements
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
+      CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       Arg arg,
@@ -333,7 +334,7 @@ public class CxxLibraryDescription implements
         .addAllArgs(
             CxxDescriptionEnhancer.toStringWithMacrosArgs(
                 params.getBuildTarget(),
-                params.getCellRoots(),
+                cellRoots,
                 ruleResolver,
                 cxxPlatform,
                 Iterables.concat(linkerFlags, exportedLinkerFlags)))
@@ -353,9 +354,10 @@ public class CxxLibraryDescription implements
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
+      CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
-      CxxLibraryDescription.Arg args,
+      Arg args,
       ImmutableList<StringWithMacros> linkerFlags,
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
@@ -422,7 +424,7 @@ public class CxxLibraryDescription implements
             .addAllArgs(
                 CxxDescriptionEnhancer.toStringWithMacrosArgs(
                     params.getBuildTarget(),
-                    params.getCellRoots(),
+                    cellRoots,
                     ruleResolver,
                     cxxPlatform,
                     extraLdFlags))
@@ -599,8 +601,7 @@ public class CxxLibraryDescription implements
               staticTarget,
               Suppliers.ofInstance(ImmutableSortedSet.of()),
               Suppliers.ofInstance(ImmutableSortedSet.of()),
-              params.getProjectFilesystem(),
-              params.getCellRoots()));
+              params.getProjectFilesystem()));
     }
 
     Path staticLibraryPath =
@@ -626,6 +627,7 @@ public class CxxLibraryDescription implements
   private static <A extends Arg> CxxLink createSharedLibraryBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       A args,
@@ -656,6 +658,7 @@ public class CxxLibraryDescription implements
         resolver,
         sourcePathResolver,
         ruleFinder,
+        cellRoots,
         cxxBuckConfig,
         cxxPlatform,
         args,
@@ -714,6 +717,7 @@ public class CxxLibraryDescription implements
     return createBuildRule(
         params,
         resolver,
+        cellRoots,
         args,
         args.linkStyle,
         Optional.empty(),
@@ -723,6 +727,7 @@ public class CxxLibraryDescription implements
   public <A extends Arg> BuildRule createBuildRule(
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       final A args,
       Optional<Linker.LinkableDepType> linkableDepType,
       final Optional<SourcePath> bundleLoader,
@@ -839,6 +844,7 @@ public class CxxLibraryDescription implements
           return createSharedLibraryBuildRule(
               untypedParams,
               resolver,
+              cellRoots,
               cxxBuckConfig,
               platform.get(),
               args,
@@ -855,6 +861,7 @@ public class CxxLibraryDescription implements
           return createSharedLibraryBuildRule(
               untypedParams,
               resolver,
+              cellRoots,
               cxxBuckConfig,
               platform.get(),
               args,
@@ -925,7 +932,7 @@ public class CxxLibraryDescription implements
                   input);
           return CxxDescriptionEnhancer.toStringWithMacrosArgs(
               params.getBuildTarget(),
-              params.getCellRoots(),
+              cellRoots,
               resolver,
               input,
               flags);
@@ -937,6 +944,7 @@ public class CxxLibraryDescription implements
                 resolver,
                 pathResolver,
                 ruleFinder,
+                cellRoots,
                 cxxBuckConfig,
                 cxxPlatform,
                 args,

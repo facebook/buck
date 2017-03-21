@@ -285,7 +285,7 @@ public class AndroidBinaryDescription implements
               .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
 
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-      Optional<RedexOptions> redexOptions = getRedexOptions(params, resolver, args);
+      Optional<RedexOptions> redexOptions = getRedexOptions(params, resolver, cellRoots, args);
 
       ImmutableSortedSet<BuildRule> redexExtraDeps = redexOptions
           .map(a -> a.getRedexExtraArgs()
@@ -322,7 +322,7 @@ public class AndroidBinaryDescription implements
           exopackageModes,
           MACRO_HANDLER.getExpander(
               params.getBuildTarget(),
-              params.getCellRoots(),
+              cellRoots,
               resolver),
           args.preprocessJavaClassesBash,
           rulesToExcludeFromDex,
@@ -434,6 +434,7 @@ public class AndroidBinaryDescription implements
   private Optional<RedexOptions> getRedexOptions(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       Arg arg) {
     boolean redexRequested = arg.redex.orElse(false);
     if (!redexRequested) {
@@ -454,7 +455,7 @@ public class AndroidBinaryDescription implements
         MacroArg.toMacroArgFunction(
             MACRO_HANDLER,
             params.getBuildTarget(),
-            params.getCellRoots(),
+            cellRoots,
             resolver)::apply;
     List<com.facebook.buck.rules.args.Arg> redexExtraArgs = arg.redexExtraArgs.stream()
         .map(macroArgFunction)

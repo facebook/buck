@@ -118,6 +118,7 @@ public class HalideLibraryDescription
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
+      CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       ImmutableSortedSet<SourceWithFlags> halideSources,
       ImmutableList<String> compilerFlags,
@@ -160,6 +161,7 @@ public class HalideLibraryDescription
         CxxDescriptionEnhancer.createBuildRulesForCxxBinary(
             params,
             ruleResolver,
+            cellRoots,
             cxxBuckConfig,
             cxxPlatform,
             srcs,
@@ -324,6 +326,7 @@ public class HalideLibraryDescription
           resolver,
           pathResolver,
           ruleFinder,
+          cellRoots,
           hostCxxPlatform,
           args.srcs,
           args.compilerFlags,

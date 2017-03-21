@@ -116,6 +116,7 @@ public class CxxTestDescription implements
               targetGraph,
               paramsWithoutFlavor,
               resolver,
+              cellRoots,
               cxxBuckConfig,
               cxxPlatform,
               args,
@@ -179,7 +180,7 @@ public class CxxTestDescription implements
                 args.env,
                 CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
                     params.getBuildTarget(),
-                    params.getCellRoots(),
+                    cellRoots,
                     resolver)));
 
     // Supplier which expands macros in the passed in test arguments.
@@ -187,7 +188,7 @@ public class CxxTestDescription implements
         () -> args.args.stream()
             .map(CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
                 params.getBuildTarget(),
-                params.getCellRoots(),
+                cellRoots,
                 resolver)::apply)
             .collect(MoreCollectors.toImmutableList());
 
@@ -211,7 +212,7 @@ public class CxxTestDescription implements
               deps.addAll(
                   CxxDescriptionEnhancer.MACRO_HANDLER.extractBuildTimeDeps(
                       params.getBuildTarget(),
-                      params.getCellRoots(),
+                      cellRoots,
                       resolver,
                       part));
             } catch (MacroException e) {

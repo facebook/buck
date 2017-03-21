@@ -307,7 +307,7 @@ public class PythonBinaryDescription implements
                 .map(MacroArg.toMacroArgFunction(
                     PythonUtil.MACRO_HANDLER,
                     params.getBuildTarget(),
-                    params.getCellRoots(),
+                    cellRoots,
                     resolver)::apply)
                 .collect(MoreCollectors.toImmutableList()),
             pythonBuckConfig.getNativeLinkStrategy(),

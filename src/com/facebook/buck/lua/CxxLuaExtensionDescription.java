@@ -115,6 +115,7 @@ public class CxxLuaExtensionDescription implements
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
+      CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       Arg args) throws NoSuchBuildTargetException {
 
@@ -196,7 +197,7 @@ public class CxxLuaExtensionDescription implements
     argsBuilder.addAll(
         CxxDescriptionEnhancer.toStringWithMacrosArgs(
             params.getBuildTarget(),
-            params.getCellRoots(),
+            cellRoots,
             ruleResolver,
             cxxPlatform,
             CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
@@ -213,6 +214,7 @@ public class CxxLuaExtensionDescription implements
   private <A extends Arg> BuildRule createExtensionBuildRule(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
+      CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       A args) throws NoSuchBuildTargetException {
     if (params.getBuildTarget().getFlavors().contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
@@ -257,6 +259,7 @@ public class CxxLuaExtensionDescription implements
                     ruleResolver,
                     pathResolver,
                     ruleFinder,
+                    cellRoots,
                     cxxPlatform,
                     args))
             .build());
@@ -283,7 +286,7 @@ public class CxxLuaExtensionDescription implements
 
     // If a C/C++ platform is specified, then build an extension with it.
     if (platform.isPresent()) {
-      return createExtensionBuildRule(params, resolver, platform.get().getValue(), args);
+      return createExtensionBuildRule(params, resolver, cellRoots, platform.get().getValue(), args);
     }
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use
@@ -328,7 +331,14 @@ public class CxxLuaExtensionDescription implements
           throws NoSuchBuildTargetException {
         return NativeLinkableInput.builder()
             .addAllArgs(
-                getExtensionArgs(params, resolver, pathResolver, ruleFinder, cxxPlatform, args))
+                getExtensionArgs(
+                    params,
+                    resolver,
+                    pathResolver,
+                    ruleFinder,
+                    cellRoots,
+                    cxxPlatform,
+                    args))
             .addAllFrameworks(args.frameworks)
             .build();
       }

@@ -128,7 +128,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
                 targetGraph,
                 args),
             params.getBuildTarget(),
-            params.getCellRoots(),
+            cellRoots,
             resolver)::apply;
     final Optional<com.facebook.buck.rules.args.Arg> cmd = args.cmd.map(macroArgFunction);
     final Optional<com.facebook.buck.rules.args.Arg> bash = args.bash.map(macroArgFunction);

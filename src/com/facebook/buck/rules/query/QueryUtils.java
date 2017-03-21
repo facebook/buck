@@ -55,6 +55,7 @@ public final class QueryUtils {
       BuildRuleParams params,
       Query query,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       TargetGraph targetGraph) {
     BuildTarget target = params.getBuildTarget();
     Set<BuildTarget> declaredDeps = params.getDeclaredDeps()
@@ -65,7 +66,7 @@ public final class QueryUtils {
     GraphEnhancementQueryEnvironment env = new GraphEnhancementQueryEnvironment(
         Optional.of(resolver),
         Optional.of(targetGraph),
-        params.getCellRoots(),
+        cellRoots,
         BuildTargetPatternParser.forBaseName(target.getBaseName()),
         declaredDeps);
     ListeningExecutorService executorService = MoreExecutors.newDirectExecutorService();

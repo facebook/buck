@@ -372,6 +372,7 @@ public class PrebuiltCxxLibraryDescription implements
   private <A extends Arg> BuildRule createSharedLibraryBuildRule(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
+      CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       A args) throws NoSuchBuildTargetException {
@@ -382,7 +383,7 @@ public class PrebuiltCxxLibraryDescription implements
     BuildTarget target = params.getBuildTarget();
     String soname = getSoname(
         target,
-        params.getCellRoots(),
+        cellRoots,
         ruleResolver,
         cxxPlatform,
         args.soname,
@@ -397,7 +398,7 @@ public class PrebuiltCxxLibraryDescription implements
     SourcePath staticLibraryPath =
         getStaticPicLibraryPath(
             target,
-            params.getCellRoots(),
+            cellRoots,
             params.getProjectFilesystem(),
             ruleResolver,
             cxxPlatform,
@@ -407,7 +408,7 @@ public class PrebuiltCxxLibraryDescription implements
     if (!params.getProjectFilesystem().exists(pathResolver.getAbsolutePath(staticLibraryPath))) {
       staticLibraryPath = getStaticLibraryPath(
           target,
-          params.getCellRoots(),
+          cellRoots,
           params.getProjectFilesystem(),
           ruleResolver,
           cxxPlatform,
@@ -432,13 +433,13 @@ public class PrebuiltCxxLibraryDescription implements
             .copyAppendingExtraDeps(
                 getBuildRules(
                     params.getBuildTarget(),
-                    params.getCellRoots(),
+                    cellRoots,
                     ruleResolver,
                     Optionals.toStream(args.libDir).collect(MoreCollectors.toImmutableList())))
             .copyAppendingExtraDeps(
                 getBuildRules(
                     params.getBuildTarget(),
-                    params.getCellRoots(),
+                    cellRoots,
                     ruleResolver,
                     args.includeDirs)),
         ruleResolver,
@@ -519,6 +520,7 @@ public class PrebuiltCxxLibraryDescription implements
       BuildTarget baseTarget,
       BuildRuleParams baseParams,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       Optional<String> versionSubdir,
       A args)
@@ -548,7 +550,7 @@ public class PrebuiltCxxLibraryDescription implements
             baseTarget,
             resolver,
             pathResolver,
-            baseParams.getCellRoots(),
+            cellRoots,
             baseParams.getProjectFilesystem(),
             cxxPlatform,
             versionSubdir,
@@ -602,6 +604,7 @@ public class PrebuiltCxxLibraryDescription implements
         return createSharedLibraryBuildRule(
             params,
             ruleResolver,
+            cellRoots,
             platform.get().getValue(),
             selectedVersions,
             args);
@@ -610,6 +613,7 @@ public class PrebuiltCxxLibraryDescription implements
             baseTarget,
             params,
             ruleResolver,
+            cellRoots,
             platform.get().getValue(),
             versionSubdir,
             args);
@@ -680,7 +684,7 @@ public class PrebuiltCxxLibraryDescription implements
       private String getSoname(CxxPlatform cxxPlatform) {
         return PrebuiltCxxLibraryDescription.getSoname(
             getBuildTarget(),
-            params.getCellRoots(),
+            cellRoots,
             ruleResolver,
             cxxPlatform,
             args.soname,
@@ -716,7 +720,7 @@ public class PrebuiltCxxLibraryDescription implements
             params.getBuildTarget(),
             ruleResolver,
             pathResolver,
-            params.getCellRoots(),
+            cellRoots,
             params.getProjectFilesystem(),
             cxxPlatform,
             versionSubdir,
@@ -731,7 +735,7 @@ public class PrebuiltCxxLibraryDescription implements
         SourcePath staticPicLibraryPath =
             PrebuiltCxxLibraryDescription.getStaticPicLibraryPath(
                 getBuildTarget(),
-                params.getCellRoots(),
+                cellRoots,
                 params.getProjectFilesystem(),
                 ruleResolver,
                 cxxPlatform,
@@ -747,7 +751,7 @@ public class PrebuiltCxxLibraryDescription implements
         SourcePath staticLibraryPath =
             PrebuiltCxxLibraryDescription.getStaticLibraryPath(
                 getBuildTarget(),
-                params.getCellRoots(),
+                cellRoots,
                 getProjectFilesystem(),
                 ruleResolver,
                 cxxPlatform,
@@ -797,7 +801,7 @@ public class PrebuiltCxxLibraryDescription implements
                     .map(
                         input -> PrebuiltCxxLibraryDescription.getApplicableSourcePath(
                             params.getBuildTarget(),
-                            params.getCellRoots(),
+                            cellRoots,
                             params.getProjectFilesystem(),
                             ruleResolver,
                             cxxPlatform,
@@ -910,7 +914,7 @@ public class PrebuiltCxxLibraryDescription implements
                     getStaticPicLibrary(cxxPlatform).get() :
                     PrebuiltCxxLibraryDescription.getStaticLibraryPath(
                         getBuildTarget(),
-                        params.getCellRoots(),
+                        cellRoots,
                         params.getProjectFilesystem(),
                         ruleResolver,
                         cxxPlatform,

@@ -71,7 +71,7 @@ public class OcamlBinaryDescription implements
     ImmutableList.Builder<com.facebook.buck.rules.args.Arg> flags = ImmutableList.builder();
     flags.addAll(OcamlDescriptionEnhancer.toStringWithMacrosArgs(
             params.getBuildTarget(),
-            params.getCellRoots(),
+            cellRoots,
             resolver,
             args.compilerFlags
         ));

@@ -93,7 +93,7 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
         MacroArg.toMacroArgFunction(
             MACRO_HANDLER,
             params.getBuildTarget(),
-            params.getCellRoots(),
+            cellRoots,
             resolver);
     final ImmutableList<com.facebook.buck.rules.args.Arg> workerToolArgs =
         args.getStartupArgs().stream()
@@ -108,7 +108,7 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
                     input.getKey(),
                     MACRO_HANDLER.expand(
                         params.getBuildTarget(),
-                        params.getCellRoots(),
+                        cellRoots,
                         resolver,
                         input.getValue()));
               } catch (MacroException e) {

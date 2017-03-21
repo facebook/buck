@@ -144,6 +144,7 @@ public class CxxPythonExtensionDescription implements
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
+      CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       Arg args) throws NoSuchBuildTargetException {
 
@@ -226,7 +227,7 @@ public class CxxPythonExtensionDescription implements
     argsBuilder.addAll(
         CxxDescriptionEnhancer.toStringWithMacrosArgs(
             params.getBuildTarget(),
-            params.getCellRoots(),
+            cellRoots,
             ruleResolver,
             cxxPlatform,
             CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
@@ -276,6 +277,7 @@ public class CxxPythonExtensionDescription implements
   private <A extends Arg> BuildRule createExtensionBuildRule(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
+      CellPathResolver cellRoots,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       A args) throws NoSuchBuildTargetException {
@@ -320,6 +322,7 @@ public class CxxPythonExtensionDescription implements
                 ruleResolver,
                 pathResolver,
                 ruleFinder,
+                cellRoots,
                 cxxPlatform,
                 args))
           .setFrameworks(args.frameworks)
@@ -367,6 +370,7 @@ public class CxxPythonExtensionDescription implements
                           args))),
               Suppliers.ofInstance(ImmutableSortedSet.of())),
           ruleResolver,
+          cellRoots,
           pythonPlatform.get().getValue(),
           platform.get().getValue(),
           args);
@@ -456,6 +460,7 @@ public class CxxPythonExtensionDescription implements
                         ruleResolver,
                         pathResolver,
                         ruleFinder,
+                        cellRoots,
                         cxxPlatform,
                         args))
                 .addAllFrameworks(args.frameworks)

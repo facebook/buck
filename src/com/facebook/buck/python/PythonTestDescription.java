@@ -262,7 +262,7 @@ public class PythonTestDescription implements
                 .map(MacroArg.toMacroArgFunction(
                     PythonUtil.MACRO_HANDLER,
                     params.getBuildTarget(),
-                    params.getCellRoots(),
+                    cellRoots,
                     resolver)::apply)
                 .collect(MoreCollectors.toImmutableList()),
             pythonBuckConfig.getNativeLinkStrategy(),
@@ -332,7 +332,7 @@ public class PythonTestDescription implements
                 args.env,
                 MACRO_HANDLER.getExpander(
                     params.getBuildTarget(),
-                    params.getCellRoots(),
+                    cellRoots,
                     resolver)));
 
     // Generate and return the python test rule, which depends on the python binary rule above.

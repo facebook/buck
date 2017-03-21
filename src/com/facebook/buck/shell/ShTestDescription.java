@@ -84,7 +84,7 @@ public class ShTestDescription implements
         MacroArg.toMacroArgFunction(
             MACRO_HANDLER,
             params.getBuildTarget(),
-            params.getCellRoots(),
+            cellRoots,
             resolver);
     final ImmutableList<com.facebook.buck.rules.args.Arg> testArgs =
         args.args.stream()

@@ -414,6 +414,7 @@ public class AppleLibraryDescription implements
       BuildRule rule = delegate.createBuildRule(
           params.withBuildTarget(unstrippedTarget),
           resolver,
+          cellRoots,
           delegateArg,
           linkableDepType,
           bundleLoader,

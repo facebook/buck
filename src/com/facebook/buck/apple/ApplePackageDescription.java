@@ -84,7 +84,7 @@ public class ApplePackageDescription implements
             MacroArg.toMacroArgFunction(
                 AbstractGenruleDescription.PARSE_TIME_MACRO_HANDLER,
                 params.getBuildTarget(),
-                params.getCellRoots(),
+                cellRoots,
                 resolver));
     if (applePackageConfigAndPlatformInfo.isPresent()) {
       return new ExternallyBuiltApplePackage(

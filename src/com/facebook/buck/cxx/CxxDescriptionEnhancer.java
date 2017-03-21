@@ -770,6 +770,7 @@ public class CxxDescriptionEnhancer {
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       CxxBinaryDescription.Arg args,
@@ -801,13 +802,14 @@ public class CxxDescriptionEnhancer {
     // Add in deps found via deps query.
     args.depsQuery.ifPresent(
         depsQuery ->
-            QueryUtils.resolveDepQuery(params, depsQuery, resolver, targetGraph)
+            QueryUtils.resolveDepQuery(params, depsQuery, resolver, cellRoots, targetGraph)
                 .forEach(depsBuilder::add));
     ImmutableSortedSet<BuildRule> deps = depsBuilder.build();
 
     return createBuildRulesForCxxBinary(
         params,
         resolver,
+        cellRoots,
         cxxBuckConfig,
         cxxPlatform,
         srcs,
@@ -836,6 +838,7 @@ public class CxxDescriptionEnhancer {
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinary(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ImmutableMap<String, CxxSource> srcs,
@@ -943,7 +946,7 @@ public class CxxDescriptionEnhancer {
     argsBuilder.addAll(
         toStringWithMacrosArgs(
             target,
-            params.getCellRoots(),
+            cellRoots,
             resolver,
             cxxPlatform,
             CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
