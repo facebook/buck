@@ -78,6 +78,7 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
       TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
 
     BuildRule rule = resolver.requireRule(args.exe);

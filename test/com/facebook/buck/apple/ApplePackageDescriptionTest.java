@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.testutil.TargetGraphFactory;
 
@@ -69,6 +70,7 @@ public class ApplePackageDescriptionTest {
         graph,
         new FakeBuildRuleParamsBuilder(packageBuildTarget).build(),
         resolver,
+        TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
         arg);
 
     assertThat(rule, instanceOf(ExternallyBuiltApplePackage.class));
@@ -107,7 +109,12 @@ public class ApplePackageDescriptionTest {
             packageBuildTarget,
             params.getCellRoots(),
             arg));
-    BuildRule rule = description.createBuildRule(graph, params, resolver, arg);
+    BuildRule rule = description.createBuildRule(
+        graph,
+        params,
+        resolver,
+        TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
+        arg);
 
     assertThat(rule.getDeps(), hasItem(resolver.getRule(exportFileBuildTarget)));
   }

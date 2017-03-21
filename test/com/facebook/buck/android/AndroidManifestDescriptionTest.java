@@ -30,6 +30,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
@@ -64,7 +65,12 @@ public class AndroidManifestDescriptionTest {
         .setDeclaredDeps(buildRuleResolver.getAllRules(arg.deps))
         .build();
     BuildRule androidManifest = new AndroidManifestDescription()
-        .createBuildRule(TargetGraph.EMPTY, params, buildRuleResolver, arg);
+        .createBuildRule(
+            TargetGraph.EMPTY,
+            params,
+            buildRuleResolver,
+            TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
+            arg);
 
     assertEquals(
         ImmutableSortedSet.of(ruleWithOutput),

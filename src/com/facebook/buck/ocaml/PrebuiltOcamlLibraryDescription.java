@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -51,6 +52,7 @@ public class PrebuiltOcamlLibraryDescription implements
       TargetGraph targetGraph,
       final BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       final A args) {
 
     final BuildTarget target = params.getBuildTarget();

@@ -251,6 +251,7 @@ public class PythonBinaryDescription implements
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
     if (!(args.main.isPresent() ^ args.mainModule.isPresent())) {
       throw new HumanReadableException(

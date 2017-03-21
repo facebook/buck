@@ -332,6 +332,7 @@ public class CxxPythonExtensionDescription implements
       TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver ruleResolver,
+      CellPathResolver cellRoots,
       final A args) throws NoSuchBuildTargetException {
 
     Optional<Map.Entry<Flavor, CxxPlatform>> platform = cxxPlatforms.getFlavorAndValue(

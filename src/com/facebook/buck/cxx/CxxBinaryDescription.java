@@ -107,6 +107,7 @@ public class CxxBinaryDescription implements
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
 
     // We explicitly remove some flavors below from params to make sure rule

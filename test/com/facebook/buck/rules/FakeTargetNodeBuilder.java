@@ -57,6 +57,7 @@ public class FakeTargetNodeBuilder extends AbstractNodeBuilder<
         TargetGraph targetGraph,
         BuildRuleParams params,
         BuildRuleResolver resolver,
+        CellPathResolver cellRoots,
         A args) throws NoSuchBuildTargetException {
       return rule;
     }

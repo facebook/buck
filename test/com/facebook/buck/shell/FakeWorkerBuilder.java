@@ -22,6 +22,7 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -135,6 +136,7 @@ public class FakeWorkerBuilder extends AbstractNodeBuilder<
         TargetGraph targetGraph,
         BuildRuleParams params,
         BuildRuleResolver resolver,
+        CellPathResolver cellRoots,
         A args) throws NoSuchBuildTargetException {
       return create.apply(params);
     }

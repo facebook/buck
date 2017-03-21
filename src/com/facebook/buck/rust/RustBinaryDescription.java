@@ -80,6 +80,7 @@ public class RustBinaryDescription implements
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
     Linker.LinkableDepType linkStyle =
         RustCompileUtils.getLinkStyle(params.getBuildTarget(), args.linkStyle);

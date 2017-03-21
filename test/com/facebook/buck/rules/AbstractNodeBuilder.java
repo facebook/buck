@@ -112,7 +112,7 @@ public abstract class AbstractNodeBuilder<
 
     @SuppressWarnings("unchecked")
     TBuildRule rule =
-        (TBuildRule) description.createBuildRule(targetGraph, params, resolver, arg);
+        (TBuildRule) description.createBuildRule(targetGraph, params, resolver, cellRoots, arg);
     resolver.addToIndex(rule);
     return rule;
   }

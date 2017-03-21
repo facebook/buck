@@ -151,6 +151,7 @@ public class AppleTestDescription implements
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
     AppleDebugFormat debugFormat = AppleDebugFormat.FLAVOR_DOMAIN
         .getValue(params.getBuildTarget())
@@ -226,6 +227,7 @@ public class AppleTestDescription implements
         targetGraph,
         params,
         resolver,
+        cellRoots,
         args,
         testHostInfo.map(TestHostInfo::getTestHostAppBinarySourcePath),
         testHostInfo.map(TestHostInfo::getBlacklist).orElse(ImmutableSet.of()),
@@ -356,6 +358,7 @@ public class AppleTestDescription implements
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args,
       Optional<SourcePath> testHostAppBinarySourcePath,
       ImmutableSet<BuildTarget> blacklist,
@@ -372,6 +375,7 @@ public class AppleTestDescription implements
           targetGraph,
           params.withBuildTarget(libraryTarget),
           resolver,
+          cellRoots,
           args,
           // For now, instead of building all deps as dylibs and fixing up their install_names,
           // we'll just link them statically.

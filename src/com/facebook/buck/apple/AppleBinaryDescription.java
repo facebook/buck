@@ -173,11 +173,12 @@ public class AppleBinaryDescription
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
     if (params.getBuildTarget().getFlavors().contains(APP_FLAVOR)) {
       return createBundleBuildRule(targetGraph, params, resolver, args);
     } else {
-      return createBinaryBuildRule(targetGraph, params, resolver, args);
+      return createBinaryBuildRule(targetGraph, params, resolver, cellRoots, args);
     }
   }
 
@@ -197,6 +198,7 @@ public class AppleBinaryDescription
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
     // remove some flavors so binary will have the same output regardless their values
     BuildTarget unstrippedBinaryBuildTarget = params.getBuildTarget()
@@ -207,6 +209,7 @@ public class AppleBinaryDescription
         targetGraph,
         params.withBuildTarget(unstrippedBinaryBuildTarget),
         resolver,
+        cellRoots,
         args);
 
     if (shouldWrapIntoAppleDebuggableBinary(params.getBuildTarget(), unstrippedBinaryRule)) {
@@ -214,6 +217,7 @@ public class AppleBinaryDescription
           targetGraph,
           params,
           resolver,
+          cellRoots,
           args,
           unstrippedBinaryBuildTarget,
           (ProvidesLinkedBinaryDeps) unstrippedBinaryRule);
@@ -226,6 +230,7 @@ public class AppleBinaryDescription
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args,
       BuildTarget unstrippedBinaryBuildTarget,
       ProvidesLinkedBinaryDeps unstrippedBinaryRule) throws NoSuchBuildTargetException {
@@ -238,6 +243,7 @@ public class AppleBinaryDescription
         targetGraph,
         params.withBuildTarget(strippedBinaryBuildTarget),
         resolver,
+        cellRoots,
         args);
     return AppleDescriptions.createAppleDebuggableBinary(
         params.withBuildTarget(unstrippedBinaryBuildTarget),
@@ -310,6 +316,7 @@ public class AppleBinaryDescription
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
 
     if (AppleDescriptions.flavorsDoNotAllowLinkerMapMode(params)) {
@@ -326,6 +333,7 @@ public class AppleBinaryDescription
             targetGraph,
             params.withBuildTarget(thinTarget),
             resolver,
+            cellRoots,
             args);
       }
 
@@ -340,6 +348,7 @@ public class AppleBinaryDescription
             targetGraph,
             params.withBuildTarget(thinTarget),
             resolver,
+            cellRoots,
             args);
         resolver.addToIndex(thinRule);
         thinRules.add(thinRule);
@@ -350,7 +359,7 @@ public class AppleBinaryDescription
           fatBinaryInfo.get(),
           thinRules.build());
     } else {
-      return requireThinBinary(targetGraph, params, resolver, args);
+      return requireThinBinary(targetGraph, params, resolver, cellRoots, args);
     }
   }
 
@@ -358,6 +367,7 @@ public class AppleBinaryDescription
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
     Optional<BuildRule> existingThinRule = resolver.getRuleOptional(params.getBuildTarget());
     if (existingThinRule.isPresent()) {
@@ -365,7 +375,7 @@ public class AppleBinaryDescription
     }
 
     Optional<BuildRule> swiftCompanionBuildRule = swiftDelegate.createCompanionBuildRule(
-        targetGraph, params, resolver, args);
+        targetGraph, params, resolver, cellRoots, args);
     if (swiftCompanionBuildRule.isPresent()) {
       // when creating a swift target, there is no need to proceed with apple binary rules,
       // otherwise, add this swift rule as a dependency.
@@ -402,7 +412,7 @@ public class AppleBinaryDescription
           args,
           params.getBuildTarget());
       return resolver.addToIndex(
-          delegate.createBuildRule(targetGraph, params, resolver, delegateArg));
+          delegate.createBuildRule(targetGraph, params, resolver, cellRoots, delegateArg));
     }
   }
 

@@ -43,6 +43,11 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
         targetNode.getFilesystem(),
         targetNode.getCellNames());
 
-    return description.createBuildRule(targetGraph, params, ruleResolver, arg);
+    return description.createBuildRule(
+        targetGraph,
+        params,
+        ruleResolver,
+        targetNode.getCellNames(),
+        arg);
   }
 }

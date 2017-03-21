@@ -164,6 +164,7 @@ public class PythonTestDescription implements
       TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       final A args) throws HumanReadableException, NoSuchBuildTargetException {
 
     PythonPlatform pythonPlatform =

@@ -33,6 +33,7 @@ public class ProjectConfigDescription implements Description<ProjectConfigDescri
       TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args) {
     return new ProjectConfig(
         params,

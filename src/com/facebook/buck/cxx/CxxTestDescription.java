@@ -89,6 +89,7 @@ public class CxxTestDescription implements
       TargetGraph targetGraph,
       BuildRuleParams inputParams,
       final BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       final A args) throws NoSuchBuildTargetException {
     Optional<StripStyle> flavoredStripStyle =
         StripStyle.FLAVOR_DOMAIN.getValue(inputParams.getBuildTarget());
@@ -150,6 +151,7 @@ public class CxxTestDescription implements
             targetGraph,
             params,
             resolver,
+            cellRoots,
             cxxBuckConfig,
             cxxPlatform,
             args,

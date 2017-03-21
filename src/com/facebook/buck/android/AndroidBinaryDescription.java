@@ -148,6 +148,7 @@ public class AndroidBinaryDescription implements
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
     try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(
         Optional.ofNullable(resolver.getEventBus()),

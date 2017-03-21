@@ -39,6 +39,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -117,7 +118,12 @@ public class SwiftLibraryIntegrationTest {
     SwiftLibraryDescription.Arg args = createDummySwiftArg();
 
     SwiftCompile buildRule = (SwiftCompile) FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION
-        .createBuildRule(TargetGraph.EMPTY, params, resolver, args);
+        .createBuildRule(
+            TargetGraph.EMPTY,
+            params,
+            resolver,
+            TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
+            args);
 
     ImmutableList<String> swiftIncludeArgs = buildRule.getSwiftIncludeArgs(pathResolver);
 
@@ -139,6 +145,7 @@ public class SwiftLibraryIntegrationTest {
             TargetGraph.EMPTY,
             params,
             resolver,
+            TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
             args);
     resolver.addToIndex(buildRule);
 
@@ -169,6 +176,7 @@ public class SwiftLibraryIntegrationTest {
             TargetGraphFactory.newInstance(FakeTargetNodeBuilder.build(buildRule)),
             params.withBuildTarget(linkTarget),
             resolver,
+            TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
             args);
 
     assertThat(linkRule.getArgs(), Matchers.hasItem(objArg));

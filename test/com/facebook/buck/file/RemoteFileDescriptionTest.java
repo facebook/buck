@@ -30,6 +30,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
@@ -81,6 +82,7 @@ public class RemoteFileDescriptionTest {
         RemoteFileBuilder.createBuilder(downloader, target)
             .createBuildRuleParams(ruleResolver, filesystem),
         ruleResolver,
+        TestCellBuilder.createCellRoots(filesystem),
         arg);
   }
 
@@ -98,6 +100,7 @@ public class RemoteFileDescriptionTest {
         RemoteFileBuilder.createBuilder(downloader, target)
             .createBuildRuleParams(ruleResolver, filesystem),
         ruleResolver,
+        TestCellBuilder.createCellRoots(filesystem),
         arg);
     ruleResolver.addToIndex(buildRule);
 

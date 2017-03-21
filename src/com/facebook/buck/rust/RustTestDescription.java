@@ -76,6 +76,7 @@ public class RustTestDescription implements
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
     BuildTarget exeTarget = params.getBuildTarget()
         .withAppendedFlavors(InternalFlavor.of("unittest"));

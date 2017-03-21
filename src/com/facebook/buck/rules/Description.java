@@ -79,6 +79,7 @@ public interface Description<T> {
    * {@link Flavor} to create.
    *
    * @param resolver For querying for build rules by their targets.
+   * @param cellRoots The roots of known cells.
    * @param args A constructor argument, as returned by {@link #createUnpopulatedConstructorArg()}.
    * @return The {@link BuildRule} that describes the default flavour of the rule being described.
    */
@@ -86,5 +87,6 @@ public interface Description<T> {
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException;
 }

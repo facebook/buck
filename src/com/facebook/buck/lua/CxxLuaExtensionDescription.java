@@ -272,6 +272,7 @@ public class CxxLuaExtensionDescription implements
       TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       final A args)
       throws NoSuchBuildTargetException {
 

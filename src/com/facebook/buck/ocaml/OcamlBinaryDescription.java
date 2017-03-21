@@ -64,6 +64,7 @@ public class OcamlBinaryDescription implements
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
 
     ImmutableList<OcamlSource> srcs = args.srcs;

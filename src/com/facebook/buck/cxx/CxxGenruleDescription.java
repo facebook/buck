@@ -272,6 +272,7 @@ public class CxxGenruleDescription
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args)
       throws NoSuchBuildTargetException {
     Optional<CxxPlatform> cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget());
@@ -280,7 +281,7 @@ public class CxxGenruleDescription
           targetGraph,
           params.withAppendedFlavor(cxxPlatform.get().getFlavor()),
           resolver,
-          args);
+          cellRoots, args);
     }
     return new CxxGenrule(params, resolver, args.out);
   }

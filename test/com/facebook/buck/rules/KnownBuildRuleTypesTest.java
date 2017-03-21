@@ -102,6 +102,7 @@ public class KnownBuildRuleTypesTest {
         TargetGraph targetGraph,
         BuildRuleParams params,
         BuildRuleResolver resolver,
+        CellPathResolver cellRoots,
         A args) {
       return null;
     }
@@ -151,7 +152,12 @@ public class KnownBuildRuleTypesTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     return (DefaultJavaLibrary) description
-        .createBuildRule(TargetGraph.EMPTY, buildRuleParams, resolver, arg);
+        .createBuildRule(
+            TargetGraph.EMPTY,
+            buildRuleParams,
+            resolver,
+            TestCellBuilder.createCellRoots(buildRuleParams.getProjectFilesystem()),
+            arg);
   }
 
   @Test

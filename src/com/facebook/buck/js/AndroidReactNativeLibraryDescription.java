@@ -60,6 +60,7 @@ public class AndroidReactNativeLibraryDescription
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args) {
     return enhancer.enhanceForAndroid(params, resolver, args);
   }

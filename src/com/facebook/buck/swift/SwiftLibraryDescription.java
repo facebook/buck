@@ -38,6 +38,7 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -144,6 +145,7 @@ public class SwiftLibraryDescription implements
       TargetGraph targetGraph,
       BuildRuleParams params,
       final BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
 
     Optional<LinkerMapMode> flavoredLinkerMapMode =
@@ -326,6 +328,7 @@ public class SwiftLibraryDescription implements
       final TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
     BuildTarget buildTarget = params.getBuildTarget();
     if (!isSwiftTarget(buildTarget)) {
@@ -346,7 +349,7 @@ public class SwiftLibraryDescription implements
     if (!delegateArgs.srcs.isEmpty()) {
       return Optional.of(
           resolver.addToIndex(
-              createBuildRule(targetGraph, params, resolver, delegateArgs)));
+              createBuildRule(targetGraph, params, resolver, cellRoots, delegateArgs)));
     } else {
       return Optional.empty();
     }

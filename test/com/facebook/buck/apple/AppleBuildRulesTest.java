@@ -133,6 +133,7 @@ public class AppleBuildRulesTest {
             TargetGraph.EMPTY,
             params,
             new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
+            TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
             arg);
 
     assertFalse(AppleBuildRules.isXcodeTargetTestBuildRule(libraryRule));

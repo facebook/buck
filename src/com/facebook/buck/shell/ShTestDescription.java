@@ -77,6 +77,7 @@ public class ShTestDescription implements
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     Function<String, com.facebook.buck.rules.args.Arg> toArg =

@@ -43,6 +43,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -141,7 +142,12 @@ public class ApkGenruleTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
         .setProjectFilesystem(projectFilesystem).build();
     ApkGenrule apkGenrule =
-        (ApkGenrule) description.createBuildRule(TargetGraph.EMPTY, params, ruleResolver, arg);
+        (ApkGenrule) description.createBuildRule(
+            TargetGraph.EMPTY,
+            params,
+            ruleResolver,
+            TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
+            arg);
     ruleResolver.addToIndex(apkGenrule);
 
     // Verify all of the observers of the Genrule.

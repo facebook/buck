@@ -37,6 +37,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -130,7 +131,12 @@ public class AndroidInstrumentationApkTest {
             MoreExecutors.newDirectExecutorService(),
             CxxPlatformUtils.DEFAULT_CONFIG,
             new DxConfig(FakeBuckConfig.builder().build()))
-            .createBuildRule(TargetGraph.EMPTY, params, ruleResolver, arg);
+            .createBuildRule(
+                TargetGraph.EMPTY,
+                params,
+                ruleResolver,
+                TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
+                arg);
 
     assertEquals(
         "//apps:app should have three JAR files to dex.",

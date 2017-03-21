@@ -568,6 +568,7 @@ public class PrebuiltCxxLibraryDescription implements
       TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver ruleResolver,
+      CellPathResolver cellRoots,
       final A args) throws NoSuchBuildTargetException {
 
     // See if we're building a particular "type" of this library, and if so, extract

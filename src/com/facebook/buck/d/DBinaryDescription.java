@@ -75,6 +75,7 @@ public class DBinaryDescription implements
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
+      CellPathResolver cellRoots,
       A args)
       throws NoSuchBuildTargetException {
 

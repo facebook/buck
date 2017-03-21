@@ -183,6 +183,7 @@ public class AppleLibraryDescription implements
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
     Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(
         params.getBuildTarget());
@@ -193,6 +194,7 @@ public class AppleLibraryDescription implements
           targetGraph,
           params,
           resolver,
+          cellRoots,
           args,
           args.linkStyle,
           Optional.empty(),
@@ -247,13 +249,14 @@ public class AppleLibraryDescription implements
 
   /**
    * @param targetGraph The target graph.
+   * @param cellRoots The roots of known cells.
    * @param bundleLoader The binary in which the current library will be (dynamically) loaded into.
-   *                     Only valid when building a shared library with MACH_O_BUNDLE link type.
    */
   public <A extends AppleNativeTargetDescriptionArg> BuildRule createLibraryBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args,
       Optional<Linker.LinkableDepType> linkableDepType,
       Optional<SourcePath> bundleLoader,
@@ -269,6 +272,7 @@ public class AppleLibraryDescription implements
     BuildRule unstrippedBinaryRule = requireUnstrippedBuildRule(
         params,
         resolver,
+        cellRoots,
         targetGraph,
         args,
         linkableDepType,
@@ -315,6 +319,7 @@ public class AppleLibraryDescription implements
   private <A extends AppleNativeTargetDescriptionArg> BuildRule requireUnstrippedBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       TargetGraph targetGraph,
       A args,
       Optional<Linker.LinkableDepType> linkableDepType,
@@ -330,6 +335,7 @@ public class AppleLibraryDescription implements
             requireSingleArchUnstrippedBuildRule(
                 params.withBuildTarget(thinTarget),
                 resolver,
+                cellRoots,
                 targetGraph,
                 args,
                 linkableDepType,
@@ -349,6 +355,7 @@ public class AppleLibraryDescription implements
       return requireSingleArchUnstrippedBuildRule(
           params,
           resolver,
+          cellRoots,
           targetGraph,
           args,
           linkableDepType,
@@ -362,6 +369,7 @@ public class AppleLibraryDescription implements
   requireSingleArchUnstrippedBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       TargetGraph targetGraph,
       A args,
       Optional<Linker.LinkableDepType> linkableDepType,
@@ -370,7 +378,7 @@ public class AppleLibraryDescription implements
       SourcePathResolver pathResolver) throws NoSuchBuildTargetException {
 
     Optional<BuildRule> swiftCompanionBuildRule = swiftDelegate.createCompanionBuildRule(
-        targetGraph, params, resolver, args);
+        targetGraph, params, resolver, cellRoots, args);
     if (swiftCompanionBuildRule.isPresent()) {
       // when creating a swift target, there is no need to proceed with apple binary rules,
       // otherwise, add this swift rule as a dependency.

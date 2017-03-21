@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
@@ -38,10 +39,11 @@ public class CxxPrecompiledHeaderDescription implements
 
   @Override
   public <A extends Arg> CxxPrecompiledHeaderTemplate createBuildRule(
-        TargetGraph targetGraph,
-        BuildRuleParams params,
-        BuildRuleResolver ruleResolver,
-        A args) {
+      TargetGraph targetGraph,
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
+      CellPathResolver cellRoots,
+      A args) {
     return new CxxPrecompiledHeaderTemplate(
         params.copyAppendingExtraDeps(ruleResolver.getAllRules(args.deps)),
         ruleResolver,

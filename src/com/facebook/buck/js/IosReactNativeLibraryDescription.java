@@ -56,6 +56,7 @@ public class IosReactNativeLibraryDescription
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args) {
     return enhancer.enhanceForIos(params, resolver, args);
   }

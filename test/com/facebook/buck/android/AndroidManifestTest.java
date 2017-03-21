@@ -37,6 +37,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
@@ -121,8 +122,11 @@ public class AndroidManifestTest {
     return description.createBuildRule(
         TargetGraph.EMPTY,
         buildRuleParams,
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
-        arg);
+        new BuildRuleResolver(
+            TargetGraph.EMPTY,
+            new DefaultTargetNodeToBuildRuleTransformer()),
+            TestCellBuilder.createCellRoots(buildRuleParams.getProjectFilesystem()),
+            arg);
   }
 
   // TODO(abhi): Add another unit test that passes in a non-trivial DependencyGraph and verify that

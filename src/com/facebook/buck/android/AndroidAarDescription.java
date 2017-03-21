@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -94,6 +95,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
       TargetGraph targetGraph,
       BuildRuleParams originalBuildRuleParams,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
 
     originalBuildRuleParams.getBuildTarget().checkUnflavored();
@@ -114,6 +116,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         targetGraph,
         androidManifestParams,
         resolver,
+        cellRoots,
         androidManifestArgs);
     aarExtraDepsBuilder.add(resolver.addToIndex(manifest));
 
