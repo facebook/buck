@@ -1160,35 +1160,34 @@ public class ProjectFilesystem {
     }
 
     private class DirWalkState {
-      final @Nullable Path dir;
-      final @Nullable BasicFileAttributes attrs;
+      final Path dir;
+      final BasicFileAttributes attrs;
+      final boolean isRootSentinel;
       UnmodifiableIterator<Path> iter;
-      @Nullable IOException ioe;
+      @Nullable IOException ioe = null;
 
       DirWalkState(
           Path directory,
-          BasicFileAttributes attributes) {
+          BasicFileAttributes attributes,
+          boolean isRootSentinel) {
         this.dir = directory;
         this.attrs = attributes;
-        try {
-          this.iter = getContents(directory).iterator();
-          this.ioe = null;
-        } catch (IOException e) {
-          this.iter = ImmutableList.<Path>of().iterator();
-          this.ioe = e;
+        if (isRootSentinel) {
+          this.iter = ImmutableList.of(root).iterator();
+        } else {
+          try {
+            this.iter = getContents(directory).iterator();
+          } catch (IOException e) {
+            this.iter = ImmutableList.<Path>of().iterator();
+            this.ioe = e;
+          }
         }
-      }
-
-      DirWalkState(Path root) {
-        this.dir = null;
-        this.attrs = null;
-        this.iter = ImmutableList.<Path>of(root).iterator();
-        this.ioe = null;
+        this.isRootSentinel = isRootSentinel;
       }
     }
 
     private void walk() throws IOException {
-      state.add(new DirWalkState(root));
+      state.add(new DirWalkState(root, getAttributes(root), true));
 
       while (true) {
         FileVisitResult result;
@@ -1196,7 +1195,7 @@ public class ProjectFilesystem {
           result = visitPath(state.getLast().iter.next());
         } else {
           DirWalkState dirState = state.removeLast();
-          if (dirState.dir == null) {
+          if (dirState.isRootSentinel) {
             return;
           }
           result = visitor.postVisitDirectory(dirState.dir, dirState.ioe);
@@ -1222,7 +1221,7 @@ public class ProjectFilesystem {
       if (attrs.isDirectory()) {
         FileVisitResult result = visitor.preVisitDirectory(p, attrs);
         if (result == FileVisitResult.CONTINUE) {
-          state.add(new DirWalkState(p, attrs));
+          state.add(new DirWalkState(p, attrs, false));
         }
         return result;
       } else {
@@ -1246,7 +1245,7 @@ public class ProjectFilesystem {
       try {
         Object thisKey = attrs.fileKey();
         for (DirWalkState s : state) {
-          if (s.dir == null) {
+          if (s.isRootSentinel) {
             continue;
           }
           Object thatKey = s.attrs.fileKey();
