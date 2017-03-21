@@ -197,10 +197,10 @@ public class AndroidLibraryDescription
       return AndroidLibrary.builder(
           androidLibraryParams,
           resolver,
-          compiler.compileToJar(args, javacOptions, resolver))
+          compiler.compileToJar(args, javacOptions, resolver),
+          javacOptions)
           .setArgs(args)
           .setAdditionalClasspathEntries(additionalClasspathEntries)
-          .setJavacOptions(javacOptions)
           .setTrackClassUsage(compiler.trackClassUsage(javacOptions))
           .setTests(args.tests)
           .build();

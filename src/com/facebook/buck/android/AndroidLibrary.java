@@ -26,6 +26,7 @@ import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -42,7 +43,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Pattern;
+
 
 public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackageable {
 
@@ -58,8 +59,9 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   public static Builder builder(
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      CompileToJarStepFactory compileStepFactory) {
-    return new Builder(params, buildRuleResolver, compileStepFactory);
+      CompileToJarStepFactory compileStepFactory,
+      JavacOptions javacOptions) {
+    return new Builder(params, buildRuleResolver, compileStepFactory, javacOptions);
   }
 
   @VisibleForTesting
@@ -115,11 +117,15 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   }
 
   public static class Builder extends DefaultJavaLibraryBuilder {
+    private final JavacOptions javacOptions;
+
     protected Builder(
         BuildRuleParams params,
         BuildRuleResolver buildRuleResolver,
-        CompileToJarStepFactory compileStepFactory) {
+        CompileToJarStepFactory compileStepFactory,
+        JavacOptions javacOptions) {
       super(params, buildRuleResolver, compileStepFactory);
+      this.javacOptions = javacOptions;
     }
 
     @Override
@@ -130,30 +136,10 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     }
 
     @Override
-    protected AndroidLibrary newInstance(
-        BuildRuleParams params,
-        JavacOptions javacOptions,
-        SourcePathResolver resolver,
-        SourcePathRuleFinder ruleFinder,
-        ImmutableSortedSet<? extends SourcePath> srcs,
-        ImmutableSortedSet<? extends SourcePath> resources,
-        Optional<Path> generatedSourceFolder,
-        Optional<SourcePath> proguardConfig,
-        ImmutableList<String> postprocessClassesCommands,
-        ImmutableSortedSet<BuildRule> exportedDeps,
-        ImmutableSortedSet<BuildRule> providedDeps,
-        ImmutableSortedSet<SourcePath> abiInputs,
-        boolean trackClassUsage,
-        ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries,
-        CompileToJarStepFactory compileStepFactory,
-        Optional<Path> resourcesRoot,
-        Optional<SourcePath> manifestFile,
-        Optional<String> mavenCoords,
-        ImmutableSortedSet<BuildTarget> tests,
-        ImmutableSet<Pattern> classesToRemoveFromJar) {
+    public DefaultJavaLibrary build() throws NoSuchBuildTargetException {
       return new AndroidLibrary(
           params,
-          resolver,
+          sourcePathResolver,
           ruleFinder,
           srcs,
           resources,
@@ -161,7 +147,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
           postprocessClassesCommands,
           exportedDeps,
           providedDeps,
-          abiInputs,
+          getAbiInputs(),
           additionalClasspathEntries,
           javacOptions,
           trackClassUsage,

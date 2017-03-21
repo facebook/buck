@@ -36,26 +36,25 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class DefaultJavaLibraryBuilder {
-  private final BuildRuleParams params;
-  private final BuildRuleResolver buildRuleResolver;
-  private final SourcePathResolver sourcePathResolver;
-  private final SourcePathRuleFinder ruleFinder;
-  private final CompileToJarStepFactory compileStepFactory;
-  private JavacOptions javacOptions;
-  private ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
-  private ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
-  private Optional<Path> generatedSourceFolder = Optional.empty();
-  private Optional<SourcePath> proguardConfig = Optional.empty();
-  private ImmutableList<String> postprocessClassesCommands = ImmutableList.of();
-  private ImmutableSortedSet<BuildRule> exportedDeps = ImmutableSortedSet.of();
-  private ImmutableSortedSet<BuildRule> providedDeps = ImmutableSortedSet.of();
-  private boolean trackClassUsage = false;
-  private ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries = ImmutableSet.of();
-  private Optional<Path> resourcesRoot = Optional.empty();
-  private Optional<SourcePath> manifestFile = Optional.empty();
-  private Optional<String> mavenCoords = Optional.empty();
-  private ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
-  private ImmutableSet<Pattern> classesToRemoveFromJar = ImmutableSet.of();
+  protected final BuildRuleParams params;
+  protected final BuildRuleResolver buildRuleResolver;
+  protected final SourcePathResolver sourcePathResolver;
+  protected final SourcePathRuleFinder ruleFinder;
+  protected final CompileToJarStepFactory compileStepFactory;
+  protected ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
+  protected ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
+  protected Optional<Path> generatedSourceFolder = Optional.empty();
+  protected Optional<SourcePath> proguardConfig = Optional.empty();
+  protected ImmutableList<String> postprocessClassesCommands = ImmutableList.of();
+  protected ImmutableSortedSet<BuildRule> exportedDeps = ImmutableSortedSet.of();
+  protected ImmutableSortedSet<BuildRule> providedDeps = ImmutableSortedSet.of();
+  protected boolean trackClassUsage = false;
+  protected ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries = ImmutableSet.of();
+  protected Optional<Path> resourcesRoot = Optional.empty();
+  protected Optional<SourcePath> manifestFile = Optional.empty();
+  protected Optional<String> mavenCoords = Optional.empty();
+  protected ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
+  protected ImmutableSet<Pattern> classesToRemoveFromJar = ImmutableSet.of();
 
   protected DefaultJavaLibraryBuilder(
       BuildRuleParams params,
@@ -67,11 +66,6 @@ public class DefaultJavaLibraryBuilder {
 
     ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     sourcePathResolver = new SourcePathResolver(ruleFinder);
-  }
-
-  public DefaultJavaLibraryBuilder setJavacOptions(JavacOptions javacOptions) {
-    this.javacOptions = javacOptions;
-    return this;
   }
 
   public DefaultJavaLibraryBuilder setArgs(JavaLibraryDescription.Arg args) {
@@ -169,54 +163,11 @@ public class DefaultJavaLibraryBuilder {
     return this;
   }
 
-  public DefaultJavaLibrary build() throws NoSuchBuildTargetException {
-    ImmutableSortedSet<SourcePath> abiInputs =
-        JavaLibraryRules.getAbiInputs(buildRuleResolver, params.getDeps());
-
-    return newInstance(
-        params,
-        javacOptions,
-        sourcePathResolver,
-        ruleFinder,
-        srcs,
-        resources,
-        generatedSourceFolder,
-        proguardConfig,
-        postprocessClassesCommands,
-        exportedDeps,
-        providedDeps,
-        abiInputs,
-        trackClassUsage,
-        additionalClasspathEntries,
-        compileStepFactory,
-        resourcesRoot,
-        manifestFile,
-        mavenCoords,
-        tests,
-        classesToRemoveFromJar);
+  protected ImmutableSortedSet<SourcePath> getAbiInputs() throws NoSuchBuildTargetException {
+    return JavaLibraryRules.getAbiInputs(buildRuleResolver, params.getDeps());
   }
 
-  protected DefaultJavaLibrary newInstance(
-      BuildRuleParams params,
-      @SuppressWarnings("unused") JavacOptions javacOptions,
-      SourcePathResolver sourcePathResolver,
-      SourcePathRuleFinder ruleFinder,
-      ImmutableSortedSet<? extends SourcePath> srcs,
-      ImmutableSortedSet<? extends SourcePath> resources,
-      Optional<Path> generatedSourceFolder,
-      Optional<SourcePath> proguardConfig,
-      ImmutableList<String> postprocessClassesCommands,
-      ImmutableSortedSet<BuildRule> exportedDeps,
-      ImmutableSortedSet<BuildRule> providedDeps,
-      ImmutableSortedSet<SourcePath> abiInputs,
-      boolean trackClassUsage,
-      ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries,
-      CompileToJarStepFactory compileStepFactory,
-      Optional<Path> resourcesRoot,
-      Optional<SourcePath> manifestFile,
-      Optional<String> mavenCoords,
-      ImmutableSortedSet<BuildTarget> tests,
-      ImmutableSet<Pattern> classesToRemoveFromJar) {
+  public DefaultJavaLibrary build() throws NoSuchBuildTargetException {
     return new DefaultJavaLibrary(
         params,
         sourcePathResolver,
@@ -228,7 +179,7 @@ public class DefaultJavaLibraryBuilder {
         postprocessClassesCommands,
         exportedDeps,
         providedDeps,
-        abiInputs,
+        getAbiInputs(),
         trackClassUsage,
         additionalClasspathEntries,
         compileStepFactory,
