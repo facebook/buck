@@ -56,11 +56,12 @@ public class AppleResources {
       Iterable<? extends TargetNode<?, ?>> targetNodes) {
     return FluentIterable
         .from(targetNodes)
-        .transformAndConcat(
-            AppleBuildRules.newRecursiveRuleDependencyTransformer(
+        .transformAndConcat(node ->
+            AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                 targetGraph,
                 cache,
                 AppleBuildRules.RecursiveDependenciesMode.COPYING,
+                node,
                 ImmutableSet.of(AppleResourceDescription.class)))
         .transform(
             input -> (AppleResourceDescription.Arg) input.getConstructorArg())

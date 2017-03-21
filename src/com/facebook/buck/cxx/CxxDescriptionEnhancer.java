@@ -54,7 +54,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -757,11 +756,11 @@ public class CxxDescriptionEnhancer {
 
       @Override
       public Path apply(FrameworkPath input) {
-        Function<FrameworkPath, Path> convertToPath =
-            FrameworkPath.getUnexpandedSearchPathFunction(
+        String pathAsString =
+            FrameworkPath.getUnexpandedSearchPath(
                 resolver::getAbsolutePath,
-                Functions.identity());
-        String pathAsString = convertToPath.apply(input).toString();
+                Functions.identity(),
+                input).toString();
         return Paths.get(translateMacrosFn.apply(pathAsString));
       }
     };

@@ -125,7 +125,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -2440,11 +2439,12 @@ public class ProjectGenerator {
       Iterable<TargetNode<T, ?>> targetNodes) {
     return FluentIterable
         .from(targetNodes)
-        .transformAndConcat(
-            AppleBuildRules.newRecursiveRuleDependencyTransformer(
+        .transformAndConcat(node ->
+            AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                 targetGraph,
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
+                node,
                 AppleBuildRules.XCODE_TARGET_DESCRIPTION_CLASSES))
         .transformAndConcat(input -> {
           Optional<TargetNode<CxxLibraryDescription.Arg, ?>> library =
@@ -2467,18 +2467,19 @@ public class ProjectGenerator {
           ImmutableSortedSet<FrameworkPath>> pathSetExtractor) {
     return FluentIterable
         .from(targetNodes)
-        .transformAndConcat(
-            AppleBuildRules.newRecursiveRuleDependencyTransformer(
+        .transformAndConcat(node ->
+            AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                 targetGraph,
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
+                node,
                 ImmutableSet.of(
                     AppleLibraryDescription.class,
                     CxxLibraryDescription.class)))
         .append(targetNodes)
         .transformAndConcat(
             input -> input.castArg(AppleNativeTargetDescriptionArg.class)
-                .map(getTargetFrameworkSearchPaths(pathSetExtractor)::apply)
+                .map(castedInput -> getTargetFrameworkSearchPaths(pathSetExtractor, castedInput))
                 .orElse(ImmutableSet.of()));
   }
 
@@ -2486,11 +2487,12 @@ public class ProjectGenerator {
       Iterable<TargetNode<T, ?>> targetNodes) {
     return FluentIterable
         .from(targetNodes)
-        .transformAndConcat(
-            AppleBuildRules.newRecursiveRuleDependencyTransformer(
+        .transformAndConcat(node ->
+            AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                 targetGraph,
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.BUILDING,
+                node,
                 ImmutableSet.of(
                     AppleLibraryDescription.class,
                     CxxLibraryDescription.class)))
@@ -2505,11 +2507,12 @@ public class ProjectGenerator {
       collectRecursiveExportedPlatformPreprocessorFlags(Iterable<TargetNode<T, ?>> targetNodes) {
     return FluentIterable
         .from(targetNodes)
-        .transformAndConcat(
-            AppleBuildRules.newRecursiveRuleDependencyTransformer(
+        .transformAndConcat(node ->
+            AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                 targetGraph,
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.BUILDING,
+                node,
                 ImmutableSet.of(
                     AppleLibraryDescription.class,
                     CxxLibraryDescription.class)))
@@ -2525,11 +2528,12 @@ public class ProjectGenerator {
       Iterable<TargetNode<T, ?>> targetNodes) {
     return FluentIterable
         .from(targetNodes)
-        .transformAndConcat(
-            AppleBuildRules.newRecursiveRuleDependencyTransformer(
+        .transformAndConcat(node ->
+            AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                 targetGraph,
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
+                node,
                 ImmutableSet.of(
                     AppleLibraryDescription.class,
                     CxxLibraryDescription.class,
@@ -2546,11 +2550,12 @@ public class ProjectGenerator {
       collectRecursiveExportedPlatformLinkerFlags(Iterable<TargetNode<T, ?>> targetNodes) {
     return FluentIterable
         .from(targetNodes)
-        .transformAndConcat(
-            AppleBuildRules.newRecursiveRuleDependencyTransformer(
+        .transformAndConcat(node ->
+            AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                 targetGraph,
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
+                node,
                 ImmutableSet.of(
                     AppleLibraryDescription.class,
                     CxxLibraryDescription.class,
@@ -2567,29 +2572,28 @@ public class ProjectGenerator {
   collectRecursiveLibraryDependencies(Iterable<TargetNode<T, ?>> targetNodes) {
     return FluentIterable
         .from(targetNodes)
-        .transformAndConcat(
-            AppleBuildRules.newRecursiveRuleDependencyTransformer(
+        .transformAndConcat(node ->
+            AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                 targetGraph,
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
+                node,
                 AppleBuildRules.XCODE_TARGET_DESCRIPTION_CLASSES))
-        .filter(getLibraryWithSourcesToCompilePredicate())
+        .filter(this::isLibraryWithSourcesToCompile)
         .transform(this::getLibraryFileReference)
         .toSet();
   }
 
-  private Function<
-      TargetNode<AppleNativeTargetDescriptionArg, ?>,
-      Iterable<String>> getTargetFrameworkSearchPaths(
-      final Function<
-          AppleNativeTargetDescriptionArg,
-          ImmutableSortedSet<FrameworkPath>> pathSetExtractor) {
-    return input -> FluentIterable
+  private Iterable<String> getTargetFrameworkSearchPaths(
+      Function<AppleNativeTargetDescriptionArg, ImmutableSortedSet<FrameworkPath>> pathSetExtractor,
+      TargetNode<AppleNativeTargetDescriptionArg, ?> input) {
+    return FluentIterable
         .from(pathSetExtractor.apply(input.getConstructorArg()))
-        .transform(
-            FrameworkPath.getUnexpandedSearchPathFunction(
+        .transform(frameworkPath ->
+            FrameworkPath.getUnexpandedSearchPath(
                 this::resolveSourcePath,
-                pathRelativizer::outputDirToRootRelative))
+                pathRelativizer::outputDirToRootRelative,
+                frameworkPath))
         .transform(Object::toString);
   }
 
@@ -2763,19 +2767,17 @@ public class ProjectGenerator {
     return resolveSourcePath(src.get());
   }
 
-  private Predicate<TargetNode<?, ?>> getLibraryWithSourcesToCompilePredicate() {
-    return input -> {
-      if (input.getDescription() instanceof HalideLibraryDescription) {
-        return true;
-      }
+  private boolean isLibraryWithSourcesToCompile(TargetNode<?, ?> input) {
+    if (input.getDescription() instanceof HalideLibraryDescription) {
+      return true;
+    }
 
-      Optional<TargetNode<CxxLibraryDescription.Arg, ?>> library =
-          getLibraryNode(targetGraph, input);
-      if (!library.isPresent()) {
-        return false;
-      }
-      return (library.get().getConstructorArg().srcs.size() != 0);
-    };
+    Optional<TargetNode<CxxLibraryDescription.Arg, ?>> library =
+        getLibraryNode(targetGraph, input);
+    if (!library.isPresent()) {
+      return false;
+    }
+    return (library.get().getConstructorArg().srcs.size() != 0);
   }
 
   /**

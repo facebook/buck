@@ -26,8 +26,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.swift.SwiftLibraryDescription;
-import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.Function;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -264,6 +263,21 @@ public final class AppleBuildRules {
     return result;
   }
 
+  public static ImmutableSet<TargetNode<?, ?>> getRecursiveTargetNodeDependenciesOfTypes(
+      TargetGraph targetGraph,
+      Optional<AppleDependenciesCache> cache,
+      RecursiveDependenciesMode mode,
+      TargetNode<?, ?> input,
+      ImmutableSet<Class<? extends Description<?>>> descriptionClasses) {
+    return getRecursiveTargetNodeDependenciesOfTypes(
+        targetGraph,
+        cache,
+        mode,
+        input,
+        Optional.of(descriptionClasses));
+  }
+
+
   static void addDirectAndExportedDeps(
       TargetGraph targetGraph,
       TargetNode<?, ?> targetNode,
@@ -301,20 +315,6 @@ public final class AppleBuildRules {
             input -> isXcodeTargetDescription(input.getDescription())));
   }
 
-  public static Function<TargetNode<?, ?>, ImmutableSet<TargetNode<?, ?>>>
-    newRecursiveRuleDependencyTransformer(
-      final TargetGraph targetGraph,
-      final Optional<AppleDependenciesCache> cache,
-      final RecursiveDependenciesMode mode,
-      final ImmutableSet<Class<? extends Description<?>>> descriptionClasses) {
-    return input -> getRecursiveTargetNodeDependenciesOfTypes(
-        targetGraph,
-        cache,
-        mode,
-        input,
-        Optional.of(descriptionClasses));
-  }
-
   public static <T> ImmutableSet<AppleAssetCatalogDescription.Arg>
   collectRecursiveAssetCatalogs(
       TargetGraph targetGraph,
@@ -322,14 +322,14 @@ public final class AppleBuildRules {
       Iterable<TargetNode<T, ?>> targetNodes) {
     return FluentIterable
         .from(targetNodes)
-        .transformAndConcat(
-            newRecursiveRuleDependencyTransformer(
+        .transformAndConcat(input ->
+            getRecursiveTargetNodeDependenciesOfTypes(
                 targetGraph,
                 cache,
                 RecursiveDependenciesMode.COPYING,
+                input,
                 APPLE_ASSET_CATALOG_DESCRIPTION_CLASSES))
-        .transform(
-            input -> (AppleAssetCatalogDescription.Arg) input.getConstructorArg())
+        .transform(input -> (AppleAssetCatalogDescription.Arg) input.getConstructorArg())
         .toSet();
   }
 
@@ -340,36 +340,34 @@ public final class AppleBuildRules {
       Iterable<TargetNode<T, ?>> targetNodes) {
     return FluentIterable
         .from(targetNodes)
-        .transformAndConcat(
-            newRecursiveRuleDependencyTransformer(
+        .transformAndConcat(input ->
+            getRecursiveTargetNodeDependenciesOfTypes(
                 targetGraph,
                 cache,
                 RecursiveDependenciesMode.COPYING,
+                input,
                 WRAPPER_RESOURCE_DESCRIPTION_CLASSES))
-        .transform(
-            input -> (AppleWrapperResourceArg) input.getConstructorArg())
+        .transform(input -> (AppleWrapperResourceArg) input.getConstructorArg())
         .toSet();
   }
 
   @SuppressWarnings("unchecked")
-  public static <T, U extends Description<T>> ImmutableSet<T> collectTransitiveBuildRules(
+  public static <T> ImmutableSet<T> collectTransitiveBuildRules(
       TargetGraph targetGraph,
       Optional<AppleDependenciesCache> cache,
       ImmutableSet<Class<? extends Description<?>>> descriptionClasses,
       Collection<TargetNode<?, ?>> targetNodes) {
-    return targetNodes
-        .stream()
-        .flatMap(
-            targetNode ->
-                newRecursiveRuleDependencyTransformer(
+    return RichStream.from(targetNodes)
+        .flatMap(targetNode ->
+                getRecursiveTargetNodeDependenciesOfTypes(
                     targetGraph,
                     cache,
                     RecursiveDependenciesMode.COPYING,
+                    targetNode,
                     descriptionClasses)
-                    .apply(targetNode)
                     .stream())
         .map(input -> (T) input.getConstructorArg())
-        .collect(MoreCollectors.toImmutableSet());
+        .toImmutableSet();
   }
 
   public static ImmutableSet<AppleAssetCatalogDescription.Arg> collectDirectAssetCatalogs(

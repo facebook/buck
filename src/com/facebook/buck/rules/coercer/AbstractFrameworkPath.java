@@ -88,27 +88,27 @@ abstract class AbstractFrameworkPath implements
     return Files.getNameWithoutExtension(fileName);
   }
 
-  public static Function<FrameworkPath, Path> getUnexpandedSearchPathFunction(
-      final Function<SourcePath, Path> resolver,
-      final Function<? super Path, Path> relativizer) {
-    return input -> getConvertToPathFunction(resolver, relativizer).apply(input).getParent();
+  public static Path getUnexpandedSearchPath(
+      Function<SourcePath, Path> resolver,
+      Function<? super Path, Path> relativizer,
+      FrameworkPath input) {
+    return convertToPath(resolver, relativizer, input).getParent();
   }
 
-  public static Function<FrameworkPath, Path> getConvertToPathFunction(
-      final Function<SourcePath, Path> resolver,
-      final Function<? super Path, Path> relativizer) {
-    return input -> {
-      switch (input.getType()) {
-        case SOURCE_TREE_PATH:
-          return Paths.get(input.getSourceTreePath().get().toString());
-        case SOURCE_PATH:
-          return relativizer.apply(
-              Preconditions
-                  .checkNotNull(resolver.apply(input.getSourcePath().get())));
-        default:
-          throw new RuntimeException("Unhandled type: " + input.getType());
-      }
-    };
+  private static Path convertToPath(
+      Function<SourcePath, Path> resolver,
+      Function<? super Path, Path> relativizer,
+      FrameworkPath input) {
+    switch (input.getType()) {
+      case SOURCE_TREE_PATH:
+        return Paths.get(input.getSourceTreePath().get().toString());
+      case SOURCE_PATH:
+        return relativizer.apply(
+            Preconditions
+                .checkNotNull(resolver.apply(input.getSourcePath().get())));
+      default:
+        throw new RuntimeException("Unhandled type: " + input.getType());
+    }
   }
 
   @Value.Check
