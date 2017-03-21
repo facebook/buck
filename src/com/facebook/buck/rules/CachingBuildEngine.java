@@ -164,6 +164,8 @@ public class CachingBuildEngine implements BuildEngine {
   private final Optional<UnskippedRulesTracker> unskippedRulesTracker;
   private final BuildRuleDurationTracker buildRuleDurationTracker = new BuildRuleDurationTracker();
 
+  private final ConcurrentMap<Path, BuildInfoStore> buildInfoStores = Maps.newConcurrentMap();
+
   public CachingBuildEngine(
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
       WeightedListeningExecutorService service,
@@ -654,6 +656,12 @@ public class CachingBuildEngine implements BuildEngine {
     return verifyRecordedPathHashes(target, filesystem, recordedPathHashes);
   }
 
+  private BuildInfoStore getOrCreateBuildInfoStore(ProjectFilesystem filesystem) {
+    return buildInfoStores.computeIfAbsent(
+        filesystem.getRootPath(),
+        path -> new FilesystemBuildInfoStore(filesystem));
+  }
+
   private ListenableFuture<BuildResult> processBuildRule(
       BuildRule rule,
       BuildEngineBuildContext buildContext,
@@ -661,12 +669,17 @@ public class CachingBuildEngine implements BuildEngine {
       ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks) {
 
     final RuleKeyFactories keyFactories = ruleKeyFactories.apply(rule.getProjectFilesystem());
+    final BuildInfoStore buildInfoStore = getOrCreateBuildInfoStore(rule.getProjectFilesystem());
     final OnDiskBuildInfo onDiskBuildInfo =
         buildContext.createOnDiskBuildInfoFor(
             rule.getBuildTarget(),
-            rule.getProjectFilesystem());
+            rule.getProjectFilesystem(),
+            buildInfoStore);
     final BuildInfoRecorder buildInfoRecorder =
-        buildContext.createBuildInfoRecorder(rule.getBuildTarget(), rule.getProjectFilesystem())
+        buildContext.createBuildInfoRecorder(
+            rule.getBuildTarget(),
+            rule.getProjectFilesystem(),
+            buildInfoStore)
             .addBuildMetadata(
                 BuildInfo.MetadataKey.RULE_KEY,
                 keyFactories.getDefaultRuleKeyFactory().build(rule).toString());
@@ -1380,11 +1393,9 @@ public class CachingBuildEngine implements BuildEngine {
       // First, clear out the pre-existing metadata directory.  We have to do this *before*
       // unpacking the zipped artifact, as it includes files that will be stored in the metadata
       // directory.
-      Path metadataDir =
-          BuildInfo.getPathToMetadataDirectory(
-              rule.getBuildTarget(),
-              rule.getProjectFilesystem());
-      rule.getProjectFilesystem().deleteRecursivelyIfExists(metadataDir);
+      BuildInfoStore buildInfoStore = buildInfoStores.get(
+          rule.getProjectFilesystem().getRootPath());
+      buildInfoStore.deleteMetadata(rule.getBuildTarget());
 
       Unzip.extractZipFile(
           zipPath.toAbsolutePath(),
@@ -1396,12 +1407,7 @@ public class CachingBuildEngine implements BuildEngine {
       Files.delete(zipPath);
 
       // Also write out the build metadata.
-      for (Map.Entry<String, String> ent : cacheResult.getMetadata().entrySet()) {
-        Path dest = metadataDir.resolve(ent.getKey());
-        filesystem.createParentDirs(dest);
-        filesystem.writeContentsToPath(ent.getValue(), dest);
-      }
-
+      buildInfoStore.updateMetadata(rule.getBuildTarget(), cacheResult.getMetadata());
     } catch (IOException e) {
       // In the wild, we have seen some inexplicable failures during this step. For now, we try to
       // give the user as much information as we can to debug the issue, but return CacheResult.MISS

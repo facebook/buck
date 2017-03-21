@@ -42,15 +42,20 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
 
   private static final Logger LOG = Logger.get(DefaultOnDiskBuildInfo.class);
 
+  private final BuildTarget buildTarget;
   private final ProjectFilesystem projectFilesystem;
+  private final BuildInfoStore buildInfoStore;
   private final Path metadataDirectory;
   private final ObjectMapper objectMapper;
 
   public DefaultOnDiskBuildInfo(
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
+      BuildInfoStore buildInfoStore,
       ObjectMapper objectMapper) {
+    this.buildTarget = target;
     this.projectFilesystem = projectFilesystem;
+    this.buildInfoStore = buildInfoStore;
     this.metadataDirectory = BuildInfo.getPathToMetadataDirectory(target, projectFilesystem);
     this.objectMapper = objectMapper;
   }
@@ -62,7 +67,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
 
   @Override
   public Optional<String> getBuildValue(String key) {
-    return projectFilesystem.readFileIfItExists(metadataDirectory.resolve(key));
+    return buildInfoStore.readMetadata(buildTarget, key);
   }
 
   @Override

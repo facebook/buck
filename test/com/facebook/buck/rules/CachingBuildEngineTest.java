@@ -194,6 +194,7 @@ public class CachingBuildEngineTest {
     protected final InMemoryArtifactCache cache = new InMemoryArtifactCache();
     protected final FakeBuckEventListener listener = new FakeBuckEventListener();
     protected FakeProjectFilesystem filesystem;
+    protected FilesystemBuildInfoStore buildInfoStore;
     protected FileHashCache fileHashCache;
     protected BuildEngineBuildContext buildContext;
     protected BuildRuleResolver resolver;
@@ -206,6 +207,7 @@ public class CachingBuildEngineTest {
     @Before
     public void setUp() {
       filesystem = new FakeProjectFilesystem(tmp.getRoot());
+      buildInfoStore = new FilesystemBuildInfoStore(filesystem);
       fileHashCache =
           new StackedFileHashCache(
               ImmutableList.of(
@@ -243,6 +245,7 @@ public class CachingBuildEngineTest {
       return new BuildInfoRecorder(
           buildTarget,
           filesystem,
+          buildInfoStore,
           new DefaultClock(),
           new BuildId(),
           new ObjectMapper(),
@@ -1295,7 +1298,10 @@ public class CachingBuildEngineTest {
       assertTrue(cache.hasArtifact(inputRuleKey));
 
       // Verify the input rule key was written to disk.
-      OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(target, filesystem);
+      OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(
+          target,
+          filesystem,
+          buildInfoStore);
       assertThat(
           onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY),
           equalTo(Optional.of(inputRuleKey)));
@@ -1347,7 +1353,10 @@ public class CachingBuildEngineTest {
       assertEquals(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY, result.getSuccess());
 
       // Verify the input-based and actual rule keys were updated on disk.
-      OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(target, filesystem);
+      OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(
+          target,
+          filesystem,
+          buildInfoStore);
       assertThat(
           onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY),
           equalTo(Optional.of(defaultRuleKeyFactory.build(rule))));
@@ -1421,7 +1430,10 @@ public class CachingBuildEngineTest {
       assertEquals(BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED, result.getSuccess());
 
       // Verify the input-based and actual rule keys were updated on disk.
-      OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(target, filesystem);
+      OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(
+          target,
+          filesystem,
+          buildInfoStore);
       assertThat(
           onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY),
           equalTo(Optional.of(defaultRuleKeyFactory.build(rule))));
@@ -1517,7 +1529,10 @@ public class CachingBuildEngineTest {
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
 
       // Verify the input-based and actual rule keys were updated on disk.
-      OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(target, filesystem);
+      OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(
+          target,
+          filesystem,
+          buildInfoStore);
       assertThat(
           onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY),
           equalTo(Optional.of(defaultRuleKeyFactory.build(rule))));
@@ -1630,7 +1645,10 @@ public class CachingBuildEngineTest {
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, getSuccess(result));
 
       // Verify the dep file rule key and dep file contents were written to disk.
-      OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(target, filesystem);
+      OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(
+          target,
+          filesystem,
+          buildInfoStore);
       assertThat(
           onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY),
           equalTo(Optional.of(depFileRuleKey)));
@@ -2085,7 +2103,10 @@ public class CachingBuildEngineTest {
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, getSuccess(result));
 
       // Verify the input-based and actual rule keys were updated on disk.
-      OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(target, filesystem);
+      OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(
+          target,
+          filesystem,
+          buildInfoStore);
       assertThat(
           onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY),
           equalTo(Optional.of(defaultRuleKeyFactory.build(rule))));
@@ -2189,7 +2210,10 @@ public class CachingBuildEngineTest {
           getSuccess(result),
           equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
 
-      OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(target, filesystem);
+      OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(
+          target,
+          filesystem,
+          buildInfoStore);
       RuleKey depFileRuleKey =
           onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY).get();
 
@@ -2315,7 +2339,10 @@ public class CachingBuildEngineTest {
           getSuccess(result),
           equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
 
-      OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(target, filesystem);
+      OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(
+          target,
+          filesystem,
+          buildInfoStore);
       RuleKey depFileRuleKey =
           onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY).get();
 
@@ -2441,7 +2468,10 @@ public class CachingBuildEngineTest {
           getSuccess(result),
           equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
 
-      OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(target, filesystem);
+      OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(
+          target,
+          filesystem,
+          buildInfoStore);
       RuleKey depFileRuleKey =
           onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY).get();
 

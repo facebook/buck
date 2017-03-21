@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
@@ -83,6 +82,7 @@ public class BuildInfoRecorder {
   private final BuildTarget buildTarget;
   private final Path pathToMetadataDirectory;
   private final ProjectFilesystem projectFilesystem;
+  private final BuildInfoStore buildInfoStore;
   private final Clock clock;
   private final BuildId buildId;
   private final ObjectMapper objectMapper;
@@ -99,6 +99,7 @@ public class BuildInfoRecorder {
   BuildInfoRecorder(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      BuildInfoStore buildInfoStore,
       Clock clock,
       BuildId buildId,
       ObjectMapper objectMapper,
@@ -107,6 +108,7 @@ public class BuildInfoRecorder {
     this.pathToMetadataDirectory =
         BuildInfo.getPathToMetadataDirectory(buildTarget, projectFilesystem);
     this.projectFilesystem = projectFilesystem;
+    this.buildInfoStore = buildInfoStore;
     this.clock = clock;
     this.buildId = buildId;
     this.objectMapper = objectMapper;
@@ -167,11 +169,12 @@ public class BuildInfoRecorder {
   public void writeMetadataToDisk(boolean clearExistingMetadata) throws IOException {
     if (clearExistingMetadata) {
       projectFilesystem.deleteRecursivelyIfExists(pathToMetadataDirectory);
+      buildInfoStore.deleteMetadata(buildTarget);
     }
     projectFilesystem.mkdirs(pathToMetadataDirectory);
 
-    for (Map.Entry<String, String> entry :
-         Iterables.concat(metadataToWrite.entrySet(), getBuildMetadata().entrySet())) {
+    buildInfoStore.updateMetadata(buildTarget, getBuildMetadata());
+    for (Map.Entry<String, String> entry : metadataToWrite.entrySet()) {
       projectFilesystem.writeContentsToPath(
           entry.getValue(),
           pathToMetadataDirectory.resolve(entry.getKey()));

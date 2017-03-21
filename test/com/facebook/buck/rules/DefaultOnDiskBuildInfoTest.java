@@ -45,6 +45,7 @@ public class DefaultOnDiskBuildInfoTest {
         new DefaultOnDiskBuildInfo(
             buildTarget,
             projectFilesystem,
+            new FilesystemBuildInfoStore(projectFilesystem),
             ObjectMappers.newDefaultInstance());
     assertThat(
         onDiskBuildInfo.getValue("KEY"),
@@ -63,6 +64,7 @@ public class DefaultOnDiskBuildInfoTest {
         new DefaultOnDiskBuildInfo(
             buildTarget,
             projectFilesystem,
+            new FilesystemBuildInfoStore(projectFilesystem),
             ObjectMappers.newDefaultInstance());
     assertThat(
         onDiskBuildInfo.getValues("KEY"),
@@ -81,6 +83,7 @@ public class DefaultOnDiskBuildInfoTest {
         new DefaultOnDiskBuildInfo(
             buildTarget,
             projectFilesystem,
+            new FilesystemBuildInfoStore(projectFilesystem),
             ObjectMappers.newDefaultInstance());
     assertThat(
         onDiskBuildInfo.getValues("KEY"),
@@ -97,6 +100,7 @@ public class DefaultOnDiskBuildInfoTest {
         new DefaultOnDiskBuildInfo(
             buildTarget,
             projectFilesystem,
+            new FilesystemBuildInfoStore(projectFilesystem),
             ObjectMappers.newDefaultInstance());
     assertThat(
         onDiskBuildInfo.getValues("KEY"),
@@ -115,6 +119,7 @@ public class DefaultOnDiskBuildInfoTest {
         new DefaultOnDiskBuildInfo(
             buildTarget,
             projectFilesystem,
+            new FilesystemBuildInfoStore(projectFilesystem),
             ObjectMappers.newDefaultInstance());
     assertThat(
         onDiskBuildInfo.getValues("KEY"),
@@ -134,6 +139,7 @@ public class DefaultOnDiskBuildInfoTest {
         new DefaultOnDiskBuildInfo(
             buildTarget,
             projectFilesystem,
+            new FilesystemBuildInfoStore(projectFilesystem),
             ObjectMappers.newDefaultInstance());
     assertThat(
         onDiskBuildInfo.getHash("KEY"),
@@ -150,6 +156,7 @@ public class DefaultOnDiskBuildInfoTest {
         new DefaultOnDiskBuildInfo(
             buildTarget,
             projectFilesystem,
+            new FilesystemBuildInfoStore(projectFilesystem),
             ObjectMappers.newDefaultInstance());
     assertThat(
         onDiskBuildInfo.getHash("KEY"),
@@ -168,6 +175,7 @@ public class DefaultOnDiskBuildInfoTest {
         new DefaultOnDiskBuildInfo(
             buildTarget,
             projectFilesystem,
+            new FilesystemBuildInfoStore(projectFilesystem),
             ObjectMappers.newDefaultInstance());
     assertThat(
         onDiskBuildInfo.getHash("KEY"),
@@ -187,6 +195,7 @@ public class DefaultOnDiskBuildInfoTest {
         new DefaultOnDiskBuildInfo(
             buildTarget,
             projectFilesystem,
+            new FilesystemBuildInfoStore(projectFilesystem),
             ObjectMappers.newDefaultInstance());
     assertThat(
         onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY),
@@ -205,6 +214,7 @@ public class DefaultOnDiskBuildInfoTest {
         new DefaultOnDiskBuildInfo(
             buildTarget,
             projectFilesystem,
+            new FilesystemBuildInfoStore(projectFilesystem),
             ObjectMappers.newDefaultInstance());
     assertThat(
         onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY),
@@ -223,6 +233,7 @@ public class DefaultOnDiskBuildInfoTest {
         new DefaultOnDiskBuildInfo(
             buildTarget,
             projectFilesystem,
+            new FilesystemBuildInfoStore(projectFilesystem),
             ObjectMappers.newDefaultInstance());
     assertThat(
         onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY),

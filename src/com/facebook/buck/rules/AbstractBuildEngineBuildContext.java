@@ -55,8 +55,15 @@ abstract class AbstractBuildEngineBuildContext {
    * This method should be visible to {@link AbstractBuildRuleWithResolver}, but not {@link BuildRule}s
    * in general.
    */
-  OnDiskBuildInfo createOnDiskBuildInfoFor(BuildTarget target, ProjectFilesystem filesystem) {
-    return new DefaultOnDiskBuildInfo(target, filesystem, getObjectMapper());
+  OnDiskBuildInfo createOnDiskBuildInfoFor(
+      BuildTarget target,
+      ProjectFilesystem filesystem,
+      BuildInfoStore buildInfoStore) {
+    return new DefaultOnDiskBuildInfo(
+        target,
+        filesystem,
+        buildInfoStore,
+        getObjectMapper());
   }
 
   /**
@@ -65,10 +72,14 @@ abstract class AbstractBuildEngineBuildContext {
    * This method should be visible to {@link AbstractBuildRuleWithResolver}, but not {@link BuildRule}s
    * in general.
    */
-  BuildInfoRecorder createBuildInfoRecorder(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+  BuildInfoRecorder createBuildInfoRecorder(
+      BuildTarget buildTarget,
+      ProjectFilesystem filesystem,
+      BuildInfoStore buildInfoStore) {
     return new BuildInfoRecorder(
         buildTarget,
         filesystem,
+        buildInfoStore,
         getClock(),
         getBuildId(),
         getObjectMapper(),

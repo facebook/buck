@@ -81,6 +81,7 @@ public class BuildInfoRecorderIntegrationTest {
     return new BuildInfoRecorder(
         BUILD_TARGET,
         filesystem,
+        new FilesystemBuildInfoStore(filesystem),
         new DefaultClock(),
         new BuildId(),
         ObjectMappers.newDefaultInstance(),

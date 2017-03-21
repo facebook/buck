@@ -37,6 +37,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultOnDiskBuildInfo;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.FilesystemBuildInfoStore;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -226,9 +227,11 @@ public class AndroidBinaryIntegrationTest {
 
   @Test
   public void testDxFindsReferencedResources() throws IOException {
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmpFolder.getRoot());
     DefaultOnDiskBuildInfo buildInfo = new DefaultOnDiskBuildInfo(
         BuildTargetFactory.newInstance("//java/com/sample/lib:lib#dex"),
-        new ProjectFilesystem(tmpFolder.getRoot()),
+        filesystem,
+        new FilesystemBuildInfoStore(filesystem),
         ObjectMappers.newDefaultInstance());
     Optional<ImmutableList<String>> resourcesFromMetadata =
         buildInfo.getValues(DexProducedFromJavaLibrary.REFERENCED_RESOURCES);

@@ -83,14 +83,14 @@ public class BuildInfoRecorderTest {
   @Test
   public void testWriteMetadataToDisk() throws IOException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-
+    BuildInfoStore store = new FilesystemBuildInfoStore(filesystem);
     BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(filesystem);
     buildInfoRecorder.addMetadata("key1", "value1");
 
     buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ true);
 
     OnDiskBuildInfo onDiskBuildInfo =
-        new DefaultOnDiskBuildInfo(BUILD_TARGET, filesystem, new ObjectMapper());
+        new DefaultOnDiskBuildInfo(BUILD_TARGET, filesystem, store, new ObjectMapper());
     assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "key1", "value1");
 
     buildInfoRecorder = createBuildInfoRecorder(filesystem);
@@ -98,7 +98,11 @@ public class BuildInfoRecorderTest {
 
     buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ false);
 
-    onDiskBuildInfo = new DefaultOnDiskBuildInfo(BUILD_TARGET, filesystem, new ObjectMapper());
+    onDiskBuildInfo = new DefaultOnDiskBuildInfo(
+        BUILD_TARGET,
+        filesystem,
+        store,
+        new ObjectMapper());
     assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "key1", "value1");
     assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "key2", "value2");
 
@@ -107,7 +111,11 @@ public class BuildInfoRecorderTest {
 
     buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ true);
 
-    onDiskBuildInfo = new DefaultOnDiskBuildInfo(BUILD_TARGET, filesystem, new ObjectMapper());
+    onDiskBuildInfo = new DefaultOnDiskBuildInfo(
+        BUILD_TARGET,
+        filesystem,
+        store,
+        new ObjectMapper());
     assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "key3", "value3");
     assertOnDiskBuildInfoDoesNotHaveMetadata(onDiskBuildInfo, "key1");
     assertOnDiskBuildInfoDoesNotHaveMetadata(onDiskBuildInfo, "key2");
@@ -116,13 +124,21 @@ public class BuildInfoRecorderTest {
     buildInfoRecorder = createBuildInfoRecorder(filesystem);
     buildInfoRecorder.addBuildMetadata("build", "metadata");
     buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ true);
-    onDiskBuildInfo = new DefaultOnDiskBuildInfo(BUILD_TARGET, filesystem, new ObjectMapper());
+    onDiskBuildInfo = new DefaultOnDiskBuildInfo(
+        BUILD_TARGET,
+        filesystem,
+        store,
+        new ObjectMapper());
     assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "build", "metadata");
 
     // Verify additional info build metadata always gets written.
     buildInfoRecorder = createBuildInfoRecorder(filesystem);
     buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ true);
-    onDiskBuildInfo = new DefaultOnDiskBuildInfo(BUILD_TARGET, filesystem, new ObjectMapper());
+    onDiskBuildInfo = new DefaultOnDiskBuildInfo(
+        BUILD_TARGET,
+        filesystem,
+        store,
+        new ObjectMapper());
     assertTrue(onDiskBuildInfo.getValue(BuildInfo.MetadataKey.ADDITIONAL_INFO).isPresent());
   }
 
@@ -322,6 +338,7 @@ public class BuildInfoRecorderTest {
     return new BuildInfoRecorder(
         BUILD_TARGET,
         filesystem,
+        new FilesystemBuildInfoStore(filesystem),
         new DefaultClock(),
         new BuildId(),
         new ObjectMapper(),
