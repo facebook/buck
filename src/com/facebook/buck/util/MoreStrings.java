@@ -106,6 +106,14 @@ public final class MoreStrings {
     final int keepFirstChars = 10000;
     final int keepLastChars = 10000;
     final String truncateMessage = "...\n<truncated>\n...";
+    return truncateMiddle(data, keepFirstChars, keepLastChars, truncateMessage);
+  }
+
+  public static String truncateMiddle(
+      String data,
+      int keepFirstChars,
+      int keepLastChars,
+      String truncateMessage) {
     if (data.length() <= keepFirstChars + keepLastChars + truncateMessage.length()) {
       return data;
     }
