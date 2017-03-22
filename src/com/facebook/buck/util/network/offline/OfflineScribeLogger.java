@@ -49,10 +49,12 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * This logger uses files-related operations (for offline logging i.e. storing and delayed logging
@@ -67,7 +69,7 @@ public class OfflineScribeLogger extends ScribeLogger {
   protected static final String LOGFILE_SUFFIX = ".log";
 
   private static final int BUFFER_SIZE = 1024 * 1024;
-  private static final int CLUSTER_DISPATCH_SIZE = 1024 * 1024;
+  private static final long CLUSTER_DISPATCH_SIZE = 1024 * 1024;
   private static final int KILO = 1024;
   private static final Logger LOG = Logger.get(OfflineScribeLogger.class);
   // Timeout used when submitting data read from offline logs.
@@ -337,9 +339,10 @@ public class OfflineScribeLogger extends ScribeLogger {
             logReadData.put(newData.getCategory(), new CategoryData());
           }
           CategoryData categoryData = logReadData.get(newData.getCategory());
-          if (categoryData.getLinesBytes() > CLUSTER_DISPATCH_SIZE) {
-            logFutures.add(scribeLogger.log(newData.getCategory(), categoryData.getLines()));
-            categoryData.clearData();
+          List<String> linesToLog =
+              categoryData.getLinesAndReset(Optional.of(CLUSTER_DISPATCH_SIZE));
+          if (!linesToLog.isEmpty()) {
+            logFutures.add(scribeLogger.log(newData.getCategory(), linesToLog));
           }
           // Add new data to the cluster for the category.
           for (String line : newData.getLines()) {
@@ -356,7 +359,8 @@ public class OfflineScribeLogger extends ScribeLogger {
               break;
             }
 
-            List<String> categoryLines = logReadDataEntry.getValue().getLines();
+            List<String> categoryLines =
+                logReadDataEntry.getValue().getLinesAndReset(Optional.empty());
             if (categoryLines.size() > 0) {
               logFutures.add(scribeLogger.log(logReadDataEntry.getKey(), categoryLines));
             }
@@ -403,29 +407,22 @@ public class OfflineScribeLogger extends ScribeLogger {
     }
   }
 
+  @ThreadSafe
   private class CategoryData {
-    private long linesBytes;
-    private List<String> lines;
+    private long linesBytes = 0;
+    private List<String> lines = new LinkedList<>();
 
-    public CategoryData() {
-      this.linesBytes = 0;
-      this.lines = new LinkedList<>();
-    }
-
-    public long getLinesBytes() {
-      return linesBytes;
-    }
-
-    public List<String> getLines() {
-      return lines;
-    }
-
-    public void clearData() {
-      lines.clear();
+    public synchronized List<String> getLinesAndReset(Optional<Long> minimumSize) {
+      if (minimumSize.isPresent() && linesBytes < minimumSize.get()) {
+        return new LinkedList<>();
+      }
+      List<String> toReturn = lines;
+      lines = new LinkedList<>();
       linesBytes = 0;
+      return toReturn;
     }
 
-    public void addLine(String line) {
+    public synchronized void addLine(String line) {
       lines.add(line);
       linesBytes += line.getBytes(Charsets.UTF_8).length;
     }
