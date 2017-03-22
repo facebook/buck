@@ -42,4 +42,9 @@ public class DefaultApplicationLike implements ApplicationLike {
 
   @Override
   public void onConfigurationChanged(Configuration newConfig) {}
+
+  @Override
+  public Object getSystemService(String name) {
+    return null;
+  }
 }

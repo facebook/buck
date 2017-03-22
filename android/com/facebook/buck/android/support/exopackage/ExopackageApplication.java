@@ -162,4 +162,15 @@ public abstract class ExopackageApplication<T extends ApplicationLike> extends A
       delegate.onConfigurationChanged(newConfig);
     }
   }
+
+  @Override
+  public Object getSystemService(String name) {
+    if (delegate != null) {
+      Object service = delegate.getSystemService(name);
+      if (service != null) {
+        return service;
+      }
+    }
+    return super.getSystemService(name);
+  }
 }

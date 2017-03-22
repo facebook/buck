@@ -53,4 +53,9 @@ public interface ApplicationLike {
    */
   void onConfigurationChanged(Configuration newConfig);
 
+  /**
+   * Same as {@link Application#getSystemService(String name)}.
+   */
+  Object getSystemService(String name);
+
 }
