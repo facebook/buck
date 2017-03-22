@@ -12,7 +12,6 @@
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/test/selectors:selectors",
       "//src/com/facebook/buck/timing:timing",
-      "//src/com/facebook/buck/util:object_mapper",
       "//test/com/facebook/buck/event:testutil",
       "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/rules:testutil",
@@ -21,9 +20,7 @@
       "//test/com/facebook/buck/timing:testutil",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
-      "//third-party/java/jackson:jackson-core",
       "//third-party/java/jackson:jackson-databind",
-      "//third-party/java/jackson:jackson-datatype-guava",
       "//third-party/java/junit:junit"
     ],
     "exported_deps" : [ ]
