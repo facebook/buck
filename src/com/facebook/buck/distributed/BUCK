@@ -1,9 +1,9 @@
 standard_java_library(
-  immutable_types = [
-    'DistBuildExecutorArgs',
-    'DistBuildStatus',
-  ],
-  tests = [
-    '//test/com/facebook/buck/distributed:distributed',
-  ],
+    immutable_types = [
+        "DistBuildExecutorArgs",
+        "DistBuildStatus",
+    ],
+    tests = [
+        "//test/com/facebook/buck/distributed:distributed",
+    ],
 )

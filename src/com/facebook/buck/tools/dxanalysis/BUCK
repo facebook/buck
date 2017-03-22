@@ -1,13 +1,13 @@
 java_binary(
-  name = 'dxanalysis',
-  main_class = 'com.facebook.buck.tools.dxanalysis.DxAnalysisMain',
-  deps = [
-    ':lib',
-  ],
+    name = "dxanalysis",
+    main_class = "com.facebook.buck.tools.dxanalysis.DxAnalysisMain",
+    deps = [
+        ":lib",
+    ],
 )
 
 java_library(
-  name = 'lib',
-  srcs = glob(['*.java']),
-  autodeps = True,
+    name = "lib",
+    srcs = glob(["*.java"]),
+    autodeps = True,
 )

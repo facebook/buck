@@ -1,5 +1,5 @@
 standard_java_library(
-  tests = [
-    '//test/com/facebook/buck/apple/xcode/xcspec:xcspec',
-  ],
+    tests = [
+        "//test/com/facebook/buck/apple/xcode/xcspec:xcspec",
+    ],
 )

@@ -1,22 +1,22 @@
 java_annotation_processor(
-  name = 'processor',
-  processor_class = 'org.immutables.value.internal.$processor$.$Processor',
-  isolate_class_loader = True,
-  deps = [
-    ':immutables',
-  ],
-  visibility = [
-    'PUBLIC'
-  ],
+    name = "processor",
+    isolate_class_loader = True,
+    processor_class = "org.immutables.value.internal.$processor$.$Processor",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":immutables",
+    ],
 )
 
 prebuilt_jar(
-  name = 'immutables',
-  binary_jar = 'value-2.3.8.jar',
-  licenses = [
-    'COPYING',
-  ],
-  visibility = [
-    'PUBLIC'
-  ],
+    name = "immutables",
+    binary_jar = "value-2.3.8.jar",
+    licenses = [
+        "COPYING",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )

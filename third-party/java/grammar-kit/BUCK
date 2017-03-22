@@ -1,37 +1,37 @@
 java_binary(
-  name = 'grammar-kit',
-  deps = [
-    ':grammar-kit_prebuilt',
-    ':light-psi_prebuilt',
-  ],
-  main_class = 'org.intellij.grammar.Main',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "grammar-kit",
+    main_class = "org.intellij.grammar.Main",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":grammar-kit_prebuilt",
+        ":light-psi_prebuilt",
+    ],
 )
 
 java_binary(
-  name = 'jflex',
-  deps = [
-    ':jflex_prebuilt',
-  ],
-  main_class = 'JFlex.Main',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "jflex",
+    main_class = "JFlex.Main",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":jflex_prebuilt",
+    ],
 )
 
 prebuilt_jar(
-  name='grammar-kit_prebuilt',
-  binary_jar='grammar-kit.jar',
+    name = "grammar-kit_prebuilt",
+    binary_jar = "grammar-kit.jar",
 )
 
 prebuilt_jar(
-  name='light-psi_prebuilt',
-  binary_jar='light-psi-all.jar',
+    name = "light-psi_prebuilt",
+    binary_jar = "light-psi-all.jar",
 )
 
 prebuilt_jar(
-  name='jflex_prebuilt',
-  binary_jar='JFlex.jar',
+    name = "jflex_prebuilt",
+    binary_jar = "JFlex.jar",
 )

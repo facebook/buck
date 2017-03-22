@@ -1,23 +1,23 @@
 java_immutables_library(
-  name = 'testutil',
-  srcs = [
-    'AbstractFakeLuaConfig.java',
-    'CxxLuaExtensionBuilder.java',
-    'LuaBinaryBuilder.java',
-    'LuaLibraryBuilder.java',
-  ],
-  immutable_types = [
-    'FakeLuaConfig',
-  ],
-  autodeps = True,
-  visibility = [
-    '//test/...',
-  ],
+    name = "testutil",
+    srcs = [
+        "AbstractFakeLuaConfig.java",
+        "CxxLuaExtensionBuilder.java",
+        "LuaBinaryBuilder.java",
+        "LuaLibraryBuilder.java",
+    ],
+    autodeps = True,
+    immutable_types = [
+        "FakeLuaConfig",
+    ],
+    visibility = [
+        "//test/...",
+    ],
 )
 
 java_test(
-  name = 'lua',
-  srcs = glob(['*Test.java']),
-  autodeps = True,
-  labels = ['long_running'],
+    name = "lua",
+    srcs = glob(["*Test.java"]),
+    autodeps = True,
+    labels = ["long_running"],
 )

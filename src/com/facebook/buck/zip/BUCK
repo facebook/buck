@@ -1,78 +1,78 @@
 java_library(
-  name = 'stream',
-  srcs = [
-    'AppendingZipOutputStream.java',
-    'ByteIo.java',
-    'CentralDirectory.java',
-    'CustomZipOutputStream.java',
-    'CustomZipEntry.java',
-    'EntryAccounting.java',
-    'OverwritingZipOutputStream.java',
-    'ZipConstants.java',
-    'ZipOutputStreams.java',
-    'ZipWriteTest.java',
-  ],
-  tests = [
-    '//test/com/facebook/buck/zip:zip',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "stream",
+    srcs = [
+        "AppendingZipOutputStream.java",
+        "ByteIo.java",
+        "CentralDirectory.java",
+        "CustomZipEntry.java",
+        "CustomZipOutputStream.java",
+        "EntryAccounting.java",
+        "OverwritingZipOutputStream.java",
+        "ZipConstants.java",
+        "ZipOutputStreams.java",
+        "ZipWriteTest.java",
+    ],
+    autodeps = True,
+    tests = [
+        "//test/com/facebook/buck/zip:zip",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 java_library(
-  name = 'unzip',
-  srcs = [ 'Unzip.java' ],
-  tests = [
-    '//test/com/facebook/buck/zip:zip',
-  ],
-  autodeps = True,
-  visibility = [ 'PUBLIC' ],
+    name = "unzip",
+    srcs = ["Unzip.java"],
+    autodeps = True,
+    tests = [
+        "//test/com/facebook/buck/zip:zip",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 java_library(
-  name = 'steps',
-  srcs = glob(['*Step.java']),
-  tests = [
-    '//test/com/facebook/buck/zip:zip',
-  ],
-  autodeps = True,
-  visibility = [
-    '//src/com/facebook/buck/android/...',
-    '//src/com/facebook/buck/apple:rules',
-    '//src/com/facebook/buck/file:file',
-    '//src/com/facebook/buck/jvm/java:rules',
-    '//src/com/facebook/buck/rules:rules',
-    '//src/com/facebook/buck/shell:rules',
-    '//test/com/facebook/buck/zip:zip',
-  ],
+    name = "steps",
+    srcs = glob(["*Step.java"]),
+    autodeps = True,
+    tests = [
+        "//test/com/facebook/buck/zip:zip",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/android/...",
+        "//src/com/facebook/buck/apple:rules",
+        "//src/com/facebook/buck/file:file",
+        "//src/com/facebook/buck/jvm/java:rules",
+        "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/shell:rules",
+        "//test/com/facebook/buck/zip:zip",
+    ],
 )
 
 java_library(
-  name = 'rules',
-  srcs = [
-    'SrcZipAwareFileBundler.java',
-    'Zip.java',
-    'ZipFileDescription.java',
-  ],
-  autodeps = True,
-  visibility = [
-    '//src/com/facebook/buck/rules:types',
-    '//test/com/facebook/buck/zip:zip',
-  ],
+    name = "rules",
+    srcs = [
+        "SrcZipAwareFileBundler.java",
+        "Zip.java",
+        "ZipFileDescription.java",
+    ],
+    autodeps = True,
+    visibility = [
+        "//src/com/facebook/buck/rules:types",
+        "//test/com/facebook/buck/zip:zip",
+    ],
 )
 
 java_library(
-  name = 'constants',
-  srcs = [
-    'ZipCompressionLevel.java',
-  ],
-  visibility = ['PUBLIC'],
+    name = "constants",
+    srcs = [
+        "ZipCompressionLevel.java",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 java_binary(
-  name = 'zip-write-test',
-  main_class = 'com.facebook.buck.zip.ZipWriteTest',
-  deps = [
-    ':stream',
-  ],
+    name = "zip-write-test",
+    main_class = "com.facebook.buck.zip.ZipWriteTest",
+    deps = [
+        ":stream",
+    ],
 )

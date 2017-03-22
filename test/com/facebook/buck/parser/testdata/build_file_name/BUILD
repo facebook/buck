@@ -1,4 +1,4 @@
 java_library(
-  name = 'root',
-  srcs = [],
+    name = "root",
+    srcs = [],
 )

@@ -1,34 +1,37 @@
 EVENT_INTERFACES = [
-  'AbstractBuckEvent.java',
-  'AbstractEventKey.java',
-  'BroadcastEvent.java',
-  'BuckEvent.java',
-  'BuckEventListener.java',
-  'BuckEventBus.java',
-  'LeafEvent.java',
-  'WorkAdvanceEvent.java',
+    "AbstractBuckEvent.java",
+    "AbstractEventKey.java",
+    "BroadcastEvent.java",
+    "BuckEvent.java",
+    "BuckEventListener.java",
+    "BuckEventBus.java",
+    "LeafEvent.java",
+    "WorkAdvanceEvent.java",
 ]
 
 java_immutables_library(
-  name = 'interfaces',
-  srcs = EVENT_INTERFACES,
-  autodeps = True,
-  immutable_types = [
-    'EventKey'
-  ],
-  visibility = [ 'PUBLIC' ],
+    name = "interfaces",
+    srcs = EVENT_INTERFACES,
+    autodeps = True,
+    immutable_types = [
+        "EventKey",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 standard_java_library(
-  srcs = glob(['*.java'], excludes = EVENT_INTERFACES),
-  immutable_types = [
-    'ScubaData',
-  ],
-  tests = [
-    '//test/com/facebook/buck/event:event',
-  ],
-  provided_deps = [
-    # Event API is loaded by the bootstrapper at runtime; don't need to depend on it strongly
-    '//src/com/facebook/buck/event/api:api',
-  ],
+    srcs = glob(
+        ["*.java"],
+        excludes = EVENT_INTERFACES,
+    ),
+    immutable_types = [
+        "ScubaData",
+    ],
+    provided_deps = [
+        # Event API is loaded by the bootstrapper at runtime; don't need to depend on it strongly
+        "//src/com/facebook/buck/event/api:api",
+    ],
+    tests = [
+        "//test/com/facebook/buck/event:event",
+    ],
 )

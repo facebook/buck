@@ -1,47 +1,59 @@
 FAKE_BUCK_CONFIG_SRCS = [
-  'FakeBuckConfig.java',
+    "FakeBuckConfig.java",
 ]
 
 STANDARD_TEST_SRCS = [
-  '**/*Test.java',
+    "**/*Test.java",
 ]
 
 java_library(
-  name = 'FakeBuckConfig',
-  srcs = FAKE_BUCK_CONFIG_SRCS,
-  autodeps = True,
-  visibility = [
-    '//test/...',
-  ],
+    name = "FakeBuckConfig",
+    srcs = FAKE_BUCK_CONFIG_SRCS,
+    autodeps = True,
+    visibility = [
+        "//test/...",
+    ],
 )
 
 java_library(
-  name = 'testutil',
-  srcs = glob(['*.java'], excludes = FAKE_BUCK_CONFIG_SRCS + STANDARD_TEST_SRCS),
-  autodeps = True,
-  visibility = [
-    '//test/...',
-  ],
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        excludes = FAKE_BUCK_CONFIG_SRCS + STANDARD_TEST_SRCS,
+    ),
+    autodeps = True,
+    visibility = [
+        "//test/...",
+    ],
 )
 
 APPLE_INTEGRATION_TEST_SRCS = [
-  'InstallCommandIntegrationTest.java',
+    "InstallCommandIntegrationTest.java",
 ]
 
 java_test(
-  name = 'cli-apple-integration',
-  srcs = APPLE_INTEGRATION_TEST_SRCS,
-  # We run this test separately, since the Apple simulator tends to time out
-  # when the system is under load.
-  run_test_separately = True,
-  resources = glob(['testdata/**'], include_dotfiles=True),
-  autodeps = True,
+    name = "cli-apple-integration",
+    srcs = APPLE_INTEGRATION_TEST_SRCS,
+    autodeps = True,
+    resources = glob(
+        ["testdata/**"],
+        include_dotfiles = True,
+    ),
+    # We run this test separately, since the Apple simulator tends to time out
+    # when the system is under load.
+    run_test_separately = True,
 )
 
 java_test(
-  name = 'cli',
-  srcs = glob(STANDARD_TEST_SRCS, excludes=APPLE_INTEGRATION_TEST_SRCS),
-  resources = glob(['testdata/**'], include_dotfiles=True),
-  autodeps = True,
-  labels = ['long_running'],
+    name = "cli",
+    srcs = glob(
+        STANDARD_TEST_SRCS,
+        excludes = APPLE_INTEGRATION_TEST_SRCS,
+    ),
+    autodeps = True,
+    labels = ["long_running"],
+    resources = glob(
+        ["testdata/**"],
+        include_dotfiles = True,
+    ),
 )

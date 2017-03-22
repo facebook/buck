@@ -1,9 +1,9 @@
 java_test(
-  name = 'xcode',
-  srcs = [
-    'GidGeneratorTest.java',
-    'ProjectIntegrationTest.java',
-    'XcodeprojSerializerTest.java',
-  ] + glob(['xcodeproj/*Test.java']),
-  autodeps = True,
+    name = "xcode",
+    srcs = [
+        "GidGeneratorTest.java",
+        "ProjectIntegrationTest.java",
+        "XcodeprojSerializerTest.java",
+    ] + glob(["xcodeproj/*Test.java"]),
+    autodeps = True,
 )

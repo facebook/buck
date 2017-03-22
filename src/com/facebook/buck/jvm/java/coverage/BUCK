@@ -1,20 +1,20 @@
 standard_java_library(
-  visibility = [], # Only visible to this build file.
+    visibility = [],  # Only visible to this build file.
 )
 
 java_binary(
-  name = 'report-generator',
-  main_class = 'com.facebook.buck.jvm.java.coverage.ReportGenerator',
-  blacklist = [
-    '.*SF',
-    '.*RSA',
-  ],
-  deps = [
-    ':coverage',
-  ],
-  visibility = [
-    '//programs:bucklib',
-    '//programs:bucklib-no-nailgun',
-    '//src/com/facebook/buck/jvm/java:steps',
-  ]
+    name = "report-generator",
+    blacklist = [
+        ".*SF",
+        ".*RSA",
+    ],
+    main_class = "com.facebook.buck.jvm.java.coverage.ReportGenerator",
+    visibility = [
+        "//programs:bucklib",
+        "//programs:bucklib-no-nailgun",
+        "//src/com/facebook/buck/jvm/java:steps",
+    ],
+    deps = [
+        ":coverage",
+    ],
 )

@@ -1,26 +1,34 @@
 BINARY_INTEGRATION_SRCS = [
-  'CxxBinaryIntegrationTest.java',
+    "CxxBinaryIntegrationTest.java",
 ]
-TEST_SRCS = glob(['*Test.java'], excludes = BINARY_INTEGRATION_SRCS)
-UTIL_SRCS = glob(['*.java'], excludes = BINARY_INTEGRATION_SRCS + TEST_SRCS)
 
-java_test(
-  name = 'cxx-binary-integration',
-  srcs = BINARY_INTEGRATION_SRCS,
-  autodeps = True,
-  labels = ['long_running'],
+TEST_SRCS = glob(
+    ["*Test.java"],
+    excludes = BINARY_INTEGRATION_SRCS,
+)
+
+UTIL_SRCS = glob(
+    ["*.java"],
+    excludes = BINARY_INTEGRATION_SRCS + TEST_SRCS,
 )
 
 java_test(
-  name = 'cxx',
-  srcs = TEST_SRCS,
-  autodeps = True,
-  labels = ['long_running'],
+    name = "cxx-binary-integration",
+    srcs = BINARY_INTEGRATION_SRCS,
+    autodeps = True,
+    labels = ["long_running"],
+)
+
+java_test(
+    name = "cxx",
+    srcs = TEST_SRCS,
+    autodeps = True,
+    labels = ["long_running"],
 )
 
 java_library(
-  name = 'testutil',
-  srcs = UTIL_SRCS,
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "testutil",
+    srcs = UTIL_SRCS,
+    autodeps = True,
+    visibility = ["PUBLIC"],
 )

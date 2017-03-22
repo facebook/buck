@@ -1,35 +1,38 @@
 UTIL_SRCS = [
-  'AetherUtil.java',
-  'ArtifactConfig.java',
+    "AetherUtil.java",
+    "ArtifactConfig.java",
 ]
 
 java_library(
-  name = 'maven',
-  srcs = glob(['*.java'], excludes = UTIL_SRCS),
-  resources = [
-    'build-file.st',
-  ],
-  autodeps = True,
-  visibility = [
-    '//src/com/facebook/buck/cli:cli',
-    '//src/com/facebook/buck/jvm/java:rules',
-    '//test/com/facebook/buck/cli:cli',
-    '//test/com/facebook/buck/maven:maven',
-    '//test/com/facebook/buck/maven:testutil',
-  ],
+    name = "maven",
+    srcs = glob(
+        ["*.java"],
+        excludes = UTIL_SRCS,
+    ),
+    autodeps = True,
+    resources = [
+        "build-file.st",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/jvm/java:rules",
+        "//test/com/facebook/buck/cli:cli",
+        "//test/com/facebook/buck/maven:maven",
+        "//test/com/facebook/buck/maven:testutil",
+    ],
 )
 
 java_library(
-  name = 'util',
-  srcs = UTIL_SRCS,
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "util",
+    srcs = UTIL_SRCS,
+    autodeps = True,
+    visibility = ["PUBLIC"],
 )
 
 java_binary(
-  name = 'resolver',
-  main_class = 'com.facebook.buck.maven.Resolver',
-  deps = [
-    ':maven',
-  ],
+    name = "resolver",
+    main_class = "com.facebook.buck.maven.Resolver",
+    deps = [
+        ":maven",
+    ],
 )

@@ -1,8 +1,8 @@
 standard_java_library(
-  immutable_types = [
-    'HashCodeAndFileType',
-  ],
-  tests = [
-    '//test/com/facebook/buck/util/cache:cache',
-  ],
+    immutable_types = [
+        "HashCodeAndFileType",
+    ],
+    tests = [
+        "//test/com/facebook/buck/util/cache:cache",
+    ],
 )

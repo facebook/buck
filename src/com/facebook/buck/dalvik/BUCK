@@ -1,57 +1,57 @@
 java_library(
-  name = 'dalvik_stats_tool',
-  srcs = [
-    'DalvikStatsTool.java',
-  ],
-  tests = [
-    '//test/com/facebook/buck/dalvik:dalvik',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "dalvik_stats_tool",
+    srcs = [
+        "DalvikStatsTool.java",
+    ],
+    autodeps = True,
+    tests = [
+        "//test/com/facebook/buck/dalvik:dalvik",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 java_binary(
-  name = 'cli_dalvik_stats_tool',
-  main_class = 'com.facebook.buck.dalvik.DalvikStatsTool',
-  deps = [
-    ':dalvik',
-  ],
+    name = "cli_dalvik_stats_tool",
+    main_class = "com.facebook.buck.dalvik.DalvikStatsTool",
+    deps = [
+        ":dalvik",
+    ],
 )
 
 java_library(
-  name = 'dalvik',
-  srcs = [
-    'CanaryFactory.java',
-    'DalvikAwareOutputStreamHelper.java',
-    'DalvikAwareZipSplitterFactory.java',
-    'DalvikAwareZipSplitter.java',
-    'DalvikStatsCache.java',
-    'SecondaryDexHelper.java',
-    'ZipOutputStreamHelper.java',
-    'ZipSplitterFactory.java',
-    'ZipSplitter.java',
-  ],
-  tests = [
-    '//test/com/facebook/buck/dalvik:dalvik',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "dalvik",
+    srcs = [
+        "CanaryFactory.java",
+        "DalvikAwareOutputStreamHelper.java",
+        "DalvikAwareZipSplitter.java",
+        "DalvikAwareZipSplitterFactory.java",
+        "DalvikStatsCache.java",
+        "SecondaryDexHelper.java",
+        "ZipOutputStreamHelper.java",
+        "ZipSplitter.java",
+        "ZipSplitterFactory.java",
+    ],
+    autodeps = True,
+    tests = [
+        "//test/com/facebook/buck/dalvik:dalvik",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 java_library(
-  name = 'steps',
-  srcs = [
-    'EstimateDexWeightStep.java',
-  ],
-  tests = [
-    '//test/com/facebook/buck/dalvik:dalvik',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "steps",
+    srcs = [
+        "EstimateDexWeightStep.java",
+    ],
+    autodeps = True,
+    tests = [
+        "//test/com/facebook/buck/dalvik:dalvik",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )

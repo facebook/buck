@@ -1,36 +1,39 @@
 # TODO(bolinfest): Replace this with standard_java_test() once `buck autodeps` is
 # fixed to automatically infer the export of '//third-party/java/jetty:jetty'.
 
-TEST_SRCS=glob(['*Test.java'])
+TEST_SRCS = glob(["*Test.java"])
+
 java_test(
-  name = 'integration',
-  autodeps = True,
-  srcs=TEST_SRCS,
-  visibility = [
-    '//test/...',
-  ],
+    name = "integration",
+    srcs = TEST_SRCS,
+    autodeps = True,
+    visibility = [
+        "//test/...",
+    ],
 )
 
-
 java_library(
-  name = 'util',
-  srcs = glob(['*.java'], excludes=TEST_SRCS),
-  autodeps = True,
-  exported_deps = [
-    # This is due to the bug mentioned above.
-    '//third-party/java/jetty:jetty',
-  ],
-  visibility = [
-    '//test/...',
-  ],
+    name = "util",
+    srcs = glob(
+        ["*.java"],
+        excludes = TEST_SRCS,
+    ),
+    autodeps = True,
+    exported_deps = [
+        # This is due to the bug mentioned above.
+        "//third-party/java/jetty:jetty",
+    ],
+    visibility = [
+        "//test/...",
+    ],
 )
 
 python_library(
-  name = 'integration-py',
-  base_module = '',
-  srcs = glob(['*.py']),
-  visibility = [
-    '//test/...',
-    '//scripts/...',
-  ],
+    name = "integration-py",
+    srcs = glob(["*.py"]),
+    base_module = "",
+    visibility = [
+        "//scripts/...",
+        "//test/...",
+    ],
 )

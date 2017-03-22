@@ -1,31 +1,33 @@
 CONFIG_SRCS = [
-  'AbstractAutoSparseConfig.java',
+    "AbstractAutoSparseConfig.java",
 ]
 
 java_immutables_library(
-  name = 'autosparse_config',
-  srcs = CONFIG_SRCS,
-  immutable_types = [
-    'AutoSparseConfig',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ]
+    name = "autosparse_config",
+    srcs = CONFIG_SRCS,
+    autodeps = True,
+    immutable_types = [
+        "AutoSparseConfig",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 java_immutables_library(
-  name = 'autosparse',
-  srcs = glob(['*.java'], excludes=CONFIG_SRCS),
-  immutable_types = [
-    'ManifestInfo',
-  ],
-  tests = [
-    '//test/com/facebook/buck/util/autosparse:autosparse',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "autosparse",
+    srcs = glob(
+        ["*.java"],
+        excludes = CONFIG_SRCS,
+    ),
+    autodeps = True,
+    immutable_types = [
+        "ManifestInfo",
+    ],
+    tests = [
+        "//test/com/facebook/buck/util/autosparse:autosparse",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
-

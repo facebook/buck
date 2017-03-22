@@ -1,78 +1,83 @@
 RULES_SRCS = [
-  'JsonConcatenate.java',
+    "JsonConcatenate.java",
 ]
 
 PYTHON_PROD_SRCS = glob(
-  ['buck_parser/**/*.py'],
-  excludes=['buck_parser/**/*_test.py'])
+    ["buck_parser/**/*.py"],
+    excludes = ["buck_parser/**/*_test.py"],
+)
 
 java_library(
-  name = 'rules',
-  srcs = RULES_SRCS,
-  autodeps = True,
-  visibility = [ 'PUBLIC' ],
+    name = "rules",
+    srcs = RULES_SRCS,
+    autodeps = True,
+    visibility = ["PUBLIC"],
 )
 
 STEPS_SRCS = [
-  'JsonConcatenateStep.java',
+    "JsonConcatenateStep.java",
 ]
+
 java_library(
-  name = 'steps',
-  srcs = STEPS_SRCS,
-  autodeps = True,
-  visibility = [ 'PUBLIC' ],
+    name = "steps",
+    srcs = STEPS_SRCS,
+    autodeps = True,
+    visibility = ["PUBLIC"],
 )
 
 java_immutables_library(
-  name = 'json',
-  srcs = glob(['*.java'], excludes = RULES_SRCS + STEPS_SRCS),
-  immutable_types = [
-    'ProjectBuildFileParserOptions',
-    'BuildFileParseExceptionData',
-    'BuildFileParseExceptionStackTraceEntry',
-    'BuildFileSyntaxError',
-  ],
-  tests = [
-    '//test/com/facebook/buck/json:json',
-  ],
-  # Place the python package in the JAR root so the jar can be imported by
-  # python's built in zip importer.
-  resources_root = '.',
-  resources = PYTHON_PROD_SRCS,
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "json",
+    srcs = glob(
+        ["*.java"],
+        excludes = RULES_SRCS + STEPS_SRCS,
+    ),
+    autodeps = True,
+    immutable_types = [
+        "ProjectBuildFileParserOptions",
+        "BuildFileParseExceptionData",
+        "BuildFileParseExceptionStackTraceEntry",
+        "BuildFileSyntaxError",
+    ],
+    resources = PYTHON_PROD_SRCS,
+    # Place the python package in the JAR root so the jar can be imported by
+    # python's built in zip importer.
+    resources_root = ".",
+    tests = [
+        "//test/com/facebook/buck/json:json",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 python_library(
-  name = 'buck_parser',
-  srcs = PYTHON_PROD_SRCS,
-  base_module = '',
-  deps = [
-    '//third-party/py/pathlib:pathlib',
-    '//third-party/py/pywatchman:pywatchman',
-  ],
+    name = "buck_parser",
+    srcs = PYTHON_PROD_SRCS,
+    base_module = "",
+    deps = [
+        "//third-party/py/pathlib:pathlib",
+        "//third-party/py/pywatchman:pywatchman",
+    ],
 )
 
 python_test(
-  name = 'buck_test',
-  srcs = glob(['buck_parser/**/*_test.py']),
-  base_module = '',
-  deps = [
-    ':buck_parser',
-    '//third-party/py/pathlib:pathlib',
-    '//third-party/py/pywatchman:pywatchman',
-    '//third-party/py:typing',
-  ],
+    name = "buck_test",
+    srcs = glob(["buck_parser/**/*_test.py"]),
+    base_module = "",
+    deps = [
+        ":buck_parser",
+        "//third-party/py:typing",
+        "//third-party/py/pathlib:pathlib",
+        "//third-party/py/pywatchman:pywatchman",
+    ],
 )
 
 # Main binary for testing.
 python_binary(
-  name = 'standalone',
-  base_module = '',
-  main_module = 'buck_parser',
-  deps = [
-    ':buck_parser',
-  ]
+    name = "standalone",
+    base_module = "",
+    main_module = "buck_parser",
+    deps = [
+        ":buck_parser",
+    ],
 )

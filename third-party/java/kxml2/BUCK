@@ -1,12 +1,12 @@
 prebuilt_jar(
-  name = 'kxml2',
-  binary_jar = 'kxml2-2.3.0.jar',
-  source_jar = 'kxml2-2.3.0-sources.jar',
-  licenses = [
-    'license.txt',
-  ],
-  visibility = [
-    '//third-party/java/ddmlib:ddmlib',
-    '//src/com/facebook/buck/android:kxml2.jar',
-  ],
+    name = "kxml2",
+    binary_jar = "kxml2-2.3.0.jar",
+    licenses = [
+        "license.txt",
+    ],
+    source_jar = "kxml2-2.3.0-sources.jar",
+    visibility = [
+        "//src/com/facebook/buck/android:kxml2.jar",
+        "//third-party/java/ddmlib:ddmlib",
+    ],
 )

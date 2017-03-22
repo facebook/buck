@@ -1,0 +1,27 @@
+{
+  "IsLabelArg": {
+  },
+  "LabelBlacklist": {
+  },
+  "IsSortableListArg": {
+    "cpu_filters": true,
+    "deps": true,
+    "exported_deps": true,
+    "exported_headers": true,
+    "frameworks": true,
+    "headers": true,
+    "labels": true,
+    "licenses": true,
+    "provided_deps": true,
+    "resources": true,
+    "srcs": true,
+    "tests": true,
+    "visibility": true
+  },
+  "SortableBlacklist": {
+    "apk_genrule.srcs": true,
+    "genrule.srcs": true
+  },
+  "SortableWhitelist": {
+  }
+}

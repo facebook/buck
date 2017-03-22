@@ -1,31 +1,34 @@
 PLATFORM_SRCS = [
-  'Architecture.java',
-  'Platform.java',
+    "Architecture.java",
+    "Platform.java",
 ]
 
 java_library(
-  name = 'platform',
-  srcs = PLATFORM_SRCS,
-  # This library is deep in the dependency tree, keep its dependency list small.
-  deps = [
-    "//third-party/java/guava:guava"
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "platform",
+    srcs = PLATFORM_SRCS,
+    visibility = [
+        "PUBLIC",
+    ],
+    # This library is deep in the dependency tree, keep its dependency list small.
+    deps = [
+        "//third-party/java/guava:guava",
+    ],
 )
 
 java_immutables_library(
-  name = 'environment',
-  srcs = glob(['*.java'], excludes = PLATFORM_SRCS),
-  immutable_types = [
-    'BuildEnvironmentDescription',
-  ],
-  tests = [
-    '//test/com/facebook/buck/util/environment:environment',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "environment",
+    srcs = glob(
+        ["*.java"],
+        excludes = PLATFORM_SRCS,
+    ),
+    autodeps = True,
+    immutable_types = [
+        "BuildEnvironmentDescription",
+    ],
+    tests = [
+        "//test/com/facebook/buck/util/environment:environment",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )

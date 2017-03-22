@@ -1,73 +1,78 @@
 CONFIG_SRCS = [
-  'PythonBuckConfig.java',
+    "PythonBuckConfig.java",
 ]
+
 java_library(
-  name = 'config',
-  srcs = CONFIG_SRCS,
-  resources = [
-    '__test_main__.py',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "config",
+    srcs = CONFIG_SRCS,
+    autodeps = True,
+    resources = [
+        "__test_main__.py",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 SUPPORT_SRCS = [
-  'AbstractNeededCoverageSpec.java',
-  'AbstractPythonPlatform.java',
-  'AbstractPythonVersion.java',
-  'PythonEnvironment.java',
+    "AbstractNeededCoverageSpec.java",
+    "AbstractPythonPlatform.java",
+    "AbstractPythonVersion.java",
+    "PythonEnvironment.java",
 ]
+
 java_immutables_library(
-  name = 'support',
-  srcs = SUPPORT_SRCS,
-  immutable_types = [
-    'NeededCoverageSpec',
-    'PythonPlatform',
-    'PythonVersion',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "support",
+    srcs = SUPPORT_SRCS,
+    autodeps = True,
+    immutable_types = [
+        "NeededCoverageSpec",
+        "PythonPlatform",
+        "PythonVersion",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 java_immutables_library(
-  name = 'rules',
-  srcs = glob(['*.java'], excludes=CONFIG_SRCS + SUPPORT_SRCS),
-  immutable_types = [
-    'PythonPackageComponents',
-  ],
-  tests = [
-    '//test/com/facebook/buck/python:python',
-  ],
-  resources = [
-    'run_inplace.py.in',
-  ],
-  autodeps = True,
-  visibility = [
-    '//src/com/facebook/buck/cxx:rules',
-    '//src/com/facebook/buck/lua:lua',
-    '//src/com/facebook/buck/ocaml:rules',
-    '//src/com/facebook/buck/rules:types',
-    '//test/com/facebook/buck/cxx:cxx',
-    '//test/com/facebook/buck/cxx:testutil',
-    '//test/com/facebook/buck/python:',
-    '//test/com/facebook/buck/thrift:thrift',
-  ],
+    name = "rules",
+    srcs = glob(
+        ["*.java"],
+        excludes = CONFIG_SRCS + SUPPORT_SRCS,
+    ),
+    autodeps = True,
+    immutable_types = [
+        "PythonPackageComponents",
+    ],
+    resources = [
+        "run_inplace.py.in",
+    ],
+    tests = [
+        "//test/com/facebook/buck/python:python",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/cxx:rules",
+        "//src/com/facebook/buck/lua:lua",
+        "//src/com/facebook/buck/ocaml:rules",
+        "//src/com/facebook/buck/rules:types",
+        "//test/com/facebook/buck/cxx:cxx",
+        "//test/com/facebook/buck/cxx:testutil",
+        "//test/com/facebook/buck/python:",
+        "//test/com/facebook/buck/thrift:thrift",
+    ],
 )
 
 python_binary(
-  name = 'pex',
-  main = 'make_pex.py',
-  deps = [
-    '//third-party/py/pex:pex',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "pex",
+    main = "make_pex.py",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//third-party/py/pex:pex",
+    ],
 )
 
 export_file(
-  name = '__test_main__.py',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "__test_main__.py",
+    visibility = [
+        "PUBLIC",
+    ],
 )

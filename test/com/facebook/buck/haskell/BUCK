@@ -1,14 +1,17 @@
 java_immutables_library(
-  name = 'testutil',
-  srcs = glob(['*.java'], excludes=['*Test.java']),
-  immutable_types = [
-    'FakeHaskellConfig',
-  ],
-  autodeps = True,
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        excludes = ["*Test.java"],
+    ),
+    autodeps = True,
+    immutable_types = [
+        "FakeHaskellConfig",
+    ],
 )
 
 java_test(
-  name = 'haskell',
-  srcs = glob(['*Test.java']),
-  autodeps = True,
+    name = "haskell",
+    srcs = glob(["*Test.java"]),
+    autodeps = True,
 )

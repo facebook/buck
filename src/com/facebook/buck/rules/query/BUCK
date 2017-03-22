@@ -1,21 +1,25 @@
 TYPES_SRCS = [
-  'AbstractQuery.java',
+    "AbstractQuery.java",
 ]
+
 java_immutables_library(
-  name = 'types',
-  immutable_types = [
-    'Query',
-  ],
-  srcs = TYPES_SRCS,
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "types",
+    srcs = TYPES_SRCS,
+    autodeps = True,
+    immutable_types = [
+        "Query",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 standard_java_library(
-  srcs = glob(['*.java'], excludes=TYPES_SRCS),
-  tests = [
-    '//test/com/facebook/buck/rules/query:query',
-  ],
+    srcs = glob(
+        ["*.java"],
+        excludes = TYPES_SRCS,
+    ),
+    tests = [
+        "//test/com/facebook/buck/rules/query:query",
+    ],
 )

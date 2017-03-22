@@ -1,5 +1,5 @@
 java_test(
-  name = 'headermap',
-  srcs = glob(['*.java']),
-  autodeps = True,
+    name = "headermap",
+    srcs = glob(["*.java"]),
+    autodeps = True,
 )

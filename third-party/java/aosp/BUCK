@@ -1,14 +1,14 @@
 java_library(
-  name = 'aosp',
-  srcs = glob(['src/**/*.java']),
-  deps = [
-      '//third-party/java/guava:guava',
-      '//third-party/java/gson:gson',
-  ],
-  licenses = [
-    'NOTICE',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "aosp",
+    srcs = glob(["src/**/*.java"]),
+    licenses = [
+        "NOTICE",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//third-party/java/gson:gson",
+        "//third-party/java/guava:guava",
+    ],
 )

@@ -1,31 +1,34 @@
 CONFIG_SRCS = [
-  'AbstractRageConfig.java',
-  'AbstractUserLocalConfiguration.java',
-  'AbstractRageJsonResponse.java'
+    "AbstractRageConfig.java",
+    "AbstractUserLocalConfiguration.java",
+    "AbstractRageJsonResponse.java",
 ]
 
 java_immutables_library(
-  name = 'config',
-  srcs = CONFIG_SRCS,
-  immutable_types = [
-    'RageConfig',
-    'RageJsonResponse',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC'
-  ]
+    name = "config",
+    srcs = CONFIG_SRCS,
+    autodeps = True,
+    immutable_types = [
+        "RageConfig",
+        "RageJsonResponse",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 java_immutables_library(
-  name = 'rage',
-  srcs = glob(['*.java'], excludes = CONFIG_SRCS),
-  immutable_types = [
-    'BuildLogEntry',
-    'UserReport',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "rage",
+    srcs = glob(
+        ["*.java"],
+        excludes = CONFIG_SRCS,
+    ),
+    autodeps = True,
+    immutable_types = [
+        "BuildLogEntry",
+        "UserReport",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )

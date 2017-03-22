@@ -1,134 +1,133 @@
 prebuilt_jar(
-  name = 'aether-util',
-  maven_coords = 'org.eclipse.aether:aether-util:1.0.2.v20150114',
-  binary_jar = 'aether-util-1.0.2.v20150114.jar',
-  source_jar = 'aether-util-1.0.2.v20150114-sources.jar',
-  deps = [
-    ':aether-api',
-  ],
-  licenses = [
-    'LICENSE',
-  ],
-  visibility = [
-    '//src/com/facebook/buck/maven:maven',
-    '//src/com/facebook/buck/maven:util',
-    '//third-party/java/maven:maven-aether-provider',
-  ],
+    name = "aether-util",
+    binary_jar = "aether-util-1.0.2.v20150114.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    maven_coords = "org.eclipse.aether:aether-util:1.0.2.v20150114",
+    source_jar = "aether-util-1.0.2.v20150114-sources.jar",
+    visibility = [
+        "//src/com/facebook/buck/maven:maven",
+        "//src/com/facebook/buck/maven:util",
+        "//third-party/java/maven:maven-aether-provider",
+    ],
+    deps = [
+        ":aether-api",
+    ],
 )
 
 prebuilt_jar(
-  name = 'aether-connector-basic',
-  maven_coords = 'org.eclipse.aether:aether-connector-basic:1.0.2.v20150114',
-  binary_jar = 'aether-connector-basic-1.0.2.v20150114.jar',
-  source_jar = 'aether-connector-basic-1.0.2.v20150114-sources.jar',
-  deps = [
-    '//third-party/java/jsr:jsr305',
-    ':aether-api',
-    ':aether-spi',
-    ':aether-util',
-  ],
-  licenses = [
-    'LICENSE',
-  ],
-  visibility = [
-    '//src/com/facebook/buck/maven:maven',
-    '//src/com/facebook/buck/maven:util',
-  ],
+    name = "aether-connector-basic",
+    binary_jar = "aether-connector-basic-1.0.2.v20150114.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    maven_coords = "org.eclipse.aether:aether-connector-basic:1.0.2.v20150114",
+    source_jar = "aether-connector-basic-1.0.2.v20150114-sources.jar",
+    visibility = [
+        "//src/com/facebook/buck/maven:maven",
+        "//src/com/facebook/buck/maven:util",
+    ],
+    deps = [
+        ":aether-api",
+        ":aether-spi",
+        ":aether-util",
+        "//third-party/java/jsr:jsr305",
+    ],
 )
 
 prebuilt_jar(
-  name = 'aether-api',
-  maven_coords = 'org.eclipse.aether:aether-api:1.0.2.v20150114',
-  binary_jar = 'aether-api-1.0.2.v20150114.jar',
-  source_jar = 'aether-api-1.0.2.v20150114-sources.jar',
-  licenses = [
-    'LICENSE',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "aether-api",
+    binary_jar = "aether-api-1.0.2.v20150114.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    maven_coords = "org.eclipse.aether:aether-api:1.0.2.v20150114",
+    source_jar = "aether-api-1.0.2.v20150114-sources.jar",
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 prebuilt_jar(
-  name = 'aether-transport-http',
-  maven_coords = 'org.eclipse.aether:aether-transport-http:1.0.2.v20150114',
-  binary_jar = 'aether-transport-http-1.0.2.v20150114.jar',
-  source_jar = 'aether-transport-http-1.0.2.v20150114-sources.jar',
-  deps = [
-    '//third-party/java/httpcomponents:httpclient',
-    '//third-party/java/jsr:jsr305',
-    '//third-party/java/slf4j:jcl-over-slf4j',
-    ':aether-api',
-    ':aether-spi',
-    ':aether-util',
-  ],
-  licenses = [
-    'LICENSE',
-  ],
-  visibility = [
-    '//src/com/facebook/buck/maven:maven',
-    '//src/com/facebook/buck/maven:util',
-  ],
+    name = "aether-transport-http",
+    binary_jar = "aether-transport-http-1.0.2.v20150114.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    maven_coords = "org.eclipse.aether:aether-transport-http:1.0.2.v20150114",
+    source_jar = "aether-transport-http-1.0.2.v20150114-sources.jar",
+    visibility = [
+        "//src/com/facebook/buck/maven:maven",
+        "//src/com/facebook/buck/maven:util",
+    ],
+    deps = [
+        ":aether-api",
+        ":aether-spi",
+        ":aether-util",
+        "//third-party/java/httpcomponents:httpclient",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/slf4j:jcl-over-slf4j",
+    ],
 )
 
 prebuilt_jar(
-  name = 'aether-transport-file',
-  maven_coords = 'org.eclipse.aether:aether-transport-file:1.0.2.v20150114',
-  binary_jar = 'aether-transport-file-1.0.2.v20150114.jar',
-  source_jar = 'aether-transport-file-1.0.2.v20150114-sources.jar',
-  deps = [
-    ':aether-api',
-    ':aether-spi',
-    ':aether-util',
-  ],
-  licenses = [
-    'LICENSE',
-  ],
-  visibility = [
-    '//src/com/facebook/buck/maven:maven',
-    '//src/com/facebook/buck/maven:util',
-  ],
+    name = "aether-transport-file",
+    binary_jar = "aether-transport-file-1.0.2.v20150114.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    maven_coords = "org.eclipse.aether:aether-transport-file:1.0.2.v20150114",
+    source_jar = "aether-transport-file-1.0.2.v20150114-sources.jar",
+    visibility = [
+        "//src/com/facebook/buck/maven:maven",
+        "//src/com/facebook/buck/maven:util",
+    ],
+    deps = [
+        ":aether-api",
+        ":aether-spi",
+        ":aether-util",
+    ],
 )
 
 prebuilt_jar(
-  name = 'aether-spi',
-  maven_coords = 'org.eclipse.aether:aether-spi:1.0.2.v20150114',
-  binary_jar = 'aether-spi-1.0.2.v20150114.jar',
-  source_jar = 'aether-spi-1.0.2.v20150114-sources.jar',
-  deps = [
-    ':aether-api',
-  ],
-  licenses = [
-    'LICENSE',
-  ],
-  visibility = [
-    '//src/com/facebook/buck/maven:maven',
-    '//src/com/facebook/buck/maven:util',
-    '//third-party/java/maven:maven-aether-provider',
-  ],
+    name = "aether-spi",
+    binary_jar = "aether-spi-1.0.2.v20150114.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    maven_coords = "org.eclipse.aether:aether-spi:1.0.2.v20150114",
+    source_jar = "aether-spi-1.0.2.v20150114-sources.jar",
+    visibility = [
+        "//src/com/facebook/buck/maven:maven",
+        "//src/com/facebook/buck/maven:util",
+        "//third-party/java/maven:maven-aether-provider",
+    ],
+    deps = [
+        ":aether-api",
+    ],
 )
 
 prebuilt_jar(
-  name = 'aether-impl',
-  maven_coords = 'org.eclipse.aether:aether-impl:1.0.0.v20140518',
-  binary_jar = 'aether-impl-1.0.0.v20140518.jar',
-  source_jar = 'aether-impl-1.0.0.v20140518-sources.jar',
-  deps = [
-    '//third-party/java/guava:guava',
-    '//third-party/java/guice:guice',
-    '//third-party/java/jsr:jsr305',
-    '//third-party/java/slf4j:slf4j-api',
-    ':aether-api',
-    ':aether-spi',
-    ':aether-util',
-  ],
-  licenses = [
-    'LICENSE',
-  ],
-  visibility = [
-    '//src/com/facebook/buck/maven:maven',
-    '//src/com/facebook/buck/maven:util',
-    '//third-party/java/maven:maven-aether-provider',
-  ],
+    name = "aether-impl",
+    binary_jar = "aether-impl-1.0.0.v20140518.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    maven_coords = "org.eclipse.aether:aether-impl:1.0.0.v20140518",
+    source_jar = "aether-impl-1.0.0.v20140518-sources.jar",
+    visibility = [
+        "//src/com/facebook/buck/maven:maven",
+        "//src/com/facebook/buck/maven:util",
+        "//third-party/java/maven:maven-aether-provider",
+    ],
+    deps = [
+        ":aether-api",
+        ":aether-spi",
+        ":aether-util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/guice:guice",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/slf4j:slf4j-api",
+    ],
 )
-

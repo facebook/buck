@@ -1,253 +1,258 @@
 EXCEPTION_SRCS = [
-  'NoAndroidSdkException.java',
+    "NoAndroidSdkException.java",
 ]
+
 java_library(
-  name = 'exceptions',
-  srcs = EXCEPTION_SRCS,
-  tests = [
-    '//test/com/facebook/buck/android:unit',
-    '//test/com/facebook/buck/android:integration',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "exceptions",
+    srcs = EXCEPTION_SRCS,
+    autodeps = True,
+    tests = [
+        "//test/com/facebook/buck/android:integration",
+        "//test/com/facebook/buck/android:unit",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 PACKAGEABLE_SRCS = [
-  'AbstractAndroidPackageableCollection.java',
-  'AndroidPackageable.java',
-  'AndroidPackageableCollector.java',
+    "AbstractAndroidPackageableCollection.java",
+    "AndroidPackageable.java",
+    "AndroidPackageableCollector.java",
 ]
+
 java_immutables_library(
-  name = 'packageable',
-  srcs = PACKAGEABLE_SRCS,
-  immutable_types = [
-    'AndroidPackageableCollection',
-  ],
-  tests = [
-    '//test/com/facebook/buck/android:unit',
-    '//test/com/facebook/buck/android:aar-integration',
-    '//test/com/facebook/buck/android:binary-integration',
-    '//test/com/facebook/buck/android:build-config-integration',
-    '//test/com/facebook/buck/android:instrumentation-integration',
-    '//test/com/facebook/buck/android:integration',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "packageable",
+    srcs = PACKAGEABLE_SRCS,
+    autodeps = True,
+    immutable_types = [
+        "AndroidPackageableCollection",
+    ],
+    tests = [
+        "//test/com/facebook/buck/android:aar-integration",
+        "//test/com/facebook/buck/android:binary-integration",
+        "//test/com/facebook/buck/android:build-config-integration",
+        "//test/com/facebook/buck/android:instrumentation-integration",
+        "//test/com/facebook/buck/android:integration",
+        "//test/com/facebook/buck/android:unit",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 RULES_SRCS = [
-  'AaptPackageResources.java',
-  'AbstractAndroidGraphEnhancementResult.java',
-  'AbstractAndroidInstrumentationTestJVMArgs.java',
-  'AndroidAar.java',
-  'AndroidAarDescription.java',
-  'AndroidBinary.java',
-  'AndroidBinaryDescription.java',
-  'AndroidBinaryGraphEnhancer.java',
-  'AndroidBinaryResourcesGraphEnhancer.java',
-  'AndroidBuckConfig.java',
-  'AndroidBuildConfig.java',
-  'AndroidBuildConfigDescription.java',
-  'AndroidBuildConfigJavaLibrary.java',
-  'AndroidInstrumentationApk.java',
-  'AndroidInstrumentationApkDescription.java',
-  'AndroidInstrumentationTest.java',
-  'AndroidInstrumentationTestDescription.java',
-  'AndroidLibrary.java',
-  'AndroidLibraryCompiler.java',
-  'AndroidLibraryCompilerFactory.java',
-  'AndroidLibraryDescription.java',
-  'AndroidLibraryGraphEnhancer.java',
-  'AndroidManifest.java',
-  'AndroidManifestDescription.java',
-  'AndroidNativeLibsPackageableGraphEnhancer.java',
-  'AndroidPrebuiltAar.java',
-  'AndroidPrebuiltAarCollection.java',
-  'AndroidPrebuiltAarDescription.java',
-  'AndroidResource.java',
-  'AndroidResourceDescription.java',
-  'AndroidResourceHelper.java',
-  'AndroidTransitiveDependencyGraph.java',
-  'ApkGenrule.java',
-  'ApkGenruleDescription.java',
-  'AssembleDirectories.java',
-  'BootClasspathAppender.java',
-  'ComputeExopackageDepsAbi.java',
-  'CopyNativeLibraries.java',
-  'DefaultAndroidLibraryCompilerFactory.java',
-  'DexProducedFromJavaLibrary.java',
-  'DexWithClasses.java',
-  'DummyRDotJava.java',
-  'FilteredResourcesProvider.java',
-  'GenAidl.java',
-  'GenAidlDescription.java',
-  'HasAndroidResourceDeps.java',
-  'IdentityResourcesProvider.java',
-  'JavaAndroidLibraryCompiler.java',
-  'KotlinAndroidLibraryCompiler.java',
-  'MergeAndroidResourcesStep.java',
-  'NativeLibraryBuildRule.java',
-  'NdkLibrary.java',
-  'NdkLibraryDescription.java',
-  'PackageStringAssets.java',
-  'PreDexMerge.java',
-  'PreDexedFilesSorter.java',
-  'PrebuiltNativeLibrary.java',
-  'PrebuiltNativeLibraryDescription.java',
-  'ProGuardConfig.java',
-  'RDotJava.java',
-  'ResourcesFilter.java',
-  'RobolectricTest.java',
-  'RobolectricTestDescription.java',
-  'ScalaAndroidLibraryCompiler.java',
-  'StripLinkable.java',
-  'TrimUberRDotJava.java',
-  'UnsortedAndroidResourceDeps.java',
-  'UnzipAar.java',
-  # This and the InstrumentationStep would make more sense in the steps
-  # library, but are added here to avoid circular dependencies.
-  'ApkInstallStep.java',
-  'InstrumentationStep.java',
-  'relinker/RelinkerRule.java',
-  'relinker/NativeRelinker.java',
-  'relinker/Symbols.java',
+    "AaptPackageResources.java",
+    "AbstractAndroidGraphEnhancementResult.java",
+    "AbstractAndroidInstrumentationTestJVMArgs.java",
+    "AndroidAar.java",
+    "AndroidAarDescription.java",
+    "AndroidBinary.java",
+    "AndroidBinaryDescription.java",
+    "AndroidBinaryGraphEnhancer.java",
+    "AndroidBinaryResourcesGraphEnhancer.java",
+    "AndroidBuckConfig.java",
+    "AndroidBuildConfig.java",
+    "AndroidBuildConfigDescription.java",
+    "AndroidBuildConfigJavaLibrary.java",
+    "AndroidInstrumentationApk.java",
+    "AndroidInstrumentationApkDescription.java",
+    "AndroidInstrumentationTest.java",
+    "AndroidInstrumentationTestDescription.java",
+    "AndroidLibrary.java",
+    "AndroidLibraryCompiler.java",
+    "AndroidLibraryCompilerFactory.java",
+    "AndroidLibraryDescription.java",
+    "AndroidLibraryGraphEnhancer.java",
+    "AndroidManifest.java",
+    "AndroidManifestDescription.java",
+    "AndroidNativeLibsPackageableGraphEnhancer.java",
+    "AndroidPrebuiltAar.java",
+    "AndroidPrebuiltAarCollection.java",
+    "AndroidPrebuiltAarDescription.java",
+    "AndroidResource.java",
+    "AndroidResourceDescription.java",
+    "AndroidResourceHelper.java",
+    "AndroidTransitiveDependencyGraph.java",
+    "ApkGenrule.java",
+    "ApkGenruleDescription.java",
+    "AssembleDirectories.java",
+    "BootClasspathAppender.java",
+    "ComputeExopackageDepsAbi.java",
+    "CopyNativeLibraries.java",
+    "DefaultAndroidLibraryCompilerFactory.java",
+    "DexProducedFromJavaLibrary.java",
+    "DexWithClasses.java",
+    "DummyRDotJava.java",
+    "FilteredResourcesProvider.java",
+    "GenAidl.java",
+    "GenAidlDescription.java",
+    "HasAndroidResourceDeps.java",
+    "IdentityResourcesProvider.java",
+    "JavaAndroidLibraryCompiler.java",
+    "KotlinAndroidLibraryCompiler.java",
+    "MergeAndroidResourcesStep.java",
+    "NativeLibraryBuildRule.java",
+    "NdkLibrary.java",
+    "NdkLibraryDescription.java",
+    "PackageStringAssets.java",
+    "PreDexMerge.java",
+    "PreDexedFilesSorter.java",
+    "PrebuiltNativeLibrary.java",
+    "PrebuiltNativeLibraryDescription.java",
+    "ProGuardConfig.java",
+    "RDotJava.java",
+    "ResourcesFilter.java",
+    "RobolectricTest.java",
+    "RobolectricTestDescription.java",
+    "ScalaAndroidLibraryCompiler.java",
+    "StripLinkable.java",
+    "TrimUberRDotJava.java",
+    "UnsortedAndroidResourceDeps.java",
+    "UnzipAar.java",
+    # This and the InstrumentationStep would make more sense in the steps
+    # library, but are added here to avoid circular dependencies.
+    "ApkInstallStep.java",
+    "InstrumentationStep.java",
+    "relinker/RelinkerRule.java",
+    "relinker/NativeRelinker.java",
+    "relinker/Symbols.java",
 ]
+
 java_immutables_library(
-  name = 'rules',
-  srcs = RULES_SRCS,
-  immutable_types = [
-    'AndroidGraphEnhancementResult',
-    'AndroidInstrumentationTestJVMArgs',
-    'StrippedObjectDescription',
-  ],
-  tests = [
-    '//test/com/facebook/buck/android:unit',
-    '//test/com/facebook/buck/android:aar-integration',
-    '//test/com/facebook/buck/android:binary-integration',
-    '//test/com/facebook/buck/android:build-config-integration',
-    '//test/com/facebook/buck/android:instrumentation-integration',
-    '//test/com/facebook/buck/android:integration',
-  ],
-  autodeps = True,
-  resources = [
-    ':android-tools-common.jar',
-    ':ddmlib.jar',
-    ':guava.jar',
-    ':kxml2.jar',
-  ],
-  visibility = ['PUBLIC'],
+    name = "rules",
+    srcs = RULES_SRCS,
+    autodeps = True,
+    immutable_types = [
+        "AndroidGraphEnhancementResult",
+        "AndroidInstrumentationTestJVMArgs",
+        "StrippedObjectDescription",
+    ],
+    resources = [
+        ":android-tools-common.jar",
+        ":ddmlib.jar",
+        ":guava.jar",
+        ":kxml2.jar",
+    ],
+    tests = [
+        "//test/com/facebook/buck/android:aar-integration",
+        "//test/com/facebook/buck/android:binary-integration",
+        "//test/com/facebook/buck/android:build-config-integration",
+        "//test/com/facebook/buck/android:instrumentation-integration",
+        "//test/com/facebook/buck/android:integration",
+        "//test/com/facebook/buck/android:unit",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 export_file(
-  name = 'android-tools-common.jar',
-  src = '//third-party/java/android:common',
+    name = "android-tools-common.jar",
+    src = "//third-party/java/android:common",
 )
 
 export_file(
-  name = 'ddmlib.jar',
-  src = '//third-party/java/ddmlib:ddmlib',
+    name = "ddmlib.jar",
+    src = "//third-party/java/ddmlib:ddmlib",
 )
 
 export_file(
-  name = 'guava.jar',
-  src = '//third-party/java/guava:guava',
+    name = "guava.jar",
+    src = "//third-party/java/guava:guava",
 )
 
 export_file(
-  name = 'kxml2.jar',
-  src = '//third-party/java/kxml2:kxml2',
+    name = "kxml2.jar",
+    src = "//third-party/java/kxml2:kxml2",
 )
 
 SPLIT_DEX_SRCS = [
-  'DexSplitMode.java',
-  'DexStore.java',
+    "DexSplitMode.java",
+    "DexStore.java",
 ]
 
 java_library(
-  name = 'split_dex',
-  srcs = SPLIT_DEX_SRCS,
-  tests = [
-    '//test/com/facebook/buck/android:unit',
-    '//test/com/facebook/buck/android:binary-integration',
-    '//test/com/facebook/buck/android:instrumentation-integration',
-    '//test/com/facebook/buck/android:integration',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "split_dex",
+    srcs = SPLIT_DEX_SRCS,
+    autodeps = True,
+    tests = [
+        "//test/com/facebook/buck/android:binary-integration",
+        "//test/com/facebook/buck/android:instrumentation-integration",
+        "//test/com/facebook/buck/android:integration",
+        "//test/com/facebook/buck/android:unit",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 APKMODULE_SRCS = [
-  'AbstractAPKModule.java',
-  'APKModuleGraph.java',
+    "AbstractAPKModule.java",
+    "APKModuleGraph.java",
 ]
 
 java_immutables_library(
-  name = 'apkmodule',
-  srcs = APKMODULE_SRCS,
-  immutable_types = [
-    'APKModule',
-  ],
-  tests = [
-    '//test/com/facebook/buck/android:integration',
-    '//test/com/facebook/buck/android:unit',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "apkmodule",
+    srcs = APKMODULE_SRCS,
+    autodeps = True,
+    immutable_types = [
+        "APKModule",
+    ],
+    tests = [
+        "//test/com/facebook/buck/android:integration",
+        "//test/com/facebook/buck/android:unit",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 HELPERS_SRCS = [
-  'AdbHelper.java',
-  'ExopackageInstaller.java',
-  'HasInstallableApk.java',
+    "AdbHelper.java",
+    "ExopackageInstaller.java",
+    "HasInstallableApk.java",
 ]
 
 java_immutables_library(
-  name = 'helpers',
-  srcs = HELPERS_SRCS,
-  immutable_types = [
-    'ApkInfo',
-  ],
-  tests = [
-    '//test/com/facebook/buck/android:unit',
-    '//test/com/facebook/buck/android:integration',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "helpers",
+    srcs = HELPERS_SRCS,
+    autodeps = True,
+    immutable_types = [
+        "ApkInfo",
+    ],
+    tests = [
+        "//test/com/facebook/buck/android:integration",
+        "//test/com/facebook/buck/android:unit",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 UTILS_SRCS = [
-  'AndroidPlatformTarget.java',
-  'AndroidManifestReader.java',
-  'DefaultAndroidManifestReader.java',
-  'AndroidDirectoryResolver.java',
-  'DefaultAndroidDirectoryResolver.java',
+    "AndroidPlatformTarget.java",
+    "AndroidManifestReader.java",
+    "DefaultAndroidManifestReader.java",
+    "AndroidDirectoryResolver.java",
+    "DefaultAndroidDirectoryResolver.java",
 ]
 
 java_library(
-  name = 'utils',
-  srcs = UTILS_SRCS,
-  tests = [
-    '//test/com/facebook/buck/android:unit',
-    '//test/com/facebook/buck/android:integration',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "utils",
+    srcs = UTILS_SRCS,
+    autodeps = True,
+    tests = [
+        "//test/com/facebook/buck/android:integration",
+        "//test/com/facebook/buck/android:unit",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 java_immutables_library(
-  name = 'steps',
-  srcs = glob(['*.java'],
-              excludes = EXCEPTION_SRCS + PACKAGEABLE_SRCS + RULES_SRCS +
-                  SPLIT_DEX_SRCS + UTILS_SRCS + APKMODULE_SRCS + HELPERS_SRCS),
-  immutable_types = [
-    'NdkCxxPlatform',
-  ],
-  tests = [
-    '//test/com/facebook/buck/android:steps',
-    '//test/com/facebook/buck/android:integration',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "steps",
+    srcs = glob(
+        ["*.java"],
+        excludes = EXCEPTION_SRCS + PACKAGEABLE_SRCS + RULES_SRCS +
+                   SPLIT_DEX_SRCS + UTILS_SRCS + APKMODULE_SRCS + HELPERS_SRCS,
+    ),
+    autodeps = True,
+    immutable_types = [
+        "NdkCxxPlatform",
+    ],
+    tests = [
+        "//test/com/facebook/buck/android:integration",
+        "//test/com/facebook/buck/android:steps",
+    ],
+    visibility = ["PUBLIC"],
 )

@@ -1,115 +1,115 @@
 java_library(
-  name = 'rules',
-  srcs = [
-    'AbstractGenruleDescription.java',
-    'ExportFile.java',
-    'ExportFileDescription.java',
-    'Genrule.java',
-    'GenruleBinary.java',
-    'GenruleDescription.java',
-    'ShBinary.java',
-    'ShBinaryDescription.java',
-    'ShTest.java',
-    'ShTestDescription.java',
-  ],
-  tests = [
-    '//test/com/facebook/buck/shell:shell',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "rules",
+    srcs = [
+        "AbstractGenruleDescription.java",
+        "ExportFile.java",
+        "ExportFileDescription.java",
+        "Genrule.java",
+        "GenruleBinary.java",
+        "GenruleDescription.java",
+        "ShBinary.java",
+        "ShBinaryDescription.java",
+        "ShTest.java",
+        "ShTestDescription.java",
+    ],
+    autodeps = True,
+    tests = [
+        "//test/com/facebook/buck/shell:shell",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 java_library(
-  name = 'steps',
-  srcs = [
-    'AbstractGenruleStep.java',
-    'BashStep.java',
-    'DefaultShellStep.java',
-    'RunShTestAndRecordResultStep.java',
-    'ShellStep.java',
-    'SymlinkFilesIntoDirectoryStep.java',
-    'Shell.java',
-  ],
-  tests = [
-    '//test/com/facebook/buck/shell:shell',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "steps",
+    srcs = [
+        "AbstractGenruleStep.java",
+        "BashStep.java",
+        "DefaultShellStep.java",
+        "RunShTestAndRecordResultStep.java",
+        "Shell.java",
+        "ShellStep.java",
+        "SymlinkFilesIntoDirectoryStep.java",
+    ],
+    autodeps = True,
+    tests = [
+        "//test/com/facebook/buck/shell:shell",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 java_immutables_library(
-  name = 'worker_job_params',
-  srcs = [
-    'AbstractWorkerJobParams.java',
-  ],
-  immutable_types = [
-    'WorkerJobParams',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "worker_job_params",
+    srcs = [
+        "AbstractWorkerJobParams.java",
+    ],
+    autodeps = True,
+    immutable_types = [
+        "WorkerJobParams",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 java_library(
-  name = 'worker',
-  srcs = [
-    'DefaultWorkerTool.java',
-    'WorkerShellStep.java',
-    'WorkerToolDescription.java',
-  ],
-  tests = [
-    '//test/com/facebook/buck/shell:shell',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "worker",
+    srcs = [
+        "DefaultWorkerTool.java",
+        "WorkerShellStep.java",
+        "WorkerToolDescription.java",
+    ],
+    autodeps = True,
+    tests = [
+        "//test/com/facebook/buck/shell:shell",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 java_library(
-  name = 'worker_tool',
-  srcs = [
-    'WorkerTool.java',
-  ],
-  tests = [
-    '//test/com/facebook/buck/shell:shell',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "worker_tool",
+    srcs = [
+        "WorkerTool.java",
+    ],
+    autodeps = True,
+    tests = [
+        "//test/com/facebook/buck/shell:shell",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 java_library(
-  name = 'worker_pool_factory',
-  srcs = [
-    'WorkerProcessPoolFactory.java',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "worker_pool_factory",
+    srcs = [
+        "WorkerProcessPoolFactory.java",
+    ],
+    autodeps = True,
+    visibility = ["PUBLIC"],
 )
 
 java_immutables_library(
-  name = 'worker_process',
-  srcs = [
-    'AbstractWorkerProcessCommand.java',
-    'AbstractWorkerJobResult.java',
-    'WorkerProcess.java',
-    'WorkerProcessPool.java',
-    'WorkerProcessProtocol.java',
-    'WorkerProcessProtocolZero.java',
-  ],
-  immutable_types = [
-    'WorkerProcessCommand',
-    'WorkerJobResult',
-  ],
-  tests = [
-    '//test/com/facebook/buck/shell:shell',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "worker_process",
+    srcs = [
+        "AbstractWorkerJobResult.java",
+        "AbstractWorkerProcessCommand.java",
+        "WorkerProcess.java",
+        "WorkerProcessPool.java",
+        "WorkerProcessProtocol.java",
+        "WorkerProcessProtocolZero.java",
+    ],
+    autodeps = True,
+    immutable_types = [
+        "WorkerProcessCommand",
+        "WorkerJobResult",
+    ],
+    tests = [
+        "//test/com/facebook/buck/shell:shell",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 export_file(
-  name = 'sh_binary_template',
-  visibility = [
-    'PUBLIC'
-  ]
+    name = "sh_binary_template",
+    visibility = [
+        "PUBLIC",
+    ],
 )

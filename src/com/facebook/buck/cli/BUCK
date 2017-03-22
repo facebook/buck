@@ -1,73 +1,76 @@
 CONFIG_SRCS = [
-  'BuckConfig.java',
-  'ConfigPathGetter.java',
-  'DownloadConfig.java',
-  'ProjectTestsMode.java',
+    "BuckConfig.java",
+    "ConfigPathGetter.java",
+    "DownloadConfig.java",
+    "ProjectTestsMode.java",
 ]
+
 java_library(
-  name = 'config',
-  srcs = CONFIG_SRCS,
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ]
+    name = "config",
+    srcs = CONFIG_SRCS,
+    autodeps = True,
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 java_immutables_library(
-  name = 'cli',
-  srcs = glob(['*.java'],
-              excludes = CONFIG_SRCS),
-  immutable_types = [
-    'CommandRunnerParams',
-    'InstallResult',
-    'ProjectPredicates',
-    'TestRun',
-  ],
-  tests = [
-    '//test/com/facebook/buck/cli:cli',
-    '//test/com/facebook/buck/cli:cli-apple-integration',
-  ],
-  autodeps = True,
-  deps = [
-    # Autdeps is not finding this dep, but it is needed for the bootstrapper
-    '//src/com/facebook/buck/log/memory:memory',
-    '//src/com/facebook/buck/build_type:build_type',
-    '//src/com/facebook/buck/doctor/config:config',
-    '//src/com/facebook/buck/doctor:doctor',
-  ],
-  provided_deps = [
-    # Event API is loaded by the bootstrapper at runtime; don't need to depend on it strongly
-    '//src/com/facebook/buck/event/api:api',
-  ],
-  visibility = [
-    '//src/com/facebook/buck/event:dependencies-for-external-projects-inner',
-    '//test/com/facebook/buck/...',
-  ],
+    name = "cli",
+    srcs = glob(
+        ["*.java"],
+        excludes = CONFIG_SRCS,
+    ),
+    autodeps = True,
+    immutable_types = [
+        "CommandRunnerParams",
+        "InstallResult",
+        "ProjectPredicates",
+        "TestRun",
+    ],
+    provided_deps = [
+        # Event API is loaded by the bootstrapper at runtime; don't need to depend on it strongly
+        "//src/com/facebook/buck/event/api:api",
+    ],
+    tests = [
+        "//test/com/facebook/buck/cli:cli",
+        "//test/com/facebook/buck/cli:cli-apple-integration",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/event:dependencies-for-external-projects-inner",
+        "//test/com/facebook/buck/...",
+    ],
+    deps = [
+        # Autdeps is not finding this dep, but it is needed for the bootstrapper
+        "//src/com/facebook/buck/log/memory:memory",
+        "//src/com/facebook/buck/build_type:build_type",
+        "//src/com/facebook/buck/doctor/config:config",
+        "//src/com/facebook/buck/doctor:doctor",
+    ],
 )
 
 java_binary(
-  name = 'main',
-  deps = [
-    ':cli',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "main",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":cli",
+    ],
 )
 
 genrule(
-  name = 'main-fixed',
-  out = 'main-fixed.jar',
-  cmd = ' '.join([
-    '$(exe //py/buck/zip:munger)',
-    '--input=$(location :main)',
-    '--output=$OUT',
-    '--exclude=META-INF/MANIFEST.MF',
-  ]),
-  srcs = [
-    ':main',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "main-fixed",
+    srcs = [
+        ":main",
+    ],
+    out = "main-fixed.jar",
+    cmd = " ".join([
+        "$(exe //py/buck/zip:munger)",
+        "--input=$(location :main)",
+        "--output=$OUT",
+        "--exclude=META-INF/MANIFEST.MF",
+    ]),
+    visibility = [
+        "PUBLIC",
+    ],
 )

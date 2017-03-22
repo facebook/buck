@@ -1,14 +1,14 @@
 standard_java_library(
-  immutable_types = [
-    'GoLinkable',
-    'GoPlatform',
-  ],
-  visibility = [
-    '//src/com/facebook/buck/rules:types',
-    '//test/com/facebook/buck/go/...',
-  ],
-  resources = [
-    'testmaingen.go',
-    'LICENSE',
-  ],
+    immutable_types = [
+        "GoLinkable",
+        "GoPlatform",
+    ],
+    resources = [
+        "LICENSE",
+        "testmaingen.go",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/rules:types",
+        "//test/com/facebook/buck/go/...",
+    ],
 )

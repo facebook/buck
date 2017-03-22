@@ -1,17 +1,17 @@
 python_library(
-  name = 'typing',
-  srcs = {'typing.py': 'typing/python2/typing.py'},
-  base_module = '',
-  visibility = ['PUBLIC'],
+    name = "typing",
+    srcs = {"typing.py": "typing/python2/typing.py"},
+    base_module = "",
+    visibility = ["PUBLIC"],
 )
 
 zip_file(
-  name = 'typing-archive',
-  srcs = [':typing.py'],
-  visibility = ['PUBLIC'],
+    name = "typing-archive",
+    srcs = [":typing.py"],
+    visibility = ["PUBLIC"],
 )
 
 export_file(
-  name = 'typing.py',
-  src = 'typing/python2/typing.py',
+    name = "typing.py",
+    src = "typing/python2/typing.py",
 )

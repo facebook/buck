@@ -1,22 +1,22 @@
 standard_java_library(
-  immutable_types = [
-    'BuildExecutionResult',
-  ],
-  tests = [
-    '//test/com/facebook/buck/cli:cli',
-    '//test/com/facebook/buck/jvm/java/intellij:intellij',
-  ],
-  visibility = [
-    '//src/com/facebook/buck/cli:cli',
-    '//src/com/facebook/buck/distributed:distributed',
-    '//test/com/facebook/buck/cli:cli',
-    '//test/com/facebook/buck/jvm/java/intellij:intellij',
-  ],
+    immutable_types = [
+        "BuildExecutionResult",
+    ],
+    tests = [
+        "//test/com/facebook/buck/cli:cli",
+        "//test/com/facebook/buck/jvm/java/intellij:intellij",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/distributed:distributed",
+        "//test/com/facebook/buck/cli:cli",
+        "//test/com/facebook/buck/jvm/java/intellij:intellij",
+    ],
 )
 
 export_file(
-  name = 'intellij.py',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "intellij.py",
+    visibility = [
+        "PUBLIC",
+    ],
 )

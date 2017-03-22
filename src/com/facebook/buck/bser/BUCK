@@ -1,5 +1,5 @@
 standard_java_library(
-  tests = [
-    '//test/com/facebook/buck/bser:bser',
-  ],
+    tests = [
+        "//test/com/facebook/buck/bser:bser",
+    ],
 )

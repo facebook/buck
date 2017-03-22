@@ -1,44 +1,44 @@
 java_library(
-  name = 'downloader',
-  srcs = [
-    'AuthAwareDownloader.java',
-    'Downloader.java',
-    'DownloadEvent.java',
-    'DownloadProgressEvent.java',
-    'ExplodingDownloader.java',
-    'HttpDownloader.java',
-    'MavenUrlDecoder.java',
-    'OnDiskMavenDownloader.java',
-    'RemoteMavenDownloader.java',
-    'RetryingDownloader.java',
-    'StackedDownloader.java',
-  ],
-  autodeps = True,
-  visibility = [ 'PUBLIC' ],
+    name = "downloader",
+    srcs = [
+        "AuthAwareDownloader.java",
+        "DownloadEvent.java",
+        "DownloadProgressEvent.java",
+        "Downloader.java",
+        "ExplodingDownloader.java",
+        "HttpDownloader.java",
+        "MavenUrlDecoder.java",
+        "OnDiskMavenDownloader.java",
+        "RemoteMavenDownloader.java",
+        "RetryingDownloader.java",
+        "StackedDownloader.java",
+    ],
+    autodeps = True,
+    visibility = ["PUBLIC"],
 )
 
 java_library(
-  name = 'file',
-  srcs = [
-    'DownloadStep.java',
-    'RemoteFile.java',
-    'RemoteFileBinary.java',
-    'RemoteFileDescription.java',
-  ],
-  autodeps = True,
-  visibility = [
-    '//src/com/facebook/buck/cli:cli',
-    '//src/com/facebook/buck/rules:types',
-    '//test/com/facebook/buck/file:',
-    '//test/com/facebook/buck/maven:maven',
-  ],
+    name = "file",
+    srcs = [
+        "DownloadStep.java",
+        "RemoteFile.java",
+        "RemoteFileBinary.java",
+        "RemoteFileDescription.java",
+    ],
+    autodeps = True,
+    visibility = [
+        "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/rules:types",
+        "//test/com/facebook/buck/file:",
+        "//test/com/facebook/buck/maven:maven",
+    ],
 )
 
 java_library(
-  name = 'rules',
-  srcs = [
-    'WriteFile.java',
-  ],
-  autodeps = True,
-  visibility = [ 'PUBLIC' ],
+    name = "rules",
+    srcs = [
+        "WriteFile.java",
+    ],
+    autodeps = True,
+    visibility = ["PUBLIC"],
 )

@@ -1,27 +1,30 @@
 java_immutables_library(
-  name = 'concurrent',
-  srcs = glob(['*.java'], excludes=['MostExecutors.java']),
-  immutable_types = [
-    'ListeningSemaphoreArrayPendingItem',
-    'ResourceAmounts',
-  ],
-  tests = [
-    '//test/com/facebook/buck/util/concurrent:concurrent',
-  ],
-  autodeps = True,
-  exported_deps = [
-    ':concurrent_for_junit_runner',
-  ],
-  visibility = ['PUBLIC'],
+    name = "concurrent",
+    srcs = glob(
+        ["*.java"],
+        excludes = ["MostExecutors.java"],
+    ),
+    autodeps = True,
+    exported_deps = [
+        ":concurrent_for_junit_runner",
+    ],
+    immutable_types = [
+        "ListeningSemaphoreArrayPendingItem",
+        "ResourceAmounts",
+    ],
+    tests = [
+        "//test/com/facebook/buck/util/concurrent:concurrent",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 java_library(
-  name = 'concurrent_for_junit_runner',
-  srcs = [ 'MostExecutors.java' ],
-  deps = [
-    # IMPORTANT! This list is to remain empty. See src/com/facebook/buck/testrunner/BUCK.
-  ],
-  visibility = [
-    '//src/com/facebook/buck/testrunner:junit',
-  ],
+    name = "concurrent_for_junit_runner",
+    srcs = ["MostExecutors.java"],
+    visibility = [
+        "//src/com/facebook/buck/testrunner:junit",
+    ],
+    deps = [
+        # IMPORTANT! This list is to remain empty. See src/com/facebook/buck/testrunner/BUCK.
+    ],
 )

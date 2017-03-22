@@ -1,15 +1,15 @@
 standard_java_library(
-  immutable_types = [
-    'FatArch',
-    'FatHeader',
-    'LoadCommand',
-    'MachoHeader',
-    'Nlist',
-    'Section',
-    'SegmentCommand',
-    'UUIDCommand',
-  ],
-  tests = [
-    '//test/com/facebook/buck/macho:macho',
-  ],
+    immutable_types = [
+        "FatArch",
+        "FatHeader",
+        "LoadCommand",
+        "MachoHeader",
+        "Nlist",
+        "Section",
+        "SegmentCommand",
+        "UUIDCommand",
+    ],
+    tests = [
+        "//test/com/facebook/buck/macho:macho",
+    ],
 )

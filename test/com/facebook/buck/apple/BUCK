@@ -1,15 +1,18 @@
 APPLE_TEST_INTEGRATION_TEST_SRCS = [
-  'AppleTestIntegrationTest.java',
-  'AppleBundleIntegrationTest.java',
+    "AppleTestIntegrationTest.java",
+    "AppleBundleIntegrationTest.java",
 ]
 
 java_library(
-  name = 'testutil',
-  srcs = glob(['*.java'], excludes = ['*Test.java']),
-  autodeps = True,
-  visibility = [
-    '//test/...',
-  ],
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        excludes = ["*Test.java"],
+    ),
+    autodeps = True,
+    visibility = [
+        "//test/...",
+    ],
 )
 # These are separate from the rest of the tests so we can run
 # them separately, avoiding the 20 second timeout in the iOS simulator.

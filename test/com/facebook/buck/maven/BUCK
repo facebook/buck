@@ -2,21 +2,27 @@
 # See //third-party/java/maven:maven-model for an explanation of why this causes issues.
 
 java_library(
-  name = 'testutil',
-  srcs = glob(['*.java'], excludes = ['*Test.java']),
-  autodeps = True,
-  visibility = [
-    '//test/...',
-  ],
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        excludes = ["*Test.java"],
+    ),
+    autodeps = True,
+    visibility = [
+        "//test/...",
+    ],
 )
 
 java_test(
-  name = 'maven',
-  srcs = glob(['*Test.java']),
-  resources = glob(['testdata/**'], include_dotfiles=True),
-  autodeps = True,
-  deps = [
-    # This is due to the bug mentioned above.
-    '//third-party/java/plexus:plexus-utils',
-  ],
+    name = "maven",
+    srcs = glob(["*Test.java"]),
+    autodeps = True,
+    resources = glob(
+        ["testdata/**"],
+        include_dotfiles = True,
+    ),
+    deps = [
+        # This is due to the bug mentioned above.
+        "//third-party/java/plexus:plexus-utils",
+    ],
 )

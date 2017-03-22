@@ -1,21 +1,21 @@
 standard_java_library(
-  immutable_types = [
-    'IjLibrary',
-    'IjModule',
-    'IjModuleAndroidFacet',
-  ],
-  resources = [
-    'GeneratedByIdeaClass.st',
-    'ij-library.st',
-    'ij-misc.st',
-    'ij-module.st',
-    'ij-module-index.st',
-  ],
-  deps = [
-    '//src/com/facebook/buck/artifact_cache:config',
-  ],
-  visibility = [
-    '//src/com/facebook/buck/cli:cli',
-    '//test/...',
-  ],
+    immutable_types = [
+        "IjLibrary",
+        "IjModule",
+        "IjModuleAndroidFacet",
+    ],
+    resources = [
+        "GeneratedByIdeaClass.st",
+        "ij-library.st",
+        "ij-misc.st",
+        "ij-module.st",
+        "ij-module-index.st",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/cli:cli",
+        "//test/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/artifact_cache:config",
+    ],
 )

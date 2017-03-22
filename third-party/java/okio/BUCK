@@ -1,11 +1,11 @@
 prebuilt_jar(
-  name = 'okio',
-  binary_jar = 'okio-1.11.0.jar',
-  javadoc_url = 'http://square.github.io/okio/1.x/okio',
-  licenses = [
-    'LICENSE.txt',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "okio",
+    binary_jar = "okio-1.11.0.jar",
+    javadoc_url = "http://square.github.io/okio/1.x/okio",
+    licenses = [
+        "LICENSE.txt",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )

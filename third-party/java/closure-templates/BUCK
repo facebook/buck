@@ -1,16 +1,16 @@
 prebuilt_jar(
-  name = 'closure-templates',
-  binary_jar = 'soy-excluding-deps.jar',
-  deps = [
-    '//third-party/java/guava:guava',
-    '//third-party/java/guice:guice',
-    '//third-party/java/icu4j:icu4j',
-  ],
-  licenses = [
-    'COPYING',
-  ],
-  visibility = [
-    '//src/com/facebook/buck/httpserver:',
-    '//test/com/facebook/buck/httpserver:',
-  ],
+    name = "closure-templates",
+    binary_jar = "soy-excluding-deps.jar",
+    licenses = [
+        "COPYING",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/httpserver:",
+        "//test/com/facebook/buck/httpserver:",
+    ],
+    deps = [
+        "//third-party/java/guava:guava",
+        "//third-party/java/guice:guice",
+        "//third-party/java/icu4j:icu4j",
+    ],
 )

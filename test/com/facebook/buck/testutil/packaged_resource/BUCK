@@ -1,16 +1,16 @@
 # This file does not use standard_java_test() because it defines a library with some nonstandard
 # resources.
 java_library(
-  name = 'testutil',
-  srcs = [
-    'PackagedResourceTestUtil.java',
-  ],
-  resources = [
-    'testdata/packaged_resource_one',
-    'testdata/packaged_resource_two'
-  ],
-  autodeps = True,
-  visibility = [
-    '//test/...',
-  ],
+    name = "testutil",
+    srcs = [
+        "PackagedResourceTestUtil.java",
+    ],
+    autodeps = True,
+    resources = [
+        "testdata/packaged_resource_one",
+        "testdata/packaged_resource_two",
+    ],
+    visibility = [
+        "//test/...",
+    ],
 )

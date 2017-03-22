@@ -1,9 +1,9 @@
 standard_java_library(
-  immutable_types = [
-    'AppleSimulator',
-    'AppleSimulatorProfile',
-  ],
-  tests = [
-    '//test/com/facebook/buck/apple/simulator:simulator',
-  ],
+    immutable_types = [
+        "AppleSimulator",
+        "AppleSimulatorProfile",
+    ],
+    tests = [
+        "//test/com/facebook/buck/apple/simulator:simulator",
+    ],
 )

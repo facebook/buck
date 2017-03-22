@@ -1,5 +1,5 @@
 standard_java_library(
-  immutable_types = [
-    'CounterSnapshot',
-  ],
+    immutable_types = [
+        "CounterSnapshot",
+    ],
 )

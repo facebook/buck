@@ -1,47 +1,52 @@
 REPORT_FORMAT_SRCS = [
-  'CoverageReportFormat.java',
+    "CoverageReportFormat.java",
 ]
+
 java_library(
-  name = 'report-format',
-  srcs = REPORT_FORMAT_SRCS,
-  visibility = [
-    '//src/com/facebook/buck/cli:cli',
-    '//src/com/facebook/buck/jvm/java:steps',
-    '//test/com/facebook/buck/jvm/java:java',
-  ],
+    name = "report-format",
+    srcs = REPORT_FORMAT_SRCS,
+    visibility = [
+        "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/jvm/java:steps",
+        "//test/com/facebook/buck/jvm/java:java",
+    ],
 )
 
 CONFIG_SRCS = [
-  'AbstractTestResultSummaryVerbosity.java',
-  'TestConfig.java',
+    "AbstractTestResultSummaryVerbosity.java",
+    "TestConfig.java",
 ]
+
 java_immutables_library(
-  name = 'config',
-  srcs = CONFIG_SRCS,
-  immutable_types = [
-    'TestResultSummaryVerbosity',
-  ],
-  autodeps = True,
-  visibility = [
-    '//src/com/facebook/buck/cli:cli',
-    '//src/com/facebook/buck/event/listener:listener',
-    '//test/com/facebook/buck/event/listener:listener',
-    '//test/com/facebook/buck/test:test',
-  ],
+    name = "config",
+    srcs = CONFIG_SRCS,
+    autodeps = True,
+    immutable_types = [
+        "TestResultSummaryVerbosity",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/event/listener:listener",
+        "//test/com/facebook/buck/event/listener:listener",
+        "//test/com/facebook/buck/test:test",
+    ],
 )
 
 # Sources for dealing with test results.
 java_immutables_library(
-  name = 'test',
-  srcs = glob(['*.java'], excludes = REPORT_FORMAT_SRCS + CONFIG_SRCS),
-  immutable_types = [
-    'TestResults',
-    'TestRunningOptions',
-    'TestStatusMessage',
-  ],
-  tests = [
-    '//test/com/facebook/buck/test:test',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "test",
+    srcs = glob(
+        ["*.java"],
+        excludes = REPORT_FORMAT_SRCS + CONFIG_SRCS,
+    ),
+    autodeps = True,
+    immutable_types = [
+        "TestResults",
+        "TestRunningOptions",
+        "TestStatusMessage",
+    ],
+    tests = [
+        "//test/com/facebook/buck/test:test",
+    ],
+    visibility = ["PUBLIC"],
 )

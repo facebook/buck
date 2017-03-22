@@ -1,22 +1,22 @@
 java_immutables_library(
-  name = 'testutil',
-  srcs = [
-    'AbstractType.java',
-  ],
-  immutable_types = [
-    'Type',
-  ],
-  autodeps = True,
-  tests = [
-    '//test/com/facebook/buck/immutables:test',
-  ],
-  visibility = [
-    '//test/...',
-  ],
+    name = "testutil",
+    srcs = [
+        "AbstractType.java",
+    ],
+    autodeps = True,
+    immutable_types = [
+        "Type",
+    ],
+    tests = [
+        "//test/com/facebook/buck/immutables:test",
+    ],
+    visibility = [
+        "//test/...",
+    ],
 )
 
 java_test(
-  name = 'test',
-  srcs = glob(['*Test.java']),
-  autodeps = True,
+    name = "test",
+    srcs = glob(["*Test.java"]),
+    autodeps = True,
 )

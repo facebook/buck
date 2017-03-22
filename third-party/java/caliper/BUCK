@@ -1,32 +1,31 @@
 prebuilt_jar(
-  name = 'caliper',
-  binary_jar = ':caliper_shaded',
-  licenses = [
-    'LICENSE.txt',
-  ],
-  visibility = [
-    '//test/...',
-  ],
+    name = "caliper",
+    binary_jar = ":caliper_shaded",
+    licenses = [
+        "LICENSE.txt",
+    ],
+    visibility = [
+        "//test/...",
+    ],
 )
 
 genrule(
-  name = 'caliper_shaded',
-  srcs = [
-    'jarjar-rules.txt',
-  ],
-  cmd = '$(exe //third-party/java/jarjar:jarjar) process ' \
-      '$SRCDIR/jarjar-rules.txt $(location :caliper-all) $OUT',
-  out = 'caliper_shaded.jar',
-  licenses = [
-    'LICENSE.txt',
-  ],
+    name = "caliper_shaded",
+    srcs = [
+        "jarjar-rules.txt",
+    ],
+    out = "caliper_shaded.jar",
+    cmd = "$(exe //third-party/java/jarjar:jarjar) process " +
+          "$SRCDIR/jarjar-rules.txt $(location :caliper-all) $OUT",
+    licenses = [
+        "LICENSE.txt",
+    ],
 )
 
-
 prebuilt_jar(
-  name = 'caliper-all',
-  binary_jar = 'caliper-1.0-all.jar',
-  licenses = [
-    'LICENSE.txt',
-  ],
+    name = "caliper-all",
+    binary_jar = "caliper-1.0-all.jar",
+    licenses = [
+        "LICENSE.txt",
+    ],
 )

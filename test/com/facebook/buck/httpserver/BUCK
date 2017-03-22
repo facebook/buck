@@ -1,16 +1,19 @@
 CACHE_INTEGRATION_SRCS = [
-  'ServedCacheIntegrationTest.java',
+    "ServedCacheIntegrationTest.java",
 ]
 
 java_test(
-  name = 'httpserver',
-  srcs = glob(['*.java'], excludes=CACHE_INTEGRATION_SRCS),
-  resources = glob(['*.soy']),
-  autodeps = True,
+    name = "httpserver",
+    srcs = glob(
+        ["*.java"],
+        excludes = CACHE_INTEGRATION_SRCS,
+    ),
+    autodeps = True,
+    resources = glob(["*.soy"]),
 )
 
 java_test(
-  name = 'httpserver_cache_integration_test',
-  srcs = CACHE_INTEGRATION_SRCS,
-  autodeps = True,
+    name = "httpserver_cache_integration_test",
+    srcs = CACHE_INTEGRATION_SRCS,
+    autodeps = True,
 )

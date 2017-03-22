@@ -1,11 +1,11 @@
 prebuilt_jar(
-  name = 'libthrift',
-  binary_jar = 'libthrift-0.9.3.jar',
-  source_jar = 'libthrift-0.9.3-sources.jar',
-  licenses = [
-    'LICENSE',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "libthrift",
+    binary_jar = "libthrift-0.9.3.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "libthrift-0.9.3-sources.jar",
+    visibility = [
+        "PUBLIC",
+    ],
 )

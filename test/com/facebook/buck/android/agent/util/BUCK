@@ -1,9 +1,9 @@
 java_test(
-  name = 'util',
-  srcs = glob(['*.java']),
-  autodeps = True,
-  deps = [
-    # Resource-only rule: not picked up by autodeps.
-    '//src/com/facebook/buck/android/agent:manifest-as-resource',
-  ]
+    name = "util",
+    srcs = glob(["*.java"]),
+    autodeps = True,
+    deps = [
+        # Resource-only rule: not picked up by autodeps.
+        "//src/com/facebook/buck/android/agent:manifest-as-resource",
+    ],
 )

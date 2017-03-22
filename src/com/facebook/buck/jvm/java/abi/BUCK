@@ -1,27 +1,30 @@
 java_library(
-  name = 'abi',
-  srcs = glob(['*.java'], excludes = ['ApiStubber.java']),
-  tests = [
-    '//test/com/facebook/buck/jvm/java/abi:abi',
-  ],
-  autodeps = True,
-  visibility = [
-    '//src/com/facebook/buck/jvm/java:steps',
-    '//src/com/facebook/buck/jvm/java:support',
-    '//test/com/facebook/buck/jvm/java/abi:abi'
-  ],
+    name = "abi",
+    srcs = glob(
+        ["*.java"],
+        excludes = ["ApiStubber.java"],
+    ),
+    autodeps = True,
+    tests = [
+        "//test/com/facebook/buck/jvm/java/abi:abi",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/jvm/java:steps",
+        "//src/com/facebook/buck/jvm/java:support",
+        "//test/com/facebook/buck/jvm/java/abi:abi",
+    ],
 )
 
 java_binary(
-  name = 'api-stubber',
-  main_class = 'com.facebook.buck.jvm.java.abi.ApiStubber',
-  deps = [
-    ':lib-api-stubber',
-  ],
+    name = "api-stubber",
+    main_class = "com.facebook.buck.jvm.java.abi.ApiStubber",
+    deps = [
+        ":lib-api-stubber",
+    ],
 )
 
 java_library(
-  name = 'lib-api-stubber',
-  srcs = [ 'ApiStubber.java' ],
-  autodeps = True,
+    name = "lib-api-stubber",
+    srcs = ["ApiStubber.java"],
+    autodeps = True,
 )

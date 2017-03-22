@@ -1,97 +1,100 @@
 PUBLIC_SRCS = [
-  'AbstractVersionControlStats.java',
-  'VersionControlCmdLineInterface.java',
-  'VersionControlCmdLineInterfaceFactory.java',
-  'VersionControlCommandFailedException.java',
-  'NoOpCmdLineInterface.java',
+    "AbstractVersionControlStats.java",
+    "VersionControlCmdLineInterface.java",
+    "VersionControlCmdLineInterfaceFactory.java",
+    "VersionControlCommandFailedException.java",
+    "NoOpCmdLineInterface.java",
 ]
 
 CONFIG_SRCS = [
-  'VersionControlBuckConfig.java',
+    "VersionControlBuckConfig.java",
 ]
 
 GENERATOR_SRCS = [
-  'VersionControlStatsEvent.java',
-  'VersionControlStatsGenerator.java',
+    "VersionControlStatsEvent.java",
+    "VersionControlStatsGenerator.java",
 ]
 
 HG_SRCS = [
-  'HgCmdLineInterface.java',
+    "HgCmdLineInterface.java",
 ]
 
 java_immutables_library(
-  name = 'versioncontrol',
-  srcs = PUBLIC_SRCS,
-  immutable_types = [
-    'VersionControlStats',
-  ],
-  tests = [
-    '//test/com/facebook/buck/util/versioncontrol:versioncontrol',
-  ],
-  resources = [
-    'rawmanifest.py',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "versioncontrol",
+    srcs = PUBLIC_SRCS,
+    autodeps = True,
+    immutable_types = [
+        "VersionControlStats",
+    ],
+    resources = [
+        "rawmanifest.py",
+    ],
+    tests = [
+        "//test/com/facebook/buck/util/versioncontrol:versioncontrol",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 java_library(
-  name = 'versioncontrol_config',
-  srcs = CONFIG_SRCS,
-  tests = [
-    '//test/com/facebook/buck/util/versioncontrol:versioncontrol',
-  ],
-  autodeps=True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "versioncontrol_config",
+    srcs = CONFIG_SRCS,
+    autodeps = True,
+    tests = [
+        "//test/com/facebook/buck/util/versioncontrol:versioncontrol",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 java_library(
-  name = 'versioncontrol_generator',
-  srcs = GENERATOR_SRCS,
-  tests = [
-    '//test/com/facebook/buck/util/versioncontrol:versioncontrol',
-  ],
-  autodeps=True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "versioncontrol_generator",
+    srcs = GENERATOR_SRCS,
+    autodeps = True,
+    tests = [
+        "//test/com/facebook/buck/util/versioncontrol:versioncontrol",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 java_library(
-  name = 'versioncontrol_hg',
-  srcs = HG_SRCS,
-  tests = [
-    '//test/com/facebook/buck/util/versioncontrol:versioncontrol',
-  ],
-  autodeps=True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "versioncontrol_hg",
+    srcs = HG_SRCS,
+    autodeps = True,
+    tests = [
+        "//test/com/facebook/buck/util/versioncontrol:versioncontrol",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 export_file(
-  name = 'rawmanifest',
-  src = 'rawmanifest.py',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "rawmanifest",
+    src = "rawmanifest.py",
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 java_library(
-  name = 'impl',
-  srcs = glob(['*.java'], excludes = PUBLIC_SRCS + CONFIG_SRCS + GENERATOR_SRCS + HG_SRCS),
-  tests = [
-    '//test/com/facebook/buck/util/versioncontrol:versioncontrol',
-  ],
-  autodeps = True,
-  visibility = [
-   '//src/com/facebook/buck/util/versioncontrol:versioncontrol',
-   '//src/com/facebook/buck/cli:cli',
-   '//test/com/facebook/buck/util/versioncontrol/...',
-   '//test/com/facebook/buck/util/autosparse/...',
-  ],
+    name = "impl",
+    srcs = glob(
+        ["*.java"],
+        excludes = PUBLIC_SRCS + CONFIG_SRCS + GENERATOR_SRCS + HG_SRCS,
+    ),
+    autodeps = True,
+    tests = [
+        "//test/com/facebook/buck/util/versioncontrol:versioncontrol",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
+        "//test/com/facebook/buck/util/autosparse/...",
+        "//test/com/facebook/buck/util/versioncontrol/...",
+    ],
 )

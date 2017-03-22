@@ -1,296 +1,296 @@
 # This is here to break circular dependencies, since this interface is
 # threaded through almost everything.
 java_library(
-  name = 'interfaces',
-  srcs = [
-    'CellPathResolver.java',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "interfaces",
+    srcs = [
+        "CellPathResolver.java",
+    ],
+    autodeps = True,
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 java_library(
-  name = 'cell_path_resolver_serializer',
-  srcs = [
-    'CellPathResolverSerializer.java',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "cell_path_resolver_serializer",
+    srcs = [
+        "CellPathResolverSerializer.java",
+    ],
+    autodeps = True,
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 java_immutables_library(
-  name = 'types',
-  srcs = [
-    'Cell.java',
-    'CellProvider.java',
-    'KnownBuildRuleTypes.java',
-    'KnownBuildRuleTypesFactory.java',
-  ],
-  immutable_types = [
-    'CellConstructionDelegateData',
-  ],
-  tests = [
-    '//test/com/facebook/buck/rules:rules',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "types",
+    srcs = [
+        "Cell.java",
+        "CellProvider.java",
+        "KnownBuildRuleTypes.java",
+        "KnownBuildRuleTypesFactory.java",
+    ],
+    autodeps = True,
+    immutable_types = [
+        "CellConstructionDelegateData",
+    ],
+    tests = [
+        "//test/com/facebook/buck/rules:rules",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 java_library(
-  name = 'rule_key',
-  srcs = [
-    'RuleKey.java',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "rule_key",
+    srcs = [
+        "RuleKey.java",
+    ],
+    autodeps = True,
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 # Ideally, BuildRule.java would require only a handful of other source files
 # in order to compile it. Because BuildContext is referenced in the BuildRule
 # interface, its dependencies are much broader than desired.
 java_immutables_library(
-  name = 'build_rule',
-  srcs = [
-    'AbstractActionGraphAndResolver.java',
-    'AbstractBuildContext.java',
-    'AbstractBuildRule.java',
-    'AbstractBuildRuleType.java',
-    'AbstractBuildRuleWithResolver.java',
-    'AbstractDescriptionArg.java',
-    'AbstractExopackageInfo.java',
-    'AbstractExternalTestRunnerTestSpec.java',
-    'AbstractLabel.java',
-    'AbstractSourcePath.java',
-    'AbstractSourceWithFlags.java',
-    'AbstractTargetGraphAndBuildTargets.java',
-    'AbstractTargetGraphAndTargetNodes.java',
-    'AbstractVersionedTool.java',
-    'ActionGraph.java',
-    'AddToRuleKey.java',
-    'ArchiveMemberSourcePath.java',
-    'BinaryBuildRule.java',
-    'BinaryBuildRuleToolProvider.java',
-    'BuckPyFunction.java',
-    'BuildRule.java',
-    'BuildRuleDependencyVisitors.java',
-    'BuildRuleParams.java',
-    'BuildRuleResolver.java',
-    'BuildRuleStatus.java',
-    'BuildRuleSuccessType.java',
-    'BuildRuleDurationTracker.java',
-    'BuildRules.java',
-    'BuildTargetSourcePath.java',
-    'BuildableContext.java',
-    'BuildableProperties.java',
-    'ConstantToolProvider.java',
-    'ConstructorArgMarshaller.java',
-    'DefaultBuildTargetSourcePath.java',
-    'DefaultTargetNodeToBuildRuleTransformer.java',
-    'DependencyAggregation.java',
-    'Description.java',
-    'ExplicitBuildTargetSourcePath.java',
-    'ExportDependencies.java',
-    'ForwardingBuildTargetSourcePath.java',
-    'HasPostBuildSteps.java',
-    'HasRuntimeDeps.java',
-    'HashedFileTool.java',
-    'Hint.java',
-    'ImplicitDepsInferringDescription.java',
-    'ImplicitFlavorsInferringDescription.java',
-    'ImplicitInputsInferringDescription.java',
-    'LazyDelegatingTool.java',
-    'MetadataProvidingDescription.java',
-    'NonHashableSourcePathContainer.java',
-    'OnDiskBuildInfo.java',
-    'ParamInfo.java',
-    'ParamInfoException.java',
-    'PathSourcePath.java',
-    'RecordFileSha1Step.java',
-    'RuleKeyAppendable.java',
-    'RuleKeyObjectSink.java',
-    'RuleKeyFieldCategory.java',
-    'SourcePath.java',
-    'SourcePathResolver.java',
-    'SourcePathRuleFinder.java',
-    'SourceRoot.java',
-    'TargetGraph.java',
-    'TargetGroup.java',
-    'TargetName.java',
-    'TargetNode.java',
-    'TargetNodeFactory.java',
-    'TargetNodeToBuildRuleTransformer.java',
-    'TargetNodes.java',
-    'Tool.java',
-    'ToolProvider.java',
-    'VisibilityPattern.java',
-    'VisibilityPatternParser.java',
-  ],
-  immutable_types = [
-    'AbstractVersionedTool',
-    'BuildContext',
-    'BuildRuleType',
-    'ExopackageInfo',
-    'ExternalTestRunnerTestSpec',
-    'Label',
-    'SourceWithFlags',
-  ],
-  resources = [
-    'BuckPyFunction.stg',
-  ],
-  tests = [
-    '//test/com/facebook/buck/rules/coercer:coercer',
-    '//test/com/facebook/buck/rules:rules',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "build_rule",
+    srcs = [
+        "AbstractActionGraphAndResolver.java",
+        "AbstractBuildContext.java",
+        "AbstractBuildRule.java",
+        "AbstractBuildRuleType.java",
+        "AbstractBuildRuleWithResolver.java",
+        "AbstractDescriptionArg.java",
+        "AbstractExopackageInfo.java",
+        "AbstractExternalTestRunnerTestSpec.java",
+        "AbstractLabel.java",
+        "AbstractSourcePath.java",
+        "AbstractSourceWithFlags.java",
+        "AbstractTargetGraphAndBuildTargets.java",
+        "AbstractTargetGraphAndTargetNodes.java",
+        "AbstractVersionedTool.java",
+        "ActionGraph.java",
+        "AddToRuleKey.java",
+        "ArchiveMemberSourcePath.java",
+        "BinaryBuildRule.java",
+        "BinaryBuildRuleToolProvider.java",
+        "BuckPyFunction.java",
+        "BuildRule.java",
+        "BuildRuleDependencyVisitors.java",
+        "BuildRuleDurationTracker.java",
+        "BuildRuleParams.java",
+        "BuildRuleResolver.java",
+        "BuildRuleStatus.java",
+        "BuildRuleSuccessType.java",
+        "BuildRules.java",
+        "BuildTargetSourcePath.java",
+        "BuildableContext.java",
+        "BuildableProperties.java",
+        "ConstantToolProvider.java",
+        "ConstructorArgMarshaller.java",
+        "DefaultBuildTargetSourcePath.java",
+        "DefaultTargetNodeToBuildRuleTransformer.java",
+        "DependencyAggregation.java",
+        "Description.java",
+        "ExplicitBuildTargetSourcePath.java",
+        "ExportDependencies.java",
+        "ForwardingBuildTargetSourcePath.java",
+        "HasPostBuildSteps.java",
+        "HasRuntimeDeps.java",
+        "HashedFileTool.java",
+        "Hint.java",
+        "ImplicitDepsInferringDescription.java",
+        "ImplicitFlavorsInferringDescription.java",
+        "ImplicitInputsInferringDescription.java",
+        "LazyDelegatingTool.java",
+        "MetadataProvidingDescription.java",
+        "NonHashableSourcePathContainer.java",
+        "OnDiskBuildInfo.java",
+        "ParamInfo.java",
+        "ParamInfoException.java",
+        "PathSourcePath.java",
+        "RecordFileSha1Step.java",
+        "RuleKeyAppendable.java",
+        "RuleKeyFieldCategory.java",
+        "RuleKeyObjectSink.java",
+        "SourcePath.java",
+        "SourcePathResolver.java",
+        "SourcePathRuleFinder.java",
+        "SourceRoot.java",
+        "TargetGraph.java",
+        "TargetGroup.java",
+        "TargetName.java",
+        "TargetNode.java",
+        "TargetNodeFactory.java",
+        "TargetNodeToBuildRuleTransformer.java",
+        "TargetNodes.java",
+        "Tool.java",
+        "ToolProvider.java",
+        "VisibilityPattern.java",
+        "VisibilityPatternParser.java",
+    ],
+    autodeps = True,
+    immutable_types = [
+        "AbstractVersionedTool",
+        "BuildContext",
+        "BuildRuleType",
+        "ExopackageInfo",
+        "ExternalTestRunnerTestSpec",
+        "Label",
+        "SourceWithFlags",
+    ],
+    resources = [
+        "BuckPyFunction.stg",
+    ],
+    tests = [
+        "//test/com/facebook/buck/rules:rules",
+        "//test/com/facebook/buck/rules/coercer:coercer",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 java_library(
-  name = 'target_graph_hashing',
-  srcs = [
-    'TargetGraphHashing.java',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "target_graph_hashing",
+    srcs = [
+        "TargetGraphHashing.java",
+    ],
+    autodeps = True,
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 java_library(
-  name = 'build_event',
-  srcs = [
-    'BuildEvent.java',
-  ],
-  autodeps = True,
+    name = "build_event",
+    srcs = [
+        "BuildEvent.java",
+    ],
+    autodeps = True,
 )
 
 java_library(
-  name = 'caching_build_engine_delegates',
-  srcs = [
-    'CachingBuildEngineDelegate.java',
-    'LocalCachingBuildEngineDelegate.java',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "caching_build_engine_delegates",
+    srcs = [
+        "CachingBuildEngineDelegate.java",
+        "LocalCachingBuildEngineDelegate.java",
+    ],
+    autodeps = True,
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 java_immutables_library(
-  name = 'rules',
-  srcs = [
-    'AbstractBuildEngineBuildContext.java',
-    'AbstractBuildRuleKeys.java',
-    'AbstractCachingBuildEngineBuckConfig.java',
-    'AbstractResourceAwareSchedulingInfo.java',
-    'AbstractRuleScheduleInfo.java',
-    'AssociatedTargetNodePredicate.java',
-    'BinaryWrapperRule.java',
-    'BuildEngine.java',
-    'BuildInfo.java',
-    'BuildInfoRecorder.java',
-    'BuildInfoStore.java',
-    'BuildOutputInitializer.java',
-    'BuildResult.java',
-    'BuildRuleCacheEvent.java',
-    'BuildRuleEvent.java',
-    'CachingBuildEngine.java',
-    'DefaultBuildableContext.java',
-    'DefaultOnDiskBuildInfo.java',
-    'ExternalTestRunnerRule.java',
-    'FilesystemBuildInfoStore.java',
-    'IndividualTestEvent.java',
-    'InitializableFromDisk.java',
-    'Manifest.java',
-    'NoopBuildRule.java',
-    'OverrideScheduleRule.java',
-    'ProjectConfig.java',
-    'ProjectConfigDescription.java',
-    'RuleDepsCache.java',
-    'SymlinkTree.java',
-    'TargetGraphAndTargets.java',
-    'TestRule.java',
-    'TestRunEvent.java',
-    'TestStatusMessageEvent.java',
-    'TestSummaryEvent.java',
-    'UnskippedRulesTracker.java',
-    'WriteStringTemplateRule.java',
-  ],
-  immutable_types = [
-    'BuildEngineBuildContext',
-    'BuildRuleKeys',
-    'ResourceAwareSchedulingInfo',
-    'RuleScheduleInfo',
-  ],
-  tests = [
-    '//test/com/facebook/buck/rules:rules',
-  ],
-  autodeps = True,
-  exported_deps = [
-    # For some reason, :build_event is not a PUBLIC rule. As such, we export it
-    # explicitly as part of :rules even though it is not used by any of its
-    # srcs. This is probably for legacy reasons: we can (and should) move
-    # :build_event into its own package and make it a PUBLIC rule.
-    '//src/com/facebook/buck/rules:build_event',
-  ],
-  visibility = ['PUBLIC'],
+    name = "rules",
+    srcs = [
+        "AbstractBuildEngineBuildContext.java",
+        "AbstractBuildRuleKeys.java",
+        "AbstractCachingBuildEngineBuckConfig.java",
+        "AbstractResourceAwareSchedulingInfo.java",
+        "AbstractRuleScheduleInfo.java",
+        "AssociatedTargetNodePredicate.java",
+        "BinaryWrapperRule.java",
+        "BuildEngine.java",
+        "BuildInfo.java",
+        "BuildInfoRecorder.java",
+        "BuildInfoStore.java",
+        "BuildOutputInitializer.java",
+        "BuildResult.java",
+        "BuildRuleCacheEvent.java",
+        "BuildRuleEvent.java",
+        "CachingBuildEngine.java",
+        "DefaultBuildableContext.java",
+        "DefaultOnDiskBuildInfo.java",
+        "ExternalTestRunnerRule.java",
+        "FilesystemBuildInfoStore.java",
+        "IndividualTestEvent.java",
+        "InitializableFromDisk.java",
+        "Manifest.java",
+        "NoopBuildRule.java",
+        "OverrideScheduleRule.java",
+        "ProjectConfig.java",
+        "ProjectConfigDescription.java",
+        "RuleDepsCache.java",
+        "SymlinkTree.java",
+        "TargetGraphAndTargets.java",
+        "TestRule.java",
+        "TestRunEvent.java",
+        "TestStatusMessageEvent.java",
+        "TestSummaryEvent.java",
+        "UnskippedRulesTracker.java",
+        "WriteStringTemplateRule.java",
+    ],
+    autodeps = True,
+    exported_deps = [
+        # For some reason, :build_event is not a PUBLIC rule. As such, we export it
+        # explicitly as part of :rules even though it is not used by any of its
+        # srcs. This is probably for legacy reasons: we can (and should) move
+        # :build_event into its own package and make it a PUBLIC rule.
+        "//src/com/facebook/buck/rules:build_event",
+    ],
+    immutable_types = [
+        "BuildEngineBuildContext",
+        "BuildRuleKeys",
+        "ResourceAwareSchedulingInfo",
+        "RuleScheduleInfo",
+    ],
+    tests = [
+        "//test/com/facebook/buck/rules:rules",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 java_library(
-  name = 'command_tool',
-  srcs = [
-    'CommandTool.java',
-  ],
-  tests = [
-    '//test/com/facebook/buck/rules:rules',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "command_tool",
+    srcs = [
+        "CommandTool.java",
+    ],
+    autodeps = True,
+    tests = [
+        "//test/com/facebook/buck/rules:rules",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 java_library(
-  name = 'action_graph_cache',
-  srcs = [
-    'ActionGraphCache.java',
-  ],
-  tests = [
-    '//test/com/facebook/buck/rules:rules',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "action_graph_cache",
+    srcs = [
+        "ActionGraphCache.java",
+    ],
+    autodeps = True,
+    tests = [
+        "//test/com/facebook/buck/rules:rules",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 java_immutables_library(
-  name = 'relative_cell_name',
-  srcs = [
-    'AbstractRelativeCellName.java',
-  ],
-  autodeps = True,
-  immutable_types = [
-    'RelativeCellName',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "relative_cell_name",
+    srcs = [
+        "AbstractRelativeCellName.java",
+    ],
+    autodeps = True,
+    immutable_types = [
+        "RelativeCellName",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 java_library(
-  name = 'default_cell_path_resolver',
-  srcs = [
-    'DefaultCellPathResolver.java',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "default_cell_path_resolver",
+    srcs = [
+        "DefaultCellPathResolver.java",
+    ],
+    autodeps = True,
+    visibility = [
+        "PUBLIC",
+    ],
 )

@@ -1,8 +1,8 @@
 standard_java_library(
-  immutable_types = [
-    'ClientSideSlbConfig',
-    'PerServerData',
-    'ServerHealthManagerEventData',
-    'ThriftOverHttpServiceConfig',
-  ],
+    immutable_types = [
+        "ClientSideSlbConfig",
+        "PerServerData",
+        "ServerHealthManagerEventData",
+        "ThriftOverHttpServiceConfig",
+    ],
 )

@@ -1,81 +1,80 @@
 java_library(
-  name = 'tracing',
-  srcs = [
-    'JavacPhaseEvent.java',
-    'JavacPhaseEventLogger.java',
-    'TranslatingJavacPhaseTracer.java',
-  ],
-  tests = [
-    '//test/com/facebook/buck/jvm/java/tracing:tracing',
-  ],
-  exported_deps = [
-    # Have to export this manually. `buck autodeps` does not export it because it is in the
-    # provided_deps. This should be fixed in `buck autodeps`.
-    ':api',
-  ],
-  provided_deps = [
-    # The API module is part of the bootstrapper at runtime; don't need to depend on it directly
-    ':api',
-  ],
-  autodeps = True,
-  visibility = [
-    '//src/com/facebook/buck/event/listener:listener',
-    '//src/com/facebook/buck/jvm/java:support',
-    '//test/com/facebook/buck/event/listener:listener',
-    '//test/com/facebook/buck/jvm/java/tracing:tracing',
-  ],
+    name = "tracing",
+    srcs = [
+        "JavacPhaseEvent.java",
+        "JavacPhaseEventLogger.java",
+        "TranslatingJavacPhaseTracer.java",
+    ],
+    autodeps = True,
+    exported_deps = [
+        # Have to export this manually. `buck autodeps` does not export it because it is in the
+        # provided_deps. This should be fixed in `buck autodeps`.
+        ":api",
+    ],
+    provided_deps = [
+        # The API module is part of the bootstrapper at runtime; don't need to depend on it directly
+        ":api",
+    ],
+    tests = [
+        "//test/com/facebook/buck/jvm/java/tracing:tracing",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/event/listener:listener",
+        "//src/com/facebook/buck/jvm/java:support",
+        "//test/com/facebook/buck/event/listener:listener",
+        "//test/com/facebook/buck/jvm/java/tracing:tracing",
+    ],
 )
 
 java_library(
-  name = 'compiler-plugin',
-  srcs = [
-    'TracingTaskListener.java',
-  ],
-  tests = [
-    '//test/com/facebook/buck/jvm/java/tracing:tracing',
-  ],
-  autodeps = False,  # see below
-  deps = [
-    # This module is loaded as a plugin into the compiler itself; don't take dependencies on Buck
-    # internals (outside of stuff designed for use in plugins) or large libraries like Guava
+    name = "compiler-plugin",
+    srcs = [
+        "TracingTaskListener.java",
+    ],
+    autodeps = False,  # see below
+    provided_deps = [
+        # Tools.jar is the compiler itself, and will already be present at runtime;
+        # don't need to depend on it strongly.
+        "//third-party/java/jdk:compiler-tree-api",
 
-    '//src/com/facebook/buck/jvm/java/plugin/adapter:adapter',
-    '//src/com/facebook/buck/util/liteinfersupport:liteinfersupport',
-  ],
-  provided_deps = [
-    # Tools.jar is the compiler itself, and will already be present at runtime;
-    # don't need to depend on it strongly.
-    '//third-party/java/jdk:compiler-tree-api',
-
-    # The API module is part of the bootstrapper at runtime; don't need to depend on it directly
-    ':api',
-  ],
-  visibility = [
-    '//src/com/facebook/buck/jvm/java/plugin:javac-plugin',
-    '//test/com/facebook/buck/jvm/java/tracing:tracing',
-  ],
+        # The API module is part of the bootstrapper at runtime; don't need to depend on it directly
+        ":api",
+    ],
+    tests = [
+        "//test/com/facebook/buck/jvm/java/tracing:tracing",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/jvm/java/plugin:javac-plugin",
+        "//test/com/facebook/buck/jvm/java/tracing:tracing",
+    ],
+    deps = [
+        # This module is loaded as a plugin into the compiler itself; don't take dependencies on Buck
+        # internals (outside of stuff designed for use in plugins) or large libraries like Guava
+        "//src/com/facebook/buck/jvm/java/plugin/adapter:adapter",
+        "//src/com/facebook/buck/util/liteinfersupport:liteinfersupport",
+    ],
 )
 
 java_library(
-  name = 'api',
-  srcs = [
-    'JavacPhaseTracer.java',
-  ],
-  autodeps = False,  # see below
-  deps = [
-    # This is a super-light API that is loaded into Buck's bootstrapper. As such, be very careful
-    # what you put here as it can pollute the classpath for annotation processors. In particular,
-    # don't put any deps on third-party libraries or parts of Buck that might need third-party
-    # libraries.
+    name = "api",
+    srcs = [
+        "JavacPhaseTracer.java",
+    ],
+    autodeps = False,  # see below
+    visibility = [
+        "//src/com/facebook/buck/cli/bootstrapper:bootstrapper_lib",
+        "//src/com/facebook/buck/intellij/...",
+        "//src/com/facebook/buck/jvm/java:support",
+        "//test/com/facebook/buck/jvm/java/tracing:tracing",
+    ],
+    deps = [
+        # This is a super-light API that is loaded into Buck's bootstrapper. As such, be very careful
+        # what you put here as it can pollute the classpath for annotation processors. In particular,
+        # don't put any deps on third-party libraries or parts of Buck that might need third-party
+        # libraries.
 
-    # This dep is safe because it's designed for use in compiler plugins like annotation processors
-    # and has no third-party dependencies.
-    '//src/com/facebook/buck/util/liteinfersupport:liteinfersupport',
-  ],
-  visibility = [
-    '//src/com/facebook/buck/cli/bootstrapper:bootstrapper_lib',
-    '//src/com/facebook/buck/intellij/...',
-    '//src/com/facebook/buck/jvm/java:support',
-    '//test/com/facebook/buck/jvm/java/tracing:tracing',
-  ],
+        # This dep is safe because it's designed for use in compiler plugins like annotation processors
+        # and has no third-party dependencies.
+        "//src/com/facebook/buck/util/liteinfersupport:liteinfersupport",
+    ],
 )

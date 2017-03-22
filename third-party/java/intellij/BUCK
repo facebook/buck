@@ -1,54 +1,54 @@
 java_library(
-  name='intellij-plugin-sdk',
-  exported_deps = [
-    ':annotations',
-    ':extensions',
-    ':idea',
-    ':openapi',
-    ':util',
-    ':serviceMessages',
-    ':jdom',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "intellij-plugin-sdk",
+    exported_deps = [
+        ":annotations",
+        ":extensions",
+        ":idea",
+        ":jdom",
+        ":openapi",
+        ":serviceMessages",
+        ":util",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 prebuilt_jar(
-  name='annotations',
-  binary_jar='annotations.jar',
+    name = "annotations",
+    binary_jar = "annotations.jar",
 )
 
 prebuilt_jar(
-  name='extensions',
-  binary_jar='extensions.jar',
+    name = "extensions",
+    binary_jar = "extensions.jar",
 )
 
 prebuilt_jar(
-  name='openapi',
-  binary_jar='openapi.jar',
+    name = "openapi",
+    binary_jar = "openapi.jar",
 )
 
 prebuilt_jar(
-  name='util',
-  binary_jar='util.jar',
+    name = "util",
+    binary_jar = "util.jar",
 )
 
 prebuilt_jar(
-  name='idea',
-  binary_jar='idea.jar',
+    name = "idea",
+    binary_jar = "idea.jar",
 )
 
 prebuilt_jar(
-  name='serviceMessages',
-  binary_jar='serviceMessages.jar',
+    name = "serviceMessages",
+    binary_jar = "serviceMessages.jar",
 )
 
 prebuilt_jar(
-  name='jdom',
-  binary_jar='jdom.jar',
+    name = "jdom",
+    binary_jar = "jdom.jar",
 )
 
 project_config(
-  src_target = ':intellij-plugin-sdk'
+    src_target = ":intellij-plugin-sdk",
 )

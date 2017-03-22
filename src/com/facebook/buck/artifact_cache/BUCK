@@ -1,117 +1,122 @@
 PUBLIC_API_SOURCES = [
-  'ArtifactCacheFactory.java',
-  'AbstractArtifactInfo.java',
-  'AbstractCacheResult.java',
-  'AbstractNetworkCacheArgs.java',
-  'ArtifactCache.java',
-  'ArtifactCacheEvent.java',
-  'ArtifactCacheEventFactory.java',
-  'HttpArtifactCacheEvent.java',
-  'DirArtifactCache.java',
-  'DirArtifactCacheEvent.java',
-  'ArtifactCacheConnectEvent.java',
-  'CacheResultType.java',
-  'NoopArtifactCache.java',
+    "ArtifactCacheFactory.java",
+    "AbstractArtifactInfo.java",
+    "AbstractCacheResult.java",
+    "AbstractNetworkCacheArgs.java",
+    "ArtifactCache.java",
+    "ArtifactCacheEvent.java",
+    "ArtifactCacheEventFactory.java",
+    "HttpArtifactCacheEvent.java",
+    "DirArtifactCache.java",
+    "DirArtifactCacheEvent.java",
+    "ArtifactCacheConnectEvent.java",
+    "CacheResultType.java",
+    "NoopArtifactCache.java",
 ]
+
 java_immutables_library(
-  name = 'artifact_cache',
-  srcs = PUBLIC_API_SOURCES,
-  immutable_types = [
-    'ArtifactInfo',
-    'CacheResult',
-  ],
-  tests = [
-    '//test/com/facebook/buck/artifact_cache:artifact_cache',
-  ],
-  deps = [
-      "//third-party/java/okhttp:okhttp",
-      "//third-party/java/okio:okio"
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "artifact_cache",
+    srcs = PUBLIC_API_SOURCES,
+    autodeps = True,
+    immutable_types = [
+        "ArtifactInfo",
+        "CacheResult",
+    ],
+    tests = [
+        "//test/com/facebook/buck/artifact_cache:artifact_cache",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//third-party/java/okhttp:okhttp",
+        "//third-party/java/okio:okio",
+    ],
 )
 
 PROTOCOL_SOURCES = [
-  'HttpArtifactCacheBinaryProtocol.java',
+    "HttpArtifactCacheBinaryProtocol.java",
 ]
+
 java_immutables_library(
-  name = 'binary_protocol',
-  srcs = PROTOCOL_SOURCES,
-  immutable_types = [
-    'HttpArtifactCacheArgs',
-    'FetchResponseReadResult',
-    'MetadataAndPayloadReadResultInternal',
-    'StoreResponseReadResult',
-    'StoreWriteResult',
-  ],
-  tests = [
-    '//test/com/facebook/buck/artifact_cache:artifact_cache',
-  ],
-  autodeps = True,
-  visibility = [
-    '//src/com/facebook/buck/artifact_cache:generate_hybrid_payloads',
-    '//src/com/facebook/buck/httpserver:cache_handler',
-    '//test/com/facebook/buck/artifact_cache:artifact_cache',
-  ],
+    name = "binary_protocol",
+    srcs = PROTOCOL_SOURCES,
+    autodeps = True,
+    immutable_types = [
+        "HttpArtifactCacheArgs",
+        "FetchResponseReadResult",
+        "MetadataAndPayloadReadResultInternal",
+        "StoreResponseReadResult",
+        "StoreWriteResult",
+    ],
+    tests = [
+        "//test/com/facebook/buck/artifact_cache:artifact_cache",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/artifact_cache:generate_hybrid_payloads",
+        "//src/com/facebook/buck/httpserver:cache_handler",
+        "//test/com/facebook/buck/artifact_cache:artifact_cache",
+    ],
 )
 
 CONFIG_SOURCES = [
-  'ArtifactCacheBuckConfig.java',
-  'ArtifactCaches.java',
-  'SingletonArtifactCacheFactory.java',
+    "ArtifactCacheBuckConfig.java",
+    "ArtifactCaches.java",
+    "SingletonArtifactCacheFactory.java",
 ]
+
 java_immutables_library(
-  name = 'config',
-  srcs = CONFIG_SOURCES,
-  immutable_types = [
-    'DirCacheEntry',
-    'HttpCacheEntry',
-  ],
-  tests = [
-    '//test/com/facebook/buck/artifact_cache:artifact_cache',
-    '//test/com/facebook/buck/httpserver:httpserver_cache_integration_test',
-  ],
-  autodeps = True,
-  visibility = [
-    '//src/com/facebook/buck/cli:cli',
-    '//src/com/facebook/buck/httpserver:cache_handler',
-    '//test/com/facebook/buck/artifact_cache/...',
-    '//test/com/facebook/buck/cli/...',
-    '//test/com/facebook/buck/httpserver:httpserver_cache_integration_test',
-    '//src/com/facebook/buck/jvm/java/intellij:intellij',
-  ]
+    name = "config",
+    srcs = CONFIG_SOURCES,
+    autodeps = True,
+    immutable_types = [
+        "DirCacheEntry",
+        "HttpCacheEntry",
+    ],
+    tests = [
+        "//test/com/facebook/buck/artifact_cache:artifact_cache",
+        "//test/com/facebook/buck/httpserver:httpserver_cache_integration_test",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/httpserver:cache_handler",
+        "//src/com/facebook/buck/jvm/java/intellij:intellij",
+        "//test/com/facebook/buck/artifact_cache/...",
+        "//test/com/facebook/buck/cli/...",
+        "//test/com/facebook/buck/httpserver:httpserver_cache_integration_test",
+    ],
 )
 
 GENERATOR_SOURCE = [
-  'HybridPayloadGenerator.java'
+    "HybridPayloadGenerator.java",
 ]
 
 java_library(
-  name = 'impl',
-  srcs = glob(['*.java'],
-              excludes=PUBLIC_API_SOURCES + CONFIG_SOURCES + PROTOCOL_SOURCES + GENERATOR_SOURCE),
-  tests = [
-    '//test/com/facebook/buck/artifact_cache:artifact_cache',
-  ],
-  autodeps = True,
-  visibility = [
-    '//test/com/facebook/buck/artifact_cache/...',
-  ],
+    name = "impl",
+    srcs = glob(
+        ["*.java"],
+        excludes = PUBLIC_API_SOURCES + CONFIG_SOURCES + PROTOCOL_SOURCES + GENERATOR_SOURCE,
+    ),
+    autodeps = True,
+    tests = [
+        "//test/com/facebook/buck/artifact_cache:artifact_cache",
+    ],
+    visibility = [
+        "//test/com/facebook/buck/artifact_cache/...",
+    ],
 )
 
 java_binary(
-  name = 'generate-hybrid-payloads',
-  main_class = 'com.facebook.buck.artifact_cache.HybridPayloadGenerator',
-  deps = [
-    ':lib-generate-hybrid-payloads',
-  ],
+    name = "generate-hybrid-payloads",
+    main_class = "com.facebook.buck.artifact_cache.HybridPayloadGenerator",
+    deps = [
+        ":lib-generate-hybrid-payloads",
+    ],
 )
 
 java_library(
-  name = 'lib-generate-hybrid-payloads',
-  srcs = GENERATOR_SOURCE,
-  autodeps = True,
-  visibility = [ 'PUBLIC' ],
+    name = "lib-generate-hybrid-payloads",
+    srcs = GENERATOR_SOURCE,
+    autodeps = True,
+    visibility = ["PUBLIC"],
 )

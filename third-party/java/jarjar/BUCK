@@ -1,19 +1,18 @@
 java_binary(
-  name = 'jarjar',
-  deps = [
-    ':jarjar_prebuilt',
-  ],
-  main_class = 'com.tonicsystems.jarjar.Main',
-  visibility = [
-    '//third-party/java/...',
-  ],
+    name = "jarjar",
+    main_class = "com.tonicsystems.jarjar.Main",
+    visibility = [
+        "//third-party/java/...",
+    ],
+    deps = [
+        ":jarjar_prebuilt",
+    ],
 )
 
 prebuilt_jar(
-  name = 'jarjar_prebuilt',
-  binary_jar = 'jarjar-1.4.jar',
-  licenses = [
-    'LICENSE.txt',
-  ],
+    name = "jarjar_prebuilt",
+    binary_jar = "jarjar-1.4.jar",
+    licenses = [
+        "LICENSE.txt",
+    ],
 )
-

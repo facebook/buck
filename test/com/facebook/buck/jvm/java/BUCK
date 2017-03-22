@@ -1,58 +1,67 @@
 java_library(
-  name = 'testutil',
-  srcs = [
-    'FakeJavac.java',
-    'FakeJavaLibrary.java',
-    'FakeStandardJavaFileManager.java',
-    'JavaBinaryRuleBuilder.java',
-    'JavaLibraryBuilder.java',
-    'JavaTestBuilder.java',
-    'KeystoreBuilder.java',
-    'OptionAccumulator.java',
-    'PrebuiltJarBuilder.java',
-  ],
-  autodeps = True,
-  visibility = [
-    '//test/...',
-  ],
+    name = "testutil",
+    srcs = [
+        "FakeJavaLibrary.java",
+        "FakeJavac.java",
+        "FakeStandardJavaFileManager.java",
+        "JavaBinaryRuleBuilder.java",
+        "JavaLibraryBuilder.java",
+        "JavaTestBuilder.java",
+        "KeystoreBuilder.java",
+        "OptionAccumulator.java",
+        "PrebuiltJarBuilder.java",
+    ],
+    autodeps = True,
+    visibility = [
+        "//test/...",
+    ],
 )
 
 java_library(
-  name = 'fakepackagefinder',
-  srcs = [
-    'FakeJavaPackageFinder.java',
-  ],
-  autodeps = True,
-  visibility = [
-    '//test/...',
-  ],
+    name = "fakepackagefinder",
+    srcs = [
+        "FakeJavaPackageFinder.java",
+    ],
+    autodeps = True,
+    visibility = [
+        "//test/...",
+    ],
 )
 
 java_library(
-  name = 'javac-env',
-  srcs = [ 'JavaCompilationConstants.java', ],
-  autodeps = True,
-  visibility = [
-    '//test/...',
-  ],
+    name = "javac-env",
+    srcs = ["JavaCompilationConstants.java"],
+    autodeps = True,
+    visibility = [
+        "//test/...",
+    ],
 )
 
 SLOW_INTEGRATION_TESTS = [
-  'JavaTestIntegrationTest.java',
+    "JavaTestIntegrationTest.java",
 ]
 
 java_test(
-  name = 'integration-slow',
-  srcs = SLOW_INTEGRATION_TESTS,
-  resources = glob(['testdata/**'], include_dotfiles=True),
-  run_test_separately = True,
-  autodeps = True,
+    name = "integration-slow",
+    srcs = SLOW_INTEGRATION_TESTS,
+    autodeps = True,
+    resources = glob(
+        ["testdata/**"],
+        include_dotfiles = True,
+    ),
+    run_test_separately = True,
 )
 
 java_test(
-  name = 'java',
-  srcs = glob(['*Test.java'], excludes = SLOW_INTEGRATION_TESTS),
-  resources = glob(['testdata/**'], include_dotfiles=True),
-  autodeps = True,
-  labels = ['long_running'],
+    name = "java",
+    srcs = glob(
+        ["*Test.java"],
+        excludes = SLOW_INTEGRATION_TESTS,
+    ),
+    autodeps = True,
+    labels = ["long_running"],
+    resources = glob(
+        ["testdata/**"],
+        include_dotfiles = True,
+    ),
 )

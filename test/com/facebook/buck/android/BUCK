@@ -1,102 +1,124 @@
 STANDARD_TEST_SRCS = [
-  '*Test.java',
+    "*Test.java",
 ]
 
 STANDARD_INTEGRATION_TEST_SRCS = [
-  '*IntegrationTest.java',
+    "*IntegrationTest.java",
 ]
 
 UTILS_SRCS = [
-  'FakeAndroidDirectoryResolver.java',
+    "FakeAndroidDirectoryResolver.java",
 ]
 
 java_library(
-  name = 'utils',
-  srcs = UTILS_SRCS,
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "utils",
+    srcs = UTILS_SRCS,
+    autodeps = True,
+    visibility = ["PUBLIC"],
 )
 
 java_library(
-  name = 'testutil',
-  srcs = glob(
-      ['*.java'],
-      excludes = STANDARD_INTEGRATION_TEST_SRCS + STANDARD_TEST_SRCS + UTILS_SRCS),
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        excludes = STANDARD_INTEGRATION_TEST_SRCS + STANDARD_TEST_SRCS + UTILS_SRCS,
+    ),
+    autodeps = True,
+    visibility = [
+        "PUBLIC",
+    ],
 )
-
 
 STEP_TEST_SRCS = [
-  '*StepTest.java',
+    "*StepTest.java",
 ]
+
 java_test(
-  name = 'steps',
-  srcs = glob(STEP_TEST_SRCS),
-  autodeps = True,
+    name = "steps",
+    srcs = glob(STEP_TEST_SRCS),
+    autodeps = True,
 )
 
 java_test(
-  name = 'unit',
-  srcs = glob(
-    STANDARD_TEST_SRCS,
-    excludes = STANDARD_INTEGRATION_TEST_SRCS +
-      STEP_TEST_SRCS),
-  autodeps = True,
+    name = "unit",
+    srcs = glob(
+        STANDARD_TEST_SRCS,
+        excludes = STANDARD_INTEGRATION_TEST_SRCS +
+                   STEP_TEST_SRCS,
+    ),
+    autodeps = True,
 )
 
 ANDROID_AAR_INTEGRATION_TEST_SRCS = [
-  '*Aar*IntegrationTest.java',
+    "*Aar*IntegrationTest.java",
 ]
+
 java_test(
-  name = 'aar-integration',
-  srcs = glob(ANDROID_AAR_INTEGRATION_TEST_SRCS),
-  resources = glob(['testdata/**'], include_dotfiles=True),
-  autodeps = True,
+    name = "aar-integration",
+    srcs = glob(ANDROID_AAR_INTEGRATION_TEST_SRCS),
+    autodeps = True,
+    resources = glob(
+        ["testdata/**"],
+        include_dotfiles = True,
+    ),
 )
 
 ANDROID_BINARY_INTEGRATION_TEST_SRCS = [
-  '*Binary*IntegrationTest.java',
+    "*Binary*IntegrationTest.java",
 ]
+
 java_test(
-  name = 'binary-integration',
-  srcs = glob(ANDROID_BINARY_INTEGRATION_TEST_SRCS),
-  resources = glob(['testdata/**'], include_dotfiles=True),
-  autodeps = True,
-  labels = ['long_running'],
+    name = "binary-integration",
+    srcs = glob(ANDROID_BINARY_INTEGRATION_TEST_SRCS),
+    autodeps = True,
+    labels = ["long_running"],
+    resources = glob(
+        ["testdata/**"],
+        include_dotfiles = True,
+    ),
 )
 
 ANDROID_BUILD_CONFIG_INTEGRATION_TEST_SRCS = [
-  '*BuildConfig*IntegrationTest.java',
+    "*BuildConfig*IntegrationTest.java",
 ]
+
 java_test(
-  name = 'build-config-integration',
-  srcs = glob(ANDROID_BUILD_CONFIG_INTEGRATION_TEST_SRCS),
-  resources = glob(['testdata/**'], include_dotfiles=True),
-  autodeps = True,
+    name = "build-config-integration",
+    srcs = glob(ANDROID_BUILD_CONFIG_INTEGRATION_TEST_SRCS),
+    autodeps = True,
+    resources = glob(
+        ["testdata/**"],
+        include_dotfiles = True,
+    ),
 )
 
 ANDROID_INSTRUMENTATION_INTEGRATION_TEST_SRCS = [
-  '*Instrumentation*IntegrationTest.java',
+    "*Instrumentation*IntegrationTest.java",
 ]
+
 java_test(
-  name = 'instrumentation-integration',
-  srcs = glob(ANDROID_INSTRUMENTATION_INTEGRATION_TEST_SRCS),
-  resources = glob(['testdata/**'], include_dotfiles=True),
-  autodeps = True,
+    name = "instrumentation-integration",
+    srcs = glob(ANDROID_INSTRUMENTATION_INTEGRATION_TEST_SRCS),
+    autodeps = True,
+    resources = glob(
+        ["testdata/**"],
+        include_dotfiles = True,
+    ),
 )
 
 java_test(
-  name = 'integration',
-  srcs = glob(
-    STANDARD_INTEGRATION_TEST_SRCS,
-    excludes = ANDROID_AAR_INTEGRATION_TEST_SRCS +
-      ANDROID_BINARY_INTEGRATION_TEST_SRCS +
-      ANDROID_BUILD_CONFIG_INTEGRATION_TEST_SRCS +
-      ANDROID_INSTRUMENTATION_INTEGRATION_TEST_SRCS),
-  autodeps = True,
-  resources = glob(['testdata/**'], include_dotfiles=True),
-  labels = ['long_running'],
+    name = "integration",
+    srcs = glob(
+        STANDARD_INTEGRATION_TEST_SRCS,
+        excludes = ANDROID_AAR_INTEGRATION_TEST_SRCS +
+                   ANDROID_BINARY_INTEGRATION_TEST_SRCS +
+                   ANDROID_BUILD_CONFIG_INTEGRATION_TEST_SRCS +
+                   ANDROID_INSTRUMENTATION_INTEGRATION_TEST_SRCS,
+    ),
+    autodeps = True,
+    labels = ["long_running"],
+    resources = glob(
+        ["testdata/**"],
+        include_dotfiles = True,
+    ),
 )

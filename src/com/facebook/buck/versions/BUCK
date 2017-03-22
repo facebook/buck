@@ -1,45 +1,50 @@
 TYPES_SRCS = [
-  'AbstractExactConstraint.java',
-  'AbstractVersion.java',
-  'Constraint.java',
+    "AbstractExactConstraint.java",
+    "AbstractVersion.java",
+    "Constraint.java",
 ]
+
 java_immutables_library(
-  name = 'types',
-  immutable_types = [
-    'ExactConstraint',
-    'Version',
-  ],
-  srcs = TYPES_SRCS,
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "types",
+    srcs = TYPES_SRCS,
+    autodeps = True,
+    immutable_types = [
+        "ExactConstraint",
+        "Version",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 TRANSLATOR_SRCS = [
-  'TargetNodeTranslator.java',
-  'TargetTranslatable.java',
-  'TargetTranslator.java',
-  'TargetTranslatorOverridingDescription.java',
+    "TargetNodeTranslator.java",
+    "TargetTranslatable.java",
+    "TargetTranslator.java",
+    "TargetTranslatorOverridingDescription.java",
 ]
+
 java_library(
-  name = 'translator',
-  srcs = TRANSLATOR_SRCS,
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "translator",
+    srcs = TRANSLATOR_SRCS,
+    autodeps = True,
+    visibility = ["PUBLIC"],
 )
 
 java_immutables_library(
-  name = 'versions',
-  immutable_types = [
-    'Constraints',
-    'Implication',
-    'VersionedAlias',
-    'VersionInfo',
-    'VersionUniverse',
-  ],
-  srcs = glob(['*.java'], excludes=TYPES_SRCS + TRANSLATOR_SRCS),
-  tests = [
-    '//test/com/facebook/buck/versions:versions',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "versions",
+    srcs = glob(
+        ["*.java"],
+        excludes = TYPES_SRCS + TRANSLATOR_SRCS,
+    ),
+    autodeps = True,
+    immutable_types = [
+        "Constraints",
+        "Implication",
+        "VersionedAlias",
+        "VersionInfo",
+        "VersionUniverse",
+    ],
+    tests = [
+        "//test/com/facebook/buck/versions:versions",
+    ],
+    visibility = ["PUBLIC"],
 )

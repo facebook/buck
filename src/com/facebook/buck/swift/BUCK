@@ -1,21 +1,25 @@
 PLATFORM_SRCS = [
-  'AbstractSwiftPlatform.java',
-  'SwiftPlatforms.java',
+    "AbstractSwiftPlatform.java",
+    "SwiftPlatforms.java",
 ]
+
 java_immutables_library(
-  name = 'platform',
-  srcs = PLATFORM_SRCS,
-  immutable_types = [
-    'SwiftPlatform',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "platform",
+    srcs = PLATFORM_SRCS,
+    autodeps = True,
+    immutable_types = [
+        "SwiftPlatform",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 standard_java_library(
-  srcs = glob(['*.java',], excludes=PLATFORM_SRCS),
-  tests = [
-    '//test/com/facebook/buck/swift:integration',
-    '//test/com/facebook/buck/swift:unit',
-  ],
+    srcs = glob(
+        ["*.java"],
+        excludes = PLATFORM_SRCS,
+    ),
+    tests = [
+        "//test/com/facebook/buck/swift:integration",
+        "//test/com/facebook/buck/swift:unit",
+    ],
 )

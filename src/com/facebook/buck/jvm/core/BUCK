@@ -1,26 +1,26 @@
 java_library(
-  name = 'classhash',
-  srcs = [
-    'HasJavaClassHashes.java',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "classhash",
+    srcs = [
+        "HasJavaClassHashes.java",
+    ],
+    autodeps = True,
+    visibility = ["PUBLIC"],
 )
 
 java_library(
-  name = 'packagefinder',
-  srcs = [
-    'JavaPackageFinder.java',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "packagefinder",
+    srcs = [
+        "JavaPackageFinder.java",
+    ],
+    autodeps = True,
+    visibility = ["PUBLIC"],
 )
 
 java_library(
-  name = 'suggestbuildrules',
-  srcs = [
-    'SuggestBuildRules.java',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "suggestbuildrules",
+    srcs = [
+        "SuggestBuildRules.java",
+    ],
+    autodeps = True,
+    visibility = ["PUBLIC"],
 )

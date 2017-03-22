@@ -1,15 +1,15 @@
 prebuilt_jar(
-  name = 'ddmlib',
-  binary_jar = 'ddmlib-25.2.0.jar',
-  source_jar = 'ddmlib-25.2.0-sources.jar',
-  deps = [
-    '//third-party/java/android:common',
-    '//third-party/java/kxml2:kxml2',
-  ],
-  licenses = [
-    'NOTICE',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "ddmlib",
+    binary_jar = "ddmlib-25.2.0.jar",
+    licenses = [
+        "NOTICE",
+    ],
+    source_jar = "ddmlib-25.2.0-sources.jar",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//third-party/java/android:common",
+        "//third-party/java/kxml2:kxml2",
+    ],
 )

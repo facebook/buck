@@ -1,15 +1,15 @@
 standard_java_library(
-  immutable_types = [
-    'LuaBinaryPackageComponents',
-    'LuaNativeExecutableStarter',
-    'LuaPackageComponents',
-    'LuaScriptStarter',
-  ],
-  tests = [
-    '//test/com/facebook/buck/lua:lua',
-  ],
-  resources = [
-    'native-starter.cpp.in',
-    'starter.lua.in',
-  ],
+    immutable_types = [
+        "LuaBinaryPackageComponents",
+        "LuaNativeExecutableStarter",
+        "LuaPackageComponents",
+        "LuaScriptStarter",
+    ],
+    resources = [
+        "native-starter.cpp.in",
+        "starter.lua.in",
+    ],
+    tests = [
+        "//test/com/facebook/buck/lua:lua",
+    ],
 )

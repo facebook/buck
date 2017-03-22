@@ -1,11 +1,11 @@
 python_library(
-  name='ng',
-  srcs=glob(['pynailgun/*.py']),
-  base_module='',
-  licenses = [
-    'LICENSE',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "ng",
+    srcs = glob(["pynailgun/*.py"]),
+    base_module = "",
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
