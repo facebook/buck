@@ -41,6 +41,7 @@ public class DefaultJavaLibraryBuilder {
   protected final SourcePathResolver sourcePathResolver;
   protected final SourcePathRuleFinder ruleFinder;
   protected final CompileToJarStepFactory compileStepFactory;
+  protected final boolean suggestDependencies;
   protected ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
   protected ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
   protected Optional<Path> generatedSourceFolder = Optional.empty();
@@ -59,10 +60,12 @@ public class DefaultJavaLibraryBuilder {
   protected DefaultJavaLibraryBuilder(
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      CompileToJarStepFactory compileStepFactory) {
+      CompileToJarStepFactory compileStepFactory,
+      boolean suggestDependencies) {
     this.params = params;
     this.buildRuleResolver = buildRuleResolver;
     this.compileStepFactory = compileStepFactory;
+    this.suggestDependencies = suggestDependencies;
 
     ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     sourcePathResolver = new SourcePathResolver(ruleFinder);
@@ -183,6 +186,7 @@ public class DefaultJavaLibraryBuilder {
         trackClassUsage,
         additionalClasspathEntries,
         compileStepFactory,
+        suggestDependencies,
         resourcesRoot,
         manifestFile,
         mavenCoords,

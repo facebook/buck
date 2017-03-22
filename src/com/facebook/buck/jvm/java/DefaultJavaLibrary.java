@@ -145,12 +145,18 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey
   private final CompileToJarStepFactory compileStepFactory;
+  private final boolean suggestDependencies;
 
   public static DefaultJavaLibraryBuilder builder(
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      CompileToJarStepFactory compileStepFactory) {
-    return new DefaultJavaLibraryBuilder(params, buildRuleResolver, compileStepFactory);
+      CompileToJarStepFactory compileStepFactory,
+      boolean suggestDependencies) {
+    return new DefaultJavaLibraryBuilder(
+        params,
+        buildRuleResolver,
+        compileStepFactory,
+        suggestDependencies);
   }
 
   @Override
@@ -196,6 +202,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       boolean trackClassUsage,
       ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries,
       CompileToJarStepFactory compileStepFactory,
+      boolean suggestDependencies,
       Optional<Path> resourcesRoot,
       Optional<SourcePath> manifestFile,
       Optional<String> mavenCoords,
@@ -216,6 +223,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         new JarArchiveDependencySupplier(abiInputs),
         additionalClasspathEntries,
         compileStepFactory,
+        suggestDependencies,
         resourcesRoot,
         manifestFile,
         mavenCoords,
@@ -238,6 +246,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       final JarArchiveDependencySupplier abiClasspath,
       ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries,
       CompileToJarStepFactory compileStepFactory,
+      boolean suggestDependencies,
       Optional<Path> resourcesRoot,
       Optional<SourcePath> manifestFile,
       Optional<String> mavenCoords,
@@ -248,6 +257,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         resolver);
     this.ruleFinder = ruleFinder;
     this.compileStepFactory = compileStepFactory;
+    this.suggestDependencies = suggestDependencies;
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
     // and so only make sense for java library types.
@@ -422,7 +432,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     Path outputDirectory = getClassesDir(target, getProjectFilesystem());
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDirectory));
 
-    SuggestBuildRules suggestBuildRule =
+    SuggestBuildRules suggestBuildRule = suggestDependencies ?
         DefaultSuggestBuildRules.createSuggestBuildFunction(
             JAR_RESOLVER,
             context.getSourcePathResolver(),
@@ -431,7 +441,8 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
                 .addAll(getTransitiveClasspathDeps())
                 .add(this)
                 .build(),
-            context.getActionGraph().getNodes());
+            context.getActionGraph().getNodes()) :
+        (failedImports) -> ImmutableSet.of();
 
     // We don't want to add these to the declared or transitive deps, since they're only used at
     // compile time.

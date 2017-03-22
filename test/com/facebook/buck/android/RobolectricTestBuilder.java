@@ -35,6 +35,7 @@ public class RobolectricTestBuilder extends AbstractNodeBuilder<
         new RobolectricTestDescription(
             DEFAULT_JAVA_OPTIONS,
             ANDROID_JAVAC_OPTIONS,
+            false,
             /* testRuleTimeoutMs */ Optional.empty(),
             null),
         target);
@@ -45,6 +46,7 @@ public class RobolectricTestBuilder extends AbstractNodeBuilder<
         new RobolectricTestDescription(
             DEFAULT_JAVA_OPTIONS,
             ANDROID_JAVAC_OPTIONS,
+            false,
             /* testRuleTimeoutMs */ Optional.empty(),
             null),
         target,

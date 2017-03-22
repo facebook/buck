@@ -144,6 +144,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* skipCrunchPngs */ false,
         /* includesVectorDrawables */ false,
         ANDROID_JAVAC_OPTIONS,
+        false,
         EnumSet.noneOf(ExopackageMode.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFile */ Optional.empty(),
@@ -262,13 +263,14 @@ public class AndroidBinaryGraphEnhancerTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     AndroidBuildConfigJavaLibrary buildConfigJavaLibrary = AndroidBuildConfigDescription
         .createBuildRule(
-          buildConfigParams,
-          "com.example.buck",
-          /* values */ BuildConfigFields.empty(),
-          /* valuesFile */ Optional.empty(),
-          /* useConstantExpressions */ false,
-          ANDROID_JAVAC_OPTIONS,
-          ruleResolver);
+            buildConfigParams,
+            "com.example.buck",
+            /* values */ BuildConfigFields.empty(),
+            /* valuesFile */ Optional.empty(),
+            /* useConstantExpressions */ false,
+            ANDROID_JAVAC_OPTIONS,
+            false,
+            ruleResolver);
 
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
     BuildRuleParams originalParams = new FakeBuildRuleParamsBuilder(apkTarget)
@@ -300,6 +302,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* skipCrunchPngs */ false,
         /* includesVectorDrawables */ false,
         ANDROID_JAVAC_OPTIONS,
+        false,
         EnumSet.of(ExopackageMode.SECONDARY_DEX),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFiles */ Optional.empty(),
@@ -449,6 +452,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* skipCrunchPngs */ false,
         /* includesVectorDrawables */ false,
         ANDROID_JAVAC_OPTIONS,
+        false,
         EnumSet.of(ExopackageMode.SECONDARY_DEX),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFiles */ Optional.empty(),
@@ -510,6 +514,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* skipCrunchPngs */ false,
         /* includesVectorDrawables */ false,
         ANDROID_JAVAC_OPTIONS,
+        false,
         EnumSet.of(ExopackageMode.SECONDARY_DEX),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFiles */ Optional.empty(),
@@ -598,6 +603,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* skipCrunchPngs */ false,
         /* includesVectorDrawables */ false,
         ANDROID_JAVAC_OPTIONS,
+        false,
         EnumSet.of(ExopackageMode.SECONDARY_DEX),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFiles */ Optional.empty(),

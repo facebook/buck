@@ -37,7 +37,7 @@ public class KotlinLibraryBuilder
       ProjectFilesystem projectFilesystem,
       HashCode hashCode) {
     super(
-        new KotlinLibraryDescription(null, null),
+        new KotlinLibraryDescription(null, null, false),
         target,
         projectFilesystem,
         hashCode);

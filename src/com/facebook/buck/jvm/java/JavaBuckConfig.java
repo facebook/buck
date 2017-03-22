@@ -183,4 +183,8 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   public Optional<Integer> getDxThreadCount() {
     return delegate.getInteger(SECTION, "dx_threads");
   }
+
+  public boolean shouldSuggestDependencies() {
+    return delegate.getBooleanValue(SECTION, "suggest_dependencies", false);
+  }
 }

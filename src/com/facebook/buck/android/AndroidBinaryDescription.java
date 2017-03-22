@@ -112,6 +112,7 @@ public class AndroidBinaryDescription implements
 
   private final JavaOptions javaOptions;
   private final JavacOptions javacOptions;
+  private final boolean suggestDependencies;
   private final ProGuardConfig proGuardConfig;
   private final BuckConfig buckConfig;
   private final CxxBuckConfig cxxBuckConfig;
@@ -122,6 +123,7 @@ public class AndroidBinaryDescription implements
   public AndroidBinaryDescription(
       JavaOptions javaOptions,
       JavacOptions javacOptions,
+      boolean suggestDependencies,
       ProGuardConfig proGuardConfig,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ListeningExecutorService dxExecutorService,
@@ -130,6 +132,7 @@ public class AndroidBinaryDescription implements
       DxConfig dxConfig) {
     this.javaOptions = javaOptions;
     this.javacOptions = javacOptions;
+    this.suggestDependencies = suggestDependencies;
     this.proGuardConfig = proGuardConfig;
     this.buckConfig = buckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
@@ -242,6 +245,7 @@ public class AndroidBinaryDescription implements
           args.skipCrunchPngs,
           args.includesVectorDrawables,
           javacOptions,
+          suggestDependencies,
           exopackageModes,
           args.buildConfigValues,
           args.buildConfigValuesFile,

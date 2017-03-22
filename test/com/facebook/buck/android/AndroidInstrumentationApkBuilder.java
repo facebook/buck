@@ -39,6 +39,7 @@ public class AndroidInstrumentationApkBuilder
         new AndroidInstrumentationApkDescription(
             new ProGuardConfig(FakeBuckConfig.builder().build()),
             ANDROID_JAVAC_OPTIONS,
+            false,
             ImmutableMap.of(),
             MoreExecutors.newDirectExecutorService(),
             new CxxBuckConfig(new FakeBuckConfig.Builder().build()),

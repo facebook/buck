@@ -52,6 +52,7 @@ public class AndroidPrebuiltAar
       UnzipAar unzipAar,
       JavacOptions javacOptions,
       CompileToJarStepFactory compileStepFactory,
+      boolean suggestDependencies,
       Iterable<PrebuiltJar> exportedDeps,
       ImmutableSortedSet<SourcePath> abiInputs) {
     super(
@@ -72,6 +73,7 @@ public class AndroidPrebuiltAar
         javacOptions,
         /* trackClassUsage */ false,
         compileStepFactory,
+        suggestDependencies,
         /* resourcesRoot */ Optional.empty(),
         /* mavenCoords */ Optional.empty(),
         Optional.of(

@@ -37,6 +37,7 @@ public class JavaTestBuilder
         new JavaTestDescription(
             DEFAULT_JAVA_OPTIONS,
             DEFAULT_JAVAC_OPTIONS,
+            false,
             /* testRuleTimeoutMs */ Optional.empty(),
             null),
         target);

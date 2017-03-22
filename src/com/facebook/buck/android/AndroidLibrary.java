@@ -60,8 +60,14 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       CompileToJarStepFactory compileStepFactory,
+      boolean suggestDependencies,
       JavacOptions javacOptions) {
-    return new Builder(params, buildRuleResolver, compileStepFactory, javacOptions);
+    return new Builder(
+        params,
+        buildRuleResolver,
+        compileStepFactory,
+        suggestDependencies,
+        javacOptions);
   }
 
   @VisibleForTesting
@@ -80,6 +86,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       JavacOptions javacOptions,
       boolean trackClassUsage,
       CompileToJarStepFactory compileStepFactory,
+      boolean suggestDependencies,
       Optional<Path> resourcesRoot,
       Optional<String> mavenCoords,
       Optional<SourcePath> manifestFile,
@@ -99,6 +106,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         trackClassUsage,
         additionalClasspathEntries,
         compileStepFactory,
+        suggestDependencies,
         resourcesRoot,
         Optional.empty(),
         mavenCoords,
@@ -123,8 +131,9 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         BuildRuleParams params,
         BuildRuleResolver buildRuleResolver,
         CompileToJarStepFactory compileStepFactory,
+        boolean suggestDependencies,
         JavacOptions javacOptions) {
-      super(params, buildRuleResolver, compileStepFactory);
+      super(params, buildRuleResolver, compileStepFactory, suggestDependencies);
       this.javacOptions = javacOptions;
     }
 
@@ -152,6 +161,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
           javacOptions,
           trackClassUsage,
           compileStepFactory,
+          suggestDependencies,
           resourcesRoot,
           mavenCoords,
           manifestFile,

@@ -67,12 +67,15 @@ public class AndroidLibraryDescription
   }
 
   private final JavacOptions defaultOptions;
+  private final boolean suggestDependencies;
   private final AndroidLibraryCompilerFactory compilerFactory;
 
   public AndroidLibraryDescription(
       JavacOptions defaultOptions,
+      boolean suggestDependencies,
       AndroidLibraryCompilerFactory compilerFactory) {
     this.defaultOptions = defaultOptions;
+    this.suggestDependencies = suggestDependencies;
     this.compilerFactory = compilerFactory;
   }
 
@@ -198,6 +201,7 @@ public class AndroidLibraryDescription
           androidLibraryParams,
           resolver,
           compiler.compileToJar(args, javacOptions, resolver),
+          suggestDependencies,
           javacOptions)
           .setArgs(args)
           .setAdditionalClasspathEntries(additionalClasspathEntries)

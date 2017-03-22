@@ -43,7 +43,7 @@ public class JavaLibraryBuilder extends
       ProjectFilesystem projectFilesystem,
       HashCode hashCode) {
     super(
-        new JavaLibraryDescription(DEFAULT_JAVAC_OPTIONS),
+        new JavaLibraryDescription(DEFAULT_JAVAC_OPTIONS, false),
         target,
         projectFilesystem,
         hashCode);

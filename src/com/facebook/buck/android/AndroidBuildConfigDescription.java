@@ -48,9 +48,13 @@ public class AndroidBuildConfigDescription
 
   private static final Flavor GEN_JAVA_FLAVOR = InternalFlavor.of("gen_java_android_build_config");
   private final JavacOptions androidJavacOptions;
+  private final boolean suggestDependencies;
 
-  public AndroidBuildConfigDescription(JavacOptions androidJavacOptions) {
+  public AndroidBuildConfigDescription(
+      JavacOptions androidJavacOptions,
+      boolean suggestDependencies) {
     this.androidJavacOptions = androidJavacOptions;
+    this.suggestDependencies = suggestDependencies;
   }
 
   @Override
@@ -83,6 +87,7 @@ public class AndroidBuildConfigDescription
         args.valuesFile,
         /* useConstantExpressions */ false,
         androidJavacOptions,
+        suggestDependencies,
         resolver);
   }
 
@@ -101,6 +106,7 @@ public class AndroidBuildConfigDescription
       Optional<SourcePath> valuesFile,
       boolean useConstantExpressions,
       JavacOptions javacOptions,
+      boolean suggestDependencies,
       BuildRuleResolver ruleResolver) throws NoSuchBuildTargetException {
     // Normally, the build target for an intermediate rule is a flavored version of the target for
     // the original rule. For example, if the build target for an android_build_config() were
@@ -154,6 +160,7 @@ public class AndroidBuildConfigDescription
         pathResolver,
         ruleFinder,
         javacOptions,
+        suggestDependencies,
         JavaLibraryRules.getAbiInputs(ruleResolver, javaLibraryParams.getDeps()),
         androidBuildConfig);
   }

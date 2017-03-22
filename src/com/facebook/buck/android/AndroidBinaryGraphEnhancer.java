@@ -94,6 +94,7 @@ public class AndroidBinaryGraphEnhancer {
   private final ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex;
   private final ImmutableSet<BuildTarget> resourcesToExclude;
   private final JavacOptions javacOptions;
+  private final boolean suggestDependencies;
   private final EnumSet<ExopackageMode> exopackageModes;
   private final BuildConfigFields buildConfigValues;
   private final Optional<SourcePath> buildConfigValuesFile;
@@ -124,6 +125,7 @@ public class AndroidBinaryGraphEnhancer {
       boolean skipCrunchPngs,
       boolean includesVectorDrawables,
       JavacOptions javacOptions,
+      boolean suggestDependencies,
       EnumSet<ExopackageMode> exopackageModes,
       BuildConfigFields buildConfigValues,
       Optional<SourcePath> buildConfigValuesFile,
@@ -152,6 +154,7 @@ public class AndroidBinaryGraphEnhancer {
     this.buildTargetsToExcludeFromDex = buildTargetsToExcludeFromDex;
     this.resourcesToExclude = resourcesToExclude;
     this.javacOptions = javacOptions;
+    this.suggestDependencies = suggestDependencies;
     this.exopackageModes = exopackageModes;
     this.buildConfigValues = buildConfigValues;
     this.buildConfigValuesFile = buildConfigValuesFile;
@@ -241,7 +244,7 @@ public class AndroidBinaryGraphEnhancer {
           javacOptions.withSourceLevel("7").withTargetLevel("7"),
           JavacOptionsAmender.IDENTITY);
       DefaultJavaLibrary compileMergedNativeLibMapGenCode = DefaultJavaLibrary
-          .builder(paramsForCompileGenCode, ruleResolver, compileStepFactory)
+          .builder(paramsForCompileGenCode, ruleResolver, compileStepFactory, suggestDependencies)
           .setSrcs(ImmutableSortedSet.of(generateCodeForMergedLibraryMap.getSourcePathToOutput()))
           .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
           .build();
@@ -265,6 +268,7 @@ public class AndroidBinaryGraphEnhancer {
           buildConfigValuesFile,
           ruleResolver,
           javacOptions,
+          suggestDependencies,
           packageableCollection);
       enhancedDeps.addAll(buildConfigDepsRules);
       additionalJavaLibrariesBuilder.addAll(buildConfigDepsRules);
@@ -310,7 +314,11 @@ public class AndroidBinaryGraphEnhancer {
         javacOptions.withSourceLevel("7").withTargetLevel("7"),
         JavacOptionsAmender.IDENTITY);
     JavaLibrary compileUberRDotJava = DefaultJavaLibrary
-        .builder(paramsForCompileUberRDotJava, ruleResolver, compileStepFactory)
+        .builder(
+            paramsForCompileUberRDotJava,
+            ruleResolver,
+            compileStepFactory,
+            suggestDependencies)
         .setSrcs(ImmutableSortedSet.of(trimUberRDotJava.getSourcePathToOutput()))
         .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
         .build();
@@ -396,6 +404,7 @@ public class AndroidBinaryGraphEnhancer {
       Optional<SourcePath> buildConfigValuesFile,
       BuildRuleResolver ruleResolver,
       JavacOptions javacOptions,
+      boolean suggestDependencies,
       AndroidPackageableCollection packageableCollection) throws NoSuchBuildTargetException {
     ImmutableSortedSet.Builder<JavaLibrary> result = ImmutableSortedSet.naturalOrder();
     BuildConfigFields buildConfigConstants = BuildConfigFields.fromFields(
@@ -440,6 +449,7 @@ public class AndroidBinaryGraphEnhancer {
           buildConfigValuesFile,
           /* useConstantExpressions */ true,
           javacOptions,
+          suggestDependencies,
           ruleResolver);
       ruleResolver.addToIndex(buildConfigJavaLibrary);
 

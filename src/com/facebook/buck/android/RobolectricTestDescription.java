@@ -56,16 +56,19 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
   private final JavaOptions javaOptions;
   private final JavacOptions templateOptions;
+  private final boolean suggestDependencies;
   private final Optional<Long> defaultTestRuleTimeoutMs;
   private final CxxPlatform cxxPlatform;
 
   public RobolectricTestDescription(
       JavaOptions javaOptions,
       JavacOptions templateOptions,
+      boolean suggestDependencies,
       Optional<Long> defaultTestRuleTimeoutMs,
       CxxPlatform cxxPlatform) {
     this.javaOptions = javaOptions;
     this.templateOptions = templateOptions;
+    this.suggestDependencies = suggestDependencies;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.cxxPlatform = cxxPlatform;
   }
@@ -168,7 +171,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
     JavaLibrary testsLibrary =
         resolver.addToIndex(
             DefaultJavaLibrary
-                .builder(testsLibraryParams, resolver, compileStepFactory)
+                .builder(testsLibraryParams, resolver, compileStepFactory, suggestDependencies)
                 .setArgs(args)
                 .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
                 .setTrackClassUsage(javacOptions.trackClassUsage())

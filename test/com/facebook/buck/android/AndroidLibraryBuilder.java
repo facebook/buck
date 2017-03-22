@@ -33,7 +33,9 @@ public class AndroidLibraryBuilder extends
     AbstractNodeBuilder<AndroidLibraryDescription.Arg, AndroidLibraryDescription, AndroidLibrary> {
 
   private AndroidLibraryBuilder(BuildTarget target) {
-    super(new AndroidLibraryDescription(ANDROID_JAVAC_OPTIONS, JAVA_ONLY_COMPILER_FACTORY), target);
+    super(
+        new AndroidLibraryDescription(ANDROID_JAVAC_OPTIONS, false, JAVA_ONLY_COMPILER_FACTORY),
+        target);
   }
 
   public static AndroidLibraryBuilder createBuilder(BuildTarget target) {

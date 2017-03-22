@@ -242,7 +242,10 @@ public class DefaultJavaLibraryIntegrationTest {
     workspace.setUp();
 
     // Run `buck build`.
-    ProcessResult buildResult = workspace.runBuckCommand("build",
+    ProcessResult buildResult = workspace.runBuckCommand(
+        "build",
+        "--config",
+        "java.suggest_dependencies=true",
         "//:raz");
 
     String expectedWarning = Joiner.on("\n").join(

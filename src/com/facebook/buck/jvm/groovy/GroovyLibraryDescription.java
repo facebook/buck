@@ -45,12 +45,15 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
   private final GroovyBuckConfig groovyBuckConfig;
   // For cross compilation
   private final JavacOptions defaultJavacOptions;
+  private final boolean suggestDependencies;
 
   public GroovyLibraryDescription(
       GroovyBuckConfig groovyBuckConfig,
-      JavacOptions defaultJavacOptions) {
+      JavacOptions defaultJavacOptions,
+      boolean suggestDependencies) {
     this.groovyBuckConfig = groovyBuckConfig;
     this.defaultJavacOptions = defaultJavacOptions;
+    this.suggestDependencies = suggestDependencies;
   }
 
   @Override
@@ -99,7 +102,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
         Optional.of(args.extraGroovycArguments),
         javacOptions);
     return DefaultJavaLibrary
-        .builder(javaLibraryParams, resolver, compileStepFactory)
+        .builder(javaLibraryParams, resolver, compileStepFactory, suggestDependencies)
         .setArgs(args)
         .build();
   }

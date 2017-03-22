@@ -44,6 +44,7 @@ public class AndroidBinaryBuilder extends
         new AndroidBinaryDescription(
             DEFAULT_JAVA_OPTIONS,
             ANDROID_JAVAC_OPTIONS,
+            false,
             new ProGuardConfig(FakeBuckConfig.builder().build()),
             ImmutableMap.of(),
             MoreExecutors.newDirectExecutorService(),

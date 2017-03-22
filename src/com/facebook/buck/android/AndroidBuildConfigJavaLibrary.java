@@ -49,6 +49,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
       SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       JavacOptions javacOptions,
+      boolean suggestDependencies,
       ImmutableSortedSet<SourcePath> abiInputs,
       AndroidBuildConfig androidBuildConfig) {
     super(
@@ -66,6 +67,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         /* trackClassUsage */ javacOptions.trackClassUsage(),
         /* additionalClasspathEntries */ ImmutableSet.of(),
         new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
+        suggestDependencies,
         /* resourcesRoot */ Optional.empty(),
         /* manifest file */ Optional.empty(),
         /* mavenCoords */ Optional.empty(),

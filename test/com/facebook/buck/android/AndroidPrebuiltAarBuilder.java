@@ -30,26 +30,28 @@ public class AndroidPrebuiltAarBuilder extends AbstractNodeBuilder<
     AndroidPrebuiltAarDescription,
     AndroidPrebuiltAar> {
 
- private AndroidPrebuiltAarBuilder(BuildTarget target) {
-  super(new AndroidPrebuiltAarDescription(JavaCompilationConstants.ANDROID_JAVAC_OPTIONS), target);
- }
+  private AndroidPrebuiltAarBuilder(BuildTarget target) {
+    super(
+        new AndroidPrebuiltAarDescription(JavaCompilationConstants.ANDROID_JAVAC_OPTIONS, false),
+        target);
+  }
 
- public static AndroidPrebuiltAarBuilder createBuilder(BuildTarget target) {
-  return new AndroidPrebuiltAarBuilder(target);
- }
+  public static AndroidPrebuiltAarBuilder createBuilder(BuildTarget target) {
+    return new AndroidPrebuiltAarBuilder(target);
+  }
 
- public AndroidPrebuiltAarBuilder setBinaryAar(SourcePath binaryAar) {
-  arg.aar = binaryAar;
-  return this;
- }
+  public AndroidPrebuiltAarBuilder setBinaryAar(SourcePath binaryAar) {
+    arg.aar = binaryAar;
+    return this;
+  }
 
- public AndroidPrebuiltAarBuilder setSourcesJar(Path sourcesJar) {
-  arg.sourceJar = Optional.of(new FakeSourcePath(sourcesJar.toString()));
-  return this;
- }
+  public AndroidPrebuiltAarBuilder setSourcesJar(Path sourcesJar) {
+    arg.sourceJar = Optional.of(new FakeSourcePath(sourcesJar.toString()));
+    return this;
+  }
 
- public AndroidPrebuiltAarBuilder setJavadocUrl(String javadocUrl) {
-  arg.javadocUrl = Optional.of(javadocUrl);
-  return this;
- }
+  public AndroidPrebuiltAarBuilder setJavadocUrl(String javadocUrl) {
+    arg.javadocUrl = Optional.of(javadocUrl);
+    return this;
+  }
 }

@@ -72,16 +72,19 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
   private final AndroidManifestDescription androidManifestDescription;
   private final CxxBuckConfig cxxBuckConfig;
   private final JavacOptions javacOptions;
+  private final boolean suggestDependencies;
   private final ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms;
 
   public AndroidAarDescription(
       AndroidManifestDescription androidManifestDescription,
       CxxBuckConfig cxxBuckConfig,
       JavacOptions javacOptions,
+      boolean suggestDependencies,
       ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms) {
     this.androidManifestDescription = androidManifestDescription;
     this.cxxBuckConfig = cxxBuckConfig;
     this.javacOptions = javacOptions;
+    this.suggestDependencies = suggestDependencies;
     this.nativePlatforms = nativePlatforms;
   }
 
@@ -218,6 +221,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
               Optional.empty(),
               resolver,
               javacOptions,
+              suggestDependencies,
               packageableCollection);
       resolver.addAllToIndex(buildConfigRules);
       aarExtraDepsBuilder.addAll(buildConfigRules);

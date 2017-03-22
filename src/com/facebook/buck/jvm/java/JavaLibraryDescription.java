@@ -53,16 +53,18 @@ public class JavaLibraryDescription implements
     Flavored,
     VersionPropagator<JavaLibraryDescription.Arg> {
 
-  public static final ImmutableSet<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
+  private static final ImmutableSet<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       Javadoc.DOC_JAR,
       JavaLibrary.SRC_JAR,
       JavaLibrary.MAVEN_JAR);
 
   @VisibleForTesting
-  final JavacOptions defaultOptions;
+  private final JavacOptions defaultOptions;
+  private final boolean suggestDependencies;
 
-  public JavaLibraryDescription(JavacOptions defaultOptions) {
+  public JavaLibraryDescription(JavacOptions defaultOptions, boolean suggestDependencies) {
     this.defaultOptions = defaultOptions;
+    this.suggestDependencies = suggestDependencies;
   }
 
   @Override
@@ -191,7 +193,8 @@ public class JavaLibraryDescription implements
         javacOptions,
         JavacOptionsAmender.IDENTITY);
     DefaultJavaLibrary defaultJavaLibrary =
-        DefaultJavaLibrary.builder(javaLibraryParams, resolver, compileStepFactory)
+        DefaultJavaLibrary
+            .builder(javaLibraryParams, resolver, compileStepFactory, suggestDependencies)
             .setArgs(args)
             .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
             .setTrackClassUsage(javacOptions.trackClassUsage())

@@ -57,6 +57,7 @@ public class AndroidInstrumentationApkDescription
 
   private final ProGuardConfig proGuardConfig;
   private final JavacOptions javacOptions;
+  private final boolean suggestDependencies;
   private final ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms;
   private final ListeningExecutorService dxExecutorService;
   private final CxxBuckConfig cxxBuckConfig;
@@ -65,12 +66,14 @@ public class AndroidInstrumentationApkDescription
   public AndroidInstrumentationApkDescription(
       ProGuardConfig proGuardConfig,
       JavacOptions androidJavacOptions,
+      boolean suggestDependencies,
       ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ListeningExecutorService dxExecutorService,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig) {
     this.proGuardConfig = proGuardConfig;
     this.javacOptions = androidJavacOptions;
+    this.suggestDependencies = suggestDependencies;
     this.nativePlatforms = nativePlatforms;
     this.dxExecutorService = dxExecutorService;
     this.cxxBuckConfig = cxxBuckConfig;
@@ -138,6 +141,7 @@ public class AndroidInstrumentationApkDescription
         /* skipCrunchPngs */ false,
         args.includesVectorDrawables.orElse(false),
         javacOptions,
+        suggestDependencies,
         EnumSet.noneOf(ExopackageMode.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFile */ Optional.empty(),

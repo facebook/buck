@@ -25,8 +25,9 @@ public class ScalaLibraryBuilder extends DefaultJavaLibraryBuilder {
   ScalaLibraryBuilder(
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      CompileToJarStepFactory compileStepFactory) {
-    super(params, buildRuleResolver, compileStepFactory);
+      CompileToJarStepFactory compileStepFactory,
+      boolean suggestDependencies) {
+    super(params, buildRuleResolver, compileStepFactory, suggestDependencies);
   }
 
   public DefaultJavaLibraryBuilder setArgs(ScalaLibraryDescription.Arg args) {

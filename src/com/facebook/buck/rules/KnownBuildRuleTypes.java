@@ -626,22 +626,28 @@ public class KnownBuildRuleTypes {
             new AndroidManifestDescription(),
             cxxBuckConfig,
             defaultJavacOptions,
+            javaConfig.shouldSuggestDependencies(),
             ndkCxxPlatforms));
     builder.register(
         new AndroidBinaryDescription(
             defaultJavaOptions,
             defaultJavacOptions,
+            javaConfig.shouldSuggestDependencies(),
             proGuardConfig,
             ndkCxxPlatforms,
             dxExecutorService,
             config,
             cxxBuckConfig,
             dxConfig));
-    builder.register(new AndroidBuildConfigDescription(defaultJavacOptions));
+    builder.register(
+        new AndroidBuildConfigDescription(
+            defaultJavacOptions,
+            javaConfig.shouldSuggestDependencies()));
     builder.register(
         new AndroidInstrumentationApkDescription(
             proGuardConfig,
             defaultJavacOptions,
+            javaConfig.shouldSuggestDependencies(),
             ndkCxxPlatforms,
             dxExecutorService,
             cxxBuckConfig,
@@ -649,11 +655,16 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidInstrumentationTestDescription(
         defaultJavaOptions,
         defaultTestRuleTimeoutMs));
-    builder.register(new AndroidLibraryDescription(
-        defaultJavacOptions,
-        new DefaultAndroidLibraryCompilerFactory(scalaConfig, kotlinBuckConfig)));
+    builder.register(
+        new AndroidLibraryDescription(
+            defaultJavacOptions,
+            javaConfig.shouldSuggestDependencies(),
+            new DefaultAndroidLibraryCompilerFactory(scalaConfig, kotlinBuckConfig)));
     builder.register(new AndroidManifestDescription());
-    builder.register(new AndroidPrebuiltAarDescription(defaultJavacOptions));
+    builder.register(
+        new AndroidPrebuiltAarDescription(
+            defaultJavacOptions,
+            javaConfig.shouldSuggestDependencies()));
     builder.register(new AndroidReactNativeLibraryDescription(reactNativeBuckConfig));
     builder.register(new AndroidResourceDescription(config.isGrayscaleImageProcessingEnabled()));
     builder.register(new ApkGenruleDescription());
@@ -722,12 +733,14 @@ public class KnownBuildRuleTypes {
     builder.register(
         new GroovyLibraryDescription(
             groovyBuckConfig,
-            defaultJavacOptions));
+            defaultJavacOptions,
+            javaConfig.shouldSuggestDependencies()));
     builder.register(
         new GroovyTestDescription(
             groovyBuckConfig,
             defaultJavaOptionsForTests,
             defaultJavacOptions,
+            javaConfig.shouldSuggestDependencies(),
             defaultTestRuleTimeoutMs)
     );
     builder.register(new GwtBinaryDescription(defaultJavaOptions));
@@ -744,22 +757,29 @@ public class KnownBuildRuleTypes {
         defaultCxxPlatform,
         javaConfig));
     builder.register(new JavaAnnotationProcessorDescription());
-    builder.register(new JavaLibraryDescription(defaultJavacOptions));
+    builder.register(
+        new JavaLibraryDescription(defaultJavacOptions, javaConfig.shouldSuggestDependencies()));
     builder.register(
         new JavaTestDescription(
             defaultJavaOptionsForTests,
             defaultJavacOptions,
+            javaConfig.shouldSuggestDependencies(),
             defaultTestRuleTimeoutMs,
             defaultCxxPlatform));
     builder.register(new JsBundleDescription());
     builder.register(new JsLibraryDescription());
     builder.register(new KeystoreDescription());
-    builder.register(new KotlinLibraryDescription(kotlinBuckConfig, defaultJavacOptions));
+    builder.register(
+        new KotlinLibraryDescription(
+            kotlinBuckConfig,
+            defaultJavacOptions,
+            javaConfig.shouldSuggestDependencies()));
     builder.register(
         new KotlinTestDescription(
             kotlinBuckConfig,
             defaultJavaOptionsForTests,
             defaultJavacOptions,
+            javaConfig.shouldSuggestDependencies(),
             defaultTestRuleTimeoutMs));
     builder.register(
         new LuaBinaryDescription(
@@ -796,19 +816,23 @@ public class KnownBuildRuleTypes {
             defaultTestRuleTimeoutMs,
             cxxPlatforms));
     builder.register(new RemoteFileDescription(downloader));
-    builder.register(new RobolectricTestDescription(
+    builder.register(
+        new RobolectricTestDescription(
             defaultJavaOptionsForTests,
             defaultJavacOptions,
+            javaConfig.shouldSuggestDependencies(),
             defaultTestRuleTimeoutMs,
             defaultCxxPlatform));
     builder.register(new RustBinaryDescription(rustBuckConfig, cxxPlatforms, defaultCxxPlatform));
     builder.register(new RustLibraryDescription(rustBuckConfig, cxxPlatforms, defaultCxxPlatform));
     builder.register(new RustTestDescription(rustBuckConfig, cxxPlatforms, defaultCxxPlatform));
     builder.register(new PrebuiltRustLibraryDescription());
-    builder.register(new ScalaLibraryDescription(scalaConfig));
+    builder.register(
+        new ScalaLibraryDescription(javaConfig.shouldSuggestDependencies(), scalaConfig));
     builder.register(new ScalaTestDescription(
         scalaConfig,
         defaultJavaOptionsForTests,
+        javaConfig.shouldSuggestDependencies(),
         defaultTestRuleTimeoutMs,
         defaultCxxPlatform));
     builder.register(new SceneKitAssetsDescription());

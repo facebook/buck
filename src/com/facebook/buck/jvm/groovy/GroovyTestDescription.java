@@ -53,16 +53,19 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
   private final GroovyBuckConfig groovyBuckConfig;
   private final JavaOptions javaOptions;
   private final JavacOptions defaultJavacOptions;
+  private final boolean suggestDependencies;
   private final Optional<Long> defaultTestRuleTimeoutMs;
 
   public GroovyTestDescription(
       GroovyBuckConfig groovyBuckConfig,
       JavaOptions javaOptions,
       JavacOptions defaultJavacOptions,
+      boolean suggestDependencies,
       Optional<Long> defaultTestRuleTimeoutMs) {
     this.groovyBuckConfig = groovyBuckConfig;
     this.javaOptions = javaOptions;
     this.defaultJavacOptions = defaultJavacOptions;
+    this.suggestDependencies = suggestDependencies;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
   }
 
@@ -119,7 +122,8 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
             .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
     JavaLibrary testsLibrary =
         resolver.addToIndex(
-            DefaultJavaLibrary.builder(testsLibraryParams, resolver, stepFactory)
+            DefaultJavaLibrary
+                .builder(testsLibraryParams, resolver, stepFactory, suggestDependencies)
                 .setArgs(args)
                 .setGeneratedSourceFolder(defaultJavacOptions.getGeneratedSourceFolderName())
                 .build());

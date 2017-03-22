@@ -74,9 +74,11 @@ public class AndroidPrebuiltAarDescription
   }
 
   private final JavacOptions javacOptions;
+  private final boolean suggestDependencies;
 
-  public AndroidPrebuiltAarDescription(JavacOptions javacOptions) {
+  public AndroidPrebuiltAarDescription(JavacOptions javacOptions, boolean suggestDependencies) {
     this.javacOptions = javacOptions;
+    this.suggestDependencies = suggestDependencies;
   }
 
   @Override
@@ -191,6 +193,7 @@ public class AndroidPrebuiltAarDescription
         /* unzipRule */ unzipAar,
         /* javacOptions */ javacOptions,
         new JavacToJarStepFactory(javacOptions, new BootClasspathAppender()),
+        suggestDependencies,
         /* exportedDeps */ javaDeps,
         JavaLibraryRules.getAbiInputs(buildRuleResolver, androidLibraryParams.getDeps()));
   }
