@@ -485,7 +485,7 @@ def make_nailgun_socket(nailgun_server, nailgun_port=None, cwd=None):
     if s is None:
         raise NailgunException(
             'Could not connect to server {0}:{1}'.format(nailgun_server, nailgun_port),
-            NailgunException.NAILGUN_CONNECT_FAILED)
+            NailgunException.CONNECT_FAILED)
     return s
 
 
