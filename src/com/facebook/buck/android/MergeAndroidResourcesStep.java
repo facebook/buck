@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -54,6 +55,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class MergeAndroidResourcesStep implements Step {
   private static final Logger LOG = Logger.get(MergeAndroidResourcesStep.class);
@@ -261,10 +263,10 @@ public class MergeAndroidResourcesStep implements Step {
 
         ImmutableList.Builder<String> customDrawablesBuilder = ImmutableList.builder();
         ImmutableList.Builder<String> grayscaleImagesBuilder = ImmutableList.builder();
-        RDotTxtEntry.RType lastType = null;
+        RType lastType = null;
 
         for (RDotTxtEntry res : packageToResources.get(rDotJavaPackage)) {
-          RDotTxtEntry.RType type = res.type;
+          RType type = res.type;
           if (!type.equals(lastType)) {
             // If the previous type needs to be closed, close it.
             if (lastType != null) {
@@ -285,10 +287,10 @@ public class MergeAndroidResourcesStep implements Step {
               res.name,
               res.idValue);
 
-          if (type == RDotTxtEntry.RType.DRAWABLE &&
+          if (type == RType.DRAWABLE &&
               res.customType == RDotTxtEntry.CustomDrawableType.CUSTOM) {
             customDrawablesBuilder.add(res.idValue);
-          } else if (type == RDotTxtEntry.RType.DRAWABLE &&
+          } else if (type == RType.DRAWABLE &&
               res.customType == RDotTxtEntry.CustomDrawableType.GRAYSCALE_IMAGE) {
             grayscaleImagesBuilder.add(res.idValue);
           }
@@ -353,9 +355,10 @@ public class MergeAndroidResourcesStep implements Step {
       List<String> linesInSymbolsFile;
       try {
         linesInSymbolsFile =
-            FluentIterable.from(filesystem.readLines(symbolsFile))
+            filesystem.readLines(symbolsFile)
+                .stream()
                 .filter(input -> !Strings.isNullOrEmpty(input))
-                .toList();
+                .collect(Collectors.toList());
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
@@ -385,7 +388,7 @@ public class MergeAndroidResourcesStep implements Step {
 
         } else if (resource.idType == IdType.INT_ARRAY && resource.type == RType.STYLEABLE) {
           Map<RDotTxtEntry, String> styleableResourcesMap = getStyleableResources(
-              resourceToIdValuesMap, linesInSymbolsFile, resource.name, index + 1
+              resourceToIdValuesMap, linesInSymbolsFile, resource, index + 1
           );
 
           for (RDotTxtEntry styleableResource : styleableResourcesMap.keySet()) {
@@ -445,10 +448,11 @@ public class MergeAndroidResourcesStep implements Step {
   private static Map<RDotTxtEntry, String> getStyleableResources(
       Map<RDotTxtEntry, String> resourceToIdValuesMap,
       List<String> linesInSymbolsFile,
-      String resourceName,
+      RDotTxtEntry resource,
       int index) {
 
     Map<RDotTxtEntry, String> styleableResourceMap = new LinkedHashMap<>();
+    List<String> givenResourceIds = null;
 
     for (int styleableIndex = 0;
          styleableIndex + index < linesInSymbolsFile.size(); styleableIndex++) {
@@ -457,7 +461,7 @@ public class MergeAndroidResourcesStep implements Step {
           linesInSymbolsFile, styleableIndex + index
       );
 
-      String styleablePrefix = resourceName + "_";
+      String styleablePrefix = resource.name + "_";
 
       if (styleableResource.idType == IdType.INT &&
           styleableResource.type == RType.STYLEABLE &&
@@ -468,9 +472,35 @@ public class MergeAndroidResourcesStep implements Step {
 
         String attrIdValue = resourceToIdValuesMap.get(attrResource);
         if (attrIdValue == null) {
-          // If not value is found just put the index.
-          // The attribute is coming from android R.java
-          attrIdValue = String.valueOf(styleableIndex);
+
+          if (givenResourceIds == null) {
+            if (resource.idValue.startsWith("{") &&
+                resource.idValue.endsWith("}")) {
+              givenResourceIds = Arrays.stream(
+                  resource.idValue
+                      .substring(1, resource.idValue.length() - 1)
+                      .split(RDotTxtEntry.INT_ARRAY_SEPARATOR))
+                  .map(String::trim)
+                  .filter(s -> s.length() > 0)
+                  .collect(Collectors.toList());
+            } else {
+              givenResourceIds = new ArrayList<>();
+            }
+          }
+
+          int styleableResourceIndex = Integer.valueOf(styleableResource.idValue);
+          if (styleableResourceIndex < givenResourceIds.size()) {
+
+            // These are attributes coming from android SDK -- `android_*`
+            attrIdValue = givenResourceIds.get(styleableResourceIndex);
+          } else {
+
+            // If not value is found just put the index.
+            attrIdValue = String.valueOf(styleableIndex);
+          }
+
+          // Add resource to cache so that the id value is consistent across all R.txt
+          resourceToIdValuesMap.put(attrResource.copyWithNewIdValue(attrIdValue), attrIdValue);
         }
 
         styleableResourceMap.put(
@@ -501,10 +531,12 @@ public class MergeAndroidResourcesStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    ImmutableList<String> resources =
-        FluentIterable.from(androidResourceDeps)
-            .transform(Object::toString)
-            .toSortedList(natural());
+    List<String> resources =
+        androidResourceDeps
+            .stream()
+            .map(Object::toString)
+            .sorted(natural())
+            .collect(Collectors.toList());
     return getShortName() + " " + Joiner.on(' ').join(resources);
   }
 
@@ -516,7 +548,7 @@ public class MergeAndroidResourcesStep implements Step {
   private static class IntEnumerator {
     private int value;
 
-    public IntEnumerator(int start) {
+    IntEnumerator(int start) {
       value = start;
     }
 
