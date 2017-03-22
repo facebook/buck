@@ -1,3 +1,6 @@
+with allow_unsafe_import():
+    from sys import platform as os_platform
+
 def java_immutables_library(
     name,
     # These must be relative to the package implied by the path to the BUCK file.
