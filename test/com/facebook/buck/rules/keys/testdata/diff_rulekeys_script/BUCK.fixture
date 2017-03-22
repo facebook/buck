@@ -12,3 +12,12 @@ java_library(
   ]),
   deps = [ ':java_lib_1' ]
 )
+
+# This is the same as java_lib_2 except that it has no deps on any of the other rules.
+java_library(
+  name = 'java_lib_all',
+  # srcs is a glob because JavaLib3.java is added by a test.
+  srcs = glob([
+    'JavaLib3.java',
+  ]),
+)

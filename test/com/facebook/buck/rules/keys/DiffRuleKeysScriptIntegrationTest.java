@@ -26,6 +26,8 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -41,6 +43,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
+import java.util.stream.Stream;
 
 public class DiffRuleKeysScriptIntegrationTest {
 
@@ -87,8 +90,8 @@ public class DiffRuleKeysScriptIntegrationTest {
         "    +[path(JavaLib1.java:7d82c86f964af479abefa21da1f19b1030649314)]",
         "");
     assertThat(
-        runRuleKeyDiffer(workspace).getStdout(),
-        Matchers.equalTo(Optional.of(expectedResult)));
+        runRuleKeyDiffer(workspace),
+        Matchers.equalTo(expectedResult));
   }
 
   @Test
@@ -112,8 +115,8 @@ public class DiffRuleKeysScriptIntegrationTest {
         "    +[path(JavaLib3.java:3396c5e71e9fad8e8f177af9d842f1b9b67bfb46)]",
         "");
     assertThat(
-        runRuleKeyDiffer(workspace).getStdout(),
-        Matchers.equalTo(Optional.of(expectedResult)));
+        runRuleKeyDiffer(workspace),
+        Matchers.equalTo(expectedResult));
   }
 
   @Test
@@ -138,8 +141,8 @@ public class DiffRuleKeysScriptIntegrationTest {
         "    +[string(\"7\")]",
         "");
     assertThat(
-        runRuleKeyDiffer(workspace).getStdout(),
-        Matchers.equalTo(Optional.of(expectedResult)));
+        runRuleKeyDiffer(workspace),
+        Matchers.equalTo(expectedResult));
   }
 
   @Test
@@ -150,14 +153,14 @@ public class DiffRuleKeysScriptIntegrationTest {
         this, "diff_rulekeys_script", tmp);
     workspace.setUp();
 
-    invokeBuckCommand(workspace, "//cxx:cxx_bin", "buck-0.log");
+    invokeBuckCommand(workspace, ImmutableList.of("//cxx:cxx_bin"), "buck-0.log");
     workspace.writeContentsToPath(
         "// Different contents",
         "cxx/a.h");
-    invokeBuckCommand(workspace, "//cxx:cxx_bin", "buck-1.log");
+    invokeBuckCommand(workspace, ImmutableList.of("//cxx:cxx_bin"), "buck-1.log");
 
     assertThat(
-        runRuleKeyDiffer(workspace, "//cxx:cxx_bin").getStdout().get(),
+        runRuleKeyDiffer(workspace, "//cxx:cxx_bin"),
         Matchers.stringContainsInOrder(
             "Change details for [//cxx:cxx_bin#compile-a.cpp.", /* hash */
             ",default->preprocessDelegate->includes]",
@@ -194,7 +197,7 @@ public class DiffRuleKeysScriptIntegrationTest {
     invokeBuckCommand(workspace, "buck-1.log");
 
     assertThat(
-        runRuleKeyDiffer(workspace).getStdout().get(),
+        runRuleKeyDiffer(workspace),
         Matchers.stringContainsInOrder(
             "Change details for [//:java_lib_2]",
             "  (abiClasspath):",
@@ -205,7 +208,7 @@ public class DiffRuleKeysScriptIntegrationTest {
             "    +[\"//:java_lib_3\"@ruleKey(sha1=", /* some rulekey */ ")]",
             "  (buck.extraDeps):",
             "    -[<missing>]",
-            "    +[\"//:java_lib_1#abi\"@ruleKey(sha1=", /* some rulekey */ ")]",
+            "    +[\"//:java_lib_3#abi\"@ruleKey(sha1=", /* some rulekey */ ")]",
             "Change details for [//:java_lib_2->abiClasspath]",
             "  (.name):",
             "    -[string(\"//:java_lib_1#abi\")]",
@@ -216,6 +219,42 @@ public class DiffRuleKeysScriptIntegrationTest {
             "  (buck.declaredDeps):",
             "    -[\"//:java_lib_1\"@ruleKey(sha1=", /* some rulekey */ ")]",
             "    +[\"//:java_lib_3\"@ruleKey(sha1=", /* some rulekey */ ")]"));
+  }
+
+  @Test
+  public void diffAll() throws Exception {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "diff_rulekeys_script", tmp);
+    workspace.setUp();
+
+    invokeBuckCommand(workspace, "buck-0.log");
+    workspace.writeContentsToPath(
+        "public class JavaLib1 { /* change */ }",
+        "JavaLib1.java");
+    workspace.writeContentsToPath(
+        "public class JavaLib3 { /* change */ }",
+        "JavaLib3.java");
+    invokeBuckCommand(workspace, "buck-1.log");
+
+    assertThat(
+        runRuleKeyDiffer(workspace, ""),
+        Matchers.stringContainsInOrder(
+            "Change details for [//:java_lib_all]",
+            "  (srcs):",
+            "    -[<missing>]",
+            "    +[container(LIST,len=1)]",
+            "    +[path(JavaLib3.java:3396c5e71e9fad8e8f177af9d842f1b9b67bfb46)]",
+            "Change details for [//:java_lib_2]",
+            "  (srcs):",
+            "    -[<missing>]",
+            "    -[container(LIST,len=1)]",
+            "    +[container(LIST,len=2)]",
+            "    +[path(JavaLib3.java:3396c5e71e9fad8e8f177af9d842f1b9b67bfb46)]",
+            "Change details for [//:java_lib_1]",
+            "  (srcs):",
+            "    -[path(JavaLib1.java:e3506ff7c11f638458d08120d54f186dc79ddada)]",
+            "    +[path(JavaLib1.java:7d82c86f964af479abefa21da1f19b1030649314)]"
+        ));
   }
 
   private void writeBuckConfig(
@@ -230,12 +269,12 @@ public class DiffRuleKeysScriptIntegrationTest {
 
   }
 
-  private ProcessExecutor.Result runRuleKeyDiffer(
+  private String runRuleKeyDiffer(
       ProjectWorkspace workspace) throws IOException, InterruptedException {
     return runRuleKeyDiffer(workspace, "//:java_lib_2");
   }
 
-  private ProcessExecutor.Result runRuleKeyDiffer(
+  private String runRuleKeyDiffer(
       ProjectWorkspace workspace,
       String target) throws IOException, InterruptedException {
     String cmd = Platform.detect() == Platform.WINDOWS ? "python" : "python2.7";
@@ -247,20 +286,28 @@ public class DiffRuleKeysScriptIntegrationTest {
         target);
     assertThat(result.getStderr(), Matchers.equalTo(Optional.of("")));
     assertThat(result.getExitCode(), Matchers.is(0));
-    return result;
+    String stdout = result.getStdout().get();
+    String comparingRuleString = "Comparing rules...\n";
+    int i = stdout.indexOf(comparingRuleString);
+    Preconditions.checkState(i != -1);
+    return stdout.substring(i + comparingRuleString.length());
   }
 
 
   private void invokeBuckCommand(ProjectWorkspace workspace, String logOut) throws IOException {
-    invokeBuckCommand(workspace, "//:", logOut);
+    invokeBuckCommand(workspace, ImmutableList.of("//:"), logOut);
   }
 
-  private void invokeBuckCommand(ProjectWorkspace workspace, String target, String logOut)
+  private void invokeBuckCommand(
+      ProjectWorkspace workspace,
+      ImmutableList<String> targets,
+      String logOut)
       throws IOException {
+    ImmutableList<String> args = ImmutableList.of("targets", "--show-rulekey");
     ProjectWorkspace.ProcessResult buckCommandResult = workspace.runBuckCommand(
-        "targets",
-        "--show-rulekey",
-        target);
+        Stream.concat(args.stream(), targets.stream())
+        .toArray(String[]::new));
+
     buckCommandResult.assertSuccess();
     String fullLogContents = workspace.getFileContents(getLogFilePath());
     String logContentsForThisInvocation = fullLogContents.substring(lastPositionInLog);

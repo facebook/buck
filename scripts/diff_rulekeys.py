@@ -4,14 +4,17 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import argparse
-import codecs
 import collections
 import hashlib
+import codecs
 import itertools
 import os
 import re
+import sys
 
 RULE_LINE_REGEX = re.compile(r'.*(\[[^\]+]\])*\s+RuleKey\s+(.*)')
+INVOCATION_LINE_REGEX = re.compile(r'.*(\[[^\]+]\])*\s+InvocationInfo\s+(.*)')
+INVOCATION_VALUE_REGEX = re.compile(r'(\w+)=\[([^]]*)\]')
 PATH_VALUE_REGEX = re.compile(r'path\(([^:]+):\w+\)')
 LOGGER_NAME = 'com.facebook.buck.rules.keys.RuleKeyBuilder'
 TAG_NAME = 'RuleKey'
@@ -46,12 +49,19 @@ slower due to the extra logging.
         help='buck.log file to look at second.')
     parser.add_argument(
         'build_target',
-        help='Name of the RuleKey that you want to analyze')
+        help='Name of the RuleKey that you want to analyze',
+        nargs='?')
     parser.add_argument(
         '--verbose',
         help='Verbose mode',
         action='store_true',
         default=False)
+
+    # Print full help message if we're invoked with no arguments (otherwise
+    # you get the shortened 1 line 'usage' message.
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit(1)
     return parser.parse_args()
 
 
@@ -147,13 +157,17 @@ class RuleKeyStructureInfo(object):
         if entries_for_test is not None:
             self._entries = entries_for_test
         elif isinstance(buck_out, basestring):
-            self._entries = RuleKeyStructureInfo._parseBuckOut(buck_out)
+            parsed_log = RuleKeyStructureInfo._parseBuckOut(buck_out)
         else:
-            self._entries = RuleKeyStructureInfo._parseLogFile(buck_out)
+            parsed_log = RuleKeyStructureInfo._parseLogFile(buck_out)
+        self._entries, self._invocation_info = parsed_log
         self._key_to_struct = RuleKeyStructureInfo._makeKeyToStructureMap(
             self._entries)
         self._name_to_key = RuleKeyStructureInfo._makeNameToKeyMap(
             self._entries)
+
+    def getInvocationInfo(self, key):
+        return self._invocation_info.get(key, '<unknown>')
 
     def getByKey(self, key):
         return self._key_to_struct.get(key)
@@ -172,6 +186,24 @@ class RuleKeyStructureInfo(object):
         if key is None:
             return None
         return self.getByKey(key)
+
+    def getAllNames(self):
+        names = []
+        for e in self._entries:
+            top_key, structure = e
+            name = self.getNameForKey(top_key)
+            if name is not None:
+                names.append(name)
+        return names
+
+    def getRuleKeyRefs(self, values):
+        return [
+            (value, RuleKeyStructureInfo._extractRuleKeyRef(value))
+            for value in values
+        ]
+
+    def size(self):
+        return len(self._entries)
 
     @staticmethod
     def _nameFromStruct(structure):
@@ -237,36 +269,43 @@ class RuleKeyStructureInfo(object):
     @staticmethod
     def _parseLogFile(buck_out):
         rule_key_structures = []
+        invocation_info_line = None
         for line in buck_out.readlines():
+            if invocation_info_line is None:
+                invocation_match = INVOCATION_LINE_REGEX.match(line)
+                if invocation_match is not None:
+                    invocation_info_line = invocation_match.groups()[1]
             match = RULE_LINE_REGEX.match(line)
             if match is None:
                 continue
             parsed_line = RuleKeyStructureInfo._parseRuleKeyLine(match)
             rule_key_structures.append(parsed_line)
-        return rule_key_structures
+
+        invocation_info = {}
+        if invocation_info_line is not None:
+            invocation_info = dict(
+                    INVOCATION_VALUE_REGEX.findall(invocation_info_line))
+
+        return (rule_key_structures, invocation_info)
 
     @staticmethod
     def _parseBuckOut(file_path):
         with codecs.open(file_path, 'r', 'utf-8') as buck_out:
             return RuleKeyStructureInfo._parseLogFile(buck_out)
 
-RULE_KEY_REF_START = 'ruleKey(sha1='
-RULE_KEY_REF_END = ')'
+    @staticmethod
+    def _extractRuleKeyRef(value):
+        RULE_KEY_REF_START = 'ruleKey(sha1='
+        RULE_KEY_REF_END = ')'
 
+        def isRuleKeyRef(value):
+            return (value.endswith(RULE_KEY_REF_END) and
+                    value.startswith(RULE_KEY_REF_START))
 
-def isRuleKeyRef(value):
-    return (value.endswith(RULE_KEY_REF_END) and
-            value.startswith(RULE_KEY_REF_START))
-
-
-def extractRuleKeyRefs(values, struct_info):
-    def extract(v):
-        if not isRuleKeyRef(v):
+        if not isRuleKeyRef(value):
             return None
-        rk = v[len(RULE_KEY_REF_START):-len(RULE_KEY_REF_END)]
+        rk = value[len(RULE_KEY_REF_START):-len(RULE_KEY_REF_END)]
         return rk
-
-    return [(v, extract(v)) for v in values]
 
 
 def reportOnInterestingPaths(paths):
@@ -316,14 +355,14 @@ def diffInternal(
         left_values = left_s.get(key, set([]))
         right_values = right_s.get(key, set([]))
 
-        left_with_keys = extractRuleKeyRefs(left_values, left_info)
-        right_with_keys = extractRuleKeyRefs(right_values, right_info)
+        left_with_keys = left_info.getRuleKeyRefs(left_values)
+        right_with_keys = right_info.getRuleKeyRefs(right_values)
 
         did_align_for_deps = False
-        if key in set(['deps', 'declaredDeps', 'providedDeps']):
+        if key.endswith(('Deps', 'deps')):
             for left_idx, (left_v, left_key) in enumerate(left_with_keys):
                 left_name = left_info.getNameForKey(left_key)
-                if left_name is None:
+                if left_name is None or left_idx >= len(right_with_keys):
                     continue
                 right_idx = None
                 for j, (right_v, right_key) in enumerate(right_with_keys):
@@ -397,28 +436,16 @@ def diffInternal(
     return (report, changed_key_pairs_with_labels)
 
 
-def diff(name,
-         left_info,
-         right_info,
-         verbose,
-         format_tuple=None,
-         check_paths=False):
-    left_key = left_info.getKeyForName(name)
-    right_key = right_info.getKeyForName(name)
-    keys_match = left_key == right_key
-    if left_key is None:
-        raise Exception('Left log does not contain ' + name + '. Did you ' +
-                        'forget to enable logging? (see help).')
-    if right_key is None:
-        raise Exception('Right log does not contain ' + name + '. Did you ' +
-                        'forget to enable logging? (see help).')
-    queue = collections.deque([(name, (left_key, right_key))])
+def diffAndReturnSeen(starting_refs, left_info, right_info, verbose,
+                      format_tuple, check_paths, seen_keys):
+    queue = collections.deque(starting_refs)
     result = []
-    seen_keys = set()
+    visited_keys = []
     while len(queue) > 0:
         p = queue.popleft()
         label, ref_pair = p
         (left_key, right_key) = ref_pair
+        visited_keys.append(ref_pair)
         report, changed_key_pairs_with_labels = diffInternal(
             label,
             left_info.getByKey(left_key),
@@ -436,10 +463,66 @@ def diff(name,
             queue.append(e)
 
         result += report
-    if not result and not keys_match:
+    return (result, visited_keys)
+
+
+def diff(name, left_info, right_info, verbose, format_tuple=None,
+         check_paths=False):
+    left_key = left_info.getKeyForName(name)
+    right_key = right_info.getKeyForName(name)
+    if left_key is None:
+        raise KeyError('Left log does not contain ' + name)
+    if right_key is None:
+        raise KeyError('Right log does not contain ' + name)
+    result, _ = diffAndReturnSeen([(name, (left_key, right_key))], left_info,
+                                  right_info, verbose, format_tuple,
+                                  check_paths, set())
+    if not result and left_key != right_key:
         result.append("I don't know why RuleKeys for {} do not match.".format(
             name))
     return result
+
+
+def diffAll(left_info, right_info, verbose, format_tuple=None,
+            check_paths=False):
+    # Ghetto ordered set implementation.
+    seen_left_names = collections.OrderedDict(
+        [(k, True) for k in left_info.getAllNames()])
+    all_seen = set()
+    all_results = []
+    while True:
+        if not seen_left_names:
+            break
+        name, _ = seen_left_names.popitem()
+        if name is None:
+            continue
+        left_key = left_info.getKeyForName(name)
+        if left_key is None:
+            all_results.append('Skipping {} because it is missing' +
+                               'from the left log.'.format(name))
+            continue
+        right_key = right_info.getKeyForName(name)
+        if right_key is None:
+            all_results.append('Skipping {} because it is missing' +
+                               'from the right log.'.format(name))
+            continue
+        if left_key == right_key:
+            continue
+        print('Analyzing', name, 'for changes...')
+
+        all_seen_before = len(all_seen)
+        single_result, visited_keys = diffAndReturnSeen(
+                [(name, (left_key, right_key))], left_info, right_info,
+                verbose, format_tuple, check_paths, all_seen)
+        if not single_result and left_key != right_key:
+            single_result.append(
+                "I don't know why RuleKeys for {} do not match.".format(name))
+        all_results.extend(single_result)
+        deleted_names = 0
+        for l, r in visited_keys:
+            left_name = left_info.getNameForKey(l)
+            seen_left_names.pop(left_name, False)
+    return all_results
 
 
 def swap_entries_in_list(l, i, j):
@@ -450,13 +533,37 @@ def main():
     args = parseArgs()
     if not os.path.exists(args.left_log):
         raise Exception(args.left_log + ' does not exist')
+    print('Loading', args.left_log)
     left = RuleKeyStructureInfo(args.left_log)
+    print('Loaded', left.size(), 'rules')
 
     if not os.path.exists(args.right_log):
         raise Exception(args.right_log + ' does not exist')
+    print('Loading', args.right_log)
     right = RuleKeyStructureInfo(args.right_log)
+    print('Loaded', right.size(), 'rules')
 
-    print('\n'.join(diff(args.build_target, left, right, args.verbose)))
+    print('Comparing rules...')
+    name = args.build_target
+    if name:
+        left_key = left.getKeyForName(name)
+        right_key = right.getKeyForName(name)
+        if left_key is None:
+            raise KeyError('Left log does not contain {}. Did you forget to' +
+                           'enable logging? (see help).'.format(name))
+        if right_key is None:
+            raise KeyError('Right log does not contain {}. Did you forget ' +
+                           'to enable logging? (see help).'.format(name))
+
+        print('\n'.join(diff(name, left, right, args.verbose)))
+    else:
+        left_args = left.getInvocationInfo('Args')
+        right_args = right.getInvocationInfo('Args')
+        if left_args != right_args:
+            print('Commands used to generate the logs are not identical: [',
+                  left_args, '] vs [', right_args, ']. This might cause ' +
+                  'spurious differences to be listed.')
+        print('\n'.join(diffAll(left, right, args.verbose)))
 
 
 if __name__ == '__main__':

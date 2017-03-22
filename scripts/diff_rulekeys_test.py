@@ -287,6 +287,58 @@ class TestRuleKeyDiff(unittest.TestCase):
             if temp_file is not None:
                 os.unlink(temp_file.name)
 
+    def test_diff_all(self):
+        name = "//:lib"
+        result = diffAll(
+              RuleKeyStructureInfo(MockFile([
+                  makeRuleKeyLine(
+                      name="//:mid",
+                      key="aabb",
+                      srcs={'JavaLib1.java': 'aabb'}
+                  ),
+                  makeRuleKeyLine(
+                      name="//:top1",
+                      key="aabe",
+                      deps=["aabb"]
+                  ),
+                  makeRuleKeyLine(
+                      name="//:top2",
+                      key="aa",
+                      srcs={'Top.java': 'aa'}
+                  ),
+              ])),
+              RuleKeyStructureInfo(MockFile([
+                  makeRuleKeyLine(
+                      name="//:mid",
+                      key="cabb",
+                      srcs={'JavaLib1.java': 'cabb'}
+                  ),
+                  makeRuleKeyLine(
+                      name="//:top1",
+                      key="cabe",
+                      deps=["cabb"]
+                  ),
+                  makeRuleKeyLine(
+                      name="//:top2",
+                      key="bb",
+                      srcs={'Top.java': 'bb'}
+                  ),
+              ])),
+              verbose=False)
+
+        expected = [
+            'Change details for [//:top2]',
+            '  (srcs):',
+            '    -[path(Top.java:aa)]',
+            '    +[path(Top.java:bb)]',
+            'Change details for [//:mid]',
+            '  (srcs):',
+            '    -[path(JavaLib1.java:aabb)]',
+            '    +[path(JavaLib1.java:cabb)]',
+        ]
+        self.assertEqual(result, expected)
+
+
 
 def makeRuleKeyLine(key="aabb", name="//:name", srcs=None,
                     ruleType="java_library", deps=None):
