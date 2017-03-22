@@ -55,9 +55,15 @@ public class RobolectricTestRuleTest {
 
   private class ResourceRule implements HasAndroidResourceDeps {
     private final SourcePath resourceDirectory;
+    private final SourcePath assetsDirectory;
 
-    public ResourceRule(SourcePath resourceDirectory) {
+    ResourceRule(SourcePath resourceDirectory) {
+      this(resourceDirectory, null);
+    }
+
+    ResourceRule(SourcePath resourceDirectory, SourcePath assetsDirectory) {
       this.resourceDirectory = resourceDirectory;
+      this.assetsDirectory = assetsDirectory;
     }
 
     @Override
@@ -82,7 +88,7 @@ public class RobolectricTestRuleTest {
 
     @Override
     public SourcePath getAssets() {
-      return null;
+      return assetsDirectory;
     }
 
     @Override
@@ -175,6 +181,7 @@ public class RobolectricTestRuleTest {
         ImmutableList.of(
             new ResourceRule(new PathSourcePath(filesystem, resDep1)),
             new ResourceRule(new PathSourcePath(filesystem, resDep2)),
+            new ResourceRule(null),
             new ResourceRule(new PathSourcePath(filesystem, resDep3)),
             new ResourceRule(new PathSourcePath(filesystem, resDep4))));
 
@@ -203,10 +210,84 @@ public class RobolectricTestRuleTest {
       robolectricTest.getRobolectricResourceDirectories(
           pathResolver,
           ImmutableList.of(
-              new ResourceRule(new PathSourcePath(filesystem, Paths.get("not_there")))));
+              new ResourceRule(new PathSourcePath(filesystem, Paths.get("not_there_res")))));
       fail("Expected FileNotFoundException");
     } catch (RuntimeException e) {
-      assertThat(e.getMessage(), Matchers.containsString("not_there"));
+      assertThat(e.getMessage(), Matchers.containsString("not_there_res"));
+    }
+  }
+
+  @Test
+  public void testRobolectricAssetsDependenciesVmArgHasCorrectFormat() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
+    filesystem.mkdirs(Paths.get("assets1/svg"));
+    filesystem.mkdirs(Paths.get("assets2/xml"));
+    filesystem.mkdirs(Paths.get("assets3_to_ignore"));
+
+    Path assetsDep1 = Paths.get("assets1");
+    Path assetsDep2 = Paths.get("assets2");
+    Path assetsDep3 = Paths.get("assets3_to_ignore");
+
+    StringBuilder expectedVmArgBuilder = new StringBuilder();
+    expectedVmArgBuilder.append("-D")
+        .append(RobolectricTest.LIST_OF_ASSETS_DIRECTORIES_PROPERTY_NAME)
+        .append("=")
+        .append(assetsDep1)
+        .append(File.pathSeparator)
+        .append(assetsDep2);
+
+    BuildTarget robolectricBuildTarget = BuildTargetFactory.newInstance(
+        "//java/src/com/facebook/base/robolectricTest:robolectricTest");
+
+    TargetNode<?, ?> robolectricTestNode = RobolectricTestBuilder
+        .createBuilder(robolectricBuildTarget, filesystem)
+        .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(robolectricTestNode);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+
+    RobolectricTest robolectricTest =
+        (RobolectricTest) resolver.requireRule(robolectricBuildTarget);
+
+    String result = robolectricTest.getRobolectricAssetsDirectories(
+        pathResolver,
+        ImmutableList.of(
+            new ResourceRule(null, new PathSourcePath(filesystem, assetsDep1)),
+            new ResourceRule(null, null),
+            new ResourceRule(null, new PathSourcePath(filesystem, assetsDep2)),
+            new ResourceRule(null, new PathSourcePath(filesystem, assetsDep3))));
+
+    assertEquals(expectedVmArgBuilder.toString(), result);
+  }
+
+  @Test
+  public void testRobolectricThrowsIfAssetsDirNotThere() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
+
+    BuildTarget robolectricBuildTarget = BuildTargetFactory.newInstance(
+        "//java/src/com/facebook/base/robolectricTest:robolectricTest");
+    TargetNode<?, ?> robolectricTestNode = RobolectricTestBuilder
+        .createBuilder(robolectricBuildTarget, filesystem)
+        .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(robolectricTestNode);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+
+    RobolectricTest robolectricTest =
+        (RobolectricTest) resolver.requireRule(robolectricBuildTarget);
+
+    try {
+      robolectricTest.getRobolectricResourceDirectories(
+          pathResolver,
+          ImmutableList.of(
+              new ResourceRule(new PathSourcePath(filesystem, Paths.get("not_there_assets")))));
+      fail("Expected FileNotFoundException");
+    } catch (RuntimeException e) {
+      assertThat(e.getMessage(), Matchers.containsString("not_there_assets"));
     }
   }
 
@@ -214,14 +295,21 @@ public class RobolectricTestRuleTest {
   public void runtimeDepsIncludeTransitiveResources() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
 
-    BuildTarget genRuleTarget = BuildTargetFactory.newInstance("//:gen");
-    TargetNode<?, ?> genRuleNode = GenruleBuilder.newGenruleBuilder(genRuleTarget)
-        .setOut("out")
+    BuildTarget resGenRuleTarget = BuildTargetFactory.newInstance("//:res-gen");
+    TargetNode<?, ?> resGenRuleNode = GenruleBuilder.newGenruleBuilder(resGenRuleTarget)
+        .setOut("res-out")
         .build();
+
+    BuildTarget assetsGenRuleTarget = BuildTargetFactory.newInstance("//:assets-gen");
+    TargetNode<?, ?> assetsGenRuleNode = GenruleBuilder.newGenruleBuilder(assetsGenRuleTarget)
+        .setOut("assets-out")
+        .build();
+
 
     BuildTarget res2RuleTarget = BuildTargetFactory.newInstance("//:res2");
     TargetNode<?, ?> res2Node = AndroidResourceBuilder.createBuilder(res2RuleTarget)
-        .setRes(new DefaultBuildTargetSourcePath(genRuleTarget))
+        .setRes(new DefaultBuildTargetSourcePath(resGenRuleTarget))
+        .setAssets(new DefaultBuildTargetSourcePath(assetsGenRuleTarget))
         .setRDotJavaPackage("foo.bar")
         .build();
 
@@ -232,17 +320,21 @@ public class RobolectricTestRuleTest {
         .addDep(res2RuleTarget)
         .build();
 
-    TargetGraph targetGraph =
-        TargetGraphFactory.newInstance(genRuleNode, res2Node, robolectricTestNode);
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(resGenRuleNode,
+        assetsGenRuleNode, res2Node, robolectricTestNode);
+
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
-    BuildRule genRule = resolver.requireRule(genRuleTarget);
     RobolectricTest robolectricTest =
         (RobolectricTest) resolver.requireRule(robolectricBuildTarget);
 
+    BuildRule resGenRule = resolver.requireRule(resGenRuleTarget);
+    BuildRule assetsGenRule = resolver.requireRule(assetsGenRuleTarget);
+
     assertThat(
         robolectricTest.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
-        Matchers.hasItem(genRule.getBuildTarget()));
+        Matchers.hasItems(resGenRule.getBuildTarget(), assetsGenRule.getBuildTarget())
+    );
   }
 }
