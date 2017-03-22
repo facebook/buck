@@ -47,6 +47,9 @@
     ; cache every time it encounters one.
     allow_symlinks = forbid
     watchman_cursor = clock_id
+    ; This is intentionally disabled to test how the workflow would be without
+    ; autodeps in the Buck project.
+    autodeps_command_enabled = false
 [test]
     ; Maximum timeout of 1 minute per test.
     timeout = 60000

@@ -22,6 +22,7 @@ import com.facebook.buck.jvm.java.autodeps.JavaDepsFinder;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 
@@ -45,6 +46,14 @@ public class AutodepsCommand extends AbstractCommand {
   @Override
   public int runWithoutHelp(final CommandRunnerParams params)
       throws IOException, InterruptedException {
+    if (!params.getBuckConfig().isAutodepsCommandEnabled()) {
+      throw new HumanReadableException(
+          "autodeps command is disabled.\n" +
+              "\n" +
+              "The autodeps command is going to be removed soon.\n" +
+              "To continue using it in the meantime, " +
+              "set the .buckconfig setting project.autodeps_command_enabled.");
+    }
     JavaBuildGraphProcessor.Processor processor =
         (graph, javaDepsFinder, executorService) -> generateAutodeps(
             params,
