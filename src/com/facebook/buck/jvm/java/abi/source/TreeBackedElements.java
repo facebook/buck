@@ -260,7 +260,7 @@ class TreeBackedElements implements Elements {
 
   @Override
   public Name getBinaryName(TypeElement type) {
-    throw new UnsupportedOperationException();
+    return javacElements.getBinaryName(getJavacElement(type));
   }
 
   @Override
