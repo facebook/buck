@@ -199,10 +199,7 @@ public class HaskellPackageRule extends AbstractBuildRule {
 
     // Setup the package DB directory.
     final Path packageDb = getPackageDb();
-    steps.add(new RmStep(
-        getProjectFilesystem(),
-        packageDb,
-        RmStep.Mode.RECURSIVE));
+    steps.add(RmStep.of(getProjectFilesystem(), packageDb).withRecursive(true));
     buildableContext.recordArtifact(packageDb);
 
     // Create the registration file.

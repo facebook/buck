@@ -128,10 +128,7 @@ public class ExportFile extends AbstractBuildRuleWithResolver
     if (mode == ExportFileDescription.Mode.COPY) {
       Path out = getCopiedPath();
       builder.add(new MkdirStep(getProjectFilesystem(), out.getParent()));
-      builder.add(new RmStep(
-          getProjectFilesystem(),
-          out,
-          RmStep.Mode.RECURSIVE));
+      builder.add(RmStep.of(getProjectFilesystem(), out).withRecursive(true));
       if (resolver.getFilesystem(src).isDirectory(resolver.getRelativePath(src))) {
         builder.add(
             CopyStep.forDirectory(

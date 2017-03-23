@@ -66,7 +66,7 @@ public class BuiltinApplePackage extends AbstractBuildRule {
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     // Remove the output .ipa file if it exists already
-    commands.add(new RmStep(getProjectFilesystem(), pathToOutputFile));
+    commands.add(RmStep.of(getProjectFilesystem(), pathToOutputFile));
 
     // Create temp folder to store the files going to be zipped
     commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), temp));

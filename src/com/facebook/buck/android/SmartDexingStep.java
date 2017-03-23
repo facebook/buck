@@ -436,7 +436,7 @@ public class SmartDexingStep implements Step {
               repackedJar,
               ImmutableSet.of("classes.dex"),
               ZipCompressionLevel.MIN_COMPRESSION_LEVEL));
-      steps.add(new RmStep(filesystem, tempDexJarOutput));
+      steps.add(RmStep.of(filesystem, tempDexJarOutput));
       steps.add(
           new DexJarAnalysisStep(
               filesystem,
@@ -462,7 +462,7 @@ public class SmartDexingStep implements Step {
               outputPath,
               ImmutableSet.of("classes.dex"),
               ZipCompressionLevel.MIN_COMPRESSION_LEVEL));
-      steps.add(new RmStep(filesystem, tempDexJarOutput));
+      steps.add(RmStep.of(filesystem, tempDexJarOutput));
 
       // Write a .meta file.
       steps.add(

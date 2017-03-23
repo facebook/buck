@@ -177,7 +177,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
 
     builder.add(
         new MkdirStep(getProjectFilesystem(), output.getParent()),
-        new RmStep(getProjectFilesystem(), output),
+        RmStep.of(getProjectFilesystem(), output),
         new ArchiveStep(
             getProjectFilesystem(),
             archiver.getEnvironment(resolver),

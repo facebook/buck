@@ -72,7 +72,7 @@ public class JsLibrary extends AbstractBuildRule {
         outputPath,
         JsUtil.resolveMapJoin(sources, sourcePathResolver, Path::toString));
     return ImmutableList.of(
-        new RmStep(getProjectFilesystem(), outputPath),
+        RmStep.of(getProjectFilesystem(), outputPath),
         JsUtil.workerShellStep(
             worker,
             jobArgs,

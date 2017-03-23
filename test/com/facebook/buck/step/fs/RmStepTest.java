@@ -48,7 +48,7 @@ public class RmStepTest {
   public void deletesAFile() throws IOException {
     Path file = createFile();
 
-    RmStep step = new RmStep(filesystem, file);
+    RmStep step = RmStep.of(filesystem, file);
     assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(file));
@@ -58,7 +58,7 @@ public class RmStepTest {
   public void deletesADirectory() throws IOException {
     Path dir = createNonEmptyDirectory();
 
-    RmStep step = new RmStep(filesystem, dir, RmStep.Mode.RECURSIVE);
+    RmStep step = RmStep.of(filesystem, dir).withRecursive(true);
     assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(dir));
@@ -68,7 +68,7 @@ public class RmStepTest {
   public void recursiveModeWorksOnFiles() throws IOException {
     Path file = createFile();
 
-    RmStep step = new RmStep(filesystem, file, RmStep.Mode.RECURSIVE);
+    RmStep step = RmStep.of(filesystem, file).withRecursive(true);
     assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(file));
@@ -78,7 +78,7 @@ public class RmStepTest {
   public void nonRecursiveModeFailsOnDirectories() throws IOException {
     Path dir = createNonEmptyDirectory();
 
-    RmStep step = new RmStep(filesystem, dir);
+    RmStep step = RmStep.of(filesystem, dir);
     assertEquals(1, step.execute(context).getExitCode());
   }
 
@@ -87,7 +87,7 @@ public class RmStepTest {
   public void deletingNonExistentFileSucceeds() throws IOException {
     Path file = getNonExistentFile();
 
-    RmStep step = new RmStep(filesystem, file);
+    RmStep step = RmStep.of(filesystem, file);
     assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(file));
@@ -97,7 +97,7 @@ public class RmStepTest {
   public void deletingNonExistentFileRecursivelySucceeds() throws IOException {
     Path file = getNonExistentFile();
 
-    RmStep step = new RmStep(filesystem, file, RmStep.Mode.RECURSIVE);
+    RmStep step = RmStep.of(filesystem, file).withRecursive(true);
     assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(file));

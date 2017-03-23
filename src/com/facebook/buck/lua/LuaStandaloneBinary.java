@@ -101,10 +101,7 @@ public class LuaStandaloneBinary extends AbstractBuildRule {
     steps.add(new MkdirStep(getProjectFilesystem(), output.getParent()));
 
     // Delete any other pex that was there (when switching between pex styles).
-    steps.add(new RmStep(
-        getProjectFilesystem(),
-        output,
-        RmStep.Mode.RECURSIVE));
+    steps.add(RmStep.of(getProjectFilesystem(), output).withRecursive(true));
 
     SourcePathResolver resolver = context.getSourcePathResolver();
 

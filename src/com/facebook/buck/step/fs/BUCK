@@ -1,4 +1,7 @@
 standard_java_library(
+    immutable_types = [
+        "RmStep",
+    ],
     tests = [
         "//test/com/facebook/buck/step/fs:fs",
     ],

@@ -122,10 +122,7 @@ public class AppleDsym
         context.getSourcePathResolver().getAbsolutePath(unstrippedBinarySourcePath);
     Path dwarfFileFolder = dsymOutputPath.resolve(DSYM_DWARF_FILE_FOLDER);
     return ImmutableList.of(
-        new RmStep(
-            getProjectFilesystem(),
-            dsymOutputPath,
-            RmStep.Mode.RECURSIVE),
+        RmStep.of(getProjectFilesystem(), dsymOutputPath).withRecursive(true),
         new DsymStep(
             getProjectFilesystem(),
             dsymutil.getEnvironment(context.getSourcePathResolver()),

@@ -89,9 +89,7 @@ public class JsBundle extends AbstractBuildRule {
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(sourceMapFile));
 
     return ImmutableList.of(
-        new RmStep(
-            getProjectFilesystem(),
-            sourcePathResolver.getAbsolutePath(getOutputRoot())),
+        RmStep.of(getProjectFilesystem(), sourcePathResolver.getAbsolutePath(getOutputRoot())),
         new MkdirStep(
             getProjectFilesystem(),
             sourcePathResolver.getAbsolutePath(jsOutputDir)),

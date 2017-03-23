@@ -124,7 +124,7 @@ public class PrebuiltAppleFramework
     // unpacked on another machine, it is an ordinary file in both scenarios.
     ImmutableList.Builder<Step> builder = ImmutableList.builder();
     builder.add(new MkdirStep(getProjectFilesystem(), out.getParent()));
-    builder.add(new RmStep(getProjectFilesystem(), out, RmStep.Mode.RECURSIVE));
+    builder.add(RmStep.of(getProjectFilesystem(), out).withRecursive(true));
     builder.add(
         CopyStep.forDirectory(
             getProjectFilesystem(),

@@ -134,7 +134,7 @@ public class DirectHeaderMapTest {
     ImmutableList<Step> expectedBuildSteps =
         ImmutableList.of(
             new MkdirStep(projectFilesystem, headerMapPath.getParent()),
-            new RmStep(projectFilesystem, headerMapPath),
+            RmStep.of(projectFilesystem, headerMapPath),
             new HeaderMapStep(
                 projectFilesystem,
                 headerMapPath,

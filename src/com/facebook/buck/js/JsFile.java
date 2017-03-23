@@ -65,7 +65,7 @@ public abstract class JsFile extends AbstractBuildRule {
       String jobArgsFormat,
       Path outputPath) {
     return ImmutableList.of(
-        new RmStep(getProjectFilesystem(), outputPath),
+        RmStep.of(getProjectFilesystem(), outputPath),
         JsUtil.workerShellStep(
             worker,
             String.format(jobArgsFormat, extraArgs.orElse("")),
