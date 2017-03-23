@@ -233,6 +233,20 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
   }
 
   @Test
+  public void testGetSuperclassOfEnumIsEnumWithArgs() throws IOException {
+    compile("enum Foo { }");
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    DeclaredType superclass = (DeclaredType) fooElement.getSuperclass();
+
+    TypeElement enumElement = elements.getTypeElement("java.lang.Enum");
+    TypeMirror expectedSuperclass = types.getDeclaredType(enumElement, fooElement.asType());
+
+    assertSameType(expectedSuperclass, superclass);
+  }
+
+
+  @Test
   public void testGetSuperclassOtherSuperclass() throws IOException {
     compile(ImmutableMap.of(
         "Foo.java",

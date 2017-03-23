@@ -44,6 +44,7 @@ import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
+import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
@@ -133,6 +134,13 @@ public abstract class CompilerTreeApiTest {
     TypeVariable typeVariable = (TypeVariable) typeParameter.asType();
 
     return typeVariable.getUpperBound();
+  }
+
+  protected ExecutableElement findDefaultConstructor(TypeElement typeElement) {
+    return ElementFilter.constructorsIn(typeElement.getEnclosedElements()).stream()
+        .filter(element -> element.getParameters().isEmpty())
+        .findFirst()
+        .get();
   }
 
   protected ExecutableElement findMethod(String name, TypeElement typeElement) {

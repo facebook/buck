@@ -51,6 +51,31 @@ public class TreeBackedExecutableElementTest extends CompilerTreeApiParameterize
   }
 
   @Test
+  public void testGetVoidReturnType() throws IOException {
+    compile(Joiner.on('\n').join(
+        "abstract class Foo {",
+        "  public void foo();",
+        "}"));
+
+    ExecutableElement element = findMethod("foo", elements.getTypeElement("Foo"));
+    TypeMirror voidType = types.getNoType(TypeKind.VOID);
+
+    assertSameType(voidType, element.getReturnType());
+  }
+
+  @Test
+  public void testGetConstructorReturnType() throws IOException {
+    compile(Joiner.on('\n').join(
+        "class Foo {",
+        "}"));
+
+    ExecutableElement element = findDefaultConstructor(elements.getTypeElement("Foo"));
+    TypeMirror voidType = types.getNoType(TypeKind.VOID);
+
+    assertSameType(voidType, element.getReturnType());
+  }
+
+  @Test
   public void testGetParameters() throws IOException {
     compile(Joiner.on('\n').join(
         "abstract class Foo {",
