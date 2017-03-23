@@ -500,8 +500,8 @@ public class AppleCxxPlatforms {
         .add(toolchainPath.toString());
     }
 
-    Optional<Tool> swift = getOptionalToolWithParams(
-        "swift",
+    Optional<Tool> swiftc = getOptionalToolWithParams(
+        "swiftc",
         toolSearchPaths,
         executableFinder,
         version,
@@ -513,12 +513,12 @@ public class AppleCxxPlatforms {
         version,
         swiftStdlibToolParamsBuilder.build());
 
-    if (swift.isPresent() && swiftStdLibTool.isPresent()) {
+    if (swiftc.isPresent() && swiftStdLibTool.isPresent()) {
       return Optional.of(
           SwiftPlatforms.build(
               platformName,
               sdkPaths.getToolchainPaths(),
-              swift.get(),
+              swiftc.get(),
               swiftStdLibTool.get()));
     } else {
       return Optional.empty();

@@ -30,10 +30,10 @@ public class SwiftPlatforms {
   public static SwiftPlatform build(
       String platformName,
       Set<Path> toolchainPaths,
-      Tool swift,
+      Tool swiftc,
       Tool swiftStdLibTool) {
     SwiftPlatform.Builder builder = SwiftPlatform.builder()
-        .setSwift(swift)
+        .setSwiftc(swiftc)
         .setSwiftStdlibTool(swiftStdLibTool);
 
     for (Path toolchainPath : toolchainPaths) {

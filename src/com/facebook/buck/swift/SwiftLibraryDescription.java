@@ -242,7 +242,7 @@ public class SwiftLibraryDescription implements
           cxxPlatform,
           swiftBuckConfig,
           params,
-          swiftPlatform.get().getSwift(),
+          swiftPlatform.get().getSwiftc(),
           args.frameworks,
           args.moduleName.orElse(buildTarget.getShortName()),
           BuildTargets.getGenPath(

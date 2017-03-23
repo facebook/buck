@@ -31,7 +31,7 @@ import java.util.Set;
 @BuckStyleImmutable
 interface AbstractSwiftPlatform {
 
-  Tool getSwift();
+  Tool getSwiftc();
   Tool getSwiftStdlibTool();
   Set<Path> getSwiftRuntimePaths();
   Set<Path> getSwiftStaticRuntimePaths();

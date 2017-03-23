@@ -1034,10 +1034,10 @@ public class AppleCxxPlatformsTest {
     AppleCxxPlatform platformWithDefaultSwift = buildAppleCxxPlatformWithSwiftToolchain(true);
     Optional<SwiftPlatform> swiftPlatformOptional = platformWithDefaultSwift.getSwiftPlatform();
     assertThat(swiftPlatformOptional.isPresent(), is(true));
-    Tool swiftTool = swiftPlatformOptional.get().getSwift();
-    assertTrue(swiftTool instanceof VersionedTool);
-    assertThat(((VersionedTool) swiftTool).getPath(),
-        equalTo(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/swift")));
+    Tool swiftcTool = swiftPlatformOptional.get().getSwiftc();
+    assertTrue(swiftcTool instanceof VersionedTool);
+    assertThat(((VersionedTool) swiftcTool).getPath(),
+        equalTo(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc")));
 
     assertThat(swiftPlatformOptional.get().getSwiftRuntimePaths(), Matchers.empty());
   }
@@ -1047,9 +1047,9 @@ public class AppleCxxPlatformsTest {
     AppleCxxPlatform platformWithConfiguredSwift = buildAppleCxxPlatformWithSwiftToolchain(false);
     Optional<SwiftPlatform> swiftPlatformOptional = platformWithConfiguredSwift.getSwiftPlatform();
     assertThat(swiftPlatformOptional.isPresent(), is(true));
-    Tool swiftTool = swiftPlatformOptional.get().getSwift();
-    assertThat(((VersionedTool) swiftTool).getPath(),
-        not(equalTo(Paths.get("Toolchains/Swift_2.3.xctoolchain/usr/bin/swift"))));
+    Tool swiftcTool = swiftPlatformOptional.get().getSwiftc();
+    assertThat(((VersionedTool) swiftcTool).getPath(),
+        not(equalTo(Paths.get("Toolchains/Swift_2.3.xctoolchain/usr/bin/swiftc"))));
 
     assertThat(swiftPlatformOptional.get().getSwiftRuntimePaths(),
         equalTo(ImmutableSet.of(temp.getRoot().resolve("usr/lib/swift/iphoneos"))));
@@ -1058,11 +1058,11 @@ public class AppleCxxPlatformsTest {
   @Test
   public void checkSwiftPlatformUsesCorrectMinTargetSdk() throws IOException {
     AppleCxxPlatform platformWithConfiguredSwift = buildAppleCxxPlatformWithSwiftToolchain(true);
-    Tool swift = platformWithConfiguredSwift.getSwiftPlatform().get().getSwift();
-    assertThat(swift, notNullValue());
-    assertThat(swift, instanceOf(VersionedTool.class));
-    VersionedTool versionedSwift = (VersionedTool) swift;
-    assertThat(versionedSwift.getExtraArgs(), hasItem("i386-apple-ios7.0"));
+    Tool swiftc = platformWithConfiguredSwift.getSwiftPlatform().get().getSwiftc();
+    assertThat(swiftc, notNullValue());
+    assertThat(swiftc, instanceOf(VersionedTool.class));
+    VersionedTool versionedSwiftc = (VersionedTool) swiftc;
+    assertThat(versionedSwiftc.getExtraArgs(), hasItem("i386-apple-ios7.0"));
   }
 
   private AppleCxxPlatform buildAppleCxxPlatformWithSwiftToolchain(boolean useDefaultSwift)
@@ -1076,7 +1076,7 @@ public class AppleCxxPlatformsTest {
     temp.newFolder("usr", "bin");
     temp.newFolder("usr", "lib", "swift", "iphoneos");
     temp.newFolder("usr", "lib", "swift_static", "iphoneos");
-    MoreFiles.makeExecutable(temp.newFile("usr/bin/swift"));
+    MoreFiles.makeExecutable(temp.newFile("usr/bin/swiftc"));
     MoreFiles.makeExecutable(temp.newFile("usr/bin/swift-stdlib-tool"));
     Optional<AppleToolchain> selectedSwiftToolChain = useDefaultSwift ?
         Optional.empty() : Optional.of(swiftToolchain);
@@ -1084,7 +1084,7 @@ public class AppleCxxPlatformsTest {
         .addAll(COMMON_KNOWN_PATHS)
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
-        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/swift"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-stdlib-tool"))
         .build();
     return AppleCxxPlatforms.buildWithExecutableChecker(

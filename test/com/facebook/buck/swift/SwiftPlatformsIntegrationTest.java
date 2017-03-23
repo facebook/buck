@@ -39,12 +39,12 @@ public class SwiftPlatformsIntegrationTest {
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
 
-  private Tool swiftTool;
+  private Tool swiftcTool;
   private Tool swiftStdTool;
 
   @Before
   public void setUp() {
-    swiftTool = VersionedTool.of(Paths.get("swift"), "foo", "1.0");
+    swiftcTool = VersionedTool.of(Paths.get("swiftc"), "foo", "1.0");
     swiftStdTool = VersionedTool.of(Paths.get("swift-std"), "foo", "1.0");
   }
 
@@ -53,9 +53,9 @@ public class SwiftPlatformsIntegrationTest {
     SwiftPlatform swiftPlatform = SwiftPlatforms.build(
         "iphoneos",
         ImmutableSet.of(),
-        swiftTool, swiftStdTool);
+        swiftcTool, swiftStdTool);
     assertThat(swiftPlatform.getSwiftStdlibTool(), equalTo(swiftStdTool));
-    assertThat(swiftPlatform.getSwift(), equalTo(swiftTool));
+    assertThat(swiftPlatform.getSwiftc(), equalTo(swiftcTool));
     assertThat(swiftPlatform.getSwiftRuntimePaths(), empty());
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), empty());
   }
@@ -66,7 +66,7 @@ public class SwiftPlatformsIntegrationTest {
     SwiftPlatform swiftPlatform = SwiftPlatforms.build(
         "iphoneos",
         ImmutableSet.of(dir),
-        swiftTool, swiftStdTool);
+        swiftcTool, swiftStdTool);
     assertThat(swiftPlatform.getSwiftRuntimePaths(), empty());
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), empty());
   }
@@ -82,7 +82,7 @@ public class SwiftPlatformsIntegrationTest {
             tmp.getRoot().resolve("foo"),
             tmp.getRoot().resolve("foo2"),
             tmp.getRoot().resolve("foo3")),
-        swiftTool, swiftStdTool);
+        swiftcTool, swiftStdTool);
     assertThat(swiftPlatform.getSwiftRuntimePaths(), hasSize(1));
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), hasSize(2));
   }
