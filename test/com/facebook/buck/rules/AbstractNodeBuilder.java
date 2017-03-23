@@ -136,6 +136,7 @@ public abstract class AbstractNodeBuilder<
                   VISIBILITY_PATTERN_PARSER.parse(
                       null,
                       VisibilityPatternParser.VISIBILITY_PUBLIC)),
+              ImmutableSet.of(),
               cellRoots);
       if (selectedVersions.isPresent()) {
         node =

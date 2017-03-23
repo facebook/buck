@@ -18,11 +18,9 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Sets;
 
 public class VisibilityPatternParser {
   public static final String VISIBILITY_PUBLIC = "PUBLIC";
-  public static final String VISIBILITY_GROUP = "GROUP";
 
   private static final BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
       BuildTargetPatternParser.forVisibilityArgument();
@@ -32,8 +30,6 @@ public class VisibilityPatternParser {
       String buildTargetPattern) {
     if (VISIBILITY_PUBLIC.equals(buildTargetPattern)) {
       return PublicVisibilityPattern.INSTANCE;
-    } else if (VISIBILITY_GROUP.equals(buildTargetPattern)) {
-      return GroupVisibilityPattern.INSTANCE;
     } else {
       return new BuildTargetVisibilityPattern(buildTargetPatternParser.parse(
           cellNames,
@@ -49,12 +45,10 @@ public class VisibilityPatternParser {
       this.viewerPattern = viewerPattern;
     }
 
-    // TODO(tophyr) let this account for specifying groups as targets in visibility too
     @Override
     public boolean checkVisibility(
-        TargetGraph graphContext,
-        TargetNode<?, ?> viewer,
-        TargetNode<?, ?> viewed) {
+        ObeysVisibility viewer,
+        ObeysVisibility viewed) {
       return viewerPattern.apply(viewer.getBuildTarget());
     }
 
@@ -69,35 +63,14 @@ public class VisibilityPatternParser {
 
     @Override
     public boolean checkVisibility(
-        TargetGraph graphContext,
-        TargetNode<?, ?> viewer,
-        TargetNode<?, ?> viewed) {
+        ObeysVisibility viewer,
+        ObeysVisibility viewed) {
       return true;
     }
 
     @Override
     public String getRepresentation() {
       return VISIBILITY_PUBLIC;
-    }
-  }
-
-  // TODO(tophyr): warn if GROUP and not actually in a group
-  private static class GroupVisibilityPattern implements VisibilityPattern {
-    public static final GroupVisibilityPattern INSTANCE = new GroupVisibilityPattern();
-
-    @Override
-    public boolean checkVisibility(
-        TargetGraph graphContext,
-        TargetNode<?, ?> viewer,
-        TargetNode<?, ?> viewed) {
-      return !Sets.intersection(
-          graphContext.getGroupsContainingTarget(viewer.getBuildTarget()),
-          graphContext.getGroupsContainingTarget(viewed.getBuildTarget())).isEmpty();
-    }
-
-    @Override
-    public String getRepresentation() {
-      return VISIBILITY_GROUP;
     }
   }
 }

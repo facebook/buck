@@ -195,7 +195,7 @@ public class JavaDepsFinder {
 
   public DepsForBuildFiles findDepsForBuildFiles(final TargetGraph graph, Console console) {
     DependencyInfo dependencyInfo = findDependencyInfoForGraph(graph);
-    return findDepsForBuildFiles(graph, dependencyInfo, console);
+    return findDepsForBuildFiles(dependencyInfo, console);
   }
 
   public DependencyInfo findDependencyInfoForGraph(final TargetGraph graph) {
@@ -254,7 +254,6 @@ public class JavaDepsFinder {
   }
 
   private DepsForBuildFiles findDepsForBuildFiles(
-      final TargetGraph graph,
       final DependencyInfo dependencyInfo,
       final Console console) {
     // For the rules that expect to have their deps generated, look through all of their required
@@ -268,7 +267,7 @@ public class JavaDepsFinder {
       final Set<BuildTarget> providedDeps = dependencyInfo.rulesWithAutodepsToProvidedDeps.get(
           rule);
       final Predicate<TargetNode<?, ?>> isVisibleDepNotAlreadyInProvidedDeps =
-          provider -> provider.isVisibleTo(graph, rule) &&
+          provider -> provider.isVisibleTo(rule) &&
               !providedDeps.contains(provider.getBuildTarget());
       final boolean isJavaTestRule =
           rule.getDescription() instanceof JavaTestDescription;
@@ -336,7 +335,7 @@ public class JavaDepsFinder {
                 .flatMap(candidate ->
                     dependencyInfo.ruleToRulesThatExportIt.get(candidate).stream())
                 .filter(ruleThatExportsCandidate ->
-                    ruleThatExportsCandidate.isVisibleTo(graph, rule))
+                    ruleThatExportsCandidate.isVisibleTo(rule))
                 .collect(
                     MoreCollectors.toImmutableSortedSet(
                         Comparator.<TargetNode<?, ?>>naturalOrder()));

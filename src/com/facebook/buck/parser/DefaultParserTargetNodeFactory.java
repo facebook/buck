@@ -152,6 +152,8 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
       ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
       ImmutableSet.Builder<VisibilityPattern> visibilityPatterns =
           ImmutableSet.builder();
+      ImmutableSet.Builder<VisibilityPattern> withinViewPatterns =
+          ImmutableSet.builder();
       try (SimplePerfEvent.Scope scope =
                perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg"))) {
         marshaller.populate(
@@ -161,6 +163,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
             constructorArg,
             declaredDeps,
             visibilityPatterns,
+            withinViewPatterns,
             rawNode);
       }
       try (SimplePerfEvent.Scope scope =
@@ -176,6 +179,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
             target,
             declaredDeps.build(),
             visibilityPatterns.build(),
+            withinViewPatterns.build(),
             targetCell.getCellPathResolver());
         if (buildFileTrees.isPresent() &&
             cell.isEnforcingBuckPackageBoundaries(target.getBasePath())) {

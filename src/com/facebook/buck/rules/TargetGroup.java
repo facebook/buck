@@ -20,31 +20,23 @@ import com.google.common.collect.ImmutableSet;
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 public class TargetGroup implements Iterable<BuildTarget> {
 
   private final ImmutableSet<BuildTarget> targets;
-  private final boolean restrictOutboundVisibility;
 
   private final BuildTarget buildTarget;
 
   public TargetGroup(
       Set<BuildTarget> targets,
-      Optional<Boolean> restrictOutboundVisibility,
       BuildTarget buildTarget) {
     this.buildTarget = buildTarget;
     this.targets = ImmutableSet.copyOf(targets);
-    this.restrictOutboundVisibility = restrictOutboundVisibility.orElse(false);
   }
 
   public boolean containsTarget(BuildTarget target) {
     return targets.contains(target);
-  }
-
-  public boolean restrictsOutboundVisibility() {
-    return restrictOutboundVisibility;
   }
 
   @Override
@@ -67,7 +59,6 @@ public class TargetGroup implements Iterable<BuildTarget> {
     }
     return new TargetGroup(
         newTargets.build(),
-        Optional.of(restrictOutboundVisibility),
         buildTarget);
   }
 }

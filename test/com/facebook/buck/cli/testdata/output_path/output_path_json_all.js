@@ -17,7 +17,8 @@
   "srcs":null,
   "tests":null,
   "type":null,
-  "visibility":null
+  "visibility":null,
+  "within_view":null
 },
 {
   "autodeps":null,
@@ -37,6 +38,7 @@
   "srcs":null,
   "tests":null,
   "type":null,
-  "visibility":null
+  "visibility":null,
+  "within_view":null
 }
 ]

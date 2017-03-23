@@ -23,7 +23,6 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -49,11 +48,6 @@ public class TargetNodeTest {
 
   public static final BuildTarget TARGET_THREE =
       BuildTargetFactory.newInstance("//example/path:three");
-
-  private static final TargetGraph GRAPH = new TargetGraph(
-      new MutableDirectedGraph<TargetNode<?, ?>>(),
-      ImmutableMap.of(),
-      ImmutableSet.of());
 
   @Test
   public void testIgnoreNonBuildTargetOrPathOrSourcePathArgument()
@@ -113,7 +107,7 @@ public class TargetNodeTest {
     BuildTarget buildTargetTwo = BuildTargetFactory.newInstance(rootTwo, "//foo:bar");
     TargetNode<Arg, ExampleDescription> targetNodeTwo = createTargetNode(buildTargetTwo);
 
-    boolean isVisible = targetNodeOne.isVisibleTo(GRAPH, targetNodeTwo);
+    boolean isVisible = targetNodeOne.isVisibleTo(targetNodeTwo);
 
     assertThat(isVisible, is(false));
   }
@@ -178,6 +172,7 @@ public class TargetNodeTest {
             buildTarget,
             declaredDeps,
             ImmutableSet.of(),
+            ImmutableSet.of(),
             createCellRoots(filesystem));
   }
 
@@ -197,6 +192,7 @@ public class TargetNodeTest {
           projectFilesystem,
           buildTarget,
           constructorArg,
+          ImmutableSet.builder(),
           ImmutableSet.builder(),
           ImmutableSet.builder(),
           instance);

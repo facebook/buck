@@ -13,15 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.facebook.buck.rules;
 
-public interface VisibilityPattern {
-  boolean checkVisibility(
-      ObeysVisibility viewer,
-      ObeysVisibility viewed);
+import com.facebook.buck.model.BuildTarget;
 
-  /**
-   * Value used in a build file to specify this pattern.
-   */
-  String getRepresentation();
+public interface ObeysVisibility {
+  BuildTarget getBuildTarget();
+  VisibilityChecker getVisibilityChecker();
 }

@@ -98,10 +98,6 @@ public class VersionedTargetGraphBuilder {
       VersionSelector versionSelector,
       TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets) {
 
-    Preconditions.checkArgument(
-        unversionedTargetGraphAndBuildTargets.getTargetGraph().getGroups().isEmpty(),
-        "graph versioning does not currently support target groups");
-
     this.pool = pool;
     this.versionSelector = versionSelector;
     this.unversionedTargetGraphAndBuildTargets = unversionedTargetGraphAndBuildTargets;

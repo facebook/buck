@@ -17,6 +17,7 @@ genrule(
   ],
   tests = None,
   type = None,
+  within_view = None,
   visibility = [
   ],
 )

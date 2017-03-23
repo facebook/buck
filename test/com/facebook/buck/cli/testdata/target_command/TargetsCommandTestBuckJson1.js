@@ -36,6 +36,7 @@
   "srcs" : [],
   "target" : "6",
   "tests" : null,
-  "visibility" : [ "PUBLIC" ]
+  "visibility" : [ "PUBLIC" ],
+  "within_view" : null
 }
 ]

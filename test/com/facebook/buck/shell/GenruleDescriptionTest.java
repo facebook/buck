@@ -65,6 +65,7 @@ public class GenruleDescriptionTest {
             ObjectMappers.newDefaultInstance()));
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     ImmutableSet.Builder<VisibilityPattern> visibilityPatterns = ImmutableSet.builder();
+    ImmutableSet.Builder<VisibilityPattern> withinViewPatterns = ImmutableSet.builder();
     GenruleDescription.Arg constructorArg = genruleDescription.createUnpopulatedConstructorArg();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     marshaller.populate(
@@ -74,6 +75,7 @@ public class GenruleDescriptionTest {
         constructorArg,
         declaredDeps,
         visibilityPatterns,
+        withinViewPatterns,
         instance);
     TargetNode<GenruleDescription.Arg, ?> targetNode =
         new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
@@ -85,6 +87,7 @@ public class GenruleDescriptionTest {
                 buildTarget,
                 declaredDeps.build(),
                 visibilityPatterns.build(),
+                withinViewPatterns.build(),
                 createCellRoots(projectFilesystem));
     assertEquals(
         "SourcePaths and targets from cmd string should be extracted as extra deps.",

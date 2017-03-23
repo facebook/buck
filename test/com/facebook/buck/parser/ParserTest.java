@@ -2409,33 +2409,6 @@ public class ParserTest {
   }
 
   @Test
-  public void groupsAreExpanded() throws Exception {
-    Path buckFile = cellRoot.resolve("BUCK");
-    Files.createDirectories(buckFile.getParent());
-    Path groupsData = TestDataHelper.getTestDataScenario(this, "groups");
-    Files.copy(groupsData.resolve("BUCK.fixture"), buckFile);
-
-    BuildTarget fooTarget = BuildTargetFactory.newInstance(cellRoot, "//:foo");
-    BuildTarget barTarget = BuildTargetFactory.newInstance(cellRoot, "//:bar");
-
-    TargetGraph targetGraph = parser.buildTargetGraph(
-        eventBus,
-        cell,
-        false,
-        executorService,
-        ImmutableSet.of(barTarget));
-
-    assertThat(targetGraph.getGroupsContainingTarget(fooTarget).size(), is(2));
-
-    assertThat(
-        targetGraph.get(fooTarget).isVisibleTo(targetGraph, targetGraph.get(barTarget)),
-        is(true));
-    assertThat(
-        targetGraph.get(barTarget).isVisibleTo(targetGraph, targetGraph.get(fooTarget)),
-        is(false));
-  }
-
-  @Test
   public void testVisibilityGetsChecked() throws Exception {
     Path visibilityData = TestDataHelper.getTestDataScenario(this, "visibility");
     Path visibilityBuckFile = cellRoot.resolve("BUCK");

@@ -22,10 +22,8 @@ import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.MoreMaps;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
 
 import java.util.HashMap;
@@ -40,30 +38,16 @@ import javax.annotation.Nullable;
  */
 public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
   public static final TargetGraph EMPTY = new TargetGraph(
-      new MutableDirectedGraph<TargetNode<?, ?>>(),
-      ImmutableMap.of(),
-      ImmutableSet.of());
+      new MutableDirectedGraph<>(),
+      ImmutableMap.of());
 
   private final ImmutableMap<BuildTarget, TargetNode<?, ?>> targetsToNodes;
-  private final ImmutableSetMultimap<BuildTarget, TargetGroup> groupsByBuildTarget;
 
   public TargetGraph(
       MutableDirectedGraph<TargetNode<?, ?>> graph,
-      ImmutableMap<BuildTarget, TargetNode<?, ?>> index,
-      ImmutableSet<TargetGroup> groups) {
+      ImmutableMap<BuildTarget, TargetNode<?, ?>> index) {
     super(graph);
     this.targetsToNodes = index;
-
-    ImmutableSetMultimap.Builder<BuildTarget, TargetGroup> builder =
-        ImmutableSetMultimap.builder();
-    for (TargetGroup group : groups) {
-      for (BuildTarget target : group) {
-        if (targetsToNodes.containsKey(target)) {
-          builder.put(target, group);
-        }
-      }
-    }
-    this.groupsByBuildTarget = builder.build();
 
     verifyVisibilityIntegrity();
   }
@@ -71,7 +55,7 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
   private void verifyVisibilityIntegrity() {
     for (TargetNode<?, ?> node : getNodes()) {
       for (TargetNode<?, ?> dep : getOutgoingNodesFor(node)) {
-        dep.isVisibleToOrThrow(this, node);
+        dep.isVisibleToOrThrow(node);
       }
     }
   }
@@ -105,10 +89,6 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
     return Iterables.transform(
         targets,
         this::get);
-  }
-
-  public ImmutableSet<TargetGroup> getGroupsContainingTarget(BuildTarget target) {
-    return groupsByBuildTarget.get(target);
   }
 
   @Override
@@ -160,12 +140,7 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
 
     return new TargetGraph(
         subgraph,
-        ImmutableMap.copyOf(index),
-        groupsByBuildTarget.inverse().keySet());
-  }
-
-  public ImmutableCollection<TargetGroup> getGroups() {
-    return groupsByBuildTarget.values();
+        ImmutableMap.copyOf(index));
   }
 
   @SuppressWarnings("serial")

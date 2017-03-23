@@ -173,9 +173,8 @@ public class DistBuildTargetGraphCodec {
       }
     }
 
-    // TODO(tophyr): make this work with TargetGroups
     TargetGraph targetGraph =
-        new TargetGraph(mutableTargetGraph, targetNodeIndex, ImmutableSet.of());
+        new TargetGraph(mutableTargetGraph, targetNodeIndex);
 
     return TargetGraphAndBuildTargets.builder()
         .setTargetGraph(targetGraph)

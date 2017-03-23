@@ -37,7 +37,6 @@ import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
-import com.facebook.buck.rules.TargetGroup;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
@@ -52,9 +51,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.Futures;
@@ -276,11 +273,6 @@ public class Parser {
       return TargetGraph.EMPTY;
     }
 
-    final Map<BuildTarget, TargetGroup> groups = Maps.newHashMap();
-    for (TargetGroup group : state.getAllGroups()) {
-      groups.put(group.getBuildTarget(), group);
-    }
-
     final MutableDirectedGraph<TargetNode<?, ?>> graph = new MutableDirectedGraph<>();
     final Map<BuildTarget, TargetNode<?, ?>> index = new HashMap<>();
 
@@ -319,17 +311,6 @@ public class Parser {
       return node.getDeps().iterator();
     };
 
-    GraphTraversable<BuildTarget> groupExpander = target -> {
-      TargetGroup group = Preconditions.checkNotNull(
-          groups.get(target),
-          "SANITY FAILURE: Tried to expand group %s but it doesn't exist.",
-          target);
-      return Iterators.filter(group.iterator(), groups::containsKey);
-    };
-
-    AcyclicDepthFirstPostOrderTraversal<BuildTarget> targetGroupExpansion =
-        new AcyclicDepthFirstPostOrderTraversal<>(groupExpander);
-
     AcyclicDepthFirstPostOrderTraversal<BuildTarget> targetNodeTraversal =
         new AcyclicDepthFirstPostOrderTraversal<>(traversable);
 
@@ -353,29 +334,9 @@ public class Parser {
         }
       }
 
-      for (BuildTarget groupTarget : targetGroupExpansion.traverse(groups.keySet())) {
-        ImmutableMap<BuildTarget, Iterable<BuildTarget>> replacements = Maps.toMap(
-            groupExpander.findChildren(groupTarget),
-            target -> {
-              TargetGroup group = groups.get(target);
-              return Preconditions.checkNotNull(
-                  group,
-                  "SANITY FAILURE: Tried to expand group %s but it doesn't exist.",
-                  target);
-            });
-        if (!replacements.isEmpty()) {
-          // TODO(tophyr): Stop duplicating target lists
-          groups.put(
-              groupTarget,
-              Preconditions.checkNotNull(groups.get(groupTarget))
-                  .withReplacedTargets(replacements));
-        }
-      }
-
       targetGraph = new TargetGraph(
           graph,
-          ImmutableMap.copyOf(index),
-          ImmutableSet.copyOf(groups.values()));
+          ImmutableMap.copyOf(index));
       state.ensureConcreteFilesExist(eventBus);
       return targetGraph;
     } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {

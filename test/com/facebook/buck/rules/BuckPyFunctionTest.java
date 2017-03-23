@@ -84,12 +84,13 @@ public class BuckPyFunctionTest {
 
     assertEquals(Joiner.on("\n").join(
         "@provide_for_build",
-        "def named(name, autodeps=None, visibility=None, build_env=None):",
+        "def named(name, autodeps=None, visibility=None, within_view=None, build_env=None):",
         "    add_rule({",
         "        'buck.type': 'named',",
         "        'name': name,",
         "        'autodeps': autodeps,",
         "        'visibility': visibility,",
+        "        'within_view': within_view,",
         "    }, build_env)",
         "",
         ""
@@ -110,13 +111,14 @@ public class BuckPyFunctionTest {
 
     assertEquals(Joiner.on("\n").join(
             "@provide_for_build",
-            "def noname(foobar, autodeps=None, visibility=None, build_env=None):",
+            "def noname(foobar, autodeps=None, visibility=None, within_view=None, build_env=None):",
             "    add_rule({",
             "        'buck.type': 'noname',",
             "        'name': 'lollerskates',",
             "        'foobar': foobar,",
             "        'autodeps': autodeps,",
             "        'visibility': visibility,",
+            "        'within_view': within_view,",
             "    }, build_env)",
             "",
             ""
@@ -168,8 +170,8 @@ public class BuckPyFunctionTest {
 
     assertEquals(Joiner.on("\n").join(
         "@provide_for_build",
-        "def either(name, dog, fake, " +
-            "cat=None, egg=None, autodeps=None, visibility=None, build_env=None):",
+        "def either(name, dog, fake, cat=None, egg=None, " +
+            "autodeps=None, visibility=None, within_view=None, build_env=None):",
         "    add_rule({",
         "        'buck.type': 'either',",
         "        'name': name,",
@@ -179,6 +181,7 @@ public class BuckPyFunctionTest {
         "        'egg': egg,",
         "        'autodeps': autodeps,",
         "        'visibility': visibility,",
+        "        'within_view': within_view,",
         "    }, build_env)",
         "",
         ""
@@ -210,7 +213,7 @@ public class BuckPyFunctionTest {
     assertEquals(Joiner.on("\n").join(
         "@provide_for_build",
         "def case(name, all_this_was_fields, some_field, " +
-            "autodeps=None, visibility=None, build_env=None):",
+            "autodeps=None, visibility=None, within_view=None, build_env=None):",
         "    add_rule({",
         "        'buck.type': 'case',",
         "        'name': name,",
@@ -218,6 +221,7 @@ public class BuckPyFunctionTest {
         "        'someField': some_field,",
         "        'autodeps': autodeps,",
         "        'visibility': visibility,",
+        "        'within_view': within_view,",
         "    }, build_env)",
         "",
         ""

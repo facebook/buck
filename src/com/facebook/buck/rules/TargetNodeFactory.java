@@ -69,6 +69,7 @@ public class TargetNodeFactory {
       BuildTarget buildTarget,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
+      ImmutableSet<VisibilityPattern> withinViewPatterns,
       CellPathResolver cellRoots)
       throws NoSuchBuildTargetException {
     return create(
@@ -79,6 +80,7 @@ public class TargetNodeFactory {
         buildTarget,
         declaredDeps,
         visibilityPatterns,
+        withinViewPatterns,
         cellRoots);
   }
 
@@ -91,6 +93,7 @@ public class TargetNodeFactory {
       BuildTarget buildTarget,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
+      ImmutableSet<VisibilityPattern> withinViewPatterns,
       CellPathResolver cellRoots)
       throws NoSuchBuildTargetException {
 
@@ -133,6 +136,7 @@ public class TargetNodeFactory {
         declaredDeps,
         ImmutableSortedSet.copyOf(Sets.difference(extraDepsBuilder.build(), declaredDeps)),
         visibilityPatterns,
+        withinViewPatterns,
         pathsBuilder.build(),
         cellRoots,
         Optional.empty());
@@ -192,6 +196,7 @@ public class TargetNodeFactory {
           originalNode.getBuildTarget(),
           originalNode.getDeclaredDeps(),
           originalNode.getVisibilityPatterns(),
+          originalNode.getWithinViewPatterns(),
           originalNode.getCellNames());
     } catch (NoSuchBuildTargetException e) {
       throw new IllegalStateException(
@@ -214,6 +219,7 @@ public class TargetNodeFactory {
           originalNode.getBuildTarget().withFlavors(flavors),
           originalNode.getDeclaredDeps(),
           originalNode.getVisibilityPatterns(),
+          originalNode.getWithinViewPatterns(),
           originalNode.getCellNames());
     } catch (NoSuchBuildTargetException e) {
       throw new IllegalStateException(

@@ -254,7 +254,7 @@ class FineGrainedJavaDependencySuggester {
         }
 
         depProviders = FluentIterable.from(depProviders)
-            .filter(provider -> provider.isVisibleTo(graph, suggestedNode))
+            .filter(provider -> provider.isVisibleTo(suggestedNode))
             .toSet();
         TargetNode<?, ?> depProvider;
         if (depProviders.size() == 1) {

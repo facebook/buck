@@ -85,6 +85,7 @@ public class BuckPyFunction {
     }
     optional.add(StParamInfo.ofOptionalValue("autodeps", "autodeps"));
     optional.add(StParamInfo.ofOptionalValue("visibility", "visibility"));
+    optional.add(StParamInfo.ofOptionalValue("within_view", "within_view"));
 
     STGroup group = buckPyFunctionTemplate.get();
     ST st;
@@ -132,6 +133,11 @@ public class BuckPyFunction {
     if ("visibility".equals(param.getName())) {
       throw new HumanReadableException(
           "'visibility' parameter must be omitted. It will be passed to the rule at run time.");
+    }
+
+    if ("within_view".equals(param.getName())) {
+      throw new HumanReadableException(
+          "'within_view' parameter must be omitted. It will be passed to the rule at run time.");
     }
 
     return false;

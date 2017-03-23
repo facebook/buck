@@ -26,7 +26,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 
-import java.util.Optional;
 import java.util.Set;
 
 public class TargetGroupDescription implements Description<TargetGroupDescription.Arg> {
@@ -49,6 +48,5 @@ public class TargetGroupDescription implements Description<TargetGroupDescriptio
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public Set<BuildTarget> targets;
-    public Optional<Boolean> restrictOutboundVisibility;
   }
 }

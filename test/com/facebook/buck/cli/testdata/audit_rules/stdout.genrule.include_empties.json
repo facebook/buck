@@ -14,6 +14,7 @@
     "srcs" : [ "foo.txt", "bar.txt", "//fake:rule" ],
     "tests" : null,
     "type" : null,
-    "visibility" : [ ]
+    "visibility" : [ ],
+    "within_view" : null
   }
 }

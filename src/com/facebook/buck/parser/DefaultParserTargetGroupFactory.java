@@ -91,7 +91,9 @@ public class DefaultParserTargetGroupFactory implements ParserTargetNodeFactory<
         (TargetGroupDescription.Arg) description.createUnpopulatedConstructorArg();
     try {
       ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
-      ImmutableSet.Builder<VisibilityPattern> visibilityPatterns =
+      ImmutableSet.Builder<VisibilityPattern> visibilityPatterns = // unused
+          ImmutableSet.builder();
+      ImmutableSet.Builder<VisibilityPattern> withinViewPatterns = // unused
           ImmutableSet.builder();
       try (SimplePerfEvent.Scope scope =
                perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg"))) {
@@ -102,6 +104,7 @@ public class DefaultParserTargetGroupFactory implements ParserTargetNodeFactory<
             constructorArg,
             declaredDeps,
             visibilityPatterns,
+            withinViewPatterns,
             rawNode);
       }
       try (SimplePerfEvent.Scope scope =
@@ -111,7 +114,6 @@ public class DefaultParserTargetGroupFactory implements ParserTargetNodeFactory<
         JsonObjectHashing.hashJsonObject(hasher, rawNode);
         TargetGroup node = new TargetGroup(
             constructorArg.targets,
-            constructorArg.restrictOutboundVisibility,
             target);
         return node;
       }

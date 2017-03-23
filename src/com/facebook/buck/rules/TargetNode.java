@@ -36,7 +36,7 @@ import java.util.stream.Stream;
  * targets and paths referenced from those inputs.
  */
 public class TargetNode<T, U extends Description<T>>
-    implements Comparable<TargetNode<?, ?>> {
+    implements Comparable<TargetNode<?, ?>>, ObeysVisibility {
 
   private final TargetNodeFactory factory;
 
@@ -51,7 +51,7 @@ public class TargetNode<T, U extends Description<T>>
   private final ImmutableSet<Path> inputs;
   private final ImmutableSet<BuildTarget> declaredDeps;
   private final ImmutableSet<BuildTarget> extraDeps;
-  private final ImmutableSet<VisibilityPattern> visibilityPatterns;
+  private final VisibilityChecker visibilityChecker;
 
   private final Optional<ImmutableMap<BuildTarget, Version>> selectedVersions;
 
@@ -65,6 +65,7 @@ public class TargetNode<T, U extends Description<T>>
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<BuildTarget> extraDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
+      ImmutableSet<VisibilityPattern> withinViewPatterns,
       ImmutableSet<Path> paths,
       CellPathResolver cellNames,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions) {
@@ -78,8 +79,11 @@ public class TargetNode<T, U extends Description<T>>
     this.declaredDeps = declaredDeps;
     this.extraDeps = extraDeps;
     this.inputs = paths;
-    this.visibilityPatterns = visibilityPatterns;
     this.selectedVersions = selectedVersions;
+    this.visibilityChecker = new VisibilityChecker(
+        this,
+        visibilityPatterns,
+        withinViewPatterns);
   }
 
   /**
@@ -101,6 +105,7 @@ public class TargetNode<T, U extends Description<T>>
     return filesystem;
   }
 
+  @Override
   public BuildTarget getBuildTarget() {
     return buildTarget;
   }
@@ -135,41 +140,17 @@ public class TargetNode<T, U extends Description<T>>
     return Stream.concat(getDeclaredDeps().stream(), getExtraDeps().stream());
   }
 
-  /**
-   * TODO(andrewjcg): It'd be nice to eventually move this implementation to an
-   * `AbstractDescription` base class, so that the various types of descriptions
-   * can install their own implementations.  However, we'll probably want to move
-   * most of what is now `BuildRuleParams` to `DescriptionParams` and set them up
-   * while building the target graph.
-   */
-  public boolean isVisibleTo(TargetGraph graph, TargetNode<?, ?> viewer) {
-
-    // if i am in a restricted visibility group that the viewer isn't, the viewer can't see me.
-    // this check *must* take priority even over the sibling check, because if it didn't then that
-    // would introduce siblings as a way to "leak" visibility out of restricted groups.
-    for (TargetGroup targetGroup : graph.getGroupsContainingTarget(viewer.getBuildTarget())) {
-      if (targetGroup.restrictsOutboundVisibility() &&
-          !targetGroup.containsTarget(getBuildTarget())) {
-        return false;
-      }
-    }
-
-    if (getBuildTarget().getCellPath().equals(viewer.getBuildTarget().getCellPath()) &&
-        getBuildTarget().getBaseName().equals(viewer.getBuildTarget().getBaseName())) {
-      return true;
-    }
-
-    for (VisibilityPattern pattern : visibilityPatterns) {
-      if (pattern.checkVisibility(graph, viewer, this)) {
-        return true;
-      }
-    }
-
-    return false;
+  @Override
+  public VisibilityChecker getVisibilityChecker() {
+    return visibilityChecker;
   }
 
-  public void isVisibleToOrThrow(TargetGraph graphContext, TargetNode<?, ?> viewer) {
-    if (!isVisibleTo(graphContext, viewer)) {
+  public boolean isVisibleTo(TargetNode<?, ?> viewer) {
+    return visibilityChecker.isVisibleTo(viewer);
+  }
+
+  public void isVisibleToOrThrow(TargetNode<?, ?> viewer) {
+    if (!isVisibleTo(viewer)) {
       throw new HumanReadableException(
           "%s depends on %s, which is not visible",
           viewer,
@@ -218,6 +199,7 @@ public class TargetNode<T, U extends Description<T>>
         declaredDeps,
         extraDeps,
         getVisibilityPatterns(),
+        getWithinViewPatterns(),
         getInputs(),
         getCellNames(),
         getSelectedVersions());
@@ -239,6 +221,7 @@ public class TargetNode<T, U extends Description<T>>
         declaredDeps,
         extraDeps,
         getVisibilityPatterns(),
+        getWithinViewPatterns(),
         getInputs(),
         getCellNames(),
         selectedVerisons);
@@ -249,7 +232,11 @@ public class TargetNode<T, U extends Description<T>>
   }
 
   public ImmutableSet<VisibilityPattern> getVisibilityPatterns() {
-    return visibilityPatterns;
+    return visibilityChecker.getVisibilityPatterns();
+  }
+
+  public ImmutableSet<VisibilityPattern> getWithinViewPatterns() {
+    return visibilityChecker.getWithinViewPatterns();
   }
 
   public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions() {
