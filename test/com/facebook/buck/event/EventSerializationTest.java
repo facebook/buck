@@ -38,6 +38,7 @@ import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.testutil.JsonMatcher;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -51,9 +52,8 @@ import java.util.Random;
 
 public class EventSerializationTest {
 
-  // The hardcoded strings depend on this being an vanilla mapper.
-
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER =
+      new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
   private long timestamp;
   private long nanoTime;
@@ -218,10 +218,9 @@ public class EventSerializationTest {
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = MAPPER.writeValueAsString(event);
     assertJsonEquals("{%s," +
-        "\"results\":[{\"testCases\":[{\"testCaseName\":\"Test1\",\"testResults\":[{\"testName\":" +
-        "null,\"testCaseName\":\"Test1\",\"type\":\"FAILURE\",\"time\":0,\"message\":null," +
-        "\"stacktrace\":null,\"stdOut\":null," +
-        "\"stdErr\":null}],\"failureCount\":1,\"skippedCount\":0,\"totalTime\":0," +
+        "\"results\":[{\"testCases\":[{\"testCaseName\":\"Test1\",\"testResults\":[{" +
+        "\"testCaseName\":\"Test1\",\"type\":\"FAILURE\",\"time\":0}]," +
+        "\"failureCount\":1,\"skippedCount\":0,\"totalTime\":0," +
         "\"success\":false}]," +
         "\"failureCount\":1,\"contacts\":[],\"labels\":[]," +
         "\"dependenciesPassTheirTests\":true,\"sequenceNumber\":0,\"totalNumberOfTests\":0," +
@@ -248,10 +247,9 @@ public class EventSerializationTest {
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = MAPPER.writeValueAsString(event);
     assertJsonEquals("{%s,\"eventKey\":{\"value\":-594614477}," +
-        "\"results\":{\"testCases\":[{\"testCaseName\":\"Test1\",\"testResults\":[{\"testName\"" +
-        ":null,\"testCaseName\":\"Test1\",\"type\":\"FAILURE\",\"time\":0,\"message\":null," +
-        "\"stacktrace\":null,\"stdOut\":null," +
-        "\"stdErr\":null}],\"failureCount\":1,\"skippedCount\":0,\"totalTime\":0," +
+        "\"results\":{\"testCases\":[{\"testCaseName\":\"Test1\",\"testResults\":[{" +
+        "\"testCaseName\":\"Test1\",\"type\":\"FAILURE\",\"time\":0}]," +
+        "\"failureCount\":1,\"skippedCount\":0,\"totalTime\":0," +
         "\"success\":false}]," +
         "\"failureCount\":1,\"contacts\":[],\"labels\":[]," +
         "\"dependenciesPassTheirTests\":true,\"sequenceNumber\":0,\"totalNumberOfTests\":0," +
