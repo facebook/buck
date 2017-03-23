@@ -36,13 +36,16 @@ import java.util.List;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.SimpleElementVisitor8;
 
 @RunWith(CompilerTreeApiParameterized.class)
@@ -288,5 +291,49 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
     PackageElement javaLangElement = elements.getPackageElement("java.lang");
 
     assertSame(javaLangElement, stringElement.getEnclosingElement());
+  }
+
+  @Test
+  public void testIncludesGeneratedDefaultConstructor() throws IOException {
+    compile("class Foo { }");
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    ExecutableElement constructorElement =
+        (ExecutableElement) fooElement.getEnclosedElements().get(0);
+
+    assertEquals("<init>", constructorElement.getSimpleName().toString());
+    assertSameType(types.getNoType(TypeKind.VOID), constructorElement.getReturnType());
+    assertThat(constructorElement.getParameters(), Matchers.empty());
+    assertThat(constructorElement.getTypeParameters(), Matchers.empty());
+    assertThat(constructorElement.getThrownTypes(), Matchers.empty());
+    assertEquals(1, fooElement.getEnclosedElements().size());
+  }
+
+  @Test
+  public void testIncludesGeneratedEnumMembers() throws IOException {
+    compile("enum Foo { }");
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+
+    List<ExecutableElement> methods = ElementFilter.methodsIn(fooElement.getEnclosedElements());
+    ExecutableElement valuesMethod = methods.get(0);
+    assertEquals("values", valuesMethod.getSimpleName().toString());
+    assertSameType(types.getArrayType(fooElement.asType()), valuesMethod.getReturnType());
+    assertThat(valuesMethod.getParameters(), Matchers.empty());
+    assertThat(valuesMethod.getTypeParameters(), Matchers.empty());
+    assertThat(valuesMethod.getThrownTypes(), Matchers.empty());
+
+    ExecutableElement valueOfMethod = methods.get(1);
+    assertEquals("valueOf", valueOfMethod.getSimpleName().toString());
+    assertSameType(fooElement.asType(), valueOfMethod.getReturnType());
+    List<? extends VariableElement> parameters = valueOfMethod.getParameters();
+    assertSameType(
+        elements.getTypeElement("java.lang.String").asType(),
+        parameters.get(0).asType());
+    assertEquals(1, parameters.size());
+    assertThat(valuesMethod.getTypeParameters(), Matchers.empty());
+    assertThat(valuesMethod.getThrownTypes(), Matchers.empty());
+
+    assertEquals(2, methods.size());
   }
 }

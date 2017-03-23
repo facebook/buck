@@ -30,6 +30,9 @@ import com.sun.source.util.SourcePositions;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -47,8 +50,9 @@ import javax.tools.JavaCompiler;
  */
 class TreeBackedTrees extends Trees {
   private final TreeBackedElements elements;
+  private final TreeBackedTypes types;
   private final Trees javacTrees;
-  private final TreeResolver resolver;
+  private final Map<Tree, TypeMirror> canonicalTypes = new HashMap<>();
 
   public static TreeBackedTrees instance(JavaCompiler.CompilationTask task) {
     return ((FrontendOnlyJavacTask) task).getTrees();
@@ -60,11 +64,11 @@ class TreeBackedTrees extends Trees {
       TreeBackedTypes types) {
     this.javacTrees = javacTrees;
     this.elements = elements;
-    resolver = new TreeResolver(elements, javacTrees, types);
+    this.types = types;
   }
 
   /* package */ void clear() {
-    resolver.clear();
+    canonicalTypes.clear();
   }
 
   @Override
@@ -152,7 +156,14 @@ class TreeBackedTrees extends Trees {
   @Override
   @Nullable
   public TypeMirror getTypeMirror(TreePath path) {
-    return resolver.getType(path);
+    Tree leaf = path.getLeaf();
+    TypeMirror result = canonicalTypes.get(leaf);
+    if (result == null) {
+      result = types.getCanonicalType(javacTrees.getTypeMirror(path));
+      canonicalTypes.put(leaf, result);
+    }
+
+    return result;
   }
 
   @Override

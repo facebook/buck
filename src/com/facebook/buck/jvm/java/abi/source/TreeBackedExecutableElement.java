@@ -37,7 +37,6 @@ import javax.lang.model.type.TypeMirror;
  */
 class TreeBackedExecutableElement extends TreeBackedParameterizable implements ExecutableElement {
   private final ExecutableElement underlyingElement;
-  private final MethodTree tree;
   private final List<TreeBackedVariableElement> parameters = new ArrayList<>();
 
   @Nullable
@@ -48,11 +47,10 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable implements E
   TreeBackedExecutableElement(
       ExecutableElement underlyingElement,
       TreeBackedElement enclosingElement,
-      TreePath path,
+      @Nullable TreePath path,
       TreeBackedElementResolver resolver) {
     super(underlyingElement, enclosingElement, path, resolver);
     this.underlyingElement = underlyingElement;
-    this.tree = (MethodTree) path.getLeaf();
     enclosingElement.addEnclosedElement(this);
   }
 
@@ -64,7 +62,7 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable implements E
   @Override
   public TypeMirror getReturnType() {
     if (returnType == null) {
-      returnType = getResolver().resolveType(this, tree.getReturnType());
+      returnType = getResolver().getCanonicalType(underlyingElement.getReturnType());
     }
     return returnType;
   }
@@ -97,8 +95,8 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable implements E
   public List<? extends TypeMirror> getThrownTypes() {
     if (thrownTypes == null) {
       thrownTypes = Collections.unmodifiableList(
-          tree.getThrows().stream()
-              .map(tree -> getResolver().resolveType(this, tree))
+          underlyingElement.getThrownTypes().stream()
+              .map(getResolver()::getCanonicalType)
               .collect(Collectors.toList()));
     }
 

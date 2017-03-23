@@ -16,28 +16,15 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
-import com.facebook.buck.util.liteinfersupport.Preconditions;
-import com.sun.source.tree.Tree;
-import com.sun.source.util.TreePath;
-
-import javax.lang.model.type.NoType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 /**
  * Used to resolve type references in {@link TreeBackedElement}s after they've all been created.
  */
 class TreeBackedElementResolver {
-  private final TreeBackedElements elements;
-  private final TreeBackedTrees trees;
   private final TreeBackedTypes types;
 
-  public TreeBackedElementResolver(
-      TreeBackedElements elements,
-      TreeBackedTrees trees,
-      TreeBackedTypes types) {
-    this.elements = elements;
-    this.trees = trees;
+  public TreeBackedElementResolver(TreeBackedTypes types) {
     this.types = types;
   }
 
@@ -53,16 +40,7 @@ class TreeBackedElementResolver {
     return new StandalonePackageType(element);
   }
 
-  /* package */ TypeMirror resolveType(TreeBackedElement containingElement, Tree tree) {
-    return Preconditions.checkNotNull(
-        trees.getTypeMirror(new TreePath(containingElement.getTreePath(), tree)));
-  }
-
-  /* package */ TypeMirror getJavaLangObject() {
-    return Preconditions.checkNotNull(elements.getTypeElement("java.lang.Object")).asType();
-  }
-
-  /* package */ NoType getNoneType() {
-    return types.getNoType(TypeKind.NONE);
+  /* package */ TypeMirror getCanonicalType(TypeMirror javacType) {
+    return types.getCanonicalType(javacType);
   }
 }

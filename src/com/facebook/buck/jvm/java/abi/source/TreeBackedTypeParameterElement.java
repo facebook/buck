@@ -36,7 +36,7 @@ import javax.lang.model.type.TypeMirror;
  * individual methods and {@link com.facebook.buck.jvm.java.abi.source} for more information.
  */
 class TreeBackedTypeParameterElement extends TreeBackedElement implements TypeParameterElement {
-  private final TypeParameterTree tree;
+  private final TypeParameterElement underlyingElement;
   private final StandaloneTypeVariable typeVar;
   @Nullable
   private List<TypeMirror> bounds;
@@ -47,7 +47,7 @@ class TreeBackedTypeParameterElement extends TreeBackedElement implements TypePa
       TreeBackedElement enclosingElement,
       TreeBackedElementResolver resolver) {
     super(underlyingElement, enclosingElement, path, resolver);
-    this.tree = (TypeParameterTree) path.getLeaf();
+    this.underlyingElement = underlyingElement;
     typeVar = resolver.createType(this);
 
     // In javac's implementation, enclosingElement does not have type parameters in the return
@@ -68,15 +68,10 @@ class TreeBackedTypeParameterElement extends TreeBackedElement implements TypePa
   @Override
   public List<? extends TypeMirror> getBounds() {
     if (bounds == null) {
-      TreeBackedElementResolver resolver = getResolver();
-      if (tree.getBounds().isEmpty()) {
-        bounds = Collections.singletonList(resolver.getJavaLangObject());
-      } else {
-        bounds = Collections.unmodifiableList(
-            tree.getBounds().stream()
-                .map(boundTree -> resolver.resolveType(this, boundTree))
-                .collect(Collectors.toList()));
-      }
+      bounds = Collections.unmodifiableList(
+          underlyingElement.getBounds().stream()
+              .map(getResolver()::getCanonicalType)
+              .collect(Collectors.toList()));
     }
 
     return bounds;

@@ -149,7 +149,7 @@ class TreeBackedElements implements Elements {
     return new TreeBackedExecutableElement(
         underlyingExecutable,
         enterElement(underlyingExecutable.getEnclosingElement()),
-        Preconditions.checkNotNull(javacTrees.getPath(underlyingExecutable)),
+        javacTrees.getPath(underlyingExecutable),
         Preconditions.checkNotNull(resolver));
   }
 
@@ -157,7 +157,7 @@ class TreeBackedElements implements Elements {
     return new TreeBackedVariableElement(
         underlyingVariable,
         enterElement(underlyingVariable.getEnclosingElement()),
-        Preconditions.checkNotNull(javacTrees.getPath(underlyingVariable)),
+        javacTrees.getPath(underlyingVariable),
         Preconditions.checkNotNull(resolver));
   }
 

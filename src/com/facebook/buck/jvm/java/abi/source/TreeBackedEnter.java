@@ -18,19 +18,19 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
-import com.sun.source.tree.BlockTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.MethodTree;
-import com.sun.source.tree.TypeParameterTree;
-import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.util.ElementScanner8;
 
 /**
  * Creates {@link TreeBackedElement}s for each element in the {@link CompilationUnitTree}s known
@@ -40,7 +40,8 @@ class TreeBackedEnter {
   private static final BuckTracing BUCK_TRACING = BuckTracing.getInstance("TreeBackedEnter");
   private final TreeBackedElements elements;
   private final Trees javacTrees;
-  private final ElementEnteringScanner scanner = new ElementEnteringScanner();
+  private final EnteringTreePathScanner treeScanner = new EnteringTreePathScanner();
+  private final EnteringElementScanner elementScanner = new EnteringElementScanner();
 
   TreeBackedEnter(TreeBackedElements elements, Trees javacTrees) {
     this.elements = elements;
@@ -49,73 +50,72 @@ class TreeBackedEnter {
 
   public void enter(CompilationUnitTree compilationUnit) {
     try (BuckTracing.TraceSection t = BUCK_TRACING.traceSection("enter")) {
-      scanner.scan(compilationUnit, null);
+      treeScanner.scan(compilationUnit, null);
     }
   }
 
-  private class ElementEnteringScanner extends TreePathScanner<Void, Void> {
+  private class EnteringTreePathScanner extends TreePathScanner<Void, Void> {
+    @Override
+    public Void visitClass(ClassTree node, Void v) {
+      return elementScanner.scan(
+          Preconditions.checkNotNull(javacTrees.getElement(getCurrentPath())));
+    }
+  }
+
+  private class EnteringElementScanner extends ElementScanner8<Void, Void> {
     private final Deque<TreeBackedElement> contextStack = new ArrayDeque<>();
 
     private TreeBackedElement getCurrentContext() {
       return contextStack.peek();
     }
 
-    private Element getCurrentJavacElement() {
-      return Preconditions.checkNotNull(javacTrees.getElement(getCurrentPath()));
-    }
-
     @Override
-    public Void visitClass(ClassTree node, Void v) {
+    public Void visitType(TypeElement e, Void v) {
       TreeBackedTypeElement newClass =
-          (TreeBackedTypeElement) elements.enterElement(getCurrentJavacElement());
+          (TreeBackedTypeElement) elements.enterElement(e);
       try (ElementContext c = new ElementContext(newClass)) {
-        return super.visitClass(node, v);
+        super.visitType(e, v);
+        super.scan(e.getTypeParameters(), v);
+        return null;
       }
     }
 
     @Override
-    public Void visitTypeParameter(TypeParameterTree node, Void v) {
+    public Void visitTypeParameter(TypeParameterElement e, Void v) {
       TreeBackedTypeParameterElement typeParameter =
-          (TreeBackedTypeParameterElement) elements.enterElement(getCurrentJavacElement());
+          (TreeBackedTypeParameterElement) elements.enterElement(e);
 
       TreeBackedParameterizable currentParameterizable =
           (TreeBackedParameterizable) getCurrentContext();
       currentParameterizable.addTypeParameter(typeParameter);
 
       try (ElementContext c = new ElementContext(typeParameter)) {
-        return super.visitTypeParameter(node, v);
+        return super.visitTypeParameter(e, v);
       }
     }
 
     @Override
-    public Void visitMethod(MethodTree node, Void v) {
+    public Void visitExecutable(ExecutableElement e, Void v) {
       TreeBackedExecutableElement method =
-          (TreeBackedExecutableElement) elements.enterElement(getCurrentJavacElement());
+          (TreeBackedExecutableElement) elements.enterElement(e);
 
       try (ElementContext c = new ElementContext(method)) {
-        scan(node.getParameters(), v);
+        super.visitExecutable(e, v);
+        super.scan(e.getTypeParameters(), v);
         return null;
       }
     }
 
     @Override
-    public Void visitVariable(VariableTree node, Void v) {
-      elements.enterElement(getCurrentJavacElement());
-
-      return null;
-    }
-
-    @Override
-    public Void visitBlock(BlockTree node, Void v) {
-      // Don't recurse into method bodies
-      return null;
+    public Void visitVariable(VariableElement e, Void v) {
+      elements.enterElement(e);
+      return super.visitVariable(e, v);
     }
 
     private class ElementContext implements AutoCloseable {
       public ElementContext(TreeBackedElement newContext) {
         contextStack.push(newContext);
       }
-
 
       @Override
       public void close() {

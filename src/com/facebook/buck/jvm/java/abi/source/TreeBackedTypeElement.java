@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java.abi.source;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.ClassTree;
-import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
 
 import java.util.List;
@@ -37,7 +36,6 @@ import javax.lang.model.type.TypeMirror;
  */
 class TreeBackedTypeElement extends TreeBackedParameterizable implements TypeElement {
   private final TypeElement underlyingElement;
-  private final ClassTree tree;
   private StandaloneDeclaredType typeMirror;
   @Nullable
   private TypeMirror superclass;
@@ -49,7 +47,6 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements TypeEle
       TreeBackedElementResolver resolver) {
     super(underlyingElement, enclosingElement, path, resolver);
     this.underlyingElement = underlyingElement;
-    this.tree = (ClassTree) path.getLeaf();
     typeMirror = resolver.createType(this);
     enclosingElement.addEnclosedElement(this);
   }
@@ -77,17 +74,7 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements TypeEle
   @Override
   public TypeMirror getSuperclass() {
     if (superclass == null) {
-      TreeBackedElementResolver resolver = getResolver();
-      final Tree extendsClause = tree.getExtendsClause();
-      if (extendsClause == null) {
-        if (tree.getKind() == Tree.Kind.INTERFACE) {
-          superclass = resolver.getNoneType();
-        } else {
-          superclass = resolver.getJavaLangObject();
-        }
-      } else {
-        superclass = resolver.resolveType(this, extendsClause);
-      }
+      superclass = getResolver().getCanonicalType(underlyingElement.getSuperclass());
     }
 
     return superclass;

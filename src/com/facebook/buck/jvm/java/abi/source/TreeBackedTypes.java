@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
+import com.facebook.buck.util.liteinfersupport.Preconditions;
 
 import java.util.Arrays;
 import java.util.List;
@@ -44,9 +45,19 @@ import javax.lang.model.util.Types;
  */
 class TreeBackedTypes implements Types {
   private final Types javacTypes;
+  @Nullable
+  private TreeBackedElements elements;
 
   TreeBackedTypes(Types javacTypes) {
     this.javacTypes = javacTypes;
+  }
+
+  /* package */ void setElements(TreeBackedElements elements) {
+    this.elements = elements;
+  }
+
+  private TreeBackedElements getElements() {
+    return Preconditions.checkNotNull(elements);
   }
 
   @Override
@@ -277,6 +288,69 @@ class TreeBackedTypes implements Types {
     }
 
     return javacTypes.getDeclaredType(containing, typeElem, typeArgs);
+  }
+
+  @Nullable
+  public TypeMirror getCanonicalType(@Nullable TypeMirror typeMirror) {
+    if (typeMirror == null) {
+      return null;
+    }
+
+    switch (typeMirror.getKind()) {
+      case ARRAY: {
+        ArrayType arrayType = (ArrayType) typeMirror;
+        return getArrayType(getCanonicalType(arrayType.getComponentType()));
+      }
+      case TYPEVAR: {
+        TypeVariable typeVar = (TypeVariable) typeMirror;
+        return getElements().getCanonicalElement(typeVar.asElement()).asType();
+      }
+      case WILDCARD: {
+        WildcardType wildcardType = (WildcardType) typeMirror;
+        return getWildcardType(
+            getCanonicalType(wildcardType.getExtendsBound()),
+            getCanonicalType(wildcardType.getSuperBound()));
+      }
+      case DECLARED: {
+        DeclaredType declaredType = (DeclaredType) typeMirror;
+
+        TypeMirror enclosingType = declaredType.getEnclosingType();
+        DeclaredType canonicalEnclosingType = enclosingType.getKind() != TypeKind.NONE
+            ? (DeclaredType) getCanonicalType(enclosingType)
+            : null;
+        TypeElement canonicalElement =
+            (TypeElement) getElements().getCanonicalElement(declaredType.asElement());
+        TypeMirror[] canonicalTypeArgs = declaredType.getTypeArguments().stream()
+            .map(this::getCanonicalType)
+            .toArray(TypeMirror[]::new);
+
+        return getDeclaredType(
+            canonicalEnclosingType,
+            canonicalElement,
+            canonicalTypeArgs);
+      }
+      case PACKAGE:
+      case ERROR:
+        throw new UnsupportedOperationException("ErrorType NYI");
+      case BOOLEAN:
+      case BYTE:
+      case SHORT:
+      case INT:
+      case LONG:
+      case CHAR:
+      case FLOAT:
+      case DOUBLE:
+      case VOID:
+      case NONE:
+      case NULL:
+        return typeMirror;
+      case EXECUTABLE:
+      case OTHER:
+      case UNION:
+      case INTERSECTION:
+      default:
+        throw new UnsupportedOperationException();
+    }
   }
 
   private boolean isArtificialElement(Element element) {
