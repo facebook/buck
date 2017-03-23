@@ -127,6 +127,7 @@ public class AndroidLibraryDescription
                     .addAll(queriedDeps)
                     .addAll(resolver.getAllRules(args.exportedDeps))
                     .build())),
+        javacOptions.getJavac(),
         javacOptions,
         DependencyMode.FIRST_ORDER,
         /* forceFinalResourceIds */ false,

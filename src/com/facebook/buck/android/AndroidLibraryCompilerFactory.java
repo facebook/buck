@@ -27,9 +27,6 @@ import com.facebook.buck.android.AndroidLibraryDescription.JvmLanguage;
  */
 public interface AndroidLibraryCompilerFactory {
 
-  AndroidLibraryCompilerFactory JAVA_ONLY_COMPILER_FACTORY =
-      language -> new JavaAndroidLibraryCompiler();
-
   AndroidLibraryCompiler getCompiler(JvmLanguage language);
 }
 

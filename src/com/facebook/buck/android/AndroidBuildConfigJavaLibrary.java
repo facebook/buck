@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
@@ -48,6 +49,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
       BuildRuleParams params,
       SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
+      Javac javac,
       JavacOptions javacOptions,
       boolean suggestDependencies,
       ImmutableSortedSet<SourcePath> abiInputs,
@@ -66,7 +68,10 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         abiInputs,
         /* trackClassUsage */ javacOptions.trackClassUsage(),
         /* additionalClasspathEntries */ ImmutableSet.of(),
-        new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
+        new JavacToJarStepFactory(
+            javac,
+            javacOptions,
+            JavacOptionsAmender.IDENTITY),
         suggestDependencies,
         /* resourcesRoot */ Optional.empty(),
         /* manifest file */ Optional.empty(),

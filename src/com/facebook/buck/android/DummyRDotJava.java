@@ -20,6 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CalculateAbiStep;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
+import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
@@ -61,6 +62,8 @@ public class DummyRDotJava extends AbstractBuildRule
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final Path outputJar;
   @AddToRuleKey
+  private final Javac javac;
+  @AddToRuleKey
   private final JavacOptions javacOptions;
   @AddToRuleKey
   private final boolean forceFinalResourceIds;
@@ -78,6 +81,7 @@ public class DummyRDotJava extends AbstractBuildRule
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       Set<HasAndroidResourceDeps> androidResourceDeps,
+      Javac javac,
       JavacOptions javacOptions,
       boolean forceFinalResourceIds,
       Optional<String> unionPackage,
@@ -87,6 +91,7 @@ public class DummyRDotJava extends AbstractBuildRule
         params,
         ruleFinder,
         androidResourceDeps,
+        javac,
         javacOptions,
         forceFinalResourceIds,
         unionPackage,
@@ -99,6 +104,7 @@ public class DummyRDotJava extends AbstractBuildRule
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       Set<HasAndroidResourceDeps> androidResourceDeps,
+      Javac javac,
       JavacOptions javacOptions,
       boolean forceFinalResourceIds,
       Optional<String> unionPackage,
@@ -113,6 +119,7 @@ public class DummyRDotJava extends AbstractBuildRule
         .collect(MoreCollectors.toImmutableList());
     this.useOldStyleableFormat = useOldStyleableFormat;
     this.outputJar = getOutputJarPath(getBuildTarget(), getProjectFilesystem());
+    this.javac = javac;
     this.javacOptions = javacOptions.withAnnotationProcessingParams(
         javacOptions.getAnnotationProcessingParams().withoutProcessOnly());
     this.forceFinalResourceIds = forceFinalResourceIds;
@@ -210,6 +217,7 @@ public class DummyRDotJava extends AbstractBuildRule
             javaSourceFilePaths,
             pathToSrcsList,
             rDotJavaClassesFolder,
+            javac,
             javacOptions,
             getBuildTarget(),
             context.getSourcePathResolver(),

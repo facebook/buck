@@ -140,6 +140,7 @@ public class AndroidInstrumentationApkDescription
         resourcesToExclude,
         /* skipCrunchPngs */ false,
         args.includesVectorDrawables.orElse(false),
+        javacOptions.getJavac(),
         javacOptions,
         suggestDependencies,
         EnumSet.noneOf(ExopackageMode.class),

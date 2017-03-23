@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -42,6 +43,7 @@ public class AndroidLibraryGraphEnhancer {
 
   private final BuildTarget dummyRDotJavaBuildTarget;
   private final BuildRuleParams originalBuildRuleParams;
+  private final Javac javac;
   private final JavacOptions javacOptions;
   private final DependencyMode resourceDependencyMode;
   private final boolean forceFinalResourceIds;
@@ -52,6 +54,7 @@ public class AndroidLibraryGraphEnhancer {
   public AndroidLibraryGraphEnhancer(
       BuildTarget buildTarget,
       BuildRuleParams buildRuleParams,
+      Javac javac,
       JavacOptions javacOptions,
       DependencyMode resourceDependencyMode,
       boolean forceFinalResourceIds,
@@ -60,6 +63,7 @@ public class AndroidLibraryGraphEnhancer {
       boolean useOldStyleableFormat) {
     this.dummyRDotJavaBuildTarget = getDummyRDotJavaTarget(buildTarget);
     this.originalBuildRuleParams = buildRuleParams;
+    this.javac = javac;
     // Override javacoptions because DummyRDotJava doesn't require annotation processing.
     this.javacOptions = JavacOptions.builder(javacOptions)
         .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
@@ -124,6 +128,7 @@ public class AndroidLibraryGraphEnhancer {
         dummyRDotJavaParams,
         ruleFinder,
         androidResourceDeps,
+        javac,
         javacOptions,
         forceFinalResourceIds,
         resourceUnionPackage,

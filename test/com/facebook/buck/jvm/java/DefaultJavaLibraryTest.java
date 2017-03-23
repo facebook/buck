@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC;
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
@@ -1161,6 +1162,7 @@ public class DefaultJavaLibraryTest {
         : DEFAULT_JAVAC_OPTIONS;
 
     JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
+        DEFAULT_JAVAC,
         javacOptions,
         JavacOptionsAmender.IDENTITY);
     DefaultJavaLibrary defaultJavaLibrary = DefaultJavaLibrary
@@ -1446,6 +1448,7 @@ public class DefaultJavaLibraryTest {
           .build();
 
       JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
+          DEFAULT_JAVAC,
           options,
           JavacOptionsAmender.IDENTITY);
       DefaultJavaLibrary javaLibrary = DefaultJavaLibrary

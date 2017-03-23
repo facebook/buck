@@ -192,7 +192,10 @@ public class AndroidPrebuiltAarDescription
         /* prebuiltJar */ prebuiltJar,
         /* unzipRule */ unzipAar,
         /* javacOptions */ javacOptions,
-        new JavacToJarStepFactory(javacOptions, new BootClasspathAppender()),
+        new JavacToJarStepFactory(
+            javacOptions.getJavac(),
+            javacOptions,
+            new BootClasspathAppender()),
         suggestDependencies,
         /* exportedDeps */ javaDeps,
         JavaLibraryRules.getAbiInputs(buildRuleResolver, androidLibraryParams.getDeps()));

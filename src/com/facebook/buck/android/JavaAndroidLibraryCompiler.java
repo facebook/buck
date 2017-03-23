@@ -29,6 +29,9 @@ public class JavaAndroidLibraryCompiler extends AndroidLibraryCompiler {
       JavacOptions javacOptions,
       BuildRuleResolver resolver) {
 
-    return new JavacToJarStepFactory(javacOptions, new BootClasspathAppender());
+    return new JavacToJarStepFactory(
+        javacOptions.getJavac(),
+        javacOptions,
+        new BootClasspathAppender());
   }
 }

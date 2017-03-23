@@ -73,6 +73,7 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
       "com/facebook/buck/jvm/java/FatJarMain.java";
 
   private final SourcePathRuleFinder ruleFinder;
+  private final Javac javac;
   private final JavacOptions javacOptions;
   @AddToRuleKey
   private final SourcePath innerJar;
@@ -85,12 +86,14 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
   public JarFattener(
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
+      Javac javac,
       JavacOptions javacOptions,
       SourcePath innerJar,
       ImmutableMap<String, SourcePath> nativeLibraries,
       JavaRuntimeLauncher javaRuntimeLauncher) {
     super(params);
     this.ruleFinder = ruleFinder;
+    this.javac = javac;
     this.javacOptions = javacOptions;
     this.innerJar = innerJar;
     this.nativeLibraries = nativeLibraries;
@@ -170,7 +173,10 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
     steps.add(new MkdirStep(getProjectFilesystem(), pathToSrcsList.getParent()));
 
     CompileToJarStepFactory compileStepFactory =
-        new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY);
+        new JavacToJarStepFactory(
+            javac,
+            javacOptions,
+            JavacOptionsAmender.IDENTITY);
 
     compileStepFactory.createCompileStep(
         context,

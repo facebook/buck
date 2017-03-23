@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -56,6 +57,7 @@ public class AndroidLibraryGraphEnhancerTest {
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
+        DEFAULT_JAVAC,
         DEFAULT_JAVAC_OPTIONS,
         DependencyMode.FIRST_ORDER,
         /* forceFinalResourceIds */ false,
@@ -74,6 +76,7 @@ public class AndroidLibraryGraphEnhancerTest {
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
+        DEFAULT_JAVAC,
         DEFAULT_JAVAC_OPTIONS,
         DependencyMode.FIRST_ORDER,
         /* forceFinalResourceIds */ false,
@@ -119,6 +122,7 @@ public class AndroidLibraryGraphEnhancerTest {
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
         buildRuleParams,
+        DEFAULT_JAVAC,
         DEFAULT_JAVAC_OPTIONS,
         DependencyMode.FIRST_ORDER,
         /* forceFinalResourceIds */ false,
@@ -174,6 +178,7 @@ public class AndroidLibraryGraphEnhancerTest {
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
         buildRuleParams,
+        DEFAULT_JAVAC,
         JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
             .setAnnotationProcessingParams(
                 new AnnotationProcessingParams.Builder()
@@ -217,6 +222,7 @@ public class AndroidLibraryGraphEnhancerTest {
         new AndroidLibraryGraphEnhancer(
             target,
             new FakeBuildRuleParamsBuilder(target).build(),
+            options.getJavac(),
             options,
             DependencyMode.FIRST_ORDER,
             /* forceFinalResourceIds */ false,

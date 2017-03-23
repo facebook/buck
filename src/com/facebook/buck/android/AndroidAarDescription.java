@@ -220,6 +220,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
               args.buildConfigValues,
               Optional.empty(),
               resolver,
+              javacOptions.getJavac(),
               javacOptions,
               suggestDependencies,
               packageableCollection);

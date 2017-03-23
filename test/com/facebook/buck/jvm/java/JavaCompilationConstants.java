@@ -34,6 +34,8 @@ public class JavaCompilationConstants {
           .setTargetLevel("6")
           .build();
 
+  public static final Javac DEFAULT_JAVAC = new JdkProvidedInMemoryJavac();
+
   private JavaCompilationConstants() {
     // Thou shalt not instantiate utility classes.
   }

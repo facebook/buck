@@ -40,10 +40,15 @@ import java.util.regex.Pattern;
 public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
   private static final Logger LOG = Logger.get(JavacToJarStepFactory.class);
 
+  private final Javac javac;
   private final JavacOptions javacOptions;
   private final JavacOptionsAmender amender;
 
-  public JavacToJarStepFactory(JavacOptions javacOptions, JavacOptionsAmender amender) {
+  public JavacToJarStepFactory(
+      Javac javac,
+      JavacOptions javacOptions,
+      JavacOptionsAmender amender) {
+    this.javac = javac;
     this.javacOptions = javacOptions;
     this.amender = amender;
   }
@@ -78,7 +83,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
             sourceFilePaths,
             pathToSrcsList,
             declaredClasspathEntries,
-            buildTimeOptions.getJavac(),
+            javac,
             buildTimeOptions,
             invokingRule,
             suggestBuildRules,
@@ -127,7 +132,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
     boolean isSpoolingToJarEnabled =
         postprocessClassesCommands.isEmpty() &&
             javacOptions.getSpoolMode() == AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR &&
-            javacOptions.getJavac() instanceof Jsr199Javac;
+            javac instanceof Jsr199Javac;
 
     LOG.info("Target: %s SpoolMode: %s Expected SpoolMode: %s Postprocessing steps: %s",
         invokingRule.getBaseName(),
@@ -148,6 +153,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
               ruleFinder,
               filesystem,
               declaredClasspathEntries,
+              javac,
               buildTimeOptions,
               outputDirectory,
               workingDirectory,
@@ -198,6 +204,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("javac", javac);
     sink.setReflectively("javacOptions", javacOptions);
     sink.setReflectively("amender", amender);
   }

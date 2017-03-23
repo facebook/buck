@@ -244,6 +244,7 @@ public class AndroidBinaryDescription implements
           /* resourcesToExclude */ ImmutableSet.of(),
           args.skipCrunchPngs,
           args.includesVectorDrawables,
+          javacOptions.getJavac(),
           javacOptions,
           suggestDependencies,
           exopackageModes,

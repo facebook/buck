@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.ClasspathChecker;
+import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacStep;
 import com.facebook.buck.jvm.java.NoOpClassUsageFileWriter;
@@ -48,6 +49,7 @@ public class RDotJava {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Path outputDirectory,
+      Javac javac,
       JavacOptions javacOptions,
       BuildTarget buildTarget,
       SourcePathResolver resolver,
@@ -61,7 +63,7 @@ public class RDotJava {
         javaSourceFilePaths,
         pathToSrcsList,
         /* declared classpath */ ImmutableSortedSet.of(),
-        javacOptions.getJavac(),
+        javac,
         JavacOptions.builder(javacOptions)
             .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
             .build(),

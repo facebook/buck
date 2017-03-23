@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.JavaLibraryRules;
+import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -86,6 +87,7 @@ public class AndroidBuildConfigDescription
         args.values,
         args.valuesFile,
         /* useConstantExpressions */ false,
+        androidJavacOptions.getJavac(),
         androidJavacOptions,
         suggestDependencies,
         resolver);
@@ -105,6 +107,7 @@ public class AndroidBuildConfigDescription
       BuildConfigFields values,
       Optional<SourcePath> valuesFile,
       boolean useConstantExpressions,
+      Javac javac,
       JavacOptions javacOptions,
       boolean suggestDependencies,
       BuildRuleResolver ruleResolver) throws NoSuchBuildTargetException {
@@ -159,6 +162,7 @@ public class AndroidBuildConfigDescription
         javaLibraryParams,
         pathResolver,
         ruleFinder,
+        javac,
         javacOptions,
         suggestDependencies,
         JavaLibraryRules.getAbiInputs(ruleResolver, javaLibraryParams.getDeps()),

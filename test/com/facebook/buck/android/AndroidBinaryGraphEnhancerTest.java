@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC;
 import static org.easymock.EasyMock.createStrictMock;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
@@ -143,6 +144,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* resourcesToExclude */ ImmutableSet.of(),
         /* skipCrunchPngs */ false,
         /* includesVectorDrawables */ false,
+        DEFAULT_JAVAC,
         ANDROID_JAVAC_OPTIONS,
         false,
         EnumSet.noneOf(ExopackageMode.class),
@@ -268,6 +270,7 @@ public class AndroidBinaryGraphEnhancerTest {
             /* values */ BuildConfigFields.empty(),
             /* valuesFile */ Optional.empty(),
             /* useConstantExpressions */ false,
+            DEFAULT_JAVAC,
             ANDROID_JAVAC_OPTIONS,
             false,
             ruleResolver);
@@ -301,6 +304,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* resourcesToExclude */ ImmutableSet.of(),
         /* skipCrunchPngs */ false,
         /* includesVectorDrawables */ false,
+        DEFAULT_JAVAC,
         ANDROID_JAVAC_OPTIONS,
         false,
         EnumSet.of(ExopackageMode.SECONDARY_DEX),
@@ -451,6 +455,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* resourcesToExclude */ ImmutableSet.of(),
         /* skipCrunchPngs */ false,
         /* includesVectorDrawables */ false,
+        DEFAULT_JAVAC,
         ANDROID_JAVAC_OPTIONS,
         false,
         EnumSet.of(ExopackageMode.SECONDARY_DEX),
@@ -513,6 +518,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* resourcesToExclude */ ImmutableSet.of(),
         /* skipCrunchPngs */ false,
         /* includesVectorDrawables */ false,
+        DEFAULT_JAVAC,
         ANDROID_JAVAC_OPTIONS,
         false,
         EnumSet.of(ExopackageMode.SECONDARY_DEX),
@@ -602,6 +608,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* resourcesToExclude */ ImmutableSet.of(),
         /* skipCrunchPngs */ false,
         /* includesVectorDrawables */ false,
+        DEFAULT_JAVAC,
         ANDROID_JAVAC_OPTIONS,
         false,
         EnumSet.of(ExopackageMode.SECONDARY_DEX),

@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.MorePaths;
@@ -85,6 +86,7 @@ public class DummyRDotJavaTest {
         ImmutableSet.of(
             (HasAndroidResourceDeps) resourceRule1,
             (HasAndroidResourceDeps) resourceRule2),
+        DEFAULT_JAVAC,
         ANDROID_JAVAC_OPTIONS,
         /* forceFinalResourceIds */ false,
         Optional.empty(),
@@ -138,6 +140,7 @@ public class DummyRDotJavaTest {
             javaSourceFiles,
             BuildTargets.getGenPath(filesystem, dummyRDotJava.getBuildTarget(), "__%s__srcs"),
             Paths.get(rDotJavaBinFolder),
+            DEFAULT_JAVAC,
             ANDROID_JAVAC_OPTIONS,
         /* buildTarget */ null,
             pathResolver,
@@ -168,6 +171,7 @@ public class DummyRDotJavaTest {
             .build(),
         ruleFinder,
         ImmutableSet.of(),
+        DEFAULT_JAVAC,
         ANDROID_JAVAC_OPTIONS,
         /* forceFinalResourceIds */ false,
         Optional.empty(),

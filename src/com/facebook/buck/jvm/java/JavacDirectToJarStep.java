@@ -44,6 +44,7 @@ public class JavacDirectToJarStep implements Step {
   private final ProjectFilesystem filesystem;
   private final ImmutableSortedSet<Path> declaredClasspathEntries;
   private final Path outputDirectory;
+  private final Javac javac;
   private final JavacOptions buildTimeOptions;
   private final Optional<Path> workingDirectory;
   private final Path pathToSrcsList;
@@ -61,6 +62,7 @@ public class JavacDirectToJarStep implements Step {
       SourcePathRuleFinder ruleFinder,
       ProjectFilesystem filesystem,
       ImmutableSortedSet<Path> declaredClasspathEntries,
+      Javac javac,
       JavacOptions buildTimeOptions,
       Path outputDirectory,
       Optional<Path> workingDirectory,
@@ -77,6 +79,7 @@ public class JavacDirectToJarStep implements Step {
     this.ruleFinder = ruleFinder;
     this.filesystem = filesystem;
     this.declaredClasspathEntries = declaredClasspathEntries;
+    this.javac = javac;
     this.buildTimeOptions = buildTimeOptions;
     this.outputDirectory = outputDirectory;
     this.workingDirectory = workingDirectory;
@@ -109,7 +112,7 @@ public class JavacDirectToJarStep implements Step {
         outputDirectory,
         context,
         declaredClasspathEntries);
-    String javacDescription = buildTimeOptions.getJavac().getDescription(
+    String javacDescription = javac.getDescription(
         javacStepOptions,
         sourceFilePaths,
         pathToSrcsList);
@@ -145,7 +148,7 @@ public class JavacDirectToJarStep implements Step {
         sourceFilePaths,
         pathToSrcsList,
         declaredClasspathEntries,
-        buildTimeOptions.getJavac(),
+        javac,
         buildTimeOptions,
         invokingRule,
         suggestBuildRules,

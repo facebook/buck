@@ -26,6 +26,7 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
@@ -93,6 +94,7 @@ public class AndroidBinaryGraphEnhancer {
   private final DexSplitMode dexSplitMode;
   private final ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex;
   private final ImmutableSet<BuildTarget> resourcesToExclude;
+  private final Javac javac;
   private final JavacOptions javacOptions;
   private final boolean suggestDependencies;
   private final EnumSet<ExopackageMode> exopackageModes;
@@ -124,6 +126,7 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableSet<BuildTarget> resourcesToExclude,
       boolean skipCrunchPngs,
       boolean includesVectorDrawables,
+      Javac javac,
       JavacOptions javacOptions,
       boolean suggestDependencies,
       EnumSet<ExopackageMode> exopackageModes,
@@ -153,6 +156,7 @@ public class AndroidBinaryGraphEnhancer {
     this.dexSplitMode = dexSplitMode;
     this.buildTargetsToExcludeFromDex = buildTargetsToExcludeFromDex;
     this.resourcesToExclude = resourcesToExclude;
+    this.javac = javac;
     this.javacOptions = javacOptions;
     this.suggestDependencies = suggestDependencies;
     this.exopackageModes = exopackageModes;
@@ -238,6 +242,7 @@ public class AndroidBinaryGraphEnhancer {
               Suppliers.ofInstance(ImmutableSortedSet.of(generateCodeForMergedLibraryMap)),
               Suppliers.ofInstance(ImmutableSortedSet.of()));
       JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
+          javac,
           // Kind of a hack: override language level to 7 to allow string switch.
           // This can be removed once no one who uses this feature sets the level
           // to 6 in their .buckconfig.
@@ -267,6 +272,7 @@ public class AndroidBinaryGraphEnhancer {
           buildConfigValues,
           buildConfigValuesFile,
           ruleResolver,
+          javac,
           javacOptions,
           suggestDependencies,
           packageableCollection);
@@ -311,6 +317,7 @@ public class AndroidBinaryGraphEnhancer {
             Suppliers.ofInstance(ImmutableSortedSet.of(trimUberRDotJava)),
             Suppliers.ofInstance(ImmutableSortedSet.of()));
     JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
+        javac,
         javacOptions.withSourceLevel("7").withTargetLevel("7"),
         JavacOptionsAmender.IDENTITY);
     JavaLibrary compileUberRDotJava = DefaultJavaLibrary
@@ -403,6 +410,7 @@ public class AndroidBinaryGraphEnhancer {
       BuildConfigFields buildConfigValues,
       Optional<SourcePath> buildConfigValuesFile,
       BuildRuleResolver ruleResolver,
+      Javac javac,
       JavacOptions javacOptions,
       boolean suggestDependencies,
       AndroidPackageableCollection packageableCollection) throws NoSuchBuildTargetException {
@@ -448,6 +456,7 @@ public class AndroidBinaryGraphEnhancer {
           totalBuildConfigValues,
           buildConfigValuesFile,
           /* useConstantExpressions */ true,
+          javac,
           javacOptions,
           suggestDependencies,
           ruleResolver);

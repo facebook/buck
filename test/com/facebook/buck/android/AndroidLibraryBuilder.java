@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.android.AndroidLibraryCompilerFactory.JAVA_ONLY_COMPILER_FACTORY;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
 
 import com.facebook.buck.model.BuildTarget;
@@ -31,6 +30,9 @@ import java.util.Optional;
 
 public class AndroidLibraryBuilder extends
     AbstractNodeBuilder<AndroidLibraryDescription.Arg, AndroidLibraryDescription, AndroidLibrary> {
+
+  private static final AndroidLibraryCompilerFactory JAVA_ONLY_COMPILER_FACTORY =
+      language -> new JavaAndroidLibraryCompiler();
 
   private AndroidLibraryBuilder(BuildTarget target) {
     super(
