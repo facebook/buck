@@ -29,7 +29,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
-import java.net.Socket;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -37,26 +36,26 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-class WatchmanSocketClient implements WatchmanClient, AutoCloseable {
+class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
 
-  private static final Logger LOG = Logger.get(WatchmanSocketClient.class);
+  private static final Logger LOG = Logger.get(WatchmanTransportClient.class);
   private static final long POLL_TIME_NANOS = TimeUnit.SECONDS.toNanos(1);
 
   private final ListeningExecutorService listeningExecutorService;
   private final Clock clock;
-  private final Socket watchmanSocket;
+  private final Transport transport;
   private final Console console;
   private final BserSerializer bserSerializer;
   private final BserDeserializer bserDeserializer;
 
-  public WatchmanSocketClient(
+  public WatchmanTransportClient(
       Console console,
       Clock clock,
-      Socket watchmanSocket) {
+      Transport transport) {
     this.listeningExecutorService = listeningDecorator(newSingleThreadExecutor("Watchman"));
     this.console = console;
     this.clock = clock;
-    this.watchmanSocket = watchmanSocket;
+    this.transport = transport;
     this.bserSerializer = new BserSerializer();
     this.bserDeserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
   }
@@ -98,8 +97,8 @@ class WatchmanSocketClient implements WatchmanClient, AutoCloseable {
 
   @Override
   public void close() throws IOException {
-    LOG.debug("Closing Watchman socket.");
-    watchmanSocket.close();
+    LOG.debug("Closing Watchman transport.");
+    transport.close();
     listeningExecutorService.shutdown();
   }
 
@@ -138,8 +137,8 @@ class WatchmanSocketClient implements WatchmanClient, AutoCloseable {
   private Optional<Map<String, Object>> sendWatchmanQuery(List<Object> query)
       throws IOException {
     LOG.debug("Sending query: %s", query);
-    bserSerializer.serializeToStream(query, watchmanSocket.getOutputStream());
-    Object response = bserDeserializer.deserializeBserValue(watchmanSocket.getInputStream());
+    bserSerializer.serializeToStream(query, transport.getOutputStream());
+    Object response = bserDeserializer.deserializeBserValue(transport.getInputStream());
     LOG.verbose("Got response: %s", response);
     Map<String, Object> responseMap = (Map<String, Object>) response;
     if (responseMap == null) {

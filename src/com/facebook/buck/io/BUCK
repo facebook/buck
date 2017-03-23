@@ -53,13 +53,26 @@ java_library(
     ],
 )
 
+TRANSPORT_SRCS = [
+    "Transport.java",
+]
+
+java_library(
+    name = "transport",
+    srcs = TRANSPORT_SRCS,
+    autodeps = True,
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
 WATCHMAN_SRCS = [
     "AbstractWatchmanQuery.java",
     "Watchman.java",
     "WatchmanClient.java",
     "WatchmanDiagnosticEvent.java",
     "WatchmanDiagnosticEventListener.java",
-    "WatchmanSocketClient.java",
+    "WatchmanTransportClient.java",
 ]
 
 java_immutables_library(
@@ -117,7 +130,8 @@ java_immutables_library(
             MORE_PATHS_SRCS +
             PROJECT_FILESYSTEM_DELEGATE_FACTORY_SRCS +
             PROJECT_FILESYSTEM_DELEGATE_SRCS +
-            WATCHMAN_SRCS
+            WATCHMAN_SRCS +
+            TRANSPORT_SRCS
         ),
     ),
     autodeps = True,

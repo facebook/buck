@@ -2,6 +2,7 @@
   "unixsocket" : {
     "deps" : [ ],
     "exported_deps" : [
+      "//src/com/facebook/buck/io:transport",
       "//third-party/java/jna:jna",
       "//third-party/java/jsr:jsr305"
     ]

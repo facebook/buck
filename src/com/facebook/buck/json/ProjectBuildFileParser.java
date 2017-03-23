@@ -279,10 +279,10 @@ public class ProjectBuildFileParser implements AutoCloseable {
       argBuilder.add("--watchman_use_glob_generator");
     }
 
-    if (options.getWatchman().getSocketPath().isPresent()) {
+    if (options.getWatchman().getTransportPath().isPresent()) {
       argBuilder.add(
           "--watchman_socket_path",
-          options.getWatchman().getSocketPath().get().toAbsolutePath().toString());
+          options.getWatchman().getTransportPath().get().toAbsolutePath().toString());
     }
 
     if (options.getWatchmanQueryTimeoutMs().isPresent()) {

@@ -98,6 +98,7 @@
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/event:interfaces",
+      "//src/com/facebook/buck/io:transport",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/timing:timing",

@@ -34,6 +34,7 @@
 
 package com.facebook.buck.io.unixsocket;
 
+import com.facebook.buck.io.Transport;
 import com.sun.jna.LastErrorException;
 
 import java.io.IOException;
@@ -57,7 +58,7 @@ import java.net.Socket;
  * Caller is responsible for closing the streams returned from
  * {@link #getInputStream()} and {@link #getOutputStream()}.
  */
-public class UnixDomainSocket extends Socket {
+public class UnixDomainSocket extends Socket implements Transport {
   private final ReferenceCountedFileDescriptor fd;
   private final InputStream is;
   private final OutputStream os;

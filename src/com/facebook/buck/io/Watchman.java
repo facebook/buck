@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableSet;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.Socket;
 import java.nio.channels.Channels;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -88,7 +87,7 @@ public class Watchman implements AutoCloseable {
 
   private final ImmutableMap<Path, ProjectWatch> projectWatches;
   private final ImmutableSet<Capability> capabilities;
-  private final Optional<Path> socketPath;
+  private final Optional<Path> transportPath;
   private final Optional<WatchmanClient> watchmanClient;
   private final ImmutableMap<Path, String> clockIds;
 
@@ -101,7 +100,7 @@ public class Watchman implements AutoCloseable {
       throws InterruptedException {
     return build(
         new ListeningProcessExecutor(),
-        localSocketWatchmanConnector(
+        localWatchmanConnector(
             console,
             clock),
         projectWatchList,
@@ -148,10 +147,11 @@ public class Watchman implements AutoCloseable {
       if (rawSockname == null) {
         return NULL_WATCHMAN;
       }
-      Path socketPath = Paths.get(rawSockname);
+      Path transportPath = Paths.get(rawSockname);
 
-      LOG.info("Connecting to Watchman version %s at %s", result.get().get("version"), socketPath);
-      watchmanClient = watchmanConnector.apply(socketPath);
+      LOG.info("Connecting to Watchman version %s at %s",
+          result.get().get("version"), transportPath);
+      watchmanClient = watchmanConnector.apply(transportPath);
       if (!watchmanClient.isPresent()) {
         LOG.warn("Could not connect to Watchman, disabling.");
         return NULL_WATCHMAN;
@@ -217,7 +217,7 @@ public class Watchman implements AutoCloseable {
           projectWatchesBuilder.build(),
           capabilities,
           clockIdsBuilder.build(),
-          Optional.of(socketPath),
+          Optional.of(transportPath),
           watchmanClient);
     } catch (ClassCastException | HumanReadableException | IOException e) {
       LOG.warn(e, "Unable to determine the version of watchman. Going without.");
@@ -273,7 +273,7 @@ public class Watchman implements AutoCloseable {
    * Executes the underlying watchman query: {@code watchman watch-project <rootPath>}
    *
    * @param watchmanClient to use for the query
-   * @param watchRoot path to the root of the watch-project
+   * @param rootPath path to the root of the watch-project
    * @param clock used to compute timeouts and statistics
    * @param timeoutNanos for the watchman query
    * @return If successful, a {@link ProjectWatch} instance containing
@@ -449,27 +449,27 @@ public class Watchman implements AutoCloseable {
     return Optional.of((Map<String, Object>) response);
   }
 
-  private static Function<Path, Optional<WatchmanClient>> localSocketWatchmanConnector(
+  private static Function<Path, Optional<WatchmanClient>> localWatchmanConnector(
       final Console console,
       final Clock clock) {
     return new Function<Path, Optional<WatchmanClient>>() {
       @Override
-      public Optional<WatchmanClient> apply(Path socketPath) {
+      public Optional<WatchmanClient> apply(Path transportPath) {
         try {
           return Optional.of(
-              new WatchmanSocketClient(
+              new WatchmanTransportClient(
                   console,
                   clock,
-                  createLocalWatchmanSocket(socketPath)));
+                  createLocalWatchmanTransport(transportPath)));
         } catch (IOException e) {
-          LOG.warn(e, "Could not connect to Watchman at path %s", socketPath);
+          LOG.warn(e, "Could not connect to Watchman at path %s", transportPath);
           return Optional.empty();
         }
       }
 
-      private Socket createLocalWatchmanSocket(Path socketPath) throws IOException {
+      private Transport createLocalWatchmanTransport(Path transportPath) throws IOException {
         // TODO(bhamiltoncx): Support Windows named pipes here.
-        return UnixDomainSocket.createSocketWithPath(socketPath);
+        return UnixDomainSocket.createSocketWithPath(transportPath);
       }
     };
   }
@@ -481,12 +481,12 @@ public class Watchman implements AutoCloseable {
       ImmutableMap<Path, ProjectWatch> projectWatches,
       ImmutableSet<Capability> capabilities,
       ImmutableMap<Path, String> clockIds,
-      Optional<Path> socketPath,
+      Optional<Path> transportPath,
       Optional<WatchmanClient> watchmanClient) {
     this.projectWatches = projectWatches;
     this.capabilities = capabilities;
     this.clockIds = clockIds;
-    this.socketPath = socketPath;
+    this.transportPath = transportPath;
     this.watchmanClient = watchmanClient;
   }
 
@@ -506,8 +506,8 @@ public class Watchman implements AutoCloseable {
     return capabilities.contains(Capability.WILDMATCH_GLOB);
   }
 
-  public Optional<Path> getSocketPath() {
-    return socketPath;
+  public Optional<Path> getTransportPath() {
+    return transportPath;
   }
 
   public Optional<WatchmanClient> getWatchmanClient() {
