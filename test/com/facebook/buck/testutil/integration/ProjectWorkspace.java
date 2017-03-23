@@ -52,6 +52,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -311,7 +312,8 @@ public class ProjectWorkspace {
     return runBuckCommand(totalArgs);
   }
 
-  public Map<String, Path> buildMultipleAndReturnOutputs(String... args) throws IOException {
+  private ImmutableMap<String, String> buildMultipleAndReturnStringOutputs(String... args)
+      throws IOException {
     // Add in `--show-output` to the build, so we can parse the output paths after the fact.
     ImmutableList<String> buildArgs =
         ImmutableList.<String>builder()
@@ -334,18 +336,55 @@ public class ProjectWorkspace {
     lines = lines.subList(1, lines.size());
 
     Splitter lineSplitter = Splitter.on(' ').trimResults();
-    ImmutableMap.Builder<String, Path> builder = ImmutableMap.builder();
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
     for (String line : lines) {
       List<String> fields = lineSplitter.splitToList(line);
       assertThat(fields, Matchers.hasSize(2));
-      builder.put(fields.get(0), getPath(fields.get(1)));
+      builder.put(fields.get(0), fields.get(1));
     }
 
     return builder.build();
   }
 
+  public ImmutableMap<String, Path> buildMultipleAndReturnOutputs(String... args)
+        throws IOException {
+    return buildMultipleAndReturnStringOutputs(args)
+      .entrySet()
+      .stream()
+      .collect(
+          MoreCollectors.toImmutableMap(
+              entry -> entry.getKey(),
+              entry -> getPath(entry.getValue())));
+  }
+
   public Path buildAndReturnOutput(String... args) throws IOException {
-    Map<String, Path> outputs = buildMultipleAndReturnOutputs(args);
+    ImmutableMap<String, Path> outputs = buildMultipleAndReturnOutputs(args);
+
+    // Verify we only have a single output.
+    assertThat(
+        String.format(
+            "expected only a single build target in command `%s`: %s",
+            ImmutableList.copyOf(args),
+            outputs),
+        outputs.entrySet(),
+        Matchers.hasSize(1));
+
+    return outputs.values().iterator().next();
+  }
+
+  public ImmutableMap<String, Path> buildMultipleAndReturnRelativeOutputs(String... args)
+      throws IOException {
+    return buildMultipleAndReturnStringOutputs(args)
+      .entrySet()
+      .stream()
+      .collect(
+          MoreCollectors.toImmutableMap(
+              entry -> entry.getKey(),
+              entry -> Paths.get(entry.getValue())));
+  }
+
+  public Path buildAndReturnRelativeOutput(String... args) throws IOException {
+    ImmutableMap<String, Path> outputs = buildMultipleAndReturnRelativeOutputs(args);
 
     // Verify we only have a single output.
     assertThat(

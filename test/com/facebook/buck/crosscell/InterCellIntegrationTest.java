@@ -102,6 +102,10 @@ public class InterCellIntegrationTest {
     String actual = new String(Files.readAllBytes(path), UTF_8);
 
     assertEquals(expected, actual);
+
+    Path secondaryPath = primary.buildAndReturnRelativeOutput("secondary//:hello");
+    actual = new String(Files.readAllBytes(secondary.resolve(secondaryPath)), UTF_8);
+    assertEquals(expected, actual);
   }
 
   @Test

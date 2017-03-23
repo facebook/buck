@@ -405,7 +405,7 @@ public class AndroidBinaryIntegrationTest {
         ".buckconfig",
         "#cpu_abis",
         "cpu_abis = x86");
-    Map<String, Path> paths = workspace.buildMultipleAndReturnOutputs(
+    ImmutableMap<String, Path> paths = workspace.buildMultipleAndReturnOutputs(
         "//apps/sample:app_with_merged_libs",
         "//apps/sample:app_with_alternate_merge_glue",
         "//apps/sample:app_with_merged_libs_modular"
