@@ -40,6 +40,8 @@ import java.util.Optional;
 public class CachingBuildEngineFactory {
 
   private CachingBuildEngine.BuildMode buildMode = CachingBuildEngine.BuildMode.SHALLOW;
+  private CachingBuildEngine.MetadataStorage metadataStorage =
+      CachingBuildEngine.MetadataStorage.FILESYSTEM;
   private CachingBuildEngine.DepFiles depFiles = CachingBuildEngine.DepFiles.ENABLED;
   private long maxDepFileCacheEntries = 256L;
   private Optional<Long> artifactCacheSizeLimit = Optional.empty();
@@ -115,6 +117,7 @@ public class CachingBuildEngineFactory {
           executorService,
           new DefaultStepRunner(),
           buildMode,
+          metadataStorage,
           depFiles,
           maxDepFileCacheEntries,
           artifactCacheSizeLimit,
@@ -131,6 +134,7 @@ public class CachingBuildEngineFactory {
         executorService,
         new DefaultStepRunner(),
         buildMode,
+        metadataStorage,
         depFiles,
         maxDepFileCacheEntries,
         artifactCacheSizeLimit,

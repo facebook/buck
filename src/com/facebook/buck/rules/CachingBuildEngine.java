@@ -149,6 +149,7 @@ public class CachingBuildEngine implements BuildEngine {
   private final WeightedListeningExecutorService cacheActivityService;
   private final StepRunner stepRunner;
   private final BuildMode buildMode;
+  private final MetadataStorage metadataStorage;
   private final DepFiles depFiles;
   private final long maxDepFileCacheEntries;
   private final ObjectMapper objectMapper;
@@ -172,6 +173,7 @@ public class CachingBuildEngine implements BuildEngine {
       WeightedListeningExecutorService artifactFetchService,
       StepRunner stepRunner,
       BuildMode buildMode,
+      MetadataStorage metadataStorage,
       DepFiles depFiles,
       long maxDepFileCacheEntries,
       Optional<Long> artifactCacheSizeLimit,
@@ -185,6 +187,7 @@ public class CachingBuildEngine implements BuildEngine {
     this.cacheActivityService = artifactFetchService;
     this.stepRunner = stepRunner;
     this.buildMode = buildMode;
+    this.metadataStorage = metadataStorage;
     this.depFiles = depFiles;
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
@@ -211,6 +214,7 @@ public class CachingBuildEngine implements BuildEngine {
       WeightedListeningExecutorService service,
       StepRunner stepRunner,
       BuildMode buildMode,
+      MetadataStorage metadataStorage,
       DepFiles depFiles,
       long maxDepFileCacheEntries,
       Optional<Long> artifactCacheSizeLimit,
@@ -225,6 +229,7 @@ public class CachingBuildEngine implements BuildEngine {
     this.cacheActivityService = service;
     this.stepRunner = stepRunner;
     this.buildMode = buildMode;
+    this.metadataStorage = metadataStorage;
     this.depFiles = depFiles;
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
@@ -656,10 +661,40 @@ public class CachingBuildEngine implements BuildEngine {
     return verifyRecordedPathHashes(target, filesystem, recordedPathHashes);
   }
 
+  private void checkBuildInfoType(ProjectFilesystem filesystem) throws IOException {
+    Path metadataTypePath = filesystem.getBuckPaths().getScratchDir().resolve("metadata.type");
+    Optional<String> metadataType = filesystem.readFileIfItExists(metadataTypePath);
+    if (metadataType.isPresent()) {
+      MetadataStorage old = MetadataStorage.valueOf(metadataType.get());
+      if (old == MetadataStorage.ROCKSDB && metadataStorage == MetadataStorage.FILESYSTEM) {
+        throw new RuntimeException(
+            "Can't downgrade build.metadata_storage from rocksdb to filesystem without cleaning. " +
+                "Run `buck clean` to rebuild.");
+      }
+    }
+    filesystem.createParentDirs(metadataTypePath);
+    filesystem.writeContentsToPath(metadataStorage.toString(), metadataTypePath);
+  }
+
   private BuildInfoStore getOrCreateBuildInfoStore(ProjectFilesystem filesystem) {
     return buildInfoStores.computeIfAbsent(
         filesystem.getRootPath(),
-        path -> new FilesystemBuildInfoStore(filesystem));
+        path -> {
+          try {
+            checkBuildInfoType(filesystem);
+            switch (metadataStorage) {
+              case ROCKSDB:
+                return new RocksDBBuildInfoStore(filesystem);
+              case FILESYSTEM:
+                return new FilesystemBuildInfoStore(filesystem);
+              default:
+                throw new IllegalStateException();
+            }
+          } catch (IOException e) {
+            LOG.error("Can't open metadata storage. Do you have multiple `buckd`s running?");
+            throw new RuntimeException(e);
+          }
+        });
   }
 
   private ListenableFuture<BuildResult> processBuildRule(
@@ -1907,6 +1942,11 @@ public class CachingBuildEngine implements BuildEngine {
     ENABLED,
     DISABLED,
     CACHE,
+  }
+
+  public enum MetadataStorage {
+    FILESYSTEM,
+    ROCKSDB,
   }
 
   // Wrap an async function in rule resume/suspend events.

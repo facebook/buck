@@ -141,6 +141,7 @@ final class JavaBuildGraphProcessor {
           executorService,
           new DefaultStepRunner(),
           CachingBuildEngine.BuildMode.SHALLOW,
+          cachingBuildEngineBuckConfig.getBuildMetadataStorage(),
           cachingBuildEngineBuckConfig.getBuildDepFiles(),
           cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
           cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),

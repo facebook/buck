@@ -548,6 +548,7 @@ public class TestCommand extends BuildCommand {
                     artifactFetchService.getExecutor(),
                 new DefaultStepRunner(),
                 getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
+                cachingBuildEngineBuckConfig.getBuildMetadataStorage(),
                 cachingBuildEngineBuckConfig.getBuildDepFiles(),
                 cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
                 cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),

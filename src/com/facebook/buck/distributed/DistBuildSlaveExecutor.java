@@ -286,6 +286,7 @@ public class DistBuildSlaveExecutor {
           args.getExecutorService(),
           new DefaultStepRunner(),
           engineConfig.getBuildEngineMode(),
+          engineConfig.getBuildMetadataStorage(),
           engineConfig.getBuildDepFiles(),
           engineConfig.getBuildMaxDepFileCacheEntries(),
           engineConfig.getBuildArtifactCacheSizeLimit(),

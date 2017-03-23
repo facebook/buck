@@ -36,6 +36,14 @@ abstract class AbstractCachingBuildEngineBuckConfig implements ConfigView<BuckCo
         CachingBuildEngine.BuildMode.class).orElse(CachingBuildEngine.BuildMode.SHALLOW);
   }
 
+  public CachingBuildEngine.MetadataStorage getBuildMetadataStorage() {
+    return getDelegate().getEnum(
+        "build",
+        "metadata_storage",
+        CachingBuildEngine.MetadataStorage.class)
+        .orElse(CachingBuildEngine.MetadataStorage.FILESYSTEM);
+  }
+
   /**
    * @return the mode with which to run the build engine.
    */

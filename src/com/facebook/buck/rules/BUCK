@@ -217,6 +217,7 @@ java_immutables_library(
         "OverrideScheduleRule.java",
         "ProjectConfig.java",
         "ProjectConfigDescription.java",
+        "RocksDBBuildInfoStore.java",
         "RuleDepsCache.java",
         "SymlinkTree.java",
         "TargetGraphAndTargets.java",
@@ -245,6 +246,9 @@ java_immutables_library(
         "//test/com/facebook/buck/rules:rules",
     ],
     visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/rocksdbjni:rocksdbjni",
+    ],
 )
 
 java_library(

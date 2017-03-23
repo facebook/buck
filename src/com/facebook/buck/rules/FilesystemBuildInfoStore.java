@@ -54,7 +54,7 @@ public class FilesystemBuildInfoStore implements BuildInfoStore {
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
   }
 
   private final Path pathToMetadata(BuildTarget target) {

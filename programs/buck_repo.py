@@ -72,6 +72,7 @@ JAVA_CLASSPATHS = [
     "third-party/java/okhttp/okhttp-3.6.0.jar",
     "third-party/java/okio/okio-1.11.0.jar",
     "third-party/java/oshi/oshi-core-3.3-SNAPSHOT.jar",
+    "third-party/java/rocksdbjni/rocksdbjni-5.1.2.jar",
     "third-party/java/servlet-api/javax.servlet-api-3.1.0.jar",
     "third-party/java/slf4j/slf4j-jdk14-1.7.5.jar",
     "third-party/java/stringtemplate/ST-4.0.8.jar",
