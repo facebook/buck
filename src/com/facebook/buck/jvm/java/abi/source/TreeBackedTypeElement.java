@@ -41,6 +41,7 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements TypeEle
   private final TypeElement underlyingElement;
   @Nullable
   private final ClassTree tree;
+  @Nullable
   private StandaloneDeclaredType typeMirror;
   @Nullable
   private TypeMirror superclass;
@@ -55,7 +56,6 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements TypeEle
     super(underlyingElement, enclosingElement, path, resolver);
     this.underlyingElement = underlyingElement;
     tree = path != null ? (ClassTree) path.getLeaf() : null;
-    typeMirror = resolver.createType(this);
     enclosingElement.addEnclosedElement(this);
   }
 
@@ -76,6 +76,9 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements TypeEle
 
   @Override
   public StandaloneDeclaredType asType() {
+    if (typeMirror == null) {
+      typeMirror = getResolver().createType(this);
+    }
     return typeMirror;
   }
 

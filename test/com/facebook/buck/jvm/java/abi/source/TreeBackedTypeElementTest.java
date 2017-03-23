@@ -45,6 +45,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.SimpleElementVisitor8;
 
@@ -195,6 +196,25 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
     DeclaredType fooDeclaredType = (DeclaredType) fooTypeMirror;
     assertSame(fooElement, fooDeclaredType.asElement());
     assertEquals(0, fooDeclaredType.getTypeArguments().size());
+
+    TypeMirror enclosingType = fooDeclaredType.getEnclosingType();
+    assertEquals(TypeKind.NONE, enclosingType.getKind());
+    assertTrue(enclosingType instanceof NoType);
+  }
+
+  @Test
+  public void testAsTypeGeneric() throws IOException {
+    compile("class Foo<T> { }");
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    TypeMirror fooTypeMirror = fooElement.asType();
+
+    assertEquals(TypeKind.DECLARED, fooTypeMirror.getKind());
+    DeclaredType fooDeclaredType = (DeclaredType) fooTypeMirror;
+    assertSame(fooElement, fooDeclaredType.asElement());
+    List<? extends TypeMirror> typeArguments = fooDeclaredType.getTypeArguments();
+    assertEquals("T", ((TypeVariable) typeArguments.get(0)).asElement().getSimpleName().toString());
+    assertEquals(1, typeArguments.size());
 
     TypeMirror enclosingType = fooDeclaredType.getEnclosingType();
     assertEquals(TypeKind.NONE, enclosingType.getKind());

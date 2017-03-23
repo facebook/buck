@@ -263,20 +263,12 @@ class TreeBackedTypes implements Types {
 
   @Override
   public DeclaredType getDeclaredType(TypeElement typeElem, TypeMirror... typeArgs) {
-    if (isArtificialElement(typeElem) || containsArtificialTypes(typeArgs)) {
-      return new StandaloneDeclaredType(this, typeElem, Arrays.asList(typeArgs));
-    }
-
-    return javacTypes.getDeclaredType(typeElem, typeArgs);
+    return getDeclaredType(null, typeElem, typeArgs);
   }
 
   @Override
   public DeclaredType getDeclaredType(
       @Nullable DeclaredType containing, TypeElement typeElem, TypeMirror... typeArgs) {
-    if (containing == null && typeArgs.length == 0) {
-      return (DeclaredType) typeElem.asType();
-    }
-
     if (isArtificialType(containing) ||
         isArtificialElement(typeElem) ||
         containsArtificialTypes(typeArgs)) {

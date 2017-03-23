@@ -24,10 +24,12 @@ import com.sun.source.util.TreePath;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleAnnotationValueVisitor8;
@@ -45,7 +47,12 @@ class TreeBackedElementResolver {
   }
 
   /* package */ StandaloneDeclaredType createType(TreeBackedTypeElement element) {
-    return new StandaloneDeclaredType(types, element);
+    return new StandaloneDeclaredType(
+        types,
+        element,
+        element.getTypeParameters().stream()
+            .map(TypeParameterElement::asType)
+            .collect(Collectors.toList()));
   }
 
   /* package */ StandaloneTypeVariable createType(TreeBackedTypeParameterElement element) {

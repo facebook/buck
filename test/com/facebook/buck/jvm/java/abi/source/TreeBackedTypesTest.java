@@ -61,6 +61,24 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
   }
 
   @Test
+  public void testGetDeclaredTypeTopLevelRawType() throws IOException {
+    compile("class Foo<T> { }");
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    TypeMirror fooTypeMirror = types.getDeclaredType(fooElement);
+
+    assertEquals(TypeKind.DECLARED, fooTypeMirror.getKind());
+    DeclaredType fooDeclaredType = (DeclaredType) fooTypeMirror;
+    assertNotSame(fooElement.asType(), fooDeclaredType);
+    assertSame(fooElement, fooDeclaredType.asElement());
+    assertEquals(0, fooDeclaredType.getTypeArguments().size());
+
+    TypeMirror enclosingType = fooDeclaredType.getEnclosingType();
+    assertEquals(TypeKind.NONE, enclosingType.getKind());
+    assertTrue(enclosingType instanceof NoType);
+  }
+
+  @Test
   public void testIsSameTypeTopLevelNoGenerics() throws IOException {
     compile("class Foo { }");
 
