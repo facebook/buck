@@ -63,6 +63,10 @@ class TreeBackedTrees extends Trees {
     resolver = new TreeResolver(elements, javacTrees, types);
   }
 
+  /* package */ void clear() {
+    resolver.clear();
+  }
+
   @Override
   public SourcePositions getSourcePositions() {
     return javacTrees.getSourcePositions();

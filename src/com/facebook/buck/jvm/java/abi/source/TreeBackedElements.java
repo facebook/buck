@@ -62,6 +62,12 @@ class TreeBackedElements implements Elements {
     this.resolver = resolver;
   }
 
+  /* package */ void clear() {
+    treeBackedElements.clear();
+    knownTypes.clear();
+    knownPackages.clear();
+  }
+
   public TreeBackedElement enterElement(Element underlyingElement) {
     TreeBackedElement result = treeBackedElements.get(underlyingElement);
     if (result != null) {

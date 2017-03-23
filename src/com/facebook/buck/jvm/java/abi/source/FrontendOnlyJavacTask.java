@@ -27,6 +27,8 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.annotation.processing.Processor;
 import javax.lang.model.element.Element;
@@ -65,6 +67,7 @@ public class FrontendOnlyJavacTask extends JavacTask {
     elements = new TreeBackedElements(javacElements, javacTrees);
     trees = new TreeBackedTrees(javacTrees, elements, types);
     elements.setResolver(new TreeBackedElementResolver(elements, trees, types));
+    javacTask.setTaskListener(new EnteringTaskListener(elements, trees));
   }
 
   @Override
@@ -78,15 +81,18 @@ public class FrontendOnlyJavacTask extends JavacTask {
 
   public Iterable<? extends TypeElement> enter() throws IOException {
     if (topLevelElements == null) {
-      Iterable<? extends CompilationUnitTree> compilationUnits;
       try {
-        compilationUnits = parse();
-        javacTask.getClass().getMethod("enter").invoke(javacTask);
+        @SuppressWarnings("unchecked")
+        Iterable<? extends TypeElement> javacTopLevelElements = (Iterable<? extends TypeElement>)
+            javacTask.getClass().getMethod("enter").invoke(javacTask);
+
+        topLevelElements = StreamSupport.stream(javacTopLevelElements.spliterator(), false)
+            .map(elements::getCanonicalElement)
+            .map(element -> (TreeBackedTypeElement) element)
+            .collect(Collectors.toList());
       } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
         throw new AssertionError(e);
       }
-
-      topLevelElements = new TreeBackedEnter(elements, javacTrees).enter(compilationUnits);
     }
 
     return topLevelElements;

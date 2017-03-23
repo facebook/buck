@@ -65,6 +65,10 @@ class TreeResolver {
     this.types = types;
   }
 
+  /* package */ void clear() {
+    treesToTypes.clear();
+  }
+
   @Nullable
   public TypeMirror getType(TreePath path) {
     Tree tree = path.getLeaf();

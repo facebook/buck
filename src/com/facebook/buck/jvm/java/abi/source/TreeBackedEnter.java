@@ -28,13 +28,9 @@ import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Deque;
-import java.util.List;
 
 import javax.lang.model.element.Element;
-import javax.lang.model.element.NestingKind;
 
 /**
  * Creates {@link TreeBackedElement}s for each element in the {@link CompilationUnitTree}s known
@@ -44,41 +40,21 @@ class TreeBackedEnter {
   private static final BuckTracing BUCK_TRACING = BuckTracing.getInstance("TreeBackedEnter");
   private final TreeBackedElements elements;
   private final Trees javacTrees;
+  private final ElementEnteringScanner scanner = new ElementEnteringScanner();
 
   TreeBackedEnter(TreeBackedElements elements, Trees javacTrees) {
     this.elements = elements;
     this.javacTrees = javacTrees;
   }
 
-  /**
-   * Returns the top-level types discovered while entering the given trees into the symbol table.
-   */
-  public List<TreeBackedTypeElement> enter(
-      Iterable<? extends CompilationUnitTree> compilationUnits) {
-    List<TreeBackedTypeElement> topLevelTypes = new ArrayList<>();
-
+  public void enter(CompilationUnitTree compilationUnit) {
     try (BuckTracing.TraceSection t = BUCK_TRACING.traceSection("enter")) {
-      for (CompilationUnitTree compilationUnit : compilationUnits) {
-        enter(compilationUnit, topLevelTypes);
-      }
-
-      return Collections.unmodifiableList(topLevelTypes);
+      scanner.scan(compilationUnit, null);
     }
-  }
-
-  private void enter(
-      CompilationUnitTree compilationUnit,
-      List<TreeBackedTypeElement> topLevelTypes) {
-    new ElementEnteringScanner(topLevelTypes).scan(compilationUnit, null);
   }
 
   private class ElementEnteringScanner extends TreePathScanner<Void, Void> {
     private final Deque<TreeBackedElement> contextStack = new ArrayDeque<>();
-    private final List<TreeBackedTypeElement> topLevelTypes;
-
-    private ElementEnteringScanner(List<TreeBackedTypeElement> topLevelTypes) {
-      this.topLevelTypes = topLevelTypes;
-    }
 
     private TreeBackedElement getCurrentContext() {
       return contextStack.peek();
@@ -93,10 +69,6 @@ class TreeBackedEnter {
       TreeBackedTypeElement newClass =
           (TreeBackedTypeElement) elements.enterElement(getCurrentJavacElement());
       try (ElementContext c = new ElementContext(newClass)) {
-        if (newClass.getNestingKind() == NestingKind.TOP_LEVEL) {
-          topLevelTypes.add(newClass);
-        }
-
         return super.visitClass(node, v);
       }
     }
