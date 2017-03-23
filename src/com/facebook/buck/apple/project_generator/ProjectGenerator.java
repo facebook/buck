@@ -281,6 +281,8 @@ public class ProjectGenerator {
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
       ImmutableSet.builder();
   private final Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode;
+  private final BuildRuleResolver defaultBuildRuleResolver;
+  private final SourcePathResolver defaultPathResolver;
   private final BuckEventBus buckEventBus;
 
   /**
@@ -343,6 +345,11 @@ public class ProjectGenerator {
     this.cxxPlatforms = cxxPlatforms;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.buildRuleResolverForNode = buildRuleResolverForNode;
+    this.defaultBuildRuleResolver = new BuildRuleResolver(
+        TargetGraph.EMPTY,
+        new DefaultTargetNodeToBuildRuleTransformer());
+    this.defaultPathResolver = new SourcePathResolver(
+        new SourcePathRuleFinder(this.defaultBuildRuleResolver));
     this.buckEventBus = buckEventBus;
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
@@ -1081,19 +1088,14 @@ public class ProjectGenerator {
     ImmutableList<? extends AbstractMacroExpander<? extends Macro>> expanders =
         ImmutableList.of(new AsIsLocationMacroExpander());
     for (StringWithMacros flag : flags) {
-      BuildRuleResolver buildRuleResolver = new BuildRuleResolver(
-          TargetGraph.EMPTY,
-          new DefaultTargetNodeToBuildRuleTransformer());
-      SourcePathResolver pathResolver =
-          new SourcePathResolver(new SourcePathRuleFinder(buildRuleResolver));
       StringWithMacrosArg
           .of(
               flag,
               expanders,
               node.getBuildTarget(),
               node.getCellNames(),
-              buildRuleResolver)
-          .appendToCommandLine(result, pathResolver);
+              defaultBuildRuleResolver)
+          .appendToCommandLine(result, defaultPathResolver);
     }
     return result.build();
   }
@@ -2714,7 +2716,7 @@ public class ProjectGenerator {
 
   private Path resolveSourcePath(SourcePath sourcePath) {
     if (sourcePath instanceof PathSourcePath) {
-      return ((PathSourcePath) sourcePath).getRelativePath();
+      return projectFilesystem.relativize(defaultPathResolver.getAbsolutePath(sourcePath));
     }
     Preconditions.checkArgument(sourcePath instanceof BuildTargetSourcePath);
     BuildTargetSourcePath<?> buildTargetSourcePath = (BuildTargetSourcePath<?>) sourcePath;
@@ -2726,19 +2728,22 @@ public class ProjectGenerator {
       BuildRuleResolver resolver = buildRuleResolverForNode.apply(node);
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-      Path output = pathResolver.getRelativePath(sourcePath);
+      Path output = pathResolver.getAbsolutePath(sourcePath);
       if (output == null) {
         throw new HumanReadableException(
             "The target '%s' does not have an output.",
             node.getBuildTarget());
       }
       requiredBuildTargetsBuilder.add(buildTarget);
-      return output;
+      return projectFilesystem.relativize(output);
     }
 
     Optional<SourcePath> src = exportFileNode.get().getConstructorArg().src;
     if (!src.isPresent()) {
-      return buildTarget.getBasePath().resolve(buildTarget.getShortNameAndFlavorPostfix());
+      Path output = buildTarget.getCellPath()
+        .resolve(buildTarget.getBasePath())
+        .resolve(buildTarget.getShortNameAndFlavorPostfix());
+      return projectFilesystem.relativize(output);
     }
 
     return resolveSourcePath(src.get());
