@@ -249,7 +249,7 @@ public class AndroidBinaryGraphEnhancer {
           javacOptions.withSourceLevel("7").withTargetLevel("7"),
           JavacOptionsAmender.IDENTITY);
       DefaultJavaLibrary compileMergedNativeLibMapGenCode = DefaultJavaLibrary
-          .builder(paramsForCompileGenCode, ruleResolver, compileStepFactory, suggestDependencies)
+          .builder(paramsForCompileGenCode, ruleResolver, compileStepFactory)
           .setSrcs(ImmutableSortedSet.of(generateCodeForMergedLibraryMap.getSourcePathToOutput()))
           .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
           .build();
@@ -324,8 +324,7 @@ public class AndroidBinaryGraphEnhancer {
         .builder(
             paramsForCompileUberRDotJava,
             ruleResolver,
-            compileStepFactory,
-            suggestDependencies)
+            compileStepFactory)
         .setSrcs(ImmutableSortedSet.of(trimUberRDotJava.getSourcePathToOutput()))
         .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
         .build();

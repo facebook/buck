@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.SourcePath;
@@ -139,5 +140,9 @@ public class KotlinBuckConfig {
       throw new HumanReadableException(
           "Could not resolve kotlin home directory, Consider setting KOTLIN_HOME.", io);
     }
+  }
+
+  public boolean shouldSuggestDependencies() {
+    return delegate.getBooleanValue(JavaBuckConfig.SECTION, "suggest_dependencies", false);
   }
 }

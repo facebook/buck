@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
@@ -73,12 +74,14 @@ public class AndroidPrebuiltAarDescription
     return Sets.difference(flavors, KNOWN_FLAVORS).isEmpty();
   }
 
+  private final JavaBuckConfig javaBuckConfig;
   private final JavacOptions javacOptions;
-  private final boolean suggestDependencies;
 
-  public AndroidPrebuiltAarDescription(JavacOptions javacOptions, boolean suggestDependencies) {
+  public AndroidPrebuiltAarDescription(
+      JavaBuckConfig javaBuckConfig,
+      JavacOptions javacOptions) {
+    this.javaBuckConfig = javaBuckConfig;
     this.javacOptions = javacOptions;
-    this.suggestDependencies = suggestDependencies;
   }
 
   @Override
@@ -196,7 +199,7 @@ public class AndroidPrebuiltAarDescription
             javacOptions.getJavac(ruleFinder),
             javacOptions,
             new BootClasspathAppender()),
-        suggestDependencies,
+        javaBuckConfig.shouldSuggestDependencies(),
         /* exportedDeps */ javaDeps,
         JavaLibraryRules.getAbiInputs(buildRuleResolver, androidLibraryParams.getDeps()));
   }

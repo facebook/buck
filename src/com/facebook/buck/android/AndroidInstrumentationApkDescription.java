@@ -23,6 +23,7 @@ import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
@@ -55,25 +56,25 @@ import java.util.Optional;
 public class AndroidInstrumentationApkDescription
     implements Description<AndroidInstrumentationApkDescription.Arg> {
 
+  private final JavaBuckConfig javaBuckConfig;
   private final ProGuardConfig proGuardConfig;
   private final JavacOptions javacOptions;
-  private final boolean suggestDependencies;
   private final ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms;
   private final ListeningExecutorService dxExecutorService;
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
 
   public AndroidInstrumentationApkDescription(
+      JavaBuckConfig javaBuckConfig,
       ProGuardConfig proGuardConfig,
       JavacOptions androidJavacOptions,
-      boolean suggestDependencies,
       ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ListeningExecutorService dxExecutorService,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig) {
+    this.javaBuckConfig = javaBuckConfig;
     this.proGuardConfig = proGuardConfig;
     this.javacOptions = androidJavacOptions;
-    this.suggestDependencies = suggestDependencies;
     this.nativePlatforms = nativePlatforms;
     this.dxExecutorService = dxExecutorService;
     this.cxxBuckConfig = cxxBuckConfig;
@@ -143,7 +144,7 @@ public class AndroidInstrumentationApkDescription
         args.includesVectorDrawables.orElse(false),
         javacOptions.getJavac(ruleFinder),
         javacOptions,
-        suggestDependencies,
+        javaBuckConfig.shouldSuggestDependencies(),
         EnumSet.noneOf(ExopackageMode.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFile */ Optional.empty(),

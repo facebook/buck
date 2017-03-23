@@ -14,33 +14,26 @@
  * under the License.
  */
 
-package com.facebook.buck.jvm.scala;
+package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 
-public class ScalaLibraryBuilder extends DefaultJavaLibraryBuilder {
-  ScalaLibraryBuilder(
+public class DefaultKotlinLibraryBuilder extends DefaultJavaLibraryBuilder {
+  public DefaultKotlinLibraryBuilder(
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       CompileToJarStepFactory compileStepFactory) {
     super(params, buildRuleResolver, compileStepFactory);
   }
 
-  public ScalaLibraryBuilder setConfigAndArgs(
-      ScalaBuckConfig config,
-      ScalaLibraryDescription.Arg args) {
+  DefaultKotlinLibraryBuilder setConfigAndArgs(
+      KotlinBuckConfig config,
+      KotlinLibraryDescription.Arg args) {
     setSuggestDependencies(config.shouldSuggestDependencies());
-
-    setSrcs(args.srcs)
-        .setResources(args.resources)
-        .setResourcesRoot(args.resourcesRoot)
-        .setProvidedDeps(args.providedDeps)
-        .setManifestFile(args.manifestFile)
-        .setMavenCoords(args.mavenCoords);
-
+    setArgs(args);
     return this;
   }
 }

@@ -16,7 +16,12 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.cli.FakeBuckConfig;
+
 public class JavaCompilationConstants {
+
+  public static final JavaBuckConfig DEFAULT_JAVA_CONFIG =
+      JavaBuckConfig.of(FakeBuckConfig.builder().build());
 
   public static final JavaOptions DEFAULT_JAVA_OPTIONS =
       JavaOptions.builder()

@@ -58,13 +58,15 @@ public class JavaLibraryDescription implements
       JavaLibrary.SRC_JAR,
       JavaLibrary.MAVEN_JAR);
 
+  private final JavaBuckConfig javaBuckConfig;
   @VisibleForTesting
   private final JavacOptions defaultOptions;
-  private final boolean suggestDependencies;
 
-  public JavaLibraryDescription(JavacOptions defaultOptions, boolean suggestDependencies) {
+  public JavaLibraryDescription(
+      JavaBuckConfig javaBuckConfig,
+      JavacOptions defaultOptions) {
+    this.javaBuckConfig = javaBuckConfig;
     this.defaultOptions = defaultOptions;
-    this.suggestDependencies = suggestDependencies;
   }
 
   @Override
@@ -195,8 +197,11 @@ public class JavaLibraryDescription implements
         JavacOptionsAmender.IDENTITY);
     DefaultJavaLibrary defaultJavaLibrary =
         DefaultJavaLibrary
-            .builder(javaLibraryParams, resolver, compileStepFactory, suggestDependencies)
-            .setArgs(args)
+            .builder(
+                javaLibraryParams,
+                resolver,
+                compileStepFactory)
+            .setConfigAndArgs(javaBuckConfig, args)
             .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
             .setTrackClassUsage(javacOptions.trackClassUsage())
             .build();

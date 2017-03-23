@@ -60,13 +60,11 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       CompileToJarStepFactory compileStepFactory,
-      boolean suggestDependencies,
       JavacOptions javacOptions) {
     return new Builder(
         params,
         buildRuleResolver,
         compileStepFactory,
-        suggestDependencies,
         javacOptions);
   }
 
@@ -131,14 +129,13 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         BuildRuleParams params,
         BuildRuleResolver buildRuleResolver,
         CompileToJarStepFactory compileStepFactory,
-        boolean suggestDependencies,
         JavacOptions javacOptions) {
-      super(params, buildRuleResolver, compileStepFactory, suggestDependencies);
+      super(params, buildRuleResolver, compileStepFactory);
       this.javacOptions = javacOptions;
     }
 
     @Override
-    public DefaultJavaLibraryBuilder setArgs(JavaLibraryDescription.Arg args) {
+    protected DefaultJavaLibraryBuilder setArgs(JavaLibraryDescription.Arg args) {
       super.setArgs(args);
       AndroidLibraryDescription.Arg androidArgs = (AndroidLibraryDescription.Arg) args;
       return setManifestFile(androidArgs.manifest);

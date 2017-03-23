@@ -34,7 +34,7 @@ import java.util.Optional;
  * A java-specific "view" of BuckConfig.
  */
 public class JavaBuckConfig implements ConfigView<BuckConfig> {
-  private static final String SECTION = "java";
+  public static final String SECTION = "java";
 
   private final BuckConfig delegate;
 

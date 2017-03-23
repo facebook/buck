@@ -91,8 +91,11 @@
     "exported_deps" : [ ]
   },
   "javac-env" : {
-    "deps" : [ ],
+    "deps" : [
+      "//test/com/facebook/buck/cli:FakeBuckConfig"
+    ],
     "exported_deps" : [
+      "//src/com/facebook/buck/jvm/java:config",
       "//src/com/facebook/buck/jvm/java:support"
     ]
   },

@@ -46,13 +46,9 @@ import java.util.Optional;
 public class ScalaLibraryDescription implements Description<ScalaLibraryDescription.Arg>,
     ImplicitDepsInferringDescription<ScalaLibraryDescription.Arg> {
 
-  private final boolean suggestDependencies;
   private final ScalaBuckConfig scalaBuckConfig;
 
-  public ScalaLibraryDescription(
-      boolean suggestDependencies,
-      ScalaBuckConfig scalaBuckConfig) {
-    this.suggestDependencies = suggestDependencies;
+  public ScalaLibraryDescription(ScalaBuckConfig scalaBuckConfig) {
     this.scalaBuckConfig = scalaBuckConfig;
   }
 
@@ -106,9 +102,8 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
     return new ScalaLibraryBuilder(
         javaLibraryParams,
         resolver,
-        compileStepFactory,
-        suggestDependencies)
-        .setArgs(args)
+        compileStepFactory)
+        .setConfigAndArgs(scalaBuckConfig, args)
         .build();
   }
 

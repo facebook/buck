@@ -57,15 +57,12 @@ public class KotlinLibraryDescription implements
 
   @VisibleForTesting
   private final JavacOptions defaultOptions;
-  private final boolean suggestDependencies;
 
   public KotlinLibraryDescription(
       KotlinBuckConfig kotlinBuckConfig,
-      JavacOptions templateOptions,
-      boolean suggestDependencies) {
+      JavacOptions templateOptions) {
     this.kotlinBuckConfig = kotlinBuckConfig;
     this.defaultOptions = templateOptions;
-    this.suggestDependencies = suggestDependencies;
   }
 
   @Override
@@ -153,9 +150,11 @@ public class KotlinLibraryDescription implements
         kotlinBuckConfig.getKotlinCompiler().get(),
         args.extraKotlincArguments);
     DefaultJavaLibrary defaultKotlinLibrary =
-        DefaultJavaLibrary
-            .builder(javaLibraryParams, resolver, compileStepFactory, suggestDependencies)
-            .setArgs(args)
+        new DefaultKotlinLibraryBuilder(
+            javaLibraryParams,
+            resolver,
+            compileStepFactory)
+            .setConfigAndArgs(kotlinBuckConfig, args)
             .build();
 
     if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {

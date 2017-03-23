@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
@@ -42,9 +43,9 @@ public class AndroidBinaryBuilder extends
   private AndroidBinaryBuilder(BuildTarget target) {
     super(
         new AndroidBinaryDescription(
+            DEFAULT_JAVA_CONFIG,
             DEFAULT_JAVA_OPTIONS,
             ANDROID_JAVAC_OPTIONS,
-            false,
             new ProGuardConfig(FakeBuckConfig.builder().build()),
             ImmutableMap.of(),
             MoreExecutors.newDirectExecutorService(),

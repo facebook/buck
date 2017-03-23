@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -48,14 +49,14 @@ public class AndroidBuildConfigDescription
     implements Description<AndroidBuildConfigDescription.Arg> {
 
   private static final Flavor GEN_JAVA_FLAVOR = InternalFlavor.of("gen_java_android_build_config");
+  private final JavaBuckConfig javaBuckConfig;
   private final JavacOptions androidJavacOptions;
-  private final boolean suggestDependencies;
 
   public AndroidBuildConfigDescription(
-      JavacOptions androidJavacOptions,
-      boolean suggestDependencies) {
+      JavaBuckConfig javaBuckConfig,
+      JavacOptions androidJavacOptions) {
+    this.javaBuckConfig = javaBuckConfig;
     this.androidJavacOptions = androidJavacOptions;
-    this.suggestDependencies = suggestDependencies;
   }
 
   @Override
@@ -89,7 +90,7 @@ public class AndroidBuildConfigDescription
         /* useConstantExpressions */ false,
         androidJavacOptions.getJavac(ruleFinder),
         androidJavacOptions,
-        suggestDependencies,
+        javaBuckConfig.shouldSuggestDependencies(),
         resolver);
   }
 

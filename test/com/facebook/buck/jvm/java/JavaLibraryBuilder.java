@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -43,7 +44,9 @@ public class JavaLibraryBuilder extends
       ProjectFilesystem projectFilesystem,
       HashCode hashCode) {
     super(
-        new JavaLibraryDescription(DEFAULT_JAVAC_OPTIONS, false),
+        new JavaLibraryDescription(
+            DEFAULT_JAVA_CONFIG,
+            DEFAULT_JAVAC_OPTIONS),
         target,
         projectFilesystem,
         hashCode);

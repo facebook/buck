@@ -41,7 +41,6 @@ public class DefaultJavaLibraryBuilder {
   protected final SourcePathResolver sourcePathResolver;
   protected final SourcePathRuleFinder ruleFinder;
   protected final CompileToJarStepFactory compileStepFactory;
-  protected final boolean suggestDependencies;
   protected ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
   protected ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
   protected Optional<Path> generatedSourceFolder = Optional.empty();
@@ -56,22 +55,29 @@ public class DefaultJavaLibraryBuilder {
   protected Optional<String> mavenCoords = Optional.empty();
   protected ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
   protected ImmutableSet<Pattern> classesToRemoveFromJar = ImmutableSet.of();
+  protected boolean suggestDependencies = false;
 
   protected DefaultJavaLibraryBuilder(
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      CompileToJarStepFactory compileStepFactory,
-      boolean suggestDependencies) {
+      CompileToJarStepFactory compileStepFactory) {
     this.params = params;
     this.buildRuleResolver = buildRuleResolver;
     this.compileStepFactory = compileStepFactory;
-    this.suggestDependencies = suggestDependencies;
 
     ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     sourcePathResolver = new SourcePathResolver(ruleFinder);
   }
 
-  public DefaultJavaLibraryBuilder setArgs(JavaLibraryDescription.Arg args) {
+  public DefaultJavaLibraryBuilder setConfigAndArgs(
+      JavaBuckConfig config,
+      JavaLibraryDescription.Arg args) {
+    setSuggestDependencies(config.shouldSuggestDependencies());
+
+    return setArgs(args);
+  }
+
+  protected DefaultJavaLibraryBuilder setArgs(JavaLibraryDescription.Arg args) {
     return setSrcs(args.srcs)
         .setResources(args.resources)
         .setResourcesRoot(args.resourcesRoot)
@@ -163,6 +169,11 @@ public class DefaultJavaLibraryBuilder {
   public DefaultJavaLibraryBuilder setClassesToRemoveFromJar(
       ImmutableSet<Pattern> classesToRemoveFromJar) {
     this.classesToRemoveFromJar = classesToRemoveFromJar;
+    return this;
+  }
+
+  public DefaultJavaLibraryBuilder setSuggestDependencies(boolean suggestDependencies) {
+    this.suggestDependencies = suggestDependencies;
     return this;
   }
 

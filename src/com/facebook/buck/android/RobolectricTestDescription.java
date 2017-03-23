@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
@@ -54,21 +55,21 @@ import java.util.Optional;
 public class RobolectricTestDescription implements Description<RobolectricTestDescription.Arg> {
 
 
+  private final JavaBuckConfig javaBuckConfig;
   private final JavaOptions javaOptions;
   private final JavacOptions templateOptions;
-  private final boolean suggestDependencies;
   private final Optional<Long> defaultTestRuleTimeoutMs;
   private final CxxPlatform cxxPlatform;
 
   public RobolectricTestDescription(
+      JavaBuckConfig javaBuckConfig,
       JavaOptions javaOptions,
       JavacOptions templateOptions,
-      boolean suggestDependencies,
       Optional<Long> defaultTestRuleTimeoutMs,
       CxxPlatform cxxPlatform) {
+    this.javaBuckConfig = javaBuckConfig;
     this.javaOptions = javaOptions;
     this.templateOptions = templateOptions;
-    this.suggestDependencies = suggestDependencies;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.cxxPlatform = cxxPlatform;
   }
@@ -173,8 +174,11 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
     JavaLibrary testsLibrary =
         resolver.addToIndex(
             DefaultJavaLibrary
-                .builder(testsLibraryParams, resolver, compileStepFactory, suggestDependencies)
-                .setArgs(args)
+                .builder(
+                    testsLibraryParams,
+                    resolver,
+                    compileStepFactory)
+                .setConfigAndArgs(javaBuckConfig, args)
                 .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
                 .setTrackClassUsage(javacOptions.trackClassUsage())
                 .setAdditionalClasspathEntries(additionalClasspathEntries)

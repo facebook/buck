@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaSourceJar;
@@ -66,16 +67,16 @@ public class AndroidLibraryDescription
     SCALA,
   }
 
+  private final JavaBuckConfig javaBuckConfig;
   private final JavacOptions defaultOptions;
-  private final boolean suggestDependencies;
   private final AndroidLibraryCompilerFactory compilerFactory;
 
   public AndroidLibraryDescription(
+      JavaBuckConfig javaBuckConfig,
       JavacOptions defaultOptions,
-      boolean suggestDependencies,
       AndroidLibraryCompilerFactory compilerFactory) {
+    this.javaBuckConfig = javaBuckConfig;
     this.defaultOptions = defaultOptions;
-    this.suggestDependencies = suggestDependencies;
     this.compilerFactory = compilerFactory;
   }
 
@@ -202,9 +203,8 @@ public class AndroidLibraryDescription
           androidLibraryParams,
           resolver,
           compiler.compileToJar(args, javacOptions, resolver),
-          suggestDependencies,
           javacOptions)
-          .setArgs(args)
+          .setConfigAndArgs(javaBuckConfig, args)
           .setAdditionalClasspathEntries(additionalClasspathEntries)
           .setTrackClassUsage(compiler.trackClassUsage(javacOptions))
           .setTests(args.tests)

@@ -55,19 +55,16 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
 
   private final ScalaBuckConfig config;
   private final JavaOptions javaOptions;
-  private final boolean suggestDependencies;
   private final Optional<Long> defaultTestRuleTimeoutMs;
   private final CxxPlatform cxxPlatform;
 
   public ScalaTestDescription(
       ScalaBuckConfig config,
       JavaOptions javaOptions,
-      boolean suggestDependencies,
       Optional<Long> defaultTestRuleTimeoutMs,
       CxxPlatform cxxPlatform) {
     this.config = config;
     this.javaOptions = javaOptions;
-    this.suggestDependencies = suggestDependencies;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.cxxPlatform = cxxPlatform;
   }
@@ -137,9 +134,8 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
             new ScalaLibraryBuilder(
                 javaLibraryParams,
                 resolver,
-                compileStepFactory,
-                suggestDependencies)
-                .setArgs(args)
+                compileStepFactory)
+                .setConfigAndArgs(config, args)
                 .build());
 
     return new JavaTest(

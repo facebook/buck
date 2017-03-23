@@ -150,13 +150,11 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   public static DefaultJavaLibraryBuilder builder(
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      CompileToJarStepFactory compileStepFactory,
-      boolean suggestDependencies) {
+      CompileToJarStepFactory compileStepFactory) {
     return new DefaultJavaLibraryBuilder(
         params,
         buildRuleResolver,
-        compileStepFactory,
-        suggestDependencies);
+        compileStepFactory);
   }
 
   @Override

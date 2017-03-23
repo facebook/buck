@@ -32,7 +32,9 @@ public class AndroidPrebuiltAarBuilder extends AbstractNodeBuilder<
 
   private AndroidPrebuiltAarBuilder(BuildTarget target) {
     super(
-        new AndroidPrebuiltAarDescription(JavaCompilationConstants.ANDROID_JAVAC_OPTIONS, false),
+        new AndroidPrebuiltAarDescription(
+            JavaCompilationConstants.DEFAULT_JAVA_CONFIG,
+            JavaCompilationConstants.ANDROID_JAVAC_OPTIONS),
         target);
   }
 

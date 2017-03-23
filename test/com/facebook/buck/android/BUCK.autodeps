@@ -177,6 +177,7 @@
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/core:classhash",
       "//src/com/facebook/buck/jvm/core:packagefinder",
+      "//src/com/facebook/buck/jvm/java:config",
       "//src/com/facebook/buck/jvm/java:rules",
       "//src/com/facebook/buck/jvm/java:support",
       "//src/com/facebook/buck/model:model",

@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.jvm.java.CalculateAbi;
-import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
@@ -45,15 +44,12 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
   private final GroovyBuckConfig groovyBuckConfig;
   // For cross compilation
   private final JavacOptions defaultJavacOptions;
-  private final boolean suggestDependencies;
 
   public GroovyLibraryDescription(
       GroovyBuckConfig groovyBuckConfig,
-      JavacOptions defaultJavacOptions,
-      boolean suggestDependencies) {
+      JavacOptions defaultJavacOptions) {
     this.groovyBuckConfig = groovyBuckConfig;
     this.defaultJavacOptions = defaultJavacOptions;
-    this.suggestDependencies = suggestDependencies;
   }
 
   @Override
@@ -101,9 +97,12 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
         groovyBuckConfig.getGroovyCompiler().get(),
         Optional.of(args.extraGroovycArguments),
         javacOptions);
-    return DefaultJavaLibrary
-        .builder(javaLibraryParams, resolver, compileStepFactory, suggestDependencies)
-        .setArgs(args)
+    return
+        new DefaultGroovyLibraryBuilder(
+            javaLibraryParams,
+            resolver,
+            compileStepFactory)
+        .setConfigAndArgs(groovyBuckConfig, args)
         .build();
   }
 

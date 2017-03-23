@@ -31,6 +31,7 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -110,9 +111,9 @@ public class AndroidBinaryDescription implements
   private static final ImmutableSet<Flavor> FLAVORS = ImmutableSet.of(
       PACKAGE_STRING_ASSETS_FLAVOR);
 
+  private final JavaBuckConfig javaBuckConfig;
   private final JavaOptions javaOptions;
   private final JavacOptions javacOptions;
-  private final boolean suggestDependencies;
   private final ProGuardConfig proGuardConfig;
   private final BuckConfig buckConfig;
   private final CxxBuckConfig cxxBuckConfig;
@@ -121,18 +122,18 @@ public class AndroidBinaryDescription implements
   private final ListeningExecutorService dxExecutorService;
 
   public AndroidBinaryDescription(
+      JavaBuckConfig javaBuckConfig,
       JavaOptions javaOptions,
       JavacOptions javacOptions,
-      boolean suggestDependencies,
       ProGuardConfig proGuardConfig,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ListeningExecutorService dxExecutorService,
       BuckConfig buckConfig,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig) {
+    this.javaBuckConfig = javaBuckConfig;
     this.javaOptions = javaOptions;
     this.javacOptions = javacOptions;
-    this.suggestDependencies = suggestDependencies;
     this.proGuardConfig = proGuardConfig;
     this.buckConfig = buckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
@@ -247,7 +248,7 @@ public class AndroidBinaryDescription implements
           args.includesVectorDrawables,
           javacOptions.getJavac(ruleFinder),
           javacOptions,
-          suggestDependencies,
+          javaBuckConfig.shouldSuggestDependencies(),
           exopackageModes,
           args.buildConfigValues,
           args.buildConfigValuesFile,

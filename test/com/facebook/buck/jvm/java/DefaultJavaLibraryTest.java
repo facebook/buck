@@ -1166,7 +1166,7 @@ public class DefaultJavaLibraryTest {
         javacOptions,
         JavacOptionsAmender.IDENTITY);
     DefaultJavaLibrary defaultJavaLibrary = DefaultJavaLibrary
-        .builder(buildRuleParams, ruleResolver, compileStepFactory, false)
+        .builder(buildRuleParams, ruleResolver, compileStepFactory)
         .setSrcs(srcsAsPaths)
         .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
         .setPostprocessClassesCommands(postprocessClassesCommands)
@@ -1452,7 +1452,7 @@ public class DefaultJavaLibraryTest {
           options,
           JavacOptionsAmender.IDENTITY);
       DefaultJavaLibrary javaLibrary = DefaultJavaLibrary
-          .builder(buildRuleParams, ruleResolver, compileStepFactory, false)
+          .builder(buildRuleParams, ruleResolver, compileStepFactory)
           .setSrcs(ImmutableSortedSet.of(new FakeSourcePath(src)))
           .setResources(ImmutableSortedSet.of())
           .setGeneratedSourceFolder(options.getGeneratedSourceFolderName())

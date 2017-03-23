@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.jvm.java.CalculateAbi;
-import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.ForkMode;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
@@ -56,19 +55,16 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
   private final KotlinBuckConfig kotlinBuckConfig;
   private final JavaOptions javaOptions;
   private final JavacOptions templateJavacOptions;
-  private final boolean suggestDependencies;
   private final Optional<Long> defaultTestRuleTimeoutMs;
 
   public KotlinTestDescription(
       KotlinBuckConfig kotlinBuckConfig,
       JavaOptions javaOptions,
       JavacOptions templateOptions,
-      boolean suggestDependencies,
       Optional<Long> defaultTestRuleTimeoutMs) {
     this.kotlinBuckConfig = kotlinBuckConfig;
     this.javaOptions = javaOptions;
     this.templateJavacOptions = templateOptions;
-    this.suggestDependencies = suggestDependencies;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
   }
 
@@ -128,11 +124,13 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
 
         JavaLibrary testsLibrary =
         resolver.addToIndex(
-            DefaultJavaLibrary
-                .builder(testsLibraryParams, resolver, stepFactory, suggestDependencies)
-                .setArgs(args)
-                .setGeneratedSourceFolder(templateJavacOptions.getGeneratedSourceFolderName())
-                .build());
+            new DefaultKotlinLibraryBuilder(
+                testsLibraryParams,
+                resolver,
+                stepFactory)
+            .setConfigAndArgs(kotlinBuckConfig, args)
+            .setGeneratedSourceFolder(templateJavacOptions.getGeneratedSourceFolderName())
+            .build());
 
     return new KotlinTest(
         params.copyReplacingDeclaredAndExtraDeps(

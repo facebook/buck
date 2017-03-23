@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.MergeAndroidResourceSources;
 import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.Flavor;
@@ -71,20 +72,20 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
 
   private final AndroidManifestDescription androidManifestDescription;
   private final CxxBuckConfig cxxBuckConfig;
+  private final JavaBuckConfig javaBuckConfig;
   private final JavacOptions javacOptions;
-  private final boolean suggestDependencies;
   private final ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms;
 
   public AndroidAarDescription(
       AndroidManifestDescription androidManifestDescription,
       CxxBuckConfig cxxBuckConfig,
+      JavaBuckConfig javaBuckConfig,
       JavacOptions javacOptions,
-      boolean suggestDependencies,
       ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms) {
     this.androidManifestDescription = androidManifestDescription;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.javaBuckConfig = javaBuckConfig;
     this.javacOptions = javacOptions;
-    this.suggestDependencies = suggestDependencies;
     this.nativePlatforms = nativePlatforms;
   }
 
@@ -222,7 +223,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
               resolver,
               javacOptions.getJavac(ruleFinder),
               javacOptions,
-              suggestDependencies,
+              javaBuckConfig.shouldSuggestDependencies(),
               packageableCollection);
       resolver.addAllToIndex(buildConfigRules);
       aarExtraDepsBuilder.addAll(buildConfigRules);
