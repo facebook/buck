@@ -65,7 +65,7 @@ public class JavacOptionsTest {
   public void locationIsInprocByDefault() {
     JavacOptions options = createStandardBuilder().build();
 
-    assertThat(options.getJavacLocation(), is(JavacOptions.JavacLocation.IN_PROCESS));
+    assertThat(options.getJavacLocation(), is(Javac.Location.IN_PROCESS));
   }
 
   @Test
@@ -81,7 +81,7 @@ public class JavacOptionsTest {
         .setJavacPath(Either.ofRight(new FakeSourcePath("javac")))
         .build();
 
-    assumeThat(options.getJavacSource(), is(JavacOptions.JavacSource.EXTERNAL));
+    assumeThat(options.getJavacSource(), is(Javac.Source.EXTERNAL));
 
     assertFalse(options.trackClassUsage());
   }
@@ -92,7 +92,7 @@ public class JavacOptionsTest {
         .setJavacJarPath(new FakeSourcePath("javac_jar"))
         .build();
 
-    assumeThat(options.getJavacSource(), is(JavacOptions.JavacSource.JAR));
+    assumeThat(options.getJavacSource(), is(Javac.Source.JAR));
 
     assertTrue(options.trackClassUsage());
   }
@@ -102,7 +102,7 @@ public class JavacOptionsTest {
     JavacOptions options = createStandardBuilder()
         .build();
 
-    assumeThat(options.getJavacSource(), is(JavacOptions.JavacSource.JDK));
+    assumeThat(options.getJavacSource(), is(Javac.Source.JDK));
 
     assertTrue(options.trackClassUsage());
   }

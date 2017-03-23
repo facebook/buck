@@ -84,10 +84,10 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
       builder.setTargetLevel(targetLevel.get());
     }
 
-    Optional<JavacOptions.JavacLocation> location = delegate.getEnum(
+    Optional<Javac.Location> location = delegate.getEnum(
         SECTION,
         "location",
-        JavacOptions.JavacLocation.class);
+        Javac.Location.class);
     if (location.isPresent()) {
       builder.setJavacLocation(location.get());
     }

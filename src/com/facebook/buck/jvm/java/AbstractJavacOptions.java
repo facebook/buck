@@ -82,26 +82,6 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     INTERMEDIATE_TO_DISK,
   }
 
-  public enum JavacSource {
-    /** Shell out to the javac in the JDK */
-    EXTERNAL,
-    /** Run javac in-process, loading it from a jar specified in .buckconfig. */
-    JAR,
-    /** Run javac in-process, loading it from the JRE in which Buck is running. */
-    JDK,
-  }
-
-  public enum JavacLocation {
-    /**
-     * Perform compilation inside main process.
-     */
-    IN_PROCESS,
-    /**
-     * Delegate compilation into separate process.
-     */
-    OUT_OF_PROCESS,
-  }
-
   public enum AbiGenerationMode {
     /** Generate ABIs by stripping .class files */
     CLASS,
@@ -163,24 +143,24 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   }
 
   public boolean trackClassUsage() {
-    final JavacSource javacSource = getJavacSource();
+    final Javac.Source javacSource = getJavacSource();
     return getTrackClassUsageNotDisabled() &&
-        (javacSource == JavacSource.JAR || javacSource == JavacSource.JDK);
+        (javacSource == Javac.Source.JAR || javacSource == Javac.Source.JDK);
   }
 
-  public JavacSource getJavacSource() {
+  public Javac.Source getJavacSource() {
     if (getJavacPath().isPresent()) {
-      return JavacSource.EXTERNAL;
+      return Javac.Source.EXTERNAL;
     } else if (getJavacJarPath().isPresent()) {
-      return JavacSource.JAR;
+      return Javac.Source.JAR;
     } else {
-      return JavacSource.JDK;
+      return Javac.Source.JDK;
     }
   }
 
   @Value.Default
-  public JavacLocation getJavacLocation() {
-    return JavacLocation.IN_PROCESS;
+  public Javac.Location getJavacLocation() {
+    return Javac.Location.IN_PROCESS;
   }
 
   @Value.Default
@@ -190,8 +170,8 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
 
   @Value.Lazy
   public Javac getJavac() {
-    final JavacSource javacSource = getJavacSource();
-    final JavacLocation javacLocation = getJavacLocation();
+    final Javac.Source javacSource = getJavacSource();
+    final Javac.Location javacLocation = getJavacLocation();
     switch (javacSource) {
       case EXTERNAL:
         return ExternalJavac.createJavac(getJavacPath().get());

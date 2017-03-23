@@ -315,7 +315,7 @@ public class JavaBuckConfigTest {
     JavacOptions options = config.getDefaultJavacOptions();
     assertThat(
         options.getJavacLocation(),
-        Matchers.equalTo(JavacOptions.JavacLocation.OUT_OF_PROCESS));
+        Matchers.equalTo(Javac.Location.OUT_OF_PROCESS));
   }
 
   @Test
@@ -326,7 +326,7 @@ public class JavaBuckConfigTest {
     JavacOptions options = config.getDefaultJavacOptions();
     assertThat(
         options.getJavacLocation(),
-        Matchers.equalTo(JavacOptions.JavacLocation.IN_PROCESS));
+        Matchers.equalTo(Javac.Location.IN_PROCESS));
   }
 
   @Test
@@ -339,7 +339,7 @@ public class JavaBuckConfigTest {
     JavacOptions options = config.getDefaultJavacOptions();
     assertThat(
         options.getJavacLocation(),
-        Matchers.equalTo(JavacOptions.JavacLocation.IN_PROCESS));
+        Matchers.equalTo(Javac.Location.IN_PROCESS));
   }
 
   @Test

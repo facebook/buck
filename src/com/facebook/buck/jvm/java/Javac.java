@@ -55,4 +55,23 @@ public interface Javac extends RuleKeyAppendable, Tool {
 
   String getShortName();
 
+  enum Location {
+    /**
+     * Perform compilation inside main process.
+     */
+    IN_PROCESS,
+    /**
+     * Delegate compilation into separate process.
+     */
+    OUT_OF_PROCESS,
+  }
+
+  enum Source {
+    /** Shell out to the javac in the JDK */
+    EXTERNAL,
+    /** Run javac in-process, loading it from a jar specified in .buckconfig. */
+    JAR,
+    /** Run javac in-process, loading it from the JRE in which Buck is running. */
+    JDK,
+  }
 }
