@@ -163,4 +163,20 @@ public class TreeBackedExecutableElementTest extends CompilerTreeApiParameterize
             elements.getTypeElement("java.lang.Exception").asType().toString(),
             elements.getTypeElement("java.lang.RuntimeException").asType().toString()));
   }
+
+  /**
+   * See {@link com.facebook.buck.jvm.java.abi.source.TreeBackedAnnotationValueTest} for lots of
+   * tests of methods with default values.
+   */
+  @Test
+  public void testGetDefaultValueNoDefault() throws IOException {
+    compile(Joiner.on('\n').join(
+        "@interface Foo {",
+        "  int value();",
+        "}"));
+
+    assertThat(
+        findMethod("value", elements.getTypeElement("Foo")).getDefaultValue(),
+        Matchers.nullValue());
+  }
 }

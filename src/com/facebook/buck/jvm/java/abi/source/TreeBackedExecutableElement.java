@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
+import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.util.TreePath;
 
@@ -39,11 +40,15 @@ import javax.lang.model.type.TypeMirror;
 class TreeBackedExecutableElement extends TreeBackedParameterizable implements ExecutableElement {
   private final ExecutableElement underlyingElement;
   private final List<TreeBackedVariableElement> parameters = new ArrayList<>();
+  @Nullable
+  private final MethodTree tree;
 
   @Nullable
   private TypeMirror returnType;
   @Nullable
   private List<TypeMirror> thrownTypes;
+  @Nullable
+  private TreeBackedAnnotationValue defaultValue;
 
   TreeBackedExecutableElement(
       ExecutableElement underlyingElement,
@@ -52,6 +57,7 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable implements E
       TreeBackedElementResolver resolver) {
     super(underlyingElement, enclosingElement, path, resolver);
     this.underlyingElement = underlyingElement;
+    tree = path != null ? (MethodTree) path.getLeaf() : null;
     enclosingElement.addEnclosedElement(this);
   }
 
@@ -105,8 +111,18 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable implements E
   }
 
   @Override
-  public AnnotationValue getDefaultValue() {
-    throw new UnsupportedOperationException("NYI");
+  @Nullable
+  public TreeBackedAnnotationValue getDefaultValue() {
+    if (defaultValue == null) {
+      AnnotationValue underlyingValue = underlyingElement.getDefaultValue();
+      if (underlyingValue != null) {
+        defaultValue = new TreeBackedAnnotationValue(
+            underlyingValue,
+            new TreePath(getTreePath(), Preconditions.checkNotNull(tree).getDefaultValue()),
+            getResolver());
+      }
+    }
+    return defaultValue;
   }
 
   @Override
