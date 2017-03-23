@@ -16,7 +16,6 @@
 
 package com.facebook.buck.crosscell;
 
-import static com.facebook.buck.util.environment.Platform.MACOS;
 import static com.facebook.buck.util.environment.Platform.WINDOWS;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.not;
@@ -181,33 +180,6 @@ public class InterCellIntegrationTest {
     ProjectWorkspace primary = cells.getFirst();
 
     ProjectWorkspace.ProcessResult result = primary.runBuckBuild("//:cxxbinary");
-
-    result.assertSuccess();
-  }
-
-  @Test
-  public void shouldBeAbleToUseAppleProjectCommandXCell() throws IOException {
-    assumeThat(Platform.detect(), is(MACOS));
-
-    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
-        "inter-cell/apple/primary",
-        "inter-cell/apple/secondary");
-    ProjectWorkspace primary = cells.getFirst();
-
-    primary.runBuckCommand("project", "//:applebundle").assertSuccess();
-    primary.runBuckCommand("project", "//:applebundle_with_cross_cell_plist").assertSuccess();
-  }
-
-  @Test
-  public void shouldBeAbleToUseAppleBundleXCell() throws IOException {
-    assumeThat(Platform.detect(), is(MACOS));
-
-    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
-        "inter-cell/apple/primary",
-        "inter-cell/apple/secondary");
-    ProjectWorkspace primary = cells.getFirst();
-
-    ProjectWorkspace.ProcessResult result = primary.runBuckBuild("//:applebundle");
 
     result.assertSuccess();
   }
