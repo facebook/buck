@@ -31,7 +31,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
-import com.facebook.buck.rules.TargetGroup;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -284,47 +283,6 @@ public class ParsePipelineTest {
     }
   }
 
-  @Test
-  public void exceptionOnFetchingNodeAsGroup() throws Exception {
-    try (Fixture fixture = createSynchronousExecutionFixture("groups")) {
-      final Cell cell = fixture.getCell();
-
-      expectedException.expect(NoSuchBuildTargetException.class);
-      fixture.getTargetNodeParsePipeline().getNode(
-          cell,
-          BuildTargetFactory.newInstance(cell.getFilesystem(), "//:group_one"));
-    }
-  }
-
-  @Test
-  public void exceptionOnFetchingGroupAsNode() throws Exception {
-    try (Fixture fixture = createSynchronousExecutionFixture("groups")) {
-      final Cell cell = fixture.getCell();
-
-      expectedException.expect(NoSuchBuildTargetException.class);
-      fixture.getTargetGroupParsePipeline().getNode(
-          cell,
-          BuildTargetFactory.newInstance(cell.getFilesystem(), "//:foo"));
-    }
-  }
-
-  @Test
-  public void fetchGroup() throws Exception {
-    try (Fixture fixture = createSynchronousExecutionFixture("groups")) {
-      final Cell cell = fixture.getCell();
-
-      TargetGroup group = fixture.getTargetGroupParsePipeline().getNode(
-          cell,
-          BuildTargetFactory.newInstance(cell.getFilesystem(), "//:group_one"));
-
-      TargetNode<?, ?> node = fixture.getTargetNodeParsePipeline().getNode(
-          cell,
-          BuildTargetFactory.newInstance(cell.getFilesystem(), "//:foo"));
-
-      assertThat(group.containsTarget(node.getBuildTarget()), is(true));
-    }
-  }
-
   private static class TypedParsePipelineCache<K, V> implements PipelineNodeCache.Cache<K, V> {
     private final Map<K, V> nodeMap = new HashMap<>();
 
@@ -382,13 +340,11 @@ public class ParsePipelineTest {
     private final BuckEventBus eventBus;
     private final TestConsole console;
     private final TargetNodeParsePipeline targetNodeParsePipeline;
-    private final TargetGroupParsePipeline targetGroupParsePipeline;
     private final RawNodeParsePipeline rawNodeParsePipeline;
     private final ProjectBuildFileParserPool projectBuildFileParserPool;
     private final Cell cell;
     private final TypedParsePipelineCache<BuildTarget, TargetNode<?, ?>>
         targetNodeParsePipelineCache;
-    private final TypedParsePipelineCache<BuildTarget, TargetGroup> targetGroupParsePipelineCache;
     private final RawNodeParsePipelineCache rawNodeParsePipelineCache;
     private final ListeningExecutorService executorService;
     private final Set<ProjectBuildFileParser> projectBuildFileParsers;
@@ -409,7 +365,6 @@ public class ParsePipelineTest {
 
       this.cell = this.workspace.asCell();
       this.targetNodeParsePipelineCache = new TypedParsePipelineCache<>();
-      this.targetGroupParsePipelineCache = new TypedParsePipelineCache<>();
       this.rawNodeParsePipelineCache = new RawNodeParsePipelineCache();
       final TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory(
           ObjectMappers.newDefaultInstance());
@@ -456,12 +411,6 @@ public class ParsePipelineTest {
           this.eventBus,
           speculativeParsing.value(),
           this.rawNodeParsePipeline);
-      this.targetGroupParsePipeline = new TargetGroupParsePipeline(
-          this.targetGroupParsePipelineCache,
-          new DefaultParserTargetGroupFactory(constructorArgMarshaller),
-          executorService,
-          this.eventBus,
-          this.rawNodeParsePipeline);
     }
 
     public TargetNodeParsePipeline getTargetNodeParsePipeline() {
@@ -470,10 +419,6 @@ public class ParsePipelineTest {
 
     public RawNodeParsePipeline getRawNodeParsePipeline() {
       return rawNodeParsePipeline;
-    }
-
-    public TargetGroupParsePipeline getTargetGroupParsePipeline() {
-      return targetGroupParsePipeline;
     }
 
     public Cell getCell() {

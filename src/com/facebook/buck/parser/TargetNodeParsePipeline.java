@@ -160,11 +160,6 @@ public class TargetNodeParsePipeline
   }
 
   @Override
-  protected boolean isValid(Map<String, Object> from) {
-    return super.isValid(from) && !TargetGroupParsePipeline.isTargetGroup(from);
-  }
-
-  @Override
   public void close() {
     targetNodePipelineLifetimeEventScope.close();
     super.close();
