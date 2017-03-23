@@ -176,7 +176,10 @@ public class OfflineScribeLogger extends ScribeLogger {
                             .build())
                     .getBytes(Charsets.UTF_8);
               } catch (Exception e) {
-                LOG.error(e, "Failed generating JSON to store for category: %s.", category);
+                LOG.error(
+                    "Failed generating JSON to store for category: %s: %s.",
+                    category,
+                    e.getMessage());
                 return;
               }
 
