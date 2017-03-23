@@ -21,7 +21,9 @@ import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.util.TreePath;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.Name;
@@ -39,6 +41,8 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements TypeEle
   private StandaloneDeclaredType typeMirror;
   @Nullable
   private TypeMirror superclass;
+  @Nullable
+  private List<? extends TypeMirror> interfaces;
 
   TreeBackedTypeElement(
       TypeElement underlyingElement,
@@ -82,7 +86,13 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements TypeEle
 
   @Override
   public List<? extends TypeMirror> getInterfaces() {
-    throw new UnsupportedOperationException();
+    if (interfaces == null) {
+      interfaces = Collections.unmodifiableList(
+          underlyingElement.getInterfaces().stream()
+              .map(getResolver()::getCanonicalType)
+              .collect(Collectors.toList()));
+    }
+    return interfaces;
   }
 
   @Override

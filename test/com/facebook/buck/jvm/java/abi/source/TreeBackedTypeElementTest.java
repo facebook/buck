@@ -269,6 +269,83 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
   }
 
   @Test
+  public void testGetInterfacesOnClass() throws IOException {
+    compile(Joiner.on('\n').join(
+        "package com.facebook.foo;",
+        "public abstract class Foo implements Runnable, java.io.Closeable { }"));
+
+    TypeElement fooElement = elements.getTypeElement("com.facebook.foo.Foo");
+    TypeMirror runnableType = elements.getTypeElement("java.lang.Runnable").asType();
+    TypeMirror closeableType = elements.getTypeElement("java.io.Closeable").asType();
+
+    List<? extends TypeMirror> interfaces = fooElement.getInterfaces();
+    assertSameType(runnableType, interfaces.get(0));
+    assertSameType(closeableType, interfaces.get(1));
+    assertEquals(2, interfaces.size());
+  }
+
+  @Test
+  public void testGetInterfacesOnInterface() throws IOException {
+    compile(Joiner.on('\n').join(
+        "package com.facebook.foo;",
+        "public interface Foo extends Runnable, java.io.Closeable { }"));
+
+    TypeElement fooElement = elements.getTypeElement("com.facebook.foo.Foo");
+    TypeMirror runnableType = elements.getTypeElement("java.lang.Runnable").asType();
+    TypeMirror closeableType = elements.getTypeElement("java.io.Closeable").asType();
+
+    List<? extends TypeMirror> interfaces = fooElement.getInterfaces();
+    assertSameType(runnableType, interfaces.get(0));
+    assertSameType(closeableType, interfaces.get(1));
+    assertEquals(2, interfaces.size());
+  }
+
+  @Test
+  public void testGetInterfacesDefaultsEmptyForClass() throws IOException {
+    compile(Joiner.on('\n').join(
+        "package com.facebook.foo;",
+        "public class Foo { }"));
+
+    TypeElement fooElement = elements.getTypeElement("com.facebook.foo.Foo");
+    assertThat(fooElement.getInterfaces(), Matchers.empty());
+  }
+
+  @Test
+  public void testGetInterfacesDefaultsEmptyForInterface() throws IOException {
+    compile(Joiner.on('\n').join(
+        "package com.facebook.foo;",
+        "public interface Foo { }"));
+
+    TypeElement fooElement = elements.getTypeElement("com.facebook.foo.Foo");
+    assertThat(fooElement.getInterfaces(), Matchers.empty());
+  }
+
+  @Test
+  public void testGetInterfacesDefaultsEmptyForEnum() throws IOException {
+    compile(Joiner.on('\n').join(
+        "package com.facebook.foo;",
+        "public enum Foo { }"));
+
+    TypeElement fooElement = elements.getTypeElement("com.facebook.foo.Foo");
+    assertThat(fooElement.getInterfaces(), Matchers.empty());
+  }
+
+  @Test
+  public void testGetInterfacesDefaultsAnnotationForAnnotation() throws IOException {
+    compile(Joiner.on('\n').join(
+        "package com.facebook.foo;",
+        "public @interface Foo { }"));
+
+    TypeElement fooElement = elements.getTypeElement("com.facebook.foo.Foo");
+    TypeMirror annotationType =
+        elements.getTypeElement("java.lang.annotation.Annotation").asType();
+
+    List<? extends TypeMirror> interfaces = fooElement.getInterfaces();
+    assertSameType(annotationType, interfaces.get(0));
+    assertEquals(1, interfaces.size());
+  }
+
+  @Test
   public void testEnclosedClasses() throws IOException {
     compile(Joiner.on('\n').join(
         "class Foo {",
