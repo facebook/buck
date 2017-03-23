@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.lang.model.element.AnnotationValue;
+import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
@@ -106,5 +107,10 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable implements E
   @Override
   public AnnotationValue getDefaultValue() {
     throw new UnsupportedOperationException("NYI");
+  }
+
+  @Override
+  public <R, P> R accept(ElementVisitor<R, P> v, P p) {
+    return v.visitExecutable(this, p);
   }
 }

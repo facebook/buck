@@ -20,6 +20,7 @@ import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.sun.source.util.TreePath;
 
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 
@@ -55,5 +56,10 @@ class TreeBackedVariableElement extends TreeBackedElement implements VariableEle
   @Override
   public Object getConstantValue() {
     return underlyingElement.getConstantValue();
+  }
+
+  @Override
+  public <R, P> R accept(ElementVisitor<R, P> v, P p) {
+    return v.visitVariable(this, p);
   }
 }
