@@ -78,6 +78,47 @@ class NailgunException(Exception):
         return self.message
 
 
+class Transport(object):
+    def close(self):
+        raise NotImplementedError()
+
+    def sendall(self, data):
+        raise NotImplementedError()
+
+    def recv_into(self, buffer, size=None):
+        raise NotImplementedError()
+
+    def select(self, timeout_secs):
+        raise NotImplementedError()
+
+
+class UnixTransport(Transport):
+    def __init__(self, __socket):
+        self.__socket = __socket
+        self.recv_flags = 0
+        self.send_flags = 0
+        if hasattr(socket, 'MSG_WAITALL'):
+            self.recv_flags |= socket.MSG_WAITALL
+        if hasattr(socket, 'MSG_NOSIGNAL'):
+            self.send_flags |= socket.MSG_NOSIGNAL
+
+    def close(self):
+        return self.__socket.close()
+
+    def sendall(self, data):
+        result = self.__socket.sendall(data, self.send_flags)
+        return result
+
+    def recv_into(self, buffer, nbytes=None):
+        return self.__socket.recv_into(buffer, nbytes, self.send_flags)
+
+    def select(self, timeout_secs):
+        select_list = {self.__socket}
+        readable, _, exceptional = select.select(
+            select_list, [], select_list, timeout_secs)
+        return (self.__socket in readable), (self.__socket in exceptional)
+
+
 class NailgunConnection(object):
     '''Stateful object holding the connection to the Nailgun server.'''
 
@@ -89,16 +130,12 @@ class NailgunConnection(object):
             stdout=sys.stdout,
             stderr=sys.stderr,
             cwd=None):
-        self.socket = make_nailgun_socket(server_name, server_port, cwd)
+        self.transport = make_nailgun_transport(server_name, server_port, cwd)
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
         self.recv_flags = 0
         self.send_flags = 0
-        if hasattr(socket, 'MSG_WAITALL'):
-            self.recv_flags |= socket.MSG_WAITALL
-        if hasattr(socket, 'MSG_NOSIGNAL'):
-            self.send_flags |= socket.MSG_NOSIGNAL
         self.header_buf = ctypes.create_string_buffer(CHUNK_HEADER_LEN)
         self.buf = ctypes.create_string_buffer(BUFSIZE)
         self.ready_to_send_condition = Condition()
@@ -160,15 +197,13 @@ class NailgunConnection(object):
         '''
         Processes the next chunk from the nailgun server.
         '''
-        select_list = set([self.socket])
-        readable, _, exceptional = select.select(
-            select_list, [], select_list, HEARTBEAT_TIMEOUT_SECS)
-        if self.socket in readable:
+        readable, exceptional = self.transport.select(HEARTBEAT_TIMEOUT_SECS)
+        if readable:
             process_nailgun_stream(self)
         now = monotonic_time_nanos()
         if now - self.sendtime_nanos > HEARTBEAT_TIMEOUT_NANOS:
             send_heartbeat(self)
-        if self.socket in exceptional:
+        if exceptional:
             raise NailgunException(
                 'Server disconnected in select',
                 NailgunException.CONNECTION_BROKEN)
@@ -192,7 +227,7 @@ class NailgunConnection(object):
 
     def __exit__(self, type, value, traceback):
         try:
-            self.socket.close()
+            self.transport.close()
         except socket.error:
             pass
 
@@ -269,10 +304,8 @@ def send_chunk(buf, chunk_type, nailgun_connection):
     '''
     struct.pack_into('>ic', nailgun_connection.header_buf, 0, len(buf), chunk_type)
     nailgun_connection.sendtime_nanos = monotonic_time_nanos()
-    nailgun_connection.socket.sendall(
-        nailgun_connection.header_buf.raw,
-        nailgun_connection.send_flags)
-    nailgun_connection.socket.sendall(buf, nailgun_connection.send_flags)
+    nailgun_connection.transport.sendall(nailgun_connection.header_buf.raw)
+    nailgun_connection.transport.sendall(buf)
 
 
 def send_env_var(name, value, nailgun_connection):
@@ -315,10 +348,9 @@ def recv_to_fd(dest_file, num_bytes, nailgun_connection):
 
     while bytes_read < num_bytes:
         bytes_to_read = min(len(nailgun_connection.buf), num_bytes - bytes_read)
-        bytes_received = nailgun_connection.socket.recv_into(
+        bytes_received = nailgun_connection.transport.recv_into(
             nailgun_connection.buf,
-            bytes_to_read,
-            nailgun_connection.recv_flags)
+            bytes_to_read)
         if dest_file:
             dest_file.write(nailgun_connection.buf[:bytes_received])
         bytes_read += bytes_received
@@ -345,10 +377,9 @@ def recv_into_memoryview(num_bytes, buf_view, nailgun_connection):
     '''
     bytes_read = 0
     while bytes_read < num_bytes:
-        bytes_received = nailgun_connection.socket.recv_into(
+        bytes_received = nailgun_connection.transport.recv_into(
             buf_view[bytes_read:],
-            num_bytes - bytes_read,
-            nailgun_connection.recv_flags)
+            num_bytes - bytes_read)
         if not bytes_received:
             raise NailgunException(
                 'Server unexpectedly disconnected in recv_into()',
@@ -362,9 +393,8 @@ def recv_to_buffer_with_copy(num_bytes, buf, nailgun_connection):
     '''
     bytes_read = 0
     while bytes_read < num_bytes:
-        recv_buf = nailgun_connection.socket.recv(
-            num_bytes - bytes_read,
-            nailgun_connection.recv_flags)
+        recv_buf = nailgun_connection.transport.recv(
+            num_bytes - bytes_read)
         if not len(recv_buf):
             raise NailgunException(
                 'Server unexpectedly disconnected in recv()',
@@ -440,31 +470,35 @@ def process_nailgun_stream(nailgun_connection):
             NailgunException.UNEXPECTED_CHUNKTYPE)
 
 
-def make_nailgun_socket(nailgun_server, nailgun_port=None, cwd=None):
+def make_nailgun_transport(nailgun_server, nailgun_port=None, cwd=None):
     '''
     Creates and returns a socket connection to the nailgun server.
     '''
-    s = None
+    transport = None
     if nailgun_server.startswith('local:'):
-        try:
-            s = socket.socket(socket.AF_UNIX)
-        except socket.error as msg:
-            raise NailgunException(
-                'Could not create local socket connection to server: {0}'.format(msg),
-                NailgunException.SOCKET_FAILED)
-        socket_addr = nailgun_server[6:]
-        prev_cwd = os.getcwd()
-        try:
-            if cwd is not None:
-                os.chdir(cwd)
-            s.connect(socket_addr)
-        except socket.error as msg:
-            raise NailgunException(
-                'Could not connect to local server at {0}: {1}'.format(socket_addr, msg),
-                NailgunException.CONNECT_FAILED)
-        finally:
-            if cwd is not None:
-                os.chdir(prev_cwd)
+        if platform.system() == 'Windows':
+            raise NotImplementedError("Windows local pipes are not implemented yet")
+        else:
+            try:
+                s = socket.socket(socket.AF_UNIX)
+            except socket.error as msg:
+                raise NailgunException(
+                    'Could not create local socket connection to server: {0}'.format(msg),
+                    NailgunException.SOCKET_FAILED)
+            socket_addr = nailgun_server[6:]
+            prev_cwd = os.getcwd()
+            try:
+                if cwd is not None:
+                    os.chdir(cwd)
+                s.connect(socket_addr)
+                transport = UnixTransport(s)
+            except socket.error as msg:
+                raise NailgunException(
+                    'Could not connect to local server at {0}: {1}'.format(socket_addr, msg),
+                    NailgunException.CONNECT_FAILED)
+            finally:
+                if cwd is not None:
+                    os.chdir(prev_cwd)
     else:
         socket_addr = nailgun_server
         socket_family = socket.AF_UNSPEC
@@ -477,16 +511,17 @@ def make_nailgun_socket(nailgun_server, nailgun_port=None, cwd=None):
                 continue
             try:
                 s.connect(sa)
+                transport = UnixTransport(s)
             except socket.error as msg:
                 s.close()
                 s = None
                 continue
             break
-    if s is None:
+    if transport is None:
         raise NailgunException(
             'Could not connect to server {0}:{1}'.format(nailgun_server, nailgun_port),
             NailgunException.CONNECT_FAILED)
-    return s
+    return transport
 
 
 def main():
