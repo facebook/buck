@@ -161,6 +161,11 @@ class TreeBackedElements implements Elements {
         Preconditions.checkNotNull(resolver));
   }
 
+  @Nullable
+  /* package */ TypeElement getCanonicalElement(@Nullable TypeElement element) {
+    return (TypeElement) getCanonicalElement((Element) element);
+  }
+
   /**
    * Given a javac Element, gets the element that should be used by callers to refer to it. For
    * elements that have ASTs, that will be a TreeBackedElement; otherwise the javac Element itself.
@@ -173,6 +178,19 @@ class TreeBackedElements implements Elements {
     }
 
     return result;
+  }
+
+  /* package */ TypeElement getJavacElement(TypeElement element) {
+    return (TypeElement) getJavacElement((Element) element);
+  }
+
+  /* package */ Element getJavacElement(Element element) {
+    if (element instanceof TreeBackedElement) {
+      TreeBackedElement treeBackedElement = (TreeBackedElement) element;
+      return treeBackedElement.getUnderlyingElement();
+    }
+
+    return element;
   }
 
   /**

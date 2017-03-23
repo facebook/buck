@@ -25,6 +25,7 @@ import com.sun.source.util.Trees;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -159,9 +160,17 @@ public class FrontendOnlyJavacTask extends JavacTask {
   @Override
   public void setProcessors(Iterable<? extends Processor> processors) {
     if (processors.iterator().hasNext()) {
-      // Only throw if there's actually something there; an empty list we can actually handle
-      throw new UnsupportedOperationException("NYI");
+      javacTask.setProcessors(wrap(processors));
     }
+  }
+
+  private List<TreeBackedProcessorWrapper> wrap(Iterable<? extends Processor> processors) {
+    List<TreeBackedProcessorWrapper> result = new ArrayList<>();
+    for (Processor processor : processors) {
+      result.add(new TreeBackedProcessorWrapper(elements, types, processor));
+    }
+
+    return result;
   }
 
   @Override
