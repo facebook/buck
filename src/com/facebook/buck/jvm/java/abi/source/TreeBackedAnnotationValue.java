@@ -17,6 +17,8 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
+import com.sun.source.tree.AssignmentTree;
+import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
 
 import java.util.List;
@@ -26,7 +28,7 @@ import javax.lang.model.element.AnnotationValueVisitor;
 
 class TreeBackedAnnotationValue implements AnnotationValue {
   private final AnnotationValue underlyingAnnotationValue;
-  private final TreePath path;
+  private final TreePath valuePath;
   private final TreeBackedElementResolver resolver;
 
   @Nullable
@@ -37,14 +39,20 @@ class TreeBackedAnnotationValue implements AnnotationValue {
       TreePath path,
       TreeBackedElementResolver resolver) {
     this.underlyingAnnotationValue = underlyingAnnotationValue;
-    this.path = path;
+    Tree leaf = path.getLeaf();
+    if (leaf instanceof AssignmentTree) {
+      AssignmentTree assignmentTree = (AssignmentTree) leaf;
+      valuePath = new TreePath(path, assignmentTree.getExpression());
+    } else {
+      valuePath = path;
+    }
     this.resolver = resolver;
   }
 
   @Override
   public Object getValue() {
     if (value == null) {
-      value = resolver.getCanonicalValue(underlyingAnnotationValue, path);
+      value = resolver.getCanonicalValue(underlyingAnnotationValue, valuePath);
     }
     return value;
   }

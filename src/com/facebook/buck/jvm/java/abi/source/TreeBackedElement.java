@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
+import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.ModifiersTree;
 import com.sun.source.util.TreePath;
 
@@ -47,6 +48,8 @@ abstract class TreeBackedElement implements Element {
 
   @Nullable
   private final TreePath path;
+  @Nullable
+  private List<TreeBackedAnnotationMirror> annotationMirrors;
 
   public TreeBackedElement(
       Element underlyingElement,
@@ -109,7 +112,29 @@ abstract class TreeBackedElement implements Element {
 
   @Override
   public List<? extends AnnotationMirror> getAnnotationMirrors() {
-    throw new UnsupportedOperationException();
+    if (annotationMirrors == null) {
+      List<? extends AnnotationMirror> underlyingAnnotations =
+          underlyingElement.getAnnotationMirrors();
+      List<? extends AnnotationTree> annotationTrees = getAnnotationTrees();
+      List<TreeBackedAnnotationMirror> result = new ArrayList<>();
+      for (int i = 0; i < underlyingAnnotations.size(); i++) {
+        result.add(new TreeBackedAnnotationMirror(
+            underlyingAnnotations.get(i),
+            new TreePath(path, annotationTrees.get(i)),
+            resolver));
+      }
+      annotationMirrors = Collections.unmodifiableList(result);
+    }
+    return annotationMirrors;
+  }
+
+  private List<? extends AnnotationTree> getAnnotationTrees() {
+    ModifiersTree modifiersTree = getModifiersTree();
+    if (modifiersTree == null) {
+      return Collections.emptyList();
+    }
+
+    return modifiersTree.getAnnotations();
   }
 
   @Nullable

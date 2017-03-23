@@ -16,6 +16,18 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.util.liteinfersupport.Nullable;
+import com.facebook.buck.util.liteinfersupport.Preconditions;
+import com.sun.source.tree.AnnotationTree;
+import com.sun.source.tree.AssignmentTree;
+import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.IdentifierTree;
+import com.sun.source.tree.Tree;
+import com.sun.source.util.TreePath;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -24,13 +36,68 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.DeclaredType;
 
 class TreeBackedAnnotationMirror implements AnnotationMirror {
-  @Override
-  public DeclaredType getAnnotationType() {
-    throw new UnsupportedOperationException();
+  private final AnnotationMirror underlyingAnnotationMirror;
+  private final TreePath path;
+  private final AnnotationTree tree;
+  private final TreeBackedElementResolver resolver;
+
+  @Nullable
+  private DeclaredType type;
+  @Nullable
+  private Map<ExecutableElement, TreeBackedAnnotationValue> elementValues;
+
+  TreeBackedAnnotationMirror(
+      AnnotationMirror underlyingAnnotationMirror,
+      TreePath path,
+      TreeBackedElementResolver resolver) {
+    this.underlyingAnnotationMirror = underlyingAnnotationMirror;
+    this.path = path;
+    this.resolver = resolver;
+
+    tree = (AnnotationTree) path.getLeaf();
   }
 
   @Override
-  public Map<? extends ExecutableElement, ? extends AnnotationValue> getElementValues() {
-    throw new UnsupportedOperationException();
+  public DeclaredType getAnnotationType() {
+    if (type == null) {
+      type =
+          (DeclaredType) resolver.getCanonicalType(underlyingAnnotationMirror.getAnnotationType());
+    }
+    return type;
+  }
+
+  @Override
+  public Map<ExecutableElement, TreeBackedAnnotationValue> getElementValues() {
+    if (elementValues == null) {
+      Map<ExecutableElement, TreeBackedAnnotationValue> result = new HashMap<>();
+      Map<String, TreePath> treePaths = new HashMap<>();
+
+      List<? extends ExpressionTree> arguments = tree.getArguments();
+      for (ExpressionTree argument : arguments) {
+        TreePath valuePath = new TreePath(path, argument);
+        if (argument.getKind() != Tree.Kind.ASSIGNMENT) {
+          treePaths.put("value", valuePath);
+        } else {
+          AssignmentTree assignment = (AssignmentTree) argument;
+          IdentifierTree nameTree = (IdentifierTree) assignment.getVariable();
+          treePaths.put(nameTree.getName().toString(), valuePath);
+        }
+      }
+
+      for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry
+          : underlyingAnnotationMirror.getElementValues().entrySet()) {
+        ExecutableElement underlyingKeyElement = entry.getKey();
+
+        TreePath valuePath =
+            Preconditions.checkNotNull(treePaths.get(entry.getKey().getSimpleName().toString()));
+
+        result.put(
+            resolver.getCanonicalElement(underlyingKeyElement),
+            new TreeBackedAnnotationValue(entry.getValue(), valuePath, resolver));
+      }
+
+      elementValues = Collections.unmodifiableMap(result);
+    }
+    return elementValues;
   }
 }

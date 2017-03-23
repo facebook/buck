@@ -166,6 +166,11 @@ class TreeBackedElements implements Elements {
     return (TypeElement) getCanonicalElement((Element) element);
   }
 
+  @Nullable
+  /* package */ ExecutableElement getCanonicalElement(@Nullable ExecutableElement element) {
+    return (ExecutableElement) getCanonicalElement((Element) element);
+  }
+
   /**
    * Given a javac Element, gets the element that should be used by callers to refer to it. For
    * elements that have ASTs, that will be a TreeBackedElement; otherwise the javac Element itself.

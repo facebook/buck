@@ -18,13 +18,16 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.NewArrayTree;
+import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleAnnotationValueVisitor8;
@@ -53,6 +56,10 @@ class TreeBackedElementResolver {
     return new StandalonePackageType(element);
   }
 
+  public ExecutableElement getCanonicalElement(ExecutableElement element) {
+    return elements.getCanonicalElement(element);
+  }
+
   /* package */ TypeMirror getCanonicalType(TypeMirror javacType) {
     return types.getCanonicalType(javacType);
   }
@@ -76,22 +83,31 @@ class TreeBackedElementResolver {
 
       @Override
       public Object visitAnnotation(AnnotationMirror a, Void aVoid) {
-        throw new UnsupportedOperationException("NYI");
+        return new TreeBackedAnnotationMirror(a, path, TreeBackedElementResolver.this);
       }
 
       @Override
       public Object visitArray(List<? extends AnnotationValue> values, Void aVoid) {
-        NewArrayTree tree = (NewArrayTree) path.getLeaf();
-        List<? extends ExpressionTree> valueTrees = tree.getInitializers();
+        Tree valueTree = path.getLeaf();
 
-        List<TreeBackedAnnotationValue> result = new ArrayList<>();
-        for (int i = 0; i < values.size(); i++) {
-          result.add(new TreeBackedAnnotationValue(
-              values.get(i),
-              new TreePath(path, valueTrees.get(i)),
+        if (valueTree instanceof NewArrayTree) {
+          NewArrayTree tree = (NewArrayTree) path.getLeaf();
+          List<? extends ExpressionTree> valueTrees = tree.getInitializers();
+
+          List<TreeBackedAnnotationValue> result = new ArrayList<>();
+          for (int i = 0; i < values.size(); i++) {
+            result.add(new TreeBackedAnnotationValue(
+                values.get(i),
+                new TreePath(path, valueTrees.get(i)),
+                TreeBackedElementResolver.this));
+          }
+          return result;
+        } else {
+          return Collections.singletonList(new TreeBackedAnnotationValue(
+              values.get(0),
+              path,
               TreeBackedElementResolver.this));
         }
-        return result;
       }
 
       @Override

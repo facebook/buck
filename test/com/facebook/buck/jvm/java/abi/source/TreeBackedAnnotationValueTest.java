@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
@@ -336,6 +337,85 @@ public class TreeBackedAnnotationValueTest extends CompilerTreeApiParameterizedT
         assertSameType(
             elements.getTypeElement("Foo").asType(),
             (TypeMirror) vals.get(1).getValue());
+        return null;
+      }
+    }, null);
+  }
+
+  @Test
+  public void testAnnotationMirrorValue() throws IOException {
+    compile(Joiner.on('\n').join(
+        "public @interface Foo {",
+        "  FooHelper value() default @FooHelper;",
+        "}",
+        "@interface FooHelper {}"));
+
+    ExecutableElement method = findMethod("value", elements.getTypeElement("Foo"));
+    AnnotationValue defaultValue = method.getDefaultValue();
+    defaultValue.accept(new TestVisitor() {
+      @Override
+      public Void visitAnnotation(AnnotationMirror a, Void aVoid) {
+        assertSameType(elements.getTypeElement("FooHelper").asType(), a.getAnnotationType());
+        assertSame(a, defaultValue.getValue());
+        return null;
+      }
+    }, null);
+  }
+
+  @Test
+  public void testSingleElementAnnotationMirrorValue() throws IOException {
+    compile(Joiner.on('\n').join(
+        "public @interface Foo {",
+        "  FooHelper value() default @FooHelper(42);",
+        "}",
+        "@interface FooHelper {",
+        "  int value();",
+        "}"));
+
+    ExecutableElement method = findMethod("value", elements.getTypeElement("Foo"));
+    AnnotationValue defaultValue = method.getDefaultValue();
+    defaultValue.accept(new TestVisitor() {
+      @Override
+      public Void visitAnnotation(AnnotationMirror a, Void aVoid) {
+        AnnotationMirror annotationMirrorValue = (AnnotationMirror) defaultValue.getValue();
+        ExecutableElement keyElement = findMethod("value", elements.getTypeElement("FooHelper"));
+
+        assertEquals(1, annotationMirrorValue.getElementValues().size());
+        assertEquals(42, annotationMirrorValue.getElementValues().get(keyElement).getValue());
+        return null;
+      }
+    }, null);
+  }
+
+  @Test
+  public void testMultiElementAnnotationMirrorValue() throws IOException {
+    compile(Joiner.on('\n').join(
+        "public @interface Foo {",
+        "  FooHelper value() default @FooHelper(number=42, string=\"42\");",
+        "}",
+        "@interface FooHelper {",
+        "  int number();",
+        "  String string();",
+        "}"));
+
+    ExecutableElement method = findMethod("value", elements.getTypeElement("Foo"));
+    AnnotationValue defaultValue = method.getDefaultValue();
+    defaultValue.accept(new TestVisitor() {
+      @Override
+      public Void visitAnnotation(AnnotationMirror a, Void aVoid) {
+        AnnotationMirror annotationMirrorValue = (AnnotationMirror) defaultValue.getValue();
+        ExecutableElement numberKeyElement =
+            findMethod("number", elements.getTypeElement("FooHelper"));
+        ExecutableElement stringKeyElement =
+            findMethod("string", elements.getTypeElement("FooHelper"));
+
+        assertEquals(2, annotationMirrorValue.getElementValues().size());
+        assertEquals(
+            42,
+            annotationMirrorValue.getElementValues().get(numberKeyElement).getValue());
+        assertEquals(
+            "42",
+            annotationMirrorValue.getElementValues().get(stringKeyElement).getValue());
         return null;
       }
     }, null);
