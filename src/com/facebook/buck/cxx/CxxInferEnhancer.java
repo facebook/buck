@@ -129,7 +129,7 @@ public final class CxxInferEnhancer {
                     ImmutableSortedSet.<BuildRule>naturalOrder()
                         .addAll(captureRules)
                         .build()),
-                params.getExtraDeps()),
+                ImmutableSortedSet::of),
             captureRules));
   }
 
@@ -196,10 +196,12 @@ public final class CxxInferEnhancer {
         sourceFilter,
         args);
 
+    ImmutableSet<BuildRule> deps = args.getCxxDeps().get(resolver);
+
     // Build all the transitive dependencies build rules with the Infer's flavor
     ImmutableSet<T> transitiveDepsLibraryRules = requireTransitiveDependentLibraries(
         cxxPlatform,
-        cleanParams.getDeps(),
+        deps,
         requiredFlavor,
         aggregatingRuleClass);
 
@@ -314,11 +316,12 @@ public final class CxxInferEnhancer {
   private static ImmutableList<CxxPreprocessorInput>
   computePreprocessorInputForCxxBinaryDescriptionArg(
       BuildRuleParams params,
+      BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       CxxBinaryDescription.Arg args,
       HeaderSymlinkTree headerSymlinkTree,
       Optional<SymlinkTree> sandboxTree) throws NoSuchBuildTargetException {
-    ImmutableSet<BuildRule> deps = params.getDeps();
+    ImmutableSet<BuildRule> deps = args.getCxxDeps().get(resolver);
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
         params,
         cxxPlatform,
@@ -348,7 +351,7 @@ public final class CxxInferEnhancer {
       HeaderSymlinkTree headerSymlinkTree,
       ImmutableList<String> includeDirs,
       Optional<SymlinkTree> sandboxTree) throws NoSuchBuildTargetException {
-    ImmutableSet<BuildRule> deps = params.getDeps();
+    ImmutableSet<BuildRule> deps = args.getAllCxxDeps().get(resolver);
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
         params,
         cxxPlatform,
@@ -421,6 +424,7 @@ public final class CxxInferEnhancer {
     if (args instanceof CxxBinaryDescription.Arg) {
       preprocessorInputs = computePreprocessorInputForCxxBinaryDescriptionArg(
           params,
+          resolver,
           cxxPlatform,
           (CxxBinaryDescription.Arg) args,
           headerSymlinkTree,
@@ -474,7 +478,7 @@ public final class CxxInferEnhancer {
                         .addAll(captureAnalyzeRules.captureRules)
                         .addAll(captureAnalyzeRules.aggregatingRules)
                         .build()),
-                params.getExtraDeps()),
+                ImmutableSortedSet::of),
             inferConfig,
             captureAnalyzeRules));
   }
@@ -501,7 +505,7 @@ public final class CxxInferEnhancer {
                         .addAll(analysisToReport.getTransitiveAnalyzeRules())
                         .add(analysisToReport)
                         .build()),
-                buildRuleParams.getExtraDeps()),
+                ImmutableSortedSet::of),
             analysisToReport));
   }
 }

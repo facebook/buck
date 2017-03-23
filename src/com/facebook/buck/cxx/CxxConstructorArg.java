@@ -80,4 +80,12 @@ public class CxxConstructorArg extends AbstractDescriptionArg
     // plan to eventually support key-value flavors.
     return ImmutableSortedSet.copyOf(defaults.values());
   }
+
+  public CxxDeps getCxxDeps() {
+    return CxxDeps.builder()
+        .addDeps(deps)
+        .addDep(precompiledHeader)
+        .build();
+  }
+
 }

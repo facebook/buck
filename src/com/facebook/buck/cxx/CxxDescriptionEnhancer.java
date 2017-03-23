@@ -774,8 +774,10 @@ public class CxxDescriptionEnhancer {
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       CxxBinaryDescription.Arg args,
+      ImmutableSet<BuildTarget> extraDeps,
       Optional<StripStyle> stripStyle,
-      Optional<LinkerMapMode> flavoredLinkerMapMode) throws NoSuchBuildTargetException {
+      Optional<LinkerMapMode> flavoredLinkerMapMode)
+      throws NoSuchBuildTargetException {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
@@ -798,12 +800,16 @@ public class CxxDescriptionEnhancer {
     // Build the binary deps.
     ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
     // Add original declared and extra deps.
-    depsBuilder.addAll(params.getDeps());
+    args.getCxxDeps().get(resolver).forEach(depsBuilder::add);
     // Add in deps found via deps query.
     args.depsQuery.ifPresent(
-        depsQuery ->
-            QueryUtils.resolveDepQuery(params, depsQuery, resolver, cellRoots, targetGraph)
+        query ->
+            QueryUtils.resolveDepQuery(params, query, resolver, cellRoots, targetGraph, args.deps)
                 .forEach(depsBuilder::add));
+    // Add any extra deps passed in.
+    extraDeps.stream()
+        .map(resolver::getRule)
+        .forEach(depsBuilder::add);
     ImmutableSortedSet<BuildRule> deps = depsBuilder.build();
 
     return createBuildRulesForCxxBinary(

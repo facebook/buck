@@ -198,7 +198,8 @@ public class AppleLibraryDescription implements
           args,
           args.linkStyle,
           Optional.empty(),
-          ImmutableSet.of());
+          ImmutableSet.of(),
+          ImmutableSortedSet.of());
     }
   }
 
@@ -260,7 +261,9 @@ public class AppleLibraryDescription implements
       A args,
       Optional<Linker.LinkableDepType> linkableDepType,
       Optional<SourcePath> bundleLoader,
-      ImmutableSet<BuildTarget> blacklist) throws NoSuchBuildTargetException {
+      ImmutableSet<BuildTarget> blacklist,
+      ImmutableSortedSet<BuildTarget> extraCxxDeps)
+      throws NoSuchBuildTargetException {
     // We explicitly remove flavors from params to make sure rule
     // has the same output regardless if we will strip or not.
     Optional<StripStyle> flavoredStripStyle =
@@ -278,7 +281,8 @@ public class AppleLibraryDescription implements
         linkableDepType,
         bundleLoader,
         blacklist,
-        pathResolver);
+        pathResolver,
+        extraCxxDeps);
 
     if (!shouldWrapIntoDebuggableBinary(params.getBuildTarget(), unstrippedBinaryRule)) {
         return unstrippedBinaryRule;
@@ -325,7 +329,9 @@ public class AppleLibraryDescription implements
       Optional<Linker.LinkableDepType> linkableDepType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
-      SourcePathResolver pathResolver) throws NoSuchBuildTargetException {
+      SourcePathResolver pathResolver,
+      ImmutableSortedSet<BuildTarget> extraCxxDeps)
+      throws NoSuchBuildTargetException {
     Optional<MultiarchFileInfo> multiarchFileInfo =
         MultiarchFileInfos.create(appleCxxPlatformFlavorDomain, params.getBuildTarget());
     if (multiarchFileInfo.isPresent()) {
@@ -341,7 +347,8 @@ public class AppleLibraryDescription implements
                 linkableDepType,
                 bundleLoader,
                 blacklist,
-                pathResolver));
+                pathResolver,
+                extraCxxDeps));
       }
       return MultiarchFileInfos.requireMultiarchRule(
           // In the same manner that debug flavors are omitted from single-arch constituents, they
@@ -361,7 +368,8 @@ public class AppleLibraryDescription implements
           linkableDepType,
           bundleLoader,
           blacklist,
-          pathResolver);
+          pathResolver,
+          extraCxxDeps);
     }
   }
 
@@ -375,7 +383,9 @@ public class AppleLibraryDescription implements
       Optional<Linker.LinkableDepType> linkableDepType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
-      SourcePathResolver pathResolver) throws NoSuchBuildTargetException {
+      SourcePathResolver pathResolver,
+      ImmutableSortedSet<BuildTarget> extraCxxDeps)
+      throws NoSuchBuildTargetException {
 
     Optional<BuildRule> swiftCompanionBuildRule = swiftDelegate.createCompanionBuildRule(
         targetGraph, params, resolver, cellRoots, args);
@@ -390,6 +400,11 @@ public class AppleLibraryDescription implements
             .add(swiftCompanionBuildRule.get().getBuildTarget())
             .build();
         params = params.copyAppendingExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
+        extraCxxDeps =
+            ImmutableSortedSet.<BuildTarget>naturalOrder()
+                .addAll(extraCxxDeps)
+                .add(swiftCompanionBuildRule.get().getBuildTarget())
+                .build();
       }
     }
 
@@ -411,14 +426,16 @@ public class AppleLibraryDescription implements
     if (existingRule.isPresent()) {
       return existingRule.get();
     } else {
-      BuildRule rule = delegate.createBuildRule(
-          params.withBuildTarget(unstrippedTarget),
-          resolver,
-          cellRoots,
-          delegateArg,
-          linkableDepType,
-          bundleLoader,
-          blacklist);
+      BuildRule rule =
+          delegate.createBuildRule(
+              params.withBuildTarget(unstrippedTarget),
+              resolver,
+              cellRoots,
+              delegateArg,
+              linkableDepType,
+              bundleLoader,
+              blacklist,
+              extraCxxDeps);
       return resolver.addToIndex(rule);
     }
   }

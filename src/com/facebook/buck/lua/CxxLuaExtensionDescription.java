@@ -54,10 +54,10 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -66,6 +66,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class CxxLuaExtensionDescription implements
     Description<CxxLuaExtensionDescription.Arg>,
@@ -152,24 +153,30 @@ public class CxxLuaExtensionDescription implements
               ruleResolver,
               cxxPlatform);
     }
-    ImmutableSet<BuildRule> deps = params.getDeps();
+    ImmutableSet<BuildRule> deps = args.getCxxDeps().get(ruleResolver);
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput =
-        CxxDescriptionEnhancer.collectCxxPreprocessorInput(
-            params,
-            cxxPlatform,
-            deps,
-            CxxFlags.getLanguageFlags(
-                args.preprocessorFlags,
-                args.platformPreprocessorFlags,
-                args.langPreprocessorFlags,
-                cxxPlatform),
-            ImmutableList.of(headerSymlinkTree),
-            ImmutableSet.of(),
-            CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                cxxPlatform,
-                deps),
-            args.includeDirs,
-            sandboxTree);
+        ImmutableList.<CxxPreprocessorInput>builder()
+            .add(
+                luaConfig.getLuaCxxLibrary(ruleResolver)
+                    .getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC))
+            .addAll(
+                CxxDescriptionEnhancer.collectCxxPreprocessorInput(
+                    params,
+                    cxxPlatform,
+                    deps,
+                    CxxFlags.getLanguageFlags(
+                        args.preprocessorFlags,
+                        args.platformPreprocessorFlags,
+                        args.langPreprocessorFlags,
+                        cxxPlatform),
+                    ImmutableList.of(headerSymlinkTree),
+                    ImmutableSet.of(),
+                    CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+                        cxxPlatform,
+                        deps),
+                    args.includeDirs,
+                    sandboxTree))
+            .build();
 
     // Generate rule to build the object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> picObjects =
@@ -245,9 +252,10 @@ public class CxxLuaExtensionDescription implements
         Optional.of(extensionName),
         extensionPath,
         Linker.LinkableDepType.SHARED,
-        FluentIterable.from(params.getDeps())
+        RichStream.from(args.getCxxDeps().get(ruleResolver))
             .filter(NativeLinkable.class)
-            .append(luaConfig.getLuaCxxLibrary(ruleResolver)),
+            .concat(Stream.of(luaConfig.getLuaCxxLibrary(ruleResolver)))
+            .toImmutableList(),
         args.cxxRuntimeType,
         Optional.empty(),
         ImmutableSet.of(),
@@ -321,8 +329,9 @@ public class CxxLuaExtensionDescription implements
       @Override
       public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
           CxxPlatform cxxPlatform) {
-        return FluentIterable.from(params.getDeclaredDeps().get())
-            .filter(NativeLinkable.class);
+        return RichStream.from(args.getCxxDeps().get(resolver))
+            .filter(NativeLinkable.class)
+            .toImmutableList();
       }
 
       @Override

@@ -101,14 +101,31 @@ public class CxxBinaryDescription implements
     return new Arg();
   }
 
-  @SuppressWarnings("PMD.PrematureDeclaration")
   @Override
   public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
+      A args)
+      throws NoSuchBuildTargetException {
+    return createBuildRule(targetGraph, params, resolver, cellRoots, args, ImmutableSortedSet.of());
+  }
+
+  @SuppressWarnings("PMD.PrematureDeclaration")
+  public BuildRule createBuildRule(
+      TargetGraph targetGraph,
+      BuildRuleParams metadataRuleParams,
+      BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
+      Arg args,
+      ImmutableSortedSet<BuildTarget> extraDeps)
+      throws NoSuchBuildTargetException {
+
+    // Create a copy of the metadata-rule params with the deps removed to pass around into library
+    // code.  This should prevent this code from using the over-specified deps when constructing
+    // build rules.
+    BuildRuleParams params = metadataRuleParams.copyInvalidatingDeps();
 
     // We explicitly remove some flavors below from params to make sure rule
     // has the same output regardless if we will strip or not.
@@ -154,6 +171,7 @@ public class CxxBinaryDescription implements
               cxxBuckConfig,
               cxxPlatform,
               args,
+              ImmutableSet.of(),
               flavoredStripStyle,
               flavoredLinkerMapMode);
       return CxxCompilationDatabase.createCompilationDatabase(
@@ -230,6 +248,7 @@ public class CxxBinaryDescription implements
             cxxBuckConfig,
             cxxPlatform,
             args,
+            extraDeps,
             flavoredStripStyle,
             flavoredLinkerMapMode);
 
@@ -250,7 +269,7 @@ public class CxxBinaryDescription implements
     CxxBinary cxxBinary = new CxxBinary(
         params
             .copyReplacingDeclaredAndExtraDeps(
-                () -> cxxLinkAndCompileRules.deps, params.getExtraDeps())
+                () -> cxxLinkAndCompileRules.deps, metadataRuleParams.getExtraDeps())
             .copyAppendingExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder)),
         resolver,
         ruleFinder,

@@ -736,23 +736,36 @@ public class CxxLibraryDescription implements
         args,
         args.linkStyle,
         Optional.empty(),
-        ImmutableSet.of());
+        ImmutableSet.of(),
+        ImmutableSortedSet.of());
   }
 
   public <A extends Arg> BuildRule createBuildRule(
-      final BuildRuleParams params,
+      BuildRuleParams metadataRuleParams,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       final A args,
       Optional<Linker.LinkableDepType> linkableDepType,
       final Optional<SourcePath> bundleLoader,
-      ImmutableSet<BuildTarget> blacklist)
+      ImmutableSet<BuildTarget> blacklist,
+      ImmutableSortedSet<BuildTarget> extraDeps)
       throws NoSuchBuildTargetException {
+
+    // Create a copy of the metadata-rule params with the deps removed to pass around into library
+    // code.  This should prevent this code from using the over-specified deps when constructing
+    // build rules.
+    BuildRuleParams params = metadataRuleParams.copyInvalidatingDeps();
+
     BuildTarget buildTarget = params.getBuildTarget();
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, Type>> type = getLibType(buildTarget);
     Optional<CxxPlatform> platform = cxxPlatforms.getValue(buildTarget);
+    CxxDeps cxxDeps =
+        CxxDeps.builder()
+            .addDeps(args.getAllCxxDeps())
+            .addDeps(extraDeps)
+            .build();
 
     if (params.getBuildTarget().getFlavors()
         .contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
@@ -772,7 +785,7 @@ public class CxxLibraryDescription implements
               cxxPlatform,
               CxxSourceRuleFactory.PicType.PIC,
               args,
-              params.getDeps());
+              cxxDeps.get(resolver));
       return CxxCompilationDatabase.createCompilationDatabase(params, objects.keySet());
     } else if (params.getBuildTarget().getFlavors()
         .contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
@@ -865,7 +878,7 @@ public class CxxLibraryDescription implements
               cxxBuckConfig,
               platform.get(),
               args,
-              params.getDeps(),
+              cxxDeps.get(resolver),
               Linker.LinkType.SHARED,
               linkableDepType.orElse(Linker.LinkableDepType.SHARED),
               Optional.empty(),
@@ -883,7 +896,7 @@ public class CxxLibraryDescription implements
               cxxBuckConfig,
               platform.get(),
               args,
-              params.getDeps(),
+              cxxDeps.get(resolver),
               Linker.LinkType.MACH_O_BUNDLE,
               linkableDepType.orElse(Linker.LinkableDepType.SHARED),
               bundleLoader,
@@ -895,7 +908,7 @@ public class CxxLibraryDescription implements
               cxxBuckConfig,
               platform.get(),
               args,
-              params.getDeps(),
+              cxxDeps.get(resolver),
               CxxSourceRuleFactory.PicType.PDC);
         case STATIC_PIC:
           return createStaticLibraryBuildRule(
@@ -904,7 +917,7 @@ public class CxxLibraryDescription implements
               cxxBuckConfig,
               platform.get(),
               args,
-              params.getDeps(),
+              cxxDeps.get(resolver),
               CxxSourceRuleFactory.PicType.PIC);
         case SANDBOX_TREE:
           return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
@@ -939,10 +952,10 @@ public class CxxLibraryDescription implements
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new CxxLibrary(
-        params,
+        metadataRuleParams,
         resolver,
-        params.getDeps(),
-        resolver.getAllRules(args.exportedDeps),
+        args.getCxxDeps(),
+        args.getExportedCxxDeps(),
         hasExportedHeaders,
         Predicates.not(hasObjects),
         input -> {
@@ -969,7 +982,7 @@ public class CxxLibraryDescription implements
                 cxxBuckConfig,
                 cxxPlatform,
                 args,
-                params.getDeps(),
+                cxxDeps.get(resolver),
                 CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
                     args.linkerFlags,
                     args.platformLinkerFlags,
@@ -1218,6 +1231,17 @@ public class CxxLibraryDescription implements
     // used otherwise.
     public Optional<SourcePath> bridgingHeader;
     public Optional<String> moduleName;
+
+    CxxDeps getExportedCxxDeps() {
+      return CxxDeps.builder()
+          .addDeps(exportedDeps)
+          .build();
+    }
+
+    CxxDeps getAllCxxDeps() {
+      return CxxDeps.concat(getCxxDeps(), getExportedCxxDeps());
+    }
+
   }
 
 }

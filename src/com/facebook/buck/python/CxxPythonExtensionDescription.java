@@ -63,7 +63,6 @@ import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -256,7 +255,7 @@ public class CxxPythonExtensionDescription implements
     ImmutableSet.Builder<BuildRule> rules = ImmutableSet.builder();
 
     // Add declared deps.
-    rules.addAll(ruleResolver.getAllRules(args.deps));
+    rules.addAll(args.getCxxDeps().get(ruleResolver));
 
     // Add platform specific deps.
     rules.addAll(
@@ -429,8 +428,9 @@ public class CxxPythonExtensionDescription implements
           @Override
           public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
               CxxPlatform cxxPlatform) {
-            return FluentIterable.from(getPlatformDeps(ruleResolver, pythonPlatform, args))
-                .filter(NativeLinkable.class);
+            return RichStream.from(getPlatformDeps(ruleResolver, pythonPlatform, args))
+                .filter(NativeLinkable.class)
+                .toImmutableList();
           }
 
           @Override

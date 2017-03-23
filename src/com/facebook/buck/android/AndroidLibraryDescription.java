@@ -114,7 +114,8 @@ public class AndroidLibraryDescription
               args.depsQuery.get(),
               resolver,
               cellRoots,
-              targetGraph)
+              targetGraph,
+              args.deps)
               .collect(Collectors.toList()));
 
     }

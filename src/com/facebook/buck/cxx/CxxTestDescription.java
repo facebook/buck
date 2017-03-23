@@ -78,6 +78,30 @@ public class CxxTestDescription implements
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
   }
 
+  private ImmutableSet<BuildTarget> getImplicitFrameworkDeps(Arg constructorArg) {
+    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
+
+    CxxTestType type = constructorArg.framework.orElse(getDefaultTestType());
+    switch (type) {
+      case GTEST: {
+        cxxBuckConfig.getGtestDep().ifPresent(deps::add);
+        if (constructorArg.useDefaultTestMain.orElse(true)) {
+          cxxBuckConfig.getGtestDefaultTestMainDep().ifPresent(deps::add);
+        }
+        break;
+      }
+      case BOOST: {
+        cxxBuckConfig.getBoostTestDep().ifPresent(deps::add);
+        break;
+      }
+      default: {
+        break;
+      }
+    }
+
+    return deps.build();
+  }
+
   @Override
   public Arg createUnpopulatedConstructorArg() {
     return new Arg();
@@ -120,6 +144,7 @@ public class CxxTestDescription implements
               cxxBuckConfig,
               cxxPlatform,
               args,
+              getImplicitFrameworkDeps(args),
               flavoredStripStyle,
               flavoredLinkerMapMode);
       return CxxCompilationDatabase.createCompilationDatabase(
@@ -156,6 +181,7 @@ public class CxxTestDescription implements
             cxxBuckConfig,
             cxxPlatform,
             args,
+            getImplicitFrameworkDeps(args),
             flavoredStripStyle,
             flavoredLinkerMapMode);
 
@@ -309,23 +335,8 @@ public class CxxTestDescription implements
       }
     }
 
-    CxxTestType type = constructorArg.framework.orElse(getDefaultTestType());
-    switch (type) {
-      case GTEST: {
-        cxxBuckConfig.getGtestDep().ifPresent(deps::add);
-        if (constructorArg.useDefaultTestMain.orElse(true)) {
-          cxxBuckConfig.getGtestDefaultTestMainDep().ifPresent(deps::add);
-        }
-        break;
-      }
-      case BOOST: {
-        cxxBuckConfig.getBoostTestDep().ifPresent(deps::add);
-        break;
-      }
-      default: {
-        break;
-      }
-    }
+    // Add in any implicit framework deps.
+    deps.addAll(getImplicitFrameworkDeps(constructorArg));
 
     constructorArg.depsQuery.ifPresent(
         depsQuery ->

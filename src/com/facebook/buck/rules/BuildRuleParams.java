@@ -80,6 +80,22 @@ public class BuildRuleParams {
             .build());
   }
 
+  /**
+   * @return a copy of these {@link BuildRuleParams} with the deps removed to prevent using them to
+   *         as the deps in constructed {@link BuildRule}s.
+   */
+  public BuildRuleParams copyInvalidatingDeps() {
+    Supplier<ImmutableSortedSet<BuildRule>> throwingDeps =
+        () -> {
+          throw new IllegalStateException(
+              String.format(
+                  "%s: Access to target-node level `BuildRuleParam` deps. " +
+                      "Please compose application-specific deps from the constructor arg instead.",
+                  getBuildTarget()));
+        };
+    return copyReplacingDeclaredAndExtraDeps(throwingDeps, throwingDeps);
+  }
+
   public BuildRuleParams copyAppendingExtraDeps(Iterable<? extends BuildRule> additional) {
     return copyAppendingExtraDeps(Suppliers.ofInstance(additional));
   }

@@ -53,6 +53,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.zip.UnzipStep;
@@ -231,7 +232,8 @@ public class AppleTestDescription implements
         args,
         testHostInfo.map(TestHostInfo::getTestHostAppBinarySourcePath),
         testHostInfo.map(TestHostInfo::getBlacklist).orElse(ImmutableSet.of()),
-        libraryTarget);
+        libraryTarget,
+        ImmutableSortedSet.copyOf(OptionalCompat.asSet(args.testHostApp)));
     if (!createBundle || SwiftLibraryDescription.isSwiftTarget(libraryTarget)) {
       return library;
     }
@@ -362,7 +364,9 @@ public class AppleTestDescription implements
       A args,
       Optional<SourcePath> testHostAppBinarySourcePath,
       ImmutableSet<BuildTarget> blacklist,
-      BuildTarget libraryTarget) throws NoSuchBuildTargetException {
+      BuildTarget libraryTarget,
+      ImmutableSortedSet<BuildTarget> extraCxxDeps)
+      throws NoSuchBuildTargetException {
     BuildTarget existingLibraryTarget = libraryTarget
         .withAppendedFlavors(AppleDebuggableBinary.RULE_FLAVOR, CxxStrip.RULE_FLAVOR)
         .withAppendedFlavors(StripStyle.NON_GLOBAL_SYMBOLS.getFlavor());
@@ -381,7 +385,8 @@ public class AppleTestDescription implements
           // we'll just link them statically.
           Optional.of(Linker.LinkableDepType.STATIC),
           testHostAppBinarySourcePath,
-          blacklist);
+          blacklist,
+          extraCxxDeps);
       resolver.addToIndex(library);
     }
     return library;

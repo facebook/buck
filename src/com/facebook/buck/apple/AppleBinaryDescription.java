@@ -374,6 +374,7 @@ public class AppleBinaryDescription
       return existingThinRule.get();
     }
 
+    ImmutableSortedSet.Builder<BuildTarget> extraCxxDepsBuilder = ImmutableSortedSet.naturalOrder();
     Optional<BuildRule> swiftCompanionBuildRule = swiftDelegate.createCompanionBuildRule(
         targetGraph, params, resolver, cellRoots, args);
     if (swiftCompanionBuildRule.isPresent()) {
@@ -382,9 +383,11 @@ public class AppleBinaryDescription
       if (isSwiftTarget(params.getBuildTarget())) {
         return swiftCompanionBuildRule.get();
       } else {
+        extraCxxDepsBuilder.add(swiftCompanionBuildRule.get().getBuildTarget());
         params = params.copyAppendingExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
       }
     }
+    ImmutableSortedSet<BuildTarget> extraCxxDeps = extraCxxDepsBuilder.build();
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
@@ -412,7 +415,13 @@ public class AppleBinaryDescription
           args,
           params.getBuildTarget());
       return resolver.addToIndex(
-          delegate.createBuildRule(targetGraph, params, resolver, cellRoots, delegateArg));
+          delegate.createBuildRule(
+              targetGraph,
+              params,
+              resolver,
+              cellRoots,
+              delegateArg,
+              extraCxxDeps));
     }
   }
 

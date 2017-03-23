@@ -49,7 +49,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * An action graph representation of a C/C++ library from the target graph, providing the
@@ -60,8 +59,8 @@ public class CxxLibrary
     implements AbstractCxxLibrary, HasRuntimeDeps, NativeTestable, NativeLinkTarget {
 
   private final BuildRuleResolver ruleResolver;
-  private final Iterable<BuildRule> deps;
-  private final Iterable<BuildRule> exportedDeps;
+  private final CxxDeps deps;
+  private final CxxDeps exportedDeps;
   private final Predicate<CxxPlatform> hasExportedHeaders;
   private final Predicate<CxxPlatform> headerOnly;
   private final Function<? super CxxPlatform, Iterable<? extends Arg>> exportedLinkerFlags;
@@ -93,8 +92,8 @@ public class CxxLibrary
   public CxxLibrary(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
-      Iterable<BuildRule> deps,
-      Iterable<BuildRule> exportedDeps,
+      CxxDeps deps,
+      CxxDeps exportedDeps,
       Predicate<CxxPlatform> hasExportedHeaders,
       Predicate<CxxPlatform> headerOnly,
       Function<? super CxxPlatform, Iterable<? extends Arg>> exportedLinkerFlags,
@@ -139,7 +138,7 @@ public class CxxLibrary
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
-    return RichStream.from(deps)
+    return RichStream.from(Iterables.concat(deps.get(ruleResolver), exportedDeps.get(ruleResolver)))
         .filter(CxxPreprocessorDep.class)
         .toImmutableList();
   }
@@ -184,7 +183,7 @@ public class CxxLibrary
     if (!propagateLinkables) {
       return ImmutableList.of();
     }
-    return RichStream.from(getDeclaredDeps())
+    return RichStream.from(deps.get(ruleResolver))
         .filter(NativeLinkable.class)
         .toImmutableList();
   }
@@ -202,7 +201,7 @@ public class CxxLibrary
     if (!propagateLinkables) {
       return ImmutableList.of();
     }
-    return RichStream.from(exportedDeps)
+    return RichStream.from(exportedDeps.get(ruleResolver))
         .filter(NativeLinkable.class)
         .toImmutableList();
   }
@@ -309,7 +308,9 @@ public class CxxLibrary
 
   @Override
   public Iterable<AndroidPackageable> getRequiredPackageables() {
-    return AndroidPackageableCollector.getPackageableRules(deps);
+    return AndroidPackageableCollector.getPackageableRules(
+        RichStream.from(Iterables.concat(deps.get(ruleResolver), exportedDeps.get(ruleResolver)))
+            .toImmutableList());
   }
 
   @Override
@@ -381,10 +382,8 @@ public class CxxLibrary
     // will pull in runtime deps (e.g. other binaries) or transitive C/C++ libraries.  Since the
     // `CxxLibrary` rules themselves are noop meta rules, they shouldn't add any unnecessary
     // overhead.
-    return Stream
-        .concat(
-            getDeclaredDeps().stream(),
-            StreamSupport.stream(exportedDeps.spliterator(), false))
+    return RichStream.from(getDeclaredDeps().stream())
+        .concat(exportedDeps.get(ruleResolver).stream())
         .map(BuildRule::getBuildTarget);
   }
 
