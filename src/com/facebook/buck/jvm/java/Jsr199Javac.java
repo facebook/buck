@@ -319,7 +319,6 @@ public abstract class Jsr199Javac implements Javac {
           Diagnostic.Kind kind = diagnostic.getKind();
           if (kind == Diagnostic.Kind.ERROR) {
             ++numErrors;
-            handleMissingSymbolError(invokingRule, diagnostic, context);
           } else if (kind == Diagnostic.Kind.WARNING ||
               kind == Diagnostic.Kind.MANDATORY_WARNING) {
             ++numWarnings;
@@ -382,22 +381,6 @@ public abstract class Jsr199Javac implements Javac {
       }
     }
     return compilationUnits;
-  }
-
-  private void handleMissingSymbolError(
-      BuildTarget invokingRule,
-      Diagnostic<? extends JavaFileObject> diagnostic,
-      JavacExecutionContext context) {
-    JavacErrorParser javacErrorParser = new JavacErrorParser(
-        context.getProjectFilesystem(),
-        context.getJavaPackageFinder());
-    Optional<String> symbol = javacErrorParser.getMissingSymbolFromCompilerError(
-        DiagnosticPrettyPrinter.format(diagnostic));
-    if (!symbol.isPresent()) {
-      // This error wasn't related to a missing symbol, as far as we can tell.
-      return;
-    }
-    context.getEventSink().reportMissingJavaSymbol(invokingRule, symbol.get());
   }
 
   private static class FileManagerBootClasspathOracle implements BootClasspathOracle {

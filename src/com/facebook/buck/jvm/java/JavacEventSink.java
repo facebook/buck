@@ -23,7 +23,6 @@ import java.util.logging.Level;
 
 public interface JavacEventSink {
   void reportThrowable(Throwable throwable, String message, Object... args);
-  void reportMissingJavaSymbol(BuildTarget target, String symbol);
   void reportEvent(Level level, String message, Object... args);
 
   void reportCompilerPluginStarted(

@@ -208,8 +208,6 @@ java_library(
     name = "autodeps",
     srcs = [
         "JavaFileParser.java",
-        "JavaSymbolFinder.java",
-        "SrcRootsFinder.java",
     ],
     autodeps = True,
     visibility = [

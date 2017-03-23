@@ -20,7 +20,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckTracingEventBusBridge;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.EventKey;
-import com.facebook.buck.event.MissingSymbolEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.jvm.java.tracing.JavacPhaseEvent;
 import com.facebook.buck.model.BuildTarget;
@@ -63,11 +62,6 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
   @Override
   public void reportThrowable(Throwable throwable, String message, Object... args) {
     eventBus.post(ThrowableConsoleEvent.create(throwable, message, args));
-  }
-
-  @Override
-  public void reportMissingJavaSymbol(BuildTarget target, String symbol) {
-    eventBus.post(MissingSymbolEvent.create(target, symbol, MissingSymbolEvent.SymbolType.Java));
   }
 
   @Override

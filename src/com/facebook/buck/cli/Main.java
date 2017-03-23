@@ -1177,16 +1177,6 @@ public final class Main {
                       .getEventListeners(invocationInfo.getLogDirectoryPath(), filesystem) :
                   ImmutableList.of();
 
-          Supplier<BuckEventListener> missingSymbolsListenerSupplier = () -> {
-            return MissingSymbolsHandler.createListener(
-              rootCell.getFilesystem(),
-              rootCell.getKnownBuildRuleTypes().getAllDescriptions(),
-              rootCell.getBuckConfig(),
-              buildEventBus,
-              console,
-              buckConfig.getView(JavaBuckConfig.class).getDefaultJavacOptions(),
-              clientEnvironment);
-          };
           eventListeners = addEventListeners(
               buildEventBus,
               rootCell.getFilesystem(),
@@ -1195,7 +1185,6 @@ public final class Main {
               webServer,
               clock,
               consoleListener,
-              missingSymbolsListenerSupplier,
               counterRegistry,
               commandEventListeners
           );
@@ -1776,7 +1765,6 @@ public final class Main {
       Optional<WebServer> webServer,
       Clock clock,
       AbstractConsoleEventBusListener consoleEventBusListener,
-      Supplier<BuckEventListener> missingSymbolsListenerSupplier,
       CounterRegistry counterRegistry,
       Iterable<BuckEventListener> commandSpecificEventListeners
   ) {
@@ -1828,10 +1816,6 @@ public final class Main {
       }
     }
 
-    JavaBuckConfig javaBuckConfig = buckConfig.getView(JavaBuckConfig.class);
-    if (!javaBuckConfig.getSkipCheckingMissingDeps()) {
-      eventListenersBuilder.add(missingSymbolsListenerSupplier.get());
-    }
 
     eventListenersBuilder.add(new LoadBalancerEventsListener(counterRegistry));
     eventListenersBuilder.add(new CacheRateStatsListener(buckEventBus));
