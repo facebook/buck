@@ -16,6 +16,8 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.sun.source.tree.ModifiersTree;
+
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -93,6 +95,11 @@ class TreeBackedPackageElement extends TreeBackedElement implements PackageEleme
   @Override
   public StandalonePackageType asType() {
     return typeMirror;
+  }
+
+  @Override
+  protected ModifiersTree getModifiersTree() {
+    throw new UnsupportedOperationException();
   }
 
   @Override

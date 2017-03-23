@@ -17,6 +17,8 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
+import com.sun.source.tree.ModifiersTree;
+import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreePath;
 
 import javax.lang.model.element.ElementKind;
@@ -28,6 +30,9 @@ class TreeBackedVariableElement extends TreeBackedElement implements VariableEle
   private final VariableElement underlyingElement;
 
   @Nullable
+  private final VariableTree tree;
+
+  @Nullable
   private TypeMirror type;
 
   TreeBackedVariableElement(
@@ -37,7 +42,7 @@ class TreeBackedVariableElement extends TreeBackedElement implements VariableEle
       TreeBackedElementResolver resolver) {
     super(underlyingElement, enclosingElement, path, resolver);
     this.underlyingElement = underlyingElement;
-
+    tree = path != null ? (VariableTree) path.getLeaf() : null;
     if (underlyingElement.getKind() == ElementKind.PARAMETER) {
       ((TreeBackedExecutableElement) enclosingElement).addParameter(this);
     } else {
@@ -51,6 +56,12 @@ class TreeBackedVariableElement extends TreeBackedElement implements VariableEle
       type = getResolver().getCanonicalType(underlyingElement.asType());
     }
     return type;
+  }
+
+  @Override
+  @Nullable
+  protected ModifiersTree getModifiersTree() {
+    return tree != null ? tree.getModifiers() : null;
   }
 
   @Override

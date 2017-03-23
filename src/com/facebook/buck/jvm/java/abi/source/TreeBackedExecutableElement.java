@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java.abi.source;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.ModifiersTree;
 import com.sun.source.util.TreePath;
 
 import java.util.ArrayList;
@@ -64,6 +65,12 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable implements E
   @Override
   public StandaloneTypeMirror asType() {
     throw new UnsupportedOperationException("NYI");
+  }
+
+  @Override
+  @Nullable
+  protected ModifiersTree getModifiersTree() {
+    return tree != null ? tree.getModifiers() : null;
   }
 
   @Override

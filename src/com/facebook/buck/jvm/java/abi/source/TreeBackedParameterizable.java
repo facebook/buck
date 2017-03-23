@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.sun.source.util.TreePath;
 
 import java.util.ArrayList;
@@ -32,7 +33,8 @@ abstract class TreeBackedParameterizable extends TreeBackedElement implements Pa
   public TreeBackedParameterizable(
       Element underlyingElement,
       TreeBackedElement enclosingElement,
-      TreePath path, TreeBackedElementResolver resolver) {
+      @Nullable TreePath path,
+      TreeBackedElementResolver resolver) {
     super(underlyingElement, enclosingElement, path, resolver);
   }
 

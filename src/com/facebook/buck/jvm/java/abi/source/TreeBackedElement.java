@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
+import com.sun.source.tree.ModifiersTree;
 import com.sun.source.util.TreePath;
 
 import java.lang.annotation.Annotation;
@@ -110,6 +111,9 @@ abstract class TreeBackedElement implements Element {
   public List<? extends AnnotationMirror> getAnnotationMirrors() {
     throw new UnsupportedOperationException();
   }
+
+  @Nullable
+  protected abstract ModifiersTree getModifiersTree();
 
   @Override
   @Nullable

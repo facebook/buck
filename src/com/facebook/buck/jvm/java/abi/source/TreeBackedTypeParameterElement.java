@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
+import com.sun.source.tree.ModifiersTree;
 import com.sun.source.tree.TypeParameterTree;
 import com.sun.source.util.TreePath;
 
@@ -57,6 +58,12 @@ class TreeBackedTypeParameterElement extends TreeBackedElement implements TypePa
   @Override
   public StandaloneTypeVariable asType() {
     return typeVar;
+  }
+
+  @Override
+  @Nullable
+  protected ModifiersTree getModifiersTree() {
+    return null;
   }
 
   @Override
