@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacSpec;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -206,7 +207,8 @@ public class AndroidLibraryGraphEnhancerTest {
   public void testDummyRDotJavaRuleInheritsJavacOptionsDeps() {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     FakeBuildRule dep = new FakeBuildRule(
         BuildTargetFactory.newInstance("//:dep"),
         pathResolver);
@@ -216,13 +218,15 @@ public class AndroidLibraryGraphEnhancerTest {
     JavacOptions options = JavacOptions.builder()
         .setSourceLevel("5")
         .setTargetLevel("5")
-        .setJavacJarPath(dep.getSourcePathToOutput())
+        .setJavacSpec(JavacSpec.builder()
+            .setJavacJarPath(dep.getSourcePathToOutput())
+            .build())
         .build();
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
             target,
             new FakeBuildRuleParamsBuilder(target).build(),
-            options.getJavac(),
+            options.getJavac(ruleFinder),
             options,
             DependencyMode.FIRST_ORDER,
             /* forceFinalResourceIds */ false,

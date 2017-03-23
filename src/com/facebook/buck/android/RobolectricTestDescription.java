@@ -99,7 +99,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
         params.getBuildTarget(),
         params.copyReplacingExtraDeps(
             Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps))),
-        javacOptions.getJavac(),
+        javacOptions.getJavac(ruleFinder),
         javacOptions,
         DependencyMode.TRANSITIVE,
         /* forceFinalResourceIds */ true,
@@ -167,7 +167,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
         .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
-        javacOptions.getJavac(),
+        javacOptions.getJavac(ruleFinder),
         javacOptions,
         new BootClasspathAppender());
     JavaLibrary testsLibrary =

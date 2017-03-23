@@ -128,10 +128,10 @@ public class JvmLibraryArgInterpreterTest {
     arg.compiler = Optional.of(either);
     JavacOptions options = createJavacOptions(arg);
 
-    Javac javac = options.getJavac();
+    Javac javac = options.getJavac(ruleFinder);
 
-    assertEquals(Optional.empty(), options.getJavacJarPath());
-    assertEquals(Optional.empty(), options.getJavacPath());
+    assertEquals(Optional.empty(), options.getJavacSpec().getJavacJarPath());
+    assertEquals(Optional.empty(), options.getJavacSpec().getJavacPath());
     assertTrue(javac.getClass().getName(), javac instanceof Jsr199Javac);
   }
 
@@ -148,12 +148,12 @@ public class JvmLibraryArgInterpreterTest {
     arg.compiler = Optional.of(either);
     JavacOptions options = createJavacOptions(arg);
 
-    Javac javac = options.getJavac();
+    Javac javac = options.getJavac(ruleFinder);
 
     assertEquals(
         pathResolver.getRelativePath(sourcePath),
-        pathResolver.getRelativePath(options.getJavacJarPath().get()));
-    assertEquals(Optional.empty(), options.getJavacPath());
+        pathResolver.getRelativePath(options.getJavacSpec().getJavacJarPath().get()));
+    assertEquals(Optional.empty(), options.getJavacSpec().getJavacPath());
     assertTrue(javac.getClass().getName(), javac instanceof Jsr199Javac);
   }
 
@@ -166,10 +166,10 @@ public class JvmLibraryArgInterpreterTest {
     arg.compiler = Optional.of(either);
     JavacOptions options = createJavacOptions(arg);
 
-    Javac javac = options.getJavac();
+    Javac javac = options.getJavac(ruleFinder);
 
-    assertEquals(Optional.empty(), options.getJavacJarPath());
-    assertEquals(sourcePath, options.getJavacPath().get().getRight());
+    assertEquals(Optional.empty(), options.getJavacSpec().getJavacJarPath());
+    assertEquals(sourcePath, options.getJavacSpec().getJavacPath().get().getRight());
     assertTrue(javac.getClass().getName(), javac instanceof ExternalJavac);
   }
 
@@ -183,10 +183,10 @@ public class JvmLibraryArgInterpreterTest {
     arg.javac = Optional.of(Paths.get("does-not-exist"));
     JavacOptions options = createJavacOptions(arg);
 
-    Javac javac = options.getJavac();
+    Javac javac = options.getJavac(ruleFinder);
 
-    assertEquals(Optional.empty(), options.getJavacJarPath());
-    assertEquals(sourcePath, options.getJavacPath().get().getRight());
+    assertEquals(Optional.empty(), options.getJavacSpec().getJavacJarPath());
+    assertEquals(sourcePath, options.getJavacSpec().getJavacPath().get().getRight());
     assertTrue(javac.getClass().getName(), javac instanceof ExternalJavac);
   }
 
@@ -205,12 +205,12 @@ public class JvmLibraryArgInterpreterTest {
         new PathSourcePath(new FakeProjectFilesystem(), Paths.get("does-not-exist")));
     JavacOptions options = createJavacOptions(arg);
 
-    Javac javac = options.getJavac();
+    Javac javac = options.getJavac(ruleFinder);
 
     assertEquals(
         pathResolver.getRelativePath(sourcePath),
-        pathResolver.getRelativePath(options.getJavacJarPath().get()));
-    assertEquals(Optional.empty(), options.getJavacPath());
+        pathResolver.getRelativePath(options.getJavacSpec().getJavacJarPath().get()));
+    assertEquals(Optional.empty(), options.getJavacSpec().getJavacPath());
     assertTrue(javac.getClass().getName(), javac instanceof Jsr199Javac);
   }
 
@@ -224,10 +224,12 @@ public class JvmLibraryArgInterpreterTest {
         new PathSourcePath(new FakeProjectFilesystem(), expected));
     JavacOptions options = createJavacOptions(arg);
 
-    Javac javac = options.getJavac();
+    Javac javac = options.getJavac(ruleFinder);
 
-    assertEquals(Optional.of(new PathSourcePath(filesystem, expected)), options.getJavacJarPath());
-    assertEquals(Optional.empty(), options.getJavacPath());
+    assertEquals(
+        Optional.of(new PathSourcePath(filesystem, expected)),
+        options.getJavacSpec().getJavacJarPath());
+    assertEquals(Optional.empty(), options.getJavacSpec().getJavacPath());
     assertTrue(javac.getClass().getName(), javac instanceof Jsr199Javac);
   }
 

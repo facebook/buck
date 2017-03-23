@@ -225,6 +225,7 @@ public class AndroidBinaryDescription implements
       ResourceFilter resourceFilter =
         new ResourceFilter(args.resourceFilter);
 
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
           params,
           resolver,
@@ -244,7 +245,7 @@ public class AndroidBinaryDescription implements
           /* resourcesToExclude */ ImmutableSet.of(),
           args.skipCrunchPngs,
           args.includesVectorDrawables,
-          javacOptions.getJavac(),
+          javacOptions.getJavac(ruleFinder),
           javacOptions,
           suggestDependencies,
           exopackageModes,
@@ -289,7 +290,6 @@ public class AndroidBinaryDescription implements
               .filter(JavaLibrary.class)
               .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
 
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       Optional<RedexOptions> redexOptions = getRedexOptions(params, resolver, cellRoots, args);
 
       ImmutableSortedSet<BuildRule> redexExtraDeps = redexOptions

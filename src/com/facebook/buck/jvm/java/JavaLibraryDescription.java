@@ -190,7 +190,7 @@ public class JavaLibraryDescription implements
                 ruleFinder.filterBuildRuleInputs(
                     javacOptions.getInputs(ruleFinder))));
     JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
-        javacOptions.getJavac(),
+        javacOptions.getJavac(ruleFinder),
         javacOptions,
         JavacOptionsAmender.IDENTITY);
     DefaultJavaLibrary defaultJavaLibrary =

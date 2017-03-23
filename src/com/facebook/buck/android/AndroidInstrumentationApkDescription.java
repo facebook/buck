@@ -119,6 +119,7 @@ public class AndroidInstrumentationApkDescription
 
     Path primaryDexPath =
         AndroidBinary.getPrimaryDexPath(params.getBuildTarget(), params.getProjectFilesystem());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
         params,
         resolver,
@@ -140,7 +141,7 @@ public class AndroidInstrumentationApkDescription
         resourcesToExclude,
         /* skipCrunchPngs */ false,
         args.includesVectorDrawables.orElse(false),
-        javacOptions.getJavac(),
+        javacOptions.getJavac(ruleFinder),
         javacOptions,
         suggestDependencies,
         EnumSet.noneOf(ExopackageMode.class),
@@ -166,7 +167,6 @@ public class AndroidInstrumentationApkDescription
     AndroidGraphEnhancementResult enhancementResult =
         graphEnhancer.createAdditionalBuildables();
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new AndroidInstrumentationApk(
         params
             .copyReplacingExtraDeps(Suppliers.ofInstance(enhancementResult.getFinalDeps()))

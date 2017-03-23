@@ -16,14 +16,12 @@
 
 package com.facebook.buck.jvm.java;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.easymock.EasyMock.createMock;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -37,17 +35,12 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.Lists;
 
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
-import org.junit.Assume;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -62,13 +55,6 @@ public class JavacOptionsTest {
   }
 
   @Test
-  public void locationIsInprocByDefault() {
-    JavacOptions options = createStandardBuilder().build();
-
-    assertThat(options.getJavacLocation(), is(Javac.Location.IN_PROCESS));
-  }
-
-  @Test
   public void trackClassUsageOnByDefault() {
     JavacOptions options = createStandardBuilder().build();
 
@@ -78,10 +64,12 @@ public class JavacOptionsTest {
   @Test
   public void doNotTrackClassUsageForExternJavac() {
     JavacOptions options = createStandardBuilder()
-        .setJavacPath(Either.ofRight(new FakeSourcePath("javac")))
+        .setJavacSpec(JavacSpec.builder()
+          .setJavacPath(Either.ofRight(new FakeSourcePath("javac")))
+          .build())
         .build();
 
-    assumeThat(options.getJavacSource(), is(Javac.Source.EXTERNAL));
+    assumeThat(options.getJavacSpec().getJavacSource(), is(Javac.Source.EXTERNAL));
 
     assertFalse(options.trackClassUsage());
   }
@@ -89,10 +77,12 @@ public class JavacOptionsTest {
   @Test
   public void trackClassUsageForJavacFromJar() {
     JavacOptions options = createStandardBuilder()
-        .setJavacJarPath(new FakeSourcePath("javac_jar"))
+        .setJavacSpec(JavacSpec.builder()
+            .setJavacJarPath(new FakeSourcePath("javac_jar"))
+            .build())
         .build();
 
-    assumeThat(options.getJavacSource(), is(Javac.Source.JAR));
+    assumeThat(options.getJavacSpec().getJavacSource(), is(Javac.Source.JAR));
 
     assertTrue(options.trackClassUsage());
   }
@@ -102,7 +92,7 @@ public class JavacOptionsTest {
     JavacOptions options = createStandardBuilder()
         .build();
 
-    assumeThat(options.getJavacSource(), is(Javac.Source.JDK));
+    assumeThat(options.getJavacSpec().getJavacSource(), is(Javac.Source.JDK));
 
     assertTrue(options.trackClassUsage());
   }
@@ -250,37 +240,15 @@ public class JavacOptionsTest {
   }
 
   @Test
-  public void externalJavacVersionIsReadFromStderrBecauseThatIsWhereJavacWritesIt()
-      throws IOException {
-    Platform current = Platform.detect();
-    Assume.assumeTrue(current != Platform.WINDOWS && current != Platform.UNKNOWN);
-
-    Path tempPath = Files.createTempFile("javac", "spoof");
-    File tempFile = tempPath.toFile();
-    tempFile.deleteOnExit();
-    assertTrue(tempFile.setExecutable(true));
-    // We could use the "-n" syntax, but that doesn't work on all variants of echo. Play it safe.
-    Files.write(tempPath, "echo \"cover-version\" 1>&2".getBytes(UTF_8));
-
-    JavacOptions options = createStandardBuilder()
-        .setJavacPath(Either.ofLeft(tempPath))
-        .build();
-
-    Javac javac = options.getJavac();
-    assertTrue(javac instanceof ExternalJavac);
-
-    JavacVersion seen = javac.getVersion();
-    assertEquals(seen.toString(), JavacVersion.of("cover-version"), seen);
-  }
-
-  @Test
   public void getInputs() {
     Path javacPath = Paths.get("javac");
     FakeSourcePath javacJarPath = new FakeSourcePath("javac_jar");
 
     JavacOptions options = createStandardBuilder()
-        .setJavacPath(Either.ofLeft(javacPath))
-        .setJavacJarPath(javacJarPath)
+        .setJavacSpec(JavacSpec.builder()
+            .setJavacPath(Either.ofLeft(javacPath))
+            .setJavacJarPath(javacJarPath)
+            .build())
         .build();
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
@@ -289,21 +257,6 @@ public class JavacOptionsTest {
     assertThat(
         options.getInputs(ruleFinder),
         Matchers.containsInAnyOrder(javacJarPath));
-  }
-
-  @Test
-  public void customCompilerClassNameIsSet()
-      throws IOException {
-    FakeSourcePath javacJarPath = new FakeSourcePath("javac_jar");
-
-    JavacOptions options = createStandardBuilder()
-        .setJavacJarPath(javacJarPath)
-        .setCompilerClassName("test.compiler")
-        .build();
-
-    Javac javac = options.getJavac();
-    assertTrue(javac instanceof JarBackedJavac);
-    assertEquals(((JarBackedJavac) javac).getCompilerClassName(), "test.compiler");
   }
 
   private JavacOptions.Builder createStandardBuilder() {

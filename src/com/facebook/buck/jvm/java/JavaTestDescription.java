@@ -136,7 +136,7 @@ public class JavaTestDescription implements
         .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
-        javacOptions.getJavac(),
+        javacOptions.getJavac(ruleFinder),
         javacOptions,
         JavacOptionsAmender.IDENTITY);
     JavaLibrary testsLibrary =

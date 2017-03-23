@@ -68,24 +68,29 @@ public final class JavacOptionsFactory {
       Either<BuiltInJavac, SourcePath> either = jvmLibraryArg.compiler.get();
 
       if (either.isRight()) {
+        JavacSpec.Builder javacSpecBuilder = JavacSpec.builder();
         SourcePath sourcePath = either.getRight();
 
         Optional<BuildRule> possibleRule = ruleFinder.getRule(sourcePath);
         if (possibleRule.isPresent() && possibleRule.get() instanceof PrebuiltJar) {
-          builder.setJavacJarPath(((PrebuiltJar) possibleRule.get()).getSourcePathToOutput());
+          PrebuiltJar prebuiltJar = (PrebuiltJar) possibleRule.get();
+          javacSpecBuilder.setJavacJarPath(prebuiltJar.getSourcePathToOutput());
         } else {
-          builder.setJavacPath(Either.ofRight(sourcePath));
+          javacSpecBuilder.setJavacPath(Either.ofRight(sourcePath));
         }
+        builder.setJavacSpec(javacSpecBuilder.build());
       }
     } else {
       if (jvmLibraryArg.javac.isPresent() || jvmLibraryArg.javacJar.isPresent()) {
         if (jvmLibraryArg.javac.isPresent() && jvmLibraryArg.javacJar.isPresent()) {
           throw new HumanReadableException("Cannot set both javac and javacjar");
         }
-        builder.setJavacPath(
+        JavacSpec.Builder javacSpecBuilder = JavacSpec.builder();
+        javacSpecBuilder.setJavacPath(
             jvmLibraryArg.javac.map(Either::ofLeft));
-        builder.setJavacJarPath(jvmLibraryArg.javacJar);
-        builder.setCompilerClassName(jvmLibraryArg.compilerClassName);
+        javacSpecBuilder.setJavacJarPath(jvmLibraryArg.javacJar);
+        javacSpecBuilder.setCompilerClassName(jvmLibraryArg.compilerClassName);
+        builder.setJavacSpec(javacSpecBuilder.build());
       }
     }
 

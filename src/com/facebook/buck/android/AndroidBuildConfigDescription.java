@@ -70,8 +70,8 @@ public class AndroidBuildConfigDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     if (CalculateAbi.isAbiTarget(params.getBuildTarget())) {
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       BuildTarget configTarget = CalculateAbi.getLibraryTarget(params.getBuildTarget());
       BuildRule configRule = resolver.requireRule(configTarget);
       return CalculateAbi.of(
@@ -87,7 +87,7 @@ public class AndroidBuildConfigDescription
         args.values,
         args.valuesFile,
         /* useConstantExpressions */ false,
-        androidJavacOptions.getJavac(),
+        androidJavacOptions.getJavac(ruleFinder),
         androidJavacOptions,
         suggestDependencies,
         resolver);

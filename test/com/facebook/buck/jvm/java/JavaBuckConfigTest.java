@@ -201,7 +201,7 @@ public class JavaBuckConfigTest {
             "    javac_jar = " + invalidPath.replace("\\", "\\\\")));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
     try {
-      config.getJavacJarPath();
+      config.getJavacSpec().getJavacJarPath();
       fail("Should throw exception as javac file does not exist.");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -264,7 +264,7 @@ public class JavaBuckConfigTest {
     JavaBuckConfig javaConfig = buckConfig.getView(JavaBuckConfig.class);
     JavacOptions javacOptions = javaConfig.getDefaultJavacOptions();
 
-    Javac javac = javacOptions.getJavac();
+    Javac javac = javacOptions.getJavac(null);
     assertTrue(javac.getClass().toString(), javac instanceof Jsr199Javac);
   }
 
@@ -283,7 +283,7 @@ public class JavaBuckConfigTest {
     JavaBuckConfig javaConfig = buckConfig.getView(JavaBuckConfig.class);
     JavacOptions javacOptions = javaConfig.getDefaultJavacOptions();
 
-    assertEquals(javac, ((ExternalJavac) javacOptions.getJavac()).getShortName());
+    assertEquals(javac, ((ExternalJavac) javacOptions.getJavac(null)).getShortName());
   }
 
   @Test
@@ -312,9 +312,8 @@ public class JavaBuckConfigTest {
         "[java]",
         "    location = OUT_OF_PROCESS");
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
-    JavacOptions options = config.getDefaultJavacOptions();
     assertThat(
-        options.getJavacLocation(),
+        config.getJavacSpec().getJavacLocation(),
         Matchers.equalTo(Javac.Location.OUT_OF_PROCESS));
   }
 
@@ -322,10 +321,8 @@ public class JavaBuckConfigTest {
   public void testJavaLocationInProcessByDefault()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
-
-    JavacOptions options = config.getDefaultJavacOptions();
     assertThat(
-        options.getJavacLocation(),
+        config.getJavacSpec().getJavacLocation(),
         Matchers.equalTo(Javac.Location.IN_PROCESS));
   }
 
@@ -336,9 +333,8 @@ public class JavaBuckConfigTest {
         "[java]",
         "    location = IN_PROCESS");
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
-    JavacOptions options = config.getDefaultJavacOptions();
     assertThat(
-        options.getJavacLocation(),
+        config.getJavacSpec().getJavacLocation(),
         Matchers.equalTo(Javac.Location.IN_PROCESS));
   }
 

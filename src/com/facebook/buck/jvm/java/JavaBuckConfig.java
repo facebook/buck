@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -84,14 +83,6 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
       builder.setTargetLevel(targetLevel.get());
     }
 
-    Optional<Javac.Location> location = delegate.getEnum(
-        SECTION,
-        "location",
-        Javac.Location.class);
-    if (location.isPresent()) {
-      builder.setJavacLocation(location.get());
-    }
-
     ImmutableList<String> extraArguments = delegate.getListWithoutComments(
         SECTION,
         "extra_arguments");
@@ -129,10 +120,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     }
 
     return builder
-        .setJavacPath(
-            getJavacPath().map(Either::ofLeft))
-        .setJavacJarPath(getJavacJarPath())
-        .setCompilerClassName(getCompilerClassName())
+        .setJavacSpec(getJavacSpec())
         .putAllSourceToBootclasspath(bootclasspaths.build())
         .addAllExtraArguments(extraArguments)
         .setSafeAnnotationProcessors(safeAnnotationProcessors)
@@ -145,6 +133,20 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
   public DefaultJavaPackageFinder createDefaultJavaPackageFinder() {
     return DefaultJavaPackageFinder.createDefaultJavaPackageFinder(getSrcRoots());
+  }
+
+  public JavacSpec getJavacSpec() {
+    return JavacSpec.builder()
+        .setJavacPath(
+            getJavacPath().isPresent()
+                ? Optional.of(Either.ofLeft(getJavacPath().get()))
+                : Optional.empty())
+        .setJavacJarPath(delegate.getSourcePath("tools", "javac_jar"))
+        .setJavacLocation(
+            delegate.getEnum(SECTION, "location", Javac.Location.class)
+                .orElse(Javac.Location.IN_PROCESS))
+        .setCompilerClassName(delegate.getValue("tools", "compiler_class_name"))
+        .build();
   }
 
   @VisibleForTesting
@@ -162,14 +164,6 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
       return Optional.of(file.toPath());
     }
     return Optional.empty();
-  }
-
-  Optional<SourcePath> getJavacJarPath() {
-    return delegate.getSourcePath("tools", "javac_jar");
-  }
-
-  Optional<String> getCompilerClassName() {
-    return delegate.getValue("tools", "compiler_class_name");
   }
 
   public boolean shouldCacheBinaries() {

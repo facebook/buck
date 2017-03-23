@@ -126,7 +126,7 @@ public class JavaBinaryDescription implements
                           .addAll(nativeLibraries.values())
                           .build()))),
           ruleFinder,
-          javacOptions.getJavac(),
+          javacOptions.getJavac(ruleFinder),
           javacOptions,
           innerJar,
           nativeLibraries,

@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -30,7 +29,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.immutables.value.Value;
@@ -60,9 +58,6 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   // Default combined source and target level.
   public static final String TARGETED_JAVA_VERSION = "7";
 
-  public static final String COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL =
-      "com.sun.tools.javac.api.JavacTool";
-
   /**
    * The method in which the compiler output is spooled.
    */
@@ -91,9 +86,10 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     SOURCE,
   }
 
-  protected abstract Optional<Either<Path, SourcePath>> getJavacPath();
-  protected abstract Optional<SourcePath> getJavacJarPath();
-  protected abstract Optional<String> getCompilerClassName();
+  @Value.Default
+  protected JavacSpec getJavacSpec() {
+    return JavacSpec.builder().build();
+  }
 
   @Value.Default
   protected SpoolMode getSpoolMode() {
@@ -143,24 +139,9 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   }
 
   public boolean trackClassUsage() {
-    final Javac.Source javacSource = getJavacSource();
+    final Javac.Source javacSource = getJavacSpec().getJavacSource();
     return getTrackClassUsageNotDisabled() &&
         (javacSource == Javac.Source.JAR || javacSource == Javac.Source.JDK);
-  }
-
-  public Javac.Source getJavacSource() {
-    if (getJavacPath().isPresent()) {
-      return Javac.Source.EXTERNAL;
-    } else if (getJavacJarPath().isPresent()) {
-      return Javac.Source.JAR;
-    } else {
-      return Javac.Source.JDK;
-    }
-  }
-
-  @Value.Default
-  public Javac.Location getJavacLocation() {
-    return Javac.Location.IN_PROCESS;
   }
 
   @Value.Default
@@ -168,36 +149,8 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     return AbiGenerationMode.CLASS;
   }
 
-  @Value.Lazy
-  public Javac getJavac() {
-    final Javac.Source javacSource = getJavacSource();
-    final Javac.Location javacLocation = getJavacLocation();
-    switch (javacSource) {
-      case EXTERNAL:
-        return ExternalJavac.createJavac(getJavacPath().get());
-      case JAR:
-        switch (javacLocation) {
-          case IN_PROCESS:
-            return new JarBackedJavac(
-                getCompilerClassName().orElse(COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL),
-                ImmutableSet.of(getJavacJarPath().get()));
-          case OUT_OF_PROCESS:
-            return new OutOfProcessJarBackedJavac(
-                getCompilerClassName().orElse(COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL),
-                ImmutableSet.of(getJavacJarPath().get()));
-        }
-        break;
-      case JDK:
-        switch (javacLocation) {
-          case IN_PROCESS:
-            return new JdkProvidedInMemoryJavac();
-          case OUT_OF_PROCESS:
-            return new OutOfProcessJdkProvidedInMemoryJavac();
-        }
-        break;
-    }
-    throw new AssertionError(
-        "Unknown javac source/javac location pair: " + javacSource + "/" + javacLocation);
+  public Javac getJavac(SourcePathRuleFinder ruleFinder) {
+    return getJavacSpec().getJavacProvider().resolve(ruleFinder);
   }
 
   public void validateOptions(Function<String, Boolean> classpathChecker) throws IOException {
@@ -296,7 +249,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
         .setReflectively("extraArguments", Joiner.on(',').join(getExtraArguments()))
         .setReflectively("debug", isDebug())
         .setReflectively("bootclasspath", getBootclasspath())
-        .setReflectively("javac", getJavac())
+        .setReflectively("javac", getJavacSpec())
         .setReflectively("annotationProcessingParams", getAnnotationProcessingParams())
         .setReflectively("spoolMode", getSpoolMode())
         .setReflectively("trackClassUsage", trackClassUsage())
@@ -307,7 +260,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     ImmutableSortedSet.Builder<SourcePath> builder = ImmutableSortedSet.<SourcePath>naturalOrder()
         .addAll(getAnnotationProcessingParams().getInputs());
 
-    Optional<SourcePath> javacJarPath = getJavacJarPath();
+    Optional<SourcePath> javacJarPath = getJavacSpec().getJavacJarPath();
     if (javacJarPath.isPresent()) {
       SourcePath sourcePath = javacJarPath.get();
 

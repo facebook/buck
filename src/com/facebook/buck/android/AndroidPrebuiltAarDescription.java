@@ -193,7 +193,7 @@ public class AndroidPrebuiltAarDescription
         /* unzipRule */ unzipAar,
         /* javacOptions */ javacOptions,
         new JavacToJarStepFactory(
-            javacOptions.getJavac(),
+            javacOptions.getJavac(ruleFinder),
             javacOptions,
             new BootClasspathAppender()),
         suggestDependencies,
