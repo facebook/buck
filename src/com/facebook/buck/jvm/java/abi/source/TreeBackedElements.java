@@ -134,8 +134,8 @@ class TreeBackedElements implements Elements {
 
   private TreeBackedTypeParameterElement newTreeBackedTypeParameter(
       TypeParameterElement underlyingTypeParameter) {
-    TreeBackedTypeElement enclosingElement =
-        (TreeBackedTypeElement) enterElement(underlyingTypeParameter.getEnclosingElement());
+    TreeBackedParameterizable enclosingElement =
+        (TreeBackedParameterizable) enterElement(underlyingTypeParameter.getEnclosingElement());
     return new TreeBackedTypeParameterElement(
         underlyingTypeParameter,
         Preconditions.checkNotNull(javacTrees.getPath(underlyingTypeParameter)),

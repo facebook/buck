@@ -31,6 +31,8 @@ import java.io.IOException;
 import java.util.stream.Collectors;
 
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Name;
+import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -178,5 +180,24 @@ public class TreeBackedExecutableElementTest extends CompilerTreeApiParameterize
     assertThat(
         findMethod("value", elements.getTypeElement("Foo")).getDefaultValue(),
         Matchers.nullValue());
+  }
+
+  /**
+   * See {@link TreeBackedTypeParameterElementTest} for lots of tests of the type parameter elements
+   * themselves.
+   */
+  @Test
+  public void testGetTypeParameters() throws IOException {
+    compile(Joiner.on('\n').join(
+        "class Foo {",
+          "  public <T, U> void foo(T t, U u) { }",
+        "}"));
+
+    assertThat(
+        findMethod("foo", elements.getTypeElement("Foo")).getTypeParameters().stream()
+            .map(TypeParameterElement::getSimpleName)
+            .map(Name::toString)
+            .collect(Collectors.toList()),
+        Matchers.contains("T", "U"));
   }
 }
