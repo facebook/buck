@@ -36,6 +36,10 @@ concat() {
   echo $@
 }
 
+write_asset() {
+  cp "$(dirname "$0")/1x1.gif" "$1/"
+}
+
 run_command() {
   local args=
   local infiles=
@@ -50,9 +54,10 @@ run_command() {
         outfile="$2"
         shift
         ;;
-      --sourcemap)
+      --assets|--sourcemap)
         touch "$2"
         args=$(concat $args "$1" "${2/\/*\/buck-out\//@/buck-out/}")
+        [ "$1" == --assets ] && write_asset "$2"
         shift
         ;;
       --lib)

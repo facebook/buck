@@ -1,4 +1,4 @@
-bundle --release --lib @/buck-out/gen/js/extras#android,release.json --lib @/buck-out/gen/js/fruit#android,release.json --lib @/buck-out/gen/js/fruit-salad#android,release.json --sourcemap @/buck-out/gen/js/fruit-salad-in-a-bundle#android,release/map/fruit-salad-in-a-bundle.js.map fruit-salad
+bundle --release --lib @/buck-out/gen/js/extras#android,release.json --lib @/buck-out/gen/js/fruit#android,release.json --lib @/buck-out/gen/js/fruit-salad#android,release.json --sourcemap @/buck-out/gen/js/fruit-salad-in-a-bundle#android,release/map/fruit-salad-in-a-bundle.js.map --assets @/buck-out/gen/js/fruit-salad-in-a-bundle#android,release/res fruit-salad
 library
 optimize --arbitrary extra --flags --platform android
 transform --arbitrary extra --flags --filename js/extras/choclate-chips.js

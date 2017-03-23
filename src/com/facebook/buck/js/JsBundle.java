@@ -70,15 +70,17 @@ public class JsBundle extends AbstractBuildRule {
     final SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
     final SourcePath jsOutputDir = getSourcePathToOutput();
     final SourcePath sourceMapFile = getSourcePathToSourceMap();
+    final SourcePath resourcesDir = getSourcePathToResources();
 
     String jobArgs = Stream.concat(
         Stream.of(
             "bundle",
             JsFlavors.bundleJobArgs(getBuildTarget().getFlavors()),
             JsUtil.resolveMapJoin(libraries, sourcePathResolver, p -> "--lib " + p),
-            String.format("--sourcemap %s", sourcePathResolver.getAbsolutePath(sourceMapFile)),
             String.format(
-                "--out %s/%s",
+                "--sourcemap %s --assets %s --out %s/%s",
+                sourcePathResolver.getAbsolutePath(sourceMapFile),
+                sourcePathResolver.getAbsolutePath(resourcesDir),
                 sourcePathResolver.getAbsolutePath(jsOutputDir),
                 bundleName)),
         entryPoints.stream())
@@ -87,6 +89,7 @@ public class JsBundle extends AbstractBuildRule {
 
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(jsOutputDir));
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(sourceMapFile));
+    buildableContext.recordArtifact(sourcePathResolver.getRelativePath(resourcesDir));
 
     return ImmutableList.of(
         RmStep.of(getProjectFilesystem(), sourcePathResolver.getAbsolutePath(getOutputRoot())),
@@ -96,6 +99,9 @@ public class JsBundle extends AbstractBuildRule {
         new MkdirStep(
             getProjectFilesystem(),
             sourcePathResolver.getAbsolutePath(sourceMapFile).getParent()),
+        new MkdirStep(
+            getProjectFilesystem(),
+            sourcePathResolver.getAbsolutePath(resourcesDir)),
         JsUtil.workerShellStep(
             worker,
             jobArgs,
@@ -114,6 +120,10 @@ public class JsBundle extends AbstractBuildRule {
         String.format("%%s/map/%s.map", bundleName.replace("%", "%%")));
   }
 
+  public SourcePath getSourcePathToResources() {
+    return getSourcePathRelativeToOutputRoot("%s/res");
+  }
+
   private SourcePath getOutputRoot() {
     return getSourcePathRelativeToOutputRoot("%s");
   }
@@ -126,5 +136,4 @@ public class JsBundle extends AbstractBuildRule {
             getBuildTarget(),
             format));
   }
-
 }

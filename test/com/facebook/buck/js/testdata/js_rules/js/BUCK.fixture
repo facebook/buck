@@ -1,6 +1,7 @@
 sh_binary(
   name = 'packager_worker_exe',
   main = 'packager_worker.sh',
+  resources = ['1x1.gif'],
   visibility = [
     'PUBLIC',
   ],
