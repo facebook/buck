@@ -117,6 +117,16 @@ class ZipScrubber {
     }
   }
 
+  /**
+   * Read the name of a zip file from a local entry.  Useful for debugging.
+   */
+  @SuppressWarnings("unused")
+  private static String localEntryName(ByteBuffer entry) {
+    byte[] nameBytes = new byte[entry.getShort(ZipEntry.LOCNAM)];
+    ((ByteBuffer) entry.slice().position(ZipEntry.LOCHDR)).get(nameBytes);
+    return new String(nameBytes);
+  }
+
   public static void main(String[] args) throws IOException {
     if (args.length != 1) {
       System.err.println("usage: ZipScrubberCli file-to-scrub-in-place.zip");
