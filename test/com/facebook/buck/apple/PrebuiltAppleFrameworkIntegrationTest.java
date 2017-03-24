@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -39,6 +40,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 public class PrebuiltAppleFrameworkIntegrationTest {
 
@@ -156,4 +158,58 @@ public class PrebuiltAppleFrameworkIntegrationTest {
         not(containsString("U _OBJC_CLASS_$_Strings")));
   }
 
+  @Test
+  public void testProjectGeneratorGeneratesWorkingProject() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "prebuilt_apple_framework_links", tmp);
+    workspace.setUp();
+    workspace.runBuckCommand("project", "//app:workspace").assertSuccess();
+
+    {
+      ProcessExecutor.Result result = workspace.runCommand(
+          "xcodebuild",
+
+          // "json" output.
+          "-json",
+
+          // Make sure the output stays in the temp folder.
+          "-derivedDataPath", "xcode-out/",
+
+          // Build the project that we just generated
+          "-workspace", "app/TestAppBundle.xcworkspace",
+          "-scheme", "TestAppBundle",
+
+          // Build for iphonesimulator
+          "-arch", "x86_64",
+          "-sdk", "iphonesimulator");
+      result.getStderr().ifPresent(System.err::print);
+      assertEquals("xcodebuild should succeed", 0, result.getExitCode());
+    }
+
+    Path appBundlePath =
+        tmp.getRoot().resolve("xcode-out/Build/Products/Debug-iphonesimulator/TestAppBundle.app");
+    assertTrue(
+        "Framework is copied into bundle.",
+        Files.isRegularFile(appBundlePath.resolve("Frameworks/BuckTest.framework/BuckTest")));
+
+    {
+      ProcessExecutor.Result result =
+          workspace.runCommand("otool", "-l", appBundlePath.resolve("TestAppBundle").toString());
+      assertThat(
+          "App binary adds Framework dir to rpath.",
+          result.getStdout().get(),
+          matchesPattern(
+              Pattern.compile(
+                  ".*\\s+cmd LC_RPATH.*\\s+path @executable_path/Frameworks\\b.*",
+                  Pattern.DOTALL)));
+      assertThat(
+          "App binary has load instruction for framework",
+          result.getStdout().get(),
+          matchesPattern(
+              Pattern.compile(
+                  ".*\\s+cmd LC_LOAD_DYLIB.*\\s+name @rpath/BuckTest.framework/BuckTest\\b.*",
+                  Pattern.DOTALL)));
+    }
+  }
 }

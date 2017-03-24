@@ -17,6 +17,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxFlags;
 import com.facebook.buck.cxx.FrameworkDependencies;
+import com.facebook.buck.cxx.HasSystemFrameworkAndLibraries;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -90,7 +91,8 @@ public class PrebuiltAppleFrameworkDescription implements
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
+  public static class Arg extends AbstractDescriptionArg
+      implements HasSystemFrameworkAndLibraries {
     public SourcePath framework;
     public ImmutableSortedSet<FrameworkPath> frameworks = ImmutableSortedSet.of();
     public Optional<Pattern> supportedPlatformsRegex;
@@ -99,5 +101,15 @@ public class PrebuiltAppleFrameworkDescription implements
         PatternMatchedCollection.of();
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public NativeLinkable.Linkage preferredLinkage;
+
+    @Override
+    public ImmutableSortedSet<FrameworkPath> getFrameworks() {
+      return frameworks;
+    }
+
+    @Override
+    public ImmutableSortedSet<FrameworkPath> getLibraries() {
+      return ImmutableSortedSet.of();
+    }
   }
 }

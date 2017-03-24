@@ -39,6 +39,8 @@ import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.AppleWrapperResourceArg;
 import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.HasAppleBundleFields;
+import com.facebook.buck.cxx.HasSystemFrameworkAndLibraries;
+import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.SceneKitAssetsDescription;
 import com.facebook.buck.apple.XcodePostbuildScriptDescription;
 import com.facebook.buck.apple.XcodePrebuildScriptDescription;
@@ -63,12 +65,12 @@ import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCConfigurationList;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HeaderVisibility;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.ProjectGenerationEvent;
@@ -959,6 +961,10 @@ public class ProjectGenerator {
     return target;
   }
 
+  /**
+   * Traverses the graph to find all (non-system) frameworks that should be embedded into the
+   * target's bundle.
+   */
   private ImmutableSet<TargetNode<?, ?>> getTransitiveFrameworkNodes(
       TargetNode<? extends HasAppleBundleFields, ?> targetNode) {
     GraphTraversable<TargetNode<?, ?>> graphTraversable = node -> {
@@ -975,12 +981,21 @@ public class ProjectGenerator {
     try {
       for (TargetNode<?, ?> node : traversal.traverse(ImmutableList.of(targetNode))) {
         if (node != targetNode) {
-          Optional<TargetNode<AppleBundleDescription.Arg, ?>> appleBundleNode =
-              node.castArg(AppleBundleDescription.Arg.class);
-          if (appleBundleNode.isPresent() &&
-              isFrameworkBundle(appleBundleNode.get().getConstructorArg())) {
-            filteredRules.add(node);
-          }
+          node.castArg(AppleBundleDescription.Arg.class).ifPresent(appleBundleNode ->  {
+            if (isFrameworkBundle(appleBundleNode.getConstructorArg())) {
+              filteredRules.add(node);
+            }
+          });
+          node.castArg(PrebuiltAppleFrameworkDescription.Arg.class).ifPresent(prebuiltFramework -> {
+            // Technically (see Apple Tech Notes 2435), static frameworks are lies. In case a static
+            // framework is used, they can escape the incorrect project generation by marking its
+            // preferred linkage static (what does preferred linkage even mean for a prebuilt thing?
+            // none of this makes sense anyways).
+            if (prebuiltFramework.getConstructorArg().preferredLinkage !=
+                NativeLinkable.Linkage.STATIC) {
+              filteredRules.add(node);
+            }
+          });
         }
       }
     } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
@@ -1185,8 +1200,8 @@ public class ProjectGenerator {
 
       if (includeFrameworks && isFocusedOnTarget) {
         ImmutableSet.Builder<FrameworkPath> frameworksBuilder = ImmutableSet.builder();
-        frameworksBuilder.addAll(targetNode.getConstructorArg().frameworks);
-        frameworksBuilder.addAll(targetNode.getConstructorArg().libraries);
+        frameworksBuilder.addAll(targetNode.getConstructorArg().getFrameworks());
+        frameworksBuilder.addAll(targetNode.getConstructorArg().getLibraries());
         frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(targetNode));
         mutator.setFrameworks(frameworksBuilder.build());
 
@@ -1497,10 +1512,11 @@ public class ProjectGenerator {
 
   private ImmutableMap<String, String> getFrameworkAndLibrarySearchPathConfigs(
       TargetNode<?, ?> node) {
-    ImmutableSet.Builder<String> frameworkSearchPathsBuilder = ImmutableSet.<String>builder()
-        .add("$BUILT_PRODUCTS_DIR");
-    ImmutableSet.Builder<String> librarySearchPathsBuilder = ImmutableSet.<String>builder()
-        .add("$BUILT_PRODUCTS_DIR");
+    HashSet<String> frameworkSearchPaths = new HashSet<>();
+    frameworkSearchPaths.add("$BUILT_PRODUCTS_DIR");
+    HashSet<String> librarySearchPaths = new HashSet<>();
+    librarySearchPaths.add("$BUILT_PRODUCTS_DIR");
+    HashSet<String> ldRunpathSearchPaths = new HashSet<>();
 
     Stream.concat(
         // Collect all the nodes that contribute to linking
@@ -1514,36 +1530,56 @@ public class ProjectGenerator {
             node,
             ImmutableSet.of(
                 AppleLibraryDescription.class,
-                CxxLibraryDescription.class)).stream())
+                CxxLibraryDescription.class,
+                PrebuiltAppleFrameworkDescription.class)).stream())
         // Keep only the ones that may have frameworks and libraries fields.
-        .flatMap(input -> RichStream.from(input.castArg(CxxConstructorArg.class)))
+        .flatMap(input -> RichStream.from(input.castArg(HasSystemFrameworkAndLibraries.class)))
         // Then for each of them
         .forEach(castedNode -> {
           // ... Add the framework path strings.
-          castedNode.getConstructorArg().frameworks
+          castedNode.getConstructorArg().getFrameworks()
               .stream()
               .map(frameworkPath ->
                   FrameworkPath.getUnexpandedSearchPath(
                       this::resolveSourcePath,
                       pathRelativizer::outputDirToRootRelative,
                       frameworkPath).toString())
-              .forEach(frameworkSearchPathsBuilder::add);
+              .forEach(frameworkSearchPaths::add);
 
           // ... And do the same for libraries.
-          castedNode.getConstructorArg().libraries
+          castedNode.getConstructorArg().getLibraries()
               .stream()
-              .map(frameworkPath ->
+              .map(libraryPath ->
                   FrameworkPath.getUnexpandedSearchPath(
                       this::resolveSourcePath,
                       pathRelativizer::outputDirToRootRelative,
-                      frameworkPath).toString())
-              .forEach(librarySearchPathsBuilder::add);
+                      libraryPath).toString())
+              .forEach(librarySearchPaths::add);
+
+          // If the item itself is a prebuilt framework, add it to framework_search_paths.
+          // This is needed for prebuilt framework's headers to be reference-able.
+          castedNode.castArg(PrebuiltAppleFrameworkDescription.Arg.class).ifPresent(prebuilt -> {
+              frameworkSearchPaths.add(
+                  "$REPO_ROOT/" +
+                  resolveSourcePath(prebuilt.getConstructorArg().framework)
+                      .getParent());
+              if (prebuilt.getConstructorArg().preferredLinkage != NativeLinkable.Linkage.STATIC) {
+                // Frameworks that are copied into the binary.
+                ldRunpathSearchPaths.add("@executable_path/Frameworks");
+              }
+          });
         });
 
-    return ImmutableMap.<String, String>builder()
-        .put("FRAMEWORK_SEARCH_PATHS", Joiner.on(' ').join(frameworkSearchPathsBuilder.build()))
-        .put("LIBRARY_SEARCH_PATHS", Joiner.on(' ').join(librarySearchPathsBuilder.build()))
-        .build();
+
+    ImmutableMap.Builder<String, String> results = ImmutableMap.<String, String>builder()
+        .put("FRAMEWORK_SEARCH_PATHS", Joiner.on(' ').join(frameworkSearchPaths))
+        .put("LIBRARY_SEARCH_PATHS", Joiner.on(' ').join(librarySearchPaths));
+    if (!ldRunpathSearchPaths.isEmpty()) {
+      results.put(
+          "LD_RUNPATH_SEARCH_PATHS",
+          Joiner.on(' ').join(ldRunpathSearchPaths));
+    }
+    return results.build();
   }
 
   public static String getProductName(TargetNode<?, ?> buildTargetNode, BuildTarget buildTarget) {
@@ -2135,11 +2171,19 @@ public class ProjectGenerator {
       return Optional.of(
           CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.RESOURCES)
       );
+    } else if (targetNode.getDescription() instanceof PrebuiltAppleFrameworkDescription) {
+      return Optional.of(
+          CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS));
     } else {
       throw new RuntimeException("Unexpected type: " + targetNode.getDescription().getClass());
     }
   }
 
+  /**
+   * Convert a list of rules that should be somehow included into the bundle, into build phases
+   * which copies them into the bundle. The parameters of these copy phases are divined by
+   * scrutinizing the type of node we want to include.
+   */
   private ImmutableList<PBXBuildPhase> getCopyFilesBuildPhases(
       Iterable<TargetNode<?, ?>> copiedNodes) {
 
@@ -2457,6 +2501,9 @@ public class ProjectGenerator {
     return isSourceUnderTest;
   }
 
+  /**
+   * List of frameworks and libraries that goes into the "Link Binary With Libraries" phase.
+   */
   private Iterable<FrameworkPath> collectRecursiveFrameworkDependencies(
       TargetNode<?, ?> targetNode) {
     return FluentIterable
@@ -2466,18 +2513,31 @@ public class ProjectGenerator {
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 targetNode,
-                AppleBuildRules.XCODE_TARGET_DESCRIPTION_CLASSES))
+                ImmutableSet.<Class<? extends Description<?>>>builder()
+                    .addAll(AppleBuildRules.XCODE_TARGET_DESCRIPTION_CLASSES)
+                    .add(PrebuiltAppleFrameworkDescription.class)
+                    .build()))
         .transformAndConcat(input -> {
+          // Libraries and bundles which has system frameworks and libraries.
           Optional<TargetNode<CxxLibraryDescription.Arg, ?>> library =
               getLibraryNode(targetGraph, input);
-          if (library.isPresent() &&
-              !AppleLibraryDescription.isSharedLibraryNode(library.get())) {
+          if (library.isPresent() && !AppleLibraryDescription.isSharedLibraryNode(library.get())) {
             return Iterables.concat(
-                library.get().getConstructorArg().frameworks,
-                library.get().getConstructorArg().libraries);
-          } else {
-            return ImmutableList.of();
+                library.get().getConstructorArg().getFrameworks(),
+                library.get().getConstructorArg().getLibraries());
           }
+
+          Optional<TargetNode<PrebuiltAppleFrameworkDescription.Arg, ?>> prebuilt =
+              input.castArg(PrebuiltAppleFrameworkDescription.Arg.class);
+          if (prebuilt.isPresent()) {
+            return Iterables.concat(
+                prebuilt.get().getConstructorArg().getFrameworks(),
+                prebuilt.get().getConstructorArg().getLibraries(),
+                ImmutableList.of(
+                    FrameworkPath.ofSourcePath(prebuilt.get().getConstructorArg().framework)));
+          }
+
+          return ImmutableList.of();
         });
   }
 
@@ -2598,6 +2658,14 @@ public class ProjectGenerator {
     } else if (
         targetNode.getDescription() instanceof AppleBinaryDescription) {
       productOutputName = productName;
+    } else if (targetNode.getDescription() instanceof PrebuiltAppleFrameworkDescription) {
+      PrebuiltAppleFrameworkDescription.Arg arg =
+          (PrebuiltAppleFrameworkDescription.Arg) targetNode.getConstructorArg();
+      // Prebuilt frameworks reside in the source repo, not outputs dir.
+      return new SourceTreePath(
+          PBXReference.SourceTree.SOURCE_ROOT,
+          pathRelativizer.outputPathToSourcePath(arg.framework),
+          Optional.empty());
     } else {
       throw new RuntimeException("Unexpected type: " + targetNode.getDescription().getClass());
     }
@@ -2621,7 +2689,9 @@ public class ProjectGenerator {
         targetNode.getDescription() instanceof AppleLibraryDescription ||
         targetNode.getDescription() instanceof AppleBundleDescription ||
         targetNode.getDescription() instanceof CxxLibraryDescription ||
-        targetNode.getDescription() instanceof HalideLibraryDescription) {
+        targetNode.getDescription() instanceof HalideLibraryDescription ||
+        targetNode.getDescription() instanceof PrebuiltAppleFrameworkDescription
+    ) {
       return project.getMainGroup()
           .getOrCreateChildGroupByName("Frameworks")
           .getOrCreateFileReferenceBySourceTreePath(productsPath);

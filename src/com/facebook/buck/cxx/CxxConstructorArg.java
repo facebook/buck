@@ -38,7 +38,7 @@ import java.util.Optional;
 
 @SuppressFieldNotInitialized
 public class CxxConstructorArg extends AbstractDescriptionArg
-    implements HasDefaultFlavors, HasTests {
+    implements HasDefaultFlavors, HasTests, HasSystemFrameworkAndLibraries {
 
   public ImmutableSortedSet<SourceWithFlags> srcs = ImmutableSortedSet.of();
   public PatternMatchedCollection<ImmutableSortedSet<SourceWithFlags>> platformSrcs =
@@ -79,6 +79,16 @@ public class CxxConstructorArg extends AbstractDescriptionArg
     // We don't (yet) use the keys in the default_flavors map, but we
     // plan to eventually support key-value flavors.
     return ImmutableSortedSet.copyOf(defaults.values());
+  }
+
+  @Override
+  public ImmutableSortedSet<FrameworkPath> getFrameworks() {
+    return frameworks;
+  }
+
+  @Override
+  public ImmutableSortedSet<FrameworkPath> getLibraries() {
+    return libraries;
   }
 
   public CxxDeps getCxxDeps() {
