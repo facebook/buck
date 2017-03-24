@@ -17,13 +17,11 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -260,29 +258,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     ImmutableSortedSet.Builder<SourcePath> builder = ImmutableSortedSet.<SourcePath>naturalOrder()
         .addAll(getAnnotationProcessingParams().getInputs());
 
-    Optional<SourcePath> javacJarPath = getJavacSpec().getJavacJarPath();
-    if (javacJarPath.isPresent()) {
-      SourcePath sourcePath = javacJarPath.get();
-
-      // Add the original rule regardless of what happens next.
-      builder.add(sourcePath);
-
-      Optional<BuildRule> possibleRule = ruleFinder.getRule(sourcePath);
-
-      if (possibleRule.isPresent()) {
-        BuildRule rule = possibleRule.get();
-
-        // And now include any transitive deps that contribute to the classpath.
-        if (rule instanceof JavaLibrary) {
-          builder.addAll(
-              ((JavaLibrary) rule).getDepsForTransitiveClasspathEntries().stream()
-                  .map(BuildRule::getSourcePathToOutput)
-                  .collect(MoreCollectors.toImmutableList()));
-        } else {
-          builder.add(sourcePath);
-        }
-      }
-    }
+    builder.addAll(getJavac(ruleFinder).getInputs());
 
     return builder.build();
   }

@@ -88,7 +88,6 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
             invokingRule,
             suggestBuildRules,
             resolver,
-            ruleFinder,
             filesystem,
             new ClasspathChecker(),
             Optional.empty()));
@@ -150,7 +149,6 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
               sourceFilePaths,
               invokingRule,
               resolver,
-              ruleFinder,
               filesystem,
               declaredClasspathEntries,
               javac,

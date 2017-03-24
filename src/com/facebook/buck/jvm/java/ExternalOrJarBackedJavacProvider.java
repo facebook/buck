@@ -23,7 +23,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.Optional;
 
@@ -66,9 +65,12 @@ public class ExternalOrJarBackedJavacProvider implements JavacProvider {
               compiler));
         }
 
-        javac = new JarBackedJavac(
-            Preconditions.checkNotNull(compilerClassName),
-            ImmutableSortedSet.of(javacJarPath));
+        javac =
+            new JarBackedJavacProvider(
+                javacJarPath,
+                Preconditions.checkNotNull(compilerClassName),
+                Javac.Location.IN_PROCESS)
+            .resolve(ruleFinder);
       } else {
         javac = new ExternalJavac(Either.ofRight(compiler));
       }

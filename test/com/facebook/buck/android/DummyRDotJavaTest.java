@@ -144,7 +144,6 @@ public class DummyRDotJavaTest {
             ANDROID_JAVAC_OPTIONS,
         /* buildTarget */ null,
             pathResolver,
-            ruleFinder,
             new FakeProjectFilesystem())
             .getDescription(TestExecutionContext.newInstance()),
         String.format("jar cf %s  %s", rDotJavaOutputJar, rDotJavaBinFolder),

@@ -41,8 +41,6 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 
 public class JavacOptionsTest {
@@ -241,12 +239,10 @@ public class JavacOptionsTest {
 
   @Test
   public void getInputs() {
-    Path javacPath = Paths.get("javac");
     FakeSourcePath javacJarPath = new FakeSourcePath("javac_jar");
 
     JavacOptions options = createStandardBuilder()
         .setJavacSpec(JavacSpec.builder()
-            .setJavacPath(Either.ofLeft(javacPath))
             .setJavacJarPath(javacJarPath)
             .build())
         .build();

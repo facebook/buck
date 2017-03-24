@@ -99,7 +99,6 @@ public class JavacStepTest {
         BuildTargetFactory.newInstance("//foo:bar"),
         Optional.empty(),
         sourcePathResolver,
-        ruleFinder,
         fakeFilesystem,
         classpathChecker,
         Optional.empty());
@@ -154,7 +153,6 @@ public class JavacStepTest {
         BuildTargetFactory.newInstance("//foo:bar"),
         Optional.empty(),
         sourcePathResolver,
-        ruleFinder,
         fakeFilesystem,
         classpathChecker,
         Optional.empty());
@@ -213,7 +211,6 @@ public class JavacStepTest {
         BuildTargetFactory.newInstance("//foo:bar"),
         Optional.empty(),
         sourcePathResolver,
-        ruleFinder,
         fakeFilesystem,
         classpathChecker,
         Optional.empty());
@@ -270,7 +267,6 @@ public class JavacStepTest {
         BuildTargetFactory.newInstance("//foo:bar"),
         Optional.empty(),
         sourcePathResolver,
-        ruleFinder,
         fakeFilesystem,
         classpathChecker,
         Optional.empty());

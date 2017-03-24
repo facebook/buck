@@ -22,7 +22,6 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
 
@@ -57,17 +56,10 @@ abstract class AbstractJavacSpec implements RuleKeyAppendable {
         return new ConstantJavacProvider(
             ExternalJavac.createJavac(getJavacPath().get()));
       case JAR:
-        switch (javacLocation) {
-          case IN_PROCESS:
-            return new ConstantJavacProvider(new JarBackedJavac(
-                compilerClassName,
-                ImmutableSet.of(getJavacJarPath().get())));
-          case OUT_OF_PROCESS:
-            return new ConstantJavacProvider(new OutOfProcessJarBackedJavac(
-                compilerClassName,
-                ImmutableSet.of(getJavacJarPath().get())));
-        }
-        break;
+        return new JarBackedJavacProvider(
+            getJavacJarPath().get(),
+            compilerClassName,
+            javacLocation);
       case JDK:
         switch (javacLocation) {
           case IN_PROCESS:

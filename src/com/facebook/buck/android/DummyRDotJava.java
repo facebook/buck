@@ -58,7 +58,6 @@ import java.util.Set;
 public class DummyRDotJava extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, HasJavaAbi {
 
-  private final SourcePathRuleFinder ruleFinder;
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final Path outputJar;
   @AddToRuleKey
@@ -112,7 +111,6 @@ public class DummyRDotJava extends AbstractBuildRule
       boolean useOldStyleableFormat,
       ImmutableList<SourcePath> abiInputs) {
     super(params.copyAppendingExtraDeps(() -> ruleFinder.filterBuildRuleInputs(abiInputs)));
-    this.ruleFinder = ruleFinder;
     // Sort the input so that we get a stable ABI for the same set of resources.
     this.androidResourceDeps = androidResourceDeps.stream()
         .sorted(Comparator.comparing(HasAndroidResourceDeps::getBuildTarget))
@@ -221,7 +219,6 @@ public class DummyRDotJava extends AbstractBuildRule
             javacOptions,
             getBuildTarget(),
             context.getSourcePathResolver(),
-            ruleFinder,
             getProjectFilesystem());
     steps.add(javacStep);
     buildableContext.recordArtifact(rDotJavaClassesFolder);
