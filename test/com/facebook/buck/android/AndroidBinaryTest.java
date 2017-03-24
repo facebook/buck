@@ -410,9 +410,10 @@ public class AndroidBinaryTest {
     AndroidBinary buildRule = builder.build(resolver);
     ImmutableList<Path> resourceDirectories = ImmutableList.of(Paths.get("one"), Paths.get("two"));
 
-    FilteredResourcesProvider resourcesProvider = buildRule.getEnhancementResult()
-        .getAaptPackageResources()
-        .getFilteredResourcesProvider();
+    BuildRule aaptPackageRule = resolver.getRule(
+        BuildTargetFactory.newInstance("//:target#aapt_package"));
+    FilteredResourcesProvider resourcesProvider =
+        ((AaptPackageResources) aaptPackageRule).getFilteredResourcesProvider();
     assertTrue(resourcesProvider instanceof ResourcesFilter);
     ImmutableList.Builder<Path> filteredDirs = ImmutableList.builder();
     ((ResourcesFilter) resourcesProvider)

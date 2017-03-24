@@ -121,7 +121,7 @@ public class TrimUberRDotJavaTest {
         "  }\n" +
         "}\n";
     Path rDotJavaPath = pathResolver.getRelativePath(
-        aaptPackageResources.getPathToRDotJavaDir())
+        aaptPackageResources.getAaptOutputInfo().getRDotJavaDir())
         .resolve("com/test/R.java");
     filesystem.createParentDirs(rDotJavaPath);
     filesystem.writeContentsToPath(rDotJavaContents, rDotJavaPath);
@@ -144,7 +144,7 @@ public class TrimUberRDotJavaTest {
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:trim"))
             .setProjectFilesystem(filesystem)
             .build(),
-        aaptPackageResources.getPathToRDotJavaDir(),
+        aaptPackageResources.getAaptOutputInfo().getRDotJavaDir(),
         ImmutableList.of(dexProducedFromJavaLibrary),
         keepResourcePattern);
     resolver.addToIndex(trimUberRDotJava);

@@ -34,7 +34,6 @@ import java.util.Optional;
 @BuckStyleImmutable
 interface AbstractAndroidGraphEnhancementResult {
   AndroidPackageableCollection getPackageableCollection();
-  AaptPackageResources getAaptPackageResources();
   Optional<ImmutableMap<APKModule, CopyNativeLibraries>> getCopyNativeLibraries();
   Optional<PackageStringAssets> getPackageStringAssets();
   Optional<PreDexMerge> getPreDexMerge();
@@ -54,19 +53,11 @@ interface AbstractAndroidGraphEnhancementResult {
    */
   ImmutableSet<SourcePath> getClasspathEntriesToDex();
 
-  default SourcePath getPrimaryResourcesApkPath() {
-    return new ExplicitBuildTargetSourcePath(
-        getAaptPackageResources().getBuildTarget(),
-        getAaptPackageResources().getResourceApkPath());
-  }
+  SourcePath getPrimaryResourcesApkPath();
 
-  default SourcePath getAndroidManifestPath() {
-    return getAaptPackageResources().getAndroidManifestXmlSourcePath();
-  }
+  SourcePath getAndroidManifestPath();
 
-  default SourcePath getSourcePathToAaptGeneratedProguardConfigFile() {
-    return getAaptPackageResources().getSourcePathToGeneratedProguardConfigFile();
-  }
+  SourcePath getSourcePathToAaptGeneratedProguardConfigFile();
 
   ImmutableSortedSet<BuildRule> getFinalDeps();
 

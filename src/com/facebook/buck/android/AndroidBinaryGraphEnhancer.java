@@ -314,6 +314,7 @@ public class AndroidBinaryGraphEnhancer {
               .collect(MoreCollectors.toImmutableList()));
     }
 
+    AaptOutputInfo aaptOutputInfo;
     // Create the AaptPackageResourcesBuildable.
     BuildRuleParams paramsForAaptPackageResources = buildRuleParams
         .withAppendedFlavor(AAPT_PACKAGE_FLAVOR)
@@ -337,6 +338,7 @@ public class AndroidBinaryGraphEnhancer {
         manifestEntries);
     ruleResolver.addToIndex(aaptPackageResources);
     enhancedDeps.add(aaptPackageResources);
+    aaptOutputInfo = aaptPackageResources.getAaptOutputInfo();
 
     Optional<PackageStringAssets> packageStringAssets = Optional.empty();
     if (resourceCompressionMode.isStoreStringsAsAssets()) {
@@ -344,7 +346,7 @@ public class AndroidBinaryGraphEnhancer {
           .withAppendedFlavor(PACKAGE_STRING_ASSETS_FLAVOR)
           .copyReplacingDeclaredAndExtraDeps(Suppliers.ofInstance(
               ImmutableSortedSet.<BuildRule>naturalOrder()
-                  .add(aaptPackageResources)
+                  .addAll(ruleFinder.filterBuildRuleInputs(aaptOutputInfo.getPathToRDotTxt()))
                   .addAll(resourceRules)
                   .addAll(rulesWithResourceDirectories)
                   // Model the dependency on the presence of res directories, which, in the case
@@ -360,7 +362,7 @@ public class AndroidBinaryGraphEnhancer {
               paramsForPackageStringAssets,
               locales,
               filteredResourcesProvider,
-              aaptPackageResources.getPathToRDotTxt()));
+              aaptOutputInfo.getPathToRDotTxt()));
       ruleResolver.addToIndex(packageStringAssets.get());
       enhancedDeps.add(packageStringAssets.get());
     }
@@ -402,13 +404,13 @@ public class AndroidBinaryGraphEnhancer {
         .withAppendedFlavor(TRIM_UBER_R_DOT_JAVA_FLAVOR)
         .copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>naturalOrder()
-                .add(aaptPackageResources)
+                .addAll(ruleFinder.filterBuildRuleInputs(aaptOutputInfo.getRDotJavaDir()))
                 .addAll(preDexedLibrariesForResourceIdFiltering)
                 .build()),
             Suppliers.ofInstance(ImmutableSortedSet.of()));
     TrimUberRDotJava trimUberRDotJava = new TrimUberRDotJava(
         paramsForTrimUberRDotJava,
-        aaptPackageResources.getPathToRDotJavaDir(),
+        aaptOutputInfo.getRDotJavaDir(),
         preDexedLibrariesForResourceIdFiltering,
         keepResourcePattern);
     ruleResolver.addToIndex(trimUberRDotJava);
@@ -481,7 +483,10 @@ public class AndroidBinaryGraphEnhancer {
 
     return AndroidGraphEnhancementResult.builder()
         .setPackageableCollection(packageableCollection)
-        .setAaptPackageResources(aaptPackageResources)
+        .setPrimaryResourcesApkPath(aaptOutputInfo.getPrimaryResourcesApkPath())
+        .setAndroidManifestPath(aaptOutputInfo.getAndroidManifestXml())
+        .setSourcePathToAaptGeneratedProguardConfigFile(
+            aaptOutputInfo.getAaptGeneratedProguardConfigFile())
         .setCompiledUberRDotJava(compileUberRDotJava)
         .setCopyNativeLibraries(copyNativeLibraries)
         .setPackageStringAssets(packageStringAssets)

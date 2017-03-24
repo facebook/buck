@@ -370,9 +370,6 @@ public class AndroidBinaryGraphEnhancerTest {
         findRuleOfType(ruleResolver, ComputeExopackageDepsAbi.class);
     assertThat(finalDeps, Matchers.hasItem(computeExopackageDepsAbiRule));
 
-    FilteredResourcesProvider resourcesProvider = result.getAaptPackageResources()
-        .getFilteredResourcesProvider();
-    assertTrue(resourcesProvider instanceof ResourcesFilter);
     BuildRule resourcesFilterRule = findRuleOfType(ruleResolver, ResourcesFilter.class);
 
     BuildRule aaptPackageResourcesRule =
