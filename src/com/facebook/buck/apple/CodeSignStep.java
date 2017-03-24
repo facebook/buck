@@ -114,11 +114,16 @@ class CodeSignStep implements Step {
           processExecutorParams,
           options,
               /* stdin */ Optional.empty(),
-              /* timeOutMs */ Optional.empty(),
+              /* timeOutMs */ Optional.of((long) 120000),
               /* timeOutHandler */ Optional.empty());
     } catch (InterruptedException | IOException e) {
       context.logError(e, "Could not execute codesign.");
       return StepExecutionResult.ERROR;
+    }
+
+    if (result.isTimedOut()) {
+      throw new RuntimeException(
+          "codesign timed out.  This may be due to the keychain being locked.");
     }
 
     if (result.getExitCode() != 0) {
