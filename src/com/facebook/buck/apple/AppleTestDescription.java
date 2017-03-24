@@ -528,6 +528,11 @@ public class AppleTestDescription implements
       return xcodeProductType;
     }
 
+    @Override
+    public ImmutableMap<String, String> getInfoPlistSubstitutions() {
+      return infoPlistSubstitutions;
+    }
+
     public boolean getRunTestSeparately() {
       return runTestSeparately.orElse(false);
     }

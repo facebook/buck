@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.Optional;
@@ -72,4 +73,9 @@ public class AppleBundleBuilder
     return this;
   }
 
+  public AppleBundleBuilder setInfoPlistSubstitutions(
+      ImmutableMap<String, String> infoPlistSubstitutions) {
+    arg.infoPlistSubstitutions = infoPlistSubstitutions;
+    return this;
+  }
 }

@@ -2707,6 +2707,43 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testCodeSignEntitlementsAddsReference() throws IOException {
+    BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+    BuildTarget bundleTarget = BuildTarget.builder(rootPath, "//foo", "bundle").build();
+
+    TargetNode<?, ?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setExportedHeaders(
+            ImmutableSortedSet.of(new FakeSourcePath("foo.h")))
+        .build();
+
+    TargetNode<?, ?> bundleNode = AppleBundleBuilder
+        .createBuilder(bundleTarget)
+        .setBinary(libraryTarget)
+        .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+        .setInfoPlist(new FakeSourcePath(("Info.plist")))
+        .setInfoPlistSubstitutions(ImmutableMap.of("CODE_SIGN_ENTITLEMENTS", "foo.plist"))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(libraryNode, bundleNode));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXGroup targetGroup =
+        project.getMainGroup().getOrCreateChildGroupByName(bundleTarget.getFullyQualifiedName());
+
+    assertThat(targetGroup.getChildren(), hasSize(3));
+
+    PBXFileReference ruleReference = (PBXFileReference) Iterables.get(
+        targetGroup.getChildren(),
+        2);
+    assertEquals("foo.plist", ruleReference.getName());
+  }
+
+
+  @Test
   public void testAppleWatchTarget() throws IOException {
     BuildTarget watchAppBinaryTarget =
         BuildTarget.builder(rootPath, "//foo", "WatchAppBinary").build();

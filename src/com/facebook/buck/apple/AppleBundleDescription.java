@@ -314,5 +314,10 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     public Optional<String> getProductName() {
       return productName;
     }
+
+    @Override
+    public ImmutableMap<String, String> getInfoPlistSubstitutions() {
+      return infoPlistSubstitutions;
+    }
   }
 }

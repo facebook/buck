@@ -39,7 +39,7 @@ import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.AppleWrapperResourceArg;
 import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.HasAppleBundleFields;
-import com.facebook.buck.cxx.HasSystemFrameworkAndLibraries;
+import com.facebook.buck.apple.InfoPlistSubstitution;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.SceneKitAssetsDescription;
 import com.facebook.buck.apple.XcodePostbuildScriptDescription;
@@ -69,6 +69,7 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSource;
+import com.facebook.buck.cxx.HasSystemFrameworkAndLibraries;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.event.BuckEventBus;
@@ -1507,6 +1508,12 @@ public class ProjectGenerator {
       addSceneKitAssetsIntoTarget(appleTargetNode.get(), targetGroup.get());
     }
 
+    if (bundle.isPresent() &&
+        isFocusedOnTarget &&
+        !shouldGenerateHeaderSymlinkTreesOnly()) {
+      addEntitlementsPlistIntoTarget(bundle.get(), targetGroup.get());
+    }
+
     return target;
   }
 
@@ -1684,6 +1691,31 @@ public class ProjectGenerator {
       configs = Optional.of(ImmutableSortedMap.copyOf(defaultConfig));
     }
     return configs;
+  }
+
+  private void addEntitlementsPlistIntoTarget(
+      TargetNode<? extends HasAppleBundleFields, ?> targetNode,
+      PBXGroup targetGroup) throws IOException {
+    ImmutableMap<String, String> infoPlistSubstitutions =
+        targetNode.getConstructorArg().getInfoPlistSubstitutions();
+
+    if (infoPlistSubstitutions.containsKey(AppleBundle.CODE_SIGN_ENTITLEMENTS)) {
+      String entitlementsPlistPath =
+          InfoPlistSubstitution.replaceVariablesInString(
+              "$(" + AppleBundle.CODE_SIGN_ENTITLEMENTS + ")",
+              AppleBundle.withDefaults(
+                  infoPlistSubstitutions,
+                  ImmutableMap.of(
+                      "SOURCE_ROOT", ".",
+                      "SRCROOT", "."
+                  )));
+
+      targetGroup.getOrCreateFileReferenceBySourceTreePath(
+          new SourceTreePath(
+              PBXReference.SourceTree.SOURCE_ROOT,
+              Paths.get(entitlementsPlistPath),
+              Optional.empty()));
+    }
   }
 
   private void addCoreDataModelsIntoTarget(

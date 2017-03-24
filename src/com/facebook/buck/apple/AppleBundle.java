@@ -90,7 +90,7 @@ public class AppleBundle
     implements NativeTestable, BuildRuleWithBinary, HasRuntimeDeps, BinaryBuildRule {
 
   private static final Logger LOG = Logger.get(AppleBundle.class);
-  private static final String CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
+  public static final String CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
   private static final String FRAMEWORK_EXTENSION =
       AppleBundleExtension.FRAMEWORK.toFileExtension();
   private static final String PP_DRY_RUN_RESULT_FILE = "BUCK_pp_dry_run.plist";
@@ -714,7 +714,7 @@ public class AppleBundle
     }
   }
 
-  static ImmutableMap<String, String> withDefaults(
+  public static ImmutableMap<String, String> withDefaults(
       ImmutableMap<String, String> map,
       ImmutableMap<String, String> defaults) {
     ImmutableMap.Builder<String, String> builder = ImmutableMap.<String, String>builder()
