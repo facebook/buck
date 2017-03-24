@@ -120,7 +120,8 @@ public class TrimUberRDotJavaTest {
         "    public static final int keep_resource=0x7f083bc2;\n" +
         "  }\n" +
         "}\n";
-    Path rDotJavaPath = aaptPackageResources.getPathToGeneratedRDotJavaSrcFiles()
+    Path rDotJavaPath = pathResolver.getRelativePath(
+        aaptPackageResources.getPathToRDotJavaDir())
         .resolve("com/test/R.java");
     filesystem.createParentDirs(rDotJavaPath);
     filesystem.writeContentsToPath(rDotJavaContents, rDotJavaPath);

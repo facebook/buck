@@ -79,10 +79,12 @@ class TrimUberRDotJava extends AbstractBuildRule {
       BuildContext context,
       BuildableContext buildableContext) {
     Path output = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
+    Path input = context.getSourcePathResolver().getRelativePath(
+        aaptPackageResources.getPathToRDotJavaDir());
     buildableContext.recordArtifact(output);
     return ImmutableList.of(
         new MakeCleanDirectoryStep(getProjectFilesystem(), output.getParent()),
-        new PerformTrimStep(output),
+        new PerformTrimStep(output, input),
         ZipScrubberStep.of(context.getSourcePathResolver().getAbsolutePath(getSourcePathToOutput()))
     );
   }
@@ -99,9 +101,11 @@ class TrimUberRDotJava extends AbstractBuildRule {
 
   private class PerformTrimStep implements Step {
     private final Path pathToOutput;
+    private final Path pathToInput;
 
-    public PerformTrimStep(Path pathToOutput) {
+    public PerformTrimStep(Path pathToOutput, Path pathToInput) {
       this.pathToOutput = pathToOutput;
+      this.pathToInput = pathToInput;
     }
 
     @Override
@@ -117,10 +121,9 @@ class TrimUberRDotJava extends AbstractBuildRule {
       final ImmutableSet<String> allReferencedResources = allReferencedResourcesBuilder.build();
 
       final ProjectFilesystem projectFilesystem = getProjectFilesystem();
-      final Path sourceDir = aaptPackageResources.getPathToGeneratedRDotJavaSrcFiles();
       try (final CustomZipOutputStream output =
                ZipOutputStreams.newOutputStream(projectFilesystem.resolve(pathToOutput))) {
-        if (!projectFilesystem.exists(sourceDir)) {
+        if (!projectFilesystem.exists(pathToInput)) {
           // dx fails if its input contains no classes.  Rather than add empty input handling
           // to DxStep, the dex merger, and every other step of this chain, just generate a
           // stub class.  This will be stripped by ProGuard in release builds and have a minimal
@@ -132,7 +135,7 @@ class TrimUberRDotJava extends AbstractBuildRule {
               ).getBytes());
         } else {
           projectFilesystem.walkRelativeFileTree(
-              sourceDir,
+              pathToInput,
               new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
@@ -153,7 +156,7 @@ class TrimUberRDotJava extends AbstractBuildRule {
                   }
 
                   output.putNextEntry(new ZipEntry(
-                      MorePaths.pathWithUnixSeparators(sourceDir.relativize(file))));
+                      MorePaths.pathWithUnixSeparators(pathToInput.relativize(file))));
                   if (allPreDexRules.isEmpty()) {
                     // If there are no pre-dexed inputs, we don't yet support trimming
                     // R.java, so just copy it verbatim (instead of trimming it down to nothing).
@@ -182,7 +185,7 @@ class TrimUberRDotJava extends AbstractBuildRule {
     public String getDescription(ExecutionContext context) {
       return String.format(
           "trim_uber_r_dot_java %s > %s",
-          aaptPackageResources.getPathToGeneratedRDotJavaSrcFiles(),
+          pathToInput,
           pathToOutput);
     }
   }

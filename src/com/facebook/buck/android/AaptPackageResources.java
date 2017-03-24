@@ -272,7 +272,7 @@ public class AaptPackageResources extends AbstractBuildRule {
       BuildableContext buildableContext,
       BuildContext buildContext) {
     // Merge R.txt of HasAndroidRes and generate the resulting R.java files per package.
-    Path rDotJavaSrc = getPathToGeneratedRDotJavaSrcFiles();
+    Path rDotJavaSrc = getRawPathToGeneratedRDotJavaSrcFiles();
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), rDotJavaSrc));
 
     Path rDotTxtDir = getPathToRDotTxtDir();
@@ -340,7 +340,13 @@ public class AaptPackageResources extends AbstractBuildRule {
    * This directory contains both the generated {@code R.java} files under a directory path that
    * matches the corresponding package structure.
    */
-  Path getPathToGeneratedRDotJavaSrcFiles() {
+  SourcePath getPathToRDotJavaDir() {
+    return new ExplicitBuildTargetSourcePath(
+        getBuildTarget(),
+        getRawPathToGeneratedRDotJavaSrcFiles());
+  }
+
+  private Path getRawPathToGeneratedRDotJavaSrcFiles() {
     return getPathToGeneratedRDotJavaSrcFiles(getBuildTarget(), getProjectFilesystem());
   }
 
