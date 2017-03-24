@@ -85,6 +85,9 @@ class Transport(object):
     def sendall(self, data):
         raise NotImplementedError()
 
+    def recv(self, size):
+        raise NotImplementedError()
+
     def recv_into(self, buffer, size=None):
         raise NotImplementedError()
 
@@ -109,11 +112,14 @@ class UnixTransport(Transport):
         result = self.__socket.sendall(data, self.send_flags)
         return result
 
+    def recv(self, nbytes):
+        return self.__socket.recv(nbytes, self.recv_flags)
+
     def recv_into(self, buffer, nbytes=None):
-        return self.__socket.recv_into(buffer, nbytes, self.send_flags)
+        return self.__socket.recv_into(buffer, nbytes, self.recv_flags)
 
     def select(self, timeout_secs):
-        select_list = {self.__socket}
+        select_list = [self.__socket]
         readable, _, exceptional = select.select(
             select_list, [], select_list, timeout_secs)
         return (self.__socket in readable), (self.__socket in exceptional)
