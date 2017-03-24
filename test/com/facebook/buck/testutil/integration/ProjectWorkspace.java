@@ -429,15 +429,10 @@ public class ProjectWorkspace {
       throws IOException, InterruptedException {
     ProcessExecutorParams params = ProcessExecutorParams.builder()
         .setCommand(command)
+        .setDirectory(destPath.toAbsolutePath())
         .build();
     ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
-    String currentDir = System.getProperty("user.dir");
-    try {
-      System.setProperty("user.dir", destPath.toAbsolutePath().toString());
-      return executor.launchAndExecute(params);
-    } finally {
-      System.setProperty("user.dir", currentDir);
-    }
+    return executor.launchAndExecute(params);
   }
 
   /**

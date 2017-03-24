@@ -280,7 +280,7 @@ public class DiffRuleKeysScriptIntegrationTest {
     String cmd = Platform.detect() == Platform.WINDOWS ? "python" : "python2.7";
     ProcessExecutor.Result result = workspace.runCommand(
         cmd,
-        Paths.get("scripts", "diff_rulekeys.py").toString(),
+        Paths.get("scripts", "diff_rulekeys.py").toAbsolutePath().toString(),
         tmp.getRoot().resolve("buck-0.log").toString(),
         tmp.getRoot().resolve("buck-1.log").toString(),
         target);
