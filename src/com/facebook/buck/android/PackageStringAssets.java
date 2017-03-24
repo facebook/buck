@@ -56,18 +56,18 @@ public class PackageStringAssets extends AbstractBuildRule {
   public static final String STRING_ASSETS_DIR_FORMAT = "__strings_%s__";
 
   private final FilteredResourcesProvider filteredResourcesProvider;
-  private final AaptPackageResources aaptPackageResources;
+  private final SourcePath rDotTxtPath;
   private final ImmutableSet<String> locales;
 
   public PackageStringAssets(
       BuildRuleParams params,
       ImmutableSet<String> locales,
       FilteredResourcesProvider filteredResourcesProvider,
-      AaptPackageResources aaptPackageResources) {
+      SourcePath rDotTxtPath) {
     super(params);
     this.locales = locales;
     this.filteredResourcesProvider = filteredResourcesProvider;
-    this.aaptPackageResources = aaptPackageResources;
+    this.rDotTxtPath = rDotTxtPath;
   }
 
   // TODO(russellporter): Add an integration test for packaging string assets
@@ -100,7 +100,7 @@ public class PackageStringAssets extends AbstractBuildRule {
     steps.add(new CompileStringsStep(
             getProjectFilesystem(),
             filteredResourcesProvider.getStringFiles(),
-            aaptPackageResources.getPathToRDotTxtDir(),
+            context.getSourcePathResolver().getIdeallyRelativePath(rDotTxtPath),
             assetPathBuilder));
     steps.add(new ZipStep(
             getProjectFilesystem(),

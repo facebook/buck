@@ -151,7 +151,7 @@ public class AaptPackageResources extends AbstractBuildRule {
     return new ExplicitBuildTargetSourcePath(getBuildTarget(), getResourceApkPath());
   }
 
-  public Path getPathToRDotTxtDir() {
+  private Path getPathToRDotTxtDir() {
     return BuildTargets.getScratchPath(
         getProjectFilesystem(),
         getBuildTarget(),
@@ -160,6 +160,10 @@ public class AaptPackageResources extends AbstractBuildRule {
 
   private Path getPathToRDotTxtFile() {
     return getPathToRDotTxtDir().resolve("R.txt");
+  }
+
+  public SourcePath getPathToRDotTxt() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToRDotTxtFile());
   }
 
   @Override

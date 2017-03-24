@@ -417,7 +417,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
     CompileStringsStep step = new CompileStringsStep(
         fileSystem,
         stringFiles,
-        rDotJavaSrcDir,
+        rDotJavaSrcDir.resolve("R.txt"),
         input -> destinationDir.resolve(input + PackageStringAssets.STRING_ASSET_FILE_EXTENSION));
     assertEquals(0, step.execute(context).getExitCode());
     Map<String, byte[]> fileContentsMap = fileSystem.getFileContents();

@@ -360,7 +360,7 @@ public class AndroidBinaryGraphEnhancer {
               paramsForPackageStringAssets,
               locales,
               filteredResourcesProvider,
-              aaptPackageResources));
+              aaptPackageResources.getPathToRDotTxt()));
       ruleResolver.addToIndex(packageStringAssets.get());
       enhancedDeps.add(packageStringAssets.get());
     }
