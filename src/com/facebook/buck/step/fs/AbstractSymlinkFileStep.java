@@ -16,54 +16,44 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Joiner;
+
+import org.immutables.value.Value;
 
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class SymlinkFileStep implements Step {
+@Value.Immutable
+@BuckStyleImmutable
+abstract class AbstractSymlinkFileStep implements Step {
 
-  private final ProjectFilesystem filesystem;
-  private final Path existingFile;
-  private final Path desiredLink;
-  private final boolean useAbsolutePaths;
-
-  public SymlinkFileStep(
-      ProjectFilesystem filesystem,
-      Path existingFile,
-      Path desiredLink,
-      boolean useAbsolutePaths) {
-    this.filesystem = filesystem;
-    this.existingFile = existingFile;
-    this.desiredLink = desiredLink;
-    this.useAbsolutePaths = useAbsolutePaths;
-  }
+  @Value.Parameter
+  // TODO(illicitonion): Remove filesystem when ignored files are removed.
+  protected abstract ProjectFilesystem getFilesystem();
+  @Value.Parameter
+  // TODO(illicitonion): Require this to be one of absolute or relative.
+  protected abstract Path getExistingFile();
+  @Value.Parameter
+  // TODO(illicitonion): Require this to be absolute.
+  protected abstract Path getDesiredLink();
 
   /**
    * Get the path to the existing file that should be linked.
    */
-  private Path getExistingFilePath() {
-    // This could be either an absolute or relative path.
-    // TODO(edelron): Ideally all symbolic links should be relative, consider eliminating the
-    // absolute option.
-    return (useAbsolutePaths ? getAbsolutePath(existingFile, filesystem) :
-        MorePaths.getRelativePath(existingFile, desiredLink.getParent()));
+  private Path getAbsoluteExistingFilePath() {
+    return getFilesystem().resolve(getExistingFile());
   }
 
   /**
    * Get the path to the desired link that should be created.
    */
-  private Path getDesiredLinkPath() {
-    return getAbsolutePath(desiredLink, filesystem);
-  }
-
-  private  Path getAbsolutePath(Path path, ProjectFilesystem filesystem) {
-    return filesystem.resolve(path);
+  private Path getAbsoluteDesiredLinkPath() {
+    return getFilesystem().resolve(getDesiredLink());
   }
 
   @Override
@@ -77,16 +67,16 @@ public class SymlinkFileStep implements Step {
         "ln",
         "-f",
         "-s",
-        getExistingFilePath(),
-        getDesiredLinkPath());
+        getAbsoluteExistingFilePath(),
+        getAbsoluteDesiredLinkPath());
   }
 
   @Override
   public StepExecutionResult execute(ExecutionContext context) {
-    Path existingFilePath = getExistingFilePath();
-    Path desiredLinkPath = getDesiredLinkPath();
+    Path existingFilePath = getAbsoluteExistingFilePath();
+    Path desiredLinkPath = getAbsoluteDesiredLinkPath();
     try {
-      filesystem.createSymLink(
+      getFilesystem().createSymLink(
           desiredLinkPath,
           existingFilePath,
           /* force */ true);

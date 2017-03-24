@@ -48,15 +48,6 @@ public class SymlinkFileStepTest {
 
   @Test
   public void testAbsoluteSymlinkFiles() throws IOException {
-    internalTestSymlinkFiles(/* useAbsolutePaths */ true);
-  }
-
-  @Test
-  public void testRelativeSymlinkFiles() throws IOException {
-    internalTestSymlinkFiles(/* useAbsolutePaths */ false);
-  }
-
-  public void internalTestSymlinkFiles(boolean useAbsolutePaths) throws IOException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     File source = tmpDir.newFile();
@@ -65,11 +56,11 @@ public class SymlinkFileStepTest {
     File target = tmpDir.newFile();
     target.delete();
 
-    SymlinkFileStep step = new SymlinkFileStep(
-        new ProjectFilesystem(tmpDir.getRoot().toPath()),
-        /* source */ Paths.get(source.getName()),
-        /* target */ Paths.get(target.getName()),
-        useAbsolutePaths);
+    SymlinkFileStep step = SymlinkFileStep.builder()
+        .setFilesystem(new ProjectFilesystem(tmpDir.getRoot().toPath()))
+        .setExistingFile(Paths.get(source.getName()))
+        .setDesiredLink(Paths.get(target.getName()))
+        .build();
     step.execute(context);
     // Run twice to ensure we can overwrite an existing symlink
     step.execute(context);
@@ -106,11 +97,11 @@ public class SymlinkFileStepTest {
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
     tmpDir.newFile("dummy");
-    SymlinkFileStep symlinkStep = new SymlinkFileStep(
-        projectFilesystem,
-        /* source */ Paths.get("dummy"),
-        /* target */ Paths.get("my_symlink"),
-        /* useAbsolutePaths*/ true);
+    SymlinkFileStep symlinkStep = SymlinkFileStep.builder()
+        .setFilesystem(projectFilesystem)
+        .setExistingFile(Paths.get("dummy"))
+        .setDesiredLink(Paths.get("my_symlink"))
+        .build();
     int exitCode = symlinkStep.execute(executionContext).getExitCode();
     assertEquals(0, exitCode);
     assertTrue(java.nio.file.Files.isSymbolicLink(symlink));

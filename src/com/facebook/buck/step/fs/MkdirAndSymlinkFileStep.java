@@ -36,7 +36,11 @@ public final class MkdirAndSymlinkFileStep extends CompositeStep {
   public MkdirAndSymlinkFileStep(ProjectFilesystem filesystem, Path source, Path target) {
     super(ImmutableList.of(
         MkdirStep.of(filesystem, target.getParent()),
-        new SymlinkFileStep(filesystem, source, target, /* useAbsolutePaths */ true)));
+        SymlinkFileStep.builder()
+            .setFilesystem(filesystem)
+            .setExistingFile(source)
+            .setDesiredLink(target)
+            .build()));
     this.source = source;
     this.target = target;
   }

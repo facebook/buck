@@ -2,6 +2,7 @@ standard_java_library(
     immutable_types = [
         "MkdirStep",
         "RmStep",
+        "SymlinkFileStep",
     ],
     tests = [
         "//test/com/facebook/buck/step/fs:fs",

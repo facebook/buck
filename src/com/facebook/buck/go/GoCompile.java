@@ -169,11 +169,12 @@ public class GoCompile extends AbstractBuildRule {
       if (!headerSrcs.isEmpty()) {
         // TODO(mikekap): Allow header-map style input.
         for (Path header : FluentIterable.from(headerSrcs).append(asmSrcs)) {
-          steps.add(new SymlinkFileStep(
-              getProjectFilesystem(),
-              header,
-              asmIncludeDir.resolve(header.getFileName()),
-              /* useAbsolutePaths */ true));
+          steps.add(
+              SymlinkFileStep.builder()
+                  .setFilesystem(getProjectFilesystem())
+                  .setExistingFile(header)
+                  .setDesiredLink(asmIncludeDir.resolve(header.getFileName()))
+                  .build());
         }
       }
 
