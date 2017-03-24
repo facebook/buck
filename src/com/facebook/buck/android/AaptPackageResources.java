@@ -173,27 +173,12 @@ public class AaptPackageResources extends AbstractBuildRule {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    // Copy manifest to a path named AndroidManifest.xml after replacing the manifest placeholders
-    // if needed. Do this before running any other commands to ensure that it is available at the
-    // desired path.
-    steps.add(
-        MkdirStep.of(getProjectFilesystem(), getAndroidManifestXml().getParent()));
-
-    Optional<ImmutableMap<String, String>> placeholders = manifestEntries.getPlaceholders();
-    if (placeholders.isPresent() && !placeholders.get().isEmpty()) {
-      steps.add(
-          new ReplaceManifestPlaceholdersStep(
-              getProjectFilesystem(),
-              context.getSourcePathResolver().getAbsolutePath(manifest),
-              getAndroidManifestXml(),
-              placeholders.get()));
-    } else {
-      steps.add(
-          CopyStep.forFile(
-              getProjectFilesystem(),
-              context.getSourcePathResolver().getAbsolutePath(manifest),
-              getAndroidManifestXml()));
-    }
+    prepareManifestForAapt(
+        steps,
+        getProjectFilesystem(),
+        getAndroidManifestXml(),
+        context.getSourcePathResolver().getAbsolutePath(manifest),
+        manifestEntries);
 
     steps.add(MkdirStep.of(getProjectFilesystem(), getResourceApkPath().getParent()));
 
@@ -258,6 +243,36 @@ public class AaptPackageResources extends AbstractBuildRule {
             buildableContext));
 
     return steps.build();
+  }
+
+  static void prepareManifestForAapt(
+      ImmutableList.Builder<Step> stepBuilder,
+      ProjectFilesystem projectFilesystem,
+      Path finalManifestPath,
+      Path rawManifestPath,
+      ManifestEntries manifestEntries) {
+    // Copy manifest to a path named AndroidManifest.xml after replacing the manifest placeholders
+    // if needed. Do this before running any other commands to ensure that it is available at the
+    // desired path.
+
+    stepBuilder.add(
+        MkdirStep.of(projectFilesystem, finalManifestPath.getParent()));
+
+    Optional<ImmutableMap<String, String>> placeholders = manifestEntries.getPlaceholders();
+    if (placeholders.isPresent() && !placeholders.get().isEmpty()) {
+      stepBuilder.add(
+          new ReplaceManifestPlaceholdersStep(
+              projectFilesystem,
+              rawManifestPath,
+              finalManifestPath,
+              placeholders.get()));
+    } else {
+      stepBuilder.add(
+          CopyStep.forFile(
+              projectFilesystem,
+              rawManifestPath,
+              finalManifestPath));
+    }
   }
 
   /**
