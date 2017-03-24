@@ -80,7 +80,7 @@ public class ApkGenruleDescriptionTest {
     BuildRule dep = resolver.requireRule(depNode.getBuildTarget());
     BuildRule genrule = resolver.requireRule(genruleNode.getBuildTarget());
 
-    assertThat(genrule.getDeps(), Matchers.hasItems(dep, transitiveDep));
+    assertThat(genrule.getBuildDeps(), Matchers.hasItems(dep, transitiveDep));
   }
 
   private static class FakeInstallable extends FakeBuildRule implements HasInstallableApk {

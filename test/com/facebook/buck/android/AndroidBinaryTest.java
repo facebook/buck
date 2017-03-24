@@ -481,7 +481,7 @@ public class AndroidBinaryTest {
         .setOriginalDeps(ImmutableSortedSet.of(immediateDep.getBuildTarget()))
         .build(resolver);
 
-    assertThat(rule.getDeps(), Matchers.hasItem(transitivePrebuiltJarDep));
+    assertThat(rule.getBuildDeps(), Matchers.hasItem(transitivePrebuiltJarDep));
   }
 
   private Keystore addKeystoreRule(BuildRuleResolver ruleResolver) throws Exception {

@@ -150,7 +150,7 @@ public class AndroidLibraryGraphEnhancerTest {
     assertEquals(
         "DummyRDotJava must depend on the two AndroidResourceRules.",
         ImmutableSet.of("//android_res/com/example:res1", "//android_res/com/example:res2"),
-        dummyRDotJava.get().getDeps().stream()
+        dummyRDotJava.get().getBuildDeps().stream()
             .map(Object::toString)
             .collect(MoreCollectors.toImmutableSet()));
   }
@@ -246,6 +246,6 @@ public class AndroidLibraryGraphEnhancerTest {
             resolver,
             /* createdBuildableIfEmptyDeps */ true);
     assertTrue(result.isPresent());
-    assertThat(result.get().getDeps(), Matchers.<BuildRule>hasItem(dep));
+    assertThat(result.get().getBuildDeps(), Matchers.<BuildRule>hasItem(dep));
   }
 }

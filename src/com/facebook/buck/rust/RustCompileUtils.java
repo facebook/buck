@@ -147,7 +147,7 @@ public class RustCompileUtils {
     // Second pass - indirect deps
     new AbstractBreadthFirstTraversal<BuildRule>(
         ruledeps.stream()
-            .flatMap(r -> r.getDeps().stream())
+            .flatMap(r -> r.getBuildDeps().stream())
             .collect(MoreCollectors.toImmutableList())) {
       private final ImmutableSet<BuildRule> empty = ImmutableSet.of();
 
@@ -155,7 +155,7 @@ public class RustCompileUtils {
       public Iterable<BuildRule> visit(BuildRule rule) {
         ImmutableSet<BuildRule> deps = empty;
         if (rule instanceof RustLinkable) {
-          deps = rule.getDeps();
+          deps = rule.getBuildDeps();
 
           Arg arg = ((RustLinkable) rule).getLinkerArg(
               false,
@@ -503,7 +503,7 @@ public class RustCompileUtils {
       public Iterable<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
         ImmutableSet<BuildRule> deps = empty;
         if (rule instanceof RustLinkable) {
-          deps = rule.getDeps();
+          deps = rule.getBuildDeps();
 
           RustLinkable rustLinkable = (RustLinkable) rule;
 

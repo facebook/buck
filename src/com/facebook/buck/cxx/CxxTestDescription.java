@@ -227,7 +227,7 @@ public class CxxTestDescription implements
           deps.addAll(
               Sets.difference(
                   params.getBuildDeps(),
-                  cxxLinkAndCompileRules.getBinaryRule().getDeps()));
+                  cxxLinkAndCompileRules.getBinaryRule().getBuildDeps()));
 
           // Add any build-time from any macros embedded in the `env` or `args` parameter.
           for (String part :

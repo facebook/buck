@@ -77,7 +77,7 @@ public class DefaultWorkerTool extends NoopBuildRule implements
     Tool baseTool = this.exe.getExecutableCommand();
     CommandTool.Builder builder = new CommandTool.Builder(baseTool)
         .addInputs(
-            this.getDeps().stream()
+            this.getBuildDeps().stream()
                 .map(BuildRule::getSourcePathToOutput)
                 .collect(MoreCollectors.toImmutableList()));
     for (Map.Entry<String, String> e : env.entrySet()) {
@@ -118,7 +118,7 @@ public class DefaultWorkerTool extends NoopBuildRule implements
 
   @Override
   public Stream<BuildTarget> getRuntimeDeps() {
-    return getDeps().stream().map(BuildRule::getBuildTarget);
+    return getBuildDeps().stream().map(BuildRule::getBuildTarget);
   }
 
   @Override

@@ -57,7 +57,7 @@ public interface BuildRule extends Comparable<BuildRule> {
    *     original {@code deps} argument, as defined in the build file, must be accessed via a
    *     custom getter provided by the build rule.
    */
-  ImmutableSortedSet<BuildRule> getDeps();
+  ImmutableSortedSet<BuildRule> getBuildDeps();
 
   /** @return the same value as {@link #getFullyQualifiedName()} */
   @Override

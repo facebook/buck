@@ -96,7 +96,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
         // If the java library doesn't generate any output, it doesn't contribute a GwtModule
         JavaLibrary javaLibrary = (JavaLibrary) rule;
         if (javaLibrary.getSourcePathToOutput() == null) {
-          return rule.getDeps();
+          return rule.getBuildDeps();
         }
 
         BuildTarget gwtModuleTarget = BuildTargets.createFlavoredBuildTarget(
@@ -133,7 +133,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
         }
 
         // Traverse all of the deps of this rule.
-        return rule.getDeps();
+        return rule.getBuildDeps();
       }
     }.start();
 

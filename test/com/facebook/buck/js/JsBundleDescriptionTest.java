@@ -99,7 +99,7 @@ public class JsBundleDescriptionTest {
   }
 
   private static Collection<BuildTarget> dependencyTargets(JsBundle jsBundle) {
-    return jsBundle.getDeps()
+    return jsBundle.getBuildDeps()
         .stream()
         .map(BuildRule::getBuildTarget)
         .collect(Collectors.toSet());

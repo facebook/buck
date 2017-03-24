@@ -102,7 +102,7 @@ public class CxxLink
     // One way that we know would work is exposing every known cell root paths, since the only rules
     // that we built (and therefore need to scrub) will be in one of those roots.
     ImmutableSet.Builder<Path> cellRoots = ImmutableSet.builder();
-    for (BuildRule dep : getDeps()) {
+    for (BuildRule dep : getBuildDeps()) {
       cellRoots.add(dep.getProjectFilesystem().getRootPath());
     }
 
@@ -139,12 +139,14 @@ public class CxxLink
 
   @Override
   public ImmutableSet<BuildRule> getStaticLibraryDeps() {
-    return FluentIterable.from(getDeps()).filter(Archive.class::isInstance).toSet();
+    return FluentIterable.from(getBuildDeps()).filter(Archive.class::isInstance).toSet();
   }
 
   @Override
   public ImmutableSet<BuildRule> getCompileDeps() {
-    return FluentIterable.from(getDeps()).filter(CxxPreprocessAndCompile.class::isInstance).toSet();
+    return FluentIterable.from(getBuildDeps())
+        .filter(CxxPreprocessAndCompile.class::isInstance)
+        .toSet();
   }
 
   @Override

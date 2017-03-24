@@ -81,7 +81,7 @@ public class AndroidInstrumentationApkDescriptionTest {
     BuildRule transitiveDepRule = ruleResolver.requireRule(transitiveDep.getBuildTarget());
     AndroidInstrumentationApk androidInstrumentationApkRule =
         (AndroidInstrumentationApk) ruleResolver.requireRule(target);
-    assertThat(androidInstrumentationApkRule.getDeps(), Matchers.hasItem(transitiveDepRule));
+    assertThat(androidInstrumentationApkRule.getBuildDeps(), Matchers.hasItem(transitiveDepRule));
   }
 
 }

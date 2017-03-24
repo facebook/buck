@@ -323,7 +323,7 @@ public class RuleKeyBuilderTest {
     }
 
     @Override
-    public ImmutableSortedSet<BuildRule> getDeps() {
+    public ImmutableSortedSet<BuildRule> getBuildDeps() {
       return ImmutableSortedSet.of();
     }
 

@@ -390,7 +390,7 @@ public class GenruleTest {
         .setOut("output.txt")
         .build(ruleResolver);
 
-    assertThat(genrule.getDeps(), Matchers.hasItems(shBinaryRule, workerToolRule));
+    assertThat(genrule.getBuildDeps(), Matchers.hasItems(shBinaryRule, workerToolRule));
   }
 
   private ExecutionContext newEmptyExecutionContext(Platform platform) {

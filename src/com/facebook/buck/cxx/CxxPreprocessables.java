@@ -172,7 +172,7 @@ public class CxxPreprocessables {
                   HeaderVisibility.PUBLIC));
           return ImmutableSet.of();
         }
-        return traverse.apply(rule) ? rule.getDeps() : ImmutableSet.of();
+        return traverse.apply(rule) ? rule.getBuildDeps() : ImmutableSet.of();
       }
     }.start();
 

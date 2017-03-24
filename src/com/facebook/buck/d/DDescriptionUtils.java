@@ -208,7 +208,7 @@ abstract class DDescriptionUtils {
       public ImmutableSet<BuildRule> visit(BuildRule rule) {
         if (rule instanceof DLibrary) {
           libraries.put(rule.getBuildTarget(), (DLibrary) rule);
-          return rule.getDeps();
+          return rule.getBuildDeps();
         }
         return ImmutableSet.of();
       }

@@ -227,7 +227,7 @@ public class PomIntegrationTest {
 
     @Override
     public Iterable<HasMavenCoordinates> getMavenDeps() {
-      return FluentIterable.from(getDeps()).filter(HasMavenCoordinates.class);
+      return FluentIterable.from(getBuildDeps()).filter(HasMavenCoordinates.class);
     }
 
     @Override

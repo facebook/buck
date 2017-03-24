@@ -70,20 +70,20 @@ public class AppleTestDescriptionTest {
         builder.build().getExtraDeps(),
         Matchers.hasItem(dep.getBuildTarget()));
     AppleTest test = builder.build(resolver, targetGraph);
-    CxxStrip strip = (CxxStrip) RichStream.from(test.getDeps())
+    CxxStrip strip = (CxxStrip) RichStream.from(test.getBuildDeps())
         .filter(AppleBundle.class)
         .findFirst()
         .get()
         .getBinary()
         .get();
-    BuildRule binary = strip.getDeps().first();
+    BuildRule binary = strip.getBuildDeps().first();
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
         Arg.stringify(((CxxLink) binary).getArgs(), pathResolver),
         Matchers.hasItem(
             String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
     assertThat(
-        binary.getDeps(),
+        binary.getBuildDeps(),
         Matchers.hasItem(dep));
   }
 

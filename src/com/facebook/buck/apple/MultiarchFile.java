@@ -135,7 +135,7 @@ public class MultiarchFile extends AbstractBuildRule
   @Override
   public ImmutableSet<BuildRule> getStaticLibraryDeps() {
     ImmutableSet.Builder<BuildRule> builder = ImmutableSet.builder();
-    for (BuildRule dep : getDeps()) {
+    for (BuildRule dep : getBuildDeps()) {
       if (dep instanceof ProvidesLinkedBinaryDeps) {
         builder.addAll(((ProvidesLinkedBinaryDeps) dep).getStaticLibraryDeps());
       }
@@ -146,7 +146,7 @@ public class MultiarchFile extends AbstractBuildRule
   @Override
   public ImmutableSet<BuildRule> getCompileDeps() {
     ImmutableSet.Builder<BuildRule> builder = ImmutableSet.builder();
-    for (BuildRule dep : getDeps()) {
+    for (BuildRule dep : getBuildDeps()) {
       if (dep instanceof ProvidesLinkedBinaryDeps) {
         builder.addAll(((ProvidesLinkedBinaryDeps) dep).getCompileDeps());
       }

@@ -70,7 +70,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
         .naturalOrder();
     for (CxxPreprocessAndCompile compileRule : compileAndPreprocessRules) {
       compileRules.add(compileRule);
-      deps.addAll(compileRule.getDeps());
+      deps.addAll(compileRule.getBuildDeps());
     }
 
     return new CxxCompilationDatabase(

@@ -77,7 +77,7 @@ public class AndroidBinaryDescriptionTest {
 
     BuildRule transitiveDep = ruleResolver.requireRule(transitiveDepNode.getBuildTarget());
     AndroidBinary androidBinary = (AndroidBinary) ruleResolver.requireRule(target);
-    assertThat(androidBinary.getDeps(), Matchers.hasItem(transitiveDep));
+    assertThat(androidBinary.getBuildDeps(), Matchers.hasItem(transitiveDep));
   }
 
   @Test

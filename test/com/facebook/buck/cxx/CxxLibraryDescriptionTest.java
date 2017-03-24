@@ -295,7 +295,7 @@ public class CxxLibraryDescriptionTest {
         ImmutableSet.of(
             cxxSourceRuleFactory.createCompileBuildTarget("test/bar.cpp"),
             cxxSourceRuleFactory.createCompileBuildTarget(genSourceName)),
-        archiveRule.getDeps().stream()
+        archiveRule.getBuildDeps().stream()
             .map(BuildRule::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()));
 
@@ -570,7 +570,7 @@ public class CxxLibraryDescriptionTest {
         ImmutableSet.of(
             cxxSourceRuleFactoryPDC.createCompileBuildTarget("test/bar.cpp"),
             cxxSourceRuleFactoryPDC.createCompileBuildTarget(genSourceName)),
-        staticRule.getDeps().stream()
+        staticRule.getBuildDeps().stream()
             .map(BuildRule::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()));
 
@@ -636,7 +636,7 @@ public class CxxLibraryDescriptionTest {
             sharedLibraryDepTarget,
             cxxSourceRuleFactoryPIC.createCompileBuildTarget("test/bar.cpp"),
             cxxSourceRuleFactoryPIC.createCompileBuildTarget(genSourceName)),
-        sharedRule.getDeps().stream()
+        sharedRule.getBuildDeps().stream()
             .map(BuildRule::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()));
 
@@ -796,7 +796,7 @@ public class CxxLibraryDescriptionTest {
         Arg.stringify(((CxxLink) binary).getArgs(), pathResolver),
         hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
     assertThat(
-        binary.getDeps(),
+        binary.getBuildDeps(),
         hasItem(dep));
   }
 
@@ -838,7 +838,7 @@ public class CxxLibraryDescriptionTest {
             filesystem,
             targetGraph);
 
-    assertThat(lib.getDeps(), hasItem(loc));
+    assertThat(lib.getBuildDeps(), hasItem(loc));
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     assertThat(
         Arg.stringify(lib.getArgs(), pathResolver),
@@ -890,7 +890,7 @@ public class CxxLibraryDescriptionTest {
             filesystem,
             targetGraph);
 
-    assertThat(lib.getDeps(), hasItem(loc));
+    assertThat(lib.getBuildDeps(), hasItem(loc));
     assertThat(
         Arg.stringify(lib.getArgs(), pathResolver),
         hasItem(
@@ -945,7 +945,7 @@ public class CxxLibraryDescriptionTest {
             filesystem,
             targetGraph);
 
-    assertThat(lib.getDeps(), not(hasItem(loc)));
+    assertThat(lib.getBuildDeps(), not(hasItem(loc)));
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     assertThat(
         Arg.stringify(lib.getArgs(), pathResolver),
@@ -1160,7 +1160,7 @@ public class CxxLibraryDescriptionTest {
         filesystem,
         targetGraph);
 
-    assertThat(lib.getDeps(), is(empty()));
+    assertThat(lib.getBuildDeps(), is(empty()));
     assertThat(
         lib.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext()),
         is(empty()));

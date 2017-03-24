@@ -236,7 +236,7 @@ public class CxxSourceRuleFactoryTest {
           ImmutableList.of());
       CxxPreprocessAndCompile cxxCompile =
           cxxSourceRuleFactory.requireCompileBuildRule(nameCompile, cxxSourceCompile);
-      assertEquals(ImmutableSortedSet.<BuildRule>of(dep), cxxCompile.getDeps());
+      assertEquals(ImmutableSortedSet.<BuildRule>of(dep), cxxCompile.getBuildDeps());
 
       String namePreprocessAndCompile = "foo/bar.cpp";
       CxxSource cxxSourcePreprocessAndCompile = CxxSource.of(
@@ -474,12 +474,12 @@ public class CxxSourceRuleFactoryTest {
               name,
               cxxSource);
       assertThat(
-          cxxPreprocess.getDeps(),
+          cxxPreprocess.getBuildDeps(),
           hasItems(cxx, cxxpp));
       cxxPreprocess =
           cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(name, cxxSource);
       assertThat(
-          cxxPreprocess.getDeps(),
+          cxxPreprocess.getBuildDeps(),
           hasItems(cxx, cxxpp));
     }
 

@@ -661,7 +661,7 @@ public class JavaTest
             // It's possible that the user added some tool as a dependency, so make sure we promote
             // this rules first-order deps to runtime deps, so that these potential tools are
             // available when this test runs.
-            compiledTestsLibrary.getDeps().stream())
+            compiledTestsLibrary.getBuildDeps().stream())
         .map(BuildRule::getBuildTarget);
   }
 

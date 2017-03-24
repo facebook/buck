@@ -160,7 +160,7 @@ public class ApkGenruleTest {
     assertEquals(
         "The apk that this rule is modifying must have the apk in its deps.",
         ImmutableSet.of(apkTarget.toString()),
-        apkGenrule.getDeps().stream()
+        apkGenrule.getBuildDeps().stream()
             .map(Object::toString)
             .collect(MoreCollectors.toImmutableSet()));
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);

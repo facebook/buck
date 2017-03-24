@@ -82,7 +82,7 @@ public class CxxBinary
         "CxxBinary (%s) link rule (%s) is expected to be instance of either CxxLink or CxxStrip",
         this, linkRule);
     Preconditions.checkArgument(
-        getDeps().contains(linkRule),
+        getBuildDeps().contains(linkRule),
         "CxxBinary (%s) must depend on its link rule (%s) via deps",
         this, linkRule);
     Preconditions.checkArgument(

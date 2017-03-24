@@ -72,7 +72,7 @@ public class NativeLinkables {
 
             // Otherwise, make sure this rule is marked as traversable before following it's deps.
             if (traverse.apply(rule)) {
-              return rule.getDeps();
+              return rule.getBuildDeps();
             }
 
             return ImmutableSet.of();

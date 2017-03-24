@@ -35,7 +35,7 @@ public abstract class AbstractBuildRule implements BuildRule {
   private final BuildTarget buildTarget;
   private final Supplier<ImmutableSortedSet<BuildRule>> declaredDeps;
   private final Supplier<ImmutableSortedSet<BuildRule>> extraDeps;
-  private final Supplier<ImmutableSortedSet<BuildRule>> deps;
+  private final Supplier<ImmutableSortedSet<BuildRule>> buildDeps;
   private final ProjectFilesystem projectFilesystem;
 
   private final Supplier<String> typeSupplier = Suppliers.memoize(
@@ -45,7 +45,7 @@ public abstract class AbstractBuildRule implements BuildRule {
     this.buildTarget = buildRuleParams.getBuildTarget();
     this.declaredDeps = buildRuleParams.getDeclaredDeps();
     this.extraDeps = buildRuleParams.getExtraDeps();
-    this.deps = buildRuleParams.getTotalBuildDeps();
+    this.buildDeps = buildRuleParams.getTotalBuildDeps();
     this.projectFilesystem = buildRuleParams.getProjectFilesystem();
   }
 
@@ -60,8 +60,8 @@ public abstract class AbstractBuildRule implements BuildRule {
   }
 
   @Override
-  public final ImmutableSortedSet<BuildRule> getDeps() {
-    return deps.get();
+  public final ImmutableSortedSet<BuildRule> getBuildDeps() {
+    return buildDeps.get();
   }
 
   public final ImmutableSortedSet<BuildRule> getDeclaredDeps() {

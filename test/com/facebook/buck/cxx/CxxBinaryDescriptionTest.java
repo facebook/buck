@@ -211,7 +211,7 @@ public class CxxBinaryDescriptionTest {
             cxxSourceRuleFactory.createCompileBuildTarget("test/bar.cpp"),
             cxxSourceRuleFactory.createCompileBuildTarget(genSourceName),
             archiveTarget),
-        rule.getDeps().stream()
+        rule.getBuildDeps().stream()
             .map(BuildRule::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()));
 
@@ -328,7 +328,7 @@ public class CxxBinaryDescriptionTest {
         Matchers.hasItem(
             String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
     assertThat(
-        binary.getDeps(),
+        binary.getBuildDeps(),
         Matchers.hasItem(dep));
   }
 
@@ -367,7 +367,7 @@ public class CxxBinaryDescriptionTest {
         Matchers.hasItem(
             String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
     assertThat(
-        binary.getDeps(),
+        binary.getBuildDeps(),
         Matchers.hasItem(dep));
   }
 
@@ -405,7 +405,7 @@ public class CxxBinaryDescriptionTest {
             Matchers.hasItem(
                 String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver)))));
     assertThat(
-        binary.getDeps(),
+        binary.getBuildDeps(),
         Matchers.not(Matchers.hasItem(dep)));
   }
 
@@ -492,7 +492,7 @@ public class CxxBinaryDescriptionTest {
     CxxBinary binary = builder.build(resolver, targetGraph);
     // TODO(andrewjcg): should also test that `:dep` does *not* get included.
     assertThat(
-        binary.getDeps(),
+        binary.getBuildDeps(),
         Matchers.hasItem(transitiveDep));
   }
 

@@ -299,7 +299,7 @@ public class CxxTestDescriptionTest {
         Matchers.hasItem(
             String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
     assertThat(
-        binary.getDeps(),
+        binary.getBuildDeps(),
         Matchers.hasItem(dep));
   }
 
@@ -339,7 +339,7 @@ public class CxxTestDescriptionTest {
         Matchers.hasItem(
             String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
     assertThat(
-        binary.getDeps(),
+        binary.getBuildDeps(),
         Matchers.hasItem(dep));
   }
 
@@ -384,7 +384,7 @@ public class CxxTestDescriptionTest {
         Matchers.hasItem(
             String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
     assertThat(
-        binary.getDeps(),
+        binary.getBuildDeps(),
         Matchers.hasItem(dep));
   }
 
@@ -426,7 +426,7 @@ public class CxxTestDescriptionTest {
             Matchers.hasItem(
                 String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver)))));
     assertThat(
-        binary.getDeps(),
+        binary.getBuildDeps(),
         Matchers.not(Matchers.hasItem(dep)));
   }
 

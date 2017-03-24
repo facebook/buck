@@ -268,7 +268,7 @@ public class RobolectricTest extends JavaTest {
                 // It's possible that the user added some tool as a dependency, so make sure we
                 // promote this rules first-order deps to runtime deps, so that these potential
                 // tools are available when this test runs.
-                getDeps().stream())
+                getBuildDeps().stream())
             .reduce(Stream.empty(), Stream::concat)
             .map(BuildRule::getBuildTarget));
   }

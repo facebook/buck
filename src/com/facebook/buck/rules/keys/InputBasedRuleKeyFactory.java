@@ -114,11 +114,11 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
 
   private Builder<HashCode> newVerifyingBuilder(final BuildRule rule) {
     final Iterable<DependencyAggregation> aggregatedRules =
-        Iterables.filter(rule.getDeps(), DependencyAggregation.class);
+        Iterables.filter(rule.getBuildDeps(), DependencyAggregation.class);
     return new Builder<HashCode>(RuleKeyBuilder.createDefaultHasher()) {
       private boolean hasEffectiveDirectDep(BuildRule dep) {
         for (BuildRule aggregationRule : aggregatedRules) {
-          if (aggregationRule.getDeps().contains(dep)) {
+          if (aggregationRule.getBuildDeps().contains(dep)) {
             return true;
           }
         }
@@ -132,11 +132,11 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
         Result<RESULT> result = super.buildResult(mapper);
         for (BuildRule usedDep : result.getDeps()) {
           Preconditions.checkState(
-              rule.getDeps().contains(usedDep) || hasEffectiveDirectDep(usedDep),
+              rule.getBuildDeps().contains(usedDep) || hasEffectiveDirectDep(usedDep),
               "%s: %s not in deps (%s)",
               rule.getBuildTarget(),
               usedDep.getBuildTarget(),
-              rule.getDeps());
+              rule.getBuildDeps());
         }
         return result;
       }

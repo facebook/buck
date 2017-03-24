@@ -57,7 +57,7 @@ public class JavaLibraryDescriptionTest {
         .addDep(exportingRule.getBuildTarget())
         .build(resolver);
 
-    assertThat(javaLibrary.getDeps(), Matchers.<BuildRule>hasItem(exportedRule));
+    assertThat(javaLibrary.getBuildDeps(), Matchers.<BuildRule>hasItem(exportedRule));
   }
 
   @Test
@@ -67,6 +67,6 @@ public class JavaLibraryDescriptionTest {
         .addProvidedDep(exportingRule.getBuildTarget())
         .build(resolver);
 
-    assertThat(javaLibrary.getDeps(), Matchers.<BuildRule>hasItem(exportedRule));
+    assertThat(javaLibrary.getBuildDeps(), Matchers.<BuildRule>hasItem(exportedRule));
   }
 }

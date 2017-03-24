@@ -153,7 +153,7 @@ public class PrebuiltAppleFramework
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
-    return FluentIterable.from(getDeps())
+    return FluentIterable.from(getBuildDeps())
         .filter(CxxPreprocessorDep.class);
   }
 

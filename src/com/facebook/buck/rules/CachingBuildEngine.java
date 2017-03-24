@@ -298,8 +298,8 @@ public class CachingBuildEngine implements BuildEngine {
       ExecutionContext executionContext,
       ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks) {
     List<ListenableFuture<BuildResult>> depResults =
-        Lists.newArrayListWithExpectedSize(rule.getDeps().size());
-    for (BuildRule dep : shuffled(rule.getDeps())) {
+        Lists.newArrayListWithExpectedSize(rule.getBuildDeps().size());
+    for (BuildRule dep : shuffled(rule.getBuildDeps())) {
       depResults.add(
           getBuildRuleResultWithRuntimeDeps(dep, buildContext, executionContext, asyncCallbacks));
     }
@@ -1297,7 +1297,7 @@ public class CachingBuildEngine implements BuildEngine {
               ruleDeps.get(rule),
               deps -> {
                 List<ListenableFuture<RuleKey>> depKeys1 =
-                    Lists.newArrayListWithExpectedSize(rule.getDeps().size());
+                    Lists.newArrayListWithExpectedSize(rule.getBuildDeps().size());
                 for (BuildRule dep : deps) {
                   depKeys1.add(calculateRuleKey(dep, context));
                 }

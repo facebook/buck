@@ -331,7 +331,7 @@ public class CxxPrecompiledHeaderRuleTest {
     assertTrue(seek(libCmd, "-flag-for-factory").size() > 0);
 
     CxxPrecompiledHeader pchInstance = null;
-    for (BuildRule dep : lib.getDeps()) {
+    for (BuildRule dep : lib.getBuildDeps()) {
       if (dep instanceof CxxPrecompiledHeader) {
         pchInstance = (CxxPrecompiledHeader) dep;
       }
@@ -395,7 +395,7 @@ public class CxxPrecompiledHeaderRuleTest {
         lib2.makeMainStep(pathResolver, Paths.get("/tmp/y"), false).getCommand();
 
     CxxPrecompiledHeader pchInstance = null;
-    for (BuildRule dep : lib2.getDeps()) {
+    for (BuildRule dep : lib2.getBuildDeps()) {
       if (dep instanceof CxxPrecompiledHeader) {
         pchInstance = (CxxPrecompiledHeader) dep;
       }

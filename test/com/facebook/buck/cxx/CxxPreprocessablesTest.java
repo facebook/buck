@@ -69,7 +69,7 @@ public class CxxPreprocessablesTest {
 
     @Override
     public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
-      return FluentIterable.from(getDeps())
+      return FluentIterable.from(getBuildDeps())
           .filter(CxxPreprocessorDep.class);
     }
 
@@ -88,7 +88,7 @@ public class CxxPreprocessablesTest {
       builder.put(
           getBuildTarget(),
           getCxxPreprocessorInput(cxxPlatform, headerVisibility));
-      for (BuildRule dep : getDeps()) {
+      for (BuildRule dep : getBuildDeps()) {
         if (dep instanceof CxxPreprocessorDep) {
           builder.putAll(
               ((CxxPreprocessorDep) dep).getTransitiveCxxPreprocessorInput(
@@ -253,7 +253,7 @@ public class CxxPreprocessablesTest {
     // Verify that the symlink tree has no deps.  This is by design, since setting symlinks can
     // be done completely independently from building the source that the links point to and
     // independently from the original deps attached to the input build rule params.
-    assertTrue(symlinkTree.getDeps().isEmpty());
+    assertTrue(symlinkTree.getBuildDeps().isEmpty());
   }
 
   @Test

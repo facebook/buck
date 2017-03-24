@@ -689,7 +689,7 @@ abstract class AbstractCxxSourceRuleFactory {
     final String pchBaseID =
         "pch-" + langCode + "-" + preprocessorDelegateCacheValue.getBaseHash(compilerFlags);
 
-    for (BuildRule rule : pchTemplate.getDeps()) {
+    for (BuildRule rule : pchTemplate.getBuildDeps()) {
       depsBuilder.add(rule);
     }
 

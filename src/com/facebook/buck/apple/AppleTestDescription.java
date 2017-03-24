@@ -441,7 +441,7 @@ public class AppleTestDescription implements
 
     ImmutableMap<BuildTarget, NativeLinkable> roots =
         NativeLinkables.getNativeLinkableRoots(
-            testHostApp.getBinary().get().getDeps(),
+            testHostApp.getBinary().get().getBuildDeps(),
             x -> true);
 
     // Union the blacklist of all the platforms. This should give a superset for each particular

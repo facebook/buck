@@ -75,6 +75,6 @@ public class MavenUberJarTest {
             javaLibraryBuilder.createBuildRuleParams(resolver, filesystem),
             Optional.of("com.facebook.buck.jvm.java:java:jar:42"),
             Optional.empty());
-    assertThat(buildRule.getDeps(), Matchers.not(Matchers.hasItem(pythonLibrary)));
+    assertThat(buildRule.getBuildDeps(), Matchers.not(Matchers.hasItem(pythonLibrary)));
   }
 }

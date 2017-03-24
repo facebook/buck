@@ -25,8 +25,9 @@ public final class DependencyAggregationTestUtil {
    */
   public static Stream<BuildRule> getDisaggregatedDeps(BuildRule rule) {
     return
-        rule.getDeps().stream()
+        rule.getBuildDeps().stream()
             .flatMap(
-                (x) -> x instanceof DependencyAggregation ? x.getDeps().stream() : Stream.of(x));
+                (x) -> x instanceof DependencyAggregation ?
+                    x.getBuildDeps().stream() : Stream.of(x));
   }
 }

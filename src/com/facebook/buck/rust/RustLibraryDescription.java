@@ -290,7 +290,7 @@ public class RustLibraryDescription implements
 
       @Override
       public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
-        return FluentIterable.from(getDeps())
+        return FluentIterable.from(getBuildDeps())
             .filter(NativeLinkable.class);
       }
 

@@ -167,7 +167,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
 
   @Override
   public ImmutableSortedSet<BuildRule> getDepsForTransitiveClasspathEntries() {
-    return getDeps();
+    return getBuildDeps();
   }
 
   @Override

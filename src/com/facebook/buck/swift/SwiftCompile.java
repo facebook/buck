@@ -161,7 +161,7 @@ class SwiftCompile extends AbstractBuildRule {
             getSwiftIncludeArgs(resolver)));
     compilerCommand.addAll(MoreIterables.zipAndConcat(
         Iterables.cycle(INCLUDE_FLAG),
-        getDeps().stream()
+        getBuildDeps().stream()
             .filter(SwiftCompile.class::isInstance)
             .map(BuildRule::getSourcePathToOutput)
             .map(input -> resolver.getAbsolutePath(input).toString())

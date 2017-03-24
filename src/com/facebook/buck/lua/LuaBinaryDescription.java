@@ -328,7 +328,7 @@ public class LuaBinaryDescription implements
           LuaPackageComponents components = packageable.getLuaPackageComponents();
           LuaPackageComponents.addComponents(builder, components);
           if (components.hasNativeCode(cxxPlatform)) {
-            for (BuildRule dep : rule.getDeps()) {
+            for (BuildRule dep : rule.getBuildDeps()) {
               if (dep instanceof NativeLinkable) {
                 NativeLinkable linkable = (NativeLinkable) dep;
                 nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
@@ -336,7 +336,7 @@ public class LuaBinaryDescription implements
               }
             }
           }
-          deps = rule.getDeps();
+          deps = rule.getBuildDeps();
         } else if (rule instanceof CxxPythonExtension) {
           CxxPythonExtension extension = (CxxPythonExtension) rule;
           NativeLinkTarget target = extension.getNativeLinkTarget(pythonPlatform);
@@ -355,7 +355,7 @@ public class LuaBinaryDescription implements
                   components.getNativeLibraries(),
                   Object::toString));
           if (components.hasNativeCode(cxxPlatform)) {
-            for (BuildRule dep : rule.getDeps()) {
+            for (BuildRule dep : rule.getBuildDeps()) {
               if (dep instanceof NativeLinkable) {
                 NativeLinkable linkable = (NativeLinkable) dep;
                 nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
@@ -363,7 +363,7 @@ public class LuaBinaryDescription implements
               }
             }
           }
-          deps = rule.getDeps();
+          deps = rule.getBuildDeps();
         } else if (rule instanceof CxxLuaExtension) {
           CxxLuaExtension extension = (CxxLuaExtension) rule;
           luaExtensions.put(extension.getBuildTarget(), extension);

@@ -52,7 +52,7 @@ public class JavaTestDescriptionTest {
         .addDep(exportingRule.getBuildTarget())
         .build(resolver);
 
-    ImmutableSortedSet<BuildRule> deps = javaTest.getCompiledTestsLibrary().getDeps();
+    ImmutableSortedSet<BuildRule> deps = javaTest.getCompiledTestsLibrary().getBuildDeps();
     assertThat(deps, Matchers.<BuildRule>hasItem(exportedRule));
   }
 
@@ -73,7 +73,7 @@ public class JavaTestDescriptionTest {
         .addProvidedDep(exportingRule.getBuildTarget())
         .build(resolver);
 
-    ImmutableSortedSet<BuildRule> deps = javaTest.getCompiledTestsLibrary().getDeps();
+    ImmutableSortedSet<BuildRule> deps = javaTest.getCompiledTestsLibrary().getBuildDeps();
     assertThat(deps, Matchers.<BuildRule>hasItem(exportedRule));
   }
 

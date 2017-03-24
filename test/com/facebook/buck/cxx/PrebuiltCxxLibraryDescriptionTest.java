@@ -363,7 +363,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertTrue(Iterables.contains(implicit, genTarget));
 
     assertThat(
-        lib.getDeps(),
+        lib.getBuildDeps(),
         Matchers.contains(genrule));
   }
 
@@ -556,7 +556,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
     CxxLink lib = (CxxLink) builder.build(resolver, filesystem, targetGraph);
     assertNotNull(lib);
-    assertThat(lib.getDeps(), Matchers.contains(genSrc));
+    assertThat(lib.getBuildDeps(), Matchers.contains(genSrc));
   }
 
   @Test

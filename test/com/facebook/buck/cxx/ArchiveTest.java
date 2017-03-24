@@ -246,7 +246,7 @@ public class ArchiveTest {
     // SourcePath inputs.
     assertEquals(
         ImmutableSortedSet.<BuildRule>of(genrule1, genrule2),
-        archive.getDeps());
+        archive.getBuildDeps());
   }
 
   @Test
@@ -282,7 +282,7 @@ public class ArchiveTest {
             DEFAULT_INPUTS);
 
     // Verify that the archive rules dependencies are empty.
-    assertEquals(archive.getDeps(), ImmutableSortedSet.<BuildRule>of());
+    assertEquals(archive.getBuildDeps(), ImmutableSortedSet.<BuildRule>of());
   }
 
 }

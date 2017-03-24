@@ -76,7 +76,7 @@ public class ApplePackageDescriptionTest {
 
     assertThat(rule, instanceOf(ExternallyBuiltApplePackage.class));
     assertThat(
-        rule.getDeps(),
+        rule.getBuildDeps(),
         hasItem(
             resolver.getRule(
                 bundleBuildTarget.withFlavors(InternalFlavor.of("macosx-x86_64")))));
@@ -117,7 +117,7 @@ public class ApplePackageDescriptionTest {
         TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
         arg);
 
-    assertThat(rule.getDeps(), hasItem(resolver.getRule(exportFileBuildTarget)));
+    assertThat(rule.getBuildDeps(), hasItem(resolver.getRule(exportFileBuildTarget)));
   }
 
   private ApplePackageDescription descriptionWithCommand(String command) {

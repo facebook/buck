@@ -305,7 +305,7 @@ public final class CxxInferEnhancer {
               (ruleClass.cast(library.requireBuildRule(
                   requiredFlavor,
                   cxxPlatform.getFlavor()))));
-          return buildRule.getDeps();
+          return buildRule.getBuildDeps();
         }
         return ImmutableSet.of();
       }

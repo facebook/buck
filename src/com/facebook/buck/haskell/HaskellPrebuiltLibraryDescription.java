@@ -141,7 +141,7 @@ public class HaskellPrebuiltLibraryDescription implements
       @Override
       public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(
           CxxPlatform cxxPlatform) {
-        return FluentIterable.from(getDeps())
+        return FluentIterable.from(getBuildDeps())
             .filter(CxxPreprocessorDep.class);
       }
 

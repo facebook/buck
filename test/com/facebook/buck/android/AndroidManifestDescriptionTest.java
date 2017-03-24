@@ -74,6 +74,6 @@ public class AndroidManifestDescriptionTest {
 
     assertEquals(
         ImmutableSortedSet.of(ruleWithOutput),
-        androidManifest.getDeps());
+        androidManifest.getBuildDeps());
   }
 }

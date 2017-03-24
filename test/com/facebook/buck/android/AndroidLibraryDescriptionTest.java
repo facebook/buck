@@ -82,7 +82,7 @@ public class AndroidLibraryDescriptionTest {
         .build(resolver);
 
     assertThat(
-        javaLibrary.getDeps(),
+        javaLibrary.getBuildDeps(),
         Matchers.allOf(
             Matchers.hasItem(exportedRule),
             Matchers.hasItem(transitiveExportedRule)));
@@ -134,11 +134,11 @@ public class AndroidLibraryDescriptionTest {
         .build(resolver, targetGraph);
 
     assertThat(
-        javaLibrary.getDeps(),
+        javaLibrary.getBuildDeps(),
         Matchers.hasItems(libRule, sublibRule));
     // The bottom rule should be filtered since it does not match the regex
     assertThat(
-        javaLibrary.getDeps(),
+        javaLibrary.getBuildDeps(),
             Matchers.not(Matchers.hasItem(bottomRule)));
   }
 
@@ -166,7 +166,7 @@ public class AndroidLibraryDescriptionTest {
         .build(resolver);
 
     assertThat(
-        javaLibrary.getDeps(),
+        javaLibrary.getBuildDeps(),
         Matchers.allOf(
             Matchers.hasItem(exportedRule),
             Matchers.hasItem(transitiveExportedRule)));

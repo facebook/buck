@@ -188,7 +188,7 @@ public class ShTest
   // dependencies, as these are always components that the shell test needs available to run.
   @Override
   public Stream<BuildTarget> getRuntimeDeps() {
-    return getDeps().stream().map(BuildRule::getBuildTarget);
+    return getBuildDeps().stream().map(BuildRule::getBuildTarget);
   }
 
   @Override

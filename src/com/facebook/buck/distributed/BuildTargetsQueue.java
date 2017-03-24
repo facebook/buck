@@ -62,8 +62,8 @@ public class BuildTargetsQueue {
     while (!buildRulesToProcess.isEmpty()) {
       BuildRule rule = buildRulesToProcess.remove();
       String target = ruleToTarget(rule);
-      numberOfDependencies.put(target, rule.getDeps().size());
-      for (BuildRule dependencyRule : rule.getDeps()) {
+      numberOfDependencies.put(target, rule.getBuildDeps().size());
+      for (BuildRule dependencyRule : rule.getBuildDeps()) {
         String dependencyTarget = ruleToTarget(dependencyRule);
         if (!allReverseDeps.containsKey(dependencyTarget)) {
           allReverseDeps.put(dependencyTarget, Sets.newHashSet());

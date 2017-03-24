@@ -73,7 +73,7 @@ public class PrebuiltRustLibraryDescription implements
             args.crate.orElse(getBuildTarget().getShortName()),
             args.rlib,
             direct,
-            getDeps());
+            getBuildDeps());
       }
 
       @Override

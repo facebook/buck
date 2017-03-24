@@ -126,7 +126,7 @@ public class JsLibraryDescriptionTest {
   private JsFile.JsFileDev findFileRule(BuildRuleResolver resolver) {
     return RichStream.from(resolver
         .getRule(target)
-        .getDeps())
+        .getBuildDeps())
         .filter(JsFile.JsFileDev.class)
         .findFirst()
         .get();

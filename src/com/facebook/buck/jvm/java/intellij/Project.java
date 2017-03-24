@@ -821,9 +821,9 @@ public class Project {
 
     Set<BuildRule> targetsToWalk;
     if (rule instanceof JavaTest) {
-      targetsToWalk = ((JavaTest) rule).getCompiledTestsLibrary().getDeps();
+      targetsToWalk = ((JavaTest) rule).getCompiledTestsLibrary().getBuildDeps();
     } else {
-      targetsToWalk = rule.getDeps();
+      targetsToWalk = rule.getBuildDeps();
     }
 
     new AbstractBreadthFirstTraversal<BuildRule>(targetsToWalk) {
@@ -845,7 +845,7 @@ public class Project {
         if (rule.getProperties().is(PACKAGING) ||
             dep instanceof AndroidResource ||
             dep == rule) {
-          depsToVisit = dep.getDeps();
+          depsToVisit = dep.getBuildDeps();
         } else if (dep.getProperties().is(LIBRARY) && dep instanceof ExportDependencies) {
           depsToVisit = ((ExportDependencies) dep).getExportedDeps();
         } else {
@@ -884,7 +884,7 @@ public class Project {
             depsToVisit.isEmpty() &&
             dep.getBuildTarget().getBasePath().equals(basePathForRule) &&
             !dep.equals(srcTarget)) {
-          depsToVisit = dep.getDeps();
+          depsToVisit = dep.getBuildDeps();
         }
 
         SerializableDependentModule dependentModule;

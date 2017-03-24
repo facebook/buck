@@ -79,7 +79,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
 
   @Override
   public ImmutableSortedSet<BuildRule> getDepsForTransitiveClasspathEntries() {
-    return getDeps();
+    return getBuildDeps();
   }
 
   @Override
@@ -145,7 +145,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
 
   @Override
   public Iterable<AndroidPackageable> getRequiredPackageables() {
-    return AndroidPackageableCollector.getPackageableRules(getDeps());
+    return AndroidPackageableCollector.getPackageableRules(getBuildDeps());
   }
 
   @Override

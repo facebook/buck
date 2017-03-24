@@ -120,7 +120,7 @@ public class PythonBinaryDescriptionTest {
     Genrule genrule = genruleBuilder.build(resolver, filesystem, targetGraph);
     libBuilder.build(resolver, filesystem, targetGraph);
     PythonBinary binary = binaryBuilder.build(resolver, filesystem, targetGraph);
-    assertThat(binary.getDeps(), Matchers.hasItem(genrule));
+    assertThat(binary.getBuildDeps(), Matchers.hasItem(genrule));
   }
 
   @Test
@@ -135,7 +135,7 @@ public class PythonBinaryDescriptionTest {
         PythonBinaryBuilder.create(BuildTargetFactory.newInstance("//:bin"))
             .setMain(genrule.getSourcePathToOutput())
             .build(resolver);
-    assertThat(binary.getDeps(), Matchers.hasItem(genrule));
+    assertThat(binary.getBuildDeps(), Matchers.hasItem(genrule));
   }
 
   @Test
@@ -408,7 +408,7 @@ public class PythonBinaryDescriptionTest {
             .setMainModule("main")
             .build(resolver);
     assertThat(
-        binary.getDeps(),
+        binary.getBuildDeps(),
         Matchers.hasItem(pexTool));
   }
 

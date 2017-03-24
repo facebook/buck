@@ -108,7 +108,7 @@ public class WorkerToolTest {
     assertThat(
         workerToolBuilder.findImplicitDeps(),
         Matchers.hasItem(exportFileRule.getBuildTarget()));
-    assertThat(workerTool.getDeps(), Matchers.hasItems(shBinaryRule, exportFileRule));
+    assertThat(workerTool.getBuildDeps(), Matchers.hasItems(shBinaryRule, exportFileRule));
     assertThat(
         workerTool.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
         Matchers.hasItems(

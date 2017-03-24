@@ -129,7 +129,7 @@ public class Javadoc extends AbstractBuildRule implements MavenPublishable {
     StringBuilder argsBuilder = new StringBuilder("-classpath ");
     Joiner.on(File.pathSeparator).appendTo(
         argsBuilder,
-        getDeps().stream()
+        getBuildDeps().stream()
             .filter(HasClasspathEntries.class::isInstance)
             .flatMap(rule -> ((HasClasspathEntries) rule).getTransitiveClasspaths().stream())
             .map(context.getSourcePathResolver()::getAbsolutePath)

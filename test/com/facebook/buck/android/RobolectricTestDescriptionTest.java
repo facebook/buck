@@ -66,7 +66,7 @@ public class RobolectricTestDescriptionTest {
     RobolectricTest robolectricTest =
         (RobolectricTest) resolver.requireRule(robolectricTestNode.getBuildTarget());
 
-    assertThat(robolectricTest.getCompiledTestsLibrary().getDeps(),
+    assertThat(robolectricTest.getCompiledTestsLibrary().getBuildDeps(),
         Matchers.<BuildRule>hasItem(exportedRule));
   }
 
@@ -99,7 +99,7 @@ public class RobolectricTestDescriptionTest {
     RobolectricTest robolectricTest =
         (RobolectricTest) resolver.requireRule(robolectricTestNode.getBuildTarget());
 
-    assertThat(robolectricTest.getCompiledTestsLibrary().getDeps(),
+    assertThat(robolectricTest.getCompiledTestsLibrary().getBuildDeps(),
         Matchers.<BuildRule>hasItem(exportedRule));
   }
 

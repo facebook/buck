@@ -291,7 +291,7 @@ public class NativeLinkablesTest {
                 .build(),
             ImmutableMap.of(),
             b);
-    assertThat(a.getDeps(), Matchers.hasItem(b));
+    assertThat(a.getBuildDeps(), Matchers.hasItem(b));
     assertThat(
         NativeLinkables.getNativeLinkables(
             CxxPlatformUtils.DEFAULT_PLATFORM,

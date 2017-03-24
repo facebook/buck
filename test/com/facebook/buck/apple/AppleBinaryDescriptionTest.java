@@ -74,7 +74,7 @@ public class AppleBinaryDescriptionTest {
         Matchers.hasItem(
             String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
     assertThat(
-        binary.getDeps(),
+        binary.getBuildDeps(),
         Matchers.hasItem(dep));
   }
 

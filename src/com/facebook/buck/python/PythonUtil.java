@@ -200,7 +200,7 @@ public class PythonUtil {
           extensions.put(target.getBuildTarget(), extension);
           omnibusRoots.addIncludedRoot(target);
           List<BuildRule> cxxpydeps = new ArrayList<>();
-          for (BuildRule dep : rule.getDeps()) {
+          for (BuildRule dep : rule.getBuildDeps()) {
             if (dep instanceof CxxPythonExtension) {
               cxxpydeps.add(dep);
             }
@@ -212,7 +212,7 @@ public class PythonUtil {
               packagable.getPythonPackageComponents(pythonPlatform, cxxPlatform);
           allComponents.addComponent(comps, rule.getBuildTarget());
           if (comps.hasNativeCode(cxxPlatform)) {
-            for (BuildRule dep : rule.getDeps()) {
+            for (BuildRule dep : rule.getBuildDeps()) {
               if (dep instanceof NativeLinkable) {
                 NativeLinkable linkable = (NativeLinkable) dep;
                 nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
@@ -220,7 +220,7 @@ public class PythonUtil {
               }
             }
           }
-          deps = rule.getDeps();
+          deps = rule.getBuildDeps();
         } else if (rule instanceof NativeLinkable) {
           NativeLinkable linkable = (NativeLinkable) rule;
           nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);

@@ -105,7 +105,7 @@ public class JavaLibraryRules {
         }
         if (rule instanceof NativeLinkable ||
             rule instanceof JavaLibrary) {
-          return rule.getDeps();
+          return rule.getBuildDeps();
         } else {
           return ImmutableSet.of();
         }

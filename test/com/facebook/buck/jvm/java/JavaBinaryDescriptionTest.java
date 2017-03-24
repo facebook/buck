@@ -57,7 +57,7 @@ public class JavaBinaryDescriptionTest {
         .build(resolver);
 
     assertThat(
-        javaBinary.getDeps(),
+        javaBinary.getBuildDeps(),
         Matchers.containsInAnyOrder(firstOrderLibrary, transitiveLibrary));
   }
 

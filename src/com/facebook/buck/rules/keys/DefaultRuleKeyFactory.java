@@ -120,7 +120,7 @@ public class DefaultRuleKeyFactory implements RuleKeyFactory<RuleKey> {
       sink.setReflectively("buck.extraDeps", abstractBuildRule.deprecatedGetExtraDeps());
       sink.setReflectively("buck.declaredDeps", abstractBuildRule.getDeclaredDeps());
     } else {
-      sink.setReflectively("buck.deps", buildRule.getDeps());
+      sink.setReflectively("buck.deps", buildRule.getBuildDeps());
     }
   }
 

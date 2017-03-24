@@ -153,7 +153,7 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getDeps() {
+  public ImmutableSortedSet<BuildRule> getBuildDeps() {
     return ImmutableSortedSet.of();
   }
 

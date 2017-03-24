@@ -78,16 +78,16 @@ public class CxxPrecompiledHeaderTemplate
   }
 
   private ImmutableSortedSet<BuildRule> getExportedDeps() {
-    return BuildRules.getExportedRules(getDeps());
+    return BuildRules.getExportedRules(getBuildDeps());
   }
 
   /**
-   * Returns our {@link #getDeps()},
+   * Returns our {@link #getBuildDeps()},
    * limited to the subset of those which are {@link NativeLinkable}.
    */
   @Override
   public Iterable<? extends NativeLinkable> getNativeLinkableDeps() {
-    return RichStream.from(getDeps()).filter(NativeLinkable.class).toImmutableList();
+    return RichStream.from(getBuildDeps()).filter(NativeLinkable.class).toImmutableList();
   }
 
   /**
@@ -127,14 +127,14 @@ public class CxxPrecompiledHeaderTemplate
       Linker.LinkableDepType type) throws NoSuchBuildTargetException {
     return NativeLinkables.getTransitiveNativeLinkableInput(
         cxxPlatform,
-        getDeps(),
+        getBuildDeps(),
         Linker.LinkableDepType.SHARED,
         NativeLinkable.class::isInstance);
   }
 
   @Override
   public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
-    return RichStream.from(getDeps()).filter(CxxPreprocessorDep.class).toImmutableList();
+    return RichStream.from(getBuildDeps()).filter(CxxPreprocessorDep.class).toImmutableList();
   }
 
   @Override
@@ -200,7 +200,7 @@ public class CxxPrecompiledHeaderTemplate
       builder.addAll(frameworkPath.getDeps(ruleFinder));
     }
 
-    builder.addAll(getDeps());
+    builder.addAll(getBuildDeps());
     builder.addAll(getExportedDeps());
 
     return builder.build();

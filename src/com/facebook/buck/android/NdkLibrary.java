@@ -211,7 +211,7 @@ public class NdkLibrary extends AbstractBuildRule
 
   @Override
   public Iterable<AndroidPackageable> getRequiredPackageables() {
-    return AndroidPackageableCollector.getPackageableRules(getDeps());
+    return AndroidPackageableCollector.getPackageableRules(getBuildDeps());
   }
 
   @Override

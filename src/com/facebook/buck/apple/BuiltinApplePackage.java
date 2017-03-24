@@ -135,7 +135,7 @@ public class BuiltinApplePackage extends AbstractBuildRule {
     // For WatchOS1 support: same as above, except:
     // 1. No "Symbols" directory needed.
     // 2. WatchKitSupport instead of WatchKitSupport2.
-    for (BuildRule rule : bundle.getDeps()) {
+    for (BuildRule rule : bundle.getBuildDeps()) {
       if (rule instanceof AppleBundle) {
         AppleBundle appleBundle = (AppleBundle) rule;
         if (appleBundle.getBinary().isPresent()) {
@@ -175,7 +175,7 @@ public class BuiltinApplePackage extends AbstractBuildRule {
    * Otherwise, return absent.
    */
   private Optional<WriteFile> getLegacyWatchStubFromDeps(AppleBundle appleBundle) {
-    for (BuildRule rule : appleBundle.getDeps()) {
+    for (BuildRule rule : appleBundle.getBuildDeps()) {
       if (rule instanceof AppleBundle && rule.getBuildTarget().getFlavors()
             .contains(AppleBinaryDescription.LEGACY_WATCH_FLAVOR)) {
         AppleBundle legacyWatchApp = (AppleBundle) rule;

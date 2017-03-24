@@ -160,7 +160,7 @@ public class SymlinkTree implements BuildRule, HasRuntimeDeps, SupportsInputBase
    * This is to avoid removing and re-creating the same symlinks every build.
    */
   @Override
-  public ImmutableSortedSet<BuildRule> getDeps() {
+  public ImmutableSortedSet<BuildRule> getBuildDeps() {
     return ImmutableSortedSet.of();
   }
 

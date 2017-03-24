@@ -186,7 +186,7 @@ public class CxxPythonExtensionDescriptionTest {
             PY2.getFlavor(),
             CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()));
     assertThat(
-        rule.getDeps(),
+        rule.getBuildDeps(),
         Matchers.hasItems(
             FluentIterable.from(depInput.getArgs())
                 .transformAndConcat(arg -> arg.getDeps(ruleFinder))

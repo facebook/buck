@@ -252,7 +252,7 @@ class SwiftLibrary
 
   @Override
   public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
-    return getDeps().stream()
+    return getBuildDeps().stream()
         .filter(CxxPreprocessorDep.class::isInstance)
         .map(CxxPreprocessorDep.class::cast)
         .collect(MoreCollectors.toImmutableSet());

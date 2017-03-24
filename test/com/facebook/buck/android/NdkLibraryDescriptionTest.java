@@ -120,7 +120,7 @@ public class NdkLibraryDescriptionTest {
         .build(resolver);
 
     assertThat(
-        ndkLibrary.getDeps(),
+        ndkLibrary.getBuildDeps(),
         Matchers.allOf(
             Matchers.<BuildRule>hasItem(firstOrderInput),
             Matchers.<BuildRule>hasItem(transitiveInput)));

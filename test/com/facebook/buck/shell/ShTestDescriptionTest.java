@@ -63,7 +63,7 @@ public class ShTestDescriptionTest {
     assertThat(shTestBuilder.findImplicitDeps(), Matchers.hasItem(dep.getBuildTarget()));
     ShTest shTest = shTestBuilder.build(resolver);
     assertThat(
-        shTest.getDeps(),
+        shTest.getBuildDeps(),
         Matchers.contains(dep));
     assertThat(
         Arg.stringify(shTest.getArgs(), pathResolver),
@@ -86,7 +86,7 @@ public class ShTestDescriptionTest {
     assertThat(shTestBuilder.findImplicitDeps(), Matchers.hasItem(dep.getBuildTarget()));
     ShTest shTest = shTestBuilder.build(resolver);
     assertThat(
-        shTest.getDeps(),
+        shTest.getBuildDeps(),
         Matchers.contains(dep));
     assertThat(
         Arg.stringify(shTest.getEnv(), pathResolver),

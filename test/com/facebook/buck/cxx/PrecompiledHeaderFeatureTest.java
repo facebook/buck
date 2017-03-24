@@ -198,8 +198,10 @@ public class PrecompiledHeaderFeatureTest {
               preconfiguredCxxSourceBuilder()
                   .addFlags("-I", from.toString())
                   .build());
-          return
-              FluentIterable.from(rule.getDeps()).filter(CxxPrecompiledHeader.class).first().get();
+          return FluentIterable.from(rule.getBuildDeps())
+              .filter(CxxPrecompiledHeader.class)
+              .first()
+              .get();
         }
       }
       TestData testData = new TestData();
@@ -232,7 +234,10 @@ public class PrecompiledHeaderFeatureTest {
               "foo.c",
               preconfiguredCxxSourceBuilder().build());
           return
-              FluentIterable.from(rule.getDeps()).filter(CxxPrecompiledHeader.class).first().get();
+              FluentIterable.from(rule.getBuildDeps())
+                  .filter(CxxPrecompiledHeader.class)
+                  .first()
+                  .get();
         }
       }
       TestData testData = new TestData();
@@ -267,7 +272,10 @@ public class PrecompiledHeaderFeatureTest {
               "foo.c",
               preconfiguredCxxSourceBuilder().build());
           return
-              FluentIterable.from(rule.getDeps()).filter(CxxPrecompiledHeader.class).first().get();
+              FluentIterable.from(rule.getBuildDeps())
+                  .filter(CxxPrecompiledHeader.class)
+                  .first()
+                  .get();
         }
       }
       TestData testData = new TestData();

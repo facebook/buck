@@ -127,7 +127,7 @@ public class GenruleDescriptionTest {
     BuildRule transitiveDep = resolver.requireRule(transitiveDepNode.getBuildTarget());
     BuildRule genrule = resolver.requireRule(genruleNode.getBuildTarget());
 
-    assertThat(genrule.getDeps(), Matchers.containsInAnyOrder(dep, transitiveDep));
+    assertThat(genrule.getBuildDeps(), Matchers.containsInAnyOrder(dep, transitiveDep));
   }
 
 

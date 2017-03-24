@@ -52,13 +52,13 @@ public class BuildRuleDependencyVisitors {
           public ImmutableSet<BuildRule> visit(BuildRule rule) {
             if (filter.apply(rule)) {
               graph.addNode(rule);
-              for (BuildRule dep : rule.getDeps()) {
+              for (BuildRule dep : rule.getBuildDeps()) {
                 if (traverse.apply(dep) && filter.apply(dep)) {
                   graph.addEdge(rule, dep);
                 }
               }
             }
-            return traverse.apply(rule) ? rule.getDeps() : ImmutableSet.of();
+            return traverse.apply(rule) ? rule.getBuildDeps() : ImmutableSet.of();
           }
         };
     visitor.start();
@@ -66,6 +66,6 @@ public class BuildRuleDependencyVisitors {
   }
 
   public static ImmutableSet<BuildRule> maybeVisitAllDeps(BuildRule rule, boolean visitDeps) {
-    return visitDeps ? rule.getDeps() : ImmutableSet.of();
+    return visitDeps ? rule.getBuildDeps() : ImmutableSet.of();
   }
 }

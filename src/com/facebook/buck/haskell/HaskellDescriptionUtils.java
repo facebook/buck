@@ -95,7 +95,7 @@ public class HaskellDescriptionUtils {
       public Iterable<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
         ImmutableSet<BuildRule> ruleDeps = empty;
         if (rule instanceof HaskellCompileDep) {
-          ruleDeps = rule.getDeps();
+          ruleDeps = rule.getBuildDeps();
           HaskellCompileInput compileInput =
               ((HaskellCompileDep) rule).getCompileInput(cxxPlatform, depType);
           depFlags.put(rule.getBuildTarget(), compileInput.getFlags());

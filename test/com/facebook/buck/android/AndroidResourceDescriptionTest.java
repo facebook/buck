@@ -184,7 +184,7 @@ public class AndroidResourceDescriptionTest {
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     AndroidResource resource = (AndroidResource) resolver.requireRule(target);
 
-    ImmutableList<BuildRule> deps = resource.getDeps().asList();
+    ImmutableList<BuildRule> deps = resource.getBuildDeps().asList();
     assertThat(deps, hasSize(2));
 
     assertThat(

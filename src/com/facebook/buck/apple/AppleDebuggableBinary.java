@@ -75,7 +75,7 @@ public class AppleDebuggableBinary
         AppleDebugFormat.FLAVOR_DOMAIN.containsAnyOf(buildRuleParams.getBuildTarget().getFlavors()),
         "Rule %s should contain some of AppleDebugFormat flavors", this);
     Preconditions.checkArgument(
-        getDeps().contains(cxxStrip),
+        getBuildDeps().contains(cxxStrip),
         "Rule %s should depend on its stripped rule %s", this, cxxStrip);
   }
 

@@ -49,7 +49,7 @@ public class RuleDepsCache {
           rule.getBuildTarget(),
           () -> service.submit(() -> {
             ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
-            deps.addAll(rule.getDeps());
+            deps.addAll(rule.getBuildDeps());
             if (rule instanceof HasRuntimeDeps) {
               deps.addAll(
                   resolver.getAllRules(((HasRuntimeDeps) rule).getRuntimeDeps()

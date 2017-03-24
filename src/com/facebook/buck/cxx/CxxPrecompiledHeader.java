@@ -160,7 +160,7 @@ public class CxxPrecompiledHeader
 
   public CxxIncludePaths getCxxIncludePaths() {
     return CxxIncludePaths.concat(
-        RichStream.from(this.getDeps())
+        RichStream.from(this.getBuildDeps())
             .filter(CxxPreprocessAndCompile.class)
             .map(CxxPreprocessAndCompile::getPreprocessorDelegate)
             .filter(Optional::isPresent)
