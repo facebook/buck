@@ -97,13 +97,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
       builder.setSpoolMode(spoolMode.get());
     }
 
-    // This is just to make it possible to turn off dep-based rulekeys in case anything goes wrong
-    // and can be removed when we're sure class usage tracking and dep-based keys for Java
-    // work fine.
-    Optional<Boolean> trackClassUsage = delegate.getBoolean(SECTION, "track_class_usage");
-    if (trackClassUsage.isPresent()) {
-      builder.setTrackClassUsageNotDisabled(trackClassUsage.get());
-    }
+    builder.setTrackClassUsage(trackClassUsage());
 
     Optional<JavacOptions.AbiGenerationMode> abiGenerationMode =
         delegate.getEnum(SECTION, "abi_generation_mode", JavacOptions.AbiGenerationMode.class);
@@ -133,6 +127,19 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
   public DefaultJavaPackageFinder createDefaultJavaPackageFinder() {
     return DefaultJavaPackageFinder.createDefaultJavaPackageFinder(getSrcRoots());
+  }
+
+  public boolean trackClassUsage() {
+    // This is just to make it possible to turn off dep-based rulekeys in case anything goes wrong
+    // and can be removed when we're sure class usage tracking and dep-based keys for Java
+    // work fine.
+    Optional<Boolean> trackClassUsage = delegate.getBoolean(SECTION, "track_class_usage");
+    if (trackClassUsage.isPresent() && !trackClassUsage.get()) {
+      return false;
+    }
+
+    final Javac.Source javacSource = getJavacSpec().getJavacSource();
+    return (javacSource == Javac.Source.JAR || javacSource == Javac.Source.JDK);
   }
 
   public JavacSpec getJavacSpec() {

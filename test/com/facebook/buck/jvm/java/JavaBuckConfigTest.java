@@ -287,22 +287,75 @@ public class JavaBuckConfigTest {
   }
 
   @Test
-  public void classUsageTracking()
-      throws IOException, NoSuchBuildTargetException, InterruptedException {
-    String jarPath = temporaryFolder.newFile("javac.jar").toString();
-    String config = Joiner.on('\n').join(
-        "[tools]",
-        "    javac_jar = " + jarPath.replace("\\", "\\\\"));
+  public void trackClassUsageCanBeDisabled() {
+    JavaBuckConfig config =
+        FakeBuckConfig
+            .builder()
+            .setSections(ImmutableMap.of(
+                "java",
+                ImmutableMap.of("track_class_usage", "false")))
+            .build()
+            .getView(JavaBuckConfig.class);
 
-    assertTrue(createWithDefaultFilesystem(
-        new StringReader(config))
-        .getDefaultJavacOptions()
-        .trackClassUsage());
+    assumeThat(config.getJavacSpec().getJavacSource(), is(Javac.Source.JDK));
+    assertFalse(config.trackClassUsage());
+  }
 
-    assertFalse(createWithDefaultFilesystem(
-        new StringReader(config + "\n[java]\ntrack_class_usage = false"))
-        .getDefaultJavacOptions()
-        .trackClassUsage());
+  @Test
+  public void doNotTrackClassUsageByDefaultForExternJavac() throws IOException {
+    JavaBuckConfig config = FakeBuckConfig.builder()
+        .setFilesystem(defaultFilesystem)
+        .setSections(ImmutableMap.of("tools",
+            ImmutableMap.of("javac", temporaryFolder.newExecutableFile().toString())))
+        .build()
+        .getView(JavaBuckConfig.class);
+
+    assumeThat(config.getJavacSpec().getJavacSource(), is(Javac.Source.EXTERNAL));
+
+    assertFalse(config.trackClassUsage());
+  }
+
+  @Test
+  public void doNotTrackClassUsageEvenIfAskedForExternJavac() throws IOException {
+    JavaBuckConfig config =
+        FakeBuckConfig
+            .builder()
+            .setFilesystem(defaultFilesystem)
+            .setSections(ImmutableMap.of(
+                "tools",
+                ImmutableMap.of("javac", temporaryFolder.newExecutableFile().toString()),
+                "java",
+                ImmutableMap.of("track_class_usage", "true")))
+            .build()
+            .getView(JavaBuckConfig.class);
+
+    assumeThat(config.getJavacSpec().getJavacSource(), is(Javac.Source.EXTERNAL));
+    assertFalse(config.trackClassUsage());
+  }
+
+  @Test
+  public void trackClassUsageByDefaultForJavacFromJar() throws IOException {
+    JavaBuckConfig config = FakeBuckConfig.builder()
+        .setFilesystem(defaultFilesystem)
+        .setSections(ImmutableMap.of("tools",
+            ImmutableMap.of("javac_jar", temporaryFolder.newExecutableFile().toString())))
+        .build()
+        .getView(JavaBuckConfig.class);
+
+    assumeThat(config.getJavacSpec().getJavacSource(), is(Javac.Source.JAR));
+
+    assertTrue(config.trackClassUsage());
+  }
+
+  @Test
+  public void trackClassUsageByDefaultForJavacFromJDK() {
+    JavaBuckConfig config = FakeBuckConfig.builder()
+        .build()
+        .getView(JavaBuckConfig.class);
+
+    assumeThat(config.getJavacSpec().getJavacSource(), is(Javac.Source.JDK));
+
+    assertTrue(config.trackClassUsage());
   }
 
   @Test

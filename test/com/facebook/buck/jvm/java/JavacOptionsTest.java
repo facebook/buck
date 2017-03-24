@@ -22,13 +22,9 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -50,49 +46,6 @@ public class JavacOptionsTest {
     JavacOptions options = createStandardBuilder().build();
 
     assertOptionFlags(options, hasItem("g"));
-  }
-
-  @Test
-  public void trackClassUsageOnByDefault() {
-    JavacOptions options = createStandardBuilder().build();
-
-    assertTrue(options.getTrackClassUsageNotDisabled());
-  }
-
-  @Test
-  public void doNotTrackClassUsageForExternJavac() {
-    JavacOptions options = createStandardBuilder()
-        .setJavacSpec(JavacSpec.builder()
-          .setJavacPath(Either.ofRight(new FakeSourcePath("javac")))
-          .build())
-        .build();
-
-    assumeThat(options.getJavacSpec().getJavacSource(), is(Javac.Source.EXTERNAL));
-
-    assertFalse(options.trackClassUsage());
-  }
-
-  @Test
-  public void trackClassUsageForJavacFromJar() {
-    JavacOptions options = createStandardBuilder()
-        .setJavacSpec(JavacSpec.builder()
-            .setJavacJarPath(new FakeSourcePath("javac_jar"))
-            .build())
-        .build();
-
-    assumeThat(options.getJavacSpec().getJavacSource(), is(Javac.Source.JAR));
-
-    assertTrue(options.trackClassUsage());
-  }
-
-  @Test
-  public void trackClassUsageForJavacFromJDK() {
-    JavacOptions options = createStandardBuilder()
-        .build();
-
-    assumeThat(options.getJavacSpec().getJavacSource(), is(Javac.Source.JDK));
-
-    assertTrue(options.trackClassUsage());
   }
 
   @Test

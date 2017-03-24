@@ -132,14 +132,8 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   }
 
   @Value.Default
-  boolean getTrackClassUsageNotDisabled() {
-    return true;
-  }
-
   public boolean trackClassUsage() {
-    final Javac.Source javacSource = getJavacSpec().getJavacSource();
-    return getTrackClassUsageNotDisabled() &&
-        (javacSource == Javac.Source.JAR || javacSource == Javac.Source.JDK);
+    return false;
   }
 
   @Value.Default
