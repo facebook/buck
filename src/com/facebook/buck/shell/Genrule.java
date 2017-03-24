@@ -343,7 +343,9 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
     }
 
     if (MorePaths.getFileExtension(pathToOutFile).equals("zip")) {
-      commands.add(ZipScrubberStep.of(getProjectFilesystem(), pathToOutFile));
+      commands.add(
+          ZipScrubberStep.of(
+              context.getSourcePathResolver().getAbsolutePath(getSourcePathToOutput())));
     }
 
     buildableContext.recordArtifact(pathToOutFile);

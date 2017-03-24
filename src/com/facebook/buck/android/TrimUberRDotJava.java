@@ -84,7 +84,7 @@ class TrimUberRDotJava extends AbstractBuildRule {
         new MakeCleanDirectoryStep(getProjectFilesystem(), output.getParent()),
         new PerformTrimStep(
             context.getSourcePathResolver().getAbsolutePath(getSourcePathToOutput())),
-        ZipScrubberStep.of(getProjectFilesystem(), output)
+        ZipScrubberStep.of(context.getSourcePathResolver().getAbsolutePath(getSourcePathToOutput()))
     );
   }
 

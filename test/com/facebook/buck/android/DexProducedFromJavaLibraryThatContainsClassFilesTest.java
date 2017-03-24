@@ -139,7 +139,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
             String.format("mkdir -p %s", filesystem.resolve(dexOutput).getParent()),
             "estimate_dex_weight",
             "(cd " + filesystem.getRootPath() + " && " + expectedDxCommand + ")",
-            String.format("zip-scrub %s", dexOutput),
+            String.format("zip-scrub %s", filesystem.resolve(dexOutput)),
             "record_dx_success"),
         steps,
         executionContext);

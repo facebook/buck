@@ -16,11 +16,11 @@
 
 package com.facebook.buck.zip;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.immutables.BuckStyleStep;
+import com.google.common.base.Preconditions;
 
 import org.immutables.value.Value;
 
@@ -39,10 +39,14 @@ abstract class AbstractZipScrubberStep implements Step {
   public static final int EXTENDED_TIMESTAMP_ID = 0x5455;
 
   @Value.Parameter
-  protected abstract ProjectFilesystem getFilesystem();
+  protected abstract Path getZipAbsolutePath();
 
-  @Value.Parameter
-  protected abstract Path getZip();
+  @Value.Check
+  protected void check() {
+    Preconditions.checkArgument(
+        getZipAbsolutePath().isAbsolute(),
+        "ZipScrubberStep must take an absolute path");
+  }
 
   @Override
   public String getShortName() {
@@ -51,7 +55,7 @@ abstract class AbstractZipScrubberStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return "zip-scrub " + getZip();
+    return "zip-scrub " + getZipAbsolutePath();
   }
 
   private static void check(boolean expression, String msg) throws IOException {
@@ -62,9 +66,10 @@ abstract class AbstractZipScrubberStep implements Step {
 
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
-    Path zipPath = getFilesystem().resolve(getZip());
-    try (FileChannel channel =
-             FileChannel.open(zipPath, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
+    try (FileChannel channel = FileChannel.open(
+        getZipAbsolutePath(),
+        StandardOpenOption.READ,
+        StandardOpenOption.WRITE)) {
       MappedByteBuffer map = channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());
       map.order(ByteOrder.LITTLE_ENDIAN);
 
@@ -96,10 +101,16 @@ abstract class AbstractZipScrubberStep implements Step {
             entry.getShort(ZipEntry.CENCOM);
       }
     } catch (RuntimeException e) {
-      context.logError(e, "Error scrubbing non-deterministic metadata from %s", zipPath);
+      context.logError(
+          e,
+          "Error scrubbing non-deterministic metadata from %s",
+          getZipAbsolutePath());
       throw e;
     } catch (IOException e) {
-      context.logError(e, "Error scrubbing non-deterministic metadata from %s", zipPath);
+      context.logError(
+          e,
+          "Error scrubbing non-deterministic metadata from %s",
+          getZipAbsolutePath());
       return StepExecutionResult.ERROR;
     }
     return StepExecutionResult.SUCCESS;

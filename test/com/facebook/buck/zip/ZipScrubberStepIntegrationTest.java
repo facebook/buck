@@ -19,7 +19,6 @@ package com.facebook.buck.zip;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -67,9 +66,7 @@ public class ZipScrubberStepIntegrationTest {
 
     // Execute the zip scrubber step.
     ExecutionContext executionContext = TestExecutionContext.newInstance();
-    ZipScrubberStep step = ZipScrubberStep.of(
-        new ProjectFilesystem(tmp.getRoot()),
-        Paths.get("output.zip"));
+    ZipScrubberStep step = ZipScrubberStep.of(tmp.getRoot().resolve(Paths.get("output.zip")));
     assertEquals(0, step.execute(executionContext).getExitCode());
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
