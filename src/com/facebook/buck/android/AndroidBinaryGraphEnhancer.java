@@ -96,6 +96,7 @@ public class AndroidBinaryGraphEnhancer {
   private final BuildRuleResolver ruleResolver;
   private final SourcePathResolver pathResolver;
   private final SourcePathRuleFinder ruleFinder;
+  private final AndroidBinary.AaptMode aaptMode;
   private final ResourceCompressionMode resourceCompressionMode;
   private final ResourceFilter resourceFilter;
   private final EnumSet<RType> bannedDuplicateResourceTypes;
@@ -126,6 +127,7 @@ public class AndroidBinaryGraphEnhancer {
   AndroidBinaryGraphEnhancer(
       BuildRuleParams originalParams,
       BuildRuleResolver ruleResolver,
+      AndroidBinary.AaptMode aaptMode,
       ResourceCompressionMode resourceCompressionMode,
       ResourceFilter resourcesFilter,
       EnumSet<RType> bannedDuplicateResourceTypes,
@@ -168,6 +170,7 @@ public class AndroidBinaryGraphEnhancer {
     this.ruleResolver = ruleResolver;
     this.ruleFinder = new SourcePathRuleFinder(ruleResolver);
     this.pathResolver = new SourcePathResolver(ruleFinder);
+    this.aaptMode = aaptMode;
     this.resourceCompressionMode = resourceCompressionMode;
     this.resourceFilter = resourcesFilter;
     this.bannedDuplicateResourceTypes = bannedDuplicateResourceTypes;
@@ -315,6 +318,7 @@ public class AndroidBinaryGraphEnhancer {
     }
 
     AaptOutputInfo aaptOutputInfo;
+    aaptMode.getClass();
     // Create the AaptPackageResourcesBuildable.
     BuildRuleParams paramsForAaptPackageResources = buildRuleParams
         .withAppendedFlavor(AAPT_PACKAGE_FLAVOR)

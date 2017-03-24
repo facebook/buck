@@ -183,6 +183,12 @@ public class AndroidBinary
     ;
   }
 
+  enum AaptMode {
+    AAPT1,
+    AAPT2,
+    ;
+  }
+
   private final Keystore keystore;
   @AddToRuleKey
   private final SourcePath keystorePath;

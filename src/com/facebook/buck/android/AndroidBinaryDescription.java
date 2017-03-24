@@ -231,6 +231,7 @@ public class AndroidBinaryDescription implements
       AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
           params,
           resolver,
+          args.aaptMode,
           compressionMode,
           resourceFilter,
           args.getBannedDuplicateResourceTypes(),
@@ -520,6 +521,7 @@ public class AndroidBinaryDescription implements
     public Set<RType> bannedDuplicateResourceTypes = ImmutableSet.of();
     public Set<RType> allowedDuplicateResourceTypes = ImmutableSet.of();
 
+    public AndroidBinary.AaptMode aaptMode = AndroidBinary.AaptMode.AAPT1;
     public boolean trimResourceIds = false;
     public Optional<String> keepResourcePattern;
     public Optional<String> resourceUnionPackage;
