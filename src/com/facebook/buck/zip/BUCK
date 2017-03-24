@@ -29,10 +29,13 @@ java_library(
     visibility = ["PUBLIC"],
 )
 
-java_library(
+java_immutables_library(
     name = "steps",
     srcs = glob(["*Step.java"]),
     autodeps = True,
+    immutable_types = [
+        "ZipScrubberStep",
+    ],
     tests = [
         "//test/com/facebook/buck/zip:zip",
     ],

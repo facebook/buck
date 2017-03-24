@@ -223,7 +223,7 @@ public class AaptPackageResources extends AbstractBuildRule {
             !skipCrunchPngs /* && packageType.isCrunchPngFiles() */,
             includesVectorDrawables,
             manifestEntries),
-        new ZipScrubberStep(getProjectFilesystem(), getResourceApkPath()));
+        ZipScrubberStep.of(getProjectFilesystem(), getResourceApkPath()));
 
     // If we had an empty res directory, we won't generate an R.txt file.  This ensures that it
     // always exists.

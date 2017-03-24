@@ -144,7 +144,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
 
       // The `DxStep` delegates to android tools to build a ZIP with timestamps in it, making
       // the output non-deterministic.  So use an additional scrubbing step to zero these out.
-      steps.add(new ZipScrubberStep(getProjectFilesystem(), getPathToDex()));
+      steps.add(ZipScrubberStep.of(getProjectFilesystem(), getPathToDex()));
 
     } else {
       dx = null;

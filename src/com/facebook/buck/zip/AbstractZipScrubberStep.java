@@ -20,6 +20,9 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.util.immutables.BuckStyleStep;
+
+import org.immutables.value.Value;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -30,16 +33,16 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.zip.ZipEntry;
 
-public class ZipScrubberStep implements Step {
+@Value.Immutable
+@BuckStyleStep
+abstract class AbstractZipScrubberStep implements Step {
   public static final int EXTENDED_TIMESTAMP_ID = 0x5455;
 
-  private final ProjectFilesystem filesystem;
-  private final Path zip;
+  @Value.Parameter
+  protected abstract ProjectFilesystem getFilesystem();
 
-  public ZipScrubberStep(ProjectFilesystem filesystem, Path zip) {
-    this.filesystem = filesystem;
-    this.zip = zip;
-  }
+  @Value.Parameter
+  protected abstract Path getZip();
 
   @Override
   public String getShortName() {
@@ -48,7 +51,7 @@ public class ZipScrubberStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return "zip-scrub " + zip;
+    return "zip-scrub " + getZip();
   }
 
   private static void check(boolean expression, String msg) throws IOException {
@@ -59,7 +62,7 @@ public class ZipScrubberStep implements Step {
 
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
-    Path zipPath = filesystem.resolve(zip);
+    Path zipPath = getFilesystem().resolve(getZip());
     try (FileChannel channel =
              FileChannel.open(zipPath, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
       MappedByteBuffer map = channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());
