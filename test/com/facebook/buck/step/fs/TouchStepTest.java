@@ -34,6 +34,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
 import java.util.concurrent.TimeUnit;
 
 public class TouchStepTest {
@@ -68,11 +69,11 @@ public class TouchStepTest {
         new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1)),
         tmp.getRoot(),
         ImmutableSet.of(path));
-    long lastModifiedTime = projectFilesystem.getLastModifiedTime(path);
+    FileTime lastModifiedTime = projectFilesystem.getLastModifiedTime(path);
     TouchStep touchStep = new TouchStep(projectFilesystem, path);
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     touchStep.execute(executionContext);
     assertTrue(projectFilesystem.exists(path));
-    assertTrue(lastModifiedTime < projectFilesystem.getLastModifiedTime(path));
+    assertTrue(lastModifiedTime.compareTo(projectFilesystem.getLastModifiedTime(path)) < 0);
   }
 }

@@ -32,6 +32,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.file.attribute.FileTime;
 import java.util.Optional;
 
 import javax.servlet.ServletException;
@@ -57,7 +58,7 @@ public class TraceHandlerDelegateTest extends EasyMockSupport {
 
     BuildTraces buildTraces = createMock(BuildTraces.class);
     expect(buildTraces.getTraceAttributesFor("abcdef")).andReturn(
-        new TraceAttributes(Optional.of("buck build buck"), 2000L));
+        new TraceAttributes(Optional.of("buck build buck"), FileTime.fromMillis(2000L)));
     Handler traceHandler = new TemplateHandler(new TraceHandlerDelegate(buildTraces));
 
     replayAll();

@@ -142,6 +142,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Collection;
@@ -3278,7 +3279,7 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
     assertThat(
         projectFilesystem.getLastModifiedTime(OUTPUT_PROJECT_FILE_PATH),
-        equalTo(49152L));
+        equalTo(FileTime.fromMillis(49152L)));
 
     BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "foo").build();
     TargetNode<?, ?> node = AppleLibraryBuilder
@@ -3291,7 +3292,7 @@ public class ProjectGeneratorTest {
     projectGenerator2.createXcodeProjects();
     assertThat(
         projectFilesystem.getLastModifiedTime(OUTPUT_PROJECT_FILE_PATH),
-        equalTo(64738L));
+        equalTo(FileTime.fromMillis(64738L)));
   }
 
   @Test
@@ -3303,7 +3304,7 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
     assertThat(
         projectFilesystem.getLastModifiedTime(OUTPUT_PROJECT_FILE_PATH),
-        equalTo(49152L));
+        equalTo(FileTime.fromMillis(49152L)));
 
     ProjectGenerator projectGenerator2 = createProjectGeneratorForCombinedProject(
         ImmutableSet.of());
@@ -3312,7 +3313,7 @@ public class ProjectGeneratorTest {
     projectGenerator2.createXcodeProjects();
     assertThat(
         projectFilesystem.getLastModifiedTime(OUTPUT_PROJECT_FILE_PATH),
-        equalTo(49152L));
+        equalTo(FileTime.fromMillis(49152L)));
   }
 
   @Test

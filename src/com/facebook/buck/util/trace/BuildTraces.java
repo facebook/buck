@@ -30,6 +30,7 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -77,9 +78,9 @@ public class BuildTraces {
     };
 
     private final Optional<String> command;
-    private final long lastModifiedTime;
+    private final FileTime lastModifiedTime;
 
-    public TraceAttributes(Optional<String> command, long lastModifiedTime) {
+    public TraceAttributes(Optional<String> command, FileTime lastModifiedTime) {
       this.command = command;
       this.lastModifiedTime = lastModifiedTime;
     }
@@ -88,13 +89,13 @@ public class BuildTraces {
       return command;
     }
 
-    public long getLastModifiedTime() {
+    public FileTime getLastModifiedTime() {
       return lastModifiedTime;
     }
 
     public String getFormattedDateTime() {
-      if (lastModifiedTime != 0) {
-        return DATE_FORMAT.get().format(new Date(lastModifiedTime));
+      if (lastModifiedTime.toMillis() != 0) {
+        return DATE_FORMAT.get().format(Date.from(lastModifiedTime.toInstant()));
       } else {
         return "";
       }
@@ -125,7 +126,7 @@ public class BuildTraces {
    * {@link Optional#empty()} if it does not find the fields in the JSON that it expects.
    */
   public TraceAttributes getTraceAttributesFor(Path pathToTrace) throws IOException {
-    long lastModifiedTime = projectFilesystem.getLastModifiedTime(pathToTrace);
+    FileTime lastModifiedTime = projectFilesystem.getLastModifiedTime(pathToTrace);
     Optional<String> command = parseCommandFrom(pathToTrace);
     return new TraceAttributes(command, lastModifiedTime);
   }
@@ -179,14 +180,16 @@ public class BuildTraces {
     // 2. Alphabetical order.
     Collections.sort(allTraces, (path1, path2) -> {
       int result = 0;
+      FileTime lastModifiedTime1;
+      FileTime lastModifiedTime2;
       try {
-        result = Long.compare(
-            projectFilesystem.getLastModifiedTime(path2),
-            projectFilesystem.getLastModifiedTime(path1));
+        lastModifiedTime1 = projectFilesystem.getLastModifiedTime(path1);
+        lastModifiedTime2 = projectFilesystem.getLastModifiedTime(path2);
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
 
+      result = lastModifiedTime2.compareTo(lastModifiedTime1);
       if (result == 0) {
         return path2.toString().compareTo(path1.toString());
       } else {

@@ -630,7 +630,7 @@ public class ProjectFilesystem {
 
   @VisibleForTesting
   protected PathListing.PathModifiedTimeFetcher getLastModifiedTimeFetcher() {
-    return path -> FileTime.fromMillis(ProjectFilesystem.this.getLastModifiedTime(path));
+    return path -> ProjectFilesystem.this.getLastModifiedTime(path);
   }
 
   /**
@@ -649,9 +649,9 @@ public class ProjectFilesystem {
         getLastModifiedTimeFetcher());
   }
 
-  public long getLastModifiedTime(Path pathRelativeToProjectRoot) throws IOException {
+  public FileTime getLastModifiedTime(Path pathRelativeToProjectRoot) throws IOException {
     Path path = getPathForRelativePath(pathRelativeToProjectRoot);
-    return Files.getLastModifiedTime(path).toMillis();
+    return Files.getLastModifiedTime(path);
   }
 
   /**

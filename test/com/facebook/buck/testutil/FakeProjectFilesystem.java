@@ -449,12 +449,12 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   @Override
-  public long getLastModifiedTime(Path path) throws IOException {
+  public FileTime getLastModifiedTime(Path path) throws IOException {
     Path normalizedPath = MorePaths.normalize(path);
     if (!exists(normalizedPath)) {
       throw new NoSuchFileException(path.toString());
     }
-    return Preconditions.checkNotNull(fileLastModifiedTimes.get(normalizedPath)).toMillis();
+    return Preconditions.checkNotNull(fileLastModifiedTimes.get(normalizedPath));
   }
 
   @Override

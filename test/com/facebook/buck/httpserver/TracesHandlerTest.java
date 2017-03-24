@@ -30,6 +30,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.Optional;
 
 public class TracesHandlerTest extends EasyMockSupport {
@@ -40,17 +41,21 @@ public class TracesHandlerTest extends EasyMockSupport {
     BuildTraces buildTraces = createMock(BuildTraces.class);
     expect(buildTraces.getTraceAttributesFor(traceDir.resolve(
         "build.a.trace")))
-        .andReturn(new TraceAttributes(Optional.of("buck build buck"), 1000L));
+        .andReturn(new TraceAttributes(Optional.of("buck build buck"), FileTime.fromMillis(1000L)));
     expect(buildTraces.getTraceAttributesFor(traceDir.resolve(
         "build.b.trace")))
-        .andReturn(new TraceAttributes(Optional.of("buck test --all --code-coverage"), 4000L));
+        .andReturn(new TraceAttributes(
+            Optional.of("buck test --all --code-coverage"),
+            FileTime.fromMillis(4000L)));
     expect(buildTraces.getTraceAttributesFor(traceDir.resolve(
         "build.c.trace")))
-        .andReturn(new TraceAttributes(Optional.empty(), 2000L));
+        .andReturn(new TraceAttributes(Optional.empty(), FileTime.fromMillis(2000L)));
     expect(buildTraces.getTraceAttributesFor(traceDir.resolve(
         "build.d.trace")))
         .andReturn(
-            new TraceAttributes(Optional.of("buck test //test/com/facebook/buck/cli:cli"), 3000L));
+            new TraceAttributes(
+                Optional.of("buck test //test/com/facebook/buck/cli:cli"),
+                FileTime.fromMillis(3000L)));
 
     expect(buildTraces.listTraceFilesByLastModified()).andReturn(
         ImmutableList.of(

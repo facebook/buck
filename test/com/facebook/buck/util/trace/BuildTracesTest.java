@@ -34,6 +34,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -76,7 +77,7 @@ public class BuildTracesTest {
         "BuildTraces should be able to extract the command.",
         Optional.of("buck build buck"),
         traceAttributes.getCommand());
-    assertEquals(1000L, traceAttributes.getLastModifiedTime());
+    assertEquals(FileTime.fromMillis(1000L), traceAttributes.getLastModifiedTime());
 
     // We cannot verify the contents of getFormattedDateTime() because they may vary depending on
     // timezone and locale.
@@ -107,7 +108,7 @@ public class BuildTracesTest {
             "attribute.",
         Optional.empty(),
         traceAttributes.getCommand());
-    assertEquals(2000L, traceAttributes.getLastModifiedTime());
+    assertEquals(FileTime.fromMillis(2000L), traceAttributes.getLastModifiedTime());
   }
 
   @Test
@@ -133,7 +134,7 @@ public class BuildTracesTest {
             "command_args attribute.",
         Optional.empty(),
         traceAttributes.getCommand());
-    assertEquals(2000L, traceAttributes.getLastModifiedTime());
+    assertEquals(FileTime.fromMillis(2000L), traceAttributes.getLastModifiedTime());
   }
 
   @Test

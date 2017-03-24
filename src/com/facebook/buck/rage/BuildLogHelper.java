@@ -104,7 +104,7 @@ public class BuildLogHelper {
     return builder
         .setRelativePath(logFile)
         .setSize(projectFilesystem.getFileSize(logFile))
-        .setLastModifiedTime(new Date(projectFilesystem.getLastModifiedTime(logFile)))
+        .setLastModifiedTime(Date.from(projectFilesystem.getLastModifiedTime(logFile).toInstant()))
         .setTraceFile(traceFile)
         .build();
   }

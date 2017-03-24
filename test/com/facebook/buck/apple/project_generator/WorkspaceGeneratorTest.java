@@ -41,6 +41,7 @@ import org.w3c.dom.Node;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
 import java.util.Optional;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -163,7 +164,7 @@ public class WorkspaceGeneratorTest {
       Path workspacePath = generator.writeWorkspace();
       assertThat(
           projectFilesystem.getLastModifiedTime(workspacePath.resolve("contents.xcworkspacedata")),
-          equalTo(49152L));
+          equalTo(FileTime.fromMillis(49152L)));
     }
 
     {
@@ -176,7 +177,7 @@ public class WorkspaceGeneratorTest {
       Path workspacePath2 = generator2.writeWorkspace();
       assertThat(
           projectFilesystem.getLastModifiedTime(workspacePath2.resolve("contents.xcworkspacedata")),
-          equalTo(64738L));
+          equalTo(FileTime.fromMillis(64738L)));
     }
   }
 
@@ -188,7 +189,7 @@ public class WorkspaceGeneratorTest {
       Path workspacePath = generator.writeWorkspace();
       assertThat(
           projectFilesystem.getLastModifiedTime(workspacePath.resolve("contents.xcworkspacedata")),
-          equalTo(49152L));
+          equalTo(FileTime.fromMillis(49152L)));
     }
 
     {
@@ -201,7 +202,7 @@ public class WorkspaceGeneratorTest {
       Path workspacePath2 = generator2.writeWorkspace();
       assertThat(
           projectFilesystem.getLastModifiedTime(workspacePath2.resolve("contents.xcworkspacedata")),
-          equalTo(49152L));
+          equalTo(FileTime.fromMillis(49152L)));
     }
   }
 

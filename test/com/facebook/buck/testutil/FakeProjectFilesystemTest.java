@@ -47,6 +47,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
@@ -279,7 +280,7 @@ public class FakeProjectFilesystemTest {
     SettableFakeClock clock = new SettableFakeClock(49152, 0);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem(clock);
     filesystem.touch(Paths.get("foo"));
-    assertEquals(filesystem.getLastModifiedTime(Paths.get("foo")), 49152);
+    assertEquals(filesystem.getLastModifiedTime(Paths.get("foo")), FileTime.fromMillis(49152));
   }
 
   @Test
@@ -289,7 +290,7 @@ public class FakeProjectFilesystemTest {
     filesystem.touch(Paths.get("foo"));
     clock.setCurrentTimeMillis(64738);
     filesystem.touch(Paths.get("foo"));
-    assertEquals(filesystem.getLastModifiedTime(Paths.get("foo")), 64738);
+    assertEquals(filesystem.getLastModifiedTime(Paths.get("foo")), FileTime.fromMillis(64738));
   }
 
   @Test
@@ -297,9 +298,11 @@ public class FakeProjectFilesystemTest {
     SettableFakeClock clock = new SettableFakeClock(49152, 0);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem(clock);
     filesystem.mkdirs(Paths.get("foo/bar/baz"));
-    assertEquals(filesystem.getLastModifiedTime(Paths.get("foo")), 49152);
-    assertEquals(filesystem.getLastModifiedTime(Paths.get("foo/bar")), 49152);
-    assertEquals(filesystem.getLastModifiedTime(Paths.get("foo/bar/baz")), 49152);
+    assertEquals(filesystem.getLastModifiedTime(Paths.get("foo")), FileTime.fromMillis(49152));
+    assertEquals(filesystem.getLastModifiedTime(Paths.get("foo/bar")), FileTime.fromMillis(49152));
+    assertEquals(filesystem.getLastModifiedTime(
+        Paths.get("foo/bar/baz")),
+        FileTime.fromMillis(49152));
   }
 
   @Test

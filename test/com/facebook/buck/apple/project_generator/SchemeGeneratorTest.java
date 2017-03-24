@@ -48,6 +48,7 @@ import org.w3c.dom.NodeList;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -550,7 +551,9 @@ public class SchemeGeneratorTest {
           XCScheme.LaunchAction.LaunchStyle.AUTO);
 
       Path schemePath = schemeGenerator.writeScheme();
-      assertThat(projectFilesystem.getLastModifiedTime(schemePath), equalTo(49152L));
+      assertThat(
+          projectFilesystem.getLastModifiedTime(schemePath),
+          equalTo(FileTime.fromMillis(49152L)));
     }
 
     {
@@ -584,7 +587,9 @@ public class SchemeGeneratorTest {
           XCScheme.LaunchAction.LaunchStyle.AUTO);
 
       Path schemePath = schemeGenerator.writeScheme();
-      assertThat(projectFilesystem.getLastModifiedTime(schemePath), equalTo(64738L));
+      assertThat(
+          projectFilesystem.getLastModifiedTime(schemePath),
+          equalTo(FileTime.fromMillis(64738L)));
     }
   }
 
@@ -621,7 +626,9 @@ public class SchemeGeneratorTest {
           XCScheme.LaunchAction.LaunchStyle.AUTO);
 
       Path schemePath = schemeGenerator.writeScheme();
-      assertThat(projectFilesystem.getLastModifiedTime(schemePath), equalTo(49152L));
+      assertThat(
+          projectFilesystem.getLastModifiedTime(schemePath),
+          equalTo(FileTime.fromMillis(49152L)));
     }
 
     {
@@ -654,7 +661,9 @@ public class SchemeGeneratorTest {
           ImmutableMap.of(rootTarget, pbxprojectPath),
           XCScheme.LaunchAction.LaunchStyle.AUTO);
       Path schemePath = schemeGenerator.writeScheme();
-      assertThat(projectFilesystem.getLastModifiedTime(schemePath), equalTo(49152L));
+      assertThat(
+          projectFilesystem.getLastModifiedTime(schemePath),
+          equalTo(FileTime.fromMillis(49152L)));
     }
   }
 
