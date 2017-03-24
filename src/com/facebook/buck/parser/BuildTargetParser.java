@@ -145,7 +145,7 @@ public class BuildTargetParser {
       throw new BuildTargetParseException(
           String.format(
               "Build target path should start with an optional cell name, then // and then a " +
-              " relative directory name, not an absolute directory path (found %s)",
+              "relative directory name, not an absolute directory path (found %s)",
               buildTargetName
           ));
     }
