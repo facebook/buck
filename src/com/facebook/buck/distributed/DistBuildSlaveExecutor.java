@@ -295,7 +295,7 @@ public class DistBuildSlaveExecutor {
           engineConfig.getResourceAwareSchedulingInfo(),
           new RuleKeyFactoryManager(
               distBuildConfig.getKeySeed(),
-              filesystem -> cachingBuildEngineDelegate.getFileHashCache(),
+              cachingBuildEngineDelegate.getFileHashCache(),
               actionGraphAndResolver.getResolver(),
               engineConfig.getBuildInputRuleKeyFileSizeLimit(),
               new DefaultRuleKeyCache<>()));

@@ -814,7 +814,7 @@ public class BuildCommand extends AbstractCommand {
                    cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
                    new RuleKeyFactoryManager(
                        rootCellBuckConfig.getKeySeed(),
-                       fs -> cachingBuildEngineDelegate.getFileHashCache(),
+                       cachingBuildEngineDelegate.getFileHashCache(),
                        actionGraphAndResolver.getResolver(),
                        cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
                        ruleKeyCacheScope.getCache())),

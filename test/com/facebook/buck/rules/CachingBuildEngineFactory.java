@@ -143,7 +143,7 @@ public class CachingBuildEngineFactory {
         resourceAwareSchedulingInfo,
         new RuleKeyFactoryManager(
             0,
-            fs -> cachingBuildEngineDelegate.getFileHashCache(),
+            cachingBuildEngineDelegate.getFileHashCache(),
             buildRuleResolver,
             inputFileSizeLimit,
             new DefaultRuleKeyCache<>()));

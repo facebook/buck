@@ -22,54 +22,26 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 
 import java.util.function.Function;
-
-import javax.annotation.Nonnull;
 
 /**
  * A class which generates {@link RuleKeyFactories} objects.
  */
 public class RuleKeyFactoryManager {
 
-  private final int keySeed;
-  private final Function<ProjectFilesystem, FileHashCache> fileHashCacheProvider;
-  private final BuildRuleResolver resolver;
-  private final long inputRuleKeyFileSizeLimit;
-  private final RuleKeyCache<RuleKey> defaultRuleKeyFactoryCache;
-
-  private final LoadingCache<ProjectFilesystem, RuleKeyFactories> cache =
-      CacheBuilder.newBuilder()
-          .build(
-              new CacheLoader<ProjectFilesystem, RuleKeyFactories>() {
-                @Override
-                public RuleKeyFactories load(@Nonnull ProjectFilesystem filesystem) {
-                  return create(filesystem);
-                }
-              });
+  RuleKeyFactories instance;
 
   public RuleKeyFactoryManager(
       int keySeed,
-      Function<ProjectFilesystem, FileHashCache> fileHashCacheProvider,
+      FileHashCache fileHashCache,
       BuildRuleResolver resolver,
       long inputRuleKeyFileSizeLimit,
       RuleKeyCache<RuleKey> defaultRuleKeyFactoryCache) {
-    this.keySeed = keySeed;
-    this.fileHashCacheProvider = fileHashCacheProvider;
-    this.resolver = resolver;
-    this.inputRuleKeyFileSizeLimit = inputRuleKeyFileSizeLimit;
-    this.defaultRuleKeyFactoryCache = defaultRuleKeyFactoryCache;
-  }
-
-  private RuleKeyFactories create(ProjectFilesystem filesystem) {
     RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(keySeed);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    FileHashCache fileHashCache = fileHashCacheProvider.apply(filesystem);
-    return RuleKeyFactories.of(
+    this.instance = RuleKeyFactories.of(
         new DefaultRuleKeyFactory(
             fieldLoader,
             fileHashCache,
@@ -87,10 +59,11 @@ public class RuleKeyFactoryManager {
             fileHashCache,
             pathResolver,
             ruleFinder));
+
   }
 
   public Function<ProjectFilesystem, RuleKeyFactories> getProvider() {
-    return cache::getUnchecked;
+    return fs -> instance;
   }
 
 }

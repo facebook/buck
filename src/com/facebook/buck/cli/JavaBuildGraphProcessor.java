@@ -150,7 +150,7 @@ final class JavaBuildGraphProcessor {
           cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
           new RuleKeyFactoryManager(
               params.getBuckConfig().getKeySeed(),
-              fs -> cachingBuildEngineDelegate.getFileHashCache(),
+              cachingBuildEngineDelegate.getFileHashCache(),
               buildRuleResolver,
               cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
               new DefaultRuleKeyCache<>()));
