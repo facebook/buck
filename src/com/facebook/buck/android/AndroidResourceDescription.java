@@ -279,7 +279,7 @@ public class AndroidResourceDescription
         return new Pair<>(Optional.empty(), Optional.of(inputSourcePath));
       }
     }
-    BuildTarget symlinkTreeTarget = resourceRuleTarget.withAppendedFlavors(symlinkTreeFlavor);
+    BuildTarget symlinkTreeTarget = resourceRuleTarget.withFlavors(symlinkTreeFlavor);
     SymlinkTree symlinkTree;
     try {
       symlinkTree = (SymlinkTree) ruleResolver.requireRule(symlinkTreeTarget);
