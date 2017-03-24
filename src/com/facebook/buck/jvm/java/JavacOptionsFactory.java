@@ -72,9 +72,14 @@ public final class JavacOptionsFactory {
         SourcePath sourcePath = either.getRight();
 
         Optional<BuildRule> possibleRule = ruleFinder.getRule(sourcePath);
-        if (possibleRule.isPresent() && possibleRule.get() instanceof PrebuiltJar) {
-          PrebuiltJar prebuiltJar = (PrebuiltJar) possibleRule.get();
-          javacSpecBuilder.setJavacJarPath(prebuiltJar.getSourcePathToOutput());
+        if (possibleRule.isPresent() && possibleRule.get() instanceof JavaLibrary) {
+          SourcePath javacJarPath = possibleRule.get().getSourcePathToOutput();
+          if (javacJarPath == null) {
+            throw new HumanReadableException(String.format(
+                "%s isn't a valid value for javac_jar because it does not produce output",
+                sourcePath));
+          }
+          javacSpecBuilder.setJavacJarPath(javacJarPath);
         } else {
           javacSpecBuilder.setJavacPath(Either.ofRight(sourcePath));
         }
