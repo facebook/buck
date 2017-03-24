@@ -314,7 +314,7 @@ public class OfflineScribeLogger extends ScribeLogger {
           continue;
         }
 
-        it = new ObjectMapper().readValues(
+        it = objectMapper.readValues(
             new JsonFactory().createParser(logFileStream),
             ScribeData.class);
       } catch (Exception e) {

@@ -27,6 +27,7 @@
   },
   "util" : {
     "deps" : [
+      "//src/com/facebook/buck/util:object_mapper",
       "//third-party/java/aether:aether-connector-basic",
       "//third-party/java/aether:aether-impl",
       "//third-party/java/aether:aether-transport-file",

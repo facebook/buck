@@ -17,6 +17,7 @@
       "//src/com/facebook/buck/model:simple_types",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/step:step",
       "//third-party/java/guava:guava",

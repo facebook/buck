@@ -24,6 +24,7 @@
       "//src/com/facebook/buck/file:downloader",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/step:step",
       "//third-party/java/guava:guava",
       "//third-party/java/infer-annotations:infer-annotations"

@@ -25,6 +25,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.ContextualProcessExecutor;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -54,7 +55,7 @@ public class JavacExecutionContextSerializerTest {
         BuckEventBusFactory.newInstance());
     PrintStream stdErr = new PrintStream(new ByteArrayOutputStream());
     ClassLoaderCache classLoaderCache = new ClassLoaderCache();
-    ObjectMapper objectMapper = new ObjectMapper();
+    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
     Verbosity verbosity = Verbosity.COMMANDS_AND_OUTPUT;
     DefaultCellPathResolver cellPathResolver = new DefaultCellPathResolver(
         Paths.get("/some/cell/path/resolver/path"),

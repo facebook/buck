@@ -171,7 +171,7 @@ public class OfflineScribeLoggerTest {
 
     Iterator<ScribeData> it = null;
     try {
-      it = new ObjectMapper().readValues(
+      it = objectMapper.readValues(
           new JsonFactory().createParser(logFile), ScribeData.class);
     } catch (Exception e) {
       fail("Obtaining iterator for reading the log failed.");

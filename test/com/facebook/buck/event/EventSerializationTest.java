@@ -38,9 +38,8 @@ import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.testutil.JsonMatcher;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -53,10 +52,7 @@ import java.util.Random;
 
 public class EventSerializationTest {
 
-  private static final ObjectMapper MAPPER =
-      new ObjectMapper()
-          .registerModule(new Jdk8Module())
-          .setSerializationInclusion(JsonInclude.Include.NON_ABSENT);
+  private static final ObjectMapper MAPPER = ObjectMappers.newDefaultInstance();
 
   private long timestamp;
   private long nanoTime;

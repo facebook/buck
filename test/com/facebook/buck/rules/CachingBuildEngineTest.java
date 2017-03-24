@@ -248,7 +248,7 @@ public class CachingBuildEngineTest {
           buildInfoStore,
           new DefaultClock(),
           new BuildId(),
-          new ObjectMapper(),
+          ObjectMappers.newDefaultInstance(),
           ImmutableMap.of());
     }
   }

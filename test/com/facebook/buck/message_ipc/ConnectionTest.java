@@ -19,6 +19,7 @@ package com.facebook.buck.message_ipc;
 import com.facebook.buck.shell.FakeWorkerProcess;
 import com.facebook.buck.shell.WorkerJobResult;
 import com.facebook.buck.shell.WorkerProcess;
+import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 
@@ -39,7 +40,7 @@ public class ConnectionTest {
 
   @Test
   public void testConnection() throws Exception {
-    ObjectMapper objectMapper = new ObjectMapper();
+    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
     MessageSerializer messageSerializer = new MessageSerializer(objectMapper);
     WorkerProcess workerProcess = new FakeWorkerProcess(
         ImmutableMap.of(
@@ -68,7 +69,7 @@ public class ConnectionTest {
 
   @Test
   public void testConnectionWithMultipleArgs() throws Exception {
-    ObjectMapper objectMapper = new ObjectMapper();
+    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
     MessageSerializer messageSerializer = new MessageSerializer(objectMapper);
     WorkerProcess workerProcess = new FakeWorkerProcess(
         ImmutableMap.of(
@@ -89,7 +90,7 @@ public class ConnectionTest {
 
   @Test
   public void testPassingNull() throws Exception {
-    ObjectMapper objectMapper = new ObjectMapper();
+    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
     MessageSerializer messageSerializer = new MessageSerializer(objectMapper);
     WorkerProcess workerProcess = new FakeWorkerProcess(
         ImmutableMap.of(
