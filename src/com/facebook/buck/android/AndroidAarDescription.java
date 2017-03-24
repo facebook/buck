@@ -20,6 +20,7 @@ import com.facebook.buck.android.aapt.MergeAndroidResourceSources;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -221,7 +222,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
               args.buildConfigValues,
               Optional.empty(),
               resolver,
-              javacOptions.getJavac(ruleFinder),
+              JavacFactory.create(ruleFinder, javaBuckConfig, args),
               javacOptions,
               javaBuckConfig.shouldSuggestDependencies(),
               packageableCollection);

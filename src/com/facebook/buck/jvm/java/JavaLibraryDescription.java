@@ -180,6 +180,7 @@ public class JavaLibraryDescription implements
         args);
 
     ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps);
+    Javac javac = JavacFactory.create(ruleFinder, javaBuckConfig, args);
     BuildRuleParams javaLibraryParams =
         params.copyAppendingExtraDeps(
             Iterables.concat(
@@ -189,9 +190,11 @@ public class JavaLibraryDescription implements
                         exportedDeps,
                         resolver.getAllRules(args.providedDeps))),
                 ruleFinder.filterBuildRuleInputs(
-                    javacOptions.getInputs(ruleFinder))));
+                    Iterables.concat(
+                        javacOptions.getAnnotationProcessingParams().getInputs(),
+                        javac.getInputs()))));
     JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
-        javacOptions.getJavac(ruleFinder),
+        javac,
         javacOptions,
         JavacOptionsAmender.IDENTITY);
     DefaultJavaLibrary defaultJavaLibrary =

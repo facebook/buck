@@ -56,12 +56,6 @@ public final class JavacOptionsFactory {
 
     builder.addAllClassesToRemoveFromJar(jvmLibraryArg.removeClasses);
 
-    if (jvmLibraryArg.compiler.isPresent() ||
-        jvmLibraryArg.javac.isPresent() ||
-        jvmLibraryArg.javacJar.isPresent()) {
-      builder.setJavacSpec(jvmLibraryArg.getJavacSpec());
-    }
-
     AnnotationProcessingParams annotationParams =
         jvmLibraryArg.buildAnnotationProcessingParams(
             params.getBuildTarget(),

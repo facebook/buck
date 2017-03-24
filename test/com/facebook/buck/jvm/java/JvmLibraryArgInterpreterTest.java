@@ -20,6 +20,7 @@ import static com.facebook.buck.jvm.java.BuiltInJavac.DEFAULT;
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
@@ -142,11 +143,17 @@ public class JvmLibraryArgInterpreterTest {
 
   @Test
   public void testCompilerClassNameArgIsSet() {
+    arg.javacJar = Optional.of(new FakeSourcePath("does-not-exist"));
     arg.compilerClassName = Optional.of("compiler");
 
     assertEquals(
         arg.compilerClassName,
         arg.getJavacSpec().getCompilerClassName());
+  }
+
+  @Test
+  public void testNoJavacSpecIfNoJavacArg() {
+    assertNull(arg.getJavacSpec());
   }
 
   @Test

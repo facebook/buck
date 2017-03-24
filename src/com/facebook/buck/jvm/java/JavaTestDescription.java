@@ -117,6 +117,7 @@ public class JavaTestDescription implements
         cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
 
+    Javac javac = JavacFactory.create(ruleFinder, javaBuckConfig, args);
     BuildRuleParams testsLibraryParams = params.copyReplacingDeclaredAndExtraDeps(
         Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -130,12 +131,14 @@ public class JavaTestDescription implements
             ImmutableSortedSet.<BuildRule>naturalOrder()
                 .addAll(params.getExtraDeps().get())
                 .addAll(ruleFinder.filterBuildRuleInputs(
-                    javacOptions.getInputs(ruleFinder)))
+                    Iterables.concat(
+                        javacOptions.getAnnotationProcessingParams().getInputs(),
+                        javac.getInputs())))
                 .build()))
         .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
-        javacOptions.getJavac(ruleFinder),
+        javac,
         javacOptions,
         JavacOptionsAmender.IDENTITY);
     JavaLibrary testsLibrary =

@@ -121,7 +121,7 @@ public class AndroidLibraryGraphEnhancer {
         .copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(
                 ImmutableSortedSet.copyOf(
-                    ruleFinder.filterBuildRuleInputs(javacOptions.getInputs(ruleFinder)))),
+                    ruleFinder.filterBuildRuleInputs(javac.getInputs()))),
             Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     DummyRDotJava dummyRDotJava = new DummyRDotJava(

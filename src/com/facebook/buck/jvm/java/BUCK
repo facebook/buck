@@ -155,6 +155,7 @@ java_library(
         "JavaSourceJar.java",
         "JavaTest.java",
         "JavaTestDescription.java",
+        "JavacFactory.java",
         "JavacOptionsFactory.java",
         "Javadoc.java",
         "JvmLibraryArg.java",

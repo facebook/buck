@@ -655,7 +655,10 @@ public class KnownBuildRuleTypes {
         new AndroidLibraryDescription(
             javaConfig,
             defaultJavacOptions,
-            new DefaultAndroidLibraryCompilerFactory(scalaConfig, kotlinBuckConfig)));
+            new DefaultAndroidLibraryCompilerFactory(
+                javaConfig,
+                scalaConfig,
+                kotlinBuckConfig)));
     builder.register(new AndroidManifestDescription());
     builder.register(
         new AndroidPrebuiltAarDescription(

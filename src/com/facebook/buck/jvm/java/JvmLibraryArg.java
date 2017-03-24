@@ -33,6 +33,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nullable;
+
 @SuppressFieldNotInitialized
 public class JvmLibraryArg extends AbstractDescriptionArg {
   public Optional<String> source;
@@ -51,7 +53,12 @@ public class JvmLibraryArg extends AbstractDescriptionArg {
   public ImmutableList<BuildTarget> plugins = ImmutableList.of();
   public Optional<Boolean> generateAbiFromSource;
 
+  @Nullable
   public JavacSpec getJavacSpec() {
+    if (!compiler.isPresent() && !javac.isPresent() && !javacJar.isPresent()) {
+      return null;
+    }
+
     return JavacSpec.builder()
         .setCompiler(compiler)
         .setJavacPath(

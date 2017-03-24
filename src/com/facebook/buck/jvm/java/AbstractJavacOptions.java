@@ -19,15 +19,12 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 
 import org.immutables.value.Value;
 
@@ -85,11 +82,6 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   }
 
   @Value.Default
-  protected JavacSpec getJavacSpec() {
-    return JavacSpec.builder().build();
-  }
-
-  @Value.Default
   protected SpoolMode getSpoolMode() {
     return SpoolMode.INTERMEDIATE_TO_DISK;
   }
@@ -139,10 +131,6 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   @Value.Default
   public AbiGenerationMode getAbiGenerationMode() {
     return AbiGenerationMode.CLASS;
-  }
-
-  public Javac getJavac(SourcePathRuleFinder ruleFinder) {
-    return getJavacSpec().getJavacProvider().resolve(ruleFinder);
   }
 
   public void validateOptions(Function<String, Boolean> classpathChecker) throws IOException {
@@ -241,20 +229,10 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
         .setReflectively("extraArguments", Joiner.on(',').join(getExtraArguments()))
         .setReflectively("debug", isDebug())
         .setReflectively("bootclasspath", getBootclasspath())
-        .setReflectively("javac", getJavacSpec())
         .setReflectively("annotationProcessingParams", getAnnotationProcessingParams())
         .setReflectively("spoolMode", getSpoolMode())
         .setReflectively("trackClassUsage", trackClassUsage())
         .setReflectively("abiGenerationMode", getAbiGenerationMode());
-  }
-
-  public ImmutableSortedSet<SourcePath> getInputs(SourcePathRuleFinder ruleFinder) {
-    ImmutableSortedSet.Builder<SourcePath> builder = ImmutableSortedSet.<SourcePath>naturalOrder()
-        .addAll(getAnnotationProcessingParams().getInputs());
-
-    builder.addAll(getJavac(ruleFinder).getInputs());
-
-    return builder.build();
   }
 
   static JavacOptions.Builder builderForUseInJavaBuckConfig() {

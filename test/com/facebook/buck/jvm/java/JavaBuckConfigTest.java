@@ -262,9 +262,8 @@ public class JavaBuckConfigTest {
       throws IOException, NoSuchBuildTargetException, InterruptedException {
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     JavaBuckConfig javaConfig = buckConfig.getView(JavaBuckConfig.class);
-    JavacOptions javacOptions = javaConfig.getDefaultJavacOptions();
 
-    Javac javac = javacOptions.getJavac(null);
+    Javac javac = JavacFactory.create(null, javaConfig, null);
     assertTrue(javac.getClass().toString(), javac instanceof Jsr199Javac);
   }
 
@@ -281,9 +280,10 @@ public class JavaBuckConfigTest {
         .setSections(sections)
         .build();
     JavaBuckConfig javaConfig = buckConfig.getView(JavaBuckConfig.class);
-    JavacOptions javacOptions = javaConfig.getDefaultJavacOptions();
 
-    assertEquals(javac, ((ExternalJavac) javacOptions.getJavac(null)).getShortName());
+    assertEquals(
+        javac,
+        ((ExternalJavac) JavacFactory.create(null, javaConfig, null)).getShortName());
   }
 
   @Test

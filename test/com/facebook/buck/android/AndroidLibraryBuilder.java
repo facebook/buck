@@ -33,7 +33,7 @@ public class AndroidLibraryBuilder extends
     AbstractNodeBuilder<AndroidLibraryDescription.Arg, AndroidLibraryDescription, AndroidLibrary> {
 
   private static final AndroidLibraryCompilerFactory JAVA_ONLY_COMPILER_FACTORY =
-      language -> new JavaAndroidLibraryCompiler();
+      language -> new JavaAndroidLibraryCompiler(DEFAULT_JAVA_CONFIG);
 
   private AndroidLibraryBuilder(BuildTarget target) {
     super(

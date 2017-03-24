@@ -24,6 +24,8 @@ import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
+import com.facebook.buck.jvm.java.Javac;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
@@ -96,7 +98,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
         params.getBuildTarget(),
         params.copyReplacingExtraDeps(
             Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps))),
-        javacOptions.getJavac(ruleFinder),
+        JavacFactory.create(ruleFinder, javaBuckConfig, args),
         javacOptions,
         DependencyMode.TRANSITIVE,
         /* forceFinalResourceIds */ true,
@@ -144,6 +146,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
 
+    Javac javac = JavacFactory.create(ruleFinder, javaBuckConfig, args);
     // Rewrite dependencies on tests to actually depend on the code which backs the test.
     BuildRuleParams testsLibraryParams = params.copyReplacingDeclaredAndExtraDeps(
         Suppliers.ofInstance(
@@ -158,12 +161,14 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             ImmutableSortedSet.<BuildRule>naturalOrder()
                 .addAll(params.getExtraDeps().get())
                 .addAll(ruleFinder.filterBuildRuleInputs(
-                    javacOptions.getInputs(ruleFinder)))
+                    Iterables.concat(
+                        javac.getInputs(),
+                        javacOptions.getAnnotationProcessingParams().getInputs())))
                 .build()))
         .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
-        javacOptions.getJavac(ruleFinder),
+        javac,
         javacOptions,
         new BootClasspathAppender());
     JavaLibrary testsLibrary =

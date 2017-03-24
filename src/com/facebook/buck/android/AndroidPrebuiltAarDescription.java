@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryRules;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.PrebuiltJar;
@@ -196,7 +197,7 @@ public class AndroidPrebuiltAarDescription
         /* unzipRule */ unzipAar,
         /* javacOptions */ javacOptions,
         new JavacToJarStepFactory(
-            javacOptions.getJavac(ruleFinder),
+            JavacFactory.create(ruleFinder, javaBuckConfig, null),
             javacOptions,
             new BootClasspathAppender()),
         javaBuckConfig.shouldSuggestDependencies(),

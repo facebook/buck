@@ -25,16 +25,10 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.Lists;
 
 import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -188,24 +182,6 @@ public class JavacOptionsTest {
         .build();
 
     assertOptionsHasExtra(options, "-Xfoobar");
-  }
-
-  @Test
-  public void getInputs() {
-    FakeSourcePath javacJarPath = new FakeSourcePath("javac_jar");
-
-    JavacOptions options = createStandardBuilder()
-        .setJavacSpec(JavacSpec.builder()
-            .setJavacJarPath(javacJarPath)
-            .build())
-        .build();
-
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
-    assertThat(
-        options.getInputs(ruleFinder),
-        Matchers.containsInAnyOrder(javacJarPath));
   }
 
   private JavacOptions.Builder createStandardBuilder() {

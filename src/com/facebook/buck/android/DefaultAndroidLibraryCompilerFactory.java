@@ -16,17 +16,19 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 
 public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompilerFactory {
-
+  private final JavaBuckConfig javaConfig;
   private final ScalaBuckConfig scalaConfig;
   private final KotlinBuckConfig kotlinBuckConfig;
 
   public DefaultAndroidLibraryCompilerFactory(
-      ScalaBuckConfig scalaConfig, KotlinBuckConfig kotlinBuckConfig) {
+      JavaBuckConfig javaConfig, ScalaBuckConfig scalaConfig, KotlinBuckConfig kotlinBuckConfig) {
+    this.javaConfig = javaConfig;
     this.scalaConfig = scalaConfig;
     this.kotlinBuckConfig = kotlinBuckConfig;
   }
@@ -34,7 +36,7 @@ public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompi
   @Override
   public AndroidLibraryCompiler getCompiler(AndroidLibraryDescription.JvmLanguage language) {
     switch (language) {
-      case JAVA: return new JavaAndroidLibraryCompiler();
+      case JAVA: return new JavaAndroidLibraryCompiler(javaConfig);
       case SCALA: return new ScalaAndroidLibraryCompiler(scalaConfig);
       case KOTLIN: return new KotlinAndroidLibraryCompiler(kotlinBuckConfig);
     }

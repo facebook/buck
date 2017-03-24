@@ -114,7 +114,6 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     }
 
     return builder
-        .setJavacSpec(getJavacSpec())
         .putAllSourceToBootclasspath(bootclasspaths.build())
         .addAllExtraArguments(extraArguments)
         .setSafeAnnotationProcessors(safeAnnotationProcessors)

@@ -25,6 +25,7 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -142,7 +143,7 @@ public class AndroidInstrumentationApkDescription
         resourcesToExclude,
         /* skipCrunchPngs */ false,
         args.includesVectorDrawables.orElse(false),
-        javacOptions.getJavac(ruleFinder),
+        JavacFactory.create(ruleFinder, javaBuckConfig, null),
         javacOptions,
         javaBuckConfig.shouldSuggestDependencies(),
         EnumSet.noneOf(ExopackageMode.class),

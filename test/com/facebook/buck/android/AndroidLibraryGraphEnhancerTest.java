@@ -24,9 +24,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
+import com.facebook.buck.jvm.java.FakeJavaLibrary;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.jvm.java.JavacSpec;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -42,6 +45,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -209,24 +213,28 @@ public class AndroidLibraryGraphEnhancerTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    FakeBuildRule dep = new FakeBuildRule(
+    FakeBuildRule dep = new FakeJavaLibrary(
         BuildTargetFactory.newInstance("//:dep"),
         pathResolver);
-    dep.setOutputFile("foo");
     resolver.addToIndex(dep);
+    JavaBuckConfig javaConfig = FakeBuckConfig.builder()
+        .setSections(
+            ImmutableMap.of("tools",
+            ImmutableMap.of(
+                "javac_jar",
+                "//:dep")))
+        .build()
+        .getView(JavaBuckConfig.class);
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     JavacOptions options = JavacOptions.builder()
         .setSourceLevel("5")
         .setTargetLevel("5")
-        .setJavacSpec(JavacSpec.builder()
-            .setJavacJarPath(dep.getSourcePathToOutput())
-            .build())
         .build();
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
             target,
             new FakeBuildRuleParamsBuilder(target).build(),
-            options.getJavac(ruleFinder),
+            JavacFactory.create(ruleFinder, javaConfig, null),
             options,
             DependencyMode.FIRST_ORDER,
             /* forceFinalResourceIds */ false,

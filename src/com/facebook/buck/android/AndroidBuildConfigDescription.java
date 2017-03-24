@@ -20,6 +20,7 @@ import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.Javac;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -88,7 +89,7 @@ public class AndroidBuildConfigDescription
         args.values,
         args.valuesFile,
         /* useConstantExpressions */ false,
-        androidJavacOptions.getJavac(ruleFinder),
+        JavacFactory.create(ruleFinder, javaBuckConfig, null),
         androidJavacOptions,
         javaBuckConfig.shouldSuggestDependencies(),
         resolver);

@@ -34,6 +34,7 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.log.Logger;
@@ -246,7 +247,7 @@ public class AndroidBinaryDescription implements
           /* resourcesToExclude */ ImmutableSet.of(),
           args.skipCrunchPngs,
           args.includesVectorDrawables,
-          javacOptions.getJavac(ruleFinder),
+          JavacFactory.create(ruleFinder, javaBuckConfig, null),
           javacOptions,
           javaBuckConfig.shouldSuggestDependencies(),
           exopackageModes,
