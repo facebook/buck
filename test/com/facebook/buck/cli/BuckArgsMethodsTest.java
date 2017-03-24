@@ -39,12 +39,12 @@ public class BuckArgsMethodsTest {
   @Test
   public void testArgFileExpansion() throws IOException {
     assertThat(
-        BuckArgsMethods.expandAtFiles(new String[] {"arg1"}),
+        BuckArgsMethods.expandAtFiles(new String[] {"arg1"}, tmp.getRoot()),
         Matchers.arrayContaining("arg1")
     );
 
     assertThat(
-        BuckArgsMethods.expandAtFiles(new String[] {"arg1", "arg@a"}),
+        BuckArgsMethods.expandAtFiles(new String[] {"arg1", "arg@a"}, tmp.getRoot()),
         Matchers.arrayContaining("arg1", "arg@a")
     );
 
@@ -55,17 +55,19 @@ public class BuckArgsMethodsTest {
     ));
 
     assertThat(
-        BuckArgsMethods.expandAtFiles(new String[] {"arg1", "@" + arg.toString()}),
+        BuckArgsMethods.expandAtFiles(new String[] {"arg1", "@" + arg.toString()}, tmp.getRoot()),
         Matchers.arrayContaining("arg1", "arg2", "arg3")
     );
 
     assertThat(
-        BuckArgsMethods.expandAtFiles(new String[] {"arg1", "@" + arg.toString(), "arg4"}),
+        BuckArgsMethods.expandAtFiles(
+            new String[] {"arg1", "@" + arg.toString(), "arg4"},
+            tmp.getRoot()),
         Matchers.arrayContaining("arg1", "arg2", "arg3", "arg4")
     );
 
     assertThat(
-        BuckArgsMethods.expandAtFiles(new String[] {"@" + arg.toString()}),
+        BuckArgsMethods.expandAtFiles(new String[] {"@" + arg.toString()}, tmp.getRoot()),
         Matchers.arrayContaining("arg2", "arg3")
     );
 
@@ -76,7 +78,7 @@ public class BuckArgsMethodsTest {
 
     assertThat(
         BuckArgsMethods.expandAtFiles(
-            new String[] {"arg1", "@" + arg.toString(), "@" + arg4.toString()}),
+            new String[] {"arg1", "@" + arg.toString(), "@" + arg4.toString()}, tmp.getRoot()),
         Matchers.arrayContaining("arg1", "arg2", "arg3", "arg4")
     );
 
@@ -85,7 +87,7 @@ public class BuckArgsMethodsTest {
         "arg "
     ));
     assertThat(
-        BuckArgsMethods.expandAtFiles(new String[] {"@" + argWithSpace.toString()}),
+        BuckArgsMethods.expandAtFiles(new String[] {"@" + argWithSpace.toString()}, tmp.getRoot()),
         Matchers.arrayContaining("arg ")
     );
   }

@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
@@ -41,14 +42,16 @@ public class BuckArgsMethods {
    * args array from args4j.
    *
    * @param args original args array
+   * @param projectRoot path against which any {@code @args} path arguments will be resolved.
    * @return args array with AT-files expanded.
    */
-  public static String[] expandAtFiles(String[] args) {
+  public static String[] expandAtFiles(String[] args, Path projectRoot) {
     return Arrays.stream(args)
         .flatMap(arg -> {
               if (arg.startsWith("@")) {
+                Path argsPath = projectRoot.resolve(Paths.get(arg.substring(1)));
                 try {
-                  return Files.readAllLines(Paths.get(arg.substring(1)), Charsets.UTF_8).stream();
+                  return Files.readAllLines(argsPath, Charsets.UTF_8).stream();
                 } catch (IOException e) {
                   throw new HumanReadableException(e, "Could not read options from " + arg);
                 }

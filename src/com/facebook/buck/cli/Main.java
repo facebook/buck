@@ -808,7 +808,7 @@ public final class Main {
       String... unexpandedCommandLineArgs)
       throws IOException, InterruptedException {
 
-    String[] args = BuckArgsMethods.expandAtFiles(unexpandedCommandLineArgs);
+    String[] args = BuckArgsMethods.expandAtFiles(unexpandedCommandLineArgs, projectRoot);
 
     // Parse the command line args.
     BuckCommand command = new BuckCommand();
