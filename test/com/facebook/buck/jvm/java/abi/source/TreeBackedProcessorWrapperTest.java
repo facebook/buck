@@ -141,8 +141,7 @@ public class TreeBackedProcessorWrapperTest {
     });
 
     assertThat(
-        testCompiler.getDiagnostics().stream()
-            .map(Diagnostic::toString)
+        testCompiler.getDiagnosticMessages().stream()
             .map(message -> message.substring(message.indexOf("Foo.java")))
             .collect(Collectors.toList()),
         Matchers.contains(Joiner.on('\n').join(

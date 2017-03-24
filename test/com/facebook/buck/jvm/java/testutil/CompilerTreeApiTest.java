@@ -198,7 +198,7 @@ public abstract class CompilerTreeApiTest {
     }
   }
   protected void assertNoErrors() {
-    assertThat(testCompiler.getDiagnostics(), Matchers.empty());
+    assertThat(testCompiler.getDiagnosticMessages(), Matchers.empty());
   }
 
   protected void assertError(String message) {
@@ -207,12 +207,10 @@ public abstract class CompilerTreeApiTest {
 
   protected void assertErrors(String... messages) {
     assertThat(
-        testCompiler.getDiagnostics()
+        testCompiler.getDiagnosticMessages()
             .stream()
-            .map(diagnostic -> {
-              String toString = diagnostic.toString();
-              return toString.substring(toString.lastIndexOf(File.separatorChar) + 1);
-            })
+            .map(diagnosticMessage ->
+                diagnosticMessage.substring(diagnosticMessage.lastIndexOf(File.separatorChar) + 1))
             .collect(Collectors.toSet()),
         Matchers.containsInAnyOrder(messages));
   }

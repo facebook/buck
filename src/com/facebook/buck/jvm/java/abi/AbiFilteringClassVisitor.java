@@ -22,6 +22,7 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 
 import javax.annotation.Nullable;
@@ -32,6 +33,10 @@ import javax.annotation.Nullable;
 class AbiFilteringClassVisitor extends ClassVisitor {
   @Nullable
   private String name;
+  @Nullable
+  private String outerName = null;
+  private int classAccess;
+  private boolean hasVisibleConstructor = false;
 
   public AbiFilteringClassVisitor(ClassVisitor cv) {
     super(Opcodes.ASM5, cv);
@@ -46,11 +51,16 @@ class AbiFilteringClassVisitor extends ClassVisitor {
       String superName,
       String[] interfaces) {
     this.name = name;
+    classAccess = access;
     super.visit(version, access, name, signature, superName, interfaces);
   }
 
   @Override
   public void visitInnerClass(String name, String outerName, String innerName, int access) {
+    String currentClassName = Preconditions.checkNotNull(this.name);
+    if (name.equals(currentClassName)) {
+      this.outerName = outerName;
+    }
     if (!shouldInclude(access)) {
       return;
     }
@@ -60,7 +70,6 @@ class AbiFilteringClassVisitor extends ClassVisitor {
     // include InnerClasses attributes for the class itself (if it is a member class, so that
     // the compiler can know that), and for the member classes of this class (so that the
     // compiler knows to go looking for them). All of the other ones are only needed at runtime.
-    String currentClassName = Preconditions.checkNotNull(this.name);
     if (currentClassName.equals(name) || currentClassName.equals(outerName)) {
       super.visitInnerClass(name, outerName, innerName, access);
     }
@@ -96,6 +105,16 @@ class AbiFilteringClassVisitor extends ClassVisitor {
       return null;
     }
 
+    // We don't stub private constructors, but if stripping these constructors results in no
+    // constructors at all, we want to include a default private constructor. This is because
+    // removing all these private methods will make the class look like it has no constructors at
+    // all, which is not possible. We track if this class has a public, non-synthetic constructor
+    // and is not an interface or annotation to determine if a default private constructor is
+    // generated when visitEnd() is called.
+    if (name.equals("<init>") && (access & Opcodes.ACC_SYNTHETIC) == 0) {
+      hasVisibleConstructor = true;
+    }
+
     // Bridge methods are created by the compiler, and don't appear in source. It would be nice to
     // skip them, but they're used by the compiler to cover the fact that type erasure has occurred.
     // Normally the compiler adds these as public methods, but if you're compiling against a stub
@@ -109,7 +128,40 @@ class AbiFilteringClassVisitor extends ClassVisitor {
     return super.visitMethod(access, name, desc, signature, exceptions);
   }
 
+  @Override
+  public void visitEnd() {
+    if (!hasVisibleConstructor &&
+        !isInterface(classAccess) &&
+        !isAnnotation(classAccess)) {
+      String desc;
+      if (isEnum(classAccess)) {
+        desc = Type.getMethodType(
+            Type.VOID_TYPE,
+            Type.getObjectType("java/lang/String"),
+            Type.INT_TYPE).getDescriptor();
+      } else {
+        desc = outerName == null ?
+            Type.getMethodType(Type.VOID_TYPE).getDescriptor() :
+            Type.getMethodType(Type.VOID_TYPE, Type.getObjectType(outerName)).getDescriptor();
+      }
+      super.visitMethod(Opcodes.ACC_PRIVATE, "<init>", desc, null, null);
+    }
+    super.visitEnd();
+  }
+
   private boolean shouldInclude(int access) {
     return (access & Opcodes.ACC_PRIVATE) == 0;
+  }
+
+  private boolean isInterface(int access) {
+    return (access & Opcodes.ACC_INTERFACE) > 0;
+  }
+
+  private boolean isAnnotation(int access) {
+    return (access & Opcodes.ACC_ANNOTATION) > 0;
+  }
+
+  private boolean isEnum(int access) {
+    return (access & Opcodes.ACC_ENUM) > 0;
   }
 }

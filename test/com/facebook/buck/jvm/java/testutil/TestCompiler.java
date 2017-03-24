@@ -49,7 +49,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
-import javax.tools.DiagnosticCollector;
+import javax.tools.DiagnosticListener;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
@@ -70,14 +70,16 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
   private final TemporaryFolder outputFolder = new TemporaryFolder();
   private final Classes classes = new ClassesImpl(outputFolder);
   private final JavaCompiler javaCompiler = ToolProvider.getSystemJavaCompiler();
-  private final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+  private final DiagnosticMessageCollector<JavaFileObject> diagnosticCollector =
+      new DiagnosticMessageCollector<>();
   private final StandardJavaFileManager fileManager =
-      javaCompiler.getStandardFileManager(diagnostics, null, null);
+      javaCompiler.getStandardFileManager(diagnosticCollector, null, null);
   private final List<JavaFileObject> sourceFiles = new ArrayList<>();
 
   private TestCompiler classpathCompiler;
   private JavacTask javacTask;
   private boolean useFrontendOnlyJavacTask = false;
+  private boolean allowCompilationErrors = false;
   private Set<String> classpath = new LinkedHashSet<>();
 
   public void addClasspathFileContents(String fileName, String contents) throws IOException {
@@ -144,6 +146,10 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
     getJavacTask().setProcessors(processors);
   }
 
+  public void setAllowCompilationErrors(boolean allowCompileErrors) {
+    this.allowCompilationErrors = allowCompileErrors;
+  }
+
   public Iterable<? extends CompilationUnitTree> parse() throws IOException {
     return getJavacTask().parse();
   }
@@ -169,11 +175,14 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
   }
 
   public void compile() {
-    assertTrue("Compilation encountered errors", getJavacTask().call());
+    boolean result = getJavacTask().call();
+    if (!allowCompilationErrors) {
+      assertTrue("Compilation encountered errors", result);
+    }
   }
 
-  public List<Diagnostic<? extends JavaFileObject>> getDiagnostics() {
-    return diagnostics.getDiagnostics();
+  public List<String> getDiagnosticMessages() {
+    return diagnosticCollector.getDiagnosticMessages();
   }
 
   public Classes getClasses() {
@@ -212,7 +221,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
       javacTask = (JavacTask) javaCompiler.getTask(
           null,
           null,
-          diagnostics,
+          diagnosticCollector,
           options,
           null,
           sourceFiles);
@@ -235,7 +244,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
     }
 
     classpathCompiler.compile();
-    assertThat(classpathCompiler.getDiagnostics(), Matchers.empty());
+    assertThat(classpathCompiler.getDiagnosticMessages(), Matchers.empty());
   }
 
   public void init() {
@@ -265,4 +274,25 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
   public void close() {
     after();
   }
+
+  /**
+   * There's an issue with using the built in {@link javax.tools.DiagnosticCollector}.
+   * Grabbing the {@link Diagnostic}s after compilation can lead to incorrect error messages. The
+   * references to info that make up the Diagnostic's error message string may be GC-ed by the time
+   * we request the message. To work around this, we use our own DiagnosticCollector that grabs the
+   * string of the diagnostic at the time its reported and collect that instead.
+   */
+  private static class DiagnosticMessageCollector<S> implements DiagnosticListener<S> {
+    private List<String> diagnostics = new ArrayList<>();
+
+    @Override
+    public void report(Diagnostic<? extends S> diagnostic) {
+      diagnostics.add(diagnostic.toString());
+    }
+
+    private List<String> getDiagnosticMessages() {
+      return diagnostics;
+    }
+  }
+
 }

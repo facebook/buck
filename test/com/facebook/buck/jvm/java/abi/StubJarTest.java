@@ -53,6 +53,7 @@ import org.objectweb.asm.tree.TypeAnnotationNode;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -64,7 +65,6 @@ import java.util.stream.Collectors;
 
 import javax.annotation.processing.Processor;
 import javax.lang.model.SourceVersion;
-
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class StubJarTest {
@@ -98,6 +98,8 @@ public class StubJarTest {
   @Parameterized.Parameter
   public String testingMode;
   private Map<String, AbiClass> classNameToOriginal;
+  private boolean allowCompilationErrors = false;
+  private List<String> diagnostics;
 
   @Parameterized.Parameters
   public static Object[] getParameters() {
@@ -274,6 +276,85 @@ public class StubJarTest {
             )));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+  }
+
+  @Test
+  public void shouldGenerateConstructorForClassWithSinglePrivateConstructor() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class A {",
+                "  private A() { }",
+                "}"
+            )));
+
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+  }
+
+  @Test
+  public void shouldGenerateConstructorForClassWithPrivateConstructorsOnly() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class A {",
+                "  private A() { }",
+                "  private A(int test) { }",
+                "  private A(String test) { }",
+                "}"
+            )));
+
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+  }
+
+  @Test
+  public void shouldGeneratePrivateInnerClassDefaultConstructor() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "Outer.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class Outer {",
+                "  public class Inner {",
+                "    private Inner() { }",
+                "  }",
+                "}"
+            )));
+
+    assertClassesStubbedCorrectly(
+        paths,
+        "com/example/buck/Outer.class",
+        "com/example/buck/Outer$Inner.class");
+  }
+
+  @Test
+  public void shouldGeneratePrivateNestedClassDefaultConstructor() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "Outer.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class Outer {",
+                "  public class Inner {",
+                "    public class Nested {",
+                "      private Nested() { }",
+                "    }",
+                "  }",
+                "}"
+            )));
+
+    assertClassesStubbedCorrectly(
+        paths,
+        "com/example/buck/Outer.class",
+        "com/example/buck/Outer$Inner.class",
+        "com/example/buck/Outer$Inner$Nested.class");
   }
 
   @Test
@@ -1343,6 +1424,42 @@ public class StubJarTest {
   }
 
   @Test
+  public void privateConstructorResultsInCorrectCompileError() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "PrivateTest.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class PrivateTest {",
+                "  private PrivateTest() { }",
+                "}")));
+
+    allowCompilationErrors = true;
+    compileToJar(
+        ImmutableSortedSet.of(paths.stubJar),
+        Collections.emptyList(),
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck2;",
+                "import com.example.buck.PrivateTest;",
+                "public class A {",
+                "  public void foo() {",
+                "   PrivateTest test = new PrivateTest();",
+                "  }",
+                "}")),
+        temp.newFolder());
+
+    ImmutableList<String> expectedErrors =
+        ImmutableList.of(Joiner.on('\n').join(
+            "A.java:5: error: PrivateTest() has private access in com.example.buck.PrivateTest",
+            "   PrivateTest test = new PrivateTest();",
+            "                      ^"));
+    assertCompilationErrors(expectedErrors);
+  }
+
+  @Test
   public void shouldPreserveSynchronizedKeywordOnMethods() throws IOException {
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
@@ -1492,8 +1609,10 @@ public class StubJarTest {
       compiler.addSourceFileContents(fileName, source);
       compiler.addClasspath(classpath);
       compiler.setProcessors(processors);
+      compiler.setAllowCompilationErrors(allowCompilationErrors);
 
       compiler.compile();
+      diagnostics = compiler.getDiagnosticMessages();
 
       Path jarPath = outputDir.toPath().resolve("output.jar");
       compiler.getClasses().createJar(jarPath);
@@ -1616,8 +1735,37 @@ public class StubJarTest {
   private static void assertMethodsStubbedCorrectly(
       List<MethodNode> original,
       List<MethodNode> stubbed) {
+    boolean hasConstructor = false;
+    List<MethodNode> filteredOriginal = new ArrayList<>();
+    for (MethodNode m : original) {
+      if (m.name.equals("<clinit>") && m.desc.equals("()V")) {
+        continue;
+      }
+      if (m.name.equals("<init>")) {
+        hasConstructor = true;
+      }
+      filteredOriginal.add(m);
+    }
+
+    // Check that our stubbed class has a constructor if it should
+    if (hasConstructor) {
+      List<MethodNode> stubbedConstructors = stubbed.stream()
+          .filter(m -> m.name.equals("<init>") && (m.access & Opcodes.ACC_SYNTHETIC) == 0)
+          .collect(Collectors.toList());
+      if (stubbedConstructors.size() == 1 &&
+          (stubbedConstructors.get(0).access & Opcodes.ACC_PRIVATE) > 0) {
+        // A single private default constructor will exist if the stubbed class only has private
+        // constructors. We remove it before comparing since we'll filter all private methods from
+        // the original class anyway. See AbiFilteringClassVisitor.visitMethod() for more info
+        stubbed.remove(stubbedConstructors.get(0));
+      } else if (stubbedConstructors.size() == 0) {
+        fail("No constructor found.\n" +
+            "This stubbed class should at least have a default private constructor!");
+      }
+    }
+
     assertMembersStubbedCorrectly(
-        original,
+        filteredOriginal,
         stubbed,
         node -> node.access,
         StubJarTest::assertMethodStubbedCorrectly);
@@ -1638,27 +1786,18 @@ public class StubJarTest {
       List<M> stubbed,
       Function<M, Integer> getAccess,
       BiFunction<M, M, Void> assertMemberStubbedCorrectly) {
-
     List<M> filtered = original.stream()
         .filter(m -> {
           if (m instanceof InnerClassNode) {
             return true;
           }
-
-          if (m instanceof MethodNode &&
-              ((MethodNode) m).name.equals("<clinit>") &&
-              ((MethodNode) m).desc.equals("()V")) {
-            return false;
-          }
-
-          int access = getAccess.apply(m);
           // Never stub things that are private
-          return (access & (Opcodes.ACC_PRIVATE)) == 0;
+          return (getAccess.apply(m) & Opcodes.ACC_PRIVATE) == 0;
         })
         .collect(Collectors.toList());
 
     // We just iterate through since order of each list should match
-    // An IndexOutOFBoundsException may be thrown if extra or missing stubs are found
+    // An IndexOutOfBoundsException may be thrown if extra or missing stubs are found
     int max = Math.max(stubbed.size(), filtered.size());
     for (int i = 0; i < max; i++) {
       assertMemberStubbedCorrectly.apply(filtered.get(i), stubbed.remove(0));
@@ -1767,6 +1906,13 @@ public class StubJarTest {
         seen.stream()
             .map(toString)
             .collect(Collectors.toList()));
+  }
+
+  private void assertCompilationErrors(List<String> expectedErrors) {
+    List<String> actual = diagnostics.stream()
+        .map(diagnostic -> diagnostic.substring(diagnostic.lastIndexOf(File.separatorChar) + 1))
+        .collect(Collectors.toList());
+    assertThat(actual, Matchers.containsInAnyOrder(expectedErrors.toArray()));
   }
 
   private static String typeAnnotationToString(TypeAnnotationNode typeAnnotationNode) {
