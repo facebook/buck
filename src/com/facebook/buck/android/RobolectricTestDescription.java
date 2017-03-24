@@ -90,7 +90,6 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             templateOptions,
             params,
             resolver,
-            ruleFinder,
             args);
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(

@@ -15,23 +15,15 @@
  */
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.model.Either;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.HumanReadableException;
-
-import java.util.Optional;
-
 
 public final class JavacOptionsFactory {
   public static JavacOptions create(
       JavacOptions defaultOptions,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      SourcePathRuleFinder ruleFinder,
       JvmLibraryArg jvmLibraryArg) {
     if ((jvmLibraryArg.source.isPresent() || jvmLibraryArg.target.isPresent()) &&
         jvmLibraryArg.javaVersion.isPresent()) {
@@ -64,39 +56,10 @@ public final class JavacOptionsFactory {
 
     builder.addAllClassesToRemoveFromJar(jvmLibraryArg.removeClasses);
 
-    if (jvmLibraryArg.compiler.isPresent()) {
-      Either<BuiltInJavac, SourcePath> either = jvmLibraryArg.compiler.get();
-
-      if (either.isRight()) {
-        JavacSpec.Builder javacSpecBuilder = JavacSpec.builder();
-        SourcePath sourcePath = either.getRight();
-
-        Optional<BuildRule> possibleRule = ruleFinder.getRule(sourcePath);
-        if (possibleRule.isPresent() && possibleRule.get() instanceof JavaLibrary) {
-          SourcePath javacJarPath = possibleRule.get().getSourcePathToOutput();
-          if (javacJarPath == null) {
-            throw new HumanReadableException(String.format(
-                "%s isn't a valid value for javac_jar because it does not produce output",
-                sourcePath));
-          }
-          javacSpecBuilder.setJavacJarPath(javacJarPath);
-        } else {
-          javacSpecBuilder.setJavacPath(Either.ofRight(sourcePath));
-        }
-        builder.setJavacSpec(javacSpecBuilder.build());
-      }
-    } else {
-      if (jvmLibraryArg.javac.isPresent() || jvmLibraryArg.javacJar.isPresent()) {
-        if (jvmLibraryArg.javac.isPresent() && jvmLibraryArg.javacJar.isPresent()) {
-          throw new HumanReadableException("Cannot set both javac and javacjar");
-        }
-        JavacSpec.Builder javacSpecBuilder = JavacSpec.builder();
-        javacSpecBuilder.setJavacPath(
-            jvmLibraryArg.javac.map(Either::ofLeft));
-        javacSpecBuilder.setJavacJarPath(jvmLibraryArg.javacJar);
-        javacSpecBuilder.setCompilerClassName(jvmLibraryArg.compilerClassName);
-        builder.setJavacSpec(javacSpecBuilder.build());
-      }
+    if (jvmLibraryArg.compiler.isPresent() ||
+        jvmLibraryArg.javac.isPresent() ||
+        jvmLibraryArg.javacJar.isPresent()) {
+      builder.setJavacSpec(jvmLibraryArg.getJavacSpec());
     }
 
     AnnotationProcessingParams annotationParams =

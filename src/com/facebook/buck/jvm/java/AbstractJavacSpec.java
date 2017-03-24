@@ -20,6 +20,7 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
 
@@ -34,12 +35,21 @@ abstract class AbstractJavacSpec implements RuleKeyAppendable {
   public static final String COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL =
       "com.sun.tools.javac.api.JavacTool";
 
+  protected abstract Optional<Either<BuiltInJavac, SourcePath>> getCompiler();
   protected abstract Optional<Either<Path, SourcePath>> getJavacPath();
   protected abstract Optional<SourcePath> getJavacJarPath();
   protected abstract Optional<String> getCompilerClassName();
 
   @Value.Lazy
   public JavacProvider getJavacProvider() {
+    if (getCompiler().isPresent() && getCompiler().get().isRight()) {
+      return new ExternalOrJarBackedJavacProvider(
+          getCompiler().get().getRight(),
+          // compiler_class_name has no effect when compiler is specified
+          COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL);
+    }
+
+    String compilerClassName = getCompilerClassName().orElse(COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL);
     final Javac.Source javacSource = getJavacSource();
     final Javac.Location javacLocation = getJavacLocation();
     switch (javacSource) {
@@ -50,11 +60,11 @@ abstract class AbstractJavacSpec implements RuleKeyAppendable {
         switch (javacLocation) {
           case IN_PROCESS:
             return new ConstantJavacProvider(new JarBackedJavac(
-                getCompilerClassName().orElse(COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL),
+                compilerClassName,
                 ImmutableSet.of(getJavacJarPath().get())));
           case OUT_OF_PROCESS:
             return new ConstantJavacProvider(new OutOfProcessJarBackedJavac(
-                getCompilerClassName().orElse(COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL),
+                compilerClassName,
                 ImmutableSet.of(getJavacJarPath().get())));
         }
         break;
@@ -72,6 +82,10 @@ abstract class AbstractJavacSpec implements RuleKeyAppendable {
   }
 
   public Javac.Source getJavacSource() {
+    if (getJavacPath().isPresent() && getJavacJarPath().isPresent()) {
+      throw new HumanReadableException("Cannot set both javac and javacjar");
+    }
+
     if (getJavacPath().isPresent()) {
       return Javac.Source.EXTERNAL;
     } else if (getJavacJarPath().isPresent()) {

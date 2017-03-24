@@ -105,7 +105,6 @@ public class JavaTestDescription implements
             templateJavacOptions,
             params,
             resolver,
-            ruleFinder,
             args
         );
 

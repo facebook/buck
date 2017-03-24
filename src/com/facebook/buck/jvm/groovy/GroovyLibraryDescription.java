@@ -89,7 +89,6 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
           defaultJavacOptions,
           params,
           resolver,
-          ruleFinder,
           args)
         // groovyc may or may not play nice with generating ABIs from source, so disabling for now
         .withAbiGenerationMode(JavacOptions.AbiGenerationMode.CLASS);

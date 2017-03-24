@@ -96,7 +96,6 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
           defaultJavacOptions,
           params,
           resolver,
-          ruleFinder,
           args
         )
         // groovyc may or may not play nice with generating ABIs from source, so disabling for now

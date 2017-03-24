@@ -99,7 +99,6 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
             templateJavacOptions,
             params,
             resolver,
-            ruleFinder,
             args
         );
 

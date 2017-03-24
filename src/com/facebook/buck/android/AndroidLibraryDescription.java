@@ -100,7 +100,6 @@ public class AndroidLibraryDescription
         defaultOptions,
         params,
         resolver,
-        ruleFinder,
         args
     );
 

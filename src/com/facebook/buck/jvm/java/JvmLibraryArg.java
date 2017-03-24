@@ -51,6 +51,18 @@ public class JvmLibraryArg extends AbstractDescriptionArg {
   public ImmutableList<BuildTarget> plugins = ImmutableList.of();
   public Optional<Boolean> generateAbiFromSource;
 
+  public JavacSpec getJavacSpec() {
+    return JavacSpec.builder()
+        .setCompiler(compiler)
+        .setJavacPath(
+            javac.isPresent()
+                ? Optional.of(Either.ofLeft(javac.get()))
+                : Optional.empty())
+        .setJavacJarPath(javacJar)
+        .setCompilerClassName(compilerClassName)
+        .build();
+  }
+
   public AnnotationProcessingParams buildAnnotationProcessingParams(
       BuildTarget owner,
       ProjectFilesystem filesystem,

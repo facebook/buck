@@ -177,7 +177,6 @@ public class JavaLibraryDescription implements
         defaultOptions,
         params,
         resolver,
-        ruleFinder,
         args);
 
     ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps);
