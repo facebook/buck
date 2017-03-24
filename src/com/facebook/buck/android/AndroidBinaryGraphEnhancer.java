@@ -72,6 +72,7 @@ public class AndroidBinaryGraphEnhancer {
   public static final Flavor DEX_MERGE_FLAVOR = InternalFlavor.of("dex_merge");
   public static final Flavor RESOURCES_FILTER_FLAVOR = InternalFlavor.of("resources_filter");
   public static final Flavor AAPT_PACKAGE_FLAVOR = InternalFlavor.of("aapt_package");
+  public static final Flavor AAPT2_LINK_FLAVOR = InternalFlavor.of("aapt2_link");
   private static final Flavor CALCULATE_ABI_FLAVOR = InternalFlavor.of("calculate_exopackage_abi");
   public static final Flavor PACKAGE_STRING_ASSETS_FLAVOR =
       InternalFlavor.of("package_string_assets");
@@ -318,31 +319,60 @@ public class AndroidBinaryGraphEnhancer {
     }
 
     AaptOutputInfo aaptOutputInfo;
-    aaptMode.getClass();
-    // Create the AaptPackageResourcesBuildable.
-    BuildRuleParams paramsForAaptPackageResources = buildRuleParams
-        .withAppendedFlavor(AAPT_PACKAGE_FLAVOR)
-        .copyReplacingDeclaredAndExtraDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.of()),
-            Suppliers.ofInstance(ImmutableSortedSet.of()));
-    AaptPackageResources aaptPackageResources = new AaptPackageResources(
-        paramsForAaptPackageResources,
-        ruleFinder,
-        ruleResolver,
-        manifest,
-        filteredResourcesProvider,
-        getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
-        getTargetsAsRules(resourceDetails.getResourcesWithEmptyResButNonEmptyAssetsDir()),
-        packageableCollection.getAssetsDirectories(),
-        resourceUnionPackage,
-        shouldBuildStringSourceMap,
-        skipCrunchPngs,
-        includesVectorDrawables,
-        bannedDuplicateResourceTypes,
-        manifestEntries);
-    ruleResolver.addToIndex(aaptPackageResources);
-    enhancedDeps.add(aaptPackageResources);
-    aaptOutputInfo = aaptPackageResources.getAaptOutputInfo();
+    switch (aaptMode) {
+      case AAPT1: {
+        // Create the AaptPackageResourcesBuildable.
+        BuildRuleParams paramsForAaptPackageResources = buildRuleParams
+            .withAppendedFlavor(AAPT_PACKAGE_FLAVOR)
+            .copyReplacingDeclaredAndExtraDeps(
+              Suppliers.ofInstance(ImmutableSortedSet.of()),
+              Suppliers.ofInstance(ImmutableSortedSet.of()));
+        AaptPackageResources aaptPackageResources = new AaptPackageResources(
+            paramsForAaptPackageResources,
+            ruleFinder,
+            ruleResolver,
+            manifest,
+            filteredResourcesProvider,
+            getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
+            getTargetsAsRules(resourceDetails.getResourcesWithEmptyResButNonEmptyAssetsDir()),
+            packageableCollection.getAssetsDirectories(),
+            resourceUnionPackage,
+            shouldBuildStringSourceMap,
+            skipCrunchPngs,
+            includesVectorDrawables,
+            bannedDuplicateResourceTypes,
+            manifestEntries);
+        ruleResolver.addToIndex(aaptPackageResources);
+        enhancedDeps.add(aaptPackageResources);
+        aaptOutputInfo = aaptPackageResources.getAaptOutputInfo();
+      }
+      break;
+
+      case AAPT2: {
+        ImmutableList.Builder<Aapt2Compile> compileListBuilder = ImmutableList.builder();
+        for (BuildTarget resTarget : resourceDetails.getResourcesWithNonEmptyResDir()) {
+          compileListBuilder.add((Aapt2Compile) ruleResolver.requireRule(
+              resTarget.withFlavors(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)));
+        }
+        ImmutableList<Aapt2Compile> compileList = compileListBuilder.build();
+        BuildRuleParams paramsForAapt2Link = buildRuleParams
+            .withAppendedFlavor(AAPT2_LINK_FLAVOR)
+            .copyReplacingDeclaredAndExtraDeps(
+              Suppliers.ofInstance(ImmutableSortedSet.of()),
+              Suppliers.ofInstance(ImmutableSortedSet.of()));
+        Aapt2Link aapt2Link = new Aapt2Link(
+            paramsForAapt2Link,
+            compileList
+            );
+        ruleResolver.addToIndex(aapt2Link);
+        enhancedDeps.add(aapt2Link);
+        aaptOutputInfo = aapt2Link.getAaptOutputInfo();
+      }
+      break;
+
+      default:
+        throw new RuntimeException("Unexpected aaptMode: " + aaptMode);
+    }
 
     Optional<PackageStringAssets> packageStringAssets = Optional.empty();
     if (resourceCompressionMode.isStoreStringsAsAssets()) {

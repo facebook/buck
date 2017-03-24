@@ -87,6 +87,10 @@ public class AndroidResourceDescription
   static final Flavor ASSETS_SYMLINK_TREE_FLAVOR =
       InternalFlavor.of("assets-symlink-tree");
 
+  public static final Flavor AAPT2_COMPILE_FLAVOR =
+      InternalFlavor.of("aapt2_compile");
+
+
   public AndroidResourceDescription(boolean enableGrayscaleImageProcessing) {
     isGrayscaleImageProcessingEnabled = enableGrayscaleImageProcessing;
   }
@@ -96,6 +100,7 @@ public class AndroidResourceDescription
     return new Arg();
   }
 
+  @SuppressWarnings("PMD.PrematureDeclaration")
   @Override
   public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
@@ -138,6 +143,10 @@ public class AndroidResourceDescription
             params.getBuildTarget(),
             ASSETS_SYMLINK_TREE_FLAVOR,
             args.assets);
+
+    if (flavors.contains(AAPT2_COMPILE_FLAVOR)) {
+      return new Aapt2Compile(params);
+    }
 
     params = params.copyAppendingExtraDeps(
         Iterables.concat(
@@ -371,7 +380,8 @@ public class AndroidResourceDescription
     if (flavors.size() == 1) {
       Flavor flavor = flavors.iterator().next();
       if (flavor.equals(RESOURCES_SYMLINK_TREE_FLAVOR) ||
-          flavor.equals(ASSETS_SYMLINK_TREE_FLAVOR)) {
+          flavor.equals(ASSETS_SYMLINK_TREE_FLAVOR) ||
+          flavor.equals(AAPT2_COMPILE_FLAVOR)) {
         return true;
       }
     }
