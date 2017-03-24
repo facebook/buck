@@ -292,7 +292,7 @@ public class PythonTestDescription implements
         ImmutableList.builder();
     for (NeededCoverageSpec coverageSpec : args.neededCoverage) {
         BuildRule buildRule = resolver.getRule(coverageSpec.getBuildTarget());
-        if (params.getDeps().contains(buildRule) &&
+        if (params.getBuildDeps().contains(buildRule) &&
             buildRule instanceof PythonLibrary) {
           PythonLibrary pythonLibrary = (PythonLibrary) buildRule;
           ImmutableSortedSet<Path> paths;

@@ -167,7 +167,7 @@ public class AndroidBuildConfigDescription
         javac,
         javacOptions,
         suggestDependencies,
-        JavaLibraryRules.getAbiInputs(ruleResolver, javaLibraryParams.getDeps()),
+        JavaLibraryRules.getAbiInputs(ruleResolver, javaLibraryParams.getBuildDeps()),
         androidBuildConfig);
   }
 

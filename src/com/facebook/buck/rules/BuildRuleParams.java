@@ -35,7 +35,7 @@ public class BuildRuleParams {
   private final BuildTarget buildTarget;
   private final Supplier<ImmutableSortedSet<BuildRule>> declaredDeps;
   private final Supplier<ImmutableSortedSet<BuildRule>> extraDeps;
-  private final Supplier<ImmutableSortedSet<BuildRule>> totalDeps;
+  private final Supplier<ImmutableSortedSet<BuildRule>> totalBuildDeps;
   private final ProjectFilesystem projectFilesystem;
 
   public BuildRuleParams(
@@ -48,7 +48,7 @@ public class BuildRuleParams {
     this.extraDeps = Suppliers.memoize(extraDeps);
     this.projectFilesystem = projectFilesystem;
 
-    this.totalDeps = Suppliers.memoize(
+    this.totalBuildDeps = Suppliers.memoize(
         () -> ImmutableSortedSet.<BuildRule>naturalOrder()
             .addAll(declaredDeps.get())
             .addAll(extraDeps.get())
@@ -63,7 +63,7 @@ public class BuildRuleParams {
     this.projectFilesystem = projectFilesystem;
     this.declaredDeps = baseForDeps.declaredDeps;
     this.extraDeps = baseForDeps.extraDeps;
-    this.totalDeps = baseForDeps.totalDeps;
+    this.totalBuildDeps = baseForDeps.totalBuildDeps;
   }
 
   public BuildRuleParams copyReplacingExtraDeps(Supplier<ImmutableSortedSet<BuildRule>> extraDeps) {
@@ -140,12 +140,15 @@ public class BuildRuleParams {
     return buildTarget;
   }
 
-  public ImmutableSortedSet<BuildRule> getDeps() {
-    return totalDeps.get();
+  /**
+   * @return all BuildRules which must be built before this one can be.
+   */
+  public ImmutableSortedSet<BuildRule> getBuildDeps() {
+    return totalBuildDeps.get();
   }
 
-  public Supplier<ImmutableSortedSet<BuildRule>> getTotalDeps() {
-    return totalDeps;
+  public Supplier<ImmutableSortedSet<BuildRule>> getTotalBuildDeps() {
+    return totalBuildDeps;
   }
 
   public Supplier<ImmutableSortedSet<BuildRule>> getDeclaredDeps() {

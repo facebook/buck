@@ -54,7 +54,7 @@ public class JavaAnnotationProcessorDescription implements
       A args) throws NoSuchBuildTargetException {
     JavacPluginProperties.Builder propsBuilder = JavacPluginProperties.builder();
     propsBuilder.addProcessorNames(args.processorClass);
-    for (BuildRule dep : params.getDeps()) {
+    for (BuildRule dep : params.getBuildDeps()) {
       if (!(dep instanceof JavaLibrary)) {
         throw new HumanReadableException(
             String.format(

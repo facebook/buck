@@ -181,7 +181,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
 
       @Override
       public Iterable<AndroidPackageable> getRequiredPackageables() {
-        return AndroidPackageableCollector.getPackageableRules(params.getDeps());
+        return AndroidPackageableCollector.getPackageableRules(params.getBuildDeps());
       }
 
       @Override

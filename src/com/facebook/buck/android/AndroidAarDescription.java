@@ -139,7 +139,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
             apkModuleGraph);
     collector.addPackageables(
         AndroidPackageableCollector.getPackageableRules(
-            originalBuildRuleParams.getDeps()));
+            originalBuildRuleParams.getBuildDeps()));
     AndroidPackageableCollection packageableCollection = collector.build();
 
     ImmutableSortedSet<BuildRule> androidResourceDeclaredDeps =

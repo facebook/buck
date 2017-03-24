@@ -248,7 +248,7 @@ public class RustLibraryDescription implements
           throw new RuntimeException(e);
         }
         SourcePath rlib = rule.getSourcePathToOutput();
-        return new RustLibraryArg(pathResolver, crate, rlib, direct, params.getDeps());
+        return new RustLibraryArg(pathResolver, crate, rlib, direct, params.getBuildDeps());
       }
 
       @Override

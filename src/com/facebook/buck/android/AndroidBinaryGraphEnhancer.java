@@ -147,7 +147,7 @@ public class AndroidBinaryGraphEnhancer {
       DxConfig dxConfig) {
     this.buildRuleParams = originalParams;
     this.originalBuildTarget = originalParams.getBuildTarget();
-    this.originalDeps = originalParams.getDeps();
+    this.originalDeps = originalParams.getBuildDeps();
     this.ruleResolver = ruleResolver;
     this.ruleFinder = new SourcePathRuleFinder(ruleResolver);
     this.packageType = packageType;

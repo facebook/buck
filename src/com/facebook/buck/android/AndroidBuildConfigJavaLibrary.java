@@ -79,7 +79,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         /* classesToRemoveFromJar */ ImmutableSet.of());
     this.androidBuildConfig = androidBuildConfig;
     Preconditions.checkState(
-        params.getDeps().contains(androidBuildConfig),
+        params.getBuildDeps().contains(androidBuildConfig),
         "%s must depend on the AndroidBuildConfig whose output is in this rule's srcs.",
         params.getBuildTarget());
   }

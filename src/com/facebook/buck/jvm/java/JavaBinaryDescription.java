@@ -85,7 +85,7 @@ public class JavaBinaryDescription implements
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     ImmutableMap<String, SourcePath> nativeLibraries =
-        JavaLibraryRules.getNativeLibraries(params.getDeps(), cxxPlatform);
+        JavaLibraryRules.getNativeLibraries(params.getBuildDeps(), cxxPlatform);
     BuildRuleParams binaryParams = params;
 
     // If we're packaging native libraries, we'll build the binary JAR in a separate rule and
@@ -96,7 +96,7 @@ public class JavaBinaryDescription implements
 
     // Construct the build rule to build the binary JAR.
     ImmutableSet<JavaLibrary> transitiveClasspathDeps =
-        JavaLibraryClasspathProvider.getClasspathDeps(binaryParams.getDeps());
+        JavaLibraryClasspathProvider.getClasspathDeps(binaryParams.getBuildDeps());
     ImmutableSet<SourcePath> transitiveClasspaths =
         JavaLibraryClasspathProvider.getClasspathsFromLibraries(transitiveClasspathDeps);
     BuildRule rule = new JavaBinary(

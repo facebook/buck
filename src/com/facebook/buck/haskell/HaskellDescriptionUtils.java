@@ -290,7 +290,7 @@ public class HaskellDescriptionUtils {
                 // TODO(andrewjcg): We shouldn't need any deps to compile an empty module, but ghc
                 // implicitly tries to load the prelude and in some setups this is provided via a
                 // Buck dependency.
-                baseParams.getDeps(),
+                baseParams.getBuildDeps(),
                 cxxPlatform,
                 haskellConfig,
                 depType,

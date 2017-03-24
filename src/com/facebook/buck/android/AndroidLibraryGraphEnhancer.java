@@ -89,7 +89,7 @@ public class AndroidLibraryGraphEnhancer {
     if (previouslyCreated.isPresent()) {
       return previouslyCreated.map(input -> (DummyRDotJava) input);
     }
-    ImmutableSortedSet<BuildRule> originalDeps = originalBuildRuleParams.getDeps();
+    ImmutableSortedSet<BuildRule> originalDeps = originalBuildRuleParams.getBuildDeps();
     ImmutableSet<HasAndroidResourceDeps> androidResourceDeps;
 
     switch (resourceDependencyMode) {

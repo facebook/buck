@@ -170,7 +170,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
           CxxPreprocessorInput.concat(
               CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                   cxxPlatform,
-                  params.getDeps(),
+                  params.getBuildDeps(),
                   NdkLibrary.class::isInstance));
 
       // We add any dependencies from the C/C++ preprocessor input to this rule, even though
@@ -197,7 +197,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
       NativeLinkableInput nativeLinkableInput =
           NativeLinkables.getTransitiveNativeLinkableInput(
               cxxPlatform,
-              params.getDeps(),
+              params.getBuildDeps(),
               Linker.LinkableDepType.SHARED,
               NdkLibrary.class::isInstance);
 

@@ -256,7 +256,7 @@ public class AndroidResource extends AbstractBuildRule
         assets,
         assetsSrcs,
         manifestFile,
-        () -> FluentIterable.from(buildRuleParams.getDeps())
+        () -> FluentIterable.from(buildRuleParams.getBuildDeps())
             .filter(HasAndroidResourceDeps.class)
             .filter(input -> input.getRes() != null)
             .transform(HasAndroidResourceDeps::getPathToTextSymbolsFile)

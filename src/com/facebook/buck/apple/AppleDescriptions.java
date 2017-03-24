@@ -749,7 +749,7 @@ public class AppleDescriptions {
             .build());
 
     ImmutableMap<SourcePath, String> extensionBundlePaths = collectFirstLevelAppleDependencyBundles(
-        params.getDeps(),
+        params.getBuildDeps(),
         destinations);
 
     return new AppleBundle(

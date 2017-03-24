@@ -220,13 +220,13 @@ public class SwiftLibraryDescription implements
         }
       };
       params = params.copyAppendingExtraDeps(
-          params.getDeps().stream()
+          params.getBuildDeps().stream()
               .filter(SwiftLibrary.class::isInstance)
               .map(requireSwiftCompile)
               .collect(MoreCollectors.toImmutableSet()));
 
       params = params.copyAppendingExtraDeps(
-          params.getDeps().stream()
+          params.getBuildDeps().stream()
               .filter(CxxLibrary.class::isInstance)
               .map(input -> {
                 BuildTarget companionTarget = input.getBuildTarget().withAppendedFlavors(
@@ -314,7 +314,7 @@ public class SwiftLibraryDescription implements
         Optional.of(sharedLibrarySoname),
         sharedLibOutput,
         Linker.LinkableDepType.SHARED,
-        RichStream.from(params.getDeps())
+        RichStream.from(params.getBuildDeps())
             .filter(NativeLinkable.class)
             .concat(RichStream.of(swiftRuntimeLinkable))
             .collect(MoreCollectors.toImmutableSet()),

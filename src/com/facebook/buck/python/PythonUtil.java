@@ -189,7 +189,7 @@ public class PythonUtil {
     // Walk all our transitive deps to build our complete package that we'll
     // turn into an executable.
     new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(
-        params.getDeps()) {
+        params.getBuildDeps()) {
       private final ImmutableList<BuildRule> empty = ImmutableList.of();
       @Override
       public Iterable<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {

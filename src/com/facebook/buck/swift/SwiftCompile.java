@@ -110,7 +110,7 @@ class SwiftCompile extends AbstractBuildRule {
     this.frameworks = frameworks;
     this.swiftBuckConfig = swiftBuckConfig;
     this.cxxPreprocessorInputs =
-        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, params.getDeps());
+        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, params.getBuildDeps());
     this.swiftCompiler = swiftCompiler;
     this.outputPath = outputPath;
     this.headerPath = outputPath.resolve(SwiftDescriptions.toSwiftHeaderName(moduleName) + ".h");

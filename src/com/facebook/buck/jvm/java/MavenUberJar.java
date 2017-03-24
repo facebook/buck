@@ -163,7 +163,7 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
         ImmutableSortedSet<SourcePath> topLevelSrcs,
         Optional<String> mavenCoords,
         Optional<SourcePath> mavenPomTemplate) {
-      TraversedDeps traversedDeps = TraversedDeps.traverse(params.getDeps());
+      TraversedDeps traversedDeps = TraversedDeps.traverse(params.getBuildDeps());
 
       params = adjustParams(params, traversedDeps);
 

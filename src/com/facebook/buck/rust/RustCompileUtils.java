@@ -102,7 +102,7 @@ public class RustCompileUtils {
       ImmutableSortedSet<SourcePath> sources,
       SourcePath rootModule
   ) throws NoSuchBuildTargetException {
-    ImmutableSortedSet<BuildRule> ruledeps = params.getDeps();
+    ImmutableSortedSet<BuildRule> ruledeps = params.getBuildDeps();
     ImmutableList.Builder<Arg> linkerArgs = ImmutableList.builder();
 
     Stream.concat(
@@ -361,7 +361,7 @@ public class RustCompileUtils {
                   params.getBuildTarget(),
                   params.getProjectFilesystem(),
                   cxxPlatform,
-                  params.getDeps(),
+                  params.getBuildDeps(),
                   RustLinkable.class::isInstance,
                   RustLinkable.class::isInstance));
 
@@ -386,7 +386,7 @@ public class RustCompileUtils {
       // Also add Rust shared libraries as runtime deps. We don't need these in the symlink tree
       // because rustc will include their dirs in rpath by default.
       Map<String, SourcePath> rustSharedLibraries =
-          getTransitiveRustSharedLibraries(cxxPlatform, params.getDeps());
+          getTransitiveRustSharedLibraries(cxxPlatform, params.getBuildDeps());
       executableBuilder.addInputs(rustSharedLibraries.values());
     }
 

@@ -277,7 +277,7 @@ public class JavaTestDescription implements
           buildRuleParams.getBuildTarget(),
           buildRuleParams.getProjectFilesystem(),
           cxxPlatform,
-          buildRuleParams.getDeps(),
+          buildRuleParams.getBuildDeps(),
           Predicates.or(
               NativeLinkable.class::isInstance,
               JavaLibrary.class::isInstance));

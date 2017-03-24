@@ -159,7 +159,7 @@ abstract class DDescriptionUtils {
             buildTarget,
             "%s/" + buildTarget.getShortName()),
         Linker.LinkableDepType.STATIC,
-        FluentIterable.from(params.getDeps())
+        FluentIterable.from(params.getBuildDeps())
             .filter(NativeLinkable.class),
         /* cxxRuntimeType */ Optional.empty(),
         /* bundleLoader */ Optional.empty(),
@@ -247,7 +247,7 @@ abstract class DDescriptionUtils {
       Map<BuildTarget, DIncludes> transitiveIncludes = new TreeMap<>();
       transitiveIncludes.put(baseParams.getBuildTarget(), includes);
       for (Map.Entry<BuildTarget, DLibrary> library :
-           getTransitiveDLibraryRules(baseParams.getDeps()).entrySet()) {
+           getTransitiveDLibraryRules(baseParams.getBuildDeps()).entrySet()) {
         transitiveIncludes.put(library.getKey(), library.getValue().getIncludes());
       }
 

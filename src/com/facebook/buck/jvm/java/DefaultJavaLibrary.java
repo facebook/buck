@@ -273,7 +273,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
 
     this.trackClassUsage = trackClassUsage;
     this.abiClasspath = abiClasspath;
-    this.deps = params.getDeps();
+    this.deps = params.getBuildDeps();
     if (!srcs.isEmpty() || !resources.isEmpty() || manifestFile.isPresent()) {
       this.outputJar = Optional.of(getOutputJarPath(getBuildTarget(), getProjectFilesystem()));
     } else {

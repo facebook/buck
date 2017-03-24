@@ -450,7 +450,7 @@ public class PrebuiltCxxLibraryDescription implements
         Optional.of(soname),
         builtSharedLibraryPath,
         Linker.LinkableDepType.SHARED,
-        FluentIterable.from(params.getDeps())
+        FluentIterable.from(params.getBuildDeps())
             .filter(NativeLinkable.class),
         Optional.empty(),
         Optional.empty(),
@@ -968,7 +968,7 @@ public class PrebuiltCxxLibraryDescription implements
 
       @Override
       public Iterable<AndroidPackageable> getRequiredPackageables() {
-        return AndroidPackageableCollector.getPackageableRules(params.getDeps());
+        return AndroidPackageableCollector.getPackageableRules(params.getBuildDeps());
       }
 
       @Override

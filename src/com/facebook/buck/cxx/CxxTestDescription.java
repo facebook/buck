@@ -226,7 +226,7 @@ public class CxxTestDescription implements
           // during the test, so make sure to add them as runtime deps.
           deps.addAll(
               Sets.difference(
-                  params.getDeps(),
+                  params.getBuildDeps(),
                   cxxLinkAndCompileRules.getBinaryRule().getDeps()));
 
           // Add any build-time from any macros embedded in the `env` or `args` parameter.

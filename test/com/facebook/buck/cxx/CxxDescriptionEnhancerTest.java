@@ -83,13 +83,13 @@ public class CxxDescriptionEnhancerTest {
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             testParams,
             CxxPlatformUtils.DEFAULT_PLATFORM,
-            testParams.getDeps(),
+            testParams.getBuildDeps(),
             ImmutableMultimap.of(),
             ImmutableList.of(),
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 CxxPlatformUtils.DEFAULT_PLATFORM,
-                FluentIterable.from(testParams.getDeps())
+                FluentIterable.from(testParams.getBuildDeps())
                     .filter(CxxPreprocessorDep.class::isInstance)),
             ImmutableList.of(),
             Optional.empty());
@@ -155,13 +155,13 @@ public class CxxDescriptionEnhancerTest {
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             testParams,
             CxxPlatformUtils.DEFAULT_PLATFORM,
-            testParams.getDeps(),
+            testParams.getBuildDeps(),
             ImmutableMultimap.of(),
             ImmutableList.of(),
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 CxxPlatformUtils.DEFAULT_PLATFORM,
-                FluentIterable.from(testParams.getDeps())
+                FluentIterable.from(testParams.getBuildDeps())
                     .filter(CxxPreprocessorDep.class::isInstance)),
             ImmutableList.of(),
             Optional.empty());
@@ -217,13 +217,13 @@ public class CxxDescriptionEnhancerTest {
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             otherLibDepParams,
             CxxPlatformUtils.DEFAULT_PLATFORM,
-            otherLibDepParams.getDeps(),
+            otherLibDepParams.getBuildDeps(),
             ImmutableMultimap.of(),
             ImmutableList.of(),
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 CxxPlatformUtils.DEFAULT_PLATFORM,
-                FluentIterable.from(otherLibDepParams.getDeps())
+                FluentIterable.from(otherLibDepParams.getBuildDeps())
                     .filter(CxxPreprocessorDep.class::isInstance)),
             ImmutableList.of(),
             Optional.empty());
