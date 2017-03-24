@@ -68,7 +68,7 @@ public class ChromeTraceParser {
     }
 
     String commandArgs = argsEl.getAsJsonObject().get("command_args").getAsString();
-    String command = "buck " + name + " " + commandArgs;
+    String command = "buck " + name + (commandArgs.isEmpty() ? "" : " " + commandArgs);
 
     return Optional.of(command);
   };
