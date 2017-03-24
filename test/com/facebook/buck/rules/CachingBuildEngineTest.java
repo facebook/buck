@@ -96,7 +96,6 @@ import com.facebook.buck.zip.ZipConstants;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
@@ -1280,13 +1279,12 @@ public class CachingBuildEngineTest {
 
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
-          .setRuleKeyFactoriesFunction(
-              Functions.constant(
-                  RuleKeyFactories.of(
-                      NOOP_RULE_KEY_FACTORY,
-                      new FakeInputBasedRuleKeyFactory(
-                          ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+          .setRuleKeyFactories(
+              RuleKeyFactories.of(
+                  NOOP_RULE_KEY_FACTORY,
+                  new FakeInputBasedRuleKeyFactory(
+                      ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
+                  NOOP_DEP_FILE_RULE_KEY_FACTORY))
           .build();
 
       // Run the build.
@@ -1338,13 +1336,12 @@ public class CachingBuildEngineTest {
 
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
-          .setRuleKeyFactoriesFunction(
-              Functions.constant(
-                  RuleKeyFactories.of(
-                      defaultRuleKeyFactory,
-                      new FakeInputBasedRuleKeyFactory(
-                          ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+          .setRuleKeyFactories(
+              RuleKeyFactories.of(
+                  defaultRuleKeyFactory,
+                  new FakeInputBasedRuleKeyFactory(
+                      ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
+                  NOOP_DEP_FILE_RULE_KEY_FACTORY))
           .build();
 
       // Run the build.
@@ -1415,13 +1412,12 @@ public class CachingBuildEngineTest {
 
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
-          .setRuleKeyFactoriesFunction(
-              Functions.constant(
-                  RuleKeyFactories.of(
-                      defaultRuleKeyFactory,
-                      new FakeInputBasedRuleKeyFactory(
-                          ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+          .setRuleKeyFactories(
+              RuleKeyFactories.of(
+                  defaultRuleKeyFactory,
+                  new FakeInputBasedRuleKeyFactory(
+                      ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
+                  NOOP_DEP_FILE_RULE_KEY_FACTORY))
           .build();
 
       // Run the build.
@@ -1512,15 +1508,14 @@ public class CachingBuildEngineTest {
 
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
-          .setRuleKeyFactoriesFunction(
-              Functions.constant(
-                  RuleKeyFactories.of(
-                      defaultRuleKeyFactory,
-                      new FakeInputBasedRuleKeyFactory(
-                          ImmutableMap.of(),
-                          ImmutableSet.of(rule.getBuildTarget()),
-                          fileHashCache),
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+          .setRuleKeyFactories(
+              RuleKeyFactories.of(
+                  defaultRuleKeyFactory,
+                  new FakeInputBasedRuleKeyFactory(
+                      ImmutableMap.of(),
+                      ImmutableSet.of(rule.getBuildTarget()),
+                      fileHashCache),
+                  NOOP_DEP_FILE_RULE_KEY_FACTORY))
           .build();
 
       // Run the build.
@@ -2118,12 +2113,11 @@ public class CachingBuildEngineTest {
     public CachingBuildEngine engineWithDepFileFactory(
         DependencyFileRuleKeyFactory depFileFactory) {
       return cachingBuildEngineFactory()
-          .setRuleKeyFactoriesFunction(
-              Functions.constant(
-                  RuleKeyFactories.of(
-                      defaultRuleKeyFactory,
-                      NOOP_INPUT_BASED_RULE_KEY_FACTORY,
-                      depFileFactory)))
+          .setRuleKeyFactories(
+              RuleKeyFactories.of(
+                  defaultRuleKeyFactory,
+                  NOOP_INPUT_BASED_RULE_KEY_FACTORY,
+                  depFileFactory))
           .build();
     }
   }
@@ -2195,12 +2189,11 @@ public class CachingBuildEngineTest {
       CachingBuildEngine cachingBuildEngine =
           cachingBuildEngineFactory()
               .setDepFiles(CachingBuildEngine.DepFiles.CACHE)
-              .setRuleKeyFactoriesFunction(
-                   Functions.constant(
-                      RuleKeyFactories.of(
-                          defaultRuleKeyFactory,
-                          inputBasedRuleKeyFactory,
-                          depFilefactory)))
+              .setRuleKeyFactories(
+                  RuleKeyFactories.of(
+                      defaultRuleKeyFactory,
+                      inputBasedRuleKeyFactory,
+                      depFilefactory))
               .build();
 
       // Run the build.
@@ -2308,12 +2301,11 @@ public class CachingBuildEngineTest {
       CachingBuildEngine cachingBuildEngine =
           cachingBuildEngineFactory()
               .setDepFiles(CachingBuildEngine.DepFiles.CACHE)
-              .setRuleKeyFactoriesFunction(
-                  Functions.constant(
-                      RuleKeyFactories.of(
-                          defaultRuleKeyFactory,
-                          inputBasedRuleKeyFactory,
-                          depFilefactory)))
+              .setRuleKeyFactories(
+                  RuleKeyFactories.of(
+                      defaultRuleKeyFactory,
+                      inputBasedRuleKeyFactory,
+                      depFilefactory))
               .build();
 
       // Seed the cache with an existing manifest with a dummy entry.
@@ -2436,12 +2428,11 @@ public class CachingBuildEngineTest {
           cachingBuildEngineFactory()
               .setDepFiles(CachingBuildEngine.DepFiles.CACHE)
               .setMaxDepFileCacheEntries(1L)
-              .setRuleKeyFactoriesFunction(
-                  Functions.constant(
-                      RuleKeyFactories.of(
-                          defaultRuleKeyFactory,
-                          inputBasedRuleKeyFactory,
-                          depFilefactory)))
+              .setRuleKeyFactories(
+                  RuleKeyFactories.of(
+                      defaultRuleKeyFactory,
+                      inputBasedRuleKeyFactory,
+                      depFilefactory))
               .build();
 
       // Seed the cache with an existing manifest with a dummy entry so that it's already at the max
@@ -2548,12 +2539,11 @@ public class CachingBuildEngineTest {
       CachingBuildEngine cachingBuildEngine =
           cachingBuildEngineFactory()
               .setDepFiles(CachingBuildEngine.DepFiles.CACHE)
-              .setRuleKeyFactoriesFunction(
-                  Functions.constant(
-                      RuleKeyFactories.of(
-                          defaultRuleKeyFactory,
-                          inputBasedRuleKeyFactory,
-                          depFilefactory)))
+              .setRuleKeyFactories(
+                  RuleKeyFactories.of(
+                      defaultRuleKeyFactory,
+                      inputBasedRuleKeyFactory,
+                      depFilefactory))
               .build();
 
       // Calculate expected rule keys.
@@ -2648,12 +2638,11 @@ public class CachingBuildEngineTest {
           ImmutableList.of(),
           Paths.get("foo.out"));
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
-          .setRuleKeyFactoriesFunction(
-              Functions.constant(
-                  RuleKeyFactories.of(
-                      NOOP_RULE_KEY_FACTORY,
-                      NOOP_INPUT_BASED_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+          .setRuleKeyFactories(
+              RuleKeyFactories.of(
+                  NOOP_RULE_KEY_FACTORY,
+                  NOOP_INPUT_BASED_RULE_KEY_FACTORY,
+                  NOOP_DEP_FILE_RULE_KEY_FACTORY))
           .build();
       BuildResult result =
           cachingBuildEngine.build(buildContext, TestExecutionContext.newInstance(), rule).get();
@@ -2735,12 +2724,11 @@ public class CachingBuildEngineTest {
                   semaphore,
                   /* defaultWeight */ ResourceAmounts.of(1, 0, 0, 0),
                   listeningDecorator(Executors.newCachedThreadPool())))
-          .setRuleKeyFactoriesFunction(
-              Functions.constant(
-                  RuleKeyFactories.of(
-                      NOOP_RULE_KEY_FACTORY,
-                      NOOP_INPUT_BASED_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+          .setRuleKeyFactories(
+              RuleKeyFactories.of(
+                  NOOP_RULE_KEY_FACTORY,
+                  NOOP_INPUT_BASED_RULE_KEY_FACTORY,
+                  NOOP_DEP_FILE_RULE_KEY_FACTORY))
           .build();
       ListenableFuture<BuildResult> result1 =
           cachingBuildEngine.build(buildContext, TestExecutionContext.newInstance(), rule1);
@@ -2835,12 +2823,11 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
           .setExecutorService(SERVICE)
-          .setRuleKeyFactoriesFunction(
-              Functions.constant(
-                  RuleKeyFactories.of(
-                      NOOP_RULE_KEY_FACTORY,
-                      NOOP_INPUT_BASED_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+          .setRuleKeyFactories(
+              RuleKeyFactories.of(
+                  NOOP_RULE_KEY_FACTORY,
+                  NOOP_INPUT_BASED_RULE_KEY_FACTORY,
+                  NOOP_DEP_FILE_RULE_KEY_FACTORY))
           .build();
 
       // Run the build.
@@ -2874,12 +2861,11 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
           .setExecutorService(SERVICE)
-          .setRuleKeyFactoriesFunction(
-              Functions.constant(
-                  RuleKeyFactories.of(
-                      NOOP_RULE_KEY_FACTORY,
-                      NOOP_INPUT_BASED_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+          .setRuleKeyFactories(
+              RuleKeyFactories.of(
+                  NOOP_RULE_KEY_FACTORY,
+                  NOOP_INPUT_BASED_RULE_KEY_FACTORY,
+                  NOOP_DEP_FILE_RULE_KEY_FACTORY))
           .build();
 
       // Run the build.
@@ -2914,12 +2900,11 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
           .setExecutorService(SERVICE)
-          .setRuleKeyFactoriesFunction(
-              Functions.constant(
-                  RuleKeyFactories.of(
-                      NOOP_RULE_KEY_FACTORY,
-                      NOOP_INPUT_BASED_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+          .setRuleKeyFactories(
+              RuleKeyFactories.of(
+                  NOOP_RULE_KEY_FACTORY,
+                  NOOP_INPUT_BASED_RULE_KEY_FACTORY,
+                  NOOP_DEP_FILE_RULE_KEY_FACTORY))
           .build();
 
       // Run the build.

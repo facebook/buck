@@ -16,7 +16,11 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 
 import org.immutables.value.Value;
@@ -26,21 +30,51 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleTuple
-interface AbstractRuleKeyFactories {
+abstract class AbstractRuleKeyFactories {
 
   /**
    * @return a {@link RuleKeyFactory} that produces {@link RuleKey}s.
    */
-  RuleKeyFactory<RuleKey> getDefaultRuleKeyFactory();
+  public abstract RuleKeyFactory<RuleKey> getDefaultRuleKeyFactory();
 
   /**
    * @return a {@link RuleKeyFactory} that produces input-based {@link RuleKey}s.
    */
-  RuleKeyFactory<RuleKey> getInputBasedRuleKeyFactory();
+  public abstract RuleKeyFactory<RuleKey> getInputBasedRuleKeyFactory();
 
   /**
    * @return a {@link DependencyFileRuleKeyFactory} that produces dep-file-based {@link RuleKey}s.
    */
-  DependencyFileRuleKeyFactory getDepFileRuleKeyFactory();
+  public abstract DependencyFileRuleKeyFactory getDepFileRuleKeyFactory();
+
+
+  public static RuleKeyFactories of(
+      int keySeed,
+      FileHashCache fileHashCache,
+      BuildRuleResolver resolver,
+      long inputRuleKeyFileSizeLimit,
+      RuleKeyCache<RuleKey> defaultRuleKeyFactoryCache) {
+    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(keySeed);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    return RuleKeyFactories.of(
+        new DefaultRuleKeyFactory(
+            fieldLoader,
+            fileHashCache,
+            pathResolver,
+            ruleFinder,
+            defaultRuleKeyFactoryCache),
+        new InputBasedRuleKeyFactory(
+            fieldLoader,
+            fileHashCache,
+            pathResolver,
+            ruleFinder,
+            inputRuleKeyFileSizeLimit),
+        new DefaultDependencyFileRuleKeyFactory(
+            fieldLoader,
+            fileHashCache,
+            pathResolver,
+            ruleFinder));
+  }
 
 }

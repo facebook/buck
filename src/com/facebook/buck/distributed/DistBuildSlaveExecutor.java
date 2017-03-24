@@ -41,7 +41,7 @@ import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
-import com.facebook.buck.rules.keys.RuleKeyFactoryManager;
+import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
@@ -293,7 +293,7 @@ public class DistBuildSlaveExecutor {
           args.getObjectMapper(),
           Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
           engineConfig.getResourceAwareSchedulingInfo(),
-          new RuleKeyFactoryManager(
+          RuleKeyFactories.of(
               distBuildConfig.getKeySeed(),
               cachingBuildEngineDelegate.getFileHashCache(),
               actionGraphAndResolver.getResolver(),

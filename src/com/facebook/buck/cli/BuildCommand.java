@@ -67,7 +67,7 @@ import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
-import com.facebook.buck.rules.keys.RuleKeyFactoryManager;
+import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.shell.WorkerProcessPool;
 import com.facebook.buck.step.AdbOptions;
@@ -812,7 +812,7 @@ public class BuildCommand extends AbstractCommand {
                    params.getObjectMapper(),
                    actionGraphAndResolver.getResolver(),
                    cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
-                   new RuleKeyFactoryManager(
+                   RuleKeyFactories.of(
                        rootCellBuckConfig.getKeySeed(),
                        cachingBuildEngineDelegate.getFileHashCache(),
                        actionGraphAndResolver.getResolver(),
