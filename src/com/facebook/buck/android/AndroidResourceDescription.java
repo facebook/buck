@@ -104,9 +104,10 @@ public class AndroidResourceDescription
       CellPathResolver cellRoots,
       A args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    if (params.getBuildTarget().getFlavors().contains(RESOURCES_SYMLINK_TREE_FLAVOR)) {
+    ImmutableSortedSet<Flavor> flavors = params.getBuildTarget().getFlavors();
+    if (flavors.contains(RESOURCES_SYMLINK_TREE_FLAVOR)) {
       return createSymlinkTree(ruleFinder, params, args.res, "res");
-    } else if (params.getBuildTarget().getFlavors().contains(ASSETS_SYMLINK_TREE_FLAVOR)) {
+    } else if (flavors.contains(ASSETS_SYMLINK_TREE_FLAVOR)) {
       return createSymlinkTree(ruleFinder, params, args.assets, "assets");
     }
 
