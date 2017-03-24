@@ -144,7 +144,7 @@ public class TrimUberRDotJavaTest {
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:trim"))
             .setProjectFilesystem(filesystem)
             .build(),
-        aaptPackageResources,
+        aaptPackageResources.getPathToRDotJavaDir(),
         ImmutableList.of(dexProducedFromJavaLibrary),
         keepResourcePattern);
     resolver.addToIndex(trimUberRDotJava);

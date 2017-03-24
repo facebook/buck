@@ -53,7 +53,7 @@ import java.util.zip.ZipEntry;
  * Rule for trimming unnecessary ids from R.java files.
  */
 class TrimUberRDotJava extends AbstractBuildRule {
-  private final AaptPackageResources aaptPackageResources;
+  private final SourcePath pathToRDotJavaDir;
   private final Collection<DexProducedFromJavaLibrary> allPreDexRules;
   private final Optional<String> keepResourcePattern;
 
@@ -65,11 +65,11 @@ class TrimUberRDotJava extends AbstractBuildRule {
 
   TrimUberRDotJava(
       BuildRuleParams buildRuleParams,
-      AaptPackageResources aaptPackageResources,
+      SourcePath pathToRDotJavaDir,
       Collection<DexProducedFromJavaLibrary> allPreDexRules,
       Optional<String> keepResourcePattern) {
     super(buildRuleParams);
-    this.aaptPackageResources = aaptPackageResources;
+    this.pathToRDotJavaDir = pathToRDotJavaDir;
     this.allPreDexRules = allPreDexRules;
     this.keepResourcePattern = keepResourcePattern;
   }
@@ -79,8 +79,7 @@ class TrimUberRDotJava extends AbstractBuildRule {
       BuildContext context,
       BuildableContext buildableContext) {
     Path output = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
-    Path input = context.getSourcePathResolver().getRelativePath(
-        aaptPackageResources.getPathToRDotJavaDir());
+    Path input = context.getSourcePathResolver().getRelativePath(pathToRDotJavaDir);
     buildableContext.recordArtifact(output);
     return ImmutableList.of(
         new MakeCleanDirectoryStep(getProjectFilesystem(), output.getParent()),
