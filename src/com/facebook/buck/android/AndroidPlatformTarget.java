@@ -62,6 +62,7 @@ public class AndroidPlatformTarget {
   private final Path androidJar;
   private final List<Path> bootclasspathEntries;
   private final Path aaptExecutable;
+  private final Path aapt2Executable;
   private final Path adbExecutable;
   private final Path aidlExecutable;
   private final Path zipalignExecutable;
@@ -78,6 +79,7 @@ public class AndroidPlatformTarget {
       Path androidJar,
       List<Path> bootclasspathEntries,
       Path aaptExecutable,
+      Path aapt2Executable,
       Path adbExecutable,
       Path aidlExecutable,
       Path zipalignExecutable,
@@ -91,6 +93,7 @@ public class AndroidPlatformTarget {
     this.androidJar = androidJar;
     this.bootclasspathEntries = ImmutableList.copyOf(bootclasspathEntries);
     this.aaptExecutable = aaptExecutable;
+    this.aapt2Executable = aapt2Executable;
     this.adbExecutable = adbExecutable;
     this.aidlExecutable = aidlExecutable;
     this.zipalignExecutable = zipalignExecutable;
@@ -127,6 +130,10 @@ public class AndroidPlatformTarget {
 
   public Path getAaptExecutable() {
     return aaptExecutable;
+  }
+
+  public Path getAapt2Executable() {
+    return aapt2Executable;
   }
 
   public Path getAdbExecutable() {
@@ -290,6 +297,7 @@ public class AndroidPlatformTarget {
         bootclasspathEntries,
         aaptOverride.orElse(
             androidSdkDir.resolve(buildToolsBinDir).resolve("aapt").toAbsolutePath()),
+        androidSdkDir.resolve(buildToolsBinDir).resolve("aapt2").toAbsolutePath(),
         androidSdkDir.resolve("platform-tools/adb").toAbsolutePath(),
         androidSdkDir.resolve(buildToolsBinDir).resolve("aidl").toAbsolutePath(),
         zipAlignExecutable,
