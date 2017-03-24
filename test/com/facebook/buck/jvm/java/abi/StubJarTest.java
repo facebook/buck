@@ -1430,34 +1430,49 @@ public class StubJarTest {
       String fileName,
       String source) throws IOException {
     File outputDir = temp.newFolder();
-
-    List<Processor> processors = Collections.emptyList();
-    StubJarGeneratingProcessor stubJarGenerator = null;
-    if (testingMode != MODE_JAR_BASED) {
-      stubJarGenerator =
-          new StubJarGeneratingProcessor(
-              filesystem,
-              outputDir.toPath().resolve("sourceStub.jar"),
-              SourceVersion.RELEASE_8);
-      processors = Collections.singletonList(stubJarGenerator);
-    }
-
     Path fullJar = compileToJar(
-        testingMode != MODE_SOURCE_BASED_MISSING_DEPS ? classPath : Collections.emptySortedSet(),
-        processors,
+        classPath,
+        Collections.emptyList(),
         fileName,
         source,
         outputDir);
 
     Path stubJar;
-
-    if (stubJarGenerator != null) {
-      stubJar = stubJarGenerator.getStubJarPath();
+    if (testingMode != MODE_JAR_BASED) {
+      stubJar = createStubJar(
+          testingMode == MODE_SOURCE_BASED ? classPath : Collections.emptySortedSet(),
+          fileName,
+          source,
+          outputDir.toPath());
     } else {
       stubJar = createStubJar(fullJar);
     }
 
     return new JarPaths(fullJar, stubJar);
+  }
+
+  private Path createStubJar(
+      SortedSet<Path> classpath,
+      String fileName,
+      String source,
+      Path outputDir) throws IOException {
+    Path stubJar = outputDir.resolve("stub.jar");
+
+    List<Processor> processors = Collections.singletonList(new StubJarGeneratingProcessor(
+        filesystem,
+        stubJar,
+        SourceVersion.RELEASE_8));
+
+    try (TestCompiler testCompiler = new TestCompiler()) {
+      testCompiler.init();
+      testCompiler.useFrontendOnlyJavacTask();
+      testCompiler.addSourceFileContents(fileName, source);
+      testCompiler.addClasspath(classpath);
+      testCompiler.setProcessors(processors);
+      testCompiler.enter();
+    }
+
+    return stubJar;
   }
 
   private Path createStubJar(Path fullJar) throws IOException {
