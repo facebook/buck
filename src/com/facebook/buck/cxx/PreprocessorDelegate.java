@@ -81,6 +81,9 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
               for (CxxHeaders include : preprocessorFlags.getIncludes()) {
                 include.addToHeaderPathNormalizer(builder);
               }
+              for (FrameworkPath frameworkPath : preprocessorFlags.getFrameworkPaths()) {
+                frameworkPath.getSourcePath().ifPresent(builder::addHeaderDir);
+              }
               if (preprocessorFlags.getPrefixHeader().isPresent()) {
                 SourcePath headerPath = preprocessorFlags.getPrefixHeader().get();
                 builder.addPrefixHeader(headerPath);

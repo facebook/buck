@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -157,6 +158,48 @@ public class PrebuiltAppleFrameworkIntegrationTest {
         nmResult.getStdout().orElse(""),
         not(containsString("U _OBJC_CLASS_$_Strings")));
   }
+
+  @Test
+  public void headerUsesShouldMapBackToTestApp() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "prebuilt_apple_framework_links", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild(
+        "//app:TestApp#iphonesimulator-x86_64",
+        "--config", "cxx.untracked_headers=error")
+        .assertSuccess();
+  }
+
+  @Test
+  public void ruleKeyChangesWhenFrameworkIsModified() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "prebuilt_apple_framework_links", tmp);
+    workspace.setUp();
+
+    String resultBefore;
+    {
+      ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+          "targets", "--show-rulekey", "//app:TestApp#iphonesimulator-x86_64");
+      resultBefore = result.assertSuccess().getStdout();
+    }
+
+    workspace.writeContentsToPath("", "prebuilt/BuckTest.framework/Headers/Hello.h");
+
+    String resultAfter;
+    {
+      ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+          "targets", "--show-rulekey", "//app:TestApp#iphonesimulator-x86_64");
+      resultAfter = result.assertSuccess().getStdout();
+    }
+
+    assertNotEquals(
+        "Rule Key before and after header change should be different",
+        resultBefore,
+        resultAfter);
+  }
+
 
   @Test
   public void testProjectGeneratorGeneratesWorkingProject() throws Exception {

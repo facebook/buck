@@ -74,6 +74,8 @@ public class PrebuiltAppleFramework
   private final NativeLinkable.Linkage preferredLinkage;
 
   private final BuildRuleResolver ruleResolver;
+
+  @AddToRuleKey
   private final SourcePath frameworkPath;
   private final String frameworkName;
   private final Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags;
