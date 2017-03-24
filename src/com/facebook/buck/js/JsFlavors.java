@@ -65,17 +65,9 @@ public class JsFlavors {
 
   private static final String fileFlavorPrefix = "file-";
 
-  public static boolean validateLibraryFlavors(ImmutableSet<Flavor> flavors) {
-    return validateFlavors(flavors, PLATFORM_DOMAIN, OPTIMIZATION_DOMAIN);
-  }
-
-  public static boolean validateBundleFlavors(ImmutableSet<Flavor> flavors) {
-    return validateFlavors(flavors, PLATFORM_DOMAIN, OPTIMIZATION_DOMAIN, RAM_BUNDLE_DOMAIN);
-  }
-
-  private static boolean validateFlavors(
+  public static boolean validateFlavors(
       ImmutableSet<Flavor> flavors,
-      FlavorDomain<?>... allowableDomains) {
+      Iterable<FlavorDomain<?>> allowableDomains) {
 
     final ImmutableSet.Builder<Flavor> allowableFlavors = ImmutableSet.builder();
     for (FlavorDomain<?> domain : allowableDomains) {

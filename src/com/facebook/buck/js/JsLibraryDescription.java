@@ -56,6 +56,10 @@ import javax.annotation.Nullable;
 
 public class JsLibraryDescription implements Description<JsLibraryDescription.Arg>, Flavored {
 
+  private static final ImmutableSet<FlavorDomain<?>> FLAVOR_DOMAINS = ImmutableSet.of(
+      JsFlavors.PLATFORM_DOMAIN,
+      JsFlavors.OPTIMIZATION_DOMAIN);
+
   @Override
   public Arg createUnpopulatedConstructorArg() {
     return new Arg();
@@ -110,15 +114,12 @@ public class JsLibraryDescription implements Description<JsLibraryDescription.Ar
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return JsFlavors.validateLibraryFlavors(flavors);
+    return JsFlavors.validateFlavors(flavors, FLAVOR_DOMAINS);
   }
 
   @Override
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(
-        ImmutableSet.of(
-            JsFlavors.OPTIMIZATION_DOMAIN,
-            JsFlavors.PLATFORM_DOMAIN));
+    return Optional.of(FLAVOR_DOMAINS);
   }
 
   @SuppressFieldNotInitialized

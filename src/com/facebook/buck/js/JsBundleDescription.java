@@ -44,18 +44,19 @@ import java.util.stream.Stream;
 
 public class JsBundleDescription implements Description<JsBundleDescription.Arg>, Flavored {
 
+  private static final ImmutableSet<FlavorDomain<?>> FLAVOR_DOMAINS = ImmutableSet.of(
+      JsFlavors.PLATFORM_DOMAIN,
+      JsFlavors.OPTIMIZATION_DOMAIN,
+      JsFlavors.RAM_BUNDLE_DOMAIN);
+
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return JsFlavors.validateBundleFlavors(flavors);
+    return JsFlavors.validateFlavors(flavors, FLAVOR_DOMAINS);
   }
 
   @Override
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(
-        ImmutableSet.of(
-            JsFlavors.OPTIMIZATION_DOMAIN,
-            JsFlavors.PLATFORM_DOMAIN,
-            JsFlavors.RAM_BUNDLE_DOMAIN));
+    return Optional.of(FLAVOR_DOMAINS);
   }
 
   @Override
