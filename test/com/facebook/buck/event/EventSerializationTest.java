@@ -40,6 +40,7 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -53,7 +54,9 @@ import java.util.Random;
 public class EventSerializationTest {
 
   private static final ObjectMapper MAPPER =
-      new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL);
+      new ObjectMapper()
+          .registerModule(new Jdk8Module())
+          .setSerializationInclusion(JsonInclude.Include.NON_ABSENT);
 
   private long timestamp;
   private long nanoTime;
@@ -121,7 +124,7 @@ public class EventSerializationTest {
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = MAPPER.writeValueAsString(event);
     assertJsonEquals("{%s," +
-        "\"buildTargets\":[{\"cell\":{\"present\":false},\"baseName\":\"//base\"," +
+        "\"buildTargets\":[{\"baseName\":\"//base\"," +
         "\"shortName\":\"short\",\"flavor\":\"flv\"}],\"type\":\"ParseFinished\"," +
         "\"eventKey\":{\"value\":4242}}", message);
   }
@@ -181,9 +184,7 @@ public class EventSerializationTest {
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = MAPPER.writeValueAsString(event);
     assertJsonEquals(
-        "{%s,\"status\":\"SUCCESS\",\"cacheResult\":{\"type\":\"MISS\",\"cacheSource\":{" +
-            "\"present\":false},\"cacheError\":{\"present\":false}," +
-            "\"metadata\":{\"present\":false},\"artifactSizeBytes\":{\"present\":false}}," +
+        "{%s,\"status\":\"SUCCESS\",\"cacheResult\":{\"type\":\"MISS\"}," +
             "\"buildRule\":{\"type\":" +
             "\"fake_build_rule\",\"name\":\"//fake:rule\"}," +
             "\"type\":\"BuildRuleFinished\"," +
@@ -191,11 +192,7 @@ public class EventSerializationTest {
             "\"wallMillisDuration\":11,\"nanoDuration\":12,\"threadUserNanoDuration\":13}," +
             "\"ruleRunningAfterThisEvent\":false," +
             "\"eventKey\":{\"value\":1024186770}," +
-            "\"ruleKeys\":{\"ruleKey\":{\"hashCode\":\"aaaa\"}," +
-            "\"inputRuleKey\":{\"present\":false}," +
-            "\"depFileRuleKey\":{\"present\":false}," +
-            "\"manifestRuleKey\":{\"present\":false}}," +
-            "\"outputHash\":{\"present\":false}},",
+            "\"ruleKeys\":{\"ruleKey\":{\"hashCode\":\"aaaa\"}}}",
         message);
   }
 
@@ -225,7 +222,7 @@ public class EventSerializationTest {
         "\"failureCount\":1,\"contacts\":[],\"labels\":[]," +
         "\"dependenciesPassTheirTests\":true,\"sequenceNumber\":0,\"totalNumberOfTests\":0," +
         "\"buildTarget\":{\"shortName\":\"baz\",\"baseName\":\"//foo/bar\"," +
-        "\"cell\":{\"present\":false},\"flavor\":\"\"}," +
+        "\"flavor\":\"\"}," +
         "\"success\":false}],\"type\":\"RunComplete\", \"eventKey\":" +
         "{\"value\":-624576559}}",
         message);
@@ -254,7 +251,7 @@ public class EventSerializationTest {
         "\"failureCount\":1,\"contacts\":[],\"labels\":[]," +
         "\"dependenciesPassTheirTests\":true,\"sequenceNumber\":0,\"totalNumberOfTests\":0," +
         "\"buildTarget\":{\"shortName\":\"baz\",\"baseName\":\"//foo/bar\"," +
-        "\"cell\":{\"present\":false},\"flavor\":\"\"}," +
+        "\"flavor\":\"\"}," +
         "\"success\":false},\"type\":\"ResultsAvailable\"}", message);
   }
 
@@ -263,12 +260,12 @@ public class EventSerializationTest {
   public void testSimplePerfEvent() throws IOException {
     SimplePerfEvent.Started event = SimplePerfEvent.started(
         PerfEventId.of("PerfId"),
-        "value", Optional.of(BuildTargetFactory.newInstance("//:fake")));
+        "value", "Some value");
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = MAPPER.writeValueAsString(event);
     assertJsonEquals("{%s," +
             "\"eventKey\":{\"value\":4242},\"eventId\":\"PerfId\",\"eventType\":\"STARTED\"," +
-            "\"eventInfo\":{\"value\":{\"present\":true}},\"type\":\"PerfEventPerfIdStarted\"}",
+            "\"eventInfo\":{\"value\":\"Some value\"},\"type\":\"PerfEventPerfIdStarted\"}",
         message);
   }
 

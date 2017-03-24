@@ -21,6 +21,7 @@
       "//test/com/facebook/buck/timing:testutil",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/jackson:jackson-annotations",
       "//third-party/java/jackson:jackson-core",
       "//third-party/java/jackson:jackson-databind",
       "//third-party/java/jackson:jackson-datatype-guava",
