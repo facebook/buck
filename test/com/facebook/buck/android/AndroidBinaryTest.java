@@ -122,7 +122,7 @@ public class AndroidBinaryTest {
         pathResolver);
 
     BuildTarget aaptPackageTarget = binaryBuildTarget
-        .withFlavors(AndroidBinaryResourcesGraphEnhancer.AAPT_PACKAGE_FLAVOR);
+        .withFlavors(AndroidBinaryGraphEnhancer.AAPT_PACKAGE_FLAVOR);
     Path aaptProguardDir = BuildTargets.getGenPath(
         androidBinary.getProjectFilesystem(),
         aaptPackageTarget,
@@ -281,7 +281,7 @@ public class AndroidBinaryTest {
         BuildTargetFactory.newInstance("//first-party/orca/lib-base:lib-base");
     Path proguardConfigDir = BuildTargets.getGenPath(
         rule.getProjectFilesystem(),
-        target.withFlavors(AndroidBinaryResourcesGraphEnhancer.AAPT_PACKAGE_FLAVOR),
+        target.withFlavors(AndroidBinaryGraphEnhancer.AAPT_PACKAGE_FLAVOR),
         "__%s__proguard__/.proguard");
     Path proguardDir = AndroidBinary.getProguardOutputFromInputClasspath(
         proguardConfigDir,
@@ -426,11 +426,11 @@ public class AndroidBinaryTest {
         ImmutableList.of(
             BuildTargets.getScratchPath(
                 buildRule.getProjectFilesystem(),
-                target.withFlavors(AndroidBinaryResourcesGraphEnhancer.RESOURCES_FILTER_FLAVOR),
+                target.withFlavors(AndroidBinaryGraphEnhancer.RESOURCES_FILTER_FLAVOR),
                 "__filtered__%s__/0"),
             BuildTargets.getScratchPath(
                 buildRule.getProjectFilesystem(),
-                target.withFlavors(AndroidBinaryResourcesGraphEnhancer.RESOURCES_FILTER_FLAVOR),
+                target.withFlavors(AndroidBinaryGraphEnhancer.RESOURCES_FILTER_FLAVOR),
                 "__filtered__%s__/1")),
         filteredDirs.build());
   }
