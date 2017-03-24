@@ -73,7 +73,9 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
       "com/facebook/buck/jvm/java/FatJarMain.java";
 
   private final SourcePathRuleFinder ruleFinder;
+  @AddToRuleKey
   private final Javac javac;
+  @AddToRuleKey
   private final JavacOptions javacOptions;
   @AddToRuleKey
   private final SourcePath innerJar;
