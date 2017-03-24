@@ -82,8 +82,7 @@ class TrimUberRDotJava extends AbstractBuildRule {
     buildableContext.recordArtifact(output);
     return ImmutableList.of(
         new MakeCleanDirectoryStep(getProjectFilesystem(), output.getParent()),
-        new PerformTrimStep(
-            context.getSourcePathResolver().getAbsolutePath(getSourcePathToOutput())),
+        new PerformTrimStep(output),
         ZipScrubberStep.of(context.getSourcePathResolver().getAbsolutePath(getSourcePathToOutput()))
     );
   }
@@ -99,10 +98,10 @@ class TrimUberRDotJava extends AbstractBuildRule {
   }
 
   private class PerformTrimStep implements Step {
-    private final Path absolutePathToOutput;
+    private final Path pathToOutput;
 
-    public PerformTrimStep(Path absolutePathToOutput) {
-      this.absolutePathToOutput = absolutePathToOutput;
+    public PerformTrimStep(Path pathToOutput) {
+      this.pathToOutput = pathToOutput;
     }
 
     @Override
@@ -120,7 +119,7 @@ class TrimUberRDotJava extends AbstractBuildRule {
       final ProjectFilesystem projectFilesystem = getProjectFilesystem();
       final Path sourceDir = aaptPackageResources.getPathToGeneratedRDotJavaSrcFiles();
       try (final CustomZipOutputStream output =
-               ZipOutputStreams.newOutputStream(absolutePathToOutput)) {
+               ZipOutputStreams.newOutputStream(projectFilesystem.resolve(pathToOutput))) {
         if (!projectFilesystem.exists(sourceDir)) {
           // dx fails if its input contains no classes.  Rather than add empty input handling
           // to DxStep, the dex merger, and every other step of this chain, just generate a
@@ -184,7 +183,7 @@ class TrimUberRDotJava extends AbstractBuildRule {
       return String.format(
           "trim_uber_r_dot_java %s > %s",
           aaptPackageResources.getPathToGeneratedRDotJavaSrcFiles(),
-          getProjectFilesystem().relativize(absolutePathToOutput));
+          pathToOutput);
     }
   }
 
