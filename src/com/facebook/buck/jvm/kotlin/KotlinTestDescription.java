@@ -22,7 +22,6 @@ import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
@@ -94,14 +93,6 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
-    JavacOptions javacOptions =
-        JavacOptionsFactory.create(
-            templateJavacOptions,
-            params,
-            resolver,
-            args
-        );
-
     KotlincToJarStepFactory stepFactory = new KotlincToJarStepFactory(
         kotlinBuckConfig.getKotlinCompiler().get(),
         args.extraKotlincArguments);
@@ -114,8 +105,6 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
                     Iterables.concat(
                         params.getDeclaredDeps().get(),
                         resolver.getAllRules(args.providedDeps))))
-                .addAll(ruleFinder.filterBuildRuleInputs(
-                    javacOptions.getInputs(ruleFinder)))
                 .build()
             ),
             params.getExtraDeps())

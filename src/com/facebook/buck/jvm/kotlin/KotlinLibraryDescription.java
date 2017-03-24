@@ -21,8 +21,6 @@ import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaSourceJar;
-import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.MavenUberJar;
 import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.model.BuildTarget;
@@ -38,7 +36,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -55,14 +52,8 @@ public class KotlinLibraryDescription implements
       JavaLibrary.SRC_JAR,
       JavaLibrary.MAVEN_JAR);
 
-  @VisibleForTesting
-  private final JavacOptions defaultOptions;
-
-  public KotlinLibraryDescription(
-      KotlinBuckConfig kotlinBuckConfig,
-      JavacOptions templateOptions) {
+  public KotlinLibraryDescription(KotlinBuckConfig kotlinBuckConfig) {
     this.kotlinBuckConfig = kotlinBuckConfig;
-    this.defaultOptions = templateOptions;
   }
 
   @Override
@@ -128,23 +119,14 @@ public class KotlinLibraryDescription implements
       }
     }
 
-    JavacOptions javacOptions = JavacOptionsFactory.create(
-        defaultOptions,
-        params,
-        resolver,
-        args);
-
     ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps);
     BuildRuleParams javaLibraryParams =
         params.copyAppendingExtraDeps(
-            Iterables.concat(
-                BuildRules.getExportedRules(
-                    Iterables.concat(
-                        params.getDeclaredDeps().get(),
-                        exportedDeps,
-                        resolver.getAllRules(args.providedDeps))),
-                ruleFinder.filterBuildRuleInputs(
-                    javacOptions.getInputs(ruleFinder))));
+            BuildRules.getExportedRules(
+                Iterables.concat(
+                    params.getDeclaredDeps().get(),
+                    exportedDeps,
+                    resolver.getAllRules(args.providedDeps))));
     KotlincToJarStepFactory compileStepFactory = new KotlincToJarStepFactory(
         kotlinBuckConfig.getKotlinCompiler().get(),
         args.extraKotlincArguments);

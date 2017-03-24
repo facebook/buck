@@ -765,7 +765,7 @@ public class KnownBuildRuleTypes {
     builder.register(new JsBundleDescription());
     builder.register(new JsLibraryDescription());
     builder.register(new KeystoreDescription());
-    builder.register(new KotlinLibraryDescription(kotlinBuckConfig, defaultJavacOptions));
+    builder.register(new KotlinLibraryDescription(kotlinBuckConfig));
     builder.register(
         new KotlinTestDescription(
             kotlinBuckConfig,

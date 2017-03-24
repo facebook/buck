@@ -107,13 +107,10 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
 
     BuildRuleParams testsLibraryParams =
         params.copyAppendingExtraDeps(
-            Iterables.concat(
-                BuildRules.getExportedRules(
-                    Iterables.concat(
-                        params.getDeclaredDeps().get(),
-                        resolver.getAllRules(args.providedDeps))),
-                ruleFinder.filterBuildRuleInputs(
-                    defaultJavacOptions.getInputs(ruleFinder))))
+            BuildRules.getExportedRules(
+                Iterables.concat(
+                    params.getDeclaredDeps().get(),
+                    resolver.getAllRules(args.providedDeps))))
             .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
     JavaLibrary testsLibrary =
         resolver.addToIndex(
