@@ -60,6 +60,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.MapMaker;
+import com.google.common.hash.HashCode;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -117,10 +118,10 @@ public class DefaultRuleKeyFactoryTest {
 
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
-    RuleKeyBuilder<RuleKeyResult<RuleKey>> builder = factory.newBuilderForTesting(rule);
+    DefaultRuleKeyFactory.Builder<HashCode> builder = factory.newBuilderForTesting(rule);
 
     builder.setReflectively("field", "cake-walk");
-    RuleKey expected = builder.build().result;
+    RuleKey expected = builder.build(RuleKey::new);
 
     class DecoratedFields extends EmptyRule {
 
@@ -150,10 +151,10 @@ public class DefaultRuleKeyFactoryTest {
 
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
-    RuleKeyBuilder<RuleKeyResult<RuleKey>> builder = factory.newBuilderForTesting(rule);
+    DefaultRuleKeyFactory.Builder<HashCode> builder = factory.newBuilderForTesting(rule);
 
     builder.setReflectively("field", "sausages");
-    RuleKey expected = builder.build().result;
+    RuleKey expected = builder.build(RuleKey::new);
 
     class Stringifiable {
       @Override
@@ -193,16 +194,16 @@ public class DefaultRuleKeyFactoryTest {
     RuleKey subKey =
         new UncachedRuleKeyBuilder(ruleFinder, pathResolver, fileHashCache, factory)
             .setReflectively("cheese", "brie")
-            .build();
+            .build(RuleKey::new);
 
-    RuleKeyBuilder<RuleKeyResult<RuleKey>> builder = factory.newBuilderForTesting(rule);
+    DefaultRuleKeyFactory.Builder<HashCode> builder = factory.newBuilderForTesting(rule);
     try (RuleKeyScopedHasher.Scope keyScope = builder.getScopedHasher().keyScope("field")) {
       try (RuleKeyScopedHasher.Scope appendableScope =
                builder.getScopedHasher().wrapperScope(RuleKeyHasher.Wrapper.APPENDABLE)) {
         builder.getScopedHasher().getHasher().putRuleKey(subKey);
       }
     }
-    RuleKey expected = builder.build().result;
+    RuleKey expected = builder.build(RuleKey::new);
 
     class AppendingField extends EmptyRule {
 
@@ -250,17 +251,17 @@ public class DefaultRuleKeyFactoryTest {
     RuleKey appendableSubKey =
         new UncachedRuleKeyBuilder(ruleFinder, pathResolver, fileHashCache, factory)
             .setReflectively("cheese", "brie")
-            .build();
+            .build(RuleKey::new);
     RuleKey ruleSubKey = factory.build(appendableRule);
 
-    RuleKeyBuilder<RuleKeyResult<RuleKey>> builder = factory.newBuilderForTesting(rule);
+    DefaultRuleKeyFactory.Builder<HashCode> builder = factory.newBuilderForTesting(rule);
     try (RuleKeyScopedHasher.Scope keyScope = builder.getScopedHasher().keyScope("field")) {
       try (RuleKeyScopedHasher.Scope appendableScope =
                builder.getScopedHasher().wrapperScope(RuleKeyHasher.Wrapper.BUILD_RULE)) {
         builder.getScopedHasher().getHasher().putRuleKey(ruleSubKey);
       }
     }
-    RuleKey expected = builder.build().result;
+    RuleKey expected = builder.build(RuleKey::new);
 
     class RuleContainingAppendableRule extends EmptyRule {
       @AddToRuleKey
@@ -289,10 +290,10 @@ public class DefaultRuleKeyFactoryTest {
 
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
-    RuleKeyBuilder<RuleKeyResult<RuleKey>> builder = factory.newBuilderForTesting(rule);
+    DefaultRuleKeyFactory.Builder<HashCode> builder = factory.newBuilderForTesting(rule);
 
     builder.setReflectively("field", "cheddar");
-    RuleKey expected = builder.build().result;
+    RuleKey expected = builder.build(RuleKey::new);
 
     class AppendingField extends EmptyRule {
 
@@ -320,12 +321,12 @@ public class DefaultRuleKeyFactoryTest {
 
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
-    RuleKeyBuilder<RuleKeyResult<RuleKey>> builder = factory.newBuilderForTesting(rule);
+    DefaultRuleKeyFactory.Builder<HashCode> builder = factory.newBuilderForTesting(rule);
 
     builder.setReflectively("alpha", "stilton");
     builder.setReflectively("beta", 1);
     builder.setReflectively("gamma", "stinking bishop");
-    RuleKey expected = builder.build().result;
+    RuleKey expected = builder.build(RuleKey::new);
 
     class UnsortedFields extends EmptyRule {
 
@@ -357,11 +358,11 @@ public class DefaultRuleKeyFactoryTest {
 
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
-    RuleKeyBuilder<RuleKeyResult<RuleKey>> builder = factory.newBuilderForTesting(rule);
+    DefaultRuleKeyFactory.Builder<HashCode> builder = factory.newBuilderForTesting(rule);
 
     builder.setReflectively("exoticCheese", "bavarian smoked");
     builder.setReflectively("target", topLevelTarget);
-    RuleKey expected = builder.build().result;
+    RuleKey expected = builder.build(RuleKey::new);
 
     class Parent extends EmptyRule {
 
@@ -400,11 +401,11 @@ public class DefaultRuleKeyFactoryTest {
 
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
-    RuleKeyBuilder<RuleKeyResult<RuleKey>> builder = factory.newBuilderForTesting(rule);
+    DefaultRuleKeyFactory.Builder<HashCode> builder = factory.newBuilderForTesting(rule);
 
     builder.setReflectively("key", "child");
     builder.setReflectively("key", "parent");
-    RuleKey expected = builder.build().result;
+    RuleKey expected = builder.build(RuleKey::new);
 
     class Parent extends EmptyRule {
       @AddToRuleKey
@@ -609,10 +610,15 @@ public class DefaultRuleKeyFactoryTest {
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
 
-    RuleKey key1 = factory.newBuilderForTesting(rule).setReflectively("key1", val).build().result;
-    RuleKey key1again =
-        factory.newBuilderForTesting(rule).setReflectively("key1", val).build().result;
-    RuleKey key2 = factory.newBuilderForTesting(rule).setReflectively("key2", val).build().result;
+    RuleKey key1 = factory.newBuilderForTesting(rule)
+        .setReflectively("key1", val)
+        .build(RuleKey::new);
+    RuleKey key1again = factory.newBuilderForTesting(rule)
+        .setReflectively("key1", val)
+        .build(RuleKey::new);
+    RuleKey key2 = factory.newBuilderForTesting(rule)
+        .setReflectively("key2", val)
+        .build(RuleKey::new);
     assertEquals("Rule keys should be same! " + val, key1, key1again);
     assertNotEquals("Rule keys should be different! " + val, key1, key2);
   }
@@ -629,10 +635,15 @@ public class DefaultRuleKeyFactoryTest {
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
 
-    RuleKey key1 = factory.newBuilderForTesting(rule).setReflectively("key", val1).build().result;
-    RuleKey key1again =
-        factory.newBuilderForTesting(rule).setReflectively("key", val1).build().result;
-    RuleKey key2 = factory.newBuilderForTesting(rule).setReflectively("key", val2).build().result;
+    RuleKey key1 = factory.newBuilderForTesting(rule)
+        .setReflectively("key", val1)
+        .build(RuleKey::new);
+    RuleKey key1again = factory.newBuilderForTesting(rule)
+        .setReflectively("key", val1)
+        .build(RuleKey::new);
+    RuleKey key2 = factory.newBuilderForTesting(rule)
+        .setReflectively("key", val2)
+        .build(RuleKey::new);
     assertEquals("Rule keys should be same! " + val1, key1, key1again);
     assertNotEquals("Rule keys should be different! " + val1 + " != " + val2, key1, key2);
   }

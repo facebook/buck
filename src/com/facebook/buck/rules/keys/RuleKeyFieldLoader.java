@@ -19,6 +19,7 @@ package com.facebook.buck.rules.keys;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.LoadingCache;
@@ -36,7 +37,7 @@ public class RuleKeyFieldLoader {
     this.cache = CacheBuilder.newBuilder().build(new ReflectiveAlterKeyLoader());
   }
 
-  public void setFields(BuildRule buildRule, RuleKeyBuilder<?> builder) {
+  public void setFields(BuildRule buildRule, RuleKeyObjectSink builder) {
     // "." is not a valid first character for a field name, nor a valid character for rule attribute
     // name and so the following fields will never collide with other stuff.
     builder.setReflectively(".seed", seed);

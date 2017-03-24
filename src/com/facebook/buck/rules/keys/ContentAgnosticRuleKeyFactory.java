@@ -72,9 +72,15 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
   }
 
   private RuleKey calculateBuildRuleKey(BuildRule buildRule) {
-    RuleKeyBuilder<RuleKey> builder = newBuilder();
+    Builder<HashCode> builder = new Builder<>(RuleKeyBuilder.createDefaultHasher());
     ruleKeyFieldLoader.setFields(buildRule, builder);
-    return builder.build();
+    return builder.build(RuleKey::new);
+  }
+
+  private RuleKey calculateAppendableKey(RuleKeyAppendable appendable) {
+    Builder<HashCode> subKeyBuilder = new Builder<>(RuleKeyBuilder.createDefaultHasher());
+    appendable.appendToRuleKey(subKeyBuilder);
+    return subKeyBuilder.build(RuleKey::new);
   }
 
   @Override
@@ -82,45 +88,39 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     return ruleKeyCache.get(buildRule, this::calculateBuildRuleKey);
   }
 
-  private RuleKeyBuilder<RuleKey> newBuilder() {
-    return new RuleKeyBuilder<RuleKey>(ruleFinder, pathResolver, fileHashLoader) {
+  private RuleKey buildAppendableKey(RuleKeyAppendable appendable) {
+    return ruleKeyCache.get(appendable, this::calculateAppendableKey);
+  }
 
-      private RuleKey calculateRuleKeyAppendableKey(RuleKeyAppendable appendable) {
-        RuleKeyBuilder<RuleKey> subKeyBuilder = newBuilder();
-        appendable.appendToRuleKey(subKeyBuilder);
-        return subKeyBuilder.build();
+  public class Builder<RULE_KEY> extends RuleKeyBuilder<RULE_KEY> {
+
+    public Builder(RuleKeyHasher<RULE_KEY> hasher) {
+      super(ruleFinder, pathResolver, fileHashLoader, hasher);
+    }
+
+    @Override
+    protected RuleKeyBuilder<RULE_KEY> setBuildRule(BuildRule rule) {
+      return setBuildRuleKey(ContentAgnosticRuleKeyFactory.this.build(rule));
+    }
+
+    @Override
+    protected RuleKeyBuilder<RULE_KEY> setAppendableRuleKey(RuleKeyAppendable appendable) {
+      return setAppendableRuleKey(
+          ContentAgnosticRuleKeyFactory.this.buildAppendableKey(appendable));
+    }
+
+    @Override
+    protected RuleKeyBuilder<RULE_KEY> setSourcePath(SourcePath sourcePath) throws IOException {
+      if (sourcePath instanceof BuildTargetSourcePath) {
+        return setSourcePathAsRule((BuildTargetSourcePath<?>) sourcePath);
+      } else {
+        return setSourcePathDirectly(sourcePath);
       }
+    }
 
-      @Override
-      protected RuleKeyBuilder<RuleKey> setBuildRule(BuildRule rule) {
-        return setBuildRuleKey(ContentAgnosticRuleKeyFactory.this.build(rule));
-      }
-
-      @Override
-      protected RuleKeyBuilder<RuleKey> setAppendableRuleKey(RuleKeyAppendable appendable) {
-        return setAppendableRuleKey(
-            ruleKeyCache.get(appendable, this::calculateRuleKeyAppendableKey));
-      }
-
-      @Override
-      protected RuleKeyBuilder<RuleKey> setSourcePath(SourcePath sourcePath) throws IOException {
-        if (sourcePath instanceof BuildTargetSourcePath) {
-          return setSourcePathAsRule((BuildTargetSourcePath<?>) sourcePath);
-        } else {
-          return setSourcePathDirectly(sourcePath);
-        }
-      }
-
-      @Override
-      protected RuleKeyBuilder<RuleKey> setNonHashingSourcePath(SourcePath sourcePath) {
-        return setNonHashingSourcePathDirectly(sourcePath);
-      }
-
-      @Override
-      public RuleKey build() {
-        return buildRuleKey();
-      }
-
-    };
+    @Override
+    protected RuleKeyBuilder<RULE_KEY> setNonHashingSourcePath(SourcePath sourcePath) {
+      return setNonHashingSourcePathDirectly(sourcePath);
+    }
   }
 }

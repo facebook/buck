@@ -1513,8 +1513,7 @@ public class CachingBuildEngineTest {
                   defaultRuleKeyFactory,
                   new FakeInputBasedRuleKeyFactory(
                       ImmutableMap.of(),
-                      ImmutableSet.of(rule.getBuildTarget()),
-                      fileHashCache),
+                      ImmutableSet.of(rule.getBuildTarget())),
                   NOOP_DEP_FILE_RULE_KEY_FACTORY))
           .build();
 
@@ -1719,8 +1718,7 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine = engineWithDepFileFactory(
           new FakeRuleKeyFactory(
-              ImmutableMap.of(rule.getBuildTarget(), depFileRuleKey),
-              fileHashCache));
+              ImmutableMap.of(rule.getBuildTarget(), depFileRuleKey)));
 
       // Prepopulate the dep file rule key and dep file.
       BuildInfoRecorder recorder = createBuildInfoRecorder(rule.getBuildTarget());

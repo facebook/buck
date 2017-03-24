@@ -35,6 +35,7 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.HashCode;
 
 import org.junit.Test;
 
@@ -52,10 +53,10 @@ public class HeaderVerificationTest {
                 DefaultFileHashCache.createDefaultFileHashCache(new FakeProjectFilesystem())));
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, fileHashCache, resolver, ruleFinder);
-    RuleKeyBuilder<RuleKey> builder =
+    RuleKeyBuilder<HashCode> builder =
         new UncachedRuleKeyBuilder(ruleFinder, resolver, fileHashCache, factory);
     builder.setReflectively("headerVerification", headerVerification);
-    return builder.build();
+    return builder.build(RuleKey::new);
   }
 
   @Test

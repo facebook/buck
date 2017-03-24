@@ -16,25 +16,24 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.keys.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
-import com.facebook.buck.rules.keys.RuleKeyResult;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.hash.HashCode;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -109,16 +108,16 @@ public class PreprocessorFlagsTest {
           ));
       BuildRule fakeBuildRule = new FakeBuildRule(target, pathResolver);
 
-      RuleKeyBuilder<RuleKeyResult<RuleKey>> builder;
+      DefaultRuleKeyFactory.Builder<HashCode> builder;
       builder = new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
           .newBuilderForTesting(fakeBuildRule);
       defaultFlags.appendToRuleKey(builder, CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
-      RuleKey defaultRuleKey = builder.build().result;
+      RuleKey defaultRuleKey = builder.build(RuleKey::new);
 
       builder = new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
           .newBuilderForTesting(fakeBuildRule);
       alteredFlags.appendToRuleKey(builder, CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
-      RuleKey alteredRuleKey = builder.build().result;
+      RuleKey alteredRuleKey = builder.build(RuleKey::new);
 
       if (shouldDiffer) {
         Assert.assertNotEquals(defaultRuleKey, alteredRuleKey);
@@ -154,12 +153,12 @@ public class PreprocessorFlagsTest {
               .addRuleFlags("-I" + prefix + "/bar")
               .build();
 
-          RuleKeyBuilder<RuleKeyResult<RuleKey>> builder =
+          DefaultRuleKeyFactory.Builder<HashCode> builder =
               new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
                   .newBuilderForTesting(fakeBuildRule);
           PreprocessorFlags.builder().setOtherFlags(flags).build()
               .appendToRuleKey(builder, sanitizer);
-          return builder.build().result;
+          return builder.build(RuleKey::new);
         }
       }
 

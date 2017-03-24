@@ -156,7 +156,7 @@ public class CommandToolTest {
         hashCache,
         ruleKeyFactory)
         .setReflectively("key",  tool)
-        .build();
+        .build(RuleKey::new);
 
     hashCache = FakeFileHashCache.createFromStrings(
         ImmutableMap.of(
@@ -169,7 +169,7 @@ public class CommandToolTest {
         hashCache,
         ruleKeyFactory)
         .setReflectively("key",  tool)
-        .build();
+        .build(RuleKey::new);
 
     assertThat(ruleKey, Matchers.not(Matchers.equalTo(changedRuleKey)));
   }

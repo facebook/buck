@@ -55,7 +55,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
-import com.google.common.hash.Hashing;
 
 import org.junit.Test;
 
@@ -176,7 +175,7 @@ public class RuleKeyBuilderTest {
 
     List<RuleKey> ruleKeys = new ArrayList<>();
     List<String> desc = new ArrayList<>();
-    ruleKeys.add(newBuilder().build());
+    ruleKeys.add(newBuilder().build(RuleKey::new));
     desc.add("<empty>");
     for (String key : fieldKeys) {
       for (Object val : fieldValues) {
@@ -198,7 +197,7 @@ public class RuleKeyBuilderTest {
 
   @Test
   public void testNoOp() {
-    RuleKey noop = newBuilder().build();
+    RuleKey noop = newBuilder().build(RuleKey::new);
     assertEquals(noop, calcRuleKey("key", ImmutableList.of()));
     assertEquals(noop, calcRuleKey("key", ImmutableList.of().iterator()));
     assertEquals(noop, calcRuleKey("key", ImmutableMap.of()));
@@ -212,10 +211,10 @@ public class RuleKeyBuilderTest {
   }
 
   private RuleKey calcRuleKey(String key, @Nullable Object val) {
-    return newBuilder().setReflectively(key, val).build();
+    return newBuilder().setReflectively(key, val).build(RuleKey::new);
   }
 
-  private RuleKeyBuilder<RuleKey> newBuilder() {
+  private RuleKeyBuilder<HashCode> newBuilder() {
     Map<BuildTarget, BuildRule> ruleMap = ImmutableMap.of(TARGET_1, RULE_1, TARGET_2, RULE_2);
     Map<BuildRule, RuleKey> ruleKeyMap = ImmutableMap.of(RULE_1, RULE_KEY_1, RULE_2, RULE_KEY_2);
     Map<RuleKeyAppendable, RuleKey> appendableKeys =
@@ -233,24 +232,31 @@ public class RuleKeyBuilderTest {
             pathResolver.getAbsoluteArchiveMemberPath(ARCHIVE_PATH_2), HashCode.fromInt(42)
         ),
         ImmutableMap.of());
-    RuleKeyHasher<HashCode> hasher = new GuavaRuleKeyHasher(Hashing.sha1().newHasher());
-    return new RuleKeyBuilder<RuleKey>(ruleFinder, pathResolver, hashCache, hasher) {
+
+    return new RuleKeyBuilder<HashCode>(
+        ruleFinder,
+        pathResolver,
+        hashCache,
+        RuleKeyBuilder.createDefaultHasher()) {
+
       @Override
-      protected RuleKeyBuilder<RuleKey> setBuildRule(BuildRule rule) {
+      protected RuleKeyBuilder<HashCode> setBuildRule(BuildRule rule) {
         if (rule == IGNORED_RULE) {
           return this;
         }
         return setBuildRuleKey(ruleKeyMap.get(rule));
       }
+
       @Override
-      public RuleKeyBuilder<RuleKey> setAppendableRuleKey(RuleKeyAppendable appendable) {
+      public RuleKeyBuilder<HashCode> setAppendableRuleKey(RuleKeyAppendable appendable) {
         if (appendable == IGNORED_APPENDABLE) {
           return this;
         }
         return setAppendableRuleKey(appendableKeys.get(appendable));
       }
+
       @Override
-      protected RuleKeyBuilder<RuleKey> setSourcePath(SourcePath sourcePath) throws IOException {
+      protected RuleKeyBuilder<HashCode> setSourcePath(SourcePath sourcePath) throws IOException {
         if (sourcePath instanceof BuildTargetSourcePath) {
           return setSourcePathAsRule((BuildTargetSourcePath<?>) sourcePath);
         } else {
@@ -259,13 +265,8 @@ public class RuleKeyBuilderTest {
       }
 
       @Override
-      protected RuleKeyBuilder<RuleKey> setNonHashingSourcePath(SourcePath sourcePath) {
+      protected RuleKeyBuilder<HashCode> setNonHashingSourcePath(SourcePath sourcePath) {
         return setNonHashingSourcePathDirectly(sourcePath);
-      }
-
-      @Override
-      public RuleKey build() {
-        return buildRuleKey();
       }
     };
   }

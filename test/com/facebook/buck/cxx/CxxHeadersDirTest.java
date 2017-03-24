@@ -56,7 +56,7 @@ public class CxxHeadersDirTest {
     UncachedRuleKeyBuilder builder =
         new UncachedRuleKeyBuilder(ruleFinder, pathResolver, fileHashCache, factory);
     cxxHeaders.appendToRuleKey(builder);
-    return builder.build();
+    return builder.build(RuleKey::new);
   }
 
   @Test

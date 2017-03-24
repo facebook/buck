@@ -57,6 +57,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
@@ -66,7 +67,7 @@ import javax.annotation.Nullable;
  *
  * {@link RuleKeyFactory} classes create concrete instances of this class and use them to produce
  * rule keys. Concrete implementations may tweak behavior of the builder, and at the very minimum
- * should implement {@link #build()}, {@link #setAppendableRuleKey(RuleKeyAppendable)}, and
+ * should implement {@link #setAppendableRuleKey(RuleKeyAppendable)}, and
  * {@link #setBuildRule(BuildRule)}.
  *
  * This class implements {@link RuleKeyObjectSink} interface which is the primary mechanism of how
@@ -83,7 +84,7 @@ import javax.annotation.Nullable;
  * concrete rule key builders that ignore some elements, or handle them differently. For example,
  * several concrete builders handle {@link SourcePath} elements in a special way.
  *
- * @param <RULE_KEY> - the actual type that the concrete builder produces (e.g. {@code RuleKey}).
+ * @param <RULE_KEY> - the actual type that the builder produces (e.g. {@code HashCode}).
  */
 public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
 
@@ -92,15 +93,14 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   private final SourcePathRuleFinder ruleFinder;
   private final SourcePathResolver resolver;
   private final FileHashLoader hashLoader;
-  private final CountingRuleKeyHasher<HashCode> hasher;
-  private final RuleKeyScopedHasher<HashCode> scopedHasher;
+  private final CountingRuleKeyHasher<RULE_KEY> hasher;
+  private final RuleKeyScopedHasher<RULE_KEY> scopedHasher;
 
-  @VisibleForTesting
-  protected RuleKeyBuilder(
+  public RuleKeyBuilder(
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver resolver,
       FileHashLoader hashLoader,
-      RuleKeyHasher<HashCode> hasher) {
+      RuleKeyHasher<RULE_KEY> hasher) {
     this.ruleFinder = ruleFinder;
     this.resolver = resolver;
     this.hashLoader = hashLoader;
@@ -109,18 +109,11 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   }
 
   @VisibleForTesting
-  RuleKeyScopedHasher<HashCode> getScopedHasher() {
+  RuleKeyScopedHasher<RULE_KEY> getScopedHasher() {
     return this.scopedHasher;
   }
 
-  public RuleKeyBuilder(
-      SourcePathRuleFinder ruleFinder,
-      SourcePathResolver resolver,
-      FileHashLoader hashLoader) {
-    this(ruleFinder, resolver, hashLoader, createHasher());
-  }
-
-  private static RuleKeyHasher<HashCode> createHasher() {
+  public static RuleKeyHasher<HashCode> createDefaultHasher() {
     RuleKeyHasher<HashCode> hasher = new GuavaRuleKeyHasher(Hashing.sha1().newHasher());
     if (logger.isVerboseEnabled()) {
       hasher = new ForwardingRuleKeyHasher<HashCode, String>(hasher, new StringRuleKeyHasher()) {
@@ -431,11 +424,14 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     return this;
   }
 
-  /** A convenience method for implementations that build {@link RuleKey}. */
-  protected final RuleKey buildRuleKey() {
-    return new RuleKey(hasher.hash());
+  /** Builds the rule key hash. */
+  public final RULE_KEY build() {
+    return hasher.hash();
   }
 
-  public abstract RULE_KEY build();
+  /** A convenience method that builds the rule key hash and transforms it with a mapper. */
+  public final <RESULT> RESULT build(Function<RULE_KEY, RESULT> mapper) {
+    return mapper.apply(build());
+  }
 
 }

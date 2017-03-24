@@ -24,13 +24,13 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.google.common.base.Supplier;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
 import java.io.IOException;
+import java.util.function.Supplier;
 
-public class UncachedRuleKeyBuilder extends RuleKeyBuilder<RuleKey> {
+public class UncachedRuleKeyBuilder extends RuleKeyBuilder<HashCode> {
 
   private final RuleKeyFactory<RuleKey> ruleKeyFactory;
   private final Supplier<UncachedRuleKeyBuilder> subKeySupplier;
@@ -78,15 +78,15 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder<RuleKey> {
 
   @Override
   protected UncachedRuleKeyBuilder setAppendableRuleKey(RuleKeyAppendable appendable) {
-    RuleKeyBuilder<RuleKey> subKeyBuilder = subKeySupplier.get();
+    RuleKeyBuilder<HashCode> subKeyBuilder = subKeySupplier.get();
     appendable.appendToRuleKey(subKeyBuilder);
-    RuleKey subKey = subKeyBuilder.build();
+    RuleKey subKey = subKeyBuilder.build(RuleKey::new);
     setAppendableRuleKey(subKey);
     return this;
   }
 
   @Override
-  protected RuleKeyBuilder<RuleKey> setSourcePath(SourcePath sourcePath) throws IOException {
+  protected RuleKeyBuilder<HashCode> setSourcePath(SourcePath sourcePath) throws IOException {
     if (sourcePath instanceof ExplicitBuildTargetSourcePath) {
       return setSourcePathAsRule((ExplicitBuildTargetSourcePath) sourcePath);
     } else {
@@ -95,13 +95,8 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder<RuleKey> {
   }
 
   @Override
-  protected RuleKeyBuilder<RuleKey> setNonHashingSourcePath(SourcePath sourcePath) {
+  protected RuleKeyBuilder<HashCode> setNonHashingSourcePath(SourcePath sourcePath) {
     return setNonHashingSourcePathDirectly(sourcePath);
-  }
-
-  @Override
-  public RuleKey build() {
-    return buildRuleKey();
   }
 
 }
