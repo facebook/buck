@@ -89,8 +89,6 @@ import java.util.stream.Stream;
  * themselves.  Future work could identify cases where the original build rules are sufficient.
  */
 class NativeLibraryMergeEnhancer {
-  private static SourcePathRuleFinder ruleFinder;
-
   private NativeLibraryMergeEnhancer() {
   }
 
@@ -107,7 +105,6 @@ class NativeLibraryMergeEnhancer {
       ImmutableMultimap<APKModule, NativeLinkable> linkables,
       ImmutableMultimap<APKModule, NativeLinkable> linkablesAssets)
       throws NoSuchBuildTargetException {
-    NativeLibraryMergeEnhancer.ruleFinder = ruleFinder;
 
     NativeLibraryMergeEnhancementResult.Builder builder =
         NativeLibraryMergeEnhancementResult.builder();
@@ -163,6 +160,7 @@ class NativeLibraryMergeEnhancer {
           cxxBuckConfig,
           ruleResolver,
           pathResolver,
+          ruleFinder,
           buildRuleParams,
           glueLinkable,
           orderedConstituents);
@@ -347,6 +345,7 @@ class NativeLibraryMergeEnhancer {
       CxxBuckConfig cxxBuckConfig,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       BuildRuleParams buildRuleParams,
       Optional<NativeLinkable> glueLinkable,
       Iterable<MergedNativeLibraryConstituents> orderedConstituents) {
@@ -369,6 +368,7 @@ class NativeLibraryMergeEnhancer {
           cxxBuckConfig,
           ruleResolver,
           pathResolver,
+          ruleFinder,
           buildRuleParams,
           constituents,
           orderedDeps,
@@ -469,6 +469,7 @@ class NativeLibraryMergeEnhancer {
     private final CxxBuckConfig cxxBuckConfig;
     private final BuildRuleResolver ruleResolver;
     private final SourcePathResolver pathResolver;
+    private final SourcePathRuleFinder ruleFinder;
     private final BuildRuleParams baseBuildRuleParams;
     private final MergedNativeLibraryConstituents constituents;
     private final Optional<NativeLinkable> glueLinkable;
@@ -481,6 +482,7 @@ class NativeLibraryMergeEnhancer {
         CxxBuckConfig cxxBuckConfig,
         BuildRuleResolver ruleResolver,
         SourcePathResolver pathResolver,
+        SourcePathRuleFinder ruleFinder,
         BuildRuleParams baseBuildRuleParams,
         MergedNativeLibraryConstituents constituents,
         List<MergedLibNativeLinkable> orderedDeps,
@@ -489,6 +491,7 @@ class NativeLibraryMergeEnhancer {
       this.cxxBuckConfig = cxxBuckConfig;
       this.ruleResolver = ruleResolver;
       this.pathResolver = pathResolver;
+      this.ruleFinder = ruleFinder;
       this.baseBuildRuleParams = baseBuildRuleParams;
       this.constituents = constituents;
       this.glueLinkable = glueLinkable;
