@@ -67,7 +67,7 @@ public class WriteStringTemplateRule extends AbstractBuildRule {
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.add(new MkdirStep(getProjectFilesystem(), output.getParent()));
+    steps.add(MkdirStep.of(getProjectFilesystem(), output.getParent()));
     steps.add(
         new StringTemplateStep(
             context.getSourcePathResolver().getAbsolutePath(template),

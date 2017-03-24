@@ -219,7 +219,7 @@ public class GnuLinker implements Linker {
       final Path linkerScript = getLinkerScript();
       buildableContext.recordArtifact(linkerScript);
       return ImmutableList.of(
-          new MkdirStep(getProjectFilesystem(), linkerScript.getParent()),
+          MkdirStep.of(getProjectFilesystem(), linkerScript.getParent()),
           new WriteFileStep(
               getProjectFilesystem(),
               () -> {

@@ -113,8 +113,8 @@ public class CxxInferCapture
 
     Path inputRelativePath = context.getSourcePathResolver().getRelativePath(input);
     return ImmutableList.<Step>builder()
-        .add(new MkdirStep(getProjectFilesystem(), resultsDir))
-        .add(new MkdirStep(getProjectFilesystem(), output.getParent()))
+        .add(MkdirStep.of(getProjectFilesystem(), resultsDir))
+        .add(MkdirStep.of(getProjectFilesystem(), output.getParent()))
         .add(new WriteArgFileStep(inputRelativePath))
         .add(
             new DefaultShellStep(

@@ -72,7 +72,7 @@ public class BuiltinApplePackage extends AbstractBuildRule {
     commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), temp));
 
     Path payloadDir = temp.resolve("Payload");
-    commands.add(new MkdirStep(getProjectFilesystem(), payloadDir));
+    commands.add(MkdirStep.of(getProjectFilesystem(), payloadDir));
 
     // Recursively copy the .app directory into the Payload folder
     Path bundleOutputPath = context.getSourcePathResolver().getRelativePath(
@@ -89,7 +89,7 @@ public class BuiltinApplePackage extends AbstractBuildRule {
     appendAdditionalSwiftSteps(context.getSourcePathResolver(), commands);
 
     // do the zipping
-    commands.add(new MkdirStep(getProjectFilesystem(), pathToOutputFile.getParent()));
+    commands.add(MkdirStep.of(getProjectFilesystem(), pathToOutputFile.getParent()));
     commands.add(
         new ZipStep(
             getProjectFilesystem(),
@@ -141,9 +141,9 @@ public class BuiltinApplePackage extends AbstractBuildRule {
         if (appleBundle.getBinary().isPresent()) {
           BuildRule binary = appleBundle.getBinary().get();
           if (binary instanceof WriteFile && appleBundle.getPlatformName().startsWith("watch")) {
-            commands.add(new MkdirStep(getProjectFilesystem(), temp.resolve("Symbols")));
+            commands.add(MkdirStep.of(getProjectFilesystem(), temp.resolve("Symbols")));
             Path watchKitSupportDir = temp.resolve("WatchKitSupport2");
-            commands.add(new MkdirStep(getProjectFilesystem(), watchKitSupportDir));
+            commands.add(MkdirStep.of(getProjectFilesystem(), watchKitSupportDir));
             commands.add(new WriteFileStep(
                 getProjectFilesystem(),
                 ByteSource.wrap(((WriteFile) binary).getFileContents()),
@@ -154,7 +154,7 @@ public class BuiltinApplePackage extends AbstractBuildRule {
             Optional<WriteFile> legacyWatchStub = getLegacyWatchStubFromDeps(appleBundle);
             if (legacyWatchStub.isPresent()) {
               Path watchKitSupportDir = temp.resolve("WatchKitSupport");
-              commands.add(new MkdirStep(getProjectFilesystem(), watchKitSupportDir));
+              commands.add(MkdirStep.of(getProjectFilesystem(), watchKitSupportDir));
               commands.add(new WriteFileStep(
                   getProjectFilesystem(),
                   ByteSource.wrap(legacyWatchStub.get().getFileContents()),

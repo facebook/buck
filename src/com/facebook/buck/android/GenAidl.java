@@ -129,7 +129,7 @@ public class GenAidl extends AbstractBuildRule {
               target.getBasePath()));
     }
 
-    commands.add(new MkdirStep(getProjectFilesystem(), genDirectory));
+    commands.add(MkdirStep.of(getProjectFilesystem(), genDirectory));
 
     commands.add(
         new JarDirectoryStep(

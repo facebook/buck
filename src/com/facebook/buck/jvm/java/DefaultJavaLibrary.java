@@ -508,7 +508,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       // This adds the javac command, along with any supporting commands.
       Path pathToSrcsList =
           BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__srcs");
-      steps.add(new MkdirStep(getProjectFilesystem(), pathToSrcsList.getParent()));
+      steps.add(MkdirStep.of(getProjectFilesystem(), pathToSrcsList.getParent()));
 
       Path scratchDir =
           BuildTargets.getGenPath(getProjectFilesystem(), target, "lib__%s____working_directory");

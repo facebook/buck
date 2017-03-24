@@ -127,7 +127,7 @@ public class SrcZipAwareFileBundler {
       }
 
       if (destination.getParent() != null) {
-        steps.add(new MkdirStep(filesystem, destination.getParent()));
+        steps.add(MkdirStep.of(filesystem, destination.getParent()));
       }
       steps.add(CopyStep.forFile(filesystem, absolutePath, destination));
     }

@@ -64,7 +64,7 @@ public class StripLinkable extends AbstractBuildRule {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    steps.add(new MkdirStep(getProjectFilesystem(), resultDir));
+    steps.add(MkdirStep.of(getProjectFilesystem(), resultDir));
     Path output = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
     steps.add(
         new StripStep(

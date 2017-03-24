@@ -206,7 +206,7 @@ class SwiftCompile extends AbstractBuildRule {
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(outputPath);
     return ImmutableList.of(
-        new MkdirStep(getProjectFilesystem(), outputPath),
+        MkdirStep.of(getProjectFilesystem(), outputPath),
         makeCompileStep(context.getSourcePathResolver()));
   }
 

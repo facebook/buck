@@ -107,7 +107,7 @@ public class CxxLink
     }
 
     return ImmutableList.of(
-        new MkdirStep(getProjectFilesystem(), output.getParent()),
+        MkdirStep.of(getProjectFilesystem(), output.getParent()),
         new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir),
         RmStep.of(getProjectFilesystem(), argFilePath),
         RmStep.of(getProjectFilesystem(), fileListPath),

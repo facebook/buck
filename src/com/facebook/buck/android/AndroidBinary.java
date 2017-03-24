@@ -460,7 +460,7 @@ public class AndroidBinary
     // The `HasInstallableApk` interface needs access to the manifest, so make sure we create our
     // own copy of this so that we don't have a runtime dep on the `AaptPackageResources` step.
     Path manifestPath = context.getSourcePathResolver().getRelativePath(getManifestPath());
-    steps.add(new MkdirStep(getProjectFilesystem(), manifestPath.getParent()));
+    steps.add(MkdirStep.of(getProjectFilesystem(), manifestPath.getParent()));
     steps.add(
         CopyStep.forFile(
             getProjectFilesystem(),
@@ -896,7 +896,7 @@ public class AndroidBinary
     ImmutableSet.Builder<Path> secondaryDexDirectoriesBuilder = ImmutableSet.builder();
     Optional<PreDexMerge> preDexMerge = enhancementResult.getPreDexMerge();
     if (!preDexMerge.isPresent()) {
-      steps.add(new MkdirStep(getProjectFilesystem(), primaryDexPath.getParent()));
+      steps.add(MkdirStep.of(getProjectFilesystem(), primaryDexPath.getParent()));
 
       addDexingSteps(
           classpathEntriesToDex,
@@ -1182,7 +1182,7 @@ public class AndroidBinary
                 intraDexReorderSecondaryDexDir));
       } else {
         secondaryDexDir = Optional.of(secondaryDexParentDir.resolve(SECONDARY_DEX_SUBDIR));
-        steps.add(new MkdirStep(getProjectFilesystem(), secondaryDexDir.get()));
+        steps.add(MkdirStep.of(getProjectFilesystem(), secondaryDexDir.get()));
       }
 
       if (additionalDexStoreToJarPathMap.isEmpty()) {
@@ -1232,7 +1232,7 @@ public class AndroidBinary
     // Stores checksum information from each invocation to intelligently decide when dx needs
     // to be re-run.
     Path successDir = getBinPath("__%s_smart_dex__/.success");
-    steps.add(new MkdirStep(getProjectFilesystem(), successDir));
+    steps.add(MkdirStep.of(getProjectFilesystem(), successDir));
 
     // Add the smart dexing tool that is capable of avoiding the external dx invocation(s) if
     // it can be shown that the inputs have not changed.  It also parallelizes dx invocations

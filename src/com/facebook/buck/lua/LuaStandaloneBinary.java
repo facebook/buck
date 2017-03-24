@@ -98,7 +98,7 @@ public class LuaStandaloneBinary extends AbstractBuildRule {
     buildableContext.recordArtifact(output);
 
     // Make sure the parent directory exists.
-    steps.add(new MkdirStep(getProjectFilesystem(), output.getParent()));
+    steps.add(MkdirStep.of(getProjectFilesystem(), output.getParent()));
 
     // Delete any other pex that was there (when switching between pex styles).
     steps.add(RmStep.of(getProjectFilesystem(), output).withRecursive(true));

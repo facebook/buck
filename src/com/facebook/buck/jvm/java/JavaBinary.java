@@ -114,7 +114,7 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule, Ha
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     Path outputDirectory = getOutputDirectory();
-    Step mkdir = new MkdirStep(getProjectFilesystem(), outputDirectory);
+    Step mkdir = MkdirStep.of(getProjectFilesystem(), outputDirectory);
     commands.add(mkdir);
 
     ImmutableSortedSet<Path> includePaths;

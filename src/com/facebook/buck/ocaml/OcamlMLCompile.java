@@ -48,7 +48,7 @@ public class OcamlMLCompile extends AbstractBuildRule {
       buildableContext.recordArtifact(artifact);
     }
     return ImmutableList.of(
-      new MkdirStep(getProjectFilesystem(), args.output.getParent()),
+      MkdirStep.of(getProjectFilesystem(), args.output.getParent()),
       new OcamlMLCompileStep(
           getProjectFilesystem().getRootPath(), context.getSourcePathResolver(), args)
     );

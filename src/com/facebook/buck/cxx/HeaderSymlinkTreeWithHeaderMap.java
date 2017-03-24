@@ -129,7 +129,7 @@ public final class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
     if (shouldCreateModule) {
       Optional<String> umbrellaHeader = getUmbrellaHeader(getBuildTarget().getShortName());
       String moduleName = normalizeModuleName(getBuildTarget().getShortName());
-      builder.add(new MkdirStep(getProjectFilesystem(), getRoot().resolve(moduleName)));
+      builder.add(MkdirStep.of(getProjectFilesystem(), getRoot().resolve(moduleName)));
       builder.add(createCreateModuleStep(moduleName, umbrellaHeader));
     }
     return builder.build();

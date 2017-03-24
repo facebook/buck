@@ -123,7 +123,7 @@ public class PrebuiltAppleFramework
     // This file is copied rather than symlinked so that when it is included in an archive zip and
     // unpacked on another machine, it is an ordinary file in both scenarios.
     ImmutableList.Builder<Step> builder = ImmutableList.builder();
-    builder.add(new MkdirStep(getProjectFilesystem(), out.getParent()));
+    builder.add(MkdirStep.of(getProjectFilesystem(), out.getParent()));
     builder.add(RmStep.of(getProjectFilesystem(), out).withRecursive(true));
     builder.add(
         CopyStep.forDirectory(

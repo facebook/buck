@@ -209,7 +209,7 @@ public class DummyRDotJava extends AbstractBuildRule
 
     Path pathToSrcsList =
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__srcs");
-    steps.add(new MkdirStep(getProjectFilesystem(), pathToSrcsList.getParent()));
+    steps.add(MkdirStep.of(getProjectFilesystem(), pathToSrcsList.getParent()));
 
     // Compile the .java files.
     final JavacStep javacStep =

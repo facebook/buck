@@ -105,7 +105,7 @@ public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
     }
     environment.putAll(linker.getEnvironment(context.getSourcePathResolver()));
     return ImmutableList.of(
-        new MkdirStep(getProjectFilesystem(), output.getParent()),
+        MkdirStep.of(getProjectFilesystem(), output.getParent()),
         new GoLinkStep(
             getProjectFilesystem().getRootPath(),
             environment.build(),

@@ -67,7 +67,7 @@ public class JsonConcatenate extends AbstractBuildRule {
     buildableContext.recordArtifact(output);
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return ImmutableList.<Step>builder()
-        .add(new MkdirStep(projectFilesystem, outputDirectory))
+        .add(MkdirStep.of(projectFilesystem, outputDirectory))
         .add(
             new JsonConcatenateStep(
                 projectFilesystem,

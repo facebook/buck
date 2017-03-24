@@ -105,7 +105,7 @@ public class OcamlLink extends AbstractBuildRule {
     }
 
     ImmutableList.Builder<Step> steps = ImmutableList.<Step>builder()
-        .add(new MkdirStep(getProjectFilesystem(), outputRelativePath.getParent()))
+        .add(MkdirStep.of(getProjectFilesystem(), outputRelativePath.getParent()))
         .add(OcamlLinkStep.create(
             getProjectFilesystem().getRootPath(),
             cxxCompilerEnvironment,

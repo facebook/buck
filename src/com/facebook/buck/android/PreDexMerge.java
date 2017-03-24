@@ -132,7 +132,7 @@ public class PreDexMerge extends AbstractBuildRule
       BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.add(new MkdirStep(getProjectFilesystem(), primaryDexPath.getParent()));
+    steps.add(MkdirStep.of(getProjectFilesystem(), primaryDexPath.getParent()));
 
     if (dexSplitMode.isShouldSplitDex()) {
       addStepsForSplitDex(steps, buildableContext);
@@ -206,9 +206,9 @@ public class PreDexMerge extends AbstractBuildRule
 
     // Do not clear existing directory which might contain secondary dex files that are not
     // re-merged (since their contents did not change).
-    steps.add(new MkdirStep(getProjectFilesystem(), paths.jarfilesSubdir));
-    steps.add(new MkdirStep(getProjectFilesystem(), paths.additionalJarfilesSubdir));
-    steps.add(new MkdirStep(getProjectFilesystem(), paths.successDir));
+    steps.add(MkdirStep.of(getProjectFilesystem(), paths.jarfilesSubdir));
+    steps.add(MkdirStep.of(getProjectFilesystem(), paths.additionalJarfilesSubdir));
+    steps.add(MkdirStep.of(getProjectFilesystem(), paths.successDir));
 
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), paths.metadataSubdir));
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), paths.scratchDir));
@@ -255,7 +255,7 @@ public class PreDexMerge extends AbstractBuildRule
       if (!result.apkModule.equals(apkModuleGraph.getRootAPKModule())) {
         Path dexOutputPath = paths.additionalJarfilesSubdir.resolve(result.apkModule.getName());
         steps.add(
-            new MkdirStep(
+            MkdirStep.of(
                 getProjectFilesystem(),
                 dexOutputPath));
       }

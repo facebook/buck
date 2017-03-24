@@ -118,7 +118,7 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
     for (Map.Entry<String, SourcePath> entry : nativeLibraries.entrySet()) {
       String resource = FAT_JAR_NATIVE_LIBRARY_RESOURCE_ROOT + "/" + entry.getKey();
       sonameToResourceMapBuilder.put(entry.getKey(), resource);
-      steps.add(new MkdirStep(getProjectFilesystem(), fatJarDir.resolve(resource).getParent()));
+      steps.add(MkdirStep.of(getProjectFilesystem(), fatJarDir.resolve(resource).getParent()));
       steps.add(
           new SymlinkFileStep(
               getProjectFilesystem(),
@@ -145,7 +145,7 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
 
     // Symlink the inner JAR into it's place in the fat JAR.
     steps.add(
-        new MkdirStep(
+        MkdirStep.of(
             getProjectFilesystem(),
             fatJarDir.resolve(FAT_JAR_INNER_JAR).getParent()));
     steps.add(
@@ -170,7 +170,7 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
 
     Path pathToSrcsList =
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__srcs");
-    steps.add(new MkdirStep(getProjectFilesystem(), pathToSrcsList.getParent()));
+    steps.add(MkdirStep.of(getProjectFilesystem(), pathToSrcsList.getParent()));
 
     CompileToJarStepFactory compileStepFactory =
         new JavacToJarStepFactory(

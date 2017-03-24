@@ -151,7 +151,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
               .resolve(abiDirectoryComponent.get())
               .resolve(strippedObject.getStrippedObjectName());
 
-      steps.add(new MkdirStep(getProjectFilesystem(), destination.getParent()));
+      steps.add(MkdirStep.of(getProjectFilesystem(), destination.getParent()));
       steps.add(
           CopyStep.forFile(
               filesystem,
@@ -254,7 +254,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
         final Path libSourceDir = sourceDir.resolve(abiDirectoryComponent.get());
         Path libDestinationDir = destinationDir.resolve(abiDirectoryComponent.get());
 
-        final MkdirStep mkDirStep = new MkdirStep(filesystem, libDestinationDir);
+        final MkdirStep mkDirStep = MkdirStep.of(filesystem, libDestinationDir);
         final CopyStep copyStep = CopyStep.forDirectory(
             filesystem,
             libSourceDir,

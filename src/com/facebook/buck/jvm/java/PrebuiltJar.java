@@ -255,13 +255,13 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
                 getBuildTarget().getFullyQualifiedName()));
       }
 
-      steps.add(new MkdirStep(getProjectFilesystem(), copiedBinaryJar.getParent()));
+      steps.add(MkdirStep.of(getProjectFilesystem(), copiedBinaryJar.getParent()));
       steps.add(CopyStep.forFile(getProjectFilesystem(), resolvedBinaryJar, copiedBinaryJar));
     }
     buildableContext.recordArtifact(copiedBinaryJar);
 
     // Create a step to compute the ABI key.
-    steps.add(new MkdirStep(getProjectFilesystem(), internalAbiJar.getParent()));
+    steps.add(MkdirStep.of(getProjectFilesystem(), internalAbiJar.getParent()));
     steps.add(RmStep.of(getProjectFilesystem(), internalAbiJar));
     steps.add(
         new CalculateAbiStep(

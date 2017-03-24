@@ -93,7 +93,7 @@ public class AndroidManifest extends AbstractBuildRule {
     commands.add(RmStep.of(getProjectFilesystem(), pathToOutputFile));
 
     // Make sure the directory for the output file exists.
-    commands.add(new MkdirStep(getProjectFilesystem(), pathToOutputFile.getParent()));
+    commands.add(MkdirStep.of(getProjectFilesystem(), pathToOutputFile.getParent()));
 
     commands.add(
         new GenerateManifestStep(

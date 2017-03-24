@@ -127,7 +127,7 @@ public class ExportFile extends AbstractBuildRuleWithResolver
     ImmutableList.Builder<Step> builder = ImmutableList.builder();
     if (mode == ExportFileDescription.Mode.COPY) {
       Path out = getCopiedPath();
-      builder.add(new MkdirStep(getProjectFilesystem(), out.getParent()));
+      builder.add(MkdirStep.of(getProjectFilesystem(), out.getParent()));
       builder.add(RmStep.of(getProjectFilesystem(), out).withRecursive(true));
       if (resolver.getFilesystem(src).isDirectory(resolver.getRelativePath(src))) {
         builder.add(

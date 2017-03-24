@@ -65,7 +65,7 @@ public class GoTestMain extends AbstractBuildRule {
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
     return ImmutableList.of(
-        new MkdirStep(getProjectFilesystem(), output.getParent()),
+        MkdirStep.of(getProjectFilesystem(), output.getParent()),
         new GoTestMainStep(
             getProjectFilesystem().getRootPath(),
             testMainGen.getEnvironment(context.getSourcePathResolver()),

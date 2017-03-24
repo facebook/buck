@@ -63,7 +63,7 @@ public class CxxInferCaptureTransitive extends AbstractBuildRule
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.<Step>builder()
-        .add(new MkdirStep(getProjectFilesystem(), outputDirectory))
+        .add(MkdirStep.of(getProjectFilesystem(), outputDirectory))
         .build();
   }
 
@@ -75,7 +75,7 @@ public class CxxInferCaptureTransitive extends AbstractBuildRule
   @Override
   public ImmutableList<Step> getPostBuildSteps(BuildContext context) {
     return ImmutableList.<Step>builder()
-        .add(new MkdirStep(getProjectFilesystem(), outputDirectory))
+        .add(MkdirStep.of(getProjectFilesystem(), outputDirectory))
         .add(
             CxxCollectAndLogInferDependenciesStep.fromCaptureOnlyRule(
                 this,

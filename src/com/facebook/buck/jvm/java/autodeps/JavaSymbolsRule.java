@@ -105,7 +105,7 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    Step mkdirStep = new MkdirStep(getProjectFilesystem(), outputPath.getParent());
+    Step mkdirStep = MkdirStep.of(getProjectFilesystem(), outputPath.getParent());
     Step extractSymbolsStep = new AbstractExecutionStep("java-symbols") {
       @Override
       public StepExecutionResult execute(ExecutionContext context) throws IOException {

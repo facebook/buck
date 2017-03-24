@@ -60,7 +60,7 @@ public class JavaLibraryRules {
 
     Path pathToClassHashes = JavaLibraryRules.getPathToClassHashes(
         javaLibrary.getBuildTarget(), javaLibrary.getProjectFilesystem());
-    steps.add(new MkdirStep(javaLibrary.getProjectFilesystem(), pathToClassHashes.getParent()));
+    steps.add(MkdirStep.of(javaLibrary.getProjectFilesystem(), pathToClassHashes.getParent()));
     steps.add(
         new AccumulateClassNamesStep(
             javaLibrary.getProjectFilesystem(),

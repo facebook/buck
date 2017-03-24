@@ -80,7 +80,7 @@ public class MultiarchFile extends AbstractBuildRule
     buildableContext.recordArtifact(output);
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.add(new MkdirStep(getProjectFilesystem(), output.getParent()));
+    steps.add(MkdirStep.of(getProjectFilesystem(), output.getParent()));
 
     lipoBinaries(context, steps);
     copyLinkMaps(buildableContext, steps);

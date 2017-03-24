@@ -156,7 +156,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
     Path binPath = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
 
     // Make sure the parent directory exists.
-    steps.add(new MkdirStep(getProjectFilesystem(), binPath.getParent()));
+    steps.add(MkdirStep.of(getProjectFilesystem(), binPath.getParent()));
 
     // Delete any other pex that was there (when switching between pex styles).
     steps.add(RmStep.of(getProjectFilesystem(), binPath).withRecursive(true));

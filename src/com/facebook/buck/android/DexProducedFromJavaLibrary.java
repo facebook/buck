@@ -109,7 +109,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
     steps.add(RmStep.of(getProjectFilesystem(), getPathToDex()));
 
     // Make sure that the buck-out/gen/ directory exists for this.buildTarget.
-    steps.add(new MkdirStep(getProjectFilesystem(), getPathToDex().getParent()));
+    steps.add(MkdirStep.of(getProjectFilesystem(), getPathToDex().getParent()));
 
     // If there are classes, run dx.
     final ImmutableSortedMap<String, HashCode> classNamesToHashes =

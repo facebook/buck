@@ -75,7 +75,7 @@ public class JavaSourceJar extends AbstractBuildRule
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    steps.add(new MkdirStep(getProjectFilesystem(), output.getParent()));
+    steps.add(MkdirStep.of(getProjectFilesystem(), output.getParent()));
     steps.add(RmStep.of(getProjectFilesystem(), output));
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), temp));
 
@@ -88,7 +88,7 @@ public class JavaSourceJar extends AbstractBuildRule
       Path packageFolder = packageFinder.findJavaPackageFolder(source);
       Path packageDir = temp.resolve(packageFolder);
       if (seenPackages.add(packageDir)) {
-        steps.add(new MkdirStep(getProjectFilesystem(), packageDir));
+        steps.add(MkdirStep.of(getProjectFilesystem(), packageDir));
       }
       steps.add(
           CopyStep.forFile(

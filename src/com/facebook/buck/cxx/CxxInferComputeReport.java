@@ -76,7 +76,7 @@ public class CxxInferComputeReport extends AbstractBuildRule
         .build();
 
     return ImmutableList.<Step>builder()
-        .add(new MkdirStep(projectFilesystem, outputDirectory))
+        .add(MkdirStep.of(projectFilesystem, outputDirectory))
         .add(
             new JsonConcatenateStep(
                 projectFilesystem,
@@ -95,7 +95,7 @@ public class CxxInferComputeReport extends AbstractBuildRule
   @Override
   public ImmutableList<Step> getPostBuildSteps(BuildContext context) {
     return ImmutableList.<Step>builder()
-        .add(new MkdirStep(projectFilesystem, outputDirectory))
+        .add(MkdirStep.of(projectFilesystem, outputDirectory))
         .add(
             CxxCollectAndLogInferDependenciesStep.fromAnalyzeRule(
                 analysisToReport,

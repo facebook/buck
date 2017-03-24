@@ -21,6 +21,9 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Escaper;
+import com.facebook.buck.util.immutables.BuckStyleStep;
+
+import org.immutables.value.Value;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -28,22 +31,27 @@ import java.nio.file.Path;
 /**
  * Command that runs equivalent command of {@code mkdir -p} on the specified directory.
  */
-public class MkdirStep implements Step {
+@Value.Immutable
+@BuckStyleStep
+abstract class AbstractMkdirStep implements Step {
 
-  private final ProjectFilesystem filesystem;
-  private final Path pathRelativeToProjectRoot;
+  @Value.Parameter
+  // TODO(illicitonion): Remove this ProjectFilesystem when ignored files aren't a concept.
+  protected abstract ProjectFilesystem getFilesystem();
 
-  public MkdirStep(ProjectFilesystem filesystem, Path pathRelativeToProjectRootOrJustAbsolute) {
-    this.filesystem = filesystem;
-    this.pathRelativeToProjectRoot = pathRelativeToProjectRootOrJustAbsolute;
-  }
+  @Value.Parameter
+  /**
+   * Path to make.
+   * TODO(illicitonion): Make this an absolute path.
+   */
+  protected abstract Path getAbsoluteOrRelativePath();
 
   @Override
   public StepExecutionResult execute(ExecutionContext context) {
     try {
-      filesystem.mkdirs(pathRelativeToProjectRoot);
+      getFilesystem().mkdirs(getAbsoluteOrRelativePath());
     } catch (IOException e) {
-      context.logError(e, "Cannot make directories: %s", pathRelativeToProjectRoot);
+      context.logError(e, "Cannot make directories: %s", getAbsoluteOrRelativePath());
       return StepExecutionResult.ERROR;
     }
     return StepExecutionResult.SUCCESS;
@@ -56,28 +64,9 @@ public class MkdirStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return String.format("mkdir -p %s",
-        Escaper.escapeAsShellString(getPath().toString()));
-  }
-
-  /**
-   * Get the path of the directory to make.
-   * @return Path of the directory to make.
-   */
-  public Path getPath() {
-    return filesystem.resolve(pathRelativeToProjectRoot);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof MkdirStep)) {
-      return false;
-    }
-    return getPath().equals(((MkdirStep) obj).getPath());
-  }
-
-  @Override
-  public int hashCode() {
-    return getPath().hashCode();
+    return String.format(
+        "mkdir -p %s",
+        Escaper.escapeAsShellString(
+            getFilesystem().resolve(getAbsoluteOrRelativePath()).toString()));
   }
 }

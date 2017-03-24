@@ -123,7 +123,7 @@ public class GoCompile extends AbstractBuildRule {
     ImmutableList<Path> asmSrcs = asmSrcListBuilder.build();
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.add(new MkdirStep(getProjectFilesystem(), output.getParent()));
+    steps.add(MkdirStep.of(getProjectFilesystem(), output.getParent()));
 
     Optional<Path> asmHeaderPath;
 
@@ -134,7 +134,7 @@ public class GoCompile extends AbstractBuildRule {
           "%s/" + getBuildTarget().getShortName() + "__asm_hdr")
           .resolve("go_asm.h"));
 
-      steps.add(new MkdirStep(getProjectFilesystem(), asmHeaderPath.get().getParent()));
+      steps.add(MkdirStep.of(getProjectFilesystem(), asmHeaderPath.get().getParent()));
     } else {
       asmHeaderPath = Optional.empty();
     }

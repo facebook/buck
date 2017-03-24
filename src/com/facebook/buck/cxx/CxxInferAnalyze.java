@@ -117,7 +117,7 @@ public class CxxInferAnalyze extends AbstractBuildRule {
     buildableContext.recordArtifact(
         context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
     return ImmutableList.<Step>builder()
-        .add(new MkdirStep(getProjectFilesystem(), specsDir))
+        .add(MkdirStep.of(getProjectFilesystem(), specsDir))
         .add(
             new SymCopyStep(
                 getProjectFilesystem(),

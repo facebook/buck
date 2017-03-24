@@ -93,13 +93,13 @@ public class JsBundle extends AbstractBuildRule {
 
     return ImmutableList.of(
         RmStep.of(getProjectFilesystem(), sourcePathResolver.getAbsolutePath(getOutputRoot())),
-        new MkdirStep(
+        MkdirStep.of(
             getProjectFilesystem(),
             sourcePathResolver.getAbsolutePath(jsOutputDir)),
-        new MkdirStep(
+        MkdirStep.of(
             getProjectFilesystem(),
             sourcePathResolver.getAbsolutePath(sourceMapFile).getParent()),
-        new MkdirStep(
+        MkdirStep.of(
             getProjectFilesystem(),
             sourcePathResolver.getAbsolutePath(resourcesDir)),
         JsUtil.workerShellStep(

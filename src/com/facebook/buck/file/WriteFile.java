@@ -75,7 +75,7 @@ public class WriteFile extends AbstractBuildRule {
     buildableContext.recordArtifact(output);
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return ImmutableList.of(
-        new MkdirStep(projectFilesystem, output.getParent()),
+        MkdirStep.of(projectFilesystem, output.getParent()),
         new WriteFileStep(
             projectFilesystem,
             ByteSource.wrap(fileContents),

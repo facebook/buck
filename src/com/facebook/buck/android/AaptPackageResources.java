@@ -173,7 +173,7 @@ public class AaptPackageResources extends AbstractBuildRule {
     // if needed. Do this before running any other commands to ensure that it is available at the
     // desired path.
     steps.add(
-        new MkdirStep(getProjectFilesystem(), getAndroidManifestXml().getParent()));
+        MkdirStep.of(getProjectFilesystem(), getAndroidManifestXml().getParent()));
 
     Optional<ImmutableMap<String, String>> placeholders = manifestEntries.getPlaceholders();
     if (placeholders.isPresent() && !placeholders.get().isEmpty()) {
@@ -191,7 +191,7 @@ public class AaptPackageResources extends AbstractBuildRule {
               getAndroidManifestXml()));
     }
 
-    steps.add(new MkdirStep(getProjectFilesystem(), getResourceApkPath().getParent()));
+    steps.add(MkdirStep.of(getProjectFilesystem(), getResourceApkPath().getParent()));
 
     Path rDotTxtDir = getPathToRDotTxtDir();
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), rDotTxtDir));

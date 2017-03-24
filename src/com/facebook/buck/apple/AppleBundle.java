@@ -318,7 +318,7 @@ public class AppleBundle
 
     Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
     if (assetCatalog.isPresent()) {
-      stepsBuilder.add(new MkdirStep(getProjectFilesystem(), resourcesDestinationPath));
+      stepsBuilder.add(MkdirStep.of(getProjectFilesystem(), resourcesDestinationPath));
       Path bundleDir = assetCatalog.get().getOutputDir();
       stepsBuilder.add(
           CopyStep.forDirectory(
@@ -329,7 +329,7 @@ public class AppleBundle
     }
 
     if (coreDataModel.isPresent()) {
-      stepsBuilder.add(new MkdirStep(getProjectFilesystem(), resourcesDestinationPath));
+      stepsBuilder.add(MkdirStep.of(getProjectFilesystem(), resourcesDestinationPath));
       stepsBuilder.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
@@ -340,7 +340,7 @@ public class AppleBundle
     }
 
     if (sceneKitAssets.isPresent()) {
-      stepsBuilder.add(new MkdirStep(getProjectFilesystem(), resourcesDestinationPath));
+      stepsBuilder.add(MkdirStep.of(getProjectFilesystem(), resourcesDestinationPath));
       stepsBuilder.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
@@ -358,14 +358,14 @@ public class AppleBundle
     Path infoPlistOutputPath = metadataPath.resolve("Info.plist");
 
     stepsBuilder.add(
-        new MkdirStep(getProjectFilesystem(), metadataPath),
+        MkdirStep.of(getProjectFilesystem(), metadataPath),
         // TODO(bhamiltoncx): This is only appropriate for .app bundles.
         new WriteFileStep(
             getProjectFilesystem(),
             "APPLWRUN",
             metadataPath.resolve("PkgInfo"),
             /* executable */ false),
-        new MkdirStep(getProjectFilesystem(), infoPlistSubstitutionTempPath.getParent()),
+        MkdirStep.of(getProjectFilesystem(), infoPlistSubstitutionTempPath.getParent()),
         new FindAndReplaceStep(
             getProjectFilesystem(),
             infoPlistInputPath,
@@ -400,7 +400,7 @@ public class AppleBundle
                 resources.getResourceDirs(),
                 resources.getDirsContainingResourceDirs(),
                 resources.getResourceFiles()))) {
-      stepsBuilder.add(new MkdirStep(getProjectFilesystem(), resourcesDestinationPath));
+      stepsBuilder.add(MkdirStep.of(getProjectFilesystem(), resourcesDestinationPath));
       for (SourcePath dir : resources.getResourceDirs()) {
         stepsBuilder.add(
             CopyStep.forDirectory(
@@ -445,7 +445,7 @@ public class AppleBundle
 
       Path bundleVariantDestinationPath =
           resourcesDestinationPath.resolve(variantDirectory.getFileName());
-      stepsBuilder.add(new MkdirStep(getProjectFilesystem(), bundleVariantDestinationPath));
+      stepsBuilder.add(MkdirStep.of(getProjectFilesystem(), bundleVariantDestinationPath));
 
       Path destinationPath = bundleVariantDestinationPath.resolve(variantFilePath.getFileName());
       addResourceProcessingSteps(
@@ -454,7 +454,7 @@ public class AppleBundle
 
     if (!frameworks.isEmpty()) {
       Path frameworksDestinationPath = bundleRoot.resolve(this.destinations.getFrameworksPath());
-      stepsBuilder.add(new MkdirStep(getProjectFilesystem(), frameworksDestinationPath));
+      stepsBuilder.add(MkdirStep.of(getProjectFilesystem(), frameworksDestinationPath));
       for (SourcePath framework : frameworks) {
         Path srcPath = context.getSourcePathResolver().getAbsolutePath(framework);
         stepsBuilder.add(
@@ -625,7 +625,7 @@ public class AppleBundle
       ImmutableList.Builder<Step> stepsBuilder,
       Path binaryOutputPath) {
     stepsBuilder.add(
-        new MkdirStep(
+        MkdirStep.of(
             getProjectFilesystem(),
             bundleRoot.resolve(this.destinations.getExecutablesPath())));
     stepsBuilder.add(
@@ -644,7 +644,7 @@ public class AppleBundle
         binary.get() instanceof WriteFile) {
       final Path watchKitStubDir = bundleRoot.resolve("_WatchKitStub");
       stepsBuilder.add(
-          new MkdirStep(getProjectFilesystem(), watchKitStubDir),
+          MkdirStep.of(getProjectFilesystem(), watchKitStubDir),
           CopyStep.forFile(
               getProjectFilesystem(),
               binaryOutputPath,
@@ -701,7 +701,7 @@ public class AppleBundle
     for (Map.Entry<SourcePath, String> entry : extensionBundlePaths.entrySet()) {
       Path srcPath = resolver.getAbsolutePath(entry.getKey());
       Path destPath = bundleRoot.resolve(entry.getValue());
-      stepsBuilder.add(new MkdirStep(getProjectFilesystem(), destPath));
+      stepsBuilder.add(MkdirStep.of(getProjectFilesystem(), destPath));
       stepsBuilder.add(
         CopyStep.forDirectory(
             getProjectFilesystem(),

@@ -176,7 +176,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
     ImmutableList.Builder<Step> builder = ImmutableList.builder();
 
     builder.add(
-        new MkdirStep(getProjectFilesystem(), output.getParent()),
+        MkdirStep.of(getProjectFilesystem(), output.getParent()),
         RmStep.of(getProjectFilesystem(), output),
         new ArchiveStep(
             getProjectFilesystem(),

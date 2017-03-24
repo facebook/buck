@@ -207,7 +207,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
     Path binPath = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
     buildableContext.recordArtifact(binPath);
     return ImmutableList.of(
-        new MkdirStep(getProjectFilesystem(), binPath.getParent()),
+        MkdirStep.of(getProjectFilesystem(), binPath.getParent()),
         new WriteFileStep(getProjectFilesystem(), script, binPath, /* executable */ true));
   }
 

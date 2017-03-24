@@ -154,7 +154,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
           };
 
       // Parse the output from running `nm` and write all symbols to the symbol file.
-      MkdirStep mkdirStep = new MkdirStep(getProjectFilesystem(), output.getParent());
+      MkdirStep mkdirStep = MkdirStep.of(getProjectFilesystem(), output.getParent());
       WriteFileStep writeFileStep =
           new WriteFileStep(
               getProjectFilesystem(),

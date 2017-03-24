@@ -272,7 +272,7 @@ public class CxxPreprocessAndCompile
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
     return ImmutableList.of(
-        new MkdirStep(getProjectFilesystem(), output.getParent()),
+        MkdirStep.of(getProjectFilesystem(), output.getParent()),
         new MakeCleanDirectoryStep(getProjectFilesystem(), getScratchPath()),
         makeMainStep(
             context.getSourcePathResolver(),

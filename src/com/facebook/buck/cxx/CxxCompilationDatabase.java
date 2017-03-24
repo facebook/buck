@@ -103,7 +103,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
       BuildContext context,
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.add(new MkdirStep(getProjectFilesystem(), outputJsonFile.getParent()));
+    steps.add(MkdirStep.of(getProjectFilesystem(), outputJsonFile.getParent()));
     steps.add(new GenerateCompilationCommandsJson(
         context.getSourcePathResolver(),
         context.getSourcePathResolver().getRelativePath(getSourcePathToOutput())));
