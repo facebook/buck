@@ -119,7 +119,6 @@ public class RobolectricTest extends JavaTest {
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       JavaLibrary compiledTestsLibrary,
-      ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries,
       Set<Label> labels,
       Set<String> contacts,
       TestType testType,
@@ -140,7 +139,10 @@ public class RobolectricTest extends JavaTest {
         buildRuleParams,
         new SourcePathResolver(ruleFinder),
         compiledTestsLibrary,
-        additionalClasspathEntries,
+        optionalDummyRDotJava
+            .map(r ->
+                ImmutableSet.<Either<SourcePath, Path>>of(Either.ofLeft(r.getSourcePathToOutput())))
+            .orElse(ImmutableSet.of()),
         labels,
         contacts,
         testType,

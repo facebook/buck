@@ -1461,7 +1461,6 @@ public class DefaultJavaLibraryTest {
           .setExportedDeps(ImmutableSortedSet.of())
           .setProvidedDeps(ImmutableSortedSet.of())
           .setTrackClassUsage(options.trackClassUsage())
-          .setAdditionalClasspathEntries(ImmutableSet.of())
           .setResourcesRoot(Optional.empty())
           .setManifestFile(Optional.empty())
           .setMavenCoords(Optional.empty())

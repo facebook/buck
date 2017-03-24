@@ -24,7 +24,6 @@ import com.facebook.buck.jvm.java.JavaSourceJar;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -49,7 +48,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -158,10 +156,7 @@ public class AndroidLibraryDescription
     if (hasDummyRDotJavaFlavor) {
       return dummyRDotJava.get();
     } else {
-      ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries = ImmutableSet.of();
       if (dummyRDotJava.isPresent()) {
-        additionalClasspathEntries = ImmutableSet.of(
-            Either.ofLeft(dummyRDotJava.get().getSourcePathToOutput()));
         ImmutableSortedSet<BuildRule> newDeclaredDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
             .addAll(params.getDeclaredDeps().get())
             .add(dummyRDotJava.get())
@@ -206,7 +201,6 @@ public class AndroidLibraryDescription
           compiler.compileToJar(args, javacOptions, resolver),
           javacOptions)
           .setConfigAndArgs(javaBuckConfig, args)
-          .setAdditionalClasspathEntries(additionalClasspathEntries)
           .setTrackClassUsage(compiler.trackClassUsage(javacOptions))
           .setTests(args.tests)
           .build();

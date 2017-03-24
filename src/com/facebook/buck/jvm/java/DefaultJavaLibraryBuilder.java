@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -49,7 +48,6 @@ public class DefaultJavaLibraryBuilder {
   protected ImmutableSortedSet<BuildRule> exportedDeps = ImmutableSortedSet.of();
   protected ImmutableSortedSet<BuildRule> providedDeps = ImmutableSortedSet.of();
   protected boolean trackClassUsage = false;
-  protected ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries = ImmutableSet.of();
   protected Optional<Path> resourcesRoot = Optional.empty();
   protected Optional<SourcePath> manifestFile = Optional.empty();
   protected Optional<String> mavenCoords = Optional.empty();
@@ -140,12 +138,6 @@ public class DefaultJavaLibraryBuilder {
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setAdditionalClasspathEntries(
-      ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries) {
-    this.additionalClasspathEntries = additionalClasspathEntries;
-    return this;
-  }
-
   public DefaultJavaLibraryBuilder setResourcesRoot(Optional<Path> resourcesRoot) {
     this.resourcesRoot = resourcesRoot;
     return this;
@@ -195,7 +187,6 @@ public class DefaultJavaLibraryBuilder {
         providedDeps,
         getAbiInputs(),
         trackClassUsage,
-        additionalClasspathEntries,
         compileStepFactory,
         suggestDependencies,
         resourcesRoot,

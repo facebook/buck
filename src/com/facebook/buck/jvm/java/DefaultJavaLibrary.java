@@ -26,7 +26,6 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
@@ -54,7 +53,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -68,12 +66,11 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
@@ -119,8 +116,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   private final ImmutableList<String> postprocessClassesCommands;
   private final ImmutableSortedSet<BuildRule> exportedDeps;
   private final ImmutableSortedSet<BuildRule> providedDeps;
-  // Some classes need to override this when enhancing deps (see AndroidLibrary).
-  private final ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries;
   private final Supplier<ImmutableSet<SourcePath>>
       outputClasspathEntriesSupplier;
   private final Supplier<ImmutableSet<SourcePath>>
@@ -198,7 +193,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       ImmutableSortedSet<BuildRule> providedDeps,
       ImmutableSortedSet<SourcePath> abiInputs,
       boolean trackClassUsage,
-      ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries,
       CompileToJarStepFactory compileStepFactory,
       boolean suggestDependencies,
       Optional<Path> resourcesRoot,
@@ -219,7 +213,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         providedDeps,
         trackClassUsage,
         new JarArchiveDependencySupplier(abiInputs),
-        additionalClasspathEntries,
         compileStepFactory,
         suggestDependencies,
         resourcesRoot,
@@ -242,7 +235,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       ImmutableSortedSet<BuildRule> providedDeps,
       boolean trackClassUsage,
       final JarArchiveDependencySupplier abiClasspath,
-      ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries,
       CompileToJarStepFactory compileStepFactory,
       boolean suggestDependencies,
       Optional<Path> resourcesRoot,
@@ -274,7 +266,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     this.postprocessClassesCommands = postprocessClassesCommands;
     this.exportedDeps = exportedDeps;
     this.providedDeps = providedDeps;
-    this.additionalClasspathEntries = additionalClasspathEntries;
     this.resourcesRoot = resourcesRoot;
     this.manifestFile = manifestFile;
     this.mavenCoords = mavenCoords;
@@ -420,9 +411,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    FluentIterable<JavaLibrary> declaredClasspathDeps =
-        JavaLibraryClasspathProvider.getJavaLibraryDeps(getDepsForTransitiveClasspathEntries());
-
+    ImmutableSet<BuildRule> declaredClasspathDeps = getDepsForTransitiveClasspathEntries();
 
     // Always create the output directory, even if there are no .java files to compile because there
     // might be resources that need to be copied there.
@@ -434,7 +423,8 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         DefaultSuggestBuildRules.createSuggestBuildFunction(
             JAR_RESOLVER,
             context.getSourcePathResolver(),
-            declaredClasspathDeps.toSet(),
+            JavaLibraryClasspathProvider.getJavaLibraryDeps(declaredClasspathDeps)
+                .toSet(),
             ImmutableSet.<JavaLibrary>builder()
                 .addAll(getTransitiveClasspathDeps())
                 .add(this)
@@ -442,28 +432,21 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
             context.getActionGraph().getNodes()) :
         (failedImports) -> ImmutableSet.of();
 
-    // We don't want to add these to the declared or transitive deps, since they're only used at
+    // We don't want to add provided to the declared or transitive deps, since they're only used at
     // compile time.
-    Collection<Path> provided = JavaLibraryClasspathProvider.getJavaLibraryDeps(providedDeps)
-        .transformAndConcat(JavaLibrary::getOutputClasspaths)
-        .filter(Objects::nonNull)
-        .transform(context.getSourcePathResolver()::getAbsolutePath)
-        .toSet();
-
-    Iterable<Path> declaredClasspaths = declaredClasspathDeps
-        .transformAndConcat(JavaLibrary::getOutputClasspaths)
-        .transform(context.getSourcePathResolver()::getAbsolutePath);
-    // Only override the bootclasspath if this rule is supposed to compile Android code.
-    ImmutableSortedSet<Path> declared = ImmutableSortedSet.<Path>naturalOrder()
-        .addAll(declaredClasspaths)
-        .addAll(additionalClasspathEntries.stream()
-            .map(e -> e.isLeft() ?
-                context.getSourcePathResolver().getAbsolutePath(e.getLeft())
-                : checkIsAbsolute(e.getRight()))
-            .collect(MoreCollectors.toImmutableSet()))
-        .addAll(provided)
-        .build();
-
+    ImmutableSortedSet<Path> declaredClasspaths = Sets.union(declaredClasspathDeps, providedDeps)
+        .stream()
+        .filter(buildRule -> buildRule instanceof HasJavaAbi)
+        .flatMap(buildRule -> {
+          if (buildRule instanceof JavaLibrary) {
+            return ((JavaLibrary) buildRule).getOutputClasspaths().stream();
+          } else {
+            // DummyRDotJava implements HasJavaAbi, but is not a JavaLibrary
+            return Stream.of(buildRule.getSourcePathToOutput());
+          }
+        })
+        .map(context.getSourcePathResolver()::getAbsolutePath)
+        .collect(MoreCollectors.toImmutableSortedSet());
 
     // Make sure that this directory exists because ABI information will be written here.
     Step mkdir = new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToAbiOutputDir());
@@ -526,7 +509,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
           context.getSourcePathResolver(),
           ruleFinder,
           getProjectFilesystem(),
-          declared,
+          declaredClasspaths,
           outputDirectory,
           workingDirectory,
           pathToSrcsList,
@@ -568,11 +551,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         steps);
 
     return steps.build();
-  }
-
-  private Path checkIsAbsolute(Path path) {
-    Preconditions.checkArgument(path.isAbsolute(), "Need absolute path but got %s", path);
-    return path;
   }
 
   /**

@@ -28,7 +28,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.Optional;
@@ -69,7 +68,6 @@ public class AndroidPrebuiltAar
             .build(),
         /* providedDeps */ ImmutableSortedSet.of(),
         abiInputs,
-        /* additionalClasspathEntries */ ImmutableSet.of(),
         javacOptions,
         /* trackClassUsage */ false,
         compileStepFactory,

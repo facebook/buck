@@ -29,7 +29,6 @@ import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -45,11 +44,9 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
-import java.nio.file.Path;
 import java.util.Optional;
 
 public class RobolectricTestDescription implements Description<RobolectricTestDescription.Arg> {
@@ -128,15 +125,14 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
         resolver,
         /* createBuildableIfEmpty */ true);
 
-    ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries = ImmutableSet.of();
     if (dummyRDotJava.isPresent()) {
-      additionalClasspathEntries = ImmutableSet.of(
-          Either.ofLeft(dummyRDotJava.get().getSourcePathToOutput()));
-      ImmutableSortedSet<BuildRule> newExtraDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
-          .addAll(params.getExtraDeps().get())
+      ImmutableSortedSet<BuildRule> newDeclaredDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
+          .addAll(params.getDeclaredDeps().get())
           .add(dummyRDotJava.get())
           .build();
-      params = params.copyReplacingExtraDeps(Suppliers.ofInstance(newExtraDeps));
+      params = params.copyReplacingDeclaredAndExtraDeps(
+          Suppliers.ofInstance(newDeclaredDeps),
+          params.getExtraDeps());
     }
 
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
@@ -181,7 +177,6 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                 .setConfigAndArgs(javaBuckConfig, args)
                 .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
                 .setTrackClassUsage(javacOptions.trackClassUsage())
-                .setAdditionalClasspathEntries(additionalClasspathEntries)
                 .build());
 
 
@@ -191,7 +186,6 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         ruleFinder,
         testsLibrary,
-        additionalClasspathEntries,
         args.labels,
         args.contacts,
         TestType.JUNIT,

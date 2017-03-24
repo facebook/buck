@@ -25,7 +25,6 @@ import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
@@ -37,7 +36,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -80,7 +78,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,
       ImmutableSortedSet<SourcePath> abiInputs,
-      ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries,
       JavacOptions javacOptions,
       boolean trackClassUsage,
       CompileToJarStepFactory compileStepFactory,
@@ -102,7 +99,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         providedDeps,
         abiInputs,
         trackClassUsage,
-        additionalClasspathEntries,
         compileStepFactory,
         suggestDependencies,
         resourcesRoot,
@@ -154,7 +150,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
           exportedDeps,
           providedDeps,
           getAbiInputs(),
-          additionalClasspathEntries,
           javacOptions,
           trackClassUsage,
           compileStepFactory,
