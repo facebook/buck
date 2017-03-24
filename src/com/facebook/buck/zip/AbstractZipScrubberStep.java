@@ -25,18 +25,11 @@ import com.google.common.base.Preconditions;
 import org.immutables.value.Value;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.util.zip.ZipEntry;
 
 @Value.Immutable
 @BuckStyleStep
 abstract class AbstractZipScrubberStep implements Step {
-  public static final int EXTENDED_TIMESTAMP_ID = 0x5455;
 
   @Value.Parameter
   protected abstract Path getZipAbsolutePath();
@@ -58,48 +51,10 @@ abstract class AbstractZipScrubberStep implements Step {
     return "zip-scrub " + getZipAbsolutePath();
   }
 
-  private static void check(boolean expression, String msg) throws IOException {
-    if (!expression) {
-      throw new IOException(msg);
-    }
-  }
-
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
-    try (FileChannel channel = FileChannel.open(
-        getZipAbsolutePath(),
-        StandardOpenOption.READ,
-        StandardOpenOption.WRITE)) {
-      MappedByteBuffer map = channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());
-      map.order(ByteOrder.LITTLE_ENDIAN);
-
-      // Search backwards from the end of the ZIP file, searching for the EOCD signature, which
-      // designates the start of the EOCD.
-      int eocdOffset = (int) channel.size() - ZipEntry.ENDHDR;
-      while (map.getInt(eocdOffset) != ZipEntry.ENDSIG) {
-        eocdOffset--;
-      }
-
-      int cdEntries = map.getShort(eocdOffset + ZipEntry.ENDTOT);
-      int cdOffset = map.getInt(eocdOffset + ZipEntry.ENDOFF);
-
-      for (int idx = 0; idx < cdEntries; idx++) {
-        // Wrap the central directory header and zero out it's timestamp.
-        ByteBuffer entry = slice(map, cdOffset);
-        check(entry.getInt(0) == ZipEntry.CENSIG, "expected central directory header signature");
-
-        entry.putInt(ZipEntry.CENTIM, ZipConstants.DOS_FAKE_TIME);
-        scrubLocalEntry(slice(map, entry.getInt(ZipEntry.CENOFF)));
-        scrubExtraFields(
-            slice(entry, ZipEntry.CENHDR + entry.getShort(ZipEntry.CENNAM)),
-            entry.getShort(ZipEntry.CENEXT));
-
-        cdOffset +=
-            ZipEntry.CENHDR +
-            entry.getShort(ZipEntry.CENNAM) +
-            entry.getShort(ZipEntry.CENEXT) +
-            entry.getShort(ZipEntry.CENCOM);
-      }
+    try {
+      ZipScrubber.scrubZip(getZipAbsolutePath());
     } catch (RuntimeException e) {
       context.logError(
           e,
@@ -115,46 +70,4 @@ abstract class AbstractZipScrubberStep implements Step {
     }
     return StepExecutionResult.SUCCESS;
   }
-
-  private static ByteBuffer slice(ByteBuffer map, int offset) {
-    ByteBuffer result = map.duplicate();
-    result.position(offset);
-    result = result.slice();
-    result.order(ByteOrder.LITTLE_ENDIAN);
-    return result;
-  }
-
-  private static void scrubLocalEntry(ByteBuffer entry) throws IOException {
-    check(entry.getInt(0) == ZipEntry.LOCSIG, "expected local header signature");
-    entry.putInt(ZipEntry.LOCTIM, ZipConstants.DOS_FAKE_TIME);
-    scrubExtraFields(
-        slice(entry, ZipEntry.LOCHDR + entry.getShort(ZipEntry.LOCNAM)),
-        entry.getShort(ZipEntry.LOCEXT));
-  }
-
-  private static void scrubExtraFields(ByteBuffer data, short length) {
-    // See http://mdfs.net/Docs/Comp/Archiving/Zip/ExtraField for structure of extra fields.
-    int end = data.position() + length;
-    while (data.position() < end) {
-      int id = data.getShort();
-      int size = data.getShort();
-
-      if (id == EXTENDED_TIMESTAMP_ID) {
-        // 1 byte flag
-        // 0-3 4-byte unix timestamps
-        data.get(); // ignore flags
-        size -= 1;
-        while (size > 0) {
-          data.putInt((int) (ZipConstants.getFakeTime() / 1000));
-          size -= 4;
-        }
-      } else {
-        if (data.position() + size >= end) {
-          break;
-        }
-        data.position(data.position() + size);
-      }
-    }
-  }
-
 }

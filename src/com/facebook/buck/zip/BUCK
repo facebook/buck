@@ -31,7 +31,9 @@ java_library(
 
 java_immutables_library(
     name = "steps",
-    srcs = glob(["*Step.java"]),
+    srcs = glob(["*Step.java"]) + [
+        "ZipScrubber.java",
+    ],
     autodeps = True,
     immutable_types = [
         "ZipScrubberStep",
