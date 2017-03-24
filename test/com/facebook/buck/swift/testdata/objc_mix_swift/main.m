@@ -1,4 +1,4 @@
-#import "DemoMix-Swift.h"
+#import <DemoMix/DemoMix-Swift.h>
 
 int main(int argc, const char * argv[]) {
     [Greeter sayHello:@"Swift"];
