@@ -130,7 +130,7 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
               targetsToNodes.get(unflavoredBuildTarget));
         }
         ImmutableSet<TargetNode<?, ?>> dependencies =
-            ImmutableSet.copyOf(getAll(node.getDeps()));
+            ImmutableSet.copyOf(getAll(node.getBuildDeps()));
         for (TargetNode<?, ?> dependency : dependencies) {
           subgraph.addEdge(node, dependency);
         }

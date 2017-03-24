@@ -166,7 +166,7 @@ public class DistBuildTargetGraphCodec {
     MutableDirectedGraph<TargetNode<?, ?>> mutableTargetGraph = new MutableDirectedGraph<>();
     for (TargetNode<?, ?> targetNode : targetNodeIndex.values()) {
       mutableTargetGraph.addNode(targetNode);
-      for (BuildTarget dep : targetNode.getDeps()) {
+      for (BuildTarget dep : targetNode.getBuildDeps()) {
         mutableTargetGraph.addEdge(
             targetNode,
             Preconditions.checkNotNull(targetNodeIndex.get(dep)));

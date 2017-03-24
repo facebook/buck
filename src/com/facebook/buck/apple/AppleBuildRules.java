@@ -284,7 +284,7 @@ public final class AppleBuildRules {
       ImmutableSortedSet.Builder<TargetNode<?, ?>> directDepsBuilder,
       ImmutableSortedSet.Builder<TargetNode<?, ?>> exportedDepsBuilder
   ) {
-    directDepsBuilder.addAll(targetGraph.getAll(targetNode.getDepsStream()::iterator));
+    directDepsBuilder.addAll(targetGraph.getAll(targetNode.getBuildDepsStream()::iterator));
     if (targetNode.getDescription() instanceof AppleLibraryDescription ||
         targetNode.getDescription() instanceof CxxLibraryDescription) {
       CxxLibraryDescription.Arg arg =
@@ -374,7 +374,7 @@ public final class AppleBuildRules {
       TargetGraph targetGraph,
       TargetNode<?, ?> targetNode) {
     ImmutableSet.Builder<AppleAssetCatalogDescription.Arg> builder = ImmutableSet.builder();
-    Iterable<TargetNode<?, ?>> deps = targetGraph.getAll(targetNode.getDeps());
+    Iterable<TargetNode<?, ?>> deps = targetGraph.getAll(targetNode.getBuildDeps());
     for (TargetNode<?, ?> node : deps) {
       if (node.getDescription() instanceof AppleAssetCatalogDescription) {
         builder.add((AppleAssetCatalogDescription.Arg) node.getConstructorArg());

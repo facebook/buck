@@ -185,7 +185,7 @@ public class Parser {
           toReturn.putAll(rawNode);
           toReturn.put(
               "buck.direct_dependencies",
-              targetNode.getDeps().stream()
+              targetNode.getBuildDeps().stream()
                   .map(Object::toString)
                   .collect(MoreCollectors.toImmutableList()));
           return toReturn;
@@ -296,7 +296,7 @@ public class Parser {
       // visitor pattern otherwise.
       // it's also work we need to do anyways. the getTargetNode() result is cached, so that
       // when we come around and re-visit that node there won't actually be any work performed.
-      for (BuildTarget dep : node.getDeps()) {
+      for (BuildTarget dep : node.getBuildDeps()) {
         try {
           state.getTargetNode(dep);
         } catch (BuildFileParseException | BuildTargetException | HumanReadableException e) {
@@ -308,7 +308,7 @@ public class Parser {
               e.getMessage());
         }
       }
-      return node.getDeps().iterator();
+      return node.getBuildDeps().iterator();
     };
 
     AcyclicDepthFirstPostOrderTraversal<BuildTarget> targetNodeTraversal =
@@ -329,7 +329,7 @@ public class Parser {
               unflavoredTarget,
               state.getTargetNode(unflavoredTarget));
         }
-        for (BuildTarget dep : targetNode.getDeps()) {
+        for (BuildTarget dep : targetNode.getBuildDeps()) {
           graph.addEdge(targetNode, state.getTargetNode(dep));
         }
       }

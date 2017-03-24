@@ -110,7 +110,7 @@ public class AppleResources {
       TargetGraph targetGraph,
       TargetNode<?, ?> targetNode) {
     ImmutableSet.Builder<AppleResourceDescription.Arg> builder = ImmutableSet.builder();
-    Iterable<TargetNode<?, ?>> deps = targetGraph.getAll(targetNode.getDeps());
+    Iterable<TargetNode<?, ?>> deps = targetGraph.getAll(targetNode.getBuildDeps());
     for (TargetNode<?, ?> node : deps) {
       if (node.getDescription() instanceof AppleResourceDescription) {
         builder.add((AppleResourceDescription.Arg) node.getConstructorArg());

@@ -999,7 +999,7 @@ public class TargetsCommand extends AbstractCommand {
 
     AcyclicDepthFirstPostOrderTraversal<TargetNode<?, ?>> traversal =
         new AcyclicDepthFirstPostOrderTraversal<>(
-            node -> targetGraphWithTests.getAll(node.getDeps()).iterator());
+            node -> targetGraphWithTests.getAll(node.getBuildDeps()).iterator());
 
     Map<BuildTarget, HashCode> hashesWithTests = Maps.newHashMap();
 
@@ -1022,7 +1022,7 @@ public class TargetsCommand extends AbstractCommand {
     Hasher hasher = Hashing.sha1().newHasher();
     hasher.putBytes(nodeHashCode.asBytes());
 
-    Iterable<BuildTarget> dependentTargets = node.getDeps();
+    Iterable<BuildTarget> dependentTargets = node.getBuildDeps();
     LOG.debug("Hashing target %s with dependent nodes %s", node, dependentTargets);
     for (BuildTarget targetToHash : dependentTargets) {
       HashCode dependencyHash = getHashCodeOrThrow(hashesWithTests, targetToHash);

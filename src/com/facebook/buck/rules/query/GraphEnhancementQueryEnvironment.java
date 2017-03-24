@@ -118,7 +118,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
     ImmutableSet.Builder<QueryTarget> builder = ImmutableSet.builder();
     for (QueryTarget target : targets) {
       List<QueryBuildTarget> deps = getNode(target)
-          .getDeps()
+          .getBuildDeps()
           .stream()
           .map(QueryBuildTarget::of)
           .collect(Collectors.toList());

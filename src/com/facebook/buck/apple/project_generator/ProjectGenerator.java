@@ -969,7 +969,7 @@ public class ProjectGenerator {
       TargetNode<? extends HasAppleBundleFields, ?> targetNode) {
     GraphTraversable<TargetNode<?, ?>> graphTraversable = node -> {
       if (!(node.getDescription() instanceof AppleResourceDescription)) {
-        return targetGraph.getAll(node.getDeps()).iterator();
+        return targetGraph.getAll(node.getBuildDeps()).iterator();
       } else {
         return Collections.emptyIterator();
       }
@@ -2461,7 +2461,7 @@ public class ProjectGenerator {
       BiConsumer<TargetNode<? extends CxxLibraryDescription.Arg, ?>, HeaderVisibility> visitor) {
     // Visits headers of source under tests.
     ImmutableSet<TargetNode<?, ?>> directDependencies = ImmutableSet.copyOf(
-        targetGraph.getAll(targetNode.getDeps()));
+        targetGraph.getAll(targetNode.getBuildDeps()));
     for (TargetNode<?, ?> dependency : directDependencies) {
       Optional<TargetNode<CxxLibraryDescription.Arg, ?>> nativeNode =
           getAppleNativeNode(targetGraph, dependency);

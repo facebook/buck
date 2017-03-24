@@ -112,7 +112,7 @@ public class ParsePipelineTest {
         BuildTargetFactory.newInstance(cell.getFilesystem(), "//:lib"));
 
     waitForAll(
-        libTargetNode.getDeps(),
+        libTargetNode.getBuildDeps(),
         dep -> fixture.getTargetNodeParsePipelineCache().lookupComputedNode(cell, dep) != null);
     fixture.close();
   }
@@ -130,7 +130,7 @@ public class ParsePipelineTest {
             new Function<TargetNode<?, ?>, Iterable<BuildTarget>>() {
               @Override
               public Iterable<BuildTarget> apply(TargetNode<?, ?> input) {
-                return input.getDeps();
+                return input.getBuildDeps();
               }
             });
     waitForAll(

@@ -85,7 +85,7 @@ public class TargetGraphHashing {
 
       AcyclicDepthFirstPostOrderTraversal<TargetNode<?, ?>> traversal =
           new AcyclicDepthFirstPostOrderTraversal<>(
-              node -> targetGraph.getAll(node.getDeps()).iterator());
+              node -> targetGraph.getAll(node.getBuildDeps()).iterator());
 
       final Map<BuildTarget, ForkJoinTask<HashCode>> buildTargetHashes = new HashMap<>();
       Queue<ForkJoinTask<HashCode>> tasksToSchedule = new ArrayDeque<>();
@@ -159,7 +159,7 @@ public class TargetGraphHashing {
       }
 
       // hash each dependency's build target and that build target's own hash.
-      for (BuildTarget dependency : node.getDeps()) {
+      for (BuildTarget dependency : node.getBuildDeps()) {
         ForkJoinTask<HashCode> dependencyHashCodeTask = buildTargetHashes.get(dependency);
         Preconditions.checkState(dependencyHashCodeTask != null);
         HashCode dependencyHashCode = dependencyHashCodeTask.join();

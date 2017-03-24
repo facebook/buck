@@ -122,7 +122,10 @@ public class TargetNode<T, U extends Description<T>>
     return extraDeps;
   }
 
-  public ImmutableSet<BuildTarget> getDeps() {
+  /**
+   * @return all targets which must be built before this one can be.
+   */
+  public ImmutableSet<BuildTarget> getBuildDeps() {
     ImmutableSet.Builder<BuildTarget> builder = ImmutableSet.builder();
     builder.addAll(getDeclaredDeps());
     builder.addAll(getExtraDeps());
@@ -133,10 +136,10 @@ public class TargetNode<T, U extends Description<T>>
    * Stream-style API for getting dependencies. This may return duplicates if certain dependencies
    * are in both declared deps and exported deps.
    *
-   * This method can be faster than {@link #getDeps()} in cases where repeated traversals and set
-   * operations are not necessary, as it avoids creating the intermediate set.
+   * This method can be faster than {@link #getBuildDeps()} in cases where repeated traversals and
+   * set operations are not necessary, as it avoids creating the intermediate set.
    */
-  public Stream<BuildTarget> getDepsStream() {
+  public Stream<BuildTarget> getBuildDepsStream() {
     return Stream.concat(getDeclaredDeps().stream(), getExtraDeps().stream());
   }
 

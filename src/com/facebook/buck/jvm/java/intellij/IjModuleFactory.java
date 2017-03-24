@@ -363,7 +363,7 @@ public class IjModuleFactory {
       ModuleBuildContext context) {
     context.addDeps(
         foldersToInputsIndex.keySet(),
-        targetNode.getDeps(),
+        targetNode.getBuildDeps(),
         dependencyType);
   }
 
@@ -429,7 +429,7 @@ public class IjModuleFactory {
 
     Set<Path> generatedSourcePaths = new HashSet<>();
 
-    for (BuildTarget dependencyTarget : targetNode.getDeps()) {
+    for (BuildTarget dependencyTarget : targetNode.getBuildDeps()) {
       String buildTargetName = dependencyTarget.toString();
       String generatedSourceWithPattern = depToGeneratedSourcesMap.get(buildTargetName);
       if (generatedSourceWithPattern != null) {
@@ -460,7 +460,7 @@ public class IjModuleFactory {
     public void apply(
         TargetNode<AndroidBinaryDescription.Arg, ?> target,
         ModuleBuildContext context) {
-      context.addDeps(target.getDeps(), DependencyType.PROD);
+      context.addDeps(target.getBuildDeps(), DependencyType.PROD);
 
       IjModuleAndroidFacet.Builder androidFacetBuilder = context.getOrCreateAndroidFacetBuilder();
       androidFacetBuilder
@@ -556,7 +556,7 @@ public class IjModuleFactory {
       }
       context.getOrCreateAndroidFacetBuilder().setAndroidLibrary(true);
 
-      context.addDeps(resourceFolders, target.getDeps(), DependencyType.PROD);
+      context.addDeps(resourceFolders, target.getBuildDeps(), DependencyType.PROD);
     }
   }
 
@@ -589,13 +589,13 @@ public class IjModuleFactory {
     public void apply(
         TargetNode<JavaBinaryDescription.Args, ?> target,
         ModuleBuildContext context) {
-      context.addDeps(target.getDeps(), DependencyType.PROD);
+      context.addDeps(target.getBuildDeps(), DependencyType.PROD);
       // If this is a binary based on an intellij provided library *and*
       // it has a meta_inf_directory, then it's almost certainly an IntelliJ
       // plugin, so mark the module as such.  This will allow users to create
       // a "plugin" runtime configurations for that module in IntelliJ.
       Set<String> intellijLibraries = projectConfig.getIntellijSdkTargets();
-      for (BuildTarget dep : target.getDeps()) {
+      for (BuildTarget dep : target.getBuildDeps()) {
         Optional<Path> metaInfDirectory = target.getConstructorArg().metaInfDirectory;
         if (metaInfDirectory.isPresent() &&
             intellijLibraries.contains(dep.getFullyQualifiedName())) {
