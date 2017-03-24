@@ -19,6 +19,7 @@ package com.facebook.buck.js;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
 import com.google.common.collect.ImmutableSet;
@@ -63,9 +64,9 @@ public class JsFlavorValidationCommonTest {
     assertTrue(description.hasFlavors(ImmutableSet.of(JsFlavors.IOS, JsFlavors.RELEASE)));
   }
 
-  @Test
+  @Test(expected = FlavorDomainException.class)
   public void testMultiplePlatforms() {
-    assertFalse(description.hasFlavors(ImmutableSet.of(JsFlavors.ANDROID, JsFlavors.IOS)));
+    description.hasFlavors(ImmutableSet.of(JsFlavors.ANDROID, JsFlavors.IOS));
   }
 
   @Test

@@ -16,12 +16,12 @@
 
 package com.facebook.buck.js;
 
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.FakeBuildContext;
@@ -75,8 +75,8 @@ public class JsBundleWorkerJobArgsTest {
         startsWith("bundle --indexed-rambundle "));
   }
 
-  @Test
-  public void testIndexedRamBundleFlavorTakesPrecedence() throws NoSuchBuildTargetException {
+  @Test(expected = FlavorDomainException.class)
+  public void testMultipleRamBundleFlavorsFail() throws NoSuchBuildTargetException {
     final JsBundle bundle = scenario.createBundle(
         targetWithFlavors(
             "//:arbitrary",
@@ -84,9 +84,7 @@ public class JsBundleWorkerJobArgsTest {
             JsFlavors.RAM_BUNDLE_INDEXED),
         ImmutableSortedSet.of());
 
-    final String jobArgs = getJobArgs(bundle.getBuildSteps(context, fakeBuildableContext));
-    assertThat(jobArgs, startsWith("bundle --indexed-rambundle "));
-    assertThat(jobArgs, not(startsWith("bundle --indexed-rambundle --files-rambundle")));
+    getJobArgs(bundle.getBuildSteps(context, fakeBuildableContext));
   }
 
   private static String targetWithFlavors(String target, Flavor... flavors) {

@@ -19,6 +19,7 @@ package com.facebook.buck.js;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
@@ -46,6 +47,15 @@ public class JsBundleDescription implements Description<JsBundleDescription.Arg>
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
     return JsFlavors.validateBundleFlavors(flavors);
+  }
+
+  @Override
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+    return Optional.of(
+        ImmutableSet.of(
+            JsFlavors.OPTIMIZATION_DOMAIN,
+            JsFlavors.PLATFORM_DOMAIN,
+            JsFlavors.RAM_BUNDLE_DOMAIN));
   }
 
   @Override

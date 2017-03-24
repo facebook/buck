@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.model.FlavorDomainException;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -38,33 +40,40 @@ public class JsFlavorsTest {
   }
 
   @Test
-  public void commandLineArgsDontHaveReleaseWithoutReleaseFlavor() {
-    assertEquals("", JsFlavors.bundleJobArgs(ImmutableSortedSet.of(JsFlavors.ANDROID)));
+  public void bundleArgsHaveAndroidFlag() {
+    assertEquals("--platform android",
+        JsFlavors.bundleJobArgs(ImmutableSortedSet.of(JsFlavors.ANDROID)));
   }
 
   @Test
-  public void commandLineArgsHaveReleaseWithReleaseFlavor() {
+  public void bundleArgsHaveIOSFlag() {
+    assertEquals("--platform ios",
+        JsFlavors.bundleJobArgs(ImmutableSortedSet.of(JsFlavors.IOS)));
+  }
+
+  @Test
+  public void bundleArgsHaveReleaseWithReleaseFlavor() {
     assertEquals(
-        "--release",
+        "--platform android --release",
         JsFlavors.bundleJobArgs(ImmutableSortedSet.of(JsFlavors.ANDROID, JsFlavors.RELEASE)));
   }
 
   @Test
-  public void commandLineArgsWithFilesRamBundleFlavor() {
+  public void bundleArgsWithFilesRamBundleFlavor() {
     assertEquals(
         "--files-rambundle",
         JsFlavors.bundleJobArgs(ImmutableSortedSet.of(JsFlavors.RAM_BUNDLE_FILES)));
   }
 
   @Test
-  public void commandLineArgsWithIndexRamBundleFlavor() {
+  public void bundleArgsWithIndexRamBundleFlavor() {
     assertEquals(
         "--indexed-rambundle",
         JsFlavors.bundleJobArgs(ImmutableSortedSet.of(JsFlavors.RAM_BUNDLE_INDEXED)));
   }
 
   @Test
-  public void commandLineArgsIndexedRamBundleFlavorTakesPrecedence() {
+  public void bundleArgsIndexedRamBundleFlavorTakesPrecedence() {
     assertEquals(
         "--indexed-rambundle",
         JsFlavors.bundleJobArgs(
@@ -72,11 +81,33 @@ public class JsFlavorsTest {
   }
 
   @Test
-  public void commandLineArgsUnbundleAndRelease() {
+  public void bundleArgsUnbundleAndRelease() {
     assertEquals(
         "--indexed-rambundle --release",
         JsFlavors.bundleJobArgs(
             ImmutableSortedSet.of(JsFlavors.RAM_BUNDLE_INDEXED, JsFlavors.RELEASE)));
+  }
+
+  @Test
+  public void platformArgHasAndroidFlag() {
+    assertEquals("--platform android",
+        JsFlavors.platformArgForRelease(ImmutableSortedSet.of(JsFlavors.ANDROID)));
+  }
+
+  @Test
+  public void platformArgHasIOSFlag() {
+    assertEquals("--platform ios",
+        JsFlavors.platformArgForRelease(ImmutableSortedSet.of(JsFlavors.IOS)));
+  }
+
+  @Test(expected = FlavorDomainException.class)
+  public void platformArgFailsForMultiplePlatforms() {
+    JsFlavors.platformArgForRelease(ImmutableSortedSet.of(JsFlavors.ANDROID, JsFlavors.IOS));
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void platformArgFailsForNoPlatform() {
+    JsFlavors.platformArgForRelease(ImmutableSortedSet.of());
   }
 
   @Test

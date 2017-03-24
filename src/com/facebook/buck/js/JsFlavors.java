@@ -19,51 +19,72 @@ package com.facebook.buck.js;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.model.UserFlavor;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 
 import java.nio.file.Path;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class JsFlavors {
-  public static final InternalFlavor ANDROID = InternalFlavor.of("android");
-  public static final InternalFlavor IOS = InternalFlavor.of("ios");
-  public static final InternalFlavor RELEASE = InternalFlavor.of("release");
-  public static final InternalFlavor RAM_BUNDLE_FILES = InternalFlavor.of("rambundle-files");
-  public static final InternalFlavor RAM_BUNDLE_INDEXED = InternalFlavor.of("rambundle-indexed");
+  public static final UserFlavor ANDROID = UserFlavor.of("android", "Build JS for Android");
+  public static final UserFlavor IOS = UserFlavor.of("ios", "Build JS for iOS");
+  public static final UserFlavor RELEASE = UserFlavor.of("release", "Optimize for release builds");
+  public static final UserFlavor RAM_BUNDLE_FILES = UserFlavor.of(
+      "rambundle-files",
+      "Output code as file-based RAM bundle. For Android.");
+  public static final UserFlavor RAM_BUNDLE_INDEXED = UserFlavor.of(
+      "rambundle-indexed",
+      "Output code as indexed RAM bundle. For iOS. Only use for Android if copied to disk on " +
+          "first run");
 
-  private static final ImmutableSet<Flavor> libraryFlavors = ImmutableSet.of(RELEASE);
-  private static final ImmutableSet<Flavor> bundleFlavors =
-      ImmutableSet.of(RAM_BUNDLE_FILES, RAM_BUNDLE_INDEXED, RELEASE);
-  private static final ImmutableSet<Flavor> platforms = ImmutableSet.of(ANDROID, IOS);
+  public static final FlavorDomain<String> OPTIMIZATION_DOMAIN = new FlavorDomain<>(
+      "Build optimization",
+      ImmutableMap.of(RELEASE, "--release"));
+  public static final FlavorDomain<String> PLATFORM_DOMAIN = new FlavorDomain<>(
+      "Mobile platforms",
+      ImmutableMap.of(
+          ANDROID, "--platform android",
+          IOS, "--platform ios"));
+  public static final FlavorDomain<String> RAM_BUNDLE_DOMAIN = new FlavorDomain<>(
+      "RAM bundle types",
+      ImmutableMap.of(
+          RAM_BUNDLE_FILES, "--files-rambundle",
+          RAM_BUNDLE_INDEXED, "--indexed-rambundle"));
+
   private static final String fileFlavorPrefix = "file-";
 
   public static boolean validateLibraryFlavors(ImmutableSet<Flavor> flavors) {
-    return validateFlavors(flavors, libraryFlavors);
+    return validateFlavors(flavors, PLATFORM_DOMAIN, OPTIMIZATION_DOMAIN);
   }
 
   public static boolean validateBundleFlavors(ImmutableSet<Flavor> flavors) {
-    return validateFlavors(flavors, bundleFlavors);
+    return validateFlavors(flavors, PLATFORM_DOMAIN, OPTIMIZATION_DOMAIN, RAM_BUNDLE_DOMAIN);
   }
 
   private static boolean validateFlavors(
-      ImmutableSet<Flavor> flavors, ImmutableSet<Flavor> allowableNonPlatformFlavors) {
-    return Sets.intersection(flavors, platforms).size() < 2 &&
-        allowableNonPlatformFlavors.containsAll(Sets.difference(flavors, platforms));
-  }
+      ImmutableSet<Flavor> flavors,
+      FlavorDomain<?>... allowableDomains) {
 
-  public static String getPlatform(ImmutableSet<Flavor> flavors) {
-    return flavors.contains(IOS) ? "ios" : "android";
+    final ImmutableSet.Builder<Flavor> allowableFlavors = ImmutableSet.builder();
+    for (FlavorDomain<?> domain : allowableDomains) {
+      // verify only one flavor of each domain is present
+      domain.getFlavor(flavors);
+      allowableFlavors.addAll(domain.getFlavors());
+    }
+
+    return allowableFlavors.build().containsAll(flavors);
   }
 
   public static Flavor fileFlavorForSourcePath(final Path path) {
@@ -91,14 +112,17 @@ public class JsFlavors {
   private JsFlavors() {}
 
   public static String bundleJobArgs(Set<Flavor> flavors) {
-    final String ramFlag =
-        flavors.contains(RAM_BUNDLE_INDEXED) ? "--indexed-rambundle" :
-        flavors.contains(RAM_BUNDLE_FILES) ? "--files-rambundle" :
-        null;
-    final String releaseFlag = flavors.contains(RELEASE) ? "--release" : null;
-
-    return Stream.of(ramFlag, releaseFlag)
-        .filter(Objects::nonNull)
+    return Stream.of(
+        PLATFORM_DOMAIN.getValue(flavors),
+        RAM_BUNDLE_DOMAIN.getValue(flavors),
+        OPTIMIZATION_DOMAIN.getValue(flavors))
+        .filter(Optional::isPresent)
+        .map(Optional::get)
         .collect(Collectors.joining(" "));
+  }
+
+  public static String platformArgForRelease(Set<Flavor> flavors) {
+    return PLATFORM_DOMAIN.getValue(flavors).orElseThrow(() ->
+            new HumanReadableException("A platform flavor must be passed for release builds"));
   }
 }

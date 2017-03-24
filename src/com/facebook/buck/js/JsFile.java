@@ -145,8 +145,8 @@ public abstract class JsFile extends AbstractBuildRule {
       final SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
       final Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
       final String jobArgs = String.format(
-          "optimize %%s --platform %s --out %s %s",
-          JsFlavors.getPlatform(buildTarget.getFlavors()),
+          "optimize %%s %s --out %s %s",
+          JsFlavors.platformArgForRelease(buildTarget.getFlavors()),
           outputPath,
           sourcePathResolver.getAbsolutePath(devFile).toString());
 

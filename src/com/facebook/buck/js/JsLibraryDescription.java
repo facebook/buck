@@ -20,6 +20,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.model.UnflavoredBuildTarget;
@@ -110,6 +111,14 @@ public class JsLibraryDescription implements Description<JsLibraryDescription.Ar
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
     return JsFlavors.validateLibraryFlavors(flavors);
+  }
+
+  @Override
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+    return Optional.of(
+        ImmutableSet.of(
+            JsFlavors.OPTIMIZATION_DOMAIN,
+            JsFlavors.PLATFORM_DOMAIN));
   }
 
   @SuppressFieldNotInitialized
