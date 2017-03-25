@@ -154,18 +154,18 @@ public class ExopackageInstallerTest {
   public void testChunkArgs() {
     assertEquals(
         ImmutableList.of(),
-        ExopackageInstaller.chunkArgs(ImmutableList.of(), 8));
+        RealExopackageDevice.chunkArgs(ImmutableList.of(), 8));
 
     assertEquals(
         ImmutableList.of(
             ImmutableList.of("abcd", "efg")),
-        ExopackageInstaller.chunkArgs(ImmutableList.of("abcd", "efg"), 8));
+        RealExopackageDevice.chunkArgs(ImmutableList.of("abcd", "efg"), 8));
 
     assertEquals(
         ImmutableList.of(
             ImmutableList.of("abcd", "efg"),
             ImmutableList.of("hijkl")),
-        ExopackageInstaller.chunkArgs(ImmutableList.of("abcd", "efg", "hijkl"), 8));
+        RealExopackageDevice.chunkArgs(ImmutableList.of("abcd", "efg", "hijkl"), 8));
   }
 
   @Test

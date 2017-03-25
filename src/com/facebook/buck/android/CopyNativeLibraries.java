@@ -198,32 +198,41 @@ public class CopyNativeLibraries extends AbstractBuildRule {
         steps);
 
     final Path pathToMetadataTxt = getPathToMetadataTxt();
-    steps.add(
-        new AbstractExecutionStep("hash_native_libs") {
-          @Override
-          public StepExecutionResult execute(ExecutionContext context) {
-            ProjectFilesystem filesystem = getProjectFilesystem();
-            ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
-            try {
-              for (Path nativeLib : filesystem.getFilesUnderPath(getPathToAllLibsDir())) {
-                Sha1HashCode filesha1 = filesystem.computeSha1(nativeLib);
-                Path relativePath = getPathToAllLibsDir().relativize(nativeLib);
-                metadataLines.add(String.format("%s %s", relativePath, filesha1));
-              }
-              filesystem.writeLinesToPath(metadataLines.build(), pathToMetadataTxt);
-            } catch (IOException e) {
-              context.logError(e, "There was an error hashing native libraries.");
-              return StepExecutionResult.ERROR;
-            }
-            return StepExecutionResult.SUCCESS;
-          }
-        });
+    steps.add(createMetadataStep(
+        getProjectFilesystem(),
+        getPathToMetadataTxt(),
+        getPathToAllLibsDir()));
 
     buildableContext.recordArtifact(pathToNativeLibs);
     buildableContext.recordArtifact(pathToNativeLibsAssets);
     buildableContext.recordArtifact(pathToMetadataTxt);
 
     return steps.build();
+  }
+
+  public static Step createMetadataStep(
+      ProjectFilesystem filesystem,
+      Path pathToMetadataTxt,
+      Path pathToAllLibsDir) {
+    return new AbstractExecutionStep("hash_native_libs") {
+      @Override
+      public StepExecutionResult execute(ExecutionContext context)
+          throws IOException, InterruptedException {
+        ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
+        try {
+          for (Path nativeLib : filesystem.getFilesUnderPath(pathToAllLibsDir)) {
+            Sha1HashCode filesha1 = filesystem.computeSha1(nativeLib);
+            Path relativePath = pathToAllLibsDir.relativize(nativeLib);
+            metadataLines.add(String.format("%s %s", relativePath, filesha1));
+          }
+          filesystem.writeLinesToPath(metadataLines.build(), pathToMetadataTxt);
+        } catch (IOException e) {
+          context.logError(e, "There was an error hashing native libraries.");
+          return StepExecutionResult.ERROR;
+        }
+        return StepExecutionResult.SUCCESS;
+      }
+    };
   }
 
   @Nullable

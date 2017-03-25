@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.android.ddmlib.AdbCommandRejectedException;
-import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.agent.util.AgentUtil;
@@ -45,13 +44,9 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.io.Closer;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -68,7 +63,6 @@ import javax.annotation.Nullable;
  * ExopackageInstaller manages the installation of apps with the "exopackage" flag set to true.
  */
 public class ExopackageInstaller {
-
   private static final Logger LOG = Logger.get(ExopackageInstaller.class);
 
   /**
@@ -85,14 +79,14 @@ public class ExopackageInstaller {
       AGENT_DEVICE_PATH + "-1/base.apk:" + AGENT_DEVICE_PATH + "-2/base.apk " +
       "com.facebook.buck.android.agent.AgentMain ";
 
-  /**
-   * Maximum length of commands that can be passed to "adb shell".
-   */
-  private static final int MAX_ADB_COMMAND_SIZE = 1019;
+  @VisibleForTesting
+  static final Path SECONDARY_DEX_DIR = Paths.get("secondary-dex");
 
-  private static final Path SECONDARY_DEX_DIR = Paths.get("secondary-dex");
+  @VisibleForTesting
+  static final Path RESOURCES_DIR = Paths.get("resources");
 
-  private static final Path NATIVE_LIBS_DIR = Paths.get("native-libs");
+  @VisibleForTesting
+  static final Path NATIVE_LIBS_DIR = Paths.get("native-libs");
 
   @VisibleForTesting
   static final Pattern DEX_FILE_PATTERN = Pattern.compile("secondary-([0-9a-f]+)\\.[\\w.-]*");
@@ -101,16 +95,59 @@ public class ExopackageInstaller {
   static final Pattern NATIVE_LIB_PATTERN = Pattern.compile("native-([0-9a-f]+)\\.so");
 
   private static final Pattern LINE_ENDING = Pattern.compile("\r?\n");
+  public static final Path EXOPACKAGE_INSTALL_ROOT = Paths.get("/data/local/tmp/exopackage/");
 
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus eventBus;
   private final SourcePathResolver pathResolver;
-  private final AdbHelper adbHelper;
+  private final AdbInterface adbHelper;
   private final HasInstallableApk apkRule;
   private final String packageName;
   private final Path dataRoot;
+  private final Path agentApkPath;
 
   private final ExopackageInfo exopackageInfo;
+
+  /**
+   * AdbInterface provides a way to interact with multiple devices as ExopackageDevices (rather
+   * than IDevices).
+   *
+   * All of ExopackageInstaller's interaction with devices and adb goes through this class and
+   * ExopackageDevice making it easy to provide different implementations in tests.
+   */
+  @VisibleForTesting
+  static class AdbInterface {
+    private AdbHelper adbHelper;
+
+    AdbInterface(AdbHelper adbHelper) {
+      this.adbHelper = adbHelper;
+    }
+
+    /**
+     * This is basically the same as AdbHelper.AdbCallable except that it takes an ExopackageDevice
+     * instead of an IDevice.
+     */
+    interface AdbCallable {
+      boolean apply(ExopackageDevice device) throws Exception;
+    }
+
+    boolean adbCall(String description, AdbCallable func, boolean quiet)
+        throws InterruptedException {
+      return adbHelper.adbCall(
+          new AdbHelper.AdbCallable() {
+            @Override
+            public boolean call(IDevice device) throws Exception {
+              return func.apply(new RealExopackageDevice(device, adbHelper));
+            }
+
+            @Override
+            public String toString() {
+              return description;
+            }
+          },
+          quiet);
+    }
+  }
 
   /**
    * The next port number to use for communicating with the agent on a device.
@@ -124,11 +161,19 @@ public class ExopackageInstaller {
     final String apkPath;
     final String nativeLibPath;
     final String versionCode;
-    private PackageInfo(String apkPath, String nativeLibPath, String versionCode) {
+    PackageInfo(String apkPath, String nativeLibPath, String versionCode) {
       this.nativeLibPath = nativeLibPath;
       this.apkPath = apkPath;
       this.versionCode = versionCode;
     }
+  }
+
+  private static Path getApkFilePathFromProperties() {
+    String apkFileName = System.getProperty("buck.android_agent_path");
+    if (apkFileName == null) {
+      throw new RuntimeException("Android agent apk path not specified in properties");
+    }
+    return Paths.get(apkFileName);
   }
 
   public ExopackageInstaller(
@@ -136,15 +181,30 @@ public class ExopackageInstaller {
       ExecutionContext context,
       AdbHelper adbHelper,
       HasInstallableApk apkRule) {
+    this(
+        pathResolver,
+        context,
+        new AdbInterface(adbHelper),
+        getApkFilePathFromProperties(),
+        apkRule);
+  }
+
+  public ExopackageInstaller(
+      SourcePathResolver pathResolver,
+      ExecutionContext context,
+      AdbInterface adbInterface,
+      Path agentApkPath,
+      HasInstallableApk apkRule) {
     this.pathResolver = pathResolver;
-    this.adbHelper = adbHelper;
+    this.adbHelper = adbInterface;
+    this.agentApkPath = agentApkPath;
     this.projectFilesystem = apkRule.getProjectFilesystem();
     this.eventBus = context.getBuckEventBus();
     this.apkRule = apkRule;
     this.packageName = AdbHelper.tryToExtractPackageNameFromManifest(
         pathResolver,
         apkRule.getApkInfo());
-    this.dataRoot = Paths.get("/data/local/tmp/exopackage/").resolve(packageName);
+    this.dataRoot = EXOPACKAGE_INSTALL_ROOT.resolve(packageName);
 
     Preconditions.checkArgument(AdbHelper.PACKAGE_NAME_PATTERN.matcher(packageName).matches());
 
@@ -161,23 +221,10 @@ public class ExopackageInstaller {
     eventBus.post(started);
 
     boolean success = adbHelper.adbCall(
-        new AdbHelper.AdbCallable() {
-          @Override
-          public boolean call(IDevice device) throws Exception {
-            try {
-              return new SingleDeviceInstaller(
-                  device,
-                  nextAgentPort.getAndIncrement()).doInstall();
-            } catch (Exception e) {
-              throw new RuntimeException("Failed to install exopackage on " + device, e);
-            }
-          }
-
-          @Override
-          public String toString() {
-            return "install exopackage";
-          }
-        },
+        "install exopackage apk",
+        device -> new SingleDeviceInstaller(
+            device,
+            nextAgentPort.getAndIncrement()).doInstall(),
         quiet);
 
     eventBus.post(InstallEvent.finished(
@@ -198,7 +245,7 @@ public class ExopackageInstaller {
     /**
      * Device that we are installing onto.
      */
-    private final IDevice device;
+    private final ExopackageDevice device;
 
     /**
      * Port to use for sending files to the agent.
@@ -217,7 +264,7 @@ public class ExopackageInstaller {
     private String nativeAgentPath;
 
     private SingleDeviceInstaller(
-        IDevice device,
+        ExopackageDevice device,
         int agentPort) {
       this.device = device;
       this.agentPort = agentPort;
@@ -238,13 +285,15 @@ public class ExopackageInstaller {
 
       if (shouldAppBeInstalled()) {
         try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "install_exo_apk")) {
-          boolean success = adbHelper.installApkOnDevice(device, apk, installViaSd, false);
+          boolean success = device.installApkOnDevice(apk, installViaSd, false);
           if (!success) {
             return false;
           }
         }
       }
 
+      // TODO(cjhopman): We should clear out the directories on the device for types we don't
+      // install.
       if (exopackageInfo.getDexInfo().isPresent()) {
         installSecondaryDexFiles();
       }
@@ -255,7 +304,7 @@ public class ExopackageInstaller {
 
       // TODO(dreiss): Make this work on Gingerbread.
       try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "kill_app")) {
-        AdbHelper.executeCommandWithErrorChecking(device, "am force-stop " + packageName);
+        device.stopPackage(packageName);
       }
 
       return true;
@@ -296,17 +345,17 @@ public class ExopackageInstaller {
     private ImmutableList<String> getDeviceAbis() throws Exception {
       ImmutableList.Builder<String> abis = ImmutableList.builder();
       // Rare special indigenous to Lollipop devices
-      String abiListProperty = getProperty("ro.product.cpu.abilist");
+      String abiListProperty = device.getProperty("ro.product.cpu.abilist");
       if (!abiListProperty.isEmpty()) {
         abis.addAll(Splitter.on(',').splitToList(abiListProperty));
       } else {
-        String abi1 = getProperty("ro.product.cpu.abi");
+        String abi1 = device.getProperty("ro.product.cpu.abi");
         if (abi1.isEmpty()) {
           throw new RuntimeException("adb returned empty result for ro.product.cpu.abi property.");
         }
 
         abis.add(abi1);
-        String abi2 = getProperty("ro.product.cpu.abi2");
+        String abi2 = device.getProperty("ro.product.cpu.abi2");
         if (!abi2.isEmpty()) {
           abis.add(abi2);
         }
@@ -362,7 +411,7 @@ public class ExopackageInstaller {
      * without -fPIC.  The java agent works fine on L as long as we don't use it for mkdir.
      */
     private void determineBestAgent() throws Exception {
-      String value = getProperty("ro.build.version.sdk");
+      String value = device.getProperty("ro.build.version.sdk");
       try {
         if (Integer.valueOf(value.trim()) > 19) {
           useNativeAgent = false;
@@ -385,29 +434,7 @@ public class ExopackageInstaller {
           eventBus,
           PerfEventId.of("get_package_info"),
           "package", packageName)) {
-
-        /* "dumpsys package <package>" produces output that looks like
-
-          Package [com.facebook.katana] (4229ce68):
-            userId=10145 gids=[1028, 1015, 3003]
-            pkg=Package{42690b80 com.facebook.katana}
-            codePath=/data/app/com.facebook.katana-1.apk
-            resourcePath=/data/app/com.facebook.katana-1.apk
-            nativeLibraryPath=/data/app-lib/com.facebook.katana-1
-            versionCode=1640376 targetSdk=14
-            versionName=8.0.0.0.23
-
-            ...
-
-         */
-        // We call "pm path" because "dumpsys package" returns valid output if an app has been
-        // uninstalled using the "--keepdata" option. "pm path", on the other hand, returns an empty
-        // output in that case.
-        String lines = AdbHelper.executeCommandWithErrorChecking(
-            device,
-            String.format("pm path %s; dumpsys package %s", packageName, packageName));
-
-        return parsePathAndPackageInfo(packageName, lines);
+        return device.getPackageInfo(packageName);
       }
     }
 
@@ -438,13 +465,8 @@ public class ExopackageInstaller {
 
     private Optional<PackageInfo> installAgentApk() throws Exception {
       try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "install_agent_apk")) {
-        String apkFileName = System.getProperty("buck.android_agent_path");
-        if (apkFileName == null) {
-          throw new RuntimeException("Android agent apk path not specified in properties");
-        }
-        File apkPath = new File(apkFileName);
-        boolean success = adbHelper.installApkOnDevice(
-            device,
+        File apkPath = agentApkPath.toFile();
+        boolean success = device.installApkOnDevice(
             apkPath,
             /* installViaSd */ false,
             /* quiet */ false);
@@ -480,9 +502,7 @@ public class ExopackageInstaller {
 
     private String getInstalledAppSignature(final String packagePath) throws Exception {
       try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "get_app_signature")) {
-        String command = getAgentCommand() + "get-signature " + packagePath;
-        LOG.debug("Executing %s", command);
-        String output = AdbHelper.executeCommandWithErrorChecking(device, command);
+        String output = device.getSignature(getAgentCommand(), packagePath);
 
         String result = output.trim();
         if (result.contains("\n") || result.contains("\r")) {
@@ -509,42 +529,35 @@ public class ExopackageInstaller {
 
     private ImmutableSet<String> prepareSecondaryDexDir(ImmutableSet<String> requiredHashes)
         throws Exception {
-      return prepareDirectory("secondary-dex", DEX_FILE_PATTERN, requiredHashes);
+      return prepareDirectory(SECONDARY_DEX_DIR, DEX_FILE_PATTERN, requiredHashes);
     }
 
     private ImmutableSet<String> prepareNativeLibsDir(
         String abi,
         ImmutableSet<String> requiredHashes) throws Exception {
-      return prepareDirectory("native-libs/" + abi, NATIVE_LIB_PATTERN, requiredHashes);
+      return prepareDirectory(NATIVE_LIBS_DIR.resolve(abi), NATIVE_LIB_PATTERN, requiredHashes);
     }
 
     private ImmutableSet<String> prepareDirectory(
-        String dirname,
+        Path dirname,
         Pattern filePattern,
         ImmutableSet<String> requiredHashes) throws Exception {
       try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "prepare_" + dirname)) {
         String dirPath = dataRoot.resolve(dirname).toString();
-        mkDirP(dirPath);
+        // Kind of a hack here.  The java agent can't force the proper permissions on the
+        // directories it creates, so we use the command-line "mkdir -p" instead of the java agent.
+        // Fortunately, "mkdir -p" seems to work on all devices where we use use the java agent.
+        String mkdirP = useNativeAgent ? getAgentCommand() + "mkdir-p" : "mkdir -p";
+        device.mkDirP(mkdirP, dirPath);
 
-        String output = AdbHelper.executeCommandWithErrorChecking(
-            device,
-            "ls " + dirPath + " | cat");
+        String output = device.listDir(dirPath);
 
         ImmutableSet.Builder<String> foundHashes = ImmutableSet.builder();
         ImmutableSet.Builder<String> filesToDelete = ImmutableSet.builder();
 
         processLsOutput(output, filePattern, requiredHashes, foundHashes, filesToDelete);
 
-        String commandPrefix = "cd " + dirPath + " && rm ";
-        // Add a fudge factor for separators and error checking.
-        final int overhead = commandPrefix.length() + 100;
-        for (List<String> rmArgs :
-            chunkArgs(filesToDelete.build(), MAX_ADB_COMMAND_SIZE - overhead)) {
-          String command = commandPrefix + Joiner.on(' ').join(rmArgs);
-          LOG.debug("Executing %s", command);
-          AdbHelper.executeCommandWithErrorChecking(device, command);
-        }
-
+        device.rmFiles(dirPath, filesToDelete.build());
         return foundHashes.build();
       }
     }
@@ -558,15 +571,20 @@ public class ExopackageInstaller {
       try (SimplePerfEvent.Scope ignored1 =
                SimplePerfEvent.scope(eventBus, "multi_install_" + filesType)) {
         device.createForward(agentPort, agentPort);
+        Path destinationDir = dataRoot.resolve(destinationDirRelativeToDataRoot);
         try {
           for (Map.Entry<String, Path> entry : filesToInstallByHash.entrySet()) {
-            Path destination = destinationDirRelativeToDataRoot.resolve(
+            Path destination = destinationDir.resolve(
                 String.format(filenameFormat, entry.getKey()));
             Path source = entry.getValue();
 
             try (SimplePerfEvent.Scope ignored2 =
                      SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
-              installFile(device, agentPort, destination, source);
+              device.installFile(
+                  getAgentCommand(),
+                  agentPort,
+                  destination,
+                  projectFilesystem.resolve(source));
             }
           }
           try (SimplePerfEvent.Scope ignored3 =
@@ -575,10 +593,10 @@ public class ExopackageInstaller {
               com.google.common.io.Files.write(
                   metadataFileContents.getBytes(Charsets.UTF_8),
                   temp.get().toFile());
-              installFile(
-                  device,
+              device.installFile(
+                  getAgentCommand(),
                   agentPort,
-                  destinationDirRelativeToDataRoot.resolve("metadata.txt"),
+                  destinationDir.resolve("metadata.txt"),
                   temp.get());
             }
           }
@@ -596,112 +614,6 @@ public class ExopackageInstaller {
           }
         }
       }
-    }
-
-    private void installFile(
-        IDevice device,
-        final int port,
-        Path pathRelativeToDataRoot,
-        final Path relativeSource) throws Exception {
-      final Path source = projectFilesystem.resolve(relativeSource);
-      Closer closer = Closer.create();
-      CollectingOutputReceiver receiver = new CollectingOutputReceiver() {
-
-        private boolean startedPayload = false;
-        private boolean wrotePayload = false;
-        @Nullable
-        private OutputStream outToDevice;
-
-        @Override
-        public void addOutput(byte[] data, int offset, int length) {
-          super.addOutput(data, offset, length);
-          try {
-            if (!startedPayload && getOutput().length() >= AgentUtil.TEXT_SECRET_KEY_SIZE) {
-              LOG.verbose("Got key: %s", getOutput().split("[\\r\\n]", 1)[0]);
-              startedPayload = true;
-              Socket clientSocket = new Socket("localhost", port);
-              closer.register(clientSocket);
-              LOG.verbose("Connected");
-              outToDevice = clientSocket.getOutputStream();
-              closer.register(outToDevice);
-              // Need to wait for client to acknowledge that we've connected.
-            }
-            if (!wrotePayload && getOutput().contains("z1")) {
-              if (outToDevice == null) {
-                throw new NullPointerException(
-                    "outToDevice was null when protocol says it cannot be");
-              }
-              LOG.verbose("Got z1");
-              wrotePayload = true;
-              outToDevice.write(
-                  getOutput().substring(
-                      0,
-                      AgentUtil.TEXT_SECRET_KEY_SIZE).getBytes());
-              LOG.verbose("Wrote key");
-              com.google.common.io.Files.asByteSource(source.toFile()).copyTo(outToDevice);
-              outToDevice.flush();
-              LOG.verbose("Wrote file");
-            }
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
-        }
-      };
-
-      String targetFileName = projectFilesystem.resolve(
-          dataRoot.resolve(pathRelativeToDataRoot)).toString();
-      String command =
-          "umask 022 && " +
-              getAgentCommand() +
-              "receive-file " + port + " " + Files.size(source) + " " +
-              targetFileName +
-              " ; echo -n :$?";
-      LOG.debug("Executing %s", command);
-
-      // If we fail to execute the command, stash the exception.  My experience during development
-      // has been that the exception from checkReceiverOutput is more actionable.
-      Exception shellException = null;
-      try {
-        device.executeShellCommand(command, receiver);
-      } catch (Exception e) {
-        shellException = e;
-      }
-
-      // Close the client socket, if we opened it.
-      closer.close();
-
-      try {
-        AdbHelper.checkReceiverOutput(command, receiver);
-      } catch (Exception e) {
-        if (shellException != null) {
-          e.addSuppressed(shellException);
-        }
-        throw e;
-      }
-
-      if (shellException != null) {
-        throw shellException;
-      }
-
-      // The standard Java libraries on Android always create new files un-readable by other users.
-      // We use the shell user or root to create these files, so we need to explicitly set the mode
-      // to allow the app to read them.  Ideally, the agent would do this automatically, but
-      // there's no easy way to do this in Java.  We can drop this if we drop support for the
-      // Java agent.
-      AdbHelper.executeCommandWithErrorChecking(device, "chmod 644 " + targetFileName);
-    }
-
-    private String getProperty(String property) throws Exception {
-      return AdbHelper.executeCommandWithErrorChecking(device, "getprop " + property).trim();
-    }
-
-    private void mkDirP(String dirpath) throws Exception {
-      // Kind of a hack here.  The java agent can't force the proper permissions on the
-      // directories it creates, so we use the command-line "mkdir -p" instead of the java agent.
-      // Fortunately, "mkdir -p" seems to work on all devices where we use use the java agent.
-      String mkdirP = useNativeAgent ? getAgentCommand() + "mkdir-p" : "mkdir -p";
-
-      AdbHelper.executeCommandWithErrorChecking(device, "umask 022 && " + mkdirP + " " + dirpath);
     }
   }
 
@@ -901,31 +813,4 @@ public class ExopackageInstaller {
     }
   }
 
-  /**
-   * Breaks a list of strings into groups whose total size is within some limit.
-   * Kind of like the xargs command that groups arguments to avoid maximum argument length limits.
-   * Except that the limit in adb is about 1k instead of 512k or 2M on Linux.
-   */
-  @VisibleForTesting
-  static ImmutableList<ImmutableList<String>> chunkArgs(Iterable<String> args, int sizeLimit) {
-    ImmutableList.Builder<ImmutableList<String>> topLevelBuilder = ImmutableList.builder();
-    ImmutableList.Builder<String> chunkBuilder = ImmutableList.builder();
-    int chunkSize = 0;
-    for (String arg : args) {
-      if (chunkSize + arg.length() > sizeLimit) {
-        topLevelBuilder.add(chunkBuilder.build());
-        chunkBuilder = ImmutableList.builder();
-        chunkSize = 0;
-      }
-      // We don't check for an individual arg greater than the limit.
-      // We just put it in its own chunk and hope for the best.
-      chunkBuilder.add(arg);
-      chunkSize += arg.length();
-    }
-    ImmutableList<String> tail = chunkBuilder.build();
-    if (!tail.isEmpty()) {
-      topLevelBuilder.add(tail);
-    }
-    return topLevelBuilder.build();
-  }
 }
