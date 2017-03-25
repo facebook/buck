@@ -956,14 +956,15 @@ public class PrebuiltCxxLibraryDescription implements
       public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
         if (headerOnly) {
           return Linkage.ANY;
-        }
-        if (forceStatic) {
+        } else if (forceStatic) {
           return Linkage.STATIC;
-        }
-        if (args.provided || !getStaticPicLibrary(cxxPlatform).isPresent()) {
+        } else if (args.preferredLinkage.orElse(Linkage.ANY) != Linkage.ANY) {
+          return args.preferredLinkage.get();
+        } else if (args.provided || !getStaticPicLibrary(cxxPlatform).isPresent()) {
           return Linkage.SHARED;
+        } else {
+          return Linkage.ANY;
         }
-        return Linkage.ANY;
       }
 
       @Override
@@ -1101,6 +1102,7 @@ public class PrebuiltCxxLibraryDescription implements
     public boolean provided = false;
     public boolean linkWhole = false;
     public Optional<Boolean> forceStatic;
+    public Optional<NativeLinkable.Linkage> preferredLinkage;
     public ImmutableList<String> exportedPreprocessorFlags = ImmutableList.of();
     public PatternMatchedCollection<ImmutableList<String>>
         exportedPlatformPreprocessorFlags = PatternMatchedCollection.of();
