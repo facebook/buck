@@ -49,6 +49,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -634,13 +635,13 @@ public class IjModuleFactoryTest {
           }
 
           @Override
-          public Optional<Path> getAndroidResourcePath(
+          public Optional<ImmutableList<Path>> getAndroidResourcePaths(
               TargetNode<AndroidResourceDescription.Arg, ?> targetNode) {
             return Optional.empty();
           }
 
           @Override
-          public Optional<Path> getAssetsPath(
+          public Optional<ImmutableList<Path>> getAssetsPaths(
               TargetNode<AndroidResourceDescription.Arg, ?> targetNode) {
             return Optional.empty();
           }

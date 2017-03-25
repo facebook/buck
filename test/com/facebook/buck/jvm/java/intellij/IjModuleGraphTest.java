@@ -836,13 +836,13 @@ public class IjModuleGraphTest {
           }
 
           @Override
-          public Optional<Path> getAndroidResourcePath(
+          public Optional<ImmutableList<Path>> getAndroidResourcePaths(
               TargetNode<AndroidResourceDescription.Arg, ?> targetNode) {
             return Optional.empty();
           }
 
           @Override
-          public Optional<Path> getAssetsPath(
+          public Optional<ImmutableList<Path>> getAssetsPaths(
               TargetNode<AndroidResourceDescription.Arg, ?> targetNode) {
             return Optional.empty();
           }

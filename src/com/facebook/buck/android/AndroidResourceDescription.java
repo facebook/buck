@@ -47,6 +47,7 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -204,39 +205,51 @@ public class AndroidResourceDescription
         ruleFinder);
   }
 
-  public static Optional<SourcePath> getResDirectoryForProject(
+  public static Optional<ImmutableList<? extends SourcePath>> getResDirectoriesForProject(
       BuildRuleResolver ruleResolver,
       TargetNode<Arg, ?> node) {
     Arg arg = node.getConstructorArg();
     if (arg.projectRes.isPresent()) {
-      return Optional.of(
-          new PathSourcePath(node.getFilesystem(), arg.projectRes.get()));
+      return Optional.of(RichStream.from(arg.projectRes.get().iterator())
+          .map(path -> new PathSourcePath(node.getFilesystem(), path))
+          .toImmutableList());
     }
     if (!arg.res.isPresent()) {
       return Optional.empty();
     }
     if (arg.res.get().isLeft()) {
-      return Optional.of(arg.res.get().getLeft());
+      return Optional.of(ImmutableList.of(arg.res.get().getLeft()));
     } else {
-      return getResDirectory(ruleResolver, node);
+      Optional<SourcePath> resDir = getResDirectory(ruleResolver, node);
+      if (resDir.isPresent()) {
+        return Optional.of(ImmutableList.of(resDir.get()));
+      } else {
+        return Optional.empty();
+      }
     }
   }
 
-  public static Optional<SourcePath> getAssetsDirectoryForProject(
+  public static Optional<ImmutableList<? extends SourcePath>> getAssetsDirectoriesForProject(
       BuildRuleResolver ruleResolver,
       TargetNode<Arg, ?> node) {
     Arg arg = node.getConstructorArg();
     if (arg.projectAssets.isPresent()) {
-      return Optional.of(
-          new PathSourcePath(node.getFilesystem(), arg.projectAssets.get()));
+      return Optional.of(RichStream.from(arg.projectAssets.get().iterator())
+          .map(path -> new PathSourcePath(node.getFilesystem(), path))
+          .toImmutableList());
     }
     if (!arg.assets.isPresent()) {
       return Optional.empty();
     }
     if (arg.assets.get().isLeft()) {
-      return Optional.of(arg.assets.get().getLeft());
+      return Optional.of(ImmutableList.of(arg.assets.get().getLeft()));
     } else {
-      return getAssetsDirectory(ruleResolver, node);
+      Optional<SourcePath> assetsDir = getAssetsDirectory(ruleResolver, node);
+      if (assetsDir.isPresent()) {
+        return Optional.of(ImmutableList.of(assetsDir.get()));
+      } else {
+        return Optional.empty();
+      }
     }
   }
 
@@ -382,8 +395,8 @@ public class AndroidResourceDescription
   public static class Arg extends AbstractDescriptionArg {
     public Optional<Either<SourcePath, ImmutableSortedMap<String, SourcePath>>> res;
     public Optional<Either<SourcePath, ImmutableSortedMap<String, SourcePath>>> assets;
-    public Optional<Path> projectRes;
-    public Optional<Path> projectAssets;
+    public Optional<ImmutableList<Path>> projectRes;
+    public Optional<ImmutableList<Path>> projectAssets;
     public Optional<Boolean> hasWhitelistedStrings;
     @Hint(name = "package")
     public Optional<String> rDotJavaPackage;
