@@ -50,7 +50,7 @@ class BuckPackage(BuckTool):
         return self._package_info['version']
 
     def _get_resource_dir(self):
-        if self._use_buckd():
+        if self._use_buckd:
             base_dir = self._buck_project.buckd_dir
         else:
             base_dir = self._tmp_dir

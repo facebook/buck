@@ -5,7 +5,7 @@ import sys
 import textwrap
 
 from tracing import Tracing
-from buck_tool import BuckTool, JAVA_MAX_HEAP_SIZE_MB
+from buck_tool import BuckTool, JAVA_MAX_HEAP_SIZE_MB, platform_path
 from buck_tool import BuckToolException, RestartBuck
 from subprocess import check_output
 from subprocutils import which
@@ -138,7 +138,7 @@ class BuckRepo(BuckTool):
     def __init__(self, buck_bin_dir, buck_project):
         super(BuckRepo, self).__init__(buck_project)
 
-        self._buck_dir = self._platform_path(os.path.dirname(buck_bin_dir))
+        self._buck_dir = platform_path(os.path.dirname(buck_bin_dir))
         self._build_success_file = os.path.join(
             self._buck_dir, "build", "successful-build")
 

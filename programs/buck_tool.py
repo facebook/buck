@@ -26,11 +26,14 @@ JAVA_MAX_HEAP_SIZE_MB = 1000
 # every DAEMON_BUSY_MESSAGE_SECONDS seconds.
 DAEMON_BUSY_MESSAGE_SECONDS = 1.0
 
-# Describes a resource used by this driver.
-#  - name: logical name of the resources
-#  - executable: whether the resource should/needs execute permissions
-#  - basename: required basename of the resource
+
 class Resource(object):
+    """Describes a resource used by this driver.
+
+    :ivar name: logical name of the resources
+    :ivar executable: whether the resource should/needs execute permissions
+    :ivar basename: required basename of the resource
+    """
     def __init__(self, name, executable=False, basename=None):
         self.name = name
         self.executable = executable
@@ -98,28 +101,47 @@ class BuckTool(object):
         self._init_timestamp = int(round(time.time() * 1000))
         self._command_line = CommandLineArgs(sys.argv)
         self._buck_project = buck_project
-        self._tmp_dir = self._platform_path(buck_project.tmp_dir)
+        self._tmp_dir = platform_path(buck_project.tmp_dir)
         self._stdout_file = os.path.join(self._tmp_dir, "stdout")
         self._stderr_file = os.path.join(self._tmp_dir, "stderr")
 
         self._pathsep = os.pathsep
-        if (sys.platform == 'cygwin'):
+        if sys.platform == 'cygwin':
             self._pathsep = ';'
 
-    # Check whether the given resource exists.
     def _has_resource(self, resource):
+        """Check whether the given resource exists."""
         raise NotImplementedError()
 
-    # Return an on-disk path to the given resource.  This may cause
-    # implementations to unpack the resource at this point.
     def _get_resource(self, resource):
+        """Return an on-disk path to the given resource.
+
+        This may cause implementations to unpack the resource at this point.
+        """
         raise NotImplementedError()
 
-    # Return the path to the file used to determine if another buck process is using the same
-    # resources folder (used for cleanup coordination).
     def _get_resource_lock_path(self):
+        """Return the path to the file used to determine if another buck process is using the same
+        resources folder (used for cleanup coordination).
+        """
         raise NotImplementedError()
 
+    def _get_buck_version_uid(self):
+        raise NotImplementedError()
+
+    def _get_bootstrap_classpath(self):
+        raise NotImplementedError()
+
+    def _get_java_classpath(self):
+        raise NotImplementedError()
+
+    def _is_buck_production(self):
+        raise NotImplementedError()
+
+    def _get_extra_java_args(self):
+        return []
+
+    @property
     def _use_buckd(self):
         return not os.environ.get('NO_BUCKD')
 
@@ -137,13 +159,13 @@ class BuckTool(object):
 
             buck_version_uid = self._get_buck_version_uid()
 
-            use_buckd = self._use_buckd()
+            use_buckd = self._use_buckd
             if not self._command_line.is_help():
                 has_watchman = bool(which('watchman'))
                 if use_buckd and has_watchman:
                     running_version = self._buck_project.get_running_buckd_version()
 
-                    if (running_version != buck_version_uid):
+                    if running_version != buck_version_uid:
                         self.kill_buckd()
 
                     if not self._is_buckd_running():
@@ -209,16 +231,6 @@ class BuckTool(object):
             return buck_exit_code
 
 
-    def _truncate_logs_pretty(self, logs):
-        NUMBER_OF_LINES_BEFORE = 100
-        NUMBER_OF_LINES_AFTER = 100
-        if len(logs) <= NUMBER_OF_LINES_BEFORE + NUMBER_OF_LINES_AFTER:
-            return logs
-        new_logs = logs[:NUMBER_OF_LINES_BEFORE]
-        new_logs.append('...<truncated>...')
-        new_logs.extend(logs[-NUMBER_OF_LINES_AFTER:])
-        return new_logs
-
     def _generate_log_entry(self, exit_code, message, logs_array):
         import socket
         import getpass
@@ -245,7 +257,7 @@ class BuckTool(object):
 
     def launch_buckd(self, buck_version_uid=None):
         with Tracing('BuckTool.launch_buckd'):
-            self._setup_watchman_watch()
+            setup_watchman_watch()
             if buck_version_uid is None:
                 buck_version_uid = self._get_buck_version_uid()
             # Override self._tmp_dir to a long lived directory.
@@ -354,20 +366,6 @@ class BuckTool(object):
 
             self._buck_project.clean_up_buckd()
 
-    def _setup_watchman_watch(self):
-        with Tracing('BuckTool._setup_watchman_watch'):
-            if not which('watchman'):
-                message = textwrap.dedent("""\
-                    Watchman not found, please install when using buckd.
-                    See https://github.com/facebook/watchman for details.""")
-                if sys.platform == "darwin":
-                    message += "\n(brew install watchman on OS X)"
-                # Bail if watchman isn't installed as we know java's
-                # FileSystemWatcher will take too long to process events.
-                raise BuckToolException(message)
-
-            print("Using watchman.", file=sys.stderr)
-
     def _is_buckd_running(self):
         with Tracing('BuckTool._is_buckd_running'):
             buckd_socket_path = self._buck_project.get_buckd_socket_path()
@@ -389,21 +387,6 @@ class BuckTool(object):
                 else:
                     raise
             return True
-
-    def _get_buck_version_uid(self):
-        raise NotImplementedError()
-
-    def _get_bootstrap_classpath(self):
-        raise NotImplementedError()
-
-    def _get_java_classpath(self):
-        raise NotImplementedError()
-
-    def _is_buck_production(self):
-        raise NotImplementedError()
-
-    def _get_extra_java_args(self):
-        return []
 
     def _get_java_args(self, version_uid, extra_default_options=[]):
         with Tracing('BuckTool._get_java_args'):
@@ -455,14 +438,41 @@ class BuckTool(object):
                 java_args.extend(shlex.split(extra_java_args))
             return java_args
 
-    def _platform_path(self, path):
-        if sys.platform != 'cygwin':
-            return path
-        return subprocess.check_output(['cygpath', '-w', path]).strip()
-
 
 def install_signal_handlers():
     if os.name == 'posix':
         signal.signal(
             signal.SIGUSR1,
             lambda sig, frame: traceback.print_stack(frame))
+
+
+def platform_path(path):
+    if sys.platform != 'cygwin':
+        return path
+    return subprocess.check_output(['cygpath', '-w', path]).strip()
+
+
+def truncate_logs_pretty(logs):
+    NUMBER_OF_LINES_BEFORE = 100
+    NUMBER_OF_LINES_AFTER = 100
+    if len(logs) <= NUMBER_OF_LINES_BEFORE + NUMBER_OF_LINES_AFTER:
+        return logs
+    new_logs = logs[:NUMBER_OF_LINES_BEFORE]
+    new_logs.append('...<truncated>...')
+    new_logs.extend(logs[-NUMBER_OF_LINES_AFTER:])
+    return new_logs
+
+
+def setup_watchman_watch():
+    with Tracing('BuckTool._setup_watchman_watch'):
+        if not which('watchman'):
+            message = textwrap.dedent("""\
+                Watchman not found, please install when using buckd.
+                See https://github.com/facebook/watchman for details.""")
+            if sys.platform == "darwin":
+                message += "\n(brew install watchman on OS X)"
+            # Bail if watchman isn't installed as we know java's
+            # FileSystemWatcher will take too long to process events.
+            raise BuckToolException(message)
+
+        print("Using watchman.", file=sys.stderr)
