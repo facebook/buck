@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.Dispatcher;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -70,6 +71,9 @@ public class ClientSideSlb implements HttpLoadBalancer {
         Executors.newSingleThreadScheduledExecutor(
             new CommandThreadFactory("ClientSideSlb", Thread.MAX_PRIORITY)),
         new OkHttpClient.Builder()
+            .dispatcher(new Dispatcher(Executors.newCachedThreadPool(new CommandThreadFactory(
+                "ClientSideSlb/OkHttpClient",
+                Thread.MAX_PRIORITY))))
             .connectTimeout(config.getConnectionTimeoutMillis(), TimeUnit.MILLISECONDS)
             .readTimeout(config.getConnectionTimeoutMillis(), TimeUnit.MILLISECONDS)
             .writeTimeout(config.getConnectionTimeoutMillis(), TimeUnit.MILLISECONDS)
@@ -123,6 +127,7 @@ public class ClientSideSlb implements HttpLoadBalancer {
   public void close() {
     backgroundHealthChecker.cancel(true);
     schedulerService.shutdownNow();
+    pingClient.dispatcher().executorService().shutdownNow();
   }
 
   // TODO(ruibm): Register for BuildStart events in the EventBus and force a health check then.
