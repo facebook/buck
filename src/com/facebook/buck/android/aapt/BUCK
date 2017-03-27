@@ -1,4 +1,7 @@
 standard_java_library(
+    immutable_types = [
+        "MergeAndroidResourceSourcesStep",
+    ],
     tests = [
         "//test/com/facebook/buck/android:unit",
         "//test/com/facebook/buck/android/aapt:aapt",

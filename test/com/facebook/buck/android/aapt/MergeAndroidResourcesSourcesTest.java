@@ -150,11 +150,11 @@ public class MergeAndroidResourcesSourcesTest {
     File outFolder = tmp.newFolder("out");
     File tmpFolder = tmp.newFolder("tmp");
 
-    MergeAndroidResourceSourcesStep step = new MergeAndroidResourceSourcesStep(
-        ImmutableList.of(rootPath.resolve("res_in_1"), rootPath.resolve("res_in_2")),
-        outFolder.toPath(),
-        tmpFolder.toPath()
-    );
+    MergeAndroidResourceSourcesStep step = MergeAndroidResourceSourcesStep.builder()
+        .setResPaths(ImmutableList.of(rootPath.resolve("res_in_1"), rootPath.resolve("res_in_2")))
+        .setOutFolderPath(outFolder.toPath())
+        .setTmpFolderPath(tmpFolder.toPath())
+        .build();
     step.execute(context);
     assertThat(
         filesystem.getFilesUnderPath(outFolder.toPath()),

@@ -28,9 +28,12 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+
+import org.immutables.value.Value;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -38,23 +41,35 @@ import java.nio.file.Path;
 /**
  * Merges multiple directories containing Android resource sources into one directory.
  */
-public class MergeAndroidResourceSourcesStep implements Step {
+@Value.Immutable
+@BuckStyleImmutable
+abstract class AbstractMergeAndroidResourceSourcesStep implements Step {
 
-  private static final Logger LOG = Logger.get(MergeAndroidResourceSourcesStep.class);
+  private static final Logger LOG = Logger.get(AbstractMergeAndroidResourceSourcesStep.class);
 
-  private final ImmutableList<Path> resPaths;
-  private final Path outFolderPath;
-  private final Path tmpFolderPath;
+  @Value.Parameter
+  protected abstract ImmutableList<Path> getResPaths();
+  @Value.Parameter
+  protected abstract Path getOutFolderPath();
+  @Value.Parameter
+  protected abstract Path getTmpFolderPath();
 
-  public MergeAndroidResourceSourcesStep(
-      ImmutableList<Path> resPaths,
-      Path outFolderPath,
-      Path tmpFolderPath) {
-    this.resPaths = resPaths;
-    this.outFolderPath = outFolderPath;
-    this.tmpFolderPath = tmpFolderPath;
-    Preconditions.checkArgument(outFolderPath.isAbsolute());
-    Preconditions.checkArgument(tmpFolderPath.isAbsolute());
+  @Value.Check
+  protected void check() {
+    Preconditions.checkArgument(
+        getOutFolderPath().isAbsolute(),
+        "Android merge out folder path must be absolute but was %s",
+        getOutFolderPath());
+    Preconditions.checkArgument(
+        getTmpFolderPath().isAbsolute(),
+        "Android merge tmp folder path must be absolute but was %s",
+        getOutFolderPath());
+    for (Path resPath : getResPaths()) {
+      Preconditions.checkArgument(
+          resPath.isAbsolute(),
+          "Android merge resource path must be absolute but was %s",
+          resPath);
+    }
   }
 
   @Override
@@ -62,8 +77,7 @@ public class MergeAndroidResourceSourcesStep implements Step {
       throws IOException, InterruptedException {
     ResourceMerger merger = new ResourceMerger(1);
     try {
-      for (Path resPath : resPaths) {
-        Preconditions.checkState(resPath.isAbsolute());
+      for (Path resPath : getResPaths()) {
         ResourceSet set = new ResourceSet(resPath.toString(), true);
         set.setDontNormalizeQualifiers(true);
         set.addSource(resPath.toFile());
@@ -71,11 +85,11 @@ public class MergeAndroidResourceSourcesStep implements Step {
         merger.addDataSet(set);
       }
       MergedResourceWriter writer = MergedResourceWriter.createWriterWithoutPngCruncher(
-          outFolderPath.toFile(),
+          getOutFolderPath().toFile(),
           null /*publicFile*/,
           null /*blameLogFolder*/,
           new NoOpResourcePreprocessor(),
-          tmpFolderPath.toFile());
+          getTmpFolderPath().toFile());
       merger.mergeData(writer, /* cleanUp */ false);
     } catch (MergingException e) {
       LOG.error(e, "Failed merging resources.");
@@ -93,9 +107,9 @@ public class MergeAndroidResourceSourcesStep implements Step {
   public String getDescription(ExecutionContext context) {
     StringBuilder sb = new StringBuilder(getShortName());
     sb.append(' ');
-    Joiner.on(',').appendTo(sb, resPaths);
+    Joiner.on(',').appendTo(sb, getResPaths());
     sb.append(" -> ");
-    sb.append(outFolderPath.toString());
+    sb.append(getOutFolderPath().toString());
     return sb.toString();
   }
 
