@@ -539,47 +539,48 @@ public class TestCommand extends BuildCommand {
                        actionGraphAndResolver.getActionGraph()))) {
         LocalCachingBuildEngineDelegate localCachingBuildEngineDelegate =
             new LocalCachingBuildEngineDelegate(params.getFileHashCache());
-        CachingBuildEngine cachingBuildEngine =
-            new CachingBuildEngine(
-                new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
-                pool.getExecutor(),
-                artifactFetchService == null ?
-                    pool.getExecutor() :
-                    artifactFetchService.getExecutor(),
-                new DefaultStepRunner(),
-                getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
-                cachingBuildEngineBuckConfig.getBuildMetadataStorage(),
-                cachingBuildEngineBuckConfig.getBuildDepFiles(),
-                cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
-                cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
-                params.getObjectMapper(),
-                actionGraphAndResolver.getResolver(),
-                cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
-                RuleKeyFactories.of(
-                    params.getBuckConfig().getKeySeed(),
-                    localCachingBuildEngineDelegate.getFileHashCache(),
+        try (
+            CachingBuildEngine cachingBuildEngine =
+                new CachingBuildEngine(
+                    new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
+                    pool.getExecutor(),
+                    artifactFetchService == null ?
+                        pool.getExecutor() :
+                        artifactFetchService.getExecutor(),
+                    new DefaultStepRunner(),
+                    getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
+                    cachingBuildEngineBuckConfig.getBuildMetadataStorage(),
+                    cachingBuildEngineBuckConfig.getBuildDepFiles(),
+                    cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
+                    cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
+                    params.getObjectMapper(),
                     actionGraphAndResolver.getResolver(),
-                    cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
-                    ruleKeyCacheScope.getCache()));
-        try (Build build = createBuild(
-            params.getBuckConfig(),
-            actionGraphAndResolver.getActionGraph(),
-            actionGraphAndResolver.getResolver(),
-            params.getCell(),
-            params.getAndroidPlatformTargetSupplier(),
-            cachingBuildEngine,
-            params.getArtifactCacheFactory().newInstance(),
-            params.getConsole(),
-            params.getBuckEventBus(),
-            getTargetDeviceOptional(),
-            params.getPersistentWorkerPools(),
-            params.getPlatform(),
-            params.getEnvironment(),
-            params.getObjectMapper(),
-            params.getClock(),
-            Optional.of(getAdbOptions(params.getBuckConfig())),
-            Optional.of(getTargetDeviceOptions()),
-            params.getExecutors())) {
+                    cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
+                    RuleKeyFactories.of(
+                        params.getBuckConfig().getKeySeed(),
+                        localCachingBuildEngineDelegate.getFileHashCache(),
+                        actionGraphAndResolver.getResolver(),
+                        cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
+                        ruleKeyCacheScope.getCache()));
+            Build build = createBuild(
+                params.getBuckConfig(),
+                actionGraphAndResolver.getActionGraph(),
+                actionGraphAndResolver.getResolver(),
+                params.getCell(),
+                params.getAndroidPlatformTargetSupplier(),
+                cachingBuildEngine,
+                params.getArtifactCacheFactory().newInstance(),
+                params.getConsole(),
+                params.getBuckEventBus(),
+                getTargetDeviceOptional(),
+                params.getPersistentWorkerPools(),
+                params.getPlatform(),
+                params.getEnvironment(),
+                params.getObjectMapper(),
+                params.getClock(),
+                Optional.of(getAdbOptions(params.getBuckConfig())),
+                Optional.of(getTargetDeviceOptions()),
+                params.getExecutors())) {
 
           // Build all of the test rules.
           int exitCode = build.executeAndPrintFailuresToEventBus(

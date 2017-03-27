@@ -29,6 +29,9 @@ import java.util.Optional;
 interface BuildInfoStore extends Closeable {
   Optional<String> readMetadata(BuildTarget buildTarget, String key);
 
+  @Override
+  void close();
+
   void updateMetadata(
       BuildTarget buildTarget,
       Map<String, String> metadata) throws IOException;

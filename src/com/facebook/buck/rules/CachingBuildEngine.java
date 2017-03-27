@@ -81,6 +81,7 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -110,7 +111,7 @@ import javax.annotation.Nullable;
  * {@link RuleKey} of the build rules matches the one on disk, it does not do any work. It also
  * tries to fetch its output from an {@link ArtifactCache} to avoid doing any computation.
  */
-public class CachingBuildEngine implements BuildEngine {
+public class CachingBuildEngine implements BuildEngine, Closeable {
 
   private static final Logger LOG = Logger.get(CachingBuildEngine.class);
   public static final ResourceAmounts CACHE_CHECK_RESOURCE_AMOUNTS = ResourceAmounts.of(0, 0, 1, 1);
@@ -243,6 +244,13 @@ public class CachingBuildEngine implements BuildEngine {
     this.ruleDeps = new RuleDepsCache(service, resolver);
     this.unskippedRulesTracker =
         createUnskippedRulesTracker(buildMode, ruleDeps, resolver, service);
+  }
+
+  @Override
+  public void close() {
+    for (BuildInfoStore store : buildInfoStores.values()) {
+      store.close();
+    }
   }
 
   /**

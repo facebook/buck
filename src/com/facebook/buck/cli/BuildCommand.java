@@ -792,6 +792,25 @@ public class BuildCommand extends AbstractCommand {
                  new RuleKeyCacheRecycler.SettingsAffectingCache(
                      rootCellBuckConfig.getKeySeed(),
                      actionGraphAndResolver.getActionGraph()));
+         CachingBuildEngine buildEngine = new CachingBuildEngine(
+             cachingBuildEngineDelegate,
+             executor,
+             artifactFetchService.getExecutor(),
+             new DefaultStepRunner(),
+             getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
+             cachingBuildEngineBuckConfig.getBuildMetadataStorage(),
+             cachingBuildEngineBuckConfig.getBuildDepFiles(),
+             cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
+             cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
+             params.getObjectMapper(),
+             actionGraphAndResolver.getResolver(),
+             cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
+             RuleKeyFactories.of(
+                 rootCellBuckConfig.getKeySeed(),
+                 cachingBuildEngineDelegate.getFileHashCache(),
+                 actionGraphAndResolver.getResolver(),
+                 cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
+                 ruleKeyCacheScope.getCache()));
          Build build =
              createBuild(
                rootCellBuckConfig,
@@ -799,25 +818,7 @@ public class BuildCommand extends AbstractCommand {
                actionGraphAndResolver.getResolver(),
                params.getCell(),
                params.getAndroidPlatformTargetSupplier(),
-               new CachingBuildEngine(
-                   cachingBuildEngineDelegate,
-                   executor,
-                   artifactFetchService.getExecutor(),
-                   new DefaultStepRunner(),
-                   getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
-                   cachingBuildEngineBuckConfig.getBuildMetadataStorage(),
-                   cachingBuildEngineBuckConfig.getBuildDepFiles(),
-                   cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
-                   cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
-                   params.getObjectMapper(),
-                   actionGraphAndResolver.getResolver(),
-                   cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
-                   RuleKeyFactories.of(
-                       rootCellBuckConfig.getKeySeed(),
-                       cachingBuildEngineDelegate.getFileHashCache(),
-                       actionGraphAndResolver.getResolver(),
-                       cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
-                       ruleKeyCacheScope.getCache())),
+               buildEngine,
                artifactCache,
                params.getConsole(),
                params.getBuckEventBus(),
