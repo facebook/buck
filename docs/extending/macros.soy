@@ -20,6 +20,11 @@ Such functions are called <strong>macros</strong>.
 
 <p>
 
+Macros can be written in build files or in separate files referenced in
+build files using {call buck.fn_include_defs /} or {call buckconfig.buildfile_includes /}.
+
+<p>
+
 <strong>Warning:</strong> Although build files are evaluated as Python
 and can therefore do anything (write files, access the network, etc.),
 doing so may cause Buck to fail in peculiar ways and is therefore neither
