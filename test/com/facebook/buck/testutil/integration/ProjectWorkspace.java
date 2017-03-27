@@ -974,6 +974,10 @@ public class ProjectWorkspace {
   }
 
   public void verify(Path subdirectory) throws IOException {
+    Preconditions.checkArgument(
+        !subdirectory.isAbsolute(),
+        "'verify(subdirectory)' takes a relative path, but received '%s'",
+        subdirectory);
     assertPathsEqual(templatePath.resolve(subdirectory), destPath.resolve(subdirectory));
   }
 }

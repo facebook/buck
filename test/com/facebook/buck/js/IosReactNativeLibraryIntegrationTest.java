@@ -64,24 +64,22 @@ public class IosReactNativeLibraryIntegrationTest {
   public void testBundleOutputContainsJSAndResources() throws IOException {
     workspace.runBuckBuild("//:DemoApp#iphonesimulator-x86_64,no-debug").assertSuccess();
     workspace.verify(
-        workspace.getPath(
-            BuildTargets.getGenPath(
-                filesystem,
-                BuildTargetFactory.newInstance(
-                    "//:DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks"),
-                "%s")));
+        BuildTargets.getGenPath(
+            filesystem,
+            BuildTargetFactory.newInstance(
+                "//:DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks"),
+            "%s"));
   }
 
   @Test
   public void testUnbundleOutputContainsJSAndResources() throws IOException {
     workspace.runBuckBuild("//:DemoApp-Unbundle#iphonesimulator-x86_64,no-debug").assertSuccess();
     workspace.verify(
-        workspace.getPath(
-            BuildTargets.getGenPath(
-                filesystem,
-                BuildTargetFactory.newInstance(
-                    "//:DemoApp-Unbundle#iphonesimulator-x86_64,no-debug,no-include-frameworks"),
-                "%s")));
+        BuildTargets.getGenPath(
+            filesystem,
+            BuildTargetFactory.newInstance(
+                "//:DemoApp-Unbundle#iphonesimulator-x86_64,no-debug,no-include-frameworks"),
+            "%s"));
   }
 
   @Test
