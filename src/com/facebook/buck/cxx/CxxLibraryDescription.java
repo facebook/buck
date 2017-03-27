@@ -614,6 +614,7 @@ public class CxxLibraryDescription implements
               staticTarget,
               Suppliers.ofInstance(ImmutableSortedSet.of()),
               Suppliers.ofInstance(ImmutableSortedSet.of()),
+              ImmutableSortedSet.of(),
               params.getProjectFilesystem()));
     }
 

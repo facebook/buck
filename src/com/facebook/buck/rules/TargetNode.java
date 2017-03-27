@@ -51,6 +51,7 @@ public class TargetNode<T, U extends Description<T>>
   private final ImmutableSet<Path> inputs;
   private final ImmutableSet<BuildTarget> declaredDeps;
   private final ImmutableSet<BuildTarget> extraDeps;
+  private final ImmutableSet<BuildTarget> targetGraphOnlyDeps;
   private final VisibilityChecker visibilityChecker;
 
   private final Optional<ImmutableMap<BuildTarget, Version>> selectedVersions;
@@ -64,6 +65,7 @@ public class TargetNode<T, U extends Description<T>>
       BuildTarget buildTarget,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<BuildTarget> extraDeps,
+      ImmutableSet<BuildTarget> targetGraphOnlyDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       ImmutableSet<VisibilityPattern> withinViewPatterns,
       ImmutableSet<Path> paths,
@@ -78,6 +80,7 @@ public class TargetNode<T, U extends Description<T>>
     this.cellNames = cellNames;
     this.declaredDeps = declaredDeps;
     this.extraDeps = extraDeps;
+    this.targetGraphOnlyDeps = targetGraphOnlyDeps;
     this.inputs = paths;
     this.selectedVersions = selectedVersions;
     this.visibilityChecker = new VisibilityChecker(
@@ -143,6 +146,19 @@ public class TargetNode<T, U extends Description<T>>
     return Stream.concat(getDeclaredDeps().stream(), getExtraDeps().stream());
   }
 
+  /**
+   * BuildTargets which, when changed, may change the BuildRules produced by this TargetNode,
+   * but whose steps don't need executing in order to build this TargetNode's BuildRules.
+   *
+   * A TargetNode may require metadata from other targets in order to be constructed, but may not
+   * actually require those targets' build output. For example, some targets may execute queries
+   * against the TargetGraph (e.g. detecting the names of rules of a certain type) but don't use the
+   * output of those detected rules.
+   */
+  public ImmutableSet<BuildTarget> getTargetGraphOnlyDeps() {
+    return targetGraphOnlyDeps;
+  }
+
   @Override
   public VisibilityChecker getVisibilityChecker() {
     return visibilityChecker;
@@ -201,6 +217,7 @@ public class TargetNode<T, U extends Description<T>>
         getBuildTarget().withFlavors(flavors),
         declaredDeps,
         extraDeps,
+        targetGraphOnlyDeps,
         getVisibilityPatterns(),
         getWithinViewPatterns(),
         getInputs(),
@@ -223,6 +240,7 @@ public class TargetNode<T, U extends Description<T>>
         target,
         declaredDeps,
         extraDeps,
+        targetGraphOnlyDeps,
         getVisibilityPatterns(),
         getWithinViewPatterns(),
         getInputs(),

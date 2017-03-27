@@ -120,6 +120,7 @@ public class AndroidBinaryGraphEnhancerTest {
         apkTarget,
         Suppliers.ofInstance(originalDeps),
         Suppliers.ofInstance(originalDeps),
+        ImmutableSortedSet.of(),
         filesystem
     );
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(

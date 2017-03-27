@@ -36,17 +36,20 @@ public class BuildRuleParams {
   private final Supplier<ImmutableSortedSet<BuildRule>> declaredDeps;
   private final Supplier<ImmutableSortedSet<BuildRule>> extraDeps;
   private final Supplier<ImmutableSortedSet<BuildRule>> totalBuildDeps;
+  private final ImmutableSortedSet<BuildRule> targetGraphOnlyDeps;
   private final ProjectFilesystem projectFilesystem;
 
   public BuildRuleParams(
       BuildTarget buildTarget,
       final Supplier<ImmutableSortedSet<BuildRule>> declaredDeps,
       final Supplier<ImmutableSortedSet<BuildRule>> extraDeps,
+      ImmutableSortedSet<BuildRule> targetGraphOnlyDeps,
       ProjectFilesystem projectFilesystem) {
     this.buildTarget = buildTarget;
     this.declaredDeps = Suppliers.memoize(declaredDeps);
     this.extraDeps = Suppliers.memoize(extraDeps);
     this.projectFilesystem = projectFilesystem;
+    this.targetGraphOnlyDeps = targetGraphOnlyDeps;
 
     this.totalBuildDeps = Suppliers.memoize(
         () -> ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -63,6 +66,7 @@ public class BuildRuleParams {
     this.projectFilesystem = projectFilesystem;
     this.declaredDeps = baseForDeps.declaredDeps;
     this.extraDeps = baseForDeps.extraDeps;
+    this.targetGraphOnlyDeps = baseForDeps.targetGraphOnlyDeps;
     this.totalBuildDeps = baseForDeps.totalBuildDeps;
   }
 
@@ -107,7 +111,12 @@ public class BuildRuleParams {
   public BuildRuleParams copyReplacingDeclaredAndExtraDeps(
       Supplier<ImmutableSortedSet<BuildRule>> declaredDeps,
       Supplier<ImmutableSortedSet<BuildRule>> extraDeps) {
-    return new BuildRuleParams(buildTarget, declaredDeps, extraDeps, projectFilesystem);
+    return new BuildRuleParams(
+        buildTarget,
+        declaredDeps,
+        extraDeps,
+        targetGraphOnlyDeps,
+        projectFilesystem);
   }
 
   public BuildRuleParams withBuildTarget(BuildTarget target) {
@@ -157,6 +166,13 @@ public class BuildRuleParams {
 
   public Supplier<ImmutableSortedSet<BuildRule>> getExtraDeps() {
     return extraDeps;
+  }
+
+  /**
+   * See {@link TargetNode#getTargetGraphOnlyDeps}.
+   */
+  public ImmutableSortedSet<BuildRule> getTargetGraphOnlyDeps() {
+    return targetGraphOnlyDeps;
   }
 
   public ProjectFilesystem getProjectFilesystem() {

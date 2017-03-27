@@ -135,6 +135,7 @@ public class TargetNodeFactory {
         buildTarget,
         declaredDeps,
         ImmutableSortedSet.copyOf(Sets.difference(extraDepsBuilder.build(), declaredDeps)),
+        ImmutableSortedSet.of(),
         visibilityPatterns,
         withinViewPatterns,
         pathsBuilder.build(),

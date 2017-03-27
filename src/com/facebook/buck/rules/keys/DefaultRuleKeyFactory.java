@@ -119,6 +119,7 @@ public class DefaultRuleKeyFactory implements RuleKeyFactory<RuleKey> {
       AbstractBuildRule abstractBuildRule = (AbstractBuildRule) buildRule;
       sink.setReflectively("buck.extraDeps", abstractBuildRule.deprecatedGetExtraDeps());
       sink.setReflectively("buck.declaredDeps", abstractBuildRule.getDeclaredDeps());
+      sink.setReflectively("buck.targetGraphOnlyDeps", abstractBuildRule.getTargetGraphOnlyDeps());
     } else {
       sink.setReflectively("buck.deps", buildRule.getBuildDeps());
     }

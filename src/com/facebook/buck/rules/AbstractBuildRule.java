@@ -36,6 +36,7 @@ public abstract class AbstractBuildRule implements BuildRule {
   private final Supplier<ImmutableSortedSet<BuildRule>> declaredDeps;
   private final Supplier<ImmutableSortedSet<BuildRule>> extraDeps;
   private final Supplier<ImmutableSortedSet<BuildRule>> buildDeps;
+  private final ImmutableSortedSet<BuildRule> targetGraphOnlyDeps;
   private final ProjectFilesystem projectFilesystem;
 
   private final Supplier<String> typeSupplier = Suppliers.memoize(
@@ -46,6 +47,7 @@ public abstract class AbstractBuildRule implements BuildRule {
     this.declaredDeps = buildRuleParams.getDeclaredDeps();
     this.extraDeps = buildRuleParams.getExtraDeps();
     this.buildDeps = buildRuleParams.getTotalBuildDeps();
+    this.targetGraphOnlyDeps = buildRuleParams.getTargetGraphOnlyDeps();
     this.projectFilesystem = buildRuleParams.getProjectFilesystem();
   }
 
@@ -70,6 +72,13 @@ public abstract class AbstractBuildRule implements BuildRule {
 
   public final ImmutableSortedSet<BuildRule> deprecatedGetExtraDeps() {
     return extraDeps.get();
+  }
+
+  /**
+   * See {@link TargetNode#getTargetGraphOnlyDeps}.
+   */
+  public final ImmutableSortedSet<BuildRule> getTargetGraphOnlyDeps() {
+    return targetGraphOnlyDeps;
   }
 
   @Override

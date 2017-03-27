@@ -59,6 +59,7 @@ public class FakeBuildRuleParamsBuilder {
         buildTarget,
         Suppliers.ofInstance(declaredDeps),
         Suppliers.ofInstance(extraDeps),
+        ImmutableSortedSet.of(),
         filesystem
     );
   }
