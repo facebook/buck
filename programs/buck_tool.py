@@ -3,12 +3,10 @@ import errno
 import json
 import os
 import platform
-import re
 import shlex
 import signal
 import subprocess
 import sys
-import tempfile
 import textwrap
 import time
 import traceback
@@ -17,8 +15,7 @@ import uuid
 from pynailgun import NailgunConnection, NailgunException
 from timing import monotonic_time_nanos
 from tracing import Tracing
-from subprocutils import check_output, CalledProcessError, which
-from sys import platform as os_platform
+from subprocutils import which
 
 BUCKD_CLIENT_TIMEOUT_MILLIS = 60000
 GC_MAX_PAUSE_TARGET = 15000

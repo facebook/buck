@@ -14,7 +14,6 @@
 
 import platform
 import unittest
-import os
 
 from buck_package import *
 

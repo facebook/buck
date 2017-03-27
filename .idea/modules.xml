@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/third-party/java/aosp/aosp.iml" filepath="$PROJECT_DIR$/third-party/java/aosp/aosp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/programs/bin.iml" filepath="$PROJECT_DIR$/programs/bin.iml" />
       <module fileurl="file://$PROJECT_DIR$/buck.iml" filepath="$PROJECT_DIR$/buck.iml" />
       <module fileurl="file://$PROJECT_DIR$/buck-parser-py.iml" filepath="$PROJECT_DIR$/buck-parser-py.iml" />
       <module fileurl="file://$PROJECT_DIR$/android/exopackage.iml" filepath="$PROJECT_DIR$/android/exopackage.iml" />

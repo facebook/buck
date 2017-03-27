@@ -1,16 +1,13 @@
 from __future__ import print_function
-import glob
 import os
-import platform
 import subprocess
 import sys
-import tempfile
 import textwrap
 
-from timing import monotonic_time_nanos
 from tracing import Tracing
-from buck_tool import BuckTool, check_output, JAVA_MAX_HEAP_SIZE_MB
+from buck_tool import BuckTool, JAVA_MAX_HEAP_SIZE_MB
 from buck_tool import BuckToolException, RestartBuck
+from subprocess import check_output
 from subprocutils import which
 import buck_version
 
