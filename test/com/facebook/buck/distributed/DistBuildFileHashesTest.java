@@ -46,11 +46,14 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.slb.ThriftUtil;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
@@ -114,7 +117,7 @@ public class DistBuildFileHashesTest {
 
     List<BuildJobStateFileHashes> recordedHashes = f.distributedBuildFileHashes.getFileHashes();
 
-    assertThat(recordedHashes, Matchers.hasSize(3));
+    assertThat(toDebugStringForAssert(recordedHashes), recordedHashes, Matchers.hasSize(1));
     BuildJobStateFileHashes rootCellHashes = getRootCellHashes(recordedHashes);
     assertThat(rootCellHashes.entries, Matchers.hasSize(1));
     BuildJobStateFileHashEntry fileHashEntry = rootCellHashes.entries.get(0);
@@ -262,7 +265,7 @@ public class DistBuildFileHashesTest {
     try (ArchiveFilesFixture f = ArchiveFilesFixture.create(archiveTempDir)) {
       List<BuildJobStateFileHashes> recordedHashes = f.distributedBuildFileHashes.getFileHashes();
 
-      assertThat(recordedHashes, Matchers.hasSize(3));
+      assertThat(toDebugStringForAssert(recordedHashes), recordedHashes, Matchers.hasSize(1));
       BuildJobStateFileHashes hashes = getRootCellHashes(recordedHashes);
       assertThat(hashes.entries, Matchers.hasSize(1));
       BuildJobStateFileHashEntry fileHashEntry = hashes.entries.get(0);
@@ -341,7 +344,7 @@ public class DistBuildFileHashesTest {
     };
 
     List<BuildJobStateFileHashes> recordedHashes = f.distributedBuildFileHashes.getFileHashes();
-    assertThat(recordedHashes, Matchers.hasSize(3));
+    assertThat(toDebugStringForAssert(recordedHashes), recordedHashes, Matchers.hasSize(2));
 
     BuildJobStateFileHashes rootCellHash = getRootCellHashes(recordedHashes);
     Assert.assertEquals(1, rootCellHash.getEntriesSize());
@@ -481,5 +484,13 @@ public class DistBuildFileHashesTest {
   private static BuildJobStateFileHashes getRootCellHashes(
       List<BuildJobStateFileHashes> recordedHashes) {
     return getCellHashesByIndex(recordedHashes, DistBuildCellIndexer.ROOT_CELL_INDEX);
+  }
+
+  private static String toDebugStringForAssert(List<BuildJobStateFileHashes> recordedHashes) {
+    return Joiner
+        .on("\n")
+        .join(recordedHashes.stream()
+            .map(ThriftUtil::thriftToDebugJson)
+            .collect(MoreCollectors.toImmutableList()));
   }
 }

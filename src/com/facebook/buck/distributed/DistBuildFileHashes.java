@@ -190,6 +190,7 @@ public class DistBuildFileHashes {
       ImmutableList<BuildJobStateFileHashes> hashes = fileHashes.get()
           .stream()
           .map(recordedHash -> recordedHash.getRemoteFileHashes())
+          .filter(x -> x.getEntriesSize() > 0)
           .collect(MoreCollectors.toImmutableList());
       checkNoDuplicates(hashes);
       return hashes;
