@@ -874,7 +874,9 @@ public class AndroidBinaryIntegrationTest {
         userData.get("j").toString().endsWith(".jar"));
     assertTrue(
         "redex_extra_args: -S $(location ...) is not properly expanded!",
-        userData.get("S").toString().endsWith(".jar"));
+        userData.get("S").toString().contains("coldstart_classes=") &&
+            !userData.get("S").toString().contains("location")
+    );
   }
 
   @Test
@@ -883,6 +885,21 @@ public class AndroidBinaryIntegrationTest {
         "tools/redex/fake_redex.py",
         "main()\n",
         "main() \n");
+
+    workspace.resetBuildLogFile();
+    workspace.runBuckBuild(APP_REDEX_TARGET).assertSuccess();
+
+    BuckBuildLog buildLog = workspace.getBuildLog();
+
+    buildLog.assertTargetBuiltLocally(APP_REDEX_TARGET);
+  }
+
+  @Test
+  public void testEditingSecondaryDexHeadListForcesRebuild() throws IOException {
+    workspace.replaceFileContents(
+        "tools/redex/secondary_dex_head.list",
+        "",
+        " ");
 
     workspace.resetBuildLogFile();
     workspace.runBuckBuild(APP_REDEX_TARGET).assertSuccess();

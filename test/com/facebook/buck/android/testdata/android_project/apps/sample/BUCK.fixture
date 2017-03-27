@@ -424,7 +424,7 @@ android_binary(
     '--redex-binary',
     'redex-binary',
     '-j $(location //java/com/sample/lib:lib)',
-    '-S $(location //java/com/sample2:lib)',
+    '-S coldstart_classes=$(location //tools/redex:secondary_dex_head.list)',
   ],
   deps = [
     '//java/com/sample/lib:lib',

@@ -35,7 +35,6 @@ abstract class AbstractRedexOptions implements RuleKeyAppendable {
   public abstract Optional<SourcePath> getRedexConfig();
   public abstract ImmutableList<Arg> getRedexExtraArgs();
 
-
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink.setReflectively("redex", getRedex());
