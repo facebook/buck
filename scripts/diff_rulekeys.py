@@ -549,7 +549,7 @@ def main():
         left_key = left.getKeyForName(name)
         right_key = right.getKeyForName(name)
         if left_key is None:
-            raise KeyError('Left log does not contain {}. Did you forget to' +
+            raise KeyError('Left log does not contain {}. Did you forget to ' +
                            'enable logging? (see help).'.format(name))
         if right_key is None:
             raise KeyError('Right log does not contain {}. Did you forget ' +
