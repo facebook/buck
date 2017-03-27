@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -50,6 +51,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -96,6 +98,9 @@ public class OfflineScribeLogger extends ScribeLogger {
   private final IntegerCounter totalBytesResent;
   private final IntegerCounter logfilesResent;
 
+  // A set of categories that have reported an error so we do not double-report it.
+  private Set<String> categoriesReportedAnError;
+
   public OfflineScribeLogger(
       ScribeLogger scribeLogger,
       ImmutableList<String> blacklistCategories,
@@ -126,6 +131,7 @@ public class OfflineScribeLogger extends ScribeLogger {
     this.logDir = projectFilesystem.getBuckPaths().getOfflineLogDir();
     this.newLogPath =
         projectFilesystem.resolve(logDir.resolve(LOGFILE_PREFIX + buildId + LOGFILE_SUFFIX));
+    this.categoriesReportedAnError = Sets.newConcurrentHashSet();
 
     this.startedSendingStored = new AtomicBoolean(false);
     this.totalLinesResent = new IntegerCounter(
@@ -176,10 +182,12 @@ public class OfflineScribeLogger extends ScribeLogger {
                             .build())
                     .getBytes(Charsets.UTF_8);
               } catch (Exception e) {
-                LOG.error(
-                    "Failed generating JSON to store for category: %s: %s.",
-                    category,
-                    e.getMessage());
+                if (categoriesReportedAnError.add(category)) {
+                  LOG.error(
+                      "Failed generating JSON to store for category: %s: %s.",
+                      category,
+                      e.getMessage());
+                }
                 return;
               }
 
