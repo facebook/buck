@@ -469,7 +469,7 @@ public class ExopackageInstallerIntegrationTest {
       for (String s : deviceState.subMap(
           dirPath,
           false,
-          dirPath + Character.toChars(255),
+          dirPath + Character.toChars(255).toString(),
           false).keySet()) {
         s = s.substring(dirPath.length() + 1);
         if (s.contains("/")) {
