@@ -40,7 +40,6 @@ import com.facebook.buck.util.network.ScribeLogger;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.ObjectArrays;
@@ -67,6 +66,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.annotation.ParametersAreNonnullByDefault;
 
 public class OfflineScribeLoggerTest {
 
@@ -147,11 +148,9 @@ public class OfflineScribeLoggerTest {
     }
 
     // Check correct logs are in the directory (1st log removed).
-    Path[] expectedLogPaths = FluentIterable
-        .from(ImmutableList.copyOf(ids))
-        .transform(
-            id -> filesystem.resolve(logDir.resolve(LOGFILE_PREFIX + id + LOGFILE_SUFFIX)))
-        .toArray(Path.class);
+    Path[] expectedLogPaths = Arrays.stream(ids)
+        .map(id -> filesystem.resolve(logDir.resolve(LOGFILE_PREFIX + id + LOGFILE_SUFFIX)))
+        .toArray(Path[]::new);
 
     ImmutableSortedSet<Path> logs =
         filesystem.getMtimeSortedMatchingDirectoryContents(logDir, LOGFILE_PATTERN);
@@ -300,8 +299,7 @@ public class OfflineScribeLoggerTest {
     private final OfflineScribeLogger offlineScribeLogger;
     private final AtomicInteger storedCategoriesWithLines;
 
-
-    public FakeFailingOfflineScribeLogger(
+    FakeFailingOfflineScribeLogger(
         ImmutableList<String> blacklistCategories,
         int maxScribeOfflineLogs,
         ProjectFilesystem filesystem,
@@ -334,6 +332,7 @@ public class OfflineScribeLoggerTest {
             }
 
             @Override
+            @ParametersAreNonnullByDefault
             public void onFailure(Throwable t) {
               if (!blacklistCategories.contains(category)) {
                 storedCategoriesWithLines.incrementAndGet();
@@ -348,11 +347,11 @@ public class OfflineScribeLoggerTest {
       offlineScribeLogger.close();
     }
 
-    public int getAttemptStoringCategoriesWithLinesCount() {
+    int getAttemptStoringCategoriesWithLinesCount() {
       return storedCategoriesWithLines.get();
     }
 
-    public BufferedInputStream getStoredLog() throws FileNotFoundException {
+    BufferedInputStream getStoredLog() throws FileNotFoundException {
       return new BufferedInputStream(
           new FileInputStream(
               filesystem
