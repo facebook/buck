@@ -77,7 +77,7 @@ public class JavaSourceJar extends AbstractBuildRule
 
     steps.add(MkdirStep.of(getProjectFilesystem(), output.getParent()));
     steps.add(RmStep.of(getProjectFilesystem(), output));
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), temp));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), temp));
 
     Set<Path> seenPackages = Sets.newHashSet();
 

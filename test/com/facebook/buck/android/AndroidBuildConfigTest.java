@@ -70,7 +70,7 @@ public class AndroidBuildConfigTest {
     AndroidBuildConfig buildConfig = createSimpleBuildConfigRule();
     List<Step> steps = buildConfig.getBuildSteps(
         FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext());
-    Step generateBuildConfigStep = steps.get(1);
+    Step generateBuildConfigStep = steps.get(2);
     GenerateBuildConfigStep expectedStep = new GenerateBuildConfigStep(
         new FakeProjectFilesystem(),
         BuildTargetFactory.newInstance("//java/com/example:build_config")

@@ -86,9 +86,9 @@ public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasR
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
 
-    return ImmutableList.of(
-        new MakeCleanDirectoryStep(getProjectFilesystem(), output.getParent()),
-        new StringTemplateStep(
+    return new ImmutableList.Builder<Step>()
+        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), output.getParent()))
+        .add(new StringTemplateStep(
             TEMPLATE,
             getProjectFilesystem(),
             output,
@@ -117,8 +117,9 @@ public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasR
                       Escaper.escapeAsBashString(
                           context.getSourcePathResolver().getRelativePath(main)))
                   .add("resources", resourceStrings);
-            }),
-        new MakeExecutableStep(getProjectFilesystem(), output));
+            }))
+        .add(new MakeExecutableStep(getProjectFilesystem(), output))
+        .build();
   }
 
   @Override

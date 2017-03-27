@@ -179,10 +179,10 @@ public class AaptPackageResources extends AbstractBuildRule {
     steps.add(MkdirStep.of(getProjectFilesystem(), getResourceApkPath().getParent()));
 
     Path rDotTxtDir = getPathToRDotTxtDir();
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), rDotTxtDir));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), rDotTxtDir));
 
     Path pathToGeneratedProguardConfig = getPathToGeneratedProguardConfigFile();
-    steps.add(new MakeCleanDirectoryStep(
+    steps.addAll(MakeCleanDirectoryStep.of(
         getProjectFilesystem(),
         pathToGeneratedProguardConfig.getParent()));
     buildableContext.recordArtifact(pathToGeneratedProguardConfig);
@@ -284,7 +284,7 @@ public class AaptPackageResources extends AbstractBuildRule {
       BuildContext buildContext) {
     // Merge R.txt of HasAndroidRes and generate the resulting R.java files per package.
     Path rDotJavaSrc = getRawPathToGeneratedRDotJavaSrcFiles();
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), rDotJavaSrc));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), rDotJavaSrc));
 
     Path rDotTxtDir = getPathToRDotTxtDir();
     MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForUberRDotJava(
@@ -300,7 +300,7 @@ public class AaptPackageResources extends AbstractBuildRule {
     if (shouldBuildStringSourceMap) {
       // Make sure we have an output directory
       Path outputDirPath = getPathForNativeStringInfoDirectory();
-      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDirPath));
+      steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), outputDirPath));
 
       // Add the step that parses R.txt and all the strings.xml files, and
       // produces a JSON with android resource id's and xml paths for each string resource.

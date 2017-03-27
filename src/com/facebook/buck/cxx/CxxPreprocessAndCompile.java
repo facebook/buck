@@ -271,13 +271,14 @@ public class CxxPreprocessAndCompile
       BuildContext context,
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
-    return ImmutableList.of(
-        MkdirStep.of(getProjectFilesystem(), output.getParent()),
-        new MakeCleanDirectoryStep(getProjectFilesystem(), getScratchPath()),
-        makeMainStep(
+    return new ImmutableList.Builder<Step>()
+        .add(MkdirStep.of(getProjectFilesystem(), output.getParent()))
+        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getScratchPath()))
+        .add(makeMainStep(
             context.getSourcePathResolver(),
             getScratchPath(),
-            compilerDelegate.isArgFileSupported()));
+            compilerDelegate.isArgFileSupported()))
+        .build();
   }
 
   private Path getScratchPath() {

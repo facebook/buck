@@ -89,7 +89,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
       boolean skipProguard,
       ImmutableList.Builder<Step> steps) {
 
-    steps.add(new MakeCleanDirectoryStep(filesystem, proguardDirectory));
+    steps.addAll(MakeCleanDirectoryStep.of(filesystem, proguardDirectory));
 
     Path pathToProGuardCommandLineArgsFile = proguardDirectory.resolve("command-line.txt");
 

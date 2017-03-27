@@ -49,8 +49,9 @@ import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
+import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
@@ -157,41 +158,48 @@ public class GenruleTest {
     List<Step> steps = genrule.getBuildSteps(
         buildContext,
         new FakeBuildableContext());
-    assertEquals(6, steps.size());
+    assertEquals(9, steps.size());
 
     ExecutionContext executionContext = newEmptyExecutionContext();
 
-    Step firstStep = steps.get(0);
-    assertTrue(firstStep instanceof MakeCleanDirectoryStep);
-    MakeCleanDirectoryStep mkdirCommand = (MakeCleanDirectoryStep) firstStep;
-    Path pathToOutDir = filesystem.getBuckPaths().getGenDir().resolve(
-        "src/com/facebook/katana/katana_manifest");
     assertEquals(
-        "First command should make sure the output directory exists and is empty.",
-        pathToOutDir,
-        mkdirCommand.getPath());
-
-    Step mkTmpDir = steps.get(1);
-    assertTrue(mkTmpDir instanceof MakeCleanDirectoryStep);
-    MakeCleanDirectoryStep secondMkdirCommand = (MakeCleanDirectoryStep) mkTmpDir;
-    Path pathToTmpDir = filesystem.getBuckPaths().getGenDir().resolve(
-        "src/com/facebook/katana/katana_manifest__tmp");
+        RmStep.of(
+            filesystem,
+            filesystem.getBuckPaths().getGenDir()
+                .resolve("src/com/facebook/katana/katana_manifest"))
+            .withRecursive(true),
+        steps.get(0));
     assertEquals(
-        "Second command should create the temp directory to be written by the genrule.",
-        pathToTmpDir,
-        secondMkdirCommand.getPath());
+        MkdirStep.of(
+            filesystem,
+            filesystem.getBuckPaths().getGenDir()
+                .resolve("src/com/facebook/katana/katana_manifest")),
+        steps.get(1));
 
-    Step mkSrcDir = steps.get(2);
-    assertTrue(mkSrcDir instanceof MakeCleanDirectoryStep);
-    MakeCleanDirectoryStep thirdMkdirCommand = (MakeCleanDirectoryStep) mkTmpDir;
-    Path pathToSrcDir = filesystem.getBuckPaths().getGenDir().resolve(
-        "src/com/facebook/katana/katana_manifest__srcs");
     assertEquals(
-        "Third command should create the temp source directory to be written by the genrule.",
-        pathToTmpDir,
-        thirdMkdirCommand.getPath());
+        RmStep.of(
+            filesystem,
+            filesystem.getBuckPaths().getGenDir()
+                .resolve("src/com/facebook/katana/katana_manifest__tmp"))
+            .withRecursive(true),
+        steps.get(2));
+    assertEquals(
+        MkdirStep.of(
+            filesystem,
+            filesystem.getBuckPaths().getGenDir()
+                .resolve("src/com/facebook/katana/katana_manifest__tmp")),
+        steps.get(3));
 
-    MkdirAndSymlinkFileStep linkSource1 = (MkdirAndSymlinkFileStep) steps.get(3);
+    Path pathToSrcDir = filesystem.getBuckPaths().getGenDir()
+        .resolve("src/com/facebook/katana/katana_manifest__srcs");
+    assertEquals(
+        RmStep.of(filesystem, pathToSrcDir).withRecursive(true),
+        steps.get(4));
+    assertEquals(
+        MkdirStep.of(filesystem, pathToSrcDir),
+        steps.get(5));
+
+    MkdirAndSymlinkFileStep linkSource1 = (MkdirAndSymlinkFileStep) steps.get(6);
     assertEquals(
         filesystem.getPath("src/com/facebook/katana/convert_to_katana.py"),
         linkSource1.getSource());
@@ -199,7 +207,7 @@ public class GenruleTest {
         filesystem.getPath(pathToSrcDir + "/convert_to_katana.py"),
         linkSource1.getTarget());
 
-    MkdirAndSymlinkFileStep linkSource2 = (MkdirAndSymlinkFileStep) steps.get(4);
+    MkdirAndSymlinkFileStep linkSource2 = (MkdirAndSymlinkFileStep) steps.get(7);
     assertEquals(
         filesystem.getPath("src/com/facebook/katana/AndroidManifest.xml"),
         linkSource2.getSource());
@@ -207,7 +215,7 @@ public class GenruleTest {
         filesystem.getPath(pathToSrcDir + "/AndroidManifest.xml"),
         linkSource2.getTarget());
 
-    Step sixthStep = steps.get(5);
+    Step sixthStep = steps.get(8);
     assertTrue(sixthStep instanceof AbstractGenruleStep);
     AbstractGenruleStep genruleCommand = (AbstractGenruleStep) sixthStep;
     assertEquals("genrule", genruleCommand.getShortName());
@@ -316,8 +324,8 @@ public class GenruleTest {
 
     ExecutionContext executionContext = newEmptyExecutionContext(Platform.LINUX);
 
-    assertEquals(4, steps.size());
-    Step step = steps.get(3);
+    assertEquals(7, steps.size());
+    Step step = steps.get(6);
     assertTrue(step instanceof WorkerShellStep);
     WorkerShellStep workerShellStep = (WorkerShellStep) step;
     assertThat(workerShellStep.getShortName(), Matchers.equalTo("worker"));

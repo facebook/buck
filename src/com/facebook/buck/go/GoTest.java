@@ -126,10 +126,10 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
       args.add("-test.timeout", testRuleTimeoutMs.get() + "ms");
     }
 
-    return ImmutableList.of(
-        new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToTestOutputDirectory()),
-        new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToTestWorkingDirectory()),
-        new SymlinkTreeStep(
+    return new ImmutableList.Builder<Step>()
+        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getPathToTestOutputDirectory()))
+        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getPathToTestWorkingDirectory()))
+        .add(new SymlinkTreeStep(
             getProjectFilesystem(),
             getPathToTestWorkingDirectory(),
             ImmutableMap.copyOf(
@@ -138,15 +138,16 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
                     getProjectFilesystem().getPath(pathResolver.getSourcePathName(
                         getBuildTarget(),
                         input)),
-                    pathResolver.getAbsolutePath(input))))),
-        new GoTestStep(
+                    pathResolver.getAbsolutePath(input))))))
+        .add(new GoTestStep(
             getProjectFilesystem(),
             getPathToTestWorkingDirectory(),
             args.build(),
             testMain.getExecutableCommand().getEnvironment(pathResolver),
             getPathToTestExitCode(),
             processTimeoutMs,
-            getPathToTestResults()));
+            getPathToTestResults()))
+        .build();
   }
 
   private ImmutableList<TestResultSummary> parseTestResults() throws IOException {

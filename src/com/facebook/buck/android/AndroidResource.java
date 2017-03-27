@@ -291,8 +291,8 @@ public class AndroidResource extends AbstractBuildRule
     buildableContext.recordArtifact(Preconditions.checkNotNull(pathToRDotJavaPackageFile));
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.add(
-        new MakeCleanDirectoryStep(
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
             getProjectFilesystem(),
             Preconditions.checkNotNull(pathToTextSymbolsDir)));
     if (getRes() == null) {

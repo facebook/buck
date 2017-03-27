@@ -417,7 +417,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     // might be resources that need to be copied there.
     BuildTarget target = getBuildTarget();
     Path outputDirectory = getClassesDir(target, getProjectFilesystem());
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDirectory));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), outputDirectory));
 
     SuggestBuildRules suggestBuildRule = suggestDependencies ?
         DefaultSuggestBuildRules.createSuggestBuildFunction(
@@ -449,8 +449,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         .collect(MoreCollectors.toImmutableSortedSet());
 
     // Make sure that this directory exists because ABI information will be written here.
-    Step mkdir = new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToAbiOutputDir());
-    steps.add(mkdir);
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getPathToAbiOutputDir()));
 
     // If there are resources, then link them to the appropriate place in the classes directory.
     JavaPackageFinder finder = context.getJavaPackageFinder();
@@ -468,8 +467,8 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
             outputDirectory,
             finder));
 
-    steps.add(
-        new MakeCleanDirectoryStep(
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
             getProjectFilesystem(),
             getOutputJarDirPath(target, getProjectFilesystem())));
 
@@ -495,7 +494,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
 
       Path scratchDir =
           BuildTargets.getGenPath(getProjectFilesystem(), target, "lib__%s____working_directory");
-      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
+      steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), scratchDir));
       Optional<Path> workingDirectory = Optional.of(scratchDir);
 
       ImmutableSortedSet<Path> javaSrcs = getJavaSrcs().stream()

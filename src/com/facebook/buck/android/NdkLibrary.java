@@ -158,7 +158,7 @@ public class NdkLibrary extends AbstractBuildRule
             flags,
             macroExpander));
 
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), genDirectory));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), genDirectory));
     steps.add(
         CopyStep.forDirectory(
             getProjectFilesystem(),

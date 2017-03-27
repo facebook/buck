@@ -258,10 +258,10 @@ public class AppleTest
 
     Path pathToTestOutput = getProjectFilesystem().resolve(
         getPathToTestOutputDirectory());
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToTestOutput));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToTestOutput));
 
     Path resolvedTestLogsPath = getProjectFilesystem().resolve(testLogsPath);
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), resolvedTestLogsPath));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), resolvedTestLogsPath));
 
     Path resolvedTestOutputPath = getProjectFilesystem().resolve(
         testOutputPath);

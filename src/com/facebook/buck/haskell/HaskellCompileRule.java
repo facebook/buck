@@ -289,11 +289,11 @@ public class HaskellCompileRule extends AbstractBuildRule {
     buildableContext.recordArtifact(getObjectDir());
     buildableContext.recordArtifact(getInterfaceDir());
     buildableContext.recordArtifact(getStubDir());
-    return ImmutableList.of(
-        new MakeCleanDirectoryStep(getProjectFilesystem(), getObjectDir()),
-        new MakeCleanDirectoryStep(getProjectFilesystem(), getInterfaceDir()),
-        new MakeCleanDirectoryStep(getProjectFilesystem(), getStubDir()),
-        new ShellStep(getProjectFilesystem().getRootPath()) {
+    return new ImmutableList.Builder<Step>()
+        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getObjectDir()))
+        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getInterfaceDir()))
+        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getStubDir()))
+        .add(new ShellStep(getProjectFilesystem().getRootPath()) {
 
           @Override
           public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
@@ -342,7 +342,8 @@ public class HaskellCompileRule extends AbstractBuildRule {
             return "haskell-compile";
           }
 
-        });
+        })
+        .build();
   }
 
   @Override

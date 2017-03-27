@@ -69,7 +69,7 @@ public class BuiltinApplePackage extends AbstractBuildRule {
     commands.add(RmStep.of(getProjectFilesystem(), pathToOutputFile));
 
     // Create temp folder to store the files going to be zipped
-    commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), temp));
+    commands.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), temp));
 
     Path payloadDir = temp.resolve("Payload");
     commands.add(MkdirStep.of(getProjectFilesystem(), payloadDir));

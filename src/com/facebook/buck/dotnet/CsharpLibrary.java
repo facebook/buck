@@ -95,7 +95,7 @@ public class CsharpLibrary extends AbstractBuildRule {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    steps.add(new MakeCleanDirectoryStep(filesystem, output.getParent()));
+    steps.addAll(MakeCleanDirectoryStep.of(filesystem, output.getParent()));
     steps.add(
         new CsharpLibraryCompile(
             filesystem.resolve(output),

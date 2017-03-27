@@ -64,22 +64,14 @@ public class OcamlClean extends AbstractBuildRule {
       buildableContext.recordArtifact(bcDir);
       LOG.debug("Adding clean step for bytecode output dir %s", bcDir.toString());
 
-      Step step = new MakeCleanDirectoryStep(
-              getProjectFilesystem(),
-              bcDir);
-
-      steps.add(step);
+      steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), bcDir));
     }
 
     if (Files.exists(optDir)) {
       buildableContext.recordArtifact(optDir);
       LOG.debug("Adding clean step for native output dir %s", optDir.toString());
 
-      Step step = new MakeCleanDirectoryStep(
-              getProjectFilesystem(),
-              optDir);
-
-      steps.add(step);
+      steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), optDir));
     }
     return steps.build();
   }

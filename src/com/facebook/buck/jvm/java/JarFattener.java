@@ -113,7 +113,7 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
 
     Path outputDir = getOutputDirectory();
     Path fatJarDir = outputDir.resolve("fat-jar-directory");
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDir));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), outputDir));
 
     // Map of the system-specific shared library name to it's resource name as a string.
     ImmutableMap.Builder<String, String> sonameToResourceMapBuilder = ImmutableMap.builder();

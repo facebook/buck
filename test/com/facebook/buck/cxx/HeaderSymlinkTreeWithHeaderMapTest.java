@@ -123,28 +123,28 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
   @Test
   public void testSymlinkTreeBuildSteps() throws IOException {
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(resolver);
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     ImmutableList<Step> expectedBuildSteps =
-        ImmutableList.of(
-            new MakeCleanDirectoryStep(filesystem, symlinkTreeRoot),
-            new SymlinkTreeStep(
-                filesystem,
+        new ImmutableList.Builder<Step>()
+            .addAll(MakeCleanDirectoryStep.of(projectFilesystem, symlinkTreeRoot))
+            .add(new SymlinkTreeStep(
+                projectFilesystem,
                 symlinkTreeRoot,
-                resolver.getMappedPaths(links)),
-            new HeaderMapStep(
-                filesystem,
-                HeaderSymlinkTreeWithHeaderMap.getPath(filesystem, buildTarget),
+                resolver.getMappedPaths(links)))
+            .add(new HeaderMapStep(
+                projectFilesystem,
+                HeaderSymlinkTreeWithHeaderMap.getPath(projectFilesystem, buildTarget),
                 ImmutableMap.of(
                     Paths.get("file"),
-                    filesystem.getBuckPaths().getBuckOut()
+                    projectFilesystem.getBuckPaths().getBuckOut()
                         .relativize(symlinkTreeRoot)
                         .resolve("file"),
                     Paths.get("directory/then/file"),
-                    filesystem.getBuckPaths().getBuckOut()
+                    projectFilesystem.getBuckPaths().getBuckOut()
                         .relativize(symlinkTreeRoot)
-                        .resolve("directory/then/file"))));
+                        .resolve("directory/then/file"))))
+        .build();
     ImmutableList<Step> actualBuildSteps =
         symlinkTreeBuildRule.getBuildSteps(
             buildContext,

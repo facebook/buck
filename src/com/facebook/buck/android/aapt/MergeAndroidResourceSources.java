@@ -60,7 +60,7 @@ public class MergeAndroidResourceSources extends AbstractBuildRule {
       BuildContext context,
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), destinationDirectory));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), destinationDirectory));
     steps.add(
         new MergeAndroidResourceSourcesStep(
             originalDirectories.stream()

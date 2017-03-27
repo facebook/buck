@@ -147,12 +147,11 @@ public class TestRunning {
           // support multiple repos
           // TODO(t8220837): Support tests in multiple repos
           JavaLibrary library = rulesUnderTestForCoverage.iterator().next();
-          stepRunner.runStepForBuildTarget(
-              executionContext,
-              new MakeCleanDirectoryStep(
-                  library.getProjectFilesystem(),
-                  JacocoConstants.getJacocoOutputDir(library.getProjectFilesystem())),
-              Optional.empty());
+          for (Step step : MakeCleanDirectoryStep.of(
+              library.getProjectFilesystem(),
+              JacocoConstants.getJacocoOutputDir(library.getProjectFilesystem()))) {
+            stepRunner.runStepForBuildTarget(executionContext, step, Optional.empty());
+          }
         } catch (StepFailedException e) {
           params.getBuckEventBus().post(
               ConsoleEvent.severe(Throwables.getRootCause(e).getLocalizedMessage()));

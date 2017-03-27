@@ -330,13 +330,14 @@ public class AppleTestDescription implements
                   BuildContext context,
                   BuildableContext buildableContext) {
                 buildableContext.recordArtifact(outputDirectory);
-                return ImmutableList.of(
-                    new MakeCleanDirectoryStep(getProjectFilesystem(), outputDirectory),
-                    new UnzipStep(
+                return new ImmutableList.Builder<Step>()
+                    .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), outputDirectory))
+                    .add(new UnzipStep(
                         getProjectFilesystem(),
                         context.getSourcePathResolver().getAbsolutePath(
                             Preconditions.checkNotNull(xctoolZipBuildRule.getSourcePathToOutput())),
-                        outputDirectory));
+                        outputDirectory))
+                    .build();
               }
               @Override
               public SourcePath getSourcePathToOutput() {

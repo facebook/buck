@@ -152,10 +152,10 @@ public abstract class CxxTest
       TestRunningOptions options,
       SourcePathResolver pathResolver,
       TestReportingCallback testReportingCallback) {
-    return ImmutableList.of(
-        new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToTestOutputDirectory()),
-        new TouchStep(getProjectFilesystem(), getPathToTestResults()),
-        new CxxTestStep(
+    return new ImmutableList.Builder<Step>()
+        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getPathToTestOutputDirectory()))
+        .add(new TouchStep(getProjectFilesystem(), getPathToTestResults()))
+        .add(new CxxTestStep(
             getProjectFilesystem(),
             ImmutableList.<String>builder()
                 .addAll(getShellCommand(pathResolver, getPathToTestResults()))
@@ -164,7 +164,8 @@ public abstract class CxxTest
             getEnv(pathResolver),
             getPathToTestExitCode(),
             getPathToTestOutput(),
-            testRuleTimeoutMs));
+            testRuleTimeoutMs))
+        .build();
   }
 
   protected abstract ImmutableList<TestResultSummary> parseResults(

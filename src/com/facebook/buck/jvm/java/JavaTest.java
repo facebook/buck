@@ -297,7 +297,7 @@ public class JavaTest
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     Path pathToTestOutput = getPathToTestOutputDirectory();
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToTestOutput));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToTestOutput));
     if (forkMode() == ForkMode.PER_TEST) {
       ImmutableList.Builder<JUnitStep> junitsBuilder = ImmutableList.builder();
       for (String testClass: testClassNames) {

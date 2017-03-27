@@ -125,22 +125,19 @@ public class ShTest
       TestRunningOptions options,
       SourcePathResolver pathResolver,
       TestReportingCallback testReportingCallback) {
-    Step mkdirClean = new MakeCleanDirectoryStep(
-        getProjectFilesystem(),
-        getPathToTestOutputDirectory());
-
-    // Return a single command that runs an .sh file with no arguments.
-    Step runTest =
-        new RunShTestAndRecordResultStep(
-            getProjectFilesystem(),
-            pathResolver.getAbsolutePath(test),
-            Arg.stringify(args, pathResolver),
-            Arg.stringify(env, pathResolver),
-            testRuleTimeoutMs,
-            getBuildTarget().getFullyQualifiedName(),
-            getPathToTestOutputResult());
-
-    return ImmutableList.of(mkdirClean, runTest);
+    return new ImmutableList.Builder<Step>()
+        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getPathToTestOutputDirectory()))
+        .add(
+            // Return a single command that runs an .sh file with no arguments.
+            new RunShTestAndRecordResultStep(
+                getProjectFilesystem(),
+                pathResolver.getAbsolutePath(test),
+                Arg.stringify(args, pathResolver),
+                Arg.stringify(env, pathResolver),
+                testRuleTimeoutMs,
+                getBuildTarget().getFullyQualifiedName(),
+                getPathToTestOutputResult()))
+        .build();
   }
 
   @Override

@@ -195,7 +195,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
     Optional<Path> annotationGenFolder =
         buildTimeOptions.getGeneratedSourceFolderName();
     if (annotationGenFolder.isPresent()) {
-      steps.add(new MakeCleanDirectoryStep(filesystem, annotationGenFolder.get()));
+      steps.addAll(MakeCleanDirectoryStep.of(filesystem, annotationGenFolder.get()));
       buildableContext.recordArtifact(annotationGenFolder.get());
     }
   }

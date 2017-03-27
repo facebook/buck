@@ -48,8 +48,9 @@ import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
+import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.MoreCollectors;
@@ -173,52 +174,56 @@ public class ApkGenruleTest {
 
     // Verify that the shell commands that the genrule produces are correct.
     List<Step> steps = apkGenrule.getBuildSteps(buildContext, new FakeBuildableContext());
-    assertEquals(6, steps.size());
+    assertEquals(9, steps.size());
 
     ExecutionContext executionContext = newEmptyExecutionContext();
-    Step firstStep = steps.get(0);
-    assertTrue(firstStep instanceof MakeCleanDirectoryStep);
-    MakeCleanDirectoryStep mkdirCommand = (MakeCleanDirectoryStep) firstStep;
-    Path mkdirDir =
-        projectFilesystem.getBuckPaths().getGenDir().resolve("src/com/facebook/sign_fb4a");
     assertEquals(
-        "First command should make sure the output directory exists and is empty.",
-        mkdirDir,
-        mkdirCommand.getPath());
-
-    Step secondStep = steps.get(1);
-    assertTrue(secondStep instanceof MakeCleanDirectoryStep);
-    MakeCleanDirectoryStep secondMkdirCommand = (MakeCleanDirectoryStep) secondStep;
-    Path relativePathToTmpDir = projectFilesystem.getBuckPaths().getGenDir().resolve(
-        "src/com/facebook/sign_fb4a__tmp");
+        RmStep.of(
+            projectFilesystem,
+            projectFilesystem.getBuckPaths().getGenDir().resolve("src/com/facebook/sign_fb4a"))
+                .withRecursive(true),
+        steps.get(0));
     assertEquals(
-        "Second command should make sure the temp directory exists.",
-        relativePathToTmpDir,
-        secondMkdirCommand.getPath());
+        MkdirStep.of(
+            projectFilesystem,
+            projectFilesystem.getBuckPaths().getGenDir().resolve("src/com/facebook/sign_fb4a")),
+        steps.get(1));
 
-    Step thirdStep = steps.get(2);
-    assertTrue(thirdStep instanceof MakeCleanDirectoryStep);
-    MakeCleanDirectoryStep thirdMkdirCommand = (MakeCleanDirectoryStep) thirdStep;
-    Path relativePathToSrcDir = projectFilesystem.getBuckPaths().getGenDir().resolve(
-        "src/com/facebook/sign_fb4a__srcs");
     assertEquals(
-        "Third command should make sure the temp directory exists.",
-        relativePathToSrcDir,
-        thirdMkdirCommand.getPath());
+        RmStep.of(
+            projectFilesystem,
+            projectFilesystem.getBuckPaths().getGenDir().resolve("src/com/facebook/sign_fb4a__tmp"))
+                .withRecursive(true),
+        steps.get(2));
+    assertEquals(
+        MkdirStep.of(
+            projectFilesystem,
+            projectFilesystem.getBuckPaths().getGenDir()
+                .resolve("src/com/facebook/sign_fb4a__tmp")),
+        steps.get(3));
 
-    MkdirAndSymlinkFileStep linkSource1 = (MkdirAndSymlinkFileStep) steps.get(3);
+    Path relativePathToSrcDir =
+        projectFilesystem.getBuckPaths().getGenDir().resolve("src/com/facebook/sign_fb4a__srcs");
+    assertEquals(
+        RmStep.of(projectFilesystem, relativePathToSrcDir).withRecursive(true),
+        steps.get(4));
+    assertEquals(
+        MkdirStep.of(projectFilesystem, relativePathToSrcDir),
+        steps.get(5));
+
+    MkdirAndSymlinkFileStep linkSource1 = (MkdirAndSymlinkFileStep) steps.get(6);
     assertEquals(fileSystem.getPath("src/com/facebook/signer.py"), linkSource1.getSource());
     assertEquals(fileSystem.getPath(relativePathToSrcDir + "/signer.py"), linkSource1.getTarget());
 
-    MkdirAndSymlinkFileStep linkSource2 = (MkdirAndSymlinkFileStep) steps.get(4);
+    MkdirAndSymlinkFileStep linkSource2 = (MkdirAndSymlinkFileStep) steps.get(7);
     assertEquals(fileSystem.getPath("src/com/facebook/key.properties"), linkSource2.getSource());
     assertEquals(
         fileSystem.getPath(relativePathToSrcDir + "/key.properties"),
         linkSource2.getTarget());
 
-    Step sixthStep = steps.get(5);
-    assertTrue(sixthStep instanceof AbstractGenruleStep);
-    AbstractGenruleStep genruleCommand = (AbstractGenruleStep) sixthStep;
+    Step genruleStep = steps.get(8);
+    assertTrue(genruleStep instanceof AbstractGenruleStep);
+    AbstractGenruleStep genruleCommand = (AbstractGenruleStep) genruleStep;
     assertEquals("genrule", genruleCommand.getShortName());
     ImmutableMap<String, String> environmentVariables = genruleCommand.getEnvironmentVariables(
         executionContext);

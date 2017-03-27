@@ -165,7 +165,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
         getProjectFilesystem(),
         getBuildTarget(),
         "__%s__working_directory");
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), workingDirectory));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), workingDirectory));
 
     SourcePathResolver resolver = context.getSourcePathResolver();
 

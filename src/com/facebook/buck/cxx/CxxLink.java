@@ -106,12 +106,12 @@ public class CxxLink
       cellRoots.add(dep.getProjectFilesystem().getRootPath());
     }
 
-    return ImmutableList.of(
-        MkdirStep.of(getProjectFilesystem(), output.getParent()),
-        new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir),
-        RmStep.of(getProjectFilesystem(), argFilePath),
-        RmStep.of(getProjectFilesystem(), fileListPath),
-        CxxPrepareForLinkStep.create(
+    return new ImmutableList.Builder<Step>()
+        .add(MkdirStep.of(getProjectFilesystem(), output.getParent()))
+        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), scratchDir))
+        .add(RmStep.of(getProjectFilesystem(), argFilePath))
+        .add(RmStep.of(getProjectFilesystem(), fileListPath))
+        .add(CxxPrepareForLinkStep.create(
             argFilePath,
             fileListPath,
             linker.fileList(fileListPath),
@@ -119,22 +119,23 @@ public class CxxLink
             args,
             linker,
             getBuildTarget().getCellPath(),
-            context.getSourcePathResolver()),
-        new CxxLinkStep(
+            context.getSourcePathResolver()))
+        .add(new CxxLinkStep(
             getProjectFilesystem().getRootPath(),
             linker.getEnvironment(context.getSourcePathResolver()),
             linker.getCommandPrefix(context.getSourcePathResolver()),
             argFilePath,
-            getProjectFilesystem().getRootPath().resolve(scratchDir)),
-        new FileScrubberStep(
+            getProjectFilesystem().getRootPath().resolve(scratchDir)))
+        .add(new FileScrubberStep(
             getProjectFilesystem(),
             output,
-            linker.getScrubbers(cellRoots.build())),
-        new LogContentsOfFileStep(getProjectFilesystem().resolve(argFilePath), Level.FINEST),
-        RmStep.of(getProjectFilesystem(), argFilePath),
-        new LogContentsOfFileStep(getProjectFilesystem().resolve(fileListPath), Level.FINEST),
-        RmStep.of(getProjectFilesystem(), fileListPath),
-        RmStep.of(getProjectFilesystem(), scratchDir).withRecursive(true));
+            linker.getScrubbers(cellRoots.build())))
+        .add(new LogContentsOfFileStep(getProjectFilesystem().resolve(argFilePath), Level.FINEST))
+        .add(RmStep.of(getProjectFilesystem(), argFilePath))
+        .add(new LogContentsOfFileStep(getProjectFilesystem().resolve(fileListPath), Level.FINEST))
+        .add(RmStep.of(getProjectFilesystem(), fileListPath))
+        .add(RmStep.of(getProjectFilesystem(), scratchDir).withRecursive(true))
+        .build();
   }
 
   @Override

@@ -139,10 +139,11 @@ public class CxxPrecompiledHeader
       BuildableContext buildableContext) {
     Path scratchDir =
         BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s_tmp");
-    return ImmutableList.of(
-        MkdirStep.of(getProjectFilesystem(), output.getParent()),
-        new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir),
-        makeMainStep(context.getSourcePathResolver(), scratchDir));
+    return new ImmutableList.Builder<Step>()
+        .add(MkdirStep.of(getProjectFilesystem(), output.getParent()))
+        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), scratchDir))
+        .add(makeMainStep(context.getSourcePathResolver(), scratchDir))
+        .build();
   }
 
   public SourcePath getInput() {

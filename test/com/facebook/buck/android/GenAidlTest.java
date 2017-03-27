@@ -43,7 +43,8 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Suppliers;
 
@@ -107,12 +108,11 @@ public class GenAidlTest {
     assertEquals(executionContext.getAndroidPlatformTarget(), androidPlatformTarget);
 
     Path outputDirectory = BuildTargets.getScratchPath(stubFilesystem, target, "__%s.aidl");
-    MakeCleanDirectoryStep mkdirStep = (MakeCleanDirectoryStep) steps.get(1);
-    assertEquals("gen_aidl() should make a directory at " + outputDirectory,
-        outputDirectory,
-        mkdirStep.getPath());
+    assertEquals(RmStep.of(stubFilesystem, outputDirectory).withRecursive(true), steps.get(2));
+    assertEquals(MkdirStep.of(stubFilesystem, outputDirectory), steps.get(3));
 
-    ShellStep aidlStep = (ShellStep) steps.get(2);
+
+    ShellStep aidlStep = (ShellStep) steps.get(4);
     assertEquals(
         "gen_aidl() should use the aidl binary to write .java files.",
         String.format("(cd %s && %s -p%s -I%s -o%s %s)",
@@ -124,7 +124,7 @@ public class GenAidlTest {
             pathToAidl.getRelativePath()),
         aidlStep.getDescription(executionContext));
 
-    assertEquals(5, steps.size());
+    assertEquals(7, steps.size());
 
     verify(androidPlatformTarget);
   }

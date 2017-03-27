@@ -238,7 +238,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
         copiedBinaryJar);
 
     if (resolver.getFilesystem(binaryJar).isDirectory(resolvedBinaryJar)) {
-      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), copiedBinaryJar));
+      steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), copiedBinaryJar));
       steps.add(CopyStep.forDirectory(
           getProjectFilesystem(),
           resolvedBinaryJar,

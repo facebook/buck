@@ -72,11 +72,11 @@ public class OcamlBuild extends AbstractBuildRule {
     }
     buildableContext.recordArtifact(
         baseArtifactDir.resolve(OcamlBuildContext.OCAML_COMPILED_BYTECODE_DIR));
-    return ImmutableList.of(
-        new MakeCleanDirectoryStep(
+    return new ImmutableList.Builder<Step>()
+        .addAll(MakeCleanDirectoryStep.of(
             getProjectFilesystem(),
-            ocamlContext.getNativeOutput().getParent()),
-        new OcamlBuildStep(
+            ocamlContext.getNativeOutput().getParent()))
+        .add(new OcamlBuildStep(
             context.getSourcePathResolver(),
             getProjectFilesystem(),
             ocamlContext,
@@ -84,7 +84,8 @@ public class OcamlBuild extends AbstractBuildRule {
             cCompiler.getCommandPrefix(context.getSourcePathResolver()),
             cxxCompiler.getEnvironment(context.getSourcePathResolver()),
             cxxCompiler.getCommandPrefix(context.getSourcePathResolver()),
-            bytecodeOnly));
+            bytecodeOnly))
+        .build();
   }
 
   @Override

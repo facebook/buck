@@ -175,9 +175,9 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
 
     buildableContext.recordArtifact(getSymbolsNeededOutPath());
 
-    return ImmutableList.of(
-        new MakeCleanDirectoryStep(getProjectFilesystem(), getScratchDirPath()),
-        new AbstractExecutionStep("xdso-dce relinker") {
+    return new ImmutableList.Builder<Step>()
+        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getScratchDirPath()))
+        .add(new AbstractExecutionStep("xdso-dce relinker") {
           @Override
           public StepExecutionResult execute(ExecutionContext context)
               throws IOException, InterruptedException {
@@ -201,7 +201,8 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
                     getSymbols(context.getProcessExecutor(), getLibFilePath()).undefined));
             return StepExecutionResult.SUCCESS;
           }
-        });
+        })
+        .build();
   }
 
   @Override

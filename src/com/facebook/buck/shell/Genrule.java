@@ -327,11 +327,11 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
     // Make sure that the directory to contain the output file exists, deleting any pre-existing
     // ones. Rules get output to a directory named after the base path, so we don't want to nuke
     // the entire directory.
-    commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToOutDirectory));
+    commands.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToOutDirectory));
     // Delete the old temp directory
-    commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToTmpDirectory));
+    commands.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToTmpDirectory));
     // Create a directory to hold all the source files.
-    commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToSrcDirectory));
+    commands.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToSrcDirectory));
 
     addSymlinkCommands(context, commands);
 

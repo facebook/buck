@@ -201,7 +201,7 @@ public class HalideLibraryDescriptionTest {
     ImmutableList<Step> buildSteps = compile.getBuildSteps(
         FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext()
     );
-    HalideCompilerStep compilerStep = (HalideCompilerStep) buildSteps.get(1);
+    HalideCompilerStep compilerStep = (HalideCompilerStep) buildSteps.get(2);
     ImmutableList<String> shellCommand = compilerStep.getShellCommandInternal(
         TestExecutionContext.newInstance());
     assertThat(
@@ -221,7 +221,7 @@ public class HalideLibraryDescriptionTest {
     buildSteps = compile.getBuildSteps(
         FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext()
     );
-    compilerStep = (HalideCompilerStep) buildSteps.get(1);
+    compilerStep = (HalideCompilerStep) buildSteps.get(2);
     shellCommand = compilerStep.getShellCommandInternal(TestExecutionContext.newInstance());
     assertThat(
         shellCommand,
@@ -258,7 +258,7 @@ public class HalideLibraryDescriptionTest {
         FakeBuildContext.withSourcePathResolver(pathResolver),
         new FakeBuildableContext()
     );
-    HalideCompilerStep compilerStep = (HalideCompilerStep) buildSteps.get(1);
+    HalideCompilerStep compilerStep = (HalideCompilerStep) buildSteps.get(2);
     ImmutableList<String> shellCommand = compilerStep.getShellCommandInternal(
         TestExecutionContext.newInstance());
     assertThat(
@@ -279,7 +279,7 @@ public class HalideLibraryDescriptionTest {
     buildSteps = compile.getBuildSteps(
         FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext()
     );
-    compilerStep = (HalideCompilerStep) buildSteps.get(1);
+    compilerStep = (HalideCompilerStep) buildSteps.get(2);
     shellCommand = compilerStep.getShellCommandInternal(TestExecutionContext.newInstance());
     assertThat(
         shellCommand,

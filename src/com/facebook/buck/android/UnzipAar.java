@@ -86,7 +86,7 @@ public class UnzipAar extends AbstractBuildRule
       BuildContext context,
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), unpackDirectory));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), unpackDirectory));
     steps.add(
         new UnzipStep(
             getProjectFilesystem(),
@@ -183,7 +183,7 @@ public class UnzipAar extends AbstractBuildRule
       }
     });
 
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToTextSymbolsDir));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToTextSymbolsDir));
     steps.add(
         new ExtractFromAndroidManifestStep(
             getAndroidManifest(),

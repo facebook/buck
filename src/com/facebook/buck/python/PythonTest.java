@@ -137,16 +137,17 @@ public class PythonTest
       TestRunningOptions options,
       SourcePathResolver pathResolver,
       TestReportingCallback testReportingCallback) {
-    return ImmutableList.of(
-        new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToTestOutputDirectory()),
-        new PythonRunTestsStep(
+    return new ImmutableList.Builder<Step>()
+        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getPathToTestOutputDirectory()))
+        .add(new PythonRunTestsStep(
             getProjectFilesystem().getRootPath(),
             getBuildTarget().getFullyQualifiedName(),
             binary.getExecutableCommand().getCommandPrefix(pathResolver),
             getMergedEnv(pathResolver),
             options.getTestSelectorList(),
             testRuleTimeoutMs,
-            getProjectFilesystem().resolve(getPathToTestOutputResult())));
+            getProjectFilesystem().resolve(getPathToTestOutputResult())))
+        .build();
   }
 
   private ImmutableMap<String, String> getMergedEnv(SourcePathResolver pathResolver) {

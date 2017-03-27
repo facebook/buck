@@ -132,7 +132,7 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
         false,
         steps);
     ProGuardObfuscateStep.CommandLineHelperStep commandLineHelperStep =
-        (ProGuardObfuscateStep.CommandLineHelperStep) steps.build().get(1);
+        (ProGuardObfuscateStep.CommandLineHelperStep) steps.build().get(2);
     ImmutableList<String> parameters = commandLineHelperStep.getParameters(executionContext, cwd);
     int libraryJarsArgIndex = parameters.indexOf("-libraryjars");
     int libraryJarsValueIndex = parameters.indexOf(
@@ -164,7 +164,7 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
         new FakeBuildableContext(),
         false,
         steps);
-    ProGuardObfuscateStep proguardStep = (ProGuardObfuscateStep) steps.build().get(2);
+    ProGuardObfuscateStep proguardStep = (ProGuardObfuscateStep) steps.build().get(3);
     ImmutableList<String> parameters = proguardStep.getShellCommandInternal(executionContext);
     for (String s : proguardJvmArgs) {
       assertNotEquals(-1, parameters.indexOf(s));
@@ -196,7 +196,7 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
         false,
         steps);
     ProGuardObfuscateStep.CommandLineHelperStep commandLineHelperStep =
-        (ProGuardObfuscateStep.CommandLineHelperStep) steps.build().get(1);
+        (ProGuardObfuscateStep.CommandLineHelperStep) steps.build().get(2);
 
     String found = null;
     Iterator<String> argsIt = commandLineHelperStep.getParameters(context, cwd).iterator();

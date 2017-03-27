@@ -209,14 +209,15 @@ public class DTest extends AbstractBuildRule implements
       TestRunningOptions options,
       SourcePathResolver pathResolver,
       TestReportingCallback testReportingCallback) {
-    return ImmutableList.of(
-        new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToTestOutputDirectory()),
-        new DTestStep(
+    return new ImmutableList.Builder<Step>()
+        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getPathToTestOutputDirectory()))
+        .add(new DTestStep(
             getProjectFilesystem(),
             getShellCommand(pathResolver),
             getPathToTestExitCode(),
             testRuleTimeoutMs,
-            getPathToTestOutput()));
+            getPathToTestOutput()))
+        .build();
   }
 
   @Override

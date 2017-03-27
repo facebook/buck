@@ -166,13 +166,13 @@ public class CopyNativeLibraries extends AbstractBuildRule {
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), getBinPath()));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getBinPath()));
 
     final Path pathToNativeLibs = getPathToNativeLibsDir();
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToNativeLibs));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToNativeLibs));
 
     final Path pathToNativeLibsAssets = getPathToNativeLibsAssetsDir();
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToNativeLibsAssets));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToNativeLibsAssets));
 
     for (SourcePath nativeLibDir : nativeLibDirectories.asList().reverse()) {
       copyNativeLibrary(

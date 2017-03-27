@@ -109,9 +109,9 @@ public class RustTest
       SourcePathResolver pathResolver,
       TestReportingCallback testReportingCallback) {
     Path workingDirectory = getProjectFilesystem().resolve(getPathToTestOutputDirectory());
-    return ImmutableList.of(
-        new MakeCleanDirectoryStep(getProjectFilesystem(), workingDirectory),
-        new AbstractTestStep(
+    return new ImmutableList.Builder<Step>()
+        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), workingDirectory))
+        .add(new AbstractTestStep(
             "rust test",
             getProjectFilesystem(),
             Optional.of(workingDirectory),
@@ -119,9 +119,8 @@ public class RustTest
             Optional.empty(), // TODO(StanislavGlebik): environment
             workingDirectory.resolve("exitcode"),
             Optional.empty(),
-            testStdoutFile
-        ) { }
-    );
+            testStdoutFile) { })
+        .build();
   }
 
   @Override

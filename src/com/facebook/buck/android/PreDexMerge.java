@@ -210,8 +210,8 @@ public class PreDexMerge extends AbstractBuildRule
     steps.add(MkdirStep.of(getProjectFilesystem(), paths.additionalJarfilesSubdir));
     steps.add(MkdirStep.of(getProjectFilesystem(), paths.successDir));
 
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), paths.metadataSubdir));
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), paths.scratchDir));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), paths.metadataSubdir));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), paths.scratchDir));
 
     buildableContext.addMetadata(
         SECONDARY_DEX_DIRECTORIES_KEY,

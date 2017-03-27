@@ -128,10 +128,11 @@ public class ReactNativeBundle
     final Path jsOutput = jsOutputDir.resolve(bundleName);
     final Path depFile = getPathToDepFile(getBuildTarget(), getProjectFilesystem());
 
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), jsOutput.getParent()));
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), resource));
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), sourceMapOutputPath.getParent()));
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), depFile.getParent()));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), jsOutput.getParent()));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), resource));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(getProjectFilesystem(), sourceMapOutputPath.getParent()));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), depFile.getParent()));
 
     appendWorkerSteps(
         steps,
@@ -156,7 +157,7 @@ public class ReactNativeBundle
     // Setup the temp dir.
     final Path tmpDir =
         BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s__tmp");
-    stepBuilder.add(new MakeCleanDirectoryStep(getProjectFilesystem(), tmpDir));
+    stepBuilder.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), tmpDir));
 
     // Run the bundler.
     ReactNativeBundleWorkerStep workerStep =

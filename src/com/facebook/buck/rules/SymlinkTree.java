@@ -168,13 +168,15 @@ public class SymlinkTree implements BuildRule, HasRuntimeDeps, SupportsInputBase
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    return ImmutableList.of(
-        getVerifyStep(),
-        new MakeCleanDirectoryStep(getProjectFilesystem(), root),
-        new SymlinkTreeStep(
-            getProjectFilesystem(),
-            root,
-            context.getSourcePathResolver().getMappedPaths(links)));
+    return new ImmutableList.Builder<Step>()
+        .add(getVerifyStep())
+        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), root))
+        .add(
+            new SymlinkTreeStep(
+                getProjectFilesystem(),
+                root,
+                context.getSourcePathResolver().getMappedPaths(links)))
+        .build();
   }
 
   // Put the link map into the rule key, as if it changes at all, we need to

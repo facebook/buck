@@ -313,8 +313,7 @@ public class AppleBundle
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
 
-    stepsBuilder.add(
-        new MakeCleanDirectoryStep(getProjectFilesystem(), bundleRoot));
+    stepsBuilder.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), bundleRoot));
 
     Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
     if (assetCatalog.isPresent()) {

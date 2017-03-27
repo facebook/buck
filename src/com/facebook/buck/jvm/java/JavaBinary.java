@@ -122,10 +122,7 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule, Ha
       Path stagingRoot = outputDirectory.resolve("meta_inf_staging");
       Path stagingTarget = stagingRoot.resolve("META-INF");
 
-      MakeCleanDirectoryStep createStagingRoot = new MakeCleanDirectoryStep(
-          getProjectFilesystem(),
-          stagingRoot);
-      commands.add(createStagingRoot);
+      commands.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), stagingRoot));
 
       MkdirAndSymlinkFileStep link = new MkdirAndSymlinkFileStep(
           getProjectFilesystem(),

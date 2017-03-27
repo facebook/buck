@@ -194,19 +194,19 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
 
     SourcePathResolver resolver = buildContext.getSourcePathResolver();
 
-    return ImmutableList.of(
-        new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir),
-        new SymlinkFilesIntoDirectoryStep(
+    return new ImmutableList.Builder<Step>()
+        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), scratchDir))
+        .add(new SymlinkFilesIntoDirectoryStep(
             getProjectFilesystem(),
             getProjectFilesystem().getRootPath(),
             srcs.stream()
                 .map(resolver::getRelativePath)
                 .collect(MoreCollectors.toImmutableList()),
-            scratchDir),
-        new MakeCleanDirectoryStep(
+            scratchDir))
+        .addAll(MakeCleanDirectoryStep.of(
             getProjectFilesystem(),
-            getOutputDir(getBuildTarget(), getProjectFilesystem())),
-        new ShellStep(getProjectFilesystem().getRootPath()) {
+            getOutputDir(getBuildTarget(), getProjectFilesystem())))
+        .add(new ShellStep(getProjectFilesystem().getRootPath()) {
 
           @Override
           protected ImmutableList<String> getShellCommandInternal(
@@ -253,7 +253,8 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
             return "rust-build";
           }
 
-        });
+        })
+        .build();
   }
 
   @Override

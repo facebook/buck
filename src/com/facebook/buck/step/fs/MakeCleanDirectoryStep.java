@@ -17,9 +17,7 @@
 package com.facebook.buck.step.fs;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.step.CompositeStep;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
+import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -34,38 +32,15 @@ import java.nio.file.Path;
  * that generated one of the {@code .class} files, the {@code .class} file corresponding to the
  * deleted {@code .java} file should no longer be there when {@code javac} is run again.
  */
-public final class MakeCleanDirectoryStep extends CompositeStep {
+public final class MakeCleanDirectoryStep {
 
-  private final Path pathRelativeToProjectRoot;
-
-  public MakeCleanDirectoryStep(ProjectFilesystem filesystem, Path pathRelativeToProjectRoot) {
-    super(ImmutableList.of(
+  public static ImmutableList<Step> of(
+      ProjectFilesystem filesystem,
+      Path pathRelativeToProjectRoot) {
+    return ImmutableList.of(
         RmStep.of(filesystem, pathRelativeToProjectRoot).withRecursive(true),
-        MkdirStep.of(filesystem, pathRelativeToProjectRoot)));
-    this.pathRelativeToProjectRoot = pathRelativeToProjectRoot;
+        MkdirStep.of(filesystem, pathRelativeToProjectRoot));
   }
 
-  @VisibleForTesting
-  public Path getPath() {
-    return pathRelativeToProjectRoot;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof MakeCleanDirectoryStep)) {
-      return false;
-    }
-    MakeCleanDirectoryStep that = (MakeCleanDirectoryStep) obj;
-    return Objects.equal(this.pathRelativeToProjectRoot, that.pathRelativeToProjectRoot);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(pathRelativeToProjectRoot);
-  }
-
-  @Override
-  public String toString() {
-    return "MakeCleanDirectoryStep: " + getPath();
-  }
+  private MakeCleanDirectoryStep() {}
 }

@@ -77,7 +77,7 @@ public class SceneKitAssets extends AbstractBuildRule {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
-    stepsBuilder.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDir));
+    stepsBuilder.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), outputDir));
     for (SourcePath inputPath : sceneKitAssetsPaths) {
       final Path absoluteInputPath = context.getSourcePathResolver().getAbsolutePath(inputPath);
 

@@ -287,12 +287,12 @@ public class OcamlBuildStep implements Step {
       ImmutableList<Path> sortedInput,
       ImmutableList.Builder<Path> linkerInputs
   ) throws IOException, InterruptedException {
-    MakeCleanDirectoryStep mkDir = new MakeCleanDirectoryStep(
-        filesystem,
-        ocamlContext.getCompileNativeOutputDir());
-    StepExecutionResult mkDirExecutionResult = mkDir.execute(context);
-    if (!mkDirExecutionResult.isSuccess()) {
-      return mkDirExecutionResult;
+    for (Step step :
+        MakeCleanDirectoryStep.of(filesystem, ocamlContext.getCompileNativeOutputDir())) {
+      StepExecutionResult mkDirExecutionResult = step.execute(context);
+      if (!mkDirExecutionResult.isSuccess()) {
+        return mkDirExecutionResult;
+      }
     }
     for (Path inputOutput : sortedInput) {
       String inputFileName = inputOutput.getFileName().toString();
@@ -334,12 +334,12 @@ public class OcamlBuildStep implements Step {
       ImmutableList<Path> sortedInput,
       ImmutableList.Builder<Path> linkerInputs
   ) throws IOException, InterruptedException {
-    MakeCleanDirectoryStep mkDir = new MakeCleanDirectoryStep(
-        filesystem,
-        ocamlContext.getCompileBytecodeOutputDir());
-    StepExecutionResult mkDirExecutionResult = mkDir.execute(context);
-    if (!mkDirExecutionResult.isSuccess()) {
-      return mkDirExecutionResult;
+    for (Step step :
+        MakeCleanDirectoryStep.of(filesystem, ocamlContext.getCompileBytecodeOutputDir())) {
+      StepExecutionResult mkDirExecutionResult = step.execute(context);
+      if (!mkDirExecutionResult.isSuccess()) {
+        return mkDirExecutionResult;
+      }
     }
     for (Path inputOutput : sortedInput) {
       String inputFileName = inputOutput.getFileName().toString();
@@ -377,12 +377,13 @@ public class OcamlBuildStep implements Step {
 
   private StepExecutionResult generateSources(ExecutionContext context, Path workingDirectory)
       throws IOException, InterruptedException {
-    MakeCleanDirectoryStep mkDir = new MakeCleanDirectoryStep(
+    for (Step step : MakeCleanDirectoryStep.of(
         filesystem,
-        ocamlContext.getGeneratedSourceDir());
-    StepExecutionResult mkDirExecutionResult = mkDir.execute(context);
-    if (!mkDirExecutionResult.isSuccess()) {
-      return mkDirExecutionResult;
+        ocamlContext.getGeneratedSourceDir())) {
+      StepExecutionResult mkDirExecutionResult = step.execute(context);
+      if (!mkDirExecutionResult.isSuccess()) {
+        return mkDirExecutionResult;
+      }
     }
     for (SourcePath yaccSource : ocamlContext.getYaccInput()) {
       SourcePath output = ocamlContext.getYaccOutput(ImmutableSet.of(yaccSource)).get(0);

@@ -110,26 +110,27 @@ class ElfSharedLibraryInterface
       BuildableContext buildableContext) {
     Path output = getOutputDir().resolve(getSharedAbiLibraryName());
     buildableContext.recordArtifact(output);
-    return ImmutableList.of(
-        new MakeCleanDirectoryStep(getProjectFilesystem(), getOutputDir()),
-        ElfExtractSectionsStep.of(
+    return new ImmutableList.Builder<Step>()
+        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getOutputDir()))
+        .add(ElfExtractSectionsStep.of(
             getProjectFilesystem(),
             objcopy.getCommandPrefix(context.getSourcePathResolver()),
             context.getSourcePathResolver().getAbsolutePath(input),
             output,
-            SECTIONS),
-        ElfClearProgramHeadersStep.of(getProjectFilesystem(), output),
-        ElfSymbolTableScrubberStep.of(
+            SECTIONS))
+        .add(ElfClearProgramHeadersStep.of(getProjectFilesystem(), output))
+        .add(ElfSymbolTableScrubberStep.of(
             getProjectFilesystem(),
             output,
             /* section */ ".dynsym",
-            /* allowMissing */ false),
-        ElfSymbolTableScrubberStep.of(
+            /* allowMissing */ false))
+        .add(ElfSymbolTableScrubberStep.of(
             getProjectFilesystem(),
             output,
             /* section */ ".symtab",
-            /* allowMissing */ true),
-        ElfDynamicSectionScrubberStep.of(getProjectFilesystem(), output));
+            /* allowMissing */ true))
+        .add(ElfDynamicSectionScrubberStep.of(getProjectFilesystem(), output))
+        .build();
   }
 
   @Override

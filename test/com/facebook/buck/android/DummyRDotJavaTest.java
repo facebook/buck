@@ -40,9 +40,9 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
 
 import org.junit.Test;
 
@@ -97,7 +97,7 @@ public class DummyRDotJavaTest {
     List<Step> steps = dummyRDotJava.getBuildSteps(
         FakeBuildContext.NOOP_CONTEXT,
         buildableContext);
-    assertEquals("DummyRDotJava returns an incorrect number of Steps.", 10, steps.size());
+    assertEquals("DummyRDotJava returns an incorrect number of Steps.", 14, steps.size());
 
     String rDotJavaSrcFolder =
         BuildTargets
@@ -128,15 +128,15 @@ public class DummyRDotJavaTest {
             .collect(MoreCollectors.toImmutableList());
     ImmutableSortedSet<Path> javaSourceFiles = ImmutableSortedSet.of(
         Paths.get(rDotJavaSrcFolder).resolve("com/facebook/R.java"));
-    List<String> expectedStepDescriptions = Lists.newArrayList(
-        makeCleanDirDescription(filesystem.resolve(rDotJavaSrcFolder)),
-        "android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles),
-        "android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles),
-        makeCleanDirDescription(filesystem.resolve(rDotJavaBinFolder)),
-        makeCleanDirDescription(filesystem.resolve(rDotJavaAbiFolder)),
-        makeCleanDirDescription(filesystem.resolve(rDotJavaOutputFolder)),
-        String.format("mkdir -p %s", filesystem.resolve(genFolder)),
-        RDotJava.createJavacStepForDummyRDotJavaFiles(
+    List<String> expectedStepDescriptions = new ImmutableList.Builder<String>()
+        .addAll(makeCleanDirDescription(filesystem.resolve(rDotJavaSrcFolder)))
+        .add("android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles))
+        .add("android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles))
+        .addAll(makeCleanDirDescription(filesystem.resolve(rDotJavaBinFolder)))
+        .addAll(makeCleanDirDescription(filesystem.resolve(rDotJavaAbiFolder)))
+        .addAll(makeCleanDirDescription(filesystem.resolve(rDotJavaOutputFolder)))
+        .add(String.format("mkdir -p %s", filesystem.resolve(genFolder)))
+        .add(RDotJava.createJavacStepForDummyRDotJavaFiles(
             javaSourceFiles,
             BuildTargets.getGenPath(filesystem, dummyRDotJava.getBuildTarget(), "__%s__srcs"),
             Paths.get(rDotJavaBinFolder),
@@ -145,9 +145,10 @@ public class DummyRDotJavaTest {
         /* buildTarget */ null,
             pathResolver,
             new FakeProjectFilesystem())
-            .getDescription(TestExecutionContext.newInstance()),
-        String.format("jar cf %s  %s", rDotJavaOutputJar, rDotJavaBinFolder),
-        String.format("calculate_abi %s", rDotJavaBinFolder));
+            .getDescription(TestExecutionContext.newInstance()))
+        .add(String.format("jar cf %s  %s", rDotJavaOutputJar, rDotJavaBinFolder))
+        .add(String.format("calculate_abi %s", rDotJavaBinFolder))
+        .build();
 
     MoreAsserts.assertSteps(
         "DummyRDotJava.getBuildSteps() must return these exact steps.",
@@ -184,8 +185,10 @@ public class DummyRDotJavaTest {
         dummyRDotJava.getRDotJavaBinFolder());
   }
 
-  private static String makeCleanDirDescription(Path dirname) {
-    return String.format("rm -f -r %s && mkdir -p %s", dirname, dirname);
+  private static ImmutableList<String> makeCleanDirDescription(Path dirname) {
+    return ImmutableList.of(
+        String.format("rm -f -r %s", dirname),
+        String.format("mkdir -p %s", dirname));
   }
 
   private void setAndroidResourceBuildOutput(BuildRule resourceRule) {

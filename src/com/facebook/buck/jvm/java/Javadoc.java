@@ -112,7 +112,7 @@ public class Javadoc extends AbstractBuildRule implements MavenPublishable {
 
     Path sourcesListFilePath = scratchDir.resolve("all-sources.txt");
 
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), scratchDir));
     // Write an @-file with all the source files in
     steps.add(new WriteFileStep(
         getProjectFilesystem(),
@@ -142,7 +142,7 @@ public class Javadoc extends AbstractBuildRule implements MavenPublishable {
           /* can execute */ false));
 
     Path uncompressedOutputDir = scratchDir.resolve("docs");
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), uncompressedOutputDir));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), uncompressedOutputDir));
     steps.add(new ShellStep(getProjectFilesystem().resolve(scratchDir)) {
       @Override
       protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {

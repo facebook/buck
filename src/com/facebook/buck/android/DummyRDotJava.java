@@ -140,7 +140,7 @@ public class DummyRDotJava extends AbstractBuildRule
       final BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     final Path rDotJavaSrcFolder = getRDotJavaSrcFolder(getBuildTarget(), getProjectFilesystem());
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), rDotJavaSrcFolder));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), rDotJavaSrcFolder));
 
     // Generate the .java files and record where they will be written in javaSourceFilePaths.
     ImmutableSortedSet<Path> javaSourceFilePaths;
@@ -152,7 +152,7 @@ public class DummyRDotJava extends AbstractBuildRule
       // TODO(bolinfest): Stop hardcoding com.facebook. This should match the package in the
       // associated TestAndroidManifest.xml file.
       Path emptyRDotJava = rDotJavaSrcFolder.resolve("com/facebook/R.java");
-      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), emptyRDotJava.getParent()));
+      steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), emptyRDotJava.getParent()));
       steps.add(
           new WriteFileStep(
               getProjectFilesystem(),
@@ -196,14 +196,14 @@ public class DummyRDotJava extends AbstractBuildRule
 
     // Clear out the directory where the .class files will be generated.
     final Path rDotJavaClassesFolder = getRDotJavaBinFolder();
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), rDotJavaClassesFolder));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), rDotJavaClassesFolder));
 
     Path pathToAbiOutputDir = getPathToAbiOutputDir(getBuildTarget(), getProjectFilesystem());
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToAbiOutputDir));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToAbiOutputDir));
     Path pathToAbiOutputFile = pathToAbiOutputDir.resolve("abi.jar");
 
     Path pathToJarOutputDir = outputJar.getParent();
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToJarOutputDir));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToJarOutputDir));
 
     Path pathToSrcsList =
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__srcs");

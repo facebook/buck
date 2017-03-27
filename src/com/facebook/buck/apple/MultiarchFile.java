@@ -90,7 +90,7 @@ public class MultiarchFile extends AbstractBuildRule
 
   private void copyLinkMaps(BuildableContext buildableContext, ImmutableList.Builder<Step> steps) {
     Path linkMapDir = Paths.get(output + "-LinkMap");
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), linkMapDir));
+    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), linkMapDir));
 
     for (SourcePath thinBinary : thinBinaries) {
       Optional<BuildRule> maybeRule = ruleFinder.getRule(thinBinary);

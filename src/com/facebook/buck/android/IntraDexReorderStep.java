@@ -115,7 +115,7 @@ public class IntraDexReorderStep implements Step {
       String tmpname = "dex-tmp-" + inputPath.getFileName().toString() + "-%s";
       Path temp = BuildTargets.getScratchPath(filesystem, buildTarget, tmpname);
       // Create tmp directory if necessary
-      steps.add(new MakeCleanDirectoryStep(filesystem, temp));
+      steps.addAll(MakeCleanDirectoryStep.of(filesystem, temp));
       // un-zip
       steps.add(new UnzipStep(filesystem, inputPath, temp));
       // run reorder tool

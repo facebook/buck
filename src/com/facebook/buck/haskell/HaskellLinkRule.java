@@ -83,11 +83,11 @@ public class HaskellLinkRule extends AbstractBuildRule {
       BuildContext buildContext,
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(getOutput());
-    return ImmutableList.of(
-        new MakeCleanDirectoryStep(
+    return new ImmutableList.Builder<Step>()
+        .addAll(MakeCleanDirectoryStep.of(
             getProjectFilesystem(),
-            getOutputDir(getBuildTarget(), getProjectFilesystem())),
-        new ShellStep(getProjectFilesystem().getRootPath()) {
+            getOutputDir(getBuildTarget(), getProjectFilesystem())))
+        .add(new ShellStep(getProjectFilesystem().getRootPath()) {
 
           @Override
           public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
@@ -115,7 +115,8 @@ public class HaskellLinkRule extends AbstractBuildRule {
             return "haskell-link";
           }
 
-        });
+        })
+        .build();
   }
 
   @Override

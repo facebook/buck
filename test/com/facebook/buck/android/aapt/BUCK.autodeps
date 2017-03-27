@@ -7,6 +7,7 @@
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/step:step",
+      "//src/com/facebook/buck/step/fs:fs",
       "//test/com/facebook/buck/rules:testutil",
       "//test/com/facebook/buck/step:testutil",
       "//test/com/facebook/buck/testutil:testutil",
