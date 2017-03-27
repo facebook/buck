@@ -88,9 +88,6 @@ public class AndroidBinaryIntegrationTest {
   @Rule
   public TemporaryPaths tmpFolder = new TemporaryPaths();
 
-  @Rule
-  public TemporaryPaths secondaryFolder = new TemporaryPaths();
-
   private ProjectWorkspace workspace;
 
   private ProjectFilesystem filesystem;
@@ -536,62 +533,6 @@ public class AndroidBinaryIntegrationTest {
       assertThat(e.getMessage(), Matchers.matchesPattern(".*glue.*is not linkable.*"));
     }
   }
-
-  @Test
-  public void testNativeLibraryCrossCellMerging() throws IOException, InterruptedException {
-    // Set up a cross-cell workspace
-    ProjectWorkspace secondary = TestDataHelper.createProjectWorkspaceForScenario(
-        new AndroidBinaryIntegrationTest(),
-        "android_project/secondary",
-        secondaryFolder);
-    secondary.setUp();
-
-    NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(workspace, filesystem);
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    ));
-    Path tmpDir = tmpFolder.newFolder("merging_tmp");
-    SymbolGetter syms =
-        new SymbolGetter(
-            new DefaultProcessExecutor(new TestConsole()),
-            tmpDir,
-            platform.getObjdump(),
-            pathResolver);
-    SymbolsAndDtNeeded info;
-
-    TestDataHelper.overrideBuckconfig(
-        workspace,
-        ImmutableMap.of(
-            "ndk", ImmutableMap.of("cpu_abis", "x86"),
-            "repositories", ImmutableMap.of(
-                "secondary", secondary.getPath(".").normalize().toString())));
-    workspace.replaceFileContents(
-        workspace.getPath("apps/sample/BUCK").normalize().toString(),
-        "#'secondary//merge:G'",
-        "'secondary//merge:G'");
-
-
-    Path apkPath = workspace.buildAndReturnOutput(
-        "//apps/sample:app_with_merged_cross_cell_libs");
-
-    ZipInspector zipInspector = new ZipInspector(apkPath);
-    zipInspector.assertFileDoesNotExist("lib/x86/lib1a.so");
-    zipInspector.assertFileDoesNotExist("lib/x86/lib1b.so");
-    zipInspector.assertFileDoesNotExist("lib/x86/lib1g.so");
-    zipInspector.assertFileDoesNotExist("lib/x86/lib1h.so");
-
-    info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1.so");
-    assertThat(info.symbols.global, Matchers.hasItem("A"));
-    assertThat(info.symbols.global, Matchers.hasItem("B"));
-    assertThat(info.symbols.global, Matchers.hasItem("G"));
-    assertThat(info.symbols.global, Matchers.hasItem("H"));
-    assertThat(info.symbols.global, Matchers.hasItem("glue_1"));
-    assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
-    assertThat(info.dtNeeded, not(Matchers.hasItem("libnative_merge_B.so")));
-    assertThat(info.dtNeeded, not(Matchers.hasItem("libmerge_G.so")));
-    assertThat(info.dtNeeded, not(Matchers.hasItem("libmerge_H.so")));
-  }
-
 
   @Test
   public void testNativeRelinker() throws IOException, InterruptedException {

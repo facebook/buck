@@ -16,6 +16,7 @@
       "//src/com/facebook/buck/rules/coercer:types",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:object_mapper",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/android:testutil",
       "//test/com/facebook/buck/event:testutil",

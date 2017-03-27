@@ -17,6 +17,8 @@
 package com.facebook.buck.crosscell;
 
 import static com.facebook.buck.util.environment.Platform.WINDOWS;
+import static com.facebook.buck.android.AndroidNdkHelper.SymbolGetter;
+import static com.facebook.buck.android.AndroidNdkHelper.SymbolsAndDtNeeded;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.containsString;
@@ -26,7 +28,9 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.android.AndroidNdkHelper;
 import com.facebook.buck.android.AssumeAndroidPlatform;
+import com.facebook.buck.android.NdkCxxPlatform;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.listener.BroadcastEventListener;
@@ -39,14 +43,22 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
@@ -57,6 +69,7 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import org.hamcrest.Matchers;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -576,8 +589,6 @@ public class InterCellIntegrationTest {
   @Test
   public void testCrossCellAndroidLibrary() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
-    assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
         "inter-cell/android/primary",
@@ -587,6 +598,57 @@ public class InterCellIntegrationTest {
     String target = "//apps/sample:app_with_cross_cell_android_lib";
     ProjectWorkspace.ProcessResult result = primary.runBuckCommand("build", target);
     result.assertSuccess();
+  }
+
+  @Test
+  public void testCrossCellAndroidLibraryMerge() throws IOException, InterruptedException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
+
+    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
+        "inter-cell/android/primary",
+        "inter-cell/android/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+    ProjectWorkspace secondary = cells.getSecond();
+    TestDataHelper.overrideBuckconfig(
+        primary,
+        ImmutableMap.of("ndk", ImmutableMap.of("cpu_abis", "x86")));
+    TestDataHelper.overrideBuckconfig(
+        secondary,
+        ImmutableMap.of("ndk", ImmutableMap.of("cpu_abis", "x86")));
+
+    NdkCxxPlatform platform =
+        AndroidNdkHelper.getNdkCxxPlatform(primary, primary.asCell().getFilesystem());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    ));
+    Path tmpDir = tmp.newFolder("merging_tmp");
+    SymbolGetter syms =
+        new SymbolGetter(
+            new DefaultProcessExecutor(new TestConsole()),
+            tmpDir,
+            platform.getObjdump(),
+            pathResolver);
+    SymbolsAndDtNeeded info;
+    Path apkPath = primary.buildAndReturnOutput(
+        "//apps/sample:app_with_merged_cross_cell_libs");
+
+    ZipInspector zipInspector = new ZipInspector(apkPath);
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1a.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1b.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1g.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1h.so");
+
+    info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1.so");
+    assertThat(info.symbols.global, Matchers.hasItem("A"));
+    assertThat(info.symbols.global, Matchers.hasItem("B"));
+    assertThat(info.symbols.global, Matchers.hasItem("G"));
+    assertThat(info.symbols.global, Matchers.hasItem("H"));
+    assertThat(info.symbols.global, Matchers.hasItem("glue_1"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
+    assertThat(info.dtNeeded, not(Matchers.hasItem("libnative_merge_B.so")));
+    assertThat(info.dtNeeded, not(Matchers.hasItem("libmerge_G.so")));
+    assertThat(info.dtNeeded, not(Matchers.hasItem("libmerge_H.so")));
   }
 
   private Pair<ProjectWorkspace, ProjectWorkspace> prepare(
