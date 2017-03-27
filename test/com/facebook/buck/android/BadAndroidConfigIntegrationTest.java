@@ -16,9 +16,10 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Rule;
@@ -54,9 +55,9 @@ public class BadAndroidConfigIntegrationTest {
         ImmutableMap.of("ANDROID_SDK", "/this/directory/does/not/exist");
     workspace.runBuckCommand(badEnvironment, "build", "//:hello_java").assertSuccess();
 
-    expectedException.expect(NoAndroidSdkException.class);
+    expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
-        "Must set ANDROID_SDK to point to the absolute path of your Android SDK directory.");
+        "Environment variable 'ANDROID_SDK' points to a path that is not a directory:");
     workspace.runBuckCommand(badEnvironment, "build", "//:hello_android").assertFailure();
   }
 }

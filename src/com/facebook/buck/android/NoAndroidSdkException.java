@@ -19,8 +19,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.util.HumanReadableException;
 
-import javax.annotation.Nullable;
-
 @SuppressWarnings("serial")
 public class NoAndroidSdkException extends HumanReadableException {
 
@@ -28,11 +26,7 @@ public class NoAndroidSdkException extends HumanReadableException {
       "Must set ANDROID_SDK to point to the absolute path of your Android SDK directory.";
 
   public NoAndroidSdkException() {
-    this((Throwable) null);
-  }
-
-  public NoAndroidSdkException(@Nullable Throwable cause) {
-    super(cause, DEFAULT_MESSAGE);
+    super(DEFAULT_MESSAGE);
   }
 
   private NoAndroidSdkException(String message) {

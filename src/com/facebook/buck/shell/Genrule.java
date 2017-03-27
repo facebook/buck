@@ -17,7 +17,6 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
-import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -202,7 +201,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
     AndroidPlatformTarget android;
     try {
       android = context.getAndroidPlatformTarget();
-    } catch (NoAndroidSdkException e) {
+    } catch (HumanReadableException e) {
       android = null;
     }
 

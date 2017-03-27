@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android.redex;
 
-import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.KeystoreProperties;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -152,14 +151,8 @@ public class ReDexStep extends ShellStep {
 
   @Override
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-    AndroidPlatformTarget platformTarget = context.getAndroidPlatformTarget();
-    Optional<Path> sdkDirectory = platformTarget.getSdkDirectory();
-    if (!sdkDirectory.isPresent()) {
-      throw new RuntimeException("Could not find ANDROID_SDK directory for ReDexStep");
-    }
-
     return ImmutableMap.<String, String>builder()
-        .put("ANDROID_SDK", sdkDirectory.get().toString())
+        .put("ANDROID_SDK", context.getAndroidPlatformTarget().checkSdkDirectory().toString())
         .putAll(redexEnvironmentVariables)
         .build();
   }

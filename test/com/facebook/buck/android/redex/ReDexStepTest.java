@@ -91,7 +91,7 @@ public class ReDexStepTest {
 
     AndroidPlatformTarget androidPlatform = EasyMock.createMock(AndroidPlatformTarget.class);
     Path sdkDirectory = Paths.get("/Users/user/android-sdk-macosx");
-    EasyMock.expect(androidPlatform.getSdkDirectory()).andReturn(Optional.of(sdkDirectory));
+    EasyMock.expect(androidPlatform.checkSdkDirectory()).andReturn(sdkDirectory);
     EasyMock.replay(androidPlatform);
 
     ExecutionContext context = TestExecutionContext.newBuilder()

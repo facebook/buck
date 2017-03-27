@@ -172,8 +172,16 @@ public class AndroidPlatformTarget {
     return androidDirectoryResolver.getNdkOrAbsent();
   }
 
+  public Path checkNdkDirectory() {
+    return androidDirectoryResolver.getNdkOrThrow();
+  }
+
   public Optional<Path> getSdkDirectory() {
     return androidDirectoryResolver.getSdkOrAbsent();
+  }
+
+  public Path checkSdkDirectory() {
+    return androidDirectoryResolver.getSdkOrThrow();
   }
 
   /**
@@ -212,7 +220,7 @@ public class AndroidPlatformTarget {
   }
 
   private interface Factory {
-    public AndroidPlatformTarget newInstance(
+    AndroidPlatformTarget newInstance(
         AndroidDirectoryResolver androidDirectoryResolver,
         String apiLevel,
         Optional<Path> aaptOverride);
