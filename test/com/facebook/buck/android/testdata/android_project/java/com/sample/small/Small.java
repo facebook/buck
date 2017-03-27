@@ -19,7 +19,7 @@ package com.facebook.sample;
 import android.app.Activity;
 import android.os.Bundle;
 
-public class Sample extends Activity {
+public class Small extends Activity {
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);

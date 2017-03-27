@@ -731,6 +731,28 @@ public class AndroidBinaryIntegrationTest {
   }
 
   @Test
+  public void testMultidexProguardModular() throws IOException {
+    String target = "//apps/multidex:app_modular_proguard_dontobfuscate";
+    workspace.runBuckCommand("build", target).assertSuccess();
+    ZipInspector zipInspector = new ZipInspector(
+        workspace.getPath(
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+    String module = "java.com.sample.small.small_with_no_resource_deps";
+    zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
+  }
+
+  @Test
+  public void testMultidexProguardModularWithObfuscation() throws IOException {
+    String target = "//apps/multidex:app_modular_proguard_obfuscate";
+    workspace.runBuckCommand("build", target).assertSuccess();
+    ZipInspector zipInspector = new ZipInspector(
+        workspace.getPath(
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+    String module = "java.com.sample.small.small_with_no_resource_deps";
+    zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
+  }
+
+  @Test
   public void testLibraryMetadataChecksum() throws IOException {
     String target = "//apps/sample:app_cxx_lib_asset";
     workspace.runBuckCommand("build", target).assertSuccess();

@@ -60,7 +60,7 @@ public class AndroidResourceLibraryDepIntegrationTest {
 
     // Update the java library dependency, which will force it to be rebuilt.
     workspace.replaceFileContents(
-        "java/com/sample/small/Sample.java",
+        "java/com/sample/small/Small.java",
         "savedInstanceState",
         "savedInstanceState2");
 
