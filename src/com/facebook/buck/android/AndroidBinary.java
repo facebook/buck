@@ -983,6 +983,10 @@ public class AndroidBinary
     return BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), format);
   }
 
+  private Path getAbsoluteBinPath(String format) {
+    return getProjectFilesystem().resolve(getBinPath(format));
+  }
+
   /**
    * Directory of text files used by proguard.  Unforunately, this contains both inputs and outputs.
    */
@@ -1099,8 +1103,8 @@ public class AndroidBinary
     final Supplier<Set<Path>> primaryInputsToDex;
     final Optional<Path> secondaryDexDir;
     final Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs;
-    Path secondaryDexParentDir = getBinPath("__%s_secondary_dex__/");
-    Path additionalDexParentDir = getBinPath("__%s_additional_dex__/");
+    Path secondaryDexParentDir = getAbsoluteBinPath("__%s_secondary_dex__/");
+    Path additionalDexParentDir = getAbsoluteBinPath("__%s_additional_dex__/");
     Path additionalDexAssetsDir = additionalDexParentDir.resolve("assets");
     final Optional<ImmutableSet<Path>> additionalDexDirs;
 
@@ -1117,7 +1121,7 @@ public class AndroidBinary
       // in assets.
 
       // Intermediate directory holding the primary split-zip jar.
-      Path splitZipDir = getBinPath("__%s_split_zip__");
+      Path splitZipDir = getAbsoluteBinPath("__%s_split_zip__");
       steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), splitZipDir));
       Path primaryJarPath = splitZipDir.resolve("primary.jar");
 
@@ -1130,12 +1134,12 @@ public class AndroidBinary
       // important because SmartDexingCommand will try to dx every entry in this directory.  It
       // does this because it's impossible to know what outputs split-zip will generate until it
       // runs.
-      final Path secondaryZipDir = getBinPath("__%s_secondary_zip__");
+      final Path secondaryZipDir = getAbsoluteBinPath("__%s_secondary_zip__");
       steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), secondaryZipDir));
 
       // Intermediate directory holding the directories holding _ONLY_ the additional split-zip
       // jar files that are intended for that dex store.
-      final Path additionalDexStoresZipDir = getBinPath("__%s_dex_stores_zip__");
+      final Path additionalDexStoresZipDir = getAbsoluteBinPath("__%s_dex_stores_zip__");
       steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), additionalDexStoresZipDir));
       for (APKModule dexStore : additionalDexStoreToJarPathMap.keySet()) {
         steps.addAll(
