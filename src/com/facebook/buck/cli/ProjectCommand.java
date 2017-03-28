@@ -71,6 +71,7 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.ProcessManager;
+import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.base.Charsets;
@@ -1290,7 +1291,7 @@ public class ProjectCommand extends BuildCommand {
       Optional<ImmutableSet<UnflavoredBuildTarget>> focusedModules =
           getFocusModules(params, executor);
 
-      explicitTestTargets = TargetGraphAndTargets.getExplicitTestTargets(
+      explicitTestTargets = getExplicitTestTargets(
           graphRootsOrSourceTargets,
           projectGraph,
           isWithDependenciesTests,
@@ -1387,6 +1388,32 @@ public class ProjectCommand extends BuildCommand {
     return "generates project configuration files for an IDE";
   }
 
+  /**
+   * @param buildTargets The set of targets for which we would like to find tests
+   * @param projectGraph A TargetGraph containing all nodes and their tests.
+   * @param shouldIncludeDependenciesTests Should or not include tests
+   * that test dependencies
+   * @return A set of all test targets that test any of {@code buildTargets} or their dependencies.
+   */
+  @VisibleForTesting
+  static ImmutableSet<BuildTarget> getExplicitTestTargets(
+      ImmutableSet<BuildTarget> buildTargets,
+      TargetGraph projectGraph,
+      boolean shouldIncludeDependenciesTests,
+      Optional<ImmutableSet<UnflavoredBuildTarget>> focusedModules) {
+    Iterable<TargetNode<?, ?>> projectRoots = projectGraph.getAll(buildTargets);
+    Iterable<TargetNode<?, ?>> nodes;
+    if (shouldIncludeDependenciesTests) {
+      nodes = projectGraph.getSubgraph(projectRoots).getNodes();
+    } else {
+      nodes = projectRoots;
+    }
+
+    return TargetGraphAndTargets.getExplicitTestTargets(
+        RichStream.from(nodes)
+            .filter(node -> node.getBuildTarget().matchesUnflavoredTargets(focusedModules))
+            .iterator());
+  }
 
   public static class AggregationModeOptionHandler
       extends OptionHandler<AggregationMode> {

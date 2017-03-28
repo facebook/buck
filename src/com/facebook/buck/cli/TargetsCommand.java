@@ -899,7 +899,8 @@ public class TargetsCommand extends AbstractCommand {
               targetGraphAndTargetNodes
                   .getTargetGraph()
                   .getSubgraph(targetGraphAndTargetNodes.getTargetNodes())
-                  .getNodes());
+                  .getNodes()
+                  .iterator());
       LOG.debug("Got explicit test targets: %s", explicitTestTargets);
 
       Iterable<BuildTarget> matchingBuildTargetsWithTests =

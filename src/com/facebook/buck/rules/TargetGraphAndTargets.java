@@ -17,14 +17,12 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.Function;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import java.util.Optional;
-import java.util.stream.StreamSupport;
+
+import java.util.Iterator;
 
 public class TargetGraphAndTargets {
   private final TargetGraph targetGraph;
@@ -46,47 +44,14 @@ public class TargetGraphAndTargets {
   }
 
   /**
-   * @param buildTargets The set of targets for which we would like to find tests
-   * @param projectGraph A TargetGraph containing all nodes and their tests.
-   * @param shouldIncludeDependenciesTests Should or not include tests
-   * that test dependencies
-   * @return A set of all test targets that test any of {@code buildTargets} or their dependencies.
-   */
-  public static ImmutableSet<BuildTarget> getExplicitTestTargets(
-      ImmutableSet<BuildTarget> buildTargets,
-      TargetGraph projectGraph,
-      boolean shouldIncludeDependenciesTests,
-      Optional<ImmutableSet<UnflavoredBuildTarget>> focusedModules) {
-    Iterable<TargetNode<?, ?>> projectRoots = projectGraph.getAll(buildTargets);
-    Iterable<TargetNode<?, ?>> nodes;
-    if (shouldIncludeDependenciesTests) {
-      nodes = projectGraph.getSubgraph(projectRoots).getNodes();
-    } else {
-      nodes = projectRoots;
-    }
-
-    nodes = StreamSupport.stream(nodes.spliterator(), false)
-        .filter(node -> node.getBuildTarget().matchesUnflavoredTargets(focusedModules))
-        .collect(MoreCollectors.toImmutableList());
-    return getExplicitTestTargets(nodes);
-  }
-
-  /**
    * @param nodes Nodes whose test targets we would like to find
    * @return A set of all test targets that test the targets in {@code nodes}.
    */
   public static ImmutableSet<BuildTarget> getExplicitTestTargets(
-      Iterable<TargetNode<?, ?>> nodes) {
-    return FluentIterable
-        .from(nodes)
-        .transformAndConcat(
-            new Function<TargetNode<?, ?>, Iterable<BuildTarget>>() {
-              @Override
-              public Iterable<BuildTarget> apply(TargetNode<?, ?> node) {
-                return TargetNodes.getTestTargetsForNode(node);
-              }
-            })
-        .toSet();
+      Iterator<TargetNode<?, ?>> nodes) {
+    return RichStream.from(nodes)
+        .flatMap(node -> TargetNodes.getTestTargetsForNode(node).stream())
+        .toImmutableSet();
   }
 
   public static TargetGraphAndTargets create(

@@ -74,7 +74,7 @@ public class ProjectCommandTests {
 
     ImmutableSet<BuildTarget> explicitTests;
     if (withTests) {
-      explicitTests = TargetGraphAndTargets.getExplicitTestTargets(
+      explicitTests = ProjectCommand.getExplicitTestTargets(
           graphRootsOrSourceTargets,
           projectGraph,
           withDependenciesTests,
