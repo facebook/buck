@@ -100,7 +100,6 @@ RULES_SRCS = [
     "PrebuiltNativeLibrary.java",
     "PrebuiltNativeLibraryDescription.java",
     "ProGuardConfig.java",
-    "RDotJava.java",
     "ResourcesFilter.java",
     "RobolectricTest.java",
     "RobolectricTestDescription.java",

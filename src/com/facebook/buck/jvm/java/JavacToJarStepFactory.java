@@ -29,6 +29,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -72,8 +73,10 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
 
     final JavacOptions buildTimeOptions = amender.amend(javacOptions, context);
 
-    // Javac requires that the root directory for generated sources already exist.
-    addAnnotationGenFolderStep(buildTimeOptions, filesystem, steps, buildableContext);
+    if (!javacOptions.getAnnotationProcessingParams().isEmpty()) {
+      // Javac requires that the root directory for generated sources already exist.
+      addAnnotationGenFolderStep(buildTimeOptions, filesystem, steps, buildableContext);
+    }
 
     steps.add(
         new JavacStep(
@@ -205,5 +208,10 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
     sink.setReflectively("javac", javac);
     sink.setReflectively("javacOptions", javacOptions);
     sink.setReflectively("amender", amender);
+  }
+
+  @VisibleForTesting
+  public JavacOptions getJavacOptions() {
+    return javacOptions;
   }
 }

@@ -18,8 +18,11 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacOptionsAmender;
+import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -124,12 +127,13 @@ public class AndroidLibraryGraphEnhancer {
                     ruleFinder.filterBuildRuleInputs(javac.getInputs()))),
             Suppliers.ofInstance(ImmutableSortedSet.of()));
 
+    CompileToJarStepFactory compileToJarStepFactory =
+        new JavacToJarStepFactory(javac, javacOptions, JavacOptionsAmender.IDENTITY);
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
         dummyRDotJavaParams,
         ruleFinder,
         androidResourceDeps,
-        javac,
-        javacOptions,
+        compileToJarStepFactory,
         forceFinalResourceIds,
         resourceUnionPackage,
         finalRName,

@@ -18,11 +18,10 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CalculateAbiStep;
+import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
-import com.facebook.buck.jvm.java.Javac;
-import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.jvm.java.JavacStep;
+import com.facebook.buck.jvm.java.NoOpClassUsageFileWriter;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -60,10 +59,9 @@ public class DummyRDotJava extends AbstractBuildRule
 
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final Path outputJar;
+  private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey
-  private final Javac javac;
-  @AddToRuleKey
-  private final JavacOptions javacOptions;
+  CompileToJarStepFactory compileStepFactory;
   @AddToRuleKey
   private final boolean forceFinalResourceIds;
   @AddToRuleKey
@@ -80,8 +78,7 @@ public class DummyRDotJava extends AbstractBuildRule
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       Set<HasAndroidResourceDeps> androidResourceDeps,
-      Javac javac,
-      JavacOptions javacOptions,
+      CompileToJarStepFactory compileStepFactory,
       boolean forceFinalResourceIds,
       Optional<String> unionPackage,
       Optional<String> finalRName,
@@ -90,8 +87,7 @@ public class DummyRDotJava extends AbstractBuildRule
         params,
         ruleFinder,
         androidResourceDeps,
-        javac,
-        javacOptions,
+        compileStepFactory,
         forceFinalResourceIds,
         unionPackage,
         finalRName,
@@ -103,23 +99,21 @@ public class DummyRDotJava extends AbstractBuildRule
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       Set<HasAndroidResourceDeps> androidResourceDeps,
-      Javac javac,
-      JavacOptions javacOptions,
+      CompileToJarStepFactory compileStepFactory,
       boolean forceFinalResourceIds,
       Optional<String> unionPackage,
       Optional<String> finalRName,
       boolean useOldStyleableFormat,
       ImmutableList<SourcePath> abiInputs) {
     super(params.copyAppendingExtraDeps(() -> ruleFinder.filterBuildRuleInputs(abiInputs)));
+    this.ruleFinder = ruleFinder;
     // Sort the input so that we get a stable ABI for the same set of resources.
     this.androidResourceDeps = androidResourceDeps.stream()
         .sorted(Comparator.comparing(HasAndroidResourceDeps::getBuildTarget))
         .collect(MoreCollectors.toImmutableList());
     this.useOldStyleableFormat = useOldStyleableFormat;
     this.outputJar = getOutputJarPath(getBuildTarget(), getProjectFilesystem());
-    this.javac = javac;
-    this.javacOptions = javacOptions.withAnnotationProcessingParams(
-        javacOptions.getAnnotationProcessingParams().withoutProcessOnly());
+    this.compileStepFactory = compileStepFactory;
     this.forceFinalResourceIds = forceFinalResourceIds;
     this.unionPackage = unionPackage;
     this.finalRName = finalRName;
@@ -210,17 +204,21 @@ public class DummyRDotJava extends AbstractBuildRule
     steps.add(MkdirStep.of(getProjectFilesystem(), pathToSrcsList.getParent()));
 
     // Compile the .java files.
-    final JavacStep javacStep =
-        RDotJava.createJavacStepForDummyRDotJavaFiles(
-            javaSourceFilePaths,
-            pathToSrcsList,
-            rDotJavaClassesFolder,
-            javac,
-            javacOptions,
-            getBuildTarget(),
-            context.getSourcePathResolver(),
-            getProjectFilesystem());
-    steps.add(javacStep);
+    compileStepFactory.createCompileStep(
+        context,
+        javaSourceFilePaths,
+        getBuildTarget(),
+        context.getSourcePathResolver(),
+        ruleFinder,
+        getProjectFilesystem(),
+        /* declared classpath */ ImmutableSortedSet.of(),
+        rDotJavaClassesFolder,
+        Optional.empty(),
+        pathToSrcsList,
+        Optional.empty(),
+        NoOpClassUsageFileWriter.instance(),
+        steps,
+        buildableContext);
     buildableContext.recordArtifact(rDotJavaClassesFolder);
 
     steps.add(
@@ -277,7 +275,7 @@ public class DummyRDotJava extends AbstractBuildRule
   }
 
   @VisibleForTesting
-  JavacOptions getJavacOptions() {
-    return javacOptions;
+  CompileToJarStepFactory getCompileStepFactory() {
+    return compileStepFactory;
   }
 }

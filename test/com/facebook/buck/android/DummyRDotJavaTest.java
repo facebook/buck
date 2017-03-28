@@ -22,6 +22,13 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.java.AnnotationProcessingParams;
+import com.facebook.buck.jvm.java.ClasspathChecker;
+import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacOptionsAmender;
+import com.facebook.buck.jvm.java.JavacStep;
+import com.facebook.buck.jvm.java.JavacToJarStepFactory;
+import com.facebook.buck.jvm.java.NoOpClassUsageFileWriter;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
@@ -86,8 +93,10 @@ public class DummyRDotJavaTest {
         ImmutableSet.of(
             (HasAndroidResourceDeps) resourceRule1,
             (HasAndroidResourceDeps) resourceRule2),
-        DEFAULT_JAVAC,
-        ANDROID_JAVAC_OPTIONS,
+        new JavacToJarStepFactory(
+            DEFAULT_JAVAC,
+            ANDROID_JAVAC_OPTIONS,
+            JavacOptionsAmender.IDENTITY),
         /* forceFinalResourceIds */ false,
         Optional.empty(),
         Optional.of("R2"),
@@ -128,6 +137,7 @@ public class DummyRDotJavaTest {
             .collect(MoreCollectors.toImmutableList());
     ImmutableSortedSet<Path> javaSourceFiles = ImmutableSortedSet.of(
         Paths.get(rDotJavaSrcFolder).resolve("com/facebook/R.java"));
+
     List<String> expectedStepDescriptions = new ImmutableList.Builder<String>()
         .addAll(makeCleanDirDescription(filesystem.resolve(rDotJavaSrcFolder)))
         .add("android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles))
@@ -136,15 +146,23 @@ public class DummyRDotJavaTest {
         .addAll(makeCleanDirDescription(filesystem.resolve(rDotJavaAbiFolder)))
         .addAll(makeCleanDirDescription(filesystem.resolve(rDotJavaOutputFolder)))
         .add(String.format("mkdir -p %s", filesystem.resolve(genFolder)))
-        .add(RDotJava.createJavacStepForDummyRDotJavaFiles(
+        .add(new JavacStep(
+            Paths.get(rDotJavaBinFolder),
+            NoOpClassUsageFileWriter.instance(),
+            Optional.empty(),
             javaSourceFiles,
             BuildTargets.getGenPath(filesystem, dummyRDotJava.getBuildTarget(), "__%s__srcs"),
-            Paths.get(rDotJavaBinFolder),
+        /* declared classpath */ ImmutableSortedSet.of(),
             DEFAULT_JAVAC,
-            ANDROID_JAVAC_OPTIONS,
-        /* buildTarget */ null,
+            JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
+                .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
+                .build(),
+            null,
+            Optional.empty(),
             pathResolver,
-            new FakeProjectFilesystem())
+            new FakeProjectFilesystem(),
+            new ClasspathChecker(),
+        /* directToJarOutputSettings */ Optional.empty())
             .getDescription(TestExecutionContext.newInstance()))
         .add(String.format("jar cf %s  %s", rDotJavaOutputJar, rDotJavaBinFolder))
         .add(String.format("calculate_abi %s", rDotJavaBinFolder))
@@ -171,8 +189,10 @@ public class DummyRDotJavaTest {
             .build(),
         ruleFinder,
         ImmutableSet.of(),
-        DEFAULT_JAVAC,
-        ANDROID_JAVAC_OPTIONS,
+        new JavacToJarStepFactory(
+            DEFAULT_JAVAC,
+            ANDROID_JAVAC_OPTIONS,
+            JavacOptionsAmender.IDENTITY),
         /* forceFinalResourceIds */ false,
         Optional.empty(),
         Optional.empty(),

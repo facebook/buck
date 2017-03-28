@@ -30,6 +30,7 @@ import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -202,7 +203,8 @@ public class AndroidLibraryGraphEnhancerTest {
         /* createBuildableIfEmptyDeps */ false);
 
     assertTrue(dummyRDotJava.isPresent());
-    JavacOptions javacOptions = dummyRDotJava.get().getJavacOptions();
+    JavacOptions javacOptions =
+        ((JavacToJarStepFactory) dummyRDotJava.get().getCompileStepFactory()).getJavacOptions();
     assertFalse(javacOptions.getAnnotationProcessingParams().getProcessOnly());
     assertEquals("7", javacOptions.getSourceLevel());
   }
