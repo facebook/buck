@@ -100,7 +100,7 @@ public class AaptPackageResourcesIntegrationTest {
         BuildTargets.getGenPath(
             filesystem,
             BuildTargetFactory.newInstance(MAIN_BUILD_TARGET)
-                .withFlavors(AndroidBinaryGraphEnhancer.AAPT_PACKAGE_FLAVOR),
+                .withFlavors(AndroidBinaryResourcesGraphEnhancer.AAPT_PACKAGE_FLAVOR),
             AaptPackageResources.RESOURCE_APK_PATH_FORMAT));
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
     try (ZipInputStream is = new ZipInputStream(new FileInputStream(aaptOutput.toFile()))) {
