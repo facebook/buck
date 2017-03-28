@@ -633,8 +633,6 @@ public class ProjectCommand extends BuildCommand {
 
     BuckConfig buckConfig = params.getBuckConfig();
     BuildRuleResolver ruleResolver = result.getResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
 
     JavacOptions javacOptions = buckConfig.getView(JavaBuckConfig.class).getDefaultJavacOptions();
 
@@ -643,8 +641,6 @@ public class ProjectCommand extends BuildCommand {
         getJavaPackageFinder(buckConfig),
         JavaFileParser.createJavaFileParser(javacOptions),
         ruleResolver,
-        sourcePathResolver,
-        ruleFinder,
         params.getCell().getFilesystem(),
         getIntellijAggregationMode(buckConfig),
         buckConfig);

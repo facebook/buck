@@ -65,8 +65,6 @@ public class IjProject {
       JavaPackageFinder javaPackageFinder,
       JavaFileParser javaFileParser,
       BuildRuleResolver buildRuleResolver,
-      SourcePathResolver sourcePathResolver,
-      SourcePathRuleFinder ruleFinder,
       ProjectFilesystem projectFilesystem,
       AggregationMode aggregationMode,
       BuckConfig buckConfig) {
@@ -74,8 +72,8 @@ public class IjProject {
     this.javaPackageFinder = javaPackageFinder;
     this.javaFileParser = javaFileParser;
     this.buildRuleResolver = buildRuleResolver;
-    this.sourcePathResolver = sourcePathResolver;
-    this.ruleFinder = ruleFinder;
+    this.ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    this.sourcePathResolver = new SourcePathResolver(this.ruleFinder);
     this.projectFilesystem = projectFilesystem;
     this.aggregationMode = aggregationMode;
     this.projectConfig = IjProjectBuckConfig.create(buckConfig);
