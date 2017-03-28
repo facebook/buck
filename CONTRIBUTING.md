@@ -87,7 +87,7 @@ Writing a detailed Java style guide takes a considerable amount of effort, so he
 - In the spirit of Guava, references are assumed to be non-null unless otherwise noted.
 - Non-null parameters should be verified using `Preconditions.checkNotNull()`.
 - A nullable reference should be annotated with `@javax.annotation.Nullable`.
-- A popular alternative to `@Nullable` is `com.google.common.base.Optional`.
+- A popular alternative to `@Nullable` is `java.util.Optional`.
 - Annotating an Optional as `@Nullable` is "grounds for dismissal".
 
 ### APIs
@@ -220,9 +220,9 @@ Then, declare an interface or abstract class named Abstract* containing the type
 
 ```java
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import org.immutables.value.Value;
 import java.util.List;
+import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleImmutable
