@@ -86,7 +86,8 @@ public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       AndroidLibraryDescription.Arg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
 
     extraDepsBuilder
         .add(scalaBuckConfig.getScalaLibraryTarget())

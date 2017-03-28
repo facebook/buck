@@ -1035,7 +1035,8 @@ public class CxxLibraryDescription implements
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       Arg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Get any parse time deps from the C/C++ platforms.
     extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms.getValues()));
   }

@@ -70,7 +70,8 @@ public abstract class AndroidLibraryCompiler
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       AndroidLibraryDescription.Arg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
   }
 }
 

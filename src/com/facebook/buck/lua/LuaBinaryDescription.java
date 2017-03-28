@@ -814,7 +814,8 @@ public class LuaBinaryDescription implements
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       Arg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (luaConfig.getPackageStyle() == LuaConfig.PackageStyle.STANDALONE) {
       extraDepsBuilder.addAll(luaConfig.getPackager().getParseTimeDeps());
     }

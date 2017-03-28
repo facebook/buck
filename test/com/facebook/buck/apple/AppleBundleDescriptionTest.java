@@ -73,7 +73,8 @@ public class AppleBundleDescriptionTest {
         bundleTarget,
         createCellRoots(filesystem),
         constructorArg,
-        implicitDeps);
+        implicitDeps,
+        ImmutableSortedSet.naturalOrder());
 
     assertEquals(
         ImmutableSortedSet.<BuildTarget>naturalOrder()
@@ -135,7 +136,8 @@ public class AppleBundleDescriptionTest {
         bundleTargetWithStripFlavor,
         createCellRoots(filesystem),
         constructorArg,
-        implicitDeps);
+        implicitDeps,
+        ImmutableSortedSet.naturalOrder());
 
     assertEquals(
         ImmutableSortedSet.<BuildTarget>naturalOrder()

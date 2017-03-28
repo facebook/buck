@@ -221,13 +221,15 @@ public class AndroidLibraryDescription
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       Arg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     compilerFactory.getCompiler(constructorArg.language.orElse(JvmLanguage.JAVA))
         .findDepsForTargetFromConstructorArgs(
             buildTarget,
             cellRoots,
             constructorArg,
-            extraDepsBuilder);
+            extraDepsBuilder,
+            targetGraphOnlyDepsBuilder);
   }
 
   @SuppressFieldNotInitialized

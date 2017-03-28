@@ -411,7 +411,8 @@ public class AndroidBinaryDescription implements
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       Arg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (constructorArg.redex.orElse(false)) {
       // If specified, this option may point to either a BuildTarget or a file.
       Optional<BuildTarget> redexTarget = buckConfig.getMaybeBuildTarget(

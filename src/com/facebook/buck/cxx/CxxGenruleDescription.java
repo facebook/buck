@@ -292,7 +292,8 @@ public class CxxGenruleDescription
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       Arg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add in all parse time deps from the C/C++ platforms.
     for (CxxPlatform cxxPlatform : cxxPlatforms.getValues()) {
       extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
@@ -303,7 +304,7 @@ public class CxxGenruleDescription
         buildTarget,
         cellRoots,
         constructorArg,
-        extraDepsBuilder);
+        extraDepsBuilder, targetGraphOnlyDepsBuilder);
   }
 
   private ImmutableMap<String, MacroReplacer> getMacroReplacersForTargetTranslation(

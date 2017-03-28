@@ -181,7 +181,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       Arg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (!cxxPlatformFlavorDomain.containsAnyOf(buildTarget.getFlavors())) {
       buildTarget = BuildTarget.builder(buildTarget).addAllFlavors(
           ImmutableSet.of(defaultCxxPlatform.getFlavor())).build();

@@ -87,7 +87,8 @@ public class GoBinaryDescription implements
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       Arg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add the C/C++ linker parse time deps.
     GoPlatform goPlatform = goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget)
         .orElse(goBuckConfig.getDefaultPlatform());

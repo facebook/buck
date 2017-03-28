@@ -181,7 +181,8 @@ public class JavaTestDescription implements
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       Arg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (constructorArg.useCxxLibraries.orElse(false)) {
       extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
     }

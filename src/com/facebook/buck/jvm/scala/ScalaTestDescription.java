@@ -166,7 +166,8 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       Arg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder
         .add(config.getScalaLibraryTarget())
         .addAll(OptionalCompat.asSet(config.getScalacTarget()));

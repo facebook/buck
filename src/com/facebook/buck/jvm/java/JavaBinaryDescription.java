@@ -142,7 +142,8 @@ public class JavaBinaryDescription implements
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       Args constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
   }
 

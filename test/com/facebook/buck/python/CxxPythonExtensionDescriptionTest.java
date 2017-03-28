@@ -257,7 +257,8 @@ public class CxxPythonExtensionDescriptionTest {
         BuildTargetFactory.newInstance("//foo:bar"),
         createCellRoots(filesystem),
         constructorArg,
-        builder);
+        builder,
+        ImmutableSortedSet.naturalOrder());
     assertThat(builder.build(), Matchers.contains(PYTHON2_DEP_TARGET, PYTHON3_DEP_TARGET));
   }
 

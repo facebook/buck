@@ -1046,7 +1046,8 @@ public class PrebuiltCxxLibraryDescription implements
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       Arg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (constructorArg.libDir.isPresent()) {
       addDepsFromParam(buildTarget, cellRoots, constructorArg.libDir.get(), extraDepsBuilder);
     }

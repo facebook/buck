@@ -399,7 +399,8 @@ public class AppleTestDescription implements
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       Arg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // TODO(bhamiltoncx, Coneko): This should technically only be a runtime dependency;
     // doing this adds it to the extra deps in BuildRuleParams passed to
     // the bundle and test rule.
@@ -411,7 +412,8 @@ public class AppleTestDescription implements
         buildTarget,
         cellRoots,
         constructorArg,
-        extraDepsBuilder);
+        extraDepsBuilder,
+        targetGraphOnlyDepsBuilder);
   }
 
   private TestHostInfo createTestHostInfo(

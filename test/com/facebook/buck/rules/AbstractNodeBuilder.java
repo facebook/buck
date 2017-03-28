@@ -225,7 +225,12 @@ public abstract class AbstractNodeBuilder<
     ImplicitDepsInferringDescription<TArg> desc =
         (ImplicitDepsInferringDescription<TArg>) description;
     ImmutableSortedSet.Builder<BuildTarget> builder = ImmutableSortedSet.naturalOrder();
-    desc.findDepsForTargetFromConstructorArgs(target, cellRoots, arg, builder);
+    desc.findDepsForTargetFromConstructorArgs(
+        target,
+        cellRoots,
+        arg,
+        builder,
+        ImmutableSortedSet.naturalOrder());
     return builder.build();
   }
 

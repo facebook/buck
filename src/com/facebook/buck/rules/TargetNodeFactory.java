@@ -98,6 +98,8 @@ public class TargetNodeFactory {
       throws NoSuchBuildTargetException {
 
     ImmutableSortedSet.Builder<BuildTarget> extraDepsBuilder = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<BuildTarget> targetGraphOnlyDepsBuilder =
+        ImmutableSortedSet.naturalOrder();
     ImmutableSet.Builder<Path> pathsBuilder = ImmutableSet.builder();
 
     // Scan the input to find possible BuildTargets, necessary for loading dependent rules.
@@ -115,7 +117,8 @@ public class TargetNodeFactory {
             buildTarget,
             cellRoots,
             constructorArg,
-            extraDepsBuilder);
+            extraDepsBuilder,
+            targetGraphOnlyDepsBuilder);
     }
 
     if (description instanceof ImplicitInputsInferringDescription) {
@@ -136,7 +139,7 @@ public class TargetNodeFactory {
         buildTarget,
         declaredDeps,
         ImmutableSortedSet.copyOf(Sets.difference(extraDepsBuilder.build(), declaredDeps)),
-        ImmutableSortedSet.of(),
+        targetGraphOnlyDepsBuilder.build(),
         visibilityPatterns,
         withinViewPatterns,
         pathsBuilder.build(),

@@ -34,5 +34,6 @@ public interface ImplicitDepsInferringDescription<T> {
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       T constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder);
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder);
 }

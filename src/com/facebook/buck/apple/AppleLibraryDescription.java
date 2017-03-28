@@ -533,24 +533,28 @@ public class AppleLibraryDescription implements
       final BuildTarget buildTarget,
       final CellPathResolver cellRoots,
       final Arg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     findDepsForTargetFromConstructorArgs(
         buildTarget,
         cellRoots,
         (AppleNativeTargetDescriptionArg) constructorArg,
-        extraDepsBuilder);
+        extraDepsBuilder,
+        targetGraphOnlyDepsBuilder);
   }
 
   public void findDepsForTargetFromConstructorArgs(
       final BuildTarget buildTarget,
       final CellPathResolver cellRoots,
       final AppleNativeTargetDescriptionArg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     delegate.findDepsForTargetFromConstructorArgs(
         buildTarget,
         cellRoots,
         constructorArg,
-        extraDepsBuilder);
+        extraDepsBuilder,
+        targetGraphOnlyDepsBuilder);
   }
 
   public static boolean isSharedLibraryNode(TargetNode<CxxLibraryDescription.Arg, ?> node) {

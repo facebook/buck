@@ -141,7 +141,8 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       Arg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     try {
       for (String arg : constructorArg.getStartupArgs()) {
         extraDepsBuilder.addAll(

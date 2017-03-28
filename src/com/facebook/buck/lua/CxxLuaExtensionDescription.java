@@ -365,7 +365,8 @@ public class CxxLuaExtensionDescription implements
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       Arg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add deps from lua C/C++ library.
     extraDepsBuilder.addAll(OptionalCompat.asSet(luaConfig.getLuaCxxLibraryTarget()));
 

@@ -71,7 +71,8 @@ public class IosReactNativeLibraryDescription
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       ReactNativeLibraryArgs constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     RichStream.of(packager.get())
         .filter(BuildTargetSourcePath.class)
         .map(BuildTargetSourcePath::getTarget)

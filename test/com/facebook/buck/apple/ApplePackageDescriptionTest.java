@@ -68,7 +68,8 @@ public class ApplePackageDescriptionTest {
         packageBuildTarget,
         new FakeCellPathResolver(params.getProjectFilesystem()),
         arg,
-        implicitDeps);
+        implicitDeps,
+        ImmutableSortedSet.naturalOrder());
     resolver.requireAllRules(implicitDeps.build());
     BuildRule rule = description.createBuildRule(
         graph,
@@ -113,7 +114,8 @@ public class ApplePackageDescriptionTest {
         packageBuildTarget,
         new FakeCellPathResolver(params.getProjectFilesystem()),
         arg,
-        implicitDeps);
+        implicitDeps,
+        ImmutableSortedSet.naturalOrder());
     resolver.requireAllRules(implicitDeps.build());
     BuildRule rule = description.createBuildRule(
         graph,

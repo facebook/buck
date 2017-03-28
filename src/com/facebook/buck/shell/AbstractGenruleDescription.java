@@ -156,7 +156,8 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       T constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (constructorArg.bash.isPresent()) {
       addDepsFromParam(buildTarget, cellRoots, constructorArg.bash.get(), extraDepsBuilder);
     }

@@ -109,7 +109,8 @@ public class RustBinaryDescription implements
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       Arg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     ToolProvider compiler = rustBuckConfig.getRustCompiler();
     extraDepsBuilder.addAll(compiler.getParseTimeDeps());
 

@@ -231,7 +231,8 @@ public class HaskellBinaryDescription implements
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       Arg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
         HaskellDescriptionUtils.getParseTimeDeps(
             haskellConfig,
             ImmutableList.of(

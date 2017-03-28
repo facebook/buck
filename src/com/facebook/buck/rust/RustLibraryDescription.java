@@ -380,7 +380,8 @@ public class RustLibraryDescription implements
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       Arg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder.addAll(rustBuckConfig.getRustCompiler().getParseTimeDeps());
     extraDepsBuilder.addAll(
         rustBuckConfig.getLinker()

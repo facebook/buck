@@ -506,7 +506,8 @@ public class AppleBinaryDescription
       final BuildTarget buildTarget,
       final CellPathResolver cellRoots,
       final Arg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     ImmutableList<ImmutableSortedSet<Flavor>> thinFlavorSets =
         generateThinDelegateFlavors(buildTarget.getFlavors());
     if (thinFlavorSets.size() > 0) {
