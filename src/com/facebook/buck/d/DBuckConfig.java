@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -140,7 +141,7 @@ public class DBuckConfig {
     Optional<Path> phobosPath = FileFinder.getOptionalFile(
         fileNames,
         searchPath,
-        FileFinder.IS_REGULAR_FILE);
+        Files::isRegularFile);
 
     if (phobosPath.isPresent()) {
       LOG.debug("Detected path to Phobos: " + phobosPath.get());

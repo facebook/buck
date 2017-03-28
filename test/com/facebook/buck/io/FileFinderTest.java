@@ -26,6 +26,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Optional;
@@ -71,7 +72,10 @@ public class FileFinderTest {
     tmp.newFile("fee/foo");
     tmp.newFile("fie/foo");
     ImmutableList<Path> searchPath = ImmutableList.of(fie, fee);
-    Optional<Path> result = FileFinder.getOptionalFile("foo", searchPath);
+    Optional<Path> result = FileFinder.getOptionalFile(
+        ImmutableSet.of("foo"),
+        searchPath,
+        Files::exists);
     Assert.assertTrue(result.isPresent());
     Assert.assertEquals(fie.resolve("foo"), result.get());
   }
@@ -88,15 +92,11 @@ public class FileFinderTest {
         "bar",
         "baz");
     Optional<Path> result =
-        FileFinder.getOptionalFile(
-            names,
-            ImmutableSortedSet.of(fee));
+        FileFinder.getOptionalFile(names, ImmutableSortedSet.of(fee), Files::exists);
     Assert.assertTrue(result.isPresent());
     Assert.assertEquals(fee.resolve("foo"), result.get());
 
-    result = FileFinder.getOptionalFile(
-        names,
-        ImmutableSortedSet.of(fie));
+    result = FileFinder.getOptionalFile(names, ImmutableSortedSet.of(fie), Files::exists);
     Assert.assertTrue(result.isPresent());
     Assert.assertEquals(fie.resolve("bar"), result.get());
   }
@@ -110,8 +110,9 @@ public class FileFinderTest {
 
     Optional<Path> result =
         FileFinder.getOptionalFile(
-            "baz",
-            ImmutableSortedSet.of(fee, fie));
+            ImmutableSet.of("baz"),
+            ImmutableSortedSet.of(fee, fie),
+            Files::exists);
     Assert.assertFalse(result.isPresent());
   }
 }
