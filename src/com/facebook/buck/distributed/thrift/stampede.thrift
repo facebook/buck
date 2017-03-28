@@ -154,6 +154,35 @@ struct Announcement {
 }
 
 ##############################################################################
+## Build slave structs
+##############################################################################
+
+# See build_slave.thrift in Buck client for individual event thrift structs.
+struct SequencedBuildSlaveEvent {
+  1: optional i32 eventNumber;
+  2: optional binary event;
+}
+
+# Queries for all events with event number great than or equal to
+# firstEventNumber, for build that took place at the slave identified
+# by stampedeId/runId.
+struct BuildSlaveEventsQuery {
+  1: optional StampedeId stampedeId;
+  2: optional RunId runId;
+  3: optional i32 firstEventNumber;
+}
+
+# The result of a BuildSlaveEventsQuery (contained as 'query' for reference).
+# If success == true, events contains the result of the query, otherwise
+# errorMessage contains an error string.
+struct BuildSlaveEventsRange {
+  1: optional bool success;
+  2: optional string errorMessage;
+  3: optional BuildSlaveEventsQuery query;
+  4: optional list<SequencedBuildSlaveEvent> events;
+}
+
+##############################################################################
 ## Request/Response structs
 ##############################################################################
 
@@ -299,6 +328,27 @@ struct FetchBuildSlaveStatusResponse {
   1: optional binary buildSlaveStatus;
 }
 
+# Used by build slaves to stream events (e.g. console events) back to the
+# client that initiated the distributed build.
+struct AppendBuildSlaveEventsRequest {
+  1: optional StampedeId stampedeId;
+  2: optional RunId runId;
+  3: optional list<binary> events;
+}
+
+struct AppendBuildSlaveEventsResponse {
+}
+
+# Requests the frontend perform the given BuildSlaveEventsQuery queries.
+# Results are returned inside a MultiGetBuildSlaveEventsResponse.
+struct MultiGetBuildSlaveEventsRequest {
+  1: optional list<BuildSlaveEventsQuery> requests;
+}
+
+struct MultiGetBuildSlaveEventsResponse {
+  1: optional list<BuildSlaveEventsRange> responses;
+}
+
 ##############################################################################
 ## Top-Level Buck-Frontend HTTP body thrift Request/Response format
 ##############################################################################
@@ -322,6 +372,8 @@ enum FrontendRequestType {
   GET_BUILD_SLAVE_REAL_TIME_LOGS = 16,
   UPDATE_BUILD_SLAVE_STATUS = 17,
   FETCH_BUILD_SLAVE_STATUS = 18,
+  APPEND_BUILD_SLAVE_EVENTS = 19,
+  MULTI_GET_BUILD_SLAVE_EVENTS = 20,
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -345,6 +397,8 @@ struct FrontendRequest {
     MultiGetBuildSlaveRealTimeLogsRequest multiGetBuildSlaveRealTimeLogsRequest;
   18: optional UpdateBuildSlaveStatusRequest updateBuildSlaveStatusRequest;
   19: optional FetchBuildSlaveStatusRequest fetchBuildSlaveStatusRequest;
+  20: optional AppendBuildSlaveEventsRequest appendBuildSlaveEventsRequest;
+  21: optional MultiGetBuildSlaveEventsRequest multiGetBuildSlaveEventsRequest;
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -367,6 +421,9 @@ struct FrontendResponse {
     multiGetBuildSlaveRealTimeLogsResponse;
   22: optional UpdateBuildSlaveStatusResponse updateBuildSlaveStatusResponse;
   23: optional FetchBuildSlaveStatusResponse fetchBuildSlaveStatusResponse;
+  24: optional AppendBuildSlaveEventsResponse appendBuildSlaveEventsResponse;
+  25: optional MultiGetBuildSlaveEventsResponse
+    multiGetBuildSlaveEventsResponse;
 
   // [100-199] Values are reserved for the buck cache request types.
 }

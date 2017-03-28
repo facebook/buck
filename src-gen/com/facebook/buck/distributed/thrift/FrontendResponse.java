@@ -52,6 +52,8 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
   private static final org.apache.thrift.protocol.TField MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("multiGetBuildSlaveRealTimeLogsResponse", org.apache.thrift.protocol.TType.STRUCT, (short)21);
   private static final org.apache.thrift.protocol.TField UPDATE_BUILD_SLAVE_STATUS_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("updateBuildSlaveStatusResponse", org.apache.thrift.protocol.TType.STRUCT, (short)22);
   private static final org.apache.thrift.protocol.TField FETCH_BUILD_SLAVE_STATUS_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("fetchBuildSlaveStatusResponse", org.apache.thrift.protocol.TType.STRUCT, (short)23);
+  private static final org.apache.thrift.protocol.TField APPEND_BUILD_SLAVE_EVENTS_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("appendBuildSlaveEventsResponse", org.apache.thrift.protocol.TType.STRUCT, (short)24);
+  private static final org.apache.thrift.protocol.TField MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("multiGetBuildSlaveEventsResponse", org.apache.thrift.protocol.TType.STRUCT, (short)25);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -77,6 +79,8 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
   public MultiGetBuildSlaveRealTimeLogsResponse multiGetBuildSlaveRealTimeLogsResponse; // optional
   public UpdateBuildSlaveStatusResponse updateBuildSlaveStatusResponse; // optional
   public FetchBuildSlaveStatusResponse fetchBuildSlaveStatusResponse; // optional
+  public AppendBuildSlaveEventsResponse appendBuildSlaveEventsResponse; // optional
+  public MultiGetBuildSlaveEventsResponse multiGetBuildSlaveEventsResponse; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -97,7 +101,9 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
     MULTI_GET_BUILD_SLAVE_LOG_DIR_RESPONSE((short)20, "multiGetBuildSlaveLogDirResponse"),
     MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_RESPONSE((short)21, "multiGetBuildSlaveRealTimeLogsResponse"),
     UPDATE_BUILD_SLAVE_STATUS_RESPONSE((short)22, "updateBuildSlaveStatusResponse"),
-    FETCH_BUILD_SLAVE_STATUS_RESPONSE((short)23, "fetchBuildSlaveStatusResponse");
+    FETCH_BUILD_SLAVE_STATUS_RESPONSE((short)23, "fetchBuildSlaveStatusResponse"),
+    APPEND_BUILD_SLAVE_EVENTS_RESPONSE((short)24, "appendBuildSlaveEventsResponse"),
+    MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE((short)25, "multiGetBuildSlaveEventsResponse");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -140,6 +146,10 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
           return UPDATE_BUILD_SLAVE_STATUS_RESPONSE;
         case 23: // FETCH_BUILD_SLAVE_STATUS_RESPONSE
           return FETCH_BUILD_SLAVE_STATUS_RESPONSE;
+        case 24: // APPEND_BUILD_SLAVE_EVENTS_RESPONSE
+          return APPEND_BUILD_SLAVE_EVENTS_RESPONSE;
+        case 25: // MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE
+          return MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE;
         default:
           return null;
       }
@@ -182,7 +192,7 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
   // isset id assignments
   private static final int __WASSUCCESSFUL_ISSET_ID = 0;
   private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.WAS_SUCCESSFUL,_Fields.ERROR_MESSAGE,_Fields.TYPE,_Fields.START_BUILD_RESPONSE,_Fields.BUILD_STATUS_RESPONSE,_Fields.CAS_CONTAINS_RESPONSE,_Fields.CREATE_BUILD_RESPONSE,_Fields.FETCH_SOURCE_FILES_RESPONSE,_Fields.FETCH_BUILD_GRAPH_RESPONSE,_Fields.ANNOUNCEMENT_RESPONSE,_Fields.MULTI_GET_BUILD_SLAVE_LOG_DIR_RESPONSE,_Fields.MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_RESPONSE,_Fields.UPDATE_BUILD_SLAVE_STATUS_RESPONSE,_Fields.FETCH_BUILD_SLAVE_STATUS_RESPONSE};
+  private static final _Fields optionals[] = {_Fields.WAS_SUCCESSFUL,_Fields.ERROR_MESSAGE,_Fields.TYPE,_Fields.START_BUILD_RESPONSE,_Fields.BUILD_STATUS_RESPONSE,_Fields.CAS_CONTAINS_RESPONSE,_Fields.CREATE_BUILD_RESPONSE,_Fields.FETCH_SOURCE_FILES_RESPONSE,_Fields.FETCH_BUILD_GRAPH_RESPONSE,_Fields.ANNOUNCEMENT_RESPONSE,_Fields.MULTI_GET_BUILD_SLAVE_LOG_DIR_RESPONSE,_Fields.MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_RESPONSE,_Fields.UPDATE_BUILD_SLAVE_STATUS_RESPONSE,_Fields.FETCH_BUILD_SLAVE_STATUS_RESPONSE,_Fields.APPEND_BUILD_SLAVE_EVENTS_RESPONSE,_Fields.MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -214,6 +224,10 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, UpdateBuildSlaveStatusResponse.class)));
     tmpMap.put(_Fields.FETCH_BUILD_SLAVE_STATUS_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("fetchBuildSlaveStatusResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, FetchBuildSlaveStatusResponse.class)));
+    tmpMap.put(_Fields.APPEND_BUILD_SLAVE_EVENTS_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("appendBuildSlaveEventsResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, AppendBuildSlaveEventsResponse.class)));
+    tmpMap.put(_Fields.MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("multiGetBuildSlaveEventsResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, MultiGetBuildSlaveEventsResponse.class)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(FrontendResponse.class, metaDataMap);
   }
@@ -268,6 +282,12 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
     if (other.isSetFetchBuildSlaveStatusResponse()) {
       this.fetchBuildSlaveStatusResponse = new FetchBuildSlaveStatusResponse(other.fetchBuildSlaveStatusResponse);
     }
+    if (other.isSetAppendBuildSlaveEventsResponse()) {
+      this.appendBuildSlaveEventsResponse = new AppendBuildSlaveEventsResponse(other.appendBuildSlaveEventsResponse);
+    }
+    if (other.isSetMultiGetBuildSlaveEventsResponse()) {
+      this.multiGetBuildSlaveEventsResponse = new MultiGetBuildSlaveEventsResponse(other.multiGetBuildSlaveEventsResponse);
+    }
   }
 
   public FrontendResponse deepCopy() {
@@ -292,6 +312,8 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
     this.multiGetBuildSlaveRealTimeLogsResponse = null;
     this.updateBuildSlaveStatusResponse = null;
     this.fetchBuildSlaveStatusResponse = null;
+    this.appendBuildSlaveEventsResponse = null;
+    this.multiGetBuildSlaveEventsResponse = null;
   }
 
   public boolean isWasSuccessful() {
@@ -637,6 +659,54 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
     }
   }
 
+  public AppendBuildSlaveEventsResponse getAppendBuildSlaveEventsResponse() {
+    return this.appendBuildSlaveEventsResponse;
+  }
+
+  public FrontendResponse setAppendBuildSlaveEventsResponse(AppendBuildSlaveEventsResponse appendBuildSlaveEventsResponse) {
+    this.appendBuildSlaveEventsResponse = appendBuildSlaveEventsResponse;
+    return this;
+  }
+
+  public void unsetAppendBuildSlaveEventsResponse() {
+    this.appendBuildSlaveEventsResponse = null;
+  }
+
+  /** Returns true if field appendBuildSlaveEventsResponse is set (has been assigned a value) and false otherwise */
+  public boolean isSetAppendBuildSlaveEventsResponse() {
+    return this.appendBuildSlaveEventsResponse != null;
+  }
+
+  public void setAppendBuildSlaveEventsResponseIsSet(boolean value) {
+    if (!value) {
+      this.appendBuildSlaveEventsResponse = null;
+    }
+  }
+
+  public MultiGetBuildSlaveEventsResponse getMultiGetBuildSlaveEventsResponse() {
+    return this.multiGetBuildSlaveEventsResponse;
+  }
+
+  public FrontendResponse setMultiGetBuildSlaveEventsResponse(MultiGetBuildSlaveEventsResponse multiGetBuildSlaveEventsResponse) {
+    this.multiGetBuildSlaveEventsResponse = multiGetBuildSlaveEventsResponse;
+    return this;
+  }
+
+  public void unsetMultiGetBuildSlaveEventsResponse() {
+    this.multiGetBuildSlaveEventsResponse = null;
+  }
+
+  /** Returns true if field multiGetBuildSlaveEventsResponse is set (has been assigned a value) and false otherwise */
+  public boolean isSetMultiGetBuildSlaveEventsResponse() {
+    return this.multiGetBuildSlaveEventsResponse != null;
+  }
+
+  public void setMultiGetBuildSlaveEventsResponseIsSet(boolean value) {
+    if (!value) {
+      this.multiGetBuildSlaveEventsResponse = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case WAS_SUCCESSFUL:
@@ -751,6 +821,22 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
       }
       break;
 
+    case APPEND_BUILD_SLAVE_EVENTS_RESPONSE:
+      if (value == null) {
+        unsetAppendBuildSlaveEventsResponse();
+      } else {
+        setAppendBuildSlaveEventsResponse((AppendBuildSlaveEventsResponse)value);
+      }
+      break;
+
+    case MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE:
+      if (value == null) {
+        unsetMultiGetBuildSlaveEventsResponse();
+      } else {
+        setMultiGetBuildSlaveEventsResponse((MultiGetBuildSlaveEventsResponse)value);
+      }
+      break;
+
     }
   }
 
@@ -798,6 +884,12 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
     case FETCH_BUILD_SLAVE_STATUS_RESPONSE:
       return getFetchBuildSlaveStatusResponse();
 
+    case APPEND_BUILD_SLAVE_EVENTS_RESPONSE:
+      return getAppendBuildSlaveEventsResponse();
+
+    case MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE:
+      return getMultiGetBuildSlaveEventsResponse();
+
     }
     throw new IllegalStateException();
   }
@@ -837,6 +929,10 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
       return isSetUpdateBuildSlaveStatusResponse();
     case FETCH_BUILD_SLAVE_STATUS_RESPONSE:
       return isSetFetchBuildSlaveStatusResponse();
+    case APPEND_BUILD_SLAVE_EVENTS_RESPONSE:
+      return isSetAppendBuildSlaveEventsResponse();
+    case MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE:
+      return isSetMultiGetBuildSlaveEventsResponse();
     }
     throw new IllegalStateException();
   }
@@ -980,6 +1076,24 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
         return false;
     }
 
+    boolean this_present_appendBuildSlaveEventsResponse = true && this.isSetAppendBuildSlaveEventsResponse();
+    boolean that_present_appendBuildSlaveEventsResponse = true && that.isSetAppendBuildSlaveEventsResponse();
+    if (this_present_appendBuildSlaveEventsResponse || that_present_appendBuildSlaveEventsResponse) {
+      if (!(this_present_appendBuildSlaveEventsResponse && that_present_appendBuildSlaveEventsResponse))
+        return false;
+      if (!this.appendBuildSlaveEventsResponse.equals(that.appendBuildSlaveEventsResponse))
+        return false;
+    }
+
+    boolean this_present_multiGetBuildSlaveEventsResponse = true && this.isSetMultiGetBuildSlaveEventsResponse();
+    boolean that_present_multiGetBuildSlaveEventsResponse = true && that.isSetMultiGetBuildSlaveEventsResponse();
+    if (this_present_multiGetBuildSlaveEventsResponse || that_present_multiGetBuildSlaveEventsResponse) {
+      if (!(this_present_multiGetBuildSlaveEventsResponse && that_present_multiGetBuildSlaveEventsResponse))
+        return false;
+      if (!this.multiGetBuildSlaveEventsResponse.equals(that.multiGetBuildSlaveEventsResponse))
+        return false;
+    }
+
     return true;
   }
 
@@ -1056,6 +1170,16 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
     list.add(present_fetchBuildSlaveStatusResponse);
     if (present_fetchBuildSlaveStatusResponse)
       list.add(fetchBuildSlaveStatusResponse);
+
+    boolean present_appendBuildSlaveEventsResponse = true && (isSetAppendBuildSlaveEventsResponse());
+    list.add(present_appendBuildSlaveEventsResponse);
+    if (present_appendBuildSlaveEventsResponse)
+      list.add(appendBuildSlaveEventsResponse);
+
+    boolean present_multiGetBuildSlaveEventsResponse = true && (isSetMultiGetBuildSlaveEventsResponse());
+    list.add(present_multiGetBuildSlaveEventsResponse);
+    if (present_multiGetBuildSlaveEventsResponse)
+      list.add(multiGetBuildSlaveEventsResponse);
 
     return list.hashCode();
   }
@@ -1204,6 +1328,26 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
     }
     if (isSetFetchBuildSlaveStatusResponse()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.fetchBuildSlaveStatusResponse, other.fetchBuildSlaveStatusResponse);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = Boolean.valueOf(isSetAppendBuildSlaveEventsResponse()).compareTo(other.isSetAppendBuildSlaveEventsResponse());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetAppendBuildSlaveEventsResponse()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.appendBuildSlaveEventsResponse, other.appendBuildSlaveEventsResponse);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = Boolean.valueOf(isSetMultiGetBuildSlaveEventsResponse()).compareTo(other.isSetMultiGetBuildSlaveEventsResponse());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetMultiGetBuildSlaveEventsResponse()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.multiGetBuildSlaveEventsResponse, other.multiGetBuildSlaveEventsResponse);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -1363,6 +1507,26 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
       }
       first = false;
     }
+    if (isSetAppendBuildSlaveEventsResponse()) {
+      if (!first) sb.append(", ");
+      sb.append("appendBuildSlaveEventsResponse:");
+      if (this.appendBuildSlaveEventsResponse == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.appendBuildSlaveEventsResponse);
+      }
+      first = false;
+    }
+    if (isSetMultiGetBuildSlaveEventsResponse()) {
+      if (!first) sb.append(", ");
+      sb.append("multiGetBuildSlaveEventsResponse:");
+      if (this.multiGetBuildSlaveEventsResponse == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.multiGetBuildSlaveEventsResponse);
+      }
+      first = false;
+    }
     sb.append(")");
     return sb.toString();
   }
@@ -1402,6 +1566,12 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
     }
     if (fetchBuildSlaveStatusResponse != null) {
       fetchBuildSlaveStatusResponse.validate();
+    }
+    if (appendBuildSlaveEventsResponse != null) {
+      appendBuildSlaveEventsResponse.validate();
+    }
+    if (multiGetBuildSlaveEventsResponse != null) {
+      multiGetBuildSlaveEventsResponse.validate();
     }
   }
 
@@ -1564,6 +1734,24 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 24: // APPEND_BUILD_SLAVE_EVENTS_RESPONSE
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+              struct.appendBuildSlaveEventsResponse = new AppendBuildSlaveEventsResponse();
+              struct.appendBuildSlaveEventsResponse.read(iprot);
+              struct.setAppendBuildSlaveEventsResponseIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 25: // MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+              struct.multiGetBuildSlaveEventsResponse = new MultiGetBuildSlaveEventsResponse();
+              struct.multiGetBuildSlaveEventsResponse.read(iprot);
+              struct.setMultiGetBuildSlaveEventsResponseIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -1675,6 +1863,20 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
           oprot.writeFieldEnd();
         }
       }
+      if (struct.appendBuildSlaveEventsResponse != null) {
+        if (struct.isSetAppendBuildSlaveEventsResponse()) {
+          oprot.writeFieldBegin(APPEND_BUILD_SLAVE_EVENTS_RESPONSE_FIELD_DESC);
+          struct.appendBuildSlaveEventsResponse.write(oprot);
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.multiGetBuildSlaveEventsResponse != null) {
+        if (struct.isSetMultiGetBuildSlaveEventsResponse()) {
+          oprot.writeFieldBegin(MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE_FIELD_DESC);
+          struct.multiGetBuildSlaveEventsResponse.write(oprot);
+          oprot.writeFieldEnd();
+        }
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -1735,7 +1937,13 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
       if (struct.isSetFetchBuildSlaveStatusResponse()) {
         optionals.set(13);
       }
-      oprot.writeBitSet(optionals, 14);
+      if (struct.isSetAppendBuildSlaveEventsResponse()) {
+        optionals.set(14);
+      }
+      if (struct.isSetMultiGetBuildSlaveEventsResponse()) {
+        optionals.set(15);
+      }
+      oprot.writeBitSet(optionals, 16);
       if (struct.isSetWasSuccessful()) {
         oprot.writeBool(struct.wasSuccessful);
       }
@@ -1778,12 +1986,18 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
       if (struct.isSetFetchBuildSlaveStatusResponse()) {
         struct.fetchBuildSlaveStatusResponse.write(oprot);
       }
+      if (struct.isSetAppendBuildSlaveEventsResponse()) {
+        struct.appendBuildSlaveEventsResponse.write(oprot);
+      }
+      if (struct.isSetMultiGetBuildSlaveEventsResponse()) {
+        struct.multiGetBuildSlaveEventsResponse.write(oprot);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, FrontendResponse struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
-      BitSet incoming = iprot.readBitSet(14);
+      BitSet incoming = iprot.readBitSet(16);
       if (incoming.get(0)) {
         struct.wasSuccessful = iprot.readBool();
         struct.setWasSuccessfulIsSet(true);
@@ -1850,6 +2064,16 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
         struct.fetchBuildSlaveStatusResponse = new FetchBuildSlaveStatusResponse();
         struct.fetchBuildSlaveStatusResponse.read(iprot);
         struct.setFetchBuildSlaveStatusResponseIsSet(true);
+      }
+      if (incoming.get(14)) {
+        struct.appendBuildSlaveEventsResponse = new AppendBuildSlaveEventsResponse();
+        struct.appendBuildSlaveEventsResponse.read(iprot);
+        struct.setAppendBuildSlaveEventsResponseIsSet(true);
+      }
+      if (incoming.get(15)) {
+        struct.multiGetBuildSlaveEventsResponse = new MultiGetBuildSlaveEventsResponse();
+        struct.multiGetBuildSlaveEventsResponse.read(iprot);
+        struct.setMultiGetBuildSlaveEventsResponseIsSet(true);
       }
     }
   }

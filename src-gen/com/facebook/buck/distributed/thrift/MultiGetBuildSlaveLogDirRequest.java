@@ -441,14 +441,14 @@ public class MultiGetBuildSlaveLogDirRequest implements org.apache.thrift.TBase<
           case 2: // RUN_IDS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list98 = iprot.readListBegin();
-                struct.runIds = new ArrayList<RunId>(_list98.size);
-                RunId _elem99;
-                for (int _i100 = 0; _i100 < _list98.size; ++_i100)
+                org.apache.thrift.protocol.TList _list106 = iprot.readListBegin();
+                struct.runIds = new ArrayList<RunId>(_list106.size);
+                RunId _elem107;
+                for (int _i108 = 0; _i108 < _list106.size; ++_i108)
                 {
-                  _elem99 = new RunId();
-                  _elem99.read(iprot);
-                  struct.runIds.add(_elem99);
+                  _elem107 = new RunId();
+                  _elem107.read(iprot);
+                  struct.runIds.add(_elem107);
                 }
                 iprot.readListEnd();
               }
@@ -484,9 +484,9 @@ public class MultiGetBuildSlaveLogDirRequest implements org.apache.thrift.TBase<
           oprot.writeFieldBegin(RUN_IDS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.runIds.size()));
-            for (RunId _iter101 : struct.runIds)
+            for (RunId _iter109 : struct.runIds)
             {
-              _iter101.write(oprot);
+              _iter109.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -524,9 +524,9 @@ public class MultiGetBuildSlaveLogDirRequest implements org.apache.thrift.TBase<
       if (struct.isSetRunIds()) {
         {
           oprot.writeI32(struct.runIds.size());
-          for (RunId _iter102 : struct.runIds)
+          for (RunId _iter110 : struct.runIds)
           {
-            _iter102.write(oprot);
+            _iter110.write(oprot);
           }
         }
       }
@@ -543,14 +543,14 @@ public class MultiGetBuildSlaveLogDirRequest implements org.apache.thrift.TBase<
       }
       if (incoming.get(1)) {
         {
-          org.apache.thrift.protocol.TList _list103 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.runIds = new ArrayList<RunId>(_list103.size);
-          RunId _elem104;
-          for (int _i105 = 0; _i105 < _list103.size; ++_i105)
+          org.apache.thrift.protocol.TList _list111 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.runIds = new ArrayList<RunId>(_list111.size);
+          RunId _elem112;
+          for (int _i113 = 0; _i113 < _list111.size; ++_i113)
           {
-            _elem104 = new RunId();
-            _elem104.read(iprot);
-            struct.runIds.add(_elem104);
+            _elem112 = new RunId();
+            _elem112.read(iprot);
+            struct.runIds.add(_elem112);
           }
         }
         struct.setRunIdsIsSet(true);

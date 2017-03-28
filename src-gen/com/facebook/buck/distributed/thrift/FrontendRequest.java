@@ -55,6 +55,8 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
   private static final org.apache.thrift.protocol.TField MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("multiGetBuildSlaveRealTimeLogsRequest", org.apache.thrift.protocol.TType.STRUCT, (short)17);
   private static final org.apache.thrift.protocol.TField UPDATE_BUILD_SLAVE_STATUS_REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("updateBuildSlaveStatusRequest", org.apache.thrift.protocol.TType.STRUCT, (short)18);
   private static final org.apache.thrift.protocol.TField FETCH_BUILD_SLAVE_STATUS_REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("fetchBuildSlaveStatusRequest", org.apache.thrift.protocol.TType.STRUCT, (short)19);
+  private static final org.apache.thrift.protocol.TField APPEND_BUILD_SLAVE_EVENTS_REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("appendBuildSlaveEventsRequest", org.apache.thrift.protocol.TType.STRUCT, (short)20);
+  private static final org.apache.thrift.protocol.TField MULTI_GET_BUILD_SLAVE_EVENTS_REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("multiGetBuildSlaveEventsRequest", org.apache.thrift.protocol.TType.STRUCT, (short)21);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -83,6 +85,8 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
   public MultiGetBuildSlaveRealTimeLogsRequest multiGetBuildSlaveRealTimeLogsRequest; // optional
   public UpdateBuildSlaveStatusRequest updateBuildSlaveStatusRequest; // optional
   public FetchBuildSlaveStatusRequest fetchBuildSlaveStatusRequest; // optional
+  public AppendBuildSlaveEventsRequest appendBuildSlaveEventsRequest; // optional
+  public MultiGetBuildSlaveEventsRequest multiGetBuildSlaveEventsRequest; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -106,7 +110,9 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     MULTI_GET_BUILD_SLAVE_LOG_DIR_REQUEST((short)16, "multiGetBuildSlaveLogDirRequest"),
     MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_REQUEST((short)17, "multiGetBuildSlaveRealTimeLogsRequest"),
     UPDATE_BUILD_SLAVE_STATUS_REQUEST((short)18, "updateBuildSlaveStatusRequest"),
-    FETCH_BUILD_SLAVE_STATUS_REQUEST((short)19, "fetchBuildSlaveStatusRequest");
+    FETCH_BUILD_SLAVE_STATUS_REQUEST((short)19, "fetchBuildSlaveStatusRequest"),
+    APPEND_BUILD_SLAVE_EVENTS_REQUEST((short)20, "appendBuildSlaveEventsRequest"),
+    MULTI_GET_BUILD_SLAVE_EVENTS_REQUEST((short)21, "multiGetBuildSlaveEventsRequest");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -155,6 +161,10 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
           return UPDATE_BUILD_SLAVE_STATUS_REQUEST;
         case 19: // FETCH_BUILD_SLAVE_STATUS_REQUEST
           return FETCH_BUILD_SLAVE_STATUS_REQUEST;
+        case 20: // APPEND_BUILD_SLAVE_EVENTS_REQUEST
+          return APPEND_BUILD_SLAVE_EVENTS_REQUEST;
+        case 21: // MULTI_GET_BUILD_SLAVE_EVENTS_REQUEST
+          return MULTI_GET_BUILD_SLAVE_EVENTS_REQUEST;
         default:
           return null;
       }
@@ -195,7 +205,7 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
   }
 
   // isset id assignments
-  private static final _Fields optionals[] = {_Fields.TYPE,_Fields.START_BUILD_REQUEST,_Fields.BUILD_STATUS_REQUEST,_Fields.LOG_REQUEST,_Fields.CAS_CONTAINS_REQUEST,_Fields.CREATE_BUILD_REQUEST,_Fields.STORE_LOCAL_CHANGES_REQUEST,_Fields.FETCH_SOURCE_FILES_REQUEST,_Fields.STORE_BUILD_GRAPH_REQUEST,_Fields.FETCH_BUILD_GRAPH_REQUEST,_Fields.SET_BUCK_VERSION_REQUEST,_Fields.ANNOUNCEMENT_REQUEST,_Fields.SET_BUCK_DOT_FILE_PATHS_REQUEST,_Fields.MULTI_GET_BUILD_SLAVE_LOG_DIR_REQUEST,_Fields.MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_REQUEST,_Fields.UPDATE_BUILD_SLAVE_STATUS_REQUEST,_Fields.FETCH_BUILD_SLAVE_STATUS_REQUEST};
+  private static final _Fields optionals[] = {_Fields.TYPE,_Fields.START_BUILD_REQUEST,_Fields.BUILD_STATUS_REQUEST,_Fields.LOG_REQUEST,_Fields.CAS_CONTAINS_REQUEST,_Fields.CREATE_BUILD_REQUEST,_Fields.STORE_LOCAL_CHANGES_REQUEST,_Fields.FETCH_SOURCE_FILES_REQUEST,_Fields.STORE_BUILD_GRAPH_REQUEST,_Fields.FETCH_BUILD_GRAPH_REQUEST,_Fields.SET_BUCK_VERSION_REQUEST,_Fields.ANNOUNCEMENT_REQUEST,_Fields.SET_BUCK_DOT_FILE_PATHS_REQUEST,_Fields.MULTI_GET_BUILD_SLAVE_LOG_DIR_REQUEST,_Fields.MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_REQUEST,_Fields.UPDATE_BUILD_SLAVE_STATUS_REQUEST,_Fields.FETCH_BUILD_SLAVE_STATUS_REQUEST,_Fields.APPEND_BUILD_SLAVE_EVENTS_REQUEST,_Fields.MULTI_GET_BUILD_SLAVE_EVENTS_REQUEST};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -233,6 +243,10 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, UpdateBuildSlaveStatusRequest.class)));
     tmpMap.put(_Fields.FETCH_BUILD_SLAVE_STATUS_REQUEST, new org.apache.thrift.meta_data.FieldMetaData("fetchBuildSlaveStatusRequest", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, FetchBuildSlaveStatusRequest.class)));
+    tmpMap.put(_Fields.APPEND_BUILD_SLAVE_EVENTS_REQUEST, new org.apache.thrift.meta_data.FieldMetaData("appendBuildSlaveEventsRequest", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, AppendBuildSlaveEventsRequest.class)));
+    tmpMap.put(_Fields.MULTI_GET_BUILD_SLAVE_EVENTS_REQUEST, new org.apache.thrift.meta_data.FieldMetaData("multiGetBuildSlaveEventsRequest", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, MultiGetBuildSlaveEventsRequest.class)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(FrontendRequest.class, metaDataMap);
   }
@@ -297,6 +311,12 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     if (other.isSetFetchBuildSlaveStatusRequest()) {
       this.fetchBuildSlaveStatusRequest = new FetchBuildSlaveStatusRequest(other.fetchBuildSlaveStatusRequest);
     }
+    if (other.isSetAppendBuildSlaveEventsRequest()) {
+      this.appendBuildSlaveEventsRequest = new AppendBuildSlaveEventsRequest(other.appendBuildSlaveEventsRequest);
+    }
+    if (other.isSetMultiGetBuildSlaveEventsRequest()) {
+      this.multiGetBuildSlaveEventsRequest = new MultiGetBuildSlaveEventsRequest(other.multiGetBuildSlaveEventsRequest);
+    }
   }
 
   public FrontendRequest deepCopy() {
@@ -323,6 +343,8 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     this.multiGetBuildSlaveRealTimeLogsRequest = null;
     this.updateBuildSlaveStatusRequest = null;
     this.fetchBuildSlaveStatusRequest = null;
+    this.appendBuildSlaveEventsRequest = null;
+    this.multiGetBuildSlaveEventsRequest = null;
   }
 
   /**
@@ -741,6 +763,54 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     }
   }
 
+  public AppendBuildSlaveEventsRequest getAppendBuildSlaveEventsRequest() {
+    return this.appendBuildSlaveEventsRequest;
+  }
+
+  public FrontendRequest setAppendBuildSlaveEventsRequest(AppendBuildSlaveEventsRequest appendBuildSlaveEventsRequest) {
+    this.appendBuildSlaveEventsRequest = appendBuildSlaveEventsRequest;
+    return this;
+  }
+
+  public void unsetAppendBuildSlaveEventsRequest() {
+    this.appendBuildSlaveEventsRequest = null;
+  }
+
+  /** Returns true if field appendBuildSlaveEventsRequest is set (has been assigned a value) and false otherwise */
+  public boolean isSetAppendBuildSlaveEventsRequest() {
+    return this.appendBuildSlaveEventsRequest != null;
+  }
+
+  public void setAppendBuildSlaveEventsRequestIsSet(boolean value) {
+    if (!value) {
+      this.appendBuildSlaveEventsRequest = null;
+    }
+  }
+
+  public MultiGetBuildSlaveEventsRequest getMultiGetBuildSlaveEventsRequest() {
+    return this.multiGetBuildSlaveEventsRequest;
+  }
+
+  public FrontendRequest setMultiGetBuildSlaveEventsRequest(MultiGetBuildSlaveEventsRequest multiGetBuildSlaveEventsRequest) {
+    this.multiGetBuildSlaveEventsRequest = multiGetBuildSlaveEventsRequest;
+    return this;
+  }
+
+  public void unsetMultiGetBuildSlaveEventsRequest() {
+    this.multiGetBuildSlaveEventsRequest = null;
+  }
+
+  /** Returns true if field multiGetBuildSlaveEventsRequest is set (has been assigned a value) and false otherwise */
+  public boolean isSetMultiGetBuildSlaveEventsRequest() {
+    return this.multiGetBuildSlaveEventsRequest != null;
+  }
+
+  public void setMultiGetBuildSlaveEventsRequestIsSet(boolean value) {
+    if (!value) {
+      this.multiGetBuildSlaveEventsRequest = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case TYPE:
@@ -879,6 +949,22 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
       }
       break;
 
+    case APPEND_BUILD_SLAVE_EVENTS_REQUEST:
+      if (value == null) {
+        unsetAppendBuildSlaveEventsRequest();
+      } else {
+        setAppendBuildSlaveEventsRequest((AppendBuildSlaveEventsRequest)value);
+      }
+      break;
+
+    case MULTI_GET_BUILD_SLAVE_EVENTS_REQUEST:
+      if (value == null) {
+        unsetMultiGetBuildSlaveEventsRequest();
+      } else {
+        setMultiGetBuildSlaveEventsRequest((MultiGetBuildSlaveEventsRequest)value);
+      }
+      break;
+
     }
   }
 
@@ -935,6 +1021,12 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     case FETCH_BUILD_SLAVE_STATUS_REQUEST:
       return getFetchBuildSlaveStatusRequest();
 
+    case APPEND_BUILD_SLAVE_EVENTS_REQUEST:
+      return getAppendBuildSlaveEventsRequest();
+
+    case MULTI_GET_BUILD_SLAVE_EVENTS_REQUEST:
+      return getMultiGetBuildSlaveEventsRequest();
+
     }
     throw new IllegalStateException();
   }
@@ -980,6 +1072,10 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
       return isSetUpdateBuildSlaveStatusRequest();
     case FETCH_BUILD_SLAVE_STATUS_REQUEST:
       return isSetFetchBuildSlaveStatusRequest();
+    case APPEND_BUILD_SLAVE_EVENTS_REQUEST:
+      return isSetAppendBuildSlaveEventsRequest();
+    case MULTI_GET_BUILD_SLAVE_EVENTS_REQUEST:
+      return isSetMultiGetBuildSlaveEventsRequest();
     }
     throw new IllegalStateException();
   }
@@ -1150,6 +1246,24 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
         return false;
     }
 
+    boolean this_present_appendBuildSlaveEventsRequest = true && this.isSetAppendBuildSlaveEventsRequest();
+    boolean that_present_appendBuildSlaveEventsRequest = true && that.isSetAppendBuildSlaveEventsRequest();
+    if (this_present_appendBuildSlaveEventsRequest || that_present_appendBuildSlaveEventsRequest) {
+      if (!(this_present_appendBuildSlaveEventsRequest && that_present_appendBuildSlaveEventsRequest))
+        return false;
+      if (!this.appendBuildSlaveEventsRequest.equals(that.appendBuildSlaveEventsRequest))
+        return false;
+    }
+
+    boolean this_present_multiGetBuildSlaveEventsRequest = true && this.isSetMultiGetBuildSlaveEventsRequest();
+    boolean that_present_multiGetBuildSlaveEventsRequest = true && that.isSetMultiGetBuildSlaveEventsRequest();
+    if (this_present_multiGetBuildSlaveEventsRequest || that_present_multiGetBuildSlaveEventsRequest) {
+      if (!(this_present_multiGetBuildSlaveEventsRequest && that_present_multiGetBuildSlaveEventsRequest))
+        return false;
+      if (!this.multiGetBuildSlaveEventsRequest.equals(that.multiGetBuildSlaveEventsRequest))
+        return false;
+    }
+
     return true;
   }
 
@@ -1241,6 +1355,16 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     list.add(present_fetchBuildSlaveStatusRequest);
     if (present_fetchBuildSlaveStatusRequest)
       list.add(fetchBuildSlaveStatusRequest);
+
+    boolean present_appendBuildSlaveEventsRequest = true && (isSetAppendBuildSlaveEventsRequest());
+    list.add(present_appendBuildSlaveEventsRequest);
+    if (present_appendBuildSlaveEventsRequest)
+      list.add(appendBuildSlaveEventsRequest);
+
+    boolean present_multiGetBuildSlaveEventsRequest = true && (isSetMultiGetBuildSlaveEventsRequest());
+    list.add(present_multiGetBuildSlaveEventsRequest);
+    if (present_multiGetBuildSlaveEventsRequest)
+      list.add(multiGetBuildSlaveEventsRequest);
 
     return list.hashCode();
   }
@@ -1419,6 +1543,26 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     }
     if (isSetFetchBuildSlaveStatusRequest()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.fetchBuildSlaveStatusRequest, other.fetchBuildSlaveStatusRequest);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = Boolean.valueOf(isSetAppendBuildSlaveEventsRequest()).compareTo(other.isSetAppendBuildSlaveEventsRequest());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetAppendBuildSlaveEventsRequest()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.appendBuildSlaveEventsRequest, other.appendBuildSlaveEventsRequest);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = Boolean.valueOf(isSetMultiGetBuildSlaveEventsRequest()).compareTo(other.isSetMultiGetBuildSlaveEventsRequest());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetMultiGetBuildSlaveEventsRequest()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.multiGetBuildSlaveEventsRequest, other.multiGetBuildSlaveEventsRequest);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -1612,6 +1756,26 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
       }
       first = false;
     }
+    if (isSetAppendBuildSlaveEventsRequest()) {
+      if (!first) sb.append(", ");
+      sb.append("appendBuildSlaveEventsRequest:");
+      if (this.appendBuildSlaveEventsRequest == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.appendBuildSlaveEventsRequest);
+      }
+      first = false;
+    }
+    if (isSetMultiGetBuildSlaveEventsRequest()) {
+      if (!first) sb.append(", ");
+      sb.append("multiGetBuildSlaveEventsRequest:");
+      if (this.multiGetBuildSlaveEventsRequest == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.multiGetBuildSlaveEventsRequest);
+      }
+      first = false;
+    }
     sb.append(")");
     return sb.toString();
   }
@@ -1666,6 +1830,12 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     }
     if (fetchBuildSlaveStatusRequest != null) {
       fetchBuildSlaveStatusRequest.validate();
+    }
+    if (appendBuildSlaveEventsRequest != null) {
+      appendBuildSlaveEventsRequest.validate();
+    }
+    if (multiGetBuildSlaveEventsRequest != null) {
+      multiGetBuildSlaveEventsRequest.validate();
     }
   }
 
@@ -1855,6 +2025,24 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 20: // APPEND_BUILD_SLAVE_EVENTS_REQUEST
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+              struct.appendBuildSlaveEventsRequest = new AppendBuildSlaveEventsRequest();
+              struct.appendBuildSlaveEventsRequest.read(iprot);
+              struct.setAppendBuildSlaveEventsRequestIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 21: // MULTI_GET_BUILD_SLAVE_EVENTS_REQUEST
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+              struct.multiGetBuildSlaveEventsRequest = new MultiGetBuildSlaveEventsRequest();
+              struct.multiGetBuildSlaveEventsRequest.read(iprot);
+              struct.setMultiGetBuildSlaveEventsRequestIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -1989,6 +2177,20 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
           oprot.writeFieldEnd();
         }
       }
+      if (struct.appendBuildSlaveEventsRequest != null) {
+        if (struct.isSetAppendBuildSlaveEventsRequest()) {
+          oprot.writeFieldBegin(APPEND_BUILD_SLAVE_EVENTS_REQUEST_FIELD_DESC);
+          struct.appendBuildSlaveEventsRequest.write(oprot);
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.multiGetBuildSlaveEventsRequest != null) {
+        if (struct.isSetMultiGetBuildSlaveEventsRequest()) {
+          oprot.writeFieldBegin(MULTI_GET_BUILD_SLAVE_EVENTS_REQUEST_FIELD_DESC);
+          struct.multiGetBuildSlaveEventsRequest.write(oprot);
+          oprot.writeFieldEnd();
+        }
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -2058,7 +2260,13 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
       if (struct.isSetFetchBuildSlaveStatusRequest()) {
         optionals.set(16);
       }
-      oprot.writeBitSet(optionals, 17);
+      if (struct.isSetAppendBuildSlaveEventsRequest()) {
+        optionals.set(17);
+      }
+      if (struct.isSetMultiGetBuildSlaveEventsRequest()) {
+        optionals.set(18);
+      }
+      oprot.writeBitSet(optionals, 19);
       if (struct.isSetType()) {
         oprot.writeI32(struct.type.getValue());
       }
@@ -2110,12 +2318,18 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
       if (struct.isSetFetchBuildSlaveStatusRequest()) {
         struct.fetchBuildSlaveStatusRequest.write(oprot);
       }
+      if (struct.isSetAppendBuildSlaveEventsRequest()) {
+        struct.appendBuildSlaveEventsRequest.write(oprot);
+      }
+      if (struct.isSetMultiGetBuildSlaveEventsRequest()) {
+        struct.multiGetBuildSlaveEventsRequest.write(oprot);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, FrontendRequest struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
-      BitSet incoming = iprot.readBitSet(17);
+      BitSet incoming = iprot.readBitSet(19);
       if (incoming.get(0)) {
         struct.type = com.facebook.buck.distributed.thrift.FrontendRequestType.findByValue(iprot.readI32());
         struct.setTypeIsSet(true);
@@ -2199,6 +2413,16 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
         struct.fetchBuildSlaveStatusRequest = new FetchBuildSlaveStatusRequest();
         struct.fetchBuildSlaveStatusRequest.read(iprot);
         struct.setFetchBuildSlaveStatusRequestIsSet(true);
+      }
+      if (incoming.get(17)) {
+        struct.appendBuildSlaveEventsRequest = new AppendBuildSlaveEventsRequest();
+        struct.appendBuildSlaveEventsRequest.read(iprot);
+        struct.setAppendBuildSlaveEventsRequestIsSet(true);
+      }
+      if (incoming.get(18)) {
+        struct.multiGetBuildSlaveEventsRequest = new MultiGetBuildSlaveEventsRequest();
+        struct.multiGetBuildSlaveEventsRequest.read(iprot);
+        struct.setMultiGetBuildSlaveEventsRequestIsSet(true);
       }
     }
   }
