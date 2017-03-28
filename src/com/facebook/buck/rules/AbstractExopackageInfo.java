@@ -18,12 +18,14 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.rules.ExopackageInfo.DexInfo;
 import com.facebook.buck.rules.ExopackageInfo.NativeLibsInfo;
+import com.facebook.buck.rules.ExopackageInfo.ResourcesInfo;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 
 @Value.Immutable
@@ -32,7 +34,7 @@ import java.util.Optional;
 abstract class AbstractExopackageInfo {
 
   @Value.Immutable
-  static interface AbstractDexInfo {
+  interface AbstractDexInfo {
     @Value.Parameter
     Path getMetadata();
     @Value.Parameter
@@ -40,20 +42,31 @@ abstract class AbstractExopackageInfo {
   }
 
   @Value.Immutable
-  static interface AbstractNativeLibsInfo {
+  interface AbstractNativeLibsInfo {
     @Value.Parameter
     Path getMetadata();
     @Value.Parameter
     Path getDirectory();
   }
 
+  @Value.Immutable
+  interface AbstractResourcesInfo {
+    @Value.Parameter
+    Path getResourcesPath();
+    @Value.Parameter
+    List<Path> getAssetsPaths();
+  }
+
   public abstract Optional<DexInfo> getDexInfo();
   public abstract Optional<NativeLibsInfo> getNativeLibsInfo();
+  public abstract Optional<ResourcesInfo> getResourcesInfo();
 
   @Value.Check
   protected void check() {
     Preconditions.checkArgument(
-        getDexInfo().isPresent() || getNativeLibsInfo().isPresent(),
-        "ExopackageInfo must either have secondary dexes or native libraries to install.");
+        getDexInfo().isPresent() ||
+            getNativeLibsInfo().isPresent() ||
+            getResourcesInfo().isPresent(),
+        "ExopackageInfo must have something to install.");
   }
 }

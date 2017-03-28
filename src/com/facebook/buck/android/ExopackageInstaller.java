@@ -28,6 +28,7 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.ExopackageInfo;
+import com.facebook.buck.rules.ExopackageInfo.ResourcesInfo;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.NamedTemporaryFile;
@@ -49,6 +50,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -83,16 +85,19 @@ public class ExopackageInstaller {
   static final Path SECONDARY_DEX_DIR = Paths.get("secondary-dex");
 
   @VisibleForTesting
-  static final Path RESOURCES_DIR = Paths.get("resources");
+  static final Path NATIVE_LIBS_DIR = Paths.get("native-libs");
 
   @VisibleForTesting
-  static final Path NATIVE_LIBS_DIR = Paths.get("native-libs");
+  static final Path RESOURCES_DIR = Paths.get("resources");
 
   @VisibleForTesting
   static final Pattern DEX_FILE_PATTERN = Pattern.compile("secondary-([0-9a-f]+)\\.[\\w.-]*");
 
   @VisibleForTesting
   static final Pattern NATIVE_LIB_PATTERN = Pattern.compile("native-([0-9a-f]+)\\.so");
+
+  @VisibleForTesting
+  static final Pattern RESOURCES_FILE_PATTERN = Pattern.compile("([0-9a-f]+)\\.apk");
 
   private static final Pattern LINE_ENDING = Pattern.compile("\r?\n");
   public static final Path EXOPACKAGE_INSTALL_ROOT = Paths.get("/data/local/tmp/exopackage/");
@@ -302,6 +307,10 @@ public class ExopackageInstaller {
         installNativeLibraryFiles();
       }
 
+      if (exopackageInfo.getResourcesInfo().isPresent()) {
+        installResourcesFiles();
+      }
+
       // TODO(dreiss): Make this work on Gingerbread.
       try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "kill_app")) {
         device.stopPackage(packageName);
@@ -340,6 +349,43 @@ public class ExopackageInstaller {
           metadataContents,
           "secondary-%s.dex.jar",
           SECONDARY_DEX_DIR);
+    }
+
+    private void installResourcesFiles() throws Exception {
+      ResourcesInfo info = exopackageInfo.getResourcesInfo().get();
+      Path resourcesPath = info.getResourcesPath();
+      String resourcesHash = projectFilesystem.computeSha1(resourcesPath).getHash();
+
+      List<Path> assetsPaths = info.getAssetsPaths();
+      ImmutableList.Builder<String> assetsHashesBuilder = ImmutableList.builder();
+      for (Path p : assetsPaths) {
+        assetsHashesBuilder.add(projectFilesystem.computeSha1(p).getHash());
+      }
+      List<String> assetsHashes = assetsHashesBuilder.build();
+
+      ImmutableMap.Builder<String, Path> hashToSourcesBuilder = ImmutableMap.builder();
+      hashToSourcesBuilder.put(resourcesHash, resourcesPath);
+      String metadataContent = "resources " + resourcesHash;
+      Iterator<Path> assetsPathsIter = assetsPaths.iterator();
+      for (String hash : assetsHashes) {
+        metadataContent += "\nassets " + hash;
+        hashToSourcesBuilder.put(hash, assetsPathsIter.next());
+      }
+
+      final ImmutableMap<String, Path> hashToSources = hashToSourcesBuilder.build();
+      final ImmutableSet<String> requiredHashes = hashToSources.keySet();
+      final ImmutableSet<String> presentHashes = prepareResourcesDir(requiredHashes);
+      final Set<String> hashesToInstall = Sets.difference(requiredHashes, presentHashes);
+
+      Map<String, Path> filesToInstallByHash =
+          Maps.filterKeys(hashToSources, hashesToInstall::contains);
+
+      installFiles(
+          "resources",
+          ImmutableMap.copyOf(filesToInstallByHash),
+          metadataContent,
+          "%s.apk",
+          RESOURCES_DIR);
     }
 
     private ImmutableList<String> getDeviceAbis() throws Exception {
@@ -536,6 +582,11 @@ public class ExopackageInstaller {
         String abi,
         ImmutableSet<String> requiredHashes) throws Exception {
       return prepareDirectory(NATIVE_LIBS_DIR.resolve(abi), NATIVE_LIB_PATTERN, requiredHashes);
+    }
+
+    private ImmutableSet<String> prepareResourcesDir(ImmutableSet<String> requiredHashes)
+        throws Exception {
+      return prepareDirectory(RESOURCES_DIR, RESOURCES_FILE_PATTERN, requiredHashes);
     }
 
     private ImmutableSet<String> prepareDirectory(
