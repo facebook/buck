@@ -63,6 +63,7 @@ import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -287,22 +288,22 @@ public class CxxGenruleDescription
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg) {
-    ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
-
+      Arg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
     // Add in all parse time deps from the C/C++ platforms.
     for (CxxPlatform cxxPlatform : cxxPlatforms.getValues()) {
-      targets.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
+      extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
     }
 
     // Add in parse time deps from parent.
-    targets.addAll(
-        super.findDepsForTargetFromConstructorArgs(buildTarget, cellRoots, constructorArg));
-
-    return targets.build();
+    super.findDepsForTargetFromConstructorArgs(
+        buildTarget,
+        cellRoots,
+        constructorArg,
+        extraDepsBuilder);
   }
 
   private ImmutableMap<String, MacroReplacer> getMacroReplacersForTargetTranslation(

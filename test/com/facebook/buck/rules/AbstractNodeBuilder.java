@@ -221,10 +221,12 @@ public abstract class AbstractNodeBuilder<
   }
 
   @SuppressWarnings("unchecked")
-  public Iterable<BuildTarget> findImplicitDeps() {
+  public ImmutableSortedSet<BuildTarget> findImplicitDeps() {
     ImplicitDepsInferringDescription<TArg> desc =
         (ImplicitDepsInferringDescription<TArg>) description;
-    return desc.findDepsForTargetFromConstructorArgs(target, cellRoots, arg);
+    ImmutableSortedSet.Builder<BuildTarget> builder = ImmutableSortedSet.naturalOrder();
+    desc.findDepsForTargetFromConstructorArgs(target, cellRoots, arg, builder);
+    return builder.build();
   }
 
   public BuildTarget getTarget() {

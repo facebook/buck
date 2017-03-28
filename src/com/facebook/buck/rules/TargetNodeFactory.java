@@ -111,10 +111,11 @@ public class TargetNodeFactory {
     }
 
     if (description instanceof ImplicitDepsInferringDescription) {
-      extraDepsBuilder
-          .addAll(
-              ((ImplicitDepsInferringDescription<T>) description)
-                  .findDepsForTargetFromConstructorArgs(buildTarget, cellRoots, constructorArg));
+        ((ImplicitDepsInferringDescription<T>) description).findDepsForTargetFromConstructorArgs(
+            buildTarget,
+            cellRoots,
+            constructorArg,
+            extraDepsBuilder);
     }
 
     if (description instanceof ImplicitInputsInferringDescription) {

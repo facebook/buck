@@ -23,7 +23,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -38,7 +38,7 @@ public class DTestDescriptionTest {
             BuildTargetFactory.newInstance("//:rule"),
             new DBuckConfig(FakeBuckConfig.builder().build()),
             cxxPlatform);
-    ImmutableList<BuildTarget> implicitDeps = ImmutableList.copyOf(builder.findImplicitDeps());
+    ImmutableSortedSet<BuildTarget> implicitDeps = builder.findImplicitDeps();
     for (BuildTarget target : cxxPlatform.getLd().getParseTimeDeps()) {
       assertThat(implicitDeps, Matchers.hasItem(target));
     }

@@ -41,9 +41,9 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 
 import java.util.Map;
@@ -137,27 +137,25 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      WorkerToolDescription.Arg constructorArg) {
-    ImmutableSortedSet.Builder<BuildTarget> targets = ImmutableSortedSet.naturalOrder();
+      Arg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
     try {
       for (String arg : constructorArg.getStartupArgs()) {
-        targets.addAll(
+        extraDepsBuilder.addAll(
             MACRO_HANDLER.extractParseTimeDeps(
                 buildTarget, cellRoots, arg));
       }
       for (Map.Entry<String, String> env : constructorArg.env.entrySet()) {
-        targets.addAll(
+        extraDepsBuilder.addAll(
             MACRO_HANDLER.extractParseTimeDeps(
                 buildTarget, cellRoots, env.getValue()));
       }
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
     }
-
-    return targets.build();
   }
 
   @SuppressFieldNotInitialized

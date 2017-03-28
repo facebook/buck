@@ -47,9 +47,9 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.Comparator;
@@ -152,28 +152,27 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      T constructorArg) {
-    ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
+      T constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
     if (constructorArg.bash.isPresent()) {
-      addDepsFromParam(buildTarget, cellRoots, constructorArg.bash.get(), targets);
+      addDepsFromParam(buildTarget, cellRoots, constructorArg.bash.get(), extraDepsBuilder);
     }
     if (constructorArg.cmd.isPresent()) {
-      addDepsFromParam(buildTarget, cellRoots, constructorArg.cmd.get(), targets);
+      addDepsFromParam(buildTarget, cellRoots, constructorArg.cmd.get(), extraDepsBuilder);
     }
     if (constructorArg.cmdExe.isPresent()) {
-      addDepsFromParam(buildTarget, cellRoots, constructorArg.cmdExe.get(), targets);
+      addDepsFromParam(buildTarget, cellRoots, constructorArg.cmdExe.get(), extraDepsBuilder);
     }
-    return targets.build();
   }
 
   private void addDepsFromParam(
       BuildTarget target,
       CellPathResolver cellNames,
       String paramValue,
-      ImmutableSet.Builder<BuildTarget> targets) {
+      ImmutableCollection.Builder<BuildTarget> targets) {
     try {
       targets.addAll(
           getMacroHandlerForParseTimeDeps().extractParseTimeDeps(target, cellNames, paramValue));

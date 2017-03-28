@@ -39,6 +39,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -119,14 +120,13 @@ public class ApplePackageDescription implements
    * Propagate the packages's flavors to its dependents.
    */
   @Override
-  public ImmutableSet<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      ApplePackageDescription.Arg constructorArg) {
-    ImmutableSet.Builder<BuildTarget> builder = ImmutableSet.builder();
-    builder.add(propagateFlavorsToTarget(buildTarget, constructorArg.bundle));
-    addDepsFromParam(builder, buildTarget, cellRoots);
-    return builder.build();
+      Arg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+    extraDepsBuilder.add(propagateFlavorsToTarget(buildTarget, constructorArg.bundle));
+    addDepsFromParam(extraDepsBuilder, buildTarget, cellRoots);
   }
 
   @Override
@@ -199,7 +199,7 @@ public class ApplePackageDescription implements
    * This is used for ImplicitDepsInferringDescription, so it is flavor agnostic.
    */
   private void addDepsFromParam(
-      ImmutableSet.Builder<BuildTarget> builder,
+      ImmutableCollection.Builder<BuildTarget> builder,
       BuildTarget target,
       CellPathResolver cellNames) {
     // Add all macro expanded dependencies for these platforms.

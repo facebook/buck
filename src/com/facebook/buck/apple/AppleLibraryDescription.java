@@ -58,6 +58,7 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -528,24 +529,28 @@ public class AppleLibraryDescription implements
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       final BuildTarget buildTarget,
       final CellPathResolver cellRoots,
-      final AppleLibraryDescription.Arg constructorArg) {
-    return findDepsForTargetFromConstructorArgs(
+      final Arg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+    findDepsForTargetFromConstructorArgs(
         buildTarget,
         cellRoots,
-        (AppleNativeTargetDescriptionArg) constructorArg);
+        (AppleNativeTargetDescriptionArg) constructorArg,
+        extraDepsBuilder);
   }
 
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       final BuildTarget buildTarget,
       final CellPathResolver cellRoots,
-      final AppleNativeTargetDescriptionArg constructorArg) {
-    return delegate.findDepsForTargetFromConstructorArgs(
-            buildTarget,
-            cellRoots,
-            constructorArg);
+      final AppleNativeTargetDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+    delegate.findDepsForTargetFromConstructorArgs(
+        buildTarget,
+        cellRoots,
+        constructorArg,
+        extraDepsBuilder);
   }
 
   public static boolean isSharedLibraryNode(TargetNode<CxxLibraryDescription.Arg, ?> node) {

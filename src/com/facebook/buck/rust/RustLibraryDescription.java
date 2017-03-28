@@ -48,6 +48,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -375,21 +376,18 @@ public class RustLibraryDescription implements
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg) {
-    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
-
-    deps.addAll(rustBuckConfig.getRustCompiler().getParseTimeDeps());
-    deps.addAll(
+      Arg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+    extraDepsBuilder.addAll(rustBuckConfig.getRustCompiler().getParseTimeDeps());
+    extraDepsBuilder.addAll(
         rustBuckConfig.getLinker()
             .map(ToolProvider::getParseTimeDeps)
             .orElse(ImmutableList.of()));
 
-    deps.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms.getValues()));
-
-    return deps.build();
+    extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms.getValues()));
   }
 
   @Override

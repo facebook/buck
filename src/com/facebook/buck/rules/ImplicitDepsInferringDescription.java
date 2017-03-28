@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.google.common.collect.ImmutableCollection;
 
 /**
  * While building up the target graph, we infer the implicit dependencies of a rule by parsing
@@ -29,8 +30,9 @@ import com.facebook.buck.model.BuildTarget;
  */
 public interface ImplicitDepsInferringDescription<T> {
 
-  Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      T constructorArg);
+      T constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder);
 }

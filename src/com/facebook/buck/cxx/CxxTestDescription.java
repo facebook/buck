@@ -41,6 +41,7 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -304,15 +305,14 @@ public class CxxTestDescription implements
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg) {
-
-    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
+      Arg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
 
     // Get any parse time deps from the C/C++ platforms.
-    deps.addAll(
+    extraDepsBuilder.addAll(
         CxxPlatforms.getParseTimeDeps(
             cxxPlatforms
                 .getValue(buildTarget.getFlavors()).orElse(defaultCxxPlatform)));
@@ -325,7 +325,7 @@ public class CxxTestDescription implements
             .build();
     for (String macroString : Iterables.concat(macroStrings)) {
       try {
-        deps.addAll(
+        extraDepsBuilder.addAll(
             CxxDescriptionEnhancer.MACRO_HANDLER.extractParseTimeDeps(
                 buildTarget,
                 cellRoots,
@@ -336,14 +336,12 @@ public class CxxTestDescription implements
     }
 
     // Add in any implicit framework deps.
-    deps.addAll(getImplicitFrameworkDeps(constructorArg));
+    extraDepsBuilder.addAll(getImplicitFrameworkDeps(constructorArg));
 
     constructorArg.depsQuery.ifPresent(
         depsQuery ->
             QueryUtils.extractParseTimeTargets(buildTarget, cellRoots, depsQuery)
-                .forEach(deps::add));
-
-    return deps.build();
+                .forEach(extraDepsBuilder::add));
   }
 
   public CxxTestType getDefaultTestType() {

@@ -55,6 +55,8 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -64,7 +66,6 @@ import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 
@@ -150,7 +151,7 @@ public class AppleBinaryDescription
     if (swiftDelegate.hasFlavors(delegateFlavors)) {
       return true;
     }
-    Collection<ImmutableSortedSet<Flavor>> thinFlavorSets =
+    ImmutableList<ImmutableSortedSet<Flavor>> thinFlavorSets =
         generateThinDelegateFlavors(delegateFlavors);
     if (thinFlavorSets.size() > 0) {
       return Iterables.all(
@@ -161,7 +162,7 @@ public class AppleBinaryDescription
     }
   }
 
-  private Collection<ImmutableSortedSet<Flavor>> generateThinDelegateFlavors(
+  private ImmutableList<ImmutableSortedSet<Flavor>> generateThinDelegateFlavors(
       ImmutableSet<Flavor> delegateFlavors) {
     return MultiarchFileInfos.generateThinFlavors(
         platformFlavorsToAppleCxxPlatforms.getFlavors(),
@@ -501,20 +502,20 @@ public class AppleBinaryDescription
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       final BuildTarget buildTarget,
       final CellPathResolver cellRoots,
-      final Arg constructorArg) {
-    Collection<ImmutableSortedSet<Flavor>> thinFlavorSets =
+      final Arg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+    ImmutableList<ImmutableSortedSet<Flavor>> thinFlavorSets =
         generateThinDelegateFlavors(buildTarget.getFlavors());
     if (thinFlavorSets.size() > 0) {
-      return Iterables.concat(
-          Iterables.transform(
-              thinFlavorSets,
-              input ->
-                  delegate.findDepsForTargetFromConstructorArgs(buildTarget.withFlavors(input))));
+      for (ImmutableSortedSet<Flavor> flavors : thinFlavorSets) {
+        extraDepsBuilder.addAll(
+            delegate.findDepsForTargetFromConstructorArgs(buildTarget.withFlavors(flavors)));
+      }
     } else {
-      return delegate.findDepsForTargetFromConstructorArgs(buildTarget);
+      extraDepsBuilder.addAll(delegate.findDepsForTargetFromConstructorArgs(buildTarget));
     }
   }
 

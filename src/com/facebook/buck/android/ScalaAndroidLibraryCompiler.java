@@ -27,6 +27,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.OptionalCompat;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import javax.annotation.Nullable;
@@ -81,15 +82,15 @@ public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      AndroidLibraryDescription.Arg constructorArg) {
+      AndroidLibraryDescription.Arg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
 
-    return ImmutableList.<BuildTarget>builder()
+    extraDepsBuilder
         .add(scalaBuckConfig.getScalaLibraryTarget())
         .addAll(scalaBuckConfig.getCompilerPlugins())
-        .addAll(OptionalCompat.asSet(scalaBuckConfig.getScalacTarget()))
-        .build();
+        .addAll(OptionalCompat.asSet(scalaBuckConfig.getScalacTarget()));
   }
 }

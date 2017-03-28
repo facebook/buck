@@ -252,11 +252,13 @@ public class CxxPythonExtensionDescriptionTest {
             .build()
             .getDescription();
     CxxPythonExtensionDescription.Arg constructorArg = desc.createUnpopulatedConstructorArg();
-    Iterable<BuildTarget> res = desc.findDepsForTargetFromConstructorArgs(
+    ImmutableSortedSet.Builder<BuildTarget> builder = ImmutableSortedSet.naturalOrder();
+    desc.findDepsForTargetFromConstructorArgs(
         BuildTargetFactory.newInstance("//foo:bar"),
         createCellRoots(filesystem),
-        constructorArg);
-    assertThat(res, Matchers.contains(PYTHON2_DEP_TARGET, PYTHON3_DEP_TARGET));
+        constructorArg,
+        builder);
+    assertThat(builder.build(), Matchers.contains(PYTHON2_DEP_TARGET, PYTHON3_DEP_TARGET));
   }
 
   @Test

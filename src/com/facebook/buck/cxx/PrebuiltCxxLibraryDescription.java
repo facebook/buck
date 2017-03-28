@@ -62,6 +62,7 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -1041,19 +1042,17 @@ public class PrebuiltCxxLibraryDescription implements
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      PrebuiltCxxLibraryDescription.Arg constructorArg) {
-    ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
-
+      Arg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
     if (constructorArg.libDir.isPresent()) {
-      addDepsFromParam(buildTarget, cellRoots, constructorArg.libDir.get(), targets);
+      addDepsFromParam(buildTarget, cellRoots, constructorArg.libDir.get(), extraDepsBuilder);
     }
     for (String include : constructorArg.includeDirs) {
-      addDepsFromParam(buildTarget, cellRoots, include, targets);
+      addDepsFromParam(buildTarget, cellRoots, include, extraDepsBuilder);
     }
-    return targets.build();
   }
 
   private ImmutableList<BuildRule> getBuildRules(
@@ -1078,7 +1077,7 @@ public class PrebuiltCxxLibraryDescription implements
       BuildTarget target,
       CellPathResolver cellNames,
       String paramValue,
-      ImmutableSet.Builder<BuildTarget> targets) {
+      ImmutableCollection.Builder<BuildTarget> targets) {
     try {
       // doesn't matter that the platform expander doesn't do anything.
       MacroHandler macroHandler = getMacroHandler(Optional.empty());

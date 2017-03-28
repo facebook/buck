@@ -68,6 +68,7 @@ import com.facebook.buck.util.RichStream;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -406,32 +407,31 @@ public class AndroidBinaryDescription implements
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg) {
-    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
+      Arg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
     if (constructorArg.redex.orElse(false)) {
       // If specified, this option may point to either a BuildTarget or a file.
       Optional<BuildTarget> redexTarget = buckConfig.getMaybeBuildTarget(
           SECTION,
           CONFIG_PARAM_REDEX);
       if (redexTarget.isPresent()) {
-        deps.add(redexTarget.get());
+        extraDepsBuilder.add(redexTarget.get());
       }
 
       constructorArg.redexExtraArgs.forEach(a ->
-        addDepsFromParam(buildTarget, cellRoots, a, deps)
+        addDepsFromParam(buildTarget, cellRoots, a, extraDepsBuilder)
       );
     }
-    return deps.build();
   }
 
   private void addDepsFromParam(
       BuildTarget target,
       CellPathResolver cellNames,
       String paramValue,
-      ImmutableSet.Builder<BuildTarget> targets) {
+      ImmutableCollection.Builder<BuildTarget> targets) {
     try {
       targets.addAll(MACRO_HANDLER.extractParseTimeDeps(target, cellNames, paramValue));
     } catch (MacroException e) {

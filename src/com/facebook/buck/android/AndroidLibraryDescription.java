@@ -45,6 +45,7 @@ import com.facebook.buck.util.DependencyMode;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -216,12 +217,17 @@ public class AndroidLibraryDescription
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg) {
-    return compilerFactory.getCompiler(constructorArg.language.orElse(JvmLanguage.JAVA))
-        .findDepsForTargetFromConstructorArgs(buildTarget, cellRoots, constructorArg);
+      Arg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+    compilerFactory.getCompiler(constructorArg.language.orElse(JvmLanguage.JAVA))
+        .findDepsForTargetFromConstructorArgs(
+            buildTarget,
+            cellRoots,
+            constructorArg,
+            extraDepsBuilder);
   }
 
   @SuppressFieldNotInitialized

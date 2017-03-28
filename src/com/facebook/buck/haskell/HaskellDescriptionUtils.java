@@ -48,6 +48,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -344,26 +345,24 @@ public class HaskellDescriptionUtils {
   }
 
   /**
-   * @return parse-time deps needed by Haskell descriptions.
+   * Accumulate parse-time deps needed by Haskell descriptions in depsBuilder.
    */
-  public static Iterable<BuildTarget> getParseTimeDeps(
+  public static void getParseTimeDeps(
       HaskellConfig haskellConfig,
-      Iterable<CxxPlatform> cxxPlatforms) {
-    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
+      Iterable<CxxPlatform> cxxPlatforms,
+      ImmutableCollection.Builder<BuildTarget> depsBuilder) {
 
     // Since this description generates haskell link rules, make sure the parsed includes any
     // of the linkers parse time deps.
-    deps.addAll(haskellConfig.getLinker().getParseTimeDeps());
+    depsBuilder.addAll(haskellConfig.getLinker().getParseTimeDeps());
 
     // Since this description generates haskell compile rules, make sure the parsed includes any
     // of the compilers parse time deps.
-    deps.addAll(haskellConfig.getCompiler().getParseTimeDeps());
+    depsBuilder.addAll(haskellConfig.getCompiler().getParseTimeDeps());
 
     // We use the C/C++ linker's Linker object to find out how to pass in the soname, so just add
     // all C/C++ platform parse time deps.
-    deps.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms));
-
-    return deps.build();
+    depsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms));
   }
 
 }

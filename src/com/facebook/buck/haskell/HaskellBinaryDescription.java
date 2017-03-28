@@ -48,6 +48,7 @@ import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.VersionRoot;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -226,25 +227,22 @@ public class HaskellBinaryDescription implements
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg) {
-    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
-
-    deps.addAll(
+      Arg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
         HaskellDescriptionUtils.getParseTimeDeps(
             haskellConfig,
             ImmutableList.of(
                 cxxPlatforms
-                    .getValue(buildTarget.getFlavors()).orElse(defaultCxxPlatform))));
+                    .getValue(buildTarget.getFlavors()).orElse(defaultCxxPlatform)),
+            extraDepsBuilder);
 
     constructorArg.depsQuery.ifPresent(
         depsQuery ->
             QueryUtils.extractParseTimeTargets(buildTarget, cellRoots, depsQuery)
-                .forEach(deps::add));
-
-    return deps.build();
+                .forEach(extraDepsBuilder::add));
   }
 
   @Override

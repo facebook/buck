@@ -27,9 +27,9 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 
 public class IosReactNativeLibraryDescription
@@ -67,14 +67,15 @@ public class IosReactNativeLibraryDescription
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      ReactNativeLibraryArgs constructorArg) {
-    return RichStream.of(packager.get())
+      ReactNativeLibraryArgs constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+    RichStream.of(packager.get())
         .filter(BuildTargetSourcePath.class)
         .map(BuildTargetSourcePath::getTarget)
-        .collect(MoreCollectors.toImmutableList());
+        .forEach(extraDepsBuilder::add);
   }
 
 }

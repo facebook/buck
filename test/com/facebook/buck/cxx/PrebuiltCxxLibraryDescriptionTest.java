@@ -58,7 +58,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -358,9 +357,8 @@ public class PrebuiltCxxLibraryDescriptionTest {
     BuildRule genrule = genruleBuilder.build(resolver, filesystem, targetGraph);
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) builder.build(resolver, filesystem, targetGraph);
 
-    Iterable<BuildTarget> implicit = builder.findImplicitDeps();
-    assertEquals(1, Iterables.size(implicit));
-    assertTrue(Iterables.contains(implicit, genTarget));
+    ImmutableSortedSet<BuildTarget> implicit = builder.findImplicitDeps();
+    assertEquals(ImmutableSortedSet.of(genTarget), implicit);
 
     assertThat(
         lib.getBuildDeps(),
@@ -372,7 +370,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibraryBuilder builder = new PrebuiltCxxLibraryBuilder(TARGET);
     builder.setSoname("test");
     builder.setLibDir("lib");
-    assertEquals(0, Iterables.size(builder.findImplicitDeps()));
+    assertThat(builder.findImplicitDeps(), empty());
   }
 
   @Test
@@ -380,7 +378,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibraryBuilder builder = new PrebuiltCxxLibraryBuilder(TARGET);
     builder.setSoname("test");
     builder.setLibDir("$(platform)");
-    assertEquals(0, Iterables.size(builder.findImplicitDeps()));
+    assertThat(builder.findImplicitDeps(), empty());
   }
 
   @Test

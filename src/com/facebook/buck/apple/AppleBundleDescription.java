@@ -43,6 +43,7 @@ import com.facebook.buck.versions.Version;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -176,10 +177,11 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
    * which are other bundles (e.g. extensions)
    */
   @Override
-  public ImmutableSet<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      AppleBundleDescription.Arg constructorArg) {
+      Arg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
     if (!cxxPlatformFlavorDomain.containsAnyOf(buildTarget.getFlavors())) {
       buildTarget = BuildTarget.builder(buildTarget).addAllFlavors(
           ImmutableSet.of(defaultCxxPlatform.getFlavor())).build();
@@ -266,7 +268,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
               .orElse(ImmutableSet.of()));
     }
 
-    return ImmutableSet.copyOf(depsExcludingBinary);
+    extraDepsBuilder.addAll(depsExcludingBinary);
   }
 
   @Override

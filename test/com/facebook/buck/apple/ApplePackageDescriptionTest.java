@@ -36,6 +36,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
@@ -62,11 +63,13 @@ public class ApplePackageDescriptionTest {
         new BuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(packageBuildTarget).build();
-    resolver.requireAllRules(
-        description.findDepsForTargetFromConstructorArgs(
-            packageBuildTarget,
-            new FakeCellPathResolver(params.getProjectFilesystem()),
-            arg));
+    ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
+    description.findDepsForTargetFromConstructorArgs(
+        packageBuildTarget,
+        new FakeCellPathResolver(params.getProjectFilesystem()),
+        arg,
+        implicitDeps);
+    resolver.requireAllRules(implicitDeps.build());
     BuildRule rule = description.createBuildRule(
         graph,
         new FakeBuildRuleParamsBuilder(packageBuildTarget).build(),
@@ -105,11 +108,13 @@ public class ApplePackageDescriptionTest {
         new BuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(packageBuildTarget).build();
-    resolver.requireAllRules(
-        description.findDepsForTargetFromConstructorArgs(
-            packageBuildTarget,
-            new FakeCellPathResolver(params.getProjectFilesystem()),
-            arg));
+    ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
+    description.findDepsForTargetFromConstructorArgs(
+        packageBuildTarget,
+        new FakeCellPathResolver(params.getProjectFilesystem()),
+        arg,
+        implicitDeps);
+    resolver.requireAllRules(implicitDeps.build());
     BuildRule rule = description.createBuildRule(
         graph,
         params,

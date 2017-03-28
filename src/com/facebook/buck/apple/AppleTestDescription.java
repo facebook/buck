@@ -61,6 +61,7 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -394,24 +395,23 @@ public class AppleTestDescription implements
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      AppleTestDescription.Arg constructorArg) {
+      Arg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
     // TODO(bhamiltoncx, Coneko): This should technically only be a runtime dependency;
     // doing this adds it to the extra deps in BuildRuleParams passed to
     // the bundle and test rule.
-    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
     Optional<BuildTarget> xctoolZipTarget = appleConfig.getXctoolZipTarget();
     if (xctoolZipTarget.isPresent()) {
-      deps.add(xctoolZipTarget.get());
+      extraDepsBuilder.add(xctoolZipTarget.get());
     }
-    deps.addAll(
-        appleLibraryDescription.findDepsForTargetFromConstructorArgs(
-            buildTarget,
-            cellRoots,
-            constructorArg));
-    return deps.build();
+    appleLibraryDescription.findDepsForTargetFromConstructorArgs(
+        buildTarget,
+        cellRoots,
+        constructorArg,
+        extraDepsBuilder);
   }
 
   private TestHostInfo createTestHostInfo(

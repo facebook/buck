@@ -28,10 +28,10 @@ import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.Optional;
@@ -71,14 +71,15 @@ public class AndroidReactNativeLibraryDescription
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Args constructorArg) {
-    return RichStream.of(packager.get())
+      Args constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
+    RichStream.of(packager.get())
         .filter(BuildTargetSourcePath.class)
         .map(BuildTargetSourcePath::getTarget)
-        .collect(MoreCollectors.toImmutableList());
+        .forEach(extraDepsBuilder::add);
   }
 
   @SuppressFieldNotInitialized

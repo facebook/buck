@@ -23,7 +23,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
@@ -69,19 +68,21 @@ public class AppleBundleDescriptionTest {
             watchDep);
 
     // Now call the find deps methods and verify it returns the targets with flavors.
-    Iterable<BuildTarget> results = desc.findDepsForTargetFromConstructorArgs(
+    ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
+    desc.findDepsForTargetFromConstructorArgs(
         bundleTarget,
         createCellRoots(filesystem),
-        constructorArg);
+        constructorArg,
+        implicitDeps);
 
     assertEquals(
-        ImmutableSet.<BuildTarget>builder()
+        ImmutableSortedSet.<BuildTarget>naturalOrder()
             .add(unflavoredDepAfterPropagation)
             .add(flavoredDep)
             .add(flavoredDepNotInDomainAfterPropagation)
             .add(watchDepAfterPropagation)
             .build(),
-        ImmutableSet.copyOf(results));
+        implicitDeps.build());
   }
 
   @Test
@@ -129,10 +130,12 @@ public class AppleBundleDescriptionTest {
             .build();
 
     // Now call the find deps methods and verify it returns the targets with flavors.
-    Iterable<BuildTarget> results = desc.findDepsForTargetFromConstructorArgs(
+    ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
+    desc.findDepsForTargetFromConstructorArgs(
         bundleTargetWithStripFlavor,
         createCellRoots(filesystem),
-        constructorArg);
+        constructorArg,
+        implicitDeps);
 
     assertEquals(
         ImmutableSortedSet.<BuildTarget>naturalOrder()
@@ -142,6 +145,6 @@ public class AppleBundleDescriptionTest {
             .add(stripFlavorOnlyAfterPropagation)
             .add(debugFlavorOnlyAfterPropagation)
             .build(),
-        ImmutableSet.copyOf(results));
+        implicitDeps.build());
   }
 }

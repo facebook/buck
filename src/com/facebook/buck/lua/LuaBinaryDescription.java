@@ -810,16 +810,15 @@ public class LuaBinaryDescription implements
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg) {
-    ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
+      Arg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder) {
     if (luaConfig.getPackageStyle() == LuaConfig.PackageStyle.STANDALONE) {
-      targets.addAll(luaConfig.getPackager().getParseTimeDeps());
+      extraDepsBuilder.addAll(luaConfig.getPackager().getParseTimeDeps());
     }
-    targets.addAll(getNativeStarterDepTargets());
-    return targets.build();
+    extraDepsBuilder.addAll(getNativeStarterDepTargets());
   }
 
   @Override

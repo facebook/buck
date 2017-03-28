@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -142,10 +143,10 @@ public class CxxTestDescriptionTest {
         new CxxTestBuilder(target, cxxBuckConfig)
             .setFramework(CxxTestType.GTEST)
             .setUseDefaultTestMain(true);
-    Iterable<BuildTarget> implicit = builder.findImplicitDeps();
+    ImmutableSortedSet<BuildTarget> implicit = builder.findImplicitDeps();
 
-    assertTrue(Iterables.contains(implicit, gtest));
-    assertTrue(Iterables.contains(implicit, gtestMain));
+    assertThat(implicit, hasItem(gtest));
+    assertThat(implicit, hasItem(gtestMain));
   }
 
   @Test
@@ -218,7 +219,7 @@ public class CxxTestDescriptionTest {
     CxxTestStep testStep = (CxxTestStep) Iterables.getLast(steps);
     assertThat(
         testStep.getCommand(),
-        Matchers.hasItem(
+        hasItem(
             "value " + pathResolver.getAbsolutePath(
                 Preconditions.checkNotNull(someRule.getSourcePathToOutput()))));
   }
@@ -263,7 +264,7 @@ public class CxxTestDescriptionTest {
     CxxTest cxxTest = cxxTestBuilder.build(resolver, filesystem);
     assertThat(
         BuildRules.getTransitiveRuntimeDeps(cxxTest, resolver),
-        Matchers.hasItem(cxxBinary.getBuildTarget()));
+        hasItem(cxxBinary.getBuildTarget()));
   }
 
   @Test
@@ -287,7 +288,7 @@ public class CxxTestDescriptionTest {
     addSandbox(resolver, filesystem, builder.getTarget());
     assertThat(
         builder.build().getExtraDeps(),
-        Matchers.hasItem(dep.getBuildTarget()));
+        hasItem(dep.getBuildTarget()));
     CxxTest test = builder.build(resolver);
     CxxLink binary =
         (CxxLink) resolver.getRule(
@@ -296,11 +297,11 @@ public class CxxTestDescriptionTest {
                 Optional.empty()));
     assertThat(
         Arg.stringify(binary.getArgs(), pathResolver),
-        Matchers.hasItem(
+        hasItem(
             String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
     assertThat(
         binary.getBuildDeps(),
-        Matchers.hasItem(dep));
+        hasItem(dep));
   }
 
   @Test
@@ -323,7 +324,7 @@ public class CxxTestDescriptionTest {
                         LocationMacro.of(dep.getBuildTarget()))));
     assertThat(
         builder.build().getExtraDeps(),
-        Matchers.hasItem(dep.getBuildTarget()));
+        hasItem(dep.getBuildTarget()));
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     addFramework(resolver, filesystem);
     addSandbox(resolver, filesystem, builder.getTarget());
@@ -336,11 +337,11 @@ public class CxxTestDescriptionTest {
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
         Arg.stringify(binary.getArgs(), pathResolver),
-        Matchers.hasItem(
+        hasItem(
             String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
     assertThat(
         binary.getBuildDeps(),
-        Matchers.hasItem(dep));
+        hasItem(dep));
   }
 
   @Test
@@ -372,7 +373,7 @@ public class CxxTestDescriptionTest {
     addSandbox(resolver, filesystem, builder.getTarget());
     assertThat(
         builder.build().getExtraDeps(),
-        Matchers.hasItem(dep.getBuildTarget()));
+        hasItem(dep.getBuildTarget()));
     CxxTest test = builder.build(resolver);
     CxxLink binary =
         (CxxLink) resolver.getRule(
@@ -381,11 +382,11 @@ public class CxxTestDescriptionTest {
                 Optional.empty()));
     assertThat(
         Arg.stringify(binary.getArgs(), pathResolver),
-        Matchers.hasItem(
+        hasItem(
             String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
     assertThat(
         binary.getBuildDeps(),
-        Matchers.hasItem(dep));
+        hasItem(dep));
   }
 
   @Test
@@ -412,7 +413,7 @@ public class CxxTestDescriptionTest {
                     .build());
     assertThat(
         builder.build().getExtraDeps(),
-        Matchers.hasItem(dep.getBuildTarget()));
+        hasItem(dep.getBuildTarget()));
     addSandbox(resolver, filesystem, builder.getTarget());
     CxxTest test = builder.build(resolver);
     CxxLink binary =
@@ -423,11 +424,11 @@ public class CxxTestDescriptionTest {
     assertThat(
         Arg.stringify(binary.getArgs(), pathResolver),
         Matchers.not(
-            Matchers.hasItem(
+            hasItem(
                 String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver)))));
     assertThat(
         binary.getBuildDeps(),
-        Matchers.not(Matchers.hasItem(dep)));
+        Matchers.not(hasItem(dep)));
   }
 
   @Test
@@ -479,7 +480,7 @@ public class CxxTestDescriptionTest {
               .build();
       assertThat(
           cxxTestWithResources.getInputs(),
-          Matchers.hasItem(resource));
+          hasItem(resource));
     }
   }
 
