@@ -23,7 +23,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.SmartDexingStep.DxPseudoRule;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -37,6 +36,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 import org.easymock.EasyMockSupport;
@@ -51,7 +51,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -108,7 +107,9 @@ public class SmartDexingStepTest extends EasyMockSupport {
     Path outputPath = Paths.get("classes.dex.jar.xz");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
 
-    Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(
+    ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
+    SmartDexingStep.createDxStepForDxPseudoRule(
+        steps,
         filesystem,
         filesToDex,
         outputPath,
@@ -116,15 +117,11 @@ public class SmartDexingStepTest extends EasyMockSupport {
         Optional.empty(),
         Optional.empty());
 
-    assertTrue("Result should be a CompositeStep.", dxStep instanceof CompositeStep);
-    List<Step> steps = ImmutableList.copyOf((CompositeStep) dxStep);
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
         ImmutableList.of(
             Joiner.on(" ").join(
-                "(cd",
-                filesystem.getRootPath(),
-                "&&",
+                "(cd", filesystem.getRootPath(), "&&",
                 Paths.get("/usr/bin/dx"),
                 "--dex --output",
                 filesystem.resolve("classes.dex.tmp.jar"),
@@ -135,7 +132,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
             "rm -f " + filesystem.resolve("classes.dex.tmp.jar"),
             "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
             "xz -z -4 --check=crc32 classes.dex.jar"),
-        steps,
+        steps.build(),
         createMockedExecutionContext());
 
     verifyAll();
@@ -150,7 +147,9 @@ public class SmartDexingStepTest extends EasyMockSupport {
         Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
     Path outputPath = Paths.get("classes.dex.jar.xz");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
-    Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(
+    ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
+    SmartDexingStep.createDxStepForDxPseudoRule(
+        steps,
         filesystem,
         filesToDex,
         outputPath,
@@ -158,8 +157,6 @@ public class SmartDexingStepTest extends EasyMockSupport {
         Optional.of(9),
         Optional.empty());
 
-    assertTrue("Result should be a CompositeStep.", dxStep instanceof CompositeStep);
-    List<Step> steps = ImmutableList.copyOf((CompositeStep) dxStep);
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
         ImmutableList.of(
@@ -177,7 +174,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
             "rm -f " + filesystem.resolve("classes.dex.tmp.jar"),
             "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
             "xz -z -9 --check=crc32 classes.dex.jar"),
-        steps,
+        steps.build(),
         createMockedExecutionContext());
 
     verifyAll();
@@ -191,7 +188,9 @@ public class SmartDexingStepTest extends EasyMockSupport {
         Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
     Path outputPath = Paths.get("classes.dex");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
-    Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(
+    ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
+    SmartDexingStep.createDxStepForDxPseudoRule(
+        steps,
         filesystem,
         filesToDex,
         outputPath,
@@ -210,7 +209,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
             filesystem.resolve("foo.dex.jar"),
             filesystem.resolve("bar.dex.jar") + ")"
         ),
-        dxStep.getDescription(createMockedExecutionContext()));
+        Iterables.getOnlyElement(steps.build()).getDescription(createMockedExecutionContext()));
     verifyAll();
   }
 
@@ -222,7 +221,9 @@ public class SmartDexingStepTest extends EasyMockSupport {
         Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
     Path outputPath = Paths.get("classes.dex.jar");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
-    Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(
+    ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
+    SmartDexingStep.createDxStepForDxPseudoRule(
+        steps,
         filesystem,
         filesToDex,
         outputPath,
@@ -230,20 +231,21 @@ public class SmartDexingStepTest extends EasyMockSupport {
         Optional.empty(),
         Optional.empty());
 
-    assertEquals(
-        Joiner.on(" ").join(
-            "(cd",
-            filesystem.getRootPath(),
-            "&&",
-            Paths.get("/usr/bin/dx"),
-            "--dex --output",
-            filesystem.resolve("classes.dex.jar"),
-            filesystem.resolve("foo.dex.jar"),
-            filesystem.resolve("bar.dex.jar") + ")",
-            "&&",
-            "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta"
-        ),
-        dxStep.getDescription(createMockedExecutionContext()));
+    MoreAsserts.assertSteps(
+        "Wrong steps",
+        ImmutableList.of(
+            Joiner.on(" ").join(
+                "(cd",
+                filesystem.getRootPath(),
+                "&&",
+                Paths.get("/usr/bin/dx"),
+                "--dex --output",
+                filesystem.resolve("classes.dex.jar"),
+                filesystem.resolve("foo.dex.jar"),
+                filesystem.resolve("bar.dex.jar") + ")"),
+            "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta"),
+        steps.build(),
+        createMockedExecutionContext());
     verifyAll();
   }
 
@@ -256,6 +258,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
     Path outputPath = Paths.get("classes.flex");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     SmartDexingStep.createDxStepForDxPseudoRule(
+        new ImmutableList.Builder<>(),
         filesystem,
         filesToDex,
         outputPath,

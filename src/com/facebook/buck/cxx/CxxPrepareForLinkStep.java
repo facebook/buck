@@ -22,14 +22,11 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.step.CompositeStep;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -38,11 +35,11 @@ import java.util.Optional;
  * This allows us to break the constraints that command line sets for the maximum length of
  * the commands.
  */
-public class CxxPrepareForLinkStep extends CompositeStep {
+public class CxxPrepareForLinkStep {
 
   private static final Logger LOG = Logger.get(CxxPrepareForLinkStep.class);
 
-  public static CxxPrepareForLinkStep create(
+  public static ImmutableList<Step> create(
       Path argFilePath,
       Path fileListPath,
       Iterable<Arg> linkerArgsToSupportFileList,
@@ -76,7 +73,7 @@ public class CxxPrepareForLinkStep extends CompositeStep {
 
     if (!hasLinkArgsToSupportFileList) {
       LOG.verbose("linkerArgsToSupportFileList is empty, filelist feature is not supported");
-      return new CxxPrepareForLinkStep(ImmutableList.of(createArgFileStep));
+      return ImmutableList.of(createArgFileStep);
     }
 
     CxxWriteArgsToFileStep createFileListStep = CxxWriteArgsToFileStep.create(
@@ -88,20 +85,8 @@ public class CxxPrepareForLinkStep extends CompositeStep {
         currentCellPath,
         resolver);
 
-    return new CxxPrepareForLinkStep(ImmutableList.of(createArgFileStep, createFileListStep));
+    return ImmutableList.of(createArgFileStep, createFileListStep);
   }
 
-  private CxxPrepareForLinkStep(List<? extends Step> commands) {
-    super(commands);
-  }
-
-  @Override
-  public String getShortName() {
-    return "cxx prepare for link step";
-  }
-
-  @Override
-  public String getDescription(ExecutionContext context) {
-    return "prepares arg file that will be passed to the linker";
-  }
+  private CxxPrepareForLinkStep() {}
 }

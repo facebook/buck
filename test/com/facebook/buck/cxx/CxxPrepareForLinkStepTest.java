@@ -61,7 +61,7 @@ public class CxxPrepareForLinkStepTest {
         FileListableLinkerInputArg.withSourcePathArg(
             SourcePathArg.of(new FakeSourcePath("libb.a"))));
 
-    CxxPrepareForLinkStep cxxPrepareForLinkStepSupportFileList = CxxPrepareForLinkStep.create(
+    ImmutableList<Step> cxxPrepareForLinkStepSupportFileList = CxxPrepareForLinkStep.create(
         dummyPath,
         dummyPath,
         ImmutableList.of(
@@ -73,16 +73,14 @@ public class CxxPrepareForLinkStepTest {
         dummyPath,
         pathResolver);
 
-    ImmutableList<Step> containingSteps = ImmutableList.copyOf(
-        cxxPrepareForLinkStepSupportFileList.iterator());
-    assertThat(containingSteps.size(), Matchers.equalTo(2));
-    Step firstStep = containingSteps.get(0);
-    Step secondStep = containingSteps.get(1);
+    assertThat(cxxPrepareForLinkStepSupportFileList.size(), Matchers.equalTo(2));
+    Step firstStep = cxxPrepareForLinkStepSupportFileList.get(0);
+    Step secondStep = cxxPrepareForLinkStepSupportFileList.get(1);
     assertThat(firstStep, Matchers.instanceOf(CxxWriteArgsToFileStep.class));
     assertThat(secondStep, Matchers.instanceOf(CxxWriteArgsToFileStep.class));
     assertThat(firstStep, Matchers.not(secondStep));
 
-    CxxPrepareForLinkStep cxxPrepareForLinkStepNoSupportFileList = CxxPrepareForLinkStep.create(
+    ImmutableList<Step> cxxPrepareForLinkStepNoSupportFileList = CxxPrepareForLinkStep.create(
         dummyPath,
         dummyPath,
         ImmutableList.of(),
@@ -92,10 +90,10 @@ public class CxxPrepareForLinkStepTest {
         dummyPath,
         pathResolver);
 
-    containingSteps = ImmutableList.copyOf(
-        cxxPrepareForLinkStepNoSupportFileList.iterator());
-    assertThat(containingSteps.size(), Matchers.equalTo(1));
-    assertThat(containingSteps.get(0), Matchers.instanceOf(CxxWriteArgsToFileStep.class));
+    assertThat(cxxPrepareForLinkStepNoSupportFileList.size(), Matchers.equalTo(1));
+    assertThat(
+        cxxPrepareForLinkStepNoSupportFileList.get(0),
+        Matchers.instanceOf(CxxWriteArgsToFileStep.class));
   }
 
   @Test
@@ -161,7 +159,7 @@ public class CxxPrepareForLinkStepTest {
         StringArg.of("-lz"));
 
     // Create our CxxLinkStep to test.
-    CxxPrepareForLinkStep step = CxxPrepareForLinkStep.create(
+    ImmutableList<Step> steps = CxxPrepareForLinkStep.create(
         argFilePath,
         fileListPath,
         ImmutableList.of(
@@ -173,7 +171,9 @@ public class CxxPrepareForLinkStepTest {
         currentCellPath,
         pathResolver);
 
-    step.execute(context);
+    for (Step step : steps) {
+      step.execute(context);
+    }
 
     assertThat(Files.exists(argFilePath), Matchers.equalTo(true));
 

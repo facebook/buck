@@ -17,7 +17,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.DxStep.Option;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -205,12 +204,14 @@ public class SmartDexingStep implements Step {
     DefaultStepRunner stepRunner = new DefaultStepRunner();
     // Invoke dx commands in parallel for maximum thread utilization.  In testing, dx revealed
     // itself to be CPU (and not I/O) bound making it a good candidate for parallelization.
-    List<Step> dxSteps = generateDxCommands(filesystem, outputToInputs);
+    ImmutableList<ImmutableList<Step>> dxSteps = generateDxCommands(filesystem, outputToInputs);
 
     List<Callable<Void>> callables = Lists.transform(
         dxSteps,
-        step -> (Callable<Void>) () -> {
-          stepRunner.runStepForBuildTarget(context, step, Optional.empty());
+        steps -> (Callable<Void>) () -> {
+          for (Step step : steps) {
+            stepRunner.runStepForBuildTarget(context, step, Optional.empty());
+          }
           return null;
         });
 
@@ -273,7 +274,7 @@ public class SmartDexingStep implements Step {
    * Once the {@code .class} files have been split into separate zip files, each must be converted
    * to a {@code .dex} file.
    */
-  private ImmutableList<Step> generateDxCommands(
+  private ImmutableList<ImmutableList<Step>> generateDxCommands(
       ProjectFilesystem filesystem,
       Multimap<Path, Path> outputToInputs) {
     ImmutableList.Builder<DxPseudoRule> pseudoRules = ImmutableList.builder();
@@ -293,14 +294,16 @@ public class SmartDexingStep implements Step {
               dxMaxHeapSize));
     }
 
-    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    ImmutableList.Builder<ImmutableList<Step>> stepGroups = new ImmutableList.Builder<>();
     for (DxPseudoRule pseudoRule : pseudoRules.build()) {
       if (!pseudoRule.checkIsCached()) {
-        steps.addAll(pseudoRule.buildInternal());
+        ImmutableList.Builder<Step> steps = ImmutableList.builder();
+        pseudoRule.buildInternal(steps);
+        stepGroups.add(steps.build());
       }
     }
 
-    return steps.build();
+    return stepGroups.build();
   }
 
   /**
@@ -382,26 +385,19 @@ public class SmartDexingStep implements Step {
       return newInputsHash.equals(currentInputsHash);
     }
 
-    private ImmutableList<Step> buildInternal() {
+    private void buildInternal(ImmutableList.Builder<Step> steps) {
       Preconditions.checkState(newInputsHash != null, "Must call checkIsCached first!");
 
-      List<Step> steps = Lists.newArrayList();
-
-      steps.add(
-          createDxStepForDxPseudoRule(
-              filesystem,
-              srcs,
-              outputPath,
-              dxOptions,
-              xzCompressionLevel,
-              dxMaxHeapSize));
+      createDxStepForDxPseudoRule(
+          steps,
+          filesystem,
+          srcs,
+          outputPath,
+          dxOptions,
+          xzCompressionLevel,
+          dxMaxHeapSize);
       steps.add(
           new WriteFileStep(filesystem, newInputsHash, outputHashPath, /* executable */ false));
-
-      // Use a composite step to ensure that runDxSteps can still make use of
-      // runStepsInParallelAndWait.  This is necessary to keep the DxStep and
-      // WriteFileStep dependent in series.
-      return ImmutableList.of(new CompositeStep(steps));
     }
   }
 
@@ -412,7 +408,8 @@ public class SmartDexingStep implements Step {
    * compressed and uncompressed size of the dex; this information is useful later, in applications,
    * when unpacking.
    */
-  static Step createDxStepForDxPseudoRule(
+  static void createDxStepForDxPseudoRule(
+      ImmutableList.Builder<Step> steps,
       ProjectFilesystem filesystem,
       Collection<Path> filesToDex,
       Path outputPath,
@@ -421,7 +418,6 @@ public class SmartDexingStep implements Step {
       Optional<String> dxMaxHeapSize) {
 
     String output = outputPath.toString();
-    List<Step> steps = Lists.newArrayList();
 
     if (DexStore.XZ.matchesPath(outputPath)) {
       Path tempDexJarOutput = Paths.get(output.replaceAll("\\.jar\\.xz$", ".tmp.jar"));
@@ -487,7 +483,5 @@ public class SmartDexingStep implements Step {
           "Suffix of %s does not have a corresponding DexStore type.",
           outputPath));
     }
-
-    return new CompositeStep(steps);
   }
 }

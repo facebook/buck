@@ -111,7 +111,7 @@ public class CxxLink
         .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), scratchDir))
         .add(RmStep.of(getProjectFilesystem(), argFilePath))
         .add(RmStep.of(getProjectFilesystem(), fileListPath))
-        .add(CxxPrepareForLinkStep.create(
+        .addAll(CxxPrepareForLinkStep.create(
             argFilePath,
             fileListPath,
             linker.fileList(fileListPath),
