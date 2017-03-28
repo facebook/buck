@@ -26,7 +26,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
-import com.google.common.collect.ImmutableSortedSet;
+import com.facebook.buck.util.RichStream;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -45,6 +45,8 @@ public class JsBundleDescriptionTest {
       BuildTargetFactory.newInstance("//libs:level1.1");
   private static final BuildTarget level1_2 =
       BuildTargetFactory.newInstance("//libs:level1.2");
+  private final BuildTarget bundleTarget =
+      BuildTargetFactory.newInstance("//bundle:target");
 
   private JsTestScenario.Builder scenarioBuilder;
   private JsTestScenario scenario;
@@ -62,47 +64,53 @@ public class JsBundleDescriptionTest {
         .library(level2)
         .library(level1_1, level2)
         .library(level1_2, level2)
-        .library(directDependencyTarget, level1_1, level1_2);
+        .library(directDependencyTarget, level1_1, level1_2)
+        .bundle(bundleTarget, directDependencyTarget);
     scenario = scenarioBuilder.build();
   }
 
   @Test
   public void testTransitiveLibraryDependencies() throws NoSuchBuildTargetException {
-    JsBundle jsBundle = scenario.createBundle(
-        "//arbitrary:target",
-        ImmutableSortedSet.of(directDependencyTarget));
-
+    BuildRule jsBundle = scenario.resolver.requireRule(bundleTarget);
     assertThat(allLibaryTargets(), everyItem(in(dependencyTargets(jsBundle))));
   }
 
   @Test
   public void testTransitiveLibraryDependenciesWithFlavors() throws NoSuchBuildTargetException {
-    JsBundle jsBundle = scenario.createBundle(
-        "//arbitrary:target#ios,release",
-        ImmutableSortedSet.of(directDependencyTarget));
-
-    assertThat(
-        allLibaryTargets(JsFlavors.IOS, JsFlavors.RELEASE),
-        everyItem(in(dependencyTargets(jsBundle))));
+    final Flavor[] flavors = {JsFlavors.IOS, JsFlavors.RELEASE};
+    BuildRule jsBundle = scenario.resolver.requireRule(bundleTarget.withFlavors(flavors));
+    assertThat(allLibaryTargets(flavors), everyItem(in(dependencyTargets(jsBundle))));
   }
 
   @Test
   public void testFlavoredBundleDoesNotDependOnUnflavoredLibs()
       throws NoSuchBuildTargetException {
-    JsBundle jsBundle = scenario.createBundle(
-        "//arbitrary:target#ios,release",
-        ImmutableSortedSet.of(directDependencyTarget));
-
-    assertThat(
-        allLibaryTargets(),
-        everyItem(not(in(dependencyTargets(jsBundle)))));
+    BuildRule jsBundle = scenario.resolver.requireRule(
+        bundleTarget.withFlavors(JsFlavors.IOS, JsFlavors.RELEASE));
+    assertThat(allLibaryTargets(), everyItem(not(in(dependencyTargets(jsBundle)))));
   }
 
-  private static Collection<BuildTarget> dependencyTargets(JsBundle jsBundle) {
-    return jsBundle.getBuildDeps()
-        .stream()
-        .map(BuildRule::getBuildTarget)
-        .collect(Collectors.toSet());
+  @Test
+  public void testTransitiveLibraryDependenciesWithFlavorsForAndroid()
+      throws NoSuchBuildTargetException {
+    final Flavor[] flavors = {JsFlavors.ANDROID, JsFlavors.RELEASE};
+    BuildRule jsBundle = scenario.resolver.requireRule(bundleTarget.withFlavors(flavors));
+    assertThat(allLibaryTargets(flavors), everyItem(in(dependencyTargets(jsBundle))));
+  }
+
+  private static Collection<BuildTarget> dependencyTargets(BuildRule rule) {
+    if (rule instanceof JsBundleAndroid) {
+      final JsBundle jsBundle = RichStream.from(rule.getBuildDeps())
+          .filter(JsBundle.class)
+          .findFirst()
+          .get();
+      return dependencyTargets(jsBundle);
+    } else {
+      return rule.getBuildDeps()
+          .stream()
+          .map(BuildRule::getBuildTarget)
+          .collect(Collectors.toSet());
+    }
   }
 
 }

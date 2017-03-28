@@ -63,6 +63,9 @@ public class JsFlavors {
           RAM_BUNDLE_FILES, "--files-rambundle",
           RAM_BUNDLE_INDEXED, "--indexed-rambundle"));
 
+  public static final InternalFlavor ANDROID_RESOURCES = InternalFlavor.of("_res_");
+  public static final InternalFlavor FORCE_JS_BUNDLE = InternalFlavor.of("_js_");
+
   private static final String fileFlavorPrefix = "file-";
 
   public static boolean validateFlavors(

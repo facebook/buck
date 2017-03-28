@@ -38,6 +38,7 @@ public class JsBundleBuilder extends
     arg.libs = libs;
     arg.bundleName = Optional.empty();
     arg.worker = worker;
+    arg.rDotJavaPackage = Optional.of("com.example");
   }
 
   JsBundleBuilder setBundleName(String bundleName) {

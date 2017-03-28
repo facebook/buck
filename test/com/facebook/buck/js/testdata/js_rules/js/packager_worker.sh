@@ -37,7 +37,16 @@ concat() {
 }
 
 write_asset() {
-  cp "$(dirname "$0")/1x1.gif" "$1/"
+  local dir="$1"
+  if [[ "$2" == android ]]; then
+    dir="$dir/drawable-mdpi"
+    mkdir -p "$dir"
+  fi
+  cp "$(dirname "$0")/pixel.gif" "$dir/"
+}
+
+write_sourcemap() {
+    echo '{"version": 3, "mappings": "ABCDE;"}' > "$1"
 }
 
 run_command() {
@@ -45,6 +54,8 @@ run_command() {
   local infiles=
   local outfile=
   local message_id="$1"
+  local platform=
+  local assets_dir=
 
   set -- $2
 
@@ -55,9 +66,12 @@ run_command() {
         shift
         ;;
       --assets|--sourcemap)
-        touch "$2"
         args=$(concat $args "$1" "${2/\/*\/buck-out\//@/buck-out/}")
-        [ "$1" == --assets ] && write_asset "$2"
+        if [[ "$1" == "--assets" ]]; then
+          assets_dir="$2"
+        elif [[ "$1" == "--sourcemap" ]]; then
+          write_sourcemap "$2"
+        fi
         shift
         ;;
       --lib)
@@ -67,6 +81,9 @@ run_command() {
         ;;
       --*)
         args=$(concat $args "$1")
+        if [[ "$1" == "--platform" ]]; then
+          platform="$2"
+        fi
         if [[ "$2" != --* ]]; then
           args=$(concat $args "$2")
           shift
@@ -81,6 +98,10 @@ run_command() {
     esac
     shift
   done
+
+  if [[ -n "$assets_dir" ]]; then
+    write_asset "$assets_dir" "$platform"
+  fi
 
   if [[ -z "$outfile" ]]; then
     echo "No output file given" >&2

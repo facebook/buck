@@ -16,19 +16,17 @@
 
 package com.facebook.buck.js;
 
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.RmStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -36,7 +34,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class JsBundle extends AbstractBuildRule {
+public class JsBundle extends AbstractBuildRule implements JsBundleOutputs {
 
   @AddToRuleKey
   private final String bundleName;
@@ -91,49 +89,33 @@ public class JsBundle extends AbstractBuildRule {
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(sourceMapFile));
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(resourcesDir));
 
-    return ImmutableList.of(
-        RmStep.of(getProjectFilesystem(), sourcePathResolver.getAbsolutePath(getOutputRoot())),
-        MkdirStep.of(
-            getProjectFilesystem(),
-            sourcePathResolver.getAbsolutePath(jsOutputDir)),
-        MkdirStep.of(
-            getProjectFilesystem(),
-            sourcePathResolver.getAbsolutePath(sourceMapFile).getParent()),
-        MkdirStep.of(
-            getProjectFilesystem(),
-            sourcePathResolver.getAbsolutePath(resourcesDir)),
-        JsUtil.workerShellStep(
-            worker,
-            jobArgs,
-            getBuildTarget(),
-            sourcePathResolver,
-            getProjectFilesystem()));
+    return ImmutableList.<Step>builder()
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                getProjectFilesystem(),
+                sourcePathResolver.getRelativePath(
+                    JsUtil.relativeToOutputRoot(getBuildTarget(), getProjectFilesystem(), ""))))
+        .add(
+            MkdirStep.of(
+                getProjectFilesystem(),
+                sourcePathResolver.getAbsolutePath(jsOutputDir)),
+            MkdirStep.of(
+                getProjectFilesystem(),
+                sourcePathResolver.getAbsolutePath(sourceMapFile).getParent()),
+            MkdirStep.of(
+                getProjectFilesystem(),
+                sourcePathResolver.getAbsolutePath(resourcesDir)),
+            JsUtil.workerShellStep(
+                worker,
+                jobArgs,
+                getBuildTarget(),
+                sourcePathResolver,
+                getProjectFilesystem()))
+        .build();
   }
 
   @Override
-  public SourcePath getSourcePathToOutput() {
-    return getSourcePathRelativeToOutputRoot("%s/js");
-  }
-
-  public SourcePath getSourcePathToSourceMap() {
-    return getSourcePathRelativeToOutputRoot(
-        String.format("%%s/map/%s.map", bundleName.replace("%", "%%")));
-  }
-
-  public SourcePath getSourcePathToResources() {
-    return getSourcePathRelativeToOutputRoot("%s/res");
-  }
-
-  private SourcePath getOutputRoot() {
-    return getSourcePathRelativeToOutputRoot("%s");
-  }
-
-  private ExplicitBuildTargetSourcePath getSourcePathRelativeToOutputRoot(String format) {
-    return new ExplicitBuildTargetSourcePath(
-        getBuildTarget(),
-        BuildTargets.getGenPath(
-            getProjectFilesystem(),
-            getBuildTarget(),
-            format));
+  public String getBundleName() {
+    return bundleName;
   }
 }

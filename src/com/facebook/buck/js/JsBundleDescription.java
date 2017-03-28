@@ -16,6 +16,7 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
@@ -28,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.WorkerTool;
@@ -35,6 +37,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.Collection;
@@ -72,6 +75,15 @@ public class JsBundleDescription implements Description<JsBundleDescription.Arg>
       CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
 
+    final ImmutableSortedSet<Flavor> flavors = params.getBuildTarget().getFlavors();
+    // For Android, we bundle JS output as assets, and images etc. as resources.
+    // To facilitate this, we return a build rule that in turn depends on a `JsBundle` and
+    // an `AndroidResource`. The `AndroidResource` rule also depends on the `JsBundle`
+    // if the `FORCE_JS_BUNDLE` flavor is present, we create the `JsBundle` instance itself.
+    if (flavors.contains(JsFlavors.ANDROID) && !flavors.contains(JsFlavors.FORCE_JS_BUNDLE)) {
+      return createAndroidRule(params.copyInvalidatingDeps(), resolver, args.rDotJavaPackage);
+    }
+
     // Flavors are propagated from js_bundle targets to their js_library dependencies
     // for that reason, dependencies of libraries are handled manually, and as a first step,
     // all dependencies to libraries are removed
@@ -92,12 +104,72 @@ public class JsBundleDescription implements Description<JsBundleDescription.Arg>
         resolver.getRuleWithType(args.worker, WorkerTool.class));
   }
 
+  private static BuildRule createAndroidRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      Optional<String> rDotJavaPackage) throws NoSuchBuildTargetException {
+    final BuildTarget bundleTarget = params.getBuildTarget()
+        .withAppendedFlavors(JsFlavors.FORCE_JS_BUNDLE)
+        .withoutFlavors(JsFlavors.ANDROID_RESOURCES);
+    resolver.requireRule(bundleTarget);
+
+    final JsBundle jsBundle = resolver.getRuleWithType(bundleTarget, JsBundle.class);
+    if (params.getBuildTarget().getFlavors().contains(JsFlavors.ANDROID_RESOURCES)) {
+      final String rDot = rDotJavaPackage.orElseThrow(() -> new HumanReadableException(
+          "Specify `android_package` when building %s for Android.",
+          params.getBuildTarget().getUnflavoredBuildTarget()));
+      return createAndroidResources(params, resolver, jsBundle, rDot);
+    } else {
+      return createAndroidBundle(params, resolver, jsBundle);
+    }
+  }
+
+  private static JsBundleAndroid createAndroidBundle(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      JsBundle jsBundle) throws NoSuchBuildTargetException {
+
+    final BuildTarget resourceTarget = params.getBuildTarget()
+        .withAppendedFlavors(JsFlavors.ANDROID_RESOURCES);
+    final BuildRule resource = resolver.requireRule(resourceTarget);
+
+    return new JsBundleAndroid(
+        params.copyReplacingDeclaredAndExtraDeps(
+            ImmutableSortedSet::of,
+            () -> ImmutableSortedSet.of(jsBundle, resource)),
+        jsBundle,
+        resolver.getRuleWithType(resourceTarget, AndroidResource.class));
+  }
+
+  private static BuildRule createAndroidResources(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      JsBundle jsBundle,
+      String rDotJavaPackage) throws NoSuchBuildTargetException {
+
+    return new AndroidResource(
+        params.copyReplacingDeclaredAndExtraDeps(
+            ImmutableSortedSet::of,
+            () -> ImmutableSortedSet.of(jsBundle)),
+        new SourcePathRuleFinder(resolver),
+        ImmutableSortedSet.of(), // deps
+        jsBundle.getSourcePathToResources(),
+        ImmutableSortedMap.of(), // resSrcs
+        rDotJavaPackage,
+        null,
+        ImmutableSortedMap.of(),
+        null,
+        false);
+  }
+
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public ImmutableSortedSet<BuildTarget> libs;
     public Either<ImmutableSet<String>, String> entry;
     public Optional<String> bundleName;
     public BuildTarget worker;
+    @Hint(name = "android_package")
+    public Optional<String> rDotJavaPackage;
   }
 
   private static class TransitiveLibraryDependencies {
@@ -115,7 +187,10 @@ public class JsBundleDescription implements Description<JsBundleDescription.Arg>
       this.bundleTarget = bundleTarget;
       this.targetGraph = targetGraph;
       this.resolver = resolver;
-      extraFlavors = bundleTarget.getFlavors();
+      extraFlavors = bundleTarget.getFlavors()
+          .stream()
+          .filter(flavor -> !JsFlavors.FORCE_JS_BUNDLE.equals(flavor))
+          .collect(MoreCollectors.toImmutableSortedSet());
       ruleFinder = new SourcePathRuleFinder(resolver);
     }
 

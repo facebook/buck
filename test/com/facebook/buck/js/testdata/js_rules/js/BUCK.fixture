@@ -1,7 +1,7 @@
 sh_binary(
   name = 'packager_worker_exe',
   main = 'packager_worker.sh',
-  resources = ['1x1.gif'],
+  resources = ['pixel.gif'],
   visibility = [
     'PUBLIC',
   ],
@@ -62,7 +62,9 @@ js_bundle(
     name = 'fruit-salad-in-a-bundle',
     libs = [':fruit-salad'],
     entry = 'fruit-salad',
+    android_package = 'com.sample',
     worker = ':packager_worker',
+    visibility = ['PUBLIC'],
 )
 
 js_bundle(

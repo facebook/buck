@@ -1,0 +1,10 @@
+android_binary(
+  name = 'app',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//android/keystores:debug',
+  deps = [
+    '//android/java/com/sample/lib:lib',
+    '//android/res/com/sample/base:base',
+    '//js:fruit-salad-in-a-bundle#android',
+  ],
+)

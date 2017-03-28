@@ -81,6 +81,13 @@ public class JsTestScenario {
       nodes.add(new FakeWorkerBuilder(workerTarget).build());
     }
 
+    Builder bundle(BuildTarget target, BuildTarget... libraryDependencies) {
+      final Either<ImmutableSet<String>, String> entry = Either.ofLeft(ImmutableSet.of());
+      final ImmutableSortedSet<BuildTarget> libs = ImmutableSortedSet.copyOf(libraryDependencies);
+      nodes.add(new JsBundleBuilder(target, workerTarget, libs, entry).build());
+      return this;
+    }
+
     Builder library(BuildTarget target, BuildTarget... libraryDependencies) {
       nodes.add(
           new JsLibraryBuilder(target, workerTarget)
@@ -97,7 +104,7 @@ public class JsTestScenario {
       return this;
     }
 
-    public Builder library(
+    Builder library(
         BuildTarget target,
         String basePath,
         Pair<SourcePath, String> source) {

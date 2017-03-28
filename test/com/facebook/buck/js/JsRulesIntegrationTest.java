@@ -18,10 +18,15 @@ package com.facebook.buck.js;
 
 import static org.junit.Assume.assumeFalse;
 
+import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 
@@ -174,4 +179,18 @@ public class JsRulesIntegrationTest {
         "js_library targets, but one of its dependencies, '//js:a-genrule', is of type genrule.");
     workspace.runBuckBuild("//js:bundle-with-genrule-dep");
   }
+
+  @Test
+  public void androidApplicationsContainsJsAndResources() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//android/apps/sample:app");
+    workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
+    ZipInspector zipInspector = new ZipInspector(
+        workspace.getPath(BuildTargets.getGenPath(projectFilesystem, target, "%s.apk")));
+
+    zipInspector.assertFileExists("assets/fruit-salad-in-a-bundle.js");
+    zipInspector.assertFileExists("res/drawable-mdpi-v4/pixel.gif");
+  }
+
 }
