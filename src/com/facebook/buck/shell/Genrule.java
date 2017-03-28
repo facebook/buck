@@ -36,7 +36,8 @@ import com.facebook.buck.shell.AbstractGenruleStep.CommandString;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
+import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
@@ -376,8 +377,13 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
       }
 
       Path destination = pathToSrcDirectory.resolve(localPath);
+      commands.add(MkdirStep.of(getProjectFilesystem(), destination.getParent()));
       commands.add(
-          new MkdirAndSymlinkFileStep(getProjectFilesystem(), relativePath, destination));
+          SymlinkFileStep.builder()
+              .setFilesystem(getProjectFilesystem())
+              .setExistingFile(relativePath)
+              .setDesiredLink(destination)
+              .build());
     }
   }
 

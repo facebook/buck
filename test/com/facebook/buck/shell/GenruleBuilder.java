@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
@@ -31,8 +32,16 @@ public class GenruleBuilder
     super(new GenruleDescription(), target);
   }
 
+  private GenruleBuilder(BuildTarget target, ProjectFilesystem filesystem) {
+    super(new GenruleDescription(), target, filesystem);
+  }
+
   public static GenruleBuilder newGenruleBuilder(BuildTarget target) {
     return new GenruleBuilder(target);
+  }
+
+  public static GenruleBuilder newGenruleBuilder(BuildTarget target, ProjectFilesystem filesystem) {
+    return new GenruleBuilder(target, filesystem);
   }
 
   public GenruleBuilder setOut(String out) {

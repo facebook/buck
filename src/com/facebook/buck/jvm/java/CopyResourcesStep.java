@@ -29,7 +29,8 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
+import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -171,11 +172,13 @@ public class CopyResourcesStep implements Step {
         }
       }
       Path target = outputDirectory.resolve(relativeSymlinkPath);
-      MkdirAndSymlinkFileStep link = new MkdirAndSymlinkFileStep(
-          filesystem,
-          resolver.getAbsolutePath(rawResource),
-          target);
-      allSteps.add(link);
+      allSteps.add(MkdirStep.of(filesystem, target.getParent()));
+      allSteps.add(
+          SymlinkFileStep.builder()
+              .setFilesystem(filesystem)
+              .setExistingFile(resolver.getAbsolutePath(rawResource))
+              .setDesiredLink(target)
+              .build());
     }
     return allSteps.build();
   }

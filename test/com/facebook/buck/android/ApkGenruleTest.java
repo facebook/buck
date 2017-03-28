@@ -48,9 +48,9 @@ import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.MoreCollectors;
@@ -174,7 +174,7 @@ public class ApkGenruleTest {
 
     // Verify that the shell commands that the genrule produces are correct.
     List<Step> steps = apkGenrule.getBuildSteps(buildContext, new FakeBuildableContext());
-    assertEquals(9, steps.size());
+    assertEquals(11, steps.size());
 
     ExecutionContext executionContext = newEmptyExecutionContext();
     assertEquals(
@@ -211,17 +211,29 @@ public class ApkGenruleTest {
         MkdirStep.of(projectFilesystem, relativePathToSrcDir),
         steps.get(5));
 
-    MkdirAndSymlinkFileStep linkSource1 = (MkdirAndSymlinkFileStep) steps.get(6);
-    assertEquals(fileSystem.getPath("src/com/facebook/signer.py"), linkSource1.getSource());
-    assertEquals(fileSystem.getPath(relativePathToSrcDir + "/signer.py"), linkSource1.getTarget());
-
-    MkdirAndSymlinkFileStep linkSource2 = (MkdirAndSymlinkFileStep) steps.get(7);
-    assertEquals(fileSystem.getPath("src/com/facebook/key.properties"), linkSource2.getSource());
     assertEquals(
-        fileSystem.getPath(relativePathToSrcDir + "/key.properties"),
-        linkSource2.getTarget());
+        MkdirStep.of(projectFilesystem, relativePathToSrcDir),
+        steps.get(6));
+    assertEquals(
+        SymlinkFileStep.builder()
+            .setFilesystem(projectFilesystem)
+            .setExistingFile(fileSystem.getPath("src/com/facebook/signer.py"))
+            .setDesiredLink(fileSystem.getPath(relativePathToSrcDir + "/signer.py"))
+            .build(),
+        steps.get(7));
 
-    Step genruleStep = steps.get(8);
+    assertEquals(
+        MkdirStep.of(projectFilesystem, relativePathToSrcDir),
+        steps.get(8));
+    assertEquals(
+        SymlinkFileStep.builder()
+            .setFilesystem(projectFilesystem)
+            .setExistingFile(fileSystem.getPath("src/com/facebook/key.properties"))
+            .setDesiredLink(fileSystem.getPath(relativePathToSrcDir + "/key.properties"))
+            .build(),
+        steps.get(9));
+
+    Step genruleStep = steps.get(10);
     assertTrue(genruleStep instanceof AbstractGenruleStep);
     AbstractGenruleStep genruleCommand = (AbstractGenruleStep) genruleStep;
     assertEquals("genrule", genruleCommand.getShortName());

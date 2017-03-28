@@ -29,13 +29,15 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
+import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
+import java.nio.file.Path;
 import java.util.List;
 
 public class CopyResourcesStepTest {
@@ -65,17 +67,24 @@ public class CopyResourcesStepTest {
         filesystem.getBuckPaths().getScratchDir().resolve("android/java/lib__resources__classes"),
         javaPackageFinder);
 
+    Path target = filesystem.getBuckPaths().getScratchDir().resolve(
+        "android/java/lib__resources__classes/com/facebook/common/util/data.json");
+    Path target1 = filesystem.getBuckPaths().getScratchDir().resolve(
+        "android/java/lib__resources__classes/com/facebook/base/data.json");
     List<? extends Step> expected = ImmutableList.of(
-        new MkdirAndSymlinkFileStep(
-            filesystem,
-            filesystem.resolve("android/java/src/com/facebook/base/data.json"),
-            filesystem.getBuckPaths().getScratchDir().resolve(
-                "android/java/lib__resources__classes/com/facebook/base/data.json")),
-        new MkdirAndSymlinkFileStep(
-            filesystem,
-            filesystem.resolve("android/java/src/com/facebook/common/util/data.json"),
-            filesystem.getBuckPaths().getScratchDir().resolve(
-                "android/java/lib__resources__classes/com/facebook/common/util/data.json")));
+        MkdirStep.of(filesystem, target1.getParent()),
+        SymlinkFileStep.builder()
+            .setFilesystem(filesystem)
+            .setExistingFile(filesystem.resolve("android/java/src/com/facebook/base/data.json"))
+            .setDesiredLink(target1)
+            .build(),
+        MkdirStep.of(filesystem, target.getParent()),
+        SymlinkFileStep.builder()
+            .setFilesystem(filesystem)
+            .setExistingFile(filesystem.resolve(
+                "android/java/src/com/facebook/common/util/data.json"))
+            .setDesiredLink(target)
+            .build());
     assertEquals(expected, step.buildSteps());
   }
 
@@ -106,17 +115,24 @@ public class CopyResourcesStepTest {
             .resolve("android/java/src/lib__resources__classes"),
         javaPackageFinder);
 
+    Path target = filesystem.getBuckPaths().getScratchDir().resolve(
+        "android/java/src/lib__resources__classes/com/facebook/common/util/data.json");
+    Path target1 = filesystem.getBuckPaths().getScratchDir().resolve(
+        "android/java/src/lib__resources__classes/com/facebook/base/data.json");
     List<? extends Step> expected = ImmutableList.of(
-        new MkdirAndSymlinkFileStep(
-            filesystem,
-            filesystem.resolve("android/java/src/com/facebook/base/data.json"),
-            filesystem.getBuckPaths().getScratchDir().resolve(
-                "android/java/src/lib__resources__classes/com/facebook/base/data.json")),
-        new MkdirAndSymlinkFileStep(
-            filesystem,
-            filesystem.resolve("android/java/src/com/facebook/common/util/data.json"),
-            filesystem.getBuckPaths().getScratchDir().resolve(
-                "android/java/src/lib__resources__classes/com/facebook/common/util/data.json")));
+        MkdirStep.of(filesystem, target1.getParent()),
+        SymlinkFileStep.builder()
+            .setFilesystem(filesystem)
+            .setExistingFile(filesystem.resolve("android/java/src/com/facebook/base/data.json"))
+            .setDesiredLink(target1)
+            .build(),
+        MkdirStep.of(filesystem, target.getParent()),
+        SymlinkFileStep.builder()
+            .setFilesystem(filesystem)
+            .setExistingFile(filesystem.resolve(
+                "android/java/src/com/facebook/common/util/data.json"))
+            .setDesiredLink(target)
+            .build());
     assertEquals(expected, step.buildSteps());
   }
 
@@ -148,19 +164,26 @@ public class CopyResourcesStepTest {
             "android/java/src/com/facebook/lib__resources__classes"),
         javaPackageFinder);
 
+    Path target = filesystem.getBuckPaths().getScratchDir().resolve(
+        "android/java/src/com/facebook/lib__resources__classes/" +
+            "com/facebook/common/util/data.json");
+    Path target1 = filesystem.getBuckPaths().getScratchDir().resolve(
+        "android/java/src/com/facebook/lib__resources__classes/" +
+            "com/facebook/base/data.json");
     List<? extends Step> expected = ImmutableList.of(
-        new MkdirAndSymlinkFileStep(
-            filesystem,
-            filesystem.resolve("android/java/src/com/facebook/base/data.json"),
-            filesystem.getBuckPaths().getScratchDir().resolve(
-                "android/java/src/com/facebook/lib__resources__classes/" +
-                    "com/facebook/base/data.json")),
-        new MkdirAndSymlinkFileStep(
-            filesystem,
-            filesystem.resolve("android/java/src/com/facebook/common/util/data.json"),
-            filesystem.getBuckPaths().getScratchDir().resolve(
-                "android/java/src/com/facebook/lib__resources__classes/" +
-                    "com/facebook/common/util/data.json")));
+        MkdirStep.of(filesystem, target1.getParent()),
+        SymlinkFileStep.builder()
+            .setFilesystem(filesystem)
+            .setExistingFile(filesystem.resolve("android/java/src/com/facebook/base/data.json"))
+            .setDesiredLink(target1)
+            .build(),
+        MkdirStep.of(filesystem, target.getParent()),
+        SymlinkFileStep.builder()
+            .setFilesystem(filesystem)
+            .setExistingFile(filesystem.resolve(
+                "android/java/src/com/facebook/common/util/data.json"))
+            .setDesiredLink(target)
+            .build());
     assertEquals(expected, step.buildSteps());
   }
 
