@@ -193,8 +193,10 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
 
@@ -2002,7 +2004,9 @@ public final class Main {
   }
 
   public static final class DaemonBootstrap {
+    private static final int AFTER_COMMAND_AUTO_GC_DELAY_MS = 5000;
     private static @Nullable DaemonKillers daemonKillers;
+    private static AtomicReference<ScheduledFuture<?>> scheduledGC = new AtomicReference<>();
 
     /**
      * Single thread for running short-lived tasks outside the command context.
@@ -2045,8 +2049,22 @@ public final class Main {
       return Preconditions.checkNotNull(daemonKillers, "Daemon killers should be initialized.");
     }
 
+    static void cancelGC() {
+      ScheduledFuture<?> oldScheduledGC = scheduledGC.getAndSet(null);
+      if (oldScheduledGC != null) {
+        oldScheduledGC.cancel(false);
+      }
+    }
+
     static void scheduleGC() {
-      housekeepingExecutorService.execute(System::gc);
+      ScheduledFuture<?> oldScheduledGC = scheduledGC.getAndSet(
+          housekeepingExecutorService.schedule(
+              System::gc,
+              AFTER_COMMAND_AUTO_GC_DELAY_MS,
+              TimeUnit.MILLISECONDS));
+      if (oldScheduledGC != null) {
+        oldScheduledGC.cancel(false);
+      }
     }
   }
 
@@ -2115,6 +2133,7 @@ public final class Main {
     obtainResourceFileLock();
     try (IdleKiller.CommandExecutionScope ignored =
              DaemonBootstrap.getDaemonKillers().newCommandExecutionScope()) {
+      DaemonBootstrap.cancelGC();
       new Main(context.out, context.err, context.in)
           .runMainThenExit(context.getArgs(), Optional.of(context), System.nanoTime());
     } finally {
