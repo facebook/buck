@@ -210,23 +210,5 @@ abstract class AbstractBuildTarget implements Comparable<AbstractBuildTarget> {
         getShortName())
         .addAllFlavors(getFlavors())
         .build();
-
-  }
-
-  /**
-   * Returns true if a target matches a set of unflavored targets.
-   *
-   * @param focusModules Set of unflavored targets.
-   * @param buildTarget Target to test against the set of unflavored targets.
-   *
-   * @return {@code true} if the target is member of {@code focusModules}.
-   */
-  public boolean matchesUnflavoredTargets(
-      Optional<ImmutableSet<UnflavoredBuildTarget>> focusUnflavoredTargets) {
-    if (!focusUnflavoredTargets.isPresent()) {
-      return true;
-    }
-
-    return focusUnflavoredTargets.get().contains(getUnflavoredBuildTarget());
   }
 }

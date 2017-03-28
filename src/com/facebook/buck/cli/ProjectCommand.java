@@ -21,6 +21,7 @@ import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
+import com.facebook.buck.apple.project_generator.FocusedModuleTargetMatcher;
 import com.facebook.buck.apple.project_generator.ProjectGenerator;
 import com.facebook.buck.apple.project_generator.WorkspaceAndProjectGenerator;
 import com.facebook.buck.cxx.CxxBuckConfig;
@@ -970,7 +971,7 @@ public class ProjectCommand extends BuildCommand {
       ImmutableSet<BuildTarget> passedInTargetsSet,
       ImmutableSet<ProjectGenerator.Option> options,
       ImmutableList<String> buildWithBuckFlags,
-      Optional<ImmutableSet<UnflavoredBuildTarget>> focusModules,
+      FocusedModuleTargetMatcher focusModules,
       Map<Path, ProjectGenerator> projectGenerators,
       boolean combinedProject,
       boolean buildWithBuck)
@@ -1052,12 +1053,12 @@ public class ProjectCommand extends BuildCommand {
     return requiredBuildTargetsBuilder.build();
   }
 
-  private Optional<ImmutableSet<UnflavoredBuildTarget>> getFocusModules(
+  private FocusedModuleTargetMatcher getFocusModules(
       CommandRunnerParams params,
       ListeningExecutorService executor)
       throws IOException, InterruptedException {
     if (modulesToFocusOn == null) {
-      return Optional.empty();
+      return FocusedModuleTargetMatcher.noFocus();
     }
 
     Iterable<String> patterns = Splitter.onPattern("\\s+").split(modulesToFocusOn);
@@ -1084,7 +1085,7 @@ public class ProjectCommand extends BuildCommand {
     } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
           MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return Optional.empty();
+      return FocusedModuleTargetMatcher.noFocus();
     }
     LOG.debug("Selected targets: %s", passedInTargetsSet.toString());
 
@@ -1109,7 +1110,7 @@ public class ProjectCommand extends BuildCommand {
     }
     ImmutableSet<UnflavoredBuildTarget> passedInUnflavoredTargetsSet = builder.build();
     LOG.debug("Selected unflavored targets: %s", passedInUnflavoredTargetsSet.toString());
-    return Optional.of(passedInUnflavoredTargetsSet);
+    return FocusedModuleTargetMatcher.focusedOn(passedInUnflavoredTargetsSet);
   }
 
   public static ImmutableSet<ProjectGenerator.Option> buildWorkspaceGeneratorOptions(
@@ -1288,8 +1289,7 @@ public class ProjectCommand extends BuildCommand {
         replaceWorkspacesWithSourceTargetsIfPossible(graphRoots, projectGraph);
 
     if (isWithTests) {
-      Optional<ImmutableSet<UnflavoredBuildTarget>> focusedModules =
-          getFocusModules(params, executor);
+      FocusedModuleTargetMatcher focusedModules = getFocusModules(params, executor);
 
       explicitTestTargets = getExplicitTestTargets(
           graphRootsOrSourceTargets,
@@ -1400,7 +1400,7 @@ public class ProjectCommand extends BuildCommand {
       ImmutableSet<BuildTarget> buildTargets,
       TargetGraph projectGraph,
       boolean shouldIncludeDependenciesTests,
-      Optional<ImmutableSet<UnflavoredBuildTarget>> focusedModules) {
+      FocusedModuleTargetMatcher focusedModules) {
     Iterable<TargetNode<?, ?>> projectRoots = projectGraph.getAll(buildTargets);
     Iterable<TargetNode<?, ?>> nodes;
     if (shouldIncludeDependenciesTests) {
@@ -1411,7 +1411,7 @@ public class ProjectCommand extends BuildCommand {
 
     return TargetGraphAndTargets.getExplicitTestTargets(
         RichStream.from(nodes)
-            .filter(node -> node.getBuildTarget().matchesUnflavoredTargets(focusedModules))
+            .filter(node -> focusedModules.isFocusedOn(node.getBuildTarget()))
             .iterator());
   }
 

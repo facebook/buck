@@ -85,7 +85,7 @@ public class WorkspaceAndProjectGenerator {
   private final AppleDependenciesCache dependenciesCache;
   private final XcodeWorkspaceConfigDescription.Arg workspaceArguments;
   private final BuildTarget workspaceBuildTarget;
-  private final Optional<ImmutableSet<UnflavoredBuildTarget>> focusModules;
+  private final FocusedModuleTargetMatcher focusModules;
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
   private final boolean combinedProject;
   private final boolean buildWithBuck;
@@ -118,7 +118,7 @@ public class WorkspaceAndProjectGenerator {
       boolean combinedProject,
       boolean buildWithBuck,
       ImmutableList<String> buildWithBuckFlags,
-      Optional<ImmutableSet<UnflavoredBuildTarget>> focusModules,
+      FocusedModuleTargetMatcher focusModules,
       boolean parallelizeBuild,
       ExecutableFinder executableFinder,
       ImmutableMap<String, String> environment,
@@ -154,17 +154,15 @@ public class WorkspaceAndProjectGenerator {
     this.cxxBuckConfig = cxxBuckConfig;
     this.appleConfig = appleConfig;
 
-    if (focusModules.isPresent()) {
-      ImmutableSet.Builder<UnflavoredBuildTarget> builder = ImmutableSet.builder();
-      builder.addAll(focusModules.get());
-      // Add the main target.
-      if (workspaceArguments.srcTarget.isPresent()) {
-        builder.add(workspaceArguments.srcTarget.get().getUnflavoredBuildTarget());
-      }
-      this.focusModules = Optional.of(builder.build());
-    } else {
-      this.focusModules = Optional.empty();
-    }
+    this.focusModules = focusModules.map(inputs ->
+        // Update the focused modules list (if present) to contain srcTarget (if present).
+        workspaceArguments.srcTarget
+            .map(srcTarget ->
+                ImmutableSet.<UnflavoredBuildTarget>builder()
+                    .addAll(inputs)
+                    .add(srcTarget.getUnflavoredBuildTarget())
+                    .build())
+            .orElse(inputs));
   }
 
   @VisibleForTesting
@@ -760,7 +758,7 @@ public class WorkspaceAndProjectGenerator {
             continue;
           }
           for (BuildTarget explicitTestTarget : ((HasTests) node.getConstructorArg()).getTests()) {
-            if (!explicitTestTarget.matchesUnflavoredTargets(focusModules)) {
+            if (!focusModules.isFocusedOn(explicitTestTarget)) {
               continue;
             }
             Optional<TargetNode<?, ?>> explicitTestNode =
@@ -896,7 +894,7 @@ public class WorkspaceAndProjectGenerator {
       String schemeName = schemeConfigEntry.getKey();
       XcodeWorkspaceConfigDescription.Arg schemeConfigArg = schemeConfigEntry.getValue();
       if (schemeConfigArg.srcTarget.isPresent() &&
-          !schemeConfigArg.srcTarget.get().matchesUnflavoredTargets(focusModules)) {
+          !focusModules.isFocusedOn(schemeConfigArg.srcTarget.get())) {
         continue;
       }
       Iterable<PBXTarget> orderedBuildTargets = schemeNameToSrcTargetNode.get(schemeName).stream()

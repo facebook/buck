@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
+import com.facebook.buck.apple.project_generator.FocusedModuleTargetMatcher;
 import com.facebook.buck.apple.project_generator.ProjectGenerator;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -78,7 +79,7 @@ public class ProjectCommandTests {
           graphRootsOrSourceTargets,
           projectGraph,
           withDependenciesTests,
-          Optional.empty());
+          FocusedModuleTargetMatcher.noFocus());
     } else {
       explicitTests = ImmutableSet.of();
     }
@@ -121,7 +122,7 @@ public class ProjectCommandTests {
             false /* shouldMergeHeaderMaps */,
             false /* shouldGenerateHeaderSymlinkTreeOnly */),
         ImmutableList.of(),
-        Optional.empty(),
+        FocusedModuleTargetMatcher.noFocus(),
         projectGenerators,
         isBuildWithBuck,
         isCombinedProjects);
