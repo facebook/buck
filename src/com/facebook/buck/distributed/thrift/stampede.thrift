@@ -61,6 +61,7 @@ struct BuildSlaveInfo {
   6: optional i32 stdErrCurrentBatchNumber;
   7: optional i32 stdErrCurrentBatchLineCount;
   8: optional bool logDirZipWritten;
+  9: optional i32 exitCode;
 }
 
 enum BuildStatus {
@@ -115,8 +116,6 @@ enum LogRequestType {
   UNKNOWN = 0,
   SCRIBE_DATA = 1,
 }
-
-
 
 struct PathInfo {
   1: optional string contentHash;
@@ -279,6 +278,27 @@ struct AnnouncementResponse {
   1: optional list<Announcement> announcements;
 }
 
+struct UpdateBuildSlaveStatusRequest {
+  1: optional StampedeId stampedeId;
+  2: optional RunId runId;
+  3: optional binary buildSlaveStatus;
+}
+
+struct UpdateBuildSlaveStatusResponse {
+}
+
+# Retrieves binary encoded build slave status for the given runId.
+# Structure of build status can be found in client-side build_slave.thrift.
+struct FetchBuildSlaveStatusRequest {
+  1: optional StampedeId stampedeId;
+  2: optional RunId runId;
+}
+
+struct FetchBuildSlaveStatusResponse {
+  # If the status existed, it will be set here. Otherwise field left unset
+  1: optional binary buildSlaveStatus;
+}
+
 ##############################################################################
 ## Top-Level Buck-Frontend HTTP body thrift Request/Response format
 ##############################################################################
@@ -300,6 +320,8 @@ enum FrontendRequestType {
   SET_DOTFILE_PATHS = 14,
   GET_BUILD_SLAVE_LOG_DIR = 15,
   GET_BUILD_SLAVE_REAL_TIME_LOGS = 16,
+  UPDATE_BUILD_SLAVE_STATUS = 17,
+  FETCH_BUILD_SLAVE_STATUS = 18,
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -321,6 +343,8 @@ struct FrontendRequest {
   16: optional MultiGetBuildSlaveLogDirRequest multiGetBuildSlaveLogDirRequest;
   17: optional
     MultiGetBuildSlaveRealTimeLogsRequest multiGetBuildSlaveRealTimeLogsRequest;
+  18: optional UpdateBuildSlaveStatusRequest updateBuildSlaveStatusRequest;
+  19: optional FetchBuildSlaveStatusRequest fetchBuildSlaveStatusRequest;
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -341,6 +365,8 @@ struct FrontendResponse {
     multiGetBuildSlaveLogDirResponse;
   21: optional MultiGetBuildSlaveRealTimeLogsResponse
     multiGetBuildSlaveRealTimeLogsResponse;
+  22: optional UpdateBuildSlaveStatusResponse updateBuildSlaveStatusResponse;
+  23: optional FetchBuildSlaveStatusResponse fetchBuildSlaveStatusResponse;
 
   // [100-199] Values are reserved for the buck cache request types.
 }
