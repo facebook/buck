@@ -21,5 +21,7 @@
   ],
   "infer-blacklist-path-regex": [
     "src-gen"
-  ]
+  ],
+  "resolve-infer-eradicate-conflict": true,
+  "skip-duplicated-types": false
 }
