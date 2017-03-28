@@ -627,9 +627,12 @@ public class ProjectCommand extends BuildCommand {
       final TargetGraphAndTargets targetGraphAndTargets
   ) throws IOException {
     ActionGraphAndResolver result = Preconditions.checkNotNull(
-        ActionGraphCache.getFreshActionGraph(
+        params.getActionGraphCache().getActionGraph(
             params.getBuckEventBus(),
-            targetGraphAndTargets.getTargetGraph()));
+            params.getBuckConfig().isActionGraphCheckingEnabled(),
+            params.getBuckConfig().isSkipActionGraphCache(),
+            targetGraphAndTargets.getTargetGraph(),
+            params.getBuckConfig().getKeySeed()));
 
     BuckConfig buckConfig = params.getBuckConfig();
     BuildRuleResolver ruleResolver = result.getResolver();
