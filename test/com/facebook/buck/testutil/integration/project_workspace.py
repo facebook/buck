@@ -20,6 +20,28 @@ import sys
 import tempfile
 
 
+def run_buck_process(command, cwd=None):
+    root_directory = os.getcwd()
+    cwd = cwd or root_directory
+    if platform.system() == 'Windows':
+        buck_path = os.path.join(root_directory, 'bin', 'buck.bat')
+        args = ['cmd.exe', '/C', buck_path] + list(command)
+    else:
+        buck_path = os.path.join(root_directory, 'bin', 'buck')
+        args = [buck_path] + list(command)
+    # Pass thru our environment, except disabling buckd so that we can be sure the right buck
+    # is run.
+    child_environment = dict(os.environ)
+    child_environment["NO_BUCKD"] = "1"
+
+    return subprocess.Popen(
+        args,
+        cwd=cwd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=child_environment)
+
+
 class ProjectWorkspace(object):
 
     is_windows = platform.system() == 'Windows'
@@ -49,25 +71,7 @@ class ProjectWorkspace(object):
         return os.path.join(self.test_data_directory, path)
 
     def run_buck(self, *command):
-        root_directory = os.getcwd()
-        if self.is_windows:
-            buck_path = os.path.join(root_directory, 'bin', 'buck.bat')
-            args = ['cmd.exe', '/C', buck_path] + list(command)
-        else:
-            buck_path = os.path.join(root_directory, 'bin', 'buck')
-            args = [buck_path] + list(command)
-        # Pass thru our environment, except disabling buckd so that we can be sure the right buck
-        # is run.
-        child_environment = dict(os.environ)
-        child_environment["NO_BUCKD"] = "1"
-
-        proc = subprocess.Popen(
-            args,
-            cwd=self.test_data_directory,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            env=child_environment)
-
+        proc = run_buck_process(command, self.test_data_directory)
         stdout, stderr = proc.communicate()
 
         # Copy output through to unittest's output so failures are easy to debug. Can't just
