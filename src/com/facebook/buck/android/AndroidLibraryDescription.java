@@ -109,7 +109,7 @@ public class AndroidLibraryDescription
     if (args.depsQuery.isPresent()) {
       queriedDepsBuilder.addAll(
           QueryUtils.resolveDepQuery(
-              params,
+              params.getBuildTarget(),
               args.depsQuery.get(),
               resolver,
               cellRoots,

@@ -25,7 +25,6 @@ import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -51,13 +50,12 @@ public final class QueryUtils {
   }
 
   public static Stream<BuildRule> resolveDepQuery(
-      BuildRuleParams params,
+      BuildTarget target,
       Query query,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> declaredDeps) {
-    BuildTarget target = params.getBuildTarget();
     GraphEnhancementQueryEnvironment env = new GraphEnhancementQueryEnvironment(
         Optional.of(resolver),
         Optional.of(targetGraph),

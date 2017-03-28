@@ -804,7 +804,13 @@ public class CxxDescriptionEnhancer {
     // Add in deps found via deps query.
     args.depsQuery.ifPresent(
         query ->
-            QueryUtils.resolveDepQuery(params, query, resolver, cellRoots, targetGraph, args.deps)
+            QueryUtils.resolveDepQuery(
+                params.getBuildTarget(),
+                query,
+                resolver,
+                cellRoots,
+                targetGraph,
+                args.deps)
                 .forEach(depsBuilder::add));
     // Add any extra deps passed in.
     extraDeps.stream()

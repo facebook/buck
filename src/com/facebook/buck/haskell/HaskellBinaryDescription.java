@@ -125,7 +125,13 @@ public class HaskellBinaryDescription implements
         .forEach(depsBuilder::add);
     args.depsQuery.ifPresent(
         query ->
-            QueryUtils.resolveDepQuery(params, query, resolver, cellRoots, targetGraph, args.deps)
+            QueryUtils.resolveDepQuery(
+                params.getBuildTarget(),
+                query,
+                resolver,
+                cellRoots,
+                targetGraph,
+                args.deps)
                 .filter(NativeLinkable.class::isInstance)
                 .forEach(depsBuilder::add));
     ImmutableSet<BuildRule> deps = depsBuilder.build();
