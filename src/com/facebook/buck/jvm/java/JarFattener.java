@@ -100,7 +100,8 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
     this.innerJar = innerJar;
     this.nativeLibraries = nativeLibraries;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
-    this.output = BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s")
+    this.output = BuildTargets
+        .getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
         .resolve(getBuildTarget().getShortName() + ".jar");
   }
 
@@ -205,6 +206,7 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
             /* mainClass */ FatJarMain.class.getName(),
             /* manifestFile */ null));
 
+    buildableContext.recordArtifact(output);
 
     return steps.build();
   }
