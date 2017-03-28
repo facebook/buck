@@ -44,7 +44,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 
@@ -65,7 +64,6 @@ public class AaptPackageResources extends AbstractBuildRule {
   @AddToRuleKey
   private final SourcePath manifest;
   private final FilteredResourcesProvider filteredResourcesProvider;
-  private final ImmutableSet<SourcePath> assetsDirectories;
   @AddToRuleKey
   private final Optional<String> resourceUnionPackage;
   private final ImmutableList<HasAndroidResourceDeps> resourceDeps;
@@ -86,12 +84,9 @@ public class AaptPackageResources extends AbstractBuildRule {
       BuildRuleResolver ruleResolver,
       SourcePath manifest,
       FilteredResourcesProvider filteredResourcesProvider,
-      ImmutableList<HasAndroidResourceDeps> resourceDeps,
-      ImmutableSortedSet<BuildRule> extraDeps,
-      ImmutableSet<SourcePath> assetsDirectories) {
+      ImmutableList<HasAndroidResourceDeps> resourceDeps) {
 
     ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
-    depsBuilder.addAll(extraDeps);
     Stream<BuildTarget> resourceTargets = resourceDeps.stream()
         .map(HasAndroidResourceDeps::getBuildTarget);
     depsBuilder.addAll(
@@ -101,7 +96,6 @@ public class AaptPackageResources extends AbstractBuildRule {
                 resourceTargets::iterator));
     Stream<SourcePath> resourceDirs = resourceDeps.stream().map(HasAndroidResourceDeps::getRes);
     depsBuilder.addAll(ruleFinder.filterBuildRuleInputs(resourceDirs));
-    depsBuilder.addAll(ruleFinder.filterBuildRuleInputs(assetsDirectories));
     ruleFinder.getRule(manifest).ifPresent(depsBuilder::add);
     filteredResourcesProvider.getResourceFilterRule().ifPresent(depsBuilder::add);
     return depsBuilder.build();
@@ -114,8 +108,6 @@ public class AaptPackageResources extends AbstractBuildRule {
       SourcePath manifest,
       FilteredResourcesProvider filteredResourcesProvider,
       ImmutableList<HasAndroidResourceDeps> resourceDeps,
-      ImmutableSortedSet<BuildRule> extraDeps,
-      ImmutableSet<SourcePath> assetsDirectories,
       Optional<String> resourceUnionPackage,
       boolean shouldBuildStringSourceMap,
       boolean skipCrunchPngs,
@@ -129,15 +121,11 @@ public class AaptPackageResources extends AbstractBuildRule {
             ruleResolver,
             manifest,
             filteredResourcesProvider,
-            resourceDeps,
-            extraDeps,
-            assetsDirectories)),
-        Suppliers.ofInstance(ImmutableSortedSet.of())
-    ));
+            resourceDeps)),
+        Suppliers.ofInstance(ImmutableSortedSet.of())));
     this.manifest = manifest;
     this.filteredResourcesProvider = filteredResourcesProvider;
     this.resourceDeps = resourceDeps;
-    this.assetsDirectories = assetsDirectories;
     this.resourceUnionPackage = resourceUnionPackage;
     this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
     this.skipCrunchPngs = skipCrunchPngs;
@@ -192,7 +180,7 @@ public class AaptPackageResources extends AbstractBuildRule {
             getProjectFilesystem().getRootPath(),
             getAndroidManifestXml(),
             filteredResourcesProvider.getResDirectories(),
-            context.getSourcePathResolver().getAllAbsolutePaths(assetsDirectories),
+            ImmutableSortedSet.of(),
             getResourceApkPath(),
             rDotTxtDir,
             pathToGeneratedProguardConfig,

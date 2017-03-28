@@ -51,6 +51,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.zip.ZipConstants;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -73,6 +74,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -125,6 +127,58 @@ public class AndroidBinaryIntegrationTest {
     zipInspector.assertFileExists("lib/armeabi/libfakenative.so");
   }
 
+  @Test
+  public void testAppHasAssets() throws IOException {
+    Path apkPath = workspace.buildAndReturnOutput(SIMPLE_TARGET);
+
+    ZipInspector zipInspector = new ZipInspector(workspace.getPath(apkPath));
+    zipInspector.assertFileExists("assets/asset_file.txt");
+    zipInspector.assertFileExists("assets/hilarity.txt");
+    zipInspector.assertFileContents(
+        "assets/hilarity.txt",
+        workspace.getFileContents(
+            "res/com/sample/base/buck-assets/hilarity.txt"));
+
+    // Test that after changing an asset, the new asset is in the apk.
+    String newContents = "some new contents";
+    workspace.writeContentsToPath(
+        newContents,
+        "res/com/sample/base/buck-assets/hilarity.txt");
+    workspace.buildAndReturnOutput(SIMPLE_TARGET);
+    zipInspector = new ZipInspector(workspace.getPath(apkPath));
+    zipInspector.assertFileContents("assets/hilarity.txt", newContents);
+  }
+
+  @Test
+  public void testAppAssetsAreCompressed() throws IOException {
+    // Small files don't get compressed. Make something a bit bigger.
+    String largeContents = Joiner.on("\n").join(
+        Collections.nCopies(100, "A boring line of content."));
+    workspace.writeContentsToPath(
+        largeContents,
+        "res/com/sample/base/buck-assets/hilarity.txt");
+
+    Path apkPath = workspace.buildAndReturnOutput(SIMPLE_TARGET);
+    ZipInspector zipInspector = new ZipInspector(workspace.getPath(apkPath));
+    zipInspector.assertFileExists("assets/asset_file.txt");
+    zipInspector.assertFileExists("assets/hilarity.txt");
+    zipInspector.assertFileContents(
+        "assets/hilarity.txt",
+        workspace.getFileContents(
+            "res/com/sample/base/buck-assets/hilarity.txt"));
+    zipInspector.assertFileIsCompressed("assets/hilarity.txt");
+  }
+
+  @Test
+  public void testGzAssetsAreRejected() throws IOException {
+    workspace.writeContentsToPath(
+        "some contents",
+        "res/com/sample/base/buck-assets/zipped.gz");
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(SIMPLE_TARGET);
+    result.assertFailure();
+    assertTrue(result.getStderr().contains("zipped.gz"));
+  }
 
   @Test
   public void testRawSplitDexHasSecondary() throws IOException {

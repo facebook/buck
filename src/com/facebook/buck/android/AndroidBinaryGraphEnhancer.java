@@ -266,6 +266,7 @@ public class AndroidBinaryGraphEnhancer {
     AaptOutputInfo aaptOutputInfo = resourcesEnhancementResult.getAaptOutputInfo();
     Optional<PackageStringAssets> packageStringAssets =
         resourcesEnhancementResult.getPackageStringAssets();
+    MergeAssets mergeAssets = resourcesEnhancementResult.getMergeAssets();
     enhancedDeps.addAll(resourcesEnhancementResult.getEnhancedDeps());
 
     // BuildConfig deps should not be added for instrumented APKs because BuildConfig.class has
@@ -384,7 +385,7 @@ public class AndroidBinaryGraphEnhancer {
 
     return AndroidGraphEnhancementResult.builder()
         .setPackageableCollection(packageableCollection)
-        .setPrimaryResourcesApkPath(aaptOutputInfo.getPrimaryResourcesApkPath())
+        .setPrimaryResourcesApkPath(mergeAssets.getSourcePathToOutput())
         .setAndroidManifestPath(aaptOutputInfo.getAndroidManifestXml())
         .setSourcePathToAaptGeneratedProguardConfigFile(
             aaptOutputInfo.getAaptGeneratedProguardConfigFile())

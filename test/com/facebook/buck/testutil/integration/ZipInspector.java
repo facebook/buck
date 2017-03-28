@@ -17,6 +17,7 @@
 package com.facebook.buck.testutil.integration;
 
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
@@ -102,6 +103,14 @@ public class ZipInspector {
           "Error accessing size for entry: %s",
           pathRelativeToRoot);
       return size;
+    }
+  }
+
+  public void assertFileIsCompressed(String pathRelativeToRoot) throws IOException {
+    try (ZipFile zipFile = new ZipFile(this.zipFile.toFile())) {
+      ZipEntry entry = zipFile.getEntry(pathRelativeToRoot);
+      assertThat(entry.getMethod(), is(not(ZipEntry.STORED)));
+      assertThat(entry.getCompressedSize(), Matchers.lessThan(entry.getSize()));
     }
   }
 }

@@ -51,6 +51,9 @@ class AndroidBinaryResourcesGraphEnhancer {
   private static final Flavor AAPT2_LINK_FLAVOR = InternalFlavor.of("aapt2_link");
   static final Flavor PACKAGE_STRING_ASSETS_FLAVOR =
       InternalFlavor.of("package_string_assets");
+  private static final Flavor MERGE_ASSETS_FLAVOR =
+      InternalFlavor.of("merge_assets");
+
   private final SourcePathRuleFinder ruleFinder;
   private final FilterResourcesStep.ResourceFilter resourceFilter;
   private final ResourcesFilter.ResourceCompressionMode resourceCompressionMode;
@@ -106,6 +109,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   interface AbstractAndroidBinaryResourcesGraphEnhancementResult {
     AaptOutputInfo getAaptOutputInfo();
     Optional<PackageStringAssets> getPackageStringAssets();
+    MergeAssets getMergeAssets();
     ImmutableList<BuildRule> getEnhancedDeps();
   }
 
@@ -147,7 +151,6 @@ class AndroidBinaryResourcesGraphEnhancer {
       case AAPT1: {
         // Create the AaptPackageResourcesBuildable.
         AaptPackageResources aaptPackageResources = createAaptPackageResources(
-            packageableCollection,
             resourceDetails,
             filteredResourcesProvider);
         ruleResolver.addToIndex(aaptPackageResources);
@@ -178,9 +181,18 @@ class AndroidBinaryResourcesGraphEnhancer {
       ruleResolver.addToIndex(packageStringAssets.get());
       enhancedDeps.add(packageStringAssets.get());
     }
+
+    MergeAssets mergeAssets =
+        createMergeAssetsRule(
+            packageableCollection.getAssetsDirectories(),
+            aaptOutputInfo.getPrimaryResourcesApkPath());
+    ruleResolver.addToIndex(mergeAssets);
+    enhancedDeps.add(mergeAssets);
+
     return AndroidBinaryResourcesGraphEnhancementResult.builder()
-        .setPackageStringAssets(packageStringAssets)
         .setAaptOutputInfo(aaptOutputInfo)
+        .setPackageStringAssets(packageStringAssets)
+        .setMergeAssets(mergeAssets)
         .setEnhancedDeps(enhancedDeps.build())
         .build();
   }
@@ -224,7 +236,6 @@ class AndroidBinaryResourcesGraphEnhancer {
   }
 
   private AaptPackageResources createAaptPackageResources(
-      AndroidPackageableCollection packageableCollection,
       AndroidPackageableCollection.ResourceDetails resourceDetails,
       FilteredResourcesProvider filteredResourcesProvider) {
     return new AaptPackageResources(
@@ -238,8 +249,6 @@ class AndroidBinaryResourcesGraphEnhancer {
         manifest,
         filteredResourcesProvider,
         getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
-        getTargetsAsRules(resourceDetails.getResourcesWithEmptyResButNonEmptyAssetsDir()),
-        packageableCollection.getAssetsDirectories(),
         resourceUnionPackage,
         shouldBuildStringSourceMap,
         skipCrunchPngs,
@@ -274,12 +283,29 @@ class AndroidBinaryResourcesGraphEnhancer {
         aaptOutputInfo.getPathToRDotTxt());
   }
 
+  private MergeAssets createMergeAssetsRule(
+      ImmutableSet<SourcePath> assetsDirectories,
+      SourcePath aaptOutputApk) {
+    MergeAssets mergeAssets = new MergeAssets(
+        buildRuleParams
+            .withAppendedFlavor(MERGE_ASSETS_FLAVOR)
+            .copyReplacingDeclaredAndExtraDeps(
+                Suppliers.ofInstance(ImmutableSortedSet.of()),
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
+        ruleFinder,
+        aaptOutputApk,
+        ImmutableSortedSet.copyOf(assetsDirectories));
+    ruleResolver.addToIndex(mergeAssets);
+    return mergeAssets;
+  }
+
   private ImmutableSortedSet<BuildRule> getTargetsAsRules(Collection<BuildTarget> buildTargets) {
     return BuildRules.toBuildRulesFor(
         originalBuildTarget,
         ruleResolver,
         buildTargets);
   }
+
 
   private ImmutableList<HasAndroidResourceDeps> getTargetsAsResourceDeps(
       Collection<BuildTarget> targets) {
