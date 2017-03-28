@@ -4,6 +4,7 @@ import os
 import json
 import shutil
 import stat
+import sys
 import tempfile
 
 import pkg_resources
@@ -91,17 +92,35 @@ class BuckPackage(BuckTool):
 
     def _get_resource(self, resource):
         resource_path = os.path.join(self._get_resource_subdir(), resource.basename)
+        if not os.path.exists(os.path.dirname(resource_path)):
+            os.makedirs(os.path.dirname(resource_path))
         if not os.path.exists(resource_path):
-            if not os.path.exists(os.path.dirname(resource_path)):
-                os.makedirs(os.path.dirname(resource_path))
+            self._unpack_resource(resource_path, resource.name, resource.executable)
+        return resource_path
+
+    def _unpack_resource(self, resource_path, resource_name, resource_executable):
+        if not pkg_resources.resource_exists(__name__, resource_name):
+            return
+
+        if pkg_resources.resource_isdir(__name__, resource_name):
+            os.mkdir(resource_path)
+            for f in pkg_resources.resource_listdir(__name__, resource_name):
+                if f == '':
+                    # TODO(bhamiltoncx): Figure out why this happens
+                    continue
+                # TODO: Handle executable resources in directory
+                self._unpack_resource(
+                    os.path.join(resource_path, f),
+                    os.path.join(resource_name, f),
+                    False)
+        else:
             with closable_named_temporary_file(prefix=resource_path + os.extsep) as outf:
-                outf.write(pkg_resources.resource_string(__name__, resource.name))
-                if resource.executable and hasattr(os, 'fchmod'):
+                outf.write(pkg_resources.resource_string(__name__, resource_name))
+                if resource_executable and hasattr(os, 'fchmod'):
                     st = os.fstat(outf.fileno())
                     os.fchmod(outf.fileno(), st.st_mode | stat.S_IXUSR)
                 outf.close()
                 shutil.copy(outf.name, resource_path)
-        return resource_path
 
     def _is_buck_production(self):
         build_type = pkg_resources.resource_string(__name__, 'buck_build_type_info').strip()
