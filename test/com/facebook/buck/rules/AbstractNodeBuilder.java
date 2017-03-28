@@ -145,6 +145,7 @@ public abstract class AbstractNodeBuilder<
                 node.getConstructorArg(),
                 node.getDeclaredDeps(),
                 node.getExtraDeps(),
+                node.getTargetGraphOnlyDeps(),
                 selectedVersions);
       }
       return node;

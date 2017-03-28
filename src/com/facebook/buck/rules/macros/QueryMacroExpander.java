@@ -31,6 +31,7 @@ import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -39,7 +40,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -129,13 +129,18 @@ public abstract class QueryMacroExpander<T extends QueryMacro> extends AbstractM
     return fromQuery(Query.of(input.get(0)));
   }
 
+  abstract boolean detectsTargetGraphOnlyDeps();
+
   @Override
-  public ImmutableList<BuildTarget> extractParseTimeDepsFrom(
+  public void extractParseTimeDepsFrom(
       BuildTarget target,
       CellPathResolver cellNames,
-      T input) {
-    return ImmutableList.copyOf(extractTargets(target, cellNames, Optional.empty(), input)
-        .collect(Collectors.toList()));
+      T input,
+      ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    extractTargets(target, cellNames, Optional.empty(), input)
+        .forEach(
+            (detectsTargetGraphOnlyDeps() ? targetGraphOnlyDepsBuilder : buildDepsBuilder)::add);
   }
 
 }

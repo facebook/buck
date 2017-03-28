@@ -312,6 +312,8 @@ public abstract class TargetNodeTranslator {
         translateSet(cellPathResolver, pattern, node.getDeclaredDeps());
     Optional<ImmutableSet<BuildTarget>> extraDeps =
         translateSet(cellPathResolver, pattern, node.getExtraDeps());
+    Optional<ImmutableSet<BuildTarget>> targetGraphOnlyDeps =
+        translateSet(cellPathResolver, pattern, node.getTargetGraphOnlyDeps());
 
     Optional<ImmutableMap<BuildTarget, Version>> newSelectedVersions =
         getSelectedVersions(node.getBuildTarget());
@@ -326,6 +328,7 @@ public abstract class TargetNodeTranslator {
         !constructorArg.isPresent() &&
         !declaredDeps.isPresent() &&
         !extraDeps.isPresent() &&
+        !targetGraphOnlyDeps.isPresent() &&
         !selectedVersions.isPresent()) {
       return Optional.empty();
     }
@@ -336,6 +339,7 @@ public abstract class TargetNodeTranslator {
             constructorArg.orElse(node.getConstructorArg()),
             declaredDeps.orElse(node.getDeclaredDeps()),
             extraDeps.orElse(node.getExtraDeps()),
+            targetGraphOnlyDeps.orElse(node.getTargetGraphOnlyDeps()),
             selectedVersions.orElse(oldSelectedVersions)));
   }
 

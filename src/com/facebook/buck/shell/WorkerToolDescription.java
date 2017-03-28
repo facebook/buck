@@ -145,14 +145,12 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     try {
       for (String arg : constructorArg.getStartupArgs()) {
-        extraDepsBuilder.addAll(
-            MACRO_HANDLER.extractParseTimeDeps(
-                buildTarget, cellRoots, arg));
+        MACRO_HANDLER.extractParseTimeDeps(
+            buildTarget, cellRoots, arg, extraDepsBuilder, targetGraphOnlyDepsBuilder);
       }
       for (Map.Entry<String, String> env : constructorArg.env.entrySet()) {
-        extraDepsBuilder.addAll(
-            MACRO_HANDLER.extractParseTimeDeps(
-                buildTarget, cellRoots, env.getValue()));
+        MACRO_HANDLER.extractParseTimeDeps(
+            buildTarget, cellRoots, env.getValue(), extraDepsBuilder, targetGraphOnlyDepsBuilder);
       }
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());

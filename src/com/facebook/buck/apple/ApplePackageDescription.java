@@ -127,7 +127,7 @@ public class ApplePackageDescription implements
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder.add(propagateFlavorsToTarget(buildTarget, constructorArg.bundle));
-    addDepsFromParam(extraDepsBuilder, buildTarget, cellRoots);
+    addDepsFromParam(extraDepsBuilder, targetGraphOnlyDepsBuilder, buildTarget, cellRoots);
   }
 
   @Override
@@ -200,7 +200,8 @@ public class ApplePackageDescription implements
    * This is used for ImplicitDepsInferringDescription, so it is flavor agnostic.
    */
   private void addDepsFromParam(
-      ImmutableCollection.Builder<BuildTarget> builder,
+      ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder,
       BuildTarget target,
       CellPathResolver cellNames) {
     // Add all macro expanded dependencies for these platforms.
@@ -211,11 +212,12 @@ public class ApplePackageDescription implements
 
       if (packageConfig.isPresent()) {
         try {
-          builder.addAll(
-            AbstractGenruleDescription.PARSE_TIME_MACRO_HANDLER.extractParseTimeDeps(
-                target,
-                cellNames,
-                packageConfig.get().getCommand()));
+          AbstractGenruleDescription.PARSE_TIME_MACRO_HANDLER.extractParseTimeDeps(
+              target,
+              cellNames,
+              packageConfig.get().getCommand(),
+              buildDepsBuilder,
+              targetGraphOnlyDepsBuilder);
         } catch (MacroException e) {
           throw new HumanReadableException(
               e,

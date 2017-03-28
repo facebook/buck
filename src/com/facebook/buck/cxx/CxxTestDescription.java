@@ -326,11 +326,12 @@ public class CxxTestDescription implements
             .build();
     for (String macroString : Iterables.concat(macroStrings)) {
       try {
-        extraDepsBuilder.addAll(
-            CxxDescriptionEnhancer.MACRO_HANDLER.extractParseTimeDeps(
-                buildTarget,
-                cellRoots,
-                macroString));
+        CxxDescriptionEnhancer.MACRO_HANDLER.extractParseTimeDeps(
+            buildTarget,
+            cellRoots,
+            macroString,
+            extraDepsBuilder,
+            targetGraphOnlyDepsBuilder);
       } catch (MacroException e) {
         throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
       }

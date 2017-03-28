@@ -21,16 +21,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.model.MacroException;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -71,7 +72,12 @@ public class MacroHandlerTest {
       assertTrue(e.getMessage().contains("no such macro \"badmacro\""));
     }
     try {
-      handler.extractParseTimeDeps(target, createCellRoots(filesystem), "$(badmacro hello)");
+      handler.extractParseTimeDeps(
+          target,
+          createCellRoots(filesystem),
+          "$(badmacro hello)",
+          new ImmutableSet.Builder<>(),
+          new ImmutableSet.Builder<>());
     } catch (MacroException e) {
       assertTrue(e.getMessage().contains("no such macro \"badmacro\""));
     }

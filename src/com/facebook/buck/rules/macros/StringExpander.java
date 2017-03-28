@@ -21,6 +21,7 @@ import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 public class StringExpander implements MacroExpander {
@@ -52,12 +53,13 @@ public class StringExpander implements MacroExpander {
   }
 
   @Override
-  public ImmutableList<BuildTarget> extractParseTimeDeps(
+  public void extractParseTimeDeps(
       BuildTarget target,
       CellPathResolver cellNames,
-      ImmutableList<String> input)
+      ImmutableList<String> input,
+      ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder)
       throws MacroException {
-    return ImmutableList.of();
   }
 
   @Override

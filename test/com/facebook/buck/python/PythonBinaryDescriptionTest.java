@@ -951,7 +951,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void nonBuildDepsDoNotAffectRuleKey() throws Exception {
+  public void targetGraphOnlyDepsDoNotAffectRuleKey() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     for (PythonBuckConfig.PackageStyle packageStyle : PythonBuckConfig.PackageStyle.values()) {
 

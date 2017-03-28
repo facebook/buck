@@ -1049,10 +1049,20 @@ public class PrebuiltCxxLibraryDescription implements
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (constructorArg.libDir.isPresent()) {
-      addDepsFromParam(buildTarget, cellRoots, constructorArg.libDir.get(), extraDepsBuilder);
+      addDepsFromParam(
+          buildTarget,
+          cellRoots,
+          constructorArg.libDir.get(),
+          extraDepsBuilder,
+          targetGraphOnlyDepsBuilder);
     }
     for (String include : constructorArg.includeDirs) {
-      addDepsFromParam(buildTarget, cellRoots, include, extraDepsBuilder);
+      addDepsFromParam(
+          buildTarget,
+          cellRoots,
+          include,
+          extraDepsBuilder,
+          targetGraphOnlyDepsBuilder);
     }
   }
 
@@ -1078,12 +1088,18 @@ public class PrebuiltCxxLibraryDescription implements
       BuildTarget target,
       CellPathResolver cellNames,
       String paramValue,
-      ImmutableCollection.Builder<BuildTarget> targets) {
+      ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     try {
       // doesn't matter that the platform expander doesn't do anything.
       MacroHandler macroHandler = getMacroHandler(Optional.empty());
       // Then get the parse time deps.
-      targets.addAll(macroHandler.extractParseTimeDeps(target, cellNames, paramValue));
+      macroHandler.extractParseTimeDeps(
+          target,
+          cellNames,
+          paramValue,
+          buildDepsBuilder,
+          targetGraphOnlyDepsBuilder);
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s : %s in \"%s\"", target, e.getMessage(), paramValue);
     }

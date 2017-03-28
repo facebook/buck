@@ -159,13 +159,26 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (constructorArg.bash.isPresent()) {
-      addDepsFromParam(buildTarget, cellRoots, constructorArg.bash.get(), extraDepsBuilder);
+      addDepsFromParam(
+          buildTarget,
+          cellRoots,
+          constructorArg.bash.get(),
+          extraDepsBuilder,
+          targetGraphOnlyDepsBuilder);
     }
     if (constructorArg.cmd.isPresent()) {
-      addDepsFromParam(buildTarget, cellRoots, constructorArg.cmd.get(), extraDepsBuilder);
+      addDepsFromParam(buildTarget,
+          cellRoots,
+          constructorArg.cmd.get(),
+          extraDepsBuilder,
+          targetGraphOnlyDepsBuilder);
     }
     if (constructorArg.cmdExe.isPresent()) {
-      addDepsFromParam(buildTarget, cellRoots, constructorArg.cmdExe.get(), extraDepsBuilder);
+      addDepsFromParam(buildTarget,
+          cellRoots,
+          constructorArg.cmdExe.get(),
+          extraDepsBuilder,
+          targetGraphOnlyDepsBuilder);
     }
   }
 
@@ -173,10 +186,15 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       BuildTarget target,
       CellPathResolver cellNames,
       String paramValue,
-      ImmutableCollection.Builder<BuildTarget> targets) {
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     try {
-      targets.addAll(
-          getMacroHandlerForParseTimeDeps().extractParseTimeDeps(target, cellNames, paramValue));
+      getMacroHandlerForParseTimeDeps().extractParseTimeDeps(
+          target,
+          cellNames,
+          paramValue,
+          extraDepsBuilder,
+          targetGraphOnlyDepsBuilder);
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }

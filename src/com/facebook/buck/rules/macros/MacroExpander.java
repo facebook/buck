@@ -21,6 +21,7 @@ import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import javax.annotation.Nullable;
@@ -56,10 +57,12 @@ public interface MacroExpander {
    *     {@link com.facebook.buck.rules.ImplicitDepsInferringDescription#findDepsForTargetFromConstructorArgs}
    *     to extract implicit dependencies hidden behind macros.
    */
-  ImmutableList<BuildTarget> extractParseTimeDeps(
+  void extractParseTimeDeps(
       BuildTarget target,
       CellPathResolver cellNames,
-      ImmutableList<String> input)
+      ImmutableList<String> input,
+      ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder)
       throws MacroException;
 
   /**

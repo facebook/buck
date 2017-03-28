@@ -423,7 +423,7 @@ public class AndroidBinaryDescription implements
       }
 
       constructorArg.redexExtraArgs.forEach(a ->
-        addDepsFromParam(buildTarget, cellRoots, a, extraDepsBuilder)
+        addDepsFromParam(buildTarget, cellRoots, a, extraDepsBuilder, targetGraphOnlyDepsBuilder)
       );
     }
   }
@@ -432,9 +432,15 @@ public class AndroidBinaryDescription implements
       BuildTarget target,
       CellPathResolver cellNames,
       String paramValue,
-      ImmutableCollection.Builder<BuildTarget> targets) {
+      ImmutableCollection.Builder<BuildTarget> buildDefsBuilder,
+      ImmutableCollection.Builder<BuildTarget> nonBuildDefsBuilder) {
     try {
-      targets.addAll(MACRO_HANDLER.extractParseTimeDeps(target, cellNames, paramValue));
+      MACRO_HANDLER.extractParseTimeDeps(
+          target,
+          cellNames,
+          paramValue,
+          buildDefsBuilder,
+          nonBuildDefsBuilder);
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }

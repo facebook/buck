@@ -500,7 +500,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void nonBuildDepsDoNotAffectRuleKey() throws Exception {
+  public void targetGraphOnlyDepsDoNotAffectRuleKey() throws Exception {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     for (PythonBuckConfig.PackageStyle packageStyle : PythonBuckConfig.PackageStyle.values()) {
 

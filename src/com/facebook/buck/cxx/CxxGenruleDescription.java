@@ -451,14 +451,15 @@ public class CxxGenruleDescription
     }
 
     @Override
-    public ImmutableList<BuildTarget> extractParseTimeDeps(
+    public void extractParseTimeDeps(
         BuildTarget target,
         CellPathResolver cellNames,
-        ImmutableList<String> input)
+        ImmutableList<String> input,
+        ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
+        ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder)
         throws MacroException {
       // We already return all platform-specific parse-time deps from
       // `findDepsForTargetFromConstructorArgs`.
-      return ImmutableList.of();
     }
 
     @Override
@@ -561,11 +562,13 @@ public class CxxGenruleDescription
     }
 
     @Override
-    public ImmutableList<BuildTarget> extractParseTimeDepsFrom(
+    public void extractParseTimeDepsFrom(
         BuildTarget target,
         CellPathResolver cellNames,
-        FilterAndTargets input) {
-      return input.targets;
+        FilterAndTargets input,
+        ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
+        ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+      buildDepsBuilder.addAll(input.targets);
     }
 
     @Override
@@ -919,14 +922,16 @@ public class CxxGenruleDescription
     }
 
     @Override
-    public ImmutableList<BuildTarget> extractParseTimeDeps(
+    public void extractParseTimeDeps(
         BuildTarget target,
         CellPathResolver cellNames,
-        ImmutableList<String> input) throws MacroException {
+        ImmutableList<String> input,
+        ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
+        ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) throws MacroException {
       Optional<CxxPlatform> platform = cxxPlatforms.getValue(target.getFlavors());
-      return platform.isPresent() ?
-          ImmutableList.copyOf(CxxPlatforms.getParseTimeDeps(platform.get())) :
-          ImmutableList.<BuildTarget>of();
+      if (platform.isPresent()) {
+        buildDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(platform.get()));
+      }
     }
   }
 

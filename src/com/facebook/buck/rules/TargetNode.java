@@ -23,10 +23,12 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -128,11 +130,16 @@ public class TargetNode<T, U extends Description<T>>
   /**
    * @return all targets which must be built before this one can be.
    */
-  public ImmutableSet<BuildTarget> getBuildDeps() {
-    ImmutableSet.Builder<BuildTarget> builder = ImmutableSet.builder();
-    builder.addAll(getDeclaredDeps());
-    builder.addAll(getExtraDeps());
-    return builder.build();
+  public Set<BuildTarget> getBuildDeps() {
+    return Sets.union(declaredDeps, extraDeps);
+  }
+
+  /**
+   * @return all targets which must be present in the TargetGraph before this one can be
+   * transformed into a BuildRule.
+   */
+  public Set<BuildTarget> getParseDeps() {
+    return Sets.union(getBuildDeps(), targetGraphOnlyDeps);
   }
 
   /**
@@ -230,6 +237,7 @@ public class TargetNode<T, U extends Description<T>>
       T constructorArg,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<BuildTarget> extraDeps,
+      ImmutableSet<BuildTarget> targetGraphOnlyDeps,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVerisons) {
     return new TargetNode<>(
         factory,

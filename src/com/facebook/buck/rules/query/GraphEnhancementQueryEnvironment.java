@@ -118,7 +118,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
     ImmutableSet.Builder<QueryTarget> builder = ImmutableSet.builder();
     for (QueryTarget target : targets) {
       List<QueryBuildTarget> deps = getNode(target)
-          .getBuildDeps()
+          .getParseDeps()
           .stream()
           .map(QueryBuildTarget::of)
           .collect(Collectors.toList());
@@ -138,6 +138,9 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
         action.accept(QueryBuildTarget.of(dep));
       }
       for (BuildTarget dep : node.getExtraDeps()) {
+        action.accept(QueryBuildTarget.of(dep));
+      }
+      for (BuildTarget dep : node.getTargetGraphOnlyDeps()) {
         action.accept(QueryBuildTarget.of(dep));
       }
     }

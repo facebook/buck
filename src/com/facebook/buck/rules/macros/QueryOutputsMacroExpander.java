@@ -114,6 +114,11 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander<QueryOutputsMa
   }
 
   @Override
+  boolean detectsTargetGraphOnlyDeps() {
+    return false;
+  }
+
+  @Override
   public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
       BuildTarget target,
       CellPathResolver cellNames,

@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -126,25 +127,24 @@ public class MacroHandler {
     return deps.build();
   }
 
-  public ImmutableList<BuildTarget> extractParseTimeDeps(
+  public void extractParseTimeDeps(
       BuildTarget target,
       CellPathResolver cellNames,
-      String blob)
+      String blob,
+      ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder)
       throws MacroException {
-
-    ImmutableList.Builder<BuildTarget> targets = ImmutableList.builder();
 
     // Iterate over all macros found in the string, collecting all `BuildTargets` each expander
     // extract for their respective macros.
     for (MacroMatchResult matchResult : getMacroMatchResults(blob)) {
-      targets.addAll(
-          getExpander(matchResult.getMacroType()).extractParseTimeDeps(
-              target,
-              cellNames,
-              matchResult.getMacroInput()));
+      getExpander(matchResult.getMacroType()).extractParseTimeDeps(
+          target,
+          cellNames,
+          matchResult.getMacroInput(),
+          buildDepsBuilder,
+          targetGraphOnlyDepsBuilder);
     }
-
-    return targets.build();
   }
 
   public ImmutableList<Object> extractRuleKeyAppendables(

@@ -324,7 +324,7 @@ public class VersionedTargetGraphBuilder {
         node = oldNode;
       } else {
         targetGraphBuilder.addNode(node.getBuildTarget().withFlavors(), node);
-        for (TargetNode<?, ?> dep : process(node.getBuildDeps())) {
+        for (TargetNode<?, ?> dep : process(node.getParseDeps())) {
           targetGraphBuilder.addEdge(node, dep);
         }
       }
@@ -437,7 +437,7 @@ public class VersionedTargetGraphBuilder {
                     node.getBuildTarget().getFlavors())),
             newNode);
         for (BuildTarget depTarget :
-             FluentIterable.from(node.getBuildDeps())
+             FluentIterable.from(node.getParseDeps())
                  .filter(Predicates.or(isVersionPropagator, isVersioned))) {
           targetGraphBuilder.addEdge(
               newNode,
@@ -448,7 +448,7 @@ public class VersionedTargetGraphBuilder {
         }
         for (TargetNode<?, ?> dep :
              process(
-                 FluentIterable.from(node.getBuildDeps())
+                 FluentIterable.from(node.getParseDeps())
                      .filter(Predicates.not(Predicates.or(isVersionPropagator, isVersioned))))) {
           targetGraphBuilder.addEdge(newNode, dep);
         }

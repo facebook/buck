@@ -20,6 +20,7 @@ import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Optional;
@@ -79,21 +80,29 @@ public abstract class AbstractMacroExpander<T> implements MacroExpander {
   }
 
   @Override
-  public final ImmutableList<BuildTarget> extractParseTimeDeps(
+  public final void extractParseTimeDeps(
       BuildTarget target,
       CellPathResolver cellNames,
-      ImmutableList<String> input)
+      ImmutableList<String> input,
+      ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder)
       throws MacroException {
-    return extractParseTimeDepsFrom(target, cellNames, parse(target, cellNames, input));
+    extractParseTimeDepsFrom(
+        target,
+        cellNames,
+        parse(target, cellNames, input),
+        buildDepsBuilder,
+        targetGraphOnlyDepsBuilder);
   }
 
   @SuppressWarnings("unused")
-  public ImmutableList<BuildTarget> extractParseTimeDepsFrom(
+  public void extractParseTimeDepsFrom(
       BuildTarget target,
       CellPathResolver cellNames,
-      T input)
+      T input,
+      ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder)
       throws MacroException {
-    return ImmutableList.of();
   }
 
   @Override

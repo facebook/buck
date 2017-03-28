@@ -30,6 +30,7 @@ import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.shell.WorkerTool;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
@@ -60,12 +61,16 @@ public class WorkerMacroArg extends MacroArg {
     }
 
     // extract the BuildTargets referenced in any macros
-    ImmutableList<BuildTarget> targets = macroHandler.extractParseTimeDeps(
+    ImmutableList.Builder<BuildTarget> targetsBuilder = new ImmutableList.Builder<>();
+    macroHandler.extractParseTimeDeps(
         target,
         cellNames,
-        unexpanded);
+        unexpanded,
+        targetsBuilder,
+        new ImmutableSet.Builder<>());
+    ImmutableList<BuildTarget> targets = targetsBuilder.build();
 
-    if (targets.size() < 1) {
+    if (targets.isEmpty()) {
       throw new MacroException(String.format("Unable to extract any build targets for the macros " +
           "used in \"%s\" of target %s",
           unexpanded,

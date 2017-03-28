@@ -154,7 +154,7 @@ class ModuleBuildContext {
   }
 
   public void addDeps(
-      ImmutableSet<BuildTarget> buildTargets,
+      Iterable<BuildTarget> buildTargets,
       DependencyType dependencyType) {
     addDeps(ImmutableSet.of(), buildTargets, dependencyType);
   }
@@ -178,7 +178,7 @@ class ModuleBuildContext {
    */
   public void addDeps(
       ImmutableSet<Path> sourcePaths,
-      ImmutableSet<BuildTarget> buildTargets,
+      Iterable<BuildTarget> buildTargets,
       DependencyType dependencyType) {
     for (BuildTarget buildTarget : buildTargets) {
       if (circularDependencyInducingTargets.contains(buildTarget)) {

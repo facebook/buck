@@ -127,7 +127,12 @@ public class ShTestDescription implements
              constructorArg.args,
              constructorArg.env.values())) {
       try {
-        extraDepsBuilder.addAll(MACRO_HANDLER.extractParseTimeDeps(buildTarget, cellRoots, blob));
+        MACRO_HANDLER.extractParseTimeDeps(
+            buildTarget,
+            cellRoots,
+            blob,
+            extraDepsBuilder,
+            targetGraphOnlyDepsBuilder);
       } catch (MacroException e) {
         throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
       }
