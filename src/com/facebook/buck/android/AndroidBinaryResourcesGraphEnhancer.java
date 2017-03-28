@@ -132,7 +132,6 @@ class AndroidBinaryResourcesGraphEnhancer {
           resourceRules,
           rulesWithResourceDirectories);
       ruleResolver.addToIndex(resourcesFilter);
-
       filteredResourcesProvider = resourcesFilter;
       enhancedDeps.add(resourcesFilter);
       resourceRules = ImmutableSortedSet.of(resourcesFilter);
@@ -158,21 +157,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       break;
 
       case AAPT2: {
-        ImmutableList.Builder<Aapt2Compile> compileListBuilder = ImmutableList.builder();
-        for (BuildTarget resTarget : resourceDetails.getResourcesWithNonEmptyResDir()) {
-          compileListBuilder.add((Aapt2Compile) ruleResolver.requireRule(
-              resTarget.withFlavors(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)));
-        }
-        ImmutableList<Aapt2Compile> compileList = compileListBuilder.build();
-        BuildRuleParams paramsForAapt2Link = buildRuleParams
-            .withAppendedFlavor(AAPT2_LINK_FLAVOR)
-            .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(ImmutableSortedSet.of()),
-                Suppliers.ofInstance(ImmutableSortedSet.of()));
-        Aapt2Link aapt2Link = new Aapt2Link(
-            paramsForAapt2Link,
-            compileList
-        );
+        Aapt2Link aapt2Link = createAapt2Link(resourceDetails);
         ruleResolver.addToIndex(aapt2Link);
         enhancedDeps.add(aapt2Link);
         aaptOutputInfo = aapt2Link.getAaptOutputInfo();
@@ -198,6 +183,23 @@ class AndroidBinaryResourcesGraphEnhancer {
         .setAaptOutputInfo(aaptOutputInfo)
         .setEnhancedDeps(enhancedDeps.build())
         .build();
+  }
+
+  private Aapt2Link createAapt2Link(AndroidPackageableCollection.ResourceDetails resourceDetails)
+      throws NoSuchBuildTargetException {
+    ImmutableList.Builder<Aapt2Compile> compileListBuilder = ImmutableList.builder();
+    for (BuildTarget resTarget : resourceDetails.getResourcesWithNonEmptyResDir()) {
+      compileListBuilder.add((Aapt2Compile) ruleResolver.requireRule(
+          resTarget.withFlavors(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)));
+    }
+    return new Aapt2Link(
+        buildRuleParams
+            .withAppendedFlavor(AAPT2_LINK_FLAVOR)
+            .copyReplacingDeclaredAndExtraDeps(
+                Suppliers.ofInstance(ImmutableSortedSet.of()),
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
+        compileListBuilder.build()
+    );
   }
 
   private ResourcesFilter createResourcesFilter(
