@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.CoercedTypeCache;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -71,11 +72,13 @@ public class IntraCellIntegrationTest {
 
     TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory(
         ObjectMappers.newDefaultInstance());
+    CoercedTypeCache coercedTypeCache = new CoercedTypeCache(coercerFactory);
     Parser parser = new Parser(
         new BroadcastEventListener(),
         cell.getBuckConfig().getView(ParserConfig.class),
         coercerFactory,
-        new ConstructorArgMarshaller(coercerFactory));
+        coercedTypeCache,
+        new ConstructorArgMarshaller(coercedTypeCache));
 
     // This parses cleanly
     parser.buildTargetGraph(

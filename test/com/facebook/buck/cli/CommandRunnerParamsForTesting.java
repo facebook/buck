@@ -32,6 +32,7 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.CoercedTypeCache;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -88,6 +89,7 @@ public class CommandRunnerParamsForTesting {
       throws IOException, InterruptedException {
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
         ObjectMappers.newDefaultInstance());
+    CoercedTypeCache coercedTypeCache = new CoercedTypeCache(typeCoercerFactory);
     return CommandRunnerParams.builder()
         .setConsole(console)
         .setStdIn(new ByteArrayInputStream("".getBytes("UTF-8")))
@@ -99,12 +101,14 @@ public class CommandRunnerParamsForTesting {
                 eventBus))
         .setArtifactCacheFactory(new SingletonArtifactCacheFactory(artifactCache))
         .setBuckEventBus(eventBus)
+        .setCoercedTypeCache(coercedTypeCache)
         .setParser(
             new Parser(
                 new BroadcastEventListener(),
                 cell.getBuckConfig().getView(ParserConfig.class),
                 typeCoercerFactory,
-                new ConstructorArgMarshaller(typeCoercerFactory)))
+                coercedTypeCache,
+                new ConstructorArgMarshaller(coercedTypeCache)))
         .setPlatform(platform)
         .setEnvironment(environment)
         .setJavaPackageFinder(javaPackageFinder)

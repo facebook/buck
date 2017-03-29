@@ -33,6 +33,7 @@ import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.CoercedTypeCache;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -83,14 +84,18 @@ public class BuckQueryEnvironmentTest {
     TestConsole console = new TestConsole();
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
         ObjectMappers.newDefaultInstance());
+    CoercedTypeCache coercedTypeCache = new CoercedTypeCache(typeCoercerFactory);
     Parser parser = new Parser(
         new BroadcastEventListener(),
         cell.getBuckConfig().getView(ParserConfig.class),
-        typeCoercerFactory, new ConstructorArgMarshaller(typeCoercerFactory));
+        typeCoercerFactory,
+        coercedTypeCache,
+        new ConstructorArgMarshaller(coercedTypeCache));
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     parserState =
         new PerBuildState(
             parser,
+            coercedTypeCache,
             eventBus,
             executor,
             cell,

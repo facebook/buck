@@ -28,6 +28,7 @@ import static org.junit.Assume.assumeThat;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CoercedTypeCache;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -188,8 +189,9 @@ public class JvmLibraryArgInterpreterTest {
   private void populateWithDefaultValues(Object arg) {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     try {
-      new ConstructorArgMarshaller(
-          new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance())).populate(
+      CoercedTypeCache coercedTypeCache =
+          new CoercedTypeCache(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()));
+      new ConstructorArgMarshaller(coercedTypeCache).populate(
           createCellRoots(filesystem),
           filesystem,
           BuildTargetFactory.newInstance("//example:target"),

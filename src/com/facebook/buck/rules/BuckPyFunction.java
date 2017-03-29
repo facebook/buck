@@ -62,10 +62,10 @@ public class BuckPyFunction {
           '>')
   );
 
-  private final ConstructorArgMarshaller argMarshaller;
+  private final CoercedTypeCache coercedTypeCache;
 
-  public BuckPyFunction(ConstructorArgMarshaller argMarshaller) {
-    this.argMarshaller = argMarshaller;
+  public BuckPyFunction(CoercedTypeCache coercedTypeCache) {
+    this.coercedTypeCache = coercedTypeCache;
   }
 
   public String toPythonFunction(BuildRuleType type, Object dto) {
@@ -73,7 +73,8 @@ public class BuckPyFunction {
 
     ImmutableList.Builder<StParamInfo> mandatory = ImmutableList.builder();
     ImmutableList.Builder<StParamInfo> optional = ImmutableList.builder();
-    for (ParamInfo param : ImmutableSortedSet.copyOf(argMarshaller.getAllParamInfo(dto))) {
+    for (ParamInfo param :
+        ImmutableSortedSet.copyOf(coercedTypeCache.getAllParamInfo(dto.getClass()))) {
       if (isSkippable(param)) {
         continue;
       }

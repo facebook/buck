@@ -23,6 +23,7 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.CoercedTypeCache;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -117,11 +118,13 @@ public class ParserBenchmark {
 
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
         ObjectMappers.newDefaultInstance());
-    ConstructorArgMarshaller marshaller = new ConstructorArgMarshaller(typeCoercerFactory);
+    CoercedTypeCache coercedTypeCache = new CoercedTypeCache(typeCoercerFactory);
+    ConstructorArgMarshaller marshaller = new ConstructorArgMarshaller(coercedTypeCache);
     parser = new Parser(
         new BroadcastEventListener(),
         config.getView(ParserConfig.class),
         typeCoercerFactory,
+        coercedTypeCache,
         marshaller);
   }
 

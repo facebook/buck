@@ -41,6 +41,7 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CoercedTypeCache;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
@@ -159,12 +160,14 @@ public class DistBuildStateTest {
     BuckConfig buckConfig = cell.getBuckConfig();
     TypeCoercerFactory typeCoercerFactory =
         new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance());
+    CoercedTypeCache coercedTypeCache = new CoercedTypeCache(typeCoercerFactory);
     ConstructorArgMarshaller constructorArgMarshaller =
-        new ConstructorArgMarshaller(typeCoercerFactory);
+        new ConstructorArgMarshaller(coercedTypeCache);
     Parser parser = new Parser(
         new BroadcastEventListener(),
         buckConfig.getView(ParserConfig.class),
         typeCoercerFactory,
+        coercedTypeCache,
         constructorArgMarshaller);
     TargetGraph targetGraph = parser.buildTargetGraph(
         BuckEventBusFactory.newInstance(),
@@ -368,9 +371,10 @@ public class DistBuildStateTest {
 
     DistBuildTypeCoercerFactory typeCoercerFactory =
         new DistBuildTypeCoercerFactory(objectMapper);
+    CoercedTypeCache coercedTypeCache = new CoercedTypeCache(typeCoercerFactory);
     ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
-            new ConstructorArgMarshaller(typeCoercerFactory),
+            new ConstructorArgMarshaller(coercedTypeCache),
             new TargetNodeFactory(typeCoercerFactory));
 
     return new DistBuildTargetGraphCodec(

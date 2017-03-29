@@ -39,7 +39,7 @@ import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
-import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.CoercedTypeCache;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -125,8 +125,7 @@ public class ResolverIntegrationTest {
             .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
             .build());
     buildFileParser = parserFactory.createParser(
-        new ConstructorArgMarshaller(new DefaultTypeCoercerFactory(
-            ObjectMappers.newDefaultInstance())),
+        new CoercedTypeCache(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance())),
         new TestConsole(),
         ImmutableMap.of(),
         BuckEventBusFactory.newInstance(),

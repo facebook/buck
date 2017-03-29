@@ -30,6 +30,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.CoercedTypeCache;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
@@ -368,14 +369,15 @@ public class ParsePipelineTest {
       this.rawNodeParsePipelineCache = new RawNodeParsePipelineCache();
       final TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory(
           ObjectMappers.newDefaultInstance());
+      final CoercedTypeCache coercedTypeCache = new CoercedTypeCache(coercerFactory);
       final ConstructorArgMarshaller constructorArgMarshaller =
-          new ConstructorArgMarshaller(coercerFactory);
+          new ConstructorArgMarshaller(coercedTypeCache);
 
       projectBuildFileParserPool = new ProjectBuildFileParserPool(
           4, // max parsers
           input -> {
             ProjectBuildFileParser buildFileParser = input.createBuildFileParser(
-                constructorArgMarshaller,
+                coercedTypeCache,
                 console,
                 eventBus,
                 /* ignoreBuckAutodepsFiles */ false);

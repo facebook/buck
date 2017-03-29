@@ -17,7 +17,7 @@
 package com.facebook.buck.json;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.CoercedTypeCache;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableMap;
@@ -31,14 +31,14 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
 
   @Override
   public ProjectBuildFileParser createParser(
-      ConstructorArgMarshaller marshaller,
+      CoercedTypeCache coercedTypeCache,
       Console console,
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus,
       boolean ignoreBuckAutodepsFiles) {
     return new ProjectBuildFileParser(
         options,
-        marshaller,
+        coercedTypeCache,
         environment,
         buckEventBus,
         new DefaultProcessExecutor(console),

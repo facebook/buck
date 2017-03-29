@@ -41,8 +41,9 @@ public class BuckPyFunctionTest {
   @Before
   public void setUpMarshaller() {
     buckPyFunction =
-        new BuckPyFunction(new ConstructorArgMarshaller(new DefaultTypeCoercerFactory(
-            ObjectMappers.newDefaultInstance())));
+        new BuckPyFunction(
+            new CoercedTypeCache(
+                new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance())));
   }
 
   public static class NoName {

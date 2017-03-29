@@ -78,6 +78,7 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellProvider;
+import com.facebook.buck.rules.CoercedTypeCache;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
@@ -347,6 +348,7 @@ public final class Main {
   private static final class Daemon implements Closeable {
 
     private final Cell cell;
+    private final CoercedTypeCache coercedTypeCache;
     private final Parser parser;
     private final ImmutableList<ProjectFileHashCache> hashCaches;
     private final EventBus fileEventBus;
@@ -389,11 +391,13 @@ public final class Main {
       this.versionedTargetGraphCache = new VersionedTargetGraphCache();
 
       TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(objectMapper);
+      this.coercedTypeCache = new CoercedTypeCache(typeCoercerFactory);
       this.parser = new Parser(
-          this.broadcastEventListener,
+          broadcastEventListener,
           cell.getBuckConfig().getView(ParserConfig.class),
           typeCoercerFactory,
-          new ConstructorArgMarshaller(typeCoercerFactory));
+          coercedTypeCache,
+          new ConstructorArgMarshaller(coercedTypeCache));
       fileEventBus.register(parser);
       fileEventBus.register(actionGraphCache);
 
@@ -1239,6 +1243,7 @@ public final class Main {
           buildEventBus.post(startedEvent);
 
           // Create or get Parser and invalidate cached command parameters.
+          CoercedTypeCache coercedTypeCache = null;
           Parser parser = null;
           VersionedTargetGraphCache versionedTargetGraphCache = null;
           ActionGraphCache actionGraphCache = null;
@@ -1257,6 +1262,7 @@ public final class Main {
                       .addAll(DEFAULT_IGNORE_GLOBS)
                       .build(),
                   watchman);
+              coercedTypeCache = daemon.coercedTypeCache;
               parser = getParserFromDaemon(
                   context,
                   rootCell,
@@ -1287,13 +1293,15 @@ public final class Main {
             actionGraphCache = new ActionGraphCache(broadcastEventListener);
           }
 
-          if (parser == null) {
+          if (coercedTypeCache == null || parser == null) {
             TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(objectMapper);
+            coercedTypeCache = new CoercedTypeCache(typeCoercerFactory);
             parser = new Parser(
                 broadcastEventListener,
                 rootCell.getBuckConfig().getView(ParserConfig.class),
                 typeCoercerFactory,
-                new ConstructorArgMarshaller(typeCoercerFactory));
+                coercedTypeCache,
+                new ConstructorArgMarshaller(coercedTypeCache));
           }
 
           // Because the Parser is potentially constructed before the CounterRegistry,
@@ -1344,6 +1352,7 @@ public final class Main {
                     .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)
                     .setArtifactCacheFactory(artifactCacheFactory)
                     .setBuckEventBus(buildEventBus)
+                    .setCoercedTypeCache(coercedTypeCache)
                     .setParser(parser)
                     .setPlatform(platform)
                     .setEnvironment(clientEnvironment)

@@ -26,6 +26,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.CoercedTypeCache;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
@@ -61,6 +62,7 @@ public class PerBuildState implements AutoCloseable {
   private static final Logger LOG = Logger.get(PerBuildState.class);
 
   private final Parser parser;
+  private final CoercedTypeCache coercedTypeCache;
   private final BuckEventBus eventBus;
   private final boolean enableProfiling;
   private final boolean ignoreBuckAutodepsFiles;
@@ -89,6 +91,7 @@ public class PerBuildState implements AutoCloseable {
 
   public PerBuildState(
       Parser parser,
+      CoercedTypeCache coercedTypeCache,
       BuckEventBus eventBus,
       ListeningExecutorService executorService,
       Cell rootCell,
@@ -97,6 +100,7 @@ public class PerBuildState implements AutoCloseable {
       boolean ignoreBuckAutodepsFiles) {
 
     this.parser = parser;
+    this.coercedTypeCache = coercedTypeCache;
     this.eventBus = eventBus;
     this.enableProfiling = enableProfiling;
     this.ignoreBuckAutodepsFiles = ignoreBuckAutodepsFiles;
@@ -171,7 +175,7 @@ public class PerBuildState implements AutoCloseable {
 
   private ProjectBuildFileParser createBuildFileParser(Cell cell, boolean ignoreBuckAutodepsFiles) {
     ProjectBuildFileParser parser = cell.createBuildFileParser(
-        this.parser.getMarshaller(),
+        coercedTypeCache,
         console,
         eventBus,
         ignoreBuckAutodepsFiles);

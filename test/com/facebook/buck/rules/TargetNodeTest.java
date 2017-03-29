@@ -182,8 +182,10 @@ public class TargetNodeTest {
       BuildTarget buildTarget,
       Map<String, Object> instance) throws NoSuchBuildTargetException {
     ConstructorArgMarshaller marshaller =
-        new ConstructorArgMarshaller(new DefaultTypeCoercerFactory(
-            ObjectMappers.newDefaultInstance()));
+        new ConstructorArgMarshaller(
+            new CoercedTypeCache(
+                new DefaultTypeCoercerFactory(
+                    ObjectMappers.newDefaultInstance())));
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     Arg constructorArg = description.createUnpopulatedConstructorArg();
     try {

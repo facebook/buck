@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CoercedTypeCache;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
@@ -61,8 +62,10 @@ public class GenruleDescriptionTest {
         "cmd", "$(exe //bin:executable) $(location :arg)");
     ProjectFilesystem projectFilesystem = new AllExistingProjectFilesystem();
     ConstructorArgMarshaller marshaller =
-        new ConstructorArgMarshaller(new DefaultTypeCoercerFactory(
-            ObjectMappers.newDefaultInstance()));
+        new ConstructorArgMarshaller(
+            new CoercedTypeCache(
+                new DefaultTypeCoercerFactory(
+                    ObjectMappers.newDefaultInstance())));
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     ImmutableSet.Builder<VisibilityPattern> visibilityPatterns = ImmutableSet.builder();
     ImmutableSet.Builder<VisibilityPattern> withinViewPatterns = ImmutableSet.builder();
