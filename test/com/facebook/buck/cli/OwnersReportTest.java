@@ -31,7 +31,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.CoercedTypeCache;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -88,11 +87,9 @@ public class OwnersReportTest {
     Description<FakeRuleDescription.FakeArg> description = new FakeRuleDescription();
     FakeRuleDescription.FakeArg arg = description.createUnpopulatedConstructorArg();
     arg.inputs = inputs;
-    CoercedTypeCache coercedTypeCache =
-        new CoercedTypeCache(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()));
     try {
       return
-          new TargetNodeFactory(coercedTypeCache)
+          new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
               .create(
                   Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),
                   description,

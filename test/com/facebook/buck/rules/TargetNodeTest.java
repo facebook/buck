@@ -160,9 +160,7 @@ public class TargetNodeTest {
 
     ExampleDescription description = new ExampleDescription();
 
-    CoercedTypeCache coercedTypeCache =
-        new CoercedTypeCache(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()));
-    return new TargetNodeFactory(coercedTypeCache)
+    return new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
         .create(
             Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),
             description,

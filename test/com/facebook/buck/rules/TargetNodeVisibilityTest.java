@@ -256,9 +256,7 @@ public class TargetNodeVisibilityTest {
     CellPathResolver cellNames = new FakeCellPathResolver(filesystem);
     Description<FakeRuleDescription.FakeArg> description = new FakeRuleDescription();
     FakeRuleDescription.FakeArg arg = description.createUnpopulatedConstructorArg();
-    CoercedTypeCache coercedTypeCache =
-        new CoercedTypeCache(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()));
-    return new TargetNodeFactory(coercedTypeCache)
+    return new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
         .create(
             Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),
             description,

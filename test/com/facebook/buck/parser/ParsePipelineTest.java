@@ -408,7 +408,7 @@ public class ParsePipelineTest {
               constructorArgMarshaller,
               buildFileTrees,
               nodeListener,
-              new TargetNodeFactory(coercedTypeCache)),
+              new TargetNodeFactory(coercerFactory)),
           this.executorService,
           this.eventBus,
           speculativeParsing.value(),

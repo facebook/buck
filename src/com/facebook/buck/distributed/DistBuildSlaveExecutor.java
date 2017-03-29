@@ -239,10 +239,12 @@ public class DistBuildSlaveExecutor {
   }
 
   private DistBuildTargetGraphCodec createGraphCodec(CoercedTypeCache coercedTypeCache) {
+    DistBuildTypeCoercerFactory typeCoercerFactory =
+        new DistBuildTypeCoercerFactory(args.getObjectMapper());
     ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             new ConstructorArgMarshaller(coercedTypeCache),
-            new TargetNodeFactory(coercedTypeCache));
+            new TargetNodeFactory(typeCoercerFactory));
 
     DistBuildTargetGraphCodec targetGraphCodec = new DistBuildTargetGraphCodec(
         args.getObjectMapper(),

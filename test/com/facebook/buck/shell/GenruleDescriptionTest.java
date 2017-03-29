@@ -61,10 +61,11 @@ public class GenruleDescriptionTest {
         "out", "AndroidManifest.xml",
         "cmd", "$(exe //bin:executable) $(location :arg)");
     ProjectFilesystem projectFilesystem = new AllExistingProjectFilesystem();
-    CoercedTypeCache coercedTypeCache = new CoercedTypeCache(
-        new DefaultTypeCoercerFactory(
-            ObjectMappers.newDefaultInstance()));
-    ConstructorArgMarshaller marshaller = new ConstructorArgMarshaller(coercedTypeCache);
+    ConstructorArgMarshaller marshaller =
+        new ConstructorArgMarshaller(
+            new CoercedTypeCache(
+                new DefaultTypeCoercerFactory(
+                    ObjectMappers.newDefaultInstance())));
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     ImmutableSet.Builder<VisibilityPattern> visibilityPatterns = ImmutableSet.builder();
     ImmutableSet.Builder<VisibilityPattern> withinViewPatterns = ImmutableSet.builder();
@@ -80,7 +81,7 @@ public class GenruleDescriptionTest {
         withinViewPatterns,
         instance);
     TargetNode<GenruleDescription.Arg, ?> targetNode =
-        new TargetNodeFactory(coercedTypeCache)
+        new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
             .create(
                 Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),
                 genruleDescription,

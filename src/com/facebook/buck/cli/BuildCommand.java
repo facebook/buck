@@ -30,6 +30,7 @@ import com.facebook.buck.distributed.DistBuildLogStateTracker;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
+import com.facebook.buck.distributed.DistBuildTypeCoercerFactory;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.event.BuckEventBus;
@@ -556,10 +557,12 @@ public class BuildCommand extends AbstractCommand {
     ProjectFilesystem filesystem = params.getCell().getFilesystem();
     FileHashCache fileHashCache = params.getFileHashCache();
 
+    DistBuildTypeCoercerFactory typeCoercerFactory =
+        new DistBuildTypeCoercerFactory(params.getObjectMapper());
     ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             new ConstructorArgMarshaller(params.getCoercedTypeCache()),
-            new TargetNodeFactory(params.getCoercedTypeCache()));
+            new TargetNodeFactory(typeCoercerFactory));
     DistBuildTargetGraphCodec targetGraphCodec = new DistBuildTargetGraphCodec(
         params.getObjectMapper(),
         parserTargetNodeFactory,
