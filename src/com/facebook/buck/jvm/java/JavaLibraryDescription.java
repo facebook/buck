@@ -41,7 +41,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -179,16 +178,11 @@ public class JavaLibraryDescription implements
         args);
 
     Javac javac = JavacFactory.create(ruleFinder, javaBuckConfig, args);
-    BuildRuleParams javaLibraryParams =
-        params.copyAppendingExtraDeps(
-            ruleFinder.filterBuildRuleInputs(
-                Iterables.concat(
-                    javacOptions.getAnnotationProcessingParams().getInputs(),
-                    javac.getInputs())));
     JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
         javac,
         javacOptions,
         JavacOptionsAmender.IDENTITY);
+    BuildRuleParams javaLibraryParams = compileStepFactory.addInputs(params, ruleFinder);
     DefaultJavaLibrary defaultJavaLibrary =
         DefaultJavaLibrary
             .builder(

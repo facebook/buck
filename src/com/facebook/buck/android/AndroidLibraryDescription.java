@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
@@ -185,35 +186,30 @@ public class AndroidLibraryDescription
 
       AndroidLibraryCompiler compiler =
           compilerFactory.getCompiler(args.language.orElse(JvmLanguage.JAVA));
-
+      CompileToJarStepFactory compileStepFactory = compiler.compileToJar(
+          args,
+          javacOptions,
+          resolver);
       ImmutableSortedSet.Builder<BuildRule> declaredDepsBuilder =
           ImmutableSortedSet.<BuildRule>naturalOrder()
               .addAll(params.getDeclaredDeps().get())
-              .addAll(queriedDeps)
-              .addAll(compiler.getDeclaredDeps(args, resolver));
+              .addAll(queriedDeps);
 
       ImmutableSortedSet<BuildRule> declaredDeps = declaredDepsBuilder.build();
 
-      ImmutableSortedSet<BuildRule> extraDeps =
-          ImmutableSortedSet.<BuildRule>naturalOrder()
-              .addAll(params.getExtraDeps().get())
-              .addAll(ruleFinder.filterBuildRuleInputs(
-                  javacOptions.getAnnotationProcessingParams().getInputs()))
-              .addAll(compiler.getExtraDeps(args, resolver))
-              .build();
-
       BuildRuleParams androidLibraryParams =
-          params.copyReplacingDeclaredAndExtraDeps(
-              Suppliers.ofInstance(declaredDeps),
-              Suppliers.ofInstance(extraDeps));
-
+          compileStepFactory.addInputs(
+              params.copyReplacingDeclaredAndExtraDeps(
+                Suppliers.ofInstance(declaredDeps),
+                params.getExtraDeps()),
+              ruleFinder);
       ImmutableSortedSet.Builder<BuildTarget> providedDepsTargetsBuilder =
           ImmutableSortedSet.naturalOrder();
       providedDeps.forEach(dep -> providedDepsTargetsBuilder.add(dep.getBuildTarget()));
       return AndroidLibrary.builder(
           androidLibraryParams,
           resolver,
-          compiler.compileToJar(args, javacOptions, resolver),
+          compileStepFactory,
           javacOptions)
           .setConfigAndArgs(javaBuckConfig, args)
           .setProvidedDeps(providedDepsTargetsBuilder.build())

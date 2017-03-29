@@ -93,14 +93,14 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
     }
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-
-    final BuildRule scalaLibrary = resolver.getRule(config.getScalaLibraryTarget());
-    BuildRuleParams params = rawParams.copyReplacingDeclaredAndExtraDeps(
-        () -> ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(rawParams.getDeclaredDeps().get())
-            .add(scalaLibrary)
-            .build(),
-        rawParams.getExtraDeps());
+    Tool scalac = config.getScalac(resolver);
+    ScalacToJarStepFactory compileStepFactory = new ScalacToJarStepFactory(
+        scalac,
+        resolver.getRule(config.getScalaLibraryTarget()),
+        config.getCompilerFlags(),
+        args.extraArguments,
+        ImmutableSet.of());
+    BuildRuleParams params = compileStepFactory.addInputs(rawParams, ruleFinder);
 
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
         new JavaTestDescription.CxxLibraryEnhancement(
@@ -112,16 +112,8 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
             cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
 
-    Tool scalac = config.getScalac(resolver);
-
-    BuildRuleParams javaLibraryParams =
-        params.copyAppendingExtraDeps(scalac.getDeps(ruleFinder))
-            .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
-    ScalacToJarStepFactory compileStepFactory = new ScalacToJarStepFactory(
-        scalac,
-        config.getCompilerFlags(),
-        args.extraArguments,
-        ImmutableSet.of());
+    BuildRuleParams javaLibraryParams = params
+        .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
     JavaLibrary testsLibrary =
         resolver.addToIndex(
             new ScalaLibraryBuilder(

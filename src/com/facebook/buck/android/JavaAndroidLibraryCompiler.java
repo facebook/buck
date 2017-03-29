@@ -22,7 +22,6 @@ import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 
@@ -31,14 +30,6 @@ public class JavaAndroidLibraryCompiler extends AndroidLibraryCompiler {
 
   public JavaAndroidLibraryCompiler(JavaBuckConfig javaBuckConfig) {
     this.javaBuckConfig = javaBuckConfig;
-  }
-
-  @Override
-  public Iterable<BuildRule> getExtraDeps(
-      AndroidLibraryDescription.Arg args,
-      BuildRuleResolver resolver) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    return ruleFinder.filterBuildRuleInputs(getJavac(resolver, args).getInputs());
   }
 
   @Override

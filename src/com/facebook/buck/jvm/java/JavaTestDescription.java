@@ -43,7 +43,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -118,25 +117,13 @@ public class JavaTestDescription implements
     params = cxxLibraryEnhancement.updatedParams;
 
     Javac javac = JavacFactory.create(ruleFinder, javaBuckConfig, args);
-    BuildRuleParams testsLibraryParams = params.copyReplacingDeclaredAndExtraDeps(
-        Suppliers.ofInstance(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(params.getDeclaredDeps().get())
-                .build()),
-        Suppliers.ofInstance(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(params.getExtraDeps().get())
-                .addAll(ruleFinder.filterBuildRuleInputs(
-                    Iterables.concat(
-                        javacOptions.getAnnotationProcessingParams().getInputs(),
-                        javac.getInputs())))
-                .build()))
-        .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
-
     JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
         javac,
         javacOptions,
         JavacOptionsAmender.IDENTITY);
+    BuildRuleParams testsLibraryParams = compileStepFactory.addInputs(params, ruleFinder)
+        .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+
     JavaLibrary testsLibrary =
         resolver.addToIndex(
             DefaultJavaLibrary

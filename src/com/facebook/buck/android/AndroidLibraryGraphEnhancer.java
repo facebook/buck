@@ -33,7 +33,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.DependencyMode;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -119,16 +118,12 @@ public class AndroidLibraryGraphEnhancer {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
 
-    BuildRuleParams dummyRDotJavaParams = originalBuildRuleParams
-        .withBuildTarget(dummyRDotJavaBuildTarget)
-        .copyReplacingDeclaredAndExtraDeps(
-            Suppliers.ofInstance(
-                ImmutableSortedSet.copyOf(
-                    ruleFinder.filterBuildRuleInputs(javac.getInputs()))),
-            Suppliers.ofInstance(ImmutableSortedSet.of()));
-
     CompileToJarStepFactory compileToJarStepFactory =
         new JavacToJarStepFactory(javac, javacOptions, JavacOptionsAmender.IDENTITY);
+    BuildRuleParams dummyRDotJavaParams = compileToJarStepFactory
+        .addInputs(originalBuildRuleParams, ruleFinder)
+        .withBuildTarget(dummyRDotJavaBuildTarget);
+
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
         dummyRDotJavaParams,
         ruleFinder,

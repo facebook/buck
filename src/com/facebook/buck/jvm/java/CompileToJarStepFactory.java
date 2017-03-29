@@ -20,6 +20,8 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -28,6 +30,7 @@ import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.util.Optional;
@@ -38,6 +41,20 @@ import java.util.regex.Pattern;
  * and pack the output .class files into a Jar.
  */
 public interface CompileToJarStepFactory extends RuleKeyAppendable {
+
+  default BuildRuleParams addInputs(BuildRuleParams params, SourcePathRuleFinder ruleFinder) {
+    return params.copyReplacingDeclaredAndExtraDeps(
+        () -> ImmutableSortedSet.copyOf(Iterables.concat(
+            params.getDeclaredDeps().get(),
+            getDeclaredDeps(ruleFinder))),
+        () -> ImmutableSortedSet.copyOf(Iterables.concat(
+            params.getExtraDeps().get(),
+            getExtraDeps(ruleFinder))));
+  }
+
+  Iterable<BuildRule> getDeclaredDeps(SourcePathRuleFinder ruleFinder);
+
+  Iterable<BuildRule> getExtraDeps(SourcePathRuleFinder ruleFinder);
 
   void createCompileStep(
       BuildContext context,

@@ -46,7 +46,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import java.util.Optional;
 
@@ -146,22 +145,14 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
     params = cxxLibraryEnhancement.updatedParams;
 
     Javac javac = JavacFactory.create(ruleFinder, javaBuckConfig, args);
-    // Rewrite dependencies on tests to actually depend on the code which backs the test.
-    BuildRuleParams testsLibraryParams = params.copyReplacingExtraDeps(
-        Suppliers.ofInstance(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(params.getExtraDeps().get())
-                .addAll(ruleFinder.filterBuildRuleInputs(
-                    Iterables.concat(
-                        javac.getInputs(),
-                        javacOptions.getAnnotationProcessingParams().getInputs())))
-                .build()))
-        .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
-
     JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
         javac,
         javacOptions,
         new BootClasspathAppender());
+    // Rewrite dependencies on tests to actually depend on the code which backs the test.
+    BuildRuleParams testsLibraryParams = compileStepFactory.addInputs(params, ruleFinder)
+        .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+
     JavaLibrary testsLibrary =
         resolver.addToIndex(
             DefaultJavaLibrary

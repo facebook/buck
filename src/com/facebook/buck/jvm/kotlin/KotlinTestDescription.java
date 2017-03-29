@@ -95,16 +95,10 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
         kotlinBuckConfig.getKotlinCompiler().get(),
         args.extraKotlincArguments);
 
-    BuildRuleParams testsLibraryParams = params.copyReplacingDeclaredAndExtraDeps(
-        Suppliers.ofInstance(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(params.getDeclaredDeps().get())
-                .build()
-            ),
-            params.getExtraDeps())
+    BuildRuleParams testsLibraryParams = stepFactory.addInputs(params, ruleFinder)
          .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
-        JavaLibrary testsLibrary =
+    JavaLibrary testsLibrary =
         resolver.addToIndex(
             new DefaultKotlinLibraryBuilder(
                 testsLibraryParams,

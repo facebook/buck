@@ -76,22 +76,14 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
     }
 
     Tool scalac = scalaBuckConfig.getScalac(resolver);
-
-    final BuildRule scalaLibrary = resolver.getRule(scalaBuckConfig.getScalaLibraryTarget());
-    BuildRuleParams params = rawParams.copyReplacingDeclaredAndExtraDeps(
-        () -> ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(rawParams.getDeclaredDeps().get())
-            .add(scalaLibrary)
-            .build(),
-        rawParams.getExtraDeps());
-
-    BuildRuleParams javaLibraryParams =
-        params.copyAppendingExtraDeps(scalac.getDeps(ruleFinder));
     ScalacToJarStepFactory compileStepFactory = new ScalacToJarStepFactory(
         scalac,
+        resolver.getRule(scalaBuckConfig.getScalaLibraryTarget()),
         scalaBuckConfig.getCompilerFlags(),
         args.extraArguments,
         resolver.getAllRules(scalaBuckConfig.getCompilerPlugins()));
+
+    BuildRuleParams javaLibraryParams = compileStepFactory.addInputs(rawParams, ruleFinder);
     return new ScalaLibraryBuilder(
         javaLibraryParams,
         resolver,

@@ -43,6 +43,7 @@ import java.util.Optional;
 public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory {
 
   private final Tool scalac;
+  private final BuildRule scalaLibraryTarget;
   private final ImmutableList<String> configCompilerFlags;
   private final ImmutableList<String> extraArguments;
   private final ImmutableSet<SourcePath> compilerPlugins;
@@ -50,19 +51,28 @@ public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory {
 
   public ScalacToJarStepFactory(
       Tool scalac,
+      BuildRule scalaLibraryTarget,
       ImmutableList<String> configCompilerFlags,
       ImmutableList<String> extraArguments,
       ImmutableSet<BuildRule> compilerPlugins) {
-    this(scalac, configCompilerFlags, extraArguments, compilerPlugins, EMPTY_EXTRA_CLASSPATH);
+    this(
+        scalac,
+        scalaLibraryTarget,
+        configCompilerFlags,
+        extraArguments,
+        compilerPlugins,
+        EMPTY_EXTRA_CLASSPATH);
   }
 
   public ScalacToJarStepFactory(
       Tool scalac,
+      BuildRule scalaLibraryTarget,
       ImmutableList<String> configCompilerFlags,
       ImmutableList<String> extraArguments,
       ImmutableSet<BuildRule> compilerPlugins,
       Function<BuildContext, Iterable<Path>> extraClassPath) {
     this.scalac = scalac;
+    this.scalaLibraryTarget = scalaLibraryTarget;
     this.configCompilerFlags = configCompilerFlags;
     this.extraArguments = extraArguments;
     this.compilerPlugins = compilerPlugins.stream()
@@ -117,5 +127,17 @@ public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory {
     sink.setReflectively("configCompilerFlags", configCompilerFlags);
     sink.setReflectively("extraArguments", extraArguments);
     sink.setReflectively("compilerPlugins", compilerPlugins);
+  }
+
+  @Override
+  protected Tool getCompiler() {
+    return scalac;
+  }
+
+  @Override
+  public Iterable<BuildRule> getDeclaredDeps(SourcePathRuleFinder ruleFinder) {
+    return Iterables.concat(
+        super.getDeclaredDeps(ruleFinder),
+        ImmutableList.of(scalaLibraryTarget));
   }
 }

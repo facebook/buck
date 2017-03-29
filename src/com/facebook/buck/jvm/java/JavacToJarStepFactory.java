@@ -23,16 +23,19 @@ import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.util.Optional;
@@ -100,6 +103,21 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
   Optional<String> getBootClasspath(BuildContext context) {
     JavacOptions buildTimeOptions = amender.amend(javacOptions, context);
     return buildTimeOptions.getBootclasspath();
+  }
+
+  @Override
+  protected Tool getCompiler() {
+    return javac;
+  }
+
+  @Override
+  public Iterable<BuildRule> getExtraDeps(SourcePathRuleFinder ruleFinder) {
+    // If any dep of an annotation processor changes, we need to recompile, so we add those as
+    // extra deps
+    return Iterables.concat(
+        super.getExtraDeps(ruleFinder),
+        ruleFinder.filterBuildRuleInputs(
+            javacOptions.getAnnotationProcessingParams().getInputs()));
   }
 
   @Override
