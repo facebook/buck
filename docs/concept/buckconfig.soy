@@ -888,6 +888,27 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'cache' /}
+  {param name: 'http_local_backing_cache' /}
+  {param description}
+    The name of a named dircache where artifacts stored from this remote cache will be written to.
+    This is used to enable a scenario where you want to cache remote artifacts locally without
+    writing locally built artifacts to the same local cache.
+  {/param}
+  {param raw_example}
+{literal}<pre class="prettyprint lang-ini">
+[cache]
+    mode = http
+    http_local_backing_cache = http_backing_cache
+
+[cache#http_backing_cache]
+    dir = ~/.local/http_backing_cache/
+    dir_mode = readwrite
+</pre>{/literal}
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
   {param name: 'serve_local_cache' /}
   {param example_value: 'false' /}
   {param description}

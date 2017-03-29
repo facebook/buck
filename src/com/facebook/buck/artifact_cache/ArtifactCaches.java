@@ -444,7 +444,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
 
     String cacheName = cacheDescription.getName().map(input -> "http-" + input).orElse("http");
     boolean doStore = cacheDescription.getCacheReadMode().isDoStore();
-    return factory.newInstance(
+    ArtifactCache result = factory.newInstance(
         NetworkCacheArgs.builder()
             .setThriftEndpointPath(config.getHybridThriftEndpoint())
             .setCacheName(cacheName)
@@ -459,6 +459,16 @@ public class ArtifactCaches implements ArtifactCacheFactory {
             .setErrorTextTemplate(cacheDescription.getErrorMessageFormat())
             .setDistributedBuildModeEnabled(distributedBuildModeEnabled)
             .build());
+
+    if (cacheDescription.getLocalBackingCache().isPresent()) {
+      ArtifactCache localBackingCache = createDirArtifactCache(
+          Optional.of(buckEventBus),
+          cacheDescription.getLocalBackingCache().get(),
+          projectFilesystem);
+      result = new RemoteArtifactsInLocalCacheArtifactCache(localBackingCache, result);
+    }
+
+    return result;
   }
 
   private static boolean checkArtifactCacheClass(

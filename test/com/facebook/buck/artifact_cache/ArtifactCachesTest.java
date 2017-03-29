@@ -168,17 +168,19 @@ public class ArtifactCachesTest {
     RemoteArtifactsInLocalCacheArtifactCache experimentalCache =
         (RemoteArtifactsInLocalCacheArtifactCache) result;
 
-    assertThat(experimentalCache.getLocalCaches(), Matchers.instanceOf(MultiArtifactCache.class));
-    assertThat(
-        experimentalCache.getLocalCaches().getArtifactCaches().get(0),
-        Matchers.instanceOf(CacheDecorator.class));
+    assertThat(experimentalCache.getLocalCache(), Matchers.instanceOf(MultiArtifactCache.class));
+    MultiArtifactCache localCache = (MultiArtifactCache) experimentalCache.getLocalCache();
+
+    assertThat(localCache.getArtifactCaches().get(0), Matchers.instanceOf(CacheDecorator.class));
     CacheDecorator decorator =
-        (CacheDecorator) experimentalCache.getLocalCaches().getArtifactCaches().get(0);
+        (CacheDecorator) localCache.getArtifactCaches().get(0);
+
     assertThat(decorator.getDelegate(), Matchers.instanceOf(DirArtifactCache.class));
 
-    assertThat(experimentalCache.getRemoteCaches(), Matchers.instanceOf(MultiArtifactCache.class));
+    assertThat(experimentalCache.getRemoteCache(), Matchers.instanceOf(MultiArtifactCache.class));
+    MultiArtifactCache remoteCache = (MultiArtifactCache) experimentalCache.getRemoteCache();
     assertThat(
-        experimentalCache.getRemoteCaches().getArtifactCaches().get(0),
+        remoteCache.getArtifactCaches().get(0),
         Matchers.instanceOf(HttpArtifactCache.class));
   }
 

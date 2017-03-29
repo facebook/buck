@@ -55,6 +55,7 @@ public class ArtifactCacheBuckConfig {
   private static final String HTTP_READ_HEADERS_FIELD_NAME = "http_read_headers";
   private static final String HTTP_WRITE_HEADERS_FIELD_NAME = "http_write_headers";
   private static final String HTTP_CACHE_ERROR_MESSAGE_NAME = "http_error_message_format";
+  private static final String HTTP_LOCAL_BACKING_CACHE = "http_local_backing_cache";
   private static final String HTTP_MAX_STORE_SIZE = "http_max_store_size";
   private static final String HTTP_THREAD_POOL_SIZE = "http_thread_pool_size";
   private static final String HTTP_THREAD_POOL_KEEP_ALIVE_DURATION_MILLIS =
@@ -388,6 +389,19 @@ public class ArtifactCacheBuckConfig {
             HTTP_CACHE_ERROR_MESSAGE_NAME,
             DEFAULT_HTTP_CACHE_ERROR_MESSAGE));
     builder.setMaxStoreSize(buckConfig.getLong(section, HTTP_MAX_STORE_SIZE));
+
+    Optional<DirCacheEntry> localBackingCache =
+        buckConfig.getValue(section, HTTP_LOCAL_BACKING_CACHE)
+            .map(name -> obtainDirEntryForName(Optional.of(name)));
+    localBackingCache.ifPresent(cache -> {
+      if (!cache.getCacheReadMode().isDoStore()) {
+        throw new HumanReadableException(
+            "Local backing cache of %s should be read-write.",
+            cacheName);
+      }
+    });
+    builder.setLocalBackingCache(localBackingCache);
+
     return builder.build();
   }
 
@@ -462,6 +476,7 @@ public class ArtifactCacheBuckConfig {
     protected abstract ImmutableSet<String> getBlacklistedWifiSsids();
     public abstract String getErrorMessageFormat();
     public abstract Optional<Long> getMaxStoreSize();
+    public abstract Optional<DirCacheEntry> getLocalBackingCache();
 
     public boolean isWifiUsableForDistributedCache(Optional<String> currentWifiSsid) {
       if (currentWifiSsid.isPresent() &&

@@ -29,32 +29,23 @@ import com.google.common.util.concurrent.ListenableFuture;
  * stores locally built artifacts into local cache.
  */
 public class RemoteArtifactsInLocalCacheArtifactCache implements ArtifactCache {
-  private final MultiArtifactCache localCaches;
-  private final MultiArtifactCache remoteCaches;
+  private final ArtifactCache localCache;
+  private final ArtifactCache remoteCache;
 
   public RemoteArtifactsInLocalCacheArtifactCache(
-      MultiArtifactCache localCaches,
-      MultiArtifactCache remoteCaches) {
-    this.localCaches = localCaches;
-    this.remoteCaches = remoteCaches;
+      ArtifactCache localCache,
+      ArtifactCache remoteCache) {
+    this.localCache = localCache;
+    this.remoteCache = remoteCache;
 
-    for (ArtifactCache cache : localCaches.getArtifactCaches()) {
-      Preconditions.checkArgument(
-          cache instanceof DirArtifactCache ||
-              (cache instanceof CacheDecorator &&
-                  ((CacheDecorator) cache).getDelegate() instanceof DirArtifactCache),
-          "MultiArtifactCache localCaches expected to have only DirArtifactCache");
-    }
-    for (ArtifactCache cache : remoteCaches.getArtifactCaches()) {
-      Preconditions.checkArgument(
-          cache instanceof AbstractNetworkCache,
-          "MultiArtifactCache remoteCaches expected to have only AbstractNetworkCache");
-    }
+    Preconditions.checkState(
+        localCache.isStoreSupported(),
+        "Local cache backing remote cache is read-only.");
   }
 
   @Override
   public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
-    CacheResult localResult = localCaches.fetch(ruleKey, output);
+    CacheResult localResult = localCache.fetch(ruleKey, output);
 
     if (localResult.getType() == CacheResultType.ERROR ||
         localResult.getType() == CacheResultType.HIT) {
@@ -62,10 +53,10 @@ public class RemoteArtifactsInLocalCacheArtifactCache implements ArtifactCache {
     }
 
     // miss
-    CacheResult remoteResult = remoteCaches.fetch(ruleKey, output);
+    CacheResult remoteResult = remoteCache.fetch(ruleKey, output);
     if (remoteResult.getType().isSuccess()) {
       // remote cache had artifact, let's propagate it down to dir caches.
-      localCaches.store(
+      localCache.store(
           ArtifactInfo.builder()
               .addRuleKeys(ruleKey)
               .setMetadata(remoteResult.getMetadata())
@@ -77,27 +68,27 @@ public class RemoteArtifactsInLocalCacheArtifactCache implements ArtifactCache {
 
   @Override
   public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
-    return remoteCaches.store(info, output);
+    return remoteCache.store(info, output);
   }
 
   @Override
   public boolean isStoreSupported() {
-    return remoteCaches.isStoreSupported();
+    return remoteCache.isStoreSupported();
   }
 
   @Override
   public void close() {
-    localCaches.close();
-    remoteCaches.close();
+    localCache.close();
+    remoteCache.close();
   }
 
   @VisibleForTesting
-  MultiArtifactCache getLocalCaches() {
-    return localCaches;
+  ArtifactCache getLocalCache() {
+    return localCache;
   }
 
   @VisibleForTesting
-  MultiArtifactCache getRemoteCaches() {
-    return remoteCaches;
+  ArtifactCache getRemoteCache() {
+    return remoteCache;
   }
 }
