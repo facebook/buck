@@ -41,7 +41,6 @@ import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkableInput;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -182,7 +181,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
-            new ExecutableFinder(),
+            new XcodeToolFinder(),
             Optional.empty(),
             Optional.empty());
 
@@ -289,7 +288,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
-            new ExecutableFinder(),
+            new XcodeToolFinder(),
             Optional.empty(),
             Optional.empty());
 
@@ -388,7 +387,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
-            new ExecutableFinder(),
+            new XcodeToolFinder(),
             Optional.empty(),
             Optional.empty());
 
@@ -489,7 +488,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
-            new ExecutableFinder(),
+            new XcodeToolFinder(),
             Optional.empty(),
             Optional.empty());
 
@@ -544,7 +543,7 @@ public class AppleCxxPlatformsTest {
                         "cxxflags", "-std=c++11",
                         "cxxppflags", "-DCXXTHING"))).build(),
             new FakeAppleConfig(),
-            new ExecutableFinder(),
+            new XcodeToolFinder(),
             Optional.empty(),
             Optional.empty());
 
@@ -597,7 +596,7 @@ public class AppleCxxPlatformsTest {
         appleSdkPaths,
         FakeBuckConfig.builder().build(),
         new FakeAppleConfig(),
-        new ExecutableFinder(),
+        new XcodeToolFinder(),
         Optional.empty(),
         Optional.empty());
   }
@@ -643,7 +642,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
-            new ExecutableFinder(),
+            new XcodeToolFinder(),
             Optional.empty(),
             Optional.empty());
 
@@ -697,7 +696,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
-            new ExecutableFinder(),
+            new XcodeToolFinder(),
             Optional.empty(),
             Optional.empty());
 
@@ -751,7 +750,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
-            new ExecutableFinder(),
+            new XcodeToolFinder(),
             Optional.empty(),
             Optional.empty());
 
@@ -904,7 +903,7 @@ public class AppleCxxPlatformsTest {
         appleSdkPaths,
         config,
         new FakeAppleConfig(config),
-        new ExecutableFinder(),
+        new XcodeToolFinder(),
         Optional.empty(),
         Optional.empty());
   }
@@ -1127,7 +1126,7 @@ public class AppleCxxPlatformsTest {
             .build(),
         FakeBuckConfig.builder().build(),
         new FakeAppleConfig(),
-        new ExecutableFinder(),
+        new XcodeToolFinder(),
         Optional.of(FakeAppleRuleDescriptions.PROCESS_EXECUTOR),
         selectedSwiftToolChain);
   }

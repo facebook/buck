@@ -25,8 +25,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.InferBuckConfig;
-import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.FakeExecutableFinder;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
@@ -40,10 +39,13 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
-import java.nio.file.Paths;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * Utility class holding pre-made fake Apple rule descriptions for use in tests.
@@ -53,22 +55,6 @@ public class FakeAppleRuleDescriptions {
   private FakeAppleRuleDescriptions() { }
 
   public static final Optional<Long> DEFAULT_TIMEOUT = Optional.of(300000L);
-
-  public static final AppleSdkPaths DEFAULT_MACOSX_SDK_PATHS =
-      AppleSdkPaths.builder()
-          .setDeveloperPath(Paths.get("."))
-          .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
-          .setPlatformPath(Paths.get("Platforms/MacOSX.platform"))
-          .setSdkPath(Paths.get("Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk"))
-          .build();
-
-  public static final AppleSdkPaths DEFAULT_IPHONEOS_SDK_PATHS =
-      AppleSdkPaths.builder()
-          .setDeveloperPath(Paths.get("."))
-          .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
-          .setPlatformPath(Paths.get("Platforms/iPhoneOS.platform"))
-          .setSdkPath(Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"))
-          .build();
 
   public static final AppleSdk DEFAULT_MACOSX_SDK =
       AppleSdk.builder()
@@ -88,26 +74,57 @@ public class FakeAppleRuleDescriptions {
           .setToolchains(ImmutableList.of())
           .build();
 
-  public static final ExecutableFinder EXECUTABLE_FINDER = new FakeExecutableFinder(
-      ImmutableSet.of(
-          Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"),
-          Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"),
-          Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
-          Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo"),
-          Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib"),
-          Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"),
-          Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"),
-          Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-stdlib-tool"),
-          Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/nm"),
-          Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"),
-          Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"),
-          Paths.get("usr/bin/actool"),
-          Paths.get("usr/bin/ibtool"),
-          Paths.get("usr/bin/momc"),
-          Paths.get("usr/bin/copySceneKitAssets"),
-          Paths.get("usr/bin/lldb"),
-          Paths.get("Tools/otest"),
-          Paths.get("usr/bin/xctest")));
+  public static final ProjectFilesystem FAKE_PROJECT_FILESYSTEM =
+      ((Supplier<ProjectFilesystem>) () -> {
+        ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+        Stream.of(
+            "Toolchains/XcodeDefault.xctoolchain/usr/bin/clang",
+            "Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++",
+            "Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil",
+            "Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo",
+            "Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib",
+            "Toolchains/XcodeDefault.xctoolchain/usr/bin/strip",
+            "Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+            "Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-stdlib-tool",
+            "Toolchains/XcodeDefault.xctoolchain/usr/bin/nm",
+            "Toolchains/XcodeDefault.xctoolchain/usr/bin/ar",
+            "Platforms/iPhoneOS.platform/Developer/usr/bin/libtool",
+            "usr/bin/actool",
+            "usr/bin/ibtool",
+            "usr/bin/momc",
+            "usr/bin/copySceneKitAssets",
+            "usr/bin/lldb",
+            "Tools/otest",
+            "usr/bin/xctest")
+            .forEach(path -> {
+              Path actualPath = filesystem.getPath(path);
+              try {
+                Files.createDirectories(actualPath.getParent());
+                Files.createFile(actualPath);
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            });
+        return filesystem;
+      }).get();
+
+  public static final AppleSdkPaths DEFAULT_MACOSX_SDK_PATHS = AppleSdkPaths.builder()
+      .setDeveloperPath(FAKE_PROJECT_FILESYSTEM.getPath("."))
+      .addToolchainPaths(FAKE_PROJECT_FILESYSTEM.getPath("Toolchains/XcodeDefault.xctoolchain"))
+      .setPlatformPath(FAKE_PROJECT_FILESYSTEM.getPath("Platforms/MacOSX.platform"))
+      .setSdkPath(
+          FAKE_PROJECT_FILESYSTEM.getPath("Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk"))
+      .build();
+
+  public static final AppleSdkPaths DEFAULT_IPHONEOS_SDK_PATHS = AppleSdkPaths.builder()
+      .setDeveloperPath(FAKE_PROJECT_FILESYSTEM.getPath("."))
+      .addToolchainPaths(
+          FAKE_PROJECT_FILESYSTEM.getPath("Toolchains/XcodeDefault.xctoolchain"))
+      .setPlatformPath(FAKE_PROJECT_FILESYSTEM.getPath("Platforms/iPhoneOS.platform"))
+      .setSdkPath(
+          FAKE_PROJECT_FILESYSTEM.getPath(
+              "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"))
+      .build();
 
   public static final ProcessExecutor PROCESS_EXECUTOR = new FakeProcessExecutor(
       input -> new FakeProcess(0, "Xcode 0.0.0\nBuild version 0A0000", ""),
@@ -115,41 +132,41 @@ public class FakeAppleRuleDescriptions {
 
   public static final AppleCxxPlatform DEFAULT_IPHONEOS_I386_PLATFORM =
       AppleCxxPlatforms.buildWithExecutableChecker(
-          new FakeProjectFilesystem(),
+          FAKE_PROJECT_FILESYSTEM,
           DEFAULT_IPHONEOS_SDK,
           "8.0",
           "i386",
           DEFAULT_IPHONEOS_SDK_PATHS,
           FakeBuckConfig.builder().build(),
           new FakeAppleConfig(),
-          EXECUTABLE_FINDER,
+          new XcodeToolFinder(),
           Optional.of(PROCESS_EXECUTOR),
           Optional.empty());
 
   public static final AppleCxxPlatform DEFAULT_IPHONEOS_X86_64_PLATFORM =
       AppleCxxPlatforms.buildWithExecutableChecker(
-          new FakeProjectFilesystem(),
+          FAKE_PROJECT_FILESYSTEM,
           DEFAULT_IPHONEOS_SDK,
           "8.0",
           "x86_64",
           DEFAULT_IPHONEOS_SDK_PATHS,
           FakeBuckConfig.builder().build(),
           new FakeAppleConfig(),
-          EXECUTABLE_FINDER,
+          new XcodeToolFinder(),
           Optional.of(PROCESS_EXECUTOR),
           Optional.empty());
 
 
   public static final AppleCxxPlatform DEFAULT_MACOSX_X86_64_PLATFORM =
       AppleCxxPlatforms.buildWithExecutableChecker(
-          new FakeProjectFilesystem(),
+          FAKE_PROJECT_FILESYSTEM,
           DEFAULT_MACOSX_SDK,
           "8.0",
           "x86_64",
           DEFAULT_MACOSX_SDK_PATHS,
           FakeBuckConfig.builder().build(),
           new FakeAppleConfig(),
-          EXECUTABLE_FINDER,
+          new XcodeToolFinder(),
           Optional.of(PROCESS_EXECUTOR),
           Optional.empty());
 

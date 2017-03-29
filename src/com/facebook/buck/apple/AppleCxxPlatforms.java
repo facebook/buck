@@ -36,7 +36,6 @@ import com.facebook.buck.cxx.MungingDebugPathSanitizer;
 import com.facebook.buck.cxx.PosixNmSymbolNameTool;
 import com.facebook.buck.cxx.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.cxx.PreprocessorProvider;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Flavor;
@@ -129,6 +128,7 @@ public class AppleCxxPlatforms {
       swiftToolChain = Optional.empty();
     }
 
+    XcodeToolFinder xcodeToolFinder = new XcodeToolFinder();
     sdkPaths.forEach((sdk, appleSdkPaths) -> {
       String targetSdkVersion =
           appleConfig.getTargetSdkVersion(sdk.getApplePlatform())
@@ -144,7 +144,7 @@ public class AppleCxxPlatforms {
                 appleSdkPaths,
                 buckConfig,
                 appleConfig,
-                new ExecutableFinder(),
+                xcodeToolFinder,
                 Optional.of(processExecutor),
                 swiftToolChain));
       }
@@ -161,7 +161,7 @@ public class AppleCxxPlatforms {
       final AppleSdkPaths sdkPaths,
       BuckConfig buckConfig,
       AppleConfig appleConfig,
-      ExecutableFinder executableFinder,
+      XcodeToolFinder xcodeToolFinder,
       Optional<ProcessExecutor> processExecutor,
       Optional<AppleToolchain> swiftToolChain) {
     AppleCxxPlatform.Builder platformBuilder = AppleCxxPlatform.builder();
@@ -260,68 +260,68 @@ public class AppleCxxPlatforms {
     ImmutableList<Path> toolSearchPaths = toolSearchPathsBuilder.build();
 
     Tool clangPath = VersionedTool.of(
-        getToolPath("clang", toolSearchPaths, executableFinder),
+        getToolPath("clang", toolSearchPaths, xcodeToolFinder),
         "apple-clang",
         version);
 
     Tool clangXxPath = VersionedTool.of(
-        getToolPath("clang++", toolSearchPaths, executableFinder),
+        getToolPath("clang++", toolSearchPaths, xcodeToolFinder),
         "apple-clang++",
         version);
 
     Tool ar = VersionedTool.of(
-        getToolPath("ar", toolSearchPaths, executableFinder),
+        getToolPath("ar", toolSearchPaths, xcodeToolFinder),
         "apple-ar",
         version);
 
     Tool ranlib = VersionedTool.builder()
-        .setPath(getToolPath("ranlib", toolSearchPaths, executableFinder))
+        .setPath(getToolPath("ranlib", toolSearchPaths, xcodeToolFinder))
         .setName("apple-ranlib")
         .setVersion(version)
         .build();
 
     Tool strip = VersionedTool.of(
-        getToolPath("strip", toolSearchPaths, executableFinder),
+        getToolPath("strip", toolSearchPaths, xcodeToolFinder),
         "apple-strip",
         version);
 
     Tool nm = VersionedTool.of(
-        getToolPath("nm", toolSearchPaths, executableFinder),
+        getToolPath("nm", toolSearchPaths, xcodeToolFinder),
         "apple-nm",
         version);
 
     Tool actool = VersionedTool.of(
-        getToolPath("actool", toolSearchPaths, executableFinder),
+        getToolPath("actool", toolSearchPaths, xcodeToolFinder),
         "apple-actool",
         version);
 
     Tool ibtool = VersionedTool.of(
-        getToolPath("ibtool", toolSearchPaths, executableFinder),
+        getToolPath("ibtool", toolSearchPaths, xcodeToolFinder),
         "apple-ibtool",
         version);
 
     Tool momc = VersionedTool.of(
-        getToolPath("momc", toolSearchPaths, executableFinder),
+        getToolPath("momc", toolSearchPaths, xcodeToolFinder),
         "apple-momc",
         version);
 
     Tool xctest = VersionedTool.of(
-        getToolPath("xctest", toolSearchPaths, executableFinder),
+        getToolPath("xctest", toolSearchPaths, xcodeToolFinder),
         "apple-xctest",
         version);
 
     Tool dsymutil = VersionedTool.of(
-        getToolPath("dsymutil", toolSearchPaths, executableFinder),
+        getToolPath("dsymutil", toolSearchPaths, xcodeToolFinder),
         "apple-dsymutil",
         version);
 
     Tool lipo = VersionedTool.of(
-        getToolPath("lipo", toolSearchPaths, executableFinder),
+        getToolPath("lipo", toolSearchPaths, xcodeToolFinder),
         "apple-lipo",
         version);
 
     Tool lldb = VersionedTool.of(
-        getToolPath("lldb", toolSearchPaths, executableFinder),
+        getToolPath("lldb", toolSearchPaths, xcodeToolFinder),
         "lldb",
         version);
 
@@ -490,7 +490,7 @@ public class AppleCxxPlatforms {
         swiftOverrideSearchPathBuilder
             .addAll(toolSearchPaths)
             .build(),
-        executableFinder);
+        xcodeToolFinder);
 
     platformBuilder
         .setCxxPlatform(cxxPlatform)
@@ -503,14 +503,14 @@ public class AppleCxxPlatforms {
         .setIbtool(ibtool)
         .setMomc(momc)
         .setCopySceneKitAssets(
-            getOptionalTool("copySceneKitAssets", toolSearchPaths, executableFinder, version))
+            getOptionalTool("copySceneKitAssets", toolSearchPaths, xcodeToolFinder, version))
         .setXctest(xctest)
         .setDsymutil(dsymutil)
         .setLipo(lipo)
         .setStubBinary(stubBinaryPath)
         .setLldb(lldb)
         .setCodesignAllocate(
-            getOptionalTool("codesign_allocate", toolSearchPaths, executableFinder, version))
+            getOptionalTool("codesign_allocate", toolSearchPaths, xcodeToolFinder, version))
         .setCodesignProvider(appleConfig.getCodesignProvider());
 
     return platformBuilder.build();
@@ -522,7 +522,7 @@ public class AppleCxxPlatforms {
       String version,
       AbstractAppleSdkPaths sdkPaths,
       ImmutableList<Path> toolSearchPaths,
-      ExecutableFinder executableFinder) {
+      XcodeToolFinder xcodeToolFinder) {
     ImmutableList<String> swiftParams = ImmutableList.of(
         "-frontend",
         "-sdk",
@@ -546,13 +546,13 @@ public class AppleCxxPlatforms {
     Optional<Tool> swiftc = getOptionalToolWithParams(
         "swiftc",
         toolSearchPaths,
-        executableFinder,
+        xcodeToolFinder,
         version,
         swiftParams);
     Optional<Tool> swiftStdLibTool = getOptionalToolWithParams(
         "swift-stdlib-tool",
         toolSearchPaths,
-        executableFinder,
+        xcodeToolFinder,
         version,
         swiftStdlibToolParamsBuilder.build());
 
@@ -571,12 +571,12 @@ public class AppleCxxPlatforms {
   private static Optional<Tool> getOptionalTool(
       String tool,
       ImmutableList<Path> toolSearchPaths,
-      ExecutableFinder executableFinder,
+      XcodeToolFinder xcodeToolFinder,
       String version) {
     return getOptionalToolWithParams(
         tool,
         toolSearchPaths,
-        executableFinder,
+        xcodeToolFinder,
         version,
         ImmutableList.of());
   }
@@ -584,24 +584,23 @@ public class AppleCxxPlatforms {
   private static Optional<Tool> getOptionalToolWithParams(
       final String tool,
       ImmutableList<Path> toolSearchPaths,
-      ExecutableFinder executableFinder,
+      XcodeToolFinder xcodeToolFinder,
       final String version,
       final ImmutableList<String> params) {
-    return executableFinder.getOptionalToolPath(
-        tool,
-        toolSearchPaths).map(input -> VersionedTool.builder()
-        .setPath(input)
-        .setName(tool)
-        .setVersion(version)
-        .setExtraArgs(params)
-        .build());
+    return xcodeToolFinder.getToolPath(toolSearchPaths, tool).map(input ->
+        VersionedTool.builder()
+            .setPath(input)
+            .setName(tool)
+            .setVersion(version)
+            .setExtraArgs(params)
+            .build());
   }
 
   private static Path getToolPath(
       String tool,
       ImmutableList<Path> toolSearchPaths,
-      ExecutableFinder executableFinder) {
-    Optional<Path> result = executableFinder.getOptionalToolPath(tool, toolSearchPaths);
+      XcodeToolFinder xcodeToolFinder) {
+    Optional<Path> result = xcodeToolFinder.getToolPath(toolSearchPaths, tool);
     if (!result.isPresent()) {
       throw new HumanReadableException("Cannot find tool %s in paths %s", tool, toolSearchPaths);
     }
