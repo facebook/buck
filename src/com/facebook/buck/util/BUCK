@@ -85,13 +85,23 @@ PROCESS_EXECUTOR_SRCS = [
 java_immutables_library(
     name = "process_executor",
     srcs = PROCESS_EXECUTOR_SRCS,
-    autodeps = True,
     immutable_types = [
         "ProcessExecutorParams",
     ],
     tests = [
     ],
     visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//third-party/java/immutables:immutables",
+        "//third-party/java/jna:jna",
+        "//third-party/java/jna:jna-platform",
+        "//third-party/java/nuprocess:nuprocess",
+        "//third-party/java/oshi:oshi-core",
+    ],
 )
 
 WATCHMAN_WATCHER_SRCS = [

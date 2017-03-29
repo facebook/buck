@@ -16,7 +16,10 @@
 
 package com.facebook.buck.util;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -27,14 +30,15 @@ import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.Optional;
+import java.util.concurrent.Future;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Executes a {@link Process} and blocks until it is finished.
@@ -42,6 +46,12 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class DefaultProcessExecutor implements ProcessExecutor {
 
   private static final Logger LOG = Logger.get(ProcessExecutor.class);
+  private static final ThreadPoolExecutor THREAD_POOL = new ThreadPoolExecutor(
+      0,
+      Integer.MAX_VALUE,
+      1, TimeUnit.SECONDS,
+      new SynchronousQueue<>(),
+      new MostExecutors.NamedThreadFactory("ProcessExecutor"));
 
   private final PrintStream stdOutStream;
   private final PrintStream stdErrStream;
@@ -216,28 +226,27 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       final Process process,
       long millis,
       final Optional<Consumer<Process>> timeOutHandler) throws InterruptedException {
-    final AtomicBoolean timedOut = new AtomicBoolean(false);
-    Thread waiter =
-        new Thread(
-            () -> {
-              try {
-                process.waitFor();
-              } catch (InterruptedException e) {
-                timedOut.set(true);
-                if (timeOutHandler.isPresent()) {
-                  try {
-                    timeOutHandler.get().accept(process);
-                  } catch (RuntimeException e2) {
-                    LOG.error(e2, "timeOutHandler threw an Exception!");
-                  }
-                }
-              }
-            });
-    waiter.start();
-    waiter.join(millis);
-    waiter.interrupt();
-    waiter.join();
-    return timedOut.get();
+    Future<?> waiter = THREAD_POOL.submit(() -> {
+      try {
+        process.waitFor();
+      } catch (InterruptedException e) {
+        // The thread waiting has hit its timeout.
+      }
+    });
+    try {
+      waiter.get(millis, TimeUnit.MILLISECONDS);
+    } catch (TimeoutException e) {
+      try {
+        timeOutHandler.ifPresent(consumer -> consumer.accept(process));
+      } catch (RuntimeException e1) {
+        LOG.error(e1, "ProcessExecutor timeOutHandler threw an exception, ignored.");
+      }
+      waiter.cancel(true);
+      return true;
+    } catch (ExecutionException e) {
+      throw new IllegalStateException("Unexpected exception thrown from waiter.", e);
+    }
+    return false;
   }
 
   /**
@@ -285,17 +294,8 @@ public class DefaultProcessExecutor implements ProcessExecutor {
             ansi));
 
     // Consume the streams so they do not deadlock.
-    FutureTask<Void> stdOutTerminationFuture = new FutureTask<>(stdOut);
-    Thread stdOutConsumer = Threads.namedThread(
-        "ProcessExecutor (stdOut)",
-        stdOutTerminationFuture);
-    stdOutConsumer.start();
-
-    FutureTask<Void> stdErrTerminationFuture = new FutureTask<>(stdErr);
-    Thread stdErrConsumer = Threads.namedThread(
-        "ProcessExecutor (stdErr)",
-        stdErrTerminationFuture);
-    stdErrConsumer.start();
+    Future<Void> stdOutTerminationFuture = THREAD_POOL.submit(stdOut);
+    Future<Void> stdErrTerminationFuture = THREAD_POOL.submit(stdErr);
 
     boolean timedOut = false;
 
