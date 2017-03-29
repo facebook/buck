@@ -1640,13 +1640,10 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       return Optional.empty();
     } catch (Exception e) {
       // TODO(plamenko): fix exception propagation in RuleKeyBuilder
-      if (!(Throwables.getRootCause(e) instanceof NoSuchFileException)) {
-        throw e;
+      if (allowMissingInputs && Throwables.getRootCause(e) instanceof NoSuchFileException) {
+        return Optional.empty();
       }
-      if (!allowMissingInputs) {
-        throw e;
-      }
-      return Optional.empty();
+      throw e;
     }
   }
 

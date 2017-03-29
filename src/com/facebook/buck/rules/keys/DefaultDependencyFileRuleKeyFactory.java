@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.hashing.FileHashLoader;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
@@ -31,6 +32,7 @@ import com.google.common.hash.HashCode;
 
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -45,16 +47,28 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
   private final FileHashLoader fileHashLoader;
   private final SourcePathResolver pathResolver;
   private final SourcePathRuleFinder ruleFinder;
+  private final long inputSizeLimit;
+
+
+  public DefaultDependencyFileRuleKeyFactory(
+      RuleKeyFieldLoader ruleKeyFieldLoader,
+      FileHashLoader hashLoader,
+      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
+      long inputSizeLimit) {
+    this.ruleKeyFieldLoader = ruleKeyFieldLoader;
+    this.fileHashLoader = hashLoader;
+    this.pathResolver = pathResolver;
+    this.ruleFinder = ruleFinder;
+    this.inputSizeLimit = inputSizeLimit;
+  }
 
   public DefaultDependencyFileRuleKeyFactory(
       RuleKeyFieldLoader ruleKeyFieldLoader,
       FileHashLoader hashLoader,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder) {
-    this.ruleKeyFieldLoader = ruleKeyFieldLoader;
-    this.fileHashLoader = hashLoader;
-    this.pathResolver = pathResolver;
-    this.ruleFinder = ruleFinder;
+    this(ruleKeyFieldLoader, hashLoader, pathResolver, ruleFinder, Long.MAX_VALUE);
   }
 
   @Override
@@ -102,6 +116,8 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
     final ImmutableSet.Builder<SourcePath> sourcePaths = ImmutableSet.builder();
     final ImmutableSet.Builder<DependencyFileEntry> accountedEntries = ImmutableSet.builder();
 
+    private final SizeLimiter sizeLimiter = new SizeLimiter(inputSizeLimit);
+
     private Builder(
         SupportsDependencyFileRuleKey rule,
         KeyType keyType,
@@ -147,6 +163,25 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
       } else {
         super.setReflectively(val);
       }
+      return this;
+    }
+
+    @Override
+    public Builder<RULE_KEY> setPath(Path absolutePath, Path ideallyRelative) throws IOException {
+      if (inputSizeLimit != Long.MAX_VALUE) {
+        sizeLimiter.add(fileHashLoader.getSize(absolutePath));
+      }
+      super.setPath(absolutePath, ideallyRelative);
+      return this;
+    }
+
+    @Override
+    protected Builder<RULE_KEY> setPath(ProjectFilesystem filesystem, Path relativePath)
+        throws IOException {
+      if (inputSizeLimit != Long.MAX_VALUE) {
+        sizeLimiter.add(fileHashLoader.getSize(filesystem, relativePath));
+      }
+      super.setPath(filesystem, relativePath);
       return this;
     }
 

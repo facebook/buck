@@ -53,13 +53,11 @@ import com.facebook.buck.rules.keys.DefaultDependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyFactory;
-import com.facebook.buck.rules.keys.FakeInputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyAndInputs;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
-import com.facebook.buck.rules.keys.SizeLimiter;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.shell.Genrule;
@@ -1282,7 +1280,7 @@ public class CachingBuildEngineTest {
           .setRuleKeyFactories(
               RuleKeyFactories.of(
                   NOOP_RULE_KEY_FACTORY,
-                  new FakeInputBasedRuleKeyFactory(
+                  new FakeRuleKeyFactory(
                       ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
                   NOOP_DEP_FILE_RULE_KEY_FACTORY))
           .build();
@@ -1339,7 +1337,7 @@ public class CachingBuildEngineTest {
           .setRuleKeyFactories(
               RuleKeyFactories.of(
                   defaultRuleKeyFactory,
-                  new FakeInputBasedRuleKeyFactory(
+                  new FakeRuleKeyFactory(
                       ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
                   NOOP_DEP_FILE_RULE_KEY_FACTORY))
           .build();
@@ -1415,7 +1413,7 @@ public class CachingBuildEngineTest {
           .setRuleKeyFactories(
               RuleKeyFactories.of(
                   defaultRuleKeyFactory,
-                  new FakeInputBasedRuleKeyFactory(
+                  new FakeRuleKeyFactory(
                       ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
                   NOOP_DEP_FILE_RULE_KEY_FACTORY))
           .build();
@@ -1511,7 +1509,7 @@ public class CachingBuildEngineTest {
           .setRuleKeyFactories(
               RuleKeyFactories.of(
                   defaultRuleKeyFactory,
-                  new FakeInputBasedRuleKeyFactory(
+                  new FakeRuleKeyFactory(
                       ImmutableMap.of(),
                       ImmutableSet.of(rule.getBuildTarget())),
                   NOOP_DEP_FILE_RULE_KEY_FACTORY))
@@ -2040,29 +2038,8 @@ public class CachingBuildEngineTest {
             }
           };
 
-      DependencyFileRuleKeyFactory depFileRuleKeyFactory =
-          new DependencyFileRuleKeyFactory() {
-            @Override
-            public RuleKeyAndInputs build(
-                SupportsDependencyFileRuleKey rule,
-                ImmutableList<DependencyFileEntry> inputs) {
-              if (rule.getBuildTarget().equals(target)) {
-                throw new SizeLimiter.SizeLimitException();
-              }
-
-              throw new AssertionError();
-            }
-
-            @Override
-            public RuleKeyAndInputs buildManifestKey(
-                SupportsDependencyFileRuleKey rule) {
-              if (rule.getBuildTarget().equals(target)) {
-                throw new SizeLimiter.SizeLimitException();
-              }
-
-              throw new AssertionError();
-            }
-          };
+      DependencyFileRuleKeyFactory depFileRuleKeyFactory = new FakeRuleKeyFactory(
+          ImmutableMap.of(rule.getBuildTarget(), new RuleKey("aa")));
 
       // Prepare an input file that should appear in the dep file.
       filesystem.writeContentsToPath("something", input);
@@ -2105,7 +2082,7 @@ public class CachingBuildEngineTest {
           equalTo(Optional.of(defaultRuleKeyFactory.build(rule))));
       assertThat(
           onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY),
-          equalTo(Optional.empty()));
+          equalTo(Optional.of(new RuleKey("aa"))));
     }
 
     public CachingBuildEngine engineWithDepFileFactory(

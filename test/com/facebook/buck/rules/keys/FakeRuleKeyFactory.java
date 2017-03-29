@@ -29,13 +29,25 @@ import java.io.IOException;
 public class FakeRuleKeyFactory implements RuleKeyFactory<RuleKey>, DependencyFileRuleKeyFactory {
 
   private final ImmutableMap<BuildTarget, RuleKey> ruleKeys;
+  private final ImmutableSet<BuildTarget> oversized;
 
-  public FakeRuleKeyFactory(ImmutableMap<BuildTarget, RuleKey> ruleKeys) {
+  public FakeRuleKeyFactory(
+      ImmutableMap<BuildTarget, RuleKey> ruleKeys,
+      ImmutableSet<BuildTarget> oversized) {
     this.ruleKeys = ruleKeys;
+    this.oversized = oversized;
+  }
+
+  public FakeRuleKeyFactory(
+      ImmutableMap<BuildTarget, RuleKey> ruleKeys) {
+    this(ruleKeys, ImmutableSet.of());
   }
 
   @Override
   public RuleKey build(BuildRule buildRule) {
+    if (oversized.contains(buildRule.getBuildTarget())) {
+      throw new SizeLimiter.SizeLimitException();
+    }
     return ruleKeys.get(buildRule.getBuildTarget());
   }
 
