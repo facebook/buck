@@ -1058,7 +1058,7 @@ public class AndroidBinaryIntegrationTest {
     verifyTrimmedRDotJava(ImmutableSet.of("app_icon", "app_name", "title"));
   }
 
-  public static final Pattern SMALI_STATIC_FINAL_INT_PATTERN = Pattern.compile(
+  private static final Pattern SMALI_STATIC_FINAL_INT_PATTERN = Pattern.compile(
       "\\.field public static final (\\w+):I = 0x[0-9A-fa-f]+");
 
   private void verifyTrimmedRDotJava(ImmutableSet<String> expected) throws IOException {
