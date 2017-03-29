@@ -107,18 +107,20 @@ public class AndroidBinaryIntegrationTest {
         "android_project",
         tmpFolder);
     workspace.setUp();
-    workspace.runBuckBuild(SIMPLE_TARGET, APP_REDEX_TARGET).assertSuccess();
     filesystem = new ProjectFilesystem(workspace.getDestPath());
   }
 
   @Test
   public void testNonExopackageHasSecondary() throws IOException {
+    workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
+
     ZipInspector zipInspector = new ZipInspector(
         workspace.getPath(
             BuildTargets.getGenPath(
                 filesystem,
                 BuildTargetFactory.newInstance(SIMPLE_TARGET),
                 "%s.apk")));
+
     zipInspector.assertFileExists("assets/secondary-program-dex-jars/metadata.txt");
     zipInspector.assertFileExists("assets/secondary-program-dex-jars/secondary-1.dex.jar");
     zipInspector.assertFileDoesNotExist("classes2.dex");
@@ -202,6 +204,8 @@ public class AndroidBinaryIntegrationTest {
 
   @Test
   public void testDisguisedExecutableIsRenamed() throws IOException {
+    workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
+
     ZipInspector zipInspector = new ZipInspector(
         workspace.getPath(
             BuildTargets.getGenPath(
@@ -214,6 +218,8 @@ public class AndroidBinaryIntegrationTest {
 
   @Test
   public void testEditingPrimaryDexClassForcesRebuildForSimplePackage() throws IOException {
+    workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
+
     workspace.replaceFileContents(
         "java/com/sample/app/MyApplication.java",
         "package com",
@@ -229,6 +235,8 @@ public class AndroidBinaryIntegrationTest {
 
   @Test
   public void testEditingSecondaryDexClassForcesRebuildForSimplePackage() throws IOException {
+    workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
+
     workspace.replaceFileContents(
         "java/com/sample/lib/Sample.java",
         "package com",
@@ -278,6 +286,8 @@ public class AndroidBinaryIntegrationTest {
 
   @Test
   public void testDxFindsReferencedResources() throws IOException {
+    workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
+
     ProjectFilesystem filesystem = new ProjectFilesystem(tmpFolder.getRoot());
     DefaultOnDiskBuildInfo buildInfo = new DefaultOnDiskBuildInfo(
         BuildTargetFactory.newInstance("//java/com/sample/lib:lib#dex"),
@@ -294,6 +304,8 @@ public class AndroidBinaryIntegrationTest {
 
   @Test
   public void testDexingIsInputBased() throws IOException {
+    workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
+
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//java/com/sample/lib:lib#dex");
 
@@ -935,6 +947,7 @@ public class AndroidBinaryIntegrationTest {
 
   @Test
   public void testEditingRedexToolForcesRebuild() throws IOException {
+    workspace.runBuckBuild(APP_REDEX_TARGET).assertSuccess();
     workspace.replaceFileContents(
         "tools/redex/fake_redex.py",
         "main()\n",
@@ -950,6 +963,7 @@ public class AndroidBinaryIntegrationTest {
 
   @Test
   public void testEditingSecondaryDexHeadListForcesRebuild() throws IOException {
+    workspace.runBuckBuild(APP_REDEX_TARGET).assertSuccess();
     workspace.replaceFileContents(
         "tools/redex/secondary_dex_head.list",
         "",
@@ -970,6 +984,8 @@ public class AndroidBinaryIntegrationTest {
 
   @Test
   public void testInvalidKeystoreKeyAlias() throws IOException {
+    workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
+
     workspace.replaceFileContents(
         "keystores/debug.keystore.properties",
         "key.alias=my_alias",
@@ -989,6 +1005,8 @@ public class AndroidBinaryIntegrationTest {
 
   @Test
   public void testResourcesTrimming() throws IOException {
+    workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
+
     // Enable trimming.
     workspace.replaceFileContents(
         "apps/multidex/BUCK",
