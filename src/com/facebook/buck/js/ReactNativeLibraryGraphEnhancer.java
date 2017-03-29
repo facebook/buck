@@ -16,7 +16,9 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.android.Aapt2Compile;
 import com.facebook.buck.android.AndroidResource;
+import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -117,6 +119,12 @@ public class ReactNativeLibraryGraphEnhancer {
           /* hasWhitelistedStrings */ false);
       resolver.addToIndex(resource);
       extraDeps.add(resource);
+
+      Aapt2Compile aapt2Compile = new Aapt2Compile(
+          paramsForResource.withAppendedFlavor(
+              AndroidResourceDescription.AAPT2_COMPILE_FLAVOR),
+          resources);
+      resolver.addToIndex(aapt2Compile);
     }
 
     return new AndroidReactNativeLibrary(
