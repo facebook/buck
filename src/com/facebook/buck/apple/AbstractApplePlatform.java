@@ -23,8 +23,6 @@ import com.google.common.collect.ImmutableList;
 
 import org.immutables.value.Value;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 
 @Value.Immutable
@@ -40,7 +38,7 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
           .setArchitectures(ImmutableList.of("armv7", "arm64"))
           .setMinVersionFlagPrefix("-mios-version-min=")
           // only used for legacy watch apps
-          .setStubBinaryPath(Optional.of(Paths.get("Library/Application Support/WatchKit/WK")))
+          .setStubBinaryPath(Optional.of("Library/Application Support/WatchKit/WK"))
           .build();
   public static final ApplePlatform IPHONESIMULATOR =
       ApplePlatform.builder()
@@ -49,7 +47,7 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
           .setArchitectures(ImmutableList.of("i386", "x86_64"))
           .setMinVersionFlagPrefix("-mios-simulator-version-min=")
           // only used for legacy watch apps
-          .setStubBinaryPath(Optional.of(Paths.get("Library/Application Support/WatchKit/WK")))
+          .setStubBinaryPath(Optional.of("Library/Application Support/WatchKit/WK"))
           .build();
   public static final ApplePlatform WATCHOS =
       ApplePlatform.builder()
@@ -57,14 +55,14 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
           .setProvisioningProfileName("iOS")  // watchOS uses iOS provisioning profiles.
           .setArchitectures(ImmutableList.of("armv7k"))
           .setMinVersionFlagPrefix("-mwatchos-version-min=")
-          .setStubBinaryPath(Optional.of(Paths.get("Library/Application Support/WatchKit/WK")))
+          .setStubBinaryPath(Optional.of("Library/Application Support/WatchKit/WK"))
           .build();
   public static final ApplePlatform WATCHSIMULATOR =
       ApplePlatform.builder()
           .setName("watchsimulator")
           .setArchitectures(ImmutableList.of("i386"))
           .setMinVersionFlagPrefix("-mwatchos-simulator-version-min=")
-          .setStubBinaryPath(Optional.of(Paths.get("Library/Application Support/WatchKit/WK")))
+          .setStubBinaryPath(Optional.of("Library/Application Support/WatchKit/WK"))
           .build();
   public static final ApplePlatform APPLETVOS =
       ApplePlatform.builder()
@@ -116,7 +114,7 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
     return "-m" + getName() + "-version-min=";
   }
 
-  public abstract Optional<Path> getStubBinaryPath();
+  public abstract Optional<String> getStubBinaryPath();
 
   @Value.Default
   public boolean getAppIncludesFrameworks() {

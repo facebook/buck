@@ -85,7 +85,7 @@ public class AppleCxxPlatforms {
   // Utility class, do not instantiate.
   private AppleCxxPlatforms() { }
 
-  private static final Path USR_BIN = Paths.get("usr/bin");
+  private static final String USR_BIN = "usr/bin";
 
   public static ImmutableList<AppleCxxPlatform> buildAppleCxxPlatforms(
       ProjectFilesystem filesystem,
@@ -205,10 +205,9 @@ public class AppleCxxPlatforms {
     if (developerPath.isPresent()) {
       Path xcodeBundlePath = developerPath.get().getParent();
       if (xcodeBundlePath != null) {
-        File xcodeInfoPlistPath = xcodeBundlePath.resolve("Info.plist").toFile();
-        try {
-          NSDictionary parsedXcodeInfoPlist =
-              (NSDictionary) PropertyListParser.parse(xcodeInfoPlistPath);
+        Path xcodeInfoPlistPath = xcodeBundlePath.resolve("Info.plist");
+        try (InputStream stream = Files.newInputStream(xcodeInfoPlistPath)) {
+          NSDictionary parsedXcodeInfoPlist = (NSDictionary) PropertyListParser.parse(stream);
 
           NSObject xcodeVersionObject = parsedXcodeInfoPlist.objectForKey("DTXcode");
           if (xcodeVersionObject != null) {

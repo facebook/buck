@@ -24,7 +24,6 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.matchesPattern;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -42,10 +41,8 @@ import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkableInput;
-import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.FakeExecutableFinder;
-import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
@@ -69,12 +66,11 @@ import com.facebook.buck.swift.SwiftPlatform;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestLogSink;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -91,27 +87,11 @@ import org.junit.rules.ExpectedException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 
 public class AppleCxxPlatformsTest {
-
-  private static final ImmutableSet<Path> COMMON_KNOWN_PATHS =  ImmutableSet.of(
-      Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"),
-      Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"),
-      Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
-      Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo"),
-      Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib"),
-      Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"),
-      Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/nm"),
-      Paths.get("usr/bin/actool"),
-      Paths.get("usr/bin/ibtool"),
-      Paths.get("usr/bin/momc"),
-      Paths.get("usr/bin/copySceneKitAssets"),
-      Paths.get("usr/bin/lldb"),
-      Paths.get("usr/bin/xctest"));
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
@@ -119,30 +99,61 @@ public class AppleCxxPlatformsTest {
   @Rule
   public TestLogSink logSink = new TestLogSink(AppleCxxPlatforms.class);
 
-  @Rule
-  public TemporaryPaths temp = new TemporaryPaths();
-
-  private FakeProjectFilesystem projectFilesystem;
+  private ProjectFilesystem projectFilesystem;
+  private Path developerDir;
 
   @Before
   public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
-    projectFilesystem = new FakeProjectFilesystem();
+    projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    developerDir = projectFilesystem.getPath("/Developer");
+  }
+
+  /**
+   * Get paths in a developer dir that should be set up for a sdk.
+   */
+  private static ImmutableSet<Path> getCommonKnownPaths(Path root) {
+    return ImmutableSet.of(
+        root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"),
+        root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"),
+        root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
+        root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo"),
+        root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib"),
+        root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"),
+        root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/nm"),
+        root.resolve("usr/bin/actool"),
+        root.resolve("usr/bin/ibtool"),
+        root.resolve("usr/bin/momc"),
+        root.resolve("usr/bin/copySceneKitAssets"),
+        root.resolve("usr/bin/lldb"),
+        root.resolve("usr/bin/xctest"));
+  }
+
+  private void touchFile(Path file) {
+    Preconditions.checkArgument(
+        file.getFileSystem().equals(projectFilesystem.getRootPath().getFileSystem()),
+        "Should only make changes to in-memory filesystem files.");
+    try {
+      Files.createDirectories(file.getParent());
+      Files.createFile(file);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Test
   public void iphoneOSSdkPathsBuiltFromDirectory() throws Exception {
-    AppleSdkPaths appleSdkPaths =
-        AppleSdkPaths.builder()
-            .setDeveloperPath(Paths.get("."))
-            .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(Paths.get("Platforms/iPhoneOS.platform"))
-            .setSdkPath(Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
-            .build();
+    AppleSdkPaths appleSdkPaths = AppleSdkPaths.builder()
+        .setDeveloperPath(developerDir)
+        .addToolchainPaths(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
+        .setPlatformPath(developerDir.resolve("Platforms/iPhoneOS.platform"))
+        .setSdkPath(
+            developerDir.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
+        .build();
 
     AppleToolchain toolchain = AppleToolchain.builder()
         .setIdentifier("com.apple.dt.XcodeDefault")
-        .setPath(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
+        .setPath(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
         .setVersion("1")
         .build();
 
@@ -154,12 +165,13 @@ public class AppleCxxPlatformsTest {
         .build();
 
     ImmutableSet<Path> paths = ImmutableSet.<Path>builder()
-        .addAll(COMMON_KNOWN_PATHS)
-        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/codesign_allocate"))
-        .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
-        .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
-        .add(Paths.get("Tools/otest"))
+        .addAll(getCommonKnownPaths(developerDir))
+        .add(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/codesign_allocate"))
+        .add(developerDir.resolve("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
+        .add(developerDir.resolve("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
+        .add(developerDir.resolve("Tools/otest"))
         .build();
+    paths.forEach(this::touchFile);
 
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
@@ -170,7 +182,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
-            new FakeExecutableFinder(paths),
+            new ExecutableFinder(),
             Optional.empty(),
             Optional.empty());
 
@@ -181,30 +193,31 @@ public class AppleCxxPlatformsTest {
     SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
 
     assertEquals(
-        ImmutableList.of("usr/bin/actool"),
+        ImmutableList.of("/Developer/usr/bin/actool"),
         appleCxxPlatform.getActool().getCommandPrefix(resolver));
     assertEquals(
-        ImmutableList.of("usr/bin/ibtool"),
+        ImmutableList.of("/Developer/usr/bin/ibtool"),
         appleCxxPlatform.getIbtool().getCommandPrefix(resolver));
     assertEquals(
-        ImmutableList.of("usr/bin/lldb"),
+        ImmutableList.of("/Developer/usr/bin/lldb"),
         appleCxxPlatform.getLldb().getCommandPrefix(resolver));
     assertEquals(
-        ImmutableList.of("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
+        ImmutableList.of("/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
         appleCxxPlatform.getDsymutil().getCommandPrefix(resolver));
     assertEquals(
-        ImmutableList.of("Toolchains/XcodeDefault.xctoolchain/usr/bin/codesign_allocate"),
+        ImmutableList.of(
+            "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/codesign_allocate"),
         appleCxxPlatform.getCodesignAllocate().get().getCommandPrefix(resolver));
 
     assertEquals(
-        ImmutableList.of("usr/bin/xctest"),
+        ImmutableList.of("/Developer/usr/bin/xctest"),
         appleCxxPlatform.getXctest().getCommandPrefix(resolver));
 
     assertEquals(
         InternalFlavor.of("iphoneos8.0-armv7"),
         cxxPlatform.getFlavor());
     assertEquals(
-        Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang").toString(),
+        "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang",
         cxxPlatform.getCc().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
     assertThat(
         ImmutableList.<String>builder()
@@ -213,7 +226,7 @@ public class AppleCxxPlatformsTest {
             .build(),
         hasConsecutiveItems(
             "-isysroot",
-            Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk").toString()));
+            "/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"));
     assertThat(
         cxxPlatform.getCflags(),
         hasConsecutiveItems("-arch", "armv7"));
@@ -229,11 +242,10 @@ public class AppleCxxPlatformsTest {
             "-Wl,-sdk_version",
             "-Wl,8.0"));
     assertEquals(
-        Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++").toString(),
+        "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++",
         cxxPlatform.getCxx().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
     assertEquals(
-        Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar")
-            .toString(),
+        "/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/ar",
         cxxPlatform.getAr().getCommandPrefix(resolver).get(0));
   }
 
@@ -241,15 +253,16 @@ public class AppleCxxPlatformsTest {
   public void watchOSSdkPathsBuiltFromDirectory() throws Exception {
     AppleSdkPaths appleSdkPaths =
         AppleSdkPaths.builder()
-            .setDeveloperPath(Paths.get("."))
-            .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(Paths.get("Platforms/WatchOS.platform"))
-            .setSdkPath(Paths.get("Platforms/WatchOS.platform/Developer/SDKs/WatchOS2.0.sdk"))
+            .setDeveloperPath(developerDir)
+            .addToolchainPaths(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
+            .setPlatformPath(developerDir.resolve("Platforms/WatchOS.platform"))
+            .setSdkPath(
+                developerDir.resolve("Platforms/WatchOS.platform/Developer/SDKs/WatchOS2.0.sdk"))
             .build();
 
     AppleToolchain toolchain = AppleToolchain.builder()
         .setIdentifier("com.apple.dt.XcodeDefault")
-        .setPath(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
+        .setPath(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
         .setVersion("1")
         .build();
 
@@ -261,11 +274,11 @@ public class AppleCxxPlatformsTest {
         .build();
 
     ImmutableSet<Path> paths = ImmutableSet.<Path>builder()
-        .addAll(COMMON_KNOWN_PATHS)
-        .add(Paths.get("Platforms/WatchOS.platform/Developer/usr/bin/libtool"))
-        .add(Paths.get("Platforms/WatchOS.platform/Developer/usr/bin/ar"))
-
+        .addAll(getCommonKnownPaths(developerDir))
+        .add(developerDir.resolve("Platforms/WatchOS.platform/Developer/usr/bin/libtool"))
+        .add(developerDir.resolve("Platforms/WatchOS.platform/Developer/usr/bin/ar"))
         .build();
+    paths.forEach(this::touchFile);
 
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
@@ -276,7 +289,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
-            new FakeExecutableFinder(paths),
+            new ExecutableFinder(),
             Optional.empty(),
             Optional.empty());
 
@@ -287,27 +300,27 @@ public class AppleCxxPlatformsTest {
     SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
 
     assertEquals(
-        ImmutableList.of("usr/bin/actool"),
+        ImmutableList.of("/Developer/usr/bin/actool"),
         appleCxxPlatform.getActool().getCommandPrefix(resolver));
     assertEquals(
-        ImmutableList.of("usr/bin/ibtool"),
+        ImmutableList.of("/Developer/usr/bin/ibtool"),
         appleCxxPlatform.getIbtool().getCommandPrefix(resolver));
     assertEquals(
-        ImmutableList.of("usr/bin/lldb"),
+        ImmutableList.of("/Developer/usr/bin/lldb"),
         appleCxxPlatform.getLldb().getCommandPrefix(resolver));
     assertEquals(
-        ImmutableList.of("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
+        ImmutableList.of("/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
         appleCxxPlatform.getDsymutil().getCommandPrefix(resolver));
 
     assertEquals(
-        ImmutableList.of("usr/bin/xctest"),
+        ImmutableList.of("/Developer/usr/bin/xctest"),
         appleCxxPlatform.getXctest().getCommandPrefix(resolver));
 
     assertEquals(
         InternalFlavor.of("watchos2.0-armv7k"),
         cxxPlatform.getFlavor());
     assertEquals(
-        Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang").toString(),
+        "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang",
         cxxPlatform.getCc().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
     assertThat(
         ImmutableList.<String>builder()
@@ -316,7 +329,7 @@ public class AppleCxxPlatformsTest {
             .build(),
         hasConsecutiveItems(
             "-isysroot",
-            Paths.get("Platforms/WatchOS.platform/Developer/SDKs/WatchOS2.0.sdk").toString()));
+            "/Developer/Platforms/WatchOS.platform/Developer/SDKs/WatchOS2.0.sdk"));
     assertThat(
         cxxPlatform.getCflags(),
         hasConsecutiveItems("-arch", "armv7k"));
@@ -329,27 +342,26 @@ public class AppleCxxPlatformsTest {
             "-Wl,-sdk_version",
             "-Wl,2.0"));
     assertEquals(
-        Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++").toString(),
+        "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++",
         cxxPlatform.getCxx().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
     assertEquals(
-        Paths.get("Platforms/WatchOS.platform/Developer/usr/bin/ar")
-            .toString(),
+        "/Developer/Platforms/WatchOS.platform/Developer/usr/bin/ar",
         cxxPlatform.getAr().getCommandPrefix(resolver).get(0));
   }
 
   @Test
   public void appleTVOSSdkPathsBuiltFromDirectory() throws Exception {
-    AppleSdkPaths appleSdkPaths =
-        AppleSdkPaths.builder()
-            .setDeveloperPath(Paths.get("."))
-            .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(Paths.get("Platforms/AppleTVOS.platform"))
-            .setSdkPath(Paths.get("Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.1.sdk"))
-            .build();
+    AppleSdkPaths appleSdkPaths = AppleSdkPaths.builder()
+        .setDeveloperPath(developerDir)
+        .addToolchainPaths(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
+        .setPlatformPath(developerDir.resolve("Platforms/AppleTVOS.platform"))
+        .setSdkPath(
+            developerDir.resolve("Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.1.sdk"))
+        .build();
 
     AppleToolchain toolchain = AppleToolchain.builder()
         .setIdentifier("com.apple.dt.XcodeDefault")
-        .setPath(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
+        .setPath(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
         .setVersion("1")
         .build();
 
@@ -361,11 +373,11 @@ public class AppleCxxPlatformsTest {
         .build();
 
     ImmutableSet<Path> paths = ImmutableSet.<Path>builder()
-        .addAll(COMMON_KNOWN_PATHS)
-        .add(Paths.get("Platforms/AppleTVOS.platform/Developer/usr/bin/libtool"))
-        .add(Paths.get("Platforms/AppleTVOS.platform/Developer/usr/bin/ar"))
-
+        .addAll(getCommonKnownPaths(developerDir))
+        .add(developerDir.resolve("Platforms/AppleTVOS.platform/Developer/usr/bin/libtool"))
+        .add(developerDir.resolve("Platforms/AppleTVOS.platform/Developer/usr/bin/ar"))
         .build();
+    paths.forEach(this::touchFile);
 
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
@@ -376,7 +388,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
-            new FakeExecutableFinder(paths),
+            new ExecutableFinder(),
             Optional.empty(),
             Optional.empty());
 
@@ -388,27 +400,27 @@ public class AppleCxxPlatformsTest {
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
 
     assertEquals(
-        ImmutableList.of("usr/bin/actool"),
+        ImmutableList.of("/Developer/usr/bin/actool"),
         appleCxxPlatform.getActool().getCommandPrefix(resolver));
     assertEquals(
-        ImmutableList.of("usr/bin/ibtool"),
+        ImmutableList.of("/Developer/usr/bin/ibtool"),
         appleCxxPlatform.getIbtool().getCommandPrefix(resolver));
     assertEquals(
-        ImmutableList.of("usr/bin/lldb"),
+        ImmutableList.of("/Developer/usr/bin/lldb"),
         appleCxxPlatform.getLldb().getCommandPrefix(resolver));
     assertEquals(
-        ImmutableList.of("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
+        ImmutableList.of("/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
         appleCxxPlatform.getDsymutil().getCommandPrefix(resolver));
 
     assertEquals(
-        ImmutableList.of("usr/bin/xctest"),
+        ImmutableList.of("/Developer/usr/bin/xctest"),
         appleCxxPlatform.getXctest().getCommandPrefix(resolver));
 
     assertEquals(
         InternalFlavor.of("appletvos9.1-arm64"),
         cxxPlatform.getFlavor());
     assertEquals(
-        Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang").toString(),
+        "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang",
         cxxPlatform.getCc().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
     assertThat(
         ImmutableList.<String>builder()
@@ -417,7 +429,7 @@ public class AppleCxxPlatformsTest {
             .build(),
         hasConsecutiveItems(
             "-isysroot",
-            Paths.get("Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.1.sdk").toString()));
+            "/Developer/Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.1.sdk"));
     assertThat(
         cxxPlatform.getCflags(),
         hasConsecutiveItems("-arch", "arm64"));
@@ -430,34 +442,34 @@ public class AppleCxxPlatformsTest {
             "-Wl,-sdk_version",
             "-Wl,9.1"));
     assertEquals(
-        Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++").toString(),
+        "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++",
         cxxPlatform.getCxx().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
     assertEquals(
-        Paths.get("Platforms/AppleTVOS.platform/Developer/usr/bin/ar")
-            .toString(),
+        "/Developer/Platforms/AppleTVOS.platform/Developer/usr/bin/ar",
         cxxPlatform.getAr().getCommandPrefix(resolver).get(0));
   }
 
   @Test
   public void invalidFlavorCharactersInSdkAreEscaped() throws Exception {
-    AppleSdkPaths appleSdkPaths =
-        AppleSdkPaths.builder()
-            .setDeveloperPath(Paths.get("."))
-            .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(Paths.get("Platforms/iPhoneOS.platform"))
-            .setSdkPath(Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
-            .build();
+    AppleSdkPaths appleSdkPaths = AppleSdkPaths.builder()
+        .setDeveloperPath(developerDir)
+        .addToolchainPaths(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
+        .setPlatformPath(developerDir.resolve("Platforms/iPhoneOS.platform"))
+        .setSdkPath(
+            developerDir.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
+        .build();
 
     ImmutableSet<Path> paths = ImmutableSet.<Path>builder()
-        .addAll(COMMON_KNOWN_PATHS)
-        .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
-        .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
-        .add(Paths.get("Tools/otest"))
+        .addAll(getCommonKnownPaths(developerDir))
+        .add(developerDir.resolve("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
+        .add(developerDir.resolve("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
+        .add(developerDir.resolve("Tools/otest"))
         .build();
+    paths.forEach(this::touchFile);
 
     AppleToolchain toolchain = AppleToolchain.builder()
         .setIdentifier("com.apple.dt.XcodeDefault")
-        .setPath(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
+        .setPath(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
         .setVersion("1")
         .build();
 
@@ -477,7 +489,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
-            new FakeExecutableFinder(paths),
+            new ExecutableFinder(),
             Optional.empty(),
             Optional.empty());
 
@@ -488,24 +500,25 @@ public class AppleCxxPlatformsTest {
 
   @Test
   public void cxxToolParamsReadFromBuckConfig() throws Exception {
-    AppleSdkPaths appleSdkPaths =
-        AppleSdkPaths.builder()
-            .setDeveloperPath(Paths.get("."))
-            .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(Paths.get("Platforms/iPhoneOS.platform"))
-            .setSdkPath(Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
-            .build();
+    AppleSdkPaths appleSdkPaths = AppleSdkPaths.builder()
+        .setDeveloperPath(developerDir)
+        .addToolchainPaths(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
+        .setPlatformPath(developerDir.resolve("Platforms/iPhoneOS.platform"))
+        .setSdkPath(
+            developerDir.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
+        .build();
 
     ImmutableSet<Path> paths = ImmutableSet.<Path>builder()
-        .addAll(COMMON_KNOWN_PATHS)
-        .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
-        .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
-        .add(Paths.get("Tools/otest"))
+        .addAll(getCommonKnownPaths(developerDir))
+        .add(developerDir.resolve("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
+        .add(developerDir.resolve("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
+        .add(developerDir.resolve("Tools/otest"))
         .build();
+    paths.forEach(this::touchFile);
 
     AppleToolchain toolchain = AppleToolchain.builder()
         .setIdentifier("com.apple.dt.XcodeDefault")
-        .setPath(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
+        .setPath(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
         .setVersion("1")
         .build();
 
@@ -531,7 +544,7 @@ public class AppleCxxPlatformsTest {
                         "cxxflags", "-std=c++11",
                         "cxxppflags", "-DCXXTHING"))).build(),
             new FakeAppleConfig(),
-            new FakeExecutableFinder(paths),
+            new ExecutableFinder(),
             Optional.empty(),
             Optional.empty());
 
@@ -555,17 +568,17 @@ public class AppleCxxPlatformsTest {
   public void pathNotFoundThrows() throws Exception {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(containsString("Cannot find tool"));
-    AppleSdkPaths appleSdkPaths =
-        AppleSdkPaths.builder()
-            .setDeveloperPath(Paths.get("."))
-            .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(Paths.get("Platforms/iPhoneOS.platform"))
-            .setSdkPath(Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
-            .build();
+    AppleSdkPaths appleSdkPaths = AppleSdkPaths.builder()
+        .setDeveloperPath(developerDir)
+        .addToolchainPaths(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
+        .setPlatformPath(developerDir.resolve("Platforms/iPhoneOS.platform"))
+        .setSdkPath(
+            developerDir.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
+        .build();
 
     AppleToolchain toolchain = AppleToolchain.builder()
         .setIdentifier("com.apple.dt.XcodeDefault")
-        .setPath(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
+        .setPath(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
         .setVersion("1")
         .build();
 
@@ -584,7 +597,7 @@ public class AppleCxxPlatformsTest {
         appleSdkPaths,
         FakeBuckConfig.builder().build(),
         new FakeAppleConfig(),
-        new FakeExecutableFinder(ImmutableSet.of()),
+        new ExecutableFinder(),
         Optional.empty(),
         Optional.empty());
   }
@@ -592,22 +605,25 @@ public class AppleCxxPlatformsTest {
   @Test
   public void iphoneOSSimulatorPlatformSetsLinkerFlags() throws Exception {
     AppleSdkPaths appleSdkPaths = AppleSdkPaths.builder()
-        .setDeveloperPath(Paths.get("."))
-        .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
-        .setPlatformPath(Paths.get("Platforms/iPhoneOS.platform"))
-        .setSdkPath(Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneSimulator8.0.sdk"))
+        .setDeveloperPath(developerDir)
+        .addToolchainPaths(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
+        .setPlatformPath(developerDir.resolve("Platforms/iPhoneOS.platform"))
+        .setSdkPath(
+            developerDir.resolve(
+                "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneSimulator8.0.sdk"))
         .build();
 
     ImmutableSet<Path> paths = ImmutableSet.<Path>builder()
-        .addAll(COMMON_KNOWN_PATHS)
-        .add(Paths.get("Platforms/iPhoneSimulator.platform/Developer/usr/bin/libtool"))
-        .add(Paths.get("Platforms/iPhoneSimulator.platform/Developer/usr/bin/ar"))
-        .add(Paths.get("Tools/otest"))
+        .addAll(getCommonKnownPaths(developerDir))
+        .add(developerDir.resolve("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
+        .add(developerDir.resolve("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
+        .add(developerDir.resolve("Tools/otest"))
         .build();
+    paths.forEach(this::touchFile);
 
     AppleToolchain toolchain = AppleToolchain.builder()
         .setIdentifier("com.apple.dt.XcodeDefault")
-        .setPath(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
+        .setPath(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
         .setVersion("1")
         .build();
 
@@ -627,7 +643,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
-            new FakeExecutableFinder(paths),
+            new ExecutableFinder(),
             Optional.empty(),
             Optional.empty());
 
@@ -644,24 +660,24 @@ public class AppleCxxPlatformsTest {
   @Test
   public void watchOSSimulatorPlatformSetsLinkerFlags() throws Exception {
     AppleSdkPaths appleSdkPaths = AppleSdkPaths.builder()
-        .setDeveloperPath(Paths.get("."))
-        .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
-        .setPlatformPath(Paths.get("Platforms/WatchSimulator.platform"))
+        .setDeveloperPath(developerDir)
+        .addToolchainPaths(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
+        .setPlatformPath(developerDir.resolve("Platforms/WatchSimulator.platform"))
         .setSdkPath(
-            Paths.get("Platforms/WatchSimulator.platform/Developer/SDKs/WatchSimulator2.0.sdk")
-        )
+            developerDir.resolve(
+                "Platforms/WatchSimulator.platform/Developer/SDKs/WatchSimulator2.0.sdk"))
         .build();
 
     ImmutableSet<Path> paths = ImmutableSet.<Path>builder()
-        .addAll(COMMON_KNOWN_PATHS)
-        .add(Paths.get("Platforms/iPhoneSimulator.platform/Developer/usr/bin/libtool"))
-        .add(Paths.get("Platforms/iPhoneSimulator.platform/Developer/usr/bin/ar"))
-
+        .addAll(getCommonKnownPaths(developerDir))
+        .add(developerDir.resolve("Platforms/WatchSimulator.platform/Developer/usr/bin/libtool"))
+        .add(developerDir.resolve("Platforms/WatchSimulator.platform/Developer/usr/bin/ar"))
         .build();
+    paths.forEach(this::touchFile);
 
     AppleToolchain toolchain = AppleToolchain.builder()
         .setIdentifier("com.apple.dt.XcodeDefault")
-        .setPath(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
+        .setPath(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
         .setVersion("1")
         .build();
 
@@ -681,7 +697,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
-            new FakeExecutableFinder(paths),
+            new ExecutableFinder(),
             Optional.empty(),
             Optional.empty());
 
@@ -698,24 +714,24 @@ public class AppleCxxPlatformsTest {
   @Test
   public void appleTVOSSimulatorPlatformSetsLinkerFlags() throws Exception {
     AppleSdkPaths appleSdkPaths = AppleSdkPaths.builder()
-        .setDeveloperPath(Paths.get("."))
-        .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
-        .setPlatformPath(Paths.get("Platforms/AppleTVSimulator.platform"))
+        .setDeveloperPath(developerDir)
+        .addToolchainPaths(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
+        .setPlatformPath(developerDir.resolve("Platforms/AppleTVSimulator.platform"))
         .setSdkPath(
-            Paths.get("Platforms/AppleTVSimulator.platform/Developer/SDKs/AppleTVSimulator9.1.sdk")
-        )
+            developerDir.resolve(
+                "Platforms/AppleTVSimulator.platform/Developer/SDKs/AppleTVSimulator9.1.sdk"))
         .build();
 
     ImmutableSet<Path> paths = ImmutableSet.<Path>builder()
-        .addAll(COMMON_KNOWN_PATHS)
-        .add(Paths.get("Platforms/AppleTVSimulator.platform/Developer/usr/bin/libtool"))
-        .add(Paths.get("Platforms/AppleTVSimulator.platform/Developer/usr/bin/ar"))
-
+        .addAll(getCommonKnownPaths(developerDir))
+        .add(developerDir.resolve("Platforms/AppleTVSimulator.platform/Developer/usr/bin/libtool"))
+        .add(developerDir.resolve("Platforms/AppleTVSimulator.platform/Developer/usr/bin/ar"))
         .build();
+    paths.forEach(this::touchFile);
 
     AppleToolchain toolchain = AppleToolchain.builder()
         .setIdentifier("com.apple.dt.XcodeDefault")
-        .setPath(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
+        .setPath(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
         .setVersion("1")
         .build();
 
@@ -735,7 +751,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
-            new FakeExecutableFinder(paths),
+            new ExecutableFinder(),
             Optional.empty(),
             Optional.empty());
 
@@ -844,7 +860,7 @@ public class AppleCxxPlatformsTest {
               target,
               Linker.LinkType.EXECUTABLE,
               Optional.empty(),
-              Paths.get("output"),
+              projectFilesystem.getPath("output"),
               Linker.LinkableDepType.SHARED,
               ImmutableList.of(),
               Optional.empty(),
@@ -864,7 +880,8 @@ public class AppleCxxPlatformsTest {
         .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
         .setPlatformPath(root.resolve("Platforms/iPhoneOS.platform"))
         .setSdkPath(
-            root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneSimulator8.0.sdk"))
+            root.resolve(
+                "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneSimulator8.0.sdk"))
         .build();
     AppleToolchain toolchain = AppleToolchain.builder()
         .setIdentifier("com.apple.dt.XcodeDefault")
@@ -877,6 +894,8 @@ public class AppleCxxPlatformsTest {
         .setVersion("8.0")
         .setToolchains(ImmutableList.of(toolchain))
         .build();
+    getCommonKnownPaths(root).forEach(this::touchFile);
+    this.touchFile(root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/ar"));
     return AppleCxxPlatforms.buildWithExecutableChecker(
         projectFilesystem,
         targetSdk,
@@ -885,7 +904,7 @@ public class AppleCxxPlatformsTest {
         appleSdkPaths,
         config,
         new FakeAppleConfig(config),
-        new AlwaysFoundExecutableFinder(),
+        new ExecutableFinder(),
         Optional.empty(),
         Optional.empty());
   }
@@ -896,9 +915,15 @@ public class AppleCxxPlatformsTest {
         FakeBuckConfig.builder().setFilesystem(projectFilesystem).build());
   }
 
+  private AppleCxxPlatform buildAppleCxxPlatform() {
+    return buildAppleCxxPlatform(
+        developerDir,
+        FakeBuckConfig.builder().setFilesystem(projectFilesystem).build());
+  }
+
   @Test
   public void byDefaultCodesignToolIsConstant() {
-    AppleCxxPlatform appleCxxPlatform = buildAppleCxxPlatform(temp.getRoot());
+    AppleCxxPlatform appleCxxPlatform = buildAppleCxxPlatform();
     BuildRuleResolver buildRuleResolver = EasyMock.createMock(BuildRuleResolver.class);
     SourcePathResolver sourcePathResolver = EasyMock.createMock(SourcePathResolver.class);
     assertThat(appleCxxPlatform.getCodesignProvider().resolve(buildRuleResolver).getCommandPrefix(
@@ -908,7 +933,7 @@ public class AppleCxxPlatformsTest {
   @Test
   public void buckTargetIsUsedWhenBuildTargetIsSpecified() {
     AppleCxxPlatform appleCxxPlatform = buildAppleCxxPlatform(
-        temp.getRoot(),
+        developerDir,
         FakeBuckConfig.builder().setSections(
             "[apple]",
             "codesign = //foo:bar").build());
@@ -925,10 +950,10 @@ public class AppleCxxPlatformsTest {
 
   @Test
   public void filePathIsUsedWhenBuildTargetDoesNotExist() throws IOException {
-    Path codesignPath = Paths.get("/foo/fakecodesign");
-    projectFilesystem.createNewFile(codesignPath);
+    Path codesignPath = projectFilesystem.getPath("/foo/fakecodesign");
+    touchFile(codesignPath);
     AppleCxxPlatform appleCxxPlatform = buildAppleCxxPlatform(
-        temp.getRoot(),
+        developerDir,
         FakeBuckConfig.builder().setFilesystem(projectFilesystem).setSections(
             "[apple]",
             "codesign = " + codesignPath).build());
@@ -949,7 +974,7 @@ public class AppleCxxPlatformsTest {
     // Iterate building up rule keys for combinations of different platforms and NDK root
     // directories.
     for (String dir : ImmutableList.of("something", "something else")) {
-      AppleCxxPlatform platform = buildAppleCxxPlatform(Paths.get(dir));
+      AppleCxxPlatform platform = buildAppleCxxPlatform(projectFilesystem.getPath(dir));
       preprocessAndCompileRukeKeys.put(
           String.format("AppleCxxPlatform(%s)", dir),
           constructCompileRuleKeys(
@@ -985,7 +1010,8 @@ public class AppleCxxPlatformsTest {
 
   @Test
   public void nonExistentPlatformVersionPlistIsLogged() {
-    AppleCxxPlatform platform = buildAppleCxxPlatform(Paths.get("/nonexistentjabberwock"));
+    AppleCxxPlatform platform =
+        buildAppleCxxPlatform(projectFilesystem.getPath("/nonexistentjabberwock"));
     assertThat(platform.getBuildVersion(), equalTo(Optional.empty()));
     assertThat(
         logSink.getRecords(),
@@ -996,13 +1022,12 @@ public class AppleCxxPlatformsTest {
 
   @Test
   public void invalidPlatformVersionPlistIsLogged() throws Exception {
-    Path tempRoot = temp.getRoot();
-    Path platformRoot = tempRoot.resolve("Platforms/iPhoneOS.platform");
+    Path platformRoot = developerDir.resolve("Platforms/iPhoneOS.platform");
     Files.createDirectories(platformRoot);
     Files.write(
         platformRoot.resolve("version.plist"),
         "I am, as a matter of fact, an extremely invalid plist.".getBytes(Charsets.UTF_8));
-    AppleCxxPlatform platform = buildAppleCxxPlatform(tempRoot);
+    AppleCxxPlatform platform = buildAppleCxxPlatform();
     assertThat(platform.getBuildVersion(), equalTo(Optional.empty()));
     assertThat(
         logSink.getRecords(),
@@ -1013,19 +1038,19 @@ public class AppleCxxPlatformsTest {
 
   @Test
   public void platformVersionPlistWithMissingFieldIsLogged() throws Exception {
-    Path tempRoot = temp.getRoot();
-    Path platformRoot = tempRoot.resolve("Platforms/iPhoneOS.platform");
+    Path platformRoot = developerDir.resolve("Platforms/iPhoneOS.platform");
     Files.createDirectories(platformRoot);
     Files.write(
         platformRoot.resolve("version.plist"),
         new NSDictionary().toXMLPropertyList().getBytes(Charsets.UTF_8));
-    AppleCxxPlatform platform = buildAppleCxxPlatform(tempRoot);
+    AppleCxxPlatform platform = buildAppleCxxPlatform();
     assertThat(platform.getBuildVersion(), equalTo(Optional.empty()));
     assertThat(
         logSink.getRecords(),
         hasItem(
             TestLogSink.logRecordWithMessage(
-                matchesPattern(".*missing ProductBuildVersion. Build version will be unset.*"))));
+                matchesPattern(
+                    ".*missing ProductBuildVersion. Build version will be unset.*"))));
   }
 
   @Test
@@ -1037,7 +1062,8 @@ public class AppleCxxPlatformsTest {
     Tool swiftcTool = swiftPlatformOptional.get().getSwiftc();
     assertTrue(swiftcTool instanceof VersionedTool);
     assertThat(((VersionedTool) swiftcTool).getPath(),
-        equalTo(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc")));
+        equalTo(projectFilesystem.getPath(
+            "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc")));
 
     assertThat(swiftPlatformOptional.get().getSwiftRuntimePaths(), Matchers.empty());
   }
@@ -1049,10 +1075,10 @@ public class AppleCxxPlatformsTest {
     assertThat(swiftPlatformOptional.isPresent(), is(true));
     Tool swiftcTool = swiftPlatformOptional.get().getSwiftc();
     assertThat(((VersionedTool) swiftcTool).getPath(),
-        not(equalTo(Paths.get("Toolchains/Swift_2.3.xctoolchain/usr/bin/swiftc"))));
+        equalTo(projectFilesystem.getPath("/TEMP_ROOT/usr/bin/swiftc")));
 
     assertThat(swiftPlatformOptional.get().getSwiftRuntimePaths(),
-        equalTo(ImmutableSet.of(temp.getRoot().resolve("usr/lib/swift/iphoneos"))));
+        equalTo(ImmutableSet.of(projectFilesystem.getPath("/TEMP_ROOT/usr/lib/swift/iphoneos"))));
   }
 
   @Test
@@ -1067,55 +1093,41 @@ public class AppleCxxPlatformsTest {
 
   private AppleCxxPlatform buildAppleCxxPlatformWithSwiftToolchain(boolean useDefaultSwift)
       throws IOException {
-    Path tempRoot = temp.getRoot();
+    Path tempRoot = projectFilesystem.getPath("/TEMP_ROOT");
     AppleToolchain swiftToolchain = AppleToolchain.builder()
         .setIdentifier("com.apple.dt.XcodeDefault")
         .setPath(tempRoot)
         .setVersion("1")
         .build();
-    temp.newFolder("usr", "bin");
-    temp.newFolder("usr", "lib", "swift", "iphoneos");
-    temp.newFolder("usr", "lib", "swift_static", "iphoneos");
-    MoreFiles.makeExecutable(temp.newFile("usr/bin/swiftc"));
-    MoreFiles.makeExecutable(temp.newFile("usr/bin/swift-stdlib-tool"));
+    touchFile(tempRoot.resolve("usr/bin/swiftc"));
+    touchFile(tempRoot.resolve("usr/bin/swift-stdlib-tool"));
+    Files.createDirectories(tempRoot.resolve("usr/lib/swift/iphoneos"));
+    Files.createDirectories(tempRoot.resolve("usr/lib/swift_static/iphoneos"));
     Optional<AppleToolchain> selectedSwiftToolChain = useDefaultSwift ?
         Optional.empty() : Optional.of(swiftToolchain);
     final ImmutableSet<Path> knownPaths = ImmutableSet.<Path>builder()
-        .addAll(COMMON_KNOWN_PATHS)
-        .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
-        .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
-        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"))
-        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-stdlib-tool"))
+        .addAll(getCommonKnownPaths(developerDir))
+        .add(developerDir.resolve("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
+        .add(developerDir.resolve("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
+        .add(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"))
+        .add(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-stdlib-tool"))
         .build();
+    knownPaths.forEach(this::touchFile);
     return AppleCxxPlatforms.buildWithExecutableChecker(
         projectFilesystem,
         FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_SDK,
         "7.0",
         "i386",
-        FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_SDK_PATHS,
+        AppleSdkPaths.builder()
+            .setDeveloperPath(developerDir)
+            .addToolchainPaths(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
+            .setPlatformPath(developerDir.resolve("Platforms/iPhoneOS.platform"))
+            .setSdkPath(
+                developerDir.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"))
+            .build(),
         FakeBuckConfig.builder().build(),
         new FakeAppleConfig(),
-        new ExecutableFinder() {
-          @Override
-          public Optional<Path> getOptionalExecutable(
-              Path suggestedPath,
-              ImmutableCollection<Path> searchPath,
-              ImmutableCollection<String> fileSuffixes) {
-            Optional<Path> realPath = super.getOptionalExecutable(
-                suggestedPath,
-                searchPath,
-                fileSuffixes);
-            if (realPath.isPresent()) {
-              return realPath;
-            }
-            for (Path path : knownPaths) {
-              if (suggestedPath.equals(path.getFileName())) {
-                return Optional.of(path);
-              }
-            }
-            return Optional.empty();
-          }
-        },
+        new ExecutableFinder(),
         Optional.of(FakeAppleRuleDescriptions.PROCESS_EXECUTOR),
         selectedSwiftToolChain);
   }
