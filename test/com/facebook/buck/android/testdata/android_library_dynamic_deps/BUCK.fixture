@@ -69,6 +69,17 @@ android_library(
 )
 
 android_library(
+  name = 'has_lib_c_from_provided_query',
+  srcs = [
+    'UsesC.java',
+  ],
+  provided_deps = [
+    ':top_level',
+  ],
+  provided_deps_query = 'kind(java_library, deps($declared))',
+)
+
+android_library(
   name = 'provided_only',
   srcs = [ 'UsesC.java', ],
   provided_deps = [ ':lib_c', ],
@@ -79,4 +90,17 @@ android_library(
   srcs = [ 'UsesC.java', ],
   deps = [ ':provided_only', ],
   deps_query = 'classpath($declared_deps)',
+)
+
+java_binary(
+  name = 'does_not_package_lib_c',
+  deps = [
+      ':has_lib_c_from_provided_query',
+  ],
+)
+
+genrule(
+  name = 'check_output_of_does_not_package_lib_c',
+  cmd = 'echo `unzip -l $(location :does_not_package_lib_c)` > $OUT',
+  out = 'out',
 )

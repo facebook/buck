@@ -18,15 +18,23 @@
 package com.facebook.buck.android;
 
 
+import static org.junit.Assert.fail;
+
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Tests for AndroidLibraryDescription
@@ -139,5 +147,41 @@ public class AndroidLibraryDescriptionIntegrationTest {
 
     // Should fail becuase 'C.class' is not added to the classpath because it's a provided dep
     workspace.runBuckCommand("build", "//:no_provided_deps").assertFailure();
+  }
+
+  @Test
+  public void testProvidedDepsQuery() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    // Should succeed because required dep (lib_c) will be added as provided
+    workspace.runBuckBuild("//:has_lib_c_from_provided_query").assertSuccess();
+  }
+
+  @Test
+  public void testProvidedDepsQueryDoesNotAffectPackaging() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    workspace.runBuckCommand("build", "//:check_output_of_does_not_package_lib_c")
+        .assertSuccess();
+    String[] outputs = workspace.getFileContents(
+        getOutputFile("//:check_output_of_does_not_package_lib_c"))
+        .split("\\s");
+    // There should be a class entry for UsesC.java
+    Assert.assertThat(outputs, Matchers.hasItemInArray("com/facebook/example/UsesC.class"));
+    // But not one for C.java
+    Assert.assertThat(outputs,
+        Matchers.not(Matchers.hasItemInArray("com/facebook/example/C.class")));
+  }
+
+  private Path getOutputFile(String targetName) {
+    try {
+      ProjectWorkspace.ProcessResult buildResult =
+          workspace.runBuckCommand("targets", targetName, "--show-output", "--json");
+      buildResult.assertSuccess();
+      JsonNode jsonNode = new ObjectMapper().reader().readTree(buildResult.getStdout()).get(0);
+      assert jsonNode.has("buck.outputPath");
+      return Paths.get(jsonNode.get("buck.outputPath").asText());
+    } catch (Exception e) {
+      fail(e.getMessage());
+      return Paths.get("");
+    }
   }
 }

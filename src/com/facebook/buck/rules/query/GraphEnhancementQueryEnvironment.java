@@ -98,7 +98,9 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
   public ImmutableSet<QueryTarget> getTargetsMatchingPattern(
       String pattern,
       ListeningExecutorService executor) throws QueryException, InterruptedException {
-    if ("$declared_deps".equals(pattern)) {
+    if ("$declared_deps".equals(pattern) ||
+        "$declared".equals(pattern) ||
+        "first_order_deps()".equals(pattern)) {
       return declaredDeps
           .stream()
           .map(QueryBuildTarget::of)

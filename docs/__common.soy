@@ -1219,6 +1219,20 @@ docsearch({
 {/template}
 
 /***/
+{template .provided_deps_query_arg}
+{call buck.arg}
+  {param name: 'provided_deps_query' /}
+  {param default : 'None' /}
+  {param desc}
+  Status: <strong>experimental/unstable</strong>.
+  The provided deps query functions in the same way as the deps query, but the referenced deps
+  using <code>$declared</code> are the provided deps of the target, and the results of the query
+  are appended to the declared provided deps.
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .licenses_arg}
 {call buck.arg}
   {param name: 'licenses' /}
