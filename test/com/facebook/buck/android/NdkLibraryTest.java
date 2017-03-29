@@ -65,6 +65,7 @@ public class NdkLibraryTest {
 
     AndroidPlatformTarget androidPlatformTarget = AndroidPlatformTarget.getDefaultPlatformTarget(
         resolver,
+        Optional.empty(),
         Optional.empty());
     executionContext = TestExecutionContext.newBuilder()
         .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))

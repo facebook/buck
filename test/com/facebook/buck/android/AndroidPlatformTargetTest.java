@@ -62,7 +62,8 @@ public class AndroidPlatformTargetTest {
             androidDirectoryResolver,
             platformDirectoryPath,
             additionalJarPaths,
-            /* aaptOverride */ Optional.empty());
+            /* aaptOverride */ Optional.empty(),
+            /* aapt2Override */ Optional.empty());
     assertEquals(name, androidPlatformTarget.getName());
     assertEquals(
         ImmutableList.of(
@@ -123,7 +124,8 @@ public class AndroidPlatformTargetTest {
         AndroidPlatformTarget.getTargetForId(
             "Google Inc.:Google APIs:17",
             androidDirectoryResolver,
-            /* aaptOverride */ Optional.empty());
+            /* aaptOverride */ Optional.empty(),
+            /* aapt2Override */ Optional.empty());
     assertTrue(androidPlatformTargetOption.isPresent());
 
     // Verify that addOnsLibsDir2 was picked up since addOnsLibsDir1 is empty.
@@ -161,7 +163,8 @@ public class AndroidPlatformTargetTest {
         AndroidPlatformTarget.getTargetForId(
             platformId,
             androidDirectoryResolver,
-            /* aaptOverride */ Optional.empty());
+            /* aaptOverride */ Optional.empty(),
+            /* aapt2Override */ Optional.empty());
 
     AndroidPlatformTarget androidPlatformTarget = androidPlatformTargetOption.get();
     assertEquals(platformId, androidPlatformTarget.getName());
@@ -193,7 +196,8 @@ public class AndroidPlatformTargetTest {
       AndroidPlatformTarget.getTargetForId(
           platformId,
           androidDirectoryResolver,
-          /* aaptOverride */ Optional.empty());
+          /* aaptOverride */ Optional.empty(),
+          /* aapt2Override */ Optional.empty());
       fail("Should have thrown HumanReadableException");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -233,7 +237,8 @@ public class AndroidPlatformTargetTest {
         AndroidPlatformTarget.getTargetForId(
             "Google Inc.:Google APIs:17",
             androidDirectoryResolver,
-            /* aaptOverride */ Optional.empty());
+            /* aaptOverride */ Optional.empty(),
+            /* aapt2Override */ Optional.empty());
     assertTrue(androidPlatformTargetOption1.isPresent());
     assertEquals(
         ImmutableList.of(
@@ -248,7 +253,8 @@ public class AndroidPlatformTargetTest {
         AndroidPlatformTarget.getTargetForId(
             "android-17",
             androidDirectoryResolver,
-            /* aaptOverride */ Optional.empty());
+            /* aaptOverride */ Optional.empty(),
+            /* aapt2Override */ Optional.empty());
     assertTrue(androidPlatformTargetOption2.isPresent());
     assertEquals(
         ImmutableList.of(
@@ -279,7 +285,8 @@ public class AndroidPlatformTargetTest {
         AndroidPlatformTarget.getTargetForId(
             platformId,
             androidDirectoryResolver,
-            /* aaptOverride */ Optional.empty());
+            /* aaptOverride */ Optional.empty(),
+            /* aapt2Override */ Optional.empty());
 
     assertTrue(androidPlatformTargetOption.isPresent());
     AndroidPlatformTarget androidPlatformTarget = androidPlatformTargetOption.get();
@@ -295,7 +302,8 @@ public class AndroidPlatformTargetTest {
         AndroidPlatformTarget.getTargetForId(
             platformId,
             androidDirectoryResolver,
-            /* aaptOverride */ Optional.empty());
+            /* aaptOverride */ Optional.empty(),
+            /* aapt2Override */ Optional.empty());
     assertTrue(androidPlatformTargetOption.isPresent());
     androidPlatformTarget = androidPlatformTargetOption.get();
     assertEquals(platformId, androidPlatformTarget.getName());

@@ -190,7 +190,8 @@ public class AndroidPlatformTarget {
   public static Optional<AndroidPlatformTarget> getTargetForId(
       String platformId,
       AndroidDirectoryResolver androidDirectoryResolver,
-      Optional<Path> aaptOverride) {
+      Optional<Path> aaptOverride,
+      Optional<Path> aapt2Override) {
 
     Matcher platformMatcher = PLATFORM_TARGET_PATTERN.matcher(platformId);
     if (platformMatcher.matches()) {
@@ -203,7 +204,8 @@ public class AndroidPlatformTarget {
           platformTargetFactory = new AndroidWithoutGoogleApisFactory();
         }
         return Optional.of(
-            platformTargetFactory.newInstance(androidDirectoryResolver, apiLevel, aaptOverride));
+            platformTargetFactory.newInstance(androidDirectoryResolver, apiLevel, aaptOverride,
+                aapt2Override));
       } catch (NumberFormatException e) {
         return Optional.empty();
       }
@@ -214,8 +216,10 @@ public class AndroidPlatformTarget {
 
   public static AndroidPlatformTarget getDefaultPlatformTarget(
       AndroidDirectoryResolver androidDirectoryResolver,
-      Optional<Path> aaptOverride) {
-    return getTargetForId(DEFAULT_ANDROID_PLATFORM_TARGET, androidDirectoryResolver, aaptOverride)
+      Optional<Path> aaptOverride,
+      Optional<Path> aapt2Override) {
+    return getTargetForId(DEFAULT_ANDROID_PLATFORM_TARGET, androidDirectoryResolver, aaptOverride,
+        aapt2Override)
         .get();
   }
 
@@ -223,7 +227,8 @@ public class AndroidPlatformTarget {
     AndroidPlatformTarget newInstance(
         AndroidDirectoryResolver androidDirectoryResolver,
         String apiLevel,
-        Optional<Path> aaptOverride);
+        Optional<Path> aaptOverride,
+        Optional<Path> aapt2Override);
   }
 
   /**
@@ -237,7 +242,8 @@ public class AndroidPlatformTarget {
       AndroidDirectoryResolver androidDirectoryResolver,
       String platformDirectoryPath,
       Set<Path> additionalJarPaths,
-      Optional<Path> aaptOverride) {
+      Optional<Path> aaptOverride,
+      Optional<Path> aapt2Override) {
     Path androidSdkDir = androidDirectoryResolver.getSdkOrThrow();
     if (!androidSdkDir.isAbsolute()) {
       throw new HumanReadableException(
@@ -305,7 +311,8 @@ public class AndroidPlatformTarget {
         bootclasspathEntries,
         aaptOverride.orElse(
             androidSdkDir.resolve(buildToolsBinDir).resolve("aapt").toAbsolutePath()),
-        androidSdkDir.resolve(buildToolsBinDir).resolve("aapt2").toAbsolutePath(),
+        aapt2Override.orElse(
+            androidSdkDir.resolve(buildToolsBinDir).resolve("aapt2").toAbsolutePath()),
         androidSdkDir.resolve("platform-tools/adb").toAbsolutePath(),
         androidSdkDir.resolve(buildToolsBinDir).resolve("aidl").toAbsolutePath(),
         zipAlignExecutable,
@@ -329,7 +336,8 @@ public class AndroidPlatformTarget {
     public AndroidPlatformTarget newInstance(
         final AndroidDirectoryResolver androidDirectoryResolver,
         final String apiLevel,
-        Optional<Path> aaptOverride) {
+        Optional<Path> aaptOverride,
+        Optional<Path> aapt2Override) {
       // TODO(natthu): Use Paths instead of Strings everywhere in this file.
       Path androidSdkDir = androidDirectoryResolver.getSdkOrThrow();
       File addonsParentDir = androidSdkDir.resolve("add-ons").toFile();
@@ -373,7 +381,8 @@ public class AndroidPlatformTarget {
                 androidDirectoryResolver,
                 "platforms/android-" + apiLevel,
                 additionalJarPaths.build(),
-                aaptOverride);
+                aaptOverride,
+                aapt2Override);
           }
         }
       }
@@ -393,13 +402,15 @@ public class AndroidPlatformTarget {
     public AndroidPlatformTarget newInstance(
         final AndroidDirectoryResolver androidDirectoryResolver,
         final String apiLevel,
-        Optional<Path> aaptOverride) {
+        Optional<Path> aaptOverride,
+        Optional<Path> aapt2Override) {
       return createFromDefaultDirectoryStructure(
           "android-" + apiLevel,
           androidDirectoryResolver,
           "platforms/android-" + apiLevel,
           /* additionalJarPaths */ ImmutableSet.of(),
-          aaptOverride);
+          aaptOverride,
+          aapt2Override);
     }
   }
 
