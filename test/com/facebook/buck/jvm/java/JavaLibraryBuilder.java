@@ -76,6 +76,11 @@ public class JavaLibraryBuilder extends
     return this;
   }
 
+  public JavaLibraryBuilder addAnnotationProcessorDep(BuildTarget rule) {
+    arg.annotationProcessorDeps = amend(arg.annotationProcessorDeps, rule);
+    return this;
+  }
+
   public JavaLibraryBuilder addExportedDep(BuildTarget rule) {
     arg.exportedDeps = amend(arg.exportedDeps, rule);
     return this;

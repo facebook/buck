@@ -24,6 +24,7 @@ import static org.easymock.EasyMock.replay;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -413,6 +414,31 @@ public class DefaultJavaLibraryTest {
         "The classpath for the javac step to compile //:libtwo should contain only libone.",
         ImmutableSet.of(resolver.getAbsolutePath(libraryOne.getSourcePathToOutput())),
         javacStep.getClasspathEntries());
+  }
+
+  @Test
+  public void testDepFilePredicateForNoAnnotationProcessorDeps() throws Exception {
+    BuildTarget annotationProcessorTarget = validJavaLibrary.createTarget();
+    BuildTarget annotationProcessorAbiTarget = validJavaLibraryAbi.createTarget();
+
+    BuildRule annotationProcessorRule = validJavaLibrary.createRule(annotationProcessorTarget);
+    BuildRule annotationProcessorAbiRule = validJavaLibraryAbi.createRule(
+        annotationProcessorAbiTarget);
+
+    ruleResolver.addToIndex(annotationProcessorRule);
+    ruleResolver.addToIndex(annotationProcessorAbiRule);
+
+    BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libone");
+
+    DefaultJavaLibrary libraryTwo = JavaLibraryBuilder
+        .createBuilder(libraryTwoTarget)
+        .addSrc(Paths.get("java/src/com/libtwo/Foo.java"))
+        .addAnnotationProcessorDep(annotationProcessorTarget)
+        .build(ruleResolver);
+    SourcePath sourcePath = annotationProcessorAbiRule.getSourcePathToOutput();
+    assertFalse(
+        "The predicate for dep file shouldn't contain annotation processor deps",
+        libraryTwo.getCoveredByDepFilePredicate().test(sourcePath));
   }
 
   /**
@@ -1379,6 +1405,19 @@ public class DefaultJavaLibraryTest {
             .build(ruleResolver);
       }
     };
+
+  private AnnotationProcessorTarget validJavaLibraryAbi =
+      new AnnotationProcessorTarget("//tools/java/src/com/facebook/somejava:library#abi") {
+        @Override
+        public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {
+          return  CalculateAbi.of(target,
+              new SourcePathRuleFinder(ruleResolver),
+              new FakeBuildRuleParamsBuilder(target)
+                  .setProjectFilesystem(new FakeProjectFilesystem())
+                  .build(),
+              new FakeSourcePath("java/src/com/facebook/somejava/library/library-abi.jar"));
+        }
+      };
 
   // Captures all the common code between the different annotation processing test scenarios.
   private class AnnotationProcessingScenario {

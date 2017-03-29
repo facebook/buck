@@ -262,7 +262,7 @@ public class DefaultJavaLibraryBuilder {
     protected ImmutableSortedSet<SourcePath> buildAbiInputs() throws NoSuchBuildTargetException {
       return JavaLibraryRules.getAbiInputs(
           buildRuleResolver,
-          getFinalParams().getBuildDeps());
+          getCompileTimeClasspathDeps());
     }
   }
 }

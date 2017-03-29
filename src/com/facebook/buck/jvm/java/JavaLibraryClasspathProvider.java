@@ -118,13 +118,4 @@ public class JavaLibraryClasspathProvider {
     }
     return classpathEntries.build();
   }
-
-  /**
-   * Get the direct (and exported) dependencies which will be added to the classpath during
-   * compilation.
-   */
-  public static FluentIterable<JavaLibrary> getImmediateClasspathDeps(JavaLibrary javaLibrary) {
-    return JavaLibraryClasspathProvider.getJavaLibraryDeps(
-        javaLibrary.getDepsForTransitiveClasspathEntries());
-  }
 }
