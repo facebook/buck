@@ -47,6 +47,7 @@ struct TimeStatsRemoteLogEntry {
   1: i64 pythonTimeMs;
   2: i64 initTimeMs;
   3: i64 parseTimeMs;
+  4: i64 processingTimeMs;
   5: i64 actionGraphTimeMs;
   6: i64 rulekeyTimeMs;
   7: i64 fetchTimeMs;

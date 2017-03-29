@@ -52,15 +52,15 @@ public class TimeStatsRemoteLogEntry implements org.apache.thrift.TBase<TimeStat
     schemes.put(TupleScheme.class, new TimeStatsRemoteLogEntryTupleSchemeFactory());
   }
 
-  public long pythonTimeMs; // optional
-  public long initTimeMs; // optional
-  public long parseTimeMs; // optional
-  public long processingTimeMs; // optional
-  public long actionGraphTimeMs; // optional
-  public long rulekeyTimeMs; // optional
-  public long fetchTimeMs; // optional
-  public long buildTimeMs; // optional
-  public long installTimeMs; // optional
+  public long pythonTimeMs; // required
+  public long initTimeMs; // required
+  public long parseTimeMs; // required
+  public long processingTimeMs; // required
+  public long actionGraphTimeMs; // required
+  public long rulekeyTimeMs; // required
+  public long fetchTimeMs; // required
+  public long buildTimeMs; // required
+  public long installTimeMs; // required
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -155,33 +155,64 @@ public class TimeStatsRemoteLogEntry implements org.apache.thrift.TBase<TimeStat
   private static final int __BUILDTIMEMS_ISSET_ID = 7;
   private static final int __INSTALLTIMEMS_ISSET_ID = 8;
   private short __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.PYTHON_TIME_MS,_Fields.INIT_TIME_MS,_Fields.PARSE_TIME_MS,_Fields.PROCESSING_TIME_MS,_Fields.ACTION_GRAPH_TIME_MS,_Fields.RULEKEY_TIME_MS,_Fields.FETCH_TIME_MS,_Fields.BUILD_TIME_MS,_Fields.INSTALL_TIME_MS};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-    tmpMap.put(_Fields.PYTHON_TIME_MS, new org.apache.thrift.meta_data.FieldMetaData("pythonTimeMs", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+    tmpMap.put(_Fields.PYTHON_TIME_MS, new org.apache.thrift.meta_data.FieldMetaData("pythonTimeMs", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
-    tmpMap.put(_Fields.INIT_TIME_MS, new org.apache.thrift.meta_data.FieldMetaData("initTimeMs", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+    tmpMap.put(_Fields.INIT_TIME_MS, new org.apache.thrift.meta_data.FieldMetaData("initTimeMs", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
-    tmpMap.put(_Fields.PARSE_TIME_MS, new org.apache.thrift.meta_data.FieldMetaData("parseTimeMs", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+    tmpMap.put(_Fields.PARSE_TIME_MS, new org.apache.thrift.meta_data.FieldMetaData("parseTimeMs", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
-    tmpMap.put(_Fields.PROCESSING_TIME_MS, new org.apache.thrift.meta_data.FieldMetaData("processingTimeMs", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+    tmpMap.put(_Fields.PROCESSING_TIME_MS, new org.apache.thrift.meta_data.FieldMetaData("processingTimeMs", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
-    tmpMap.put(_Fields.ACTION_GRAPH_TIME_MS, new org.apache.thrift.meta_data.FieldMetaData("actionGraphTimeMs", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+    tmpMap.put(_Fields.ACTION_GRAPH_TIME_MS, new org.apache.thrift.meta_data.FieldMetaData("actionGraphTimeMs", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
-    tmpMap.put(_Fields.RULEKEY_TIME_MS, new org.apache.thrift.meta_data.FieldMetaData("rulekeyTimeMs", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+    tmpMap.put(_Fields.RULEKEY_TIME_MS, new org.apache.thrift.meta_data.FieldMetaData("rulekeyTimeMs", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
-    tmpMap.put(_Fields.FETCH_TIME_MS, new org.apache.thrift.meta_data.FieldMetaData("fetchTimeMs", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+    tmpMap.put(_Fields.FETCH_TIME_MS, new org.apache.thrift.meta_data.FieldMetaData("fetchTimeMs", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
-    tmpMap.put(_Fields.BUILD_TIME_MS, new org.apache.thrift.meta_data.FieldMetaData("buildTimeMs", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+    tmpMap.put(_Fields.BUILD_TIME_MS, new org.apache.thrift.meta_data.FieldMetaData("buildTimeMs", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
-    tmpMap.put(_Fields.INSTALL_TIME_MS, new org.apache.thrift.meta_data.FieldMetaData("installTimeMs", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+    tmpMap.put(_Fields.INSTALL_TIME_MS, new org.apache.thrift.meta_data.FieldMetaData("installTimeMs", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(TimeStatsRemoteLogEntry.class, metaDataMap);
   }
 
   public TimeStatsRemoteLogEntry() {
+  }
+
+  public TimeStatsRemoteLogEntry(
+    long pythonTimeMs,
+    long initTimeMs,
+    long parseTimeMs,
+    long processingTimeMs,
+    long actionGraphTimeMs,
+    long rulekeyTimeMs,
+    long fetchTimeMs,
+    long buildTimeMs,
+    long installTimeMs)
+  {
+    this();
+    this.pythonTimeMs = pythonTimeMs;
+    setPythonTimeMsIsSet(true);
+    this.initTimeMs = initTimeMs;
+    setInitTimeMsIsSet(true);
+    this.parseTimeMs = parseTimeMs;
+    setParseTimeMsIsSet(true);
+    this.processingTimeMs = processingTimeMs;
+    setProcessingTimeMsIsSet(true);
+    this.actionGraphTimeMs = actionGraphTimeMs;
+    setActionGraphTimeMsIsSet(true);
+    this.rulekeyTimeMs = rulekeyTimeMs;
+    setRulekeyTimeMsIsSet(true);
+    this.fetchTimeMs = fetchTimeMs;
+    setFetchTimeMsIsSet(true);
+    this.buildTimeMs = buildTimeMs;
+    setBuildTimeMsIsSet(true);
+    this.installTimeMs = installTimeMs;
+    setInstallTimeMsIsSet(true);
   }
 
   /**
@@ -585,8 +616,8 @@ public class TimeStatsRemoteLogEntry implements org.apache.thrift.TBase<TimeStat
     if (that == null)
       return false;
 
-    boolean this_present_pythonTimeMs = true && this.isSetPythonTimeMs();
-    boolean that_present_pythonTimeMs = true && that.isSetPythonTimeMs();
+    boolean this_present_pythonTimeMs = true;
+    boolean that_present_pythonTimeMs = true;
     if (this_present_pythonTimeMs || that_present_pythonTimeMs) {
       if (!(this_present_pythonTimeMs && that_present_pythonTimeMs))
         return false;
@@ -594,8 +625,8 @@ public class TimeStatsRemoteLogEntry implements org.apache.thrift.TBase<TimeStat
         return false;
     }
 
-    boolean this_present_initTimeMs = true && this.isSetInitTimeMs();
-    boolean that_present_initTimeMs = true && that.isSetInitTimeMs();
+    boolean this_present_initTimeMs = true;
+    boolean that_present_initTimeMs = true;
     if (this_present_initTimeMs || that_present_initTimeMs) {
       if (!(this_present_initTimeMs && that_present_initTimeMs))
         return false;
@@ -603,8 +634,8 @@ public class TimeStatsRemoteLogEntry implements org.apache.thrift.TBase<TimeStat
         return false;
     }
 
-    boolean this_present_parseTimeMs = true && this.isSetParseTimeMs();
-    boolean that_present_parseTimeMs = true && that.isSetParseTimeMs();
+    boolean this_present_parseTimeMs = true;
+    boolean that_present_parseTimeMs = true;
     if (this_present_parseTimeMs || that_present_parseTimeMs) {
       if (!(this_present_parseTimeMs && that_present_parseTimeMs))
         return false;
@@ -612,8 +643,8 @@ public class TimeStatsRemoteLogEntry implements org.apache.thrift.TBase<TimeStat
         return false;
     }
 
-    boolean this_present_processingTimeMs = true && this.isSetProcessingTimeMs();
-    boolean that_present_processingTimeMs = true && that.isSetProcessingTimeMs();
+    boolean this_present_processingTimeMs = true;
+    boolean that_present_processingTimeMs = true;
     if (this_present_processingTimeMs || that_present_processingTimeMs) {
       if (!(this_present_processingTimeMs && that_present_processingTimeMs))
         return false;
@@ -621,8 +652,8 @@ public class TimeStatsRemoteLogEntry implements org.apache.thrift.TBase<TimeStat
         return false;
     }
 
-    boolean this_present_actionGraphTimeMs = true && this.isSetActionGraphTimeMs();
-    boolean that_present_actionGraphTimeMs = true && that.isSetActionGraphTimeMs();
+    boolean this_present_actionGraphTimeMs = true;
+    boolean that_present_actionGraphTimeMs = true;
     if (this_present_actionGraphTimeMs || that_present_actionGraphTimeMs) {
       if (!(this_present_actionGraphTimeMs && that_present_actionGraphTimeMs))
         return false;
@@ -630,8 +661,8 @@ public class TimeStatsRemoteLogEntry implements org.apache.thrift.TBase<TimeStat
         return false;
     }
 
-    boolean this_present_rulekeyTimeMs = true && this.isSetRulekeyTimeMs();
-    boolean that_present_rulekeyTimeMs = true && that.isSetRulekeyTimeMs();
+    boolean this_present_rulekeyTimeMs = true;
+    boolean that_present_rulekeyTimeMs = true;
     if (this_present_rulekeyTimeMs || that_present_rulekeyTimeMs) {
       if (!(this_present_rulekeyTimeMs && that_present_rulekeyTimeMs))
         return false;
@@ -639,8 +670,8 @@ public class TimeStatsRemoteLogEntry implements org.apache.thrift.TBase<TimeStat
         return false;
     }
 
-    boolean this_present_fetchTimeMs = true && this.isSetFetchTimeMs();
-    boolean that_present_fetchTimeMs = true && that.isSetFetchTimeMs();
+    boolean this_present_fetchTimeMs = true;
+    boolean that_present_fetchTimeMs = true;
     if (this_present_fetchTimeMs || that_present_fetchTimeMs) {
       if (!(this_present_fetchTimeMs && that_present_fetchTimeMs))
         return false;
@@ -648,8 +679,8 @@ public class TimeStatsRemoteLogEntry implements org.apache.thrift.TBase<TimeStat
         return false;
     }
 
-    boolean this_present_buildTimeMs = true && this.isSetBuildTimeMs();
-    boolean that_present_buildTimeMs = true && that.isSetBuildTimeMs();
+    boolean this_present_buildTimeMs = true;
+    boolean that_present_buildTimeMs = true;
     if (this_present_buildTimeMs || that_present_buildTimeMs) {
       if (!(this_present_buildTimeMs && that_present_buildTimeMs))
         return false;
@@ -657,8 +688,8 @@ public class TimeStatsRemoteLogEntry implements org.apache.thrift.TBase<TimeStat
         return false;
     }
 
-    boolean this_present_installTimeMs = true && this.isSetInstallTimeMs();
-    boolean that_present_installTimeMs = true && that.isSetInstallTimeMs();
+    boolean this_present_installTimeMs = true;
+    boolean that_present_installTimeMs = true;
     if (this_present_installTimeMs || that_present_installTimeMs) {
       if (!(this_present_installTimeMs && that_present_installTimeMs))
         return false;
@@ -673,47 +704,47 @@ public class TimeStatsRemoteLogEntry implements org.apache.thrift.TBase<TimeStat
   public int hashCode() {
     List<Object> list = new ArrayList<Object>();
 
-    boolean present_pythonTimeMs = true && (isSetPythonTimeMs());
+    boolean present_pythonTimeMs = true;
     list.add(present_pythonTimeMs);
     if (present_pythonTimeMs)
       list.add(pythonTimeMs);
 
-    boolean present_initTimeMs = true && (isSetInitTimeMs());
+    boolean present_initTimeMs = true;
     list.add(present_initTimeMs);
     if (present_initTimeMs)
       list.add(initTimeMs);
 
-    boolean present_parseTimeMs = true && (isSetParseTimeMs());
+    boolean present_parseTimeMs = true;
     list.add(present_parseTimeMs);
     if (present_parseTimeMs)
       list.add(parseTimeMs);
 
-    boolean present_processingTimeMs = true && (isSetProcessingTimeMs());
+    boolean present_processingTimeMs = true;
     list.add(present_processingTimeMs);
     if (present_processingTimeMs)
       list.add(processingTimeMs);
 
-    boolean present_actionGraphTimeMs = true && (isSetActionGraphTimeMs());
+    boolean present_actionGraphTimeMs = true;
     list.add(present_actionGraphTimeMs);
     if (present_actionGraphTimeMs)
       list.add(actionGraphTimeMs);
 
-    boolean present_rulekeyTimeMs = true && (isSetRulekeyTimeMs());
+    boolean present_rulekeyTimeMs = true;
     list.add(present_rulekeyTimeMs);
     if (present_rulekeyTimeMs)
       list.add(rulekeyTimeMs);
 
-    boolean present_fetchTimeMs = true && (isSetFetchTimeMs());
+    boolean present_fetchTimeMs = true;
     list.add(present_fetchTimeMs);
     if (present_fetchTimeMs)
       list.add(fetchTimeMs);
 
-    boolean present_buildTimeMs = true && (isSetBuildTimeMs());
+    boolean present_buildTimeMs = true;
     list.add(present_buildTimeMs);
     if (present_buildTimeMs)
       list.add(buildTimeMs);
 
-    boolean present_installTimeMs = true && (isSetInstallTimeMs());
+    boolean present_installTimeMs = true;
     list.add(present_installTimeMs);
     if (present_installTimeMs)
       list.add(installTimeMs);
@@ -839,59 +870,41 @@ public class TimeStatsRemoteLogEntry implements org.apache.thrift.TBase<TimeStat
     StringBuilder sb = new StringBuilder("TimeStatsRemoteLogEntry(");
     boolean first = true;
 
-    if (isSetPythonTimeMs()) {
-      sb.append("pythonTimeMs:");
-      sb.append(this.pythonTimeMs);
-      first = false;
-    }
-    if (isSetInitTimeMs()) {
-      if (!first) sb.append(", ");
-      sb.append("initTimeMs:");
-      sb.append(this.initTimeMs);
-      first = false;
-    }
-    if (isSetParseTimeMs()) {
-      if (!first) sb.append(", ");
-      sb.append("parseTimeMs:");
-      sb.append(this.parseTimeMs);
-      first = false;
-    }
-    if (isSetProcessingTimeMs()) {
-      if (!first) sb.append(", ");
-      sb.append("processingTimeMs:");
-      sb.append(this.processingTimeMs);
-      first = false;
-    }
-    if (isSetActionGraphTimeMs()) {
-      if (!first) sb.append(", ");
-      sb.append("actionGraphTimeMs:");
-      sb.append(this.actionGraphTimeMs);
-      first = false;
-    }
-    if (isSetRulekeyTimeMs()) {
-      if (!first) sb.append(", ");
-      sb.append("rulekeyTimeMs:");
-      sb.append(this.rulekeyTimeMs);
-      first = false;
-    }
-    if (isSetFetchTimeMs()) {
-      if (!first) sb.append(", ");
-      sb.append("fetchTimeMs:");
-      sb.append(this.fetchTimeMs);
-      first = false;
-    }
-    if (isSetBuildTimeMs()) {
-      if (!first) sb.append(", ");
-      sb.append("buildTimeMs:");
-      sb.append(this.buildTimeMs);
-      first = false;
-    }
-    if (isSetInstallTimeMs()) {
-      if (!first) sb.append(", ");
-      sb.append("installTimeMs:");
-      sb.append(this.installTimeMs);
-      first = false;
-    }
+    sb.append("pythonTimeMs:");
+    sb.append(this.pythonTimeMs);
+    first = false;
+    if (!first) sb.append(", ");
+    sb.append("initTimeMs:");
+    sb.append(this.initTimeMs);
+    first = false;
+    if (!first) sb.append(", ");
+    sb.append("parseTimeMs:");
+    sb.append(this.parseTimeMs);
+    first = false;
+    if (!first) sb.append(", ");
+    sb.append("processingTimeMs:");
+    sb.append(this.processingTimeMs);
+    first = false;
+    if (!first) sb.append(", ");
+    sb.append("actionGraphTimeMs:");
+    sb.append(this.actionGraphTimeMs);
+    first = false;
+    if (!first) sb.append(", ");
+    sb.append("rulekeyTimeMs:");
+    sb.append(this.rulekeyTimeMs);
+    first = false;
+    if (!first) sb.append(", ");
+    sb.append("fetchTimeMs:");
+    sb.append(this.fetchTimeMs);
+    first = false;
+    if (!first) sb.append(", ");
+    sb.append("buildTimeMs:");
+    sb.append(this.buildTimeMs);
+    first = false;
+    if (!first) sb.append(", ");
+    sb.append("installTimeMs:");
+    sb.append(this.installTimeMs);
+    first = false;
     sb.append(")");
     return sb.toString();
   }
@@ -1024,51 +1037,33 @@ public class TimeStatsRemoteLogEntry implements org.apache.thrift.TBase<TimeStat
       struct.validate();
 
       oprot.writeStructBegin(STRUCT_DESC);
-      if (struct.isSetPythonTimeMs()) {
-        oprot.writeFieldBegin(PYTHON_TIME_MS_FIELD_DESC);
-        oprot.writeI64(struct.pythonTimeMs);
-        oprot.writeFieldEnd();
-      }
-      if (struct.isSetInitTimeMs()) {
-        oprot.writeFieldBegin(INIT_TIME_MS_FIELD_DESC);
-        oprot.writeI64(struct.initTimeMs);
-        oprot.writeFieldEnd();
-      }
-      if (struct.isSetParseTimeMs()) {
-        oprot.writeFieldBegin(PARSE_TIME_MS_FIELD_DESC);
-        oprot.writeI64(struct.parseTimeMs);
-        oprot.writeFieldEnd();
-      }
-      if (struct.isSetProcessingTimeMs()) {
-        oprot.writeFieldBegin(PROCESSING_TIME_MS_FIELD_DESC);
-        oprot.writeI64(struct.processingTimeMs);
-        oprot.writeFieldEnd();
-      }
-      if (struct.isSetActionGraphTimeMs()) {
-        oprot.writeFieldBegin(ACTION_GRAPH_TIME_MS_FIELD_DESC);
-        oprot.writeI64(struct.actionGraphTimeMs);
-        oprot.writeFieldEnd();
-      }
-      if (struct.isSetRulekeyTimeMs()) {
-        oprot.writeFieldBegin(RULEKEY_TIME_MS_FIELD_DESC);
-        oprot.writeI64(struct.rulekeyTimeMs);
-        oprot.writeFieldEnd();
-      }
-      if (struct.isSetFetchTimeMs()) {
-        oprot.writeFieldBegin(FETCH_TIME_MS_FIELD_DESC);
-        oprot.writeI64(struct.fetchTimeMs);
-        oprot.writeFieldEnd();
-      }
-      if (struct.isSetBuildTimeMs()) {
-        oprot.writeFieldBegin(BUILD_TIME_MS_FIELD_DESC);
-        oprot.writeI64(struct.buildTimeMs);
-        oprot.writeFieldEnd();
-      }
-      if (struct.isSetInstallTimeMs()) {
-        oprot.writeFieldBegin(INSTALL_TIME_MS_FIELD_DESC);
-        oprot.writeI64(struct.installTimeMs);
-        oprot.writeFieldEnd();
-      }
+      oprot.writeFieldBegin(PYTHON_TIME_MS_FIELD_DESC);
+      oprot.writeI64(struct.pythonTimeMs);
+      oprot.writeFieldEnd();
+      oprot.writeFieldBegin(INIT_TIME_MS_FIELD_DESC);
+      oprot.writeI64(struct.initTimeMs);
+      oprot.writeFieldEnd();
+      oprot.writeFieldBegin(PARSE_TIME_MS_FIELD_DESC);
+      oprot.writeI64(struct.parseTimeMs);
+      oprot.writeFieldEnd();
+      oprot.writeFieldBegin(PROCESSING_TIME_MS_FIELD_DESC);
+      oprot.writeI64(struct.processingTimeMs);
+      oprot.writeFieldEnd();
+      oprot.writeFieldBegin(ACTION_GRAPH_TIME_MS_FIELD_DESC);
+      oprot.writeI64(struct.actionGraphTimeMs);
+      oprot.writeFieldEnd();
+      oprot.writeFieldBegin(RULEKEY_TIME_MS_FIELD_DESC);
+      oprot.writeI64(struct.rulekeyTimeMs);
+      oprot.writeFieldEnd();
+      oprot.writeFieldBegin(FETCH_TIME_MS_FIELD_DESC);
+      oprot.writeI64(struct.fetchTimeMs);
+      oprot.writeFieldEnd();
+      oprot.writeFieldBegin(BUILD_TIME_MS_FIELD_DESC);
+      oprot.writeI64(struct.buildTimeMs);
+      oprot.writeFieldEnd();
+      oprot.writeFieldBegin(INSTALL_TIME_MS_FIELD_DESC);
+      oprot.writeI64(struct.installTimeMs);
+      oprot.writeFieldEnd();
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
