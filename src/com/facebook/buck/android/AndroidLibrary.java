@@ -77,6 +77,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       ImmutableList<String> postprocessClassesCommands,
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,
+      ImmutableSortedSet<BuildRule> compileTimeClasspathDeps,
       ImmutableSortedSet<SourcePath> abiInputs,
       JavacOptions javacOptions,
       boolean trackClassUsage,
@@ -97,6 +98,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         postprocessClassesCommands,
         exportedDeps,
         providedDeps,
+        compileTimeClasspathDeps,
         abiInputs,
         trackClassUsage,
         compileStepFactory,
@@ -138,26 +140,34 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     }
 
     @Override
-    public DefaultJavaLibrary build() throws NoSuchBuildTargetException {
-      return new AndroidLibrary(
-          params,
-          sourcePathResolver,
-          ruleFinder,
-          srcs,
-          resources,
-          proguardConfig,
-          postprocessClassesCommands,
-          exportedDeps,
-          providedDeps,
-          getAbiInputs(),
-          javacOptions,
-          trackClassUsage,
-          compileStepFactory,
-          suggestDependencies,
-          resourcesRoot,
-          mavenCoords,
-          manifestFile,
-          tests);
+    protected BuilderHelper newHelper() {
+      return new BuilderHelper();
+    }
+
+    protected class BuilderHelper extends DefaultJavaLibraryBuilder.BuilderHelper {
+      @Override
+      protected DefaultJavaLibrary build() throws NoSuchBuildTargetException {
+        return new AndroidLibrary(
+            getFinalParams(),
+            sourcePathResolver,
+            ruleFinder,
+            srcs,
+            resources,
+            proguardConfig,
+            postprocessClassesCommands,
+            exportedDeps,
+            providedDeps,
+            getCompileTimeClasspathDeps(),
+            getAbiInputs(),
+            javacOptions,
+            trackClassUsage,
+            compileStepFactory,
+            suggestDependencies,
+            resourcesRoot,
+            mavenCoords,
+            manifestFile,
+            tests);
+      }
     }
   }
 }

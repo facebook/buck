@@ -29,7 +29,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -46,7 +45,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import java.util.Optional;
 import java.util.logging.Level;
@@ -117,13 +115,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
     Tool scalac = config.getScalac(resolver);
 
     BuildRuleParams javaLibraryParams =
-        params.copyAppendingExtraDeps(
-            Iterables.concat(
-                BuildRules.getExportedRules(
-                    Iterables.concat(
-                        params.getDeclaredDeps().get(),
-                        resolver.getAllRules(args.providedDeps))),
-                scalac.getDeps(ruleFinder)))
+        params.copyAppendingExtraDeps(scalac.getDeps(ruleFinder))
             .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
     ScalacToJarStepFactory compileStepFactory = new ScalacToJarStepFactory(
         scalac,

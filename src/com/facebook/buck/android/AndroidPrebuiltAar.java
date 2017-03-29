@@ -67,6 +67,7 @@ public class AndroidPrebuiltAar
             .addAll(exportedDeps)
             .build(),
         /* providedDeps */ ImmutableSortedSet.of(),
+        /* compileTimeClasspathDeps */ ImmutableSortedSet.of(prebuiltJar),
         abiInputs,
         javacOptions,
         /* trackClassUsage */ false,

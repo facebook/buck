@@ -29,7 +29,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -42,7 +41,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import java.util.Optional;
 import java.util.logging.Level;
@@ -106,12 +104,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
         javacOptions);
 
     BuildRuleParams testsLibraryParams =
-        params.copyAppendingExtraDeps(
-            BuildRules.getExportedRules(
-                Iterables.concat(
-                    params.getDeclaredDeps().get(),
-                    resolver.getAllRules(args.providedDeps))))
-            .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+        params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
     JavaLibrary testsLibrary =
         resolver.addToIndex(
             new DefaultGroovyLibraryBuilder(

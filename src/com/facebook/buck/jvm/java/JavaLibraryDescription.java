@@ -26,7 +26,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
@@ -179,20 +178,13 @@ public class JavaLibraryDescription implements
         resolver,
         args);
 
-    ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps);
     Javac javac = JavacFactory.create(ruleFinder, javaBuckConfig, args);
     BuildRuleParams javaLibraryParams =
         params.copyAppendingExtraDeps(
-            Iterables.concat(
-                BuildRules.getExportedRules(
-                    Iterables.concat(
-                        params.getDeclaredDeps().get(),
-                        exportedDeps,
-                        resolver.getAllRules(args.providedDeps))),
-                ruleFinder.filterBuildRuleInputs(
-                    Iterables.concat(
-                        javacOptions.getAnnotationProcessingParams().getInputs(),
-                        javac.getInputs()))));
+            ruleFinder.filterBuildRuleInputs(
+                Iterables.concat(
+                    javacOptions.getAnnotationProcessingParams().getInputs(),
+                    javac.getInputs())));
     JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
         javac,
         javacOptions,

@@ -35,7 +35,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
@@ -148,15 +147,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
     Javac javac = JavacFactory.create(ruleFinder, javaBuckConfig, args);
     // Rewrite dependencies on tests to actually depend on the code which backs the test.
-    BuildRuleParams testsLibraryParams = params.copyReplacingDeclaredAndExtraDeps(
-        Suppliers.ofInstance(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(params.getDeclaredDeps().get())
-                .addAll(BuildRules.getExportedRules(
-                    Iterables.concat(
-                        params.getDeclaredDeps().get(),
-                        resolver.getAllRules(args.providedDeps))))
-                .build()),
+    BuildRuleParams testsLibraryParams = params.copyReplacingExtraDeps(
         Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>naturalOrder()
                 .addAll(params.getExtraDeps().get())

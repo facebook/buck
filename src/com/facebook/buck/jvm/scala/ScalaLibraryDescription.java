@@ -24,7 +24,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
@@ -39,7 +38,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.util.Optional;
@@ -88,13 +86,7 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
         rawParams.getExtraDeps());
 
     BuildRuleParams javaLibraryParams =
-        params.copyAppendingExtraDeps(
-            Iterables.concat(
-                BuildRules.getExportedRules(
-                    Iterables.concat(
-                        params.getDeclaredDeps().get(),
-                        resolver.getAllRules(args.providedDeps))),
-                scalac.getDeps(ruleFinder)));
+        params.copyAppendingExtraDeps(scalac.getDeps(ruleFinder));
     ScalacToJarStepFactory compileStepFactory = new ScalacToJarStepFactory(
         scalac,
         scalaBuckConfig.getCompilerFlags(),

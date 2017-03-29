@@ -22,6 +22,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -29,13 +30,17 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nullable;
+
 public class DefaultJavaLibraryBuilder {
-  protected final BuildRuleParams params;
+  private final BuildRuleParams params;
   protected final BuildRuleResolver buildRuleResolver;
   protected final SourcePathResolver sourcePathResolver;
   protected final SourcePathRuleFinder ruleFinder;
@@ -169,30 +174,95 @@ public class DefaultJavaLibraryBuilder {
     return this;
   }
 
-  protected ImmutableSortedSet<SourcePath> getAbiInputs() throws NoSuchBuildTargetException {
-    return JavaLibraryRules.getAbiInputs(buildRuleResolver, params.getBuildDeps());
+  public final DefaultJavaLibrary build() throws NoSuchBuildTargetException {
+    BuilderHelper helper = newHelper();
+    return helper.build();
   }
 
-  public DefaultJavaLibrary build() throws NoSuchBuildTargetException {
-    return new DefaultJavaLibrary(
-        params,
-        sourcePathResolver,
-        ruleFinder,
-        srcs,
-        resources,
-        generatedSourceFolder,
-        proguardConfig,
-        postprocessClassesCommands,
-        exportedDeps,
-        providedDeps,
-        getAbiInputs(),
-        trackClassUsage,
-        compileStepFactory,
-        suggestDependencies,
-        resourcesRoot,
-        manifestFile,
-        mavenCoords,
-        tests,
-        classesToRemoveFromJar);
+  protected BuilderHelper newHelper() {
+    return new BuilderHelper();
+  }
+
+  protected class BuilderHelper {
+    @Nullable
+    private BuildRuleParams finalParams;
+    @Nullable
+    private ImmutableSortedSet<BuildRule> compileTimeClasspathDeps;
+    @Nullable
+    private ImmutableSortedSet<SourcePath> abiInputs;
+
+    protected DefaultJavaLibrary build() throws NoSuchBuildTargetException {
+      return new DefaultJavaLibrary(
+          getFinalParams(),
+          sourcePathResolver,
+          ruleFinder,
+          srcs,
+          resources,
+          generatedSourceFolder,
+          proguardConfig,
+          postprocessClassesCommands,
+          exportedDeps,
+          providedDeps,
+          getCompileTimeClasspathDeps(),
+          getAbiInputs(),
+          trackClassUsage,
+          compileStepFactory,
+          suggestDependencies,
+          resourcesRoot,
+          manifestFile,
+          mavenCoords,
+          tests,
+          classesToRemoveFromJar);
+    }
+
+    protected final BuildRuleParams getFinalParams() {
+      if (finalParams == null) {
+        finalParams = buildFinalParams();
+      }
+
+      return finalParams;
+    }
+
+    protected final ImmutableSortedSet<BuildRule> getCompileTimeClasspathDeps() {
+      if (compileTimeClasspathDeps == null) {
+        compileTimeClasspathDeps = buildCompileTimeClasspathDeps();
+      }
+
+      return compileTimeClasspathDeps;
+    }
+
+    protected final ImmutableSortedSet<SourcePath> getAbiInputs()
+        throws NoSuchBuildTargetException {
+      if (abiInputs == null) {
+        abiInputs = buildAbiInputs();
+      }
+
+      return abiInputs;
+    }
+
+    protected BuildRuleParams buildFinalParams() {
+      return params.copyAppendingExtraDeps(
+          Sets.difference(getCompileTimeClasspathDeps(), params.getBuildDeps()));
+    }
+
+    protected ImmutableSortedSet<BuildRule> buildCompileTimeClasspathDeps() {
+      Iterable<BuildRule> declaredDeps = Iterables.concat(
+          params.getDeclaredDeps().get(),
+          exportedDeps,
+          providedDeps);
+
+      ImmutableSortedSet<BuildRule> rulesExportedByDependencies =
+          BuildRules.getExportedRules(declaredDeps);
+
+      return ImmutableSortedSet.copyOf(Iterables.concat(
+          declaredDeps,
+          rulesExportedByDependencies));
+    }
+
+    protected ImmutableSortedSet<SourcePath> buildAbiInputs() throws NoSuchBuildTargetException {
+      return JavaLibraryRules.getAbiInputs(
+          buildRuleResolver,
+          getFinalParams().getBuildDeps());
+    }
   }
 }

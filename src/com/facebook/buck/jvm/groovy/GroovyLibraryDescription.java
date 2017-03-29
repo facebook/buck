@@ -25,7 +25,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -33,8 +32,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import java.util.Optional;
 
@@ -76,14 +73,6 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
           Preconditions.checkNotNull(libraryRule.getSourcePathToOutput()));
     }
 
-    ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps);
-    BuildRuleParams javaLibraryParams =
-        params.copyAppendingExtraDeps(
-            BuildRules.getExportedRules(
-                Iterables.concat(
-                    params.getDeclaredDeps().get(),
-                    exportedDeps,
-                    resolver.getAllRules(args.providedDeps))));
     JavacOptions javacOptions = JavacOptionsFactory
         .create(
           defaultJavacOptions,
@@ -98,7 +87,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
         javacOptions);
     return
         new DefaultGroovyLibraryBuilder(
-            javaLibraryParams,
+            params,
             resolver,
             compileStepFactory)
         .setConfigAndArgs(groovyBuckConfig, args)

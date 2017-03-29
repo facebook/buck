@@ -70,7 +70,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
@@ -123,10 +122,10 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
 
   private final boolean trackClassUsage;
+  private final ImmutableSortedSet<BuildRule> compileTimeClasspathDeps;
   @AddToRuleKey
   @SuppressWarnings("PMD.UnusedPrivateField")
   private final JarArchiveDependencySupplier abiClasspath;
-  private final ImmutableSortedSet<BuildRule> deps;
   @Nullable private Path depFileOutputPath;
 
   private final BuildOutputInitializer<Data> buildOutputInitializer;
@@ -191,6 +190,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       ImmutableList<String> postprocessClassesCommands,
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,
+      ImmutableSortedSet<BuildRule> compileTimeClasspathDeps,
       ImmutableSortedSet<SourcePath> abiInputs,
       boolean trackClassUsage,
       CompileToJarStepFactory compileStepFactory,
@@ -211,6 +211,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         postprocessClassesCommands,
         exportedDeps,
         providedDeps,
+        compileTimeClasspathDeps,
         trackClassUsage,
         new JarArchiveDependencySupplier(abiInputs),
         compileStepFactory,
@@ -233,6 +234,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       ImmutableList<String> postprocessClassesCommands,
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,
+      ImmutableSortedSet<BuildRule> compileTimeClasspathDeps,
       boolean trackClassUsage,
       final JarArchiveDependencySupplier abiClasspath,
       CompileToJarStepFactory compileStepFactory,
@@ -266,6 +268,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     this.postprocessClassesCommands = postprocessClassesCommands;
     this.exportedDeps = exportedDeps;
     this.providedDeps = providedDeps;
+    this.compileTimeClasspathDeps = compileTimeClasspathDeps;
     this.resourcesRoot = resourcesRoot;
     this.manifestFile = manifestFile;
     this.mavenCoords = mavenCoords;
@@ -273,7 +276,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
 
     this.trackClassUsage = trackClassUsage;
     this.abiClasspath = abiClasspath;
-    this.deps = params.getBuildDeps();
     if (!srcs.isEmpty() || !resources.isEmpty() || manifestFile.isPresent()) {
       this.outputJar = Optional.of(getOutputJarPath(getBuildTarget(), getProjectFilesystem()));
     } else {
@@ -411,8 +413,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    ImmutableSet<BuildRule> declaredClasspathDeps = getDepsForTransitiveClasspathEntries();
-
     // Always create the output directory, even if there are no .java files to compile because there
     // might be resources that need to be copied there.
     BuildTarget target = getBuildTarget();
@@ -423,7 +423,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         DefaultSuggestBuildRules.createSuggestBuildFunction(
             JAR_RESOLVER,
             context.getSourcePathResolver(),
-            JavaLibraryClasspathProvider.getJavaLibraryDeps(declaredClasspathDeps)
+            JavaLibraryClasspathProvider.getJavaLibraryDeps(compileTimeClasspathDeps)
                 .toSet(),
             ImmutableSet.<JavaLibrary>builder()
                 .addAll(getTransitiveClasspathDeps())
@@ -434,17 +434,10 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
 
     // We don't want to add provided to the declared or transitive deps, since they're only used at
     // compile time.
-    ImmutableSortedSet<Path> declaredClasspaths = Sets.union(declaredClasspathDeps, providedDeps)
+    ImmutableSortedSet<Path> compileTimeClasspathPaths = compileTimeClasspathDeps
         .stream()
-        .filter(buildRule -> buildRule instanceof HasJavaAbi)
-        .flatMap(buildRule -> {
-          if (buildRule instanceof JavaLibrary) {
-            return ((JavaLibrary) buildRule).getOutputClasspaths().stream();
-          } else {
-            // DummyRDotJava implements HasJavaAbi, but is not a JavaLibrary
-            return Stream.of(buildRule.getSourcePathToOutput());
-          }
-        })
+        .map(BuildRule::getSourcePathToOutput)
+        .filter(rule -> rule != null)
         .map(context.getSourcePathResolver()::getAbsolutePath)
         .collect(MoreCollectors.toImmutableSortedSet());
 
@@ -508,7 +501,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
           context.getSourcePathResolver(),
           ruleFinder,
           getProjectFilesystem(),
-          declaredClasspaths,
+          compileTimeClasspathPaths,
           outputDirectory,
           workingDirectory,
           pathToSrcsList,
@@ -642,6 +635,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         context.getSourcePathResolver(),
         getProjectFilesystem(),
         Preconditions.checkNotNull(depFileOutputPath),
-        deps);
+        compileTimeClasspathDeps);
   }
 }

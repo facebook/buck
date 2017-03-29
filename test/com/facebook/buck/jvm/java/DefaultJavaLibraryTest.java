@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
@@ -382,11 +382,6 @@ public class DefaultJavaLibraryTest {
       }
 
       @Override
-      public ImmutableSet<SourcePath> getOutputClasspaths() {
-        return ImmutableSet.of(new FakeSourcePath("java/src/com/libone/bar.jar"));
-      }
-
-      @Override
       public ImmutableSet<SourcePath> getTransitiveClasspaths() {
         return ImmutableSet.of();
       }
@@ -415,8 +410,8 @@ public class DefaultJavaLibraryTest {
     assertEquals("There should be only one javac step.", 1, javacSteps.size());
     JavacStep javacStep = javacSteps.get(0);
     assertEquals(
-        "The classpath for the javac step to compile //:libtwo should contain only bar.jar.",
-        ImmutableSet.of(libraryOne.getProjectFilesystem().resolve("java/src/com/libone/bar.jar")),
+        "The classpath for the javac step to compile //:libtwo should contain only libone.",
+        ImmutableSet.of(resolver.getAbsolutePath(libraryOne.getSourcePathToOutput())),
         javacStep.getClasspathEntries());
   }
 

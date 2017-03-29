@@ -30,7 +30,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -40,7 +39,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 
 public class KotlinLibraryDescription implements
@@ -119,20 +117,12 @@ public class KotlinLibraryDescription implements
       }
     }
 
-    ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps);
-    BuildRuleParams javaLibraryParams =
-        params.copyAppendingExtraDeps(
-            BuildRules.getExportedRules(
-                Iterables.concat(
-                    params.getDeclaredDeps().get(),
-                    exportedDeps,
-                    resolver.getAllRules(args.providedDeps))));
     KotlincToJarStepFactory compileStepFactory = new KotlincToJarStepFactory(
         kotlinBuckConfig.getKotlinCompiler().get(),
         args.extraKotlincArguments);
     DefaultJavaLibrary defaultKotlinLibrary =
         new DefaultKotlinLibraryBuilder(
-            javaLibraryParams,
+            params,
             resolver,
             compileStepFactory)
             .setConfigAndArgs(kotlinBuckConfig, args)
