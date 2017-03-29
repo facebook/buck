@@ -55,9 +55,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -97,9 +97,9 @@ public class StubJarTest {
 
   @Parameterized.Parameter
   public String testingMode;
-  private Map<String, AbiClass> classNameToOriginal;
   private boolean allowCompilationErrors = false;
   private List<String> diagnostics;
+  private Set<String> allowedInnerClassNames = new HashSet<>();
 
   @Parameterized.Parameters
   public static Object[] getParameters() {
@@ -335,6 +335,8 @@ public class StubJarTest {
 
   @Test
   public void shouldGeneratePrivateNestedClassDefaultConstructor() throws IOException {
+    notYetImplementedForSource();
+
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "Outer.java",
@@ -496,6 +498,7 @@ public class StubJarTest {
                 "package com.example.buck;",
                 "public class A<@Foo.TypeAnnotation T> { }")));
 
+    addAllowedInnerClassNames("com/example/buck/Foo$TypeAnnotation");
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
@@ -519,6 +522,7 @@ public class StubJarTest {
                 "  <@Foo.TypeAnnotation T> void foo(@Foo.TypeAnnotation String s) { }",
                 "}")));
 
+    addAllowedInnerClassNames("com/example/buck/Foo$TypeAnnotation");
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
@@ -543,6 +547,7 @@ public class StubJarTest {
                 "  List<@Foo.TypeAnnotation String> list;",
                 "}")));
 
+    addAllowedInnerClassNames("com/example/buck/Foo$TypeAnnotation");
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
@@ -896,6 +901,8 @@ public class StubJarTest {
 
   @Test
   public void stubsNestedInnerClasses() throws IOException {
+    notYetImplementedForSource();
+
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
@@ -921,6 +928,7 @@ public class StubJarTest {
 
   @Test
   public void doesNotStubReferencesToInnerClassesOfOtherTypes() throws IOException {
+    notYetImplementedForSource();
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
@@ -1050,6 +1058,38 @@ public class StubJarTest {
     Sha1HashCode secondHash = filesystem.computeSha1(paths.stubJar);
 
     assertEquals(originalHash, secondHash);
+  }
+
+  @Test
+  public void shouldIncludeInnerClassTypeParameterReferenceInMethodParameter() throws IOException {
+    notYetImplementedForSource();
+
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "Outer.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class Outer {",
+                "  public enum Inner { }",
+                "}"
+            )));
+
+    paths = createFullAndStubJars(
+        ImmutableSortedSet.of(paths.stubJar),
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "import java.util.Set;",
+                "import com.example.buck.Outer;",
+                "public interface A {",
+                "  void foo(Set<Outer.Inner> test);",
+                "}"
+            )));
+
+    addAllowedInnerClassNames("com/example/buck/Outer$Inner");
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
   @Test
@@ -1654,10 +1694,12 @@ public class StubJarTest {
   private void assertClassesStubbedCorrectly(
       JarPaths paths,
       String... classFilePaths) throws IOException {
-    classNameToOriginal = new HashMap<>();
     for (String classFilePath : classFilePaths) {
-      AbiClass original = readClass(paths.fullJar, classFilePath);
-      classNameToOriginal.put(original.getClassNode().name, original);
+      String classFileName =
+          classFilePath.substring(classFilePath.lastIndexOf(File.separatorChar) + 1);
+      if (classFileName.contains("$")) {
+        addAllowedInnerClassNames(classFilePath.substring(0, classFilePath.lastIndexOf('.')));
+      }
     }
 
     for (String classFilePath : classFilePaths) {
@@ -1709,7 +1751,6 @@ public class StubJarTest {
         stubbedNode.invisibleTypeAnnotations);
     assertEquals(originalNode.attrs, stubbedNode.attrs);
     assertInnerClassesStubbedCorrectly(
-        originalNode,
         originalNode.innerClasses,
         stubbedNode.innerClasses);
     assertFieldsStubbedCorrectly(originalNode.fields, stubbedNode.fields);
@@ -1717,14 +1758,11 @@ public class StubJarTest {
   }
 
   private void assertInnerClassesStubbedCorrectly(
-      ClassNode originalOuter,
       List<InnerClassNode> original,
       List<InnerClassNode> stubbed) {
     List<InnerClassNode> filteredOriginal = original.stream()
-        .filter(node -> classNameToOriginal.containsKey(node.name) &&
-            (node.outerName == originalOuter.name || node.name == originalOuter.name))
+        .filter(node -> allowedInnerClassNames.contains(node.name))
         .collect(Collectors.toList());
-
     assertMembersStubbedCorrectly(
         filteredOriginal,
         stubbed,
@@ -1977,6 +2015,10 @@ public class StubJarTest {
 
   private void notYetImplementedForSource() {
     assumeThat(testingMode, Matchers.equalTo(MODE_JAR_BASED));
+  }
+
+  private void addAllowedInnerClassNames(String... allowedInnerClassNames) {
+    Collections.addAll(this.allowedInnerClassNames, allowedInnerClassNames);
   }
 
   private static class JarPaths {

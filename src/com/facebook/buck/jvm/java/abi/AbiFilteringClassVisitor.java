@@ -57,22 +57,14 @@ class AbiFilteringClassVisitor extends ClassVisitor {
 
   @Override
   public void visitInnerClass(String name, String outerName, String innerName, int access) {
+    boolean isAnonymousOrLocalClass = (outerName == null);
     String currentClassName = Preconditions.checkNotNull(this.name);
     if (name.equals(currentClassName)) {
       this.outerName = outerName;
-    }
-    if (!shouldInclude(access)) {
+    } else if (!shouldInclude(access) || isAnonymousOrLocalClass) {
       return;
     }
-
-    // InnerClasses attributes are normally present for any member class (of any type) that is
-    // referenced from code in this class file. However, for stubbing purposes we need only
-    // include InnerClasses attributes for the class itself (if it is a member class, so that
-    // the compiler can know that), and for the member classes of this class (so that the
-    // compiler knows to go looking for them). All of the other ones are only needed at runtime.
-    if (currentClassName.equals(name) || currentClassName.equals(outerName)) {
-      super.visitInnerClass(name, outerName, innerName, access);
-    }
+    super.visitInnerClass(name, outerName, innerName, access);
   }
 
   @Override

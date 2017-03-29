@@ -144,8 +144,9 @@ public class AbiFilteringClassVisitorTest {
   }
 
   @Test
-  public void testExcludesInnerClassEntryForOtherClassInnerClass() {
+  public void testIncludesInnerClassEntryForOtherClassInnerClass() {
     visitClass(mockVisitor, "Foo");
+    mockVisitor.visitInnerClass("Bar$Inner", "Bar", "Inner", Opcodes.ACC_PUBLIC);
     replay(mockVisitor);
 
     visitClass(filteringVisitor, "Foo");
