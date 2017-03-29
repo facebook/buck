@@ -137,6 +137,20 @@ public class InteractiveReportIntegrationTest {
   }
 
   @Test
+  public void testLocalConfigurationReport() throws Exception {
+    DefectSubmitResult report = createDefectReport(
+        traceWorkspace,
+        new ByteArrayInputStream("0,1\nreport text\n\n".getBytes("UTF-8")));
+    Path reportFile = traceWorkspace.asCell().getFilesystem().resolve(
+        report.getReportSubmitLocation().get());
+
+    ZipInspector zipInspector = new ZipInspector(reportFile);
+    assertThat(
+        zipInspector.getZipFileEntries(),
+        Matchers.hasItems("buckconfig.local", "bucklogging.local.properties"));
+  }
+
+  @Test
   public void testWatchmanDiagReport() throws Exception {
     DefectSubmitResult report = createDefectReport(
         traceWorkspace,

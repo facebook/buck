@@ -249,17 +249,17 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     try {
       temp = File.createTempFile("diff", ".tmp");
       // Command: hg export -r "base::tip - base"
-      executeCommand(
-          ImmutableList.of(
-              HG_CMD_TEMPLATE,
-              "export",
-              "-o",
-              temp.toString(),
-              "--rev",
-              baseRevision + "::" + tipRevision + " - " + baseRevision));
+      executeCommand(ImmutableList.of(
+          HG_CMD_TEMPLATE,
+          "export",
+          "-o",
+          temp.toString(),
+          "--rev",
+          baseRevision + "::" + tipRevision + " - " + baseRevision));
       return new String(Files.readAllBytes(temp.toPath()));
     } catch (IOException e) {
-      throw new VersionControlCommandFailedException("Command failed. Reason: " + e.getMessage());
+      LOG.debug(e.getMessage());
+      throw new VersionControlCommandFailedException(e.getMessage());
     } finally {
       if (temp != null) {
         temp.delete();
