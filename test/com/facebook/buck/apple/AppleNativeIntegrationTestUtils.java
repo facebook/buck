@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
@@ -59,7 +60,7 @@ public class AppleNativeIntegrationTestUtils {
       return false;
     }
     AppleSdk anySdk = anySdkOptional.get();
-    AppleCxxPlatform appleCxxPlatform = AppleCxxPlatforms.build(
+    AppleCxxPlatform appleCxxPlatform = AppleCxxPlatforms.buildWithExecutableChecker(
         new FakeProjectFilesystem(),
         anySdk,
         "fakeversion",
@@ -67,6 +68,7 @@ public class AppleNativeIntegrationTestUtils {
         sdkPaths.get(anySdk),
         buckConfig,
         new AppleConfig(buckConfig),
+        new ExecutableFinder(),
         Optional.of(new DefaultProcessExecutor(Console.createNullConsole())),
         Optional.empty());
     return appleCxxPlatform.getSwiftPlatform().isPresent();

@@ -48,12 +48,7 @@ import com.facebook.buck.apple.AppleCxxPlatforms;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.ApplePackageDescription;
 import com.facebook.buck.apple.AppleResourceDescription;
-import com.facebook.buck.apple.AppleSdk;
-import com.facebook.buck.apple.AppleSdkDiscovery;
-import com.facebook.buck.apple.AppleSdkPaths;
 import com.facebook.buck.apple.AppleTestDescription;
-import com.facebook.buck.apple.AppleToolchain;
-import com.facebook.buck.apple.AppleToolchainDiscovery;
 import com.facebook.buck.apple.CodeSignIdentityStore;
 import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
@@ -164,7 +159,6 @@ import com.facebook.buck.versions.VersionedAliasDescription;
 import com.facebook.buck.zip.ZipFileDescription;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -173,7 +167,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -249,70 +242,6 @@ public class KnownBuildRuleTypes {
         androidDirectoryResolver).build();
   }
 
-  private static ImmutableList<AppleCxxPlatform> buildAppleCxxPlatforms(
-      ProjectFilesystem filesystem,
-      Supplier<Optional<Path>> appleDeveloperDirectorySupplier,
-      ImmutableList<Path> extraToolchainPaths,
-      ImmutableList<Path> extraPlatformPaths,
-      BuckConfig buckConfig,
-      AppleConfig appleConfig,
-      SwiftBuckConfig swiftBuckConfig,
-      ProcessExecutor processExecutor)
-      throws IOException {
-    Optional<Path> appleDeveloperDirectory = appleDeveloperDirectorySupplier.get();
-    if (appleDeveloperDirectory.isPresent() &&
-        !Files.isDirectory(appleDeveloperDirectory.get())) {
-      LOG.error(
-        "Developer directory is set to %s, but is not a directory",
-        appleDeveloperDirectory.get());
-      return ImmutableList.of();
-    }
-
-    ImmutableList.Builder<AppleCxxPlatform> appleCxxPlatformsBuilder = ImmutableList.builder();
-    ImmutableMap<String, AppleToolchain> toolchains =
-        AppleToolchainDiscovery.discoverAppleToolchains(
-            appleDeveloperDirectory,
-            extraToolchainPaths);
-
-    ImmutableMap<AppleSdk, AppleSdkPaths> sdkPaths = AppleSdkDiscovery.discoverAppleSdkPaths(
-        appleDeveloperDirectory,
-        extraPlatformPaths,
-        toolchains,
-        appleConfig);
-
-    Optional<String> swiftVersion = swiftBuckConfig.getVersion();
-    Optional<AppleToolchain> swiftToolChain = Optional.empty();
-    if (swiftVersion.isPresent()) {
-      Optional<String> swiftToolChainName =
-          swiftVersion.map(AppleCxxPlatform.SWIFT_VERSION_TO_TOOLCHAIN_IDENTIFIER);
-      swiftToolChain = toolchains.values().stream()
-          .filter(input -> input.getIdentifier().equals(swiftToolChainName.get()))
-          .findFirst();
-    }
-
-    for (Map.Entry<AppleSdk, AppleSdkPaths> entry : sdkPaths.entrySet()) {
-      AppleSdk sdk = entry.getKey();
-      AppleSdkPaths appleSdkPaths = entry.getValue();
-      String targetSdkVersion = appleConfig.getTargetSdkVersion(
-          sdk.getApplePlatform()).orElse(sdk.getVersion());
-      LOG.debug("SDK %s using default version %s", sdk, targetSdkVersion);
-      for (String architecture : sdk.getArchitectures()) {
-        AppleCxxPlatform appleCxxPlatform = AppleCxxPlatforms.build(
-            filesystem,
-            sdk,
-            targetSdkVersion,
-            architecture,
-            appleSdkPaths,
-            buckConfig,
-            appleConfig,
-            Optional.of(processExecutor),
-            swiftToolChain);
-        appleCxxPlatformsBuilder.add(appleCxxPlatform);
-      }
-    }
-    return appleCxxPlatformsBuilder.build();
-  }
-
   @VisibleForTesting
   static Builder createBuilder(
       BuckConfig config,
@@ -333,27 +262,26 @@ public class KnownBuildRuleTypes {
     AppleConfig appleConfig = new AppleConfig(config);
     SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
 
-    final ImmutableList<AppleCxxPlatform> appleCxxPlatforms = buildAppleCxxPlatforms(
-        filesystem,
-        appleConfig.getAppleDeveloperDirectorySupplier(processExecutor),
-        appleConfig.getExtraToolchainPaths(),
-        appleConfig.getExtraPlatformPaths(),
-        config,
-        appleConfig,
-        swiftBuckConfig,
-        processExecutor);
-    final FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
-        FlavorDomain.from("Apple C++ Platform", appleCxxPlatforms);
+    FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
+        FlavorDomain.from(
+            "Apple C++ Platform",
+            AppleCxxPlatforms.buildAppleCxxPlatforms(
+                filesystem,
+                config,
+                appleConfig,
+                swiftBuckConfig,
+                processExecutor));
 
     ImmutableMap.Builder<Flavor, SwiftPlatform> swiftPlatforms = ImmutableMap.builder();
     for (Flavor flavor: platformFlavorsToAppleCxxPlatforms.getFlavors()) {
-      Optional<SwiftPlatform> swiftPlatformOptional = platformFlavorsToAppleCxxPlatforms
+      platformFlavorsToAppleCxxPlatforms
           .getValue(flavor)
-          .getSwiftPlatform();
-      if (swiftPlatformOptional.isPresent()) {
-        swiftPlatforms.put(flavor, swiftPlatformOptional.get());
-      }
+          .getSwiftPlatform()
+          .ifPresent(swiftPlatform -> swiftPlatforms.put(flavor, swiftPlatform));
     }
+    FlavorDomain<SwiftPlatform> platformFlavorsToSwiftPlatforms = new FlavorDomain<>(
+        "Swift Platform",
+        swiftPlatforms.build());
 
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
 
@@ -557,9 +485,6 @@ public class KnownBuildRuleTypes {
             inferBuckConfig,
             cxxPlatforms);
 
-    FlavorDomain<SwiftPlatform> platformFlavorsToSwiftPlatforms = new FlavorDomain<>(
-        "Swift Platform",
-        swiftPlatforms.build());
     SwiftLibraryDescription swiftLibraryDescription =
         new SwiftLibraryDescription(
             cxxBuckConfig,

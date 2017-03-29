@@ -44,6 +44,7 @@ import com.facebook.buck.model.UserFlavor;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.VersionedTool;
+import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftPlatform;
 import com.facebook.buck.swift.SwiftPlatforms;
 import com.facebook.buck.util.HumanReadableException;
@@ -53,6 +54,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -85,27 +87,69 @@ public class AppleCxxPlatforms {
 
   private static final Path USR_BIN = Paths.get("usr/bin");
 
-  public static AppleCxxPlatform build(
+  public static ImmutableList<AppleCxxPlatform> buildAppleCxxPlatforms(
       ProjectFilesystem filesystem,
-      AppleSdk targetSdk,
-      String minVersion,
-      String targetArchitecture,
-      AppleSdkPaths sdkPaths,
       BuckConfig buckConfig,
       AppleConfig appleConfig,
-      Optional<ProcessExecutor> processExecutor,
-      Optional<AppleToolchain> swiftToolChain) {
-    return buildWithExecutableChecker(
-        filesystem,
-        targetSdk,
-        minVersion,
-        targetArchitecture,
-        sdkPaths,
-        buckConfig,
-        appleConfig,
-        new ExecutableFinder(),
-        processExecutor,
-        swiftToolChain);
+      SwiftBuckConfig swiftBuckConfig,
+      ProcessExecutor processExecutor)
+      throws IOException {
+    Supplier<Optional<Path>> appleDeveloperDirectorySupplier =
+        appleConfig.getAppleDeveloperDirectorySupplier(processExecutor);
+    Optional<Path> appleDeveloperDirectory = appleDeveloperDirectorySupplier.get();
+    if (appleDeveloperDirectory.isPresent() &&
+        !Files.isDirectory(appleDeveloperDirectory.get())) {
+      LOG.error(
+          "Developer directory is set to %s, but is not a directory",
+          appleDeveloperDirectory.get());
+      return ImmutableList.of();
+    }
+
+    ImmutableList.Builder<AppleCxxPlatform> appleCxxPlatformsBuilder = ImmutableList.builder();
+    ImmutableMap<String, AppleToolchain> toolchains =
+        AppleToolchainDiscovery.discoverAppleToolchains(
+            appleDeveloperDirectory,
+            appleConfig.getExtraToolchainPaths());
+
+    ImmutableMap<AppleSdk, AppleSdkPaths> sdkPaths = AppleSdkDiscovery.discoverAppleSdkPaths(
+        appleDeveloperDirectory,
+        appleConfig.getExtraPlatformPaths(),
+        toolchains,
+        appleConfig);
+
+    Optional<String> swiftVersion = swiftBuckConfig.getVersion();
+    Optional<AppleToolchain> swiftToolChain;
+    if (swiftVersion.isPresent()) {
+      Optional<String> swiftToolChainName =
+          swiftVersion.map(AppleCxxPlatform.SWIFT_VERSION_TO_TOOLCHAIN_IDENTIFIER);
+      swiftToolChain = toolchains.values().stream()
+          .filter(input -> input.getIdentifier().equals(swiftToolChainName.get()))
+          .findFirst();
+    } else {
+      swiftToolChain = Optional.empty();
+    }
+
+    sdkPaths.forEach((sdk, appleSdkPaths) -> {
+      String targetSdkVersion =
+          appleConfig.getTargetSdkVersion(sdk.getApplePlatform())
+              .orElse(sdk.getVersion());
+      LOG.debug("SDK %s using default version %s", sdk, targetSdkVersion);
+      for (String architecture : sdk.getArchitectures()) {
+        appleCxxPlatformsBuilder.add(
+            buildWithExecutableChecker(
+                filesystem,
+                sdk,
+                targetSdkVersion,
+                architecture,
+                appleSdkPaths,
+                buckConfig,
+                appleConfig,
+                new ExecutableFinder(),
+                Optional.of(processExecutor),
+                swiftToolChain));
+      }
+    });
+    return appleCxxPlatformsBuilder.build();
   }
 
   @VisibleForTesting
