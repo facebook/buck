@@ -163,12 +163,6 @@ public class AndroidPrebuiltAarDescription
         /* provided */ false);
     }
 
-    if (flavors.contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
-      return new Aapt2Compile(
-          params.copyAppendingExtraDeps(unzipAarRule),
-          unzipAar.getResDirectory());
-    }
-
     BuildRule prebuiltJarRule = buildRuleResolver.requireRule(
         BuildTargets.createFlavoredBuildTarget(
             params.getBuildTarget().checkUnflavored(),
