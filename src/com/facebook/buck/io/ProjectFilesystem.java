@@ -481,9 +481,9 @@ public class ProjectFilesystem {
   /**
    * Checks whether there is a normal file at the specified path.
    */
-  public boolean isFile(Path pathRelativeToProjectRoot, LinkOption... options) {
+  public boolean isFile(Path pathRelativeToProjectRoot) {
     return Files.isRegularFile(
-        getPathForRelativePath(pathRelativeToProjectRoot), options);
+        getPathForRelativePath(pathRelativeToProjectRoot));
   }
 
   public boolean isHidden(Path pathRelativeToProjectRoot) throws IOException {

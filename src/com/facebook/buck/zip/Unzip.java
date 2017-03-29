@@ -25,22 +25,19 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
-import java.util.Collections;
+import java.util.Enumeration;
 import java.util.Set;
 
 public class Unzip {
@@ -53,106 +50,6 @@ public class Unzip {
     OVERWRITE_AND_CLEAN_DIRECTORIES,
   }
 
-  private static void writeZipContents(
-      ZipFile zip,
-      ZipArchiveEntry entry,
-      ProjectFilesystem filesystem,
-      Path target) throws IOException {
-    // Write file
-    try (InputStream is = zip.getInputStream(entry)) {
-      if (entry.isUnixSymlink()) {
-        filesystem.createSymLink(
-            target,
-            filesystem.getPath(new String(ByteStreams.toByteArray(is), Charsets.UTF_8)),
-                  /* force */ true);
-      } else {
-        try (OutputStream out = filesystem.newFileOutputStream(target)) {
-          ByteStreams.copy(is, out);
-        }
-      }
-    }
-
-    // restore mtime for the file
-    filesystem.resolve(target).toFile().setLastModified(entry.getTime());
-
-    // TODO(shs96c): Implement what the comment below says we should do.
-    //
-    // Sets the file permissions of the output file given the information in {@code entry}'s
-    // extra data field. According to the docs at
-    // http://www.opensource.apple.com/source/zip/zip-6/unzip/unzip/proginfo/extra.fld there
-    // are two extensions that might support file permissions: Acorn and ASi UNIX. We shall
-    // assume that inputs are not from an Acorn SparkFS. The relevant section from the docs:
-    //
-    // <pre>
-    //    The following is the layout of the ASi extra block for Unix.  The
-    //    local-header and central-header versions are identical.
-    //    (Last Revision 19960916)
-    //
-    //    Value         Size        Description
-    //    -----         ----        -----------
-    //   (Unix3) 0x756e        Short       tag for this extra block type ("nu")
-    //   TSize         Short       total data size for this block
-    //   CRC           Long        CRC-32 of the remaining data
-    //   Mode          Short       file permissions
-    //   SizDev        Long        symlink'd size OR major/minor dev num
-    //   UID           Short       user ID
-    //   GID           Short       group ID
-    //   (var.)        variable    symbolic link filename
-    //
-    //   Mode is the standard Unix st_mode field from struct stat, containing
-    //   user/group/other permissions, setuid/setgid and symlink info, etc.
-    // </pre>
-    //
-    // From the stat man page, we see that the following mask values are defined for the file
-    // permissions component of the st_mode field:
-    //
-    // <pre>
-    //   S_ISUID   0004000   set-user-ID bit
-    //   S_ISGID   0002000   set-group-ID bit (see below)
-    //   S_ISVTX   0001000   sticky bit (see below)
-    //
-    //   S_IRWXU     00700   mask for file owner permissions
-    //
-    //   S_IRUSR     00400   owner has read permission
-    //   S_IWUSR     00200   owner has write permission
-    //   S_IXUSR     00100   owner has execute permission
-    //
-    //   S_IRWXG     00070   mask for group permissions
-    //   S_IRGRP     00040   group has read permission
-    //   S_IWGRP     00020   group has write permission
-    //   S_IXGRP     00010   group has execute permission
-    //
-    //   S_IRWXO     00007   mask for permissions for others
-    //   (not in group)
-    //   S_IROTH     00004   others have read permission
-    //   S_IWOTH     00002   others have write permission
-    //   S_IXOTH     00001   others have execute permission
-    // </pre>
-    //
-    // For the sake of our own sanity, we're going to assume that no-one is using symlinks,
-    // but we'll check and throw if they are.
-    //
-    // Before we do anything, we should check the header ID. Pfft!
-    //
-    // Having jumped through all these hoops, it turns out that InfoZIP's "unzip" store the
-    // values in the external file attributes of a zip entry (found in the zip's central
-    // directory) assuming that the OS creating the zip was one of an enormous list that
-    // includes UNIX but not Windows, it first searches for the extra fields, and if not found
-    // falls through to a code path that supports MS-DOS and which stores the UNIX file
-    // attributes in the upper 16 bits of the external attributes field.
-    //
-    // We'll support neither approach fully, but we encode whether this file was executable
-    // via storing 0100 in the fields that are typically used by zip implementations to store
-    // POSIX permissions. If we find it was executable, use the platform independent java
-    // interface to make this unpacked file executable.
-
-    Set<PosixFilePermission> permissions =
-        MorePosixFilePermissions.fromMode(entry.getExternalAttributes() >> 16);
-    if (permissions.contains(PosixFilePermission.OWNER_EXECUTE)) {
-      MoreFiles.makeExecutable(filesystem.resolve(target));
-    }
-  }
-
   /**
    * Unzips a file to a destination and returns the paths of the written files.
    */
@@ -161,52 +58,129 @@ public class Unzip {
       ProjectFilesystem filesystem,
       Path relativePath,
       ExistingFileMode existingFileMode) throws IOException {
-
-    // We want to remove stale contents of directories listed in zipFile, but avoid deleting and
-    // re-creating any directories that already exist. We *also* want to avoid a full recursive
-    // scan of listed directories, since that's almost as slow as deleting. So, we incrementally
-    // build a set of pathsToClean that contains children of listed directories, and remove those at
-    // the end (if they are never listed elsewhere in the zipfile).
-
-    Set<Path> pathsToClean = Sets.newHashSet();
-    Set<Path> pathsCreated = Sets.newHashSet();
-    ImmutableList.Builder<Path> filesWritten = ImmutableList.builder();
-    try (ZipFile zip = new ZipFile(zipFile.toFile())) {
-      for (ZipArchiveEntry entry : Collections.list(zip.getEntries())) {
-        String fileName = entry.getName();
-        Path target = relativePath.resolve(fileName);
-        pathsCreated.add(target);
-        pathsToClean.remove(target);
-        if (entry.isDirectory()) {
-          if (filesystem.isDirectory(target, LinkOption.NOFOLLOW_LINKS)) {
-            // We have a pre-existing directory: enqueue its contents for potential deletion (unless
-            // it's something we've already unzipped that are listed out of order).
-            for (File f : filesystem.listFiles(target)) {
-              pathsToClean.add(f.toPath());
-            }
-          } else if (filesystem.exists(target, LinkOption.NOFOLLOW_LINKS)) {
-            filesystem.deleteFileAtPath(target);
-            filesystem.mkdirs(target);
-          } else {
-            filesystem.mkdirs(target);
-          }
-        } else {
-          if (filesystem.isFile(target, LinkOption.NOFOLLOW_LINKS)) {  // NOPMD for clarity
-            // pass
-          } else if (filesystem.exists(target, LinkOption.NOFOLLOW_LINKS)) {
-            filesystem.deleteRecursivelyIfExists(target);
-          } else {
-            filesystem.createParentDirs(target);
-          }
-          filesWritten.add(target);
-          writeZipContents(zip, entry, filesystem, target);
+    // if requested, clean before extracting
+    if (existingFileMode == ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES) {
+      try (ZipFile zip = new ZipFile(zipFile.toFile())) {
+        Enumeration<ZipArchiveEntry> entries = zip.getEntries();
+        while (entries.hasMoreElements()) {
+          ZipArchiveEntry entry = entries.nextElement();
+          filesystem.deleteRecursivelyIfExists(relativePath.resolve(entry.getName()));
         }
       }
     }
-    if (existingFileMode == ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES) {
-      for (Path p : pathsToClean) {
-        if (!pathsCreated.contains(p)) {
-          filesystem.deleteRecursivelyIfExists(p);
+    ImmutableList.Builder<Path> filesWritten = ImmutableList.builder();
+    try (ZipFile zip = new ZipFile(zipFile.toFile())) {
+      Enumeration<ZipArchiveEntry> entries = zip.getEntries();
+      while (entries.hasMoreElements()) {
+        ZipArchiveEntry entry = entries.nextElement();
+        String fileName = entry.getName();
+        Path target = relativePath.resolve(fileName);
+
+        // TODO(bolinfest): Keep track of which directories have already been written to avoid
+        // making unnecessary Files.createDirectories() calls. In practice, a single zip file will
+        // have many entries in the same directory.
+
+        if (entry.isDirectory()) {
+          // Create the directory and all its parent directories
+          filesystem.mkdirs(target);
+        } else {
+          // Create parent folder
+          filesystem.createParentDirs(target);
+
+          filesWritten.add(target);
+          // Write file
+          try (InputStream is = zip.getInputStream(entry)) {
+            if (entry.isUnixSymlink()) {
+              filesystem.createSymLink(
+                  target,
+                  filesystem.getPath(new String(ByteStreams.toByteArray(is), Charsets.UTF_8)),
+                  /* force */ true);
+            } else {
+              try (OutputStream out = filesystem.newFileOutputStream(target)) {
+                ByteStreams.copy(is, out);
+              }
+            }
+          }
+
+          // restore mtime for the file
+          filesystem.resolve(target).toFile().setLastModified(entry.getTime());
+
+          // TODO(shs96c): Implement what the comment below says we should do.
+          //
+          // Sets the file permissions of the output file given the information in {@code entry}'s
+          // extra data field. According to the docs at
+          // http://www.opensource.apple.com/source/zip/zip-6/unzip/unzip/proginfo/extra.fld there
+          // are two extensions that might support file permissions: Acorn and ASi UNIX. We shall
+          // assume that inputs are not from an Acorn SparkFS. The relevant section from the docs:
+          //
+          // <pre>
+          //    The following is the layout of the ASi extra block for Unix.  The
+          //    local-header and central-header versions are identical.
+          //    (Last Revision 19960916)
+          //
+          //    Value         Size        Description
+          //    -----         ----        -----------
+          //   (Unix3) 0x756e        Short       tag for this extra block type ("nu")
+          //   TSize         Short       total data size for this block
+          //   CRC           Long        CRC-32 of the remaining data
+          //   Mode          Short       file permissions
+          //   SizDev        Long        symlink'd size OR major/minor dev num
+          //   UID           Short       user ID
+          //   GID           Short       group ID
+          //   (var.)        variable    symbolic link filename
+          //
+          //   Mode is the standard Unix st_mode field from struct stat, containing
+          //   user/group/other permissions, setuid/setgid and symlink info, etc.
+          // </pre>
+          //
+          // From the stat man page, we see that the following mask values are defined for the file
+          // permissions component of the st_mode field:
+          //
+          // <pre>
+          //   S_ISUID   0004000   set-user-ID bit
+          //   S_ISGID   0002000   set-group-ID bit (see below)
+          //   S_ISVTX   0001000   sticky bit (see below)
+          //
+          //   S_IRWXU     00700   mask for file owner permissions
+          //
+          //   S_IRUSR     00400   owner has read permission
+          //   S_IWUSR     00200   owner has write permission
+          //   S_IXUSR     00100   owner has execute permission
+          //
+          //   S_IRWXG     00070   mask for group permissions
+          //   S_IRGRP     00040   group has read permission
+          //   S_IWGRP     00020   group has write permission
+          //   S_IXGRP     00010   group has execute permission
+          //
+          //   S_IRWXO     00007   mask for permissions for others
+          //   (not in group)
+          //   S_IROTH     00004   others have read permission
+          //   S_IWOTH     00002   others have write permission
+          //   S_IXOTH     00001   others have execute permission
+          // </pre>
+          //
+          // For the sake of our own sanity, we're going to assume that no-one is using symlinks,
+          // but we'll check and throw if they are.
+          //
+          // Before we do anything, we should check the header ID. Pfft!
+          //
+          // Having jumped through all these hoops, it turns out that InfoZIP's "unzip" store the
+          // values in the external file attributes of a zip entry (found in the zip's central
+          // directory) assuming that the OS creating the zip was one of an enormous list that
+          // includes UNIX but not Windows, it first searches for the extra fields, and if not found
+          // falls through to a code path that supports MS-DOS and which stores the UNIX file
+          // attributes in the upper 16 bits of the external attributes field.
+          //
+          // We'll support neither approach fully, but we encode whether this file was executable
+          // via storing 0100 in the fields that are typically used by zip implementations to store
+          // POSIX permissions. If we find it was executable, use the platform independent java
+          // interface to make this unpacked file executable.
+
+          Set<PosixFilePermission> permissions =
+              MorePosixFilePermissions.fromMode(entry.getExternalAttributes() >> 16);
+          if (permissions.contains(PosixFilePermission.OWNER_EXECUTE)) {
+            MoreFiles.makeExecutable(filesystem.resolve(target));
+          }
         }
       }
     }

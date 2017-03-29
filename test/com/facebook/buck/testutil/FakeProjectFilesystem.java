@@ -381,7 +381,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   @Override
-  public boolean isFile(Path path, LinkOption... options) {
+  public boolean isFile(Path path) {
     return fileContents.containsKey(MorePaths.normalize(path));
   }
 
