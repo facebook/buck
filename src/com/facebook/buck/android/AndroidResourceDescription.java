@@ -145,7 +145,18 @@ public class AndroidResourceDescription
             args.assets);
 
     if (flavors.contains(AAPT2_COMPILE_FLAVOR)) {
-      return new Aapt2Compile(params);
+      Optional<SourcePath> resDir = resInputs.getSecond();
+      Preconditions.checkArgument(
+          resDir.isPresent(),
+          "Tried to require rule %s, but no resource dir is preset.",
+          params.getBuildTarget());
+      params = params.copyReplacingDeclaredAndExtraDeps(
+          Suppliers.ofInstance(
+              ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(resDir.get()))),
+          Suppliers.ofInstance(ImmutableSortedSet.of()));
+      return new Aapt2Compile(
+          params,
+          resDir.get());
     }
 
     params = params.copyAppendingExtraDeps(

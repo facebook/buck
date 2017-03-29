@@ -432,6 +432,42 @@ android_binary(
   ],
 )
 
+genrule(
+  # Hackily check for the presence of aapt2 until all of our users have it.
+  name = 'check_for_aapt2',
+  bash = 'test -x `dirname $DX`/aapt2 > $OUT',
+  out = 'does-aapt2-exist',
+)
+
+android_binary(
+  name = 'app_with_aapt2',
+  aapt_mode = 'aapt2',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  deps = [
+    '//java/com/sample/lib:lib',
+    '//res/com/sample/base:base',
+  ],
+)
+
+genrule(
+  name = 'disassemble_app_with_aapt2',
+  bash = ' && '.join([
+      '$(exe //third-party/smali:baksmali) -o $TMP $(location :app_with_aapt2)',
+      'cat $TMP/com/*/R*.smali > $OUT',
+      ]),
+  out = 'disassembled_aapt2.smali',
+)
+
+genrule(
+  name = 'resource_dump_app_with_aapt2',
+  # Using the DX environment variable here is a total hack.
+  # Ideally, we'd have a special genrule that made the Android
+  # tools available.
+  bash = '`dirname $DX`/aapt dump resources $(location :app_with_aapt2) > $OUT',
+  out = 'dump_aapt2_resources.txt',
+)
+
 android_instrumentation_apk(
   name = 'instrumentation_apk',
   manifest = 'AndroidInstrumentationManifest.xml',

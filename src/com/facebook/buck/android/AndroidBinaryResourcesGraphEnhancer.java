@@ -210,8 +210,13 @@ class AndroidBinaryResourcesGraphEnhancer {
             .copyReplacingDeclaredAndExtraDeps(
                 Suppliers.ofInstance(ImmutableSortedSet.of()),
                 Suppliers.ofInstance(ImmutableSortedSet.of())),
-        compileListBuilder.build()
-    );
+        ruleFinder,
+        compileListBuilder.build(),
+        getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
+        manifest,
+        manifestEntries,
+        resourceUnionPackage,
+        bannedDuplicateResourceTypes);
   }
 
   private ResourcesFilter createResourcesFilter(
