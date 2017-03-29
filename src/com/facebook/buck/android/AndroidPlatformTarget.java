@@ -204,7 +204,10 @@ public class AndroidPlatformTarget {
           platformTargetFactory = new AndroidWithoutGoogleApisFactory();
         }
         return Optional.of(
-            platformTargetFactory.newInstance(androidDirectoryResolver, apiLevel, aaptOverride,
+            platformTargetFactory.newInstance(
+                androidDirectoryResolver,
+                apiLevel,
+                aaptOverride,
                 aapt2Override));
       } catch (NumberFormatException e) {
         return Optional.empty();
@@ -218,7 +221,10 @@ public class AndroidPlatformTarget {
       AndroidDirectoryResolver androidDirectoryResolver,
       Optional<Path> aaptOverride,
       Optional<Path> aapt2Override) {
-    return getTargetForId(DEFAULT_ANDROID_PLATFORM_TARGET, androidDirectoryResolver, aaptOverride,
+    return getTargetForId(
+        DEFAULT_ANDROID_PLATFORM_TARGET,
+        androidDirectoryResolver,
+        aaptOverride,
         aapt2Override)
         .get();
   }
