@@ -1,4 +1,5 @@
 standard_java_library(
+    name = "project_generator",
     immutable_types = [
         "GenerationResult",
     ],

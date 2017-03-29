@@ -1,4 +1,6 @@
-standard_java_library()
+standard_java_library(
+    name = "cli",
+)
 
 java_binary(
     name = "cli_bin",

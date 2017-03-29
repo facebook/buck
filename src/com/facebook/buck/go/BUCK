@@ -1,4 +1,5 @@
 standard_java_library(
+    name = "go",
     immutable_types = [
         "GoLinkable",
         "GoPlatform",

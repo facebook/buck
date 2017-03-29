@@ -1,4 +1,5 @@
 standard_java_library(
+    name = "hashing",
     tests = [
         "//test/com/facebook/buck/hashing:hashing",
     ],

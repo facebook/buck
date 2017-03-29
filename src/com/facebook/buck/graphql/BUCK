@@ -1,4 +1,5 @@
 standard_java_library(
+    name = "graphql",
     tests = [
         "//test/com/facebook/buck/graphql:graphql",
     ],

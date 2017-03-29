@@ -1,4 +1,5 @@
 standard_java_library(
+    name = "network",
     tests = [
         "//test/com/facebook/buck/util:util",
         "//test/com/facebook/buck/util/network:network",

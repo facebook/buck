@@ -1,4 +1,5 @@
 standard_java_library(
+    name = "collect",
     tests = [
         "//test/com/facebook/buck/util/collect:collect",
     ],

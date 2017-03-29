@@ -1,4 +1,5 @@
 standard_java_library(
+    name = "lua",
     immutable_types = [
         "LuaBinaryPackageComponents",
         "LuaNativeExecutableStarter",

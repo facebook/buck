@@ -1,4 +1,5 @@
 standard_java_library(
+    name = "halide",
     tests = [
         "//test/com/facebook/buck/halide:halide",
     ],

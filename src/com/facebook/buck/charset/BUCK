@@ -1,2 +1,3 @@
 standard_java_library(
+    name = "charset",
 )

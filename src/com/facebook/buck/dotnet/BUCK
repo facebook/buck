@@ -1,4 +1,5 @@
 standard_java_library(
+    name = "dotnet",
     visibility = [
         "//src/com/facebook/buck/rules:types",
         "//test/com/facebook/buck/dotnet:",

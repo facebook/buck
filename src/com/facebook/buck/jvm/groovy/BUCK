@@ -1,4 +1,5 @@
 standard_java_library(
+    name = "groovy",
     tests = [
         "//test/com/facebook/buck/jvm/groovy:groovy",
     ],

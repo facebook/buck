@@ -1,4 +1,5 @@
 standard_java_library(
+    name = "redex",
     srcs = [
         "ReDexStep.java",
     ],

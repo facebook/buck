@@ -1,4 +1,5 @@
 standard_java_library(
+    name = "js",
     tests = [
         "//test/com/facebook/buck/js:js",
     ],

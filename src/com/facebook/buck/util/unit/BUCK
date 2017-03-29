@@ -1,4 +1,5 @@
 standard_java_library(
+    name = "unit",
     tests = [
         "//test/com/facebook/buck/util/unit:unit",
     ],

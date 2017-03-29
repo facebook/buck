@@ -1,4 +1,5 @@
 standard_java_library(
+    name = "graph",
     tests = [
         "//test/com/facebook/buck/graph:graph",
     ],

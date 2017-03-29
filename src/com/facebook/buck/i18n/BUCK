@@ -1,4 +1,5 @@
 standard_java_library(
+    name = "i18n",
     immutable_types = [
         "NumberFormatterCacheKey",
     ],

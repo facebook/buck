@@ -1,4 +1,5 @@
 standard_java_library(
+    name = "macho",
     immutable_types = [
         "FatArch",
         "FatHeader",

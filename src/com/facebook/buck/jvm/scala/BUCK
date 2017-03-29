@@ -1,4 +1,5 @@
 standard_java_library(
+    name = "scala",
     tests = [
         "//test/com/facebook/buck/jvm/scala:scala",
     ],

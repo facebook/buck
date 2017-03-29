@@ -1,4 +1,5 @@
 standard_java_library(
+    name = "command",
     immutable_types = [
         "BuildExecutionResult",
     ],

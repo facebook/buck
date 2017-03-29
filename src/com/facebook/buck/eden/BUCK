@@ -1,4 +1,5 @@
 standard_java_library(
+    name = "eden",
     tests = [
         "//test/com/facebook/buck/eden:eden",
     ],

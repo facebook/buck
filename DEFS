@@ -140,6 +140,7 @@ def _get_name():
     return os.path.basename(base_path)
 
 def standard_java_library(
+    name,
     srcs = None,
     immutable_types = None,
     tests = None,
@@ -186,7 +187,7 @@ def standard_java_library(
         build_rule = java_library
 
     build_rule(
-        name = _get_name(),
+        name = name,
         srcs = srcs,
         resources = resources,
         tests = tests,

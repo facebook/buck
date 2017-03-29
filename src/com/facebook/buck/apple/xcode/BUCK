@@ -1,4 +1,5 @@
 standard_java_library(
+    name = "xcode",
     srcs = [
         "GidGenerator.java",
         "XcodeprojSerializer.java",

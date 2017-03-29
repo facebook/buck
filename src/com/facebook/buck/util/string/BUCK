@@ -1,1 +1,3 @@
-standard_java_library()
+standard_java_library(
+    name = "string",
+)

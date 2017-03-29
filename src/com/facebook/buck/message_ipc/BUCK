@@ -1,4 +1,5 @@
 standard_java_library(
+    name = "message_ipc",
     tests = [
         "//test/com/facebook/buck/message_ipc:message_ipc",
     ],
