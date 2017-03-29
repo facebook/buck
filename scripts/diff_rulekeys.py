@@ -397,10 +397,13 @@ def diffInternal(
                     changed_key_pairs_with_labels_for_key.add(
                         (left_name, (left_key, right_key)))
                     continue
-                if (left_info.getByKey(left_key).keys() ==
-                        right_info.getByKey(right_key).keys()):
+                if (left_name is None and right_name is None and
+                    (left_info.getByKey(left_key).keys() ==
+                        right_info.getByKey(right_key).keys())):
                     # Assume that if the set of keys in the structure of the
                     # referenced RuleKey matches then it's the same "thing".
+                    # The names need to empty, otherwise we'll end up
+                    # comparing BuildRules for different targets.
                     q_label = label + '->' + key
                     changed_key_pairs_with_labels_for_key.add(
                         (q_label, (left_key, right_key)))

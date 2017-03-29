@@ -205,6 +205,41 @@ class TestRuleKeyDiff(unittest.TestCase):
         ]
         self.assertEqual(result, expected)
 
+    def test_diff_different_deps(self):
+        result = diff("//:top",
+                      RuleKeyStructureInfo(MockFile([
+                          makeRuleKeyLine(
+                              name="//:top",
+                              key="aa",
+                              deps=["00"],
+                          ),
+                          makeRuleKeyLine(
+                              name="//:Zero",
+                              key="00",
+                              srcs={"Zero": "0"}
+                          ),
+                      ])),
+                      RuleKeyStructureInfo(MockFile([
+                          makeRuleKeyLine(
+                              name="//:top",
+                              key="bb",
+                              deps=["11"],
+                          ),
+                          makeRuleKeyLine(
+                              name="//:One",
+                              key="11",
+                              srcs={"One": "1"}
+                          ),
+                      ])),
+                      verbose=False)
+        expected = [
+                'Change details for [//:top]',
+                '  (deps):',
+                '    -["//:Zero"@ruleKey(sha1=00)]',
+                '    +["//:One"@ruleKey(sha1=11)]',
+        ]
+        self.assertEqual(result, expected)
+
     def test_diff_doesnt_know(self):
         result = diff("//:top",
                       RuleKeyStructureInfo(MockFile([
