@@ -333,7 +333,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
           "dir",
           projectFilesystem,
           cacheDir,
-          dirCacheConfig.getCacheReadMode().isDoStore(),
+          dirCacheConfig.getCacheReadMode().isWritable(),
           dirCacheConfig.getMaxSizeBytes());
 
       if (!buckEventBus.isPresent()) {
@@ -447,7 +447,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
     }
 
     String cacheName = cacheDescription.getName().map(input -> "http-" + input).orElse("http");
-    boolean doStore = cacheDescription.getCacheReadMode().isDoStore();
+    boolean doStore = cacheDescription.getCacheReadMode().isWritable();
     ArtifactCache result = factory.newInstance(
         NetworkCacheArgs.builder()
             .setThriftEndpointPath(config.getHybridThriftEndpoint())

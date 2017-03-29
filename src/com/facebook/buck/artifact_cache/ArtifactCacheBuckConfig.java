@@ -221,7 +221,7 @@ public class ArtifactCacheBuckConfig {
     ImmutableSet<DirCacheEntry> dirCacheEntries = getDirCacheEntries();
     ImmutableSet<HttpCacheEntry> httpCacheEntries = getHttpCacheEntries();
     Predicate<DirCacheEntry> isDirCacheEntryWriteable =
-        dirCache -> dirCache.getCacheReadMode().isDoStore();
+        dirCache -> dirCache.getCacheReadMode().isWritable();
 
     ImmutableSet<DirCacheEntry> localBackingCaches = httpCacheEntries.stream()
         .flatMap(httpCache -> Optionals.toStream(httpCache.getLocalBackingCache()))
@@ -437,7 +437,7 @@ public class ArtifactCacheBuckConfig {
         buckConfig.getValue(section, HTTP_LOCAL_BACKING_CACHE)
             .map(name -> obtainDirEntryForName(Optional.of(name)));
     localBackingCache.ifPresent(cache -> {
-      if (!cache.getCacheReadMode().isDoStore()) {
+      if (!cache.getCacheReadMode().isWritable()) {
         throw new HumanReadableException(
             "Local backing cache of %s should be read-write.",
             cacheName);
@@ -488,14 +488,14 @@ public class ArtifactCacheBuckConfig {
     readwrite(true),
     ;
 
-    private final boolean doStore;
+    private final boolean writable;
 
-    CacheReadMode(boolean doStore) {
-      this.doStore = doStore;
+    CacheReadMode(boolean writable) {
+      this.writable = writable;
     }
 
-    public boolean isDoStore() {
-      return doStore;
+    public boolean isWritable() {
+      return writable;
     }
   }
 
