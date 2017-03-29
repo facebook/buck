@@ -20,6 +20,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.base.Joiner;
@@ -29,6 +30,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 import org.immutables.value.Value;
 
@@ -38,6 +40,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Represents configuration specific to the {@link ArtifactCache}s.
@@ -173,7 +177,7 @@ public class ArtifactCacheBuckConfig {
   }
 
   public boolean hasAtLeastOneWriteableCache() {
-    return FluentIterable.from(getHttpCaches()).anyMatch(
+    return FluentIterable.from(getHttpCacheEntries()).anyMatch(
         input -> input.getCacheReadMode().equals(CacheReadMode.readwrite));
   }
 
@@ -213,12 +217,50 @@ public class ArtifactCacheBuckConfig {
             .withCacheReadMode(getServedLocalCacheReadMode()));
   }
 
-  /**
-   * We return list instead of set to preserve an order of cache names.
-   * Buck will be attempting to use dir caches in a listed order.
-   */
-  public ImmutableList<DirCacheEntry> getDirCacheEntries() {
-    ImmutableList.Builder<DirCacheEntry> result = ImmutableList.builder();
+  public ArtifactCacheEntries getCacheEntries() {
+    ImmutableSet<DirCacheEntry> dirCacheEntries = getDirCacheEntries();
+    ImmutableSet<HttpCacheEntry> httpCacheEntries = getHttpCacheEntries();
+    Predicate<DirCacheEntry> isDirCacheEntryWriteable =
+        dirCache -> dirCache.getCacheReadMode().isDoStore();
+
+    ImmutableSet<DirCacheEntry> localBackingCaches = httpCacheEntries.stream()
+        .flatMap(httpCache -> Optionals.toStream(httpCache.getLocalBackingCache()))
+        .collect(MoreCollectors.toImmutableSet());
+
+    // Enforce some sanity checks on the config:
+    //  - we don't want multiple writeable dir caches pointing to the same directory
+    Sets.union(dirCacheEntries, localBackingCaches)
+        .stream()
+        .filter(isDirCacheEntryWriteable)
+        .collect(Collectors.groupingBy(dirCache -> dirCache.getCacheDir()))
+        .forEach((path, dirCachesPerPath) -> {
+          if (dirCachesPerPath.size() > 1) {
+            throw new HumanReadableException(
+                "Multiple writeable dir caches defined for path %s. This is not supported.",
+                path);
+          }
+        });
+
+    // Enforce some sanity checks on the config:
+    //  - if we have a local backing cache, then having a writeable dircache is probably a mistake
+    if (!localBackingCaches.isEmpty()) {
+      Optional<DirCacheEntry> writeableDirCache =
+          dirCacheEntries.stream().filter(isDirCacheEntryWriteable).findAny();
+      if (writeableDirCache.isPresent()) {
+        throw new HumanReadableException("You're using a local_backing_cache and a writeable " +
+            "dir cache. This will result in remote artifacts being written to both caches is " +
+            "equivalent to just having the dir cache and most likely not what you want.");
+      }
+    }
+
+    return ArtifactCacheEntries.builder()
+        .setDirCacheEntries(dirCacheEntries)
+        .setHttpCacheEntries(httpCacheEntries)
+        .build();
+  }
+
+  private ImmutableSet<DirCacheEntry> getDirCacheEntries() {
+    ImmutableSet.Builder<DirCacheEntry> result = ImmutableSet.builder();
 
     ImmutableList<String> names = getDirCacheNames();
     boolean implicitLegacyCache = names.isEmpty() &&
@@ -234,7 +276,7 @@ public class ArtifactCacheBuckConfig {
     return result.build();
   }
 
-  public ImmutableSet<HttpCacheEntry> getHttpCaches() {
+  private ImmutableSet<HttpCacheEntry> getHttpCacheEntries() {
     ImmutableSet.Builder<HttpCacheEntry> result = ImmutableSet.builder();
 
     ImmutableSet<String> httpCacheNames = getHttpCacheNames();
@@ -360,6 +402,7 @@ public class ArtifactCacheBuckConfig {
         .map(SizeUnit::parseBytes);
 
     return DirCacheEntry.builder()
+        .setName(cacheName)
         .setCacheDir(pathToCacheDir)
         .setCacheReadMode(readMode)
         .setMaxSizeBytes(maxSizeBytes)
@@ -458,7 +501,15 @@ public class ArtifactCacheBuckConfig {
 
   @Value.Immutable
   @BuckStyleImmutable
+  abstract static class AbstractArtifactCacheEntries {
+    public abstract ImmutableSet<HttpCacheEntry> getHttpCacheEntries();
+    public abstract ImmutableSet<DirCacheEntry> getDirCacheEntries();
+  }
+
+  @Value.Immutable
+  @BuckStyleImmutable
   abstract static class AbstractDirCacheEntry {
+    public abstract Optional<String> getName();
     public abstract Path getCacheDir();
     public abstract Optional<Long> getMaxSizeBytes();
     public abstract CacheReadMode getCacheReadMode();

@@ -184,14 +184,16 @@ public class ArtifactCaches implements ArtifactCacheFactory {
     if (modes.isEmpty()) {
       return new NoopArtifactCache();
     }
+    ArtifactCacheEntries cacheEntries = buckConfig.getCacheEntries();
     ImmutableList.Builder<ArtifactCache> builder = ImmutableList.builder();
     for (ArtifactCacheBuckConfig.ArtifactCacheMode mode : modes) {
       switch (mode) {
         case dir:
-          initializeDirCaches(buckConfig, buckEventBus, projectFilesystem, builder);
+          initializeDirCaches(cacheEntries, buckEventBus, projectFilesystem, builder);
           break;
         case http:
           initializeDistributedCaches(
+              cacheEntries,
               buckConfig,
               buckEventBus,
               projectFilesystem,
@@ -204,6 +206,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
 
         case thrift_over_http:
           initializeDistributedCaches(
+              cacheEntries,
               buckConfig,
               buckEventBus,
               projectFilesystem,
@@ -279,11 +282,11 @@ public class ArtifactCaches implements ArtifactCacheFactory {
   }
 
   private static void initializeDirCaches(
-      ArtifactCacheBuckConfig buckConfig,
+      ArtifactCacheEntries artifactCacheEntries,
       BuckEventBus buckEventBus,
       ProjectFilesystem projectFilesystem,
       ImmutableList.Builder<ArtifactCache> builder) {
-    for (DirCacheEntry cacheEntry : buckConfig.getDirCacheEntries()) {
+    for (DirCacheEntry cacheEntry : artifactCacheEntries.getDirCacheEntries()) {
       builder.add(
           createDirArtifactCache(
               Optional.ofNullable(buckEventBus),
@@ -293,6 +296,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
   }
 
   private static void initializeDistributedCaches(
+      ArtifactCacheEntries artifactCacheEntries,
       ArtifactCacheBuckConfig buckConfig,
       BuckEventBus buckEventBus,
       ProjectFilesystem projectFilesystem,
@@ -301,7 +305,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       ImmutableList.Builder<ArtifactCache> builder,
       boolean distributedBuildModeEnabled,
       NetworkCacheFactory factory) {
-    for (HttpCacheEntry cacheEntry : buckConfig.getHttpCaches()) {
+    for (HttpCacheEntry cacheEntry : artifactCacheEntries.getHttpCacheEntries()) {
       if (!cacheEntry.isWifiUsableForDistributedCache(wifiSsid)) {
         LOG.warn("HTTP cache is disabled because WiFi is not usable.");
         continue;

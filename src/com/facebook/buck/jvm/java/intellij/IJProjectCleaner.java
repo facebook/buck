@@ -21,6 +21,7 @@ import com.facebook.buck.artifact_cache.DirCacheEntry;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.Optionals;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -106,9 +107,13 @@ import java.util.concurrent.TimeUnit;
             projectFilesystem.resolve(projectFilesystem.getBuckPaths().getBuckOut())));
 
     ArtifactCacheBuckConfig cacheBuckConfig = new ArtifactCacheBuckConfig(buckConfig);
-    for (DirCacheEntry entry : cacheBuckConfig.getDirCacheEntries()) {
+    for (DirCacheEntry entry : cacheBuckConfig.getCacheEntries().getDirCacheEntries()) {
       buckDirectories.add(convertPathToFile(entry.getCacheDir()));
     }
+    cacheBuckConfig.getCacheEntries().getHttpCacheEntries()
+        .stream()
+        .flatMap(httpCache -> Optionals.toStream(httpCache.getLocalBackingCache()))
+        .forEach(entry -> buckDirectories.add(convertPathToFile(entry.getCacheDir())));
 
     ForkJoinPool cleanExecutor = new ForkJoinPool(getParallelismLimit());
     try {
