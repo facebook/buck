@@ -375,7 +375,7 @@ public class DistBuildStateTest {
     ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             new ConstructorArgMarshaller(coercedTypeCache),
-            new TargetNodeFactory(typeCoercerFactory));
+            new TargetNodeFactory(coercedTypeCache));
 
     return new DistBuildTargetGraphCodec(
         objectMapper,

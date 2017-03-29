@@ -22,7 +22,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.versions.Version;
@@ -46,10 +45,8 @@ public abstract class AbstractNodeBuilder<
     TArg,
     TDescription extends Description<TArg>,
     TBuildRule extends BuildRule> {
-  private static final TypeCoercerFactory TYPE_COERCER_FACTORY =
-      new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance());
   private static final CoercedTypeCache COERCED_TYPE_CACHE =
-      new CoercedTypeCache(TYPE_COERCER_FACTORY);
+      new CoercedTypeCache(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()));
   private static final VisibilityPatternParser VISIBILITY_PATTERN_PARSER =
       new VisibilityPatternParser();
 
@@ -125,7 +122,7 @@ public abstract class AbstractNodeBuilder<
       HashCode hash = rawHashCode == null ?
           Hashing.sha1().hashString(target.getFullyQualifiedName(), UTF_8) :
           rawHashCode;
-      TargetNodeFactory factory = new TargetNodeFactory(TYPE_COERCER_FACTORY);
+      TargetNodeFactory factory = new TargetNodeFactory(COERCED_TYPE_CACHE);
       TargetNode<TArg, TDescription> node =
           factory.create(
               // This hash will do in a pinch.
