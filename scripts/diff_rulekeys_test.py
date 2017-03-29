@@ -373,6 +373,36 @@ class TestRuleKeyDiff(unittest.TestCase):
         ]
         self.assertEqual(result, expected)
 
+    def test_compute_rulekey_mismatches(self):
+        result = compute_rulekey_mismatches(
+              RuleKeyStructureInfo(MockFile([
+                  makeRuleKeyLine(
+                      name="//:top",
+                      key="aa",
+                      ),
+                  makeRuleKeyLine(
+                      name="//:left",
+                      key="00",
+                      ),
+                  ])),
+              RuleKeyStructureInfo(MockFile([
+                  makeRuleKeyLine(
+                      name="//:top",
+                      key="bb",
+                      ),
+                  makeRuleKeyLine(
+                      name="//:right",
+                      key="11",
+                      ),
+                  ])),
+              )
+
+        expected = [
+            '//:left missing from right',
+            '//:right missing from left',
+            '//:top left:aa != right:bb',
+        ]
+        self.assertEqual(result, expected)
 
 
 def makeRuleKeyLine(key="aabb", name="//:name", srcs=None,

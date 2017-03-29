@@ -175,6 +175,9 @@ class RuleKeyStructureInfo(object):
     def getKeyForName(self, name):
         return self._name_to_key.get(name)
 
+    def getNameToKeyMap(self):
+        return self._name_to_key
+
     def getNameForKey(self, key):
         struct = self.getByKey(key)
         if struct is None:
@@ -528,6 +531,29 @@ def diffAll(left_info, right_info, verbose, format_tuple=None,
     return all_results
 
 
+def compute_rulekey_mismatches(left_info, right_info, left_name='left',
+                               right_name='right'):
+    left_name_to_key = left_info.getNameToKeyMap()
+    right_name_to_key = right_info.getNameToKeyMap()
+    left_names = set(left_name_to_key.keys())
+    right_names = set(right_name_to_key.keys())
+
+    mismatch = []
+
+    for name in left_names.union(right_names):
+        left_key = left_name_to_key.get(name)
+        right_key = right_name_to_key.get(name)
+        if left_key is None:
+            mismatch.append('{} missing from {}'.format(name, left_name))
+        elif right_key is None:
+            mismatch.append('{} missing from {}'.format(name, right_name))
+        elif left_key != right_key:
+            mismatch.append(
+                '{} {}:{} != {}:{}'.format(name, left_name, left_key,
+                                           right_name, right_key))
+    return mismatch
+
+
 def swap_entries_in_list(l, i, j):
     (l[i], l[j]) = (l[j], l[i])
 
@@ -552,11 +578,11 @@ def main():
         left_key = left.getKeyForName(name)
         right_key = right.getKeyForName(name)
         if left_key is None:
-            raise KeyError('Left log does not contain {}. Did you forget to ' +
-                           'enable logging? (see help).'.format(name))
+            raise KeyError(('Left log does not contain {}. Did you forget ' +
+                           'to enable logging? (see help).').format(name))
         if right_key is None:
-            raise KeyError('Right log does not contain {}. Did you forget ' +
-                           'to enable logging? (see help).'.format(name))
+            raise KeyError(('Right log does not contain {}. Did you forget ' +
+                           'to enable logging? (see help).').format(name))
 
         print('\n'.join(diff(name, left, right, args.verbose)))
     else:
