@@ -720,8 +720,9 @@ public class AppleBundleIntegrationTest {
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
-        "Variant files have to be in a directory with name ending in '.lproj', " +
-            "but 'cc/Localizable.strings' is not.");
+        Matchers.matchesPattern(
+        "Variant files have to be in a directory with name ending in '\\.lproj', " +
+            "but '.*/cc/Localizable.strings' is not."));
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -1137,5 +1138,17 @@ public class AppleBundleIntegrationTest {
     assertThat(
         result.getStdout(),
         Matchers.startsWith(target.getFullyQualifiedName() + " " + appPath.toString()));
+  }
+
+  @Test
+  public void resourcesFromOtherCellsCanBeProperlyIncluded() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "bundle_with_resources_from_other_cells", tmp);
+    workspace.setUp();
+    Path outputPath = workspace.buildAndReturnOutput("//:bundle#iphonesimulator-x86_64");
+    assertTrue(
+        "Resource file should exist.",
+        Files.isRegularFile(outputPath.resolve("file.txt")));
   }
 }
