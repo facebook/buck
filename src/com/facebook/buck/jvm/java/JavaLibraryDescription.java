@@ -133,16 +133,6 @@ public class JavaLibraryDescription implements
           sources);
     }
 
-    if (CalculateAbi.isAbiTarget(target)) {
-      BuildTarget libraryTarget = CalculateAbi.getLibraryTarget(target);
-      BuildRule libraryRule = resolver.requireRule(libraryTarget);
-      return CalculateAbi.of(
-          params.getBuildTarget(),
-          ruleFinder,
-          params,
-          Preconditions.checkNotNull(libraryRule.getSourcePathToOutput()));
-    }
-
     BuildRuleParams paramsWithMavenFlavor = null;
     if (flavors.contains(JavaLibrary.MAVEN_JAR)) {
       paramsWithMavenFlavor = params;
@@ -177,16 +167,21 @@ public class JavaLibraryDescription implements
         resolver,
         args);
 
-    DefaultJavaLibrary defaultJavaLibrary =
+    DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
         DefaultJavaLibrary
             .builder(params, resolver, javaBuckConfig)
             .setArgs(args)
             .setJavacOptions(javacOptions)
             .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
-            .setTrackClassUsage(javacOptions.trackClassUsage())
-            .build();
+            .setTrackClassUsage(javacOptions.trackClassUsage());
 
-  if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
+    if (CalculateAbi.isAbiTarget(target)) {
+      return defaultJavaLibraryBuilder.buildAbi();
+    }
+
+    DefaultJavaLibrary defaultJavaLibrary = defaultJavaLibraryBuilder.build();
+
+    if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
       return defaultJavaLibrary;
     } else {
       resolver.addToIndex(defaultJavaLibrary);

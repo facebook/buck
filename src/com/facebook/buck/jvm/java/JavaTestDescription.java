@@ -35,7 +35,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
@@ -85,20 +84,6 @@ public class JavaTestDescription implements
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-
-    if (CalculateAbi.isAbiTarget(params.getBuildTarget())) {
-      BuildTarget testTarget = CalculateAbi.getLibraryTarget(params.getBuildTarget());
-      BuildRule testRule = resolver.requireRule(testTarget);
-      return CalculateAbi.of(
-          params.getBuildTarget(),
-          ruleFinder,
-          params,
-          Preconditions.checkNotNull(testRule.getSourcePathToOutput()));
-    }
-
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
             templateJavacOptions,
@@ -107,6 +92,7 @@ public class JavaTestDescription implements
             args
         );
 
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     CxxLibraryEnhancement cxxLibraryEnhancement = new CxxLibraryEnhancement(
         params,
         args.useCxxLibraries,
@@ -119,16 +105,21 @@ public class JavaTestDescription implements
     BuildRuleParams testsLibraryParams = params
         .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
-    JavaLibrary testsLibrary =
-        resolver.addToIndex(
-            DefaultJavaLibrary
-                .builder(testsLibraryParams, resolver, javaBuckConfig)
-                .setArgs(args)
-                .setJavacOptions(javacOptions)
-                .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
-                .setTrackClassUsage(javacOptions.trackClassUsage())
-                .build());
+    DefaultJavaLibraryBuilder defaultJavaLibraryBuilder = DefaultJavaLibrary
+        .builder(testsLibraryParams, resolver, javaBuckConfig)
+        .setArgs(args)
+        .setJavacOptions(javacOptions)
+        .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
+        .setTrackClassUsage(javacOptions.trackClassUsage());
 
+    if (CalculateAbi.isAbiTarget(params.getBuildTarget())) {
+      return defaultJavaLibraryBuilder.buildAbi();
+    }
+
+    JavaLibrary testsLibrary =
+        resolver.addToIndex(defaultJavaLibraryBuilder.build());
+
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new JavaTest(
         params.copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),

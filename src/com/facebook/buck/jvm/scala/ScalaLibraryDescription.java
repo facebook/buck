@@ -29,11 +29,9 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -62,21 +60,15 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ScalaLibraryBuilder scalaLibraryBuilder = new ScalaLibraryBuilder(
+        rawParams,
+        resolver,
+        scalaBuckConfig)
+        .setArgs(args);
 
-    if (CalculateAbi.isAbiTarget(rawParams.getBuildTarget())) {
-      BuildTarget libraryTarget = CalculateAbi.getLibraryTarget(rawParams.getBuildTarget());
-      BuildRule libraryRule = resolver.requireRule(libraryTarget);
-      return CalculateAbi.of(
-          rawParams.getBuildTarget(),
-          ruleFinder,
-          rawParams,
-          Preconditions.checkNotNull(libraryRule.getSourcePathToOutput()));
-    }
-
-    return new ScalaLibraryBuilder(rawParams, resolver, scalaBuckConfig)
-        .setArgs(args)
-        .build();
+    return CalculateAbi.isAbiTarget(rawParams.getBuildTarget())
+        ? scalaLibraryBuilder.buildAbi()
+        : scalaLibraryBuilder.build();
   }
 
   @Override

@@ -37,7 +37,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -80,20 +79,6 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
       CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-
-    if (CalculateAbi.isAbiTarget(rawParams.getBuildTarget())) {
-      BuildTarget testTarget = CalculateAbi.getLibraryTarget(rawParams.getBuildTarget());
-      BuildRule testRule = resolver.requireRule(testTarget);
-      return CalculateAbi.of(
-          rawParams.getBuildTarget(),
-          ruleFinder,
-          rawParams,
-          Preconditions.checkNotNull(testRule.getSourcePathToOutput()));
-    }
-
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-
-
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
         new JavaTestDescription.CxxLibraryEnhancement(
             rawParams,
@@ -106,12 +91,19 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
     BuildRuleParams javaLibraryParams =
         params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
-    JavaLibrary testsLibrary =
-        resolver.addToIndex(
-            new ScalaLibraryBuilder(javaLibraryParams, resolver, config)
-                .setArgs(args)
-                .build());
+    ScalaLibraryBuilder scalaLibraryBuilder = new ScalaLibraryBuilder(
+        javaLibraryParams,
+        resolver,
+        config)
+        .setArgs(args);
 
+    if (CalculateAbi.isAbiTarget(rawParams.getBuildTarget())) {
+      return scalaLibraryBuilder.buildAbi();
+    }
+
+    JavaLibrary testsLibrary = resolver.addToIndex(scalaLibraryBuilder.build());
+
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new JavaTest(
         params.copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),

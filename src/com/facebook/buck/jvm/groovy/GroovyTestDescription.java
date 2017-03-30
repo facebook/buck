@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.jvm.java.ForkMode;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
@@ -24,7 +25,6 @@ import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.TestType;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -35,7 +35,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -75,20 +74,6 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-
-    if (CalculateAbi.isAbiTarget(params.getBuildTarget())) {
-      BuildTarget testTarget = CalculateAbi.getLibraryTarget(params.getBuildTarget());
-      BuildRule testRule = resolver.requireRule(testTarget);
-      return CalculateAbi.of(
-          params.getBuildTarget(),
-          ruleFinder,
-          params,
-          Preconditions.checkNotNull(testRule.getSourcePathToOutput()));
-    }
-
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-
     JavacOptions javacOptions = JavacOptionsFactory
         .create(
           defaultJavacOptions,
@@ -101,17 +86,22 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
 
     BuildRuleParams testsLibraryParams =
         params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
-    JavaLibrary testsLibrary =
-        resolver.addToIndex(
-            new DefaultGroovyLibraryBuilder(
-                testsLibraryParams,
-                resolver,
-                javacOptions,
-                groovyBuckConfig)
-                .setArgs(args)
-                .setGeneratedSourceFolder(defaultJavacOptions.getGeneratedSourceFolderName())
-                .build());
+    DefaultJavaLibraryBuilder defaultJavaLibraryBuilder = new DefaultGroovyLibraryBuilder(
+        testsLibraryParams,
+        resolver,
+        javacOptions,
+        groovyBuckConfig)
+        .setArgs(args)
+        .setGeneratedSourceFolder(defaultJavacOptions.getGeneratedSourceFolderName());
 
+    if (CalculateAbi.isAbiTarget(params.getBuildTarget())) {
+      return defaultJavaLibraryBuilder.buildAbi();
+    }
+
+    JavaLibrary testsLibrary = resolver.addToIndex(defaultJavaLibraryBuilder.build());
+
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new JavaTest(
         params.copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
