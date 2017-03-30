@@ -201,6 +201,10 @@ public class DefaultJavaLibraryBuilder {
     return helper.build();
   }
 
+  public final BuildRule buildAbi() throws NoSuchBuildTargetException {
+    return newHelper().buildAbi();
+  }
+
   protected BuilderHelper newHelper() {
     return new BuilderHelper();
   }
@@ -237,6 +241,18 @@ public class DefaultJavaLibraryBuilder {
           mavenCoords,
           tests,
           classesToRemoveFromJar);
+    }
+
+    protected BuildRule buildAbi() throws NoSuchBuildTargetException {
+      BuildTarget abiTarget = params.getBuildTarget();
+      BuildTarget libraryTarget = CalculateAbi.getLibraryTarget(abiTarget);
+      BuildRule libraryRule = buildRuleResolver.requireRule(libraryTarget);
+
+      return CalculateAbi.of(
+          abiTarget,
+          ruleFinder,
+          params,
+          Preconditions.checkNotNull(libraryRule.getSourcePathToOutput()));
     }
 
     protected final BuildRuleParams getFinalParams() {

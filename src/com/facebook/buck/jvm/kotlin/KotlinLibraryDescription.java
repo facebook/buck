@@ -32,7 +32,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
@@ -72,20 +71,7 @@ public class KotlinLibraryDescription implements
       CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     BuildTarget target = params.getBuildTarget();
-
-    // We know that the flavour we're being asked to create is valid, since the check is done when
-    // creating the action graph from the target graph.
-    if (CalculateAbi.isAbiTarget(target)) {
-      BuildTarget libraryTarget = CalculateAbi.getLibraryTarget(params.getBuildTarget());
-      BuildRule libraryRule = resolver.requireRule(libraryTarget);
-      return CalculateAbi.of(
-          params.getBuildTarget(),
-          ruleFinder,
-          params,
-          Preconditions.checkNotNull(libraryRule.getSourcePathToOutput()));
-    }
 
     ImmutableSortedSet<Flavor> flavors = target.getFlavors();
 
@@ -117,10 +103,20 @@ public class KotlinLibraryDescription implements
       }
     }
 
-    DefaultJavaLibrary defaultKotlinLibrary =
-        new DefaultKotlinLibraryBuilder(params, resolver, kotlinBuckConfig)
-            .setArgs(args)
-            .build();
+
+    DefaultKotlinLibraryBuilder defaultKotlinLibraryBuilder = new DefaultKotlinLibraryBuilder(
+        params,
+        resolver,
+        kotlinBuckConfig)
+        .setArgs(args);
+
+    // We know that the flavour we're being asked to create is valid, since the check is done when
+    // creating the action graph from the target graph.
+    if (CalculateAbi.isAbiTarget(target)) {
+      return defaultKotlinLibraryBuilder.buildAbi();
+    }
+
+    DefaultJavaLibrary defaultKotlinLibrary = defaultKotlinLibraryBuilder.build();
 
     if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
       return defaultKotlinLibrary;
