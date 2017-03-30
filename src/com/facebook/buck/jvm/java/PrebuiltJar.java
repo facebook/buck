@@ -42,7 +42,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.RmStep;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -78,7 +77,6 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
   private final Optional<String> mavenCoords;
   @AddToRuleKey
   private final boolean provided;
-  private final Path internalAbiJar;
   private final Supplier<ImmutableSet<SourcePath>> transitiveClasspathsSupplier;
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
 
@@ -100,9 +98,6 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
     this.javadocUrl = javadocUrl;
     this.mavenCoords = mavenCoords;
     this.provided = provided;
-
-    this.internalAbiJar =
-        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s-abi.jar");
 
     transitiveClasspathsSupplier =
         Suppliers.memoize(() -> JavaLibraryClasspathProvider.getClasspathsFromLibraries(
@@ -259,16 +254,6 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
       steps.add(CopyStep.forFile(getProjectFilesystem(), resolvedBinaryJar, copiedBinaryJar));
     }
     buildableContext.recordArtifact(copiedBinaryJar);
-
-    // Create a step to compute the ABI key.
-    steps.add(MkdirStep.of(getProjectFilesystem(), internalAbiJar.getParent()));
-    steps.add(RmStep.of(getProjectFilesystem(), internalAbiJar));
-    steps.add(
-        new CalculateAbiStep(
-            buildableContext,
-            getProjectFilesystem(),
-            resolvedBinaryJar,
-            internalAbiJar));
 
     JavaLibraryRules.addAccumulateClassNamesStep(
         this,
