@@ -227,7 +227,7 @@ public final class Main {
 
   private static final Duration DAEMON_SLAYER_TIMEOUT = Duration.ofDays(1);
 
-  private static final Duration SUPER_CONSOLE_REFRESH_RATE = Duration.ofMillis(100);
+  private static final Duration SUPER_CONSOLE_REFRESH_RATE = Duration.ofMillis(67);
 
   private static final Duration HANG_DETECTOR_TIMEOUT = Duration.ofMinutes(5);
 
@@ -1095,6 +1095,9 @@ public final class Main {
         BroadcastEventListener broadcastEventListener =
             getBroadcastEventListener(isDaemon, rootCell, objectMapper);
 
+        boolean useTheForce = command.subcommand instanceof AbstractCommand &&
+            ((AbstractCommand) command.subcommand).shouldUseTheForce();
+
         // The order of resources in the try-with-resources block is important: the BuckEventBus
         // must be the last resource, so that it is closed first and can deliver its queued events
         // to the other resources before they are closed.
@@ -1114,7 +1117,7 @@ public final class Main {
             AbstractConsoleEventBusListener consoleListener =
                 createConsoleEventListener(
                     clock,
-                    new SuperConsoleConfig(buckConfig),
+                    new SuperConsoleConfig(buckConfig, useTheForce),
                     console,
                     testConfig.getResultSummaryVerbosity(),
                     executionEnvironment,

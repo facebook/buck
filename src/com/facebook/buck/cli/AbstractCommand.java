@@ -49,6 +49,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -64,6 +65,7 @@ public abstract class AbstractCommand implements Command {
   private static final String PROFILE_PARSER_LONG_ARG = "--profile-buck-parser";
   private static final String NUM_THREADS_LONG_ARG = "--num-threads";
   private static final String LOAD_LIMIT_LONG_ARG = "--load-limit";
+  private static final String FORCE = "--force";
 
   /**
    * This value should never be read. {@link VerbosityParser} should be used instead.
@@ -93,6 +95,12 @@ public abstract class AbstractCommand implements Command {
       aliases = {"-c"},
       usage = "")
   private Map<String, String> configOverrides = Maps.newLinkedHashMap();
+
+  @Option(
+      name = FORCE,
+      usage = "Do, or do not. There is no try.",
+      hidden = true)
+  private boolean force = false;
 
   @Override
   public CellConfig getConfigOverrides() {
@@ -328,7 +336,21 @@ public abstract class AbstractCommand implements Command {
     if (enableParserProfiling) {
       builder.add(PROFILE_PARSER_LONG_ARG);
     }
+    if (shouldUseTheForce()) {
+      builder.add(FORCE);
+    }
     return builder.build();
+  }
+
+  public boolean shouldUseTheForce() {
+    Calendar startOfAprilFoolsWeekend = new Calendar.Builder()
+        .setDate(2017, Calendar.MARCH, 31)
+        .build(); // include friday, since apr 1 falls on sat
+    Calendar endOfAprilFoolsWeekend = new Calendar.Builder()
+        .setDate(2017, Calendar.APRIL, 3)
+        .build(); // exclude monday
+    Calendar now = Calendar.getInstance();
+    return now.after(startOfAprilFoolsWeekend) && now.before(endOfAprilFoolsWeekend) || force;
   }
 
   @Override

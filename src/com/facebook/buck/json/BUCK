@@ -38,7 +38,7 @@ java_immutables_library(
         "BuildFileParseExceptionStackTraceEntry",
         "BuildFileSyntaxError",
     ],
-    resources = PYTHON_PROD_SRCS,
+    resources = PYTHON_PROD_SRCS + ["buck_parser/starwars.txt"],
     # Place the python package in the JAR root so the jar can be imported by
     # python's built in zip importer.
     resources_root = ".",

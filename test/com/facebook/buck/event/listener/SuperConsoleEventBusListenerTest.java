@@ -137,7 +137,7 @@ public class SuperConsoleEventBusListenerTest {
   private Path logPath;
   private BuildRuleDurationTracker durationTracker;
   private SuperConsoleConfig emptySuperConsoleConfig =
-      new SuperConsoleConfig(FakeBuckConfig.builder().build());
+      new SuperConsoleConfig(FakeBuckConfig.builder().build(), false);
 
   private final TimeZone timeZone = TimeZone.getTimeZone("UTC");
 
@@ -2380,7 +2380,7 @@ public class SuperConsoleEventBusListenerTest {
     BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
     SuperConsoleEventBusListener listener =
         new SuperConsoleEventBusListener(
-            new SuperConsoleConfig(FakeBuckConfig.builder().build()),
+            new SuperConsoleConfig(FakeBuckConfig.builder().build(), false),
             new TestConsole(),
             fakeClock,
             silentSummaryVerbosity,
