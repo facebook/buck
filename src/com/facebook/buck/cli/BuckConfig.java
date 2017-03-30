@@ -602,8 +602,20 @@ public class BuckConfig implements ConfigPathGetter {
     return values.isEmpty() ? Optional.empty() : Optional.of(values);
   }
 
+  /**
+   * @return the string value for the config settings, where present empty values are
+   *         {@code Optional.empty()}.
+   */
   public Optional<String> getValue(String sectionName, String propertyName) {
     return config.getValue(sectionName, propertyName);
+  }
+
+  /**
+   * @return the string value for the config settings, where present empty values are
+   *         {@code Optional[]}.
+   */
+  public Optional<String> getRawValue(String sectionName, String propertyName) {
+    return config.get(sectionName, propertyName);
   }
 
   public Optional<Integer> getInteger(String sectionName, String propertyName) {

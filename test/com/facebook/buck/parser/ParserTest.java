@@ -2168,6 +2168,35 @@ public class ParserTest {
     assertEquals("Should not have invalidated.", 1, counter.calls);
   }
 
+  @Test
+  public void emptyStringBuckConfigEntryDoesNotCauseInvalidation() throws Exception {
+    Path buckFile = cellRoot.resolve("BUCK");
+    Files.write(
+        buckFile,
+        Joiner.on("").join(
+            ImmutableList.of(
+                "read_config('foo', 'bar')\n",
+                "genrule(name = 'cake', out = 'file.txt', cmd = 'touch $OUT')\n"))
+            .getBytes(UTF_8));
+
+    BuckConfig config =
+        FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("foo", ImmutableMap.of("bar", "")))
+            .setFilesystem(filesystem)
+            .build();
+
+    Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+
+    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+
+    cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+
+    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+
+    // Test that the second parseBuildFile call repopulated the cache.
+    assertEquals("Should not have invalidated.", 1, counter.calls);
+  }
+
   @Test(timeout = 20000)
   public void resolveTargetSpecsDoesNotHangOnException() throws Exception {
     Path buckFile = cellRoot.resolve("foo/BUCK");

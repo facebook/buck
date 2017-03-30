@@ -219,8 +219,12 @@ class DaemonicCellState {
     for (Map.Entry<String, ImmutableMap<String, Optional<String>>> keyEnt :
         usedConfigs.entrySet()) {
       for (Map.Entry<String, Optional<String>> valueEnt : keyEnt.getValue().entrySet()) {
+        // Make sure to use `BuckConfig.getRawValue()` here as we need to compare the same values
+        // we pass into the build file parser, which preserves empty config settings as the empty
+        // string.  It's not entirely important we use (e.g. empty settings as `Optional.empty()` or
+        // `Optional.of("")`), but we do need to be consistent.
         Optional<String> value =
-            cell.getBuckConfig().getValue(keyEnt.getKey(), valueEnt.getKey());
+            cell.getBuckConfig().getRawValue(keyEnt.getKey(), valueEnt.getKey());
         if (!value.equals(valueEnt.getValue())) {
           invalidatePath(buildFile);
           this.cell.set(cell);
