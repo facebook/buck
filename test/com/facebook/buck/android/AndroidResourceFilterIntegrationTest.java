@@ -74,6 +74,7 @@ public class AndroidResourceFilterIntegrationTest {
         Optional.empty());
     pathToAapt = AndroidPlatformTarget.getDefaultPlatformTarget(
         resolver,
+        Optional.empty(),
         Optional.empty()).getAaptExecutable();
     String buildToolsVersion = pathToAapt.getParent().getFileName().toString();
     isBuildToolsNew = new VersionStringComparator().compare(buildToolsVersion, "21") >= 0;

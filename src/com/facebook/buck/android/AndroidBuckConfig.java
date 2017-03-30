@@ -76,7 +76,19 @@ public class AndroidBuckConfig {
    * project. If not specified, the Android platform aapt will be used.
    */
   public Optional<Path> getAaptOverride() {
-    Optional<String> pathString = delegate.getValue("tools", "aapt");
+    return getToolOverride("aapt");
+  }
+
+  /**
+   * Returns the path to the platform specific aapt2 executable that is overridden by the current
+   * project. If not specified, the Android platform aapt will be used.
+   */
+  public Optional<Path> getAapt2Override() {
+    return getToolOverride("aapt2");
+  }
+
+  private Optional<Path> getToolOverride(String tool) {
+    Optional<String> pathString = delegate.getValue("tools", tool);
     if (!pathString.isPresent()) {
       return Optional.empty();
     }
@@ -92,8 +104,8 @@ public class AndroidBuckConfig {
       return Optional.empty();
     }
 
-    Path pathToAapt = Paths.get(pathString.get(), platformDir, "aapt");
-    return delegate.checkPathExists(pathToAapt.toString(), "Overridden aapt path not found: ");
+    Path pathToTool = Paths.get(pathString.get(), platformDir, tool);
+    return delegate.checkPathExists(pathToTool.toString(), "Overridden path not found: ");
   }
 
 }
