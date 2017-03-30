@@ -49,6 +49,8 @@ public class JavacPluginPropertiesTest {
 
     JavacPluginProperties props = JavacPluginProperties.builder()
         .setCanReuseClassLoader(false)
+        .setDoesNotAffectAbi(false)
+        .setSupportsAbiGenerationFromSource(false)
         .addDep(processor)
         .build();
 

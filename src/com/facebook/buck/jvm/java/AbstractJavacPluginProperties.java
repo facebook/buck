@@ -52,6 +52,10 @@ abstract class AbstractJavacPluginProperties implements RuleKeyAppendable {
 
   public abstract boolean getCanReuseClassLoader();
 
+  public abstract boolean getDoesNotAffectAbi();
+
+  public abstract boolean getSupportsAbiGenerationFromSource();
+
   public boolean isEmpty() {
     return getProcessorNames().isEmpty() &&
         getClasspathEntries().isEmpty();

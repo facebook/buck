@@ -68,6 +68,8 @@ public class JavaAnnotationProcessorDescription implements
 
     boolean reuseClassLoader = !args.isolateClassLoader;
     propsBuilder.setCanReuseClassLoader(reuseClassLoader);
+    propsBuilder.setDoesNotAffectAbi(args.doesNotAffectAbi);
+    propsBuilder.setSupportsAbiGenerationFromSource(args.supportsAbiGenerationFromSource);
     JavacPluginProperties properties = propsBuilder.build();
 
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
@@ -82,5 +84,33 @@ public class JavaAnnotationProcessorDescription implements
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public String processorClass;
     public boolean isolateClassLoader = false;
+    /**
+     * A value of false indicates that the annotation processor generates classes that are intended
+     * for use outside of the code being processed. Annotation processors that affect the ABI of
+     * the rule in which they run must be run during ABI generation from source.
+     *
+     * Defaults to false because that's the "safe" value. When migrating to ABI generation from
+     * source, having as few ABI-affecting processors as possible will yield the fastest ABI
+     * generation.
+     */
+    public boolean doesNotAffectAbi = false;
+
+    /**
+     * If true, allows ABI-affecting annotation processors to run during ABI generation
+     * from source. To run during ABI generation from source, an annotation processor must meet
+     * all of the following criteria:
+     * <li>
+     *   <ul>Uses only the public APIs from JSR-269 (annotation processing). Access to the
+     *       Compiler Tree API may also be possible via a Buck support library.</ul>
+     *   <ul>Does not require details about types beyond those being compiled as a general rule.
+     *       There are ways to ensure type information is available on a case by case basis, at
+     *       some performance cost.</ul>
+     * </li>
+     *
+     * Defaults to false because that's the "safe" value. When migrating to ABI generation from
+     * source, having as many ABI-affecting processors as possible running during ABI generation
+     * will result in the flattest build graph.
+     */
+    public boolean supportsAbiGenerationFromSource = false;
   }
 }

@@ -64,6 +64,8 @@ public class AnnotationProcessorFactoryTest {
             .addClasspathEntries(classpath)
             .addProcessorNames(annotationProcessor)
             .setCanReuseClassLoader(canReuseClasspath)
+            .setDoesNotAffectAbi(false)
+            .setSupportsAbiGenerationFromSource(false)
             .build(),
         filesystem,
         new SourcePathResolver(null));

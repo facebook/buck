@@ -75,9 +75,16 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   public enum AbiGenerationMode {
     /** Generate ABIs by stripping .class files */
     CLASS,
-    /** Output warnings for things that aren't legal when generating ABIs from source */
+    /** Generate ABIs by parsing .java files with dependency ABIs available */
+    SOURCE_WITH_DEPS,
+    /**
+     * Output warnings for things that aren't legal when generating ABIs from source without
+     * dependency ABIs
+     */
     MIGRATING_TO_SOURCE,
-    /** Generate ABIs by parsing .java files (has some limitations) */
+    /**
+     * Generate ABIs by parsing .java files without dependency ABIs available (has some limitations)
+     */
     SOURCE,
   }
 

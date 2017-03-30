@@ -170,9 +170,15 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
     private ImmutableList.Builder<ResolvedJavacPluginProperties> processorsBuilder =
         ImmutableList.builder();
     private JavacPluginProperties.Builder legacySafeProcessorsBuilder =
-        JavacPluginProperties.builder().setCanReuseClassLoader(true);
+        JavacPluginProperties.builder()
+            .setCanReuseClassLoader(true)
+            .setDoesNotAffectAbi(true)
+            .setSupportsAbiGenerationFromSource(false);
     private JavacPluginProperties.Builder legacyUnsafeProcessorsBuilder =
-        JavacPluginProperties.builder().setCanReuseClassLoader(false);
+        JavacPluginProperties.builder()
+            .setCanReuseClassLoader(false)
+            .setDoesNotAffectAbi(true)
+            .setSupportsAbiGenerationFromSource(false);
     private Set<String> parameters = Sets.newHashSet();
     private boolean processOnly;
 

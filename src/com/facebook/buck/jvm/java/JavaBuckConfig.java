@@ -183,4 +183,12 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   public boolean shouldSuggestDependencies() {
     return delegate.getBooleanValue(SECTION, "suggest_dependencies", false);
   }
+
+  /**
+   * Enables a special validation mode that generates ABIs both from source and from class files
+   * and diffs them. This is a test hook for use during development of the source ABI feature.
+   */
+  public boolean shouldValidateAbisGeneratedFromSource() {
+    return delegate.getBooleanValue(SECTION, "validate_abis_from_source", false);
+  }
 }
