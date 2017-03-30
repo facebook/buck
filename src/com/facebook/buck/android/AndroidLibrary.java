@@ -22,6 +22,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
@@ -35,12 +36,15 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 
 public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackageable {
@@ -57,13 +61,17 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   public static Builder builder(
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      CompileToJarStepFactory compileStepFactory,
-      JavacOptions javacOptions) {
+      JavaBuckConfig javaBuckConfig,
+      JavacOptions javacOptions,
+      AndroidLibraryDescription.Arg args,
+      AndroidLibraryCompilerFactory compilerFactory) {
     return new Builder(
         params,
         buildRuleResolver,
-        compileStepFactory,
-        javacOptions);
+        javaBuckConfig,
+        javacOptions,
+        args,
+        compilerFactory);
   }
 
   @VisibleForTesting
@@ -121,21 +129,31 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   }
 
   public static class Builder extends DefaultJavaLibraryBuilder {
-    private final JavacOptions javacOptions;
+    private final AndroidLibraryDescription.Arg args;
+    private final AndroidLibraryCompilerFactory compilerFactory;
+
+    private AndroidLibraryDescription.JvmLanguage language =
+        AndroidLibraryDescription.JvmLanguage.JAVA;
 
     protected Builder(
         BuildRuleParams params,
         BuildRuleResolver buildRuleResolver,
-        CompileToJarStepFactory compileStepFactory,
-        JavacOptions javacOptions) {
-      super(params, buildRuleResolver, compileStepFactory);
-      this.javacOptions = javacOptions;
+        JavaBuckConfig javaBuckConfig,
+        JavacOptions javacOptions,
+        AndroidLibraryDescription.Arg args,
+        AndroidLibraryCompilerFactory compilerFactory) {
+      super(params, buildRuleResolver, javaBuckConfig);
+      this.args = args;
+      this.compilerFactory = compilerFactory;
+      setJavacOptions(javacOptions);
+      setArgs(args);
     }
 
     @Override
-    protected DefaultJavaLibraryBuilder setArgs(JavaLibraryDescription.Arg args) {
+    public DefaultJavaLibraryBuilder setArgs(JavaLibraryDescription.Arg args) {
       super.setArgs(args);
       AndroidLibraryDescription.Arg androidArgs = (AndroidLibraryDescription.Arg) args;
+      language = androidArgs.language.orElse(AndroidLibraryDescription.JvmLanguage.JAVA);
       return setManifestFile(androidArgs.manifest);
     }
 
@@ -145,6 +163,9 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     }
 
     protected class BuilderHelper extends DefaultJavaLibraryBuilder.BuilderHelper {
+      @Nullable
+      private AndroidLibraryCompiler androidCompiler;
+
       @Override
       protected DefaultJavaLibrary build() throws NoSuchBuildTargetException {
         return new AndroidLibrary(
@@ -159,14 +180,28 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
             providedDeps,
             getCompileTimeClasspathDeps(),
             getAbiInputs(),
-            javacOptions,
-            trackClassUsage,
-            compileStepFactory,
+            Preconditions.checkNotNull(javacOptions),
+            getAndroidCompiler().trackClassUsage(Preconditions.checkNotNull(javacOptions)),
+            getCompileStepFactory(),
             suggestDependencies,
             resourcesRoot,
             mavenCoords,
             manifestFile,
             tests);
+      }
+
+      @Override
+      protected CompileToJarStepFactory buildCompileStepFactory() {
+        return getAndroidCompiler()
+            .compileToJar(args, Preconditions.checkNotNull(javacOptions), buildRuleResolver);
+      }
+
+      protected AndroidLibraryCompiler getAndroidCompiler() {
+        if (androidCompiler == null) {
+          androidCompiler = compilerFactory.getCompiler(language);
+        }
+
+        return androidCompiler;
       }
     }
   }

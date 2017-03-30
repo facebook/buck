@@ -20,27 +20,52 @@ import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+
 
 public class ScalaLibraryBuilder extends DefaultJavaLibraryBuilder {
+  private final ScalaBuckConfig scalaBuckConfig;
+  private ImmutableList<String> extraArguments = ImmutableList.of();
+
   ScalaLibraryBuilder(
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      CompileToJarStepFactory compileStepFactory) {
-    super(params, buildRuleResolver, compileStepFactory);
+      ScalaBuckConfig scalaBuckConfig) {
+    super(params, buildRuleResolver);
+    this.scalaBuckConfig = scalaBuckConfig;
+    setSuggestDependencies(scalaBuckConfig.shouldSuggestDependencies());
   }
 
-  public ScalaLibraryBuilder setConfigAndArgs(
-      ScalaBuckConfig config,
-      ScalaLibraryDescription.Arg args) {
-    setSuggestDependencies(config.shouldSuggestDependencies());
-
-    setSrcs(args.srcs)
+  public ScalaLibraryBuilder setArgs(ScalaLibraryDescription.Arg args) {
+    this.setSrcs(args.srcs)
         .setResources(args.resources)
         .setResourcesRoot(args.resourcesRoot)
         .setProvidedDeps(args.providedDeps)
         .setManifestFile(args.manifestFile)
         .setMavenCoords(args.mavenCoords);
+    extraArguments = args.extraArguments;
 
     return this;
+  }
+
+  @Override
+  protected BuilderHelper newHelper() {
+    return new BuilderHelper();
+  }
+
+  protected class BuilderHelper extends DefaultJavaLibraryBuilder.BuilderHelper {
+    @Override
+    protected CompileToJarStepFactory buildCompileStepFactory() {
+      ScalaBuckConfig scalaBuckConfig =
+          Preconditions.checkNotNull(ScalaLibraryBuilder.this.scalaBuckConfig);
+
+      return new ScalacToJarStepFactory(
+          scalaBuckConfig.getScalac(buildRuleResolver),
+          buildRuleResolver.getRule(scalaBuckConfig.getScalaLibraryTarget()),
+          scalaBuckConfig.getCompilerFlags(),
+          extraArguments,
+          buildRuleResolver.getAllRules(scalaBuckConfig.getCompilerPlugins()));
+    }
   }
 }

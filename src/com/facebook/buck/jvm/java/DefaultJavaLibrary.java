@@ -144,11 +144,8 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   public static DefaultJavaLibraryBuilder builder(
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      CompileToJarStepFactory compileStepFactory) {
-    return new DefaultJavaLibraryBuilder(
-        params,
-        buildRuleResolver,
-        compileStepFactory);
+      JavaBuckConfig javaBuckConfig) {
+    return new DefaultJavaLibraryBuilder(params, buildRuleResolver, javaBuckConfig);
   }
 
   @Override

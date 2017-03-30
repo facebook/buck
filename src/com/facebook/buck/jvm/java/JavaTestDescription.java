@@ -116,22 +116,15 @@ public class JavaTestDescription implements
         cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
 
-    Javac javac = JavacFactory.create(ruleFinder, javaBuckConfig, args);
-    JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
-        javac,
-        javacOptions,
-        JavacOptionsAmender.IDENTITY);
-    BuildRuleParams testsLibraryParams = compileStepFactory.addInputs(params, ruleFinder)
+    BuildRuleParams testsLibraryParams = params
         .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     JavaLibrary testsLibrary =
         resolver.addToIndex(
             DefaultJavaLibrary
-                .builder(
-                    testsLibraryParams,
-                    resolver,
-                    compileStepFactory)
-                .setConfigAndArgs(javaBuckConfig, args)
+                .builder(testsLibraryParams, resolver, javaBuckConfig)
+                .setArgs(args)
+                .setJavacOptions(javacOptions)
                 .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
                 .setTrackClassUsage(javacOptions.trackClassUsage())
                 .build());

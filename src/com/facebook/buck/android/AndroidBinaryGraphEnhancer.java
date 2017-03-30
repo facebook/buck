@@ -25,11 +25,10 @@ import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.jvm.java.JavacOptionsAmender;
-import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -94,6 +93,7 @@ public class AndroidBinaryGraphEnhancer {
   private final DexSplitMode dexSplitMode;
   private final ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex;
   private final ImmutableSet<BuildTarget> resourcesToExclude;
+  private final JavaBuckConfig javaBuckConfig;
   private final Javac javac;
   private final JavacOptions javacOptions;
   private final boolean suggestDependencies;
@@ -127,6 +127,7 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableSet<BuildTarget> resourcesToExclude,
       boolean skipCrunchPngs,
       boolean includesVectorDrawables,
+      JavaBuckConfig javaBuckConfig,
       Javac javac,
       JavacOptions javacOptions,
       boolean suggestDependencies,
@@ -157,6 +158,7 @@ public class AndroidBinaryGraphEnhancer {
     this.dexSplitMode = dexSplitMode;
     this.buildTargetsToExcludeFromDex = buildTargetsToExcludeFromDex;
     this.resourcesToExclude = resourcesToExclude;
+    this.javaBuckConfig = javaBuckConfig;
     this.javac = javac;
     this.javacOptions = javacOptions;
     this.suggestDependencies = suggestDependencies;
@@ -244,15 +246,12 @@ public class AndroidBinaryGraphEnhancer {
           .copyReplacingDeclaredAndExtraDeps(
               Suppliers.ofInstance(ImmutableSortedSet.of(generateCodeForMergedLibraryMap)),
               Suppliers.ofInstance(ImmutableSortedSet.of()));
-      JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
-          javac,
+      DefaultJavaLibrary compileMergedNativeLibMapGenCode = DefaultJavaLibrary
+          .builder(paramsForCompileGenCode, ruleResolver, javaBuckConfig)
           // Kind of a hack: override language level to 7 to allow string switch.
           // This can be removed once no one who uses this feature sets the level
           // to 6 in their .buckconfig.
-          javacOptions.withSourceLevel("7").withTargetLevel("7"),
-          JavacOptionsAmender.IDENTITY);
-      DefaultJavaLibrary compileMergedNativeLibMapGenCode = DefaultJavaLibrary
-          .builder(paramsForCompileGenCode, ruleResolver, compileStepFactory)
+          .setJavacOptions(javacOptions.withSourceLevel("7").withTargetLevel("7"))
           .setSrcs(ImmutableSortedSet.of(generateCodeForMergedLibraryMap.getSourcePathToOutput()))
           .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
           .build();
@@ -323,15 +322,9 @@ public class AndroidBinaryGraphEnhancer {
         .copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(trimUberRDotJava)),
             Suppliers.ofInstance(ImmutableSortedSet.of()));
-    JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
-        javac,
-        javacOptions.withSourceLevel("7").withTargetLevel("7"),
-        JavacOptionsAmender.IDENTITY);
     JavaLibrary compileUberRDotJava = DefaultJavaLibrary
-        .builder(
-            paramsForCompileUberRDotJava,
-            ruleResolver,
-            compileStepFactory)
+        .builder(paramsForCompileUberRDotJava, ruleResolver, javaBuckConfig)
+        .setJavacOptions(javacOptions.withSourceLevel("7").withTargetLevel("7"))
         .setSrcs(ImmutableSortedSet.of(trimUberRDotJava.getSourcePathToOutput()))
         .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
         .build();

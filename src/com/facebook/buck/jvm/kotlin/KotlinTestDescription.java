@@ -91,22 +91,15 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
-    KotlincToJarStepFactory stepFactory = new KotlincToJarStepFactory(
-        kotlinBuckConfig.getKotlinCompiler().get(),
-        args.extraKotlincArguments);
-
-    BuildRuleParams testsLibraryParams = stepFactory.addInputs(params, ruleFinder)
-         .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+    BuildRuleParams testsLibraryParams = params
+        .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     JavaLibrary testsLibrary =
         resolver.addToIndex(
-            new DefaultKotlinLibraryBuilder(
-                testsLibraryParams,
-                resolver,
-                stepFactory)
-            .setConfigAndArgs(kotlinBuckConfig, args)
-            .setGeneratedSourceFolder(templateJavacOptions.getGeneratedSourceFolderName())
-            .build());
+            new DefaultKotlinLibraryBuilder(testsLibraryParams, resolver, kotlinBuckConfig)
+                .setArgs(args)
+                .setGeneratedSourceFolder(templateJavacOptions.getGeneratedSourceFolderName())
+                .build());
 
     return new KotlinTest(
         params.copyReplacingDeclaredAndExtraDeps(

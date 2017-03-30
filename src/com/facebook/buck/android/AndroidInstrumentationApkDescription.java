@@ -144,6 +144,7 @@ public class AndroidInstrumentationApkDescription
         resourcesToExclude,
         /* skipCrunchPngs */ false,
         args.includesVectorDrawables.orElse(false),
+        javaBuckConfig,
         JavacFactory.create(ruleFinder, javaBuckConfig, null),
         javacOptions,
         javaBuckConfig.shouldSuggestDependencies(),

@@ -24,11 +24,9 @@ import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
-import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
-import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -144,23 +142,16 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
 
-    Javac javac = JavacFactory.create(ruleFinder, javaBuckConfig, args);
-    JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
-        javac,
-        javacOptions,
-        new BootClasspathAppender());
-    // Rewrite dependencies on tests to actually depend on the code which backs the test.
-    BuildRuleParams testsLibraryParams = compileStepFactory.addInputs(params, ruleFinder)
+    BuildRuleParams testsLibraryParams = params
         .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     JavaLibrary testsLibrary =
         resolver.addToIndex(
             DefaultJavaLibrary
-                .builder(
-                    testsLibraryParams,
-                    resolver,
-                    compileStepFactory)
-                .setConfigAndArgs(javaBuckConfig, args)
+                .builder(testsLibraryParams, resolver, javaBuckConfig)
+                .setArgs(args)
+                .setJavacOptions(javacOptions)
+                .setJavacOptionsAmender(new BootClasspathAppender())
                 .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
                 .setTrackClassUsage(javacOptions.trackClassUsage())
                 .build());

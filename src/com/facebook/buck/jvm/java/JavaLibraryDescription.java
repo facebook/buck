@@ -177,19 +177,11 @@ public class JavaLibraryDescription implements
         resolver,
         args);
 
-    Javac javac = JavacFactory.create(ruleFinder, javaBuckConfig, args);
-    JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
-        javac,
-        javacOptions,
-        JavacOptionsAmender.IDENTITY);
-    BuildRuleParams javaLibraryParams = compileStepFactory.addInputs(params, ruleFinder);
     DefaultJavaLibrary defaultJavaLibrary =
         DefaultJavaLibrary
-            .builder(
-                javaLibraryParams,
-                resolver,
-                compileStepFactory)
-            .setConfigAndArgs(javaBuckConfig, args)
+            .builder(params, resolver, javaBuckConfig)
+            .setArgs(args)
+            .setJavacOptions(javacOptions)
             .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
             .setTrackClassUsage(javacOptions.trackClassUsage())
             .build();
