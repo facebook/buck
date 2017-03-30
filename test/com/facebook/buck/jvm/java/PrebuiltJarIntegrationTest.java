@@ -75,13 +75,14 @@ public class PrebuiltJarIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = BuildTargetFactory.newInstance("//:jar");
+    BuildTarget abiTarget = target.withAppendedFlavors(HasJavaAbi.ABI_FLAVOR);
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
     result.assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally(target.getFullyQualifiedName());
 
-    result = workspace.runBuckBuild("//:jar");
+    result = workspace.runBuckBuild("//:depends_on_jar");
     result.assertSuccess();
     buildLog = workspace.getBuildLog();
     buildLog.assertTargetHadMatchingRuleKey(target.getFullyQualifiedName());
@@ -89,11 +90,9 @@ public class PrebuiltJarIntegrationTest {
     // We expect the binary jar to have a different hash to the stub jar.
     Path binaryJar = workspace.getPath("junit.jar");
     HashCode originalHash = MorePaths.asByteSource(binaryJar).hash(Hashing.sha1());
-    Path expectedOut =
-        BuildTargets.getGenPath(
-            new ProjectFilesystem(workspace.getDestPath()),
-            target,
-            "%s-abi.jar");
+    Path expectedOut = BuildTargets.getGenPath(
+        new ProjectFilesystem(workspace.getDestPath()), abiTarget, "%s")
+        .resolve(String.format("%s-abi.jar", abiTarget.getShortName()));
     Path abiJar = workspace.getPath(expectedOut.toString());
     HashCode abiHash = MorePaths.asByteSource(abiJar).hash(Hashing.sha1());
 

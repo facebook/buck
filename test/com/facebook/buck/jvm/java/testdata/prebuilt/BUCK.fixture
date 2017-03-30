@@ -1,3 +1,8 @@
+java_library(
+  name = 'depends_on_jar',
+  deps = [ ':jar' ],
+)
+
 prebuilt_jar(
   name = 'jar',
   binary_jar = 'junit.jar',
