@@ -351,7 +351,7 @@ public final class CxxInferEnhancer {
       HeaderSymlinkTree headerSymlinkTree,
       ImmutableList<String> includeDirs,
       Optional<SymlinkTree> sandboxTree) throws NoSuchBuildTargetException {
-    ImmutableSet<BuildRule> deps = args.getAllCxxDeps().get(resolver, cxxPlatform);
+    ImmutableSet<BuildRule> deps = args.getCxxDeps().get(resolver, cxxPlatform);
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
         params,
         cxxPlatform,

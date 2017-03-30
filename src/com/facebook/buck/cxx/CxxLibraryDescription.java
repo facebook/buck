@@ -764,7 +764,7 @@ public class CxxLibraryDescription implements
     Optional<CxxPlatform> platform = cxxPlatforms.getValue(buildTarget);
     CxxDeps cxxDeps =
         CxxDeps.builder()
-            .addDeps(args.getAllCxxDeps())
+            .addDeps(args.getCxxDeps())
             .addDeps(extraDeps)
             .build();
 
@@ -955,7 +955,7 @@ public class CxxLibraryDescription implements
     return new CxxLibrary(
         metadataRuleParams,
         resolver,
-        args.getCxxDeps(),
+        args.getPrivateCxxDeps(),
         args.getExportedCxxDeps(),
         hasExportedHeaders,
         Predicates.not(hasObjects),
@@ -1231,6 +1231,9 @@ public class CxxLibraryDescription implements
     public Optional<SourcePath> bridgingHeader;
     public Optional<String> moduleName;
 
+    /**
+     * @return C/C++ deps which are propagated to dependents.
+     */
     CxxDeps getExportedCxxDeps() {
       return CxxDeps.builder()
           .addDeps(exportedDeps)
@@ -1238,8 +1241,23 @@ public class CxxLibraryDescription implements
           .build();
     }
 
-    CxxDeps getAllCxxDeps() {
-      return CxxDeps.concat(getCxxDeps(), getExportedCxxDeps());
+    /**
+     * @return C/C++ deps which are *not* propagated to dependents.
+     */
+    CxxDeps getPrivateCxxDeps() {
+      return super.getCxxDeps();
+    }
+
+    /**
+     * Override parent class's deps to include exported deps.
+     *
+     * @return the C/C++ deps this rule builds against.
+     */
+    @Override
+    public CxxDeps getCxxDeps() {
+      return CxxDeps.concat(
+          getPrivateCxxDeps(),
+          getExportedCxxDeps());
     }
 
   }

@@ -93,6 +93,9 @@ public class CxxConstructorArg extends AbstractDescriptionArg
     return libraries;
   }
 
+  /**
+   * @return the C/C++ deps this rule builds against.
+   */
   public CxxDeps getCxxDeps() {
     return CxxDeps.builder()
         .addDeps(deps)
