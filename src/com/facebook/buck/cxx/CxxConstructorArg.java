@@ -62,6 +62,8 @@ public class CxxConstructorArg extends AbstractDescriptionArg
   public ImmutableSortedSet<FrameworkPath> frameworks = ImmutableSortedSet.of();
   public ImmutableSortedSet<FrameworkPath> libraries = ImmutableSortedSet.of();
   public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+  public PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps =
+      PatternMatchedCollection.of();
   public Optional<String> headerNamespace;
   public Optional<Linker.CxxRuntimeType> cxxRuntimeType;
   public ImmutableList<String> includeDirs = ImmutableList.of();
@@ -94,6 +96,7 @@ public class CxxConstructorArg extends AbstractDescriptionArg
   public CxxDeps getCxxDeps() {
     return CxxDeps.builder()
         .addDeps(deps)
+        .addPlatformDeps(platformDeps)
         .addDep(precompiledHeader)
         .build();
   }

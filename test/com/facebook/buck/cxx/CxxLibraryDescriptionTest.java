@@ -1491,6 +1491,39 @@ public class CxxLibraryDescriptionTest {
     verifySourcePaths(ruleResolver);
   }
 
+  @Test
+  public void platformDeps() throws Exception {
+    CxxLibraryBuilder depABuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep_a"), cxxBuckConfig);
+    CxxLibraryBuilder depBBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep_b"), cxxBuckConfig);
+    CxxLibraryBuilder cxxLibraryBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"), cxxBuckConfig)
+            .setExportedPlatformDeps(
+                PatternMatchedCollection.<ImmutableSortedSet<BuildTarget>>builder()
+                    .add(
+                        Pattern.compile(CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor().toString()),
+                        ImmutableSortedSet.of(depABuilder.getTarget()))
+                    .add(Pattern.compile("other"), ImmutableSortedSet.of(depBBuilder.getTarget()))
+                    .build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(
+                depABuilder.build(),
+                depBBuilder.build(),
+                cxxLibraryBuilder.build()),
+            new DefaultTargetNodeToBuildRuleTransformer());
+    resolver.requireRule(depABuilder.getTarget());
+    resolver.requireRule(depBBuilder.getTarget());
+    CxxLibrary rule = (CxxLibrary) resolver.requireRule(cxxLibraryBuilder.getTarget());
+    assertThat(
+        rule.getNativeLinkableExportedDepsForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM),
+        Matchers.contains(resolver.requireRule(depABuilder.getTarget())));
+    assertThat(
+        rule.getCxxPreprocessorDeps(CxxPlatformUtils.DEFAULT_PLATFORM),
+        Matchers.contains(resolver.requireRule(depABuilder.getTarget())));
+  }
+
   /**
    * Verify that all source paths are resolvable, which wouldn't be the case if `cxx_genrule`
    * outputs were not handled correctly.

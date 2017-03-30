@@ -800,7 +800,7 @@ public class CxxDescriptionEnhancer {
     // Build the binary deps.
     ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
     // Add original declared and extra deps.
-    args.getCxxDeps().get(resolver).forEach(depsBuilder::add);
+    args.getCxxDeps().get(resolver, cxxPlatform).forEach(depsBuilder::add);
     // Add in deps found via deps query.
     args.depsQuery.ifPresent(
         query ->

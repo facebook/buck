@@ -21,17 +21,21 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import org.immutables.value.Value;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * The group of {@link BuildTarget}s from C/C++ constructor args which comprise a C/C++
@@ -42,25 +46,39 @@ import java.util.Optional;
 @BuckStyleTuple
 abstract class AbstractCxxDeps {
 
-  public static final CxxDeps EMPTY = CxxDeps.of(ImmutableList.of());
+  public static final CxxDeps EMPTY = CxxDeps.of(ImmutableList.of(), ImmutableList.of());
 
   abstract ImmutableList<BuildTarget> getDeps();
+  abstract ImmutableList<PatternMatchedCollection<ImmutableSortedSet<BuildTarget>>>
+      getPlatformDeps();
 
-  public ImmutableSet<BuildRule> get(BuildRuleResolver resolver) {
-    ImmutableSet.Builder<BuildRule> deps = ImmutableSet.builder();
-    for (BuildTarget target : getDeps()) {
-      deps.add(resolver.getRule(target));
-    }
-    return deps.build();
+  private Stream<BuildTarget> getSpecificPlatformDeps(CxxPlatform cxxPlatform) {
+    return getPlatformDeps().stream()
+        .flatMap(
+            p ->
+                p.getMatchingValues(cxxPlatform.getFlavor().toString())
+                    .stream().flatMap(Collection::stream));
   }
 
-  public static Builder builder() {
-    return new Builder();
+  private Stream<BuildTarget> getAllPlatformDeps() {
+    return getPlatformDeps().stream()
+        .flatMap(p -> p.getValues().stream().flatMap(Collection::stream));
   }
 
-  public static Builder builder(CxxDeps deps) {
-    return new Builder()
-        .addDeps(deps);
+  public ImmutableSet<BuildRule> getForAllPlatforms(BuildRuleResolver resolver) {
+    return RichStream.<BuildTarget>empty()
+        .concat(getDeps().stream())
+        .concat(getAllPlatformDeps())
+        .map(resolver::getRule)
+        .toImmutableSet();
+  }
+
+  public ImmutableSet<BuildRule> get(BuildRuleResolver resolver, CxxPlatform cxxPlatform) {
+    return RichStream.<BuildTarget>empty()
+        .concat(getDeps().stream())
+        .concat(getSpecificPlatformDeps(cxxPlatform))
+        .map(resolver::getRule)
+        .toImmutableSet();
   }
 
   public static CxxDeps concat(Iterable<CxxDeps> cxxDeps) {
@@ -74,9 +92,20 @@ abstract class AbstractCxxDeps {
     return concat(ImmutableList.copyOf(cxxDeps));
   }
 
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static Builder builder(CxxDeps deps) {
+    return new Builder()
+        .addDeps(deps);
+  }
+
   public static class Builder {
 
     private final List<BuildTarget> deps = new ArrayList<>();
+    private final List<PatternMatchedCollection<ImmutableSortedSet<BuildTarget>>> platformDeps =
+        new ArrayList<>();
 
     private Builder() {}
 
@@ -102,13 +131,20 @@ abstract class AbstractCxxDeps {
       return this;
     }
 
+    public Builder addPlatformDeps(
+        PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> targets) {
+      platformDeps.add(targets);
+      return this;
+    }
+
     public Builder addDeps(CxxDeps cxxDeps) {
       deps.addAll(cxxDeps.getDeps());
+      platformDeps.addAll(cxxDeps.getPlatformDeps());
       return this;
     }
 
     public CxxDeps build() {
-      return CxxDeps.of(deps);
+      return CxxDeps.of(deps, platformDeps);
     }
 
   }

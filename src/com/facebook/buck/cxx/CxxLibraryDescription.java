@@ -786,7 +786,7 @@ public class CxxLibraryDescription implements
               cxxPlatform,
               CxxSourceRuleFactory.PicType.PIC,
               args,
-              cxxDeps.get(resolver));
+              cxxDeps.get(resolver, cxxPlatform));
       return CxxCompilationDatabase.createCompilationDatabase(params, objects.keySet());
     } else if (params.getBuildTarget().getFlavors()
         .contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
@@ -879,7 +879,7 @@ public class CxxLibraryDescription implements
               cxxBuckConfig,
               platform.get(),
               args,
-              cxxDeps.get(resolver),
+              cxxDeps.get(resolver, platform.get()),
               Linker.LinkType.SHARED,
               linkableDepType.orElse(Linker.LinkableDepType.SHARED),
               Optional.empty(),
@@ -897,7 +897,7 @@ public class CxxLibraryDescription implements
               cxxBuckConfig,
               platform.get(),
               args,
-              cxxDeps.get(resolver),
+              cxxDeps.get(resolver, platform.get()),
               Linker.LinkType.MACH_O_BUNDLE,
               linkableDepType.orElse(Linker.LinkableDepType.SHARED),
               bundleLoader,
@@ -909,7 +909,7 @@ public class CxxLibraryDescription implements
               cxxBuckConfig,
               platform.get(),
               args,
-              cxxDeps.get(resolver),
+              cxxDeps.get(resolver, platform.get()),
               CxxSourceRuleFactory.PicType.PDC);
         case STATIC_PIC:
           return createStaticLibraryBuildRule(
@@ -918,7 +918,7 @@ public class CxxLibraryDescription implements
               cxxBuckConfig,
               platform.get(),
               args,
-              cxxDeps.get(resolver),
+              cxxDeps.get(resolver, platform.get()),
               CxxSourceRuleFactory.PicType.PIC);
         case SANDBOX_TREE:
           return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
@@ -983,7 +983,7 @@ public class CxxLibraryDescription implements
                 cxxBuckConfig,
                 cxxPlatform,
                 args,
-                cxxDeps.get(resolver),
+                cxxDeps.get(resolver, cxxPlatform),
                 CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
                     args.linkerFlags,
                     args.platformLinkerFlags,
@@ -1234,6 +1234,7 @@ public class CxxLibraryDescription implements
     CxxDeps getExportedCxxDeps() {
       return CxxDeps.builder()
           .addDeps(exportedDeps)
+          .addPlatformDeps(exportedPlatformDeps)
           .build();
     }
 

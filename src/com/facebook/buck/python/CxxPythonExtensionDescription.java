@@ -56,7 +56,6 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.VersionPropagator;
@@ -67,7 +66,6 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
@@ -251,12 +249,13 @@ public class CxxPythonExtensionDescription implements
   private ImmutableSet<BuildRule> getPlatformDeps(
       BuildRuleResolver ruleResolver,
       PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform,
       Arg args) {
 
     ImmutableSet.Builder<BuildRule> rules = ImmutableSet.builder();
 
     // Add declared deps.
-    rules.addAll(args.getCxxDeps().get(ruleResolver));
+    rules.addAll(args.getCxxDeps().get(ruleResolver, cxxPlatform));
 
     // Add platform specific deps.
     rules.addAll(
@@ -292,7 +291,7 @@ public class CxxPythonExtensionDescription implements
             moduleName,
             pythonPlatform.getFlavor(),
             cxxPlatform.getFlavor());
-    ImmutableSet<BuildRule> deps = getPlatformDeps(ruleResolver, pythonPlatform, args);
+    ImmutableSet<BuildRule> deps = getPlatformDeps(ruleResolver, pythonPlatform, cxxPlatform, args);
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
@@ -429,7 +428,7 @@ public class CxxPythonExtensionDescription implements
           @Override
           public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
               CxxPlatform cxxPlatform) {
-            return RichStream.from(getPlatformDeps(ruleResolver, pythonPlatform, args))
+            return RichStream.from(getPlatformDeps(ruleResolver, pythonPlatform, cxxPlatform, args))
                 .filter(NativeLinkable.class)
                 .toImmutableList();
           }
@@ -450,7 +449,7 @@ public class CxxPythonExtensionDescription implements
                         cellRoots,
                         cxxPlatform,
                         args,
-                        getPlatformDeps(ruleResolver, pythonPlatform, args)))
+                        getPlatformDeps(ruleResolver, pythonPlatform, cxxPlatform, args)))
                 .addAllFrameworks(args.frameworks)
                 .build();
           }
@@ -488,8 +487,6 @@ public class CxxPythonExtensionDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg extends CxxConstructorArg {
-    public PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps =
-        PatternMatchedCollection.of();
     public Optional<String> baseModule;
     public Optional<String> moduleName;
   }

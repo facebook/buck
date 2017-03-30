@@ -196,7 +196,7 @@ public final class CxxInferEnhancer {
         sourceFilter,
         args);
 
-    ImmutableSet<BuildRule> deps = args.getCxxDeps().get(resolver);
+    ImmutableSet<BuildRule> deps = args.getCxxDeps().get(resolver, cxxPlatform);
 
     // Build all the transitive dependencies build rules with the Infer's flavor
     ImmutableSet<T> transitiveDepsLibraryRules = requireTransitiveDependentLibraries(
@@ -321,7 +321,7 @@ public final class CxxInferEnhancer {
       CxxBinaryDescription.Arg args,
       HeaderSymlinkTree headerSymlinkTree,
       Optional<SymlinkTree> sandboxTree) throws NoSuchBuildTargetException {
-    ImmutableSet<BuildRule> deps = args.getCxxDeps().get(resolver);
+    ImmutableSet<BuildRule> deps = args.getCxxDeps().get(resolver, cxxPlatform);
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
         params,
         cxxPlatform,
@@ -351,7 +351,7 @@ public final class CxxInferEnhancer {
       HeaderSymlinkTree headerSymlinkTree,
       ImmutableList<String> includeDirs,
       Optional<SymlinkTree> sandboxTree) throws NoSuchBuildTargetException {
-    ImmutableSet<BuildRule> deps = args.getAllCxxDeps().get(resolver);
+    ImmutableSet<BuildRule> deps = args.getAllCxxDeps().get(resolver, cxxPlatform);
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
         params,
         cxxPlatform,

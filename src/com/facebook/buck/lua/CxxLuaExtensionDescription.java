@@ -154,7 +154,7 @@ public class CxxLuaExtensionDescription implements
               ruleResolver,
               cxxPlatform);
     }
-    ImmutableSet<BuildRule> deps = args.getCxxDeps().get(ruleResolver);
+    ImmutableSet<BuildRule> deps = args.getCxxDeps().get(ruleResolver, cxxPlatform);
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput =
         ImmutableList.<CxxPreprocessorInput>builder()
             .add(
@@ -253,7 +253,7 @@ public class CxxLuaExtensionDescription implements
         Optional.of(extensionName),
         extensionPath,
         Linker.LinkableDepType.SHARED,
-        RichStream.from(args.getCxxDeps().get(ruleResolver))
+        RichStream.from(args.getCxxDeps().get(ruleResolver, cxxPlatform))
             .filter(NativeLinkable.class)
             .concat(Stream.of(luaConfig.getLuaCxxLibrary(ruleResolver)))
             .toImmutableList(),
@@ -330,7 +330,7 @@ public class CxxLuaExtensionDescription implements
       @Override
       public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
           CxxPlatform cxxPlatform) {
-        return RichStream.from(args.getCxxDeps().get(resolver))
+        return RichStream.from(args.getCxxDeps().get(resolver, cxxPlatform))
             .filter(NativeLinkable.class)
             .toImmutableList();
       }

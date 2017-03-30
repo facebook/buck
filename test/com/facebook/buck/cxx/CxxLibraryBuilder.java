@@ -137,6 +137,18 @@ public class CxxLibraryBuilder extends AbstractCxxSourceBuilder<
     return this;
   }
 
+  public CxxLibraryBuilder setPlatformDeps(
+      PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps) {
+    arg.platformDeps = platformDeps;
+    return this;
+  }
+
+  public CxxLibraryBuilder setExportedPlatformDeps(
+      PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> exportedPlatformDeps) {
+    arg.exportedPlatformDeps = exportedPlatformDeps;
+    return this;
+  }
+
   @Override
   protected CxxLibraryBuilder getThis() {
     return this;

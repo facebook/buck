@@ -138,7 +138,11 @@ public class CxxLibrary
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
-    return RichStream.from(Iterables.concat(deps.get(ruleResolver), exportedDeps.get(ruleResolver)))
+    return RichStream
+        .from(
+            Iterables.concat(
+                deps.get(ruleResolver, cxxPlatform),
+                exportedDeps.get(ruleResolver, cxxPlatform)))
         .filter(CxxPreprocessorDep.class)
         .toImmutableList();
   }
@@ -183,17 +187,22 @@ public class CxxLibrary
     if (!propagateLinkables) {
       return ImmutableList.of();
     }
-    return RichStream.from(deps.get(ruleResolver))
+    return RichStream.from(deps.getForAllPlatforms(ruleResolver))
         .filter(NativeLinkable.class)
         .toImmutableList();
   }
 
   @Override
   public Iterable<NativeLinkable> getNativeLinkableDepsForPlatform(CxxPlatform cxxPlatform) {
+    if (!propagateLinkables) {
+      return ImmutableList.of();
+    }
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
-    return getNativeLinkableDeps();
+    return RichStream.from(deps.get(ruleResolver, cxxPlatform))
+        .filter(NativeLinkable.class)
+        .toImmutableList();
   }
 
   @Override
@@ -201,7 +210,7 @@ public class CxxLibrary
     if (!propagateLinkables) {
       return ImmutableList.of();
     }
-    return RichStream.from(exportedDeps.get(ruleResolver))
+    return RichStream.from(exportedDeps.getForAllPlatforms(ruleResolver))
         .filter(NativeLinkable.class)
         .toImmutableList();
   }
@@ -209,10 +218,15 @@ public class CxxLibrary
   @Override
   public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
       CxxPlatform cxxPlatform) {
+    if (!propagateLinkables) {
+      return ImmutableList.of();
+    }
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
-    return getNativeLinkableExportedDeps();
+    return RichStream.from(exportedDeps.get(ruleResolver, cxxPlatform))
+        .filter(NativeLinkable.class)
+        .toImmutableList();
   }
 
   private NativeLinkableInput getNativeLinkableInputUncached(
@@ -309,7 +323,11 @@ public class CxxLibrary
   @Override
   public Iterable<AndroidPackageable> getRequiredPackageables() {
     return AndroidPackageableCollector.getPackageableRules(
-        RichStream.from(Iterables.concat(deps.get(ruleResolver), exportedDeps.get(ruleResolver)))
+        RichStream
+            .from(
+                Iterables.concat(
+                    deps.getForAllPlatforms(ruleResolver),
+                    exportedDeps.getForAllPlatforms(ruleResolver)))
             .toImmutableList());
   }
 
@@ -383,7 +401,7 @@ public class CxxLibrary
     // `CxxLibrary` rules themselves are noop meta rules, they shouldn't add any unnecessary
     // overhead.
     return RichStream.from(getDeclaredDeps().stream())
-        .concat(exportedDeps.get(ruleResolver).stream())
+        .concat(exportedDeps.getForAllPlatforms(ruleResolver).stream())
         .map(BuildRule::getBuildTarget);
   }
 
