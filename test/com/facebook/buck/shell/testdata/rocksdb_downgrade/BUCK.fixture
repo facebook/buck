@@ -1,0 +1,5 @@
+genrule(
+    name = "rocksdb_downgrade",
+    out = "rocksdb_downgrade",
+    cmd = "echo $OUT > $OUT",
+)
