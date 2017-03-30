@@ -35,7 +35,6 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
@@ -93,34 +92,24 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
     }
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    Tool scalac = config.getScalac(resolver);
-    ScalacToJarStepFactory compileStepFactory = new ScalacToJarStepFactory(
-        scalac,
-        resolver.getRule(config.getScalaLibraryTarget()),
-        config.getCompilerFlags(),
-        args.extraArguments,
-        ImmutableSet.of());
-    BuildRuleParams params = compileStepFactory.addInputs(rawParams, ruleFinder);
+
 
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
         new JavaTestDescription.CxxLibraryEnhancement(
-            params,
+            rawParams,
             args.useCxxLibraries,
             args.cxxLibraryWhitelist,
             resolver,
             ruleFinder,
             cxxPlatform);
-    params = cxxLibraryEnhancement.updatedParams;
+    BuildRuleParams params = cxxLibraryEnhancement.updatedParams;
+    BuildRuleParams javaLibraryParams =
+        params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
-    BuildRuleParams javaLibraryParams = params
-        .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
     JavaLibrary testsLibrary =
         resolver.addToIndex(
-            new ScalaLibraryBuilder(
-                javaLibraryParams,
-                resolver,
-                compileStepFactory)
-                .setConfigAndArgs(config, args)
+            new ScalaLibraryBuilder(javaLibraryParams, resolver, config)
+                .setArgs(args)
                 .build());
 
     return new JavaTest(

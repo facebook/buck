@@ -18,22 +18,46 @@ package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
+import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+
 
 public class DefaultKotlinLibraryBuilder extends DefaultJavaLibraryBuilder {
+  private final KotlinBuckConfig kotlinBuckConfig;
+  private ImmutableList<String> extraKotlincArguments = ImmutableList.of();
+
   public DefaultKotlinLibraryBuilder(
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      CompileToJarStepFactory compileStepFactory) {
-    super(params, buildRuleResolver, compileStepFactory);
+      KotlinBuckConfig kotlinBuckConfig) {
+    super(params, buildRuleResolver);
+    this.kotlinBuckConfig = kotlinBuckConfig;
+    setSuggestDependencies(kotlinBuckConfig.shouldSuggestDependencies());
   }
 
-  DefaultKotlinLibraryBuilder setConfigAndArgs(
-      KotlinBuckConfig config,
-      KotlinLibraryDescription.Arg args) {
-    setSuggestDependencies(config.shouldSuggestDependencies());
-    setArgs(args);
+  @Override
+  public DefaultKotlinLibraryBuilder setArgs(JavaLibraryDescription.Arg args) {
+    super.setArgs(args);
+
+    KotlinLibraryDescription.Arg kotlinArgs = (KotlinLibraryDescription.Arg) args;
+    extraKotlincArguments = kotlinArgs.extraKotlincArguments;
     return this;
+  }
+
+  @Override
+  protected BuilderHelper newHelper() {
+    return new BuilderHelper();
+  }
+
+  protected class BuilderHelper extends DefaultJavaLibraryBuilder.BuilderHelper {
+    @Override
+    protected CompileToJarStepFactory buildCompileStepFactory() {
+      return new KotlincToJarStepFactory(
+          Preconditions.checkNotNull(kotlinBuckConfig).getKotlinCompiler().get(),
+          extraKotlincArguments);
+    }
   }
 }

@@ -33,7 +33,6 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-import java.util.Optional;
 
 
 public class GroovyLibraryDescription implements Description<GroovyLibraryDescription.Arg> {
@@ -81,16 +80,9 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
           args)
         // groovyc may or may not play nice with generating ABIs from source, so disabling for now
         .withAbiGenerationMode(JavacOptions.AbiGenerationMode.CLASS);
-    GroovycToJarStepFactory compileStepFactory = new GroovycToJarStepFactory(
-        groovyBuckConfig.getGroovyCompiler().get(),
-        Optional.of(args.extraGroovycArguments),
-        javacOptions);
     return
-        new DefaultGroovyLibraryBuilder(
-            params,
-            resolver,
-            compileStepFactory)
-        .setConfigAndArgs(groovyBuckConfig, args)
+        new DefaultGroovyLibraryBuilder(params, resolver, javacOptions, groovyBuckConfig)
+        .setArgs(args)
         .build();
   }
 

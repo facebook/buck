@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 import static org.easymock.EasyMock.createStrictMock;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
@@ -146,6 +147,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* resourcesToExclude */ ImmutableSet.of(),
         /* skipCrunchPngs */ false,
         /* includesVectorDrawables */ false,
+        DEFAULT_JAVA_CONFIG,
         DEFAULT_JAVAC,
         ANDROID_JAVAC_OPTIONS,
         false,
@@ -305,6 +307,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* resourcesToExclude */ ImmutableSet.of(),
         /* skipCrunchPngs */ false,
         /* includesVectorDrawables */ false,
+        DEFAULT_JAVA_CONFIG,
         DEFAULT_JAVAC,
         ANDROID_JAVAC_OPTIONS,
         false,
@@ -454,6 +457,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* resourcesToExclude */ ImmutableSet.of(),
         /* skipCrunchPngs */ false,
         /* includesVectorDrawables */ false,
+        DEFAULT_JAVA_CONFIG,
         DEFAULT_JAVAC,
         ANDROID_JAVAC_OPTIONS,
         false,
@@ -518,6 +522,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* resourcesToExclude */ ImmutableSet.of(),
         /* skipCrunchPngs */ false,
         /* includesVectorDrawables */ false,
+        DEFAULT_JAVA_CONFIG,
         DEFAULT_JAVAC,
         ANDROID_JAVAC_OPTIONS,
         false,
@@ -609,6 +614,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* resourcesToExclude */ ImmutableSet.of(),
         /* skipCrunchPngs */ false,
         /* includesVectorDrawables */ false,
+        DEFAULT_JAVA_CONFIG,
         DEFAULT_JAVAC,
         ANDROID_JAVAC_OPTIONS,
         false,

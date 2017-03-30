@@ -98,10 +98,6 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
         )
         // groovyc may or may not play nice with generating ABIs from source, so disabling for now
         .withAbiGenerationMode(JavacOptions.AbiGenerationMode.CLASS);
-    GroovycToJarStepFactory stepFactory = new GroovycToJarStepFactory(
-        groovyBuckConfig.getGroovyCompiler().get(),
-        Optional.of(args.extraGroovycArguments),
-        javacOptions);
 
     BuildRuleParams testsLibraryParams =
         params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
@@ -110,8 +106,9 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
             new DefaultGroovyLibraryBuilder(
                 testsLibraryParams,
                 resolver,
-                stepFactory)
-                .setConfigAndArgs(groovyBuckConfig, args)
+                javacOptions,
+                groovyBuckConfig)
+                .setArgs(args)
                 .setGeneratedSourceFolder(defaultJavacOptions.getGeneratedSourceFolderName())
                 .build());
 

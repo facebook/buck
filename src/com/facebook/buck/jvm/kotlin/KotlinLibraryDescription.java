@@ -117,15 +117,9 @@ public class KotlinLibraryDescription implements
       }
     }
 
-    KotlincToJarStepFactory compileStepFactory = new KotlincToJarStepFactory(
-        kotlinBuckConfig.getKotlinCompiler().get(),
-        args.extraKotlincArguments);
     DefaultJavaLibrary defaultKotlinLibrary =
-        new DefaultKotlinLibraryBuilder(
-            params,
-            resolver,
-            compileStepFactory)
-            .setConfigAndArgs(kotlinBuckConfig, args)
+        new DefaultKotlinLibraryBuilder(params, resolver, kotlinBuckConfig)
+            .setArgs(args)
             .build();
 
     if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {

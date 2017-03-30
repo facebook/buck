@@ -31,7 +31,6 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
@@ -75,20 +74,8 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
           Preconditions.checkNotNull(libraryRule.getSourcePathToOutput()));
     }
 
-    Tool scalac = scalaBuckConfig.getScalac(resolver);
-    ScalacToJarStepFactory compileStepFactory = new ScalacToJarStepFactory(
-        scalac,
-        resolver.getRule(scalaBuckConfig.getScalaLibraryTarget()),
-        scalaBuckConfig.getCompilerFlags(),
-        args.extraArguments,
-        resolver.getAllRules(scalaBuckConfig.getCompilerPlugins()));
-
-    BuildRuleParams javaLibraryParams = compileStepFactory.addInputs(rawParams, ruleFinder);
-    return new ScalaLibraryBuilder(
-        javaLibraryParams,
-        resolver,
-        compileStepFactory)
-        .setConfigAndArgs(scalaBuckConfig, args)
+    return new ScalaLibraryBuilder(rawParams, resolver, scalaBuckConfig)
+        .setArgs(args)
         .build();
   }
 

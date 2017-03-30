@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
@@ -1182,12 +1182,9 @@ public class DefaultJavaLibraryTest {
         ? JavacOptions.builder(DEFAULT_JAVAC_OPTIONS).setSpoolMode(spoolMode.get()).build()
         : DEFAULT_JAVAC_OPTIONS;
 
-    JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
-        DEFAULT_JAVAC,
-        javacOptions,
-        JavacOptionsAmender.IDENTITY);
     DefaultJavaLibrary defaultJavaLibrary = DefaultJavaLibrary
-        .builder(buildRuleParams, ruleResolver, compileStepFactory)
+        .builder(buildRuleParams, ruleResolver, DEFAULT_JAVA_CONFIG)
+        .setJavacOptions(javacOptions)
         .setSrcs(srcsAsPaths)
         .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
         .setPostprocessClassesCommands(postprocessClassesCommands)
@@ -1481,12 +1478,9 @@ public class DefaultJavaLibraryTest {
           .setProjectFilesystem(projectFilesystem)
           .build();
 
-      JavacToJarStepFactory compileStepFactory = new JavacToJarStepFactory(
-          DEFAULT_JAVAC,
-          options,
-          JavacOptionsAmender.IDENTITY);
       DefaultJavaLibrary javaLibrary = DefaultJavaLibrary
-          .builder(buildRuleParams, ruleResolver, compileStepFactory)
+          .builder(buildRuleParams, ruleResolver, DEFAULT_JAVA_CONFIG)
+          .setJavacOptions(options)
           .setSrcs(ImmutableSortedSet.of(new FakeSourcePath(src)))
           .setResources(ImmutableSortedSet.of())
           .setGeneratedSourceFolder(options.getGeneratedSourceFolderName())

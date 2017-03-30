@@ -27,6 +27,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -41,10 +42,11 @@ import javax.annotation.Nullable;
 
 public class DefaultJavaLibraryBuilder {
   private final BuildRuleParams params;
+  @Nullable
+  private final JavaBuckConfig javaBuckConfig;
   protected final BuildRuleResolver buildRuleResolver;
   protected final SourcePathResolver sourcePathResolver;
   protected final SourcePathRuleFinder ruleFinder;
-  protected final CompileToJarStepFactory compileStepFactory;
   protected ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
   protected ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
   protected Optional<Path> generatedSourceFolder = Optional.empty();
@@ -58,29 +60,39 @@ public class DefaultJavaLibraryBuilder {
   protected Optional<String> mavenCoords = Optional.empty();
   protected ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
   protected ImmutableSet<Pattern> classesToRemoveFromJar = ImmutableSet.of();
+  protected JavacOptionsAmender javacOptionsAmender = JavacOptionsAmender.IDENTITY;
   protected boolean suggestDependencies = false;
+  @Nullable
+  protected JavacOptions javacOptions = null;
+  @Nullable
+  private JavaLibraryDescription.Arg args = null;
 
   protected DefaultJavaLibraryBuilder(
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      CompileToJarStepFactory compileStepFactory) {
+      JavaBuckConfig javaBuckConfig) {
     this.params = params;
     this.buildRuleResolver = buildRuleResolver;
-    this.compileStepFactory = compileStepFactory;
+    this.javaBuckConfig = javaBuckConfig;
 
     ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     sourcePathResolver = new SourcePathResolver(ruleFinder);
+    setSuggestDependencies(javaBuckConfig.shouldSuggestDependencies());
   }
 
-  public DefaultJavaLibraryBuilder setConfigAndArgs(
-      JavaBuckConfig config,
-      JavaLibraryDescription.Arg args) {
-    setSuggestDependencies(config.shouldSuggestDependencies());
+  protected DefaultJavaLibraryBuilder(
+      BuildRuleParams params,
+      BuildRuleResolver buildRuleResolver) {
+    this.params = params;
+    this.buildRuleResolver = buildRuleResolver;
 
-    return setArgs(args);
+    ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    sourcePathResolver = new SourcePathResolver(ruleFinder);
+    javaBuckConfig = null;
   }
 
-  protected DefaultJavaLibraryBuilder setArgs(JavaLibraryDescription.Arg args) {
+  public DefaultJavaLibraryBuilder setArgs(JavaLibraryDescription.Arg args) {
+    this.args = args;
     return setSrcs(args.srcs)
         .setResources(args.resources)
         .setResourcesRoot(args.resourcesRoot)
@@ -90,6 +102,16 @@ public class DefaultJavaLibraryBuilder {
         .setProvidedDeps(args.providedDeps)
         .setManifestFile(args.manifestFile)
         .setMavenCoords(args.mavenCoords);
+  }
+
+  public DefaultJavaLibraryBuilder setJavacOptions(JavacOptions javacOptions) {
+    this.javacOptions = javacOptions;
+    return this;
+  }
+
+  public DefaultJavaLibraryBuilder setJavacOptionsAmender(JavacOptionsAmender amender) {
+    javacOptionsAmender = amender;
+    return this;
   }
 
   public DefaultJavaLibraryBuilder setSrcs(ImmutableSortedSet<SourcePath> srcs) {
@@ -190,6 +212,8 @@ public class DefaultJavaLibraryBuilder {
     private ImmutableSortedSet<BuildRule> compileTimeClasspathDeps;
     @Nullable
     private ImmutableSortedSet<SourcePath> abiInputs;
+    @Nullable
+    private CompileToJarStepFactory compileStepFactory;
 
     protected DefaultJavaLibrary build() throws NoSuchBuildTargetException {
       return new DefaultJavaLibrary(
@@ -206,7 +230,7 @@ public class DefaultJavaLibraryBuilder {
           getCompileTimeClasspathDeps(),
           getAbiInputs(),
           trackClassUsage,
-          compileStepFactory,
+          getCompileStepFactory(),
           suggestDependencies,
           resourcesRoot,
           manifestFile,
@@ -240,16 +264,33 @@ public class DefaultJavaLibraryBuilder {
       return abiInputs;
     }
 
+    protected final CompileToJarStepFactory getCompileStepFactory() {
+      if (compileStepFactory == null) {
+        compileStepFactory = buildCompileStepFactory();
+      }
+
+      return compileStepFactory;
+    }
+
     protected BuildRuleParams buildFinalParams() {
-      return params.copyAppendingExtraDeps(
-          Sets.difference(getCompileTimeClasspathDeps(), params.getBuildDeps()));
+      return params.copyReplacingDeclaredAndExtraDeps(
+          () -> ImmutableSortedSet.copyOf(Iterables.concat(
+              params.getDeclaredDeps().get(),
+              getCompileStepFactory().getDeclaredDeps(ruleFinder))),
+          () -> ImmutableSortedSet.copyOf(Iterables.concat(
+              params.getExtraDeps().get(),
+              Sets.difference(getCompileTimeClasspathDeps(), params.getBuildDeps()),
+              getCompileStepFactory().getExtraDeps(ruleFinder))));
     }
 
     protected ImmutableSortedSet<BuildRule> buildCompileTimeClasspathDeps() {
+      CompileToJarStepFactory compileStepFactory = getCompileStepFactory();
+
       Iterable<BuildRule> declaredDeps = Iterables.concat(
           params.getDeclaredDeps().get(),
           exportedDeps,
-          providedDeps);
+          providedDeps,
+          compileStepFactory.getDeclaredDeps(ruleFinder));
 
       ImmutableSortedSet<BuildRule> rulesExportedByDependencies =
           BuildRules.getExportedRules(declaredDeps);
@@ -263,6 +304,16 @@ public class DefaultJavaLibraryBuilder {
       return JavaLibraryRules.getAbiInputs(
           buildRuleResolver,
           getCompileTimeClasspathDeps());
+    }
+
+    protected CompileToJarStepFactory buildCompileStepFactory() {
+      return new JavacToJarStepFactory(
+          JavacFactory.create(
+              ruleFinder,
+              Preconditions.checkNotNull(javaBuckConfig),
+              args),
+          Preconditions.checkNotNull(javacOptions),
+          javacOptionsAmender);
     }
   }
 }
