@@ -417,8 +417,7 @@ public class AppleBundle
                 CopyStep.DirectoryMode.CONTENTS_ONLY));
       }
       for (SourcePath file : resources.getResourceFiles()) {
-        // TODO(shs96c): Check that this work cross-cell
-        Path resolvedFilePath = context.getSourcePathResolver().getRelativePath(file);
+        Path resolvedFilePath = context.getSourcePathResolver().getAbsolutePath(file);
         Path destinationPath = resourcesDestinationPath.resolve(resolvedFilePath.getFileName());
         addResourceProcessingSteps(
             context.getSourcePathResolver(), resolvedFilePath, destinationPath, stepsBuilder);
@@ -431,8 +430,7 @@ public class AppleBundle
         context.getSourcePathResolver(), stepsBuilder, codeSignOnCopyPathsBuilder);
 
     for (SourcePath variantSourcePath : resources.getResourceVariantFiles()) {
-      // TODO(shs96c): Ensure this works cross-cell, as relative path begins with "buck-out"
-      Path variantFilePath = context.getSourcePathResolver().getRelativePath(variantSourcePath);
+      Path variantFilePath = context.getSourcePathResolver().getAbsolutePath(variantSourcePath);
 
       Path variantDirectory = variantFilePath.getParent();
       if (variantDirectory == null || !variantDirectory.toString().endsWith(".lproj")) {
