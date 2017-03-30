@@ -70,6 +70,7 @@ abstract class AbstractIjLibrary implements IjProjectElement {
     if (dependencyType.equals(DependencyType.COMPILED_SHADOW)) {
       dependencyListBuilder.addCompiledShadow(getName());
     } else {
+      // XXX how to properly handle 'provided_deps' here.
       IjDependencyListBuilder.Scope scope = IjDependencyListBuilder.Scope.COMPILE;
       if (dependencyType.equals(DependencyType.TEST)) {
         scope = IjDependencyListBuilder.Scope.TEST;
