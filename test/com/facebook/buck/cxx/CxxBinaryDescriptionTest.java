@@ -26,6 +26,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -537,6 +538,30 @@ public class CxxBinaryDescriptionTest {
     assertThat(
         versionedTargetGraph.get(builder.getTarget()).getSelectedVersions(),
         equalTo(Optional.of(universe1.getVersions())));
+  }
+
+  @Test
+  public void testDefaultPlatformArg() throws Exception {
+    CxxPlatform alternatePlatform =
+        CxxPlatformUtils.DEFAULT_PLATFORM
+            .withFlavor(InternalFlavor.of("alternate"));
+    FlavorDomain<CxxPlatform> cxxPlatforms =
+        new FlavorDomain<>(
+            "C/C++ Platform",
+            ImmutableMap.of(
+                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(), CxxPlatformUtils.DEFAULT_PLATFORM,
+                alternatePlatform.getFlavor(), alternatePlatform));
+    CxxBinaryBuilder binaryBuilder =
+        new CxxBinaryBuilder(
+            BuildTargetFactory.newInstance("//:foo"),
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            cxxPlatforms);
+    binaryBuilder.setDefaultPlatform(alternatePlatform.getFlavor());
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(binaryBuilder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    CxxBinary binary = binaryBuilder.build(resolver, targetGraph);
+    assertThat(binary.getCxxPlatform(), equalTo(alternatePlatform));
   }
 
 }

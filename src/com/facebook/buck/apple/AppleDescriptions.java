@@ -281,6 +281,7 @@ public class AppleDescriptions {
         output,
         arg,
         buildTarget);
+    output.defaultPlatform = Optional.empty();
     output.linkStyle = arg.linkStyle;
   }
 

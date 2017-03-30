@@ -103,6 +103,23 @@ public class CxxTestDescription implements
     return deps.build();
   }
 
+  private CxxPlatform getCxxPlatform(BuildTarget target, CxxBinaryDescription.Arg constructorArg) {
+
+    // First check if the build target is setting a particular target.
+    Optional<CxxPlatform> targetPlatform = cxxPlatforms.getValue(target.getFlavors());
+    if (targetPlatform.isPresent()) {
+      return targetPlatform.get();
+    }
+
+    // Next, check for a constructor arg level default platform.
+    if (constructorArg.defaultPlatform.isPresent()) {
+      return cxxPlatforms.getValue(constructorArg.defaultPlatform.get());
+    }
+
+    // Otherwise, fallback to the description-level default platform.
+    return defaultCxxPlatform;
+  }
+
   @Override
   public Arg createUnpopulatedConstructorArg() {
     return new Arg();
@@ -128,8 +145,7 @@ public class CxxTestDescription implements
         flavoredLinkerMapMode);
     final BuildRuleParams params = inputParams;
 
-    Optional<CxxPlatform> platform = cxxPlatforms.getValue(params.getBuildTarget());
-    CxxPlatform cxxPlatform = platform.orElse(defaultCxxPlatform);
+    CxxPlatform cxxPlatform = getCxxPlatform(params.getBuildTarget(), args);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
     if (params.getBuildTarget().getFlavors()
@@ -156,7 +172,7 @@ public class CxxTestDescription implements
     if (params.getBuildTarget().getFlavors()
           .contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
       return CxxDescriptionEnhancer.createUberCompilationDatabase(
-          platform.isPresent() ?
+          cxxPlatforms.getValue(params.getBuildTarget()).isPresent() ?
               params :
               params.withAppendedFlavor(cxxPlatform.getFlavor()),
           resolver
@@ -314,9 +330,7 @@ public class CxxTestDescription implements
 
     // Get any parse time deps from the C/C++ platforms.
     extraDepsBuilder.addAll(
-        CxxPlatforms.getParseTimeDeps(
-            cxxPlatforms
-                .getValue(buildTarget.getFlavors()).orElse(defaultCxxPlatform)));
+        CxxPlatforms.getParseTimeDeps(getCxxPlatform(buildTarget, constructorArg)));
 
     // Extract parse time deps from flags, args, and environment parameters.
     Iterable<Iterable<String>> macroStrings =

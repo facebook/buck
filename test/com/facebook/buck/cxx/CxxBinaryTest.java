@@ -65,6 +65,7 @@ public class CxxBinaryTest {
                 params.copyAppendingExtraDeps(ImmutableSortedSet.<BuildRule>of(cxxLink)),
                 ruleResolver,
                 ruleFinder,
+                CxxPlatformUtils.DEFAULT_PLATFORM,
                 cxxLink,
                 new CommandTool.Builder()
                     .addArg(SourcePathArg.of(cxxLink.getSourcePathToOutput()))

@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.query.Query;
 
@@ -76,6 +77,11 @@ public class CxxBinaryBuilder extends AbstractCxxSourceBuilder<
 
   public CxxBinaryBuilder setVersionUniverse(String versionUniverse) {
     arg.versionUniverse = Optional.of(versionUniverse);
+    return this;
+  }
+
+  public CxxBinaryBuilder setDefaultPlatform(Flavor flavor) {
+    arg.defaultPlatform = Optional.of(flavor);
     return this;
   }
 

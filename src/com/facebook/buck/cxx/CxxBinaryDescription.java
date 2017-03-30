@@ -102,6 +102,25 @@ public class CxxBinaryDescription implements
     return new Arg();
   }
 
+  private CxxPlatform getCxxPlatform(
+      BuildTarget target,
+      Optional<Flavor> defaultCxxPlatformFlavor) {
+
+    // First check if the build target is setting a particular target.
+    Optional<CxxPlatform> targetPlatform = cxxPlatforms.getValue(target.getFlavors());
+    if (targetPlatform.isPresent()) {
+      return targetPlatform.get();
+    }
+
+    // Next, check for a constructor arg level default platform.
+    if (defaultCxxPlatformFlavor.isPresent()) {
+      return cxxPlatforms.getValue(defaultCxxPlatformFlavor.get());
+    }
+
+    // Otherwise, fallback to the description-level default platform.
+    return defaultCxxPlatform;
+  }
+
   @Override
   public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
@@ -140,8 +159,7 @@ public class CxxBinaryDescription implements
     // Extract the platform from the flavor, falling back to the default platform if none are
     // found.
     ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(params.getBuildTarget().getFlavors());
-    CxxPlatform cxxPlatform = cxxPlatforms
-        .getValue(flavors).orElse(defaultCxxPlatform);
+    CxxPlatform cxxPlatform = getCxxPlatform(params.getBuildTarget(), args.defaultPlatform);
     if (flavors.contains(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR)) {
       flavors = ImmutableSet.copyOf(
           Sets.difference(
@@ -274,6 +292,7 @@ public class CxxBinaryDescription implements
             .copyAppendingExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder)),
         resolver,
         ruleFinder,
+        cxxPlatform,
         cxxLinkAndCompileRules.getBinaryRule(),
         cxxLinkAndCompileRules.executable,
         args.frameworks,
@@ -290,22 +309,22 @@ public class CxxBinaryDescription implements
       Arg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    extraDepsBuilder.addAll(findDepsForTargetFromConstructorArgs(buildTarget));
-
+    extraDepsBuilder.addAll(
+        findDepsForTargetFromConstructorArgs(buildTarget, constructorArg.defaultPlatform));
     constructorArg.depsQuery.ifPresent(
         depsQuery ->
             QueryUtils.extractParseTimeTargets(buildTarget, cellRoots, depsQuery)
                 .forEach(extraDepsBuilder::add));
   }
 
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(BuildTarget buildTarget) {
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      Optional<Flavor> defaultCxxPlatformFlavor) {
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
 
     // Get any parse time deps from the C/C++ platforms.
     deps.addAll(
-        CxxPlatforms.getParseTimeDeps(
-            cxxPlatforms
-                .getValue(buildTarget.getFlavors()).orElse(defaultCxxPlatform)));
+        CxxPlatforms.getParseTimeDeps(getCxxPlatform(buildTarget, defaultCxxPlatformFlavor)));
 
     return deps.build();
   }
@@ -415,6 +434,7 @@ public class CxxBinaryDescription implements
   public static class Arg extends LinkableCxxConstructorArg {
     public Optional<Query> depsQuery = Optional.empty();
     public Optional<String> versionUniverse;
+    public Optional<Flavor> defaultPlatform;
   }
 
 }

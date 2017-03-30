@@ -513,10 +513,13 @@ public class AppleBinaryDescription
     if (thinFlavorSets.size() > 0) {
       for (ImmutableSortedSet<Flavor> flavors : thinFlavorSets) {
         extraDepsBuilder.addAll(
-            delegate.findDepsForTargetFromConstructorArgs(buildTarget.withFlavors(flavors)));
+            delegate.findDepsForTargetFromConstructorArgs(
+                buildTarget.withFlavors(flavors),
+                Optional.empty()));
       }
     } else {
-      extraDepsBuilder.addAll(delegate.findDepsForTargetFromConstructorArgs(buildTarget));
+      extraDepsBuilder.addAll(
+          delegate.findDepsForTargetFromConstructorArgs(buildTarget, Optional.empty()));
     }
   }
 
