@@ -1612,7 +1612,8 @@ public final class Main {
             .getTargetForId(
                 androidPlatformTargetId,
                 androidDirectoryResolver,
-                androidBuckConfig.getAaptOverride());
+                androidBuckConfig.getAaptOverride(),
+                androidBuckConfig.getAapt2Override());
         if (androidPlatformTargetOptional.isPresent()) {
           androidPlatformTarget = androidPlatformTargetOptional.get();
           return androidPlatformTarget;

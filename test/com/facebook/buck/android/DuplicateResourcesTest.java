@@ -283,6 +283,7 @@ public class DuplicateResourcesTest {
             androidDirectoryResolver,
             "",
             ImmutableSet.of(),
+            Optional.empty(),
             Optional.empty());
 
     ExecutionContext context = TestExecutionContext.newBuilder()
