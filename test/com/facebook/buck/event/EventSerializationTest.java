@@ -151,7 +151,7 @@ public class EventSerializationTest {
 
   @Test
   public void testBuildRuleEventStarted() throws IOException {
-    BuildRule rule = FakeBuildRule.newEmptyInstance("//fake:rule");
+    BuildRule rule = new FakeBuildRule("//fake:rule");
     BuildRuleEvent.Started event = BuildRuleEvent.started(rule, durationTracker);
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = MAPPER.writeValueAsString(event);
@@ -165,7 +165,7 @@ public class EventSerializationTest {
 
   @Test
   public void testBuildRuleEventFinished() throws IOException {
-    BuildRule rule = FakeBuildRule.newEmptyInstance("//fake:rule");
+    BuildRule rule = new FakeBuildRule("//fake:rule");
     BuildRuleEvent.Started started = BuildRuleEvent.started(rule, durationTracker);
     started.configure(timestamp - 11, nanoTime - 12, threadUserNanoTime - 13, threadId, buildId);
     BuildRuleEvent.Finished event =
@@ -176,7 +176,7 @@ public class EventSerializationTest {
             CacheResult.miss(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
             Optional.empty(),
-            Optional.empty());
+            Optional.empty(), Optional.empty());
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = MAPPER.writeValueAsString(event);
     assertJsonEquals(

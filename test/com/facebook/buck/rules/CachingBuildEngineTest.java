@@ -349,7 +349,7 @@ public class CachingBuildEngineTest {
                   CacheResult.miss(),
                   Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                   Optional.empty(),
-                  Optional.empty())));
+                  Optional.empty(), Optional.empty())));
     }
 
     @Test
@@ -406,7 +406,7 @@ public class CachingBuildEngineTest {
                   CacheResult.miss(),
                   Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                   Optional.empty(),
-                  Optional.empty())));
+                  Optional.empty(), Optional.empty())));
     }
 
     @Test
@@ -595,7 +595,7 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.empty(),
-                  Optional.empty())));
+                  Optional.empty(), Optional.empty())));
     }
 
     @Test
@@ -645,7 +645,7 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.empty(),
-                  Optional.empty())));
+                  Optional.empty(), Optional.empty())));
       BuildRuleEvent.Started started = TestEventConfigurator.configureTestEvent(
           BuildRuleEvent.ruleKeyCalculationStarted(ruleToTest, durationTracker));
       assertThat(
@@ -659,7 +659,7 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.empty(),
-                  Optional.empty())));
+                  Optional.empty(), Optional.empty())));
     }
 
     @Test
@@ -728,7 +728,7 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.empty(),
-                  Optional.empty())));
+                  Optional.empty(), Optional.empty())));
       BuildRuleEvent.Started startedDep = TestEventConfigurator.configureTestEvent(
           BuildRuleEvent.ruleKeyCalculationStarted(runtimeDep, durationTracker));
       assertThat(
@@ -742,7 +742,7 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.empty(),
-                  Optional.empty())));
+                  Optional.empty(), Optional.empty())));
       BuildRuleEvent.Started startedTransitive = TestEventConfigurator.configureTestEvent(
           BuildRuleEvent.ruleKeyCalculationStarted(transitiveRuntimeDep, durationTracker));
       assertThat(
@@ -756,7 +756,7 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.empty(),
-                  Optional.empty())));
+                  Optional.empty(), Optional.empty())));
     }
 
     @Test

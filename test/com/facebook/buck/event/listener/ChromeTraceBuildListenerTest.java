@@ -298,7 +298,7 @@ public class ChromeTraceBuildListenerTest {
             CacheResult.miss(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
             Optional.empty(),
-            Optional.empty()));
+            Optional.empty(), Optional.empty()));
 
     try (final SimplePerfEvent.Scope scope1 = SimplePerfEvent.scope(
         eventBus,

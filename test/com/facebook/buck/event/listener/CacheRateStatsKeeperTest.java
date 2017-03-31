@@ -50,7 +50,7 @@ public class CacheRateStatsKeeperTest {
   }
 
   BuildRuleEvent.Finished finishedEvent(CacheResult cacheResult) {
-    BuildRule rule = FakeBuildRule.newEmptyInstance("//fake:rule");
+    BuildRule rule = new FakeBuildRule("//fake:rule");
     BuildRuleDurationTracker durationTracker = new BuildRuleDurationTracker();
     BuildRuleEvent.Started started = TestEventConfigurator.configureTestEvent(
         BuildRuleEvent.started(rule, durationTracker));
@@ -61,7 +61,7 @@ public class CacheRateStatsKeeperTest {
         cacheResult,
         Optional.empty(),
         Optional.empty(),
-        Optional.empty());
+        Optional.empty(), Optional.empty());
   }
 
   @Test

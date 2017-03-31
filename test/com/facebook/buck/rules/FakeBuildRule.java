@@ -69,16 +69,13 @@ public class FakeBuildRule extends AbstractBuildRuleWithResolver implements Buil
     this(BuildTargetFactory.newInstance(target), new FakeProjectFilesystem(), resolver, deps);
   }
 
-  public static FakeBuildRule newEmptyInstance(String name) {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(name);
-    return new FakeBuildRule(
-        buildTarget,
-        new SourcePathResolver(new SourcePathRuleFinder(
-            new BuildRuleResolver(
-                TargetGraph.EMPTY,
-                new DefaultTargetNodeToBuildRuleTransformer())
-        )),
-        ImmutableSortedSet.of());
+  public FakeBuildRule(String target, BuildRule... deps) {
+    this(target, newSourcePathResolver(), deps);
+  }
+
+  private static SourcePathResolver newSourcePathResolver() {
+    return new SourcePathResolver(new SourcePathRuleFinder(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
   }
 
   @Override

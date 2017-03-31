@@ -50,6 +50,7 @@ import com.facebook.buck.event.listener.LoggingBuildListener;
 import com.facebook.buck.event.listener.MachineReadableLoggerListener;
 import com.facebook.buck.event.listener.ProgressEstimator;
 import com.facebook.buck.event.listener.PublicAnnouncementManager;
+import com.facebook.buck.event.listener.RuleKeyDiagnosticsListener;
 import com.facebook.buck.event.listener.RuleKeyLoggerListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleConfig;
@@ -84,6 +85,7 @@ import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyDiagnosticsMode;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
@@ -1803,6 +1805,14 @@ public final class Main {
 
     if (buckConfig.isRuleKeyLoggerEnabled()) {
       eventListenersBuilder.add(new RuleKeyLoggerListener(
+          projectFilesystem,
+          invocationInfo,
+          MostExecutors.newSingleThreadExecutor(
+              new CommandThreadFactory(getClass().getName()))));
+    }
+
+    if (buckConfig.getRuleKeyDiagnosticsMode() != RuleKeyDiagnosticsMode.NEVER) {
+      eventListenersBuilder.add(new RuleKeyDiagnosticsListener(
           projectFilesystem,
           invocationInfo,
           MostExecutors.newSingleThreadExecutor(

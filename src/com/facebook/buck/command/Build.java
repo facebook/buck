@@ -40,6 +40,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.RuleKeyDiagnosticsMode;
 import com.facebook.buck.shell.WorkerProcessPool;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
@@ -114,6 +115,7 @@ public class Build implements Closeable {
       boolean isInclNoLocationClassesEnabled,
       boolean isDebugEnabled,
       boolean shouldReportAbsolutePaths,
+      RuleKeyDiagnosticsMode ruleKeyDiagnosticsMode,
       BuckEventBus eventBus,
       Platform platform,
       ImmutableMap<String, String> environment,
@@ -135,6 +137,7 @@ public class Build implements Closeable {
         .setCodeCoverageEnabled(isCodeCoverageEnabled)
         .setInclNoLocationClassesEnabled(isInclNoLocationClassesEnabled)
         .setDebugEnabled(isDebugEnabled)
+        .setRuleKeyDiagnosticsMode(ruleKeyDiagnosticsMode)
         .setShouldReportAbsolutePaths(shouldReportAbsolutePaths)
         .setBuckEventBus(eventBus)
         .setPlatform(platform)

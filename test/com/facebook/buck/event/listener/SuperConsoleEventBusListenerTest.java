@@ -378,7 +378,7 @@ public class SuperConsoleEventBusListenerTest {
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                 Optional.empty(),
-                Optional.empty()),
+                Optional.empty(), Optional.empty()),
             1000L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -413,7 +413,7 @@ public class SuperConsoleEventBusListenerTest {
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                 Optional.empty(),
-                Optional.empty()),
+                Optional.empty(), Optional.empty()),
             1120L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 2L));
@@ -680,7 +680,7 @@ public class SuperConsoleEventBusListenerTest {
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                 Optional.empty(),
-                Optional.empty()),
+                Optional.empty(), Optional.empty()),
             1000L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -715,7 +715,7 @@ public class SuperConsoleEventBusListenerTest {
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                 Optional.empty(),
-                Optional.empty()),
+                Optional.empty(), Optional.empty()),
             1120L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 2L));
@@ -1094,7 +1094,7 @@ public class SuperConsoleEventBusListenerTest {
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                 Optional.empty(),
-                Optional.empty()),
+                Optional.empty(), Optional.empty()),
             1000L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1385,7 +1385,7 @@ public class SuperConsoleEventBusListenerTest {
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                 Optional.empty(),
-                Optional.empty()),
+                Optional.empty(), Optional.empty()),
             1000L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1689,7 +1689,7 @@ public class SuperConsoleEventBusListenerTest {
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                 Optional.empty(),
-                Optional.empty()),
+                Optional.empty(), Optional.empty()),
             1000L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -2037,7 +2037,7 @@ public class SuperConsoleEventBusListenerTest {
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                 Optional.empty(),
-                Optional.empty()),
+                Optional.empty(), Optional.empty()),
             600L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));

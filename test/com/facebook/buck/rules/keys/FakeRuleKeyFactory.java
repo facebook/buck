@@ -19,6 +19,7 @@ package com.facebook.buck.rules.keys;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -26,7 +27,9 @@ import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 
-public class FakeRuleKeyFactory implements RuleKeyFactory<RuleKey>, DependencyFileRuleKeyFactory {
+public class FakeRuleKeyFactory implements
+    RuleKeyFactoryWithDiagnostics<RuleKey>,
+    DependencyFileRuleKeyFactory {
 
   private final ImmutableMap<BuildTarget, RuleKey> ruleKeys;
   private final ImmutableSet<BuildTarget> oversized;
@@ -64,4 +67,15 @@ public class FakeRuleKeyFactory implements RuleKeyFactory<RuleKey>, DependencyFi
     return RuleKeyAndInputs.of(build(rule), ImmutableSet.<SourcePath>of());
   }
 
+  @Override
+  public <DIAG_KEY> RuleKeyDiagnostics.Result<RuleKey, DIAG_KEY> buildForDiagnostics(
+      BuildRule rule, RuleKeyHasher<DIAG_KEY> hasher) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public <DIAG_KEY> RuleKeyDiagnostics.Result<RuleKey, DIAG_KEY> buildForDiagnostics(
+      RuleKeyAppendable appendable, RuleKeyHasher<DIAG_KEY> hasher) {
+    throw new UnsupportedOperationException();
+  }
 }

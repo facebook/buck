@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.MoreCollectors;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -61,6 +62,21 @@ public class RuleDepsCache {
       // service.submit doesn't throw any checked exceptions, so this should be fine.
       Throwables.throwIfUnchecked(e.getCause());
       throw new RuntimeException(e.getCause());
+    }
+  }
+
+  /** If the deps computation is not done prior to calling this method, an exception is thrown. */
+  public ImmutableSortedSet<BuildRule> getComputed(final BuildRule rule) {
+    // Make sure the future exists and is done.
+    ListenableFuture<ImmutableSortedSet<BuildRule>> future =
+        Preconditions.checkNotNull(cache.getIfPresent(rule.getBuildTarget()));
+    Preconditions.checkState(future.isDone());
+    try {
+      return future.get();
+    } catch (InterruptedException | ExecutionException e) {
+      // The future was done before calling get here. If get fails now, it means it also failed on
+      // the real call site so we don't want to throw another exception while doing diagnostics.
+      return ImmutableSortedSet.of();
     }
   }
 }

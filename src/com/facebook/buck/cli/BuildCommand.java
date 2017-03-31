@@ -331,6 +331,7 @@ public class BuildCommand extends AbstractCommand {
         buckConfig.getBooleanValue("test", "incl_no_location_classes", false),
         isDebugEnabled(),
         shouldReportAbsolutePaths(),
+        buckConfig.getRuleKeyDiagnosticsMode(),
         eventBus,
         platform,
         environment,

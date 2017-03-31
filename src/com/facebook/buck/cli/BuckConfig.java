@@ -37,6 +37,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
+import com.facebook.buck.rules.RuleKeyDiagnosticsMode;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.HumanReadableException;
@@ -481,6 +482,11 @@ public class BuckConfig implements ConfigPathGetter {
 
   public boolean isRuleKeyLoggerEnabled() {
     return getBooleanValue(LOG_SECTION, "rule_key_logger_enabled", false);
+  }
+
+  public RuleKeyDiagnosticsMode getRuleKeyDiagnosticsMode() {
+    return getEnum(LOG_SECTION, "rule_key_diagnostics_mode", RuleKeyDiagnosticsMode.class)
+        .orElse(RuleKeyDiagnosticsMode.NEVER);
   }
 
   public boolean isMachineReadableLoggerEnabled() {

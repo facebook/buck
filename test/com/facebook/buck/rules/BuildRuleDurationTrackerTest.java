@@ -27,8 +27,8 @@ public class BuildRuleDurationTrackerTest {
   @Test
   public void test() {
     BuildRuleDurationTracker tracker = new BuildRuleDurationTracker();
-    BuildRule rule1 = FakeBuildRule.newEmptyInstance("//fake:rule1");
-    BuildRule rule2 = FakeBuildRule.newEmptyInstance("//fake:rule2");
+    BuildRule rule1 = new FakeBuildRule("//fake:rule1");
+    BuildRule rule2 = new FakeBuildRule("//fake:rule2");
 
     /**
      * 10      15   20  22  23  26  30  31  33   35   37

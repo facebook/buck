@@ -127,7 +127,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   }
 
   @Override
-  public RuleKeyBuilder<RULE_KEY> setReflectively(String key, @Nullable Object val) {
+  public final RuleKeyBuilder<RULE_KEY> setReflectively(String key, @Nullable Object val) {
     return setReflectively(key, val, RuleKeyFieldCategory.UNKNOWN);
   }
 

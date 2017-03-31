@@ -36,7 +36,7 @@ import java.util.function.Function;
 /**
  * A {@link RuleKeyFactory} which adds some default settings to {@link RuleKey}s.
  */
-public class DefaultRuleKeyFactory implements RuleKeyFactory<RuleKey> {
+public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<RuleKey> {
 
   private final RuleKeyFieldLoader ruleKeyFieldLoader;
   private final FileHashLoader hashLoader;
@@ -87,29 +87,51 @@ public class DefaultRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     return builder;
   }
 
-  private RuleKeyResult<RuleKey> calculateBuildRuleKey(BuildRule buildRule) {
-    return newPopulatedBuilder(buildRule, RuleKeyBuilder.createDefaultHasher())
-        .buildResult(RuleKey::new);
-  }
-
-  private RuleKeyResult<RuleKey> calculateAppendableKey(RuleKeyAppendable appendable) {
-    Builder<HashCode> subKeyBuilder = new Builder<>(RuleKeyBuilder.createDefaultHasher());
-    appendable.appendToRuleKey(subKeyBuilder);
-    return subKeyBuilder.buildResult(RuleKey::new);
-  }
-
-  @Override
-  public RuleKey build(BuildRule buildRule) {
-    return ruleKeyCache.get(buildRule, this::calculateBuildRuleKey);
-  }
-
-  private RuleKey buildAppendableKey(RuleKeyAppendable appendable) {
-    return ruleKeyCache.get(appendable, this::calculateAppendableKey);
+  private <HASH> Builder<HASH> newPopulatedBuilder(
+      RuleKeyAppendable appendable,
+      RuleKeyHasher<HASH> hasher) {
+    Builder<HASH> builder = new Builder<>(hasher);
+    appendable.appendToRuleKey(builder);
+    return builder;
   }
 
   @VisibleForTesting
   public Builder<HashCode> newBuilderForTesting(BuildRule buildRule) {
     return newPopulatedBuilder(buildRule, RuleKeyBuilder.createDefaultHasher());
+  }
+
+  @Override
+  public RuleKey build(BuildRule buildRule) {
+    return ruleKeyCache.get(
+        buildRule,
+        rule -> newPopulatedBuilder(rule, RuleKeyBuilder.createDefaultHasher())
+            .buildResult(RuleKey::new));
+  }
+
+  private RuleKey buildAppendableKey(RuleKeyAppendable appendable) {
+    return ruleKeyCache.get(
+        appendable,
+        app -> newPopulatedBuilder(app, RuleKeyBuilder.createDefaultHasher())
+            .buildResult(RuleKey::new)
+    );
+  }
+
+  @Override
+  public <DIAG_KEY> RuleKeyDiagnostics.Result<RuleKey, DIAG_KEY> buildForDiagnostics(
+      BuildRule buildRule,
+      RuleKeyHasher<DIAG_KEY> hasher) {
+    return RuleKeyDiagnostics.Result.of(
+        build(buildRule), // real rule key
+        newPopulatedBuilder(buildRule, hasher).buildResult(Function.identity()));
+  }
+
+  @Override
+  public <DIAG_KEY> RuleKeyDiagnostics.Result<RuleKey, DIAG_KEY> buildForDiagnostics(
+      RuleKeyAppendable appendable,
+      RuleKeyHasher<DIAG_KEY> hasher) {
+    return RuleKeyDiagnostics.Result.of(
+        buildAppendableKey(appendable), // real rule key
+        newPopulatedBuilder(appendable, hasher).buildResult(Function.identity()));
   }
 
   private void addDepsToRuleKey(BuildRule buildRule, RuleKeyObjectSink sink) {

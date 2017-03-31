@@ -168,7 +168,7 @@ public class SimpleConsoleEventBusListenerTest {
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                 Optional.empty(),
-                Optional.empty()),
+                Optional.empty(), Optional.empty()),
             1000L,
             TimeUnit.MILLISECONDS,
             threadId));

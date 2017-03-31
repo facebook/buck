@@ -32,15 +32,14 @@ import com.facebook.buck.util.BuckConstant;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.concurrent.GuardedBy;
@@ -152,30 +151,27 @@ public class RuleKeyLoggerListener implements BuckEventListener {
   }
 
   private void submitFlushLogLines() {
-    List<String> linesToFlush;
     synchronized (lock) {
-      linesToFlush = logLines;
+      List<String> linesToFlush = logLines;
       logLines = Lists.newArrayList();
-    }
-    if (!linesToFlush.isEmpty()) {
-      @SuppressWarnings("unused") Future<?> unused =
-          outputExecutor.submit(() -> actuallyFlushLogLines(linesToFlush));
+      if (!linesToFlush.isEmpty()) {
+        outputExecutor.execute(() -> actuallyFlushLogLines(linesToFlush));
+      }
     }
   }
 
   private void actuallyFlushLogLines(List<String> linesToFlush) {
-    Path logFile = getLogFilePath();
+    Path path = getLogFilePath();
     try {
-      projectFilesystem.createParentDirs(logFile);
-      try (FileOutputStream stream = new FileOutputStream(logFile.toString(), /* append */ true);
-           OutputStreamWriter streamWriter = new OutputStreamWriter(stream, StandardCharsets.UTF_8);
-           PrintWriter writer = new PrintWriter(streamWriter)) {
+      projectFilesystem.createParentDirs(path);
+      try (OutputStream os = projectFilesystem.newUnbufferedFileOutputStream(path, true);
+           PrintWriter out = new PrintWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8))) {
         for (String line : linesToFlush) {
-          writer.println(line);
+          out.println(line);
         }
       }
     } catch (IOException e) {
-      LOG.error(e, "Failed to flush [%d] logLines to file [%s].", linesToFlush.size(), logFile);
+      LOG.error(e, "Failed to flush [%d] logLines to file [%s].", linesToFlush.size(), path);
     }
   }
 }

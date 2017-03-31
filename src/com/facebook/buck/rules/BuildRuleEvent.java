@@ -90,7 +90,8 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       CacheResult cacheResult,
       Optional<BuildRuleSuccessType> successType,
       Optional<HashCode> outputHash,
-      Optional<Long> outputSize) {
+      Optional<Long> outputSize,
+      Optional<BuildRuleDiagnosticData> diagnosticData) {
     return new Finished(
         beginning,
         ruleKeys,
@@ -98,7 +99,8 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         cacheResult,
         successType,
         outputHash,
-        outputSize);
+        outputSize,
+        diagnosticData);
   }
 
   public static StartedRuleKeyCalc ruleKeyCalculationStarted(
@@ -226,6 +228,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     private final BuildRuleKeys ruleKeys;
     private final Optional<HashCode> outputHash;
     private final Optional<Long> outputSize;
+    Optional<BuildRuleDiagnosticData> diagnosticData;
 
     private Finished(
         BeginningBuildRuleEvent beginning,
@@ -234,7 +237,8 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         CacheResult cacheResult,
         Optional<BuildRuleSuccessType> successType,
         Optional<HashCode> outputHash,
-        Optional<Long> outputSize) {
+        Optional<Long> outputSize,
+        Optional<BuildRuleDiagnosticData> diagnosticData) {
       super(beginning);
       this.status = status;
       this.cacheResult = cacheResult;
@@ -242,6 +246,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       this.ruleKeys = ruleKeys;
       this.outputHash = outputHash;
       this.outputSize = outputSize;
+      this.diagnosticData = diagnosticData;
     }
 
     @JsonView(JsonViews.MachineReadableLog.class)
@@ -272,6 +277,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     @JsonIgnore
     public Optional<Long> getOutputSize() {
       return outputSize;
+    }
+
+    @JsonIgnore
+    public Optional<BuildRuleDiagnosticData> getDiagnosticData() {
+      return diagnosticData;
     }
 
     @Override

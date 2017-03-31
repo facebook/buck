@@ -24,6 +24,8 @@ public class BuckConstant {
   public static final String BUCK_MACHINE_LOG_FILE_NAME = "buck-machine-log";
   public static final String DIST_BUILD_SLAVE_LOG_DIR_NAME_TEMPLATE = "dist-build-slave-%s";
   public static final String RULE_KEY_LOGGER_FILE_NAME = "rule_key_logger.tsv";
+  public static final String RULE_KEY_DIAG_KEYS_FILE_NAME = "rule_key_diag_keys.txt";
+  public static final String RULE_KEY_DIAG_GRAPH_FILE_NAME = "rule_key_diag_graph.txt";
 
   private static final Path BUCK_OUTPUT_PATH_DEFAULT = Paths.get("buck-out");
 

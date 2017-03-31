@@ -35,7 +35,7 @@ abstract class AbstractRuleKeyFactories {
   /**
    * @return a {@link RuleKeyFactory} that produces {@link RuleKey}s.
    */
-  public abstract RuleKeyFactory<RuleKey> getDefaultRuleKeyFactory();
+  public abstract RuleKeyFactoryWithDiagnostics<RuleKey> getDefaultRuleKeyFactory();
 
   /**
    * @return a {@link RuleKeyFactory} that produces input-based {@link RuleKey}s.

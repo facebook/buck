@@ -34,8 +34,10 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.RuleKeyAndInputs;
+import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.SizeLimiter;
+import com.facebook.buck.rules.keys.StringRuleKeyHasher;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.ExecutionContext;
@@ -163,6 +165,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private final RuleDepsCache ruleDeps;
   private final Optional<UnskippedRulesTracker> unskippedRulesTracker;
   private final BuildRuleDurationTracker buildRuleDurationTracker = new BuildRuleDurationTracker();
+  private final RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics;
 
   private final ConcurrentMap<Path, BuildInfoStore> buildInfoStores = Maps.newConcurrentMap();
 
@@ -202,6 +205,11 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.ruleDeps = new RuleDepsCache(service, resolver);
     this.unskippedRulesTracker =
         createUnskippedRulesTracker(buildMode, ruleDeps, resolver, service);
+    this.defaultRuleKeyDiagnostics = new RuleKeyDiagnostics<>(
+        rule -> ruleKeyFactories.getDefaultRuleKeyFactory()
+            .buildForDiagnostics(rule, new StringRuleKeyHasher()),
+        appendable -> ruleKeyFactories.getDefaultRuleKeyFactory()
+            .buildForDiagnostics(appendable, new StringRuleKeyHasher()));
   }
 
   /**
@@ -244,6 +252,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.ruleDeps = new RuleDepsCache(service, resolver);
     this.unskippedRulesTracker =
         createUnskippedRulesTracker(buildMode, ruleDeps, resolver, service);
+    this.defaultRuleKeyDiagnostics = RuleKeyDiagnostics.nop();
   }
 
   @Override
@@ -1105,26 +1114,19 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                   }
                 }
 
+                boolean failureOrBuiltLocally =
+                    input.getStatus() == BuildRuleStatus.FAIL ||
+                    input.getSuccess() == BuildRuleSuccessType.BUILT_LOCALLY;
                 // Log the result to the event bus.
                 BuildRuleEvent.Finished finished = BuildRuleEvent.finished(
                     resumedEvent,
-                    BuildRuleKeys.builder()
-                        .setRuleKey(ruleKeyFactories.getDefaultRuleKeyFactory().build(rule))
-                        .setInputRuleKey(
-                            onDiskBuildInfo.getRuleKey(
-                                BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY))
-                        .setDepFileRuleKey(
-                            onDiskBuildInfo.getRuleKey(
-                                BuildInfo.MetadataKey.DEP_FILE_RULE_KEY))
-                        .setManifestRuleKey(
-                            onDiskBuildInfo.getRuleKey(
-                                BuildInfo.MetadataKey.MANIFEST_KEY))
-                        .build(),
+                    getBuildRuleKeys(rule, onDiskBuildInfo),
                     input.getStatus(),
                     input.getCacheResult(),
                     successType,
                     outputHash,
-                    outputSize);
+                    outputSize,
+                    getBuildRuleDiagnosticData(rule, executionContext, failureOrBuiltLocally));
                 LOG.verbose(finished.toString());
                 buildContext.getEventBus().post(finished);
               }
@@ -1147,6 +1149,40 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
             }));
     return result;
+  }
+
+  private BuildRuleKeys getBuildRuleKeys(BuildRule rule, OnDiskBuildInfo onDiskBuildInfo) {
+    RuleKey defaultKey = ruleKeyFactories.getDefaultRuleKeyFactory().build(rule);
+    Optional<RuleKey> inputKey =
+        onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY);
+    Optional<RuleKey> depFileKey =
+        onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
+    Optional<RuleKey> manifestKey =
+        onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.MANIFEST_KEY);
+    return BuildRuleKeys.builder()
+        .setRuleKey(defaultKey)
+        .setInputRuleKey(inputKey)
+        .setDepFileRuleKey(depFileKey)
+        .setManifestRuleKey(manifestKey)
+        .build();
+  }
+
+  private Optional<BuildRuleDiagnosticData> getBuildRuleDiagnosticData(
+      BuildRule rule,
+      ExecutionContext executionContext,
+      boolean failureOrBuiltLocally) {
+    RuleKeyDiagnosticsMode mode = executionContext.getRuleKeyDiagnosticsMode();
+    if (mode == RuleKeyDiagnosticsMode.NEVER ||
+        (mode == RuleKeyDiagnosticsMode.BUILT_LOCALLY && !failureOrBuiltLocally)) {
+      return Optional.empty();
+    }
+    ImmutableList.Builder<RuleKeyDiagnostics.Result<?, ?>> diagnosticKeysBuilder =
+        ImmutableList.builder();
+    defaultRuleKeyDiagnostics.processRule(rule, diagnosticKeysBuilder::add);
+    return Optional.of(
+        new BuildRuleDiagnosticData(
+            ruleDeps.getComputed(rule),
+            diagnosticKeysBuilder.build()));
   }
 
   private static Throwable maybeAttachBuildRuleNameToException(

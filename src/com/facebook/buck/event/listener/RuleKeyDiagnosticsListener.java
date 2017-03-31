@@ -1,0 +1,247 @@
+/*
+ * Copyright 2016-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.event.listener;
+
+import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.log.InvocationInfo;
+import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildId;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleEvent;
+import com.facebook.buck.rules.BuildRuleKeys;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
+import com.facebook.buck.util.BuckConstant;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.eventbus.Subscribe;
+import com.google.common.hash.HashCode;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.annotation.concurrent.GuardedBy;
+
+public class RuleKeyDiagnosticsListener implements BuckEventListener {
+  private static final Logger LOG = Logger.get(RuleKeyDiagnosticsListener.class);
+
+  private static final int DEFAULT_MIN_KEYS_FOR_AUTO_FLUSH = 1000;
+
+  private final ProjectFilesystem projectFilesystem;
+  private final InvocationInfo info;
+  private final ExecutorService outputExecutor;
+
+  private final int minDiagKeysForAutoFlush;
+  private final Object diagKeysLock = new Object();
+  @GuardedBy("diagKeysLock")
+  private List<RuleKeyDiagnostics.Result<?, ?>> diagKeys;
+
+  private final AtomicInteger nextId = new AtomicInteger();
+  private final ConcurrentHashMap<BuildRule, RuleInfo> rulesInfo = new ConcurrentHashMap<>();
+
+  public RuleKeyDiagnosticsListener(
+      ProjectFilesystem projectFilesystem,
+      InvocationInfo info,
+      ExecutorService outputExecutor) {
+    this.projectFilesystem = projectFilesystem;
+    this.info = info;
+    this.outputExecutor = outputExecutor;
+    this.minDiagKeysForAutoFlush = DEFAULT_MIN_KEYS_FOR_AUTO_FLUSH;
+    this.diagKeys = new ArrayList<>();
+  }
+
+  @Subscribe
+  public void onBuildRuleEvent(BuildRuleEvent.Finished event) {
+    event.getDiagnosticData().ifPresent(diagData -> {
+      synchronized (diagKeysLock) {
+        diagKeys.addAll(diagData.diagnosticKeys);
+      }
+      flushDiagKeysIfNeeded();
+
+      rulesInfo.put(
+          event.getBuildRule(),
+          new RuleInfo(
+              nextId.getAndIncrement(),
+              event.getDuration().getNanoDuration(),
+              event.getRuleKeys(),
+              event.getOutputHash(),
+              diagData.deps));
+    });
+  }
+
+  @Override
+  public void outputTrace(BuildId buildId) throws InterruptedException {
+    submitFlushDiagKeys();
+    outputExecutor.execute(this::writeDiagGraph);
+    outputExecutor.shutdown();
+    outputExecutor.awaitTermination(1, TimeUnit.HOURS);
+  }
+
+  /**
+   * Diagnostic keys flushing logic.
+   */
+
+  private Path getDiagKeysFilePath() {
+    Path logDir = projectFilesystem.resolve(info.getLogDirectoryPath());
+    return logDir.resolve(BuckConstant.RULE_KEY_DIAG_KEYS_FILE_NAME);
+  }
+
+  private void flushDiagKeysIfNeeded() {
+    synchronized (diagKeysLock) {
+      if (diagKeys.size() > minDiagKeysForAutoFlush) {
+        submitFlushDiagKeys();
+      }
+    }
+  }
+
+  private void submitFlushDiagKeys() {
+    synchronized (diagKeysLock) {
+      List<RuleKeyDiagnostics.Result<?, ?>> keysToFlush = diagKeys;
+      diagKeys = new ArrayList<>();
+      if (!keysToFlush.isEmpty()) {
+        outputExecutor.execute(() -> actuallyFlushDiagKeys(keysToFlush));
+      }
+    }
+  }
+
+  private void actuallyFlushDiagKeys(List<RuleKeyDiagnostics.Result<?, ?>> keysToFlush) {
+    Path path = getDiagKeysFilePath();
+    try {
+      projectFilesystem.createParentDirs(path);
+      try (OutputStream os = projectFilesystem.newUnbufferedFileOutputStream(path, true);
+           PrintWriter out = new PrintWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8))) {
+        for (RuleKeyDiagnostics.Result<?, ?> keys : keysToFlush) {
+          out.println(String.format("%s %s", keys.ruleKey, keys.diagKey));
+        }
+      }
+    } catch (IOException e) {
+      LOG.error(e, "Failed to flush [%d] diagnostic keys to file [%s].", keysToFlush.size(), path);
+    }
+  }
+
+
+  /**
+   * Diagnostic graph flushing logic.
+   */
+
+  private Path getDiagGraphFilePath() {
+    Path logDir = projectFilesystem.resolve(info.getLogDirectoryPath());
+    return logDir.resolve(BuckConstant.RULE_KEY_DIAG_GRAPH_FILE_NAME);
+  }
+
+  /**
+   * Writes the directed acyclic graph of all the diagnosed rules to a file.
+   *
+   * This is a subgraph of the whole graph where only diagnosed rules are included. What rules get
+   * diagnostics is specified with {@link com.facebook.buck.rules.RuleKeyDiagnosticsMode}.
+   *
+   * The format is as follows. All data is written in a textual format using UTF-8 encoding.
+   * The first line contains an integer N that denotes the number of diagnosed rules (nodes).
+   * The following N lines describe each diagnosed rule as a space-separated list of values.
+   * Those values are in order: node id, duration (ns), rule type, target name, cacheable,
+   * default rule key, input key, output hash.
+   * A line with an integer M that denotes the number of edges follows. Edge represents a dependency
+   * relation between two nodes. The following M lines describe each edge as two integers: id of a
+   * node and id of its dependency.
+   * Node ids are not assigned in any specific way and are not compatible across different builds.
+   * The only purpose is to reduce the amount of data required to represent edges by using integers
+   * instead of long strings (fully qualified target names).
+   */
+  private void writeDiagGraph() {
+    ImmutableList.Builder<DepEdge> dirtyEdgesBuilder = ImmutableList.builder();
+    rulesInfo.forEach((rule, info) -> {
+      for (BuildRule dep : info.deps) {
+        if (rulesInfo.containsKey(dep)) {
+          dirtyEdgesBuilder.add(new DepEdge(rule, dep));
+        }
+      }
+    });
+    ImmutableList<DepEdge> dirtyEdges = dirtyEdgesBuilder.build();
+
+    Path path = getDiagGraphFilePath();
+    try {
+      projectFilesystem.createParentDirs(path);
+      try (OutputStream os = projectFilesystem.newUnbufferedFileOutputStream(path, false);
+           PrintWriter out = new PrintWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8));
+      ) {
+        out.println(rulesInfo.size());
+        rulesInfo.forEach((rule, info) -> {
+          out.printf(
+              "%d %d %s %s %d %s %s %s%n",
+              info.id,
+              info.duration,
+              rule.getType(),
+              rule.getBuildTarget(),
+              rule.isCacheable() ? 1 : 0,
+              info.ruleKeys.getRuleKey(),
+              info.ruleKeys.getInputRuleKey().map(RuleKey::toString).orElse("null"),
+              info.outputHash.map(HashCode::toString).orElse("null"));
+        });
+        out.println(dirtyEdges.size());
+        for (DepEdge edge : dirtyEdges) {
+          out.printf("%d %d%n", rulesInfo.get(edge.rule).id, rulesInfo.get(edge.dep).id);
+        }
+      }
+    } catch (IOException e) {
+      LOG.error(e, "Failed to write %s.", path);
+    }
+  }
+
+  private static class RuleInfo {
+    public final int id;
+    public final long duration;
+    public final BuildRuleKeys ruleKeys;
+    public final Optional<HashCode> outputHash;
+    public final ImmutableSortedSet<BuildRule> deps;
+
+    public RuleInfo(
+        int id,
+        long duration,
+        BuildRuleKeys ruleKeys,
+        Optional<HashCode> outputHash,
+        ImmutableSortedSet<BuildRule> deps) {
+      this.id = id;
+      this.duration = duration;
+      this.ruleKeys = ruleKeys;
+      this.outputHash = outputHash;
+      this.deps = deps;
+    }
+  }
+
+  private static class DepEdge {
+    public final BuildRule rule;
+    public final BuildRule dep;
+
+    public DepEdge(BuildRule rule, BuildRule dep) {
+      this.rule = rule;
+      this.dep = dep;
+    }
+  }
+
+}

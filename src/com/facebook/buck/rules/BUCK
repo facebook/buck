@@ -46,6 +46,7 @@ java_library(
     name = "rule_key",
     srcs = [
         "RuleKey.java",
+        "RuleKeyDiagnosticsMode.java",
     ],
     autodeps = True,
     visibility = [
@@ -205,6 +206,7 @@ java_immutables_library(
         "BuildOutputInitializer.java",
         "BuildResult.java",
         "BuildRuleCacheEvent.java",
+        "BuildRuleDiagnosticData.java",
         "BuildRuleEvent.java",
         "CachingBuildEngine.java",
         "DefaultBuildableContext.java",

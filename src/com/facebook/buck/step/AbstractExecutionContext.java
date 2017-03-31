@@ -24,6 +24,7 @@ import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.RuleKeyDiagnosticsMode;
 import com.facebook.buck.shell.WorkerProcessPool;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.ClassLoaderCache;
@@ -128,6 +129,11 @@ abstract class AbstractExecutionContext implements Closeable {
   @Value.Default
   public boolean isDebugEnabled() {
     return false;
+  }
+
+  @Value.Default
+  public RuleKeyDiagnosticsMode getRuleKeyDiagnosticsMode() {
+    return RuleKeyDiagnosticsMode.NEVER;
   }
 
   /**

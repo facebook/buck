@@ -67,7 +67,6 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
-import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
@@ -743,7 +742,7 @@ public class ProjectFilesystem {
       FileAttribute<?>... attrs) throws IOException {
     // No need to buffer writes when writing a single piece of data.
     try (OutputStream outputStream =
-             newUnbufferedFileOutputStream(pathRelativeToProjectRoot, attrs)) {
+             newUnbufferedFileOutputStream(pathRelativeToProjectRoot, /* append */ false, attrs)) {
       outputStream.write(bytes);
     }
   }
@@ -752,21 +751,34 @@ public class ProjectFilesystem {
       Path pathRelativeToProjectRoot,
       FileAttribute<?>... attrs)
       throws IOException {
+    return newFileOutputStream(pathRelativeToProjectRoot, /* append */ false, attrs);
+  }
+
+  public OutputStream newFileOutputStream(
+      Path pathRelativeToProjectRoot,
+      boolean append,
+      FileAttribute<?>... attrs)
+      throws IOException {
     return new BufferedOutputStream(
-        newUnbufferedFileOutputStream(pathRelativeToProjectRoot, attrs));
+        newUnbufferedFileOutputStream(pathRelativeToProjectRoot, append, attrs));
   }
 
   public OutputStream newUnbufferedFileOutputStream(
       Path pathRelativeToProjectRoot,
+      boolean append,
       FileAttribute<?>... attrs)
       throws IOException {
     return Channels.newOutputStream(
         Files.newByteChannel(
             getPathForRelativePath(pathRelativeToProjectRoot),
-            ImmutableSet.<OpenOption>of(
-                StandardOpenOption.CREATE,
-                StandardOpenOption.TRUNCATE_EXISTING,
-                StandardOpenOption.WRITE),
+            append ?
+                ImmutableSet.of(
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.APPEND) :
+                ImmutableSet.of(
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING,
+                    StandardOpenOption.WRITE),
             attrs));
   }
 

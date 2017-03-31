@@ -34,6 +34,7 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CoercedTypeCache;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.RuleKeyDiagnosticsMode;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -318,6 +319,7 @@ public class DistBuildSlaveExecutor {
         /* isInclNoLocationClassesEnabled */ false,
         /* isDebugEnabled */ false,
         /* shouldReportAbsolutePaths */ false,
+              RuleKeyDiagnosticsMode.NEVER,
               args.getBuckEventBus(),
               args.getPlatform(),
               ImmutableMap.of(),
