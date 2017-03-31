@@ -229,7 +229,7 @@ def standard_java_test(
           labels = labels or [],
         )
 
-def standard_java_testutil():
+def standard_java_testutil(name):
     srcs = glob(['*.java'])
     testutil_srcs = []
     for src in srcs:
@@ -238,7 +238,7 @@ def standard_java_testutil():
 
     if len(testutil_srcs) > 0:
         java_library(
-          name = 'testutil',
+          name = name,
           srcs = testutil_srcs,
           autodeps = True,
           visibility = [
