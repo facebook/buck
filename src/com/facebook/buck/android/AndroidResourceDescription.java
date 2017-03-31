@@ -198,7 +198,7 @@ public class AndroidResourceDescription
         // If our resources are coming from a `PathSourcePath`, we collect only the inputs we care
         // about and pass those in separately, so that that `AndroidResource` rule knows to only
         // hash these into it's rule key.
-        // TODO(k21): This is deprecated and should be disabled or removed.
+        // TODO(jakubzika): This is deprecated and should be disabled or removed.
         // Accessing the filesystem during rule creation is problematic because the accesses are
         // not cached or tracked in any way.
         Preconditions.checkArgument(

@@ -102,7 +102,6 @@ public class DoctorReportHelperTest {
         "\n:: No available suggestions right now.\n\n",
         console.getTextWrittenToStdOut());
   }
-
 }
 
 

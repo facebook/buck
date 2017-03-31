@@ -87,7 +87,7 @@ public class NdkBuildStep extends ShellStep {
     builder.add(
         ndkBuild.get().toAbsolutePath().toString(),
         "-j",
-        // TODO(dcolascione): using -j here is wrong.  It lets make run too many work when we do
+        // TODO(dancol): using -j here is wrong.  It lets make run too many work when we do
         // other work in parallel.  Instead, implement the GNU Make job server so make and Buck can
         // coordinate job concurrency.
         Integer.toString(concurrencyLimit.threadLimit),

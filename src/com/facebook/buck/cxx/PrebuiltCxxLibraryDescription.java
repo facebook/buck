@@ -498,7 +498,7 @@ public class PrebuiltCxxLibraryDescription implements
             args.libName);
 
     // If the shared library is prebuilt, just return a reference to it.
-    // TODO(alisdair04): this code misbehaves. whether the file exists should have been figured
+    // TODO(alisdair): this code misbehaves. whether the file exists should have been figured
     // out earlier during parsing/target graph creation, or it should be later when steps being
     // produced. This is preventing distributed build loading files lazily.
     if (sharedLibraryPath instanceof BuildTargetSourcePath ||

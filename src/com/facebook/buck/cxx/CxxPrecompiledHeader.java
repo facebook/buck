@@ -287,7 +287,7 @@ public class CxxPrecompiledHeader
       ImmutableList.Builder<String> iSystemDirsBuilder,
       ImmutableList.Builder<String> nonIncludeFlagsBuilder) {
 
-    // TODO(elsteveogrande): unused?
+    // TODO(steveo): unused?
 
     Iterator<String> it = flags.iterator();
     while (it.hasNext()) {

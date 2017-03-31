@@ -76,7 +76,7 @@ public class Unzip {
         String fileName = entry.getName();
         Path target = relativePath.resolve(fileName);
 
-        // TODO(bolinfest): Keep track of which directories have already been written to avoid
+        // TODO(mbolin): Keep track of which directories have already been written to avoid
         // making unnecessary Files.createDirectories() calls. In practice, a single zip file will
         // have many entries in the same directory.
 
@@ -105,7 +105,7 @@ public class Unzip {
           // restore mtime for the file
           filesystem.resolve(target).toFile().setLastModified(entry.getTime());
 
-          // TODO(shs96c): Implement what the comment below says we should do.
+          // TODO(simons): Implement what the comment below says we should do.
           //
           // Sets the file permissions of the output file given the information in {@code entry}'s
           // extra data field. According to the docs at

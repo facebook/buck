@@ -59,7 +59,7 @@ public abstract class ClasspathTraversal {
    * Subclasses can override this method to return a value of any type. This often represents some
    * sort of cumulative value that is computed as a result of the traversal.
    */
-  // TODO(bolinfest): Change this from Object to a generic <T>.
+  // TODO(mbolin): Change this from Object to a generic <T>.
   @Nullable
   public Object getResult() {
     return null;

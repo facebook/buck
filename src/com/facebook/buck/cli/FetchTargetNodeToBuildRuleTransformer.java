@@ -30,7 +30,7 @@ import com.google.common.collect.ImmutableSet;
 class FetchTargetNodeToBuildRuleTransformer implements TargetNodeToBuildRuleTransformer {
 
   private final ImmutableSet<Description<?>> descriptions;
-  // TODO(shs96c): Allow the TargetToActionGraph to be stateless.
+  // TODO(simons): Allow the TargetToActionGraph to be stateless.
   private final ImmutableSet.Builder<BuildTarget> downloadableTargets;
   private final DefaultTargetNodeToBuildRuleTransformer delegate;
 

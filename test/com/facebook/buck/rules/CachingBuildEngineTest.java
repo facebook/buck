@@ -3026,16 +3026,16 @@ public class CachingBuildEngineTest {
   }
 
 
-  // TODO(bolinfest): Test that when the success files match, nothing is built and nothing is
+  // TODO(mbolin): Test that when the success files match, nothing is built and nothing is
   // written back to the cache.
 
-  // TODO(bolinfest): Test that when the value in the success file does not agree with the current
+  // TODO(mbolin): Test that when the value in the success file does not agree with the current
   // value, the rule is rebuilt and the result is written back to the cache.
 
-  // TODO(bolinfest): Test that a failure when executing the build steps is propagated
+  // TODO(mbolin): Test that a failure when executing the build steps is propagated
   // appropriately.
 
-  // TODO(bolinfest): Test what happens when the cache's methods throw an exception.
+  // TODO(mbolin): Test what happens when the cache's methods throw an exception.
 
   private static BuildRule createRule(
       ProjectFilesystem filesystem,

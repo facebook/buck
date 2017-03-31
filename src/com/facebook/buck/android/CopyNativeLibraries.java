@@ -273,7 +273,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
             new Step() {
               @Override
               public StepExecutionResult execute(ExecutionContext context) {
-                // TODO(shs96c): Using a projectfilesystem here is almost definitely wrong.
+                // TODO(simons): Using a projectfilesystem here is almost definitely wrong.
                 // This is because each library may come from different build rules, which may be in
                 // different cells --- this check works by coincidence.
                 if (!filesystem.exists(libSourceDir)) {

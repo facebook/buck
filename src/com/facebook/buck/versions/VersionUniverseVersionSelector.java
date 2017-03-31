@@ -33,7 +33,7 @@ import java.util.Optional;
 /**
  * A fast constraint resolver which selects versions using pre-defined version universes.
  *
- * TODO(andrewjcg): Validate version constraints.
+ * TODO(agallagher): Validate version constraints.
  */
 public class VersionUniverseVersionSelector implements VersionSelector {
 

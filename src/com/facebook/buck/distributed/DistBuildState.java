@@ -240,7 +240,7 @@ public class DistBuildState {
         provider);
 
     // Create all symlinks and touch all other files.
-    // TODO(alisdair04): remove this once action graph doesn't read from file system.
+    // TODO(alisdair): remove this once action graph doesn't read from file system.
     materializer.preloadAllFiles();
 
     return materializer;

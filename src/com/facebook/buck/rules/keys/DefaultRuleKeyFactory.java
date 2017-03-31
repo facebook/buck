@@ -114,7 +114,7 @@ public class DefaultRuleKeyFactory implements RuleKeyFactory<RuleKey> {
 
   private void addDepsToRuleKey(BuildRule buildRule, RuleKeyObjectSink sink) {
     if (buildRule instanceof AbstractBuildRule) {
-      // TODO(marcinkosiba): We really need to get rid of declared/extra deps in rules. Instead
+      // TODO(mkosiba): We really need to get rid of declared/extra deps in rules. Instead
       // rules should explicitly take the needed sub-sets of deps as constructor args.
       AbstractBuildRule abstractBuildRule = (AbstractBuildRule) buildRule;
       sink.setReflectively("buck.extraDeps", abstractBuildRule.deprecatedGetExtraDeps());

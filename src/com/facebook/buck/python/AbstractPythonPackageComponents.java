@@ -77,7 +77,7 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
   public final void appendToRuleKey(RuleKeyObjectSink sink) {
     // Hash all the input components here so we can detect changes in both input file content
     // and module name mappings.
-    // TODO(andrewjcg): Change the types of these fields from Map to SortedMap so that we don't
+    // TODO(agallagher): Change the types of these fields from Map to SortedMap so that we don't
     // have to do all this weird stuff to ensure the key is stable. Please update
     // getInputsToCompareToOutput() as well once this is fixed.
     for (ImmutableMap.Entry<String, Map<Path, SourcePath>> part : ImmutableMap.of(

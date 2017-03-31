@@ -220,7 +220,7 @@ public class IjProjectWriter {
         "sourceJar",
         library.getSourceJar().map(MorePaths::pathWithUnixSeparators).orElse(null));
     contents.add("javadocUrl", library.getJavadocUrl().orElse(null));
-    //TODO(marcinkosiba): support res and assets for aar.
+    //TODO(mkosiba): support res and assets for aar.
 
     writeToFile(contents, path);
     return path;

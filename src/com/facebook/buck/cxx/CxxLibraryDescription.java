@@ -1093,7 +1093,7 @@ public class CxxLibraryDescription implements
 
         CxxPreprocessorInput.Builder cxxPreprocessorInputBuilder = CxxPreprocessorInput.builder();
 
-        // TODO(andrewjcg): We currently always add exported flags and frameworks to the
+        // TODO(agallagher): We currently always add exported flags and frameworks to the
         // preprocessor input to mimic existing behavior, but this should likely be fixed.
         cxxPreprocessorInputBuilder.putAllPreprocessorFlags(
             CxxFlags.getLanguageFlags(

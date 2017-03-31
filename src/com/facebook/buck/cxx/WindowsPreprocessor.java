@@ -40,7 +40,7 @@ public class WindowsPreprocessor extends AbstractPreprocessor {
 
   @Override
   public boolean supportsPrecompiledHeaders() {
-    // TODO(elsteveogrande) Should be easy to add support; will try @ later time,
+    // TODO(steveo) Should be easy to add support; will try @ later time,
     // when I can test w/ Windows.
     // https://msdn.microsoft.com/en-us/library/z0atkd6c.aspx
     return false;
@@ -66,7 +66,7 @@ public class WindowsPreprocessor extends AbstractPreprocessor {
       SourcePathResolver resolver,
       SourcePath prefixHeader) {
     throw new UnsupportedOperationException("prefix header not supported by " + getClass());
-    // TODO(elsteveogrande) Should be easy to add support; will try @ later time,
+    // TODO(steveo) Should be easy to add support; will try @ later time,
     // when I can test w/ Windows.
     // "Forced Include": https://msdn.microsoft.com/en-us/library/8c5ztk84.aspx
     // Space is allowed between flag and its pathname argument.
@@ -77,7 +77,7 @@ public class WindowsPreprocessor extends AbstractPreprocessor {
   @Override
   public Iterable<String> precompiledHeaderArgs(Path pchOutputPath) {
     throw new UnsupportedOperationException("precompiled header not supported by " + getClass());
-    // TODO(elsteveogrande) Should be easy to add support; will try @ later time,
+    // TODO(steveo) Should be easy to add support; will try @ later time,
     // when I can test w/ Windows.
     // https://msdn.microsoft.com/en-us/library/z0atkd6c.aspx
     // E.g. something like this flag (no space between "/Yu" and its argument):

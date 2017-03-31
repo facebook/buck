@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 
-// TODO(bolinfest): This should be renamed to DummyFileHashCache and moved under the test/
+// TODO(mbolin): This should be renamed to DummyFileHashCache and moved under the test/
 // directory.
 public class NullFileHashCache implements FileHashCache {
 

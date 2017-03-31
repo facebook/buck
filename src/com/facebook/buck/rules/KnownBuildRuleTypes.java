@@ -379,7 +379,7 @@ public class KnownBuildRuleTypes {
     }
 
     // Finalize our "default" host.
-    // TODO(Ktwu) The host flavor should default to a concrete flavor
+    // TODO(kelliem) The host flavor should default to a concrete flavor
     // like "linux-x86_64", not "default".
     hostFlavor = DefaultCxxPlatforms.FLAVOR;
     Optional<String> hostCxxPlatformOverride = cxxBuckConfig.getHostPlatform();

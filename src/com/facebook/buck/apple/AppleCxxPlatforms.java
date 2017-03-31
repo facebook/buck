@@ -180,7 +180,7 @@ public class AppleCxxPlatforms {
       toolSearchPathsBuilder.add(sdkPaths.getDeveloperPath().get().resolve("Tools"));
     }
 
-    // TODO(bhamiltoncx): Add more and better cflags.
+    // TODO(beng): Add more and better cflags.
     ImmutableList.Builder<String> cflagsBuilder = ImmutableList.builder();
     cflagsBuilder.add("-isysroot", sdkPaths.getSdkPath().toString());
     cflagsBuilder.add("-iquote", filesystem.getRootPath().toString());

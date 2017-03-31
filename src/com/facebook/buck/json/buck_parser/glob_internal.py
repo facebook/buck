@@ -15,7 +15,7 @@ def glob_internal(includes, excludes, project_root_relative_excludes, include_do
     def includes_iterator():
         for pattern in includes:
             for path in search_base.glob(pattern):
-                # TODO(bhamiltoncx): Handle hidden files on Windows.
+                # TODO(beng): Handle hidden files on Windows.
                 if path.is_file() and \
                         (include_dotfiles or not path_component_contains_dot(
                             path.relative_to(search_base))):

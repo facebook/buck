@@ -266,7 +266,7 @@ abstract class AbstractCxxSourceRuleFactory {
 
     // These source types require assembling, so add in platform-specific assembler flags.
     //
-    // TODO(andrewjcg): We shouldn't care about lower-level assembling.  If the user has assembler
+    // TODO(agallagher): We shouldn't care about lower-level assembling.  If the user has assembler
     // flags in mind which they want to propagate to other languages, they should pass them in via
     // some other means (e.g. `.buckconfig`).
     if (type == CxxSource.Type.C_CPP_OUTPUT ||

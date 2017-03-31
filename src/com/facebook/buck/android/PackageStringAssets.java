@@ -70,7 +70,7 @@ public class PackageStringAssets extends AbstractBuildRule {
     this.rDotTxtPath = rDotTxtPath;
   }
 
-  // TODO(russellporter): Add an integration test for packaging string assets
+  // TODO(russell): Add an integration test for packaging string assets
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,

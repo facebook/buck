@@ -106,7 +106,7 @@ class BuckPackage(BuckTool):
             os.mkdir(resource_path)
             for f in pkg_resources.resource_listdir(__name__, resource_name):
                 if f == '':
-                    # TODO(bhamiltoncx): Figure out why this happens
+                    # TODO(beng): Figure out why this happens
                     continue
                 # TODO: Handle executable resources in directory
                 self._unpack_resource(

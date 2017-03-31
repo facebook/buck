@@ -1039,7 +1039,7 @@ public class AndroidBinary
 
     Path proguardConfigDir = getProguardTextFilesPath();
     // Transform our input classpath to a set of output locations for each input classpath.
-    // TODO(jasta): the output path we choose is the result of a slicing function against
+    // TODO(devjasta): the output path we choose is the result of a slicing function against
     // input classpath. This is fragile and should be replaced with knowledge of the BuildTarget.
     final ImmutableMap<Path, Path> inputOutputEntries = classpathEntriesToDex.stream().collect(
         MoreCollectors.toImmutableMap(

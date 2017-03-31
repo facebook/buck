@@ -36,13 +36,13 @@ import java.nio.file.Path;
 abstract class AbstractMkdirStep implements Step {
 
   @Value.Parameter
-  // TODO(illicitonion): Remove this ProjectFilesystem when ignored files aren't a concept.
+  // TODO(dwh): Remove this ProjectFilesystem when ignored files aren't a concept.
   protected abstract ProjectFilesystem getFilesystem();
 
   @Value.Parameter
   /**
    * Path to make.
-   * TODO(illicitonion): Make this an absolute path.
+   * TODO(dwh): Make this an absolute path.
    */
   protected abstract Path getAbsoluteOrRelativePath();
 

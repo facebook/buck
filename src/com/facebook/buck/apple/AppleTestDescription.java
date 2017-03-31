@@ -401,7 +401,7 @@ public class AppleTestDescription implements
       Arg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    // TODO(bhamiltoncx, Coneko): This should technically only be a runtime dependency;
+    // TODO(beng, coneko): This should technically only be a runtime dependency;
     // doing this adds it to the extra deps in BuildRuleParams passed to
     // the bundle and test rule.
     Optional<BuildTarget> xctoolZipTarget = appleConfig.getXctoolZipTarget();

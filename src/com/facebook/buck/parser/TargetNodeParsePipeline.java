@@ -123,7 +123,7 @@ public class TargetNodeParsePipeline
         executorService.submit(() -> {
           for (BuildTarget depTarget : targetNode.getParseDeps()) {
             Path depCellPath = depTarget.getCellPath();
-            // TODO(marcinkosiba): Support crossing cell boundary from within the pipeline.
+            // TODO(mkosiba): Support crossing cell boundary from within the pipeline.
             // Currently the cell name->Cell object mapping is held by the PerBuildState in a
             // non-threadsafe way making it inconvenient to access from the pipeline.
             if (depCellPath.equals(cell.getRoot())) {

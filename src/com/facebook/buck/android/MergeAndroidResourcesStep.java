@@ -185,7 +185,7 @@ public class MergeAndroidResourcesStep implements Step {
     ImmutableMap.Builder<Path, HasAndroidResourceDeps> symbolsFileToResourceDeps =
         ImmutableMap.builder();
     for (HasAndroidResourceDeps res : androidResourceDeps) {
-      // TODO(shs96c): These have to be absolute for this all to work with multi-repo.
+      // TODO(simons): These have to be absolute for this all to work with multi-repo.
       // This is because each `androidResourceDeps` might be from a different repo, so we can't
       // assume that they exist in the calling rule's projectfilesystem.
       Path rDotTxtPath = pathResolver.getRelativePath(res.getPathToTextSymbolsFile());

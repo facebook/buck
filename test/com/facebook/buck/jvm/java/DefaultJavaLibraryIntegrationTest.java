@@ -122,7 +122,7 @@ public class DefaultJavaLibraryIntegrationTest {
             "lib__%s__output/" + target.getShortName() + ".jar");
     Path outputFile = workspace.getPath(outputPath);
     assertTrue(Files.exists(outputFile));
-    // TODO(bolinfest): When we produce byte-for-byte identical JAR files across builds, do:
+    // TODO(mbolin): When we produce byte-for-byte identical JAR files across builds, do:
     //
     //   HashCode hashOfOriginalJar = Files.hash(outputFile, Hashing.sha1());
     //
@@ -340,7 +340,7 @@ public class DefaultJavaLibraryIntegrationTest {
         "lib__%s__output/" + bizTarget.getShortName() + ".jar");
     FileTime bizJarLastModified = Files.getLastModifiedTime(workspace.getPath(bizOutputPath));
 
-    // TODO(bolinfest): Run uber-biz.jar and verify it prints "Hello World!\n".
+    // TODO(mbolin): Run uber-biz.jar and verify it prints "Hello World!\n".
 
     // Edit Util.java in a way that does not affect its ABI.
     workspace.replaceFileContents("Util.java", "Hello World", "Hola Mundo");
@@ -367,9 +367,9 @@ public class DefaultJavaLibraryIntegrationTest {
         bizJarLastModified,
         Files.getLastModifiedTime(workspace.getPath(bizOutputPath)));
 
-    // TODO(bolinfest): Run uber-biz.jar and verify it prints "Hola Mundo!\n".
+    // TODO(mbolin): Run uber-biz.jar and verify it prints "Hola Mundo!\n".
 
-    // TODO(bolinfest): This last scenario that is being tested would be better as a unit test.
+    // TODO(mbolin): This last scenario that is being tested would be better as a unit test.
     // Run `buck build` one last time. This ensures that a dependency java_library() rule (:util)
     // that is built via BuildRuleSuccess.Type.MATCHING_INPUT_BASED_RULE_KEY does not
     // explode when its dependent rule (:biz) invokes the dependency's getAbiKey() method as part of

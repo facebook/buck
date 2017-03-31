@@ -55,7 +55,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
 
   private static final String RUN_INPLACE_RESOURCE = "com/facebook/buck/python/run_inplace.py.in";
 
-  // TODO(andrewjcg): Task #8098647: This rule has no steps, so it
+  // TODO(agallagher): Task #8098647: This rule has no steps, so it
   // really doesn't need a rule key.
   //
   // However, Python tests will never be re-run if the rule key

@@ -375,7 +375,7 @@ public class IjModuleFactory {
     }
 
     T arg = targetNode.getConstructorArg();
-    // TODO(marcinkosiba): investigate supporting annotation processors without resorting to this.
+    // TODO(mkosiba): investigate supporting annotation processors without resorting to this.
     boolean hasAnnotationProcessors = !arg.annotationProcessors.isEmpty();
     if (containsNonSourcePath(arg.srcs) || hasAnnotationProcessors) {
       context.addCompileShadowDep(targetNode.getBuildTarget());

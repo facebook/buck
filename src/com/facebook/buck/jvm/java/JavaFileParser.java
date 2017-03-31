@@ -843,7 +843,7 @@ public class JavaFileParser {
       }
     });
 
-    // TODO(bolinfest): Special treatment for exportedSymbols when poisoned by wildcard import.
+    // TODO(mbolin): Special treatment for exportedSymbols when poisoned by wildcard import.
     ImmutableSortedSet<String> totalExportedSymbols = exportedSymbols.build();
 
     // If we were poisoned by an unsupported wildcard import, then we should rely exclusively on

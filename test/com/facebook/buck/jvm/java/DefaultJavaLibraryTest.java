@@ -1348,7 +1348,7 @@ public class DefaultJavaLibraryTest {
         .anyTimes();
     replay(platformTarget);
 
-    // TODO(bolinfest): Create a utility that populates a BuildContext.Builder with fakes.
+    // TODO(mbolin): Create a utility that populates a BuildContext.Builder with fakes.
     return BuildContext.builder()
         .setActionGraph(new ActionGraph(ImmutableList.of(javaLibrary)))
         .setSourcePathResolver(new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)))
@@ -1458,7 +1458,7 @@ public class DefaultJavaLibraryTest {
       return options;
     }
 
-    // TODO(shs96c): Actually generate a java library rule, rather than an android one.
+    // TODO(simons): Actually generate a java library rule, rather than an android one.
     private BuildRule createJavaLibraryRule(ProjectFilesystem projectFilesystem)
         throws IOException, NoSuchBuildTargetException {
       BuildTarget buildTarget = BuildTargetFactory.newInstance(ANNOTATION_SCENARIO_TARGET);

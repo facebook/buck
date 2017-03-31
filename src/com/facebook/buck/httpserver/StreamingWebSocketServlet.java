@@ -82,7 +82,7 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
       super.onWebSocketConnect(session);
       connections.add(this);
 
-      // TODO(bolinfest): Record all of the events for the last build that was started. For a fresh
+      // TODO(mbolin): Record all of the events for the last build that was started. For a fresh
       // connection, replay all of the events to get the client caught up. Though must be careful,
       // as this may not be a *new* connection from the client, but a *reconnection*, in which
       // case we have to be careful about redrawing.
@@ -97,7 +97,7 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
     @Override
     public void onWebSocketText(String message) {
       super.onWebSocketText(message);
-      // TODO(bolinfest): Handle requests from client instead of only pushing data down.
+      // TODO(mbolin): Handle requests from client instead of only pushing data down.
     }
   }
 }

@@ -79,7 +79,7 @@ import java.util.stream.Stream;
  * As a rule of thumb, if the "out" parameter is missing, the "name" parameter is used as the name
  * of the file to be saved.
  */
-// TODO(shs96c): Extend to also allow exporting a rule.
+// TODO(simons): Extend to also allow exporting a rule.
 public class ExportFile extends AbstractBuildRuleWithResolver
     implements HasOutputName, HasRuntimeDeps {
 

@@ -266,7 +266,7 @@ public class CompilationDatabaseIntegrationTest {
       commandArgs.add("-fPIC");
     }
 
-    // TODO(Coneko, k21): It seems like a bug that this set of flags gets inserted twice.
+    // TODO(coneko, jakubzika): It seems like a bug that this set of flags gets inserted twice.
     // Perhaps this has something to do with how the [cxx] section in .buckconfig is processed.
     // (Err, it's probably adding both the preprocessor and regular rule command suffixes. Should
     // be harmless.)

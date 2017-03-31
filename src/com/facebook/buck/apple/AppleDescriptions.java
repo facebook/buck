@@ -671,7 +671,7 @@ public class AppleDescriptions {
             appleCxxPlatform);
     addToIndex(resolver, sceneKitAssets);
 
-    // TODO(bhamiltoncx): Sort through the changes needed to make project generation work with
+    // TODO(beng): Sort through the changes needed to make project generation work with
     // binary being optional.
     BuildRule flavoredBinaryRule = getFlavoredBinaryRule(
         cxxPlatformFlavorDomain,

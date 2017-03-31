@@ -522,14 +522,14 @@ public class InterCellIntegrationTest {
     TestDataHelper.overrideBuckconfig(
         primary,
         ImmutableMap.of("cxx", ImmutableMap.of("gtest_dep", "secondary//gtest:gtest")));
-    // TODO(mzlee,illicitonion): secondary//gtest:gtest should be //gtest:gtest or we
+    // TODO(mzlee,dwh): secondary//gtest:gtest should be //gtest:gtest or we
     // should be able to use different cell names
     registerCell(secondary, "secondary", secondary);
     TestDataHelper.overrideBuckconfig(
         secondary,
         ImmutableMap.of("cxx", ImmutableMap.of("gtest_dep", "secondary//gtest:gtest")));
 
-    // TODO(mzlee,illicitonion): //test:cxxtest should be able to safely depend on
+    // TODO(mzlee,dwh): //test:cxxtest should be able to safely depend on
     // secondary//lib:cxxlib instead of having its own copy
     ProjectWorkspace.ProcessResult result = primary.runBuckCommand(
         "test",

@@ -28,7 +28,7 @@ import java.util.List;
 /**
  * {@link Downloader} decorator which adds retry logic to any decorated downloader instance.
  * <p>
- * TODO(ttsugriy): support flexible backoff strategy (at least exponential).
+ * TODO(ttsugrii): support flexible backoff strategy (at least exponential).
  */
 public class RetryingDownloader implements Downloader {
   private static final Logger LOG = Logger.get(RetryingDownloader.class);

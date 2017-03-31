@@ -251,7 +251,7 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
 
     fileHashEntry.setMaterializeDuringPreloading(materializeCurrentFileDuringPreloading);
 
-    // TODO(alisdair04): handling for symlink to internal directory (including infinite loop).
+    // TODO(alisdair): handling for symlink to internal directory (including infinite loop).
     remoteFileHashes.addEntry(fileHashEntry);
   }
 
@@ -275,12 +275,12 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
     // We want to materialize files during pre-loading for .buckconfig entries
     materializeCurrentFileDuringPreloading = true;
 
-    // TODO(alisdair04,shivanker): KnownBuildRuleTypes always loads java compilers if they are
+    // TODO(alisdair,shivanker): KnownBuildRuleTypes always loads java compilers if they are
     // defined in a .buckconfig, regardless of what type of build is taking place. Unless peforming
     // a Java build, they are not added to the build graph, and as such Stampede needs to be told
     // about them directly via the whitelist.
 
-    // TODO(alisdair04,ruibm): capture all .buckconfig dependencies automatically.
+    // TODO(alisdair,ruibm): capture all .buckconfig dependencies automatically.
 
     Optional<ImmutableList<Path>> whitelist = distBuildConfig.getOptionalPathWhitelist();
     if (!whitelist.isPresent()) {

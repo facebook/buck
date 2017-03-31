@@ -40,7 +40,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-// TODO(shs96c): Use a FakeProjectFilesystem throughout.
+// TODO(simons): Use a FakeProjectFilesystem throughout.
 public class TraceDataHandlerTest extends EasyMockSupport {
 
   @Test

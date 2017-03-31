@@ -96,7 +96,7 @@ public class CxxPlatforms {
       ImmutableMap<String, String> flagMacros,
       Optional<String> binaryExtension,
       HeaderVerification headerVerification) {
-    // TODO(bhamiltoncx, andrewjcg): Generalize this so we don't need all these setters.
+    // TODO(beng, agallagher): Generalize this so we don't need all these setters.
     CxxPlatform.Builder builder = CxxPlatform.builder();
 
     final Archiver arDelegate = ar instanceof LazyDelegatingArchiver ?
@@ -207,7 +207,7 @@ public class CxxPlatforms {
   }
 
   private static ImmutableMap<String, Flavor> getHostFlavorMap() {
-    // TODO(Coneko): base the host flavor on architecture, too.
+    // TODO(coneko): base the host flavor on architecture, too.
     return ImmutableMap.<String, Flavor>builder()
        .put(Platform.LINUX.getAutoconfName(), InternalFlavor.of("linux-x86_64"))
        .put(Platform.MACOS.getAutoconfName(), InternalFlavor.of("macosx-x86_64"))

@@ -1030,7 +1030,7 @@ public final class Main {
         // Build up the hash cache, which is a collection of the stateful cell cache and some
         // per-run caches.
         //
-        // TODO(Coneko, ruibm, andrewjcg): Determine whether we can use the existing filesystem
+        // TODO(coneko, ruibm, agallagher): Determine whether we can use the existing filesystem
         // object that is in scope instead of creating a new rootCellProjectFilesystem. The primary
         // difference appears to be that filesystem is created with a Config that is used to produce
         // ImmutableSet<PathOrGlobMatcher> and BuckPaths for the ProjectFilesystem, whereas this one
@@ -1575,11 +1575,11 @@ public final class Main {
       final AndroidDirectoryResolver androidDirectoryResolver,
       final AndroidBuckConfig androidBuckConfig,
       final BuckEventBus eventBus) {
-    // TODO(bolinfest): Only one such Supplier should be created per Cell per Buck execution.
+    // TODO(mbolin): Only one such Supplier should be created per Cell per Buck execution.
     // Currently, only one Supplier is created per Buck execution because Main creates the Supplier
     // and passes it from above all the way through, but it is not parameterized by Cell.
     //
-    // TODO(bolinfest): Every build rule that uses AndroidPlatformTarget must include the result
+    // TODO(mbolin): Every build rule that uses AndroidPlatformTarget must include the result
     // of its getCacheName() method in its RuleKey.
     return new Supplier<AndroidPlatformTarget>() {
 

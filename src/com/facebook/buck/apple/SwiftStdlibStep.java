@@ -83,7 +83,7 @@ class SwiftStdlibStep implements Step {
     ProcessExecutorParams params = makeProcessExecutorParams();
     SimpleProcessListener listener = new SimpleProcessListener();
 
-    // TODO(ryu2): parse output as needed
+    // TODO(markwang): parse output as needed
     try {
       LOG.debug("%s", command);
       ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(params, listener);

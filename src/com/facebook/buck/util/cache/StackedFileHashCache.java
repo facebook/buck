@@ -72,7 +72,7 @@ public class StackedFileHashCache implements FileHashCache {
       ProjectFilesystem filesystem,
       Path path) {
     for (ProjectFileHashCache cache : caches) {
-      // TODO(andrewjcg): This should check for equal filesystems probably shouldn't be using the
+      // TODO(agallagher): This should check for equal filesystems probably shouldn't be using the
       // root path, but we currently rely on this behavior.
       if (cache.getFilesystem().getRootPath().equals(filesystem.getRootPath()) &&
           cache.willGet(path)) {

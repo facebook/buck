@@ -439,7 +439,7 @@ public class AppleTest
 
   @Override
   public Path getPathToTestOutputDirectory() {
-    // TODO(bhamiltoncx): Refactor the JavaTest implementation; this is identical.
+    // TODO(beng): Refactor the JavaTest implementation; this is identical.
     return BuildTargets.getGenPath(
         getProjectFilesystem(),
         getBuildTarget(),

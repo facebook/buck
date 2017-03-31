@@ -925,7 +925,7 @@ public class WorkspaceAndProjectGenerator {
       }
       Optional<String> remoteRunnablePath;
       if (schemeConfigArg.isRemoteRunnable.orElse(false)) {
-        // XXX TODO(bhamiltoncx): Figure out the actual name of the binary to launch
+        // XXX TODO(beng): Figure out the actual name of the binary to launch
         remoteRunnablePath = Optional.of("/" + workspaceName);
       } else {
         remoteRunnablePath = Optional.empty();

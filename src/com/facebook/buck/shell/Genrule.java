@@ -197,7 +197,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
     environmentVariablesBuilder.put("SRCDIR", absolutePathToSrcDirectory.toString());
     environmentVariablesBuilder.put("TMP", absolutePathToTmpDirectory.toString());
 
-    // TODO(bolinfest): This entire hack needs to be removed. The [tools] section of .buckconfig
+    // TODO(mbolin): This entire hack needs to be removed. The [tools] section of .buckconfig
     // should be generalized to specify local paths to tools that can be used in genrules.
     AndroidPlatformTarget android;
     try {

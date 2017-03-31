@@ -110,7 +110,7 @@ class SwiftLibrary
 
   @Override
   public Iterable<NativeLinkable> getNativeLinkableDeps() {
-    // TODO(bhamiltoncx, ryu2): Use pseudo targets to represent the Swift
+    // TODO(beng, markwang): Use pseudo targets to represent the Swift
     // runtime library's linker args here so NativeLinkables can
     // deduplicate the linker flags on the build target (which would be the same for
     // all libraries).

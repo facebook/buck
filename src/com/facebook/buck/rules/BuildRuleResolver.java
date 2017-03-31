@@ -141,14 +141,14 @@ public class BuildRuleResolver {
     TargetNode<?, ?> node = targetGraph.get(target);
     rule = buildRuleGenerator.transform(targetGraph, this, node);
     Preconditions.checkState(
-        // TODO(k21): This should hold for flavored build targets as well.
+        // TODO(jakubzika): This should hold for flavored build targets as well.
         rule.getBuildTarget().getUnflavoredBuildTarget().equals(target.getUnflavoredBuildTarget()),
         "Description returned rule for '%s' instead of '%s'.",
         rule.getBuildTarget(),
         target);
     BuildRule oldRule = buildRuleIndex.put(target, rule);
     Preconditions.checkState(
-        // TODO(k21): Eventually we should be able to remove the oldRule == rule part.
+        // TODO(jakubzika): Eventually we should be able to remove the oldRule == rule part.
         // For now we need it to handle cases where a description adds a rule to the index before
         // returning it.
         oldRule == null || oldRule == rule,

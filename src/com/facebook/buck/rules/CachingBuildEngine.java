@@ -536,7 +536,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                         rule,
                         defaultRuleKey,
                         buildContext.getArtifactCache(),
-                        // TODO(shs96c): This should be a shared between all tests, not one per cell
+                        // TODO(simons): This should be a shared between all tests, not one per cell
                         rule.getProjectFilesystem(),
                         buildContext);
                 if (cacheResult.getType().isSuccess()) {
@@ -942,7 +942,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             buildResult,
             new FutureCallback<BuildResult>() {
 
-              // TODO(bolinfest): Delete all files produced by the rule, as they are not guaranteed
+              // TODO(mbolin): Delete all files produced by the rule, as they are not guaranteed
               // to be valid at this point?
               private void cleanupAfterError() {
                 try {
@@ -1382,7 +1382,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       }
     };
 
-    // TODO(bolinfest): Change ArtifactCache.fetch() so that it returns a File instead of takes one.
+    // TODO(mbolin): Change ArtifactCache.fetch() so that it returns a File instead of takes one.
     // Then we could download directly from the remote cache into the on-disk cache and unzip it
     // from there.
     CacheResult cacheResult = fetchArtifactForBuildable(ruleKey, lazyZipPath, artifactCache);
@@ -1814,7 +1814,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             rule,
             ruleKey.get(),
             context.getArtifactCache(),
-            // TODO(shs96c): This should be shared between all tests, not one per cell
+            // TODO(simons): This should be shared between all tests, not one per cell
             rule.getProjectFilesystem(),
             context);
 
@@ -1876,7 +1876,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
           rule,
           inputRuleKey,
           context.getArtifactCache(),
-          // TODO(shs96c): Share this between all tests, not one per cell.
+          // TODO(simons): Share this between all tests, not one per cell.
           rule.getProjectFilesystem(),
           context);
 

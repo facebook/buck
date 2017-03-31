@@ -86,7 +86,7 @@ public class AbstractTypeCoercerFactory implements TypeCoercerFactory {
             // This is only actually used directly by ConstructorArgMarshaller, for parsing the
             // groups list. It's also queried (but not actually used) when Descriptions declare
             // deps fields.
-            // TODO(tophyr): make this work for all types of BuildTargetPatterns
+            // TODO(csarbora): make this work for all types of BuildTargetPatterns
             // probably differentiate them by inheritance
             return BuildTargetPatternParser.forVisibilityArgument().parse(
                 cellRoots,

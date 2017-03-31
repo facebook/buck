@@ -468,13 +468,13 @@ public class Watchman implements AutoCloseable {
       }
 
       private Transport createLocalWatchmanTransport(Path transportPath) throws IOException {
-        // TODO(bhamiltoncx): Support Windows named pipes here.
+        // TODO(beng): Support Windows named pipes here.
         return UnixDomainSocket.createSocketWithPath(transportPath);
       }
     };
   }
 
-  // TODO(bhamiltoncx): Split the metadata out into an immutable value type and pass
+  // TODO(beng): Split the metadata out into an immutable value type and pass
   // the WatchmanClient separately.
   @VisibleForTesting
   public Watchman(

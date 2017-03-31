@@ -33,13 +33,13 @@ import java.nio.file.Path;
 abstract class AbstractSymlinkFileStep implements Step {
 
   @Value.Parameter
-  // TODO(illicitonion): Remove filesystem when ignored files are removed.
+  // TODO(dwh): Remove filesystem when ignored files are removed.
   protected abstract ProjectFilesystem getFilesystem();
   @Value.Parameter
-  // TODO(illicitonion): Require this to be one of absolute or relative.
+  // TODO(dwh): Require this to be one of absolute or relative.
   protected abstract Path getExistingFile();
   @Value.Parameter
-  // TODO(illicitonion): Require this to be absolute.
+  // TODO(dwh): Require this to be absolute.
   protected abstract Path getDesiredLink();
 
   /**

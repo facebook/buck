@@ -423,7 +423,7 @@ public class ProjectFilesystem {
       return file;
     }
 
-    // TODO(bolinfest): Eliminate this temporary exemption for symbolic links.
+    // TODO(mbolin): Eliminate this temporary exemption for symbolic links.
     if (isSymLink(file)) {
       return file;
     }

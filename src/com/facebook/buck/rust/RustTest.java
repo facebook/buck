@@ -116,7 +116,7 @@ public class RustTest
             getProjectFilesystem(),
             Optional.of(workingDirectory),
             getTestCommand(pathResolver, "--logfile", testOutputFile.toString()),
-            Optional.empty(), // TODO(StanislavGlebik): environment
+            Optional.empty(), // TODO(stash): environment
             workingDirectory.resolve("exitcode"),
             Optional.empty(),
             testStdoutFile) { })
@@ -266,7 +266,7 @@ public class RustTest
               "rust_test",
               entry.getKey(),
               entry.getValue(),
-              0, // TODO(StanislavGlebik) time
+              0, // TODO(stash) time
               "", // message
               "", // stack trace,
               testToStdout.get(entry.getKey()),

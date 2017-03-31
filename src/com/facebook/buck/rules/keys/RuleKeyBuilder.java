@@ -342,7 +342,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   public RuleKeyBuilder<RULE_KEY> setPath(
       Path absolutePath,
       Path ideallyRelative) throws IOException {
-    // TODO(shs96c): Enable this precondition once setPath(Path) has been removed.
+    // TODO(simons): Enable this precondition once setPath(Path) has been removed.
     // Preconditions.checkState(absolutePath.isAbsolute());
     if (ideallyRelative.isAbsolute()) {
       logger.warn(

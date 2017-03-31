@@ -2057,7 +2057,7 @@ public class ProjectGenerator {
   private void addCoreDataModelBuildPhase(
       PBXGroup targetGroup,
       Iterable<AppleWrapperResourceArg> dataModels) throws IOException {
-    // TODO(Coneko): actually add a build phase
+    // TODO(coneko): actually add a build phase
 
     for (final AppleWrapperResourceArg dataModel : dataModels) {
       // Core data models go in the resources group also.

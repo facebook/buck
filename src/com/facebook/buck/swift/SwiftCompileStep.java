@@ -70,7 +70,7 @@ class SwiftCompileStep implements Step {
     ProcessExecutorParams params = makeProcessExecutorParams();
     SimpleProcessListener listener = new SimpleProcessListener();
 
-    // TODO(ryu2): parse the output, print build failure errors, etc.
+    // TODO(markwang): parse the output, print build failure errors, etc.
     try {
       LOG.debug("%s", compilerCommand);
       ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(params, listener);

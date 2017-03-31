@@ -37,10 +37,10 @@ abstract class AbstractRmStep implements Step {
   private static final Logger LOG = Logger.get(AbstractRmStep.class);
 
   @Value.Parameter
-  // TODO(illicitonion): Remove this ProjectFilesystem when ignored files aren't a concept.
+  // TODO(dwh): Remove this ProjectFilesystem when ignored files aren't a concept.
   protected abstract ProjectFilesystem getFilesystem();
   @Value.Parameter
-  // TODO(illicitonion): Make this always an absolute path.
+  // TODO(dwh): Make this always an absolute path.
   protected abstract Path getAbsoluteOrRelativePath();
 
   @Value.Default

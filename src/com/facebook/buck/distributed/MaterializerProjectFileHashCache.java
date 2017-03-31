@@ -110,7 +110,7 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
       return;
     }
 
-    // TODO(alisdair04,ruibm,shivanker): materialize directories
+    // TODO(alisdair,ruibm,shivanker): materialize directories
     if (fileHashEntry.isIsDirectory()) {
       materializeDirectory(relPath, fileHashEntry, remainingRelPaths);
       materializedPaths.add(relPath);

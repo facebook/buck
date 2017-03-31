@@ -491,7 +491,7 @@ public class CxxBinaryDescriptionTest {
     CxxLibrary transitiveDep = (CxxLibrary) transitiveDepBuilder.build(resolver, targetGraph);
     depBuilder.build(resolver, targetGraph);
     CxxBinary binary = builder.build(resolver, targetGraph);
-    // TODO(andrewjcg): should also test that `:dep` does *not* get included.
+    // TODO(agallagher): should also test that `:dep` does *not* get included.
     assertThat(
         binary.getBuildDeps(),
         Matchers.hasItem(transitiveDep));

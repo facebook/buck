@@ -58,7 +58,7 @@ public class LicenseCheckTest {
   private static class JavaCopyrightVisitor extends SimpleFileVisitor<Path> {
 
     private static final Pattern LICENSE_FRAGMENT = Pattern.compile(
-        // TODO(shs96c): This is very lame.
+        // TODO(simons): This is very lame.
         // The newline character doesn't match "\w", "\\n" so do a non-greedy match until the next
         // part of the copyright.
         "^/\\\\*.*?" +

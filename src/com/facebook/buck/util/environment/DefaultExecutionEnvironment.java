@@ -87,7 +87,7 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
 
   @Override
   public Optional<String> getWifiSsid() {
-    // TODO(rowillia): Support Linux and Windows.
+    // TODO(royw): Support Linux and Windows.
     if (ENABLE_OBJC) {
       return MacWifiSsidFinder.findCurrentSsid();
     }

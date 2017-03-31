@@ -119,7 +119,7 @@ abstract class AbstractCxxIncludePaths {
       Preprocessor preprocessor) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     builder.addAll(CxxHeaders.getArgs(getIPaths(), pathResolver, Optional.empty(), preprocessor));
-    // TODO(elsteveogrande) gotta handle framework paths!
+    // TODO(steveo) gotta handle framework paths!
     return builder.build();
   }
 

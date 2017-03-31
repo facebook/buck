@@ -265,7 +265,7 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
               Preconditions.checkNotNull(lowlinks.get(sink)));
           lowlinks.put(node, lowlink);
         } else if (nodeStack.contains(sink)) {
-          // TODO(bolinfest): contains() is O(N), consider maintaining an index so it is O(1)?
+          // TODO(mbolin): contains() is O(N), consider maintaining an index so it is O(1)?
           int lowlink = Math.min(
               Preconditions.checkNotNull(lowlinks.get(node)),
               Preconditions.checkNotNull(indexes.get(sink)));

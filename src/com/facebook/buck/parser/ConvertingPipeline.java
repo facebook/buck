@@ -50,7 +50,7 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
   public ListenableFuture<ImmutableSet<T>> getAllNodesJob(
       final Cell cell,
       final Path buildFile) throws BuildTargetException {
-    // TODO(tophyr): this hits the chained pipeline before hitting the cache
+    // TODO(csarbora): this hits the chained pipeline before hitting the cache
     ListenableFuture<List<T>> allNodesListJob = Futures.transformAsync(
         getItemsToConvert(cell, buildFile),
         allToConvert -> {
@@ -126,7 +126,7 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
       Cell cell,
       BuildTarget buildTarget,
       F from) throws BuildTargetException {
-    // TODO(tophyr): would be nice to have the first half of this function pulled up into base
+    // TODO(csarbora): would be nice to have the first half of this function pulled up into base
     if (shuttingDown()) {
       return Futures.immediateCancelledFuture();
     }

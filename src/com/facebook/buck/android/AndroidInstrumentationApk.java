@@ -80,7 +80,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         Optional.empty(),
         rulesToExcludeFromDex,
         enhancementResult,
-        // reordering is not supported in instrumentation. TODO(onomatopoeia): add support
+        // reordering is not supported in instrumentation. TODO(dtarjan): add support
         false,
         Optional.empty(),
         Optional.empty(),
