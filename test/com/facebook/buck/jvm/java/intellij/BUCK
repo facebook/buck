@@ -1,1 +1,60 @@
-standard_java_test()
+TEST_SRCS = glob(["*Test.java"])
+
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        excludes = TEST_SRCS,
+    ),
+    deps = [
+        "//test/com/facebook/buck/android:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+    ],
+)
+
+java_test(
+    name = "intellij",
+    srcs = TEST_SRCS,
+    resources = glob(["testdata/**"]),
+    deps = [
+        ":testutil",
+        "//src/com/facebook/buck/android:rules",
+        "//src/com/facebook/buck/cli:config",
+        "//src/com/facebook/buck/io:MorePaths.java",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/jvm/core:packagefinder",
+        "//src/com/facebook/buck/jvm/java:autodeps",
+        "//src/com/facebook/buck/jvm/java:packagefinder",
+        "//src/com/facebook/buck/jvm/java:rules",
+        "//src/com/facebook/buck/jvm/java/intellij:intellij",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:object_mapper",
+        "//src/com/facebook/buck/util:util",
+        "//test/com/facebook/buck/android:testutil",
+        "//test/com/facebook/buck/cli:FakeBuckConfig",
+        "//test/com/facebook/buck/cxx:testutil",
+        "//test/com/facebook/buck/jvm/groovy:testutil",
+        "//test/com/facebook/buck/jvm/java:fakepackagefinder",
+        "//test/com/facebook/buck/jvm/java:javac-env",
+        "//test/com/facebook/buck/jvm/java:testutil",
+        "//test/com/facebook/buck/jvm/kotlin:testutil",
+        "//test/com/facebook/buck/model:testutil",
+        "//test/com/facebook/buck/rules:testutil",
+        "//test/com/facebook/buck/shell:testutil",
+        "//test/com/facebook/buck/step:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//test/com/facebook/buck/timing:testutil",
+        "//third-party/java/easymock:easymock",
+        "//third-party/java/guava:guava",
+        "//third-party/java/hamcrest:java-hamcrest",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/junit:junit",
+    ],
+)
