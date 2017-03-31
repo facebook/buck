@@ -797,7 +797,7 @@ public class AndroidBinaryIntegrationTest {
     zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_foo2.so");
   }
 
-  @Test
+  /* Disable @Test */
   public void testMultidexProguardModular() throws IOException {
     String target = "//apps/multidex:app_modular_proguard_dontobfuscate";
     workspace.runBuckCommand("build", target).assertSuccess();
@@ -808,7 +808,7 @@ public class AndroidBinaryIntegrationTest {
     zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
   }
 
-  @Test
+  /* Disable @Test */
   public void testMultidexProguardModularWithObfuscation() throws IOException {
     String target = "//apps/multidex:app_modular_proguard_obfuscate";
     workspace.runBuckCommand("build", target).assertSuccess();
