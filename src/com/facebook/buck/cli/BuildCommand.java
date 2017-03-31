@@ -348,6 +348,28 @@ public class BuildCommand extends AbstractCommand {
 
   private ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of();
 
+  public static BuildJobState getDistBuildState(
+      List<String> buildTargets,
+      CommandRunnerParams params,
+      WeightedListeningExecutorService executor)
+      throws InterruptedException, IOException {
+    BuildCommand buildCommand = new BuildCommand(buildTargets);
+    int exitCode = buildCommand.checkArguments(params);
+    if (exitCode != 0) {
+      throw new HumanReadableException("The build targets are invalid.");
+    }
+
+    ActionAndTargetGraphs graphs = null;
+    try {
+      graphs = buildCommand.createGraphs(params, executor);
+    } catch (ActionGraphCreationException e) {
+      params.getConsole().printBuildFailure(e.getMessage());
+      throw new RuntimeException(e);
+    }
+
+    return buildCommand.computeDistBuildState(params, graphs, executor);
+  }
+
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     int exitCode = checkArguments(params);
@@ -465,10 +487,17 @@ public class BuildCommand extends AbstractCommand {
       throws IOException, InterruptedException {
     int exitCode;
     if (useDistributedBuild) {
-      exitCode = executeDistributedBuild(
+      BuildJobState jobState = computeDistBuildState(
           params,
           graphs,
           executorService);
+      exitCode = executeDistBuild(
+          params,
+          graphs,
+          executorService,
+          params.getCell().getFilesystem(),
+          params.getFileHashCache(),
+          jobState);
     } else {
       exitCode = executeLocalBuild(params, graphs.actionGraph, executorService);
     }
@@ -514,42 +543,7 @@ public class BuildCommand extends AbstractCommand {
     return 0;
   }
 
-
-  private BuildJobState computeDistributedBuildJobState(
-      DistBuildTargetGraphCodec targetGraphCodec,
-      final CommandRunnerParams params,
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets,
-      ActionGraphAndResolver actionGraphAndResolver,
-      final WeightedListeningExecutorService executorService)
-      throws InterruptedException, IOException {
-
-    DistBuildCellIndexer cellIndexer =
-        new DistBuildCellIndexer(params.getCell());
-    SourcePathRuleFinder ruleFinder =
-        new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-
-
-    DistBuildFileHashes distributedBuildFileHashes = new DistBuildFileHashes(
-        actionGraphAndResolver.getActionGraph(),
-        pathResolver,
-        ruleFinder,
-        params.getFileHashCache(),
-        cellIndexer,
-        executorService,
-        params.getBuckConfig().getKeySeed(),
-        params.getCell());
-
-    return DistBuildState.dump(
-        cellIndexer,
-        distributedBuildFileHashes,
-        targetGraphCodec,
-        targetGraphAndBuildTargets.getTargetGraph(),
-        buildTargets
-    );
-  }
-
-  private int executeDistributedBuild(
+  private BuildJobState computeDistBuildState(
       final CommandRunnerParams params,
       ActionAndTargetGraphs graphs,
       final WeightedListeningExecutorService executorService)
@@ -557,10 +551,6 @@ public class BuildCommand extends AbstractCommand {
     // Distributed builds serialize and send the unversioned target graph,
     // and then deserialize and version remotely.
     TargetGraphAndBuildTargets targetGraphAndBuildTargets = graphs.unversionedTargetGraph;
-
-    ProjectFilesystem filesystem = params.getCell().getFilesystem();
-    FileHashCache fileHashCache = params.getFileHashCache();
-
     DistBuildTypeCoercerFactory typeCoercerFactory =
         new DistBuildTypeCoercerFactory(params.getObjectMapper());
     ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory =
@@ -589,13 +579,41 @@ public class BuildCommand extends AbstractCommand {
         targetGraphAndBuildTargets.getBuildTargets().stream().map(
             t -> t.getFullyQualifiedName()).collect(Collectors.toSet()));
 
-    BuildJobState jobState = computeDistributedBuildJobState(
-        targetGraphCodec,
-        params,
-        targetGraphAndBuildTargets,
-        graphs.actionGraph,
-        executorService);
+    ActionGraphAndResolver actionGraphAndResolver = graphs.actionGraph;
+    DistBuildCellIndexer cellIndexer =
+        new DistBuildCellIndexer(params.getCell());
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
+
+    DistBuildFileHashes distributedBuildFileHashes = new DistBuildFileHashes(
+        actionGraphAndResolver.getActionGraph(),
+        pathResolver,
+        ruleFinder,
+        params.getFileHashCache(),
+        cellIndexer,
+        executorService,
+        params.getBuckConfig().getKeySeed(),
+        params.getCell());
+
+    return DistBuildState.dump(
+        cellIndexer,
+        distributedBuildFileHashes,
+        targetGraphCodec,
+        targetGraphAndBuildTargets.getTargetGraph(),
+        buildTargets
+    );
+
+  }
+
+  private int executeDistBuild(
+      CommandRunnerParams params,
+      ActionAndTargetGraphs graphs,
+      WeightedListeningExecutorService executorService,
+      ProjectFilesystem filesystem,
+      FileHashCache fileHashCache,
+      BuildJobState jobState) throws IOException, InterruptedException {
     if (distributedBuildStateFile != null) {
       Path stateDumpPath = Paths.get(distributedBuildStateFile);
       BuildJobStateSerializer.serialize(

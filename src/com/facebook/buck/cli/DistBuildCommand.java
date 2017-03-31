@@ -30,6 +30,7 @@ public class DistBuildCommand extends AbstractContainerCommand {
   @SubCommands({
       @SubCommand(name = "status", impl = DistBuildStatusCommand.class),
       @SubCommand(name = "run", impl = DistBuildRunCommand.class),
+      @SubCommand(name = "sourcefiles", impl = DistBuildSourceFilesCommand.class),
   })
   @SuppressFieldNotInitialized
   private Command subcommand;
