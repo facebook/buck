@@ -76,7 +76,7 @@ public class FakeJavac implements Javac {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
-      JavacOptions.AbiGenerationMode abiGenerationMode) throws InterruptedException {
+      CompilationMode compilationMode) throws InterruptedException {
     try {
       return context.getProcessExecutor().launchAndExecute(
           ProcessExecutorParams.ofCommand("javac")).getExitCode();

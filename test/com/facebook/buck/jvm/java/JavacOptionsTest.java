@@ -50,10 +50,10 @@ public class JavacOptionsTest {
   }
 
   @Test
-  public void abiGenerationModeClassByDefault() {
+  public void compilationModeFullByDefault() {
     JavacOptions options = createStandardBuilder().build();
 
-    assertThat(options.getAbiGenerationMode(), is(JavacOptions.AbiGenerationMode.CLASS));
+    assertThat(options.getCompilationMode(), is(Javac.CompilationMode.FULL));
   }
 
   @Test

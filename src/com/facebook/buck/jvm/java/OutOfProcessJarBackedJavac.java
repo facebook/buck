@@ -53,7 +53,7 @@ public class OutOfProcessJarBackedJavac extends OutOfProcessJsr199Javac {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
-      JavacOptions.AbiGenerationMode abiGenerationMode) throws InterruptedException {
+      CompilationMode compilationMode) throws InterruptedException {
 
     Map<String, Object> serializedContext = JavacExecutionContextSerializer.serialize(context);
     if (LOG.isVerboseEnabled()) {
@@ -68,7 +68,7 @@ public class OutOfProcessJarBackedJavac extends OutOfProcessJsr199Javac {
         ImmutableList.copyOf(javaSourceFilePaths.stream().map(Path::toString).iterator()),
         pathToSrcsList.toString(),
         workingDirectory.isPresent() ? workingDirectory.get().toString() : null,
-        abiGenerationMode);
+        compilationMode);
   }
 
   @Override

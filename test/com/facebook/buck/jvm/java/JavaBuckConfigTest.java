@@ -392,24 +392,48 @@ public class JavaBuckConfigTest {
   }
 
   @Test
-  public void testAbisGeneratedFromClassByDefault() throws IOException {
+  public void testCompileFullJarsByDefault() throws IOException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
     JavacOptions options = config.getDefaultJavacOptions();
     assertThat(
-        options.getAbiGenerationMode(),
-        Matchers.equalTo(JavacOptions.AbiGenerationMode.CLASS));
+        options.getCompilationMode(),
+        Matchers.equalTo(Javac.CompilationMode.FULL));
   }
 
   @Test
-  public void testAbisMigratingToSource() throws IOException {
+  public void testSourceWithDepsABI() throws IOException {
+    String content = Joiner.on('\n').join(
+        "[java]",
+        "    abi_generation_mode = source_with_deps");
+    JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
+    JavacOptions options = config.getDefaultJavacOptions();
+    assertThat(
+        options.getCompilationMode(),
+        Matchers.equalTo(Javac.CompilationMode.FULL));
+  }
+
+  @Test
+  public void testMigratingToSourceABI() throws IOException {
     String content = Joiner.on('\n').join(
         "[java]",
         "    abi_generation_mode = migrating_to_source");
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
     JavacOptions options = config.getDefaultJavacOptions();
     assertThat(
-        options.getAbiGenerationMode(),
-        Matchers.equalTo(JavacOptions.AbiGenerationMode.MIGRATING_TO_SOURCE));
+        options.getCompilationMode(),
+        Matchers.equalTo(Javac.CompilationMode.FULL_CHECKING_REFERENCES));
+  }
+
+  @Test
+  public void testSourceABINoDeps() throws IOException {
+    String content = Joiner.on('\n').join(
+        "[java]",
+        "    abi_generation_mode = source");
+    JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
+    JavacOptions options = config.getDefaultJavacOptions();
+    assertThat(
+        options.getCompilationMode(),
+        Matchers.equalTo(Javac.CompilationMode.FULL_ENFORCING_REFERENCES));
   }
 
   private void assertOptionKeyAbsent(JavacOptions options, String key) {

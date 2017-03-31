@@ -80,9 +80,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
           params,
           resolver,
           args
-        )
-        // groovyc may or may not play nice with generating ABIs from source, so disabling for now
-        .withAbiGenerationMode(JavacOptions.AbiGenerationMode.CLASS);
+        );
 
     BuildRuleParams testsLibraryParams =
         params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);

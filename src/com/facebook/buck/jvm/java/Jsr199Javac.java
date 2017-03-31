@@ -121,7 +121,7 @@ public abstract class Jsr199Javac implements Javac {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
-      JavacOptions.AbiGenerationMode abiGenerationMode) {
+      CompilationMode compilationMode) {
     JavaCompiler compiler = createCompiler(context);
     CustomZipOutputStream jarOutputStream = null;
     StandardJavaFileManager fileManager = null;
@@ -167,7 +167,7 @@ public abstract class Jsr199Javac implements Javac {
             compiler,
             fileManager,
             compilationUnits,
-            abiGenerationMode);
+            compilationMode);
         if (result != 0 || !context.getDirectToJarOutputSettings().isPresent()) {
           return result;
         }
@@ -228,7 +228,7 @@ public abstract class Jsr199Javac implements Javac {
       JavaCompiler compiler,
       StandardJavaFileManager fileManager,
       Iterable<? extends JavaFileObject> compilationUnits,
-      JavacOptions.AbiGenerationMode abiGenerationMode) {
+      CompilationMode compilationMode) {
     // write javaSourceFilePaths to classes file
     // for buck user to have a list of all .java files to be compiled
     // since we do not print them out to console in case of error
@@ -265,12 +265,15 @@ public abstract class Jsr199Javac implements Javac {
     BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
         new Jsr199TracingBridge(context.getEventSink(), invokingRule));
     BuckJavacTaskListener taskListener = null;
-    if (abiGenerationMode != JavacOptions.AbiGenerationMode.CLASS) {
+    if (EnumSet.of(
+        CompilationMode.FULL_CHECKING_REFERENCES,
+        CompilationMode.FULL_ENFORCING_REFERENCES)
+        .contains(compilationMode)) {
       taskListener = SourceBasedAbiStubber.newValidatingTaskListener(
           pluginLoader,
           compilationTask,
           new FileManagerBootClasspathOracle(fileManager),
-          abiGenerationMode == JavacOptions.AbiGenerationMode.SOURCE ?
+          compilationMode == CompilationMode.FULL_ENFORCING_REFERENCES ?
               Diagnostic.Kind.ERROR :
               Diagnostic.Kind.WARNING);
     }

@@ -137,7 +137,7 @@ public class Jsr199JavacIntegrationTest {
         SOURCE_PATHS,
         pathToSrcsList,
         Optional.empty(),
-        JavacOptions.AbiGenerationMode.CLASS);
+        Javac.CompilationMode.FULL);
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
     assertTrue(Files.exists(pathToSrcsList));
@@ -185,7 +185,7 @@ public class Jsr199JavacIntegrationTest {
         SOURCE_PATHS,
         pathToSrcsList,
         Optional.empty(),
-        JavacOptions.AbiGenerationMode.CLASS);
+        Javac.CompilationMode.FULL);
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
     assertTrue(Files.exists(pathToSrcsList));
@@ -289,7 +289,7 @@ public class Jsr199JavacIntegrationTest {
           SOURCE_PATHS,
           pathToSrcsList,
           Optional.empty(),
-          JavacOptions.AbiGenerationMode.CLASS);
+          Javac.CompilationMode.FULL);
       fail("Did not expect compilation to succeed");
     } catch (UnsupportedOperationException ex) {
       if (ex.toString().contains("abcdef")) {

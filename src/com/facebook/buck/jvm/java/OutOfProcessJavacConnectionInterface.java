@@ -45,5 +45,5 @@ public interface OutOfProcessJavacConnectionInterface {
       List<String> sortedSetOfJavaSourceFilePathsAsStringsAsList,
       String pathToSrcsListAsString,
       @Nullable String workingDirectory,
-      JavacOptions.AbiGenerationMode abiGenerationMode);
+      Javac.CompilationMode abiGenerationMode);
 }

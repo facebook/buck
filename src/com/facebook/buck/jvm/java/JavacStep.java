@@ -159,7 +159,7 @@ public class JavacStep implements Step {
         javaSourceFilePaths,
         pathToSrcsList,
         workingDirectory,
-        javacOptions.getAbiGenerationMode());
+        javacOptions.getCompilationMode());
     String firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
     String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
     Optional<String> returnedStderr;

@@ -30,6 +30,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
 
+import java.util.Optional;
 
 
 public class GroovyLibraryDescription implements Description<GroovyLibraryDescription.Arg> {
@@ -62,9 +63,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
           defaultJavacOptions,
           params,
           resolver,
-          args)
-        // groovyc may or may not play nice with generating ABIs from source, so disabling for now
-        .withAbiGenerationMode(JavacOptions.AbiGenerationMode.CLASS);
+          args);
     DefaultGroovyLibraryBuilder defaultGroovyLibraryBuilder = new DefaultGroovyLibraryBuilder(
         params,
         resolver,
@@ -79,6 +78,11 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
 
   @SuppressFieldNotInitialized
   public static class Arg extends JavaLibraryDescription.Arg {
+    public Arg() {
+      // Groovyc may not play nice with this, so turning it off
+      generateAbiFromSource = Optional.of(false);
+    }
+
     public ImmutableList<String> extraGroovycArguments = ImmutableList.of();
   }
 }

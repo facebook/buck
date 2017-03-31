@@ -72,22 +72,6 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     INTERMEDIATE_TO_DISK,
   }
 
-  public enum AbiGenerationMode {
-    /** Generate ABIs by stripping .class files */
-    CLASS,
-    /** Generate ABIs by parsing .java files with dependency ABIs available */
-    SOURCE_WITH_DEPS,
-    /**
-     * Output warnings for things that aren't legal when generating ABIs from source without
-     * dependency ABIs
-     */
-    MIGRATING_TO_SOURCE,
-    /**
-     * Generate ABIs by parsing .java files without dependency ABIs available (has some limitations)
-     */
-    SOURCE,
-  }
-
   @Value.Default
   protected SpoolMode getSpoolMode() {
     return SpoolMode.INTERMEDIATE_TO_DISK;
@@ -136,8 +120,8 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   }
 
   @Value.Default
-  public AbiGenerationMode getAbiGenerationMode() {
-    return AbiGenerationMode.CLASS;
+  public Javac.CompilationMode getCompilationMode() {
+    return Javac.CompilationMode.FULL;
   }
 
   public void validateOptions(Function<String, Boolean> classpathChecker) throws IOException {
@@ -239,7 +223,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
         .setReflectively("annotationProcessingParams", getAnnotationProcessingParams())
         .setReflectively("spoolMode", getSpoolMode())
         .setReflectively("trackClassUsage", trackClassUsage())
-        .setReflectively("abiGenerationMode", getAbiGenerationMode());
+        .setReflectively("compilationMode", getCompilationMode());
   }
 
   static JavacOptions.Builder builderForUseInJavaBuckConfig() {

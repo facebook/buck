@@ -99,10 +99,18 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
     builder.setTrackClassUsage(trackClassUsage());
 
-    Optional<JavacOptions.AbiGenerationMode> abiGenerationMode =
-        delegate.getEnum(SECTION, "abi_generation_mode", JavacOptions.AbiGenerationMode.class);
-    if (abiGenerationMode.isPresent()) {
-      builder.setAbiGenerationMode(abiGenerationMode.get());
+    AbiGenerationMode abiGenerationMode = getAbiGenerationMode();
+    switch (abiGenerationMode) {
+      case CLASS:
+      case SOURCE_WITH_DEPS:
+        builder.setCompilationMode(Javac.CompilationMode.FULL);
+        break;
+      case MIGRATING_TO_SOURCE:
+        builder.setCompilationMode(Javac.CompilationMode.FULL_CHECKING_REFERENCES);
+        break;
+      case SOURCE:
+        builder.setCompilationMode(Javac.CompilationMode.FULL_ENFORCING_REFERENCES);
+        break;
     }
 
     ImmutableMap<String, String> allEntries = delegate.getEntriesForSection(SECTION);
@@ -118,6 +126,11 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
         .addAllExtraArguments(extraArguments)
         .setSafeAnnotationProcessors(safeAnnotationProcessors)
         .build();
+  }
+
+  public AbiGenerationMode getAbiGenerationMode() {
+    return delegate.getEnum(SECTION, "abi_generation_mode", AbiGenerationMode.class)
+        .orElse(AbiGenerationMode.CLASS);
   }
 
   public ImmutableSet<String> getSrcRoots() {
@@ -190,5 +203,21 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
   public boolean shouldCompileAgainstAbis() {
     return delegate.getBooleanValue(SECTION, "compile_against_abis", false);
+  }
+
+  public enum AbiGenerationMode {
+    /** Generate ABIs by stripping .class files */
+    CLASS,
+    /** Generate ABIs by parsing .java files with dependency ABIs available */
+    SOURCE_WITH_DEPS,
+    /**
+     * Output warnings for things that aren't legal when generating ABIs from source without
+     * dependency ABIs
+     */
+    MIGRATING_TO_SOURCE,
+    /**
+     * Generate ABIs by parsing .java files without dependency ABIs available (has some limitations)
+     */
+    SOURCE,
   }
 }

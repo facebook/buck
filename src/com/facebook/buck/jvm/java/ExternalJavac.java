@@ -175,11 +175,11 @@ public class ExternalJavac implements Javac {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
-      JavacOptions.AbiGenerationMode abiGenerationMode) throws InterruptedException {
+      CompilationMode compilationMode) throws InterruptedException {
 
     Preconditions.checkArgument(
-        abiGenerationMode == AbstractJavacOptions.AbiGenerationMode.CLASS,
-        "Source ABI verification requires JSR199");
+        compilationMode == CompilationMode.FULL,
+        "Cannot compile ABI jars with external javac");
     ImmutableList.Builder<String> command = ImmutableList.builder();
     command.add(
         pathToJavac.isLeft() ?
