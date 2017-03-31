@@ -145,6 +145,16 @@ public class MergeAssets extends AbstractBuildRule {
   }
 
   private static class MergeAssetsStep extends AbstractExecutionStep {
+    // See https://android.googlesource.com/platform/frameworks/base.git/+/nougat-release/tools/aapt/Package.cpp
+    private static final ImmutableSet<String> NO_COMPRESS_EXTENSIONS = ImmutableSet.of(
+        "jpg", "jpeg", "png", "gif",
+        "wav", "mp2", "mp3", "ogg", "aac",
+        "mpg", "mpeg", "mid", "midi", "smf", "jet",
+        "rtttl", "imy", "xmf", "mp4", "m4a",
+        "m4v", "3gp", "3gpp", "3g2", "3gpp2",
+        "amr", "awb", "wma", "wmv", "webm", "mkv"
+    );
+
     private final Path pathToMergedAssets;
     private final Path pathToBaseApk;
     private final TreeMultimap<Path, Path> assets;
@@ -186,11 +196,14 @@ public class MergeAssets extends AbstractBuildRule {
           for (Path asset : assets.get(assetRoot)) {
             File file = assetRoot.resolve(asset).toFile();
             byte[] data = Files.toByteArray(file);
+            String extension = Files.getFileExtension(asset.toString());
+            int compression =
+                NO_COMPRESS_EXTENSIONS.contains(extension) ? 0 : Deflater.BEST_COMPRESSION;
             addEntry(
                 output,
                 data,
                 assetsZipRoot.resolve(asset).toString(),
-                Deflater.BEST_COMPRESSION,
+                compression,
                 false);
           }
         }

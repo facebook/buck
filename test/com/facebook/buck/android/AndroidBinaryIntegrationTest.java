@@ -173,6 +173,26 @@ public class AndroidBinaryIntegrationTest {
   }
 
   @Test
+  public void testAppUncompressableAssetsAreNotCompressed() throws IOException {
+    // Small files don't get compressed. Make something a bit bigger.
+    String largeContents = Joiner.on("\n").join(
+        Collections.nCopies(100, "A boring line of content."));
+    workspace.writeContentsToPath(
+        largeContents,
+        "res/com/sample/base/buck-assets/movie.mp4");
+
+    Path apkPath = workspace.buildAndReturnOutput(SIMPLE_TARGET);
+    ZipInspector zipInspector = new ZipInspector(workspace.getPath(apkPath));
+    zipInspector.assertFileExists("assets/asset_file.txt");
+    zipInspector.assertFileExists("assets/movie.mp4");
+    zipInspector.assertFileContents(
+        "assets/movie.mp4",
+        workspace.getFileContents(
+            "res/com/sample/base/buck-assets/movie.mp4"));
+    zipInspector.assertFileIsNotCompressed("assets/movie.mp4");
+  }
+
+  @Test
   public void testGzAssetsAreRejected() throws IOException {
     workspace.writeContentsToPath(
         "some contents",

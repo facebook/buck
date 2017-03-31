@@ -113,4 +113,12 @@ public class ZipInspector {
       assertThat(entry.getCompressedSize(), Matchers.lessThan(entry.getSize()));
     }
   }
+
+  public void assertFileIsNotCompressed(String pathRelativeToRoot) throws IOException {
+    try (ZipFile zipFile = new ZipFile(this.zipFile.toFile())) {
+      ZipEntry entry = zipFile.getEntry(pathRelativeToRoot);
+      assertThat(entry.getMethod(), is(ZipEntry.STORED));
+      assertThat(entry.getCompressedSize(), Matchers.equalTo(entry.getSize()));
+    }
+  }
 }
