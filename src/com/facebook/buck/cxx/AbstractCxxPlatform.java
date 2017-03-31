@@ -108,4 +108,16 @@ interface AbstractCxxPlatform extends FlavorConvertible {
 
   Optional<String> getBinaryExtension();
 
+  /**
+    * When building or creating a project, create symlinks for the public headers if it's true.
+    * It would allow public headers to include an other public header with #include "foobar.h"\
+    * even if it's not in the same folder.
+    */
+  boolean getPublicHeadersSymlinksEnabled();
+
+  /**
+    * When building or creating a project, create symlinks for the public headers if it's true.
+    */
+  boolean getPrivateHeadersSymlinksEnabled();
+
 }

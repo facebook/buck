@@ -130,7 +130,9 @@ public class CxxPlatforms {
         .setAssemblerDebugPathSanitizer(assemblerDebugPathSanitizer)
         .setFlagMacros(flagMacros)
         .setBinaryExtension(binaryExtension)
-        .setHeaderVerification(headerVerification);
+        .setHeaderVerification(headerVerification)
+        .setPublicHeadersSymlinksEnabled(config.getPublicHeadersSymlinksEnabled())
+        .setPrivateHeadersSymlinksEnabled(config.getPrivateHeadersSymlinksEnabled());
 
 
     builder.setSymbolNameTool(new LazyDelegatingSymbolNameTool(() -> {

@@ -1487,13 +1487,15 @@ public class ProjectGenerator {
     createHeaderSymlinkTree(
         getPublicCxxHeaders(targetNode),
         getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC),
-        arg.xcodePublicHeadersSymlinks.orElse(true) || isHeaderMapDisabled(),
+        arg.xcodePublicHeadersSymlinks.orElse(
+            cxxBuckConfig.getPublicHeadersSymlinksEnabled()) || isHeaderMapDisabled(),
         !shouldMergeHeaderMaps());
     if (isFocusedOnTarget) {
       createHeaderSymlinkTree(
           getPrivateCxxHeaders(targetNode),
           getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PRIVATE),
-          arg.xcodePrivateHeadersSymlinks.orElse(true) || isHeaderMapDisabled(),
+          arg.xcodePrivateHeadersSymlinks.orElse(
+              cxxBuckConfig.getPrivateHeadersSymlinksEnabled()) || isHeaderMapDisabled(),
           !isHeaderMapDisabled());
     }
     if (shouldMergeHeaderMaps() && isMainProject) {
@@ -1889,11 +1891,13 @@ public class ProjectGenerator {
     Map<Path, SourcePath> contents;
     switch (headerVisibility) {
       case PUBLIC:
-        shouldCreateHeadersSymlinks = arg.xcodePublicHeadersSymlinks.orElse(true);
+        shouldCreateHeadersSymlinks = arg.xcodePublicHeadersSymlinks.orElse(
+            cxxBuckConfig.getPublicHeadersSymlinksEnabled());
         contents = getPublicCxxHeaders(targetNode);
         break;
       case PRIVATE:
-        shouldCreateHeadersSymlinks = arg.xcodePrivateHeadersSymlinks.orElse(true);
+        shouldCreateHeadersSymlinks = arg.xcodePrivateHeadersSymlinks.orElse(
+            cxxBuckConfig.getPrivateHeadersSymlinksEnabled());
         contents = getPrivateCxxHeaders(targetNode);
         break;
       default:

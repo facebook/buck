@@ -102,6 +102,8 @@ public class CxxPlatformUtils {
           .setCompilerDebugPathSanitizer(DEFAULT_COMPILER_DEBUG_PATH_SANITIZER)
           .setAssemblerDebugPathSanitizer(DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER)
           .setHeaderVerification(DEFAULT_CONFIG.getHeaderVerification())
+          .setPublicHeadersSymlinksEnabled(true)
+          .setPrivateHeadersSymlinksEnabled(true)
           .build();
 
   public static final FlavorDomain<CxxPlatform> DEFAULT_PLATFORMS =

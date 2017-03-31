@@ -189,7 +189,8 @@ public class CxxLibraryDescription implements
       ImmutableSet<BuildRule> deps)
       throws NoSuchBuildTargetException {
 
-    boolean shouldCreatePrivateHeadersSymlinks = args.xcodePrivateHeadersSymlinks.orElse(true);
+    boolean shouldCreatePrivateHeadersSymlinks = args.xcodePrivateHeadersSymlinks.orElse(
+        cxxPlatform.getPrivateHeadersSymlinksEnabled());
 
     HeaderSymlinkTree headerSymlinkTree =
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
@@ -504,7 +505,8 @@ public class CxxLibraryDescription implements
       CxxPlatform cxxPlatform,
       A args)
       throws NoSuchBuildTargetException {
-    boolean shouldCreatePrivateHeaderSymlinks = args.xcodePrivateHeadersSymlinks.orElse(true);
+    boolean shouldCreatePrivateHeaderSymlinks = args.xcodePrivateHeadersSymlinks.orElse(
+        cxxPlatform.getPrivateHeadersSymlinksEnabled());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
@@ -556,7 +558,8 @@ public class CxxLibraryDescription implements
       CxxPlatform cxxPlatform,
       A args)
       throws NoSuchBuildTargetException {
-    boolean shouldCreatePublicHeaderSymlinks = args.xcodePublicHeadersSymlinks.orElse(true);
+    boolean shouldCreatePublicHeaderSymlinks = args.xcodePublicHeadersSymlinks.orElse(
+        cxxPlatform.getPublicHeadersSymlinksEnabled());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
@@ -1109,7 +1112,8 @@ public class CxxLibraryDescription implements
         if (visibility.getValue() == HeaderVisibility.PUBLIC) {
 
           // Add platform-agnostic headers.
-          boolean shouldCreatePublicHeaderSymlinks = args.xcodePublicHeadersSymlinks.orElse(true);
+          boolean shouldCreatePublicHeaderSymlinks = args.xcodePublicHeadersSymlinks.orElse(
+              platform.getValue().getPublicHeadersSymlinksEnabled());
           CxxPreprocessables.HeaderMode mode =
               CxxDescriptionEnhancer.getHeaderModeForPlatform(
                   resolver,

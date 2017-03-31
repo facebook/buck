@@ -401,7 +401,8 @@ public final class CxxInferEnhancer {
     boolean shouldCreateHeadersSymlinks = true;
     if (args instanceof CxxLibraryDescription.Arg) {
       shouldCreateHeadersSymlinks =
-          ((CxxLibraryDescription.Arg) args).xcodePrivateHeadersSymlinks.orElse(true);
+          ((CxxLibraryDescription.Arg) args).xcodePrivateHeadersSymlinks.orElse(
+              cxxPlatform.getPrivateHeadersSymlinksEnabled());
     }
     HeaderSymlinkTree headerSymlinkTree = CxxDescriptionEnhancer.requireHeaderSymlinkTree(
         params,

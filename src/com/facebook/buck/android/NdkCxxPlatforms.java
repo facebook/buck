@@ -636,7 +636,9 @@ public class NdkCxxPlatforms {
                     ElfSharedLibraryInterfaceFactory.of(
                         new ConstantToolProvider(
                             getGccTool(toolchainPaths, "objcopy", version, executableFinder)))) :
-                Optional.empty());
+                Optional.empty())
+        .setPublicHeadersSymlinksEnabled(config.getPublicHeadersSymlinksEnabled())
+        .setPrivateHeadersSymlinksEnabled(config.getPrivateHeadersSymlinksEnabled());
 
     // Add the NDK root path to the white-list so that headers from the NDK won't trigger the
     // verification warnings.  Ideally, long-term, we'd model NDK libs/headers via automatically

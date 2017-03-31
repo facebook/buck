@@ -253,6 +253,14 @@ public class CxxBuckConfig {
         .build();
   }
 
+  public boolean getPublicHeadersSymlinksEnabled() {
+    return delegate.getBooleanValue(cxxSection, "exported_headers_symlinks_enabled", true);
+  }
+
+  public boolean getPrivateHeadersSymlinksEnabled() {
+    return delegate.getBooleanValue(cxxSection, "headers_symlinks_enabled", true);
+  }
+
   public Optional<RuleScheduleInfo> getLinkScheduleInfo() {
     Optional<Long> linkWeight = delegate.getLong(cxxSection, "link_weight");
     if (!linkWeight.isPresent()) {
