@@ -214,7 +214,7 @@ public class IjModuleFactory {
 
   private Path createAndroidGenPath(Path moduleBasePath) {
     return Paths
-        .get(Project.getAndroidGenDir(projectFilesystem))
+        .get(IjAndroidHelper.getAndroidGenDir(projectFilesystem))
         .resolve(moduleBasePath)
         .resolve("gen");
   }

@@ -27,7 +27,7 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
-import com.facebook.buck.jvm.java.intellij.Project;
+import com.facebook.buck.jvm.java.intellij.IjAndroidHelper;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.Cell;
@@ -92,7 +92,7 @@ public class CleanCommandTest extends EasyMockSupport {
     CommandRunnerParams params = createCommandRunnerParams();
 
     // Set up mocks.
-    projectFilesystem.mkdirs(Project.getAndroidGenPath(projectFilesystem));
+    projectFilesystem.mkdirs(IjAndroidHelper.getAndroidGenPath(projectFilesystem));
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getAnnotationDir());
 
     // Simulate `buck clean --project`.
@@ -100,7 +100,7 @@ public class CleanCommandTest extends EasyMockSupport {
     int exitCode = cleanCommand.run(params);
     assertEquals(0, exitCode);
 
-    assertFalse(projectFilesystem.exists(Project.getAndroidGenPath(projectFilesystem)));
+    assertFalse(projectFilesystem.exists(IjAndroidHelper.getAndroidGenPath(projectFilesystem)));
     assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getAnnotationDir()));
   }
 

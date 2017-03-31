@@ -430,7 +430,7 @@ public class IjProjectTemplateDataPreparer {
 
     Path apkPath = moduleBasePath
         .relativize(Paths.get(""))
-        .resolve(Project.getAndroidApkDir(projectFilesystem))
+        .resolve(IjAndroidHelper.getAndroidApkDir(projectFilesystem))
         .resolve(Paths.get("").relativize(moduleBasePath))
         .resolve(module.getName() + ".apk");
     androidProperties.put(APK_PATH_TEMPLATE_PARAMETER, apkPath);

@@ -104,28 +104,6 @@ import javax.annotation.Nullable;
  */
 public class Project {
 
-  /**
-   * This directory is analogous to the gen/ directory that IntelliJ would produce when building an
-   * Android module. It contains files such as R.java, BuildConfig.java, and Manifest.java.
-   * <p>
-   * By default, IntelliJ generates its gen/ directories in our source tree, which would likely
-   * mess with the user's use of {@code glob(['**&#x2f;*.java'])}. For this reason, we encourage
-   * users to target
-   */
-  public static String getAndroidGenDir(ProjectFilesystem filesystem) {
-    return MorePaths.pathWithUnixSeparators(
-        filesystem.getBuckPaths().getBuckOut().resolve("android")
-    );
-  }
-
-  public static Path getAndroidGenPath(ProjectFilesystem filesystem) {
-    return filesystem.getBuckPaths().getBuckOut().resolve("android");
-  }
-
-  public static String getAndroidApkDir(ProjectFilesystem filesystem) {
-    return filesystem.getBuckPaths().getGenDir().toString();
-  }
-
   private static final Logger LOG = Logger.get(Project.class);
 
   /**
@@ -569,7 +547,7 @@ public class Project {
    */
   static Path generateRelativeGenPath(ProjectFilesystem filesystem, Path basePathOfModule) {
     return MorePaths.relativize(basePathOfModule, Paths.get(""))
-        .resolve(getAndroidGenDir(filesystem))
+        .resolve(IjAndroidHelper.getAndroidGenDir(filesystem))
         .resolve(MorePaths.relativize(Paths.get(""), basePathOfModule))
         .resolve("gen");
   }
@@ -579,7 +557,7 @@ public class Project {
       String targetName,
       Path basePathOfModule) {
     return MorePaths.relativize(basePathOfModule, Paths.get(""))
-        .resolve(getAndroidApkDir(filesystem))
+        .resolve(IjAndroidHelper.getAndroidApkDir(filesystem))
         .resolve(MorePaths.relativize(Paths.get(""), basePathOfModule))
         .resolve(targetName + ".apk");
   }
