@@ -14,10 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.jvm.java.intellij;
+package com.facebook.buck.ide.intellij.deprecated;
 
-import static com.facebook.buck.jvm.java.intellij.SerializableAndroidAar.createSerializableAndroidAar;
-import static com.facebook.buck.jvm.java.intellij.SerializableIntellijSettings.createSerializableIntellijSettings;
+import static com.facebook.buck.ide.intellij.deprecated.SerializableAndroidAar.createSerializableAndroidAar;
+import static com.facebook.buck.ide.intellij.deprecated.SerializableIntellijSettings.createSerializableIntellijSettings;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
@@ -42,6 +42,7 @@ import com.facebook.buck.jvm.java.JavaBinary;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.PrebuiltJar;
+import com.facebook.buck.jvm.java.intellij.IjAndroidHelper;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
@@ -112,7 +113,7 @@ public class Project {
   private static final String PATH_TO_INTELLIJ_PY = System.getProperty(
       "buck.path_to_intellij_py",
       // Fall back on this value when running Buck from an IDE.
-      new File("src/com/facebook/buck/command/intellij.py").getAbsolutePath());
+      new File("src/com/facebook/buck/ide/intellij/deprecated/intellij.py").getAbsolutePath());
 
   private final SourcePathResolver resolver;
   private final ImmutableSortedSet<ProjectConfig> rules;

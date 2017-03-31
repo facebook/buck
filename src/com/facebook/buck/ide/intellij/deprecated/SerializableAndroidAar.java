@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.jvm.java.intellij;
+package com.facebook.buck.ide.intellij.deprecated;
 
 import com.facebook.buck.android.AndroidPrebuiltAar;
 import com.facebook.buck.rules.SourcePath;

@@ -6,6 +6,9 @@ java_library(
         ["*.java"],
         excludes = TEST_SRCS,
     ),
+    visibility = [
+        "//test/com/facebook/buck/ide/intellij/...",
+    ],
     deps = [
         "//test/com/facebook/buck/android:testutil",
         "//test/com/facebook/buck/testutil/integration:util",

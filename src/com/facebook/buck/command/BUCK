@@ -14,10 +14,3 @@ standard_java_library(
         "//test/com/facebook/buck/jvm/java/intellij:intellij",
     ],
 )
-
-export_file(
-    name = "intellij.py",
-    visibility = [
-        "PUBLIC",
-    ],
-)
