@@ -20,6 +20,7 @@ import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Sets;
 
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +64,11 @@ public class IjProjectBuckConfig {
     List<String> intellijSdkTargets =
         buckConfig.getListWithoutComments(INTELLIJ_BUCK_CONFIG_SECTION, "intellij_sdk_targets");
 
+    Optional<Path> androidManifest = buckConfig.getPath(
+        INTELLIJ_BUCK_CONFIG_SECTION,
+        "default_android_manifest_path",
+        false);
+
     return IjProjectConfig.builder()
         .setAutogenerateAndroidFacetSourcesEnabled(
             !buckConfig.getBooleanValue(
@@ -91,6 +97,7 @@ public class IjProjectBuckConfig {
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "language_level"))
         .setExcludedResourcePaths(excludedResourcePaths)
         .setDepToGeneratedSourcesMap(depToGeneratedSourcesMap)
+        .setAndroidManifest(androidManifest)
         .build();
   }
 }

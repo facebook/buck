@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
@@ -60,5 +61,7 @@ abstract class AbstractIjProjectConfig {
   public abstract List<String> getExcludedResourcePaths();
 
   public abstract ImmutableMap<String, String> getDepToGeneratedSourcesMap();
+
+  public abstract Optional<Path> getAndroidManifest();
 
 }

@@ -58,7 +58,6 @@ public class IjProject {
   private final ProjectFilesystem projectFilesystem;
   private final AggregationMode aggregationMode;
   private final IjProjectConfig projectConfig;
-  private final IntellijConfig intellijConfig;
 
   public IjProject(
       TargetGraphAndTargets targetGraphAndTargets,
@@ -77,7 +76,6 @@ public class IjProject {
     this.projectFilesystem = projectFilesystem;
     this.aggregationMode = aggregationMode;
     this.projectConfig = IjProjectBuckConfig.create(buckConfig);
-    this.intellijConfig = new IntellijConfig(buckConfig);
   }
 
   /**
@@ -147,7 +145,7 @@ public class IjProject {
           public Optional<Path> getLibraryAndroidManifestPath(
               TargetNode<AndroidLibraryDescription.Arg, ?> targetNode) {
             Optional<SourcePath> manifestPath = targetNode.getConstructorArg().manifest;
-            Optional<Path> defaultAndroidManifestPath = intellijConfig.getAndroidManifest()
+            Optional<Path> defaultAndroidManifestPath = projectConfig.getAndroidManifest()
                 .map(Path::toAbsolutePath);
             return manifestPath.map(sourcePathResolver::getAbsolutePath)
                 .map(Optional::of)
