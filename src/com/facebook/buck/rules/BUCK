@@ -302,3 +302,22 @@ java_library(
         "PUBLIC",
     ],
 )
+
+java_library(
+    name = "rocksdb-metadata-dumper",
+    srcs = [
+        "RocksDBMetadataDumper.java",
+    ],
+    deps = [
+        "//third-party/java/guava:guava",
+        "//third-party/java/rocksdbjni:rocksdbjni",
+    ],
+)
+
+java_binary(
+    name = "dump-rocksdb-metadata",
+    main_class = "com.facebook.buck.rules.RocksDBMetadataDumper",
+    deps = [
+        ":rocksdb-metadata-dumper",
+    ],
+)
