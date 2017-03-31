@@ -699,4 +699,19 @@ public class CxxPreprocessAndCompileIntegrationTest {
       result.assertSuccess();
     }
   }
+
+  @Test
+  public void canCompileSourcesFromOtherCells() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "cxx_preprocess_and_compile_can_compile_sources_from_other_cells",
+        tmp);
+    workspace.setUp();
+    workspace.runBuckBuild(
+        "//:binary",
+        "-c", "cxx.untracked_headers=error",
+        "-c", "cxx.untracked_headers_whitelist=" +
+            "/usr/.*")
+        .assertSuccess();
+  }
 }

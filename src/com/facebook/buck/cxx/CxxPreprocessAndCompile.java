@@ -239,7 +239,7 @@ public class CxxPreprocessAndCompile
         operation,
         output,
         getDepFilePath(),
-        getRelativeInputPathIfPossible(resolver),
+        getRelativeInputPath(resolver),
         inputType,
         preprocessorCommand,
         compilerCommand,
@@ -251,14 +251,11 @@ public class CxxPreprocessAndCompile
         compilerDelegate.getCompiler());
   }
 
-  public Path getRelativeInputPathIfPossible(SourcePathResolver resolver) {
-    // TODO(10194465): This uses relative paths where possible so as to get relative paths in
-    // the dep file
-    try {
-      return resolver.getRelativePath(input);
-    } catch (IllegalStateException e) {
-      return resolver.getAbsolutePath(input);
-    }
+  public Path getRelativeInputPath(SourcePathResolver resolver) {
+    // For caching purposes, the path passed to the compiler is relativized by the absolute path by
+    // the current cell root, so that file references emitted by the compiler would not change if
+    // the repo is checked out into different places on disk.
+    return getProjectFilesystem().getRootPath().relativize(resolver.getAbsolutePath(input));
   }
 
   @Override
@@ -352,7 +349,7 @@ public class CxxPreprocessAndCompile
             preprocessDelegate.get().getHeaderPathNormalizer(),
             preprocessDelegate.get().getHeaderVerification(),
             getDepFilePath(),
-            getRelativeInputPathIfPossible(context.getSourcePathResolver()),
+            getRelativeInputPath(context.getSourcePathResolver()),
             output);
       } catch (Depfiles.HeaderVerificationException e) {
         throw new HumanReadableException(e);

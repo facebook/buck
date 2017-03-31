@@ -380,13 +380,13 @@ public class CxxPreprocessAndCompileTest {
       throws Exception {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-    SourcePath preprocessor = new PathSourcePath(filesystem, Paths.get("preprocessor"));
+    SourcePath preprocessor = new PathSourcePath(filesystem, filesystem.getPath("preprocessor"));
     Tool preprocessorTool =
         new CommandTool.Builder()
             .addInput(preprocessor)
             .build();
 
-    SourcePath compiler = new PathSourcePath(filesystem, Paths.get("compiler"));
+    SourcePath compiler = new PathSourcePath(filesystem, filesystem.getPath("compiler"));
     Tool compilerTool =
         new CommandTool.Builder()
             .addInput(compiler)
@@ -404,6 +404,7 @@ public class CxxPreprocessAndCompileTest {
     filesystem.writeContentsToPath(
         "test.o: " + pathResolver.getRelativePath(DEFAULT_INPUT) + " ",
         filesystem.getPath("test.o.dep"));
+    FakeSourcePath fakeInput = new FakeSourcePath(filesystem, "test.cpp");
 
     CxxPreprocessAndCompile cxxPreprocess =
         CxxPreprocessAndCompile.preprocessAndCompile(
@@ -424,7 +425,7 @@ public class CxxPreprocessAndCompileTest {
                 DEFAULT_COMPILER,
                 CxxToolFlags.of()),
             DEFAULT_OUTPUT,
-            DEFAULT_INPUT,
+            fakeInput,
             DEFAULT_INPUT_TYPE,
             Optional.empty(),
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
@@ -443,7 +444,7 @@ public class CxxPreprocessAndCompileTest {
                 new GccCompiler(compilerTool),
                 CxxToolFlags.of()),
             DEFAULT_OUTPUT,
-            DEFAULT_INPUT,
+            fakeInput,
             DEFAULT_INPUT_TYPE,
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
             CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
