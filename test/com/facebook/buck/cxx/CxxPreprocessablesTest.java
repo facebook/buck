@@ -50,7 +50,6 @@ import org.junit.rules.ExpectedException;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 
 public class CxxPreprocessablesTest {
 
@@ -99,10 +98,6 @@ public class CxxPreprocessablesTest {
       return builder.build();
     }
 
-    @Override
-    public Optional<HeaderSymlinkTree> getExportedHeaderSymlinkTree(CxxPlatform cxxPlatform) {
-      return Optional.empty();
-    }
   }
 
   private static FakeCxxPreprocessorDep createFakeCxxPreprocessorDep(

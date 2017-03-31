@@ -138,11 +138,6 @@ public class CxxPrecompiledHeaderTemplate
   }
 
   @Override
-  public Optional<HeaderSymlinkTree> getExportedHeaderSymlinkTree(CxxPlatform cxxPlatform) {
-    return Optional.empty();
-  }
-
-  @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
         CxxPlatform cxxPlatform,
         HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {

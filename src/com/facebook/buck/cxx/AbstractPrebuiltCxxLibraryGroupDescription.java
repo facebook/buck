@@ -200,11 +200,6 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
       }
 
       @Override
-      public Optional<HeaderSymlinkTree> getExportedHeaderSymlinkTree(CxxPlatform cxxPlatform) {
-        return Optional.empty();
-      }
-
-      @Override
       public CxxPreprocessorInput getCxxPreprocessorInput(
           CxxPlatform cxxPlatform,
           HeaderVisibility headerVisibility)

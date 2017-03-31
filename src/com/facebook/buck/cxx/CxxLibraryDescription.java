@@ -941,15 +941,6 @@ public class CxxLibraryDescription implements
           input.getFlavor().toString()).isEmpty();
     }
 
-    Predicate<CxxPlatform> hasExportedHeaders;
-    if (!args.exportedHeaders.isEmpty()) {
-      hasExportedHeaders = x -> true;
-    } else {
-      hasExportedHeaders =
-          input -> !args.exportedPlatformHeaders
-              .getMatchingValues(input.getFlavor().toString()).isEmpty();
-    }
-
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -959,7 +950,6 @@ public class CxxLibraryDescription implements
         resolver,
         args.getPrivateCxxDeps(),
         args.getExportedCxxDeps(),
-        hasExportedHeaders,
         Predicates.not(hasObjects),
         input -> {
           ImmutableList<StringWithMacros> flags =

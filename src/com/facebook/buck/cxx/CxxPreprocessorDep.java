@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableMap;
 
-import java.util.Optional;
 
 /**
  * An interface that represents a {@link com.facebook.buck.rules.BuildRule} which can contribute
@@ -32,8 +31,6 @@ public interface CxxPreprocessorDep {
   BuildTarget getBuildTarget();
 
   Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform);
-
-  Optional<HeaderSymlinkTree> getExportedHeaderSymlinkTree(CxxPlatform cxxPlatform);
 
   CxxPreprocessorInput getCxxPreprocessorInput(
       CxxPlatform cxxPlatform,

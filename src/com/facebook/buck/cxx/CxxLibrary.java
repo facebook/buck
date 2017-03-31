@@ -61,7 +61,6 @@ public class CxxLibrary
   private final BuildRuleResolver ruleResolver;
   private final CxxDeps deps;
   private final CxxDeps exportedDeps;
-  private final Predicate<CxxPlatform> hasExportedHeaders;
   private final Predicate<CxxPlatform> headerOnly;
   private final Function<? super CxxPlatform, Iterable<? extends Arg>> exportedLinkerFlags;
   private final Function<? super CxxPlatform, NativeLinkableInput> linkTargetInput;
@@ -94,7 +93,6 @@ public class CxxLibrary
       BuildRuleResolver ruleResolver,
       CxxDeps deps,
       CxxDeps exportedDeps,
-      Predicate<CxxPlatform> hasExportedHeaders,
       Predicate<CxxPlatform> headerOnly,
       Function<? super CxxPlatform, Iterable<? extends Arg>> exportedLinkerFlags,
       Function<? super CxxPlatform, NativeLinkableInput> linkTargetInput,
@@ -111,7 +109,6 @@ public class CxxLibrary
     this.ruleResolver = ruleResolver;
     this.deps = deps;
     this.exportedDeps = exportedDeps;
-    this.hasExportedHeaders = hasExportedHeaders;
     this.headerOnly = headerOnly;
     this.exportedLinkerFlags = exportedLinkerFlags;
     this.linkTargetInput = linkTargetInput;
@@ -159,19 +156,6 @@ public class CxxLibrary
                 headerVisibility.getFlavor()),
             CxxPreprocessorInput.class)
         .orElseThrow(IllegalStateException::new);
-  }
-
-  @Override
-  public Optional<HeaderSymlinkTree> getExportedHeaderSymlinkTree(CxxPlatform cxxPlatform) {
-    if (hasExportedHeaders.apply(cxxPlatform)) {
-      return Optional.of(
-          CxxPreprocessables.requireHeaderSymlinkTreeForLibraryTarget(
-              ruleResolver,
-              getBuildTarget(),
-              cxxPlatform.getFlavor()));
-    } else {
-      return Optional.empty();
-    }
   }
 
   @Override

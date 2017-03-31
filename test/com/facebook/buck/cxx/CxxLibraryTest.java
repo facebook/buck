@@ -183,7 +183,6 @@ public class CxxLibraryTest {
         ruleResolver,
         CxxDeps.EMPTY,
         CxxDeps.EMPTY,
-        /* hasExportedHeaders */ x -> true,
         /* headerOnly */ x -> true,
         Functions.constant(StringArg.from("-ldl")),
         /* linkTargetInput */ Functions.constant(NativeLinkableInput.of()),

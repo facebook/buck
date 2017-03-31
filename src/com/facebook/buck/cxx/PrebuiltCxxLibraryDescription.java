@@ -826,19 +826,6 @@ public class PrebuiltCxxLibraryDescription implements
       }
 
       @Override
-      public Optional<HeaderSymlinkTree> getExportedHeaderSymlinkTree(CxxPlatform cxxPlatform) {
-        if (hasHeaders(cxxPlatform)) {
-          return Optional.of(
-              CxxPreprocessables.requireHeaderSymlinkTreeForLibraryTarget(
-                  ruleResolver,
-                  getBuildTarget(),
-                  cxxPlatform.getFlavor()));
-        } else {
-          return Optional.empty();
-        }
-      }
-
-      @Override
       public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
           CxxPlatform cxxPlatform,
           HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
