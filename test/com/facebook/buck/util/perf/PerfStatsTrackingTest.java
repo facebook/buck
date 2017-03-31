@@ -55,6 +55,8 @@ public class PerfStatsTrackingTest {
       PerfStatsTracking.MemoryPerfStatsEvent memoryEvent =
           (PerfStatsTracking.MemoryPerfStatsEvent) event;
       assertThat(memoryEvent.getTotalMemoryBytes(), Matchers.greaterThan(0L));
+      assertThat(memoryEvent.getMaxMemoryBytes(),
+          Matchers.greaterThanOrEqualTo(memoryEvent.getTotalMemoryBytes()));
       assertThat(memoryEvent.getCurrentMemoryBytesUsageByPool().size(), Matchers.greaterThan(0));
     }
   }

@@ -54,6 +54,7 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
   public void probeMemory() {
     long freeMemoryBytes = Runtime.getRuntime().freeMemory();
     long totalMemoryBytes = Runtime.getRuntime().totalMemory();
+    long maxMemoryBytes = Runtime.getRuntime().maxMemory();
 
     long totalGcTimeMs = 0;
     for (GarbageCollectorMXBean gcMxBean : ManagementFactory.getGarbageCollectorMXBeans()) {
@@ -77,6 +78,7 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
     eventBus.post(new MemoryPerfStatsEvent(
         freeMemoryBytes,
         totalMemoryBytes,
+        maxMemoryBytes,
         totalGcTimeMs,
         currentMemoryBytesUsageByPool.build()));
   }
@@ -127,16 +129,19 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
   public static class MemoryPerfStatsEvent extends PerfStatsEvent {
     private final long freeMemoryBytes;
     private final long totalMemoryBytes;
+    private final long maxMemoryBytes;
     private final long timeSpentInGcMs;
     private final Map<String, Long> currentMemoryBytesUsageByPool;
 
     public MemoryPerfStatsEvent(
         long freeMemoryBytes,
         long totalMemoryBytes,
+        long maxMemoryBytes,
         long timeSpentInGcMs,
         Map<String, Long> currentMemoryBytesUsageByPool) {
       this.freeMemoryBytes = freeMemoryBytes;
       this.totalMemoryBytes = totalMemoryBytes;
+      this.maxMemoryBytes = maxMemoryBytes;
       this.timeSpentInGcMs = timeSpentInGcMs;
       this.currentMemoryBytesUsageByPool = currentMemoryBytesUsageByPool;
     }
@@ -147,6 +152,10 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
 
     public long getTotalMemoryBytes() {
       return totalMemoryBytes;
+    }
+
+    public long getMaxMemoryBytes() {
+      return maxMemoryBytes;
     }
 
     public long getTimeSpentInGcMs() {

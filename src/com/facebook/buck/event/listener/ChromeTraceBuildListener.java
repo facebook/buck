@@ -687,6 +687,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
                 SizeUnit.BYTES.toMegabytes(memory.getFreeMemoryBytes())))
             .put("total_memory_mb", Long.toString(
                 SizeUnit.BYTES.toMegabytes(memory.getTotalMemoryBytes())))
+            .put("max_memory_mb", Long.toString(
+                SizeUnit.BYTES.toMegabytes(memory.getMaxMemoryBytes())))
             .put("time_spent_in_gc_sec",
                 Long.toString(
                     TimeUnit.MILLISECONDS.toSeconds(memory.getTimeSpentInGcMs())))
