@@ -18,7 +18,7 @@ package com.facebook.buck.ide.intellij.deprecated;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.intellij.IjAndroidHelper;
+import com.facebook.buck.ide.intellij.IjAndroidHelper;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

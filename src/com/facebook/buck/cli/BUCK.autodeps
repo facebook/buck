@@ -88,7 +88,6 @@
       "//src/com/facebook/buck/jvm/java:packagefinder",
       "//src/com/facebook/buck/jvm/java:support",
       "//src/com/facebook/buck/jvm/java/autodeps:autodeps",
-      "//src/com/facebook/buck/jvm/java/intellij:intellij",
       "//src/com/facebook/buck/log:log",
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/model:model",

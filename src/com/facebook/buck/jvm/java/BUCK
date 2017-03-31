@@ -219,10 +219,10 @@ java_library(
     autodeps = True,
     visibility = [
         "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/ide/intellij:intellij",
         "//src/com/facebook/buck/jvm/java/autodeps:",
-        "//src/com/facebook/buck/jvm/java/intellij:intellij",
+        "//test/com/facebook/buck/ide/intellij:intellij",
         "//test/com/facebook/buck/jvm/java:java",
         "//test/com/facebook/buck/jvm/java/autodeps:autodeps",
-        "//test/com/facebook/buck/jvm/java/intellij:intellij",
     ],
 )

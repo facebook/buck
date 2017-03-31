@@ -42,7 +42,7 @@ import com.facebook.buck.jvm.java.JavaBinary;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.PrebuiltJar;
-import com.facebook.buck.jvm.java.intellij.IjAndroidHelper;
+import com.facebook.buck.ide.intellij.IjAndroidHelper;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;

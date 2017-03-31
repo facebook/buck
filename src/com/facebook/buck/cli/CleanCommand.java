@@ -17,8 +17,8 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
+import com.facebook.buck.ide.intellij.IjAndroidHelper;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.intellij.IjAndroidHelper;
 
 import org.kohsuke.args4j.Option;
 

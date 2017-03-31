@@ -7,10 +7,10 @@ standard_java_library(
     deps = [
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/cxx:rules",
+        "//src/com/facebook/buck/ide/intellij:intellij",
         "//src/com/facebook/buck/io:MorePaths.java",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/jvm/java:rules",
-        "//src/com/facebook/buck/jvm/java/intellij:intellij",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:rules",

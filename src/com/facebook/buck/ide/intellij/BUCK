@@ -1,0 +1,30 @@
+standard_java_library(
+    name = "intellij",
+    immutable_types = [
+        "IjLibrary",
+        "IjModule",
+        "IjModuleAndroidFacet",
+    ],
+    resources = [
+        "GeneratedByIdeaClass.st",
+        "ij-library.st",
+        "ij-misc.st",
+        "ij-module.st",
+        "ij-module-index.st",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/ide/intellij/deprecated:deprecated",
+        "//test/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/android:rules",
+        "//src/com/facebook/buck/artifact_cache:config",
+        "//src/com/facebook/buck/io:MorePaths.java",
+        "//src/com/facebook/buck/jvm/groovy:groovy",
+        "//src/com/facebook/buck/jvm/java:autodeps",
+        "//src/com/facebook/buck/jvm/java:rules",
+        "//src/com/facebook/buck/log:api",
+        "//third-party/java/stringtemplate:stringtemplate",
+    ],
+)
