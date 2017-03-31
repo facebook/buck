@@ -1,2 +1,3 @@
-standard_java_test(
-)
+standard_java_testutil()
+
+standard_java_test()

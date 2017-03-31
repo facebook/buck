@@ -209,22 +209,9 @@ def standard_java_test(
         vm_args = ['-Xmx256M']
     srcs = glob(['*.java'])
     test_srcs = []
-    testutil_srcs = []
     for src in srcs:
         if src.endswith('Test.java'):
             test_srcs.append(src)
-        else:
-            testutil_srcs.append(src)
-
-    if len(testutil_srcs) > 0:
-        java_library(
-          name = 'testutil',
-          srcs = testutil_srcs,
-          autodeps = True,
-          visibility = [
-            '//test/...',
-          ]
-        )
 
     if len(test_srcs) > 0:
         name = _get_name()
@@ -240,4 +227,21 @@ def standard_java_test(
           run_test_separately = run_test_separately,
           fork_mode = fork_mode,
           labels = labels or [],
+        )
+
+def standard_java_testutil():
+    srcs = glob(['*.java'])
+    testutil_srcs = []
+    for src in srcs:
+        if not src.endswith('Test.java'):
+            testutil_srcs.append(src)
+
+    if len(testutil_srcs) > 0:
+        java_library(
+          name = 'testutil',
+          srcs = testutil_srcs,
+          autodeps = True,
+          visibility = [
+            '//test/...',
+          ]
         )

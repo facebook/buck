@@ -1,1 +1,3 @@
+standard_java_testutil()
+
 standard_java_test(run_test_separately = True)

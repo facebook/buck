@@ -1,3 +1,5 @@
+standard_java_testutil()
+
 standard_java_test(
     labels = ["long_running"],
 )
