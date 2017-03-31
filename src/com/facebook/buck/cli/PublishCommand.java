@@ -185,14 +185,14 @@ public class PublishCommand extends BuildCommand {
   }
 
   @Override
-  public ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
+  public ImmutableSet<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
       BuckConfig config, Iterable<String> targetsAsArgs) {
-    ImmutableList<TargetNodeSpec> specs = super.parseArgumentsAsTargetNodeSpecs(
+    ImmutableSet<TargetNodeSpec> specs = super.parseArgumentsAsTargetNodeSpecs(
         config,
         targetsAsArgs);
 
     if (includeSource) {
-      specs = ImmutableList.<TargetNodeSpec>builder()
+      specs = ImmutableSet.<TargetNodeSpec>builder()
           .addAll(specs)
           .addAll(
               specs.stream()
@@ -233,7 +233,7 @@ public class PublishCommand extends BuildCommand {
                   .addFlavors(JavaLibrary.MAVEN_JAR)
                   .build());
         })
-        .collect(MoreCollectors.toImmutableList());
+        .collect(MoreCollectors.toImmutableSet());
 
     return specs;
   }
