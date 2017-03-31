@@ -3,6 +3,7 @@ standard_java_testutil(
 )
 
 standard_java_test(
+    name = "testrunner",
     labels = ["long_running"],
     run_test_separately = True,
 )

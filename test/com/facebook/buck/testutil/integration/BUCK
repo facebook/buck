@@ -1,6 +1,3 @@
-# TODO(mbolin): Replace this with standard_java_test() once `buck autodeps` is
-# fixed to automatically infer the export of '//third-party/java/jetty:jetty'.
-
 TEST_SRCS = glob(["*Test.java"])
 
 java_test(

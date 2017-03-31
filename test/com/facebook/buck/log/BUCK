@@ -2,7 +2,9 @@ standard_java_testutil(
     name = "testutil",
 )
 
-standard_java_test()
+standard_java_test(
+    name = "log",
+)
 
 python_test(
     name = "log_rotation_integration_test",

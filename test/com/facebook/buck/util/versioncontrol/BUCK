@@ -2,4 +2,7 @@ standard_java_testutil(
     name = "testutil",
 )
 
-standard_java_test(run_test_separately = True)
+standard_java_test(
+    name = "versioncontrol",
+    run_test_separately = True,
+)

@@ -2,7 +2,9 @@ standard_java_testutil(
     name = "testutil",
 )
 
-standard_java_test()
+standard_java_test(
+    name = "shutdown",
+)
 
 java_binary(
     name = "shutdown_binary",

@@ -133,12 +133,6 @@ def java_test(
     **kwargs
   )
 
-def _get_name():
-    base_path = get_base_path()
-    with allow_unsafe_import():
-        import os.path
-    return os.path.basename(base_path)
-
 def standard_java_library(
     name,
     srcs = None,
@@ -200,6 +194,7 @@ def standard_java_library(
     )
 
 def standard_java_test(
+    name,
     run_test_separately = False,
     vm_args = None,
     fork_mode = 'none',
@@ -214,10 +209,6 @@ def standard_java_test(
             test_srcs.append(src)
 
     if len(test_srcs) > 0:
-        name = _get_name()
-        if name == 'testutil':
-            # Having a com.facebook.buck.testutil package was probably a bad choice.
-            name = 'testutil_test'
         java_test(
           name = name,
           srcs = test_srcs,

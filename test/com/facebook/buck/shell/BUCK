@@ -3,5 +3,6 @@ standard_java_testutil(
 )
 
 standard_java_test(
+    name = "shell",
     labels = ["long_running"],
 )

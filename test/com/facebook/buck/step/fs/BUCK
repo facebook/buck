@@ -2,4 +2,6 @@ standard_java_testutil(
     name = "testutil",
 )
 
-standard_java_test()
+standard_java_test(
+    name = "fs",
+)

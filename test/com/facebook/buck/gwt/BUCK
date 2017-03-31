@@ -6,6 +6,7 @@ standard_java_testutil(
 )
 
 standard_java_test(
+    name = "gwt",
     run_test_separately = True,
     vm_args = ["-Xmx512m"],
 )
