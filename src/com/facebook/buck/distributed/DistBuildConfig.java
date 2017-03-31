@@ -31,9 +31,13 @@ public class DistBuildConfig {
   public static final String STAMPEDE_SECTION = "stampede";
 
   private static final String FRONTEND_REQUEST_TIMEOUT_MILLIS = "stampede_timeout_millis";
-  private static final long DEFAULT_DEFAULT_REQUEST_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(60);
+  private static final long REQUEST_TIMEOUT_MILLIS_DEFAULT_VALUE =
+      TimeUnit.SECONDS.toMillis(60);
 
   private static final String ALWAYS_MATERIALIZE_WHITELIST = "always_materialize_whitelist";
+
+  private static final String ENABLE_SLOW_LOCAL_BUILD_FALLBACK = "enable_slow_local_build_fallback";
+  private static final boolean ENABLE_SLOW_LOCAL_BUILD_FALLBACK_DEFAULT_VALUE = false;
 
   private final SlbBuckConfig frontendConfig;
   private final BuckConfig buckConfig;
@@ -57,7 +61,18 @@ public class DistBuildConfig {
 
   public long getFrontendRequestTimeoutMillis() {
     return buckConfig.getLong(STAMPEDE_SECTION, FRONTEND_REQUEST_TIMEOUT_MILLIS).orElse(
-        DEFAULT_DEFAULT_REQUEST_TIMEOUT_MILLIS);
+        REQUEST_TIMEOUT_MILLIS_DEFAULT_VALUE);
+  }
+
+  /**
+   * Whether buck distributed build should stop building if remote/distributed build fails (true)
+   * or if it should fallback to building locally if remote/distributed build fails (false).
+   */
+  public boolean isSlowLocalBuildFallbackModeEnabled() {
+    return buckConfig.getBooleanValue(
+        STAMPEDE_SECTION,
+        ENABLE_SLOW_LOCAL_BUILD_FALLBACK,
+        ENABLE_SLOW_LOCAL_BUILD_FALLBACK_DEFAULT_VALUE);
   }
 
   public OkHttpClient createOkHttpClient() {

@@ -25,6 +25,7 @@ import com.facebook.buck.distributed.BuckVersionUtil;
 import com.facebook.buck.distributed.BuildJobStateSerializer;
 import com.facebook.buck.distributed.DistBuildCellIndexer;
 import com.facebook.buck.distributed.DistBuildClientExecutor;
+import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildFileHashes;
 import com.facebook.buck.distributed.DistBuildLogStateTracker;
 import com.facebook.buck.distributed.DistBuildService;
@@ -37,6 +38,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildTargetParser;
@@ -114,6 +116,8 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 public class BuildCommand extends AbstractCommand {
+  private static final Logger LOG = Logger.get(BuildCommand.class);
+
   private static final String KEEP_GOING_LONG_ARG = "--keep-going";
   private static final String BUILD_REPORT_LONG_ARG = "--build-report";
   private static final String JUST_BUILD_LONG_ARG = "--just-build";
@@ -613,18 +617,36 @@ public class BuildCommand extends AbstractCommand {
             distBuildLogStateTracker,
             1000 /* millisBetweenStatusPoll */,
             buckVersion);
-        int exitCode = build.executeAndPrintFailuresToEventBus(
-            executorService,
-            filesystem,
-            fileHashCache,
-            params.getBuckEventBus());
+        DistBuildClientExecutor.ExecutionResult distBuildResult =
+            build.executeAndPrintFailuresToEventBus(
+                executorService,
+                filesystem,
+                fileHashCache,
+                params.getBuckEventBus());
+        int distBuildExitCode = distBuildResult.exitCode;
 
+        DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
         // After dist-build is complete, start build locally and we'll find everything in the cache.
         // TODO(shivanker): Add a flag to disable building, and only fetch from the cache.
-        if (exitCode == 0) {
-          exitCode = executeLocalBuild(params, graphs.actionGraph, executorService);
+        if (distBuildConfig.isSlowLocalBuildFallbackModeEnabled() || distBuildExitCode == 0) {
+          if (distBuildExitCode != 0) {
+            String errorMessage = String.format(
+                "The remote/distributed build with [%s] " +
+                    "failed with exit code [%d] trying to build " +
+                    "targets [%s]. This program will continue now by falling back to a " +
+                    "local build because config " +
+                    "[stampede.enable_slow_local_build_fallback=true]. ",
+                distBuildResult.stampedeId,
+                distBuildExitCode,
+                Joiner.on(" ").join(arguments));
+            params.getConsole().printErrorText(errorMessage);
+            LOG.error(errorMessage);
+          }
+
+          return executeLocalBuild(params, graphs.actionGraph, executorService);
+        } else {
+          return distBuildExitCode;
         }
-        return exitCode;
       }
     }
   }
@@ -813,24 +835,24 @@ public class BuildCommand extends AbstractCommand {
                  ruleKeyCacheScope.getCache()));
          Build build =
              createBuild(
-               rootCellBuckConfig,
-               actionGraphAndResolver.getActionGraph(),
-               actionGraphAndResolver.getResolver(),
-               params.getCell(),
-               params.getAndroidPlatformTargetSupplier(),
-               buildEngine,
-               artifactCache,
-               params.getConsole(),
-               params.getBuckEventBus(),
-               Optional.empty(),
-               params.getPersistentWorkerPools(),
-               rootCellBuckConfig.getPlatform(),
-               rootCellBuckConfig.getEnvironment(),
-               params.getObjectMapper(),
-               params.getClock(),
-               Optional.empty(),
-               Optional.empty(),
-               params.getExecutors())) {
+                 rootCellBuckConfig,
+                 actionGraphAndResolver.getActionGraph(),
+                 actionGraphAndResolver.getResolver(),
+                 params.getCell(),
+                 params.getAndroidPlatformTargetSupplier(),
+                 buildEngine,
+                 artifactCache,
+                 params.getConsole(),
+                 params.getBuckEventBus(),
+                 Optional.empty(),
+                 params.getPersistentWorkerPools(),
+                 rootCellBuckConfig.getPlatform(),
+                 rootCellBuckConfig.getEnvironment(),
+                 params.getObjectMapper(),
+                 params.getClock(),
+                 Optional.empty(),
+                 Optional.empty(),
+                 params.getExecutors())) {
       lastBuild = build;
       return build.executeAndPrintFailuresToEventBus(
           targetsToBuild,

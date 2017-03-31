@@ -54,7 +54,17 @@ public class DistBuildClientExecutor {
   private final DistBuildLogStateTracker distBuildLogStateTracker;
   private final BuildJobState buildJobState;
   private final BuckVersion buckVersion;
-  private int millisBetweenStatusPoll;
+  private final int millisBetweenStatusPoll;
+
+  public static class ExecutionResult {
+    public final StampedeId stampedeId;
+    public final int exitCode;
+
+    public ExecutionResult(StampedeId stampedeId, int exitCode) {
+      this.stampedeId = stampedeId;
+      this.exitCode = exitCode;
+    }
+  }
 
   public DistBuildClientExecutor(
       BuildJobState buildJobState,
@@ -69,7 +79,7 @@ public class DistBuildClientExecutor {
     this.buckVersion = buckVersion;
   }
 
-  public int executeAndPrintFailuresToEventBus(
+  public ExecutionResult executeAndPrintFailuresToEventBus(
       final WeightedListeningExecutorService executorService,
       ProjectFilesystem projectFilesystem,
       FileHashCache fileHashCache,
@@ -154,7 +164,9 @@ public class DistBuildClientExecutor {
     DistBuildStatus distBuildStatus = prepareStatusFromJob(job).setETAMillis(0).build();
     eventBus.post(new DistBuildStatusEvent(distBuildStatus));
 
-    return job.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY) ? 0 : 1;
+    return new ExecutionResult(
+        job.getStampedeId(),
+        job.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY) ? 0 : 1);
   }
 
   private DistBuildStatus.Builder prepareStatusFromJob(BuildJob job) {
