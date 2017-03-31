@@ -613,9 +613,10 @@ public class DefaultJavaLibraryIntegrationTest {
   }
 
   @Test
-  public void testClassUsageFileOutputProperly() throws IOException {
+  public void testClassUsageFileOutputWhenCompilingAgainstFullJars() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "class_usage_file", tmp);
     workspace.setUp();
+    workspace.addBuckConfigLocalOption(JavaBuckConfig.SECTION, "compile_against_abis", "false");
 
     // Run `buck build`.
     BuildTarget bizTarget = BuildTargetFactory.newInstance("//:biz");
@@ -635,6 +636,40 @@ public class DefaultJavaLibraryIntegrationTest {
 
     final String utilJarPath =
         MorePaths.pathWithPlatformSeparators("buck-out/gen/lib__util__output/util.jar");
+    final String utilClassPath =
+        MorePaths.pathWithPlatformSeparators("com/example/Util.class");
+
+    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
+    JsonNode jsonNode = objectMapper.readTree(lines.get(0));
+    assertThat(jsonNode,
+        new HasJsonField(objectMapper, utilJarPath,
+            Matchers.equalTo(objectMapper.valueToTree(new String[]{utilClassPath}))));
+  }
+
+  @Test
+  public void testClassUsageFileOutputWhenCompilingAgainstAbiJars() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "class_usage_file", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption(JavaBuckConfig.SECTION, "compile_against_abis", "true");
+
+    // Run `buck build`.
+    BuildTarget bizTarget = BuildTargetFactory.newInstance("//:biz");
+    ProcessResult buildResult =
+        workspace.runBuckCommand("build", bizTarget.getFullyQualifiedName());
+    buildResult.assertSuccess("Successful build should exit with 0.");
+
+    Path bizClassUsageFilePath = BuildTargets.getGenPath(
+        filesystem,
+        bizTarget,
+        "lib__%s__output/used-classes.json");
+
+    final List<String> lines = Files.readAllLines(
+        workspace.getPath(bizClassUsageFilePath), UTF_8);
+
+    assertEquals("Expected just one line of JSON", 1, lines.size());
+
+    final String utilJarPath =
+        MorePaths.pathWithPlatformSeparators("buck-out/gen/util#abi/util-abi.jar");
     final String utilClassPath =
         MorePaths.pathWithPlatformSeparators("com/example/Util.class");
 

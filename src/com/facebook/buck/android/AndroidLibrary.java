@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
+import com.facebook.buck.android.AndroidLibraryDescription.JvmLanguage;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
@@ -147,6 +148,10 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       this.compilerFactory = compilerFactory;
       setJavacOptions(javacOptions);
       setArgs(args);
+      // Set only if this is not Scala/Kotlin
+      if (!args.language.filter(l -> l != JvmLanguage.JAVA).isPresent()) {
+        setCompileAgainstAbis(javaBuckConfig.shouldCompileAgainstAbis());
+      }
     }
 
     @Override
@@ -178,7 +183,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
             postprocessClassesCommands,
             exportedDeps,
             providedDeps,
-            getCompileTimeClasspathDeps(),
+            getFinalCompileTimeClasspathDeps(),
             getAbiInputs(),
             Preconditions.checkNotNull(javacOptions),
             getAndroidCompiler().trackClassUsage(Preconditions.checkNotNull(javacOptions)),

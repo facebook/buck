@@ -36,6 +36,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
@@ -54,6 +55,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -629,9 +631,30 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       throws IOException {
     Preconditions.checkState(useDependencyFileRuleKeys());
     return DefaultClassUsageFileReader.loadFromFile(
-        context.getSourcePathResolver(),
         getProjectFilesystem(),
         Preconditions.checkNotNull(depFileOutputPath),
-        compileTimeClasspathDeps);
+        getDepOutputPathToAbiSourcePath(context.getSourcePathResolver()));
+  }
+
+  private ImmutableMap<Path, SourcePath> getDepOutputPathToAbiSourcePath(
+      SourcePathResolver pathResolver) {
+    ImmutableMap.Builder<Path, SourcePath> pathToSourcePathMapBuilder = ImmutableMap.builder();
+    for (BuildRule rule : compileTimeClasspathDeps) {
+      SourcePath sourcePath = rule.getSourcePathToOutput();
+      if (sourcePath != null) {
+        Path path = pathResolver.getAbsolutePath(sourcePath);
+        if (rule instanceof HasJavaAbi) {
+          if (((HasJavaAbi) rule).getAbiJar().isPresent()) {
+            BuildTarget buildTarget = ((HasJavaAbi) rule).getAbiJar().get();
+            pathToSourcePathMapBuilder.put(
+                path,
+                new DefaultBuildTargetSourcePath(buildTarget));
+          }
+        } else if (rule instanceof CalculateAbi) {
+          pathToSourcePathMapBuilder.put(path, sourcePath);
+        }
+      }
+    }
+    return pathToSourcePathMapBuilder.build();
   }
 }

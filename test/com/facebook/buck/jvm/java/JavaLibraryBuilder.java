@@ -53,12 +53,33 @@ public class JavaLibraryBuilder extends
     this.projectFilesystem = projectFilesystem;
   }
 
+  protected JavaLibraryBuilder(
+      BuildTarget target,
+      JavaBuckConfig javaBuckConfig,
+      ProjectFilesystem projectFilesystem,
+      HashCode hashCode) {
+    super(
+        new JavaLibraryDescription(
+            javaBuckConfig,
+            DEFAULT_JAVAC_OPTIONS),
+        target,
+        projectFilesystem,
+        hashCode);
+    this.projectFilesystem = projectFilesystem;
+  }
+
   public static JavaLibraryBuilder createBuilder(String qualifiedTarget) {
     return createBuilder(BuildTargetFactory.newInstance(qualifiedTarget));
   }
 
   public static JavaLibraryBuilder createBuilder(BuildTarget target) {
     return new JavaLibraryBuilder(target, new FakeProjectFilesystem(), null);
+  }
+
+  public static JavaLibraryBuilder createBuilder(
+      BuildTarget target,
+      JavaBuckConfig javaBuckConfig) {
+    return new JavaLibraryBuilder(target, javaBuckConfig, new FakeProjectFilesystem(), null);
   }
 
   public static JavaLibraryBuilder createBuilder(

@@ -191,4 +191,8 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   public boolean shouldValidateAbisGeneratedFromSource() {
     return delegate.getBooleanValue(SECTION, "validate_abis_from_source", false);
   }
+
+  public boolean shouldCompileAgainstAbis() {
+    return delegate.getBooleanValue(SECTION, "compile_against_abis", false);
+  }
 }

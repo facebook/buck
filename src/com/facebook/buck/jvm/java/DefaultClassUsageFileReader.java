@@ -17,27 +17,20 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Provides utility methods for reading dependency file entries.
@@ -50,34 +43,6 @@ class DefaultClassUsageFileReader {
    */
   private DefaultClassUsageFileReader() {}
 
-  private static ImmutableMap<Path, SourcePath> buildJarToAbiJarMap(
-      SourcePathResolver pathResolver,
-      ImmutableSortedSet<BuildRule> deps) {
-    ImmutableMap.Builder<Path, SourcePath> jarAbsolutePathToAbiJarSourcePathBuilder =
-        ImmutableMap.builder();
-
-    for (BuildRule dep : deps) {
-      if (!(dep instanceof HasJavaAbi)) {
-        continue;
-      }
-
-      HasJavaAbi depWithJavaAbi = (HasJavaAbi) dep;
-      Optional<BuildTarget> depAbiJar = depWithJavaAbi.getAbiJar();
-      if (!depAbiJar.isPresent()) {
-        continue;
-      }
-
-      Path jarAbsolutePath = pathResolver.getAbsolutePath(
-          Preconditions.checkNotNull(dep.getSourcePathToOutput()));
-
-      jarAbsolutePathToAbiJarSourcePathBuilder.put(
-          jarAbsolutePath,
-          new DefaultBuildTargetSourcePath(depAbiJar.get()));
-    }
-
-    return jarAbsolutePathToAbiJarSourcePathBuilder.build();
-  }
-
   private static ImmutableMap<String, ImmutableList<String>> loadClassUsageMap(
       Path mapFilePath) throws IOException {
     return objectMapper.readValue(
@@ -86,35 +51,38 @@ class DefaultClassUsageFileReader {
         });
   }
 
+  /**
+   * This method loads a class usage file that maps JARs to the list of files within those jars
+   * that were used. Given our rule's deps, we determine which of these
+   * JARS in the class usage file are actually among the deps of our rule.
+   */
   public static ImmutableList<SourcePath> loadFromFile(
-      SourcePathResolver pathResolver,
       ProjectFilesystem projectFilesystem,
       Path classUsageFilePath,
-      ImmutableSortedSet<BuildRule> deps) {
-    final ImmutableMap<Path, SourcePath> jarAbsolutePathToAbiJarSourcePath =
-        buildJarToAbiJarMap(pathResolver, deps);
+      ImmutableMap<Path, SourcePath> jarPathToSourcePath) {
     final ImmutableList.Builder<SourcePath> builder = ImmutableList.builder();
     try {
       final ImmutableSet<Map.Entry<String, ImmutableList<String>>> classUsageEntries =
           loadClassUsageMap(classUsageFilePath).entrySet();
       for (Map.Entry<String, ImmutableList<String>> jarUsedClassesEntry : classUsageEntries) {
         Path jarAbsolutePath = projectFilesystem.resolve(Paths.get(jarUsedClassesEntry.getKey()));
-        SourcePath abiJarSourcePath = jarAbsolutePathToAbiJarSourcePath.get(jarAbsolutePath);
-        if (abiJarSourcePath == null) {
+        SourcePath sourcePath = jarPathToSourcePath.get(jarAbsolutePath);
+        if (sourcePath == null) {
           // This indicates a dependency that wasn't among the deps of the rule; i.e.,
           // it came from the build environment (JDK, Android SDK, etc.)
           continue;
         }
 
-        ImmutableList<String> classAbsolutePaths = jarUsedClassesEntry.getValue();
-        for (String classAbsolutePath : classAbsolutePaths) {
-          builder.add(
-              new ArchiveMemberSourcePath(abiJarSourcePath, Paths.get(classAbsolutePath)));
+        for (String classAbsolutePath : jarUsedClassesEntry.getValue()) {
+          builder.add(new ArchiveMemberSourcePath(sourcePath, Paths.get(classAbsolutePath)));
         }
       }
     } catch (IOException e) {
-      throw new HumanReadableException(e, "Failed to load class usage files from %s:\n%s",
-          classUsageFilePath, e.getLocalizedMessage());
+      throw new HumanReadableException(
+          e,
+          "Failed to load class usage files from %s:\n%s",
+          classUsageFilePath,
+          e.getLocalizedMessage());
     }
     return builder.build();
   }

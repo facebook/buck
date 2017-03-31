@@ -32,6 +32,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidPlatformTarget;
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.HashingDeterministicJarWriter;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -370,39 +371,83 @@ public class DefaultJavaLibraryTest {
   }
 
   @Test
-  public void testClasspathForJavacCommand() throws Exception {
-    // libraryOne responds like an ordinary prebuilt_jar with no dependencies. We have to use a
-    // FakeJavaLibraryRule so that we can override the behavior of getAbiKey().
+  public void testClasspathForJavacCommandWhenCompilingAgainstAbiJars() throws Exception {
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
-    FakeJavaLibrary libraryOne = new FakeJavaLibrary(libraryOneTarget, resolver) {
+    TargetNode<?, ?> libraryOne = JavaLibraryBuilder.createBuilder(libraryOneTarget)
+        .addSrc(Paths.get("java/src/com/libone/Bar.java"))
+        .build();
 
-      @Override
-      public Optional<BuildTarget> getAbiJar() {
-        return Optional.empty();
-      }
-
-      @Override
-      public ImmutableSet<SourcePath> getTransitiveClasspaths() {
-        return ImmutableSet.of();
-      }
-
-      @Override
-      public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
-        return ImmutableSet.of();
-      }
-    };
-    ruleResolver.addToIndex(libraryOne);
+    JavaBuckConfig testConfig = JavaBuckConfig.of(
+        FakeBuckConfig.builder()
+            .setSections("[" + JavaBuckConfig.SECTION + "]", "compile_against_abis = true")
+            .build());
 
     BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
-    BuildRule libraryTwo = JavaLibraryBuilder
-        .createBuilder(libraryTwoTarget)
+    TargetNode<?, ?> libraryTwo = JavaLibraryBuilder
+        .createBuilder(libraryTwoTarget, testConfig)
         .addSrc(Paths.get("java/src/com/libtwo/Foo.java"))
         .addDep(libraryOne.getBuildTarget())
-        .build(ruleResolver);
+        .build();
 
-    List<Step> steps = libraryTwo.getBuildSteps(
-        FakeBuildContext.withSourcePathResolver(resolver), new FakeBuildableContext());
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(libraryOne, libraryTwo);
+    ruleResolver = new BuildRuleResolver(
+        targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    JavaLibrary libraryOneRule = (JavaLibrary) ruleResolver.requireRule(libraryOneTarget);
+    BuildRule libraryTwoRule = ruleResolver.requireRule(libraryTwoTarget);
+
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+
+    List<Step> steps = libraryTwoRule.getBuildSteps(
+        FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
+
+    ImmutableList<JavacStep> javacSteps = FluentIterable
+        .from(steps)
+        .filter(JavacStep.class)
+        .toList();
+    assertEquals("There should be only one javac step.", 1, javacSteps.size());
+    JavacStep javacStep = javacSteps.get(0);
+    Path expectedPath =
+        pathResolver.getAbsolutePath(
+            ruleResolver.getRule(libraryOneRule.getAbiJar().get()).getSourcePathToOutput());
+    assertEquals(
+        "The classpath for the javac step to compile //:libtwo should contain only libone#abi.",
+        ImmutableSet.of(expectedPath),
+        javacStep.getClasspathEntries());
+  }
+
+  @Test
+  public void testClasspathForJavacCommandWhenCompilingAgainstFullJars() throws Exception {
+    BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
+    TargetNode<?, ?> libraryOne = JavaLibraryBuilder.createBuilder(libraryOneTarget)
+        .addSrc(Paths.get("java/src/com/libone/Bar.java"))
+        .build();
+
+    JavaBuckConfig testConfig = JavaBuckConfig.of(
+        FakeBuckConfig.builder()
+            .setSections("[" + JavaBuckConfig.SECTION + "]", "compile_against_abis = false")
+            .build());
+
+    BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
+    TargetNode<?, ?> libraryTwo = JavaLibraryBuilder
+        .createBuilder(libraryTwoTarget, testConfig)
+        .addSrc(Paths.get("java/src/com/libtwo/Foo.java"))
+        .addDep(libraryOne.getBuildTarget())
+        .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(libraryOne, libraryTwo);
+    ruleResolver = new BuildRuleResolver(
+        targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    JavaLibrary libraryOneRule = (JavaLibrary) ruleResolver.requireRule(libraryOneTarget);
+    BuildRule libraryTwoRule = ruleResolver.requireRule(libraryTwoTarget);
+
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+
+    List<Step> steps = libraryTwoRule.getBuildSteps(
+        FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
 
     ImmutableList<JavacStep> javacSteps = FluentIterable
         .from(steps)
@@ -412,7 +457,7 @@ public class DefaultJavaLibraryTest {
     JavacStep javacStep = javacSteps.get(0);
     assertEquals(
         "The classpath for the javac step to compile //:libtwo should contain only libone.",
-        ImmutableSet.of(resolver.getAbsolutePath(libraryOne.getSourcePathToOutput())),
+        ImmutableSet.of(pathResolver.getAbsolutePath(libraryOneRule.getSourcePathToOutput())),
         javacStep.getClasspathEntries());
   }
 

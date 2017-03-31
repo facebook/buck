@@ -31,7 +31,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.google.common.base.Preconditions;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -115,21 +115,27 @@ public class JavaLibraryRules {
     return libraries.build();
   }
 
-  public static ImmutableSortedSet<SourcePath> getAbiInputs(
+  public static ImmutableSortedSet<BuildRule> getAbiRules(
       BuildRuleResolver resolver,
       Iterable<BuildRule> inputs) throws NoSuchBuildTargetException {
-    ImmutableSortedSet.Builder<SourcePath> abiRules =
-        ImmutableSortedSet.naturalOrder();
-    for (BuildRule dep : inputs) {
-      if (dep instanceof HasJavaAbi) {
-        Optional<BuildTarget> abiJarTarget = ((HasJavaAbi) dep).getAbiJar();
-        if (abiJarTarget.isPresent()) {
-          BuildRule abiJarRule = resolver.requireRule(abiJarTarget.get());
-          abiRules.add(Preconditions.checkNotNull(abiJarRule.getSourcePathToOutput()));
-        }
+    ImmutableSortedSet.Builder<BuildRule> abiRules = ImmutableSortedSet.naturalOrder();
+    for (BuildRule input : inputs) {
+      if (input instanceof HasJavaAbi && ((HasJavaAbi) input).getAbiJar().isPresent()) {
+        Optional<BuildTarget> abiJarTarget = ((HasJavaAbi) input).getAbiJar();
+        BuildRule abiJarRule = resolver.requireRule(abiJarTarget.get());
+        abiRules.add(abiJarRule);
       }
     }
     return abiRules.build();
+  }
+
+  public static ImmutableSortedSet<SourcePath> getAbiSourcePaths(
+      BuildRuleResolver resolver,
+      Iterable<BuildRule> inputs) throws NoSuchBuildTargetException {
+    return getAbiRules(resolver, inputs)
+        .stream()
+        .map(BuildRule::getSourcePathToOutput)
+        .collect(MoreCollectors.toImmutableSortedSet());
   }
 
 }

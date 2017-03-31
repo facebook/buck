@@ -208,7 +208,7 @@ public class AndroidPrebuiltAarDescription
             new BootClasspathAppender()),
         javaBuckConfig.shouldSuggestDependencies(),
         /* exportedDeps */ javaDeps,
-        JavaLibraryRules.getAbiInputs(buildRuleResolver, androidLibraryParams.getBuildDeps()));
+        JavaLibraryRules.getAbiSourcePaths(buildRuleResolver, androidLibraryParams.getBuildDeps()));
   }
 
   @SuppressFieldNotInitialized
