@@ -307,6 +307,7 @@ public class CxxPythonExtensionDescription implements
         Optional.of(extensionName),
         extensionPath,
         Linker.LinkableDepType.SHARED,
+        /* thinLto */ false,
         RichStream.from(deps)
             .filter(NativeLinkable.class)
             .toImmutableList(),

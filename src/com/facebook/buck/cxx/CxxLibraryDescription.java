@@ -425,6 +425,7 @@ public class CxxLibraryDescription implements
         Optional.of(sharedLibrarySoname),
         sharedLibraryPath,
         linkableDepType,
+        args.thinLto,
         RichStream.from(deps)
             .filter(NativeLinkable.class)
             .toImmutableList(),
@@ -479,6 +480,7 @@ public class CxxLibraryDescription implements
     arg.forceStatic = Optional.empty();
     arg.preferredLinkage = Optional.empty();
     arg.linkWhole = Optional.empty();
+    arg.thinLto = false;
     arg.headerNamespace = Optional.empty();
     arg.soname = Optional.empty();
     arg.frameworks = ImmutableSortedSet.of();

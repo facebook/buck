@@ -451,6 +451,7 @@ public class PrebuiltCxxLibraryDescription implements
         Optional.of(soname),
         builtSharedLibraryPath,
         Linker.LinkableDepType.SHARED,
+        /* thinLto */ false,
         FluentIterable.from(params.getBuildDeps())
             .filter(NativeLinkable.class),
         Optional.empty(),

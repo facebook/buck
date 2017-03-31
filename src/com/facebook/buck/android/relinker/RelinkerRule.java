@@ -168,7 +168,8 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
               getLibFilePath(),
               args,
               cxxBuckConfig.getLinkScheduleInfo(),
-              cxxBuckConfig.shouldCacheLinks())
+              cxxBuckConfig.shouldCacheLinks(),
+              /* thinLto */ false)
               .getBuildSteps(context, buildableContext));
       buildableContext.recordArtifact(getRelativeVersionFilePath());
     }

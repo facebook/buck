@@ -1,0 +1,9 @@
+apple_library(
+  name = 'TestLibrary',
+  info_plist = 'Info.plist',
+  srcs = ['lib.c'],
+  exported_headers = ['lib.h'],
+  visibility = ['//Apps/...'],
+  compiler_flags = ['-flto=thin'],
+  thin_lto= True,
+)

@@ -168,6 +168,7 @@ public class NdkCxxPlatformTest {
           Optional.empty(),
           Paths.get("output"),
           Linker.LinkableDepType.SHARED,
+          /* thinLto */ false,
           ImmutableList.of(),
           Optional.empty(),
           Optional.empty(),

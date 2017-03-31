@@ -830,6 +830,7 @@ public class CxxDescriptionEnhancer {
         stripStyle,
         flavoredLinkerMapMode,
         args.linkStyle.orElse(Linker.LinkableDepType.STATIC),
+        args.thinLto,
         args.preprocessorFlags,
         args.platformPreprocessorFlags,
         args.langPreprocessorFlags,
@@ -859,6 +860,7 @@ public class CxxDescriptionEnhancer {
       Optional<StripStyle> stripStyle,
       Optional<LinkerMapMode> flavoredLinkerMapMode,
       Linker.LinkableDepType linkStyle,
+      boolean thinLto,
       ImmutableList<String> preprocessorFlags,
       PatternMatchedCollection<ImmutableList<String>> platformPreprocessorFlags,
       ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags,
@@ -931,6 +933,11 @@ public class CxxDescriptionEnhancer {
             includeDirs,
             sandboxTree);
 
+    ImmutableList.Builder<String> compilerFlagsWithLto = ImmutableList.builder();
+    compilerFlagsWithLto.addAll(compilerFlags);
+    if (thinLto) {
+      compilerFlagsWithLto.add("-flto=thin");
+    }
     // Generate and add all the build rules to preprocess and compile the source to the
     // resolver and get the `SourcePath`s representing the generated object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
@@ -943,7 +950,7 @@ public class CxxDescriptionEnhancer {
             cxxPlatform,
             cxxPreprocessorInput,
             CxxFlags.getLanguageFlags(
-                compilerFlags,
+                compilerFlagsWithLto.build(),
                 platformCompilerFlags,
                 langCompilerFlags,
                 cxxPlatform),
@@ -1024,6 +1031,7 @@ public class CxxDescriptionEnhancer {
             .filter(NativeLinkable.class)
             .toImmutableList(),
         linkStyle,
+        thinLto,
         frameworks,
         libraries,
         cxxRuntimeType,
@@ -1072,6 +1080,7 @@ public class CxxDescriptionEnhancer {
       CxxPlatform cxxPlatform,
       Iterable<? extends NativeLinkable> deps,
       Linker.LinkableDepType linkStyle,
+      boolean thinLto,
       ImmutableSortedSet<FrameworkPath> frameworks,
       ImmutableSortedSet<FrameworkPath> libraries,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
@@ -1102,6 +1111,7 @@ public class CxxDescriptionEnhancer {
               Optional.empty(),
               linkOutput,
               linkStyle,
+              thinLto,
               deps,
               cxxRuntimeType,
               Optional.empty(),

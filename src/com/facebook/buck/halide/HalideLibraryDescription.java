@@ -170,6 +170,7 @@ public class HalideLibraryDescription
             flavoredStripStyle,
             flavoredLinkerMapMode,
             Linker.LinkableDepType.STATIC,
+            /* thinLto */ false,
             preprocessorFlags,
             platformPreprocessorFlags,
             langPreprocessorFlags,

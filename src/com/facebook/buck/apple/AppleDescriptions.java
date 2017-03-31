@@ -283,6 +283,7 @@ public class AppleDescriptions {
         buildTarget);
     output.defaultPlatform = Optional.empty();
     output.linkStyle = arg.linkStyle;
+    output.thinLto = arg.thinLto;
   }
 
   public static void populateCxxLibraryDescriptionArg(
@@ -319,6 +320,7 @@ public class AppleDescriptions {
     output.forceStatic = arg.forceStatic;
     output.preferredLinkage = arg.preferredLinkage;
     output.linkWhole = arg.linkWhole;
+    output.thinLto = arg.thinLto;
     output.supportedPlatformsRegex = arg.supportedPlatformsRegex;
     output.canBeAsset = arg.canBeAsset;
     output.exportedDeps = arg.exportedDeps;

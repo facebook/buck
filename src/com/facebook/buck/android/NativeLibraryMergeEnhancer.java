@@ -796,6 +796,7 @@ class NativeLibraryMergeEnhancer {
                 "%s/" + getSoname(cxxPlatform)),
             // Android Binaries will use share deps by default.
             Linker.LinkableDepType.SHARED,
+            /* thinLto */ false,
             Iterables.concat(
                 getNativeLinkableDepsForPlatform(cxxPlatform),
                 getNativeLinkableExportedDepsForPlatform(cxxPlatform)),

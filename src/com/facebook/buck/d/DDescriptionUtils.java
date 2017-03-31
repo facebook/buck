@@ -159,6 +159,7 @@ abstract class DDescriptionUtils {
             buildTarget,
             "%s/" + buildTarget.getShortName()),
         Linker.LinkableDepType.STATIC,
+        /* thinLto */ false,
         FluentIterable.from(params.getBuildDeps())
             .filter(NativeLinkable.class),
         /* cxxRuntimeType */ Optional.empty(),

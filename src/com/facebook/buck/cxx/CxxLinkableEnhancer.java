@@ -75,6 +75,7 @@ public class CxxLinkableEnhancer {
       Path output,
       ImmutableList<Arg> args,
       Linker.LinkableDepType depType,
+      boolean thinLto,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType) {
 
     final Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
@@ -85,6 +86,11 @@ public class CxxLinkableEnhancer {
     // Add flags to generate linker map if supported.
     if (linker instanceof HasLinkerMap && LinkerMapMode.isLinkerMapEnabledForBuildTarget(target)) {
       argsBuilder.addAll(((HasLinkerMap) linker).linkerMap(output));
+    }
+
+    // Add lto object path if thin LTO is on.
+    if (linker instanceof HasThinLTO && thinLto) {
+      argsBuilder.addAll(((HasThinLTO) linker).thinLTO(output));
     }
 
     // Pass any platform specific or extra linker flags.
@@ -122,7 +128,8 @@ public class CxxLinkableEnhancer {
         output,
         allArgs,
         cxxBuckConfig.getLinkScheduleInfo(),
-        cxxBuckConfig.shouldCacheLinks());
+        cxxBuckConfig.shouldCacheLinks(),
+        thinLto);
   }
 
   /**
@@ -145,6 +152,7 @@ public class CxxLinkableEnhancer {
       Optional<String> soname,
       Path output,
       Linker.LinkableDepType depType,
+      boolean thinLto,
       Iterable<? extends NativeLinkable> nativeLinkableDeps,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       Optional<SourcePath> bundleLoader,
@@ -226,6 +234,7 @@ public class CxxLinkableEnhancer {
         output,
         allArgs,
         depType,
+        thinLto,
         cxxRuntimeType);
   }
 
@@ -362,6 +371,7 @@ public class CxxLinkableEnhancer {
         output,
         linkArgs,
         Linker.LinkableDepType.SHARED,
+        /* thinLto */ false,
         Optional.empty());
   }
 

@@ -248,6 +248,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
             Optional.empty(),
             getOutput(),
             Linker.LinkableDepType.SHARED,
+            /* thinLto */ false,
             getNativeStarterDeps(),
             Optional.empty(),
             Optional.empty(),

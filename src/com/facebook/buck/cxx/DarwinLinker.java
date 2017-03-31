@@ -45,7 +45,7 @@ import java.util.Set;
 /**
  * A specialization of {@link Linker} containing information specific to the Darwin implementation.
  */
-public class DarwinLinker implements Linker, HasLinkerMap {
+public class DarwinLinker implements Linker, HasLinkerMap, HasThinLTO {
 
   private final Tool tool;
 
@@ -99,6 +99,17 @@ public class DarwinLinker implements Linker, HasLinkerMap {
   @Override
   public Path linkerMapPath(Path output) {
     return Paths.get(output + "-LinkMap.txt");
+  }
+
+  @Override
+  public Iterable<Arg> thinLTO(Path output) {
+    return StringArg.from(
+        "-flto=thin", "-Xlinker", "-object_path_lto", "-Xlinker", thinLTOPath(output).toString());
+  }
+
+  @Override
+  public Path thinLTOPath(Path output) {
+    return Paths.get(output + "-lto");
   }
 
   @Override

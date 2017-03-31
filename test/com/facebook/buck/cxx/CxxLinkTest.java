@@ -91,7 +91,8 @@ public class CxxLinkTest {
                 DEFAULT_OUTPUT,
                 DEFAULT_ARGS,
                 Optional.empty(),
-                /* cacheable */ true));
+                /* cacheable */ true,
+                /* thinLto */ false));
 
     // Verify that changing the archiver causes a rulekey change.
 
@@ -103,7 +104,8 @@ public class CxxLinkTest {
                 DEFAULT_OUTPUT,
                 DEFAULT_ARGS,
                 Optional.empty(),
-                /* cacheable */ true));
+                /* cacheable */ true,
+                /* thinLto */ false));
     assertNotEquals(defaultRuleKey, linkerChange);
 
     // Verify that changing the output path causes a rulekey change.
@@ -116,7 +118,8 @@ public class CxxLinkTest {
                 Paths.get("different"),
                 DEFAULT_ARGS,
                 Optional.empty(),
-                /* cacheable */ true));
+                /* cacheable */ true,
+                /* thinLto */ false));
     assertNotEquals(defaultRuleKey, outputChange);
 
     // Verify that changing the flags causes a rulekey change.
@@ -131,7 +134,8 @@ public class CxxLinkTest {
                     SourcePathArg.of(
                         new FakeSourcePath("different"))),
                 Optional.empty(),
-                /* cacheable */ true));
+                /* cacheable */ true,
+                /* thinLto */ false));
     assertNotEquals(defaultRuleKey, flagsChange);
   }
 
@@ -185,7 +189,8 @@ public class CxxLinkTest {
             DEFAULT_OUTPUT,
             args1,
             Optional.empty(),
-            /* cacheable */ true));
+            /* cacheable */ true,
+            /* thinLto */ false));
 
     // Generate another rule with a different path we need to sanitize to the
     // same consistent value as above.
@@ -202,7 +207,8 @@ public class CxxLinkTest {
             DEFAULT_OUTPUT,
             args2,
             Optional.empty(),
-            /* cacheable */ true));
+            /* cacheable */ true,
+            /* thinLto */ false));
 
     assertEquals(ruleKey1, ruleKey2);
   }

@@ -314,6 +314,7 @@ public class SwiftLibraryDescription implements
         Optional.of(sharedLibrarySoname),
         sharedLibOutput,
         Linker.LinkableDepType.SHARED,
+        /* thinLto */ false,
         RichStream.from(params.getBuildDeps())
             .filter(NativeLinkable.class)
             .concat(RichStream.of(swiftRuntimeLinkable))

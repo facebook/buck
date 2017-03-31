@@ -253,6 +253,7 @@ public class CxxLuaExtensionDescription implements
         Optional.of(extensionName),
         extensionPath,
         Linker.LinkableDepType.SHARED,
+        /* thinLto */ false,
         RichStream.from(args.getCxxDeps().get(ruleResolver, cxxPlatform))
             .filter(NativeLinkable.class)
             .concat(Stream.of(luaConfig.getLuaCxxLibrary(ruleResolver)))

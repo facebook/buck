@@ -861,6 +861,7 @@ public class AppleCxxPlatformsTest {
               Optional.empty(),
               projectFilesystem.getPath("output"),
               Linker.LinkableDepType.SHARED,
+              /* thinLto */ false,
               ImmutableList.of(),
               Optional.empty(),
               Optional.empty(),

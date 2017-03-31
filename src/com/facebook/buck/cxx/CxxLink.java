@@ -56,6 +56,8 @@ public class CxxLink
   private final ImmutableList<Arg> args;
   private final Optional<RuleScheduleInfo> ruleScheduleInfo;
   private final boolean cacheable;
+  @AddToRuleKey
+  private boolean thinLto;
 
   public CxxLink(
       BuildRuleParams params,
@@ -63,13 +65,15 @@ public class CxxLink
       Path output,
       ImmutableList<Arg> args,
       Optional<RuleScheduleInfo> ruleScheduleInfo,
-      boolean cacheable) {
+      boolean cacheable,
+      boolean thinLto) {
     super(params);
     this.linker = linker;
     this.output = output;
     this.args = args;
     this.ruleScheduleInfo = ruleScheduleInfo;
     this.cacheable = cacheable;
+    this.thinLto = thinLto;
     performChecks(params);
   }
 
@@ -89,6 +93,9 @@ public class CxxLink
     if (linkerMapPath.isPresent() &&
         LinkerMapMode.isLinkerMapEnabledForBuildTarget(getBuildTarget())) {
       buildableContext.recordArtifact(linkerMapPath.get());
+    }
+    if (linker instanceof HasThinLTO && thinLto) {
+      buildableContext.recordArtifact(((HasThinLTO) linker).thinLTOPath(output));
     }
     Path scratchDir =
         BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s-tmp");

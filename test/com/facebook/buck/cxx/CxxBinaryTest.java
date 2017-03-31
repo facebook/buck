@@ -57,7 +57,8 @@ public class CxxBinaryTest {
                 bin,
                 ImmutableList.of(),
                 Optional.empty(),
-                /* cacheable */ true));
+                /* cacheable */ true,
+                /* thinLto */ false));
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//:target").build();
     CxxBinary binary =
         ruleResolver.addToIndex(

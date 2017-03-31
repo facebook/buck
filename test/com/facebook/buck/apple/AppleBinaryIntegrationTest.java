@@ -180,6 +180,71 @@ public class AppleBinaryIntegrationTest {
         containsString("executable"));
   }
 
+  @Test
+  public void testAppleBinaryWithThinLTO() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_binary_with_thinlto", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path outputPath = workspace.getPath(
+        BuildTargets.getGenPath(
+            filesystem,
+            target,
+            "%s"));
+    assertThat(Files.exists(outputPath), is(true));
+    assertThat(Files.isDirectory(Paths.get(outputPath.toString() + "-lto")), is(true));
+    assertThat(
+        workspace.runCommand("file", outputPath.toString()).getStdout().get(),
+        containsString("executable"));
+  }
+
+  @Test
+  public void testAppleBinaryWithThinLTOWithLibraryDependency() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_binary_with_thinlto_library_dependency", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//Apps/TestApp:TestApp#app,macosx-x86_64");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path outputPath = workspace.getPath(
+        BuildTargets.getGenPath(
+            filesystem,
+            BuildTargetFactory.newInstance(
+                "//Apps/TestApp:TestApp#macosx-x86_64").withAppendedFlavors(
+                AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR),
+            "%s"));
+    assertThat(Files.isDirectory(Paths.get(outputPath.toString() + "-lto")), is(true));
+
+    Path bundlePath = workspace.getPath(
+        BuildTargets.getGenPath(
+            filesystem,
+            target.withAppendedFlavors(
+                AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
+                AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR),
+            "%s/TestApp.app"));
+    assertThat(Files.exists(bundlePath), is(true));
+    Path binaryPath = bundlePath.resolve("Contents/MacOS/TestApp");
+    assertThat(Files.exists(binaryPath), is(true));
+    assertThat(
+        workspace.runCommand("file", binaryPath.toString()).getStdout().get(),
+        containsString("executable"));
+
+    Path frameworkBundlePath = bundlePath.resolve("Contents/Frameworks/TestLibrary.framework");
+    assertThat(Files.exists(frameworkBundlePath), is(true));
+    Path frameworkBinaryPath = frameworkBundlePath.resolve("TestLibrary");
+    assertThat(Files.exists(frameworkBinaryPath), is(true));
+    assertThat(
+        workspace.runCommand("file", frameworkBinaryPath.toString()).getStdout().get(),
+        containsString("dynamically linked shared library"));
+  }
 
   @Test
   public void testAppleBinaryAppBuildsAppWithDsym() throws Exception {
