@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java.abi.source;
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.jvm.java.abi.source.api.BootClasspathOracle;
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.util.JavacTask;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
 
@@ -34,8 +33,8 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
+import javax.tools.JavaCompiler;
 
 /**
  * Validates the type and compile-time-constant references in the non-private interface of classes
@@ -58,18 +57,16 @@ class InterfaceValidator {
   private static final BuckTracing BUCK_TRACING =
       BuckTracing.getInstance("ExpressionTreeResolutionValidator");
 
-  private final Elements elements;
   private final Diagnostic.Kind messageKind;
   private final Trees trees;
   private final BootClasspathOracle bootClasspathOracle;
 
   public InterfaceValidator(
       Diagnostic.Kind messageKind,
-      JavacTask task,
+      JavaCompiler.CompilationTask task,
       BootClasspathOracle bootClasspathOracle) {
     this.messageKind = messageKind;
     trees = Trees.instance(task);
-    elements = task.getElements();
     this.bootClasspathOracle = bootClasspathOracle;
   }
 
@@ -139,8 +136,7 @@ class InterfaceValidator {
             }
 
             private boolean isOnBootClasspath(TypeElement typeElement) {
-              return bootClasspathOracle.isOnBootClasspath(
-                  elements.getBinaryName(typeElement).toString());
+              return bootClasspathOracle.isOnBootClasspath(typeElement.getQualifiedName().toString());
             }
 
             private boolean referenceIsLegalForMissingTypes(

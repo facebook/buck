@@ -20,7 +20,6 @@ import com.facebook.buck.jvm.java.abi.source.api.BootClasspathOracle;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 
@@ -36,7 +35,7 @@ import javax.tools.JavaCompiler;
  */
 public class ValidatingTaskListener
     implements TaskListener {
-  private final JavacTask javacTask;
+  private final JavaCompiler.CompilationTask javacTask;
   private final List<CompilationUnitTree> compilationUnits = new ArrayList<>();
   private final BootClasspathOracle bootClasspathOracle;
   private final Diagnostic.Kind messageKind;
@@ -50,7 +49,7 @@ public class ValidatingTaskListener
       JavaCompiler.CompilationTask task,
       BootClasspathOracle bootClasspathOracle,
       Diagnostic.Kind messageKind) {
-    this.javacTask = (JavacTask) task;
+    this.javacTask = task;
     this.bootClasspathOracle = bootClasspathOracle;
     this.messageKind = messageKind;
   }
