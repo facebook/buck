@@ -1,5 +1,8 @@
 standard_java_library(
     name = "deprecated",
+    tests = [
+        "//test/com/facebook/buck/ide/intellij/deprecated:deprecated",
+    ],
     visibility = [
         "//src/com/facebook/buck/cli:cli",
         "//test/...",

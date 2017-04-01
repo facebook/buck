@@ -5,12 +5,10 @@ standard_java_library(
     ],
     tests = [
         "//test/com/facebook/buck/cli:cli",
-        "//test/com/facebook/buck/jvm/java/intellij:intellij",
     ],
     visibility = [
         "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/distributed:distributed",
         "//test/com/facebook/buck/cli:cli",
-        "//test/com/facebook/buck/jvm/java/intellij:intellij",
     ],
 )
