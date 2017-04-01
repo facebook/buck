@@ -62,7 +62,8 @@ public class AndroidPrebuiltAar
         /* resources */ ImmutableSortedSet.of(),
         Optional.of(proguardConfig),
         /* postprocessClassesCommands */ ImmutableList.of(),
-        /* deps */ ImmutableSortedSet.<BuildRule>naturalOrder()
+        /* declaredDeps */ androidLibraryParams.getDeclaredDeps().get(),
+        /* exportedDeps */ ImmutableSortedSet.<BuildRule>naturalOrder()
             .add(prebuiltJar)
             .addAll(exportedDeps)
             .build(),

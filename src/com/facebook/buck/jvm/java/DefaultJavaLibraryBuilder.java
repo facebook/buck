@@ -53,8 +53,8 @@ public class DefaultJavaLibraryBuilder {
   protected Optional<Path> generatedSourceFolder = Optional.empty();
   protected Optional<SourcePath> proguardConfig = Optional.empty();
   protected ImmutableList<String> postprocessClassesCommands = ImmutableList.of();
-  protected ImmutableSortedSet<BuildRule> exportedDeps = ImmutableSortedSet.of();
-  protected ImmutableSortedSet<BuildRule> providedDeps = ImmutableSortedSet.of();
+  protected ImmutableSortedSet<BuildRule> nonAbiExportedDeps = ImmutableSortedSet.of();
+  protected ImmutableSortedSet<BuildRule> nonAbiProvidedDeps = ImmutableSortedSet.of();
   protected boolean trackClassUsage = false;
   protected boolean compileAgainstAbis = false;
   protected Optional<Path> resourcesRoot = Optional.empty();
@@ -148,18 +148,18 @@ public class DefaultJavaLibraryBuilder {
   }
 
   public DefaultJavaLibraryBuilder setExportedDeps(ImmutableSortedSet<BuildTarget> exportedDeps) {
-    this.exportedDeps = buildRuleResolver.getAllRules(exportedDeps);
+    this.nonAbiExportedDeps = buildRuleResolver.getAllRules(exportedDeps);
     return this;
   }
 
   @VisibleForTesting
   public DefaultJavaLibraryBuilder setExportedDepRules(ImmutableSortedSet<BuildRule> exportedDeps) {
-    this.exportedDeps = exportedDeps;
+    this.nonAbiExportedDeps = exportedDeps;
     return this;
   }
 
   public DefaultJavaLibraryBuilder setProvidedDeps(ImmutableSortedSet<BuildTarget> providedDeps) {
-    this.providedDeps = buildRuleResolver.getAllRules(providedDeps);
+    this.nonAbiProvidedDeps = buildRuleResolver.getAllRules(providedDeps);
     return this;
   }
 
@@ -221,6 +221,8 @@ public class DefaultJavaLibraryBuilder {
     @Nullable
     private BuildRuleParams finalParams;
     @Nullable
+    private ImmutableSortedSet<BuildRule> finalNonAbiDeclaredDeps;
+    @Nullable
     private ImmutableSortedSet<BuildRule> compileTimeClasspathFullDeps;
     @Nullable
     private ImmutableSortedSet<BuildRule> compileTimeClasspathAbiDeps;
@@ -239,8 +241,9 @@ public class DefaultJavaLibraryBuilder {
           generatedSourceFolder,
           proguardConfig,
           postprocessClassesCommands,
-          exportedDeps,
-          providedDeps,
+          getFinalNonAbiDeclaredDeps(),
+          nonAbiExportedDeps,
+          nonAbiProvidedDeps,
           getFinalCompileTimeClasspathDeps(),
           getAbiInputs(),
           trackClassUsage,
@@ -271,6 +274,16 @@ public class DefaultJavaLibraryBuilder {
       }
 
       return finalParams;
+    }
+
+    protected final ImmutableSortedSet<BuildRule> getFinalNonAbiDeclaredDeps() {
+      if (finalNonAbiDeclaredDeps == null) {
+        finalNonAbiDeclaredDeps = ImmutableSortedSet.copyOf(Iterables.concat(
+            params.getDeclaredDeps().get(),
+            getCompileStepFactory().getDeclaredDeps(ruleFinder)));
+      }
+
+      return finalNonAbiDeclaredDeps;
     }
 
     protected final ImmutableSortedSet<BuildRule> getFinalCompileTimeClasspathDeps()
@@ -316,9 +329,7 @@ public class DefaultJavaLibraryBuilder {
 
     protected BuildRuleParams buildFinalParams() {
       return params.copyReplacingDeclaredAndExtraDeps(
-          () -> ImmutableSortedSet.copyOf(Iterables.concat(
-              params.getDeclaredDeps().get(),
-              getCompileStepFactory().getDeclaredDeps(ruleFinder))),
+          this::getFinalNonAbiDeclaredDeps,
           () -> ImmutableSortedSet.copyOf(Iterables.concat(
               params.getExtraDeps().get(),
               Sets.difference(getCompileTimeClasspathFullDeps(), params.getBuildDeps()),
@@ -327,10 +338,9 @@ public class DefaultJavaLibraryBuilder {
 
     protected ImmutableSortedSet<BuildRule> buildCompileTimeClasspathFullDeps() {
       Iterable<BuildRule> declaredDeps = Iterables.concat(
-          params.getDeclaredDeps().get(),
-          exportedDeps,
-          providedDeps,
-          getCompileStepFactory().getDeclaredDeps(ruleFinder));
+          getFinalNonAbiDeclaredDeps(),
+          nonAbiExportedDeps,
+          nonAbiProvidedDeps);
 
       ImmutableSortedSet<BuildRule> rulesExportedByDependencies =
           BuildRules.getExportedRules(declaredDeps);

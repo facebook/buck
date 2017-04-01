@@ -115,8 +115,14 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   private final Optional<SourcePath> proguardConfig;
   @AddToRuleKey
   private final ImmutableList<String> postprocessClassesCommands;
-  private final ImmutableSortedSet<BuildRule> exportedDeps;
-  private final ImmutableSortedSet<BuildRule> providedDeps;
+
+  // It's very important that these deps are non-ABI rules, even if compiling against ABIs is turned
+  // on. This is because various methods in this class perform dependency traversal that rely on
+  // these deps being represented as their full-jar dependency form.
+  private final ImmutableSortedSet<BuildRule> nonAbiDeclaredDeps;
+  private final ImmutableSortedSet<BuildRule> nonAbiExportedDeps;
+  private final ImmutableSortedSet<BuildRule> nonAbiProvidedDeps;
+
   private final Supplier<ImmutableSet<SourcePath>>
       outputClasspathEntriesSupplier;
   private final Supplier<ImmutableSet<SourcePath>>
@@ -187,8 +193,9 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       Optional<Path> generatedSourceFolder,
       Optional<SourcePath> proguardConfig,
       ImmutableList<String> postprocessClassesCommands,
-      ImmutableSortedSet<BuildRule> exportedDeps,
-      ImmutableSortedSet<BuildRule> providedDeps,
+      ImmutableSortedSet<BuildRule> nonAbiDeclaredDeps,
+      ImmutableSortedSet<BuildRule> nonAbiExportedDeps,
+      ImmutableSortedSet<BuildRule> nonAbiProvidedDeps,
       ImmutableSortedSet<BuildRule> compileTimeClasspathDeps,
       ImmutableSortedSet<SourcePath> abiInputs,
       boolean trackClassUsage,
@@ -208,8 +215,9 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         generatedSourceFolder,
         proguardConfig,
         postprocessClassesCommands,
-        exportedDeps,
-        providedDeps,
+        nonAbiDeclaredDeps,
+        nonAbiExportedDeps,
+        nonAbiProvidedDeps,
         compileTimeClasspathDeps,
         trackClassUsage,
         new JarArchiveDependencySupplier(abiInputs),
@@ -231,8 +239,9 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       Optional<Path> generatedSourceFolder,
       Optional<SourcePath> proguardConfig,
       ImmutableList<String> postprocessClassesCommands,
-      ImmutableSortedSet<BuildRule> exportedDeps,
-      ImmutableSortedSet<BuildRule> providedDeps,
+      ImmutableSortedSet<BuildRule> nonAbiDeclaredDeps,
+      ImmutableSortedSet<BuildRule> nonAbiExportedDeps,
+      ImmutableSortedSet<BuildRule> nonAbiProvidedDeps,
       ImmutableSortedSet<BuildRule> compileTimeClasspathDeps,
       boolean trackClassUsage,
       final JarArchiveDependencySupplier abiClasspath,
@@ -252,7 +261,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
     // and so only make sense for java library types.
-    for (BuildRule dep : exportedDeps) {
+    for (BuildRule dep : nonAbiExportedDeps) {
       if (!(dep instanceof JavaLibrary)) {
         throw new HumanReadableException(
             params.getBuildTarget() + ": exported dep " +
@@ -265,8 +274,9 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     this.resources = ImmutableSortedSet.copyOf(resources);
     this.proguardConfig = proguardConfig;
     this.postprocessClassesCommands = postprocessClassesCommands;
-    this.exportedDeps = exportedDeps;
-    this.providedDeps = providedDeps;
+    this.nonAbiDeclaredDeps = nonAbiDeclaredDeps;
+    this.nonAbiExportedDeps = nonAbiExportedDeps;
+    this.nonAbiProvidedDeps = nonAbiProvidedDeps;
     this.compileTimeClasspathDeps = compileTimeClasspathDeps;
     this.resourcesRoot = resourcesRoot;
     this.manifestFile = manifestFile;
@@ -354,7 +364,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
 
   @Override
   public ImmutableSortedSet<BuildRule> getDepsForTransitiveClasspathEntries() {
-    return ImmutableSortedSet.copyOf(Sets.union(getDeclaredDeps(), exportedDeps));
+    return ImmutableSortedSet.copyOf(Sets.union(nonAbiDeclaredDeps, nonAbiExportedDeps));
   }
 
   @Override
@@ -399,7 +409,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
 
   @Override
   public ImmutableSortedSet<BuildRule> getExportedDeps() {
-    return exportedDeps;
+    return nonAbiExportedDeps;
   }
 
   /**
@@ -580,8 +590,8 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   public Iterable<AndroidPackageable> getRequiredPackageables() {
     return AndroidPackageableCollector.getPackageableRules(ImmutableSortedSet.copyOf(
             Sets.difference(
-                Sets.union(getDeclaredDeps(), exportedDeps),
-                providedDeps)));
+                Sets.union(nonAbiDeclaredDeps, nonAbiExportedDeps),
+                nonAbiProvidedDeps)));
   }
 
   @Override
