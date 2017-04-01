@@ -17,8 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.NativeLinkable;
-import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
+import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -34,7 +33,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
@@ -94,25 +92,10 @@ public class JavaLibraryRules {
   public static ImmutableMap<String, SourcePath> getNativeLibraries(
       Iterable<BuildRule> deps,
       final CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
-    final ImmutableMap.Builder<String, SourcePath> libraries = ImmutableMap.builder();
-
-    new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(deps) {
-      @Override
-      public ImmutableSet<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
-        if (rule instanceof NativeLinkable) {
-          NativeLinkable linkable = (NativeLinkable) rule;
-          libraries.putAll(linkable.getSharedLibraries(cxxPlatform));
-        }
-        if (rule instanceof NativeLinkable ||
-            rule instanceof JavaLibrary) {
-          return rule.getBuildDeps();
-        } else {
-          return ImmutableSet.of();
-        }
-      }
-    }.start();
-
-    return libraries.build();
+    return NativeLinkables.getTransitiveSharedLibraries(
+        cxxPlatform,
+        deps,
+        r -> r instanceof JavaLibrary);
   }
 
   public static ImmutableSortedSet<BuildRule> getAbiRules(
