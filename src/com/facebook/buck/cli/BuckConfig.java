@@ -1101,6 +1101,10 @@ public class BuckConfig implements ConfigPathGetter {
     return getBooleanValue("project", "autodeps_command_enabled", false);
   }
 
+  public ImmutableList<String> getCleanAdditionalPaths() {
+    return getListWithoutComments("clean", "additional_paths");
+  }
+
   public Config getConfig() {
     return config;
   }

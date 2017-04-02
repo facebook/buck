@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
@@ -33,6 +34,7 @@ import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CoercedTypeCache;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -49,11 +51,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.easymock.EasyMockSupport;
+import org.junit.Before;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -63,6 +67,11 @@ public class CleanCommandTest extends EasyMockSupport {
 
   private ProjectFilesystem projectFilesystem;
 
+  @Before
+  public void setUp() {
+    projectFilesystem = new FakeProjectFilesystem();
+  }
+
   // TODO(mbolin): When it is possible to inject a mock object for stderr,
   // create a test that runs `buck clean unexpectedarg` and verify that the
   // exit code is 1 and that the appropriate error message is printed.
@@ -70,14 +79,14 @@ public class CleanCommandTest extends EasyMockSupport {
   @Test
   public void testCleanCommandNoArguments()
       throws CmdLineException, IOException, InterruptedException {
-    CommandRunnerParams params = createCommandRunnerParams();
+    CleanCommand cleanCommand = createCommandFromArgs();
+    CommandRunnerParams params = createCommandRunnerParams(cleanCommand);
 
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getScratchDir());
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getGenDir());
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getTrashDir());
 
     // Simulate `buck clean`.
-    CleanCommand cleanCommand = createCommandFromArgs();
     int exitCode = cleanCommand.run(params);
     assertEquals(0, exitCode);
 
@@ -89,19 +98,38 @@ public class CleanCommandTest extends EasyMockSupport {
   @Test
   public void testCleanCommandWithProjectArgument()
       throws CmdLineException, IOException, InterruptedException {
-    CommandRunnerParams params = createCommandRunnerParams();
+    CleanCommand cleanCommand = createCommandFromArgs("--project");
+    CommandRunnerParams params = createCommandRunnerParams(cleanCommand);
 
     // Set up mocks.
     projectFilesystem.mkdirs(IjAndroidHelper.getAndroidGenPath(projectFilesystem));
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getAnnotationDir());
 
     // Simulate `buck clean --project`.
-    CleanCommand cleanCommand = createCommandFromArgs("--project");
     int exitCode = cleanCommand.run(params);
     assertEquals(0, exitCode);
 
     assertFalse(projectFilesystem.exists(IjAndroidHelper.getAndroidGenPath(projectFilesystem)));
     assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getAnnotationDir()));
+  }
+
+  @Test
+  public void testCleanCommandWithAdditionalPaths()
+      throws CmdLineException, IOException, InterruptedException {
+    Path additionalPath = projectFilesystem.getPath("foo");
+    CleanCommand cleanCommand =
+        createCommandFromArgs("-c", "clean.additional_paths=" + additionalPath);
+    CommandRunnerParams params = createCommandRunnerParams(cleanCommand);
+
+    // Set up mocks.
+    projectFilesystem.mkdirs(additionalPath);
+    assertTrue(projectFilesystem.exists(additionalPath));
+
+    // Simulate `buck clean --project`.
+    int exitCode = cleanCommand.run(params);
+    assertEquals(0, exitCode);
+
+    assertFalse(projectFilesystem.exists(additionalPath));
   }
 
   private CleanCommand createCommandFromArgs(String... args) throws CmdLineException {
@@ -110,11 +138,9 @@ public class CleanCommandTest extends EasyMockSupport {
     return command;
   }
 
-  private CommandRunnerParams createCommandRunnerParams() throws InterruptedException, IOException {
-    projectFilesystem = new FakeProjectFilesystem();
-
+  private CommandRunnerParams createCommandRunnerParams(AbstractCommand command)
+      throws InterruptedException, IOException {
     Cell cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
-
     Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
         AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
     ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
@@ -134,7 +160,11 @@ public class CleanCommandTest extends EasyMockSupport {
         .setClock(new DefaultClock())
         .setProcessManager(Optional.empty())
         .setWebServer(Optional.empty())
-        .setBuckConfig(FakeBuckConfig.builder().build())
+        .setBuckConfig(
+            FakeBuckConfig.builder()
+                .setSections(
+                    command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME))
+                .build())
         .setFileHashCache(new StackedFileHashCache(ImmutableList.of()))
         .setExecutors(ImmutableMap.of())
         .setBuildEnvironmentDescription(

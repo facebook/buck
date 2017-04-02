@@ -53,6 +53,7 @@ public class CleanCommand extends AbstractCommand {
     // directories itself so we can blow away BuckConstant.ANNOTATION_DIR as part of `buck clean`.
     // This will also reduce how long `buck project` takes.
     //
+
     ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
     if (isCleanBuckProjectFiles()) {
       // Delete directories that were created for the purpose of `buck project`.
@@ -72,6 +73,11 @@ public class CleanCommand extends AbstractCommand {
           projectFilesystem.getBuckPaths().getGenDir());
       projectFilesystem.deleteRecursivelyIfExists(
           projectFilesystem.getBuckPaths().getTrashDir());
+
+      // Clean out any additional directories specified via config setting.
+      for (String subPath : params.getBuckConfig().getCleanAdditionalPaths()) {
+        projectFilesystem.deleteRecursivelyIfExists(projectFilesystem.getPath(subPath));
+      }
     }
 
     return 0;
