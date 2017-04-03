@@ -20,7 +20,6 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableMap;
@@ -67,7 +66,7 @@ public class AppleNativeIntegrationTestUtils {
         sdkPaths.get(anySdk),
         buckConfig,
         new XcodeToolFinder(),
-        Optional.of(new DefaultProcessExecutor(Console.createNullConsole())),
+        FakeAppleRuleDescriptions.FAKE_XCODE_BUILD_VERSION_CACHE,
         Optional.empty());
     return appleCxxPlatform.getSwiftPlatform().isPresent();
   }

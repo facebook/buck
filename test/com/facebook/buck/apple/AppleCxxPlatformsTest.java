@@ -181,7 +181,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
             new XcodeToolFinder(),
-            Optional.empty(),
+            new AppleCxxPlatforms.XcodeBuildVersionCache(),
             Optional.empty());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
@@ -287,7 +287,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
             new XcodeToolFinder(),
-            Optional.empty(),
+            new AppleCxxPlatforms.XcodeBuildVersionCache(),
             Optional.empty());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
@@ -385,7 +385,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
             new XcodeToolFinder(),
-            Optional.empty(),
+            new AppleCxxPlatforms.XcodeBuildVersionCache(),
             Optional.empty());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
@@ -485,7 +485,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
             new XcodeToolFinder(),
-            Optional.empty(),
+            new AppleCxxPlatforms.XcodeBuildVersionCache(),
             Optional.empty());
 
     assertEquals(
@@ -539,7 +539,7 @@ public class AppleCxxPlatformsTest {
                         "cxxflags", "-std=c++11",
                         "cxxppflags", "-DCXXTHING"))).build(),
             new XcodeToolFinder(),
-            Optional.empty(),
+            new AppleCxxPlatforms.XcodeBuildVersionCache(),
             Optional.empty());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
@@ -591,7 +591,7 @@ public class AppleCxxPlatformsTest {
         appleSdkPaths,
         FakeBuckConfig.builder().build(),
         new XcodeToolFinder(),
-        Optional.empty(),
+        new AppleCxxPlatforms.XcodeBuildVersionCache(),
         Optional.empty());
   }
 
@@ -636,7 +636,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
             new XcodeToolFinder(),
-            Optional.empty(),
+            new AppleCxxPlatforms.XcodeBuildVersionCache(),
             Optional.empty());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
@@ -689,7 +689,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
             new XcodeToolFinder(),
-            Optional.empty(),
+            new AppleCxxPlatforms.XcodeBuildVersionCache(),
             Optional.empty());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
@@ -742,7 +742,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
             new XcodeToolFinder(),
-            Optional.empty(),
+            new AppleCxxPlatforms.XcodeBuildVersionCache(),
             Optional.empty());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
@@ -895,7 +895,7 @@ public class AppleCxxPlatformsTest {
         appleSdkPaths,
         config,
         new XcodeToolFinder(),
-        Optional.empty(),
+        FakeAppleRuleDescriptions.FAKE_XCODE_BUILD_VERSION_CACHE,
         Optional.empty());
   }
 
@@ -1081,6 +1081,30 @@ public class AppleCxxPlatformsTest {
     assertThat(versionedSwiftc.getExtraArgs(), hasItem("i386-apple-ios7.0"));
   }
 
+  @Test
+  public void testXcodeBuildVersionCache() throws Exception {
+    Path developerDir = projectFilesystem.getPath("/Xcode.app/Contents/Developer");
+    Path versionPlist = projectFilesystem.getPath("/Xcode.app/Contents/version.plist");
+    Files.createDirectories(developerDir);
+    Files.write(
+        versionPlist,
+        (
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+            "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" " +
+            "\"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n" +
+            "<plist version=\"1.0\">\n" +
+            "<dict>\n" +
+            "\t<key>ProductBuildVersion</key>\n" +
+            "\t<string>9F9999</string>\n" +
+            "</dict>\n" +
+            "</plist>"
+        ).getBytes(Charsets.UTF_8));
+    AppleCxxPlatforms.XcodeBuildVersionCache cache = new AppleCxxPlatforms.XcodeBuildVersionCache();
+    assertEquals(
+        Optional.of("9F9999"),
+        cache.lookup(developerDir));
+  }
+
   private AppleCxxPlatform buildAppleCxxPlatformWithSwiftToolchain(boolean useDefaultSwift)
       throws IOException {
     Path tempRoot = projectFilesystem.getPath("/TEMP_ROOT");
@@ -1117,7 +1141,7 @@ public class AppleCxxPlatformsTest {
             .build(),
         FakeBuckConfig.builder().build(),
         new XcodeToolFinder(),
-        Optional.of(FakeAppleRuleDescriptions.PROCESS_EXECUTOR),
+        FakeAppleRuleDescriptions.FAKE_XCODE_BUILD_VERSION_CACHE,
         selectedSwiftToolChain);
   }
 }

@@ -31,10 +31,6 @@ import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.swift.SwiftPlatform;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.FakeProcess;
-import com.facebook.buck.util.FakeProcessExecutor;
-import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -134,9 +130,13 @@ public class FakeAppleRuleDescriptions {
               "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"))
       .build();
 
-  public static final ProcessExecutor PROCESS_EXECUTOR = new FakeProcessExecutor(
-      input -> new FakeProcess(0, "Xcode 0.0.0\nBuild version 0A0000", ""),
-      new TestConsole());
+  public static final AppleCxxPlatforms.XcodeBuildVersionCache FAKE_XCODE_BUILD_VERSION_CACHE =
+      new AppleCxxPlatforms.XcodeBuildVersionCache() {
+        @Override
+        Optional<String> lookup(Path developerDir) {
+          return Optional.of("0A0000");
+        }
+      };
 
   public static final AppleCxxPlatform DEFAULT_IPHONEOS_I386_PLATFORM =
       AppleCxxPlatforms.buildWithExecutableChecker(
@@ -147,7 +147,7 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_IPHONEOS_SDK_PATHS,
           DEFAULT_BUCK_CONFIG,
           new XcodeToolFinder(),
-          Optional.of(PROCESS_EXECUTOR),
+          FAKE_XCODE_BUILD_VERSION_CACHE,
           Optional.empty());
 
   public static final AppleCxxPlatform DEFAULT_IPHONEOS_X86_64_PLATFORM =
@@ -159,7 +159,7 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_IPHONEOS_SDK_PATHS,
           DEFAULT_BUCK_CONFIG,
           new XcodeToolFinder(),
-          Optional.of(PROCESS_EXECUTOR),
+          FAKE_XCODE_BUILD_VERSION_CACHE,
           Optional.empty());
 
 
@@ -172,7 +172,7 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_MACOSX_SDK_PATHS,
           DEFAULT_BUCK_CONFIG,
           new XcodeToolFinder(),
-          Optional.of(PROCESS_EXECUTOR),
+          FAKE_XCODE_BUILD_VERSION_CACHE,
           Optional.empty());
 
   public static final CxxPlatform DEFAULT_PLATFORM = DefaultCxxPlatforms.build(

@@ -35,7 +35,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.MapMaker;
 
 import org.immutables.value.Value;
 
@@ -45,9 +44,6 @@ import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class AppleConfig implements ConfigView<BuckConfig> {
   private static final String DEFAULT_TEST_LOG_DIRECTORY_ENVIRONMENT_VARIABLE = "FB_LOG_DIRECTORY";
@@ -55,14 +51,9 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   private static final String DEFAULT_TEST_LOG_LEVEL = "debug";
 
   private static final Logger LOG = Logger.get(AppleConfig.class);
-
-  private static final Pattern XCODE_BUILD_NUMBER_PATTERN =
-      Pattern.compile("Build version ([a-zA-Z0-9]+)");
   public static final String APPLE_SECTION = "apple";
 
   private final BuckConfig delegate;
-
-  private final ConcurrentMap<Path, Supplier<Optional<String>>> xcodeVersionCache;
 
   // Reflection-based factory for ConfigView
   public static AppleConfig of(BuckConfig delegate) {
@@ -75,7 +66,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   }
 
   private AppleConfig(BuckConfig delegate) {
-    this.xcodeVersionCache = new MapMaker().weakKeys().makeMap();
     this.delegate = delegate;
   }
 
@@ -190,67 +180,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
       }
     });
   }
-
-  /**
-   * For some inscrutable reason, the Xcode build number isn't in the toolchain's plist
-   * (or in any .plist under Developer/)
-   *
-   * We have to run `Developer/usr/bin/xcodebuild -version` to get it.
-   */
-  public Supplier<Optional<String>> getXcodeBuildVersionSupplier(
-      final Path developerPath,
-      final ProcessExecutor processExecutor) {
-    Supplier<Optional<String>> supplier = xcodeVersionCache.get(developerPath);
-    if (supplier != null) {
-      return supplier;
-    }
-
-    supplier = Suppliers.memoize(
-        new Supplier<Optional<String>>() {
-          @Override
-          public Optional<String> get() {
-            ProcessExecutorParams processExecutorParams =
-                ProcessExecutorParams.builder()
-                    .setCommand(
-                        ImmutableList.of(
-                            developerPath.resolve("usr/bin/xcodebuild").toString(), "-version"))
-                    .build();
-            // Specify that stdout is expected, or else output may be wrapped in Ansi escape chars.
-            Set<ProcessExecutor.Option> options =
-                EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
-            ProcessExecutor.Result result;
-
-            try {
-              result = processExecutor.launchAndExecute(
-                  processExecutorParams,
-                  options,
-                  /* stdin */ Optional.empty(),
-                  /* timeOutMs */ Optional.empty(),
-                  /* timeOutHandler */ Optional.empty());
-            } catch (InterruptedException | IOException e) {
-              LOG.warn("Could not execute xcodebuild to find Xcode build number.");
-              return Optional.empty();
-            }
-
-            if (result.getExitCode() != 0) {
-              throw new RuntimeException(
-                  result.getMessageForUnexpectedResult("xcodebuild -version"));
-            }
-
-            Matcher matcher = XCODE_BUILD_NUMBER_PATTERN.matcher(result.getStdout().get());
-            if (matcher.find()) {
-              String xcodeBuildNumber = matcher.group(1);
-              return Optional.of(xcodeBuildNumber);
-            } else {
-              LOG.warn("Xcode build number not found.");
-              return Optional.empty();
-            }
-          }
-        });
-    xcodeVersionCache.put(developerPath, supplier);
-    return supplier;
-  }
-
 
   public Optional<String> getTargetSdkVersion(ApplePlatform platform) {
     return delegate.getValue(APPLE_SECTION, platform.getName() + "_target_sdk_version");

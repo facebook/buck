@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
+import com.dd.plist.NSString;
 import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.cli.BuckConfig;
@@ -68,6 +69,8 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -129,6 +132,7 @@ public class AppleCxxPlatforms {
     }
 
     XcodeToolFinder xcodeToolFinder = new XcodeToolFinder();
+    XcodeBuildVersionCache xcodeBuildVersionCache = new XcodeBuildVersionCache();
     sdkPaths.forEach((sdk, appleSdkPaths) -> {
       String targetSdkVersion =
           appleConfig.getTargetSdkVersion(sdk.getApplePlatform())
@@ -144,7 +148,7 @@ public class AppleCxxPlatforms {
                 appleSdkPaths,
                 buckConfig,
                 xcodeToolFinder,
-                Optional.of(processExecutor),
+                xcodeBuildVersionCache,
                 swiftToolChain));
       }
     });
@@ -160,9 +164,8 @@ public class AppleCxxPlatforms {
       final AppleSdkPaths sdkPaths,
       BuckConfig buckConfig,
       XcodeToolFinder xcodeToolFinder,
-      Optional<ProcessExecutor> processExecutor,
+      XcodeBuildVersionCache xcodeBuildVersionCache,
       Optional<AppleToolchain> swiftToolChain) {
-    AppleConfig appleConfig = buckConfig.getView(AppleConfig.class);
     AppleCxxPlatform.Builder platformBuilder = AppleCxxPlatform.builder();
 
     ImmutableList.Builder<Path> toolSearchPathsBuilder = ImmutableList.builder();
@@ -226,15 +229,8 @@ public class AppleCxxPlatforms {
         }
       }
 
-      // Get the Xcode build version as reported by `xcodebuild -version`.  This is
-      // different than the build number in the Info.plist, sigh.
-      if (processExecutor.isPresent()) {
-        xcodeBuildVersion = appleConfig
-            .getXcodeBuildVersionSupplier(developerPath.get(), processExecutor.get())
-            .get();
-        platformBuilder.setXcodeBuildVersion(xcodeBuildVersion);
-        LOG.debug("Xcode build version is: " + xcodeBuildVersion.orElse("<absent>"));
-      }
+      xcodeBuildVersion = xcodeBuildVersionCache.lookup(developerPath.get());
+      LOG.debug("Xcode build version is: " + xcodeBuildVersion.orElse("<absent>"));
     }
 
     ImmutableList.Builder<String> versions = ImmutableList.builder();
@@ -491,6 +487,7 @@ public class AppleCxxPlatforms {
             .build(),
         xcodeToolFinder);
 
+    AppleConfig appleConfig = buckConfig.getView(AppleConfig.class);
     platformBuilder
         .setCxxPlatform(cxxPlatform)
         .setSwiftPlatform(swiftPlatform)
@@ -604,5 +601,47 @@ public class AppleCxxPlatforms {
       throw new HumanReadableException("Cannot find tool %s in paths %s", tool, toolSearchPaths);
     }
     return result.get();
+  }
+
+  @VisibleForTesting
+  static class XcodeBuildVersionCache {
+    private final Map<Path, Optional<String>> cache = new HashMap<>();
+
+    /**
+     * Returns the Xcode build version. This is an alphanumeric string as output by
+     * {@code xcodebuild -version} and shown in the About Xcode window. This value is embedded into
+     * the plist of app bundles built by Xcode, under the field named {@code DTXcodeBuild}
+     *
+     * @param developerDir Path to developer dir, i.e. /Applications/Xcode.app/Contents/Developer
+     * @return the xcode build version if found, nothing if it fails to be found, or the version
+     *         plist file cannot be read.
+     */
+    Optional<String> lookup(Path developerDir) {
+      return cache.computeIfAbsent(developerDir, ignored -> {
+        Path versionPlist = developerDir.getParent().resolve("version.plist");
+        NSString result;
+        try {
+          NSDictionary dict =
+              (NSDictionary) PropertyListParser.parse(Files.readAllBytes(versionPlist));
+          result = (NSString) dict.get("ProductBuildVersion");
+        } catch (IOException | ClassCastException | SAXException | PropertyListFormatException |
+            ParseException e) {
+          LOG.warn(
+              e,
+              "%s: Cannot find xcode build version, file is in an invalid format.",
+              versionPlist);
+          return Optional.empty();
+        } catch (ParserConfigurationException e) {
+          throw new IllegalStateException("plist parser threw unexpected exception", e);
+        }
+        if (result != null) {
+          return Optional.of(result.toString());
+        } else {
+          LOG.warn(
+              "%s: Cannot find xcode build version, file is in an invalid format.", versionPlist);
+          return Optional.empty();
+        }
+      });
+    }
   }
 }
