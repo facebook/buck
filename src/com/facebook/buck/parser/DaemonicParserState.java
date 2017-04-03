@@ -132,9 +132,20 @@ class DaemonicParserState {
     @Override
     public T putComputedNodeIfNotPresent(Cell cell, BuildTarget target, T targetNode)
         throws BuildTargetException {
-      invalidateIfProjectBuildFileParserStateChanged(cell);
+
+      // Verify we don't invalidate the build file at this point, as, at this point, we should have
+      // already called `lookupComputedNode` which should have done any invalidation.
+      Preconditions.checkState(
+          !invalidateIfProjectBuildFileParserStateChanged(cell),
+          "Unexpected invalidation due to build file parser state change for %s %s",
+          cell.getRoot(),
+          target);
       final Path buildFile = cell.getAbsolutePathToBuildFileUnsafe(target);
-      invalidateIfBuckConfigOrEnvHasChanged(cell, buildFile);
+      Preconditions.checkState(
+          !invalidateIfBuckConfigOrEnvHasChanged(cell, buildFile),
+          "Unexpected invalidation due to config/env change for %s %s",
+          cell.getRoot(),
+          target);
 
       return getOrCreateCache(cell).putComputedNodeIfNotPresent(cell, target, targetNode);
     }
@@ -548,17 +559,24 @@ class DaemonicParserState {
     return Iterators.any(cell.getTempFilePatterns().iterator(), patternMatches);
   }
 
-  private synchronized void invalidateIfBuckConfigOrEnvHasChanged(Cell cell, Path buildFile) {
+  private synchronized boolean invalidateIfBuckConfigOrEnvHasChanged(Cell cell, Path buildFile) {
     try (AutoCloseableLock readLock = cellStateLock.readLock()) {
       DaemonicCellState state = cellPathToDaemonicState.get(cell.getRoot());
       if (state == null) {
-        return;
+        return false;
       }
-      // Invalidates and also keeps the state cell up-to-date
-      state.invalidateIfBuckConfigHasChanged(cell, buildFile);
+
+      // Keep track of any invalidations.
+      boolean hasInvalidated = false;
+
+      // Invalidate based on config.
+      hasInvalidated |= state.invalidateIfBuckConfigHasChanged(cell, buildFile);
+
+      // Invalidate based on env vars.
       Optional<MapDifference<String, String>> envDiff =
           state.invalidateIfEnvHasChanged(cell, buildFile);
       if (envDiff.isPresent()) {
+        hasInvalidated = true;
         MapDifference<String, String> diff = envDiff.get();
         LOG.warn("Invalidating cache on environment change (%s)", diff);
         Set<String> environmentChanges = new HashSet<>();
@@ -569,10 +587,12 @@ class DaemonicParserState {
         broadcastEventListener.broadcast(
             ParsingEvent.environmentalChange(environmentChanges.toString()));
       }
+
+      return hasInvalidated;
     }
   }
 
-  private void invalidateIfProjectBuildFileParserStateChanged(Cell cell) {
+  private boolean invalidateIfProjectBuildFileParserStateChanged(Cell cell) {
     Iterable<String> defaultIncludes = cell.getBuckConfig().getView(ParserConfig.class)
         .getDefaultIncludes();
 
@@ -588,7 +608,7 @@ class DaemonicParserState {
       }
 
       if (!invalidatedByDefaultIncludesChange) {
-        return;
+        return false;
       }
     }
     try (AutoCloseableLock writeLock = cachedStateLock.writeLock()) {
@@ -603,6 +623,7 @@ class DaemonicParserState {
         cacheInvalidatedByDefaultIncludesChangeCounter.inc();
       }
     }
+    return true;
   }
 
   public boolean invalidateCellCaches(Cell cell) {

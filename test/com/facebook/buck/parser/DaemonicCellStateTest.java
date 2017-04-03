@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -49,6 +50,18 @@ public class DaemonicCellStateTest {
   private Cell cell;
   private DaemonicCellState state;
 
+  private void populateDummyRawNode(DaemonicCellState state, BuildTarget target) {
+    state.putRawNodesIfNotPresentAndStripMetaEntries(
+        target.getCellPath().resolve(target.getBasePath().resolve("BUCK")),
+        ImmutableSet.of(
+            ImmutableMap.of(
+                "name", target.getShortName(),
+                "buck.base_path", MorePaths.pathWithUnixSeparators(target.getBasePath()))),
+        ImmutableSet.of(),
+        ImmutableMap.of(),
+        ImmutableMap.of());
+  }
+
   @Before
   public void setUp() throws IOException, InterruptedException {
     Path root = tempDir.getRoot().toRealPath();
@@ -68,6 +81,9 @@ public class DaemonicCellStateTest {
       throws BuildTargetException, IOException, InterruptedException {
     Cache<BuildTarget, Boolean> cache = state.getOrCreateCache(Boolean.class);
     BuildTarget target = BuildTargetFactory.newInstance(filesystem, "//path/to:target");
+
+    // Make sure the cache has a raw node for this target.
+    populateDummyRawNode(state, target);
 
     cache.putComputedNodeIfNotPresent(cell, target, false);
     assertEquals(
@@ -101,19 +117,12 @@ public class DaemonicCellStateTest {
     Path targetPath = cell.getRoot().resolve("path/to/BUCK");
     BuildTarget target = BuildTargetFactory.newInstance(filesystem, "xplat//path/to:target");
 
+    // Make sure the cache has a raw node for this target.
+    populateDummyRawNode(state, target);
+
     cache.putComputedNodeIfNotPresent(cell, target, true);
     assertEquals(Optional.of(true), cache.lookupComputedNode(cell, target));
 
-    state.putRawNodesIfNotPresentAndStripMetaEntries(
-        targetPath,
-        ImmutableSet.of(
-            // Forms the target "//path/to:target"
-            ImmutableMap.of(
-                "buck.base_path", "path/to",
-                "name", "target")),
-        ImmutableSet.of(),
-        ImmutableMap.of(),
-        ImmutableMap.of());
     assertEquals("One raw node should be invalidated", 1, state.invalidatePath(targetPath));
     assertEquals(
         "Cell-named target should not have been removed",
@@ -134,6 +143,9 @@ public class DaemonicCellStateTest {
 
     state = new DaemonicCellState(cell, 1);
     cache = state.getOrCreateCache(Boolean.class);
+
+    // Make sure the cache has a raw node for this target.
+    populateDummyRawNode(state, target);
 
     cache.putComputedNodeIfNotPresent(cell, target, true);
     assertEquals(Optional.of(true), cache.lookupComputedNode(cell, target));
