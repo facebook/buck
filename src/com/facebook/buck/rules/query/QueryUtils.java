@@ -17,6 +17,8 @@
 
 package com.facebook.buck.rules.query;
 
+import com.facebook.buck.event.PerfEventId;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetPatternParser;
@@ -63,7 +65,10 @@ public final class QueryUtils {
         BuildTargetPatternParser.forBaseName(target.getBaseName()),
         declaredDeps);
     ListeningExecutorService executorService = MoreExecutors.newDirectExecutorService();
-    try {
+    try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(
+        Optional.ofNullable(resolver.getEventBus()),
+        PerfEventId.of("resolve_dep_query"),
+        "target", target.toString())) {
       QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env);
       Set<QueryTarget> queryTargets = parsedExp.eval(env, executorService);
       return queryTargets.stream()
