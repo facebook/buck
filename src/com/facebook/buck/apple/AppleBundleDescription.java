@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.model.BuildTarget;
@@ -279,6 +280,10 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       A args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) throws NoSuchBuildTargetException {
+    if (metadataClass.isAssignableFrom(FrameworkDependencies.class)) {
+      // Bundles should be opaque to framework dependencies.
+      return Optional.empty();
+    }
     return resolver.requireMetadata(args.binary, metadataClass);
   }
 

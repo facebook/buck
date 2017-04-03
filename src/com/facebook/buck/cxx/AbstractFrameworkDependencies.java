@@ -22,6 +22,9 @@ import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
 
+/**
+ * Metadata query for collecting framework dependencies to include in a bundle.
+ */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractFrameworkDependencies {
