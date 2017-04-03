@@ -210,4 +210,29 @@ public class AndroidLibraryDescriptionTest {
 
     verify(androidPlatformTarget);
   }
+
+  @Test
+  public void testClasspathContainsOnlyJavaTargets() throws Exception {
+    TargetNode<AndroidResourceDescription.Arg, AndroidResourceDescription> resourceRule =
+        AndroidResourceBuilder.createBuilder(
+            BuildTargetFactory.newInstance("//:res"))
+            .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(resourceRule);
+
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+
+    resolver.addToIndex(new FakeBuildRule(resourceRule.getBuildTarget(), pathResolver));
+
+    AndroidLibrary androidLibrary = AndroidLibraryBuilder.createBuilder(
+        BuildTargetFactory.newInstance("//:android_lib"))
+        .addDep(resourceRule.getBuildTarget())
+        .build(resolver, targetGraph);
+
+    assertThat(
+        androidLibrary.getCompileTimeClasspathDeps(),
+        Matchers.empty());
+  }
 }

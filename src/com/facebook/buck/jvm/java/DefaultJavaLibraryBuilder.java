@@ -27,6 +27,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -223,6 +224,8 @@ public class DefaultJavaLibraryBuilder {
     @Nullable
     private ImmutableSortedSet<BuildRule> finalNonAbiDeclaredDeps;
     @Nullable
+    private ImmutableSortedSet<BuildRule> compileTimeClasspathUnfilteredFullDeps;
+    @Nullable
     private ImmutableSortedSet<BuildRule> compileTimeClasspathFullDeps;
     @Nullable
     private ImmutableSortedSet<BuildRule> compileTimeClasspathAbiDeps;
@@ -295,7 +298,9 @@ public class DefaultJavaLibraryBuilder {
 
     protected final ImmutableSortedSet<BuildRule> getCompileTimeClasspathFullDeps() {
       if (compileTimeClasspathFullDeps == null) {
-        compileTimeClasspathFullDeps = buildCompileTimeClasspathFullDeps();
+        compileTimeClasspathFullDeps = getCompileTimeClasspathUnfilteredFullDeps().stream()
+            .filter(dep -> dep instanceof HasJavaAbi)
+            .collect(MoreCollectors.toImmutableSortedSet());
       }
 
       return compileTimeClasspathFullDeps;
@@ -332,22 +337,27 @@ public class DefaultJavaLibraryBuilder {
           this::getFinalNonAbiDeclaredDeps,
           () -> ImmutableSortedSet.copyOf(Iterables.concat(
               params.getExtraDeps().get(),
-              Sets.difference(getCompileTimeClasspathFullDeps(), params.getBuildDeps()),
+              Sets.difference(getCompileTimeClasspathUnfilteredFullDeps(), params.getBuildDeps()),
               getCompileStepFactory().getExtraDeps(ruleFinder))));
     }
 
-    protected ImmutableSortedSet<BuildRule> buildCompileTimeClasspathFullDeps() {
-      Iterable<BuildRule> declaredDeps = Iterables.concat(
-          getFinalNonAbiDeclaredDeps(),
-          nonAbiExportedDeps,
-          nonAbiProvidedDeps);
+    protected final ImmutableSortedSet<BuildRule> getCompileTimeClasspathUnfilteredFullDeps() {
+      if (compileTimeClasspathUnfilteredFullDeps == null) {
+        Iterable<BuildRule> firstOrderDeps = Iterables.concat(
+            getFinalNonAbiDeclaredDeps(),
+            nonAbiExportedDeps,
+            nonAbiProvidedDeps);
 
-      ImmutableSortedSet<BuildRule> rulesExportedByDependencies =
-          BuildRules.getExportedRules(declaredDeps);
+        ImmutableSortedSet<BuildRule> rulesExportedByDependencies =
+            BuildRules.getExportedRules(firstOrderDeps);
 
-      return ImmutableSortedSet.copyOf(Iterables.concat(
-          declaredDeps,
-          rulesExportedByDependencies));
+        compileTimeClasspathUnfilteredFullDeps = RichStream.from(Iterables.concat(
+            firstOrderDeps,
+            rulesExportedByDependencies))
+            .collect(MoreCollectors.toImmutableSortedSet());
+      }
+
+      return compileTimeClasspathUnfilteredFullDeps;
     }
 
     protected ImmutableSortedSet<BuildRule> buildCompileTimeClasspathAbiDeps()

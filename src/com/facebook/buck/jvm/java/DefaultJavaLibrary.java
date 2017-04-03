@@ -402,6 +402,10 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     return outputClasspathEntriesSupplier.get();
   }
 
+  public ImmutableSortedSet<BuildRule> getCompileTimeClasspathDeps() {
+    return compileTimeClasspathDeps;
+  }
+
   @Override
   public Optional<Path> getGeneratedSourcePath() {
     return generatedSourceFolder;
