@@ -678,8 +678,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       if (old == MetadataStorage.ROCKSDB && metadataStorage == MetadataStorage.FILESYSTEM) {
         LOG.error(
             "Can't downgrade build.metadata_storage from rocksdb to filesystem without cleaning. " +
-            "Run `buck clean` to rebuild.  If you are bisecting across a change to this config " +
-            "setting, consider pinning it by adding this to your .buckconfig.local:\n" +
+            "Run `buck clean` before rebuilding.  If you are bisecting across a change to this " +
+            "config setting, consider pinning it by adding this to your .buckconfig.local:\n" +
             "[build]\n" +
             "    metadata_storage = rocksdb");
         throw new RuntimeException("Can't downgrade build.metadata_storage");
