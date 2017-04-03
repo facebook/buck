@@ -6,6 +6,7 @@ prebuilt_jar(
     ],
     visibility = [
         "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/intellij/ideabuck:ideabuck-lib",
         "//test/com/facebook/buck/testutil/integration:util",
         "//test/com/facebook/buck/util:util",
     ],

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.file;
 
+import com.google.common.base.MoreObjects;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileTypes.FileNameMatcher;
 import com.intellij.openapi.fileTypes.FileType;
@@ -28,13 +29,21 @@ import com.intellij.psi.stubs.BinaryFileStubBuilders;
 import com.intellij.psi.stubs.Stub;
 import com.intellij.util.indexing.FileContent;
 
+import org.ini4j.Wini;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public final class BuckFileUtil {
 
   private static final String DEFAULT_BUILD_FILE = "BUCK";
+  private static final String BUCK_CONFIG_FILE = ".buckconfig";
+  private static final Map<String, String> buildFileNames = new HashMap<>();
   private static final String SAMPLE_BUCK_FILE =
       "# Thanks for installing Buck Plugin for IDEA!\n" +
       "android_library(\n" +
@@ -129,5 +138,38 @@ public final class BuckFileUtil {
             });
       }
     });
+  }
+
+  public static String getBuildFileName(String projectPath) {
+    if (!buildFileNames.containsKey(projectPath)) {
+      buildFileNames.put(projectPath, getBuildFileNameFromBuckConfig(projectPath));
+    }
+    return buildFileNames.get(projectPath);
+  }
+
+  private static String getBuildFileNameFromBuckConfig(String projectPath) {
+    Path buckConfigPath = getPathToBuckConfig(Paths.get(projectPath));
+    if (buckConfigPath == null) {
+      return DEFAULT_BUILD_FILE;
+    }
+    Wini ini = null;
+    try {
+      ini = new Wini(buckConfigPath.toFile());
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    return MoreObjects.firstNonNull(ini.get("buildfile", "name"), DEFAULT_BUILD_FILE);
+  }
+
+  private static Path getPathToBuckConfig(Path startPath) {
+    Path curPath = startPath;
+    while (curPath != null) {
+      Path pathToBuckConfig = curPath.resolve(BUCK_CONFIG_FILE);
+      if (pathToBuckConfig.toFile().exists()) {
+        return pathToBuckConfig;
+      }
+      curPath = curPath.getParent();
+    }
+    return null;
   }
 }

@@ -18,6 +18,7 @@ package com.facebook.buck.intellij.ideabuck.actions.choosetargets;
 
 import com.facebook.buck.intellij.ideabuck.actions.BuckQueryAction;
 import com.facebook.buck.intellij.ideabuck.build.BuckBuildTargetAliasParser;
+import com.facebook.buck.intellij.ideabuck.file.BuckFileUtil;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.intellij.ide.util.gotoByName.ChooseByNamePopup;
@@ -118,7 +119,7 @@ public class ChooseTargetContributor implements ChooseByNameContributor {
     List<String> names = new ArrayList<>();
     // Try to get the relative path to the current input folder
     VirtualFile baseDir = project.getBaseDir().findFileByRelativePath(
-        appendAffixIfNotEmpty(buildDir, File.separator));
+        appendSuffixIfNotEmpty(buildDir, File.separator));
     if (baseDir == null) {
       return names;
     }
@@ -131,7 +132,7 @@ public class ChooseTargetContributor implements ChooseByNameContributor {
     return names;
   }
 
-  private String appendAffixIfNotEmpty(String source, String suffix) {
+  private String appendSuffixIfNotEmpty(String source, String suffix) {
     if (!source.isEmpty()) {
       source += suffix;
     }
@@ -143,8 +144,8 @@ public class ChooseTargetContributor implements ChooseByNameContributor {
     // if the file is a directory we add it to the targets
     if (file.isDirectory()) {
       return new ArrayList<String>(Collections.singletonList(
-          "//" + appendAffixIfNotEmpty(buildDir, BUILD_DIR_SEPARATOR) + file.getName()));
-    } else if (file.getName().equals("BUCK")) {
+          "//" + appendSuffixIfNotEmpty(buildDir, BUILD_DIR_SEPARATOR) + file.getName()));
+    } else if (file.getName().equals(BuckFileUtil.getBuildFileName(project.getBasePath()))) {
       //if the file is a buck file  we parse it and add its target names to the list
       return getBuildTargetFromBuildProjectFile(project, buildDir);
     }
