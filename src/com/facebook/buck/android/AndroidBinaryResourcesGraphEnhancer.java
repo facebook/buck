@@ -202,7 +202,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     ImmutableList.Builder<Aapt2Compile> compileListBuilder = ImmutableList.builder();
     for (BuildTarget resTarget : resourceDetails.getResourcesWithNonEmptyResDir()) {
       compileListBuilder.add((Aapt2Compile) ruleResolver.requireRule(
-          resTarget.withFlavors(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)));
+          resTarget.withAppendedFlavors(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)));
     }
     return new Aapt2Link(
         buildRuleParams
