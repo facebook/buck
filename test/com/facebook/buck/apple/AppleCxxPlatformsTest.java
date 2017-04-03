@@ -180,7 +180,6 @@ public class AppleCxxPlatformsTest {
             "armv7",
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
-            new FakeAppleConfig(),
             new XcodeToolFinder(),
             Optional.empty(),
             Optional.empty());
@@ -287,7 +286,6 @@ public class AppleCxxPlatformsTest {
             "armv7k",
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
-            new FakeAppleConfig(),
             new XcodeToolFinder(),
             Optional.empty(),
             Optional.empty());
@@ -386,7 +384,6 @@ public class AppleCxxPlatformsTest {
             "arm64",
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
-            new FakeAppleConfig(),
             new XcodeToolFinder(),
             Optional.empty(),
             Optional.empty());
@@ -487,7 +484,6 @@ public class AppleCxxPlatformsTest {
             "cha+rs",
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
-            new FakeAppleConfig(),
             new XcodeToolFinder(),
             Optional.empty(),
             Optional.empty());
@@ -542,7 +538,6 @@ public class AppleCxxPlatformsTest {
                         "cppflags", "-DCTHING",
                         "cxxflags", "-std=c++11",
                         "cxxppflags", "-DCXXTHING"))).build(),
-            new FakeAppleConfig(),
             new XcodeToolFinder(),
             Optional.empty(),
             Optional.empty());
@@ -595,7 +590,6 @@ public class AppleCxxPlatformsTest {
         "armv7",
         appleSdkPaths,
         FakeBuckConfig.builder().build(),
-        new FakeAppleConfig(),
         new XcodeToolFinder(),
         Optional.empty(),
         Optional.empty());
@@ -641,7 +635,6 @@ public class AppleCxxPlatformsTest {
             "armv7",
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
-            new FakeAppleConfig(),
             new XcodeToolFinder(),
             Optional.empty(),
             Optional.empty());
@@ -695,7 +688,6 @@ public class AppleCxxPlatformsTest {
             "armv7k",
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
-            new FakeAppleConfig(),
             new XcodeToolFinder(),
             Optional.empty(),
             Optional.empty());
@@ -749,7 +741,6 @@ public class AppleCxxPlatformsTest {
             "arm64",
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
-            new FakeAppleConfig(),
             new XcodeToolFinder(),
             Optional.empty(),
             Optional.empty());
@@ -903,7 +894,6 @@ public class AppleCxxPlatformsTest {
         "armv7",
         appleSdkPaths,
         config,
-        new FakeAppleConfig(config),
         new XcodeToolFinder(),
         Optional.empty(),
         Optional.empty());
@@ -1126,7 +1116,6 @@ public class AppleCxxPlatformsTest {
                 developerDir.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"))
             .build(),
         FakeBuckConfig.builder().build(),
-        new FakeAppleConfig(),
         new XcodeToolFinder(),
         Optional.of(FakeAppleRuleDescriptions.PROCESS_EXECUTOR),
         selectedSwiftToolChain);

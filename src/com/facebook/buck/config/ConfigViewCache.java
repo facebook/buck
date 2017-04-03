@@ -64,7 +64,7 @@ public final class ConfigViewCache<T> {
         builderMethod = key.getMethod("of", this.delegate.getClass());
       } catch (NoSuchMethodException e) {
         throw new IllegalStateException(
-            "missing factory method for (persumably) immutable generated config view",
+            "missing factory method of(Config) for config view",
             e);
       }
 
@@ -72,11 +72,11 @@ public final class ConfigViewCache<T> {
         return key.cast(builderMethod.invoke(null, this.delegate));
       } catch (InvocationTargetException e) {
         throw new IllegalStateException(
-            "immutables generated of() should not throw.",
+            "of() should not throw.",
             e);
       } catch (IllegalAccessException e) {
         throw new IllegalStateException(
-            "immutables generated of() should be accessible.",
+            "of() should be public.",
             e);
       } catch (ClassCastException e) {
         throw new IllegalStateException(

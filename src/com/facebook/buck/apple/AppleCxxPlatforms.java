@@ -89,10 +89,10 @@ public class AppleCxxPlatforms {
   public static ImmutableList<AppleCxxPlatform> buildAppleCxxPlatforms(
       ProjectFilesystem filesystem,
       BuckConfig buckConfig,
-      AppleConfig appleConfig,
       SwiftBuckConfig swiftBuckConfig,
       ProcessExecutor processExecutor)
       throws IOException {
+    AppleConfig appleConfig = buckConfig.getView(AppleConfig.class);
     Supplier<Optional<Path>> appleDeveloperDirectorySupplier =
         appleConfig.getAppleDeveloperDirectorySupplier(processExecutor);
     Optional<Path> appleDeveloperDirectory = appleDeveloperDirectorySupplier.get();
@@ -143,7 +143,6 @@ public class AppleCxxPlatforms {
                 architecture,
                 appleSdkPaths,
                 buckConfig,
-                appleConfig,
                 xcodeToolFinder,
                 Optional.of(processExecutor),
                 swiftToolChain));
@@ -160,10 +159,10 @@ public class AppleCxxPlatforms {
       String targetArchitecture,
       final AppleSdkPaths sdkPaths,
       BuckConfig buckConfig,
-      AppleConfig appleConfig,
       XcodeToolFinder xcodeToolFinder,
       Optional<ProcessExecutor> processExecutor,
       Optional<AppleToolchain> swiftToolChain) {
+    AppleConfig appleConfig = buckConfig.getView(AppleConfig.class);
     AppleCxxPlatform.Builder platformBuilder = AppleCxxPlatform.builder();
 
     ImmutableList.Builder<Path> toolSearchPathsBuilder = ImmutableList.builder();

@@ -76,7 +76,7 @@ public class AppleSdkDiscoveryTest {
         Optional.of(path),
         ImmutableList.of(),
         toolchains,
-        new FakeAppleConfig());
+        FakeBuckConfig.builder().build().getView(AppleConfig.class));
 
     assertEquals(0, sdks.size());
   }
@@ -144,7 +144,7 @@ public class AppleSdkDiscoveryTest {
             Optional.of(path),
             ImmutableList.of(root),
             toolchains,
-            new FakeAppleConfig()),
+            FakeBuckConfig.builder().build().getView(AppleConfig.class)),
         equalTo(expected));
   }
 
@@ -195,7 +195,7 @@ public class AppleSdkDiscoveryTest {
             Optional.of(path),
             ImmutableList.of(root),
             toolchains,
-            new FakeAppleConfig()),
+            FakeBuckConfig.builder().build().getView(AppleConfig.class)),
         equalTo(expected));
   }
 
@@ -241,7 +241,7 @@ public class AppleSdkDiscoveryTest {
             Optional.of(root),
             ImmutableList.of(path),
             toolchains,
-            new FakeAppleConfig()),
+            FakeBuckConfig.builder().build().getView(AppleConfig.class)),
         equalTo(expected));
   }
 
@@ -262,7 +262,7 @@ public class AppleSdkDiscoveryTest {
         Optional.of(root),
         ImmutableList.of(),
         toolchains,
-        new FakeAppleConfig());
+        FakeBuckConfig.builder().build().getView(AppleConfig.class));
 
     assertEquals(2, sdks.size());
   }
@@ -286,7 +286,7 @@ public class AppleSdkDiscoveryTest {
         Optional.of(root),
         ImmutableList.of(),
         toolchains,
-        new FakeAppleConfig());
+        FakeBuckConfig.builder().build().getView(AppleConfig.class));
 
     assertEquals(0, sdks.size());
   }
@@ -448,7 +448,7 @@ public class AppleSdkDiscoveryTest {
             Optional.of(root),
             ImmutableList.of(),
             toolchains,
-            new FakeAppleConfig()),
+            FakeBuckConfig.builder().build().getView(AppleConfig.class)),
         equalTo(expected));
   }
 
@@ -468,7 +468,7 @@ public class AppleSdkDiscoveryTest {
             Optional.of(root),
             ImmutableList.of(),
             toolchains,
-            new FakeAppleConfig()).entrySet(),
+            FakeBuckConfig.builder().build().getView(AppleConfig.class)).entrySet(),
         empty());
   }
 
@@ -588,7 +588,7 @@ public class AppleSdkDiscoveryTest {
             Optional.of(root),
             ImmutableList.of(),
             toolchains,
-            new FakeAppleConfig()),
+            FakeBuckConfig.builder().build().getView(AppleConfig.class)),
         equalTo(expected));
   }
 
@@ -638,7 +638,7 @@ public class AppleSdkDiscoveryTest {
             Optional.of(root),
             ImmutableList.of(root),
             toolchains,
-            new FakeAppleConfig()),
+            FakeBuckConfig.builder().build().getView(AppleConfig.class)),
         equalTo(expected));
   }
 
@@ -669,7 +669,7 @@ public class AppleSdkDiscoveryTest {
         Optional.of(root),
         ImmutableList.of(root),
         toolchains,
-        new FakeAppleConfig());
+        FakeBuckConfig.builder().build().getView(AppleConfig.class));
 
     // if both symlinks were to be visited, exception would have been thrown during discovery
     assertThat(actual.size(), is(2));
@@ -697,7 +697,7 @@ public class AppleSdkDiscoveryTest {
         Optional.of(root),
         ImmutableList.of(root),
         toolchains,
-        new FakeAppleConfig());
+        FakeBuckConfig.builder().build().getView(AppleConfig.class));
 
     assertThat(actual.size(), is(0));
   }
@@ -757,13 +757,14 @@ public class AppleSdkDiscoveryTest {
             .put(macosx109Sdk.withName("macosx"), macosx109Paths)
             .build();
 
-    AppleConfig fakeAppleConfig = new AppleConfig(
+    AppleConfig fakeAppleConfig =
         FakeBuckConfig.builder()
             .setSections(
                 "[apple]",
                 "  macosx10.9_toolchains_override = " + toolchainName1 + "," + toolchainName2,
                 "  macosx_toolchains_override = " + toolchainName1 + "," + toolchainName2)
-            .build());
+            .build()
+            .getView(AppleConfig.class);
 
     assertThat(
         AppleSdkDiscovery.discoverAppleSdkPaths(

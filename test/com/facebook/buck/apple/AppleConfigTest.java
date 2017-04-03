@@ -56,7 +56,7 @@ public class AppleConfigTest {
   @Test
   public void getUnspecifiedAppleDeveloperDirectorySupplier() {
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
-    AppleConfig config = new AppleConfig(buckConfig);
+    AppleConfig config = buckConfig.getView(AppleConfig.class);
     assertNotNull(config.getAppleDeveloperDirectorySupplier(new FakeProcessExecutor()));
   }
 
@@ -66,7 +66,7 @@ public class AppleConfigTest {
         ImmutableMap.of(
             "apple",
             ImmutableMap.of("xcode_developer_dir", "/path/to/somewhere"))).build();
-    AppleConfig config = new AppleConfig(buckConfig);
+    AppleConfig config = buckConfig.getView(AppleConfig.class);
     Supplier<Optional<Path>> supplier =
         config.getAppleDeveloperDirectorySupplier(new FakeProcessExecutor());
     assertNotNull(supplier);
@@ -87,7 +87,7 @@ public class AppleConfigTest {
             ImmutableMap.of(
                 "xcode_developer_dir", "/path/to/somewhere",
                 "xcode_developer_dir_for_tests", "/path/to/somewhere2"))).build();
-    AppleConfig config = new AppleConfig(buckConfig);
+    AppleConfig config = buckConfig.getView(AppleConfig.class);
     Supplier<Optional<Path>> supplier =
         config.getAppleDeveloperDirectorySupplier(new FakeProcessExecutor());
     assertNotNull(supplier);
@@ -102,7 +102,7 @@ public class AppleConfigTest {
   @Test
   public void getXcodeSelectDetectedAppleDeveloperDirectorySupplier() {
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
-    AppleConfig config = new AppleConfig(buckConfig);
+    AppleConfig config = buckConfig.getView(AppleConfig.class);
     ProcessExecutorParams xcodeSelectParams =
         ProcessExecutorParams.builder()
             .setCommand(ImmutableList.of("xcode-select", "--print-path"))
@@ -117,12 +117,11 @@ public class AppleConfigTest {
 
   @Test
   public void packageConfigCommandWithoutExtensionShouldThrow() {
-    AppleConfig config = new AppleConfig(
-        FakeBuckConfig.builder()
-            .setSections(
-                "[apple]",
-                "iphoneos_package_command = echo")
-            .build());
+    AppleConfig config = FakeBuckConfig.builder()
+        .setSections(
+            "[apple]",
+            "iphoneos_package_command = echo")
+        .build().getView(AppleConfig.class);
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(containsString("be both specified, or be both omitted"));
     config.getPackageConfigForPlatform(ApplePlatform.IPHONEOS);
@@ -130,12 +129,11 @@ public class AppleConfigTest {
 
   @Test
   public void packageConfigExtensionWithoutCommandShouldThrow() {
-    AppleConfig config = new AppleConfig(
-        FakeBuckConfig.builder()
-            .setSections(
-                "[apple]",
-                "iphoneos_package_extension = api")
-            .build());
+    AppleConfig config = FakeBuckConfig.builder()
+        .setSections(
+            "[apple]",
+            "iphoneos_package_extension = api")
+        .build().getView(AppleConfig.class);
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(containsString("be both specified, or be both omitted"));
     config.getPackageConfigForPlatform(ApplePlatform.IPHONEOS);
@@ -143,13 +141,12 @@ public class AppleConfigTest {
 
   @Test
   public void packageConfigTreatsEmptyStringAsOmitted() {
-    AppleConfig config = new AppleConfig(
-        FakeBuckConfig.builder()
-            .setSections(
-                "[apple]",
-                "iphoneos_package_extension = ",
-                "iphoneos_package_command = ")
-            .build());
+    AppleConfig config = FakeBuckConfig.builder()
+        .setSections(
+            "[apple]",
+            "iphoneos_package_extension = ",
+            "iphoneos_package_command = ")
+        .build().getView(AppleConfig.class);
     assertThat(
         config.getPackageConfigForPlatform(ApplePlatform.IPHONEOS),
         equalTo(Optional.empty()));
@@ -157,13 +154,12 @@ public class AppleConfigTest {
 
   @Test
   public void packageConfigExtractsValuesFromConfig() {
-    AppleConfig config = new AppleConfig(
-        FakeBuckConfig.builder()
-            .setSections(
-                "[apple]",
-                "iphoneos_package_extension = api",
-                "iphoneos_package_command = echo $OUT")
-            .build());
+    AppleConfig config = FakeBuckConfig.builder()
+        .setSections(
+            "[apple]",
+            "iphoneos_package_extension = api",
+            "iphoneos_package_command = echo $OUT")
+        .build().getView(AppleConfig.class);
     Optional<ApplePackageConfig> packageConfig =
         config.getPackageConfigForPlatform(ApplePlatform.IPHONEOS);
     assertThat(packageConfig.get().getCommand(), equalTo("echo $OUT"));

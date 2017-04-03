@@ -33,7 +33,7 @@ public class AppleNativeIntegrationTestUtils {
 
   private static ImmutableMap<AppleSdk, AppleSdkPaths> discoverSystemSdkPaths(
       BuckConfig buckConfig) {
-    AppleConfig appleConfig = new AppleConfig(buckConfig);
+    AppleConfig appleConfig = buckConfig.getView(AppleConfig.class);
     ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
     return appleConfig.getAppleSdkPaths(executor);
   }
@@ -66,7 +66,6 @@ public class AppleNativeIntegrationTestUtils {
         "fakearch",
         sdkPaths.get(anySdk),
         buckConfig,
-        new AppleConfig(buckConfig),
         new XcodeToolFinder(),
         Optional.of(new DefaultProcessExecutor(Console.createNullConsole())),
         Optional.empty());

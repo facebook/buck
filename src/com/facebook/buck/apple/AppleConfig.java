@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -48,7 +49,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class AppleConfig {
+public class AppleConfig implements ConfigView<BuckConfig> {
   private static final String DEFAULT_TEST_LOG_DIRECTORY_ENVIRONMENT_VARIABLE = "FB_LOG_DIRECTORY";
   private static final String DEFAULT_TEST_LOG_LEVEL_ENVIRONMENT_VARIABLE = "FB_LOG_LEVEL";
   private static final String DEFAULT_TEST_LOG_LEVEL = "debug";
@@ -63,7 +64,17 @@ public class AppleConfig {
 
   private final ConcurrentMap<Path, Supplier<Optional<String>>> xcodeVersionCache;
 
-  public AppleConfig(BuckConfig delegate) {
+  // Reflection-based factory for ConfigView
+  public static AppleConfig of(BuckConfig delegate) {
+    return new AppleConfig(delegate);
+  }
+
+  @Override
+  public BuckConfig getDelegate() {
+    return delegate;
+  }
+
+  private AppleConfig(BuckConfig delegate) {
     this.xcodeVersionCache = new MapMaker().weakKeys().makeMap();
     this.delegate = delegate;
   }

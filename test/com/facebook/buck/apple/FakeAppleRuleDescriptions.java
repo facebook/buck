@@ -54,6 +54,14 @@ public class FakeAppleRuleDescriptions {
   // Utility class, do not instantiate.
   private FakeAppleRuleDescriptions() { }
 
+  private static final BuckConfig DEFAULT_BUCK_CONFIG = FakeBuckConfig.builder()
+      .setSections(
+          "[apple]",
+          "default_debug_info_format_for_tests = NONE",
+          "default_debug_info_format_for_binaries = NONE",
+          "default_debug_info_format_for_libraries = NONE")
+      .build();
+
   public static final Optional<Long> DEFAULT_TIMEOUT = Optional.of(300000L);
 
   public static final AppleSdk DEFAULT_MACOSX_SDK =
@@ -137,8 +145,7 @@ public class FakeAppleRuleDescriptions {
           "8.0",
           "i386",
           DEFAULT_IPHONEOS_SDK_PATHS,
-          FakeBuckConfig.builder().build(),
-          new FakeAppleConfig(),
+          DEFAULT_BUCK_CONFIG,
           new XcodeToolFinder(),
           Optional.of(PROCESS_EXECUTOR),
           Optional.empty());
@@ -150,8 +157,7 @@ public class FakeAppleRuleDescriptions {
           "8.0",
           "x86_64",
           DEFAULT_IPHONEOS_SDK_PATHS,
-          FakeBuckConfig.builder().build(),
-          new FakeAppleConfig(),
+          DEFAULT_BUCK_CONFIG,
           new XcodeToolFinder(),
           Optional.of(PROCESS_EXECUTOR),
           Optional.empty());
@@ -164,13 +170,10 @@ public class FakeAppleRuleDescriptions {
           "8.0",
           "x86_64",
           DEFAULT_MACOSX_SDK_PATHS,
-          FakeBuckConfig.builder().build(),
-          new FakeAppleConfig(),
+          DEFAULT_BUCK_CONFIG,
           new XcodeToolFinder(),
           Optional.of(PROCESS_EXECUTOR),
           Optional.empty());
-
-  public static final BuckConfig DEFAULT_BUCK_CONFIG = FakeBuckConfig.builder().build();
 
   public static final CxxPlatform DEFAULT_PLATFORM = DefaultCxxPlatforms.build(
       Platform.MACOS,
@@ -223,7 +226,7 @@ public class FakeAppleRuleDescriptions {
         CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
         ProvisioningProfileStore.fromProvisioningProfiles(
             ImmutableList.of()),
-        new FakeAppleConfig());
+        DEFAULT_BUCK_CONFIG.getView(AppleConfig.class));
 
   /**
    * A fake apple_binary description with an iOS platform for use in tests.
@@ -240,7 +243,7 @@ public class FakeAppleRuleDescriptions {
         CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
         ProvisioningProfileStore.fromProvisioningProfiles(
             ImmutableList.of()),
-        new FakeAppleConfig());
+        DEFAULT_BUCK_CONFIG.getView(AppleConfig.class));
 
   /**
    * A fake apple_bundle description with an iOS platform for use in tests.
@@ -255,14 +258,14 @@ public class FakeAppleRuleDescriptions {
           CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           ProvisioningProfileStore.fromProvisioningProfiles(
               ImmutableList.of()),
-          new FakeAppleConfig());
+          DEFAULT_BUCK_CONFIG.getView(AppleConfig.class));
 
   /**
    * A fake apple_test description with an iOS platform for use in tests.
    */
   public static final AppleTestDescription TEST_DESCRIPTION =
       new AppleTestDescription(
-          new FakeAppleConfig(),
+          DEFAULT_BUCK_CONFIG.getView(AppleConfig.class),
           LIBRARY_DESCRIPTION,
           DEFAULT_APPLE_FLAVOR_DOMAIN,
           DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN,

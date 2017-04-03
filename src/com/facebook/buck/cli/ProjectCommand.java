@@ -916,7 +916,7 @@ public class ProjectCommand extends BuildCommand {
       ImmutableSet<BuildTarget> passedInTargetsSet)
       throws IOException, InterruptedException {
     int exitCode = 0;
-    AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
+    AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
     ImmutableSet<ProjectGenerator.Option> options = buildWorkspaceGeneratorOptions(
         getReadOnly(params.getBuckConfig()),
         isWithTests(params.getBuckConfig()),
@@ -1002,7 +1002,7 @@ public class ProjectCommand extends BuildCommand {
       }
 
       BuckConfig buckConfig = params.getBuckConfig();
-      AppleConfig appleConfig = new AppleConfig(buckConfig);
+      AppleConfig appleConfig = buckConfig.getView(AppleConfig.class);
       HalideBuckConfig halideBuckConfig = new HalideBuckConfig(buckConfig);
       CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
       SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(buckConfig);

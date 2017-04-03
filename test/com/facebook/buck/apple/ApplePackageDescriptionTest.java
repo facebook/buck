@@ -129,14 +129,14 @@ public class ApplePackageDescriptionTest {
 
   private ApplePackageDescription descriptionWithCommand(String command) {
     return new ApplePackageDescription(
-        new AppleConfig(
-            FakeBuckConfig.builder()
-                .setSections(
-                    "[apple]",
-                    "macosx_package_command = " + command.replace("$", "\\$"),
-                    "macosx_package_extension = api"
-                )
-                .build()),
+        FakeBuckConfig.builder()
+            .setSections(
+                "[apple]",
+                "macosx_package_command = " + command.replace("$", "\\$"),
+                "macosx_package_extension = api"
+            )
+            .build()
+            .getView(AppleConfig.class),
         CxxPlatformUtils.DEFAULT_PLATFORM,
         FakeAppleRuleDescriptions.DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN);
   }

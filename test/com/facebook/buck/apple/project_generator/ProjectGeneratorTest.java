@@ -209,7 +209,7 @@ public class ProjectGeneratorTest {
             "version", "1.23"));
     BuckConfig config = FakeBuckConfig.builder().setSections(sections).build();
     cxxBuckConfig = new CxxBuckConfig(config);
-    appleConfig = new AppleConfig(config);
+    appleConfig = config.getView(AppleConfig.class);
     swiftBuckConfig = new SwiftBuckConfig(config);
   }
 

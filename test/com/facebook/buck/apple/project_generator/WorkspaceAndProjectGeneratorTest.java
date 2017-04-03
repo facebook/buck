@@ -127,7 +127,7 @@ public class WorkspaceAndProjectGeneratorTest {
     halideBuckConfig = HalideLibraryBuilder.createDefaultHalideConfig(projectFilesystem);
     cxxBuckConfig = CxxLibraryBuilder.createDefaultConfig();
     BuckConfig fakeBuckConfig = FakeBuckConfig.builder().build();
-    appleConfig = new AppleConfig(fakeBuckConfig);
+    appleConfig = fakeBuckConfig.getView(AppleConfig.class);
     swiftBuckConfig = new SwiftBuckConfig(fakeBuckConfig);
     setUpWorkspaceAndProjects();
   }

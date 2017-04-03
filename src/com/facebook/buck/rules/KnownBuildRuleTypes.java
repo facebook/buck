@@ -259,7 +259,6 @@ public class KnownBuildRuleTypes {
       ndkVersion = androidDirectoryResolver.getNdkVersion();
     }
 
-    AppleConfig appleConfig = new AppleConfig(config);
     SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
 
     FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
@@ -268,7 +267,6 @@ public class KnownBuildRuleTypes {
             AppleCxxPlatforms.buildAppleCxxPlatforms(
                 filesystem,
                 config,
-                appleConfig,
                 swiftBuckConfig,
                 processExecutor));
 
@@ -493,6 +491,7 @@ public class KnownBuildRuleTypes {
             platformFlavorsToSwiftPlatforms);
     builder.register(swiftLibraryDescription);
 
+    AppleConfig appleConfig = config.getView(AppleConfig.class);
     CodeSignIdentityStore codeSignIdentityStore =
         CodeSignIdentityStore.fromSystem(
             processExecutor,

@@ -326,7 +326,7 @@ public class InstallCommand extends BuildCommand {
                 .equals(Description.getBuildRuleType(AppleBundleDescription.class))) {
           for (Flavor flavor : node.getBuildTarget().getFlavors()) {
             if (ApplePlatform.needsInstallHelper(flavor.getName())) {
-              AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
+              AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
 
               Optional<BuildTarget> deviceHelperTarget = appleConfig.getAppleDeviceHelperTarget();
               Optionals.addIfPresent(
@@ -407,8 +407,7 @@ public class InstallCommand extends BuildCommand {
       ProcessExecutor processExecutor,
       SourcePathResolver pathResolver)
       throws IOException, NoSuchBuildTargetException {
-    // TODO(beng): This should be shared with the build and passed down.
-    AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
+    AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
 
     final Path helperPath;
     Optional<BuildTarget> helperTarget = appleConfig.getAppleDeviceHelperTarget();
@@ -540,8 +539,7 @@ public class InstallCommand extends BuildCommand {
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor) throws IOException, InterruptedException {
 
-    // TODO(beng): This should be shared with the build and passed down.
-    AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
+    AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
     Optional<Path> xcodeDeveloperPath = appleConfig.getAppleDeveloperDirectorySupplier(
         processExecutor).get();
     if (!xcodeDeveloperPath.isPresent()) {
