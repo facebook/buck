@@ -18,9 +18,12 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
+import com.facebook.buck.js.JsBundleDescription;
+import com.facebook.buck.js.JsBundleOutputs;
 import com.facebook.buck.js.ReactNativeBundle;
 import com.facebook.buck.js.ReactNativeLibraryArgs;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
@@ -38,7 +41,8 @@ public class AppleResources {
   public static final ImmutableSet<Class<? extends Description<?>>>
       APPLE_RESOURCE_DESCRIPTION_CLASSES = ImmutableSet.of(
           AppleResourceDescription.class,
-          IosReactNativeLibraryDescription.class);
+          IosReactNativeLibraryDescription.class,
+          JsBundleDescription.class);
 
   // Utility class, do not instantiate.
   private AppleResources() { }
@@ -70,6 +74,7 @@ public class AppleResources {
 
   public static <T> AppleBundleResources collectResourceDirsAndFiles(
       final TargetGraph targetGraph,
+      BuildRuleResolver resolver,
       final Optional<AppleDependenciesCache> cache,
       TargetNode<T, ?> targetNode) {
     AppleBundleResources.Builder builder = AppleBundleResources.builder();
@@ -91,6 +96,13 @@ public class AppleResources {
         builder.addAllResourceDirs(appleResource.dirs);
         builder.addAllResourceFiles(appleResource.files);
         builder.addAllResourceVariantFiles(appleResource.variants);
+      } else if (constructorArg instanceof JsBundleDescription.Arg) {
+        final JsBundleOutputs bundle = resolver.getRuleWithType(
+            resourceNode.getBuildTarget(),
+            JsBundleOutputs.class);
+        builder.addDirsContainingResourceDirs(
+            bundle.getSourcePathToOutput(),
+            bundle.getSourcePathToResources());
       } else {
         Preconditions.checkState(constructorArg instanceof ReactNativeLibraryArgs);
         BuildTarget buildTarget = resourceNode.getBuildTarget();
@@ -118,5 +130,4 @@ public class AppleResources {
     }
     return builder.build();
   }
-
 }

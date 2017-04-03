@@ -41,6 +41,9 @@ write_asset() {
   if [[ "$2" == android ]]; then
     dir="$dir/drawable-mdpi"
     mkdir -p "$dir"
+  elif [[ "$2" == ios ]]; then
+    dir="$dir/assets"
+    mkdir -p "$dir"
   fi
   cp "$(dirname "$0")/pixel.gif" "$dir/"
 }

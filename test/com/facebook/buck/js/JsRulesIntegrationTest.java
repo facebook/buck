@@ -17,6 +17,7 @@
 package com.facebook.buck.js;
 
 import static org.junit.Assume.assumeFalse;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -191,6 +192,16 @@ public class JsRulesIntegrationTest {
 
     zipInspector.assertFileExists("assets/fruit-salad-in-a-bundle.js");
     zipInspector.assertFileExists("res/drawable-mdpi-v4/pixel.gif");
+  }
+
+  @Test
+  public void iOSApplicationContainsJsAndResources() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    workspace
+        .runBuckBuild("//ios:DemoApp#iphonesimulator-x86_64,no-debug")
+        .assertSuccess();
+    workspace.verify(Paths.get("ios_app.expected"), genPath);
   }
 
 }

@@ -624,6 +624,7 @@ public class AppleDescriptions {
 
     AppleBundleResources collectedResources = AppleResources.collectResourceDirsAndFiles(
         targetGraph,
+        resolver,
         Optional.empty(),
         targetGraph.get(params.getBuildTarget()));
 

@@ -1,0 +1,28 @@
+bundle --platform ios --lib @/buck-out/gen/js/extras#ios.json --lib @/buck-out/gen/js/fruit#ios.json --lib @/buck-out/gen/js/fruit-salad#ios.json --sourcemap @/buck-out/gen/js/fruit-salad-in-a-bundle#ios/map/fruit-salad-in-a-bundle.js.map --assets @/buck-out/gen/js/fruit-salad-in-a-bundle#ios/res fruit-salad
+library
+transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
+var choclateChips;
+transform --arbitrary extra --flags --filename js/extras/yoghurt.js
+var yoghurt;
+library
+transform --filename js/apple.js
+var apple;
+transform --filename js/banana.js
+var banana;
+transform --filename js/pear.js
+var pear;
+library --lib @/buck-out/gen/js/extras#ios.json --lib @/buck-out/gen/js/fruit#ios.json
+library
+transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
+var choclateChips;
+transform --arbitrary extra --flags --filename js/extras/yoghurt.js
+var yoghurt;
+library
+transform --filename js/apple.js
+var apple;
+transform --filename js/banana.js
+var banana;
+transform --filename js/pear.js
+var pear;
+transform --filename js/fruit-salad.js
+var fruitSalad;
