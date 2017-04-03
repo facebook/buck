@@ -514,7 +514,7 @@ public class KnownBuildRuleTypes {
             appleConfig);
     builder.register(appleLibraryDescription);
     PrebuiltAppleFrameworkDescription appleFrameworkDescription =
-        new PrebuiltAppleFrameworkDescription();
+        new PrebuiltAppleFrameworkDescription(platformFlavorsToAppleCxxPlatforms);
     builder.register(appleFrameworkDescription);
 
     AppleBinaryDescription appleBinaryDescription =

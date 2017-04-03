@@ -20,6 +20,9 @@ import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.HasSystemFrameworkAndLibraries;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.Flavored;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
@@ -34,6 +37,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.Version;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
@@ -46,7 +50,35 @@ import java.util.regex.Pattern;
 
 public class PrebuiltAppleFrameworkDescription implements
     Description<PrebuiltAppleFrameworkDescription.Arg>,
+    Flavored,
     MetadataProvidingDescription<PrebuiltAppleFrameworkDescription.Arg> {
+
+  private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain;
+
+  public PrebuiltAppleFrameworkDescription(
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain) {
+    this.appleCxxPlatformsFlavorDomain = appleCxxPlatformsFlavorDomain;
+  }
+
+  @Override
+  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+    // This class supports flavors that other apple targets support.
+    // It's mainly there to be compatible with other apple rules which blindly add flavor tags to
+    // all its targets.
+    return RichStream.from(flavors)
+        .filter(flavor -> !appleCxxPlatformsFlavorDomain.getFlavors().contains(flavor))
+        .filter(flavor -> !AppleDebugFormat.FLAVOR_DOMAIN.getFlavors().contains(flavor))
+        .filter(flavor -> !AppleDescriptions.INCLUDE_FRAMEWORKS.getFlavors().contains(flavor))
+        .count() == 0;
+  }
+
+  @Override
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+    return Optional.of(ImmutableSet.of(
+        appleCxxPlatformsFlavorDomain,
+        AppleDebugFormat.FLAVOR_DOMAIN,
+        AppleDescriptions.INCLUDE_FRAMEWORKS));
+  }
 
   @Override
   public PrebuiltAppleFrameworkDescription.Arg createUnpopulatedConstructorArg() {
