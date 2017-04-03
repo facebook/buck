@@ -21,6 +21,7 @@ import com.facebook.buck.jvm.java.abi.source.api.BootClasspathOracle;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
+import com.sun.tools.javac.code.Symbol;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -136,7 +137,8 @@ class InterfaceValidator {
             }
 
             private boolean isOnBootClasspath(TypeElement typeElement) {
-              return bootClasspathOracle.isOnBootClasspath(typeElement.getQualifiedName().toString());
+              return bootClasspathOracle.isOnBootClasspath(
+                  ((Symbol.TypeSymbol) typeElement).flatName().toString());
             }
 
             private boolean referenceIsLegalForMissingTypes(
