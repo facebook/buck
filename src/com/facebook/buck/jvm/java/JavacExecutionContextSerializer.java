@@ -25,7 +25,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorSerializer;
 import com.facebook.buck.util.Verbosity;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -90,7 +89,6 @@ public class JavacExecutionContextSerializer {
       JavacEventSink eventSink,
       PrintStream stdErr,
       ClassLoaderCache classLoaderCache,
-      ObjectMapper objectMapper,
       Console console) {
 
     Verbosity verbosity =
@@ -129,7 +127,6 @@ public class JavacExecutionContextSerializer {
         eventSink,
         stdErr,
         classLoaderCache,
-        objectMapper,
         verbosity,
         cellPathResolver,
         javaPackageFinder,

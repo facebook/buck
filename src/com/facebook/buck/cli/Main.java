@@ -108,7 +108,6 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.Libc;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.PkillProcessManager;
 import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
@@ -136,7 +135,6 @@ import com.facebook.buck.util.versioncontrol.DefaultVersionControlCmdLineInterfa
 import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -258,10 +256,6 @@ public final class Main {
 
   private final Platform platform;
 
-  // It's important to re-use this object for perf:
-  // http://wiki.fasterxml.com/JacksonBestPracticesPerformance
-  private final ObjectMapper objectMapper;
-
   // Ignore changes to generated Xcode project files and editors' backup files
   // so we don't dump buckd caches on every command.
   private static final ImmutableSet<PathOrGlobMatcher> DEFAULT_IGNORE_GLOBS =
@@ -365,7 +359,6 @@ public final class Main {
 
     public Daemon(
         Cell cell,
-        ObjectMapper objectMapper,
         Optional<WebServer> webServerToReuse) {
       this.cell = cell;
       this.fileEventBus = new EventBus("file-change-events");
@@ -392,7 +385,7 @@ public final class Main {
       this.actionGraphCache = new ActionGraphCache(broadcastEventListener);
       this.versionedTargetGraphCache = new VersionedTargetGraphCache();
 
-      TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(objectMapper);
+      TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
       this.coercedTypeCache = new CoercedTypeCache(typeCoercerFactory);
       this.parser = new Parser(
           broadcastEventListener,
@@ -415,7 +408,7 @@ public final class Main {
       if (webServerToReuse.isPresent()) {
         webServer = webServerToReuse;
       } else {
-        webServer = createWebServer(cell.getBuckConfig(), cell.getFilesystem(), objectMapper);
+        webServer = createWebServer(cell.getBuckConfig(), cell.getFilesystem());
       }
       if (!initWebServer()) {
         LOG.warn("Can't start web server");
@@ -444,15 +437,14 @@ public final class Main {
 
     private Optional<WebServer> createWebServer(
         BuckConfig config,
-        ProjectFilesystem filesystem,
-        ObjectMapper objectMapper) {
+        ProjectFilesystem filesystem) {
       Optional<Integer> port = getValidWebServerPort(config);
       if (port.isPresent()) {
         WebServer webServer = new WebServer(
             port.get(),
             filesystem,
-            STATIC_CONTENT_DIRECTORY,
-            objectMapper);
+            STATIC_CONTENT_DIRECTORY
+        );
         return Optional.of(webServer);
       } else {
         return Optional.empty();
@@ -624,15 +616,12 @@ public final class Main {
    * Get or create Daemon.
    */
   @VisibleForTesting
-  static Daemon getDaemon(
-      Cell cell,
-      ObjectMapper objectMapper)
-      throws IOException {
+  static Daemon getDaemon(Cell cell) throws IOException {
     Path rootPath = cell.getFilesystem().getRootPath();
     Optional<WebServer> webServer = Optional.empty();
     if (daemon == null) {
       LOG.debug("Starting up daemon for project root [%s]", rootPath);
-      daemon = new Daemon(cell, objectMapper, webServer);
+      daemon = new Daemon(cell, webServer);
     } else {
       // Buck daemons cache build files within a single project root, changing to a different
       // project root is not supported and will likely result in incorrect builds. The buck and
@@ -658,7 +647,7 @@ public final class Main {
         } else {
           daemon.close();
         }
-        daemon = new Daemon(cell, objectMapper, webServer);
+        daemon = new Daemon(cell, webServer);
       }
     }
     return daemon;
@@ -680,11 +669,10 @@ public final class Main {
 
   private static BroadcastEventListener getBroadcastEventListener(
       boolean isDaemon,
-      Cell rootCell,
-      ObjectMapper objectMapper)
+      Cell rootCell)
       throws IOException {
     if (isDaemon) {
-      return getDaemon(rootCell, objectMapper).getBroadcastEventListener();
+      return getDaemon(rootCell).getBroadcastEventListener();
     }
     return new BroadcastEventListener();
   }
@@ -725,7 +713,6 @@ public final class Main {
     this.stdIn = stdIn;
     this.architecture = Architecture.detect();
     this.platform = Platform.detect();
-    this.objectMapper = ObjectMappers.newDefaultInstance();
   }
 
   /* Define all error handling surrounding main command */
@@ -1095,7 +1082,7 @@ public final class Main {
         // Create and register the event buses that should listen to broadcast events.
         // If the build doesn't have a daemon create a new instance.
         BroadcastEventListener broadcastEventListener =
-            getBroadcastEventListener(isDaemon, rootCell, objectMapper);
+            getBroadcastEventListener(isDaemon, rootCell);
 
         // The order of resources in the try-with-resources block is important: the BuckEventBus
         // must be the last resource, so that it is closed first and can deliver its queued events
@@ -1168,8 +1155,8 @@ public final class Main {
               new ProgressEstimator(
                   filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
                       .resolve(ProgressEstimator.PROGRESS_ESTIMATIONS_JSON),
-                  buildEventBus,
-                  objectMapper);
+                  buildEventBus
+              );
           consoleListener.setProgressEstimator(progressEstimator);
 
           BuildEnvironmentDescription buildEnvironmentDescription =
@@ -1254,7 +1241,7 @@ public final class Main {
 
           if (isDaemon) {
             try {
-              Daemon daemon = getDaemon(rootCell, objectMapper);
+              Daemon daemon = getDaemon(rootCell);
               WatchmanWatcher watchmanWatcher = createWatchmanWatcher(
                   daemon,
                   watchman.getProjectWatches(),
@@ -1296,7 +1283,7 @@ public final class Main {
           }
 
           if (coercedTypeCache == null || parser == null) {
-            TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(objectMapper);
+            TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
             coercedTypeCache = new CoercedTypeCache(typeCoercerFactory);
             parser = new Parser(
                 broadcastEventListener,
@@ -1335,7 +1322,7 @@ public final class Main {
             Optional<Path> eventsOutputPath = subcommand.getEventsOutputPath();
             if (eventsOutputPath.isPresent()) {
               BuckEventListener listener =
-                  new FileSerializationEventBusListener(eventsOutputPath.get(), objectMapper);
+                  new FileSerializationEventBusListener(eventsOutputPath.get());
               buildEventBus.register(listener);
             }
           }
@@ -1361,7 +1348,6 @@ public final class Main {
                     .setJavaPackageFinder(
                         rootCell.getBuckConfig().getView(JavaBuckConfig.class)
                             .createDefaultJavaPackageFinder())
-                    .setObjectMapper(objectMapper)
                     .setClock(clock)
                     .setProcessManager(processManager)
                     .setPersistentWorkerPools(persistentWorkerPools)
@@ -1673,7 +1659,7 @@ public final class Main {
       WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction)
       throws IOException, InterruptedException {
     // Wire up daemon to new client and get cached Parser.
-    Daemon daemonForParser = getDaemon(cell, objectMapper);
+    Daemon daemonForParser = getDaemon(cell);
     daemonForParser.watchClient(context.get());
     daemonForParser.watchFileSystem(
         commandEvent,
@@ -1685,7 +1671,7 @@ public final class Main {
 
   private ImmutableList<ProjectFileHashCache> getFileHashCachesFromDaemon(Cell cell)
       throws IOException {
-    Daemon daemon = getDaemon(cell, objectMapper);
+    Daemon daemon = getDaemon(cell);
     return daemon.getFileHashCaches();
   }
 
@@ -1694,7 +1680,7 @@ public final class Main {
       Cell cell)
       throws IOException {
     if (context.isPresent()) {
-      Daemon daemon = getDaemon(cell, objectMapper);
+      Daemon daemon = getDaemon(cell);
       return daemon.getWebServer();
     }
     return Optional.empty();
@@ -1705,7 +1691,7 @@ public final class Main {
       Cell cell)
       throws IOException {
     if (context.isPresent()) {
-      Daemon daemon = getDaemon(cell, objectMapper);
+      Daemon daemon = getDaemon(cell);
       return Optional.of(daemon.getPersistentWorkerPools());
     }
     return Optional.empty();
@@ -1788,7 +1774,6 @@ public final class Main {
             projectFilesystem,
             invocationInfo,
             clock,
-            objectMapper,
             buckConfig.getMaxTraces(),
             buckConfig.getCompressTraces()));
       } catch (IOException e) {

@@ -42,12 +42,10 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcessExecutor;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -84,11 +82,10 @@ public class CommandRunnerParamsForTesting {
       Platform platform,
       ImmutableMap<String, String> environment,
       JavaPackageFinder javaPackageFinder,
-      ObjectMapper objectMapper,
       Optional<WebServer> webServer)
       throws IOException, InterruptedException {
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
-        ObjectMappers.newDefaultInstance());
+    );
     CoercedTypeCache coercedTypeCache = new CoercedTypeCache(typeCoercerFactory);
     return CommandRunnerParams.builder()
         .setConsole(console)
@@ -112,7 +109,6 @@ public class CommandRunnerParamsForTesting {
         .setPlatform(platform)
         .setEnvironment(environment)
         .setJavaPackageFinder(javaPackageFinder)
-        .setObjectMapper(objectMapper)
         .setClock(new DefaultClock())
         .setProcessManager(Optional.empty())
         .setWebServer(webServer)
@@ -145,7 +141,6 @@ public class CommandRunnerParamsForTesting {
     private Platform platform = Platform.detect();
     private ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
     private JavaPackageFinder javaPackageFinder = new FakeJavaPackageFinder();
-    private ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
     private Optional<WebServer> webServer = Optional.empty();
 
     public CommandRunnerParams build()
@@ -160,7 +155,6 @@ public class CommandRunnerParamsForTesting {
           platform,
           environment,
           javaPackageFinder,
-          objectMapper,
           webServer);
     }
 

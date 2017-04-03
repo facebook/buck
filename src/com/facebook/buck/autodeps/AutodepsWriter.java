@@ -18,9 +18,9 @@ package com.facebook.buck.autodeps;
 
 import com.facebook.buck.autodeps.DepsForBuildFiles.DependencyType;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.PrettyPrinter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -79,14 +79,12 @@ public class AutodepsWriter {
    * @param buildFileName In practice, this should be derived from
    *     {@link com.facebook.buck.rules.Cell#getBuildFileName()}
    * @param includeSignature Whether to insert a signature for the contents of the file.
-   * @param mapper To aid in JSON serialization.
    * @return the number of files that were written.
    */
   public static int write(
       DepsForBuildFiles depsForBuildFiles,
       String buildFileName,
       boolean includeSignature,
-      ObjectMapper mapper,
       ListeningExecutorService executorService,
       int numThreads) throws ExecutionException {
     Preconditions.checkArgument(numThreads > 0, "Must be at least one thread available");
@@ -130,8 +128,7 @@ public class AutodepsWriter {
       ListenableFuture<Integer> future = executorService.submit(new AutodepsCallable(
           work,
           autodepsFileName,
-          includeSignature,
-          mapper
+          includeSignature
       ));
       futures.add(future);
     }
@@ -150,17 +147,14 @@ public class AutodepsWriter {
     private final ImmutableList<DepsForBuildFiles.BuildFileWithDeps> buildFilesWithDeps;
     private final String autodepsFileName;
     private final boolean includeSignature;
-    private final ObjectMapper mapper;
 
     AutodepsCallable(
         ImmutableList<DepsForBuildFiles.BuildFileWithDeps> buildFilesWithDeps,
         String autodepsFileName,
-        boolean includeSignature,
-        ObjectMapper mapper) {
+        boolean includeSignature) {
       this.buildFilesWithDeps = buildFilesWithDeps;
       this.autodepsFileName = autodepsFileName;
       this.includeSignature = includeSignature;
-      this.mapper = mapper;
     }
 
     @Override
@@ -183,7 +177,7 @@ public class AutodepsWriter {
           depsForBuildFile.put(depsForRule.getShortName(), deps);
         }
 
-        if (writeSignedFile(depsForBuildFile, includeSignature, generatedFile, mapper)) {
+        if (writeSignedFile(depsForBuildFile, includeSignature, generatedFile)) {
           numWritten++;
         }
       }
@@ -197,18 +191,16 @@ public class AutodepsWriter {
    * @param deps Keys must be sorted so the output is generated consistently.
    * @param includeSignature Whether to insert a signature for the contents of the file.
    * @param generatedFile Where to write the generated output.
-   * @param mapper To aid in JSON serialization.
    * @return whether the file was written
    */
   private static boolean writeSignedFile(
       SortedMap<String, SortedMap<String, Iterable<String>>> deps,
       boolean includeSignature,
-      Path generatedFile,
-      ObjectMapper mapper) throws IOException {
+      Path generatedFile) throws IOException {
     try (ByteArrayOutputStream bytes = new ByteArrayOutputStream();
          HashingOutputStream hashingOutputStream =
              new HashingOutputStream(Hashing.sha1(), bytes)) {
-      ObjectWriter jsonWriter = mapper.writer(PRETTY_PRINTER.get());
+      ObjectWriter jsonWriter = ObjectMappers.WRITER.with(PRETTY_PRINTER.get());
       jsonWriter.writeValue(includeSignature ? hashingOutputStream : bytes, deps);
 
       // Flush a trailing newline through the HashingOutputStream so it is included both the

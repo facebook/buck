@@ -25,7 +25,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Assume;
@@ -40,7 +39,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class GenruleDescriptionIntegrationTest {
-  private final ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
   @Rule
   public TemporaryPaths temporaryFolder = new TemporaryPaths();
   private ProjectWorkspace workspace;
@@ -256,7 +254,7 @@ public class GenruleDescriptionIntegrationTest {
       ProjectWorkspace.ProcessResult buildResult =
           workspace.runBuckCommand("targets", targetName, "--show-full-output", "--json");
       buildResult.assertSuccess();
-      JsonNode jsonNode = objectMapper.reader().readTree(buildResult.getStdout()).get(0);
+      JsonNode jsonNode = ObjectMappers.READER.readTree(buildResult.getStdout()).get(0);
       assert jsonNode.has("buck.outputPath");
       return Paths.get(jsonNode.get("buck.outputPath").asText());
     } catch (Exception e) {

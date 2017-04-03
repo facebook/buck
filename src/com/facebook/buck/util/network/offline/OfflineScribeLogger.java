@@ -22,9 +22,9 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.network.ScribeLogger;
 import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -83,7 +83,6 @@ public class OfflineScribeLogger extends ScribeLogger {
   private final ImmutableList<String> blacklistCategories;
   private final int maxScribeOfflineLogsBytes;
   private final ProjectFilesystem filesystem;
-  private final ObjectMapper objectMapper;
 
   @Nullable
   private BufferedOutputStream logFileStoreStream;
@@ -106,14 +105,12 @@ public class OfflineScribeLogger extends ScribeLogger {
       ImmutableList<String> blacklistCategories,
       int maxScribeOfflineLogsKB,
       ProjectFilesystem projectFilesystem,
-      ObjectMapper objectMapper,
       BuckEventBus buckEventBus,
       BuildId buildId) {
     Preconditions.checkNotNull(scribeLogger);
     Preconditions.checkNotNull(blacklistCategories);
     Preconditions.checkArgument(maxScribeOfflineLogsKB > 0);
     Preconditions.checkNotNull(projectFilesystem);
-    Preconditions.checkNotNull(objectMapper);
     Preconditions.checkNotNull(buckEventBus);
     Preconditions.checkNotNull(buildId);
 
@@ -121,7 +118,6 @@ public class OfflineScribeLogger extends ScribeLogger {
     this.blacklistCategories = blacklistCategories;
     this.maxScribeOfflineLogsBytes = KILO * maxScribeOfflineLogsKB;
     this.filesystem = projectFilesystem;
-    this.objectMapper = objectMapper;
 
     this.logFileStoreStream = null;
     this.storingAvailable = true;
@@ -174,7 +170,7 @@ public class OfflineScribeLogger extends ScribeLogger {
               // Get data to store.
               byte[] scribeData;
               try {
-                scribeData = objectMapper
+                scribeData = ObjectMappers.WRITER
                     .writeValueAsString(
                         ScribeData.builder()
                             .setCategory(category)
@@ -322,7 +318,7 @@ public class OfflineScribeLogger extends ScribeLogger {
           continue;
         }
 
-        it = objectMapper.readValues(
+        it = ObjectMappers.READER.readValues(
             new JsonFactory().createParser(logFileStream),
             ScribeData.class);
       } catch (Exception e) {

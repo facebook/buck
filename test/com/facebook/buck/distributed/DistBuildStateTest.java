@@ -41,10 +41,10 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CoercedTypeCache;
-import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.CoercedTypeCache;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
@@ -64,13 +64,11 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
@@ -159,7 +157,7 @@ public class DistBuildStateTest {
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getBuckOut());
     BuckConfig buckConfig = cell.getBuckConfig();
     TypeCoercerFactory typeCoercerFactory =
-        new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance());
+        new DefaultTypeCoercerFactory();
     CoercedTypeCache coercedTypeCache = new CoercedTypeCache(typeCoercerFactory);
     ConstructorArgMarshaller constructorArgMarshaller =
         new ConstructorArgMarshaller(coercedTypeCache);
@@ -348,7 +346,6 @@ public class DistBuildStateTest {
   public static DistBuildTargetGraphCodec createDefaultCodec(
       final Cell cell,
       final Optional<Parser> parser) {
-    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance(); // NOPMD confused by lambda
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
 
     Function<? super TargetNode<?, ?>, ? extends Map<String, Object>> nodeToRawNode;
@@ -370,7 +367,7 @@ public class DistBuildStateTest {
     }
 
     DistBuildTypeCoercerFactory typeCoercerFactory =
-        new DistBuildTypeCoercerFactory(objectMapper);
+        new DistBuildTypeCoercerFactory();
     CoercedTypeCache coercedTypeCache = new CoercedTypeCache(typeCoercerFactory);
     ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
@@ -378,7 +375,6 @@ public class DistBuildStateTest {
             new TargetNodeFactory(typeCoercerFactory));
 
     return new DistBuildTargetGraphCodec(
-        objectMapper,
         parserTargetNodeFactory,
         nodeToRawNode,
         ImmutableSet.of());

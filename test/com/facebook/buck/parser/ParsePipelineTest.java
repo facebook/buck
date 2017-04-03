@@ -41,7 +41,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -368,7 +367,7 @@ public class ParsePipelineTest {
       this.targetNodeParsePipelineCache = new TypedParsePipelineCache<>();
       this.rawNodeParsePipelineCache = new RawNodeParsePipelineCache();
       final TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory(
-          ObjectMappers.newDefaultInstance());
+      );
       final CoercedTypeCache coercedTypeCache = new CoercedTypeCache(coercerFactory);
       final ConstructorArgMarshaller constructorArgMarshaller =
           new ConstructorArgMarshaller(coercedTypeCache);

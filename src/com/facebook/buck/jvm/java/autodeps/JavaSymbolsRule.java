@@ -37,7 +37,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -65,7 +65,6 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
   @AddToRuleKey
   private final ImmutableSortedSet<String> generatedSymbols;
 
-  private final ObjectMapper objectMapper;
   private final ProjectFilesystem projectFilesystem;
   private final Path outputPath;
   private final BuildOutputInitializer<Symbols> outputInitializer;
@@ -74,12 +73,10 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
       BuildTarget javaLibraryBuildTarget,
       SymbolsFinder symbolsFinder,
       ImmutableSortedSet<String> generatedSymbols,
-      ObjectMapper objectMapper,
       ProjectFilesystem projectFilesystem) {
     this.buildTarget = javaLibraryBuildTarget.withFlavors(JAVA_SYMBOLS);
     this.symbolsFinder = symbolsFinder;
     this.generatedSymbols = generatedSymbols;
-    this.objectMapper = objectMapper;
     this.projectFilesystem = projectFilesystem;
     this.outputPath = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "__%s__.json");
     this.outputInitializer = new BuildOutputInitializer<>(buildTarget, this);
@@ -94,7 +91,7 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
       throws IOException {
     List<String> lines = onDiskBuildInfo.getOutputFileContentsByLine(outputPath);
     Preconditions.checkArgument(lines.size() == 1, "Should be one line of JSON: %s", lines);
-    return objectMapper.readValue(lines.get(0), Symbols.class);
+    return ObjectMappers.readValue(lines.get(0), Symbols.class);
   }
 
   @Override
@@ -122,7 +119,7 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
         }
 
         try (OutputStream output = getProjectFilesystem().newFileOutputStream(outputPath)) {
-          context.getObjectMapper().writeValue(output, symbolsToSerialize);
+          ObjectMappers.WRITER.writeValue(output, symbolsToSerialize);
         }
 
         return StepExecutionResult.SUCCESS;

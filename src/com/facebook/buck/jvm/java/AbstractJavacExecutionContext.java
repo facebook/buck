@@ -23,7 +23,6 @@ import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -39,7 +38,6 @@ abstract class AbstractJavacExecutionContext {
   public abstract JavacEventSink getEventSink();
   public abstract PrintStream getStdErr();
   public abstract ClassLoaderCache getClassLoaderCache();
-  public abstract ObjectMapper getObjectMapper();
   public abstract Verbosity getVerbosity();
   public abstract CellPathResolver getCellPathResolver();
   public abstract JavaPackageFinder getJavaPackageFinder();

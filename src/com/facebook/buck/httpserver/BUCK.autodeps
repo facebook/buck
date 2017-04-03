@@ -18,7 +18,8 @@
       "//src/com/facebook/buck/httpserver:cache_handler",
       "//src/com/facebook/buck/httpserver:util",
       "//src/com/facebook/buck/parser:parser",
-      "//src/com/facebook/buck/rules:rules"
+      "//src/com/facebook/buck/rules:rules",
+      "//src/com/facebook/buck/util:object_mapper"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/artifact_cache:artifact_cache",

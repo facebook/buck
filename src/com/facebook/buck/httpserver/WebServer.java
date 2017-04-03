@@ -19,7 +19,6 @@ package com.facebook.buck.httpserver;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.trace.BuildTraces;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
@@ -74,13 +73,12 @@ public class WebServer {
   public WebServer(
       int port,
       ProjectFilesystem projectFilesystem,
-      String staticContentDirectory,
-      ObjectMapper objectMapper) {
+      String staticContentDirectory) {
     this.projectFilesystem = projectFilesystem;
     this.staticContentDirectory = staticContentDirectory;
     this.port = Optional.empty();
     this.server = new Server(port);
-    this.streamingWebSocketServlet = new StreamingWebSocketServlet(objectMapper);
+    this.streamingWebSocketServlet = new StreamingWebSocketServlet();
     this.artifactCacheHandler = new ArtifactCacheHandler(projectFilesystem);
   }
 

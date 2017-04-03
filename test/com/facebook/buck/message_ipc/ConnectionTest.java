@@ -16,17 +16,15 @@
 
 package com.facebook.buck.message_ipc;
 
+import static org.junit.Assert.assertThat;
+
 import com.facebook.buck.shell.FakeWorkerProcess;
 import com.facebook.buck.shell.WorkerJobResult;
 import com.facebook.buck.shell.WorkerProcess;
-import com.facebook.buck.util.ObjectMappers;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import static org.junit.Assert.assertThat;
 
 import java.util.Optional;
 
@@ -40,8 +38,7 @@ public class ConnectionTest {
 
   @Test
   public void testConnection() throws Exception {
-    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-    MessageSerializer messageSerializer = new MessageSerializer(objectMapper);
+    MessageSerializer messageSerializer = new MessageSerializer();
     WorkerProcess workerProcess = new FakeWorkerProcess(
         ImmutableMap.of(
             "{\"type\":\"InvocationMessage\",\"name\":\"doString\",\"args\":[\"input\"]}",
@@ -69,8 +66,7 @@ public class ConnectionTest {
 
   @Test
   public void testConnectionWithMultipleArgs() throws Exception {
-    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-    MessageSerializer messageSerializer = new MessageSerializer(objectMapper);
+    MessageSerializer messageSerializer = new MessageSerializer();
     WorkerProcess workerProcess = new FakeWorkerProcess(
         ImmutableMap.of(
             "{\"type\":\"InvocationMessage\",\"name\":\"doBoolean\",\"args\":[\"input\",42.1234]}",
@@ -90,8 +86,7 @@ public class ConnectionTest {
 
   @Test
   public void testPassingNull() throws Exception {
-    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-    MessageSerializer messageSerializer = new MessageSerializer(objectMapper);
+    MessageSerializer messageSerializer = new MessageSerializer();
     WorkerProcess workerProcess = new FakeWorkerProcess(
         ImmutableMap.of(
             "{\"type\":\"InvocationMessage\",\"name\":\"doBoolean\",\"args\":[null,42.1234]}",

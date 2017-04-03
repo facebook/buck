@@ -37,7 +37,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -182,8 +182,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
         ExecutionContext context) {
       try (OutputStream outputStream =
                getProjectFilesystem().newFileOutputStream(outputRelativePath)) {
-        ObjectMapper mapper = context.getObjectMapper();
-        mapper.writeValue(outputStream, entries);
+        ObjectMappers.WRITER.writeValue(outputStream, entries);
       } catch (IOException e) {
         logError(e, context);
         return 1;

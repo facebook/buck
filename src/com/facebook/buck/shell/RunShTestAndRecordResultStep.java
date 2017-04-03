@@ -23,9 +23,9 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -163,9 +163,8 @@ public class RunShTestAndRecordResultStep implements Step {
           test.getStderr());
     }
 
-    ObjectMapper mapper = context.getObjectMapper();
     try (OutputStream outputStream = filesystem.newFileOutputStream(pathToTestResultFile)) {
-      mapper.writeValue(outputStream, summary);
+      ObjectMappers.WRITER.writeValue(outputStream, summary);
     }
 
     // Even though the test may have failed, this command executed successfully, so its exit code

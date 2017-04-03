@@ -22,7 +22,6 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
@@ -39,7 +38,6 @@ abstract class AbstractBuildEngineBuildContext {
   public abstract BuildContext getBuildContext();
 
   public abstract ArtifactCache getArtifactCache();
-  protected abstract ObjectMapper getObjectMapper();
   protected abstract Clock getClock();
   protected abstract BuildId getBuildId();
   protected abstract ImmutableMap<String, String> getEnvironment();
@@ -62,8 +60,8 @@ abstract class AbstractBuildEngineBuildContext {
     return new DefaultOnDiskBuildInfo(
         target,
         filesystem,
-        buildInfoStore,
-        getObjectMapper());
+        buildInfoStore
+    );
   }
 
   /**
@@ -82,7 +80,6 @@ abstract class AbstractBuildEngineBuildContext {
         buildInfoStore,
         getClock(),
         getBuildId(),
-        getObjectMapper(),
         ImmutableMap.copyOf(getEnvironment()));
   }
 

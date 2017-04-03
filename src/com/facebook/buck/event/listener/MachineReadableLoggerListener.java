@@ -71,7 +71,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
     this.filesystem = filesystem;
     this.executor = executor;
 
-    this.objectWriter = ObjectMappers.newDefaultInstance()
+    this.objectWriter = ObjectMappers.legacyCreate()
         .copy()
         .configure(MapperFeature.DEFAULT_VIEW_INCLUSION, false)
         .writerWithView(JsonViews.MachineReadableLog.class);

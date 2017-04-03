@@ -22,7 +22,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Ordering;
@@ -51,7 +50,6 @@ public class InteractiveReport extends AbstractReport {
   public InteractiveReport(
       DefectReporter defectReporter,
       ProjectFilesystem filesystem,
-      ObjectMapper objectMapper,
       Console console,
       InputStream stdin,
       BuildEnvironmentDescription buildEnvironmentDescription,
@@ -66,7 +64,7 @@ public class InteractiveReport extends AbstractReport {
         rageConfig,
         extraInfoCollector,
         watchmanDiagReportCollector);
-    this.buildLogHelper = new BuildLogHelper(filesystem, objectMapper);
+    this.buildLogHelper = new BuildLogHelper(filesystem);
     this.vcsInfoCollector = vcsInfoCollector;
     this.console = console;
     this.input = new UserInput(

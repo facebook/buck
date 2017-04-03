@@ -34,7 +34,6 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -51,7 +50,6 @@ import java.util.Optional;
 
 public class CxxBoostTestTest {
 
-  private static final ObjectMapper mapper = ObjectMappers.newDefaultInstance();
   private static final TypeReference<List<TestResultSummary>> SUMMARIES_REFERENCE =
       new TypeReference<List<TestResultSummary>>() {};
 
@@ -106,7 +104,7 @@ public class CxxBoostTestTest {
       Path results = workspace.resolve(Paths.get(sample)).resolve("results");
       Path summaries = workspace.resolve(Paths.get(sample)).resolve("summaries");
       List<TestResultSummary> expectedSummaries =
-          mapper.readValue(summaries.toFile(), SUMMARIES_REFERENCE);
+          ObjectMappers.readValue(summaries.toFile(), SUMMARIES_REFERENCE);
       ImmutableList<TestResultSummary> actualSummaries =
           test.parseResults(exitCode, output, results);
       assertEquals(sample, expectedSummaries, actualSummaries);

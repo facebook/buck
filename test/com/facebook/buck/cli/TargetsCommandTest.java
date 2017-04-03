@@ -61,7 +61,6 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -93,7 +92,6 @@ public class TargetsCommandTest {
   private ProjectWorkspace workspace;
   private TargetsCommand targetsCommand;
   private CommandRunnerParams params;
-  private ObjectMapper objectMapper;
   private ProjectFilesystem filesystem;
   private ListeningExecutorService executor;
 
@@ -127,7 +125,6 @@ public class TargetsCommandTest {
     AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
-    objectMapper = ObjectMappers.newDefaultInstance();
 
     targetsCommand = new TargetsCommand();
     params = CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
@@ -140,7 +137,6 @@ public class TargetsCommandTest {
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()),
         new FakeJavaPackageFinder(),
-        objectMapper,
         Optional.empty());
     executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
   }
@@ -163,13 +159,13 @@ public class TargetsCommandTest {
         ImmutableMap.of(),
         ImmutableSet.of());
     String observedOutput = console.getTextWrittenToStdOut();
-    JsonNode observed = objectMapper.readTree(
-        objectMapper.getFactory().createParser(observedOutput));
+    JsonNode observed = ObjectMappers.READER.readTree(
+        ObjectMappers.createParser(observedOutput));
 
     // parse the expected JSON.
     String expectedJson = workspace.getFileContents("TargetsCommandTestBuckJson1.js");
-    JsonNode expected = objectMapper.readTree(
-      objectMapper.getFactory().createParser(expectedJson)
+    JsonNode expected = ObjectMappers.READER.readTree(
+      ObjectMappers.createParser(expectedJson)
         .enable(Feature.ALLOW_COMMENTS)
     );
 
@@ -187,15 +183,15 @@ public class TargetsCommandTest {
       "targets", "--json", "//:B");
 
     // Parse the observed JSON.
-    JsonNode observed = objectMapper.readTree(
-      objectMapper.getFactory().createParser(result.getStdout())
+    JsonNode observed = ObjectMappers.READER.readTree(
+      ObjectMappers.createParser(result.getStdout())
         .enable(Feature.ALLOW_COMMENTS)
     );
 
     // Parse the expected JSON.
     String expectedJson = workspace.getFileContents("TargetsCommandTestBuckJson2.js");
-    JsonNode expected = objectMapper.readTree(
-      objectMapper.getFactory().createParser(expectedJson)
+    JsonNode expected = ObjectMappers.READER.readTree(
+      ObjectMappers.createParser(expectedJson)
         .enable(Feature.ALLOW_COMMENTS)
     );
 
@@ -220,15 +216,15 @@ public class TargetsCommandTest {
         "fully_qualified_name");
 
     // Parse the observed JSON.
-    JsonNode observed = objectMapper.readTree(
-        objectMapper.getFactory().createParser(result.getStdout())
+    JsonNode observed = ObjectMappers.READER.readTree(
+        ObjectMappers.createParser(result.getStdout())
             .enable(Feature.ALLOW_COMMENTS)
     );
 
     // Parse the expected JSON.
     String expectedJson = workspace.getFileContents("TargetsCommandTestBuckJson2Filtered.js");
-    JsonNode expected = objectMapper.readTree(
-        objectMapper.getFactory().createParser(expectedJson)
+    JsonNode expected = ObjectMappers.READER.readTree(
+        ObjectMappers.createParser(expectedJson)
             .enable(Feature.ALLOW_COMMENTS)
     );
 

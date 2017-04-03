@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.ImmutableSetMultimap;
 
 import java.io.IOException;
@@ -49,10 +49,10 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
   }
 
   @Override
-  public void writeFile(ProjectFilesystem filesystem, ObjectMapper objectMapper) {
+  public void writeFile(ProjectFilesystem filesystem) {
     ImmutableSetMultimap<Path, Path> classUsageMap = tracker.getClassUsageMap();
     try {
-      objectMapper.writeValue(
+      ObjectMappers.WRITER.writeValue(
           filesystem.resolve(relativePath).toFile(),
           relativizeMap(classUsageMap, filesystem));
     } catch (IOException e) {

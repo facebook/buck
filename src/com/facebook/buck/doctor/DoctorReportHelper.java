@@ -29,9 +29,9 @@ import com.facebook.buck.rage.RageConfig;
 import com.facebook.buck.rage.UserInput;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -66,19 +66,16 @@ public class DoctorReportHelper {
   private ProjectFilesystem filesystem;
   private UserInput input;
   private Console console;
-  private ObjectMapper objectMapper;
   private DoctorConfig doctorConfig;
 
   public DoctorReportHelper(
       ProjectFilesystem filesystem,
       UserInput input,
       Console console,
-      ObjectMapper objectMapper,
       DoctorConfig doctorConfig) {
     this.filesystem = filesystem;
     this.input = input;
     this.console = console;
-    this.objectMapper = objectMapper;
     this.doctorConfig = doctorConfig;
   }
 
@@ -153,7 +150,7 @@ public class DoctorReportHelper {
 
     byte[] requestJson;
     try {
-      requestJson = objectMapper.writeValueAsBytes(request);
+      requestJson = ObjectMappers.WRITER.writeValueAsBytes(request);
     } catch (JsonProcessingException e) {
       return createErrorDoctorEndpointResponse("Failed to encode request to JSON. " +
           "Reason: " + e.getMessage());
@@ -194,7 +191,7 @@ public class DoctorReportHelper {
     try {
       if (httpResponse.isSuccessful()) {
         String body = new String(httpResponse.body().bytes(), Charsets.UTF_8);
-        return objectMapper.readValue(body, DoctorEndpointResponse.class);
+        return ObjectMappers.readValue(body, DoctorEndpointResponse.class);
       }
       return createErrorDoctorEndpointResponse("Request was not successful.");
     } catch (JsonProcessingException e) {

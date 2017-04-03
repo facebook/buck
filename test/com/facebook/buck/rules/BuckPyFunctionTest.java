@@ -23,7 +23,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
@@ -43,7 +42,7 @@ public class BuckPyFunctionTest {
     buckPyFunction =
         new BuckPyFunction(
             new CoercedTypeCache(
-                new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance())));
+                new DefaultTypeCoercerFactory()));
   }
 
   public static class NoName {

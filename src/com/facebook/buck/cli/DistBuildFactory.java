@@ -102,7 +102,6 @@ public abstract class DistBuildFactory {
             .setClock(params.getClock())
             .setArtifactCache(distBuildArtifactCacheFactory.newInstance(true))
             .setState(state)
-            .setObjectMapper(params.getObjectMapper())
             .setRootCell(params.getCell())
             .setParser(params.getParser())
             .setExecutorService(executorService)

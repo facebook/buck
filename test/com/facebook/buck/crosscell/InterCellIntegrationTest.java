@@ -61,7 +61,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -344,7 +343,7 @@ public class InterCellIntegrationTest {
 
     // We could just do a build, but that's a little extreme since all we need is the target graph
     TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory(
-        ObjectMappers.newDefaultInstance());
+    );
     CoercedTypeCache coercedTypeCache = new CoercedTypeCache(coercerFactory);
     Parser parser = new Parser(
         new BroadcastEventListener(),

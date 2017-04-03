@@ -41,8 +41,8 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -92,7 +92,6 @@ public class JavaSymbolsRuleTest {
         buildTarget,
         symbolsFinder,
         /* generatedSymbols */ ImmutableSortedSet.of("com.example.generated.Example"),
-        ObjectMappers.newDefaultInstance(),
         projectFilesystem
     );
     BuildRuleResolver resolver =
@@ -104,35 +103,36 @@ public class JavaSymbolsRuleTest {
         /* buildableContext */ null);
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
-    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
 
     for (Step step : buildSteps) {
       step.execute(executionContext);
     }
 
-    JsonNode jsonNode = objectMapper.readTree(
+    try (JsonParser parser = ObjectMappers.createParser(
         projectFilesystem
             .resolve(
                 BuildTargets.getGenPath(
                     javaSymbolsRule.getProjectFilesystem(),
                     buildTarget.withFlavors(JavaSymbolsRule.JAVA_SYMBOLS),
                     "__%s__.json"))
-            .toFile());
-    assertTrue(jsonNode instanceof ObjectNode);
-    assertEquals(
-        ImmutableSet.of(
-            "com.example.Example1",
-            "com.example.Example2",
-            "com.example.generated.Example"),
-        StreamSupport.stream(jsonNode.get("provided").spliterator(), false)
-            .map(JsonNode::textValue)
-            .collect(MoreCollectors.toImmutableSet()));
-    assertEquals(
-        ImmutableSet.of(
-            "com.example.other.Bar",
-            "com.example.other.Foo"),
-        StreamSupport.stream(jsonNode.get("required").spliterator(), false)
-            .map(JsonNode::textValue)
-            .collect(MoreCollectors.toImmutableSet()));
+            .toFile())) {
+      JsonNode jsonNode = ObjectMappers.READER.readTree(parser);
+      assertTrue(jsonNode instanceof ObjectNode);
+      assertEquals(
+          ImmutableSet.of(
+              "com.example.Example1",
+              "com.example.Example2",
+              "com.example.generated.Example"),
+          StreamSupport.stream(jsonNode.get("provided").spliterator(), false)
+              .map(JsonNode::textValue)
+              .collect(MoreCollectors.toImmutableSet()));
+      assertEquals(
+          ImmutableSet.of(
+              "com.example.other.Bar",
+              "com.example.other.Foo"),
+          StreamSupport.stream(jsonNode.get("required").spliterator(), false)
+              .map(JsonNode::textValue)
+              .collect(MoreCollectors.toImmutableSet()));
+    }
   }
 }

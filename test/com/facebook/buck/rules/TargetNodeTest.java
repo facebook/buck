@@ -30,7 +30,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -160,7 +159,7 @@ public class TargetNodeTest {
 
     ExampleDescription description = new ExampleDescription();
 
-    return new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
+    return new TargetNodeFactory(new DefaultTypeCoercerFactory())
         .create(
             Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),
             description,
@@ -185,7 +184,7 @@ public class TargetNodeTest {
         new ConstructorArgMarshaller(
             new CoercedTypeCache(
                 new DefaultTypeCoercerFactory(
-                    ObjectMappers.newDefaultInstance())));
+                )));
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     Arg constructorArg = description.createUnpopulatedConstructorArg();
     try {

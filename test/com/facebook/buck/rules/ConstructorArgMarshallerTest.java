@@ -30,7 +30,6 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -68,7 +67,7 @@ public class ConstructorArgMarshallerTest {
     marshaller = new ConstructorArgMarshaller(
         new CoercedTypeCache(
             new DefaultTypeCoercerFactory(
-                ObjectMappers.newDefaultInstance())));
+            )));
     ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     filesystem = new FakeProjectFilesystem();

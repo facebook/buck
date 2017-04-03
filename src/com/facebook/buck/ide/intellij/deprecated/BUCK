@@ -17,6 +17,7 @@ standard_java_library(
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/util:object_mapper",
     ],
 )
 

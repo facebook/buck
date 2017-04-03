@@ -46,7 +46,6 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
@@ -101,7 +100,7 @@ public class DistBuildFileHashesIntegrationTest {
         .build();
 
     TypeCoercerFactory typeCoercerFactory =
-        new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance());
+        new DefaultTypeCoercerFactory();
     CoercedTypeCache coercedTypeCache = new CoercedTypeCache(typeCoercerFactory);
     ConstructorArgMarshaller constructorArgMarshaller =
         new ConstructorArgMarshaller(coercedTypeCache);
@@ -183,7 +182,7 @@ public class DistBuildFileHashesIntegrationTest {
         .build();
 
     TypeCoercerFactory typeCoercerFactory =
-        new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance());
+        new DefaultTypeCoercerFactory();
     CoercedTypeCache coercedTypeCache = new CoercedTypeCache(typeCoercerFactory);
     ConstructorArgMarshaller constructorArgMarshaller =
         new ConstructorArgMarshaller(coercedTypeCache);

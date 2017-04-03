@@ -41,7 +41,6 @@ import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
@@ -89,7 +88,7 @@ public class OwnersReportTest {
     arg.inputs = inputs;
     try {
       return
-          new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
+          new TargetNodeFactory(new DefaultTypeCoercerFactory())
               .create(
                   Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),
                   description,

@@ -20,7 +20,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
@@ -39,8 +38,8 @@ public class WebServerTest {
     WebServer webServer = new WebServer(
     /* port */ 9999,
         projectFilesystem,
-        "/static/",
-        ObjectMappers.newDefaultInstance());
+        "/static/"
+    );
     ImmutableList<ContextHandler> handlers = webServer.createHandlers();
     final Map<String, ContextHandler> contextPathToHandler = Maps.newHashMap();
     for (ContextHandler handler : handlers) {

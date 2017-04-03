@@ -29,6 +29,7 @@ import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
@@ -309,7 +310,7 @@ public class QueryCommand extends AbstractCommand {
     }
     StringWriter stringWriter = new StringWriter();
     try {
-      params.getObjectMapper().writerWithDefaultPrettyPrinter().writeValue(stringWriter, result);
+      ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, result);
     } catch (IOException e) {
       // Shouldn't be possible while writing to a StringWriter...
       throw new RuntimeException(e);

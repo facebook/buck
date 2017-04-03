@@ -38,7 +38,6 @@ import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.FakeClock;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Function;
@@ -141,7 +140,6 @@ public class PrebuiltJarSymbolsFinderTest {
                 BuildTargetFactory.newInstance("//foo:rule"),
                 finder,
                 /* generatedSymbols */ ImmutableSortedSet.of(),
-                ObjectMappers.newDefaultInstance(),
                 new ProjectFilesystem(tmp.getRoot())
             );
           } catch (IOException e) {
@@ -189,7 +187,6 @@ public class PrebuiltJarSymbolsFinderTest {
         BuildTargetFactory.newInstance("//foo:rule"),
         createFinderForGeneratedJar("//foo:jar_genrule1"),
         /* generatedSymbols */ ImmutableSortedSet.of(),
-        ObjectMappers.newDefaultInstance(),
         new ProjectFilesystem(tmp.getRoot())
     );
 
@@ -200,7 +197,6 @@ public class PrebuiltJarSymbolsFinderTest {
         BuildTargetFactory.newInstance("//foo:rule"),
         createFinderForGeneratedJar("//foo:jar_genrule2"),
         /* generatedSymbols */ ImmutableSortedSet.of(),
-        ObjectMappers.newDefaultInstance(),
         new ProjectFilesystem(tmp.getRoot())
     );
     RuleKey key2 = new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder)

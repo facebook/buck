@@ -1,6 +1,7 @@
 {
   "message_ipc" : {
     "deps" : [
+      "//src/com/facebook/buck/util:object_mapper",
       "//third-party/java/guava:guava",
       "//third-party/java/jsr:jsr305"
     ],

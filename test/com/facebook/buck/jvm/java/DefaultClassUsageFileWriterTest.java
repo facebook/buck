@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.FluentIterable;
 
 import org.junit.Test;
@@ -71,7 +70,7 @@ public class DefaultClassUsageFileWriterTest {
         javaFileObject.openInputStream();
       }
     }
-    writerOne.writeFile(filesystem, ObjectMappers.newDefaultInstance());
+    writerOne.writeFile(filesystem);
 
 
     DefaultClassUsageFileWriter writerTwo = new DefaultClassUsageFileWriter(outputTwo);
@@ -82,7 +81,7 @@ public class DefaultClassUsageFileWriterTest {
         javaFileObject.openInputStream();
       }
     }
-    writerTwo.writeFile(filesystem, ObjectMappers.newDefaultInstance());
+    writerTwo.writeFile(filesystem);
 
     assertEquals(
         new String(Files.readAllBytes(outputOne)),

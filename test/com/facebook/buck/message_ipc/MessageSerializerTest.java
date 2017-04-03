@@ -18,7 +18,6 @@ package com.facebook.buck.message_ipc;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -29,7 +28,7 @@ public class MessageSerializerTest {
   @Test
   public void testSerializeInvocationMessage() throws Exception {
     InvocationMessage message = new InvocationMessage("method_name", ImmutableList.of("arg1", 42));
-    MessageSerializer serializer = new MessageSerializer(ObjectMappers.newDefaultInstance());
+    MessageSerializer serializer = new MessageSerializer();
     String value = serializer.serializeInvocation(message);
     assertThat(
         value,
@@ -41,7 +40,7 @@ public class MessageSerializerTest {
   public void testDeserializeInvocationMessage() throws Exception {
     String value =
         "{\"type\":\"InvocationMessage\",\"name\":\"myMethod\",\"args\":[\"string\",100500]}";
-    MessageSerializer serializer = new MessageSerializer(ObjectMappers.newDefaultInstance());
+    MessageSerializer serializer = new MessageSerializer();
     InvocationMessage message = serializer.deserializeInvocation(value);
     assertThat(message.getMethodName(), Matchers.equalToObject("myMethod"));
     assertThat(message.getArguments(), Matchers.equalToObject(ImmutableList.of("string", 100500)));
@@ -51,7 +50,7 @@ public class MessageSerializerTest {
   public void testDeserializeInvocationMessageWithNullArgs() throws Exception {
     String value =
         "{\"type\":\"InvocationMessage\",\"name\":\"myMethod\",\"args\":[null,100500]}";
-    MessageSerializer serializer = new MessageSerializer(ObjectMappers.newDefaultInstance());
+    MessageSerializer serializer = new MessageSerializer();
     InvocationMessage message = serializer.deserializeInvocation(value);
     assertThat(message.getMethodName(), Matchers.equalToObject("myMethod"));
     assertThat(message.getArguments().get(0), Matchers.equalTo(null));
@@ -61,7 +60,7 @@ public class MessageSerializerTest {
   @Test
   public void testSerializeReturnResultMessage() throws Exception {
     ReturnResultMessage message = new ReturnResultMessage(ImmutableMap.of("some_value", false));
-    MessageSerializer serializer = new MessageSerializer(ObjectMappers.newDefaultInstance());
+    MessageSerializer serializer = new MessageSerializer();
     String value = serializer.serializeResult(message);
     assertThat(
         value,
@@ -73,7 +72,7 @@ public class MessageSerializerTest {
   public void testDeserializeReturnResultMessage() throws Exception {
     String value =
         "{\"type\":\"ReturnResultMessage\",\"value\":[{\"some_value\":false}, 42]}";
-    MessageSerializer serializer = new MessageSerializer(ObjectMappers.newDefaultInstance());
+    MessageSerializer serializer = new MessageSerializer();
     ReturnResultMessage message = serializer.deserializeResult(value);
     assertThat(
         message.getValue(),

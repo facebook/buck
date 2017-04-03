@@ -48,6 +48,7 @@ import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.BestCompressionGZIPOutputStream;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProcessResourceConsumption;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -55,7 +56,6 @@ import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.util.perf.ProcessTracker;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
@@ -108,7 +108,6 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   private final Clock clock;
   private final int tracesToKeep;
   private final boolean compressTraces;
-  private final ObjectMapper mapper;
   private final ThreadLocal<SimpleDateFormat> dateFormat;
   private final Path tracePath;
   private final OutputStream traceStream;
@@ -121,14 +120,12 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       ProjectFilesystem projectFilesystem,
       InvocationInfo invocationInfo,
       Clock clock,
-      ObjectMapper objectMapper,
       int tracesToKeep,
       boolean compressTraces) throws IOException {
     this(
         projectFilesystem,
         invocationInfo,
         clock,
-        objectMapper,
         Locale.US,
         TimeZone.getDefault(),
         tracesToKeep,
@@ -140,7 +137,6 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       ProjectFilesystem projectFilesystem,
       InvocationInfo invocationInfo,
       Clock clock,
-      ObjectMapper objectMapper,
       final Locale locale,
       final TimeZone timeZone,
       int tracesToKeep,
@@ -148,7 +144,6 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     this.invocationInfo = invocationInfo;
     this.projectFilesystem = projectFilesystem;
     this.clock = clock;
-    this.mapper = objectMapper;
     this.dateFormat = new ThreadLocal<SimpleDateFormat>() {
       @Override
       protected SimpleDateFormat initialValue() {
@@ -164,7 +159,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     TracePathAndStream tracePathAndStream = createPathAndStream(invocationInfo);
     this.tracePath = tracePathAndStream.getPath();
     this.traceStream = tracePathAndStream.getStream();
-    this.jsonGenerator = objectMapper.getFactory().createGenerator(this.traceStream);
+    this.jsonGenerator = ObjectMappers.createGenerator(this.traceStream);
 
     this.jsonGenerator.writeStartArray();
     addProcessMetadataEvent();
@@ -802,7 +797,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     @SuppressWarnings("unused") Future<?> unused =
         outputExecutor.submit(() -> {
         try {
-          mapper.writeValue(jsonGenerator, chromeTraceEvent);
+          ObjectMappers.WRITER.writeValue(jsonGenerator, chromeTraceEvent);
         } catch (IOException e) {
           // Swallow any failures to write.
         }

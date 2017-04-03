@@ -50,7 +50,6 @@ import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.zip.ZipConstants;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -313,8 +312,8 @@ public class AndroidBinaryIntegrationTest {
     DefaultOnDiskBuildInfo buildInfo = new DefaultOnDiskBuildInfo(
         BuildTargetFactory.newInstance("//java/com/sample/lib:lib#dex"),
         filesystem,
-        new FilesystemBuildInfoStore(filesystem),
-        ObjectMappers.newDefaultInstance());
+        new FilesystemBuildInfoStore(filesystem)
+    );
     Optional<ImmutableList<String>> resourcesFromMetadata =
         buildInfo.getValues(DexProducedFromJavaLibrary.REFERENCED_RESOURCES);
     assertTrue(resourcesFromMetadata.isPresent());
@@ -950,9 +949,8 @@ public class AndroidBinaryIntegrationTest {
 
     // We use a fake ReDex binary that writes out the arguments it received as JSON so that we can
     // verify that it was called in the right way.
-    ObjectMapper mapper = ObjectMappers.newDefaultInstance();
     @SuppressWarnings("unchecked")
-    Map<String, Object> userData = mapper.readValue(unzippedApk.toFile(), Map.class);
+    Map<String, Object> userData = ObjectMappers.readValue(unzippedApk.toFile(), Map.class);
 
     String androidSdk = (String) userData.get("ANDROID_SDK");
     assertTrue(

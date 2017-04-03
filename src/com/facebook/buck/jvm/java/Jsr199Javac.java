@@ -308,8 +308,8 @@ public abstract class Jsr199Javac implements Javac {
 
     if (isSuccess) {
       context.getUsedClassesFileWriter().writeFile(
-          context.getProjectFilesystem(),
-          context.getObjectMapper());
+          context.getProjectFilesystem()
+      );
       return 0;
     } else {
       if (context.getVerbosity().shouldPrintStandardInformation()) {

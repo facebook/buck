@@ -63,7 +63,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -139,7 +138,6 @@ public class ChromeTraceBuildListenerTest {
         projectFilesystem,
         invocationInfo,
         new FakeClock(TIMESTAMP_NANOS),
-        ObjectMappers.newDefaultInstance(),
         Locale.US,
         TimeZone.getTimeZone("America/Los_Angeles"),
         /* tracesToKeep */ 3,
@@ -166,14 +164,11 @@ public class ChromeTraceBuildListenerTest {
   public void testBuildJson() throws IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
 
-    ObjectMapper mapper = ObjectMappers.newDefaultInstance();
-
     BuildId buildId = new BuildId("ChromeTraceBuildListenerTestBuildId");
     ChromeTraceBuildListener listener = new ChromeTraceBuildListener(
         projectFilesystem,
         invocationInfo,
         new FakeClock(TIMESTAMP_NANOS),
-        mapper,
         Locale.US,
         TimeZone.getTimeZone("America/Los_Angeles"),
         /* tracesToKeep */ 42,
@@ -318,7 +313,7 @@ public class ChromeTraceBuildListenerTest {
 
     File resultFile = new File(tmpDir.getRoot(), "buck-out/log/build.trace");
 
-    List<ChromeTraceEvent> originalResultList = mapper.readValue(
+    List<ChromeTraceEvent> originalResultList = ObjectMappers.readValue(
         resultFile,
         new TypeReference<List<ChromeTraceEvent>>() {});
     List<ChromeTraceEvent> resultListCopy = new ArrayList<>();
@@ -538,7 +533,6 @@ public class ChromeTraceBuildListenerTest {
           projectFilesystem,
           invocationInfo,
           new FakeClock(TIMESTAMP_NANOS),
-          ObjectMappers.newDefaultInstance(),
           Locale.US,
           TimeZone.getTimeZone("America/Los_Angeles"),
         /* tracesToKeep */ 3,
@@ -563,7 +557,6 @@ public class ChromeTraceBuildListenerTest {
         projectFilesystem,
         invocationInfo,
         new FakeClock(TIMESTAMP_NANOS),
-        ObjectMappers.newDefaultInstance(),
         Locale.US,
         TimeZone.getTimeZone("America/Los_Angeles"),
         /* tracesToKeep */ 1,
@@ -582,7 +575,6 @@ public class ChromeTraceBuildListenerTest {
         projectFilesystem,
         invocationInfo,
         new FakeClock(TIMESTAMP_NANOS),
-        ObjectMappers.newDefaultInstance(),
         Locale.US,
         TimeZone.getTimeZone("America/Los_Angeles"),
         /* tracesToKeep */ 1,

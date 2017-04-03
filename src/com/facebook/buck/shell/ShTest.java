@@ -43,7 +43,7 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.MoreCollectors;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -160,8 +160,8 @@ public class ShTest
     return () -> {
       Optional<String> resultsFileContents =
           getProjectFilesystem().readFileIfItExists(getPathToTestOutputResult());
-      ObjectMapper mapper = context.getObjectMapper();
-      TestResultSummary testResultSummary = mapper.readValue(resultsFileContents.get(),
+      TestResultSummary testResultSummary = ObjectMappers.readValue(
+          resultsFileContents.get(),
           TestResultSummary.class);
       TestCaseSummary testCaseSummary = new TestCaseSummary(
           getBuildTarget().getFullyQualifiedName(),

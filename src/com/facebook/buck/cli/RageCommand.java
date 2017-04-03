@@ -84,7 +84,6 @@ public class RageCommand extends AbstractCommand {
     AbstractReport report;
     DefaultDefectReporter reporter = new DefaultDefectReporter(
         filesystem,
-        params.getObjectMapper(),
         rageConfig,
         params.getBuckEventBus(),
         params.getClock());
@@ -92,7 +91,6 @@ public class RageCommand extends AbstractCommand {
       report = new InteractiveReport(
           reporter,
           filesystem,
-          params.getObjectMapper(),
           params.getConsole(),
           params.getStdIn(),
           params.getBuildEnvironmentDescription(),
@@ -104,7 +102,6 @@ public class RageCommand extends AbstractCommand {
       report = new AutomatedReport(
           reporter,
           filesystem,
-          params.getObjectMapper(),
           params.getConsole(),
           params.getBuildEnvironmentDescription(),
           gatherVcsInfo ? vcsInfoCollector : Optional.empty(),

@@ -17,10 +17,7 @@
 package com.facebook.buck.testutil;
 
 import com.facebook.buck.util.ObjectMappers;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
 
 import org.hamcrest.Description;
@@ -32,7 +29,6 @@ import java.util.HashSet;
 public class JsonMatcher extends TypeSafeDiagnosingMatcher<String> {
 
   private String expectedJson;
-  private static final ObjectMapper MAPPER = ObjectMappers.newDefaultInstance();
 
   public JsonMatcher(String json) {
     this.expectedJson = json;
@@ -41,11 +37,10 @@ public class JsonMatcher extends TypeSafeDiagnosingMatcher<String> {
   @Override
   protected boolean matchesSafely(String actualJson, Description description) {
     try {
-      JsonFactory factory = MAPPER.getFactory();
-      JsonParser jsonParser = factory.createParser(String.format(expectedJson));
-      JsonNode expectedObject = MAPPER.readTree(jsonParser);
-      jsonParser = factory.createParser(actualJson);
-      JsonNode actualObject = MAPPER.readTree(jsonParser);
+      JsonNode expectedObject =
+          ObjectMappers.READER.readTree(ObjectMappers.createParser(String.format(expectedJson)));
+      JsonNode actualObject =
+          ObjectMappers.READER.readTree(ObjectMappers.createParser(String.format(actualJson)));
 
       if (!matchJsonObjects("/", expectedObject, actualObject, description)) {
         description.appendText(String.format(" in <%s>", actualJson));

@@ -38,7 +38,6 @@ import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -76,8 +75,6 @@ public interface AbstractCommandRunnerParams {
   ImmutableMap<String, String> getEnvironment();
 
   JavaPackageFinder getJavaPackageFinder();
-
-  ObjectMapper getObjectMapper();
 
   Clock getClock();
 

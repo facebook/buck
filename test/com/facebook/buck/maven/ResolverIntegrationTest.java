@@ -47,7 +47,6 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -125,7 +124,7 @@ public class ResolverIntegrationTest {
             .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
             .build());
     buildFileParser = parserFactory.createParser(
-        new CoercedTypeCache(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance())),
+        new CoercedTypeCache(new DefaultTypeCoercerFactory()),
         new TestConsole(),
         ImmutableMap.of(),
         BuckEventBusFactory.newInstance(),

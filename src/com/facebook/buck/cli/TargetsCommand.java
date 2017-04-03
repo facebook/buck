@@ -54,11 +54,11 @@ import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -697,7 +697,6 @@ public class TargetsCommand extends AbstractCommand {
     // Print the JSON representation of the build node for the specified target(s).
     params.getConsole().getStdOut().println("[");
 
-    ObjectMapper mapper = params.getObjectMapper();
     Iterator<TargetNode<?, ?>> targetNodeIterator = targetNodes.iterator();
 
     while (targetNodeIterator.hasNext()) {
@@ -752,7 +751,7 @@ public class TargetsCommand extends AbstractCommand {
       // Print the build rule information as JSON.
       StringWriter stringWriter = new StringWriter();
       try {
-        mapper.writerWithDefaultPrettyPrinter().writeValue(stringWriter, sortedTargetRule);
+        ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, sortedTargetRule);
       } catch (IOException e) {
         // Shouldn't be possible while writing to a StringWriter...
         throw new RuntimeException(e);

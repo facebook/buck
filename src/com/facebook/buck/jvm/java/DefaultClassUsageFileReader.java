@@ -22,7 +22,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -36,8 +35,6 @@ import java.util.Map;
  * Provides utility methods for reading dependency file entries.
  */
 class DefaultClassUsageFileReader {
-  private static final ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-
   /**
    * Utility code, not instantiable
    */
@@ -45,7 +42,7 @@ class DefaultClassUsageFileReader {
 
   private static ImmutableMap<String, ImmutableList<String>> loadClassUsageMap(
       Path mapFilePath) throws IOException {
-    return objectMapper.readValue(
+    return ObjectMappers.readValue(
         mapFilePath.toFile(),
         new TypeReference<ImmutableMap<String, ImmutableList<String>>>() {
         });

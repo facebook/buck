@@ -93,7 +93,6 @@ import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipConstants;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
@@ -182,7 +181,6 @@ public class CachingBuildEngineTest {
           new NullFileHashCache(),
           DEFAULT_SOURCE_PATH_RESOLVER,
           DEFAULT_RULE_FINDER);
-  private static final ObjectMapper MAPPER = ObjectMappers.newDefaultInstance();
 
   public abstract static class CommonFixture extends EasyMockSupport {
     @Rule
@@ -214,7 +212,6 @@ public class CachingBuildEngineTest {
           .setArtifactCache(cache)
           .setBuildId(new BuildId())
           .setClock(new IncrementingFakeClock())
-          .setObjectMapper(ObjectMappers.newDefaultInstance())
           .build();
       buildContext.getEventBus().register(listener);
       resolver =
@@ -245,7 +242,6 @@ public class CachingBuildEngineTest {
           buildInfoStore,
           new DefaultClock(),
           new BuildId(),
-          ObjectMappers.newDefaultInstance(),
           ImmutableMap.of());
     }
   }
@@ -434,7 +430,7 @@ public class CachingBuildEngineTest {
           "Imagine this is the contents of a valid JAR file.",
           BuildInfo.getPathToMetadataDirectory(buildRule.getBuildTarget(), filesystem)
               .resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
-          MAPPER.writeValueAsString(ImmutableList.of()));
+          ObjectMappers.WRITER.writeValueAsString(ImmutableList.of()));
       expect(
           artifactCache.fetch(
               eq(defaultRuleKeyFactory.build(buildRule)),
@@ -454,7 +450,6 @@ public class CachingBuildEngineTest {
           .setClock(new DefaultClock())
           .setBuildId(new BuildId())
           .setArtifactCache(artifactCache)
-          .setObjectMapper(ObjectMappers.newDefaultInstance())
           .build();
 
       // Build the rule!
@@ -512,7 +507,7 @@ public class CachingBuildEngineTest {
           "Imagine this is the contents of a valid JAR file.",
           BuildInfo.getPathToMetadataDirectory(buildRule.getBuildTarget(), filesystem)
               .resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
-          MAPPER.writeValueAsString(ImmutableList.of()));
+          ObjectMappers.WRITER.writeValueAsString(ImmutableList.of()));
       expect(
           artifactCache.fetch(
               eq(defaultRuleKeyFactory.build(buildRule)),
@@ -530,7 +525,6 @@ public class CachingBuildEngineTest {
           .setClock(new DefaultClock())
           .setBuildId(new BuildId())
           .setArtifactCache(artifactCache)
-          .setObjectMapper(ObjectMappers.newDefaultInstance())
           .build();
 
       // Build the rule!
@@ -1378,7 +1372,7 @@ public class CachingBuildEngineTest {
 
       // Prepopulate the recorded paths metadata.
       filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(
+          ObjectMappers.WRITER.writeValueAsString(
               ImmutableList.of(
                   pathResolver.getRelativePath(rule.getSourcePathToOutput()).toString())),
           BuildInfo.getPathToMetadataDirectory(target, filesystem)
@@ -1391,7 +1385,7 @@ public class CachingBuildEngineTest {
           ImmutableMap.of(
               BuildInfo.getPathToMetadataDirectory(target, filesystem)
                   .resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
-              MAPPER.writeValueAsString(
+              ObjectMappers.WRITER.writeValueAsString(
                   ImmutableList.of(
                       pathResolver.getRelativePath(rule.getSourcePathToOutput()).toString())),
               pathResolver.getRelativePath(rule.getSourcePathToOutput()),
@@ -1490,7 +1484,7 @@ public class CachingBuildEngineTest {
 
       // Prepopulate the recorded paths metadata.
       filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(
+          ObjectMappers.WRITER.writeValueAsString(
               ImmutableList.of(
                   pathResolver.getRelativePath(rule.getSourcePathToOutput()).toString())),
           BuildInfo.getPathToMetadataDirectory(target, filesystem)
@@ -1662,7 +1656,8 @@ public class CachingBuildEngineTest {
       inspector.assertFileContents(
           BuildInfo.getPathToMetadataDirectory(target, filesystem)
               .resolve(BuildInfo.MetadataKey.DEP_FILE),
-          MAPPER.writeValueAsString(ImmutableList.of(fileToDepFileEntryString(input))));
+          ObjectMappers.WRITER.writeValueAsString(
+              ImmutableList.of(fileToDepFileEntryString(input))));
     }
 
     @Test
@@ -1882,7 +1877,7 @@ public class CachingBuildEngineTest {
 
       // Prepopulate the recorded paths metadata.
       filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of(output.toString())),
+          ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(output.toString())),
           BuildInfo.getPathToMetadataDirectory(target, filesystem)
               .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
 
@@ -1967,13 +1962,14 @@ public class CachingBuildEngineTest {
           BuildInfo.getPathToMetadataDirectory(target, filesystem)
               .resolve(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY));
       filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of(fileToDepFileEntryString(input))),
+          ObjectMappers.WRITER.writeValueAsString(
+              ImmutableList.of(fileToDepFileEntryString(input))),
           BuildInfo.getPathToMetadataDirectory(target, filesystem)
               .resolve(BuildInfo.MetadataKey.DEP_FILE));
 
       // Prepopulate the recorded paths metadata.
       filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of(output.toString())),
+          ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(output.toString())),
           BuildInfo.getPathToMetadataDirectory(target, filesystem)
               .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
 
@@ -2055,13 +2051,14 @@ public class CachingBuildEngineTest {
           BuildInfo.getPathToMetadataDirectory(target, filesystem)
               .resolve(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY));
       filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of(fileToDepFileEntryString(input))),
+          ObjectMappers.WRITER.writeValueAsString(
+              ImmutableList.of(fileToDepFileEntryString(input))),
           BuildInfo.getPathToMetadataDirectory(target, filesystem)
               .resolve(BuildInfo.MetadataKey.DEP_FILE));
 
       // Prepopulate the recorded paths metadata.
       filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of(output.toString())),
+          ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(output.toString())),
           BuildInfo.getPathToMetadataDirectory(target, filesystem)
               .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
 
@@ -2552,7 +2549,7 @@ public class CachingBuildEngineTest {
           ImmutableMap.of(
               BuildInfo.getPathToMetadataDirectory(target, filesystem)
                   .resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
-              MAPPER.writeValueAsString(ImmutableList.of(output.toString())),
+              ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(output.toString())),
               output,
               "stuff"));
       cache.store(
@@ -2563,7 +2560,7 @@ public class CachingBuildEngineTest {
                   depFileKey.getRuleKey().toString())
               .putMetadata(
                   BuildInfo.MetadataKey.DEP_FILE,
-                  MAPPER.writeValueAsString(
+                  ObjectMappers.WRITER.writeValueAsString(
                       depFileKey.getInputs().stream()
                           .map(pathResolver::getRelativePath)
                           .collect(MoreCollectors.toImmutableList())))
@@ -2591,7 +2588,7 @@ public class CachingBuildEngineTest {
         assertThat(
             cacheResult.getMetadata().get(BuildInfo.MetadataKey.DEP_FILE),
             equalTo(
-                MAPPER.writeValueAsString(
+                ObjectMappers.WRITER.writeValueAsString(
                     depFileKey.getInputs().stream()
                         .map(pathResolver::getRelativePath)
                         .collect(MoreCollectors.toImmutableList()))));
@@ -3088,7 +3085,7 @@ public class CachingBuildEngineTest {
     DependencyFileEntry entry = DependencyFileEntry.of(file, Optional.empty());
 
     try {
-      return MAPPER.writeValueAsString(entry);
+      return ObjectMappers.WRITER.writeValueAsString(entry);
     } catch (JsonProcessingException e) {
       throw new AssertionError(e);
     }

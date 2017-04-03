@@ -17,7 +17,6 @@
 package com.facebook.buck.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.util.function.Function;
@@ -25,22 +24,20 @@ import java.util.function.Function;
 public abstract class MoreFunctions {
   private MoreFunctions() {}
 
-  public static <T> Function<T, String> toJsonFunction(final ObjectMapper mapper) {
+  public static <T> Function<T, String> toJsonFunction() {
     return input -> {
       try {
-        return mapper.writeValueAsString(input);
+        return ObjectMappers.WRITER.writeValueAsString(input);
       } catch (JsonProcessingException e) {
         throw new HumanReadableException(e, "Failed to serialize to json: " + input);
       }
     };
   }
 
-  public static <T> Function<String, T> fromJsonFunction(
-      final ObjectMapper mapper,
-      final Class<T> type) {
+  public static <T> Function<String, T> fromJsonFunction(final Class<T> type) {
     return input -> {
       try {
-        return mapper.readValue(input, type);
+        return ObjectMappers.readValue(input, type);
       } catch (IOException e) {
         throw new HumanReadableException(e, "Failed to read from json: " + input);
       }

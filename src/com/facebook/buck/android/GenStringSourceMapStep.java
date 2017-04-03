@@ -24,7 +24,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.XmlDomParser;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
@@ -147,8 +146,9 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
     // write nativeStrings out to a file
     Path outputPath = destinationPath.resolve("strings.json");
     try {
-      ObjectMapper mapper = ObjectMappers.newDefaultInstance();
-      mapper.writeValue(filesystem.getPathForRelativePath(outputPath).toFile(), nativeStrings);
+      ObjectMappers.WRITER.writeValue(
+          filesystem.getPathForRelativePath(outputPath).toFile(),
+          nativeStrings);
     } catch (IOException ex) {
       context.logError(
           ex, "Failed when trying to save the output file: '%s'", outputPath.toString());

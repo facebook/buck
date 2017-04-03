@@ -28,7 +28,6 @@ import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matchers;
@@ -69,7 +68,6 @@ public class DefectReporterTest {
     Clock clock = new DefaultClock();
     DefectReporter reporter = new DefaultDefectReporter(
         filesystem,
-        ObjectMappers.newDefaultInstance(),
         config,
         BuckEventBusFactory.newInstance(clock),
         clock);
@@ -94,12 +92,10 @@ public class DefectReporterTest {
   @Test
   public void testAttachesReport() throws Exception {
     ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
-    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
     RageConfig config = RageConfig.of(FakeBuckConfig.builder().build());
     Clock clock = new DefaultClock();
     DefectReporter reporter = new DefaultDefectReporter(
         filesystem,
-        objectMapper,
         config,
         BuckEventBusFactory.newInstance(clock),
         clock);
@@ -113,7 +109,7 @@ public class DefectReporterTest {
     Path reportPath = filesystem.resolve(defectSubmitResult.getReportSubmitLocation().get());
     try (ZipFile zipFile = new ZipFile(reportPath.toFile())) {
       ZipEntry entry = zipFile.getEntry("report.json");
-      JsonNode reportNode = objectMapper.readTree(zipFile.getInputStream(entry));
+      JsonNode reportNode = ObjectMappers.READER.readTree(zipFile.getInputStream(entry));
       assertThat(
           reportNode.get("buildEnvironmentDescription").get("user").asText(),
           Matchers.equalTo("test_user"));

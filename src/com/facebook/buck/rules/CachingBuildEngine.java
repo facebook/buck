@@ -58,7 +58,6 @@ import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.zip.Unzip;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
@@ -153,7 +152,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private final MetadataStorage metadataStorage;
   private final DepFiles depFiles;
   private final long maxDepFileCacheEntries;
-  private final ObjectMapper objectMapper;
   private final BuildRuleResolver resolver;
   private final SourcePathRuleFinder ruleFinder;
   private final SourcePathResolver pathResolver;
@@ -179,7 +177,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       DepFiles depFiles,
       long maxDepFileCacheEntries,
       Optional<Long> artifactCacheSizeLimit,
-      ObjectMapper objectMapper,
       final BuildRuleResolver resolver,
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
       RuleKeyFactories ruleKeyFactories) {
@@ -193,7 +190,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.depFiles = depFiles;
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
-    this.objectMapper = objectMapper;
     this.resolver = resolver;
     this.ruleFinder = new SourcePathRuleFinder(resolver);
     this.pathResolver = new SourcePathResolver(ruleFinder);
@@ -240,7 +236,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.depFiles = depFiles;
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
-    this.objectMapper = ObjectMappers.newDefaultInstance();
     this.resolver = resolver;
     this.ruleFinder = ruleFinder;
     this.pathResolver = pathResolver;
@@ -668,7 +663,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
     // Extract the recorded path hashes map.
     ImmutableMap<String, String> recordedPathHashes =
-        objectMapper.readValue(
+        ObjectMappers.readValue(
             recordedPathHashesBlob,
             new TypeReference<ImmutableMap<String, String>>() {});
 
@@ -815,7 +810,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             ImmutableList<String> inputStrings =
                 inputs.stream()
                 .map(inputString -> DependencyFileEntry.fromSourcePath(inputString, pathResolver))
-                .map(MoreFunctions.toJsonFunction(objectMapper))
+                .map(MoreFunctions.toJsonFunction())
                 .collect(MoreCollectors.toImmutableList());
             buildInfoRecorder.addMetadata(
                 BuildInfo.MetadataKey.DEP_FILE,
@@ -1667,7 +1662,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     // Build the dep-file rule key.  If any inputs are no longer on disk, this means something
     // changed and a dep-file based rule key can't be calculated.
     ImmutableList<DependencyFileEntry> inputs = depFile.get().stream()
-        .map(MoreFunctions.fromJsonFunction(objectMapper, DependencyFileEntry.class))
+        .map(MoreFunctions.fromJsonFunction(DependencyFileEntry.class))
         .collect(MoreCollectors.toImmutableList());
 
     try (BuckEvent.Scope scope =

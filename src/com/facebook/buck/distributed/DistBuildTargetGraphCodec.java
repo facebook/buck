@@ -32,8 +32,8 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -52,17 +52,14 @@ import java.util.stream.Collectors;
  */
 public class DistBuildTargetGraphCodec {
 
-  private final ObjectMapper objectMapper;
   private final ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory;
   private final Function<? super TargetNode<?, ?>, ? extends Map<String, Object>> nodeToRawNode;
   private Set<String> topLevelTargets;
 
   public DistBuildTargetGraphCodec(
-      ObjectMapper objectMapper,
       ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory,
       Function<? super TargetNode<?, ?>, ? extends Map<String, Object>> nodeToRawNode,
       Set<String> topLevelTargets) {
-    this.objectMapper = objectMapper;
     this.parserTargetNodeFactory = parserTargetNodeFactory;
     this.nodeToRawNode = nodeToRawNode;
     this.topLevelTargets = topLevelTargets;
@@ -82,7 +79,7 @@ public class DistBuildTargetGraphCodec {
       remoteNode.setCellIndex(cellIndexer.apply(projectFilesystem.getRootPath()));
       remoteNode.setBuildTarget(encodeBuildTarget(targetNode.getBuildTarget()));
       try {
-        remoteNode.setRawNode(objectMapper.writeValueAsString(rawTargetNode));
+        remoteNode.setRawNode(ObjectMappers.WRITER.writeValueAsString(rawTargetNode));
       } catch (JsonProcessingException e) {
         throw new RuntimeException(e);
       }
@@ -144,7 +141,7 @@ public class DistBuildTargetGraphCodec {
       }
 
       @SuppressWarnings("unchecked")
-      Map<String, Object> rawNode = objectMapper.readValue(remoteNode.getRawNode(), Map.class);
+      Map<String, Object> rawNode = ObjectMappers.readValue(remoteNode.getRawNode(), Map.class);
       Path buildFilePath = projectFilesystem
           .resolve(target.getBasePath())
           .resolve(cell.getBuildFileName());

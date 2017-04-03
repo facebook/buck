@@ -171,7 +171,6 @@ public class JavacStep implements Step {
           new JavacEventSinkToBuckEventBusBridge(firstOrderContext.getBuckEventBus()),
           stderr,
           firstOrderContext.getClassLoaderCache(),
-          firstOrderContext.getObjectMapper(),
           verbosity,
           firstOrderContext.getCellPathResolver(),
           firstOrderContext.getJavaPackageFinder(),

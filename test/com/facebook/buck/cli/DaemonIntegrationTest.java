@@ -38,7 +38,6 @@ import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.environment.CommandMode;
 import com.facebook.buck.util.environment.Platform;
@@ -572,8 +571,7 @@ public class DaemonIntegrationTest {
             FakeBuckConfig.builder().setSections(
                 ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))).build())
             .setFilesystem(filesystem)
-            .build(),
-        ObjectMappers.newDefaultInstance());
+            .build());
 
     assertEquals(
         "Daemon should not be replaced when config equal.", daemon,
@@ -584,8 +582,7 @@ public class DaemonIntegrationTest {
                         ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue")))
                     .build())
                 .setFilesystem(filesystem)
-                .build(),
-            ObjectMappers.newDefaultInstance()));
+                .build()));
 
     assertNotEquals(
         "Daemon should be replaced when config not equal.", daemon,
@@ -596,8 +593,7 @@ public class DaemonIntegrationTest {
                         "somesection",
                         ImmutableMap.of("somename", "someothervalue"))).build())
                 .setFilesystem(filesystem)
-                .build(),
-            ObjectMappers.newDefaultInstance()));
+                .build()));
   }
 
   @Test
@@ -674,8 +670,7 @@ public class DaemonIntegrationTest {
         new TestCellBuilder()
             .setBuckConfig(buckConfig1)
             .setFilesystem(filesystem)
-            .build(),
-        ObjectMappers.newDefaultInstance());
+            .build());
 
     assertNotEquals(
         "Daemon should be replaced when not equal.", daemon,
@@ -683,7 +678,6 @@ public class DaemonIntegrationTest {
             new TestCellBuilder()
                 .setBuckConfig(buckConfig2)
                 .setFilesystem(filesystem)
-                .build(),
-            ObjectMappers.newDefaultInstance()));
+                .build()));
   }
 }

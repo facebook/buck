@@ -25,10 +25,8 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.ContextualProcessExecutor;
 import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -55,7 +53,6 @@ public class JavacExecutionContextSerializerTest {
         BuckEventBusFactory.newInstance());
     PrintStream stdErr = new PrintStream(new ByteArrayOutputStream());
     ClassLoaderCache classLoaderCache = new ClassLoaderCache();
-    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
     Verbosity verbosity = Verbosity.COMMANDS_AND_OUTPUT;
     DefaultCellPathResolver cellPathResolver = new DefaultCellPathResolver(
         Paths.get("/some/cell/path/resolver/path"),
@@ -86,7 +83,6 @@ public class JavacExecutionContextSerializerTest {
         eventSink,
         stdErr,
         classLoaderCache,
-        objectMapper,
         verbosity,
         cellPathResolver,
         javaPackageFinder,
@@ -102,13 +98,11 @@ public class JavacExecutionContextSerializerTest {
         eventSink,
         stdErr,
         classLoaderCache,
-        objectMapper,
         new TestConsole());
 
     assertThat(output.getEventSink(), Matchers.equalTo(eventSink));
     assertThat(output.getStdErr(), Matchers.equalTo(stdErr));
     assertThat(output.getClassLoaderCache(), Matchers.equalTo(classLoaderCache));
-    assertThat(output.getObjectMapper(), Matchers.equalTo(objectMapper));
     assertThat(output.getVerbosity(), Matchers.equalTo(verbosity));
 
     assertThat(output.getCellPathResolver(), Matchers.instanceOf(DefaultCellPathResolver.class));

@@ -28,8 +28,8 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.timing.Clock;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -85,7 +85,6 @@ public class BuildInfoRecorder {
   private final BuildInfoStore buildInfoStore;
   private final Clock clock;
   private final BuildId buildId;
-  private final ObjectMapper objectMapper;
   private final ImmutableMap<String, String> artifactExtraData;
   private final Map<String, String> metadataToWrite;
   private final Map<String, String> buildMetadata;
@@ -102,7 +101,6 @@ public class BuildInfoRecorder {
       BuildInfoStore buildInfoStore,
       Clock clock,
       BuildId buildId,
-      ObjectMapper objectMapper,
       ImmutableMap<String, String> environment) {
     this.buildTarget = buildTarget;
     this.pathToMetadataDirectory =
@@ -111,7 +109,6 @@ public class BuildInfoRecorder {
     this.buildInfoStore = buildInfoStore;
     this.clock = clock;
     this.buildId = buildId;
-    this.objectMapper = objectMapper;
 
     this.artifactExtraData =
         ImmutableMap.<String, String>builder()
@@ -128,7 +125,7 @@ public class BuildInfoRecorder {
 
   private String toJson(Object value) {
     try {
-      return objectMapper.writeValueAsString(value);
+      return ObjectMappers.WRITER.writeValueAsString(value);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

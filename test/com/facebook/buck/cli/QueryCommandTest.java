@@ -31,9 +31,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -87,7 +85,6 @@ public class QueryCommandTest {
     AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
-    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
 
     queryCommand = new QueryCommand();
     queryCommand.outputAttributes = Suppliers.ofInstance(ImmutableSet.<String>of());
@@ -101,7 +98,6 @@ public class QueryCommandTest {
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()),
         new FakeJavaPackageFinder(),
-        objectMapper,
         Optional.empty());
     executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
   }

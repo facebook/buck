@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
@@ -76,7 +77,7 @@ public class ServerStatusCommand extends AbstractCommand {
     Console console = params.getConsole();
 
     if (isPrintJson()) {
-      console.getStdOut().println(params.getObjectMapper().writeValueAsString(values));
+      console.getStdOut().println(ObjectMappers.WRITER.writeValueAsString(values));
     } else {
       for (Map.Entry<String, Object> entry : values.entrySet()) {
         console.getStdOut().printf("%s=%s%n", entry.getKey(), entry.getValue());

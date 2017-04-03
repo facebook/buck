@@ -38,7 +38,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -47,7 +46,6 @@ import com.google.common.io.ByteStreams;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.hamcrest.Matchers;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -66,8 +64,6 @@ public class RageCommandIntegrationTest {
 
   private static final String UPLOAD_PATH = "/rage";
 
-  private ObjectMapper objectMapper;
-
   @Rule
   public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
@@ -78,11 +74,6 @@ public class RageCommandIntegrationTest {
           "2016-06-21_16h16m24s_buildcommand_ac8bd626-6137-4747-84dd-5d4f215c876c/";
   private static final String AUTODEPS_COMMAND_DIR_PATH = "buck-out/log/" +
           "2016-06-21_16h18m51s_autodepscommand_d09893d5-b11e-4e3f-a5bf-70c60a06896e/";
-
-  @Before
-  public void setUp() throws Exception {
-    objectMapper = ObjectMappers.newDefaultInstance();
-  }
 
   @Test
   public void testRageNonInteractiveReport() throws Exception {
@@ -136,14 +127,12 @@ public class RageCommandIntegrationTest {
       ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
       Clock clock = new DefaultClock();
       DefectReporter reporter = new DefaultDefectReporter(filesystem,
-          objectMapper,
           rageConfig,
           BuckEventBusFactory.newInstance(clock),
           clock);
       AutomatedReport automatedReport = new AutomatedReport(
           reporter,
           filesystem,
-          objectMapper,
           new TestConsole(),
           TestBuildEnvironmentDescription.INSTANCE,
           VcsInfoCollector.create(new NoOpCmdLineInterface()),
@@ -191,7 +180,6 @@ public class RageCommandIntegrationTest {
     AutomatedReport automatedReport = new AutomatedReport(
         defectReporter,
         filesystem,
-        ObjectMappers.newDefaultInstance(),
         new TestConsole(),
         TestBuildEnvironmentDescription.INSTANCE,
         VcsInfoCollector.create(new NoOpCmdLineInterface()),
@@ -232,18 +220,15 @@ public class RageCommandIntegrationTest {
           "",
           RageProtocolVersion.SIMPLE);
       ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
-      ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
       Clock clock = new DefaultClock();
       DefectReporter reporter = new DefaultDefectReporter(
           filesystem,
-          objectMapper,
           rageConfig,
           BuckEventBusFactory.newInstance(clock),
           clock);
       AutomatedReport automatedReport = new AutomatedReport(
           reporter,
           filesystem,
-          objectMapper,
           new TestConsole(),
           TestBuildEnvironmentDescription.INSTANCE,
           VcsInfoCollector.create(new NoOpCmdLineInterface()),
@@ -288,7 +273,7 @@ public class RageCommandIntegrationTest {
                   /* message */ Optional.of("This is supposed to be JSON."));
               try (DataOutputStream out =
                        new DataOutputStream(httpResponse.getOutputStream())) {
-                objectMapper.writeValue(out, json);
+                ObjectMappers.WRITER.writeValue(out, json);
               }
             }
           });
@@ -299,18 +284,15 @@ public class RageCommandIntegrationTest {
           "",
           RageProtocolVersion.JSON);
       ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
-      ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
       Clock clock = new DefaultClock();
       DefectReporter reporter = new DefaultDefectReporter(
           filesystem,
-          objectMapper,
           rageConfig,
           BuckEventBusFactory.newInstance(clock),
           clock);
       AutomatedReport automatedReport = new AutomatedReport(
           reporter,
           filesystem,
-          objectMapper,
           new TestConsole(),
           TestBuildEnvironmentDescription.INSTANCE,
           VcsInfoCollector.create(new NoOpCmdLineInterface()),

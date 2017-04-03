@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.query.QueryTarget;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableSet;
@@ -37,7 +38,7 @@ public abstract class CommandHelper {
         Multimaps.transformValues(
             targetsAndResults,
             input -> Preconditions.checkNotNull(input.toString()));
-    params.getObjectMapper().writeValue(
+    ObjectMappers.WRITER.writeValue(
         params.getConsole().getStdOut(),
         targetsAndResultsNames.asMap());
   }
@@ -49,7 +50,7 @@ public abstract class CommandHelper {
         Collections2.transform(
             targets,
             input -> Preconditions.checkNotNull(input.toString())));
-    params.getObjectMapper().writeValue(
+    ObjectMappers.WRITER.writeValue(
         params.getConsole().getStdOut(),
         targetsNames);
   }

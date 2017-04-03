@@ -37,7 +37,6 @@ import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -63,7 +62,7 @@ import java.util.Set;
 
 public class TypeCoercerTest {
   private final TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
-      ObjectMappers.newDefaultInstance());
+  );
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
   private final CellPathResolver cellRoots = new FakeCellPathResolver(filesystem);
 

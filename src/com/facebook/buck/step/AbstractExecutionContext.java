@@ -37,7 +37,6 @@ import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
 import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
@@ -71,9 +70,6 @@ abstract class AbstractExecutionContext implements Closeable {
 
   @Value.Parameter
   abstract JavaPackageFinder getJavaPackageFinder();
-
-  @Value.Parameter
-  abstract ObjectMapper getObjectMapper();
 
   @Value.Parameter
   abstract Map<ExecutorPool, ListeningExecutorService> getExecutors();

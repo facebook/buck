@@ -41,7 +41,6 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -76,8 +75,6 @@ import javax.annotation.Nullable;
  */
 public class DexProducedFromJavaLibrary extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, InitializableFromDisk<BuildOutput> {
-
-  private static final ObjectMapper MAPPER = ObjectMappers.newDefaultInstance();
 
   @VisibleForTesting
   static final String WEIGHT_ESTIMATE = "weight_estimate";
@@ -176,7 +173,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
         // Record the classnames to hashes map.
         buildableContext.addMetadata(
             CLASSNAMES_TO_HASHES,
-            context.getObjectMapper().writeValueAsString(
+            ObjectMappers.WRITER.writeValueAsString(
                 Maps.transformValues(classNamesToHashes, Object::toString)));
 
         return StepExecutionResult.SUCCESS;
@@ -192,7 +189,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
     int weightEstimate = Integer.parseInt(
         onDiskBuildInfo.getValue(WEIGHT_ESTIMATE).get());
     Map<String, String> map =
-        MAPPER.readValue(
+        ObjectMappers.readValue(
             onDiskBuildInfo.getValue(CLASSNAMES_TO_HASHES).get(),
             new TypeReference<Map<String, String>>() {
             });

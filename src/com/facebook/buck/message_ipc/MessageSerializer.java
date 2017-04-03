@@ -16,9 +16,9 @@
 
 package com.facebook.buck.message_ipc;
 
+import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
@@ -31,23 +31,18 @@ public class MessageSerializer {
   private static final String NAME = "name";
   private static final String ARGS = "args";
   private static final String VALUE = "value";
-  private final ObjectMapper objectMapper;
-
-  public MessageSerializer(ObjectMapper objectMapper) {
-    this.objectMapper = objectMapper;
-  }
 
   public String serializeInvocation(InvocationMessage invocation) throws JsonProcessingException {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
     builder.put(TYPE, InvocationMessage.class.getSimpleName());
     builder.put(NAME, invocation.getMethodName());
     builder.put(ARGS, invocation.getArguments());
-    return objectMapper.writeValueAsString(builder.build());
+    return ObjectMappers.WRITER.writeValueAsString(builder.build());
   }
 
   @SuppressWarnings("unchecked")
   public InvocationMessage deserializeInvocation(String data) throws IOException {
-    Map<String, Object> rep = objectMapper.readValue(
+    Map<String, Object> rep = ObjectMappers.readValue(
         data,
         new TypeReference<Map<String, Object>>() {});
     String type = (String) checkHasField(rep, TYPE, data);
@@ -61,11 +56,11 @@ public class MessageSerializer {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
     builder.put(TYPE, ReturnResultMessage.class.getSimpleName());
     builder.put(VALUE, message.getValue());
-    return objectMapper.writeValueAsString(builder.build());
+    return ObjectMappers.WRITER.writeValueAsString(builder.build());
   }
 
   public ReturnResultMessage deserializeResult(String data) throws IOException {
-    Map<String, Object> rep = objectMapper.readValue(
+    Map<String, Object> rep = ObjectMappers.readValue(
         data,
         new TypeReference<Map<String, Object>>() {});
     String type = (String) checkHasField(rep, TYPE, data);

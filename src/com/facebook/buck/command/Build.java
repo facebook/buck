@@ -56,7 +56,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -98,7 +97,6 @@ public class Build implements Closeable {
   private final BuildEngine buildEngine;
   private final JavaPackageFinder javaPackageFinder;
   private final Clock clock;
-  private final ObjectMapper objectMapper;
 
   public Build(
       ActionGraph actionGraph,
@@ -119,7 +117,6 @@ public class Build implements Closeable {
       BuckEventBus eventBus,
       Platform platform,
       ImmutableMap<String, String> environment,
-      ObjectMapper objectMapper,
       Clock clock,
       ConcurrencyLimit concurrencyLimit,
       Optional<AdbOptions> adbOptions,
@@ -143,7 +140,6 @@ public class Build implements Closeable {
         .setPlatform(platform)
         .setEnvironment(environment)
         .setJavaPackageFinder(javaPackageFinder)
-        .setObjectMapper(objectMapper)
         .setConcurrencyLimit(concurrencyLimit)
         .setAdbOptions(adbOptions)
         .setPersistentWorkerPools(persistentWorkerPools)
@@ -155,7 +151,6 @@ public class Build implements Closeable {
     this.buildEngine = buildEngine;
     this.javaPackageFinder = javaPackageFinder;
     this.clock = clock;
-    this.objectMapper = objectMapper;
   }
 
   public BuildRuleResolver getRuleResolver() {
@@ -239,7 +234,6 @@ public class Build implements Closeable {
         .setClock(clock)
         .setArtifactCache(artifactCache)
         .setBuildId(buildId)
-        .setObjectMapper(objectMapper)
         .putAllEnvironment(executionContext.getEnvironment())
         .setKeepGoing(isKeepGoing)
         .build();

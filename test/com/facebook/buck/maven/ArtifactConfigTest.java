@@ -17,14 +17,14 @@
 package com.facebook.buck.maven;
 
 
-import org.junit.Test;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.Lists;
+
+import org.junit.Test;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.IOException;
 
@@ -40,8 +40,7 @@ public class ArtifactConfigTest {
           "\"visibility\":[\"r1\"]," +
           "\"artifacts\":[\"artifact1\"]}";
 
-    ArtifactConfig base = ObjectMappers.newDefaultInstance()
-        .readValue(jsonString, ArtifactConfig.class);
+    ArtifactConfig base = ObjectMappers.readValue(jsonString, ArtifactConfig.class);
 
 
     ArtifactConfig.CmdLineArgs args = new ArtifactConfig.CmdLineArgs();

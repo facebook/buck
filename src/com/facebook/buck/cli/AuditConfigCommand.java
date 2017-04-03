@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableListMultimap;
@@ -157,7 +158,7 @@ public class AuditConfigCommand extends AbstractCommand {
       jsBuilder.put(config.getKey(), config.getValue());
     }
 
-    params.getObjectMapper().writeValue(params.getConsole().getStdOut(), jsBuilder.build());
+    ObjectMappers.WRITER.writeValue(params.getConsole().getStdOut(), jsBuilder.build());
   }
 
   private void printBuckconfigOutput(

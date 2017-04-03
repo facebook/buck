@@ -19,6 +19,7 @@ package com.facebook.buck.python;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -138,7 +139,7 @@ public class PexStep extends ShellStep {
     }
     try {
       return Optional.of(
-          context.getObjectMapper().writeValueAsString(
+          ObjectMappers.WRITER.writeValueAsString(
               ImmutableMap.of(
                   "modules", modulesBuilder.build(),
                   "resources", resourcesBuilder.build(),

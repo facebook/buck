@@ -39,7 +39,6 @@ import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.Verbosity;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 
@@ -136,8 +135,7 @@ public class BuildCommandTest {
 
   @Test
   public void testGenerateJsonBuildReport() throws IOException {
-    ObjectMapper mapper = ObjectMappers.newDefaultInstance();
-    String rule1TxtPath = mapper.valueToTree(
+    String rule1TxtPath = ObjectMappers.legacyCreate().valueToTree(
         MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt")
     ).toString();
     String expectedReport = Joiner.on(System.lineSeparator()).join(

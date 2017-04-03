@@ -25,7 +25,6 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -40,8 +39,6 @@ import java.nio.file.Paths;
  * Tests for AndroidLibraryDescription with query_deps
  */
 public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest {
-  private final ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-
   @Rule
   public TemporaryPaths tmpFolder = new TemporaryPaths();
   private ProjectWorkspace workspace;
@@ -205,7 +202,7 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest {
       ProjectWorkspace.ProcessResult buildResult =
           workspace.runBuckCommand("targets", targetName, "--show-full-output", "--json");
       buildResult.assertSuccess();
-      JsonNode jsonNode = objectMapper.reader().readTree(buildResult.getStdout()).get(0);
+      JsonNode jsonNode = ObjectMappers.READER.readTree(buildResult.getStdout()).get(0);
       assert jsonNode.has("buck.outputPath");
       return Paths.get(jsonNode.get("buck.outputPath").asText());
     } catch (Exception e) {

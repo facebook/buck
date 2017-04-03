@@ -44,8 +44,8 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -192,8 +192,7 @@ public class PythonTest
       Optional<String> resultsFileContents =
           getProjectFilesystem().readFileIfItExists(
               getPathToTestOutputResult());
-      ObjectMapper mapper = executionContext.getObjectMapper();
-      TestResultSummary[] testResultSummaries = mapper.readValue(
+      TestResultSummary[] testResultSummaries = ObjectMappers.readValue(
           resultsFileContents.get(),
           TestResultSummary[].class);
       return TestResults.of(

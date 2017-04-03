@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java.autodeps;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.util.ObjectMappers;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -48,9 +47,8 @@ public class SymbolsTest {
         "com.example.Exported3");
     Symbols symbols = new Symbols(providedSymbols, requiredSymbols, exportedSymbols);
 
-    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
     StringWriter writer = new StringWriter();
-    objectMapper.writeValue(writer, symbols);
+    ObjectMappers.WRITER.writeValue(writer, symbols);
 
     assertEquals(
         "{\"provided\":" +
@@ -62,7 +60,7 @@ public class SymbolsTest {
         writer.toString()
     );
 
-    Symbols restoredSymbols = objectMapper.readValue(writer.toString(), Symbols.class);
+    Symbols restoredSymbols = ObjectMappers.readValue(writer.toString(), Symbols.class);
     // We compare using lists to ensure order was preserved.
     assertEquals(
         ImmutableList.copyOf(providedSymbols),

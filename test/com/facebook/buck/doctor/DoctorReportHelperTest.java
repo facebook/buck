@@ -26,8 +26,6 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ObjectMappers;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -43,13 +41,11 @@ public class DoctorReportHelperTest {
   public TemporaryPaths tempFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
-  private ObjectMapper objectMapper;
 
   @Before
   public void setUp() throws Exception {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "report", tempFolder);
     workspace.setUp();
-    objectMapper = ObjectMappers.newDefaultInstance();
   }
 
   @Test
@@ -65,7 +61,6 @@ public class DoctorReportHelperTest {
         workspace.asCell().getFilesystem(),
         (new UserInputFixture("0")).getUserInput(),
         console,
-        objectMapper,
         doctorConfig);
 
     String errorMessage = "This is an error message.";
@@ -90,7 +85,6 @@ public class DoctorReportHelperTest {
         workspace.asCell().getFilesystem(),
         (new UserInputFixture("0")).getUserInput(),
         console,
-        objectMapper,
         doctorConfig);
 
     DoctorEndpointResponse response = DoctorEndpointResponse.of(

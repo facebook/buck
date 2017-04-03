@@ -71,7 +71,6 @@ public class AuditInputCommandTest {
     Cell cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
-    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
 
     auditInputCommand = new AuditInputCommand();
     params = CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
@@ -84,26 +83,25 @@ public class AuditInputCommandTest {
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()),
         new FakeJavaPackageFinder(),
-        objectMapper,
         Optional.empty());
   }
 
   @Test
   public void testJsonClassPathOutput() throws IOException {
-    ObjectMapper mapper = ObjectMappers.newDefaultInstance();
+    ObjectMapper objectMapper = ObjectMappers.legacyCreate();
     final String expectedJson = Joiner.on("").join(
         "{",
         "\"//:test-android-library\":",
         "[",
-        mapper.valueToTree(
+        objectMapper.valueToTree(
             MorePaths.pathWithPlatformSeparators("src/com/facebook/AndroidLibraryTwo.java")),
         ",",
-        mapper.valueToTree(
+        objectMapper.valueToTree(
             MorePaths.pathWithPlatformSeparators("src/com/facebook/TestAndroidLibrary.java")),
         "],",
         "\"//:test-java-library\":",
         "[",
-        mapper.valueToTree(
+        objectMapper.valueToTree(
             MorePaths.pathWithPlatformSeparators("src/com/facebook/TestJavaLibrary.java")),
         "]",
         "}");
@@ -150,7 +148,6 @@ public class AuditInputCommandTest {
 
   @Test
   public void testJsonContainsRulesWithNoFiles() throws IOException {
-    ObjectMapper mapper = ObjectMappers.newDefaultInstance();
     final String expectedJson = Joiner.on("").join(
         "{",
         "\"//:test-exported-dep\":",
@@ -158,7 +155,7 @@ public class AuditInputCommandTest {
         "],",
         "\"//:test-java-library\":",
         "[",
-        mapper.valueToTree(
+        ObjectMappers.legacyCreate().valueToTree(
             MorePaths.pathWithPlatformSeparators("src/com/facebook/TestJavaLibrary.java")
         ),
         "]",

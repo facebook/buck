@@ -54,7 +54,6 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.ObjectMappers;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -252,7 +251,6 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     DexProducedFromJavaLibrary dexProducedFromJavaLibrary =
         new DexProducedFromJavaLibrary(params, javaLibrary);
 
-    ObjectMapper mapper = ObjectMappers.newDefaultInstance();
     FakeOnDiskBuildInfo onDiskBuildInfo =
         new FakeOnDiskBuildInfo()
             .putMetadata(
@@ -260,7 +258,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
                 "0")
             .putMetadata(
                 DexProducedFromJavaLibrary.CLASSNAMES_TO_HASHES,
-                mapper.writeValueAsString(ImmutableMap.<String, String>of()));
+                ObjectMappers.WRITER.writeValueAsString(ImmutableMap.<String, String>of()));
     initialize(dexProducedFromJavaLibrary, onDiskBuildInfo);
 
     assertFalse(dexProducedFromJavaLibrary.hasOutput());

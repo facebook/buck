@@ -20,10 +20,9 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.autodeps.DepsForBuildFiles.DependencyType;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ObjectMappers;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.Rule;
@@ -83,7 +82,6 @@ public class AutodepsWriterTest {
         depsForBuildFiles,
         /* buildFileName */ "BUCK",
         /* includeSignature */ true,
-        ObjectMappers.newDefaultInstance(),
         MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
         /* numThreads */ 1);
     workspace.verify();

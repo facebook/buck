@@ -30,6 +30,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -160,7 +161,7 @@ public class AuditInputCommand extends AbstractCommand {
       }
     }.traverse();
 
-    params.getObjectMapper().writeValue(
+    ObjectMappers.WRITER.writeValue(
         params.getConsole().getStdOut(),
         targetToInputs);
 

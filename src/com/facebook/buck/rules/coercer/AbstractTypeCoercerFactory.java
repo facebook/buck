@@ -32,9 +32,6 @@ import com.facebook.buck.rules.macros.ClasspathMacro;
 import com.facebook.buck.rules.macros.ExecutableMacro;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.MavenCoordinatesMacro;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -60,14 +57,8 @@ public class AbstractTypeCoercerFactory implements TypeCoercerFactory {
   private final TypeCoercer<Pattern> patternTypeCoercer = new PatternTypeCoercer();
 
   private final TypeCoercer<?>[] nonParameterizedTypeCoercers;
-  private final ObjectMapper jacksonObjectMapper;
 
-  public AbstractTypeCoercerFactory(ObjectMapper mapper, PathTypeCoercer pathTypeCoercer) {
-    // Cached instance for any type coercers that utilize Jackson
-    jacksonObjectMapper = mapper.copy()
-        .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE)
-        .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-
+  public AbstractTypeCoercerFactory(PathTypeCoercer pathTypeCoercer) {
     TypeCoercer<String> stringTypeCoercer = new IdentityTypeCoercer<>(String.class);
     TypeCoercer<Flavor> flavorTypeCoercer = new FlavorTypeCoercer();
     TypeCoercer<Label> labelTypeCoercer = new LabelTypeCoercer();
@@ -138,7 +129,7 @@ public class AbstractTypeCoercerFactory implements TypeCoercerFactory {
         new SourceWithFlagsListTypeCoercer(stringTypeCoercer, sourceWithFlagsTypeCoercer),
         new SourceListTypeCoercer(stringTypeCoercer, sourcePathTypeCoercer),
         new LogLevelTypeCoercer(),
-        new ManifestEntriesTypeCoercer(jacksonObjectMapper),
+        new ManifestEntriesTypeCoercer(),
         patternTypeCoercer,
         neededCoverageSpecTypeCoercer,
         new ConstraintTypeCoercer(),

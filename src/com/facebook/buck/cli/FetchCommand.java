@@ -124,7 +124,6 @@ public class FetchCommand extends BuildCommand {
                cachingBuildEngineBuckConfig.getBuildDepFiles(),
                cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
                cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
-               params.getObjectMapper(),
                actionGraphAndResolver.getResolver(),
                cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
                RuleKeyFactories.of(
@@ -147,7 +146,6 @@ public class FetchCommand extends BuildCommand {
                params.getPersistentWorkerPools(),
                params.getPlatform(),
                params.getEnvironment(),
-               params.getObjectMapper(),
                params.getClock(),
                Optional.empty(),
                Optional.empty(),

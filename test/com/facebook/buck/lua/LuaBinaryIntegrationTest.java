@@ -52,7 +52,6 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -258,9 +257,8 @@ public class LuaBinaryIntegrationTest {
             "-c", "lua.package_style=standalone",
             "-c", "lua.packager=//:packager",
             "//:simple");
-    ObjectMapper mapper = ObjectMappers.newDefaultInstance();
     ImmutableMap<String, ImmutableMap<String, String>> components =
-        mapper.readValue(
+        ObjectMappers.readValue(
             output.toFile(),
             new TypeReference<ImmutableMap<String, ImmutableMap<String, String>>>() {});
     assertThat(

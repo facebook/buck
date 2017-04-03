@@ -30,7 +30,6 @@ import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.immutables.value.Value;
@@ -41,8 +40,6 @@ import java.util.Map;
 @BuckStyleImmutable
 abstract class AbstractDistBuildExecutorArgs {
   public abstract DistBuildState getState();
-
-  public abstract ObjectMapper getObjectMapper();
 
   public abstract Cell getRootCell();
 

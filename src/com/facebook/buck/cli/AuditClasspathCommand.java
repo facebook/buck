@@ -37,6 +37,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -233,7 +234,7 @@ public class AuditClasspathCommand extends AbstractCommand {
     }
 
     // Note: using `asMap` here ensures that the keys are sorted
-    params.getObjectMapper().writeValue(params.getConsole().getStdOut(), targetClasspaths.asMap());
+    ObjectMappers.WRITER.writeValue(params.getConsole().getStdOut(), targetClasspaths.asMap());
 
     return 0;
   }

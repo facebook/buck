@@ -57,13 +57,13 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -128,7 +128,6 @@ public class Project {
   private final Set<BuildRule> libraryJars;
   private final AndroidPrebuiltAarCollection androidAars;
   private final String pythonInterpreter;
-  private final ObjectMapper objectMapper;
   private final boolean turnOffAutoSourceGeneration;
 
   public Project(
@@ -143,7 +142,6 @@ public class Project {
       IntellijConfig intellijConfig,
       Optional<String> pathToPostProcessScript,
       String pythonInterpreter,
-      ObjectMapper objectMapper,
       boolean turnOffAutoSourceGeneration) {
     this.resolver = resolver;
     this.rules = rules;
@@ -158,7 +156,6 @@ public class Project {
     this.libraryJars = Sets.newHashSet();
     this.androidAars = new AndroidPrebuiltAarCollection();
     this.pythonInterpreter = pythonInterpreter;
-    this.objectMapper = objectMapper;
     this.turnOffAutoSourceGeneration = turnOffAutoSourceGeneration;
   }
 
@@ -1050,10 +1047,10 @@ public class Project {
     // Write out the JSON config to be consumed by the Python.
     try (Writer writer = new FileWriter(jsonTempFile)) {
       if (executionContext.getVerbosity().shouldPrintOutput()) {
-        ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
+        ObjectWriter objectWriter = ObjectMappers.WRITER.withDefaultPrettyPrinter();
         objectWriter.writeValue(writer, config);
       } else {
-        objectMapper.writeValue(writer, config);
+        ObjectMappers.WRITER.writeValue(writer, config);
       }
     }
   }

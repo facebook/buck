@@ -18,13 +18,12 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.rules.coercer.AbstractTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.PathTypeCoercer;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Type coercers that don't check whether the paths they're coercing actually exist.
  */
 public class DistBuildTypeCoercerFactory extends AbstractTypeCoercerFactory {
-  public DistBuildTypeCoercerFactory(ObjectMapper mapper) {
-    super(mapper, new PathTypeCoercer(PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY));
+  public DistBuildTypeCoercerFactory() {
+    super(new PathTypeCoercer(PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY));
   }
 }

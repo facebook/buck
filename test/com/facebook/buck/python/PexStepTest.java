@@ -133,7 +133,7 @@ public class PexStepTest {
             PRELOAD_LIBRARIES,
             /* zipSafe */ true);
 
-    Map<String, Object> args = ObjectMappers.newDefaultInstance().readValue(
+    Map<String, Object> args = ObjectMappers.readValue(
         step.getStdin(TestExecutionContext.newInstance()).get(),
         Map.class);
     assertThat(

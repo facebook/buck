@@ -30,6 +30,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -196,6 +197,6 @@ public class AuditFlavorsCommand extends AbstractCommand {
       targetsJson.put(targetName, flavorDomainsJson);
     }
 
-    params.getObjectMapper().writeValue(stdout, targetsJson);
+    ObjectMappers.WRITER.writeValue(stdout, targetsJson);
   }
 }

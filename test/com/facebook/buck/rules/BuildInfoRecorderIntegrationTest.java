@@ -28,7 +28,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -84,7 +83,6 @@ public class BuildInfoRecorderIntegrationTest {
         new FilesystemBuildInfoStore(filesystem),
         new DefaultClock(),
         new BuildId(),
-        ObjectMappers.newDefaultInstance(),
         ImmutableMap.of());
   }
 }

@@ -82,7 +82,6 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.autosparse.AutoSparseStateEvents;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.unit.SizeUnit;
@@ -575,8 +574,8 @@ public class SuperConsoleEventBusListenerTest {
 
     ProgressEstimator e = new ProgressEstimator(
         getStorageForTest(),
-        eventBus,
-        ObjectMappers.newDefaultInstance());
+        eventBus
+    );
     listener.setProgressEstimator(e);
     eventBus.register(listener);
 
@@ -749,8 +748,8 @@ public class SuperConsoleEventBusListenerTest {
 
     ProgressEstimator e = new ProgressEstimator(
         getStorageForTest(),
-        eventBus,
-        ObjectMappers.newDefaultInstance());
+        eventBus
+    );
     listener.setProgressEstimator(e);
     eventBus.register(listener);
 
@@ -2201,8 +2200,8 @@ public class SuperConsoleEventBusListenerTest {
 
     ProgressEstimator e = new ProgressEstimator(
         storagePath,
-        eventBus,
-        ObjectMappers.newDefaultInstance());
+        eventBus
+    );
     listener.setProgressEstimator(e);
 
     eventBus.post(

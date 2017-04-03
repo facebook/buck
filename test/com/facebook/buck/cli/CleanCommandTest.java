@@ -41,11 +41,9 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.FakeProcessExecutor;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -143,7 +141,6 @@ public class CleanCommandTest extends EasyMockSupport {
     Cell cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
     Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
         AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
-    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
     return CommandRunnerParams.builder()
         .setConsole(new TestConsole())
         .setStdIn(new ByteArrayInputStream("".getBytes("UTF-8")))
@@ -151,12 +148,11 @@ public class CleanCommandTest extends EasyMockSupport {
         .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)
         .setArtifactCacheFactory(new SingletonArtifactCacheFactory(new NoopArtifactCache()))
         .setBuckEventBus(BuckEventBusFactory.newInstance())
-        .setCoercedTypeCache(new CoercedTypeCache(new DefaultTypeCoercerFactory(objectMapper)))
+        .setCoercedTypeCache(new CoercedTypeCache(new DefaultTypeCoercerFactory()))
         .setParser(createMock(Parser.class))
         .setPlatform(Platform.detect())
         .setEnvironment(ImmutableMap.copyOf(System.getenv()))
         .setJavaPackageFinder(new FakeJavaPackageFinder())
-        .setObjectMapper(objectMapper)
         .setClock(new DefaultClock())
         .setProcessManager(Optional.empty())
         .setWebServer(Optional.empty())

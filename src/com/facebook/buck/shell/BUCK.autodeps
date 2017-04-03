@@ -10,6 +10,7 @@
       "//src/com/facebook/buck/shell:worker_pool_factory",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/zip:steps",
       "//third-party/java/jackson:jackson-databind"
@@ -39,6 +40,7 @@
       "//src/com/facebook/buck/test:test",
       "//src/com/facebook/buck/test/result/type:type",
       "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util:util",
       "//third-party/java/jackson:jackson-databind",
       "//third-party/java/jsr:jsr305"

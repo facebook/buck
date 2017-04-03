@@ -87,7 +87,6 @@ import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.versions.VersionException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -308,7 +307,6 @@ public class BuildCommand extends AbstractCommand {
       Optional<ConcurrentMap<String, WorkerProcessPool>> persistentWorkerPools,
       Platform platform,
       ImmutableMap<String, String> environment,
-      ObjectMapper objectMapper,
       Clock clock,
       Optional<AdbOptions> adbOptions,
       Optional<TargetDeviceOptions> targetDeviceOptions,
@@ -335,7 +333,6 @@ public class BuildCommand extends AbstractCommand {
         eventBus,
         platform,
         environment,
-        objectMapper,
         clock,
         getConcurrencyLimit(buckConfig),
         adbOptions,
@@ -552,14 +549,13 @@ public class BuildCommand extends AbstractCommand {
     // Distributed builds serialize and send the unversioned target graph,
     // and then deserialize and version remotely.
     TargetGraphAndBuildTargets targetGraphAndBuildTargets = graphs.unversionedTargetGraph;
-    DistBuildTypeCoercerFactory typeCoercerFactory =
-        new DistBuildTypeCoercerFactory(params.getObjectMapper());
+
+    DistBuildTypeCoercerFactory typeCoercerFactory = new DistBuildTypeCoercerFactory();
     ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             new ConstructorArgMarshaller(params.getCoercedTypeCache()),
             new TargetNodeFactory(typeCoercerFactory));
     DistBuildTargetGraphCodec targetGraphCodec = new DistBuildTargetGraphCodec(
-        params.getObjectMapper(),
         parserTargetNodeFactory,
         new Function<TargetNode<?, ?>, Map<String, Object>>() {
           @Nullable
@@ -843,7 +839,6 @@ public class BuildCommand extends AbstractCommand {
              cachingBuildEngineBuckConfig.getBuildDepFiles(),
              cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
              cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
-             params.getObjectMapper(),
              actionGraphAndResolver.getResolver(),
              cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
              RuleKeyFactories.of(
@@ -854,24 +849,23 @@ public class BuildCommand extends AbstractCommand {
                  ruleKeyCacheScope.getCache()));
          Build build =
              createBuild(
-                 rootCellBuckConfig,
-                 actionGraphAndResolver.getActionGraph(),
-                 actionGraphAndResolver.getResolver(),
-                 params.getCell(),
-                 params.getAndroidPlatformTargetSupplier(),
-                 buildEngine,
-                 artifactCache,
-                 params.getConsole(),
-                 params.getBuckEventBus(),
-                 Optional.empty(),
-                 params.getPersistentWorkerPools(),
-                 rootCellBuckConfig.getPlatform(),
-                 rootCellBuckConfig.getEnvironment(),
-                 params.getObjectMapper(),
-                 params.getClock(),
-                 Optional.empty(),
-                 Optional.empty(),
-                 params.getExecutors())) {
+               rootCellBuckConfig,
+               actionGraphAndResolver.getActionGraph(),
+               actionGraphAndResolver.getResolver(),
+               params.getCell(),
+               params.getAndroidPlatformTargetSupplier(),
+               buildEngine,
+               artifactCache,
+               params.getConsole(),
+               params.getBuckEventBus(),
+               Optional.empty(),
+               params.getPersistentWorkerPools(),
+               rootCellBuckConfig.getPlatform(),
+               rootCellBuckConfig.getEnvironment(),
+               params.getClock(),
+               Optional.empty(),
+               Optional.empty(),
+               params.getExecutors())) {
       lastBuild = build;
       return build.executeAndPrintFailuresToEventBus(
           targetsToBuild,

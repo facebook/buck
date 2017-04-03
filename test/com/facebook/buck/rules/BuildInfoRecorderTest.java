@@ -40,11 +40,9 @@ import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.timing.FakeClock;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -90,9 +88,8 @@ public class BuildInfoRecorderTest {
 
     buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ true);
 
-    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
     OnDiskBuildInfo onDiskBuildInfo =
-        new DefaultOnDiskBuildInfo(BUILD_TARGET, filesystem, store, objectMapper);
+        new DefaultOnDiskBuildInfo(BUILD_TARGET, filesystem, store);
     assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "key1", "value1");
 
     buildInfoRecorder = createBuildInfoRecorder(filesystem);
@@ -103,8 +100,8 @@ public class BuildInfoRecorderTest {
     onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         BUILD_TARGET,
         filesystem,
-        store,
-        objectMapper);
+        store
+    );
     assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "key1", "value1");
     assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "key2", "value2");
 
@@ -116,8 +113,8 @@ public class BuildInfoRecorderTest {
     onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         BUILD_TARGET,
         filesystem,
-        store,
-        objectMapper);
+        store
+    );
     assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "key3", "value3");
     assertOnDiskBuildInfoDoesNotHaveMetadata(onDiskBuildInfo, "key1");
     assertOnDiskBuildInfoDoesNotHaveMetadata(onDiskBuildInfo, "key2");
@@ -129,8 +126,8 @@ public class BuildInfoRecorderTest {
     onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         BUILD_TARGET,
         filesystem,
-        store,
-        objectMapper);
+        store
+    );
     assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "build", "metadata");
 
     // Verify additional info build metadata always gets written.
@@ -139,8 +136,8 @@ public class BuildInfoRecorderTest {
     onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         BUILD_TARGET,
         filesystem,
-        store,
-        objectMapper);
+        store
+    );
     assertTrue(onDiskBuildInfo.getValue(BuildInfo.MetadataKey.ADDITIONAL_INFO).isPresent());
   }
 
@@ -343,7 +340,6 @@ public class BuildInfoRecorderTest {
         new FilesystemBuildInfoStore(filesystem),
         new DefaultClock(),
         new BuildId(),
-        new ObjectMapper(),
         ImmutableMap.of());
   }
 }

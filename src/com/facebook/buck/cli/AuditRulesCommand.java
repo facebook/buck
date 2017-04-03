@@ -23,9 +23,8 @@ import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreStrings;
-import com.fasterxml.jackson.core.JsonFactory;
+import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -162,12 +161,10 @@ public class AuditRulesCommand extends AbstractCommand {
       }
 
       // We create a new JsonGenerator that does not close the stream.
-      ObjectMapper mapper = params.getObjectMapper();
-      JsonFactory factory = mapper.getFactory();
-      try (JsonGenerator generator = factory.createGenerator(stdOut)
+      try (JsonGenerator generator = ObjectMappers.createGenerator(stdOut)
           .disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET)
           .useDefaultPrettyPrinter()) {
-        mapper.writeValue(generator, rulesKeyedByName);
+        ObjectMappers.WRITER.writeValue(generator, rulesKeyedByName);
       }
       stdOut.print('\n');
     } else {

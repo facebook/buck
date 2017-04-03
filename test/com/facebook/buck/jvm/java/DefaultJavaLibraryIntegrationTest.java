@@ -49,7 +49,6 @@ import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
@@ -639,11 +638,12 @@ public class DefaultJavaLibraryIntegrationTest {
     final String utilClassPath =
         MorePaths.pathWithPlatformSeparators("com/example/Util.class");
 
-    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-    JsonNode jsonNode = objectMapper.readTree(lines.get(0));
+    JsonNode jsonNode = ObjectMappers.READER.readTree(lines.get(0));
     assertThat(jsonNode,
-        new HasJsonField(objectMapper, utilJarPath,
-            Matchers.equalTo(objectMapper.valueToTree(new String[]{utilClassPath}))));
+        new HasJsonField(
+            utilJarPath,
+            Matchers.equalTo(
+                ObjectMappers.legacyCreate().valueToTree(new String[]{utilClassPath}))));
   }
 
   @Test
@@ -673,11 +673,11 @@ public class DefaultJavaLibraryIntegrationTest {
     final String utilClassPath =
         MorePaths.pathWithPlatformSeparators("com/example/Util.class");
 
-    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-    JsonNode jsonNode = objectMapper.readTree(lines.get(0));
+    JsonNode jsonNode = ObjectMappers.READER.readTree(lines.get(0));
     assertThat(jsonNode,
-        new HasJsonField(objectMapper, utilJarPath,
-            Matchers.equalTo(objectMapper.valueToTree(new String[]{utilClassPath}))));
+        new HasJsonField(utilJarPath,
+            Matchers.equalTo(
+                ObjectMappers.legacyCreate().valueToTree(new String[]{utilClassPath}))));
   }
 
   @Test

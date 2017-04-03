@@ -17,14 +17,11 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.tools.StandardJavaFileManager;
 
 public interface ClassUsageFileWriter {
   StandardJavaFileManager wrapFileManager(StandardJavaFileManager inner);
 
-  void writeFile(
-      ProjectFilesystem filesystem,
-      ObjectMapper objectMapper);
+  void writeFile(ProjectFilesystem filesystem);
 }

@@ -17,7 +17,7 @@
 package com.facebook.buck.httpserver;
 
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.Maps;
 
 import org.eclipse.jetty.websocket.api.Session;
@@ -35,11 +35,9 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
 
   // This is threadsafe
   private final Set<MyWebSocket> connections;
-  private final ObjectMapper objectMapper;
 
-  public StreamingWebSocketServlet(ObjectMapper objectMapper) {
+  public StreamingWebSocketServlet() {
     this.connections = Collections.newSetFromMap(Maps.<MyWebSocket, Boolean>newConcurrentMap());
-    this.objectMapper = objectMapper;
   }
 
   @Override
@@ -58,7 +56,7 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
     }
 
     try {
-      String message = objectMapper.writeValueAsString(event);
+      String message = ObjectMappers.WRITER.writeValueAsString(event);
       tellAll(message);
     } catch (IOException e) {
       throw new RuntimeException(e);

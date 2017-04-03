@@ -19,9 +19,9 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -46,18 +46,15 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   private final ProjectFilesystem projectFilesystem;
   private final BuildInfoStore buildInfoStore;
   private final Path metadataDirectory;
-  private final ObjectMapper objectMapper;
 
   public DefaultOnDiskBuildInfo(
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
-      BuildInfoStore buildInfoStore,
-      ObjectMapper objectMapper) {
+      BuildInfoStore buildInfoStore) {
     this.buildTarget = target;
     this.projectFilesystem = projectFilesystem;
     this.buildInfoStore = buildInfoStore;
     this.metadataDirectory = BuildInfo.getPathToMetadataDirectory(target, projectFilesystem);
-    this.objectMapper = objectMapper;
   }
 
   @Override
@@ -78,7 +75,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
     }
     try {
       ImmutableList<String> list =
-          objectMapper.readValue(
+          ObjectMappers.readValue(
               value.get(),
               new TypeReference<ImmutableList<String>>() {});
       return Optional.of(list);
@@ -129,7 +126,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
     }
     try {
       ImmutableMap<String, String> map =
-          objectMapper.readValue(
+          ObjectMappers.readValue(
               value.get(),
               new TypeReference<ImmutableMap<String, String>>() {});
       return Optional.of(map);

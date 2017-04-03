@@ -25,7 +25,6 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -40,10 +39,8 @@ public class GraphqlLibraryIntegrationTest {
 
   private ProjectWorkspace workspace;
 
-  private static final ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-
   private static JsonNode parseJSON(String content) throws IOException {
-    return objectMapper.readTree(objectMapper.getFactory().createParser(content));
+    return ObjectMappers.READER.readTree(ObjectMappers.createParser(content));
   }
 
   @Before

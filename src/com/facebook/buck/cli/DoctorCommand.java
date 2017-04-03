@@ -51,7 +51,7 @@ public class DoctorCommand extends AbstractCommand {
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     ProjectFilesystem filesystem = params.getCell().getFilesystem();
-    BuildLogHelper buildLogHelper = new BuildLogHelper(filesystem, params.getObjectMapper());
+    BuildLogHelper buildLogHelper = new BuildLogHelper(filesystem);
 
     UserInput userInput = new UserInput(
         params.getConsole().getStdOut(),
@@ -60,7 +60,6 @@ public class DoctorCommand extends AbstractCommand {
         params.getCell().getFilesystem(),
         userInput,
         params.getConsole(),
-        params.getObjectMapper(),
         params.getBuckConfig().getView(DoctorConfig.class));
 
     Optional<BuildLogEntry> entry =
@@ -108,7 +107,6 @@ public class DoctorCommand extends AbstractCommand {
     DoctorInteractiveReport report = new DoctorInteractiveReport(
         new DefaultDefectReporter(
             params.getCell().getFilesystem(),
-            params.getObjectMapper(),
             rageConfig,
             params.getBuckEventBus(),
             params.getClock()),

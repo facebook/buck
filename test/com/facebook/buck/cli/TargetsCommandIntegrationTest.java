@@ -34,7 +34,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -608,18 +607,16 @@ public class TargetsCommandIntegrationTest {
     workspace.setUp();
     ProcessResult result = workspace.runBuckCommand(
         "targets", "--json", "--show-output", "//:test");
-    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
 
     // Parse the observed JSON.
-    JsonNode observed = objectMapper.readTree(
-        objectMapper.getFactory().createParser(result.getStdout())
-    );
+    JsonNode observed = ObjectMappers.READER.readTree(
+        ObjectMappers.createParser(result.getStdout()));
 
     System.out.println(observed.toString());
 
     String expectedJson = workspace.getFileContents("output_path_json.js");
-    JsonNode expected = objectMapper.readTree(
-        objectMapper.getFactory().createParser(normalizeNewlines(expectedJson))
+    JsonNode expected = ObjectMappers.READER.readTree(
+        ObjectMappers.createParser(normalizeNewlines(expectedJson))
     );
 
     MatcherAssert.assertThat(
@@ -635,11 +632,10 @@ public class TargetsCommandIntegrationTest {
     workspace.setUp();
     ProcessResult result = workspace.runBuckCommand(
         "targets", "--json", "--show-cell-path", "//:test");
-    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
 
     // Parse the observed JSON.
-    JsonNode observed = objectMapper.readTree(
-        objectMapper.getFactory().createParser(result.getStdout())
+    JsonNode observed = ObjectMappers.READER.readTree(
+        ObjectMappers.createParser(result.getStdout())
     );
 
     assertTrue(observed.isArray());
@@ -659,11 +655,10 @@ public class TargetsCommandIntegrationTest {
     workspace.setUp();
     ProcessResult result = workspace.runBuckCommand(
         "targets", "--json", "--show-full-output", "//:test");
-    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
 
     // Parse the observed JSON.
-    JsonNode observed = objectMapper.readTree(
-        objectMapper.getFactory().createParser(result.getStdout())
+    JsonNode observed = ObjectMappers.READER.readTree(
+        ObjectMappers.createParser(result.getStdout())
     );
     assertTrue(observed.isArray());
     JsonNode targetNode = observed.get(0);
@@ -706,16 +701,15 @@ public class TargetsCommandIntegrationTest {
     ProcessResult result = workspace.runBuckCommand(
         "targets", "--json", "--show-output");
     result.assertSuccess();
-    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
 
     // Parse the observed JSON.
-    JsonNode observed = objectMapper.readTree(
-        objectMapper.getFactory().createParser(result.getStdout())
+    JsonNode observed = ObjectMappers.READER.readTree(
+        ObjectMappers.createParser(result.getStdout())
     );
 
     String expectedJson = workspace.getFileContents("output_path_json_all.js");
-    JsonNode expected = objectMapper.readTree(
-        objectMapper.getFactory().createParser(normalizeNewlines(expectedJson))
+    JsonNode expected = ObjectMappers.READER.readTree(
+        ObjectMappers.createParser(normalizeNewlines(expectedJson))
     );
 
     assertEquals(
@@ -733,16 +727,15 @@ public class TargetsCommandIntegrationTest {
     ProcessResult result = workspace.runBuckCommand(
         "targets", "--json", "--show-output", "--output-attributes", "buck.outputPath", "name");
     result.assertSuccess();
-    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
 
     // Parse the observed JSON.
-    JsonNode observed = objectMapper.readTree(
-        objectMapper.getFactory().createParser(result.getStdout())
+    JsonNode observed = ObjectMappers.READER.readTree(
+        ObjectMappers.createParser(result.getStdout())
     );
 
     String expectedJson = workspace.getFileContents("output_path_json_all_filtered.js");
-    JsonNode expected = objectMapper.readTree(
-        objectMapper.getFactory().createParser(normalizeNewlines(expectedJson))
+    JsonNode expected = ObjectMappers.READER.readTree(
+        ObjectMappers.createParser(normalizeNewlines(expectedJson))
     );
 
     assertEquals(

@@ -56,6 +56,7 @@ import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
@@ -373,7 +374,7 @@ public class TestCommand extends BuildCommand {
             .resolve("external_runner_specs.json");
     Files.createDirectories(infoFile.getParent());
     Files.deleteIfExists(infoFile);
-    params.getObjectMapper().writerWithDefaultPrettyPrinter().writeValue(infoFile.toFile(), specs);
+    ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(infoFile.toFile(), specs);
 
     // Launch and run the external test runner, forwarding it's stdout/stderr to the console.
     // We wait for it to complete then returns its error code.
@@ -553,7 +554,6 @@ public class TestCommand extends BuildCommand {
                     cachingBuildEngineBuckConfig.getBuildDepFiles(),
                     cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
                     cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
-                    params.getObjectMapper(),
                     actionGraphAndResolver.getResolver(),
                     cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
                     RuleKeyFactories.of(
@@ -576,7 +576,6 @@ public class TestCommand extends BuildCommand {
                 params.getPersistentWorkerPools(),
                 params.getPlatform(),
                 params.getEnvironment(),
-                params.getObjectMapper(),
                 params.getClock(),
                 Optional.of(getAdbOptions(params.getBuckConfig())),
                 Optional.of(getTargetDeviceOptions()),

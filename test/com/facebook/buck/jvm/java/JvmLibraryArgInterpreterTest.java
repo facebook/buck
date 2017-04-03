@@ -39,7 +39,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -190,7 +189,7 @@ public class JvmLibraryArgInterpreterTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     try {
       CoercedTypeCache coercedTypeCache =
-          new CoercedTypeCache(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()));
+          new CoercedTypeCache(new DefaultTypeCoercerFactory());
       new ConstructorArgMarshaller(coercedTypeCache).populate(
           createCellRoots(filesystem),
           filesystem,

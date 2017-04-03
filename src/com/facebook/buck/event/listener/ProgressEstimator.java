@@ -16,11 +16,11 @@
 
 package com.facebook.buck.event.listener;
 
-import com.facebook.buck.event.ProgressEvent;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ProgressEvent;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.AtomicDouble;
@@ -51,8 +51,6 @@ public class ProgressEstimator {
   @Nullable
   private String command;
 
-  private final ObjectMapper objectMapper;
-
   private BuckEventBus buckEventBus;
 
   @Nullable
@@ -76,9 +74,7 @@ public class ProgressEstimator {
 
   public ProgressEstimator(
       Path storageFile,
-      BuckEventBus buckEventBus,
-      ObjectMapper objectMapper) {
-    this.objectMapper = objectMapper;
+      BuckEventBus buckEventBus) {
     this.storageFile = storageFile;
     this.command = null;
     this.buckEventBus = buckEventBus;
@@ -182,8 +178,8 @@ public class ProgressEstimator {
     if (Files.exists(storageFile)) {
       try {
         byte[] bytes = Files.readAllBytes(storageFile);
-        map = objectMapper.readValue(
-            bytes,
+        map = ObjectMappers.READER.readValue(
+            ObjectMappers.createParser(bytes),
             new TypeReference<HashMap<String, Map<String, Number>>>(){});
       } catch (Exception e) {
         LOG.warn("Unable to load progress estimations from file: " + e.getMessage());
@@ -244,7 +240,7 @@ public class ProgressEstimator {
       return;
     }
     try {
-      objectMapper.writeValue(storageFile.toFile(), expectationsStorage);
+      ObjectMappers.WRITER.writeValue(storageFile.toFile(), expectationsStorage);
     } catch (IOException e) {
       LOG.warn("Unable to save progress expectations: " + e.getLocalizedMessage());
     }

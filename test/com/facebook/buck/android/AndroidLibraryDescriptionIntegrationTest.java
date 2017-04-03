@@ -23,8 +23,8 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.hamcrest.Matchers;
 import org.junit.Assert;
@@ -176,7 +176,7 @@ public class AndroidLibraryDescriptionIntegrationTest {
       ProjectWorkspace.ProcessResult buildResult =
           workspace.runBuckCommand("targets", targetName, "--show-output", "--json");
       buildResult.assertSuccess();
-      JsonNode jsonNode = new ObjectMapper().reader().readTree(buildResult.getStdout()).get(0);
+      JsonNode jsonNode = ObjectMappers.READER.readTree(buildResult.getStdout()).get(0);
       assert jsonNode.has("buck.outputPath");
       return Paths.get(jsonNode.get("buck.outputPath").asText());
     } catch (Exception e) {

@@ -89,7 +89,6 @@ public class AutodepsCommand extends AbstractCommand {
           depsForBuildFiles,
           cell.getBuildFileName(),
           params.getBuckConfig().getIncludeAutodepsSignature(),
-          params.getObjectMapper(),
           executorService,
           concurrencyLimit.threadLimit);
     } catch (ExecutionException e) {

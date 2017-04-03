@@ -40,7 +40,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreCollectors;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -77,7 +76,6 @@ public class JavaDepsFinder {
   private final ImmutableSortedMap<String, BuildTarget> javaPackageMapping;
 
   private final JavaFileParser javaFileParser;
-  private final ObjectMapper objectMapper;
   private final BuildEngineBuildContext buildContext;
   private final ExecutionContext executionContext;
   private final BuildEngine buildEngine;
@@ -85,13 +83,11 @@ public class JavaDepsFinder {
   public JavaDepsFinder(
       ImmutableSortedMap<String, BuildTarget> javaPackageMapping,
       JavaFileParser javaFileParser,
-      ObjectMapper objectMapper,
       BuildEngineBuildContext buildContext,
       ExecutionContext executionContext,
       BuildEngine buildEngine) {
     this.javaPackageMapping = javaPackageMapping;
     this.javaFileParser = javaFileParser;
-    this.objectMapper = objectMapper;
     this.buildContext = buildContext;
     this.executionContext = executionContext;
     this.buildEngine = buildEngine;
@@ -104,7 +100,6 @@ public class JavaDepsFinder {
   public static JavaDepsFinder createJavaDepsFinder(
       BuckConfig buckConfig,
       final CellPathResolver cellNames,
-      ObjectMapper objectMapper,
       BuildEngineBuildContext buildContext,
       ExecutionContext executionContext,
       BuildEngine buildEngine) {
@@ -149,7 +144,6 @@ public class JavaDepsFinder {
     return new JavaDepsFinder(
         javaPackageMapping,
         javaFileParser,
-        objectMapper,
         buildContext,
         executionContext,
         buildEngine);
@@ -394,7 +388,6 @@ public class JavaDepsFinder {
         buildTarget,
         symbolsFinder,
         generatedSymbols,
-        objectMapper,
         node.getFilesystem());
     ListenableFuture<BuildResult> future =
         buildEngine.build(buildContext, executionContext, buildRule);

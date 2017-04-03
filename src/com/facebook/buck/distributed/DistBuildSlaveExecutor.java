@@ -240,15 +240,13 @@ public class DistBuildSlaveExecutor {
   }
 
   private DistBuildTargetGraphCodec createGraphCodec(CoercedTypeCache coercedTypeCache) {
-    DistBuildTypeCoercerFactory typeCoercerFactory =
-        new DistBuildTypeCoercerFactory(args.getObjectMapper());
+    DistBuildTypeCoercerFactory typeCoercerFactory = new DistBuildTypeCoercerFactory();
     ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             new ConstructorArgMarshaller(coercedTypeCache),
             new TargetNodeFactory(typeCoercerFactory));
 
     DistBuildTargetGraphCodec targetGraphCodec = new DistBuildTargetGraphCodec(
-        args.getObjectMapper(),
         parserTargetNodeFactory,
         new Function<TargetNode<?, ?>, Map<String, Object>>() {
           @Nullable
@@ -295,7 +293,6 @@ public class DistBuildSlaveExecutor {
               engineConfig.getBuildDepFiles(),
               engineConfig.getBuildMaxDepFileCacheEntries(),
               engineConfig.getBuildArtifactCacheSizeLimit(),
-              args.getObjectMapper(),
               Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
               engineConfig.getResourceAwareSchedulingInfo(),
               RuleKeyFactories.of(
@@ -323,7 +320,6 @@ public class DistBuildSlaveExecutor {
               args.getBuckEventBus(),
               args.getPlatform(),
               ImmutableMap.of(),
-              args.getObjectMapper(),
               args.getClock(),
               new ConcurrencyLimit(
                   4,

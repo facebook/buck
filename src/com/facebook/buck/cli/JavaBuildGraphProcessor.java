@@ -145,7 +145,6 @@ final class JavaBuildGraphProcessor {
               cachingBuildEngineBuckConfig.getBuildDepFiles(),
               cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
               cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
-              params.getObjectMapper(),
               buildRuleResolver,
               cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
               RuleKeyFactories.of(
@@ -167,7 +166,6 @@ final class JavaBuildGraphProcessor {
                     ExecutorPool.CPU,
                     executorService))
             .setJavaPackageFinder(params.getJavaPackageFinder())
-            .setObjectMapper(params.getObjectMapper())
             .setPlatform(params.getPlatform())
             .setCellPathResolver(params.getCell().getCellPathResolver())
             .build();
@@ -185,7 +183,6 @@ final class JavaBuildGraphProcessor {
             .setClock(params.getClock())
             .setArtifactCache(params.getArtifactCacheFactory().newInstance())
             .setBuildId(eventBus.getBuildId())
-            .setObjectMapper(params.getObjectMapper())
             .setEnvironment(executionContext.getEnvironment())
             .setKeepGoing(false)
             .build();
@@ -194,7 +191,6 @@ final class JavaBuildGraphProcessor {
         JavaDepsFinder javaDepsFinder = JavaDepsFinder.createJavaDepsFinder(
             params.getBuckConfig(),
             params.getCell().getCellPathResolver(),
-            params.getObjectMapper(),
             buildContext,
             executionContext,
             buildEngine);

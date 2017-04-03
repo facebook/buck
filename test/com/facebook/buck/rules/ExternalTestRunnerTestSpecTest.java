@@ -20,7 +20,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.util.ObjectMappers;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 
 import org.hamcrest.Matchers;
@@ -32,9 +31,8 @@ public class ExternalTestRunnerTestSpecTest {
 
   @Test
   public void serializeToJson() throws IOException {
-    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
     String result =
-        objectMapper.writeValueAsString(
+        ObjectMappers.WRITER.writeValueAsString(
             ExternalTestRunnerTestSpec.builder()
                 .setTarget(BuildTargetFactory.newInstance("//:target"))
                 .setType("custom")

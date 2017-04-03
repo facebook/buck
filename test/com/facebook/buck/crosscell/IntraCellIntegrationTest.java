@@ -35,7 +35,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -71,7 +70,7 @@ public class IntraCellIntegrationTest {
     Cell cell = workspace.asCell();
 
     TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory(
-        ObjectMappers.newDefaultInstance());
+    );
     CoercedTypeCache coercedTypeCache = new CoercedTypeCache(coercerFactory);
     Parser parser = new Parser(
         new BroadcastEventListener(),

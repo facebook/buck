@@ -16,13 +16,11 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 /**
  * Default implementation for the type coercer factory. @see AbstractTypeCoercerFactory
  */
 public class DefaultTypeCoercerFactory extends AbstractTypeCoercerFactory {
-  public DefaultTypeCoercerFactory(ObjectMapper mapper) {
-    super(mapper, new PathTypeCoercer(PathTypeCoercer.PathExistenceVerificationMode.VERIFY));
+  public DefaultTypeCoercerFactory() {
+    super(new PathTypeCoercer(PathTypeCoercer.PathExistenceVerificationMode.VERIFY));
   }
 }

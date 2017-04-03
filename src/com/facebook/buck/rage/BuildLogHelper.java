@@ -20,10 +20,9 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -32,6 +31,7 @@ import org.immutables.value.Value;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
@@ -56,13 +56,10 @@ public class BuildLogHelper {
   private static final String BUCK_LOG_FILE = BuckConstant.BUCK_LOG_FILE_NAME;
 
   private final ProjectFilesystem projectFilesystem;
-  private final ObjectMapper objectMapper;
 
   public BuildLogHelper(
-      ProjectFilesystem projectFilesystem,
-      ObjectMapper objectMapper) {
+      ProjectFilesystem projectFilesystem) {
     this.projectFilesystem = projectFilesystem;
-    this.objectMapper = objectMapper;
   }
 
   public ImmutableList<BuildLogEntry> getBuildLogs() throws IOException {
@@ -138,8 +135,9 @@ public class BuildLogHelper {
 
       if (lines.size() == 1) {
         Map<String, Integer> exitCode =
-            objectMapper.readValue(
-                lines.get(0).substring("ExitCode ".length()).getBytes(Charsets.UTF_8),
+            ObjectMappers.READER.readValue(
+                ObjectMappers.createParser(
+                    lines.get(0).substring("ExitCode ".length()).getBytes(StandardCharsets.UTF_8)),
                 new TypeReference<Map<String, Integer>>(){});
         if (exitCode.containsKey("exitCode")) {
           return OptionalInt.of(exitCode.get("exitCode"));

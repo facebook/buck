@@ -64,7 +64,6 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -128,7 +127,7 @@ public class ParserTest {
   private ListeningExecutorService executorService;
 
   private final DefaultTypeCoercerFactory typeCoercerFactory =
-      new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance());
+      new DefaultTypeCoercerFactory();
   private final CoercedTypeCache coercedTypeCache = new CoercedTypeCache(typeCoercerFactory);
 
   public ParserTest(int threads, boolean parallelParsing) {
@@ -1518,7 +1517,7 @@ public class ParserTest {
     HashCode original = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
-        ObjectMappers.newDefaultInstance());
+    );
     parser = new Parser(
         new BroadcastEventListener(),
         cell.getBuckConfig().getView(ParserConfig.class),
@@ -1639,7 +1638,7 @@ public class ParserTest {
     HashCode lib2Key = hashes.get(fooLib2Target);
 
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
-        ObjectMappers.newDefaultInstance());
+    );
     parser = new Parser(
         new BroadcastEventListener(),
         cell.getBuckConfig().getView(ParserConfig.class),

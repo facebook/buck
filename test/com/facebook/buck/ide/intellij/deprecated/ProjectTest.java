@@ -59,7 +59,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -866,7 +865,6 @@ public class ProjectTest {
         intellijConfig,
         /* pathToPostProcessScript */ Optional.empty(),
         "python",
-        ObjectMappers.newDefaultInstance(),
         true);
 
     // Execute Project's business logic.

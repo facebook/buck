@@ -1,7 +1,8 @@
 {
   "autodeps" : {
     "deps" : [
-      "//src/com/facebook/buck/model:model"
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/util:object_mapper"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/autodeps:model",

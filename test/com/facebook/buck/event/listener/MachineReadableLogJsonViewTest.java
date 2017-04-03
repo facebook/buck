@@ -51,7 +51,7 @@ import java.util.Random;
 
 public class MachineReadableLogJsonViewTest {
 
-  private static final ObjectWriter WRITER = ObjectMappers.newDefaultInstance()
+  private static final ObjectWriter WRITER = ObjectMappers.legacyCreate()
       .configure(MapperFeature.DEFAULT_VIEW_INCLUSION, false)
       .writerWithView(JsonViews.MachineReadableLog.class);
 

@@ -27,10 +27,10 @@ import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorEndpointRequest;
 import com.facebook.buck.doctor.config.DoctorEndpointResponse;
 import com.facebook.buck.doctor.config.DoctorSuggestion;
-import com.facebook.buck.rage.RageConfig;
 import com.facebook.buck.rage.BuildLogEntry;
 import com.facebook.buck.rage.BuildLogHelper;
 import com.facebook.buck.rage.DefectSubmitResult;
+import com.facebook.buck.rage.RageConfig;
 import com.facebook.buck.rage.UserInput;
 import com.facebook.buck.rage.UserInputFixture;
 import com.facebook.buck.testutil.TestConsole;
@@ -41,7 +41,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -73,7 +72,6 @@ public class DoctorCommandIntegrationTest {
   private ProjectWorkspace workspace;
   private HttpdForTests httpd;
 
-  private ObjectMapper objectMapper;
   private DoctorEndpointResponse doctorResponse;
   private DefectSubmitResult rageResult;
 
@@ -92,7 +90,6 @@ public class DoctorCommandIntegrationTest {
   public void setUp() throws Exception {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "report", tempFolder);
     workspace.setUp();
-    objectMapper = ObjectMappers.newDefaultInstance();
 
     rageResult = DefectSubmitResult.builder()
         .setIsRequestSuccessful(true)
@@ -131,9 +128,7 @@ public class DoctorCommandIntegrationTest {
     DoctorReportHelper helper = createDoctorHelper(
         (new UserInputFixture("0")).getUserInput(),
         DoctorConfig.of(FakeBuckConfig.builder().build()));
-    BuildLogHelper buildLogHelper = new BuildLogHelper(
-        workspace.asCell().getFilesystem(),
-        objectMapper);
+    BuildLogHelper buildLogHelper = new BuildLogHelper(workspace.asCell().getFilesystem());
     Optional<BuildLogEntry> entry =
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
 
@@ -154,8 +149,8 @@ public class DoctorCommandIntegrationTest {
         createDoctorConfig(httpd));
 
     BuildLogHelper buildLogHelper = new BuildLogHelper(
-        workspace.asCell().getFilesystem(),
-        objectMapper);
+        workspace.asCell().getFilesystem()
+    );
     Optional<BuildLogEntry> entry =
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
 
@@ -201,7 +196,7 @@ public class DoctorCommandIntegrationTest {
 
         try (DataOutputStream out =
                  new DataOutputStream(httpResponse.getOutputStream())) {
-          objectMapper.writeValue(out, doctorResponse);
+          ObjectMappers.WRITER.writeValue(out, doctorResponse);
         }
       }
     };
@@ -225,7 +220,6 @@ public class DoctorCommandIntegrationTest {
         workspace.asCell().getFilesystem(),
         input,
         new TestConsole(),
-        objectMapper,
         doctorConfig);
   }
 }

@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
@@ -43,8 +42,7 @@ public class ManifestEntriesTypeCoercerTest {
 
   @Before
   public void setUp() throws Exception {
-    DefaultTypeCoercerFactory factory = new DefaultTypeCoercerFactory(
-        ObjectMappers.newDefaultInstance());
+    DefaultTypeCoercerFactory factory = new DefaultTypeCoercerFactory();
     TypeCoercer<?> typeCoercer = factory.typeCoercerForType(ManifestEntries.class);
     assertTrue(typeCoercer instanceof ManifestEntriesTypeCoercer);
     manifestEntriesTypeCoercer = (ManifestEntriesTypeCoercer) typeCoercer;

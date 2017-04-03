@@ -39,7 +39,6 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -64,8 +63,7 @@ public class GenruleDescriptionTest {
     ConstructorArgMarshaller marshaller =
         new ConstructorArgMarshaller(
             new CoercedTypeCache(
-                new DefaultTypeCoercerFactory(
-                    ObjectMappers.newDefaultInstance())));
+                new DefaultTypeCoercerFactory()));
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     ImmutableSet.Builder<VisibilityPattern> visibilityPatterns = ImmutableSet.builder();
     ImmutableSet.Builder<VisibilityPattern> withinViewPatterns = ImmutableSet.builder();
@@ -81,7 +79,7 @@ public class GenruleDescriptionTest {
         withinViewPatterns,
         instance);
     TargetNode<GenruleDescription.Arg, ?> targetNode =
-        new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
+        new TargetNodeFactory(new DefaultTypeCoercerFactory())
             .create(
                 Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),
                 genruleDescription,

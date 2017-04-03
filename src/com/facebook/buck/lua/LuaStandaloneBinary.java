@@ -30,6 +30,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -112,7 +113,7 @@ public class LuaStandaloneBinary extends AbstractBuildRule {
           protected Optional<String> getStdin(ExecutionContext context) {
             try {
               return Optional.of(
-                  context.getObjectMapper().writeValueAsString(
+                  ObjectMappers.WRITER.writeValueAsString(
                       ImmutableMap.of(
                           "modules",
                           Maps.transformValues(

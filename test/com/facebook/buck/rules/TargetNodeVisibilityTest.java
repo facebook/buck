@@ -29,7 +29,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
@@ -256,7 +255,7 @@ public class TargetNodeVisibilityTest {
     CellPathResolver cellNames = new FakeCellPathResolver(filesystem);
     Description<FakeRuleDescription.FakeArg> description = new FakeRuleDescription();
     FakeRuleDescription.FakeArg arg = description.createUnpopulatedConstructorArg();
-    return new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
+    return new TargetNodeFactory(new DefaultTypeCoercerFactory())
         .create(
             Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),
             description,
