@@ -91,6 +91,38 @@ public class JsBundleDescriptionTest {
   }
 
   @Test
+  public void testFlavoredBundleWithoutReleaseFlavorDependOonUnflavoredLibs()
+      throws NoSuchBuildTargetException {
+    Flavor[] flavors = {JsFlavors.IOS, JsFlavors.RAM_BUNDLE_INDEXED};
+    BuildRule jsBundle = scenario.resolver.requireRule((
+        bundleTarget.withFlavors(flavors)));
+    assertThat(allLibaryTargets(), everyItem(in(dependencyTargets(jsBundle))));
+    assertThat(allLibaryTargets(flavors) , everyItem(not(in(dependencyTargets(jsBundle)))));
+  }
+
+  @Test
+  public void testFlavoredReleaseBundleDoesNotPropagateRamBundleFlavors()
+      throws NoSuchBuildTargetException {
+    Flavor[] bundleFlavors = {JsFlavors.IOS, JsFlavors.RAM_BUNDLE_INDEXED, JsFlavors.RELEASE};
+    Flavor[] flavorsToBePropagated = {JsFlavors.IOS, JsFlavors.RELEASE};
+    BuildRule jsBundle = scenario.resolver.requireRule((
+        bundleTarget.withFlavors(bundleFlavors)));
+    assertThat(allLibaryTargets(flavorsToBePropagated), everyItem(in(dependencyTargets(jsBundle))));
+    assertThat(allLibaryTargets(bundleFlavors) , everyItem(not(in(dependencyTargets(jsBundle)))));
+  }
+
+  @Test
+  public void testFlavoredReleaseBundleDoesNotPropagateRamBundleFlavorsAndroid()
+      throws NoSuchBuildTargetException {
+    Flavor[] bundleFlavors = {JsFlavors.ANDROID, JsFlavors.RAM_BUNDLE_INDEXED, JsFlavors.RELEASE};
+    Flavor[] flavorsToBePropagated = {JsFlavors.ANDROID, JsFlavors.RELEASE};
+    BuildRule jsBundle = scenario.resolver.requireRule((
+        bundleTarget.withFlavors(bundleFlavors)));
+    assertThat(allLibaryTargets(flavorsToBePropagated), everyItem(in(dependencyTargets(jsBundle))));
+    assertThat(allLibaryTargets(bundleFlavors) , everyItem(not(in(dependencyTargets(jsBundle)))));
+  }
+
+  @Test
   public void testTransitiveLibraryDependenciesWithFlavorsForAndroid()
       throws NoSuchBuildTargetException {
     final Flavor[] flavors = {JsFlavors.ANDROID, JsFlavors.RELEASE};

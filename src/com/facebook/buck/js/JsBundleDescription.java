@@ -187,10 +187,13 @@ public class JsBundleDescription implements Description<JsBundleDescription.Arg>
       this.bundleTarget = bundleTarget;
       this.targetGraph = targetGraph;
       this.resolver = resolver;
-      extraFlavors = bundleTarget.getFlavors()
-          .stream()
-          .filter(flavor -> !JsFlavors.FORCE_JS_BUNDLE.equals(flavor))
-          .collect(MoreCollectors.toImmutableSortedSet());
+      final ImmutableSortedSet<Flavor> bundleFlavors = bundleTarget.getFlavors();
+      extraFlavors = bundleFlavors.contains(JsFlavors.RELEASE)
+          ? bundleFlavors.stream()
+                .filter(flavor -> JsLibraryDescription.FLAVOR_DOMAINS.stream()
+                    .anyMatch(domain -> domain.contains(flavor)))
+                .collect(MoreCollectors.toImmutableSortedSet())
+          : ImmutableSortedSet.of();
       ruleFinder = new SourcePathRuleFinder(resolver);
     }
 

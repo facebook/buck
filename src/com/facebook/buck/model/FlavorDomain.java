@@ -59,6 +59,10 @@ public class FlavorDomain<T> {
     return !Sets.intersection(translation.keySet(), flavors).isEmpty();
   }
 
+  public boolean contains(Flavor flavor) {
+    return translation.containsKey(flavor);
+  }
+
   public Optional<Flavor> getFlavor(Set<Flavor> flavors) {
     Sets.SetView<Flavor> match = Sets.intersection(translation.keySet(), flavors);
     if (match.size() > 1) {

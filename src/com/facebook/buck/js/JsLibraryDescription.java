@@ -56,7 +56,7 @@ import javax.annotation.Nullable;
 
 public class JsLibraryDescription implements Description<JsLibraryDescription.Arg>, Flavored {
 
-  private static final ImmutableSet<FlavorDomain<?>> FLAVOR_DOMAINS = ImmutableSet.of(
+  static final ImmutableSet<FlavorDomain<?>> FLAVOR_DOMAINS = ImmutableSet.of(
       JsFlavors.PLATFORM_DOMAIN,
       JsFlavors.OPTIMIZATION_DOMAIN);
 
