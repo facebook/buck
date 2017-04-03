@@ -253,6 +253,10 @@ public class FilterResourcesStep implements Step {
         // Skip nine-patch for now.
         continue;
       }
+      if (drawable.toString().endsWith(".webp")) {
+        // Skip webp for now.
+        continue;
+      }
 
       ResourceFilters.Qualifiers qualifiers = ResourceFilters.Qualifiers.from(drawable.getParent());
       ResourceFilters.Density density = qualifiers.density;
