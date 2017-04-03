@@ -210,11 +210,15 @@ public class AndroidLibraryGraphEnhancerTest {
   }
 
   @Test
-  public void testDummyRDotJavaRuleInheritsJavacOptionsDeps() {
+  public void testDummyRDotJavaRuleInheritsJavacOptionsDepsAndNoOthers() {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    FakeBuildRule javacDep = new FakeJavaLibrary(
+        BuildTargetFactory.newInstance("//:javac_dep"),
+        pathResolver);
+    resolver.addToIndex(javacDep);
     FakeBuildRule dep = new FakeJavaLibrary(
         BuildTargetFactory.newInstance("//:dep"),
         pathResolver);
@@ -224,7 +228,7 @@ public class AndroidLibraryGraphEnhancerTest {
             ImmutableMap.of("tools",
             ImmutableMap.of(
                 "javac_jar",
-                "//:dep")))
+                "//:javac_dep")))
         .build()
         .getView(JavaBuckConfig.class);
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -235,7 +239,9 @@ public class AndroidLibraryGraphEnhancerTest {
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
             target,
-            new FakeBuildRuleParamsBuilder(target).build(),
+            new FakeBuildRuleParamsBuilder(target)
+                .setDeclaredDeps(ImmutableSortedSet.of(dep))
+                .build(),
             JavacFactory.create(ruleFinder, javaConfig, null),
             options,
             DependencyMode.FIRST_ORDER,
@@ -248,6 +254,6 @@ public class AndroidLibraryGraphEnhancerTest {
             resolver,
             /* createdBuildableIfEmptyDeps */ true);
     assertTrue(result.isPresent());
-    assertThat(result.get().getBuildDeps(), Matchers.<BuildRule>hasItem(dep));
+    assertThat(result.get().getBuildDeps(), Matchers.<BuildRule>contains(javacDep));
   }
 }
