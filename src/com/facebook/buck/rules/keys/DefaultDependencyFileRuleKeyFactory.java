@@ -148,9 +148,12 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
       // `@AddToRuleKey Optional<ImmutableList<SourcePath>> myPaths` would have to be accompanied by
       // its structure information: `myPaths;Optional;List`. This adds additional overhead of
       // bookkeeping that information and counters any benefits caching would provide here.
-      try (RuleKeyScopedHasher.Scope wrapperScope =
+      try (RuleKeyScopedHasher.Scope appendableScope =
                getScopedHasher().wrapperScope(RuleKeyHasher.Wrapper.APPENDABLE)) {
-        appendable.appendToRuleKey(this);
+        try (RuleKeyScopedHasher.ContainerScope tupleScope =
+                 getScopedHasher().containerScope(RuleKeyHasher.Container.TUPLE)) {
+          appendable.appendToRuleKey(new ScopedRuleKeyObjectSink(tupleScope, this));
+        }
       }
       return this;
     }

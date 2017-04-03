@@ -55,6 +55,7 @@ import java.util.regex.Pattern;
  */
 public interface RuleKeyHasher<HASH> {
   enum Container {
+    TUPLE,
     LIST,
     MAP,
   }

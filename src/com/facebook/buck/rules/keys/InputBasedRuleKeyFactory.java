@@ -185,7 +185,8 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
 
     @Override
     protected Builder<RULE_KEY> setNonHashingSourcePath(SourcePath sourcePath) {
-      return (Builder<RULE_KEY>) setNonHashingSourcePathDirectly(sourcePath);
+      setNonHashingSourcePathDirectly(sourcePath);
+      return this;
     }
 
     // Input-based rule keys are evaluated after all dependencies for a rule are available on
@@ -197,7 +198,7 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
         deps.add(ImmutableSet.of(ruleFinder.getRuleOrThrow((BuildTargetSourcePath<?>) sourcePath)));
         // fall through and call setSourcePathDirectly as well
       }
-      super.setSourcePathDirectly(sourcePath);
+      setSourcePathDirectly(sourcePath);
       return this;
     }
 

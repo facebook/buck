@@ -242,12 +242,16 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
 
     if (val instanceof SourceWithFlags) {
       SourceWithFlags source = (SourceWithFlags) val;
-      try {
-        setSourcePath(source.getSourcePath());
-      } catch (IOException e) {
-        throw new RuntimeException(e);
+      try (ContainerScope containerScope = scopedHasher.containerScope(Container.TUPLE)) {
+        try (Scope elementScope = containerScope.elementScope()) {
+          setSourcePath(source.getSourcePath());
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+        try (Scope elementScope = containerScope.elementScope()) {
+          setReflectively(source.getFlags());
+        }
       }
-      setReflectively(source.getFlags());
       return this;
     }
 
@@ -329,8 +333,15 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
    */
   protected final RuleKeyBuilder<RULE_KEY> setSourcePathAsRule(
       BuildTargetSourcePath<?> sourcePath) {
-    hasher.putBuildTargetSourcePath(sourcePath);
-    return setBuildRule(ruleFinder.getRuleOrThrow(sourcePath));
+    try (ContainerScope containerScope = scopedHasher.containerScope(Container.TUPLE)) {
+      try (Scope elementScope = containerScope.elementScope()) {
+        hasher.putBuildTargetSourcePath(sourcePath);
+      }
+      try (Scope elementScope = containerScope.elementScope()) {
+        setBuildRule(ruleFinder.getRuleOrThrow(sourcePath));
+      }
+    }
+    return this;
   }
 
   // Paths get added as a combination of the file name and file hash. If the path is absolute

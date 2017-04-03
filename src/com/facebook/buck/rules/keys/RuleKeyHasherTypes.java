@@ -71,6 +71,8 @@ public class RuleKeyHasherTypes {
 
   public static byte containerSubType(RuleKeyHasher.Container container) {
     switch (container) {
+      case TUPLE:
+        return (byte) '(';
       case LIST:
         return (byte) '[';
       case MAP:
