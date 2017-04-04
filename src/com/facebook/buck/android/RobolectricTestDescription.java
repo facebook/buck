@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.CalculateAbiFromClasses;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -110,7 +110,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
       }
       BuildTarget testTarget = HasJavaAbi.getLibraryTarget(params.getBuildTarget());
       BuildRule testRule = resolver.requireRule(testTarget);
-      return CalculateAbi.of(
+      return CalculateAbiFromClasses.of(
           params.getBuildTarget(),
           ruleFinder,
           params,

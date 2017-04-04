@@ -45,7 +45,7 @@ import org.junit.Test;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class CalculateAbiTest {
+public class CalculateAbiFromClassesTest {
 
   @Test
   public void testIsAbiTargetRecognizesAbiTargets() {
@@ -90,8 +90,8 @@ public class CalculateAbiTest {
         pathResolver.getRelativePath(javaLibrary.getSourcePathToOutput()));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:library-abi");
-    CalculateAbi calculateAbi =
-        CalculateAbi.of(
+    CalculateAbiFromClasses calculateAbi =
+        CalculateAbiFromClasses.of(
             target,
             ruleFinder,
             builder.createBuildRuleParams(resolver, filesystem),
@@ -172,8 +172,8 @@ public class CalculateAbiTest {
         pathResolver.getRelativePath(javaLibrary.getSourcePathToOutput()));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:library-abi");
-    CalculateAbi calculateAbi =
-        CalculateAbi.of(
+    CalculateAbiFromClasses calculateAbi =
+        CalculateAbiFromClasses.of(
             target,
             ruleFinder,
             builder.createBuildRuleParams(resolver, filesystem),

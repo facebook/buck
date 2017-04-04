@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
-import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.CalculateAbiFromClasses;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.Javac;
@@ -145,13 +145,13 @@ public class AndroidLibraryGraphEnhancer {
     return Optional.of(dummyRDotJava);
   }
 
-  public CalculateAbi getBuildableForAndroidResourcesAbi(
+  public CalculateAbiFromClasses getBuildableForAndroidResourcesAbi(
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder) throws NoSuchBuildTargetException {
     Preconditions.checkState(HasJavaAbi.isAbiTarget(dummyRDotJavaBuildTarget));
     BuildTarget resourcesTarget = HasJavaAbi.getLibraryTarget(dummyRDotJavaBuildTarget);
     BuildRule resourcesRule = resolver.requireRule(resourcesTarget);
-    return CalculateAbi.of(
+    return CalculateAbiFromClasses.of(
         dummyRDotJavaBuildTarget,
         ruleFinder,
         originalBuildRuleParams,

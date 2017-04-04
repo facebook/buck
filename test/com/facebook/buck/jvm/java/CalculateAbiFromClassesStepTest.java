@@ -34,7 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class CalculateAbiStepTest {
+public class CalculateAbiFromClassesStepTest {
   @Rule
   public TemporaryPaths temp = new TemporaryPaths();
 
@@ -53,7 +53,7 @@ public class CalculateAbiStepTest {
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
     FakeBuildableContext context = new FakeBuildableContext();
-    new CalculateAbiStep(context, filesystem, binJar, abiJar).execute(executionContext);
+    new CalculateAbiFromClassesStep(context, filesystem, binJar, abiJar).execute(executionContext);
 
     String seenHash = filesystem.computeSha1(Paths.get("abi.jar")).getHash();
 

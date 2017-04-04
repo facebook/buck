@@ -26,14 +26,14 @@ import com.facebook.buck.step.StepExecutionResult;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class CalculateAbiStep implements Step {
+public class CalculateAbiFromClassesStep implements Step {
 
   private final BuildableContext buildableContext;
   private final ProjectFilesystem filesystem;
   private final Path binaryJar;
   private final Path abiJar;
 
-  public CalculateAbiStep(
+  public CalculateAbiFromClassesStep(
       BuildableContext buildableContext,
       ProjectFilesystem filesystem,
       Path binaryJar,
@@ -60,7 +60,7 @@ public class CalculateAbiStep implements Step {
 
   @Override
   public String getShortName() {
-    return "calculate_abi";
+    return "calculate_abi_from_classes";
   }
 
   @Override

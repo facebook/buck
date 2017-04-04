@@ -63,7 +63,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
     if (HasJavaAbi.isClassAbiTarget(params.getBuildTarget())) {
-      return CalculateAbi.of(
+      return CalculateAbiFromClasses.of(
           params.getBuildTarget(),
           ruleFinder,
           params,

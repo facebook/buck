@@ -1452,7 +1452,7 @@ public class DefaultJavaLibraryTest {
       new AnnotationProcessorTarget("//tools/java/src/com/facebook/somejava:library#class-abi") {
         @Override
         public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {
-          return  CalculateAbi.of(target,
+          return  CalculateAbiFromClasses.of(target,
               new SourcePathRuleFinder(ruleResolver),
               new FakeBuildRuleParamsBuilder(target)
                   .setProjectFilesystem(new FakeProjectFilesystem())

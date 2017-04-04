@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.CalculateAbiStep;
+import com.facebook.buck.jvm.java.CalculateAbiFromClassesStep;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
@@ -231,7 +231,7 @@ public class DummyRDotJava extends AbstractBuildRule
     buildableContext.recordArtifact(outputJar);
 
     steps.add(
-        new CalculateAbiStep(
+        new CalculateAbiFromClassesStep(
             buildableContext,
             getProjectFilesystem(),
             rDotJavaClassesFolder,

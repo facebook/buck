@@ -165,7 +165,7 @@ public class DummyRDotJavaTest {
         /* directToJarOutputSettings */ Optional.empty())
             .getDescription(TestExecutionContext.newInstance()))
         .add(String.format("jar cf %s  %s", rDotJavaOutputJar, rDotJavaBinFolder))
-        .add(String.format("calculate_abi %s", rDotJavaBinFolder))
+        .add(String.format("calculate_abi_from_classes %s", rDotJavaBinFolder))
         .build();
 
     MoreAsserts.assertSteps(

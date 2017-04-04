@@ -264,7 +264,7 @@ public class DefaultJavaLibraryBuilder {
       BuildTarget libraryTarget = HasJavaAbi.getLibraryTarget(abiTarget);
       BuildRule libraryRule = buildRuleResolver.requireRule(libraryTarget);
 
-      return CalculateAbi.of(
+      return CalculateAbiFromClasses.of(
           abiTarget,
           ruleFinder,
           params,
