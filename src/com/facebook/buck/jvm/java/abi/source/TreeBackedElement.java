@@ -115,6 +115,10 @@ abstract class TreeBackedElement implements Element {
     if (annotationMirrors == null) {
       List<? extends AnnotationMirror> underlyingAnnotations =
           underlyingElement.getAnnotationMirrors();
+      if (underlyingAnnotations.isEmpty()) {
+        return underlyingAnnotations;
+      }
+
       List<? extends AnnotationTree> annotationTrees = getAnnotationTrees();
       List<TreeBackedAnnotationMirror> result = new ArrayList<>();
       for (int i = 0; i < underlyingAnnotations.size(); i++) {

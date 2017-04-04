@@ -19,11 +19,13 @@ package com.facebook.buck.jvm.java.abi.source;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.jvm.java.testutil.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -140,6 +142,19 @@ public class TreeBackedPackageElementTest extends CompilerTreeApiParameterizedTe
 
     assertPackageContains(javaUtilPackage, listType);
     assertPackageContains(javaUtilPackage, fooType);
+  }
+
+  @Test
+  public void testGetAnnotationMirrorsNoAnnotations() throws IOException {
+    compile(Joiner.on('\n').join(
+        "package foo;",
+        "class Foo { }"
+    ));
+
+    PackageElement fooPackage = elements.getPackageElement("foo");
+    assertThat(
+        fooPackage.getAnnotationMirrors(),
+        Matchers.empty());
   }
 
   private void assertPackageContains(PackageElement packageElement, TypeElement typeElement) {
