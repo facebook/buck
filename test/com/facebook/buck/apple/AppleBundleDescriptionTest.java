@@ -18,11 +18,18 @@ package com.facebook.buck.apple;
 
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
@@ -148,5 +155,33 @@ public class AppleBundleDescriptionTest {
             .add(debugFlavorOnlyAfterPropagation)
             .build(),
         implicitDeps.build());
+  }
+
+  @Test
+  public void metadataTraversalForFrameworkDependenciesAreTerminated() throws Exception {
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:binary");
+    TargetNode<?, ?> binaryNode = new AppleBinaryBuilder(binaryTarget)
+        .build();
+
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//:bundle");
+    TargetNode<?, ?> bundleNode = new AppleBundleBuilder(bundleTarget)
+        .setBinary(binaryTarget)
+        .build();
+
+    BuildRuleResolver buildRuleResolver = new BuildRuleResolver(
+        TargetGraphFactory.newInstance(
+            bundleNode,
+            binaryNode),
+        new DefaultTargetNodeToBuildRuleTransformer());
+    assertTrue(
+        "Although querying a binary's framework dependencies should not return empty...",
+        buildRuleResolver.requireMetadata(
+            binaryTarget.withFlavors(
+                FakeAppleRuleDescriptions.DEFAULT_MACOSX_X86_64_PLATFORM.getFlavor()),
+            FrameworkDependencies.class)
+            .isPresent());
+    assertFalse(
+        "Querying a bundle's framework dependencies should return empty.",
+        buildRuleResolver.requireMetadata(bundleTarget, FrameworkDependencies.class).isPresent());
   }
 }
