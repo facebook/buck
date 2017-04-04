@@ -194,7 +194,7 @@ public class IjProject {
             return sourcePathResolver.getRelativePath(sourcePath);
           }
         };
-    IjModuleGraph moduleGraph = IjModuleGraph.from(
+    IjModuleGraph moduleGraph = IjModuleGraphFactory.from(
         projectConfig,
         targetGraphAndTargets.getTargetGraph(),
         libraryFactory,

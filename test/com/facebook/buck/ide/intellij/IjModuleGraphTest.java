@@ -494,7 +494,10 @@ public class IjModuleGraphTest {
     int minimumDepth = aggregationMode.getGraphMinimumDepth(graphSize);
     ImmutableList.Builder<Path> transformedPaths = ImmutableList.builder();
     for (Path path : originalPaths) {
-      transformedPaths.add(IjModuleGraph.simplifyPath(path, minimumDepth, dummyAggregationStops));
+      transformedPaths.add(IjModuleGraphFactory.simplifyPath(
+          path,
+          minimumDepth,
+          dummyAggregationStops));
     }
 
     assertThat(
@@ -554,7 +557,10 @@ public class IjModuleGraphTest {
     int minimumDepth = testAggregationMode.getGraphMinimumDepth(originalPaths.size());
     ImmutableList.Builder<Path> transformedPaths = ImmutableList.builder();
     for (Path path : originalPaths) {
-      transformedPaths.add(IjModuleGraph.simplifyPath(path, minimumDepth, dummyAggregationStops));
+      transformedPaths.add(IjModuleGraphFactory.simplifyPath(
+          path,
+          minimumDepth,
+          dummyAggregationStops));
     }
 
     assertThat(transformedPaths.build(), Matchers.equalTo(expectedPaths));
@@ -684,7 +690,7 @@ public class IjModuleGraphTest {
 
     Path blockedChild = Paths.get("/a/b/c/block/e/f");
     assertThat(
-        IjModuleGraph.calculatePathDepth(blockedChild, 2, rootNode),
+        IjModuleGraphFactory.calculatePathDepth(blockedChild, 2, rootNode),
         Matchers.equalTo(blockedPathNameCount));
   }
 
@@ -699,14 +705,14 @@ public class IjModuleGraphTest {
     // Paths diverge one level above the block
     Path unblockedPath = Paths.get("/a/b/c/noblock/e/f");
     assertThat(
-        IjModuleGraph.calculatePathDepth(unblockedPath, 2, rootNode),
+        IjModuleGraphFactory.calculatePathDepth(unblockedPath, 2, rootNode),
         Matchers.equalTo(blockedPathNameCount - 1));
 
 
     // Paths diverge two levels above the block
     Path unblockedPath2 = Paths.get("/a/b/x/noblock/e/f");
     assertThat(
-        IjModuleGraph.calculatePathDepth(unblockedPath2, 2, rootNode),
+        IjModuleGraphFactory.calculatePathDepth(unblockedPath2, 2, rootNode),
         Matchers.equalTo(blockedPathNameCount - 2));
   }
 
@@ -721,7 +727,7 @@ public class IjModuleGraphTest {
     Path unblockedPath = Paths.get("/z/y/x/w/v");
 
     assertThat(
-        IjModuleGraph.calculatePathDepth(unblockedPath, 2, rootNode),
+        IjModuleGraphFactory.calculatePathDepth(unblockedPath, 2, rootNode),
         Matchers.equalTo(2));
   }
 
@@ -860,7 +866,7 @@ public class IjModuleGraphTest {
         },
         projectConfig);
     IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(sourceOnlyResolver);
-    return IjModuleGraph.from(
+    return IjModuleGraphFactory.from(
         projectConfig,
         TargetGraphFactory.newInstance(targets),
         libraryFactory,
