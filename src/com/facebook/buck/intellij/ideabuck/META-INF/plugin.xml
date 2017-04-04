@@ -23,9 +23,16 @@
 
   <ul>
       <li>
-	<b>2.7.6</b>
-	  Change pasting formatting to have double-quotes and four-space indents.
-      </li>	
+        <b>2.7.7</b>
+	      Fix a bug with buck command never finishes. This solves the problem with not showing
+	      targets in "Choose Buck Target" pop-up.
+	      Use buck config to determine Buck file name (default is BUCK).
+      </li>
+      <li>
+        <b>2.7.6</b>
+	      Change pasting formatting to have double-quotes and four-space indents.
+      </li>
+      <li>
         <b>2.7.5</b>
           Fix go-to-definition to recognize both single- and double-quoted strings.
           Fix how the icon gets initialized for the buck tool window.
