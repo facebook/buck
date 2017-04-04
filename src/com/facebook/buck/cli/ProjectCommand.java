@@ -82,7 +82,6 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -1087,26 +1086,10 @@ public class ProjectCommand extends BuildCommand {
     }
     LOG.debug("Selected targets: %s", passedInTargetsSet.toString());
 
-    // Retrieve mapping: cell name -> path.
-    ImmutableMap<String, Path> cellPaths = params.getCell().getCellPathResolver().getCellPaths();
-    ImmutableMap<Path, String> cellNames = ImmutableBiMap.copyOf(cellPaths).inverse();
-
-    // Create a set of unflavored targets that have cell names.
-    ImmutableSet.Builder<UnflavoredBuildTarget> builder = ImmutableSet.builder();
-    for (BuildTarget target : passedInTargetsSet) {
-      String cell = cellNames.get(target.getCellPath());
-      if (cell == null) {
-        builder.add(target.getUnflavoredBuildTarget());
-      } else {
-        UnflavoredBuildTarget targetWithCell = UnflavoredBuildTarget.of(
-            target.getCellPath(),
-            Optional.of(cell),
-            target.getBaseName(),
-            target.getShortName());
-        builder.add(targetWithCell);
-      }
-    }
-    ImmutableSet<UnflavoredBuildTarget> passedInUnflavoredTargetsSet = builder.build();
+    ImmutableSet<UnflavoredBuildTarget> passedInUnflavoredTargetsSet =
+        RichStream.from(passedInTargetsSet)
+            .map(BuildTarget::getUnflavoredBuildTarget)
+            .toImmutableSet();
     LOG.debug("Selected unflavored targets: %s", passedInUnflavoredTargetsSet.toString());
     return FocusedModuleTargetMatcher.focusedOn(passedInUnflavoredTargetsSet);
   }

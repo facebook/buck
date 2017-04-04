@@ -61,7 +61,7 @@ public final class FocusedModuleTargetMatcher {
    */
   public boolean isFocusedOn(BuildTarget buildTarget) {
     if (focusedTargets != null) {
-      return focusedTargets.contains(buildTarget.getUnflavoredBuildTarget());
+      return focusedTargets.contains(buildTarget.withoutCell().getUnflavoredBuildTarget());
     } else {
       return true;
     }
