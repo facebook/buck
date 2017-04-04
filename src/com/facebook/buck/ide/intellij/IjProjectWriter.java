@@ -47,7 +47,6 @@ public class IjProjectWriter {
   public static final char DELIMITER = '%';
   public static final Path IDEA_CONFIG_DIR_PREFIX = Paths.get(".idea");
   public static final Path LIBRARIES_PREFIX = IDEA_CONFIG_DIR_PREFIX.resolve("libraries");
-  public static final Path MODULES_PREFIX = IDEA_CONFIG_DIR_PREFIX.resolve("modules");
 
   private enum StringTemplateFile {
     MODULE_TEMPLATE("ij-module.st"),
@@ -82,6 +81,8 @@ public class IjProjectWriter {
   public void write() throws IOException {
     IJProjectCleaner cleaner = new IJProjectCleaner(projectFilesystem);
 
+    projectFilesystem.mkdirs(IDEA_CONFIG_DIR_PREFIX);
+
     writeProjectSettings(cleaner, projectConfig);
 
     boolean generateClasses = !projectConfig.isAutogenerateAndroidFacetSourcesEnabled();
@@ -109,7 +110,6 @@ public class IjProjectWriter {
   }
 
   private Path writeModule(IjModule module) throws IOException {
-    projectFilesystem.mkdirs(MODULES_PREFIX);
     Path path = module.getModuleImlFilePath();
 
     ST moduleContents = getST(StringTemplateFile.MODULE_TEMPLATE);
@@ -160,8 +160,6 @@ public class IjProjectWriter {
       return;
     }
 
-    projectFilesystem.mkdirs(IDEA_CONFIG_DIR_PREFIX);
-
     Path path = IDEA_CONFIG_DIR_PREFIX.resolve("misc.xml");
 
     ST contents = getST(StringTemplateFile.MISC_TEMPLATE);
@@ -197,7 +195,6 @@ public class IjProjectWriter {
   }
 
   private Path writeLibrary(IjLibrary library) throws IOException {
-    projectFilesystem.mkdirs(LIBRARIES_PREFIX);
     Path path = LIBRARIES_PREFIX.resolve(library.getName() + ".xml");
 
     ST contents = getST(StringTemplateFile.LIBRARY_TEMPLATE);
