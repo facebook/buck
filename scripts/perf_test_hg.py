@@ -336,16 +336,7 @@ def main():
     cwd = os.path.join(cwd_root, args.project_under_test)
 
     log('Renaming %s to %s' % (args.repo_under_test, cwd_root))
-    is_mounted = subprocess.call(
-        ["cat", "/proc/mounts", "|", "cut", "-d", "' '", "-f", "2", "|", "grep",
-         "^"+args.repo_under_test+"$"],
-        shell=True
-    ) == 0
-    if is_mounted:
-        subprocess.check_call(["mount", "--move",
-                               args.repo_under_test, cwd_root])
-    else:
-        os.rename(args.repo_under_test, cwd_root)
+    os.rename(args.repo_under_test, cwd_root)
 
     try:
         log('== Checking for problems with absolute paths ==')
@@ -371,11 +362,7 @@ def main():
 
     finally:
         log('Renaming %s to %s' % (cwd_root, args.repo_under_test))
-        if is_mounted:
-            subprocess.check_call(["mount", "--move",
-                                   cwd_root, args.repo_under_test])
-        else:
-            os.rename(cwd_root, args.repo_under_test)
+        os.rename(cwd_root, args.repo_under_test)
 
 
 if __name__ == '__main__':
