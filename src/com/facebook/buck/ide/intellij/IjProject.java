@@ -210,8 +210,7 @@ public class IjProject {
     IjProjectWriter writer = new IjProjectWriter(
         new IjProjectTemplateDataPreparer(parsingJavaPackageFinder, moduleGraph, projectFilesystem),
         projectConfig,
-        projectFilesystem,
-        moduleGraph);
+        projectFilesystem);
     writer.write();
     return requiredBuildTargets.build();
   }

@@ -336,6 +336,21 @@ public class IjProjectTemplateDataPreparer {
     return dependencyListBuilder.build();
   }
 
+  public Optional<String> getFirstResourcePackageFromDependencies(IjModule module) {
+    ImmutableMap<IjModule, DependencyType> deps =
+        moduleGraph.getDependentModulesFor(module);
+    for (IjModule dep : deps.keySet()) {
+      Optional<IjModuleAndroidFacet> facet = dep.getAndroidFacet();
+      if (facet.isPresent()) {
+        Optional<String> packageName = facet.get().getPackageName();
+        if (packageName.isPresent()) {
+          return packageName;
+        }
+      }
+    }
+    return Optional.empty();
+  }
+
   @Value.Immutable
   @BuckStyleImmutable
   abstract static class AbstractModuleIndexEntry implements Comparable<ModuleIndexEntry> {

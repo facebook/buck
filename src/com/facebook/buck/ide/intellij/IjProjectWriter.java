@@ -21,7 +21,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Resources;
 
@@ -70,17 +69,14 @@ public class IjProjectWriter {
   private IjProjectTemplateDataPreparer projectDataPreparer;
   private IjProjectConfig projectConfig;
   private ProjectFilesystem projectFilesystem;
-  private IjModuleGraph moduleGraph;
 
   public IjProjectWriter(
       IjProjectTemplateDataPreparer projectDataPreparer,
       IjProjectConfig projectConfig,
-      ProjectFilesystem projectFilesystem,
-      IjModuleGraph moduleGraph) {
+      ProjectFilesystem projectFilesystem) {
     this.projectDataPreparer = projectDataPreparer;
     this.projectConfig = projectConfig;
     this.projectFilesystem = projectFilesystem;
-    this.moduleGraph = moduleGraph;
   }
 
   public void write() throws IOException {
@@ -297,24 +293,9 @@ public class IjProjectWriter {
       IjModuleAndroidFacet androidFacet) {
     Optional<String> packageName = androidFacet.getPackageName();
     if (!packageName.isPresent()) {
-      packageName = getFirstResourcePackageFromDependencies(module);
+      packageName = projectDataPreparer.getFirstResourcePackageFromDependencies(module);
     }
     return packageName;
-  }
-
-  private Optional<String> getFirstResourcePackageFromDependencies(IjModule module) {
-    ImmutableMap<IjModule, DependencyType> deps =
-        moduleGraph.getDependentModulesFor(module);
-    for (IjModule dep : deps.keySet()) {
-      Optional<IjModuleAndroidFacet> facet = dep.getAndroidFacet();
-      if (facet.isPresent()) {
-        Optional<String> packageName = facet.get().getPackageName();
-        if (packageName.isPresent()) {
-          return packageName;
-        }
-      }
-    }
-    return Optional.empty();
   }
 
   private static ST getST(StringTemplateFile file) throws IOException {
