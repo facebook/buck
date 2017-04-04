@@ -196,6 +196,7 @@ def standard_java_library(
 def standard_java_test(
     name,
     deps = None,
+    exported_deps = None,
     run_test_separately = False,
     vm_args = None,
     fork_mode = 'none',
@@ -216,13 +217,14 @@ def standard_java_test(
           autodeps = True,
           resources = glob(['testdata/**'], include_dotfiles=True),
           deps = deps or [],
+          exported_deps = exported_deps or [],
           vm_args = vm_args,
           run_test_separately = run_test_separately,
           fork_mode = fork_mode,
           labels = labels or [],
         )
 
-def standard_java_testutil(name, deps = None):
+def standard_java_testutil(name, deps = None, exported_deps = None):
     srcs = glob(['*.java'])
     testutil_srcs = []
     for src in srcs:
@@ -235,6 +237,7 @@ def standard_java_testutil(name, deps = None):
           srcs = testutil_srcs,
           autodeps = True,
           deps = deps or [],
+          exported_deps = exported_deps or [],
           visibility = [
             '//test/...',
           ]
