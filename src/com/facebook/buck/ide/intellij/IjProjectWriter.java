@@ -209,7 +209,7 @@ public class IjProjectWriter {
         "classPaths",
         library.getClassPaths().stream()
             .map(MorePaths::pathWithUnixSeparators)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(MoreCollectors.toImmutableSortedSet()));
     contents.add(
         "sourceJar",
         library.getSourceJar().map(MorePaths::pathWithUnixSeparators).orElse(null));

@@ -128,6 +128,11 @@ public class ProjectIntegrationTest {
     runBuckProjectAndVerify("robolectric_test");
   }
 
+  @Test
+  public void testAndroidResourcesInDependencies() throws IOException {
+    runBuckProjectAndVerify("experimental_project_with_android_resources");
+  }
+
   private ProcessResult runBuckProjectAndVerify(
       String folderWithTestData,
       String... commandArgs) throws IOException {
