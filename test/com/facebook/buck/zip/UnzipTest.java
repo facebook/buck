@@ -153,4 +153,82 @@ public class UnzipTest {
     assertThat(Files.readSymbolicLink(link).toString(), Matchers.equalTo("target.txt"));
   }
 
+  @Test
+  public void testExtractWeirdIndex() throws IOException {
+
+    try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(zipFile.toFile())) {
+      zip.putArchiveEntry(new ZipArchiveEntry("foo/bar/baz"));
+      zip.write(DUMMY_FILE_CONTENTS, 0, DUMMY_FILE_CONTENTS.length);
+      zip.closeArchiveEntry();
+      zip.putArchiveEntry(new ZipArchiveEntry("foo/"));
+      zip.closeArchiveEntry();
+    }
+
+    Path extractFolder = tmpFolder.newFolder();
+    ImmutableList<Path> result = Unzip.extractZipFile(
+        zipFile.toAbsolutePath(),
+        extractFolder.toAbsolutePath(),
+        Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+    assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve("foo")));
+    assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve("foo/bar/baz")));
+
+    assertEquals(
+        ImmutableList.of(
+            extractFolder.resolve("foo/bar/baz")),
+        result);
+  }
+
+  @Test
+  public void testNonCanonicalPaths() throws IOException {
+    String names[] = {
+        "foo/./",
+        "foo/./bar/",
+        "foo/./bar/baz.cpp",
+        "foo/./bar/baz.h",
+    };
+
+    try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(zipFile.toFile())) {
+      for (String name : names) {
+        zip.putArchiveEntry(new ZipArchiveEntry(name));
+        zip.closeArchiveEntry();
+      }
+    }
+
+    Path extractFolder = tmpFolder.newFolder();
+    Unzip.extractZipFile(
+        zipFile.toAbsolutePath(),
+        extractFolder.toAbsolutePath(),
+        Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+    for (String name : names) {
+      assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve(name)));
+    }
+    Unzip.extractZipFile(
+        zipFile.toAbsolutePath(),
+        extractFolder.toAbsolutePath(),
+        Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+    for (String name : names) {
+      assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve(name)));
+    }
+  }
+
+
+  @Test
+  public void testParentDirPaths() throws IOException {
+
+    try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(zipFile.toFile())) {
+      // It seems very unlikely that a zip file would contain ".." paths, but handle it anyways.
+      zip.putArchiveEntry(new ZipArchiveEntry("foo/bar/"));
+      zip.closeArchiveEntry();
+      zip.putArchiveEntry(new ZipArchiveEntry("foo/bar/../"));
+      zip.closeArchiveEntry();
+    }
+
+    Path extractFolder = tmpFolder.newFolder();
+    Unzip.extractZipFile(
+        zipFile.toAbsolutePath(),
+        extractFolder.toAbsolutePath(),
+        Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+    assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve("foo")));
+    assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve("foo/bar")));
+  }
 }
