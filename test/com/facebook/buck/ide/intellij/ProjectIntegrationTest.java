@@ -133,6 +133,11 @@ public class ProjectIntegrationTest {
     runBuckProjectAndVerify("experimental_project_with_android_resources");
   }
 
+  @Test
+  public void testPrebuiltJarWithJavadoc() throws IOException {
+    runBuckProjectAndVerify("project_with_prebuilt_jar");
+  }
+
   private ProcessResult runBuckProjectAndVerify(
       String folderWithTestData,
       String... commandArgs) throws IOException {
