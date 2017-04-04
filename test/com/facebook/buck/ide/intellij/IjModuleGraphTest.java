@@ -490,7 +490,7 @@ public class IjModuleGraphTest {
         Paths.get("a"),
         Paths.get(""));
 
-    IjModuleGraph.BlockedPathNode dummyAggregationStops = new IjModuleGraph.BlockedPathNode();
+    BlockedPathNode dummyAggregationStops = new BlockedPathNode();
     int minimumDepth = aggregationMode.getGraphMinimumDepth(graphSize);
     ImmutableList.Builder<Path> transformedPaths = ImmutableList.builder();
     for (Path path : originalPaths) {
@@ -550,7 +550,7 @@ public class IjModuleGraphTest {
         Paths.get("a"),
         Paths.get(""));
 
-    IjModuleGraph.BlockedPathNode dummyAggregationStops = new IjModuleGraph.BlockedPathNode();
+    BlockedPathNode dummyAggregationStops = new BlockedPathNode();
     int minimumDepth = testAggregationMode.getGraphMinimumDepth(originalPaths.size());
     ImmutableList.Builder<Path> transformedPaths = ImmutableList.builder();
     for (Path path : originalPaths) {
@@ -676,7 +676,7 @@ public class IjModuleGraphTest {
 
   @Test
   public void testBlockedPathDepthCalculation() {
-    IjModuleGraph.BlockedPathNode rootNode = new IjModuleGraph.BlockedPathNode();
+    BlockedPathNode rootNode = new BlockedPathNode();
 
     Path blockedPath = Paths.get("/a/b/c/block");
     int blockedPathNameCount = blockedPath.getNameCount();
@@ -690,7 +690,7 @@ public class IjModuleGraphTest {
 
   @Test
   public void testUnblockedDivergentPathDepthCalculation() {
-    IjModuleGraph.BlockedPathNode rootNode = new IjModuleGraph.BlockedPathNode();
+    BlockedPathNode rootNode = new BlockedPathNode();
 
     Path blockedPath = Paths.get("/a/b/c/block");
     int blockedPathNameCount = blockedPath.getNameCount();
@@ -712,7 +712,7 @@ public class IjModuleGraphTest {
 
   @Test
   public void testUnblockedPathDepthCalculation() {
-    IjModuleGraph.BlockedPathNode rootNode = new IjModuleGraph.BlockedPathNode();
+    BlockedPathNode rootNode = new BlockedPathNode();
 
     Path blockedPath = Paths.get("/a/b/c/block");
     int blockedPathNameCount = blockedPath.getNameCount();
@@ -727,7 +727,7 @@ public class IjModuleGraphTest {
 
   @Test
   public void testPathBlockerBlocksExactMatch() {
-    IjModuleGraph.BlockedPathNode rootNode = new IjModuleGraph.BlockedPathNode();
+    BlockedPathNode rootNode = new BlockedPathNode();
 
     Path blockedPath = Paths.get("/a/b/c/block");
     int blockedPathNameCount = blockedPath.getNameCount();
@@ -740,7 +740,7 @@ public class IjModuleGraphTest {
 
   @Test
   public void testPathBlockerBlocksSubpathAtRightPlace() {
-    IjModuleGraph.BlockedPathNode rootNode = new IjModuleGraph.BlockedPathNode();
+    BlockedPathNode rootNode = new BlockedPathNode();
 
     Path blockedPath = Paths.get("/a/b/c/block");
     int blockedPathNameCount = blockedPath.getNameCount();
@@ -756,7 +756,7 @@ public class IjModuleGraphTest {
 
   @Test
   public void testPathBlockerBlockingOfChildOfSibling() {
-    IjModuleGraph.BlockedPathNode rootNode = new IjModuleGraph.BlockedPathNode();
+    BlockedPathNode rootNode = new BlockedPathNode();
 
     Path blockedPath = Paths.get("/a/b/c/block");
     int blockedPathNameCount = blockedPath.getNameCount();

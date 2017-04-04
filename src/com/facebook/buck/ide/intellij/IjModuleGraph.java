@@ -37,8 +37,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import javax.annotation.Nullable;
-
 /**
  * Represents a graph of IjModules and the dependencies between them.
  */
@@ -316,71 +314,4 @@ public class IjModuleGraph {
   }
 
 
-  static class BlockedPathNode {
-    private static final Optional<BlockedPathNode> EMPTY_CHILD = Optional.empty();
-
-    private boolean isBlocked;
-
-    // The key is a path component to allow traversing down a hierarchy
-    // to find blocks rather than doing simple path comparison.
-    @Nullable
-    private Map<Path, BlockedPathNode> children;
-
-    BlockedPathNode() {
-      this.isBlocked = false;
-    }
-
-    void putChild(Path path, BlockedPathNode node) {
-      if (children == null) {
-        children = new HashMap<Path, BlockedPathNode>();
-      }
-      children.put(path, node);
-    }
-
-    private Optional<BlockedPathNode> getChild(Path path) {
-      return children == null ? EMPTY_CHILD : Optional.ofNullable(children.get(path));
-    }
-
-    private void clearAllChildren() {
-      children = null;
-    }
-
-    void markAsBlocked(Path path, int currentIdx, int pathNameCount) {
-      if (currentIdx == pathNameCount) {
-        isBlocked = true;
-        clearAllChildren();
-        return;
-      }
-
-      Path component = path.getName(currentIdx);
-      Optional<BlockedPathNode> blockedPathNodeOptional = getChild(component);
-      BlockedPathNode blockedPathNode;
-
-      if (blockedPathNodeOptional.isPresent()) {
-        blockedPathNode = blockedPathNodeOptional.get();
-        if (blockedPathNode.isBlocked) {
-          return;
-        }
-      } else {
-        blockedPathNode = new BlockedPathNode();
-        putChild(component, blockedPathNode);
-      }
-
-      blockedPathNode.markAsBlocked(path, ++currentIdx, pathNameCount);
-    }
-
-    int findLowestPotentialBlockedOnPath(Path path, int currentIdx, int pathNameCount) {
-      if (isBlocked || currentIdx == pathNameCount) {
-        return currentIdx;
-      }
-
-      Path thisComponent = path.getName(currentIdx);
-      Optional<BlockedPathNode> nextNode = getChild(thisComponent);
-      if (nextNode.isPresent()) {
-        return nextNode.get().findLowestPotentialBlockedOnPath(path, ++currentIdx, pathNameCount);
-      }
-
-      return currentIdx;
-    }
-  }
 }

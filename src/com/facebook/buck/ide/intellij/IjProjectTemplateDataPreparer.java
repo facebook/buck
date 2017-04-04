@@ -20,7 +20,6 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -29,9 +28,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 
-import org.immutables.value.Value;
-
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -183,41 +179,6 @@ public class IjProjectTemplateDataPreparer {
     }
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractIjSourceFolder implements Comparable<IjSourceFolder> {
-    public abstract String getType();
-    public abstract String getUrl();
-    public abstract boolean getIsTestSource();
-    public abstract boolean getIsAndroidResources();
-    @Nullable public abstract String getPackagePrefix();
-
-    @Override
-    public int compareTo(IjSourceFolder o) {
-      if (this == o) {
-        return 0;
-      }
-
-      return getUrl().compareTo(o.getUrl());
-    }
-  }
-
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractContentRoot implements Comparable<ContentRoot> {
-    public abstract String getUrl();
-    public abstract ImmutableSortedSet<IjSourceFolder> getFolders();
-
-    @Override
-    public int compareTo(ContentRoot o) {
-      if (this == o) {
-        return 0;
-      }
-
-      return getUrl().compareTo(o.getUrl());
-    }
-  }
-
   public ImmutableSet<IjModule> getModulesToBeWritten() {
     return modulesToBeWritten;
   }
@@ -349,28 +310,6 @@ public class IjProjectTemplateDataPreparer {
       }
     }
     return Optional.empty();
-  }
-
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractModuleIndexEntry implements Comparable<ModuleIndexEntry> {
-    public abstract String getFileUrl();
-    public abstract Path getFilePath();
-    @Nullable public abstract String getGroup();
-
-    @Override
-    public int compareTo(ModuleIndexEntry o) {
-      if (this == o) {
-        return 0;
-      }
-
-      return getFilePath()
-          .toString()
-          .replace(File.separatorChar, ' ')
-          .compareTo(o.getFilePath()
-              .toString()
-              .replace(File.separatorChar, ' '));
-    }
   }
 
   public ImmutableSortedSet<ModuleIndexEntry> getModuleIndexEntries() {
