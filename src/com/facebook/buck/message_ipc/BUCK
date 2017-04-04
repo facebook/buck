@@ -1,9 +1,17 @@
 standard_java_library(
     name = "message_ipc",
+    exported_deps = [
+        "//src/com/facebook/buck/shell:worker_process",
+        "//third-party/java/jackson:jackson-core",
+        "//third-party/java/jackson:jackson-databind",
+    ],
     tests = [
         "//test/com/facebook/buck/message_ipc:message_ipc",
     ],
     deps = [
+        "//src/com/facebook/buck/util:object_mapper",
+        "//third-party/java/guava:guava",
         "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jsr:jsr305",
     ],
 )

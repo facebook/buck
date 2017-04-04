@@ -2,6 +2,10 @@ java_library(
     name = "testutil",
     srcs = glob(["*.java"]),
     autodeps = True,
+    exported_deps = [
+        "//third-party/java/asm:asm",
+        "//third-party/java/junit:junit",
+    ],
     provided_deps = [
         # Tools.jar is the compiler itself, and will already be present at runtime;
         # we compile against a stub.
@@ -9,5 +13,11 @@ java_library(
     ],
     visibility = [
         "//test/com/facebook/buck/jvm/java/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/io:MorePaths.java",
+        "//src/com/facebook/buck/jvm/java/abi/source:source",
+        "//third-party/java/guava:guava",
+        "//third-party/java/hamcrest:java-hamcrest",
     ],
 )

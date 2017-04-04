@@ -1,6 +1,10 @@
 standard_java_library(
     name = "coverage",
     visibility = [],  # Only visible to this build file.
+    deps = [
+        "//third-party/java/jacoco:jacoco",
+        "//third-party/java/plexus:plexus-utils",
+    ],
 )
 
 java_binary(

@@ -1,9 +1,18 @@
 standard_java_library(
     name = "bsd",
+    exported_deps = [
+        "//src/com/facebook/buck/charset:charset",
+        "//src/com/facebook/buck/util/immutables:immutables",
+        "//third-party/java/guava:guava",
+    ],
     immutable_types = [
         "UnixArchiveEntry",
     ],
     tests = [
         "//test/com/facebook/buck/bsd:bsd",
+    ],
+    deps = [
+        "//src/com/facebook/buck/util:exceptions",
+        "//third-party/java/immutables:immutables",
     ],
 )

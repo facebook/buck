@@ -3,4 +3,8 @@ java_test(
     srcs = glob(["*.java"]),
     autodeps = True,
     resources = glob(["test-files/*.plist"]),
+    deps = [
+        "//third-party/java/dd-plist:dd-plist",
+        "//third-party/java/junit:junit",
+    ],
 )

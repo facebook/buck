@@ -1,3 +1,12 @@
 standard_java_library(
     name = "trace",
+    exported_deps = [
+        "//src/com/facebook/buck/io:io",
+        "//third-party/java/gson:gson",
+    ],
+    deps = [
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/util:exceptions",
+        "//third-party/java/guava:guava",
+    ],
 )

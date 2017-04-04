@@ -4,4 +4,10 @@ standard_java_testutil(
 
 standard_java_test(
     name = "bser",
+    deps = [
+        "//src/com/facebook/buck/bser:bser",
+        "//third-party/java/guava:guava",
+        "//third-party/java/hamcrest:java-hamcrest",
+        "//third-party/java/junit:junit",
+    ],
 )

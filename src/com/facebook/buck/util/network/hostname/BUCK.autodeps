@@ -1,8 +1,0 @@
-{
-  "hostname" : {
-    "deps" : [ ],
-    "exported_deps" : [
-      "//third-party/java/jna:jna"
-    ]
-  }
-}

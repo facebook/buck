@@ -1,7 +1,22 @@
 standard_java_testutil(
     name = "testutil",
+    exported_deps = [
+        "//src/com/facebook/buck/util/network:network",
+        "//third-party/java/guava:guava",
+    ],
+    deps = ["//third-party/java/jsr:jsr305"],
 )
 
 standard_java_test(
     name = "network",
+    deps = [
+        "//src-gen:thrift",
+        "//src/com/facebook/buck/slb:slb",
+        "//src/com/facebook/buck/util/network:network",
+        "//third-party/java/guava:guava",
+        "//third-party/java/hamcrest:hamcrest-junit",
+        "//third-party/java/hamcrest:java-hamcrest",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/junit:junit",
+    ],
 )

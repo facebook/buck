@@ -1,3 +1,8 @@
 standard_java_library(
     name = "device",
+    exported_deps = [
+        "//src/com/facebook/buck/util:process_executor",
+        "//third-party/java/guava:guava",
+    ],
+    deps = ["//src/com/facebook/buck/log:api"],
 )

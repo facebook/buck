@@ -3,7 +3,12 @@ java_test(
     srcs = glob(["*.java"]),
     autodeps = True,
     deps = [
+        "//src/com/facebook/buck/android/agent/util:util",
         # Resource-only rule: not picked up by autodeps.
         "//src/com/facebook/buck/android/agent:manifest-as-resource",
+        "//src/com/facebook/buck/android:utils",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
     ],
 )

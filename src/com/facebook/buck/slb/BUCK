@@ -1,9 +1,25 @@
 standard_java_library(
     name = "slb",
+    exported_deps = [
+        "//src/com/facebook/buck/cli:config",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/timing:timing",
+        "//src/com/facebook/buck/util/immutables:immutables",
+        "//third-party/java/guava:guava",
+        "//third-party/java/okhttp:okhttp",
+        "//third-party/java/thrift:libthrift",
+    ],
     immutable_types = [
         "ClientSideSlbConfig",
         "PerServerData",
         "ServerHealthManagerEventData",
         "ThriftOverHttpServiceConfig",
+    ],
+    deps = [
+        "//src/com/facebook/buck/counters:counters",
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/log:log",
+        "//src/com/facebook/buck/model:simple_types",
+        "//third-party/java/immutables:immutables",
     ],
 )

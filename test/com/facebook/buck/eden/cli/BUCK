@@ -1,5 +1,14 @@
 standard_java_library(
     name = "cli",
+    exported_deps = [
+        "//third-party/java/args4j:args4j",
+        "//third-party/java/infer-annotations:infer-annotations",
+    ],
+    deps = [
+        "//src/com/facebook/buck/eden:eden",
+        "//src/com/facebook/buck/util/sha1:sha1",
+        "//third-party/java/guava:guava",
+    ],
 )
 
 java_binary(

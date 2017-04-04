@@ -10,6 +10,12 @@ java_library(
         # Have to export this manually. `buck autodeps` does not export it because it is in the
         # provided_deps. This should be fixed in `buck autodeps`.
         ":api",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/jvm/java:javac-sink",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
     ],
     provided_deps = [
         # The API module is part of the bootstrapper at runtime; don't need to depend on it directly
@@ -23,6 +29,10 @@ java_library(
         "//src/com/facebook/buck/jvm/java:support",
         "//test/com/facebook/buck/event/listener:listener",
         "//test/com/facebook/buck/jvm/java/tracing:tracing",
+    ],
+    deps = [
+        "//src/com/facebook/buck/jvm/java/plugin:plugin",
+        "//src/com/facebook/buck/log:api",
     ],
 )
 

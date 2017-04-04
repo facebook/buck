@@ -1,6 +1,15 @@
 standard_java_library(
     name = "classes",
+    exported_deps = [
+        "//src/com/facebook/buck/io:io",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
     tests = [
         "//test/com/facebook/buck/jvm/java/classes:classes",
+    ],
+    deps = [
+        "//src/com/facebook/buck/io:MorePaths.java",
+        "//src/com/facebook/buck/util:util",
     ],
 )

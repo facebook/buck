@@ -4,8 +4,18 @@ java_library(
     name = "CacheRateStatsKeeper",
     srcs = CACHE_RATE_STATS_SRCS,
     autodeps = True,
+    exported_deps = [
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/event/external:external_lib",
+    ],
     visibility = [
         "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/artifact_cache:artifact_cache",
+        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:rules",
+        "//third-party/java/guava:guava",
     ],
 )
 
@@ -15,6 +25,10 @@ java_library(
     name = "BroadcastEventListener",
     srcs = BROADCAST_EVENT_LISTENER_SCRS,
     autodeps = True,
+    exported_deps = [
+        "//src/com/facebook/buck/event:interfaces",
+        "//third-party/java/jsr:jsr305",
+    ],
     visibility = [
         "PUBLIC",
     ],

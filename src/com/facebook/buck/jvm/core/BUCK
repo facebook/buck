@@ -4,6 +4,10 @@ java_library(
         "HasJavaClassHashes.java",
     ],
     autodeps = True,
+    exported_deps = [
+        "//src/com/facebook/buck/rules:build_rule",
+        "//third-party/java/guava:guava",
+    ],
     visibility = ["PUBLIC"],
 )
 
@@ -13,6 +17,7 @@ java_library(
         "JavaPackageFinder.java",
     ],
     autodeps = True,
+    exported_deps = ["//src/com/facebook/buck/model:model"],
     visibility = ["PUBLIC"],
 )
 
@@ -22,5 +27,6 @@ java_library(
         "SuggestBuildRules.java",
     ],
     autodeps = True,
+    exported_deps = ["//third-party/java/guava:guava"],
     visibility = ["PUBLIC"],
 )

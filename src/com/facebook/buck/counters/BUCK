@@ -1,6 +1,15 @@
 standard_java_library(
     name = "counters",
+    exported_deps = [
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/util/immutables:immutables",
+        "//third-party/java/guava:guava",
+    ],
     immutable_types = [
         "CounterSnapshot",
+    ],
+    deps = [
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/immutables:immutables",
     ],
 )

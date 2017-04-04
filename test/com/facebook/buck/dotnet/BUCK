@@ -1,7 +1,21 @@
 standard_java_testutil(
     name = "testutil",
+    deps = [
+        "//src/com/facebook/buck/io:executable-finder",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
 )
 
 standard_java_test(
     name = "dotnet",
+    deps = [
+        "//src/com/facebook/buck/dotnet:dotnet",
+        "//src/com/facebook/buck/util:exceptions",
+        "//test/com/facebook/buck/dotnet:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jimfs:jimfs",
+        "//third-party/java/junit:junit",
+    ],
 )

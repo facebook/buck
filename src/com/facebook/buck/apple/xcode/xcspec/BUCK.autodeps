@@ -1,9 +1,0 @@
-{
-  "xcspec" : {
-    "deps" : [
-      "//third-party/java/dd-plist:dd-plist",
-      "//third-party/java/guava:guava"
-    ],
-    "exported_deps" : [ ]
-  }
-}

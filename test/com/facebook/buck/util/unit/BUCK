@@ -4,4 +4,9 @@ standard_java_testutil(
 
 standard_java_test(
     name = "unit",
+    deps = [
+        "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/util/unit:unit",
+        "//third-party/java/junit:junit",
+    ],
 )

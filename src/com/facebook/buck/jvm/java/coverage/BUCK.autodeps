@@ -1,9 +1,0 @@
-{
-  "coverage" : {
-    "deps" : [
-      "//third-party/java/jacoco:jacoco",
-      "//third-party/java/plexus:plexus-utils"
-    ],
-    "exported_deps" : [ ]
-  }
-}

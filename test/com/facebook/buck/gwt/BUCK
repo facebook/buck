@@ -9,4 +9,8 @@ standard_java_test(
     name = "gwt",
     run_test_separately = True,
     vm_args = ["-Xmx512m"],
+    deps = [
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/junit:junit",
+    ],
 )

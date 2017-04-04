@@ -1,3 +1,4 @@
 standard_java_library(
     name = "immutables",
+    deps = ["//third-party/java/immutables:immutables"],
 )

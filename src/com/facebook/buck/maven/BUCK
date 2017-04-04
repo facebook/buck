@@ -10,6 +10,17 @@ java_library(
         excludes = UTIL_SRCS,
     ),
     autodeps = True,
+    exported_deps = [
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/jvm/java:support",
+        "//src/com/facebook/buck/maven:util",
+        "//src/com/facebook/buck/rules:build_rule",
+        "//third-party/java/aether:aether-api",
+        "//third-party/java/args4j:args4j",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/maven:maven-model",
+    ],
     resources = [
         "build-file.st",
     ],
@@ -20,13 +31,45 @@ java_library(
         "//test/com/facebook/buck/maven:maven",
         "//test/com/facebook/buck/maven:testutil",
     ],
+    deps = [
+        "//src/com/facebook/buck/graph:graph",
+        "//src/com/facebook/buck/io:MorePaths.java",
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//third-party/java/aether:aether-spi",
+        "//third-party/java/aether:aether-util",
+        "//third-party/java/maven:maven-aether-provider",
+        "//third-party/java/maven:maven-model-builder",
+        "//third-party/java/stringtemplate:stringtemplate",
+    ],
 )
 
 java_library(
     name = "util",
     srcs = UTIL_SRCS,
     autodeps = True,
+    exported_deps = [
+        "//third-party/java/aether:aether-api",
+        "//third-party/java/aether:aether-spi",
+        "//third-party/java/args4j:args4j",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jsr:jsr305",
+    ],
     visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/util:object_mapper",
+        "//third-party/java/aether:aether-connector-basic",
+        "//third-party/java/aether:aether-impl",
+        "//third-party/java/aether:aether-transport-file",
+        "//third-party/java/aether:aether-transport-http",
+        "//third-party/java/aether:aether-util",
+        "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/maven:maven-aether-provider",
+        "//third-party/java/slf4j:slf4j-api",
+    ],
 )
 
 java_binary(

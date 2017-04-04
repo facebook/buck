@@ -1,5 +1,6 @@
 standard_java_testutil(
     name = "testutil",
+    deps = ["//src/com/facebook/buck/util/shutdown:shutdown"],
 )
 
 standard_java_test(
@@ -20,6 +21,7 @@ java_library(
         "NonReentrantSystemExitDemo.java",
     ],
     autodeps = True,
+    deps = ["//src/com/facebook/buck/util/shutdown:shutdown"],
 )
 
 sh_test(

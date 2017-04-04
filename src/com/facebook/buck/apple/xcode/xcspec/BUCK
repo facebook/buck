@@ -3,4 +3,8 @@ standard_java_library(
     tests = [
         "//test/com/facebook/buck/apple/xcode/xcspec:xcspec",
     ],
+    deps = [
+        "//third-party/java/dd-plist:dd-plist",
+        "//third-party/java/guava:guava",
+    ],
 )

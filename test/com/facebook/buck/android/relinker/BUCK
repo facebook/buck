@@ -4,4 +4,8 @@ standard_java_testutil(
 
 standard_java_test(
     name = "relinker",
+    deps = [
+        "//src/com/facebook/buck/android:rules",
+        "//third-party/java/junit:junit",
+    ],
 )

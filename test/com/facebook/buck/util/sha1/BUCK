@@ -4,4 +4,9 @@ standard_java_testutil(
 
 standard_java_test(
     name = "sha1",
+    deps = [
+        "//src/com/facebook/buck/util/sha1:sha1",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
 )

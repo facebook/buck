@@ -1,9 +1,0 @@
-{
-  "relinker" : {
-    "deps" : [
-      "//src/com/facebook/buck/android:rules",
-      "//third-party/java/junit:junit"
-    ],
-    "exported_deps" : [ ]
-  }
-}

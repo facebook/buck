@@ -1,10 +1,21 @@
 standard_java_library(
     name = "simulator",
+    exported_deps = [
+        "//src/com/facebook/buck/util:io",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util/immutables:immutables",
+        "//third-party/java/guava:guava",
+    ],
     immutable_types = [
         "AppleSimulator",
         "AppleSimulatorProfile",
     ],
     tests = [
         "//test/com/facebook/buck/apple/simulator:simulator",
+    ],
+    deps = [
+        "//src/com/facebook/buck/log:api",
+        "//third-party/java/dd-plist:dd-plist",
+        "//third-party/java/immutables:immutables",
     ],
 )

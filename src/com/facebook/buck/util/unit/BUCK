@@ -1,6 +1,11 @@
 standard_java_library(
     name = "unit",
+    exported_deps = ["//src/com/facebook/buck/model:simple_types"],
     tests = [
         "//test/com/facebook/buck/util/unit:unit",
+    ],
+    deps = [
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/guava:guava",
     ],
 )

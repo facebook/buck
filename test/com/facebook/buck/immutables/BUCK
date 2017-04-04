@@ -4,6 +4,7 @@ java_immutables_library(
         "AbstractType.java",
     ],
     autodeps = True,
+    exported_deps = ["//src/com/facebook/buck/util/immutables:immutables"],
     immutable_types = [
         "Type",
     ],
@@ -13,10 +14,16 @@ java_immutables_library(
     visibility = [
         "//test/...",
     ],
+    deps = ["//third-party/java/immutables:immutables"],
 )
 
 java_test(
     name = "test",
     srcs = glob(["*Test.java"]),
     autodeps = True,
+    deps = [
+        "//test/com/facebook/buck/immutables:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
 )

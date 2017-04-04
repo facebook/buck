@@ -4,4 +4,10 @@ standard_java_testutil(
 
 standard_java_test(
     name = "i18n",
+    deps = [
+        "//src/com/facebook/buck/i18n:i18n",
+        "//third-party/java/guava:guava",
+        "//third-party/java/hamcrest:java-hamcrest",
+        "//third-party/java/junit:junit",
+    ],
 )

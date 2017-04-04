@@ -23,6 +23,12 @@ java_immutables_library(
     name = "versioncontrol",
     srcs = PUBLIC_SRCS,
     autodeps = True,
+    exported_deps = [
+        "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/util/immutables:immutables",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jackson:jackson-annotations",
+    ],
     immutable_types = [
         "VersionControlStats",
     ],
@@ -35,12 +41,17 @@ java_immutables_library(
     visibility = [
         "PUBLIC",
     ],
+    deps = [
+        "//src/com/facebook/buck/log/views:views",
+        "//third-party/java/immutables:immutables",
+    ],
 )
 
 java_library(
     name = "versioncontrol_config",
     srcs = CONFIG_SRCS,
     autodeps = True,
+    exported_deps = ["//src/com/facebook/buck/cli:config"],
     tests = [
         "//test/com/facebook/buck/util/versioncontrol:versioncontrol",
     ],
@@ -53,11 +64,23 @@ java_library(
     name = "versioncontrol_generator",
     srcs = GENERATOR_SRCS,
     autodeps = True,
+    exported_deps = [
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
+        "//third-party/java/guava:guava",
+    ],
     tests = [
         "//test/com/facebook/buck/util/versioncontrol:versioncontrol",
     ],
     visibility = [
         "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/event:event",
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/log/views:views",
+        "//src/com/facebook/buck/model:simple_types",
+        "//third-party/java/jackson:jackson-annotations",
     ],
 )
 
@@ -65,11 +88,22 @@ java_library(
     name = "versioncontrol_hg",
     srcs = HG_SRCS,
     autodeps = True,
+    exported_deps = [
+        "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
     tests = [
         "//test/com/facebook/buck/util/versioncontrol:versioncontrol",
     ],
     visibility = [
         "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/util:util",
     ],
 )
 
@@ -88,6 +122,12 @@ java_library(
         excludes = PUBLIC_SRCS + CONFIG_SRCS + GENERATOR_SRCS + HG_SRCS,
     ),
     autodeps = True,
+    exported_deps = [
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
+        "//src/com/facebook/buck/util/versioncontrol:versioncontrol_config",
+        "//third-party/java/guava:guava",
+    ],
     tests = [
         "//test/com/facebook/buck/util/versioncontrol:versioncontrol",
     ],
@@ -96,5 +136,9 @@ java_library(
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
         "//test/com/facebook/buck/util/autosparse/...",
         "//test/com/facebook/buck/util/versioncontrol/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/util/versioncontrol:versioncontrol_hg",
     ],
 )

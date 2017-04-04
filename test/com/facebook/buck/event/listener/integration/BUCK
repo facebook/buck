@@ -4,4 +4,11 @@ standard_java_testutil(
 
 standard_java_test(
     name = "integration",
+    deps = [
+        "//src/com/facebook/buck/util:constants",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/hamcrest:java-hamcrest",
+        "//third-party/java/junit:junit",
+    ],
 )

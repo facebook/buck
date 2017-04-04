@@ -4,4 +4,15 @@ standard_java_testutil(
 
 standard_java_test(
     name = "autodeps",
+    deps = [
+        "//src/com/facebook/buck/autodeps:autodeps",
+        "//src/com/facebook/buck/autodeps:model",
+        "//src/com/facebook/buck/io:MorePaths.java",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/util:object_mapper",
+        "//test/com/facebook/buck/model:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
 )

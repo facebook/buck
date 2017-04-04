@@ -23,6 +23,7 @@ java_library(
         "//test/com/facebook/buck/util:util",
     ],
     visibility = ["PUBLIC"],
+    deps = ["//third-party/java/jsr:jsr305"],
 )
 
 IO_SRCS = [
@@ -48,12 +49,27 @@ java_immutables_library(
     name = "io",
     srcs = IO_SRCS,
     autodeps = True,
+    exported_deps = [
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/immutables:immutables",
+        "//third-party/java/guava:guava",
+    ],
     immutable_types = [
         "DirectoryCleanerArgs",
     ],
     tests = [
     ],
     visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/util:exceptions",
+        "//third-party/java/immutables:immutables",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/nuprocess:nuprocess",
+    ],
 )
 
 PROCESS_EXECUTOR_SRCS = [
@@ -112,10 +128,23 @@ java_library(
     name = "watchman",
     srcs = WATCHMAN_WATCHER_SRCS,
     autodeps = True,
+    exported_deps = [
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io:watchman",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
     visibility = [
         "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/parser:config",
         "//test/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/event:event",
+        "//src/com/facebook/buck/io:MorePaths.java",
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/util:exceptions",
     ],
 )
 
@@ -127,8 +156,14 @@ java_library(
     name = "object_mapper",
     srcs = OBJECT_MAPPER_SRCS,
     autodeps = True,
+    exported_deps = ["//third-party/java/jackson:jackson-databind"],
     visibility = [
         "PUBLIC",
+    ],
+    deps = [
+        "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jackson:jackson-datatype-guava",
+        "//third-party/java/jackson:jackson-datatype-jdk8",
     ],
 )
 
@@ -140,9 +175,14 @@ java_library(
     name = "packaged_resource",
     srcs = PACKAGED_RESOURCE_SRCS,
     autodeps = True,
+    exported_deps = [
+        "//src/com/facebook/buck/io:io",
+        "//third-party/java/guava:guava",
+    ],
     visibility = [
         "PUBLIC",
     ],
+    deps = ["//src/com/facebook/buck/zip:unzip"],
 )
 
 java_immutables_library(
@@ -154,6 +194,13 @@ java_immutables_library(
         includes = ["*.java"],
     ),
     autodeps = True,
+    exported_deps = [
+        "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/util/immutables:immutables",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/jsr:jsr305",
+    ],
     immutable_types = [
         "SampleRate",
         "PatternAndMessage",
@@ -163,5 +210,13 @@ java_immutables_library(
     ],
     visibility = [
         "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:object_mapper",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//third-party/java/immutables:immutables",
+        "//third-party/java/jackson:jackson-core",
     ],
 )

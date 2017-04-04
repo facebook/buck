@@ -1,6 +1,8 @@
 standard_java_library(
     name = "bser",
+    exported_deps = ["//third-party/java/jsr:jsr305"],
     tests = [
         "//test/com/facebook/buck/bser:bser",
     ],
+    deps = ["//third-party/java/guava:guava"],
 )

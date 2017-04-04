@@ -10,4 +10,9 @@ java_library(
     name = "lib",
     srcs = glob(["*.java"]),
     autodeps = True,
+    exported_deps = [
+        "//third-party/java/asm:asm",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
 )

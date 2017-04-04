@@ -22,6 +22,12 @@ java_immutables_library(
         excludes = PLATFORM_SRCS,
     ),
     autodeps = True,
+    exported_deps = [
+        "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/immutables:immutables",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jna:jna",
+    ],
     immutable_types = [
         "BuildEnvironmentDescription",
     ],
@@ -30,5 +36,14 @@ java_immutables_library(
     ],
     visibility = [
         "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/build_type:build_type",
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/util:io",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util/network/hostname:hostname",
+        "//third-party/java/ObjCBridge:ObjCBridge",
+        "//third-party/java/immutables:immutables",
     ],
 )

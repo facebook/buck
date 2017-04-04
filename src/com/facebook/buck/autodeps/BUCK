@@ -2,12 +2,27 @@ java_library(
     name = "autodeps",
     srcs = ["AutodepsWriter.java"],
     autodeps = True,
+    exported_deps = [
+        "//src/com/facebook/buck/autodeps:model",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jackson:jackson-core",
+        "//third-party/java/jackson:jackson-databind",
+    ],
     visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/util:object_mapper",
+    ],
 )
 
 java_library(
     name = "model",
     srcs = ["DepsForBuildFiles.java"],
     autodeps = True,
+    exported_deps = [
+        "//src/com/facebook/buck/model:model",
+        "//third-party/java/jsr:jsr305",
+    ],
     visibility = ["PUBLIC"],
+    deps = ["//third-party/java/guava:guava"],
 )

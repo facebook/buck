@@ -3,4 +3,10 @@ java_test(
     srcs = glob(["*.java"]),
     autodeps = True,
     resources = glob(["testdata/**"]),
+    deps = [
+        "//src/com/facebook/buck/apple/xcode/xcspec:xcspec",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
 )

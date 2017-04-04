@@ -1,7 +1,24 @@
 standard_java_testutil(
     name = "testutil",
+    exported_deps = ["//src/com/facebook/buck/test:test"],
+    deps = [
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/test/result/type:type",
+        "//third-party/java/guava:guava",
+    ],
 )
 
 standard_java_test(
     name = "test",
+    deps = [
+        "//src/com/facebook/buck/test:config",
+        "//src/com/facebook/buck/test:test",
+        "//src/com/facebook/buck/test/result/type:type",
+        "//test/com/facebook/buck/cli:FakeBuckConfig",
+        "//test/com/facebook/buck/cli:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/hamcrest:java-hamcrest",
+        "//third-party/java/junit:junit",
+    ],
 )

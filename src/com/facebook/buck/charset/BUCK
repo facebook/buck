@@ -1,3 +1,4 @@
 standard_java_library(
     name = "charset",
+    exported_deps = ["//third-party/java/jsr:jsr305"],
 )

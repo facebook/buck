@@ -4,6 +4,11 @@ java_library(
         "DalvikStatsTool.java",
     ],
     autodeps = True,
+    exported_deps = [
+        "//third-party/java/asm:asm",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
     tests = [
         "//test/com/facebook/buck/dalvik:dalvik",
     ],
@@ -34,11 +39,23 @@ java_library(
         "ZipSplitterFactory.java",
     ],
     autodeps = True,
+    exported_deps = [
+        "//src/com/facebook/buck/android:apkmodule",
+        "//src/com/facebook/buck/dalvik:dalvik_stats_tool",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/jvm/java/classes:classes",
+        "//third-party/java/guava:guava",
+    ],
     tests = [
         "//test/com/facebook/buck/dalvik:dalvik",
     ],
     visibility = [
         "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/util:exceptions",
+        "//third-party/java/jsr:jsr305",
     ],
 )
 
@@ -48,6 +65,12 @@ java_library(
         "EstimateDexWeightStep.java",
     ],
     autodeps = True,
+    exported_deps = [
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/jvm/java/classes:classes",
+        "//src/com/facebook/buck/step:step",
+        "//third-party/java/guava:guava",
+    ],
     tests = [
         "//test/com/facebook/buck/dalvik:dalvik",
     ],

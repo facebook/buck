@@ -1,7 +1,17 @@
 standard_java_testutil(
     name = "testutil",
+    exported_deps = [
+        "//src/com/facebook/buck/timing:timing",
+        "//third-party/java/guava:guava",
+    ],
 )
 
 standard_java_test(
     name = "timing",
+    deps = [
+        "//src/com/facebook/buck/timing:timing",
+        "//test/com/facebook/buck/timing:testutil",
+        "//third-party/java/hamcrest:java-hamcrest",
+        "//third-party/java/junit:junit",
+    ],
 )

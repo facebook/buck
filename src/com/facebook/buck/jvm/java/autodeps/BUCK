@@ -7,6 +7,11 @@ java_library(
     name = "SymbolExtractor",
     srcs = SYMBOL_EXTRACTOR_SRCS,
     autodeps = True,
+    exported_deps = [
+        "//src/com/facebook/buck/jvm/java:autodeps",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jackson:jackson-databind",
+    ],
     visibility = [
         "PUBLIC",
     ],
@@ -19,6 +24,21 @@ java_library(
         excludes = SYMBOL_EXTRACTOR_SRCS,
     ),
     autodeps = True,
+    exported_deps = [
+        "//src/com/facebook/buck/autodeps:model",
+        "//src/com/facebook/buck/cli:config",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/jvm/java:autodeps",
+        "//src/com/facebook/buck/jvm/java/autodeps:SymbolExtractor",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:interfaces",
+        "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/util:process_executor",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jackson:jackson-databind",
+    ],
     tests = [
         # JavaDepsFinder is verified via AutodepsCommandIntegrationTest.
         #
@@ -34,5 +54,16 @@ java_library(
     ],
     visibility = [
         "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/android:rules",
+        "//src/com/facebook/buck/jvm/java:config",
+        "//src/com/facebook/buck/jvm/java:rules",
+        "//src/com/facebook/buck/jvm/java:support",
+        "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/step/fs:fs",
+        "//src/com/facebook/buck/util:object_mapper",
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/jsr:jsr305",
     ],
 )

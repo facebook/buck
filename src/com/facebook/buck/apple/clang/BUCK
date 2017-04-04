@@ -2,12 +2,14 @@ java_library(
     name = "headermap",
     srcs = ["HeaderMap.java"],
     autodeps = True,
+    exported_deps = ["//third-party/java/jsr:jsr305"],
     tests = [
         "//test/com/facebook/buck/apple/clang:headermap",
     ],
     visibility = [
         "PUBLIC",
     ],
+    deps = ["//third-party/java/guava:guava"],
 )
 
 java_library(
@@ -17,6 +19,7 @@ java_library(
     visibility = [
         "PUBLIC",
     ],
+    deps = ["//src/com/facebook/buck/apple/clang:headermap"],
 )
 
 java_binary(

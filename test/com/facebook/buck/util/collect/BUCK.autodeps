@@ -1,9 +1,0 @@
-{
-  "collect" : {
-    "deps" : [
-      "//src/com/facebook/buck/util/collect:collect",
-      "//third-party/java/junit:junit"
-    ],
-    "exported_deps" : [ ]
-  }
-}
