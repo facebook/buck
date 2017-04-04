@@ -1,2 +1,4 @@
 [project]
   ide=xcode
+[repositories]
+other_cell = other_cell

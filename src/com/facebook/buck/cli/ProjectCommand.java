@@ -84,6 +84,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -938,13 +939,37 @@ public class ProjectCommand extends BuildCommand {
         options,
         super.getOptions(),
         getFocusModules(params, executor),
-        new HashMap<Path, ProjectGenerator>(),
+        new HashMap<>(),
         getCombinedProject(),
         shouldBuildWithBuck);
     if (!requiredBuildTargets.isEmpty()) {
-      BuildCommand buildCommand = new BuildCommand(requiredBuildTargets.stream()
-          .map(Object::toString)
-          .collect(MoreCollectors.toImmutableList()));
+      ImmutableMultimap<Path, String> cellPathToCellName =
+          params.getCell().getCellPathResolver().getCellPaths().asMultimap().inverse();
+      BuildCommand buildCommand = new BuildCommand(
+          RichStream.from(requiredBuildTargets)
+              .map(target -> {
+                if (!target.getCellPath().equals(params.getCell().getRoot())) {
+                  Optional<String> cellName =
+                      cellPathToCellName.get(target.getCellPath()).stream().findAny();
+                  if (cellName.isPresent()) {
+                    return target.withUnflavoredBuildTarget(
+                        UnflavoredBuildTarget.of(
+                            target.getCellPath(),
+                            cellName,
+                            target.getBaseName(),
+                            target.getShortName()));
+                  } else {
+                    throw new IllegalStateException(
+                        "Failed to find cell name for cell path while constructing parameters to " +
+                            "build dependencies for project generation. " +
+                            "Build target: " + target + " cell path: " + target.getCellPath());
+                  }
+                } else {
+                  return target;
+                }
+              })
+              .map(Object::toString)
+              .toImmutableList());
       exitCode = buildCommand.runWithoutHelp(params);
     }
     return exitCode;

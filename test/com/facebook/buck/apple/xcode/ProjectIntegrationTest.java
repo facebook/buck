@@ -295,6 +295,7 @@ public class ProjectIntegrationTest {
 
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//lib:gen");
+    buildLog.assertTargetBuiltLocally("other_cell//:gen");
   }
 
   @Test
