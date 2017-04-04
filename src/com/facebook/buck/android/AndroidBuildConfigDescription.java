@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.Javac;
@@ -73,8 +74,8 @@ public class AndroidBuildConfigDescription
       CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    if (CalculateAbi.isAbiTarget(params.getBuildTarget())) {
-      BuildTarget configTarget = CalculateAbi.getLibraryTarget(params.getBuildTarget());
+    if (HasJavaAbi.isClassAbiTarget(params.getBuildTarget())) {
+      BuildTarget configTarget = HasJavaAbi.getLibraryTarget(params.getBuildTarget());
       BuildRule configRule = resolver.requireRule(configTarget);
       return CalculateAbi.of(
           params.getBuildTarget(),

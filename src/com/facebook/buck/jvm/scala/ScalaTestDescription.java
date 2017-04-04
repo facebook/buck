@@ -17,8 +17,8 @@
 package com.facebook.buck.jvm.scala;
 
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.ForkMode;
+import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
@@ -97,7 +97,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
         config)
         .setArgs(args);
 
-    if (CalculateAbi.isAbiTarget(rawParams.getBuildTarget())) {
+    if (HasJavaAbi.isAbiTarget(rawParams.getBuildTarget())) {
       return scalaLibraryBuilder.buildAbi();
     }
 

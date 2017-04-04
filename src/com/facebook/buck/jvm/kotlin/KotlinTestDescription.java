@@ -16,9 +16,9 @@
 
 package com.facebook.buck.jvm.kotlin;
 
-import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.jvm.java.ForkMode;
+import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
@@ -86,7 +86,7 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
         .setArgs(args)
         .setGeneratedSourceFolder(templateJavacOptions.getGeneratedSourceFolderName());
 
-    if (CalculateAbi.isAbiTarget(params.getBuildTarget())) {
+    if (HasJavaAbi.isAbiTarget(params.getBuildTarget())) {
       return defaultJavaLibraryBuilder.buildAbi();
     }
 

@@ -669,7 +669,7 @@ public class DefaultJavaLibraryIntegrationTest {
     assertEquals("Expected just one line of JSON", 1, lines.size());
 
     final String utilJarPath =
-        MorePaths.pathWithPlatformSeparators("buck-out/gen/util#abi/util-abi.jar");
+        MorePaths.pathWithPlatformSeparators("buck-out/gen/util#class-abi/util-abi.jar");
     final String utilClassPath =
         MorePaths.pathWithPlatformSeparators("com/example/Util.class");
 

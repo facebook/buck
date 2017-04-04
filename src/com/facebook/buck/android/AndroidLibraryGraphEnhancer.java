@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsAmender;
@@ -86,7 +87,7 @@ public class AndroidLibraryGraphEnhancer {
   public Optional<DummyRDotJava> getBuildableForAndroidResources(
       BuildRuleResolver ruleResolver,
       boolean createBuildableIfEmptyDeps) {
-    Preconditions.checkState(!CalculateAbi.isAbiTarget(dummyRDotJavaBuildTarget));
+    Preconditions.checkState(!HasJavaAbi.isAbiTarget(dummyRDotJavaBuildTarget));
     Optional<BuildRule> previouslyCreated = ruleResolver.getRuleOptional(dummyRDotJavaBuildTarget);
     if (previouslyCreated.isPresent()) {
       return previouslyCreated.map(input -> (DummyRDotJava) input);
@@ -147,8 +148,8 @@ public class AndroidLibraryGraphEnhancer {
   public CalculateAbi getBuildableForAndroidResourcesAbi(
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder) throws NoSuchBuildTargetException {
-    Preconditions.checkState(CalculateAbi.isAbiTarget(dummyRDotJavaBuildTarget));
-    BuildTarget resourcesTarget = CalculateAbi.getLibraryTarget(dummyRDotJavaBuildTarget);
+    Preconditions.checkState(HasJavaAbi.isAbiTarget(dummyRDotJavaBuildTarget));
+    BuildTarget resourcesTarget = HasJavaAbi.getLibraryTarget(dummyRDotJavaBuildTarget);
     BuildRule resourcesRule = resolver.requireRule(resourcesTarget);
     return CalculateAbi.of(
         dummyRDotJavaBuildTarget,

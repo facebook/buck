@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
@@ -152,11 +153,11 @@ public class AndroidLibraryDescription
 
     boolean hasDummyRDotJavaFlavor =
         params.getBuildTarget().getFlavors().contains(DUMMY_R_DOT_JAVA_FLAVOR);
-    if (CalculateAbi.isAbiTarget(params.getBuildTarget())) {
+    if (HasJavaAbi.isClassAbiTarget(params.getBuildTarget())) {
       if (hasDummyRDotJavaFlavor) {
         return graphEnhancer.getBuildableForAndroidResourcesAbi(resolver, ruleFinder);
       }
-      BuildTarget libraryTarget = CalculateAbi.getLibraryTarget(params.getBuildTarget());
+      BuildTarget libraryTarget = HasJavaAbi.getLibraryTarget(params.getBuildTarget());
       BuildRule libraryRule = resolver.requireRule(libraryTarget);
       return CalculateAbi.of(
           params.getBuildTarget(),

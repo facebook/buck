@@ -20,11 +20,41 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.SourcePath;
+import com.google.common.base.Preconditions;
 
 import java.util.Optional;
 
 public interface HasJavaAbi {
-  Flavor ABI_FLAVOR = InternalFlavor.of("abi");
+  Flavor CLASS_ABI_FLAVOR = InternalFlavor.of("class-abi");
+  Flavor SOURCE_ABI_FLAVOR = InternalFlavor.of("source-abi");
+
+  static BuildTarget getClassAbiJar(BuildTarget libraryTarget) {
+    Preconditions.checkArgument(!isSourceAbiTarget(libraryTarget));
+    return libraryTarget.withAppendedFlavors(CLASS_ABI_FLAVOR);
+  }
+
+  static boolean isAbiTarget(BuildTarget target) {
+    return isClassAbiTarget(target) || isSourceAbiTarget(target);
+  }
+
+  static boolean isClassAbiTarget(BuildTarget target) {
+    return target.getFlavors().contains(CLASS_ABI_FLAVOR);
+  }
+
+  static BuildTarget getSourceAbiJar(BuildTarget libraryTarget) {
+    Preconditions.checkArgument(!isClassAbiTarget(libraryTarget));
+    return libraryTarget.withAppendedFlavors(SOURCE_ABI_FLAVOR);
+  }
+
+  static boolean isSourceAbiTarget(BuildTarget target) {
+    return target.getFlavors().contains(SOURCE_ABI_FLAVOR);
+  }
+
+  static BuildTarget getLibraryTarget(BuildTarget abiTarget) {
+    Preconditions.checkArgument(isAbiTarget(abiTarget));
+
+    return abiTarget.withoutFlavors(CLASS_ABI_FLAVOR, SOURCE_ABI_FLAVOR);
+  }
 
   BuildTarget getBuildTarget();
 
@@ -32,6 +62,6 @@ public interface HasJavaAbi {
    * @return the {@link SourcePath} representing the ABI Jar for this rule.
    */
   default Optional<BuildTarget> getAbiJar() {
-    return Optional.of(getBuildTarget().withAppendedFlavors(ABI_FLAVOR));
+    return Optional.of(getBuildTarget().withAppendedFlavors(CLASS_ABI_FLAVOR));
   }
 }

@@ -175,7 +175,7 @@ public class JavaLibraryDescription implements
             .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
             .setTrackClassUsage(javacOptions.trackClassUsage());
 
-    if (CalculateAbi.isAbiTarget(target)) {
+    if (HasJavaAbi.isAbiTarget(target)) {
       return defaultJavaLibraryBuilder.buildAbi();
     }
 

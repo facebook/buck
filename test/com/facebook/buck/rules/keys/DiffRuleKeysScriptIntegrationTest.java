@@ -202,13 +202,13 @@ public class DiffRuleKeysScriptIntegrationTest {
             "Change details for [//:java_lib_2]",
             "  (abiClasspath):",
             "    -[<missing>]",
-            "    +[\"//:java_lib_3#abi\"@ruleKey(sha1=", /* some rulekey */ ")]",
+            "    +[\"//:java_lib_3#class-abi\"@ruleKey(sha1=", /* some rulekey */ ")]",
             "  (buck.declaredDeps):",
             "    -[<missing>]",
             "    +[\"//:java_lib_3\"@ruleKey(sha1=", /* some rulekey */ ")]",
             "  (buck.extraDeps):",
             "    -[<missing>]",
-            "    +[\"//:java_lib_3#abi\"@ruleKey(sha1=", /* some rulekey */ ")]"));
+            "    +[\"//:java_lib_3#class-abi\"@ruleKey(sha1=", /* some rulekey */ ")]"));
   }
 
   @Test

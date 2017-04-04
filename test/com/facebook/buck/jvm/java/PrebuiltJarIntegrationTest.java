@@ -75,7 +75,7 @@ public class PrebuiltJarIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = BuildTargetFactory.newInstance("//:jar");
-    BuildTarget abiTarget = target.withAppendedFlavors(HasJavaAbi.ABI_FLAVOR);
+    BuildTarget abiTarget = target.withAppendedFlavors(HasJavaAbi.CLASS_ABI_FLAVOR);
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
     result.assertSuccess();
 

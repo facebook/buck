@@ -62,7 +62,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
       A args) throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
-    if (CalculateAbi.isAbiTarget(params.getBuildTarget())) {
+    if (HasJavaAbi.isClassAbiTarget(params.getBuildTarget())) {
       return CalculateAbi.of(
           params.getBuildTarget(),
           ruleFinder,

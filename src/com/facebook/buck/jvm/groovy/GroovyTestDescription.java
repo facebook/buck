@@ -16,9 +16,9 @@
 
 package com.facebook.buck.jvm.groovy;
 
-import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.jvm.java.ForkMode;
+import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
@@ -94,7 +94,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
         .setArgs(args)
         .setGeneratedSourceFolder(defaultJavacOptions.getGeneratedSourceFolderName());
 
-    if (CalculateAbi.isAbiTarget(params.getBuildTarget())) {
+    if (HasJavaAbi.isAbiTarget(params.getBuildTarget())) {
       return defaultJavaLibraryBuilder.buildAbi();
     }
 

@@ -50,21 +50,21 @@ public class CalculateAbiTest {
   @Test
   public void testIsAbiTargetRecognizesAbiTargets() {
     assertTrue(
-        CalculateAbi.isAbiTarget(
-            BuildTargetFactory.newInstance("//foo/bar:bar#abi")));
+        HasJavaAbi.isClassAbiTarget(
+            BuildTargetFactory.newInstance("//foo/bar:bar#class-abi")));
   }
 
   @Test
   public void testIsAbiTargetRecognizesNonAbiTargets() {
     assertFalse(
-        CalculateAbi.isAbiTarget(
+        HasJavaAbi.isClassAbiTarget(
             BuildTargetFactory.newInstance("//foo/bar:bar#not-abi")));
   }
 
   @Test
   public void testGetLibraryTarget() {
     assertThat(
-        CalculateAbi.getLibraryTarget(BuildTargetFactory.newInstance("//foo/bar:bar#abi")),
+        HasJavaAbi.getLibraryTarget(BuildTargetFactory.newInstance("//foo/bar:bar#class-abi")),
         Matchers.equalTo(BuildTargetFactory.newInstance("//foo/bar:bar")));
   }
 

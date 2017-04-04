@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.kotlin;
 
-import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaSourceJar;
@@ -112,7 +112,7 @@ public class KotlinLibraryDescription implements
 
     // We know that the flavour we're being asked to create is valid, since the check is done when
     // creating the action graph from the target graph.
-    if (CalculateAbi.isAbiTarget(target)) {
+    if (HasJavaAbi.isAbiTarget(target)) {
       return defaultKotlinLibraryBuilder.buildAbi();
     }
 

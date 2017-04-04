@@ -261,7 +261,7 @@ public class DefaultJavaLibraryBuilder {
 
     protected BuildRule buildAbi() throws NoSuchBuildTargetException {
       BuildTarget abiTarget = params.getBuildTarget();
-      BuildTarget libraryTarget = CalculateAbi.getLibraryTarget(abiTarget);
+      BuildTarget libraryTarget = HasJavaAbi.getLibraryTarget(abiTarget);
       BuildRule libraryRule = buildRuleResolver.requireRule(libraryTarget);
 
       return CalculateAbi.of(

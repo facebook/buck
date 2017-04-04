@@ -112,7 +112,7 @@ public class JavaTestDescription implements
         .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
         .setTrackClassUsage(javacOptions.trackClassUsage());
 
-    if (CalculateAbi.isAbiTarget(params.getBuildTarget())) {
+    if (HasJavaAbi.isAbiTarget(params.getBuildTarget())) {
       return defaultJavaLibraryBuilder.buildAbi();
     }
 

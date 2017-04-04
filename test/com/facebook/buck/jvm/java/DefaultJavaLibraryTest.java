@@ -1449,7 +1449,7 @@ public class DefaultJavaLibraryTest {
     };
 
   private AnnotationProcessorTarget validJavaLibraryAbi =
-      new AnnotationProcessorTarget("//tools/java/src/com/facebook/somejava:library#abi") {
+      new AnnotationProcessorTarget("//tools/java/src/com/facebook/somejava:library#class-abi") {
         @Override
         public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {
           return  CalculateAbi.of(target,

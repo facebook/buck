@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JavacFactory;
@@ -118,7 +119,7 @@ public class AndroidPrebuiltAarDescription
         params.getBuildTarget());
     UnzipAar unzipAar = (UnzipAar) unzipAarRule;
 
-    if (CalculateAbi.isAbiTarget(params.getBuildTarget())) {
+    if (HasJavaAbi.isClassAbiTarget(params.getBuildTarget())) {
       return CalculateAbi.of(
           params.getBuildTarget(),
           ruleFinder,

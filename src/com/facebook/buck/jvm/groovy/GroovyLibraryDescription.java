@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.groovy;
 
-import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
@@ -72,7 +72,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
         groovyBuckConfig)
         .setArgs(args);
 
-    return CalculateAbi.isAbiTarget(params.getBuildTarget())
+    return HasJavaAbi.isAbiTarget(params.getBuildTarget())
         ? defaultGroovyLibraryBuilder.buildAbi()
         : defaultGroovyLibraryBuilder.build();
   }

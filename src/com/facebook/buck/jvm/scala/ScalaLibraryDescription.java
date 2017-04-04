@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.scala;
 
 
-import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
@@ -66,7 +66,7 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
         scalaBuckConfig)
         .setArgs(args);
 
-    return CalculateAbi.isAbiTarget(rawParams.getBuildTarget())
+    return HasJavaAbi.isAbiTarget(rawParams.getBuildTarget())
         ? scalaLibraryBuilder.buildAbi()
         : scalaLibraryBuilder.build();
   }

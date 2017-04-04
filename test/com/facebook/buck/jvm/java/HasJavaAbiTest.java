@@ -29,14 +29,14 @@ public class HasJavaAbiTest {
   public void testGetAbiTarget() {
     assertThat(
         getDummyHasJavaAbi(BuildTargetFactory.newInstance("//foo/bar:bar")).getAbiJar().get(),
-        Matchers.equalTo(BuildTargetFactory.newInstance("//foo/bar:bar#abi")));
+        Matchers.equalTo(BuildTargetFactory.newInstance("//foo/bar:bar#class-abi")));
   }
 
   @Test
   public void testGetAbiTargetFlavored() {
     assertThat(
         getDummyHasJavaAbi(BuildTargetFactory.newInstance("//foo/bar:bar#baz")).getAbiJar().get(),
-        Matchers.equalTo(BuildTargetFactory.newInstance("//foo/bar:bar#baz,abi")));
+        Matchers.equalTo(BuildTargetFactory.newInstance("//foo/bar:bar#baz,class-abi")));
   }
 
   private HasJavaAbi getDummyHasJavaAbi(BuildTarget target) {
