@@ -17,51 +17,6 @@
 <p>
 An <code>android_binary()</code> rule is used to generate an Android APK.
 </p>
-
-<h2 id="redex-overview">ReDex</h2>
-<p>
-Buck makes it easy to run <a href="http://fbredex.com/">ReDex</a> as part
-of <code>android_binary()</code>. ReDex is an Android bytecode optimizer
-that can help reduce the size of your release builds. Please refer to
-<a href="http://fbredex.com/">ReDex</a> for instructions on how to create a ReDex executable.
-</p>
-<p>
-Currently, the path to ReDex must be
-specified as a path (or build target) in <code>.buckconfig</code>:
-</p>
-{literal}<pre class="prettyprint lang-ini">
-[android]
-  # In this example, we assume that you have ReDex packaged as a single
-  # executable file named redex-bin. Read "Creating redex-bin" below on how
-  # to create this file. Note that the expectation is that you check
-  # redex-bin into your project.
-  redex = third-party/native/redex/redex-bin
-
-  # Alternatively, you could create a genrule(), such as
-  # //tools/redex:redex, that wraps ReDex. It must have
-  # `executable = True` to ensure the genrule() is runnable.
-  # In this case, you would specify the build target instead
-  # of the file path.
-  # redex = //tools/redex:redex
-</pre>{/literal}
-
-<p>
-If a ReDex executable is set properly in <code>.buckconfig</code>, then it
-is possible to run ReDex as part of building an <code>android_binary()</code>,
-but the following conditions must hold:
-</p>
-<ul>
-  <li><code>redex = True</code> must be set on the <code>android_binary()</code>.
-</ul>
-
-<p>
-Other ReDex configuration options on <code>android_binary()</code> include:
-</p>
-
-<ul>
-  <li><code><a href="#arg/redex_config">redex_config</a></code>
-  <li><code><a href="#arg/redex_json_args">redex_json_args</a></code>
-</ul>
 {/param}
 
 {param args}
@@ -356,6 +311,52 @@ android_binary(
   ],
 )
 </pre>{/literal}
+
+<h2 id="redex-overview">ReDex</h2>
+<p>
+Buck makes it easy to run <a href="http://fbredex.com/">ReDex</a> as part
+of <code>android_binary()</code>. ReDex is an Android bytecode optimizer
+that can help reduce the size of your release builds. Please refer to
+<a href="http://fbredex.com/">ReDex</a> for instructions on how to create a ReDex executable.
+</p>
+<p>
+Currently, the path to ReDex must be
+specified as a path (or build target) in <code>.buckconfig</code>:
+</p>
+{literal}<pre class="prettyprint lang-ini">
+[android]
+  # In this example, we assume that you have ReDex packaged as a single
+  # executable file named redex-bin. Read "Creating redex-bin" below on how
+  # to create this file. Note that the expectation is that you check
+  # redex-bin into your project.
+  redex = third-party/native/redex/redex-bin
+
+  # Alternatively, you could create a genrule(), such as
+  # //tools/redex:redex, that wraps ReDex. It must have
+  # `executable = True` to ensure the genrule() is runnable.
+  # In this case, you would specify the build target instead
+  # of the file path.
+  # redex = //tools/redex:redex
+</pre>{/literal}
+
+<p>
+If a ReDex executable is set properly in <code>.buckconfig</code>, then it
+is possible to run ReDex as part of building an <code>android_binary()</code>,
+but the following conditions must hold:
+</p>
+<ul>
+  <li><code>redex = True</code> must be set on the <code>android_binary()</code>.
+</ul>
+
+<p>
+Other ReDex configuration options on <code>android_binary()</code> include:
+</p>
+
+<ul>
+  <li><code><a href="#arg/redex_config">redex_config</a></code>
+  <li><code><a href="#arg/redex_json_args">redex_json_args</a></code>
+</ul>
+
 {/param}
 
 {/call} // close buck.rule
