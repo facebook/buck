@@ -22,7 +22,6 @@ import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
 import com.facebook.buck.android.AndroidPrebuiltAar;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.DummyRDotJava;
-import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
@@ -56,7 +55,6 @@ public class IjProject {
   private final SourcePathResolver sourcePathResolver;
   private final SourcePathRuleFinder ruleFinder;
   private final ProjectFilesystem projectFilesystem;
-  private final AggregationMode aggregationMode;
   private final IjProjectConfig projectConfig;
 
   public IjProject(
@@ -65,8 +63,7 @@ public class IjProject {
       JavaFileParser javaFileParser,
       BuildRuleResolver buildRuleResolver,
       ProjectFilesystem projectFilesystem,
-      AggregationMode aggregationMode,
-      BuckConfig buckConfig) {
+      IjProjectConfig projectConfig) {
     this.targetGraphAndTargets = targetGraphAndTargets;
     this.javaPackageFinder = javaPackageFinder;
     this.javaFileParser = javaFileParser;
@@ -74,23 +71,17 @@ public class IjProject {
     this.ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     this.sourcePathResolver = new SourcePathResolver(this.ruleFinder);
     this.projectFilesystem = projectFilesystem;
-    this.aggregationMode = aggregationMode;
-    this.projectConfig = IjProjectBuckConfig.create(buckConfig);
+    this.projectConfig = projectConfig;
   }
 
   /**
    * Write the project to disk.
    *
-   * @param runPostGenerationCleaner Whether or not the post-generation cleaner should be run.
    * @return set of {@link BuildTarget}s which should be built in order for the project to index
    *   correctly.
    * @throws IOException
    */
-  public ImmutableSet<BuildTarget> write(
-      boolean runPostGenerationCleaner,
-      boolean removeUnusedLibraries,
-      boolean excludeArtifacts)
-      throws IOException {
+  public ImmutableSet<BuildTarget> write() throws IOException {
     final ImmutableSet.Builder<BuildTarget> requiredBuildTargets = ImmutableSet.builder();
     IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(
         new IjLibraryFactoryResolver() {
@@ -210,9 +201,7 @@ public class IjProject {
         new IjModuleFactory(
             projectFilesystem,
             moduleFactoryResolver,
-            projectConfig,
-            excludeArtifacts),
-        aggregationMode);
+            projectConfig));
     JavaPackageFinder parsingJavaPackageFinder = ParsingJavaPackageFinder.preparse(
         javaFileParser,
         projectFilesystem,
@@ -223,7 +212,7 @@ public class IjProject {
         projectConfig,
         projectFilesystem,
         moduleGraph);
-    writer.write(runPostGenerationCleaner, removeUnusedLibraries);
+    writer.write();
     return requiredBuildTargets.build();
   }
 }

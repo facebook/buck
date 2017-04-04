@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.annotation.Nullable;
+
 public class IjProjectBuckConfig {
 
   private static final String PROJECT_BUCK_CONFIG_SECTION = "project";
@@ -34,7 +36,12 @@ public class IjProjectBuckConfig {
   private IjProjectBuckConfig() {
   }
 
-  public static IjProjectConfig create(BuckConfig buckConfig) {
+  public static IjProjectConfig create(
+      BuckConfig buckConfig,
+      @Nullable AggregationMode aggregationMode,
+      boolean isCleanerEnabled,
+      boolean removeUnusedLibraries,
+      boolean excludeArtifacts) {
     Optional<String> excludedResourcePathsOption = buckConfig.getValue(
         INTELLIJ_BUCK_CONFIG_SECTION,
         "excluded_resource_paths");
@@ -98,6 +105,43 @@ public class IjProjectBuckConfig {
         .setExcludedResourcePaths(excludedResourcePaths)
         .setDepToGeneratedSourcesMap(depToGeneratedSourcesMap)
         .setAndroidManifest(androidManifest)
+        .setCleanerEnabled(isCleanerEnabled)
+        .setRemovingUnusedLibrariesEnabled(
+            isRemovingUnusedLibrariesEnabled(removeUnusedLibraries, buckConfig))
+        .setExcludeArtifactsEnabled(
+            isExcludingArtifactsEnabled(excludeArtifacts, buckConfig))
+        .setAggregationMode(getAggregationMode(aggregationMode, buckConfig))
         .build();
+  }
+
+  private static boolean isRemovingUnusedLibrariesEnabled(
+      boolean removeUnusedLibraries,
+      BuckConfig buckConfig) {
+    return removeUnusedLibraries || buckConfig.getBooleanValue(
+        INTELLIJ_BUCK_CONFIG_SECTION,
+        "remove_unused_libraries",
+        false);
+  }
+
+  private static boolean isExcludingArtifactsEnabled(
+      boolean excludeArtifacts,
+      BuckConfig buckConfig) {
+    return excludeArtifacts || buckConfig.getBooleanValue(
+        PROJECT_BUCK_CONFIG_SECTION,
+        "exclude_artifacts",
+        false);
+  }
+
+  private static AggregationMode getAggregationMode(
+      @Nullable AggregationMode aggregationMode,
+      BuckConfig buckConfig) {
+    if (aggregationMode != null) {
+      return aggregationMode;
+    }
+    Optional<AggregationMode> aggregationModeFromConfig =
+        buckConfig.getValue(
+            PROJECT_BUCK_CONFIG_SECTION,
+            "intellij_aggregation_mode").map(AggregationMode::fromString);
+    return aggregationModeFromConfig.orElse(AggregationMode.AUTO);
   }
 }

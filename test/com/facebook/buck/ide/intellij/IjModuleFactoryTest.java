@@ -652,9 +652,18 @@ public class IjModuleFactoryTest {
           }
         },
         buckConfig == null
-            ? IjProjectBuckConfig.create(FakeBuckConfig.builder().build())
-            : IjProjectBuckConfig.create(buckConfig),
-        false);
+            ? IjProjectBuckConfig.create(
+                FakeBuckConfig.builder().build(),
+                AggregationMode.AUTO,
+                false,
+                false,
+                false)
+            : IjProjectBuckConfig.create(
+                buckConfig,
+                AggregationMode.AUTO,
+                false,
+                false,
+                false));
   }
 
   @Test

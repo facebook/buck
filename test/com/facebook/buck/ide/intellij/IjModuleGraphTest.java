@@ -808,7 +808,12 @@ public class IjModuleGraphTest {
           }
         };
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
-    IjProjectConfig projectConfig = IjProjectBuckConfig.create(buckConfig);
+    IjProjectConfig projectConfig = IjProjectBuckConfig.create(
+        buckConfig,
+        aggregationMode,
+        false,
+        false,
+        false);
     IjModuleFactory moduleFactory = new IjModuleFactory(
         new FakeProjectFilesystem(),
         new IjModuleFactoryResolver() {
@@ -853,15 +858,13 @@ public class IjModuleGraphTest {
             return Optional.empty();
           }
         },
-        projectConfig,
-        false);
+        projectConfig);
     IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(sourceOnlyResolver);
     return IjModuleGraph.from(
         projectConfig,
         TargetGraphFactory.newInstance(targets),
         libraryFactory,
-        moduleFactory,
-        aggregationMode);
+        moduleFactory);
   }
 
   public static IjProjectElement getProjectElementForTarget(

@@ -31,6 +31,8 @@ import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.ide.intellij.AggregationMode;
 import com.facebook.buck.ide.intellij.IjProject;
+import com.facebook.buck.ide.intellij.IjProjectBuckConfig;
+import com.facebook.buck.ide.intellij.IjProjectConfig;
 import com.facebook.buck.ide.intellij.deprecated.IntellijConfig;
 import com.facebook.buck.ide.intellij.deprecated.Project;
 import com.facebook.buck.io.ExecutableFinder;
@@ -311,13 +313,6 @@ public class ProjectCommand extends BuildCommand {
     return buckConfig.getBooleanValue("project", "ide_prompt", true);
   }
 
-  public boolean getRemoveUnusedLibraries(BuckConfig buckConfig) {
-    if (removeUnusedLibraries) {
-      return true;
-    }
-    return buckConfig.getBooleanValue("intellij", "remove_unused_libraries", false);
-  }
-
   private Optional<Ide> getIdeFromBuckConfig(BuckConfig buckConfig) {
     return buckConfig.getValue("project", "ide").map(Ide::fromString);
   }
@@ -353,10 +348,6 @@ public class ProjectCommand extends BuildCommand {
     return buckConfig.getBooleanValue("project", "skip_build", false);
   }
 
-  private boolean getExcludeArtifactsFromConfig(BuckConfig buckConfig) {
-    return buckConfig.getBooleanValue("project", "exclude_artifacts", false);
-  }
-
   private boolean isBuildWithBuckDisabledWithFocus(BuckConfig buckConfig) {
     return buckConfig.getBooleanValue("project", "xcode_focus_disable_build_with_buck", false);
   }
@@ -386,17 +377,6 @@ public class ProjectCommand extends BuildCommand {
 
     BuildCommand buildCommand = new BuildCommand(initialTargets);
     return buildCommand;
-  }
-
-  public AggregationMode getIntellijAggregationMode(BuckConfig buckConfig) {
-    if (intellijAggregationMode != null) {
-      return intellijAggregationMode;
-    }
-    Optional<AggregationMode> aggregationMode =
-        buckConfig.getValue(
-            "project",
-            "intellij_aggregation_mode").map(AggregationMode::fromString);
-    return aggregationMode.orElse(AggregationMode.AUTO);
   }
 
   @Override
@@ -639,19 +619,22 @@ public class ProjectCommand extends BuildCommand {
 
     JavacOptions javacOptions = buckConfig.getView(JavaBuckConfig.class).getDefaultJavacOptions();
 
+    IjProjectConfig projectConfig = IjProjectBuckConfig.create(
+        buckConfig,
+        intellijAggregationMode,
+        runIjCleaner,
+        removeUnusedLibraries,
+        excludeArtifacts);
+
     IjProject project = new IjProject(
         targetGraphAndTargets,
         getJavaPackageFinder(buckConfig),
         JavaFileParser.createJavaFileParser(javacOptions),
         ruleResolver,
         params.getCell().getFilesystem(),
-        getIntellijAggregationMode(buckConfig),
-        buckConfig);
+        projectConfig);
 
-    return project.write(
-        runIjCleaner,
-        getRemoveUnusedLibraries(buckConfig),
-        excludeArtifacts || getExcludeArtifactsFromConfig(buckConfig));
+    return project.write();
   }
 
   private int buildRequiredTargetsWithoutUsingCacheForAnnotatedTargets(

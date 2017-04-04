@@ -158,7 +158,6 @@ public class IjModuleGraph {
    * @param targetGraph input graph.
    * @param libraryFactory library factory.
    * @param moduleFactory module factory.
-   * @param aggregationMode module aggregation mode.
    * @return module graph corresponding to the supplied {@link TargetGraph}. Multiple targets from
    * the same base path are mapped to a single module, therefore an IjModuleGraph edge
    * exists between two modules (Ma, Mb) if a TargetGraph edge existed between a pair of
@@ -168,14 +167,13 @@ public class IjModuleGraph {
       final IjProjectConfig projectConfig,
       final TargetGraph targetGraph,
       final IjLibraryFactory libraryFactory,
-      final IjModuleFactory moduleFactory,
-      AggregationMode aggregationMode) {
+      final IjModuleFactory moduleFactory) {
     final ImmutableMap<BuildTarget, IjModule> rulesToModules =
         createModules(
             projectConfig,
             targetGraph,
             moduleFactory,
-            aggregationMode.getGraphMinimumDepth(targetGraph.getNodes().size()));
+            projectConfig.getAggregationMode().getGraphMinimumDepth(targetGraph.getNodes().size()));
     final ExportedDepsClosureResolver exportedDepsClosureResolver =
         new ExportedDepsClosureResolver(targetGraph);
     ImmutableMap.Builder<IjProjectElement, ImmutableMap<IjProjectElement, DependencyType>>

@@ -112,10 +112,9 @@ public class IjModuleFactory {
   public IjModuleFactory(
       ProjectFilesystem projectFilesystem,
       IjModuleFactoryResolver moduleFactoryResolver,
-      IjProjectConfig projectConfig,
-      boolean excludeShadows) {
+      IjProjectConfig projectConfig) {
     this.projectFilesystem = projectFilesystem;
-    this.excludeShadows = excludeShadows;
+    this.excludeShadows = projectConfig.isExcludeArtifactsEnabled();
     this.projectConfig = projectConfig;
     this.autogenerateAndroidFacetSources = projectConfig.isAutogenerateAndroidFacetSourcesEnabled();
 

@@ -83,9 +83,7 @@ public class IjProjectWriter {
     this.moduleGraph = moduleGraph;
   }
 
-  public void write(
-      boolean runPostGenerationCleaner,
-      boolean removeUnusedLibraries) throws IOException {
+  public void write() throws IOException {
     IJProjectCleaner cleaner = new IJProjectCleaner(projectFilesystem);
 
     writeProjectSettings(cleaner, projectConfig);
@@ -110,8 +108,8 @@ public class IjProjectWriter {
     cleaner.clean(
         projectConfig.getBuckConfig(),
         LIBRARIES_PREFIX,
-        runPostGenerationCleaner,
-        removeUnusedLibraries);
+        projectConfig.isCleanerEnabled(),
+        projectConfig.isRemovingUnusedLibrariesEnabled());
   }
 
   private Path writeModule(IjModule module) throws IOException {

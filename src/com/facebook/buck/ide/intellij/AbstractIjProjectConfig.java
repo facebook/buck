@@ -64,4 +64,11 @@ abstract class AbstractIjProjectConfig {
 
   public abstract Optional<Path> getAndroidManifest();
 
+  public abstract boolean isCleanerEnabled();
+
+  public abstract boolean isRemovingUnusedLibrariesEnabled();
+
+  public abstract boolean isExcludeArtifactsEnabled();
+
+  public abstract AggregationMode getAggregationMode();
 }
