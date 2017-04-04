@@ -272,21 +272,21 @@ public class MergeAndroidResourcesStepTest {
         entriesBuilder.buildFilePathToPackageNameSet(),
         Optional.empty(),
         ImmutableMap.of(
-            Paths.get("a-R.txt"),
+            entriesBuilder.getProjectFilesystem().getPath("a-R.txt"),
             (HasAndroidResourceDeps) AndroidResourceRuleBuilder.newBuilder()
                 .setRuleFinder(ruleFinder)
                 .setBuildTarget(resTarget)
                 .setRes(new FakeSourcePath("a/res"))
                 .setRDotJavaPackage("com.res.a")
                 .build(),
-            Paths.get("b-R.txt"),
+            entriesBuilder.getProjectFilesystem().getPath("b-R.txt"),
             (HasAndroidResourceDeps) AndroidResourceRuleBuilder.newBuilder()
                 .setRuleFinder(ruleFinder)
                 .setBuildTarget(resTarget)
                 .setRes(new FakeSourcePath("b/res"))
                 .setRDotJavaPackage("com.res.b")
                 .build(),
-            Paths.get("c-R.txt"),
+            entriesBuilder.getProjectFilesystem().getPath("c-R.txt"),
             (HasAndroidResourceDeps) AndroidResourceRuleBuilder.newBuilder()
                 .setRuleFinder(ruleFinder)
                 .setBuildTarget(resTarget)
@@ -313,17 +313,18 @@ public class MergeAndroidResourcesStepTest {
 
     FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
 
-    HasAndroidResourceDeps res = AndroidResourceRuleBuilder.newBuilder()
+    AndroidResource res = AndroidResourceRuleBuilder.newBuilder()
         .setRuleFinder(ruleFinder)
         .setBuildTarget(resTarget)
         .setRes(new FakeSourcePath("res"))
         .setRDotJavaPackage("com.res1")
         .build();
+    buildRuleResolver.addToIndex(res);
 
     MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForDummyRDotJava(
         filesystem,
@@ -375,17 +376,18 @@ public class MergeAndroidResourcesStepTest {
     Path uberRDotTxt = filesystem.resolve("R.txt").toAbsolutePath();
     filesystem.writeLinesToPath(outputTextSymbols, uberRDotTxt);
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
 
-    HasAndroidResourceDeps resource = AndroidResourceRuleBuilder.newBuilder()
+    AndroidResource resource = AndroidResourceRuleBuilder.newBuilder()
         .setRuleFinder(ruleFinder)
         .setBuildTarget(target)
         .setRes(new FakeSourcePath("res"))
         .setRDotJavaPackage("com.facebook")
         .build();
+    buildRuleResolver.addToIndex(resource);
 
     MergeAndroidResourcesStep mergeStep = new MergeAndroidResourcesStep(
         filesystem,
@@ -453,17 +455,18 @@ public class MergeAndroidResourcesStepTest {
     Path uberRDotTxt = filesystem.resolve("R.txt").toAbsolutePath();
     filesystem.writeLinesToPath(outputTextSymbols, uberRDotTxt);
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
 
-    HasAndroidResourceDeps resource = AndroidResourceRuleBuilder.newBuilder()
+    AndroidResource resource = AndroidResourceRuleBuilder.newBuilder()
         .setRuleFinder(ruleFinder)
         .setBuildTarget(target)
         .setRes(new FakeSourcePath("res"))
         .setRDotJavaPackage("com.facebook")
         .build();
+    buildRuleResolver.addToIndex(resource);
 
     MergeAndroidResourcesStep mergeStep = new MergeAndroidResourcesStep(
         filesystem,
@@ -522,24 +525,26 @@ public class MergeAndroidResourcesStepTest {
 
     FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
 
-    HasAndroidResourceDeps res1 = AndroidResourceRuleBuilder.newBuilder()
+    AndroidResource res1 = AndroidResourceRuleBuilder.newBuilder()
         .setRuleFinder(ruleFinder)
         .setBuildTarget(res1Target)
         .setRes(new FakeSourcePath("res1"))
         .setRDotJavaPackage("res1")
         .build();
+    buildRuleResolver.addToIndex(res1);
 
-    HasAndroidResourceDeps res2 = AndroidResourceRuleBuilder.newBuilder()
+    AndroidResource res2 = AndroidResourceRuleBuilder.newBuilder()
         .setRuleFinder(ruleFinder)
         .setBuildTarget(res2Target)
         .setRes(new FakeSourcePath("res2"))
         .setRDotJavaPackage("res2")
         .build();
+    buildRuleResolver.addToIndex(res2);
 
     MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForDummyRDotJava(
         filesystem,
@@ -576,17 +581,18 @@ public class MergeAndroidResourcesStepTest {
                 "__%s_text_symbols__/R.txt").toString(),
             ImmutableList.of("int id id1 0x7f020000")));
     FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
 
-    HasAndroidResourceDeps res1 = AndroidResourceRuleBuilder.newBuilder()
+    AndroidResource res1 = AndroidResourceRuleBuilder.newBuilder()
         .setRuleFinder(ruleFinder)
         .setBuildTarget(res1Target)
         .setRes(new FakeSourcePath("res1"))
         .setRDotJavaPackage("res1")
         .build();
+    buildRuleResolver.addToIndex(res1);
 
     MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForDummyRDotJava(
         filesystem,
@@ -623,17 +629,18 @@ public class MergeAndroidResourcesStepTest {
 
     FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
 
-    HasAndroidResourceDeps res1 = AndroidResourceRuleBuilder.newBuilder()
+    AndroidResource res1 = AndroidResourceRuleBuilder.newBuilder()
         .setRuleFinder(ruleFinder)
         .setBuildTarget(res1Target)
         .setRes(new FakeSourcePath("res1"))
         .setRDotJavaPackage("res1")
         .build();
+    buildRuleResolver.addToIndex(res1);
 
     MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForDummyRDotJava(
         filesystem,
@@ -659,9 +666,9 @@ public class MergeAndroidResourcesStepTest {
     BuildTarget res1Target = BuildTargetFactory.newInstance("//:res1");
     BuildTarget res2Target = BuildTargetFactory.newInstance("//:res2");
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
 
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -688,19 +695,21 @@ public class MergeAndroidResourcesStepTest {
                 "int string app_name 0x7f020000",
                 "int drawable android_drawable 0x7f010000")));
 
-    HasAndroidResourceDeps res1 = AndroidResourceRuleBuilder.newBuilder()
+    AndroidResource res1 = AndroidResourceRuleBuilder.newBuilder()
         .setRuleFinder(ruleFinder)
         .setBuildTarget(res1Target)
         .setRes(new FakeSourcePath("res1"))
         .setRDotJavaPackage("package")
         .build();
+    buildRuleResolver.addToIndex(res1);
 
-    HasAndroidResourceDeps res2 = AndroidResourceRuleBuilder.newBuilder()
+    AndroidResource res2 = AndroidResourceRuleBuilder.newBuilder()
         .setRuleFinder(ruleFinder)
         .setBuildTarget(res2Target)
         .setRes(new FakeSourcePath("res2"))
         .setRDotJavaPackage("package")
         .build();
+    buildRuleResolver.addToIndex(res2);
 
     ImmutableList<HasAndroidResourceDeps> resourceDeps = ImmutableList.of(res1, res2);
 

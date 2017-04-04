@@ -142,7 +142,9 @@ class AndroidBinaryResourcesGraphEnhancer {
     } else {
       filteredResourcesProvider = new IdentityResourcesProvider(
           resourceDetails.getResourceDirectories().stream()
-              .map(pathResolver::getRelativePath)
+              .map(sourcePath ->
+                  buildRuleParams.getProjectFilesystem()
+                      .relativize(pathResolver.getAbsolutePath(sourcePath)))
               .collect(MoreCollectors.toImmutableList()));
     }
 
