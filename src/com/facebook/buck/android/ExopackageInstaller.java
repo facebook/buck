@@ -368,7 +368,7 @@ public class ExopackageInstaller {
       String metadataContent = "resources " + resourcesHash;
       Iterator<Path> assetsPathsIter = assetsPaths.iterator();
       for (String hash : assetsHashes) {
-        metadataContent += "\nassets " + hash;
+        metadataContent += "\nresources " + hash;
         hashToSourcesBuilder.put(hash, assetsPathsIter.next());
       }
 

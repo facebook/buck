@@ -25,6 +25,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
 import android.content.Context;
 import android.content.res.AssetManager;
@@ -52,9 +53,8 @@ public class ResourcesLoader {
       throws Exception {
     File resourcesDirectory = new File(
         "/data/local/tmp/exopackage/" + context.getPackageName() + "/resources");
-    Metadata metadata = readMetadata(resourcesDirectory);
-
-    if (!metadata.hasResources()) {
+    List<File> exoResourcePaths = readMetadata(resourcesDirectory);
+    if (exoResourcePaths.isEmpty()) {
       Log.w(TAG, "No exo-resources found in: " + resourcesDirectory.getName());
       return;
     }
@@ -63,17 +63,11 @@ public class ResourcesLoader {
     Method addAssetPathMethod =
         AssetManager.class.getDeclaredMethod("addAssetPath", String.class);
     addAssetPathMethod.setAccessible(true);
-    if (metadata.hasPrimaryResources()) {
-      int cookie =
-          (int) addAssetPathMethod.invoke(assetManager, metadata.getPrimaryResourcesPath());
+
+    for (File resourcePath : exoResourcePaths) {
+      int cookie = (int) addAssetPathMethod.invoke(assetManager, resourcePath.getAbsolutePath());
       if (cookie == 0) {
-        throw new RuntimeException("Unable to add resources");
-      }
-    }
-    for (String assetsPath : metadata.getAssetsPaths()) {
-      int cookie = (int) addAssetPathMethod.invoke(assetManager, assetsPath);
-      if (cookie == 0) {
-        throw new RuntimeException("Unable to add assets");
+        throw new RuntimeException("Unable to add resources.");
       }
     }
 
@@ -154,67 +148,31 @@ public class ResourcesLoader {
 
   }
 
-  private static Metadata readMetadata(File resourcesDirectory) throws IOException {
+  private static List<File> readMetadata(File resourcesDirectory) throws IOException {
     BufferedReader br = null;
     try {
       br = new BufferedReader(new FileReader(
           new File(resourcesDirectory, "metadata.txt")));
-      File resources = null;
-      ArrayList<String> assets = new ArrayList<>();
+      ArrayList<File> resources = new ArrayList<>();
       for (String line; (line = br.readLine()) != null; ) {
         String[] values = line.split(" ");
         if (values.length != 2) {
           throw new RuntimeException("Bad metadata for resources... (" + line + ")");
         }
-        switch (values[0]) {
-          case "resources":
-            resources = new File(resourcesDirectory, values[1] + ".apk");
-            if (!resources.exists()) {
-              throw new RuntimeException("resources don't exist... (" + line + ")");
-            }
-            break;
-          case "assets":
-            File asset = new File(resourcesDirectory, values[1] + ".apk");
-            if (!asset.exists()) {
-              throw new RuntimeException("resources don't exist... (" + line + ")");
-            }
-            assets.add(asset.getAbsolutePath());
-            break;
-          default:
-            throw new RuntimeException("Unrecognized resource type: (" + line + ")");
+        if (!values[0].equals("resources")) {
+          throw new RuntimeException("Unrecognized resource type: (" + line + ")");
         }
+        File apk = new File(resourcesDirectory, values[1] + ".apk");
+        if (!apk.exists()) {
+          throw new RuntimeException("resources don't exist... (" + line + ")");
+        }
+        resources.add(apk);
       }
-      return new Metadata(resources.getAbsolutePath(), assets);
+      return resources;
     } finally {
       if (br != null) {
         br.close();
       }
-    }
-  }
-
-  private static class Metadata {
-    private final String primaryResources;
-    private final ArrayList<String> assets;
-
-    Metadata(String primaryResources, ArrayList<String> assets) {
-      this.primaryResources = primaryResources;
-      this.assets = assets;
-    }
-
-    public boolean hasResources() {
-      return hasPrimaryResources() || !assets.isEmpty();
-    }
-
-    public boolean hasPrimaryResources() {
-      return primaryResources != null;
-    }
-
-    public String getPrimaryResourcesPath() {
-      return primaryResources;
-    }
-
-    public Iterable<String> getAssetsPaths() {
-      return assets;
     }
   }
 }

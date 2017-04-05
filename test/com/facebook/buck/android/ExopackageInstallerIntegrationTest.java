@@ -801,7 +801,7 @@ public class ExopackageInstallerIntegrationTest {
         writeFile(assetPath, content);
         resourcesInfoBuilder.addAssetsPaths(assetPath);
         Sha1HashCode assetHash = filesystem.computeSha1(assetPath);
-        expectedMetadata += "\n" + "assets " + assetHash;
+        expectedMetadata += "\n" + "resources " + assetHash;
         expectedState.put("resources/" + assetHash + ".apk", content);
       }
       resourcesInfo = Optional.of(resourcesInfoBuilder.build());
