@@ -374,6 +374,7 @@ public class AndroidBinaryGraphEnhancer {
         .setPackageableCollection(packageableCollection)
         .setPrimaryResourcesApkPath(resourcesEnhancementResult.getPrimaryResourcesApkPath())
         .setPrimaryApkAssetZips(resourcesEnhancementResult.getPrimaryApkAssetZips())
+        .setExoResources(resourcesEnhancementResult.getExoResources())
         .setAndroidManifestPath(resourcesEnhancementResult.getAndroidManifestXml())
         .setSourcePathToAaptGeneratedProguardConfigFile(
             resourcesEnhancementResult.getAaptGeneratedProguardConfigFile())

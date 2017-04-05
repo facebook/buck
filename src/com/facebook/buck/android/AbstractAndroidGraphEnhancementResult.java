@@ -38,7 +38,9 @@ interface AbstractAndroidGraphEnhancementResult {
   Optional<PreDexMerge> getPreDexMerge();
   Optional<ComputeExopackageDepsAbi> getComputeExopackageDepsAbi();
   Optional<Boolean> getPackageAssetLibraries();
+  SourcePath getPrimaryResourcesApkPath();
   ImmutableList<SourcePath> getPrimaryApkAssetZips();
+  ImmutableList<SourcePath> getExoResources();
 
   /**
    * Compiled R.java for use by ProGuard.  This should go away if/when
@@ -52,8 +54,6 @@ interface AbstractAndroidGraphEnhancementResult {
    * entries due to {@link AndroidBuildConfig}s (or R.java, in the future).
    */
   ImmutableSet<SourcePath> getClasspathEntriesToDex();
-
-  SourcePath getPrimaryResourcesApkPath();
 
   SourcePath getAndroidManifestPath();
 

@@ -117,6 +117,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     Optional<PackageStringAssets> getPackageStringAssets();
     ImmutableList<BuildRule> getEnhancedDeps();
     ImmutableList<SourcePath> getPrimaryApkAssetZips();
+    ImmutableList<SourcePath> getExoResources();
   }
 
   public AndroidBinaryResourcesGraphEnhancementResult enhance(
@@ -219,6 +220,7 @@ class AndroidBinaryResourcesGraphEnhancer {
         .setPrimaryApkAssetZips(primaryApkAssetZips.build())
         .setPackageStringAssets(packageStringAssets)
         .setEnhancedDeps(enhancedDeps.build())
+        .setExoResources(ImmutableList.of())
         .build();
   }
 
