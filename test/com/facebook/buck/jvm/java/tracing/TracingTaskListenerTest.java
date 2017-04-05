@@ -18,30 +18,27 @@ package com.facebook.buck.jvm.java.tracing;
 
 import static org.easymock.EasyMock.createMock;
 
-import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTestRunner;
-import com.sun.source.util.TaskEvent;
-import com.sun.source.util.TaskListener;
+import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskListener;
+import com.facebook.buck.jvm.java.plugin.api.TaskEventMirror;
 
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import javax.tools.JavaFileObject;
 
-@RunWith(CompilerTreeApiTestRunner.class)
 public class TracingTaskListenerTest {
   private IMocksControl mockControl;
   private JavacPhaseTracer mockTracer;
-  private TaskListener mockNextListener;
+  private BuckJavacTaskListener mockNextListener;
   private TracingTaskListener tracingTaskListener;
 
   @Before
   public void setUp() {
     mockControl = EasyMock.createStrictControl();
     mockTracer = mockControl.createMock(JavacPhaseTracer.class);
-    mockNextListener = mockControl.createMock(TaskListener.class);
+    mockNextListener = mockControl.createMock(BuckJavacTaskListener.class);
 
     tracingTaskListener = new TracingTaskListener(mockTracer, mockNextListener);
   }
@@ -52,7 +49,12 @@ public class TracingTaskListenerTest {
    */
   @Test
   public void testTracesAfterChainingOnStart() {
-    TaskEvent enterEvent = new TaskEvent(TaskEvent.Kind.ENTER, createMock(JavaFileObject.class));
+    TaskEventMirror enterEvent = new TaskEventMirror(
+        null,
+        TaskEventMirror.Kind.ENTER,
+        createMock(JavaFileObject.class),
+        null,
+        null);
     mockControl.checkOrder(true);
     mockNextListener.started(enterEvent);
     mockTracer.beginEnter();
@@ -68,7 +70,12 @@ public class TracingTaskListenerTest {
    */
   @Test
   public void testTracesBeforeChainingOnFinish() {
-    TaskEvent parseEvent = new TaskEvent(TaskEvent.Kind.PARSE, createMock(JavaFileObject.class));
+    TaskEventMirror parseEvent = new TaskEventMirror(
+        null,
+        TaskEventMirror.Kind.PARSE,
+        createMock(JavaFileObject.class),
+        null,
+        null);
 
     mockControl.checkOrder(true);
     mockTracer.endParse();

@@ -13,7 +13,6 @@ java_library(
     visibility = [
         "//src/com/facebook/buck/jvm/java/abi/source:source",
         "//src/com/facebook/buck/jvm/java/plugin:javac-plugin",
-        "//src/com/facebook/buck/jvm/java/tracing:compiler-plugin",
         "//test/com/facebook/buck/jvm/java/plugin/adapter:adapter",
         "//test/com/facebook/buck/jvm/java/tracing:tracing",
     ],

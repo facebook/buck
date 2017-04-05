@@ -16,17 +16,9 @@
 
 package com.facebook.buck.jvm.java.tracing;
 
-import com.facebook.buck.jvm.java.JavacEventSink;
-import com.facebook.buck.jvm.java.plugin.PluginLoader;
-import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.ClassLoaderCache;
-
-import java.lang.reflect.Method;
 import java.util.List;
 
 import javax.annotation.Nullable;
-import javax.tools.JavaCompiler;
 
 /**
  * A {@link JavacPhaseTracer} that translates the trace data to be more useful.
@@ -61,52 +53,10 @@ import javax.tools.JavaCompiler;
  * that would not have been spent if annotation processors were not present.
  */
 public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoCloseable {
-  private static final Logger LOG = Logger.get(TranslatingJavacPhaseTracer.class);
   private final JavacPhaseEventLogger logger;
 
   private boolean isProcessingAnnotations = false;
   private int roundNumber = 0;
-
-  /**
-   * @param next a TaskListener that should be notified of events outside of the trace windows. It
-   *             is passed as Object because TaskListener is not available in Buck's ClassLoader
-   */
-  @Nullable
-  public static TranslatingJavacPhaseTracer setupTracing(
-      BuildTarget invokingTarget,
-      ClassLoaderCache classLoaderCache,
-      JavacEventSink eventSink,
-      JavaCompiler.CompilationTask task,
-      @Nullable Object next) {
-    try {
-      final ClassLoader tracingTaskListenerClassLoader =
-          PluginLoader.getPluginClassLoader(classLoaderCache, task);
-      final Class<?> tracingTaskListenerClass = Class.forName(
-          "com.facebook.buck.jvm.java.tracing.TracingTaskListener",
-          false,
-          tracingTaskListenerClassLoader);
-      final Method setupTracingMethod = tracingTaskListenerClass.getMethod(
-          "setupTracing",
-          JavaCompiler.CompilationTask.class,
-          JavacPhaseTracer.class,
-          Object.class);
-      final TranslatingJavacPhaseTracer tracer = new TranslatingJavacPhaseTracer(
-          new JavacPhaseEventLogger(invokingTarget, eventSink));
-      setupTracingMethod.invoke(
-          null,
-          task,
-          tracer,
-          next);
-
-      return tracer;
-    } catch (ReflectiveOperationException e) {
-      LOG.warn(
-          "Failed loading TracingTaskListener (%s: %s). " +
-              "Perhaps using a compiler that doesn't support com.sun.source.util.JavaTask?",
-          e.getClass().getSimpleName(), e.getMessage());
-      return null;
-    }
-  }
 
   public TranslatingJavacPhaseTracer(JavacPhaseEventLogger logger) {
     this.logger = logger;

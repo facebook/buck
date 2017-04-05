@@ -16,58 +16,40 @@
 
 package com.facebook.buck.jvm.java.tracing;
 
-import com.facebook.buck.jvm.java.plugin.adapter.TaskListenerWrapper;
-import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.sun.source.util.JavacTask;
-import com.sun.source.util.TaskEvent;
-import com.sun.source.util.TaskListener;
+import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskListener;
+import com.facebook.buck.jvm.java.plugin.api.TaskEventMirror;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.tools.JavaCompiler;
+import javax.annotation.Nullable;
+
 
 /**
- * A {@link TaskListener} that traces all events to a {@link JavacPhaseTracer}. The event stream
- * coming from the compiler is a little dirty, so this class cleans it up minimally before tracing.
+ * A {@link BuckJavacTaskListener} that traces all events to a {@link JavacPhaseTracer}. The event
+ * stream coming from the compiler is a little dirty, so this class cleans it up minimally before
+ * tracing.
  */
-public class TracingTaskListener implements TaskListener {
+public class TracingTaskListener implements BuckJavacTaskListener {
   private final JavacPhaseTracer tracing;
   private final TraceCleaner traceCleaner;
-  private final TaskListenerWrapper inner;
+  @Nullable
+  private final BuckJavacTaskListener inner;
 
-  public static void setupTracing(
-      JavaCompiler.CompilationTask task,
-      JavacPhaseTracer tracing,
-      Object next) {
-    if (!(task instanceof JavacTask)) {
-      return;
-    }
-
-    final JavacTask javacTask = (JavacTask) task;
-
-    // The main part of Buck doesn't have access to `TaskListener`, since that's defined in the
-    // compiler jar. So we had to pass it as an object and downcast.
-    final TaskListener nextListener = (TaskListener) next;
-    javacTask.setTaskListener(new TracingTaskListener(tracing, nextListener));
-  }
-
-  public TracingTaskListener(JavacPhaseTracer tracing, TaskListener next) {
-    inner = new TaskListenerWrapper(next);
+  public TracingTaskListener(JavacPhaseTracer tracing, @Nullable BuckJavacTaskListener next) {
+    inner = next;
     this.tracing = tracing;
     traceCleaner = new TraceCleaner(tracing);
   }
 
   @Override
-  public synchronized void started(TaskEvent e) {
+  public synchronized void started(TaskEventMirror e) {
     // Chain start events before tracing, so that the tracing most closely tracks the actual event
     // time
-    inner.started(e);
+    if (inner != null) {
+      inner.started(e);
+    }
 
-    // Because TaskListener, TaskEvent, etc. live in tools.jar, and our build has only a stub for
-    // that, we can't call started() and finished() directly within tests. So we write started()
-    // to extract necessary information from TaskEvent and dispatch any interesting work to helper
-    // methods. Tests can then exercise those methods directly without issue.
     switch (e.getKind()) {
       case PARSE:
         tracing.beginParse(getFileName(e));
@@ -92,7 +74,7 @@ public class TracingTaskListener implements TaskListener {
   }
 
   @Override
-  public synchronized void finished(TaskEvent e) {
+  public synchronized void finished(TaskEventMirror e) {
     // See comment in started() about testability.
     switch (e.getKind()) {
       case PARSE:
@@ -118,7 +100,9 @@ public class TracingTaskListener implements TaskListener {
 
     // Chain finished events after tracing, so that the tracing most closely tracks the actual
     // event time
-    inner.finished(e);
+    if (inner != null) {
+      inner.finished(e);
+    }
   }
 
   /**
@@ -196,7 +180,7 @@ public class TracingTaskListener implements TaskListener {
   }
 
   @Nullable
-  private static String getFileName(TaskEvent e) {
+  private static String getFileName(TaskEventMirror e) {
     if (e.getSourceFile() == null) {
       return null;
     }
@@ -205,7 +189,7 @@ public class TracingTaskListener implements TaskListener {
   }
 
   @Nullable
-  private static String getTypeName(TaskEvent e) {
+  private static String getTypeName(TaskEventMirror e) {
     if (e.getTypeElement() == null) {
       return null;
     }

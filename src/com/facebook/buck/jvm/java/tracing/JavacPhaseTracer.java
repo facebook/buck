@@ -16,9 +16,9 @@
 
 package com.facebook.buck.jvm.java.tracing;
 
-import com.facebook.buck.util.liteinfersupport.Nullable;
-
 import java.util.List;
+
+import javax.annotation.Nullable;
 
 /**
  * An interface for tracing the phases of compilation in Oracle's javac. This interface is loaded

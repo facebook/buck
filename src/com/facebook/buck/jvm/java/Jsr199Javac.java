@@ -19,6 +19,11 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.jvm.java.abi.SourceBasedAbiStubber;
 import com.facebook.buck.jvm.java.abi.source.api.BootClasspathOracle;
+import com.facebook.buck.jvm.java.plugin.PluginLoader;
+import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskListener;
+import com.facebook.buck.jvm.java.plugin.api.JavacTaskProxy;
+import com.facebook.buck.jvm.java.tracing.JavacPhaseEventLogger;
+import com.facebook.buck.jvm.java.tracing.TracingTaskListener;
 import com.facebook.buck.jvm.java.tracing.TranslatingJavacPhaseTracer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -251,14 +256,18 @@ public abstract class Jsr199Javac implements Javac {
         options,
         classNamesForAnnotationProcessing,
         compilationUnits);
+    PluginLoader pluginLoader =
+        PluginLoader.newInstance(context.getClassLoaderCache(), compilationTask);
+
+    JavacTaskProxy javacTask = JavacTaskProxy.newInstance(pluginLoader, compilationTask);
 
     boolean isSuccess = false;
     BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
         new Jsr199TracingBridge(context.getEventSink(), invokingRule));
-    Object abiValidatingTaskListener = null;
+    BuckJavacTaskListener taskListener = null;
     if (abiGenerationMode != JavacOptions.AbiGenerationMode.CLASS) {
-      abiValidatingTaskListener = SourceBasedAbiStubber.newValidatingTaskListener(
-          context.getClassLoaderCache(),
+      taskListener = SourceBasedAbiStubber.newValidatingTaskListener(
+          pluginLoader,
           compilationTask,
           new FileManagerBootClasspathOracle(fileManager),
           abiGenerationMode == JavacOptions.AbiGenerationMode.SOURCE ?
@@ -270,12 +279,8 @@ public abstract class Jsr199Javac implements Javac {
       try (
           // TranslatingJavacPhaseTracer is AutoCloseable so that it can detect the end of tracing
           // in some unusual situations
-          TranslatingJavacPhaseTracer tracer = TranslatingJavacPhaseTracer.setupTracing(
-              invokingRule,
-              context.getClassLoaderCache(),
-              context.getEventSink(),
-              compilationTask,
-              abiValidatingTaskListener);
+          TranslatingJavacPhaseTracer tracer = new TranslatingJavacPhaseTracer(
+              new JavacPhaseEventLogger(invokingRule, context.getEventSink()));
 
           // Ensure annotation processors are loaded from their own classloader. If we don't do
           // this, then the evidence suggests that they get one polluted with Buck's own classpath,
@@ -286,10 +291,13 @@ public abstract class Jsr199Javac implements Javac {
               compiler.getClass().getClassLoader(),
               context.getClassLoaderCache(),
               invokingRule)) {
-        compilationTask.setProcessors(processorFactory.createProcessors(annotationProcessors));
+        taskListener = new TracingTaskListener(tracer, taskListener);
+
+        javacTask.setTaskListener(taskListener);
+        javacTask.setProcessors(processorFactory.createProcessors(annotationProcessors));
 
         // Invoke the compilation and inspect the result.
-        isSuccess = compilationTask.call();
+        isSuccess = javacTask.call();
       } catch (IOException e) {
         LOG.warn(e, "Unable to close annotation processor class loader. We may be leaking memory.");
       }

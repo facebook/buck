@@ -252,7 +252,6 @@
     <ecj destdir="${bootstrapper.classes.dir}" classpathref="bootstrapper-classpath">
       <javac-params>
         <include name="${bootstrapper.src.dir}/**/*.java" />
-        <include name="${javac-tracing.src.dir}/JavacPhaseTracer.java" />
         <include name="com/facebook/buck/util/liteinfersupport/Nullable.java" />
         <include name="com/facebook/buck/util/liteinfersupport/Preconditions.java" />
         <include name="com/facebook/buck/jvm/java/plugin/api/*.java" />
@@ -306,7 +305,6 @@
         <include name="com/facebook/buck/util/liteinfersupport/Preconditions.java" />
         <include name="com/facebook/buck/jvm/java/abi/source/*.java" />
         <include name="com/facebook/buck/jvm/java/plugin/adapter/**/*.java" />
-        <include name="${javac-tracing.src.dir}/TracingTaskListener.java" />
       </javac-params>
     </ecj>
     <jar destfile="${javac-plugin.jar}">
@@ -429,14 +427,6 @@
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
           <exclude name="com/facebook/buck/testrunner/**" />
         </patternset>
-        <or>
-          <filename name="${javac-tracing.src.dir}/JavacPhaseEvent.java" />
-          <filename name="${javac-tracing.src.dir}/JavacPhaseEventLogger.java" />
-          <filename name="${javac-tracing.src.dir}/TranslatingJavacPhaseTracer.java" />
-          <not>
-            <filename name="${javac-tracing.src.dir}/**" />
-          </not>
-        </or>
       </javac-params>
     </ecj>
   </target>
@@ -585,12 +575,6 @@
          >
       <javac-params>
         <exclude name="**/testdata/**" />
-
-        <!-- This test cannot build with the rest because it is testing TracingTaskListener,
-        which lives in the javac-plugin.jar, which is loaded dynamically at
-        runtime. This test is run in the Buck build, which is capable of more isolated testing
-        than the Ant build is. -->
-        <exclude name="com/facebook/buck/jvm/java/tracing/TracingTaskListenerCleanerTest.java" />
       </javac-params>
     </ecj>
   </target>
@@ -631,7 +615,6 @@
           <include name="com/facebook/buck/android/**/*${test.class}.java" />
           <include name="com/facebook/buck/dalvik/**/*${test.class}.java" />
 
-          <exclude name="com/facebook/buck/jvm/java/tracing/TracingTaskListenerCleanerTest.java" />
           <exclude name="**/testdata/**" />
         </fileset>
       </batchtest>
