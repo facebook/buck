@@ -52,7 +52,7 @@ abstract class AbstractExopackageInfo {
   @Value.Immutable
   interface AbstractResourcesInfo {
     @Value.Parameter
-    List<Path> getResourcesPaths();
+    List<SourcePath> getResourcesPaths();
   }
 
   public abstract Optional<DexInfo> getDexInfo();

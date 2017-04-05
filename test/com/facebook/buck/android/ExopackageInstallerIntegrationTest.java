@@ -794,7 +794,7 @@ public class ExopackageInstallerIntegrationTest {
         Path resourcePath = resourcesDirectory.resolve("resources-" + n++ + ".apk");
         String content = resourcesContents.next();
         writeFile(resourcePath, content);
-        resourcesInfoBuilder.addResourcesPaths(resourcePath);
+        resourcesInfoBuilder.addResourcesPaths(new PathSourcePath(filesystem, resourcePath));
         Sha1HashCode resourceHash = filesystem.computeSha1(resourcePath);
         expectedMetadata += prefix + "resources " + resourceHash;
         prefix = "\n";

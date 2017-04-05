@@ -29,6 +29,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.ExopackageInfo.ResourcesInfo;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.NamedTemporaryFile;
@@ -353,11 +354,11 @@ public class ExopackageInstaller {
     private void installResourcesFiles() throws Exception {
       ResourcesInfo info = exopackageInfo.getResourcesInfo().get();
 
-      List<Path> resourcesPaths = info.getResourcesPaths();
       ImmutableMap.Builder<String, Path> hashToSourcesBuilder = ImmutableMap.builder();
       String metadataContent = "";
       String prefix = "";
-      for (Path path : resourcesPaths) {
+      for (SourcePath sourcePath : info.getResourcesPaths()) {
+        Path path = pathResolver.getRelativePath(sourcePath);
         String hash = projectFilesystem.computeSha1(path).getHash();
         metadataContent += prefix + "resources " + hash;
         prefix = "\n";
