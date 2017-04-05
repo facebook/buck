@@ -9,11 +9,17 @@ java_test(
     ],
     deps = [
         "//src/com/facebook/buck/jvm/java/abi/source:source",
+        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/immutables:immutables",
         "//test/com/facebook/buck/jvm/java/abi/source:testutil",
         "//test/com/facebook/buck/jvm/java/testutil:testutil",
+        "//third-party/java/asm:asm",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:java-hamcrest",
+        "//third-party/java/immutables:immutables",
+        "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/jsr:jsr305",
         "//third-party/java/junit:junit",
     ],
 )
@@ -34,5 +40,8 @@ java_library(
         "//src/com/facebook/buck/jvm/java/abi/source:source",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
         "//test/com/facebook/buck/jvm/java/testutil:testutil",
+        "//third-party/java/asm:asm",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
     ],
 )

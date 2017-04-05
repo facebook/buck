@@ -1,15 +1,21 @@
 standard_java_library(
     name = "counters",
-    exported_deps = [
-        "//src/com/facebook/buck/event:interfaces",
-        "//src/com/facebook/buck/util/immutables:immutables",
-        "//third-party/java/guava:guava",
-    ],
     immutable_types = [
         "CounterSnapshot",
     ],
     deps = [
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/event/external:external_lib",
+        "//src/com/facebook/buck/model:build_id",
+        "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/immutables:immutables",
+        "//third-party/java/guava:guava",
         "//third-party/java/immutables:immutables",
+        "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jackson:jackson-core",
+        "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/jsr:jsr305",
     ],
 )

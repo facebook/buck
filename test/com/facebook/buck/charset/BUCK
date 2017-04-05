@@ -8,6 +8,7 @@ standard_java_test(
         "//src/com/facebook/buck/charset:charset",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:java-hamcrest",
+        "//third-party/java/jsr:jsr305",
         "//third-party/java/junit:junit",
     ],
 )

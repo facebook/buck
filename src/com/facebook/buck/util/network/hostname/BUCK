@@ -1,4 +1,4 @@
 standard_java_library(
     name = "hostname",
-    exported_deps = ["//third-party/java/jna:jna"],
+    deps = ["//third-party/java/jna:jna"],
 )

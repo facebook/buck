@@ -8,7 +8,7 @@ java_library(
     # Currently, we have decided to manage this manually.
     # We should see whether we can let `buck autodeps` take responsibility.
     autodeps = False,
-    exported_deps = [
+    deps = [
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/test/selectors:selectors",
     ],
@@ -38,6 +38,8 @@ java_library(
         # Java API. The objective is to limit the set of files added to the ClassLoader that runs the
         # test, as not to interfere with the results of the test.
         "//src/com/facebook/buck/log:appendablelogrecord",
+        "//src/com/facebook/buck/test/result/type:type",
+        "//src/com/facebook/buck/test/selectors:selectors",
         "//src/com/facebook/buck/util/concurrent:concurrent_for_junit_runner",
         "//src/com/facebook/buck/jvm/java/runner:runner",
         "//third-party/java/junit:junit",
@@ -70,6 +72,8 @@ java_library(
     ],
     deps = [
         ":base",
+        "//src/com/facebook/buck/test/result/type:type",
+        "//src/com/facebook/buck/test/selectors:selectors",
         "//third-party/java/testng:testng",
     ],
 )
@@ -83,6 +87,8 @@ java_binary(
         ":instrumentation",
         ":junit",
         ":testng",
+        "//src/com/facebook/buck/test/result/type:type",
+        "//src/com/facebook/buck/test/selectors:selectors",
     ],
 )
 

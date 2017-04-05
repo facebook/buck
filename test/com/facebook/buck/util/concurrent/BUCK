@@ -1,16 +1,19 @@
 standard_java_testutil(
     name = "testutil",
-    exported_deps = ["//third-party/java/guava:guava"],
+    deps = ["//third-party/java/guava:guava"],
 )
 
 standard_java_test(
     name = "concurrent",
     deps = [
         "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//src/com/facebook/buck/util/immutables:immutables",
         "//test/com/facebook/buck/util/concurrent:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:hamcrest-junit",
         "//third-party/java/hamcrest:java-hamcrest",
+        "//third-party/java/immutables:immutables",
+        "//third-party/java/jsr:jsr305",
         "//third-party/java/junit:junit",
     ],
 )

@@ -1,6 +1,6 @@
 standard_java_library(
     name = "unixsocket",
-    exported_deps = [
+    deps = [
         "//src/com/facebook/buck/io:transport",
         "//third-party/java/jna:jna",
         "//third-party/java/jsr:jsr305",

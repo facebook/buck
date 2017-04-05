@@ -1,8 +1,13 @@
 standard_java_library(
     name = "device",
-    exported_deps = [
+    deps = [
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util/immutables:immutables",
         "//third-party/java/guava:guava",
+        "//third-party/java/immutables:immutables",
+        "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/jsr:jsr305",
     ],
-    deps = ["//src/com/facebook/buck/log:api"],
 )

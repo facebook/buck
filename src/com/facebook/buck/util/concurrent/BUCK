@@ -1,12 +1,6 @@
 java_immutables_library(
     name = "concurrent",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/util/immutables:immutables",
-        "//third-party/java/concurrent-locks:concurrent-locks",
-        "//third-party/java/guava:guava",
-        "//third-party/java/jsr:jsr305",
-    ],
     immutable_types = [
         "ListeningSemaphoreArrayPendingItem",
         "ResourceAmounts",
@@ -18,7 +12,11 @@ java_immutables_library(
     deps = [
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/util/immutables:immutables",
+        "//third-party/java/concurrent-locks:concurrent-locks",
+        "//third-party/java/guava:guava",
         "//third-party/java/immutables:immutables",
+        "//third-party/java/jsr:jsr305",
     ],
 )
 

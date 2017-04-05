@@ -4,9 +4,11 @@ java_library(
         "BuildType.java",
     ],
     autodeps = True,
-    exported_deps = ["//third-party/java/guava:guava"],
     visibility = [
         "PUBLIC",
     ],
-    deps = ["//src/com/facebook/buck/log:api"],
+    deps = [
+        "//src/com/facebook/buck/log:api",
+        "//third-party/java/guava:guava",
+    ],
 )

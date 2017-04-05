@@ -1,11 +1,15 @@
 standard_java_library(
     name = "unit",
-    exported_deps = ["//src/com/facebook/buck/model:simple_types"],
     tests = [
         "//test/com/facebook/buck/util/unit:unit",
     ],
     deps = [
+        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/immutables:immutables",
         "//third-party/java/guava:guava",
+        "//third-party/java/immutables:immutables",
+        "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/jsr:jsr305",
     ],
 )
