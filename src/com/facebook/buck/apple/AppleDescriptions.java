@@ -28,6 +28,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.LinkerMapMode;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.io.MorePaths;
@@ -642,6 +643,19 @@ public class AppleDescriptions {
         if (frameworkDependencies.isPresent()) {
           frameworksBuilder.addAll(frameworkDependencies.get().getSourcePaths());
         }
+      }
+    }
+    // TODO(17155714): framework embedding is currently oddly entwined with framework generation.
+    // This change simply treats all the immediate prebuilt framework dependencies as wishing to be
+    // embedded, but in the future this should be dealt with with some greater sophistication.
+    for (BuildTarget dep : deps) {
+      Optional<TargetNode<PrebuiltAppleFrameworkDescription.Arg, ?>> prebuiltNode =
+          targetGraph.getOptional(dep).flatMap(node ->
+              node.castArg(PrebuiltAppleFrameworkDescription.Arg.class));
+      if (prebuiltNode.isPresent() &&
+          !prebuiltNode.get().getConstructorArg().preferredLinkage.equals(
+              NativeLinkable.Linkage.STATIC)) {
+        frameworksBuilder.add(resolver.requireRule(dep).getSourcePathToOutput());
       }
     }
     ImmutableSet<SourcePath> frameworks = frameworksBuilder.build();
