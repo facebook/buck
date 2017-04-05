@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.plugin;
 
+import com.facebook.buck.jvm.java.plugin.api.PluginClassLoader;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.google.common.collect.ImmutableList;
@@ -39,11 +40,14 @@ import javax.tools.JavaCompiler;
  * to work with these must be loaded using the same {@link ClassLoader} as the instance of javac
  * with which it will be working.
  */
-public final class PluginLoader {
+public final class PluginLoader implements PluginClassLoader {
   private static final String JAVAC_PLUGIN_JAR_RESOURCE_PATH = "javac-plugin.jar";
   @Nullable
   private static final URL JAVAC_PLUGIN_JAR_URL = extractJavacPluginJar();
   private static final Logger LOG = Logger.get(PluginLoader.class);
+
+  @Nullable
+  private final ClassLoader classLoader;
 
   /**
    * Extracts the jar containing the Buck javac plugin and returns a URL that can be given
@@ -54,6 +58,7 @@ public final class PluginLoader {
     @Nullable final URL resourceURL =
         PluginLoader.class.getResource(JAVAC_PLUGIN_JAR_RESOURCE_PATH);
     if (resourceURL == null) {
+      LOG.warn("Could not find javac plugin jar");
       return null;
     } else if ("file".equals(resourceURL.getProtocol())) {
       // When Buck is running from the repo, the jar is actually already on disk, so no extraction
@@ -91,6 +96,34 @@ public final class PluginLoader {
         ImmutableList.of(JAVAC_PLUGIN_JAR_URL));
   }
 
-  private PluginLoader() {
+  @Nullable
+  public static PluginLoader newInstance(
+      ClassLoaderCache classLoaderCache,
+      JavaCompiler.CompilationTask compiler) {
+    return new PluginLoader(getPluginClassLoader(classLoaderCache, compiler));
+  }
+
+  private PluginLoader(@Nullable ClassLoader classLoader) {
+    this.classLoader = classLoader;
+  }
+
+  @Nullable
+  @Override
+  public <T> Class<? extends T> loadClass(String name, Class<T> superclass) {
+    if (classLoader == null) {
+      // No log here because we logged when the plugin itself failed to load
+      return null;
+    }
+
+    try {
+      return Class.forName(name, false, classLoader).asSubclass(superclass);
+    } catch (ClassNotFoundException e) {
+      // Deliberately eat the stack trace to avoid log spam.
+      LOG.warn(
+          "Failed loading %s: %s. Perhaps that class is not compatible with this version of javac?",
+          name,
+          e.getMessage());
+      return null;
+    }
   }
 }

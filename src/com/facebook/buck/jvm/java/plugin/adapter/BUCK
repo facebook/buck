@@ -6,6 +6,9 @@ java_library(
         # Tools.jar is the compiler itself, and will already be present at runtime;
         # we compile against a stub.
         "//third-party/java/jdk:compiler-tree-api",
+
+        # api modules are included in the bootstrapper at runtime, so we don't need direct deps on them
+        "//src/com/facebook/buck/jvm/java/plugin/api:api",
     ],
     visibility = [
         "//src/com/facebook/buck/jvm/java/abi/source:source",
@@ -17,5 +20,6 @@ java_library(
     deps = [
         # This module is loaded as a plugin into the compiler itself; don't take dependencies on Buck
         # internals or large libraries like Guava
+        "//src/com/facebook/buck/util/liteinfersupport:liteinfersupport",
     ],
 )

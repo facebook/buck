@@ -29,6 +29,7 @@ java_library(
         "//src/com/facebook/buck/io:transport",
         "//src/com/facebook/buck/jvm/java:javac-sink",
         "//src/com/facebook/buck/jvm/java/plugin:plugin",
+        "//src/com/facebook/buck/jvm/java/plugin/api:api",
         "//src/com/facebook/buck/jvm/java/tracing:api",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:build_id",

@@ -25,6 +25,7 @@ java_library(
         "//src/com/facebook/buck/io:transport",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
         "//src/com/facebook/buck/jvm/java/plugin:plugin",
+        "//src/com/facebook/buck/jvm/java/plugin/api:api",
         "//src/com/facebook/buck/model:build_id",
         "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/rules:relative_cell_name",

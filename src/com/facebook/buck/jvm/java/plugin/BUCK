@@ -9,6 +9,7 @@ java_library(
         "PUBLIC",
     ],
     deps = [
+        "//src/com/facebook/buck/jvm/java/plugin/api:api",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/util:util",

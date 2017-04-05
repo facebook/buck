@@ -255,6 +255,7 @@
         <include name="${javac-tracing.src.dir}/JavacPhaseTracer.java" />
         <include name="com/facebook/buck/util/liteinfersupport/Nullable.java" />
         <include name="com/facebook/buck/util/liteinfersupport/Preconditions.java" />
+        <include name="com/facebook/buck/jvm/java/plugin/api/*.java" />
         <include name="com/facebook/buck/jvm/java/abi/source/api/*.java" />
       </javac-params>
     </ecj>
