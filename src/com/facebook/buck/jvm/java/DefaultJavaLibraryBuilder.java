@@ -54,8 +54,8 @@ public class DefaultJavaLibraryBuilder {
   protected Optional<Path> generatedSourceFolder = Optional.empty();
   protected Optional<SourcePath> proguardConfig = Optional.empty();
   protected ImmutableList<String> postprocessClassesCommands = ImmutableList.of();
-  protected ImmutableSortedSet<BuildRule> nonAbiExportedDeps = ImmutableSortedSet.of();
-  protected ImmutableSortedSet<BuildRule> nonAbiProvidedDeps = ImmutableSortedSet.of();
+  protected ImmutableSortedSet<BuildRule> fullJarExportedDeps = ImmutableSortedSet.of();
+  protected ImmutableSortedSet<BuildRule> fullJarProvidedDeps = ImmutableSortedSet.of();
   protected boolean trackClassUsage = false;
   protected boolean compileAgainstAbis = false;
   protected Optional<Path> resourcesRoot = Optional.empty();
@@ -147,18 +147,18 @@ public class DefaultJavaLibraryBuilder {
   }
 
   public DefaultJavaLibraryBuilder setExportedDeps(ImmutableSortedSet<BuildTarget> exportedDeps) {
-    this.nonAbiExportedDeps = buildRuleResolver.getAllRules(exportedDeps);
+    this.fullJarExportedDeps = buildRuleResolver.getAllRules(exportedDeps);
     return this;
   }
 
   @VisibleForTesting
   public DefaultJavaLibraryBuilder setExportedDepRules(ImmutableSortedSet<BuildRule> exportedDeps) {
-    this.nonAbiExportedDeps = exportedDeps;
+    this.fullJarExportedDeps = exportedDeps;
     return this;
   }
 
   public DefaultJavaLibraryBuilder setProvidedDeps(ImmutableSortedSet<BuildTarget> providedDeps) {
-    this.nonAbiProvidedDeps = buildRuleResolver.getAllRules(providedDeps);
+    this.fullJarProvidedDeps = buildRuleResolver.getAllRules(providedDeps);
     return this;
   }
 
@@ -215,7 +215,7 @@ public class DefaultJavaLibraryBuilder {
     @Nullable
     private BuildRuleParams finalParams;
     @Nullable
-    private ImmutableSortedSet<BuildRule> finalNonAbiDeclaredDeps;
+    private ImmutableSortedSet<BuildRule> finalFullJarDeclaredDeps;
     @Nullable
     private ImmutableSortedSet<BuildRule> compileTimeClasspathUnfilteredFullDeps;
     @Nullable
@@ -237,9 +237,9 @@ public class DefaultJavaLibraryBuilder {
           generatedSourceFolder,
           proguardConfig,
           postprocessClassesCommands,
-          getFinalNonAbiDeclaredDeps(),
-          nonAbiExportedDeps,
-          nonAbiProvidedDeps,
+          getFinalFullJarDeclaredDeps(),
+          fullJarExportedDeps,
+          fullJarProvidedDeps,
           getFinalCompileTimeClasspathDeps(),
           getAbiInputs(),
           trackClassUsage,
@@ -271,14 +271,14 @@ public class DefaultJavaLibraryBuilder {
       return finalParams;
     }
 
-    protected final ImmutableSortedSet<BuildRule> getFinalNonAbiDeclaredDeps() {
-      if (finalNonAbiDeclaredDeps == null) {
-        finalNonAbiDeclaredDeps = ImmutableSortedSet.copyOf(Iterables.concat(
+    protected final ImmutableSortedSet<BuildRule> getFinalFullJarDeclaredDeps() {
+      if (finalFullJarDeclaredDeps == null) {
+        finalFullJarDeclaredDeps = ImmutableSortedSet.copyOf(Iterables.concat(
             params.getDeclaredDeps().get(),
             getCompileStepFactory().getDeclaredDeps(ruleFinder)));
       }
 
-      return finalNonAbiDeclaredDeps;
+      return finalFullJarDeclaredDeps;
     }
 
     protected final ImmutableSortedSet<BuildRule> getFinalCompileTimeClasspathDeps()
@@ -326,7 +326,7 @@ public class DefaultJavaLibraryBuilder {
 
     protected BuildRuleParams buildFinalParams() {
       return params.copyReplacingDeclaredAndExtraDeps(
-          this::getFinalNonAbiDeclaredDeps,
+          this::getFinalFullJarDeclaredDeps,
           () -> ImmutableSortedSet.copyOf(Iterables.concat(
               params.getExtraDeps().get(),
               Sets.difference(getCompileTimeClasspathUnfilteredFullDeps(), params.getBuildDeps()),
@@ -336,9 +336,9 @@ public class DefaultJavaLibraryBuilder {
     protected final ImmutableSortedSet<BuildRule> getCompileTimeClasspathUnfilteredFullDeps() {
       if (compileTimeClasspathUnfilteredFullDeps == null) {
         Iterable<BuildRule> firstOrderDeps = Iterables.concat(
-            getFinalNonAbiDeclaredDeps(),
-            nonAbiExportedDeps,
-            nonAbiProvidedDeps);
+            getFinalFullJarDeclaredDeps(),
+            fullJarExportedDeps,
+            fullJarProvidedDeps);
 
         ImmutableSortedSet<BuildRule> rulesExportedByDependencies =
             BuildRules.getExportedRules(firstOrderDeps);
