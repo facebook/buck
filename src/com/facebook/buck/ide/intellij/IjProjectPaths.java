@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.ide.intellij;
 
+import com.facebook.buck.io.MorePaths;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -24,5 +26,29 @@ public class IjProjectPaths {
   public static final Path LIBRARIES_DIR = IDEA_CONFIG_DIR.resolve("libraries");
 
   private IjProjectPaths() {
+  }
+
+  /**
+   * @param path path to folder.
+   * @param moduleLocationBasePath path to the location of the .iml file.
+   * @return a path, relative to the module .iml file location describing a folder
+   * in IntelliJ format.
+   */
+  static String toModuleDirRelativeString(Path path, Path moduleLocationBasePath) {
+    String moduleRelativePath = moduleLocationBasePath.relativize(path).toString();
+    if (moduleRelativePath.isEmpty()) {
+      return "file://$MODULE_DIR$";
+    } else {
+      return "file://$MODULE_DIR$/" + moduleRelativePath;
+    }
+  }
+
+  static String toProjectDirRelativeString(Path projectRelativePath) {
+    String path = projectRelativePath.toString();
+    if (path.isEmpty()) {
+      return "file://$PROJECT_DIR$";
+    } else {
+      return "file://$PROJECT_DIR$/" + MorePaths.pathWithUnixSeparators(path);
+    }
   }
 }

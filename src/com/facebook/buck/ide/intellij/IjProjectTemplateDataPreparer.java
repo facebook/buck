@@ -155,30 +155,6 @@ public class IjProjectTemplateDataPreparer {
         .collect(MoreCollectors.toImmutableSet());
   }
 
-  /**
-   * @param path path to folder.
-   * @param moduleLocationBasePath path to the location of the .iml file.
-   * @return a path, relative to the module .iml file location describing a folder
-   * in IntelliJ format.
-   */
-  private static String toModuleDirRelativeString(Path path, Path moduleLocationBasePath) {
-    String moduleRelativePath = moduleLocationBasePath.relativize(path).toString();
-    if (moduleRelativePath.isEmpty()) {
-      return "file://$MODULE_DIR$";
-    } else {
-      return "file://$MODULE_DIR$/" + moduleRelativePath;
-    }
-  }
-
-  private static String toProjectDirRelativeString(Path projectRelativePath) {
-    String path = projectRelativePath.toString();
-    if (path.isEmpty()) {
-      return "file://$PROJECT_DIR$";
-    } else {
-      return "file://$PROJECT_DIR$/" + MorePaths.pathWithUnixSeparators(path);
-    }
-  }
-
   public ImmutableSet<IjModule> getModulesToBeWritten() {
     return modulesToBeWritten;
   }
@@ -192,7 +168,7 @@ public class IjProjectTemplateDataPreparer {
       Path contentRootPath,
       ImmutableSet<IjFolder> folders,
       final Path moduleLocationBasePath) {
-    String url = toModuleDirRelativeString(contentRootPath, moduleLocationBasePath);
+    String url = IjProjectPaths.toModuleDirRelativeString(contentRootPath, moduleLocationBasePath);
     ImmutableSet<IjFolder> simplifiedFolders = sourceRootSimplifier.simplify(
         SimplificationLimit.of(contentRootPath.getNameCount()),
         folders);
@@ -318,7 +294,7 @@ public class IjProjectTemplateDataPreparer {
         .map(
             module -> {
               Path moduleOutputFilePath = module.getModuleImlFilePath();
-              String fileUrl = toProjectDirRelativeString(moduleOutputFilePath);
+              String fileUrl = IjProjectPaths.toProjectDirRelativeString(moduleOutputFilePath);
               // The root project module cannot belong to any group.
               String group = (module.getModuleBasePath().toString().isEmpty()) ? null : "modules";
               return ModuleIndexEntry.builder()
@@ -499,7 +475,9 @@ public class IjProjectTemplateDataPreparer {
         @Nullable String packagePrefix) {
       return IjSourceFolder.builder()
           .setType(folder.getIjName())
-          .setUrl(toModuleDirRelativeString(folder.getPath(), moduleLocationBasePath))
+          .setUrl(IjProjectPaths.toModuleDirRelativeString(
+              folder.getPath(),
+              moduleLocationBasePath))
           .setIsTestSource(folder instanceof TestFolder)
           .setIsAndroidResources(folder instanceof AndroidResourceFolder)
           .setPackagePrefix(packagePrefix)
