@@ -17,7 +17,6 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
-import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
@@ -189,16 +188,16 @@ abstract class AbstractExecutionContext implements Closeable {
 
   /**
    * Returns the {@link AndroidPlatformTarget}, if present. If not, throws a
-   * {@link NoAndroidSdkException}. Use this when your logic requires the user to specify the
+   * {@link RuntimeException}. Use this when your logic requires the user to specify the
    * location of an Android SDK. A user who is building a "pure Java" (i.e., not Android) project
    * using Buck should never have to exercise this code path.
    * <p>
    * If the location of an Android SDK is optional, then use
    * {@link #getAndroidPlatformTargetSupplier()}.
-   * @throws NoAndroidSdkException if no AndroidPlatformTarget is available
+   * @throws RuntimeException if no AndroidPlatformTarget is available
    */
   @Value.Lazy
-  public AndroidPlatformTarget getAndroidPlatformTarget() throws NoAndroidSdkException {
+  public AndroidPlatformTarget getAndroidPlatformTarget() {
     return getAndroidPlatformTargetSupplier().get();
   }
 
@@ -208,7 +207,7 @@ abstract class AbstractExecutionContext implements Closeable {
     return executorService;
   }
 
-  public String getPathToAdbExecutable() throws NoAndroidSdkException {
+  public String getPathToAdbExecutable() {
     return getAndroidPlatformTarget().getAdbExecutable().toString();
   }
 

@@ -35,7 +35,6 @@ java_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
-        "//src/com/facebook/buck/android:exceptions",
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/io:MorePaths.java",
         "//src/com/facebook/buck/model:macros",

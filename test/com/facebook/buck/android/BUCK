@@ -302,7 +302,6 @@ java_test(
         include_dotfiles = True,
     ),
     deps = [
-        "//src/com/facebook/buck/android:exceptions",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:steps",

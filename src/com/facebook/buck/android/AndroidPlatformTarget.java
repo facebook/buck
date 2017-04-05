@@ -46,12 +46,12 @@ public class AndroidPlatformTarget {
   public static final String DEFAULT_ANDROID_PLATFORM_TARGET = "android-23";
 
   /**
-   * {@link Supplier} for an {@link AndroidPlatformTarget} that always throws a
-   * {@link NoAndroidSdkException}.
+   * {@link Supplier} for an {@link AndroidPlatformTarget} that always throws.
    */
   public static final Supplier<AndroidPlatformTarget> EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER =
       () -> {
-        throw new NoAndroidSdkException();
+        throw new HumanReadableException(
+            "Must set ANDROID_SDK to point to the absolute path of your Android SDK directory.");
       };
 
   @VisibleForTesting
@@ -187,7 +187,7 @@ public class AndroidPlatformTarget {
   /**
    * @param platformId for the platform, such as "Google Inc.:Google APIs:16"
    */
-  public static Optional<AndroidPlatformTarget> getTargetForId(
+  public static AndroidPlatformTarget getTargetForId(
       String platformId,
       AndroidDirectoryResolver androidDirectoryResolver,
       Optional<Path> aaptOverride,
@@ -195,25 +195,25 @@ public class AndroidPlatformTarget {
 
     Matcher platformMatcher = PLATFORM_TARGET_PATTERN.matcher(platformId);
     if (platformMatcher.matches()) {
-      try {
-        String apiLevel = platformMatcher.group(1);
-        Factory platformTargetFactory;
-        if (platformId.contains("Google APIs")) {
-          platformTargetFactory = new AndroidWithGoogleApisFactory();
-        } else {
-          platformTargetFactory = new AndroidWithoutGoogleApisFactory();
-        }
-        return Optional.of(
-            platformTargetFactory.newInstance(
-                androidDirectoryResolver,
-                apiLevel,
-                aaptOverride,
-                aapt2Override));
-      } catch (NumberFormatException e) {
-        return Optional.empty();
+      String apiLevel = platformMatcher.group(1);
+      Factory platformTargetFactory;
+      if (platformId.contains("Google APIs")) {
+        platformTargetFactory = new AndroidWithGoogleApisFactory();
+      } else {
+        platformTargetFactory = new AndroidWithoutGoogleApisFactory();
       }
+      return
+          platformTargetFactory.newInstance(
+              androidDirectoryResolver,
+              apiLevel,
+              aaptOverride,
+              aapt2Override);
     } else {
-      return Optional.empty();
+      String messagePrefix = String.format("The Android SDK for '%s' could not be found. ",
+          platformId);
+      throw new HumanReadableException(
+          messagePrefix +
+              "Must set ANDROID_SDK to point to the absolute path of your Android SDK directory.");
     }
   }
 
@@ -225,8 +225,7 @@ public class AndroidPlatformTarget {
         DEFAULT_ANDROID_PLATFORM_TARGET,
         androidDirectoryResolver,
         aaptOverride,
-        aapt2Override)
-        .get();
+        aapt2Override);
   }
 
   private interface Factory {

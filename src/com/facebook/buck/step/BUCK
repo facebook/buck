@@ -1,7 +1,6 @@
 standard_java_library(
     name = "step",
     exported_deps = [
-        "//src/com/facebook/buck/android:exceptions",
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",

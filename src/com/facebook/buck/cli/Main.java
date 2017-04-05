@@ -23,7 +23,6 @@ import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
-import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.ArtifactCaches;
@@ -1575,7 +1574,7 @@ public final class Main {
       private AndroidPlatformTarget androidPlatformTarget;
 
       @Nullable
-      private NoAndroidSdkException exception;
+      private RuntimeException exception;
 
       @Override
       public AndroidPlatformTarget get() {
@@ -1596,19 +1595,17 @@ public final class Main {
               androidPlatformTargetId));
         }
 
-        Optional<AndroidPlatformTarget> androidPlatformTargetOptional = AndroidPlatformTarget
-            .getTargetForId(
-                androidPlatformTargetId,
-                androidDirectoryResolver,
-                androidBuckConfig.getAaptOverride(),
-                androidBuckConfig.getAapt2Override());
-        if (androidPlatformTargetOptional.isPresent()) {
-          androidPlatformTarget = androidPlatformTargetOptional.get();
+        try {
+          androidPlatformTarget = AndroidPlatformTarget
+              .getTargetForId(
+                  androidPlatformTargetId,
+                  androidDirectoryResolver,
+                  androidBuckConfig.getAaptOverride(),
+                  androidBuckConfig.getAapt2Override());
           return androidPlatformTarget;
-        } else {
-          exception = NoAndroidSdkException.createExceptionForPlatformThatCannotBeFound(
-              androidPlatformTargetId);
-          throw exception;
+        } catch (RuntimeException e) {
+          exception = e;
+          throw e;
         }
       }
     };
