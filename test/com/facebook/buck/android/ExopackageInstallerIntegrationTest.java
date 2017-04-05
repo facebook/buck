@@ -784,25 +784,21 @@ public class ExopackageInstallerIntegrationTest {
 
     Optional<ExopackageInfo.ResourcesInfo> resourcesInfo = Optional.empty();
     if (!currentBuildState.resourcesContents.isEmpty()) {
-      Iterator<String> resourcesContents = currentBuildState.resourcesContents.iterator();
       ExopackageInfo.ResourcesInfo.Builder resourcesInfoBuilder =
           ExopackageInfo.ResourcesInfo.builder();
-      Path resourcesPath = resourcesDirectory.resolve("resources.apk");
-      String content = resourcesContents.next();
-      writeFile(resourcesPath, content);
-      resourcesInfoBuilder.setResourcesPath(resourcesPath);
-      Sha1HashCode resourcesHash = filesystem.computeSha1(resourcesPath);
-      String expectedMetadata = "resources " + resourcesHash;
-      expectedState.put("resources/" + resourcesHash + ".apk", content);
       int n = 0;
+      Iterator<String> resourcesContents = currentBuildState.resourcesContents.iterator();
+      String expectedMetadata = "";
+      String prefix = "";
       while (resourcesContents.hasNext()) {
-        Path assetPath = resourcesDirectory.resolve("asset-" + n++ + ".apk");
-        content = resourcesContents.next();
-        writeFile(assetPath, content);
-        resourcesInfoBuilder.addAssetsPaths(assetPath);
-        Sha1HashCode assetHash = filesystem.computeSha1(assetPath);
-        expectedMetadata += "\n" + "resources " + assetHash;
-        expectedState.put("resources/" + assetHash + ".apk", content);
+        Path resourcePath = resourcesDirectory.resolve("resources-" + n++ + ".apk");
+        String content = resourcesContents.next();
+        writeFile(resourcePath, content);
+        resourcesInfoBuilder.addResourcesPaths(resourcePath);
+        Sha1HashCode resourceHash = filesystem.computeSha1(resourcePath);
+        expectedMetadata += prefix + "resources " + resourceHash;
+        prefix = "\n";
+        expectedState.put("resources/" + resourceHash + ".apk", content);
       }
       resourcesInfo = Optional.of(resourcesInfoBuilder.build());
       expectedState.put("resources/metadata.txt", expectedMetadata);

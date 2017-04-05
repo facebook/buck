@@ -50,7 +50,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -353,23 +352,16 @@ public class ExopackageInstaller {
 
     private void installResourcesFiles() throws Exception {
       ResourcesInfo info = exopackageInfo.getResourcesInfo().get();
-      Path resourcesPath = info.getResourcesPath();
-      String resourcesHash = projectFilesystem.computeSha1(resourcesPath).getHash();
 
-      List<Path> assetsPaths = info.getAssetsPaths();
-      ImmutableList.Builder<String> assetsHashesBuilder = ImmutableList.builder();
-      for (Path p : assetsPaths) {
-        assetsHashesBuilder.add(projectFilesystem.computeSha1(p).getHash());
-      }
-      List<String> assetsHashes = assetsHashesBuilder.build();
-
+      List<Path> resourcesPaths = info.getResourcesPaths();
       ImmutableMap.Builder<String, Path> hashToSourcesBuilder = ImmutableMap.builder();
-      hashToSourcesBuilder.put(resourcesHash, resourcesPath);
-      String metadataContent = "resources " + resourcesHash;
-      Iterator<Path> assetsPathsIter = assetsPaths.iterator();
-      for (String hash : assetsHashes) {
-        metadataContent += "\nresources " + hash;
-        hashToSourcesBuilder.put(hash, assetsPathsIter.next());
+      String metadataContent = "";
+      String prefix = "";
+      for (Path path : resourcesPaths) {
+        String hash = projectFilesystem.computeSha1(path).getHash();
+        metadataContent += prefix + "resources " + hash;
+        prefix = "\n";
+        hashToSourcesBuilder.put(hash, path);
       }
 
       final ImmutableMap<String, Path> hashToSources = hashToSourcesBuilder.build();
