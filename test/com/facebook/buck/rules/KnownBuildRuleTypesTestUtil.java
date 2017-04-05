@@ -20,6 +20,7 @@ import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.python.PythonTestUtils;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -67,7 +68,12 @@ public final class KnownBuildRuleTypesTestUtil {
                       path + File.separator + python.getKey() + extension,
                       "-"))
                   .build(),
-              new FakeProcess(0, "CPython " + python.getValue().replace('.', ' '), ""));
+              new FakeProcess(
+                  0,
+                  PythonTestUtils.getPythonDiscoverOutput(
+                      "CPython",
+                      python.getValue().replace('.', ' ')),
+                  ""));
         }
       }
     }

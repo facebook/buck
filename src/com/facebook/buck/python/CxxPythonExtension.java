@@ -41,7 +41,7 @@ public abstract class CxxPythonExtension
       CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException;
 
-  public abstract Path getModule();
+  public abstract Path getModule(PythonPlatform pythonPlatform);
 
   @Override
   public abstract PythonPackageComponents getPythonPackageComponents(

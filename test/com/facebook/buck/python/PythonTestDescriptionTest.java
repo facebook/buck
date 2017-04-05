@@ -238,12 +238,18 @@ public class PythonTestDescriptionTest {
     PythonPlatform platform1 =
         PythonPlatform.of(
             InternalFlavor.of("pyPlat1"),
-            new PythonEnvironment(Paths.get("python2.6"), PythonVersion.of("CPython", "2.6")),
+            new PythonEnvironment(
+                Paths.get("python2.6"),
+                PythonVersion.of("CPython", "2.6"),
+                Optional.empty()),
             Optional.empty());
     PythonPlatform platform2 =
         PythonPlatform.of(
             InternalFlavor.of("pyPlat2"),
-            new PythonEnvironment(Paths.get("python2.7"), PythonVersion.of("CPython", "2.7")),
+            new PythonEnvironment(
+                Paths.get("python2.7"),
+                PythonVersion.of("CPython", "2.7"),
+                Optional.empty()),
             Optional.empty());
     PythonTestBuilder builder =
         PythonTestBuilder.create(

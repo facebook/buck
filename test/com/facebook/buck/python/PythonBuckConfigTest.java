@@ -43,9 +43,9 @@ import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Functions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -69,12 +69,37 @@ public class PythonBuckConfigTest {
   public TemporaryPaths temporaryFolder2 = new TemporaryPaths();
 
   @Test
-  public void testGetPythonVersion() throws Exception {
-    PythonVersion version =
-        PythonBuckConfig.extractPythonVersion(
-            Paths.get("usr", "bin", "python"),
-            new ProcessExecutor.Result(0, "", "CPython 2 7\n"));
-    assertEquals("CPython 2.7", version.toString());
+  public void testGetBuildConfig() throws Exception {
+    PythonBuildConfigAndVersion actual =
+        PythonBuckConfig.extractPythonBuildConfigAndVersion(
+            PythonTestUtils.CPYTHON_3_5_DISCOVER_OUTPUT);
+    PythonBuildConfigAndVersion expected = PythonBuildConfigAndVersion.of(
+        PythonVersion.of("CPython", "3.5"),
+        PythonBuildConfig.of(
+            ImmutableList.of("-I/usr/local/include/python3.5m", "-I/usr/local/include/python3.5m"),
+            ImmutableList.of(
+                "-I/usr/local/include/python3.5m",
+                "-I/usr/local/include/python3.5m",
+                "-Wno-unused-result",
+                "-Wsign-compare",
+                "-DNDEBUG",
+                "-g",
+                "-fwrapv",
+                "-O3",
+                "-Wall",
+                "-Wstrict-prototypes"),
+            ImmutableList.of(
+                "-L/usr/local/lib/python3.5/config-3.5m",
+                "-lpython3.5",
+                "-lpthread",
+                "-ldl",
+                "-lutil",
+                "-lm",
+                "-Xlinker",
+                "-export-dynamic"),
+            "so"
+        ));
+    assertEquals(expected, actual);
   }
 
   @Test
@@ -271,25 +296,6 @@ public class PythonBuckConfigTest {
   }
 
   @Test
-  public void testGetPyrunVersion() throws Exception {
-    PythonVersion version =
-        PythonBuckConfig.extractPythonVersion(
-            Paths.get("non", "important", "path"),
-            new ProcessExecutor.Result(0, "", "CPython 2 7\n"));
-    assertEquals("CPython 2.7", version.toString());
-  }
-
-  @Test
-  public void testGetWindowsVersion() throws Exception {
-    String output = "CPython 2 7\r\n";
-    PythonVersion version =
-        PythonBuckConfig.extractPythonVersion(
-            Paths.get("non", "important", "path"),
-            new ProcessExecutor.Result(0, "", output));
-    assertThat(version.toString(), Matchers.equalTo("CPython 2.7"));
-  }
-
-  @Test
   public void testDefaultPythonLibrary() throws InterruptedException {
     BuildTarget library = BuildTargetFactory.newInstance("//:library");
     PythonBuckConfig config =
@@ -300,7 +306,11 @@ public class PythonBuckConfigTest {
     assertThat(
         config.getDefaultPythonPlatform(
             new FakeProcessExecutor(
-                Functions.constant(new FakeProcess(0, "CPython 2 7", "")),
+                Functions.constant(
+                    new FakeProcess(
+                        0,
+                        PythonTestUtils.CPYTHON_3_5_DISCOVER_OUTPUT,
+                        "")),
                 new TestConsole()))
             .getCxxLibrary(),
         Matchers.equalTo(Optional.of(library)));

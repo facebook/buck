@@ -426,7 +426,7 @@ public class LuaBinaryDescription implements
         CxxPythonExtension pythonExtension = pythonExtensions.get(root.getKey());
         if (pythonExtension != null) {
           builder.putPythonModules(
-              pythonExtension.getModule().toString(),
+              pythonExtension.getModule(pythonPlatform).toString(),
               root.getValue().getPath());
           continue;
         }
