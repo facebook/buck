@@ -181,11 +181,6 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   }
 
   @Value.Lazy
-  public boolean getTrackCellAgnosticTarget() {
-    return getDelegate().getBooleanValue("project", "track_cell_agnostic_target", true);
-  }
-
-  @Value.Lazy
   public int getNumParsingThreads() {
     if (!getEnableParallelParsing()) {
       return 1;

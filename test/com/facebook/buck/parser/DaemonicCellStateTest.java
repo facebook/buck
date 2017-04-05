@@ -99,50 +99,12 @@ public class DaemonicCellStateTest {
   }
 
   @Test
-  public void testTrackCellAgnosticTargetConfig()
+  public void testCellNameDoesNotAffectInvalidation()
       throws BuildTargetException, IOException, InterruptedException {
-    BuckConfig config = FakeBuckConfig.builder()
-        .setFilesystem(filesystem)
-        .setSections(
-            "[project]",
-            "track_cell_agnostic_target = false")
-        .build();
-    Cell cell = new TestCellBuilder()
-        .setFilesystem(filesystem)
-        .setBuckConfig(config)
-        .build();
-
-    DaemonicCellState state = new DaemonicCellState(cell, 1);
     Cache<BuildTarget, Boolean> cache = state.getOrCreateCache(Boolean.class);
+
     Path targetPath = cell.getRoot().resolve("path/to/BUCK");
     BuildTarget target = BuildTargetFactory.newInstance(filesystem, "xplat//path/to:target");
-
-    // Make sure the cache has a raw node for this target.
-    populateDummyRawNode(state, target);
-
-    cache.putComputedNodeIfNotPresent(cell, target, true);
-    assertEquals(Optional.of(true), cache.lookupComputedNode(cell, target));
-
-    assertEquals("One raw node should be invalidated", 1, state.invalidatePath(targetPath));
-    assertEquals(
-        "Cell-named target should not have been removed",
-        Optional.of(true),
-        cache.lookupComputedNode(cell, target));
-
-    // If we change the config, then eviction does happen
-    config = FakeBuckConfig.builder()
-        .setFilesystem(filesystem)
-        .setSections(
-            "[project]",
-            "track_cell_agnostic_target = true")
-        .build();
-    cell = new TestCellBuilder()
-        .setFilesystem(filesystem)
-        .setBuckConfig(config)
-        .build();
-
-    state = new DaemonicCellState(cell, 1);
-    cache = state.getOrCreateCache(Boolean.class);
 
     // Make sure the cache has a raw node for this target.
     populateDummyRawNode(state, target);

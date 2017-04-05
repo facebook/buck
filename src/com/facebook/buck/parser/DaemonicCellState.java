@@ -73,11 +73,7 @@ class DaemonicCellState {
             "Added %s to computed nodes, which isn't present in raw nodes",
             target);
         if (updatedNode.equals(targetNode)) {
-          if (cell.getBuckConfig().getView(ParserConfig.class).getTrackCellAgnosticTarget()) {
-            targetsCornucopia.put(target.withoutCell().getUnflavoredBuildTarget(), target);
-          } else {
-            targetsCornucopia.put(target.getUnflavoredBuildTarget(), target);
-          }
+          targetsCornucopia.put(target.withoutCell().getUnflavoredBuildTarget(), target);
         }
         return updatedNode;
       }

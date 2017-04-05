@@ -216,31 +216,6 @@ public class ParserConfigTest {
   }
 
   @Test
-  public void testGetTrackCellAgnosticTarget() throws IOException {
-    assertTrue(
-        FakeBuckConfig.builder().build().getView(ParserConfig.class)
-            .getTrackCellAgnosticTarget());
-
-    Reader reader = new StringReader(
-        Joiner.on('\n').join(
-            "[project]",
-            "track_cell_agnostic_target = false"));
-    ParserConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
-        temporaryFolder,
-        reader).getView(ParserConfig.class);
-    assertFalse(config.getTrackCellAgnosticTarget());
-
-    reader = new StringReader(
-        Joiner.on('\n').join(
-            "[project]",
-            "track_cell_agnostic_target = true"));
-    config = BuckConfigTestUtils.createWithDefaultFilesystem(
-        temporaryFolder,
-        reader).getView(ParserConfig.class);
-    assertTrue(config.getTrackCellAgnosticTarget());
-  }
-
-  @Test
   public void testGetBuildFileImportWhitelist() throws IOException {
     assertTrue(
         FakeBuckConfig.builder().build().getView(ParserConfig.class)
