@@ -298,7 +298,8 @@ public class AndroidBinaryGraphEnhancer {
         .copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>naturalOrder()
                 .addAll(
-                    ruleFinder.filterBuildRuleInputs(resourcesEnhancementResult.getRDotJavaDir()))
+                    ruleFinder.filterBuildRuleInputs(
+                        resourcesEnhancementResult.getRDotJavaDir().orElse(null)))
                 .addAll(preDexedLibrariesForResourceIdFiltering)
                 .build()),
             Suppliers.ofInstance(ImmutableSortedSet.of()));

@@ -33,6 +33,7 @@ import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -53,7 +54,11 @@ import java.util.zip.ZipEntry;
  * Rule for trimming unnecessary ids from R.java files.
  */
 class TrimUberRDotJava extends AbstractBuildRule {
-  private final SourcePath pathToRDotJavaDir;
+  /**
+   * If the app has resources, aapt will have generated an R.java in this directory. If there are no
+   * resources, this should be empty and we'll create a placeholder R.java below.
+   */
+  private final Optional<SourcePath> pathToRDotJavaDir;
   private final Collection<DexProducedFromJavaLibrary> allPreDexRules;
   private final Optional<String> keepResourcePattern;
 
@@ -65,7 +70,7 @@ class TrimUberRDotJava extends AbstractBuildRule {
 
   TrimUberRDotJava(
       BuildRuleParams buildRuleParams,
-      SourcePath pathToRDotJavaDir,
+      Optional<SourcePath> pathToRDotJavaDir,
       Collection<DexProducedFromJavaLibrary> allPreDexRules,
       Optional<String> keepResourcePattern) {
     super(buildRuleParams);
@@ -79,7 +84,7 @@ class TrimUberRDotJava extends AbstractBuildRule {
       BuildContext context,
       BuildableContext buildableContext) {
     Path output = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
-    Path input = context.getSourcePathResolver().getRelativePath(pathToRDotJavaDir);
+    Optional<Path> input = pathToRDotJavaDir.map(context.getSourcePathResolver()::getRelativePath);
     buildableContext.recordArtifact(output);
     return new ImmutableList.Builder<Step>()
         .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), output.getParent()))
@@ -102,9 +107,9 @@ class TrimUberRDotJava extends AbstractBuildRule {
 
   private class PerformTrimStep implements Step {
     private final Path pathToOutput;
-    private final Path pathToInput;
+    private final Optional<Path> pathToInput;
 
-    public PerformTrimStep(Path pathToOutput, Path pathToInput) {
+    public PerformTrimStep(Path pathToOutput, Optional<Path> pathToInput) {
       this.pathToOutput = pathToOutput;
       this.pathToInput = pathToInput;
     }
@@ -124,7 +129,7 @@ class TrimUberRDotJava extends AbstractBuildRule {
       final ProjectFilesystem projectFilesystem = getProjectFilesystem();
       try (final CustomZipOutputStream output =
                ZipOutputStreams.newOutputStream(projectFilesystem.resolve(pathToOutput))) {
-        if (!projectFilesystem.exists(pathToInput)) {
+        if (!pathToInput.isPresent()) {
           // dx fails if its input contains no classes.  Rather than add empty input handling
           // to DxStep, the dex merger, and every other step of this chain, just generate a
           // stub class.  This will be stripped by ProGuard in release builds and have a minimal
@@ -135,8 +140,9 @@ class TrimUberRDotJava extends AbstractBuildRule {
               "final class AppWithoutResourcesStub {}"
               ).getBytes());
         } else {
+          Preconditions.checkState(projectFilesystem.exists(pathToInput.get()));
           projectFilesystem.walkRelativeFileTree(
-              pathToInput,
+              pathToInput.get(),
               new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
@@ -157,7 +163,7 @@ class TrimUberRDotJava extends AbstractBuildRule {
                   }
 
                   output.putNextEntry(new ZipEntry(
-                      MorePaths.pathWithUnixSeparators(pathToInput.relativize(file))));
+                      MorePaths.pathWithUnixSeparators(pathToInput.get().relativize(file))));
                   if (allPreDexRules.isEmpty()) {
                     // If there are no pre-dexed inputs, we don't yet support trimming
                     // R.java, so just copy it verbatim (instead of trimming it down to nothing).

@@ -36,4 +36,6 @@ public interface FilteredResourcesProvider {
   ImmutableList<Path> getStringFiles();
 
   Optional<BuildRule> getResourceFilterRule();
+
+  boolean hasResources();
 }

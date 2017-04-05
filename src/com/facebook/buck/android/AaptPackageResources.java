@@ -263,7 +263,7 @@ public class AaptPackageResources extends AbstractBuildRule {
    * True iff an app has resources with ids (after filtering (like for display density)).
    */
   boolean hasRDotJava() {
-    return !filteredResourcesProvider.getResDirectories().isEmpty();
+    return filteredResourcesProvider.hasResources();
   }
 
   private void generateRDotJavaFiles(
@@ -377,7 +377,7 @@ public class AaptPackageResources extends AbstractBuildRule {
         .setPathToRDotTxt(
             new ExplicitBuildTargetSourcePath(target, getPathToRDotTxtFile()))
         .setRDotJavaDir(
-            new ExplicitBuildTargetSourcePath(target, getRawPathToGeneratedRDotJavaSrcFiles()))
+            hasRDotJava() ? Optional.of(getPathToRDotJavaDir()) : Optional.empty())
         .setPrimaryResourcesApkPath(
             new ExplicitBuildTargetSourcePath(target, getResourceApkPath()))
         .setAndroidManifestXml(

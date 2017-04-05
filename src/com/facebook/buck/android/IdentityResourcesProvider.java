@@ -44,4 +44,9 @@ public class IdentityResourcesProvider implements FilteredResourcesProvider {
   public Optional<BuildRule> getResourceFilterRule() {
     return Optional.empty();
   }
+
+  @Override
+  public boolean hasResources() {
+    return !resDirectories.isEmpty();
+  }
 }

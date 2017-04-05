@@ -108,7 +108,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   @BuckStyleImmutable
   interface AbstractAndroidBinaryResourcesGraphEnhancementResult {
     SourcePath getPathToRDotTxt();
-    SourcePath getRDotJavaDir();
+    Optional<SourcePath> getRDotJavaDir();
     SourcePath getPrimaryResourcesApkPath();
     SourcePath getAndroidManifestXml();
     SourcePath getAaptGeneratedProguardConfigFile();

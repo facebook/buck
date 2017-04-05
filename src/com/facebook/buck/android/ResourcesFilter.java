@@ -134,6 +134,11 @@ public class ResourcesFilter extends AbstractBuildRule
   }
 
   @Override
+  public boolean hasResources() {
+    return !resDirectories.isEmpty();
+  }
+
+  @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       final BuildableContext buildableContext) {
