@@ -84,6 +84,9 @@ public abstract class CompilerTreeApiTest {
     trees = testCompiler.getTrees();
     elements = testCompiler.getElements();
     types = testCompiler.getTypes();
+
+    // Suppress processor auto-discovery; it was picking up the immutables processor unnecessarily
+    testCompiler.setProcessors(Collections.emptyList());
   }
 
   protected final Iterable<? extends CompilationUnitTree> compile(String source)
@@ -106,9 +109,6 @@ public abstract class CompilerTreeApiTest {
       testCompiler.setTaskListener(
           taskListenerFactory.newTaskListener(testCompiler.getJavacTask()));
     }
-
-    // Suppress processor auto-discovery; it was picking up the immutables processor unnecessarily
-    testCompiler.setProcessors(Collections.emptyList());
 
     final Iterable<? extends CompilationUnitTree> compilationUnits = testCompiler.parse();
 
