@@ -22,7 +22,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableMap;
@@ -45,9 +44,8 @@ public abstract class AbstractNodeBuilder<
     TArg,
     TDescription extends Description<TArg>,
     TBuildRule extends BuildRule> {
-  private static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
-  private static final CoercedTypeCache COERCED_TYPE_CACHE =
-      new CoercedTypeCache(TYPE_COERCER_FACTORY);
+  private static final DefaultTypeCoercerFactory TYPE_COERCER_FACTORY =
+      new DefaultTypeCoercerFactory();
   private static final VisibilityPatternParser VISIBILITY_PATTERN_PARSER =
       new VisibilityPatternParser();
 
@@ -211,7 +209,7 @@ public abstract class AbstractNodeBuilder<
    */
   private void populateWithDefaultValues(TArg arg) {
     try {
-      new ConstructorArgMarshaller(COERCED_TYPE_CACHE)
+      new ConstructorArgMarshaller(TYPE_COERCER_FACTORY)
           .populateDefaults(
               cellRoots,
               filesystem,

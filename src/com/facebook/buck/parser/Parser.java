@@ -33,7 +33,6 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasDefaultFlavors;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.CoercedTypeCache;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.TargetGraph;
@@ -86,15 +85,12 @@ public class Parser {
 
   private final DaemonicParserState permState;
   private final ConstructorArgMarshaller marshaller;
-  private final CoercedTypeCache coercedTypeCache;
 
   public Parser(
       BroadcastEventListener broadcastEventListener,
       ParserConfig parserConfig,
       TypeCoercerFactory typeCoercerFactory,
-      CoercedTypeCache coercedTypeCache,
       ConstructorArgMarshaller marshaller) {
-    this.coercedTypeCache = coercedTypeCache;
     this.permState = new DaemonicParserState(
         broadcastEventListener,
         typeCoercerFactory,
@@ -138,7 +134,6 @@ public class Parser {
 
     try (PerBuildState state = new PerBuildState(
         this,
-        coercedTypeCache,
         eventBus,
         executor,
         cell,
@@ -160,7 +155,6 @@ public class Parser {
         PerBuildState state =
             new PerBuildState(
                 this,
-                coercedTypeCache,
                 eventBus,
                 executor,
                 cell,
@@ -215,7 +209,6 @@ public class Parser {
         PerBuildState state =
             new PerBuildState(
                 this,
-                coercedTypeCache,
                 eventBus,
                 executor,
                 cell,
@@ -254,7 +247,6 @@ public class Parser {
     try (final PerBuildState state =
              new PerBuildState(
                  this,
-                 coercedTypeCache,
                  eventBus,
                  executor,
                  rootCell,
@@ -401,7 +393,6 @@ public class Parser {
     try (PerBuildState state =
              new PerBuildState(
                  this,
-                 coercedTypeCache,
                  eventBus,
                  executor,
                  rootCell,
@@ -445,7 +436,6 @@ public class Parser {
     try (PerBuildState state =
             new PerBuildState(
                 this,
-                coercedTypeCache,
                 eventBus,
                 executor,
                 rootCell,

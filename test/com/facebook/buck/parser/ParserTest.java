@@ -51,7 +51,6 @@ import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.CoercedTypeCache;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.TargetGraph;
@@ -126,10 +125,6 @@ public class ParserTest {
   private ParseEventStartedCounter counter;
   private ListeningExecutorService executorService;
 
-  private final DefaultTypeCoercerFactory typeCoercerFactory =
-      new DefaultTypeCoercerFactory();
-  private final CoercedTypeCache coercedTypeCache = new CoercedTypeCache(typeCoercerFactory);
-
   public ParserTest(int threads, boolean parallelParsing) {
     this.threads = threads;
     this.parallelParsing = parallelParsing;
@@ -148,7 +143,7 @@ public class ParserTest {
    * Helper to construct a PerBuildState and use it to get nodes.
    */
   @VisibleForTesting
-  private ImmutableSet<Map<String, Object>> getRawTargetNodes(
+  private static ImmutableSet<Map<String, Object>> getRawTargetNodes(
       Parser parser,
       BuckEventBus eventBus,
       Cell cell,
@@ -159,7 +154,6 @@ public class ParserTest {
         PerBuildState state =
             new PerBuildState(
                 parser,
-                coercedTypeCache,
                 eventBus,
                 executor,
                 cell,
@@ -232,14 +226,14 @@ public class ParserTest {
         .setBuckConfig(config)
         .build();
 
+    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     BroadcastEventListener broadcastEventListener = new BroadcastEventListener();
     broadcastEventListener.addEventBus(eventBus);
     parser = new Parser(
         broadcastEventListener,
         cell.getBuckConfig().getView(ParserConfig.class),
         typeCoercerFactory,
-        coercedTypeCache,
-        new ConstructorArgMarshaller(coercedTypeCache));
+        new ConstructorArgMarshaller(typeCoercerFactory));
 
     counter = new ParseEventStartedCounter();
     eventBus.register(counter);
@@ -1522,8 +1516,7 @@ public class ParserTest {
         new BroadcastEventListener(),
         cell.getBuckConfig().getView(ParserConfig.class),
         typeCoercerFactory,
-        coercedTypeCache,
-        new ConstructorArgMarshaller(coercedTypeCache));
+        new ConstructorArgMarshaller(typeCoercerFactory));
     Path testFooJavaFile = tempDir.newFile("foo/Foo.java");
     Files.write(testFooJavaFile, "// Ceci n'est pas une Javafile\n".getBytes(UTF_8));
     HashCode updated = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
@@ -1643,8 +1636,7 @@ public class ParserTest {
         new BroadcastEventListener(),
         cell.getBuckConfig().getView(ParserConfig.class),
         typeCoercerFactory,
-        coercedTypeCache,
-        new ConstructorArgMarshaller(coercedTypeCache));
+        new ConstructorArgMarshaller(typeCoercerFactory));
     Files.write(
         testFooBuckFile,
         ("java_library(name = 'lib', deps = [], visibility=['PUBLIC'])\n" +

@@ -34,7 +34,7 @@ import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.CoercedTypeCache;
+import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -466,7 +466,7 @@ public class ProjectBuildFileParserTest {
 
     @Override
     public ProjectBuildFileParser createParser(
-        CoercedTypeCache coercedTypeCache,
+        ConstructorArgMarshaller marshaller,
         Console console,
         ImmutableMap<String, String> environment,
         BuckEventBus buckEventBus,
@@ -612,9 +612,7 @@ public class ProjectBuildFileParserTest {
                 .setDescriptions(buildRuleTypes.getAllDescriptions())
                 .setBuildFileImportWhitelist(ImmutableList.of())
                 .build(),
-            new CoercedTypeCache(
-                new DefaultTypeCoercerFactory(
-                )),
+            new ConstructorArgMarshaller(new DefaultTypeCoercerFactory()),
             ImmutableMap.of(),
             buckEventBus,
             processExecutor,

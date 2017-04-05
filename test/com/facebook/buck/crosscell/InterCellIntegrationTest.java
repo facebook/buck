@@ -45,7 +45,6 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.CoercedTypeCache;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -342,15 +341,12 @@ public class InterCellIntegrationTest {
     registerCell(secondary, "primary", primary);
 
     // We could just do a build, but that's a little extreme since all we need is the target graph
-    TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory(
-    );
-    CoercedTypeCache coercedTypeCache = new CoercedTypeCache(coercerFactory);
+    TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
     Parser parser = new Parser(
         new BroadcastEventListener(),
         primary.asCell().getBuckConfig().getView(ParserConfig.class),
         coercerFactory,
-        coercedTypeCache,
-        new ConstructorArgMarshaller(coercedTypeCache));
+        new ConstructorArgMarshaller(coercerFactory));
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
 
     Cell primaryCell = primary.asCell();

@@ -27,7 +27,7 @@ import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.WatchmanDiagnostic;
 import com.facebook.buck.io.WatchmanDiagnosticEvent;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.CoercedTypeCache;
+import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.InputStreamConsumer;
 import com.facebook.buck.util.MoreCollectors;
@@ -85,7 +85,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
   @Nullable private BufferedOutputStream buckPyStdinWriter;
 
   private final ProjectBuildFileParserOptions options;
-  private final CoercedTypeCache coercedTypeCache;
+  private final ConstructorArgMarshaller marshaller;
   private final BuckEventBus buckEventBus;
   private final ProcessExecutor processExecutor;
   private final BserDeserializer bserDeserializer;
@@ -103,14 +103,14 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
   protected ProjectBuildFileParser(
       final ProjectBuildFileParserOptions options,
-      CoercedTypeCache coercedTypeCache,
+      final ConstructorArgMarshaller marshaller,
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus,
       ProcessExecutor processExecutor,
       boolean ignoreBuckAutodepsFiles) {
     this.buckPythonProgram = null;
     this.options = options;
-    this.coercedTypeCache = coercedTypeCache;
+    this.marshaller = marshaller;
     this.environment = environment;
     this.buckEventBus = buckEventBus;
     this.processExecutor = processExecutor;
@@ -751,7 +751,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private synchronized Path getPathToBuckPy(ImmutableSet<Description<?>> descriptions)
       throws IOException {
     if (buckPythonProgram == null) {
-      buckPythonProgram = BuckPythonProgram.newInstance(coercedTypeCache, descriptions);
+      buckPythonProgram = BuckPythonProgram.newInstance(marshaller, descriptions);
     }
     return buckPythonProgram.getExecutablePath();
   }

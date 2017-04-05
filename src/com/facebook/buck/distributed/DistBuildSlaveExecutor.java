@@ -32,7 +32,6 @@ import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.CoercedTypeCache;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.RuleKeyDiagnosticsMode;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -85,9 +84,8 @@ public class DistBuildSlaveExecutor {
     this.args = args;
   }
 
-  public int buildAndReturnExitCode(CoercedTypeCache coercedTypeCache)
-      throws IOException, InterruptedException {
-    createBuildEngineDelegate(coercedTypeCache);
+  public int buildAndReturnExitCode() throws IOException, InterruptedException {
+    createBuildEngineDelegate();
     LocalBuilder localBuilder = new LocalBuilderImpl();
 
     DistBuildModeRunner runner = null;
@@ -138,13 +136,12 @@ public class DistBuildSlaveExecutor {
         args.getStampedeId());
   }
 
-  private TargetGraph createTargetGraph(CoercedTypeCache coercedTypeCache)
-      throws IOException, InterruptedException {
+  private TargetGraph createTargetGraph() throws IOException, InterruptedException {
     if (targetGraph != null) {
       return targetGraph;
     }
 
-    DistBuildTargetGraphCodec codec = createGraphCodec(coercedTypeCache);
+    DistBuildTargetGraphCodec codec = createGraphCodec();
     TargetGraphAndBuildTargets targetGraphAndBuildTargets =
         Preconditions.checkNotNull(codec.createTargetGraph(
             args.getState().getRemoteState().getTargetGraph(),
@@ -167,12 +164,12 @@ public class DistBuildSlaveExecutor {
     return targetGraph;
   }
 
-  private ActionGraphAndResolver createActionGraphAndResolver(CoercedTypeCache coercedTypeCache)
+  private ActionGraphAndResolver createActionGraphAndResolver()
       throws IOException, InterruptedException {
     if (actionGraphAndResolver != null) {
       return actionGraphAndResolver;
     }
-    createTargetGraph(coercedTypeCache);
+    createTargetGraph();
 
     actionGraphAndResolver = Preconditions.checkNotNull(
         args.getActionGraphCache().getActionGraph(
@@ -184,14 +181,14 @@ public class DistBuildSlaveExecutor {
     return actionGraphAndResolver;
   }
 
-  private DistBuildCachingEngineDelegate createBuildEngineDelegate(
-      CoercedTypeCache coercedTypeCache) throws IOException, InterruptedException {
+  private DistBuildCachingEngineDelegate createBuildEngineDelegate()
+      throws IOException, InterruptedException {
     if (cachingBuildEngineDelegate != null) {
       return cachingBuildEngineDelegate;
     }
 
     StackedFileHashCaches caches = createStackedFileHashesAndPreload();
-    createActionGraphAndResolver(coercedTypeCache);
+    createActionGraphAndResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(Preconditions.checkNotNull(
         actionGraphAndResolver).getResolver());
     cachingBuildEngineDelegate =
@@ -239,11 +236,12 @@ public class DistBuildSlaveExecutor {
     return targets;
   }
 
-  private DistBuildTargetGraphCodec createGraphCodec(CoercedTypeCache coercedTypeCache) {
-    DistBuildTypeCoercerFactory typeCoercerFactory = new DistBuildTypeCoercerFactory();
+  private DistBuildTargetGraphCodec createGraphCodec() {
+    DistBuildTypeCoercerFactory typeCoercerFactory =
+        new DistBuildTypeCoercerFactory();
     ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
-            new ConstructorArgMarshaller(coercedTypeCache),
+            new ConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(typeCoercerFactory));
 
     DistBuildTargetGraphCodec targetGraphCodec = new DistBuildTargetGraphCodec(

@@ -553,7 +553,7 @@ public class BuildCommand extends AbstractCommand {
     DistBuildTypeCoercerFactory typeCoercerFactory = new DistBuildTypeCoercerFactory();
     ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
-            new ConstructorArgMarshaller(params.getCoercedTypeCache()),
+            new ConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(typeCoercerFactory));
     DistBuildTargetGraphCodec targetGraphCodec = new DistBuildTargetGraphCodec(
         parserTargetNodeFactory,

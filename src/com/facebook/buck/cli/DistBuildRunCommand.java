@@ -101,7 +101,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
             coordinatorPort,
             getStampedeIdOptional(),
             getGlobalCacheDirOptional());
-        int returnCode = distBuildExecutor.buildAndReturnExitCode(params.getCoercedTypeCache());
+        int returnCode = distBuildExecutor.buildAndReturnExitCode();
         if (returnCode == 0) {
           console.printSuccess(String.format(
               "Successfully ran distributed build [%s] in [%d millis].",

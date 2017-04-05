@@ -223,13 +223,13 @@ public class Cell {
    * ProjectBuildFileParser}.
    */
   public ProjectBuildFileParser createBuildFileParser(
-      CoercedTypeCache coercedTypeCache,
+      ConstructorArgMarshaller marshaller,
       Console console,
       BuckEventBus eventBus,
       boolean ignoreBuckAutodepsFiles) {
     ProjectBuildFileParserFactory factory = createBuildFileParserFactory();
     return factory.createParser(
-        coercedTypeCache,
+        marshaller,
         console,
         config.getEnvironment(),
         eventBus,

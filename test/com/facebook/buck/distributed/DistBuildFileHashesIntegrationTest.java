@@ -35,7 +35,6 @@ import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.CoercedTypeCache;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -101,14 +100,12 @@ public class DistBuildFileHashesIntegrationTest {
 
     TypeCoercerFactory typeCoercerFactory =
         new DefaultTypeCoercerFactory();
-    CoercedTypeCache coercedTypeCache = new CoercedTypeCache(typeCoercerFactory);
     ConstructorArgMarshaller constructorArgMarshaller =
-        new ConstructorArgMarshaller(coercedTypeCache);
+        new ConstructorArgMarshaller(typeCoercerFactory);
     Parser parser = new Parser(
         new BroadcastEventListener(),
         rootCellConfig.getView(ParserConfig.class),
         typeCoercerFactory,
-        coercedTypeCache,
         constructorArgMarshaller);
     TargetGraph targetGraph = parser.buildTargetGraph(
         BuckEventBusFactory.newInstance(),
@@ -181,16 +178,13 @@ public class DistBuildFileHashesIntegrationTest {
         .setFilesystem(rootFs)
         .build();
 
-    TypeCoercerFactory typeCoercerFactory =
-        new DefaultTypeCoercerFactory();
-    CoercedTypeCache coercedTypeCache = new CoercedTypeCache(typeCoercerFactory);
+    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ConstructorArgMarshaller constructorArgMarshaller =
-        new ConstructorArgMarshaller(coercedTypeCache);
+        new ConstructorArgMarshaller(typeCoercerFactory);
     Parser parser = new Parser(
         new BroadcastEventListener(),
         rootCellConfig.getView(ParserConfig.class),
         typeCoercerFactory,
-        coercedTypeCache,
         constructorArgMarshaller);
     TargetGraph targetGraph = parser.buildTargetGraph(
         BuckEventBusFactory.newInstance(),

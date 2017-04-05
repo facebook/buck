@@ -64,10 +64,7 @@ public class ConstructorArgMarshallerTest {
   @Before
   public void setUpInspector() {
     basePath = Paths.get("example", "path");
-    marshaller = new ConstructorArgMarshaller(
-        new CoercedTypeCache(
-            new DefaultTypeCoercerFactory(
-            )));
+    marshaller = new ConstructorArgMarshaller(new DefaultTypeCoercerFactory());
     ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     filesystem = new FakeProjectFilesystem();

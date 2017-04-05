@@ -165,7 +165,6 @@ java_immutables_library(
         "BuildTargetSourcePath.java",
         "BuildableContext.java",
         "BuildableProperties.java",
-        "CoercedTypeCache.java",
         "ConstantToolProvider.java",
         "ConstructorArgMarshaller.java",
         "DefaultBuildTargetSourcePath.java",

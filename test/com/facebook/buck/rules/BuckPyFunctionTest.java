@@ -40,9 +40,7 @@ public class BuckPyFunctionTest {
   @Before
   public void setUpMarshaller() {
     buckPyFunction =
-        new BuckPyFunction(
-            new CoercedTypeCache(
-                new DefaultTypeCoercerFactory()));
+        new BuckPyFunction(new ConstructorArgMarshaller(new DefaultTypeCoercerFactory()));
   }
 
   public static class NoName {
