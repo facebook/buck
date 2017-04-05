@@ -1,12 +1,7 @@
 java_immutables_library(
     name = "concurrent",
-    srcs = glob(
-        ["*.java"],
-        excludes = ["MostExecutors.java"],
-    ),
-    autodeps = True,
+    srcs = glob(["*.java"]),
     exported_deps = [
-        ":concurrent_for_junit_runner",
         "//src/com/facebook/buck/util/immutables:immutables",
         "//third-party/java/concurrent-locks:concurrent-locks",
         "//third-party/java/guava:guava",
@@ -23,7 +18,6 @@ java_immutables_library(
     deps = [
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:simple_types",
-        "//src/com/facebook/buck/util/concurrent:concurrent_for_junit_runner",
         "//third-party/java/immutables:immutables",
     ],
 )
