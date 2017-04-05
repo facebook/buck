@@ -51,6 +51,32 @@ public class StringPoolTest {
   }
 
   @Test
+  public void testCreateStringPool() throws Exception {
+    String[] strings = new String[]{"string1", "string2", "string3"};
+    StringPool pool = StringPool.create(Arrays.asList(strings));
+    assertEquals(strings.length, pool.getStringCount());
+    for (int i = 0; i < strings.length; i++) {
+      assertEquals(strings[i], pool.getString(i));
+    }
+  }
+
+  @Test
+  public void testCreateSerializeAndGet() {
+    String[] strings = new String[]{"string1", "string2", "string3"};
+    StringPool pool = StringPool.create(Arrays.asList(strings));
+    byte[] serialized = pool.serialize();
+    pool = StringPool.get(ResChunk.wrap(serialized));
+
+    assertEquals(strings.length, pool.getStringCount());
+    for (int i = 0; i < strings.length; i++) {
+      assertEquals(strings[i], pool.getString(i));
+    }
+
+    byte[] reserialized = pool.serialize();
+    assertArrayEquals(serialized, reserialized);
+  }
+
+  @Test
   public void testArscPoolGetAndSerialize() throws Exception {
     try (ZipFile apkZip = new ZipFile(apkPath.toFile())) {
       ByteBuffer buf = ResChunk.wrap(

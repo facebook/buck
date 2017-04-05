@@ -16,9 +16,13 @@
 
 package com.facebook.buck.android.resources;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
+import java.util.List;
 
 /**
  * A StringPool consists of a header:
@@ -83,6 +87,52 @@ public class StringPool extends ResChunk {
     this.styleData = styleData;
   }
 
+  public static StringPool create(Iterable<String> strings) {
+    List<String> stringsList = ImmutableList.copyOf(strings);
+    int stringCount = stringsList.size();
+
+    ByteBuffer stringOffsets = wrap(new byte[4 * stringCount]);
+    ByteArrayOutputStream stringData = new ByteArrayOutputStream();
+
+    byte[] encodedLength = new byte[4];
+    ByteBuffer lengthBuf = wrap(encodedLength);
+    for (int i = 0; i < stringsList.size(); i++) {
+      lengthBuf.position(0);
+      String value = stringsList.get(i);
+      putEncodedLength(lengthBuf, value.length());
+      ByteBuffer encoded = Charsets.UTF_8.encode(value);
+      putEncodedLength(lengthBuf, encoded.limit());
+
+      stringOffsets.putInt(i * 4, stringData.size());
+      stringData.write(encodedLength, 0, lengthBuf.position());
+      stringData.write(encoded.array(), encoded.arrayOffset(), encoded.limit());
+      stringData.write(0);
+    }
+
+    // Pad to 4-byte boundary.
+    lengthBuf.putInt(0, 0);
+    stringData.write(encodedLength, 0, (4 - (stringData.size() % 4)) % 4);
+
+    return new StringPool(
+        stringCount,
+        0,
+        true,
+        false,
+        stringOffsets,
+        wrap(new byte[0]),
+        wrap(stringData.toByteArray()),
+        wrap(new byte[0]));
+  }
+
+  private static void putEncodedLength(ByteBuffer buf, int length) {
+    if (length < (1 << 7)) {
+      buf.put((byte) length);
+    } else {
+      buf.put((byte) ((1 << 7) | (length >> 8)));
+      buf.put((byte) (length & 0xFF));
+    }
+  }
+
   public static StringPool get(ByteBuffer buf) {
     int type = buf.getShort();
     int headerSize = buf.getShort();
@@ -126,6 +176,57 @@ public class StringPool extends ResChunk {
     output.put(slice(styleOffsets, 0));
     output.put(slice(stringData, 0));
     output.put(slice(styleData, 0));
+  }
+
+  private int getUtf8Length(int offset) {
+    int hi = stringData.get(offset);
+    if (hi < 0) {
+      hi = ((hi & 0x7F) << 8) + (stringData.get(offset + 1) & 0xFF);
+    }
+    return hi;
+  }
+
+  private int getUtf16Length(int offset) {
+    int hi = stringData.getShort(offset);
+    if (hi < 0) {
+      hi = ((hi & 0x7FFF) << 16) + (stringData.getShort(offset + 2) & 0xFFFF);
+    }
+    return hi;
+  }
+
+  private int getEncodedStringOffset(int id) {
+    return stringOffsets.getInt(id * 4);
+  }
+
+  public String getString(int id) {
+    return getStringAtOffset(getEncodedStringOffset(id), false);
+  }
+
+  private String getStringAtOffset(int offset, boolean forDump) {
+    int length;
+    if (utf8) {
+      // For utf8 strings, both the length in code points and the length in bytes is encoded.
+      int utf16Length = getUtf8Length(offset);
+      offset += (utf16Length < (1 << 7)) ? 1 : 2;
+      int utf8length = getUtf8Length(offset);
+      offset += (utf8length < (1 << 7)) ? 1 : 2;
+      // For `aapt dump strings`, aapt has a bug where they use the decoded length rather than the
+      // encoded length when extracting string data...
+      length = forDump ? utf16Length : utf8length;
+    } else {
+      length = getUtf16Length(offset);
+      offset += (length < (1 << 15)) ? 2 : 4;
+      length *= 2;
+    }
+    return decodeString(offset, length);
+  }
+
+  private String decodeString(int start, int utf16Length) {
+    byte[] data = new byte[utf16Length];
+    stringData.position(start);
+    stringData.get(data);
+    stringData.position(0);
+    return new String(data, utf8 ? Charsets.UTF_8 : Charsets.UTF_16LE);
   }
 
   public int getStringCount() {
