@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -117,16 +116,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     SourcePath getAaptGeneratedProguardConfigFile();
     Optional<PackageStringAssets> getPackageStringAssets();
     ImmutableList<BuildRule> getEnhancedDeps();
-    default ImmutableList<SourcePath> getPrimaryApkAssetZips() {
-      if (!getPackageStringAssets().isPresent()) {
-        return ImmutableList.of();
-      }
-      PackageStringAssets stringAssets = getPackageStringAssets().get();
-      return ImmutableList.of(
-          new ExplicitBuildTargetSourcePath(
-              stringAssets.getBuildTarget(), stringAssets.getPathToStringAssetsZip())
-      );
-    }
+    ImmutableList<SourcePath> getPrimaryApkAssetZips();
   }
 
   public AndroidBinaryResourcesGraphEnhancementResult enhance(
@@ -190,6 +180,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     }
 
     Optional<PackageStringAssets> packageStringAssets = Optional.empty();
+    ImmutableList.Builder<SourcePath> primaryApkAssetZips = ImmutableList.builder();
     if (resourceCompressionMode.isStoreStringsAsAssets()) {
       packageStringAssets = Optional.of(createPackageStringAssets(
           resourceRules,
@@ -198,6 +189,7 @@ class AndroidBinaryResourcesGraphEnhancer {
           aaptOutputInfo));
       ruleResolver.addToIndex(packageStringAssets.get());
       enhancedDeps.add(packageStringAssets.get());
+      primaryApkAssetZips.add(packageStringAssets.get().getSourcePathToStringAssetsZip());
     }
 
     MergeAssets mergeAssets =
@@ -224,6 +216,7 @@ class AndroidBinaryResourcesGraphEnhancer {
         .setRDotJavaDir(
             generateRDotJava.map(GenerateRDotJava::getSourcePathToGeneratedRDotJavaSrcFiles))
         .setPrimaryResourcesApkPath(mergeAssets.getSourcePathToOutput())
+        .setPrimaryApkAssetZips(primaryApkAssetZips.build())
         .setPackageStringAssets(packageStringAssets)
         .setEnhancedDeps(enhancedDeps.build())
         .build();
