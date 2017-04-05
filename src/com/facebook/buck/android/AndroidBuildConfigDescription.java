@@ -92,7 +92,6 @@ public class AndroidBuildConfigDescription
         /* useConstantExpressions */ false,
         JavacFactory.create(ruleFinder, javaBuckConfig, null),
         androidJavacOptions,
-        javaBuckConfig.shouldSuggestDependencies(),
         resolver);
   }
 
@@ -112,7 +111,6 @@ public class AndroidBuildConfigDescription
       boolean useConstantExpressions,
       Javac javac,
       JavacOptions javacOptions,
-      boolean suggestDependencies,
       BuildRuleResolver ruleResolver) throws NoSuchBuildTargetException {
     // Normally, the build target for an intermediate rule is a flavored version of the target for
     // the original rule. For example, if the build target for an android_build_config() were
@@ -167,7 +165,6 @@ public class AndroidBuildConfigDescription
         ruleFinder,
         javac,
         javacOptions,
-        suggestDependencies,
         JavaLibraryRules.getAbiSourcePaths(ruleResolver, javaLibraryParams.getBuildDeps()),
         androidBuildConfig);
   }

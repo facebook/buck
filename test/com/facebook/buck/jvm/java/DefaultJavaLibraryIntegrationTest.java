@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.WRITE;
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
@@ -49,7 +48,6 @@ import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -230,36 +228,6 @@ public class DefaultJavaLibraryIntegrationTest {
         "-b",
         "FIRST_ORDER_ONLY");
     buildResult.assertFailure("Build should have failed.");
-
-    workspace.verify();
-  }
-
-  @Test
-  public void testBuildJavaLibraryShouldSuggestTransitiveImportsToInclude() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "warn_on_transitive", tmp);
-    workspace.setUp();
-
-    // Run `buck build`.
-    ProcessResult buildResult = workspace.runBuckCommand(
-        "build",
-        "--config",
-        "java.suggest_dependencies=true",
-        "//:raz");
-
-    String expectedWarning = Joiner.on("\n").join(
-      "Rule //:raz has failed to build.",
-      "Blargh",
-      "Meh",
-      "Try adding the following deps:",
-      "//:blargh",
-      "//:foo");
-
-    buildResult.assertFailure("Build should have failed with warnings.");
-
-    assertThat(
-        buildResult.getStderr(),
-        containsString(expectedWarning));
 
     workspace.verify();
   }

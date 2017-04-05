@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
@@ -46,7 +45,6 @@ public class JavacDirectToJarStep implements Step {
   private final JavacOptions buildTimeOptions;
   private final Optional<Path> workingDirectory;
   private final Path pathToSrcsList;
-  private final Optional<SuggestBuildRules> suggestBuildRules;
   private final ImmutableSortedSet<Path> entriesToJar;
   private final Optional<String> mainClass;
   private final Optional<Path> manifestFile;
@@ -64,7 +62,6 @@ public class JavacDirectToJarStep implements Step {
       Path outputDirectory,
       Optional<Path> workingDirectory,
       Path pathToSrcsList,
-      Optional<SuggestBuildRules> suggestBuildRules,
       ImmutableSortedSet<Path> entriesToJar,
       Optional<String> mainClass,
       Optional<Path> manifestFile,
@@ -80,7 +77,6 @@ public class JavacDirectToJarStep implements Step {
     this.outputDirectory = outputDirectory;
     this.workingDirectory = workingDirectory;
     this.pathToSrcsList = pathToSrcsList;
-    this.suggestBuildRules = suggestBuildRules;
     this.entriesToJar = entriesToJar;
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
@@ -147,7 +143,6 @@ public class JavacDirectToJarStep implements Step {
         javac,
         buildTimeOptions,
         invokingRule,
-        suggestBuildRules,
         resolver,
         filesystem,
         new ClasspathChecker(),

@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import static com.facebook.buck.jvm.java.AbstractJavacOptions.SpoolMode;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
@@ -69,7 +68,6 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
       Path outputDirectory,
       Optional<Path> workingDirectory,
       Path pathToSrcsList,
-      Optional<SuggestBuildRules> suggestBuildRules,
       ClassUsageFileWriter usedClassesFileWriter,
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
@@ -92,7 +90,6 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
             javac,
             buildTimeOptions,
             invokingRule,
-            suggestBuildRules,
             resolver,
             filesystem,
             new ClasspathChecker(),
@@ -132,7 +129,6 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
       Path outputDirectory,
       Optional<Path> workingDirectory,
       Path pathToSrcsList,
-      Optional<SuggestBuildRules> suggestBuildRules,
       ImmutableList<String> postprocessClassesCommands,
       ImmutableSortedSet<Path> entriesToJar,
       Optional<String> mainClass,
@@ -177,7 +173,6 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
               outputDirectory,
               workingDirectory,
               pathToSrcsList,
-              suggestBuildRules,
               entriesToJar,
               mainClass,
               manifestFile,
@@ -195,7 +190,6 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
           outputDirectory,
           workingDirectory,
           pathToSrcsList,
-          suggestBuildRules,
           postprocessClassesCommands,
           entriesToJar,
           mainClass,

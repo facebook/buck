@@ -207,7 +207,6 @@ public class AndroidPrebuiltAarDescription
             JavacFactory.create(ruleFinder, javaBuckConfig, null),
             javacOptions,
             new BootClasspathAppender()),
-        javaBuckConfig.shouldSuggestDependencies(),
         /* exportedDeps */ javaDeps,
         JavaLibraryRules.getAbiSourcePaths(buildRuleResolver, androidLibraryParams.getBuildDeps()));
   }

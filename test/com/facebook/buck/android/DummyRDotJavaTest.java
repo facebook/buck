@@ -158,7 +158,6 @@ public class DummyRDotJavaTest {
                 .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
                 .build(),
             null,
-            Optional.empty(),
             pathResolver,
             new FakeProjectFilesystem(),
             new ClasspathChecker(),

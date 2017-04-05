@@ -150,7 +150,6 @@ public class AndroidBinaryGraphEnhancerTest {
         DEFAULT_JAVA_CONFIG,
         DEFAULT_JAVAC,
         ANDROID_JAVAC_OPTIONS,
-        false,
         EnumSet.noneOf(ExopackageMode.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFile */ Optional.empty(),
@@ -274,7 +273,6 @@ public class AndroidBinaryGraphEnhancerTest {
             /* useConstantExpressions */ false,
             DEFAULT_JAVAC,
             ANDROID_JAVAC_OPTIONS,
-            false,
             ruleResolver);
 
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
@@ -310,7 +308,6 @@ public class AndroidBinaryGraphEnhancerTest {
         DEFAULT_JAVA_CONFIG,
         DEFAULT_JAVAC,
         ANDROID_JAVAC_OPTIONS,
-        false,
         EnumSet.of(ExopackageMode.SECONDARY_DEX),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFiles */ Optional.empty(),
@@ -460,7 +457,6 @@ public class AndroidBinaryGraphEnhancerTest {
         DEFAULT_JAVA_CONFIG,
         DEFAULT_JAVAC,
         ANDROID_JAVAC_OPTIONS,
-        false,
         EnumSet.of(ExopackageMode.SECONDARY_DEX),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFiles */ Optional.empty(),
@@ -525,7 +521,6 @@ public class AndroidBinaryGraphEnhancerTest {
         DEFAULT_JAVA_CONFIG,
         DEFAULT_JAVAC,
         ANDROID_JAVAC_OPTIONS,
-        false,
         EnumSet.of(ExopackageMode.SECONDARY_DEX),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFiles */ Optional.empty(),
@@ -617,7 +612,6 @@ public class AndroidBinaryGraphEnhancerTest {
         DEFAULT_JAVA_CONFIG,
         DEFAULT_JAVAC,
         ANDROID_JAVAC_OPTIONS,
-        false,
         EnumSet.of(ExopackageMode.SECONDARY_DEX),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFiles */ Optional.empty(),

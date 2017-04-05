@@ -192,7 +192,6 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
         fatJarDir,
         /* workingDir */ Optional.empty(),
         pathToSrcsList,
-        /* suggestBuildRule */ Optional.empty(),
         NoOpClassUsageFileWriter.instance(),
         steps,
         buildableContext);

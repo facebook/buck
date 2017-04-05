@@ -17,7 +17,6 @@ package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
@@ -60,7 +59,4 @@ public class GroovyBuckConfig {
     return Suppliers.ofInstance(new HashedFileTool(compiler));
   }
 
-  public boolean shouldSuggestDependencies() {
-    return delegate.getBooleanValue(JavaBuckConfig.SECTION, "suggest_dependencies", false);
-  }
 }

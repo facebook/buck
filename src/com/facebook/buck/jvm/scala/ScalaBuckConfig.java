@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.scala;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
@@ -97,7 +96,4 @@ public class ScalaBuckConfig {
         "Could not find scalac. Consider setting scala.compiler or $SCALA_HOME.");
   }
 
-  public boolean shouldSuggestDependencies() {
-    return delegate.getBooleanValue(JavaBuckConfig.SECTION, "suggest_dependencies", false);
-  }
 }

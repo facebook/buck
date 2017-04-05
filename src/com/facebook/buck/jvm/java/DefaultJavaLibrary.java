@@ -23,7 +23,6 @@ import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.io.BuckPaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
@@ -61,11 +60,8 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
-import com.google.common.reflect.ClassPath;
 
 import java.io.IOException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -147,7 +143,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey
   private final CompileToJarStepFactory compileStepFactory;
-  private final boolean suggestDependencies;
 
   public static DefaultJavaLibraryBuilder builder(
       BuildRuleParams params,
@@ -160,29 +155,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   public ImmutableSortedSet<BuildTarget> getTests() {
     return tests;
   }
-
-  private static final SuggestBuildRules.JarResolver JAR_RESOLVER =
-      classPath -> {
-        ImmutableSet.Builder<String> topLevelSymbolsBuilder = ImmutableSet.builder();
-        try {
-          ClassLoader loader = URLClassLoader.newInstance(
-              new URL[]{classPath.toUri().toURL()},
-            /* parent */ null);
-
-          // For every class contained in that jar, check to see if the package name
-          // (e.g. com.facebook.foo), the simple name (e.g. ImmutableSet) or the name
-          // (e.g com.google.common.collect.ImmutableSet) is one of the missing symbols.
-          for (ClassPath.ClassInfo classInfo : ClassPath.from(loader).getTopLevelClasses()) {
-            topLevelSymbolsBuilder.add(classInfo.getPackageName(),
-                classInfo.getSimpleName(),
-                classInfo.getName());
-          }
-        } catch (IOException e) {
-          // Since this simply is a heuristic, return an empty set if we fail to load a jar.
-          return topLevelSymbolsBuilder.build();
-        }
-        return topLevelSymbolsBuilder.build();
-      };
 
   protected DefaultJavaLibrary(
       final BuildRuleParams params,
@@ -200,7 +172,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       ImmutableSortedSet<SourcePath> abiInputs,
       boolean trackClassUsage,
       CompileToJarStepFactory compileStepFactory,
-      boolean suggestDependencies,
       Optional<Path> resourcesRoot,
       Optional<SourcePath> manifestFile,
       Optional<String> mavenCoords,
@@ -222,7 +193,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         trackClassUsage,
         new JarArchiveDependencySupplier(abiInputs),
         compileStepFactory,
-        suggestDependencies,
         resourcesRoot,
         manifestFile,
         mavenCoords,
@@ -246,7 +216,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       boolean trackClassUsage,
       final JarArchiveDependencySupplier abiClasspath,
       CompileToJarStepFactory compileStepFactory,
-      boolean suggestDependencies,
       Optional<Path> resourcesRoot,
       Optional<SourcePath> manifestFile,
       Optional<String> mavenCoords,
@@ -257,7 +226,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         resolver);
     this.ruleFinder = ruleFinder;
     this.compileStepFactory = compileStepFactory;
-    this.suggestDependencies = suggestDependencies;
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
     // and so only make sense for java library types.
@@ -432,19 +400,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     Path outputDirectory = getClassesDir(target, getProjectFilesystem());
     steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), outputDirectory));
 
-    SuggestBuildRules suggestBuildRule = suggestDependencies ?
-        DefaultSuggestBuildRules.createSuggestBuildFunction(
-            JAR_RESOLVER,
-            context.getSourcePathResolver(),
-            JavaLibraryClasspathProvider.getJavaLibraryDeps(compileTimeClasspathDeps)
-                .toSet(),
-            ImmutableSet.<JavaLibrary>builder()
-                .addAll(getTransitiveClasspathDeps())
-                .add(this)
-                .build(),
-            context.getActionGraph().getNodes()) :
-        (failedImports) -> ImmutableSet.of();
-
     // We don't want to add provided to the declared or transitive deps, since they're only used at
     // compile time.
     ImmutableSortedSet<Path> compileTimeClasspathPaths = compileTimeClasspathDeps
@@ -518,7 +473,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
           outputDirectory,
           workingDirectory,
           pathToSrcsList,
-          Optional.of(suggestBuildRule),
           postprocessClassesCommands,
           ImmutableSortedSet.of(outputDirectory),
           /* mainClass */ Optional.empty(),

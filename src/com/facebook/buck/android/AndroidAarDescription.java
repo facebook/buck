@@ -224,7 +224,6 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
               resolver,
               JavacFactory.create(ruleFinder, javaBuckConfig, args),
               javacOptions,
-              javaBuckConfig.shouldSuggestDependencies(),
               packageableCollection);
       resolver.addAllToIndex(buildConfigRules);
       aarExtraDepsBuilder.addAll(buildConfigRules);

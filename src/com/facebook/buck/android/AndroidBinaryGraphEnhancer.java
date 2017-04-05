@@ -96,7 +96,6 @@ public class AndroidBinaryGraphEnhancer {
   private final JavaBuckConfig javaBuckConfig;
   private final Javac javac;
   private final JavacOptions javacOptions;
-  private final boolean suggestDependencies;
   private final EnumSet<ExopackageMode> exopackageModes;
   private final BuildConfigFields buildConfigValues;
   private final Optional<SourcePath> buildConfigValuesFile;
@@ -130,7 +129,6 @@ public class AndroidBinaryGraphEnhancer {
       JavaBuckConfig javaBuckConfig,
       Javac javac,
       JavacOptions javacOptions,
-      boolean suggestDependencies,
       EnumSet<ExopackageMode> exopackageModes,
       BuildConfigFields buildConfigValues,
       Optional<SourcePath> buildConfigValuesFile,
@@ -161,7 +159,6 @@ public class AndroidBinaryGraphEnhancer {
     this.javaBuckConfig = javaBuckConfig;
     this.javac = javac;
     this.javacOptions = javacOptions;
-    this.suggestDependencies = suggestDependencies;
     this.exopackageModes = exopackageModes;
     this.buildConfigValues = buildConfigValues;
     this.buildConfigValuesFile = buildConfigValuesFile;
@@ -280,7 +277,6 @@ public class AndroidBinaryGraphEnhancer {
           ruleResolver,
           javac,
           javacOptions,
-          suggestDependencies,
           packageableCollection);
       enhancedDeps.addAll(buildConfigDepsRules);
       additionalJavaLibrariesBuilder.addAll(buildConfigDepsRules);
@@ -414,7 +410,6 @@ public class AndroidBinaryGraphEnhancer {
       BuildRuleResolver ruleResolver,
       Javac javac,
       JavacOptions javacOptions,
-      boolean suggestDependencies,
       AndroidPackageableCollection packageableCollection) throws NoSuchBuildTargetException {
     ImmutableSortedSet.Builder<JavaLibrary> result = ImmutableSortedSet.naturalOrder();
     BuildConfigFields buildConfigConstants = BuildConfigFields.fromFields(
@@ -461,7 +456,6 @@ public class AndroidBinaryGraphEnhancer {
           /* useConstantExpressions */ true,
           javac,
           javacOptions,
-          suggestDependencies,
           ruleResolver);
       ruleResolver.addToIndex(buildConfigJavaLibrary);
 

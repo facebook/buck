@@ -40,7 +40,6 @@ class DefaultGroovyLibraryBuilder extends DefaultJavaLibraryBuilder {
     super(params, buildRuleResolver);
     this.groovyBuckConfig = groovyBuckConfig;
     setJavacOptions(javacOptions);
-    setSuggestDependencies(groovyBuckConfig.shouldSuggestDependencies());
   }
 
   @Override

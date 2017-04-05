@@ -20,13 +20,3 @@ java_library(
     exported_deps = ["//src/com/facebook/buck/model:model"],
     visibility = ["PUBLIC"],
 )
-
-java_library(
-    name = "suggestbuildrules",
-    srcs = [
-        "SuggestBuildRules.java",
-    ],
-    autodeps = True,
-    exported_deps = ["//third-party/java/guava:guava"],
-    visibility = ["PUBLIC"],
-)

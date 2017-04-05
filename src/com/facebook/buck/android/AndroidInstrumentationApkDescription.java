@@ -147,7 +147,6 @@ public class AndroidInstrumentationApkDescription
         javaBuckConfig,
         JavacFactory.create(ruleFinder, javaBuckConfig, null),
         javacOptions,
-        javaBuckConfig.shouldSuggestDependencies(),
         EnumSet.noneOf(ExopackageMode.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFile */ Optional.empty(),

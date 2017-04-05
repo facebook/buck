@@ -215,7 +215,6 @@ public class DummyRDotJava extends AbstractBuildRule
         rDotJavaClassesFolder,
         Optional.empty(),
         pathToSrcsList,
-        Optional.empty(),
         NoOpClassUsageFileWriter.instance(),
         steps,
         buildableContext);

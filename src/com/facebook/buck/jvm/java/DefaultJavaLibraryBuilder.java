@@ -64,7 +64,6 @@ public class DefaultJavaLibraryBuilder {
   protected ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
   protected ImmutableSet<Pattern> classesToRemoveFromJar = ImmutableSet.of();
   protected JavacOptionsAmender javacOptionsAmender = JavacOptionsAmender.IDENTITY;
-  protected boolean suggestDependencies = false;
   @Nullable
   protected JavacOptions javacOptions = null;
   @Nullable
@@ -80,7 +79,6 @@ public class DefaultJavaLibraryBuilder {
 
     ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     sourcePathResolver = new SourcePathResolver(ruleFinder);
-    setSuggestDependencies(javaBuckConfig.shouldSuggestDependencies());
     setCompileAgainstAbis(javaBuckConfig.shouldCompileAgainstAbis());
   }
 
@@ -195,11 +193,6 @@ public class DefaultJavaLibraryBuilder {
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setSuggestDependencies(boolean suggestDependencies) {
-    this.suggestDependencies = suggestDependencies;
-    return this;
-  }
-
   protected DefaultJavaLibraryBuilder setCompileAgainstAbis(boolean compileAgainstAbis) {
     this.compileAgainstAbis = compileAgainstAbis;
     return this;
@@ -251,7 +244,6 @@ public class DefaultJavaLibraryBuilder {
           getAbiInputs(),
           trackClassUsage,
           getCompileStepFactory(),
-          suggestDependencies,
           resourcesRoot,
           manifestFile,
           mavenCoords,

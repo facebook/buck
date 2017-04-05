@@ -35,7 +35,6 @@ public class DefaultKotlinLibraryBuilder extends DefaultJavaLibraryBuilder {
       KotlinBuckConfig kotlinBuckConfig) {
     super(params, buildRuleResolver);
     this.kotlinBuckConfig = kotlinBuckConfig;
-    setSuggestDependencies(kotlinBuckConfig.shouldSuggestDependencies());
   }
 
   @Override

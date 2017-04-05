@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -37,7 +36,6 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.google.common.base.Functions;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -48,24 +46,6 @@ import java.nio.file.Paths;
 import java.util.Optional;
 
 public class JavacStepTest {
-
-  @Test
-  public void findFailedImports() throws Exception {
-    String lineSeperator = System.getProperty("line.separator");
-
-    String stderrOutput = Joiner.on(lineSeperator).join(
-        ImmutableList.of(
-            "java/com/foo/bar.java:5: package javax.annotation.concurrent does not exist",
-            "java/com/foo/bar.java:99: error: cannot access com.facebook.Raz",
-            "java/com/foo/bar.java:142: cannot find symbol: class ImmutableSet",
-            "java/com/foo/bar.java:999: you are a clown"));
-
-    ImmutableSet<String> missingImports =
-        JavacStep.findFailedImports(stderrOutput);
-    assertEquals(
-        ImmutableSet.of("javax.annotation.concurrent", "com.facebook.Raz", "ImmutableSet"),
-        missingImports);
-  }
 
   @Test
   public void successfulCompileDoesNotSendStdoutAndStderrToConsole() throws Exception {
@@ -97,7 +77,6 @@ public class JavacStepTest {
         fakeJavac,
         javacOptions,
         BuildTargetFactory.newInstance("//foo:bar"),
-        Optional.empty(),
         sourcePathResolver,
         fakeFilesystem,
         classpathChecker,
@@ -151,7 +130,6 @@ public class JavacStepTest {
         fakeJavac,
         javacOptions,
         BuildTargetFactory.newInstance("//foo:bar"),
-        Optional.empty(),
         sourcePathResolver,
         fakeFilesystem,
         classpathChecker,
@@ -209,7 +187,6 @@ public class JavacStepTest {
         fakeJavac,
         javacOptions,
         BuildTargetFactory.newInstance("//foo:bar"),
-        Optional.empty(),
         sourcePathResolver,
         fakeFilesystem,
         classpathChecker,
@@ -265,7 +242,6 @@ public class JavacStepTest {
         fakeJavac,
         javacOptions,
         BuildTargetFactory.newInstance("//foo:bar"),
-        Optional.empty(),
         sourcePathResolver,
         fakeFilesystem,
         classpathChecker,

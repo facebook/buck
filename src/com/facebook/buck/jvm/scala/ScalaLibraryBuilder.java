@@ -34,7 +34,6 @@ public class ScalaLibraryBuilder extends DefaultJavaLibraryBuilder {
       ScalaBuckConfig scalaBuckConfig) {
     super(params, buildRuleResolver);
     this.scalaBuckConfig = scalaBuckConfig;
-    setSuggestDependencies(scalaBuckConfig.shouldSuggestDependencies());
   }
 
   public ScalaLibraryBuilder setArgs(ScalaLibraryDescription.Arg args) {

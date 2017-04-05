@@ -51,7 +51,6 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
       SourcePathRuleFinder ruleFinder,
       Javac javac,
       JavacOptions javacOptions,
-      boolean suggestDependencies,
       ImmutableSortedSet<SourcePath> abiInputs,
       AndroidBuildConfig androidBuildConfig) {
     super(
@@ -73,7 +72,6 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
             javac,
             javacOptions,
             JavacOptionsAmender.IDENTITY),
-        suggestDependencies,
         /* resourcesRoot */ Optional.empty(),
         /* manifest file */ Optional.empty(),
         /* mavenCoords */ Optional.empty(),

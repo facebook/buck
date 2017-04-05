@@ -252,7 +252,6 @@ public class AndroidBinaryDescription implements
           javaBuckConfig,
           JavacFactory.create(ruleFinder, javaBuckConfig, null),
           javacOptions,
-          javaBuckConfig.shouldSuggestDependencies(),
           exopackageModes,
           args.buildConfigValues,
           args.buildConfigValuesFile,
