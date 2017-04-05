@@ -102,6 +102,7 @@ public class AndroidBinaryGraphEnhancer {
   private final Optional<Integer> xzCompressionLevel;
   private final AndroidNativeLibsPackageableGraphEnhancer nativeLibsEnhancer;
   private final APKModuleGraph apkModuleGraph;
+  private final Optional<BuildTarget> nativeLibraryProguardConfigGenerator;
   private final ListeningExecutorService dxExecutorService;
   private final DxConfig dxConfig;
   private final AndroidBinaryResourcesGraphEnhancer androidBinaryResourcesGraphEnhancer;
@@ -139,6 +140,7 @@ public class AndroidBinaryGraphEnhancer {
       Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap,
       Optional<BuildTarget> nativeLibraryMergeGlue,
       Optional<BuildTarget> nativeLibraryMergeCodeGenerator,
+      Optional<BuildTarget> nativeLibraryProguardConfigGenerator,
       RelinkerMode relinkerMode,
       ListeningExecutorService dxExecutorService,
       ManifestEntries manifestEntries,
@@ -167,6 +169,7 @@ public class AndroidBinaryGraphEnhancer {
     this.trimResourceIds = trimResourceIds;
     this.keepResourcePattern = keepResourcePattern;
     this.nativeLibraryMergeCodeGenerator = nativeLibraryMergeCodeGenerator;
+    this.nativeLibraryProguardConfigGenerator = nativeLibraryProguardConfigGenerator;
     this.nativeLibsEnhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
             ruleResolver,
@@ -221,6 +224,8 @@ public class AndroidBinaryGraphEnhancer {
       ruleResolver.addAllToIndex(copyNativeLibraries.get().values());
       enhancedDeps.addAll(copyNativeLibraries.get().values());
     }
+
+    nativeLibraryProguardConfigGenerator.isPresent();
 
     Optional<ImmutableSortedMap<String, String>> sonameMergeMap =
         nativeLibsEnhancementResult.getSonameMergeMap();

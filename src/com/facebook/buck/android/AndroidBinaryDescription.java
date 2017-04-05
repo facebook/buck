@@ -262,6 +262,7 @@ public class AndroidBinaryDescription implements
           Optional.of(args.nativeLibraryMergeMap),
           args.nativeLibraryMergeGlue,
           args.nativeLibraryMergeCodeGenerator,
+          args.nativeLibraryProguardConfigGenerator,
           args.enableRelinker ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
           dxExecutorService,
           args.manifestEntries,
@@ -546,6 +547,7 @@ public class AndroidBinaryDescription implements
     public Map<String, List<Pattern>> nativeLibraryMergeMap = ImmutableMap.of();
     public Optional<BuildTarget> nativeLibraryMergeGlue;
     public Optional<BuildTarget> nativeLibraryMergeCodeGenerator;
+    public Optional<BuildTarget> nativeLibraryProguardConfigGenerator;
     public boolean enableRelinker = false;
     public ManifestEntries manifestEntries = ManifestEntries.empty();
     public BuildConfigFields buildConfigValues = BuildConfigFields.empty();
