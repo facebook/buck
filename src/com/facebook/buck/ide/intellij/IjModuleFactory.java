@@ -31,6 +31,7 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription;
 import com.facebook.buck.jvm.kotlin.KotlinTestDescription;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.Description;
@@ -77,6 +78,8 @@ public class IjModuleFactory {
           GroovyTestDescription.class,
           KotlinLibraryDescription.class,
           KotlinTestDescription.class);
+
+  private static final Logger LOG = Logger.get(IjModuleFactory.class);
 
   /**
    * Rule describing which aspects of the supplied {@link TargetNode} to transfer to the
@@ -168,10 +171,19 @@ public class IjModuleFactory {
 
     ModuleBuildContext context = new ModuleBuildContext(moduleBuildTargets);
 
+    Set<Class<?>> seenTypes = new HashSet<>();
     for (TargetNode<?, ?> targetNode : targetNodes) {
-      IjModuleRule<?> rule = Preconditions.checkNotNull(moduleRuleIndex.get(
-          targetNode.getDescription().getClass()));
+      Class<?> nodeType = targetNode.getDescription().getClass();
+      seenTypes.add(nodeType);
+      IjModuleRule<?> rule = Preconditions.checkNotNull(moduleRuleIndex.get(nodeType));
       rule.apply((TargetNode) targetNode, context);
+    }
+
+    if (seenTypes.size() > 1) {
+      LOG.debug(
+          "Multiple types at the same path. Path: %s, types: %s",
+          moduleBasePath,
+          seenTypes);
     }
 
     Optional<String> sourceLevel = getSourceLevel(targetNodes);
