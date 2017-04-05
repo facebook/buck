@@ -255,4 +255,11 @@ public class StringPool extends ResChunk {
   public boolean isUtf8() {
     return utf8;
   }
+
+  public String getOutputNormalizedString(int data) {
+    return getString(data)
+        .replace("\\", "\\\\")
+        .replace("\n", "\\n")
+        .replace("\"", "\\\"");
+  }
 }

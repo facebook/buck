@@ -17,8 +17,12 @@
 package com.facebook.buck.android.resources;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
+import java.io.PrintStream;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -75,6 +79,14 @@ import java.util.Optional;
 public class ResourcesXml extends ResChunk {
   public static final int HEADER_SIZE = 8;
 
+  private static final int XML_FIRST_TYPE = 0x100;
+  private static final int XML_START_NS = 0x100;
+  private static final int XML_END_NS = 0x101;
+  private static final int XML_START_ELEMENT = 0x102;
+  private static final int XML_END_ELEMENT = 0x103;
+  private static final int XML_CDATA = 0x104;
+  private static final int XML_LAST_TYPE = 0x104;
+
   private final StringPool strings;
   private final Optional<RefMap> refMap;
   private final ByteBuffer nodeBuf;
@@ -121,8 +133,132 @@ public class ResourcesXml extends ResChunk {
     this.nodeBuf = nodeBuf;
   }
 
+  public void dump(PrintStream out) {
+    int indent = 0;
+    final Map<String, String> nsMap = new HashMap<>();
+    nodeBuf.position(0);
+    while (nodeBuf.position() < nodeBuf.limit()) {
+      int nodeSize = nodeBuf.get(nodeBuf.position() + 4);
+      indent = dumpNode(
+          out,
+          strings,
+          refMap,
+          indent,
+          nsMap,
+          slice(nodeBuf, nodeBuf.position(), nodeSize));
+      nodeBuf.position(nodeBuf.position() + nodeSize);
+    }
+  }
+
+  private static int dumpNode(
+      PrintStream out,
+      StringPool strings,
+      Optional<RefMap> refMap,
+      int indent,
+      Map<String, String> nsMap,
+      ByteBuffer buf) {
+    int type = buf.getShort(0);
+    Preconditions.checkState(type >= XML_FIRST_TYPE && type <= XML_LAST_TYPE);
+    switch (type) {
+      case XML_START_NS: {
+        // start namespace
+        int prefixId = buf.getInt(16);
+        String prefix = prefixId == -1 ? "" : strings.getString(prefixId);
+        int uriId = buf.getInt(20);
+        String uri = strings.getString(uriId);
+        out.format(
+            "%sN: %s=%s\n",
+            Strings.padEnd("", indent * 2, ' '),
+            prefix,
+            uri);
+        indent++;
+        nsMap.put(uri, prefix);
+        break;
+      }
+      case XML_END_NS:
+        indent--;
+        break;
+      case XML_START_ELEMENT: {
+        // start element
+        int lineNumber = buf.getInt(8);
+        int nameId = buf.getInt(20);
+        String name = strings.getString(nameId);
+        int attrCount = buf.getShort(28);
+        ByteBuffer attrExt = slice(buf, 36);
+        out.format(
+            "%sE: %s (line=%d)\n",
+            Strings.padEnd("", indent * 2, ' '),
+            name,
+            lineNumber);
+        indent++;
+        for (int i = 0; i < attrCount; i++) {
+          dumpAttribute(out, strings, refMap, slice(attrExt, attrExt.position()), indent, nsMap);
+          attrExt.position(attrExt.position() + 20);
+        }
+        break;
+      }
+      case XML_END_ELEMENT:
+        indent--;
+        break;
+      case XML_CDATA:
+        throw new UnsupportedOperationException();
+    }
+    return indent;
+  }
+
   public StringPool getStrings() {
     return strings;
+  }
+
+  private static void dumpAttribute(
+      PrintStream out,
+      StringPool strings,
+      Optional<RefMap> refMap,
+      ByteBuffer buf,
+      int indent, Map<String, String> nsMap) {
+    int nsId = buf.getInt(0);
+    String namespace = nsId == -1 ? "" : strings.getString(nsId);
+    String shortNs = nsMap.get(namespace);
+    int nameIndex = buf.getInt(4);
+    String name = strings.getString(nameIndex);
+    int resValue = refMap.isPresent() ? refMap.get().getRef(nameIndex) : -1;
+    int rawValueIndex = buf.getInt(8);
+    String rawValue =
+        rawValueIndex < 0 ? null : strings.getOutputNormalizedString(rawValueIndex);
+    int attrType = buf.get(15);
+    int data = buf.getInt(16);
+    String dumpValue = getValueForDump(strings, rawValue, attrType, data);
+    out.format(
+        "%sA: %s%s%s=%s%s\n",
+        Strings.padEnd("", indent * 2, ' '),
+        shortNs == null ? "" : shortNs + ":",
+        name,
+        resValue == -1 ? "" : String.format("(0x%08x)", resValue),
+        dumpValue,
+        rawValue == null ? "" : String.format(" (Raw: \"%s\")", rawValue));
+  }
+
+  private static String getValueForDump(
+      StringPool strings,
+      String rawValue,
+      int attrType,
+      int data) {
+    switch (attrType) {
+      case RES_REFERENCE:
+        return String.format("@0x%x", data);
+      case RES_STRING:
+        return String.format("\"%s\"", strings.getString(data).replace("\\", "\\\\"));
+      case RES_FLOAT:
+      case RES_DECIMAL:
+      case RES_HEX:
+      case RES_BOOL:
+        return String.format("(type 0x%x)0x%x", attrType, data);
+      case RES_DYNAMIC_ATTRIBUTE:
+      case RES_DYNAMIC_REFERENCE:
+        throw new UnsupportedOperationException();
+      default:
+        return rawValue;
+    }
   }
 
   /**
@@ -150,6 +286,13 @@ public class ResourcesXml extends ResChunk {
     @Override
     public void put(ByteBuffer output) {
       output.put(slice(buf, 0));
+    }
+
+    int getRef(int index) {
+      if (index < refCount) {
+        return buf.getInt(getHeaderSize() + index * 4);
+      }
+      return -1;
     }
   }
 }

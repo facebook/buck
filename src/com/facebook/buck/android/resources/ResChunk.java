@@ -54,6 +54,26 @@ public abstract class ResChunk {
   public static final short CHUNK_RES_TABLE_TYPE = 0x201;
   public static final short CHUNK_RES_TABLE_TYPE_SPEC = 0x202;
 
+  static final int RES_REFERENCE = 0x1;
+  static final int RES_ATTRIBUTE = 0x2;
+  static final int RES_STRING = 0x3;
+
+  static final int RES_FLOAT = 0x4;
+  static final int RES_DIMENSION = 0x5;
+  static final int RES_FRACTION = 0x6;
+
+  static final int RES_DYNAMIC_REFERENCE = 0x07;
+  static final int RES_DYNAMIC_ATTRIBUTE = 0x08;
+
+  static final int RES_DECIMAL = 0x10;
+  static final int RES_HEX = 0x11;
+  static final int RES_BOOL = 0x12;
+
+  static final int RES_COLOR_ARGB8 = 0x1c;
+  static final int RES_COLOR_RGB8 = 0x1d;
+  static final int RES_COLOR_ARGB4 = 0x1e;
+  static final int RES_COLOR_RGB4 = 0x1f;
+
   private final short type;
   private final short headerSize;
   private final int chunkSize;

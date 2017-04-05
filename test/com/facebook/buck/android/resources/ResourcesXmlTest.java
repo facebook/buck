@@ -20,8 +20,10 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 
@@ -29,8 +31,11 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.zip.ZipFile;
@@ -63,6 +68,23 @@ public class ResourcesXmlTest {
       ResourcesXml resXml = ResourcesXml.get(buf);
       assertEquals(buf.limit(), resXml.getTotalSize());
       assertArrayEquals(data, resXml.serialize());
+    }
+  }
+
+  @Test
+  public void testAaptDumpXmlTree() throws Exception {
+    try (ZipFile apkZip = new ZipFile(apkPath.toFile())) {
+      ByteBuffer buf = ResChunk.wrap(
+          ByteStreams.toByteArray(
+              apkZip.getInputStream(apkZip.getEntry("AndroidManifest.xml"))));
+      ResourcesXml xml = ResourcesXml.get(buf);
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      xml.dump(new PrintStream(baos));
+      String content = new String(baos.toByteArray(), Charsets.UTF_8);
+
+      Path xmltreeOutput = filesystem.resolve(filesystem.getPath(APK_NAME + ".manifest"));
+      String expected = new String(Files.readAllBytes(xmltreeOutput));
+      MoreAsserts.assertLargeStringsEqual(expected, content);
     }
   }
 }
