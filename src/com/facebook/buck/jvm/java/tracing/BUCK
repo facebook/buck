@@ -5,11 +5,7 @@ java_library(
         "JavacPhaseEventLogger.java",
         "TranslatingJavacPhaseTracer.java",
     ],
-    autodeps = True,
     exported_deps = [
-        # Have to export this manually. `buck autodeps` does not export it because it is in the
-        # provided_deps. This should be fixed in `buck autodeps`.
-        ":api",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/jvm/java:javac-sink",
         "//src/com/facebook/buck/model:model",
