@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
@@ -39,6 +38,7 @@ interface AbstractAndroidGraphEnhancementResult {
   Optional<PreDexMerge> getPreDexMerge();
   Optional<ComputeExopackageDepsAbi> getComputeExopackageDepsAbi();
   Optional<Boolean> getPackageAssetLibraries();
+  ImmutableList<SourcePath> getPrimaryApkAssetZips();
 
   /**
    * Compiled R.java for use by ProGuard.  This should go away if/when
@@ -62,15 +62,4 @@ interface AbstractAndroidGraphEnhancementResult {
   ImmutableSortedSet<BuildRule> getFinalDeps();
 
   APKModuleGraph getAPKModuleGraph();
-
-  default ImmutableList<SourcePath> getPrimaryApkAssetZips() {
-    if (!getPackageStringAssets().isPresent()) {
-      return ImmutableList.of();
-    }
-    PackageStringAssets stringAssets = getPackageStringAssets().get();
-    return ImmutableList.of(
-        new ExplicitBuildTargetSourcePath(
-            stringAssets.getBuildTarget(), stringAssets.getPathToStringAssetsZip())
-    );
-  }
 }

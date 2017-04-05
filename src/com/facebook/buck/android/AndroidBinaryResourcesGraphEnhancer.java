@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -116,6 +117,16 @@ class AndroidBinaryResourcesGraphEnhancer {
     SourcePath getAaptGeneratedProguardConfigFile();
     Optional<PackageStringAssets> getPackageStringAssets();
     ImmutableList<BuildRule> getEnhancedDeps();
+    default ImmutableList<SourcePath> getPrimaryApkAssetZips() {
+      if (!getPackageStringAssets().isPresent()) {
+        return ImmutableList.of();
+      }
+      PackageStringAssets stringAssets = getPackageStringAssets().get();
+      return ImmutableList.of(
+          new ExplicitBuildTargetSourcePath(
+              stringAssets.getBuildTarget(), stringAssets.getPathToStringAssetsZip())
+      );
+    }
   }
 
   public AndroidBinaryResourcesGraphEnhancementResult enhance(
