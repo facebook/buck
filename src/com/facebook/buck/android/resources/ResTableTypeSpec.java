@@ -19,6 +19,7 @@ package com.facebook.buck.android.resources;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.util.List;
 
@@ -116,6 +117,41 @@ public class ResTableTypeSpec extends ResChunk {
   @Override
   public int getTotalSize() {
     return totalSize;
+  }
+
+  String getResourceName(ResTablePackage resPackage, int id) {
+    // We need to find an actual entry in one of the configs to find the name of this resource.
+    for (ResTableType t : configs) {
+      int refId = t.getResourceRef(id);
+      if (refId >= 0) {
+        return resPackage.getKeys().getString(refId);
+      }
+    }
+    throw new RuntimeException();
+  }
+
+  public String getResourceTypeName(ResTablePackage resPackage) {
+    return resPackage.getTypes().getString(id);
+  }
+
+  public void dump(StringPool strings, ResTablePackage resPackage, PrintStream out) {
+    if (entryCount == 0) {
+      return;
+    }
+    out.format("    type %d configCount=%d entryCount=%d\n", id, configs.size(), entryCount);
+    for (int i = 0; i < entryCount; i++) {
+      out.format(
+        "      spec resource 0x7f%02x%04x %s:%s/%s: flags=0x%08x\n",
+        getResourceType(),
+        i,
+        resPackage.getPackageName(),
+        getResourceTypeName(resPackage),
+        getResourceName(resPackage, i),
+        entryFlags.getInt(i * 4));
+    }
+    for (ResTableType type : configs) {
+      type.dump(strings, resPackage, out);
+    }
   }
 
   public int getResourceType() {

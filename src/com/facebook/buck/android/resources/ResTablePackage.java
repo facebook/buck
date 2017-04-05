@@ -22,6 +22,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 
+import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.util.List;
 
@@ -139,6 +140,20 @@ public class ResTablePackage extends ResChunk {
     Preconditions.checkState(this.packageId == APP_PACKAGE_ID);
   }
 
+  public void dump(StringPool strings, PrintStream out) {
+    out.format(
+        "Package Group 0 id=0x%02x packageCount=1 name=%s\n",
+        packageId,
+        getPackageName());
+    out.format(
+        "  Package 0 id=0x%02x name=%s\n",
+        packageId,
+        getPackageName());
+    for (ResTableTypeSpec spec : typeSpecs) {
+      spec.dump(strings, this, out);
+    }
+  }
+
   String getPackageName() {
     return name.get();
   }
@@ -166,5 +181,13 @@ public class ResTablePackage extends ResChunk {
 
   public byte[] getNameData() {
     return nameData;
+  }
+
+  public String getRefName(int i) {
+    int type = (i >> 16) & 0xFF;
+    int idx = i & 0xFFFF;
+    ResTableTypeSpec spec = typeSpecs.get(type - 1);
+    Preconditions.checkState(spec.getResourceType() == type);
+    return spec.getResourceName(this, idx);
   }
 }

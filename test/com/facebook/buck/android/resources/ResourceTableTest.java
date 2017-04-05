@@ -20,8 +20,11 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 
@@ -29,11 +32,15 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.zip.ZipFile;
 
 public class ResourceTableTest {
@@ -72,6 +79,30 @@ public class ResourceTableTest {
       byte[] actual = resTable.serialize();
 
       assertArrayEquals(expected, actual);
+    }
+  }
+
+  @Test
+  public void testAaptDumpResources() throws Exception {
+    try (ZipFile apkZip = new ZipFile(apkPath.toFile())) {
+      ByteBuffer buf = ResChunk.wrap(
+          ByteStreams.toByteArray(
+              apkZip.getInputStream(apkZip.getEntry("resources.arsc"))));
+      ResourceTable resourceTable = ResourceTable.get(buf);
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      resourceTable.dump(new PrintStream(baos));
+      String content = new String(baos.toByteArray(), Charsets.UTF_8);
+
+      Path resourcesOutput = filesystem.resolve(filesystem.getPath(APK_NAME + ".resources"));
+
+      // We don't care about dumping the correct config string.
+      Pattern re = Pattern.compile("      config.*:");
+      String expected = Joiner.on("\n").join(
+          Files.readAllLines(resourcesOutput)
+              .stream()
+              .map((s) -> re.matcher(s).matches() ? "      config (unknown):" : s)
+              .iterator());
+      MoreAsserts.assertLargeStringsEqual(expected + "\n", content);
     }
   }
 }

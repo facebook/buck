@@ -81,6 +81,11 @@ public class ResourceTable extends ResChunk {
     resPackage.put(buf);
   }
 
+  public void dump(PrintStream out) {
+    out.format("Package Groups (1)\n");
+    resPackage.dump(strings, out);
+  }
+
   public StringPool getStrings() {
     return strings;
   }
