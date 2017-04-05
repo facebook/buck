@@ -41,7 +41,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -68,17 +67,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 
 public class CxxPythonExtensionDescription implements
     Description<CxxPythonExtensionDescription.Arg>,
-    Flavored,
     ImplicitDepsInferringDescription<CxxPythonExtensionDescription.Arg>,
     VersionPropagator<CxxPythonExtensionDescription.Arg> {
 
@@ -106,30 +102,6 @@ public class CxxPythonExtensionDescription implements
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return
-        Optional.of(
-            ImmutableSet.of(
-                pythonPlatforms,
-                cxxPlatforms
-            )
-        );
-  }
-
-  @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> inputFlavors) {
-    Set<Flavor> flavors = inputFlavors;
-    flavors = Sets.difference(flavors, cxxPlatforms.getFlavors());
-    flavors = Sets.difference(flavors, pythonPlatforms.getFlavors());
-    flavors = Sets.difference(
-        flavors,
-        ImmutableSet.of(
-            CxxDescriptionEnhancer.SHARED_FLAVOR
-        ));
-    return flavors.isEmpty();
-  }
-
-  @Override
   public Arg createUnpopulatedConstructorArg() {
     return new Arg();
   }
@@ -148,11 +120,9 @@ public class CxxPythonExtensionDescription implements
   }
 
   @VisibleForTesting
-  static String getExtensionName(
-      String moduleName,
-      Optional<PythonBuildConfig> pythonBuildConfig) {
-    return moduleName +
-        pythonBuildConfig.map(c -> c.getExtensionSuffix()).orElse(".so");
+  static String getExtensionName(String moduleName) {
+    // .so is used on OS X too (as opposed to dylib).
+    return String.format("%s.so", moduleName);
   }
 
   private Path getExtensionPath(
@@ -163,10 +133,7 @@ public class CxxPythonExtensionDescription implements
       Flavor platform) {
     return BuildTargets
         .getGenPath(filesystem, getExtensionTarget(target, pythonPlatform, platform), "%s")
-        .resolve(
-            getExtensionName(
-                moduleName,
-                pythonPlatforms.getValue(pythonPlatform).getEnvironment().getPythonBuildConfig()));
+        .resolve(getExtensionName(moduleName));
   }
 
   private ImmutableList<com.facebook.buck.rules.args.Arg> getExtensionArgs(
@@ -177,8 +144,8 @@ public class CxxPythonExtensionDescription implements
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       Arg args,
-      ImmutableSet<BuildRule> deps,
-      Optional<PythonBuildConfig> pythonBuildConfig) throws NoSuchBuildTargetException {
+      ImmutableSet<BuildRule> deps)
+      throws NoSuchBuildTargetException {
 
     // Extract all C/C++ sources from the constructor arg.
     ImmutableMap<String, CxxSource> srcs =
@@ -217,20 +184,13 @@ public class CxxPythonExtensionDescription implements
               cxxPlatform);
     }
 
-    ImmutableList.Builder<String> preprocessorFlagsBuilder = ImmutableList.builder();
-    if (pythonBuildConfig.isPresent()) {
-      preprocessorFlagsBuilder.addAll(pythonBuildConfig.get().getPreprocessorFlags());
-    }
-    preprocessorFlagsBuilder.addAll(args.preprocessorFlags);
-    ImmutableList<String> preprocessorFlags = preprocessorFlagsBuilder.build();
-
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput =
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             params,
             cxxPlatform,
             deps,
             CxxFlags.getLanguageFlags(
-                preprocessorFlags,
+                args.preprocessorFlags,
                 args.platformPreprocessorFlags,
                 args.langPreprocessorFlags,
                 cxxPlatform),
@@ -239,12 +199,6 @@ public class CxxPythonExtensionDescription implements
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, deps),
             args.includeDirs,
             sandboxTree);
-
-    ImmutableList.Builder<String> compileFlagsBuilder = ImmutableList.builder();
-    if (pythonBuildConfig.isPresent()) {
-      compileFlagsBuilder.addAll(pythonBuildConfig.get().getCompilerFlags());
-    }
-    compileFlagsBuilder.addAll(args.compilerFlags);
 
     // Generate rule to build the object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> picObjects =
@@ -257,7 +211,7 @@ public class CxxPythonExtensionDescription implements
             cxxPlatform,
             cxxPreprocessorInput,
             CxxFlags.getLanguageFlags(
-                compileFlagsBuilder.build(),
+                args.compilerFlags,
                 args.platformCompilerFlags,
                 args.langCompilerFlags,
                 cxxPlatform),
@@ -288,10 +242,6 @@ public class CxxPythonExtensionDescription implements
 
     // Add object files into the args.
     argsBuilder.addAll(SourcePathArg.from(picObjects.values()));
-
-    if (pythonBuildConfig.isPresent()) {
-      argsBuilder.addAll(StringArg.from(pythonBuildConfig.get().getLinkerFlags()));
-    }
 
     return argsBuilder.build();
   }
@@ -333,9 +283,7 @@ public class CxxPythonExtensionDescription implements
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     String moduleName = args.moduleName.orElse(params.getBuildTarget().getShortName());
-    String extensionName = getExtensionName(
-        moduleName,
-        pythonPlatform.getEnvironment().getPythonBuildConfig());
+    String extensionName = getExtensionName(moduleName);
     Path extensionPath =
         getExtensionPath(
             params.getProjectFilesystem(),
@@ -379,23 +327,10 @@ public class CxxPythonExtensionDescription implements
                 cellRoots,
                 cxxPlatform,
                 args,
-                deps,
-                getPythonBuildConfig(pythonPlatform)))
+                deps))
           .setFrameworks(args.frameworks)
           .setLibraries(args.libraries)
           .build());
-  }
-
-  private static final Optional<PythonBuildConfig> getPythonBuildConfig(
-      PythonPlatform pythonPlatform) {
-    if (pythonPlatform.getFlavor().equals(PythonBuckConfig.DEFAULT_PYTHON_PLATFORM)) {
-      // We only use the detected Python build config for the
-      // py-default flavor.  Any other flavors have already specified
-      // the Python build config through other means in .buckconfig.
-      return pythonPlatform.getEnvironment().getPythonBuildConfig();
-    } else {
-      return Optional.empty();
-    }
   }
 
   @Override
@@ -440,8 +375,9 @@ public class CxxPythonExtensionDescription implements
     // get the real build rules via querying the action graph.
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    final Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
+    Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
     String moduleName = args.moduleName.orElse(params.getBuildTarget().getShortName());
+    final Path module = baseModule.resolve(getExtensionName(moduleName));
     return new CxxPythonExtension(params) {
 
       @Override
@@ -457,11 +393,8 @@ public class CxxPythonExtensionDescription implements
       }
 
       @Override
-      public Path getModule(PythonPlatform pythonPlatform) {
-        return baseModule.resolve(
-            getExtensionName(
-                moduleName,
-                getPythonBuildConfig(pythonPlatform)));
+      public Path getModule() {
+        return module;
       }
 
       @Override
@@ -472,7 +405,7 @@ public class CxxPythonExtensionDescription implements
         BuildRule extension = getExtension(pythonPlatform, cxxPlatform);
         SourcePath output = extension.getSourcePathToOutput();
         return PythonPackageComponents.of(
-            ImmutableMap.of(getModule(pythonPlatform), output),
+            ImmutableMap.of(module, output),
             ImmutableMap.of(),
             ImmutableMap.of(),
             ImmutableSet.of(),
@@ -517,8 +450,7 @@ public class CxxPythonExtensionDescription implements
                         cellRoots,
                         cxxPlatform,
                         args,
-                        getPlatformDeps(ruleResolver, pythonPlatform, cxxPlatform, args),
-                        pythonPlatform.getEnvironment().getPythonBuildConfig()))
+                        getPlatformDeps(ruleResolver, pythonPlatform, cxxPlatform, args)))
                 .addAllFrameworks(args.frameworks)
                 .build();
           }

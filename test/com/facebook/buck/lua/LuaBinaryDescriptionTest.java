@@ -74,10 +74,7 @@ public class LuaBinaryDescriptionTest {
   private static final PythonPlatform PY2 =
       PythonPlatform.of(
           InternalFlavor.of("py2"),
-          new PythonEnvironment(
-              Paths.get("python2"),
-              PythonVersion.of("CPython", "2.6"),
-              Optional.empty()),
+          new PythonEnvironment(Paths.get("python2"), PythonVersion.of("CPython", "2.6")),
           Optional.of(PYTHON2_DEP_TARGET));
 
   private static final BuildTarget PYTHON3_DEP_TARGET =
@@ -85,10 +82,7 @@ public class LuaBinaryDescriptionTest {
   private static final PythonPlatform PY3 =
       PythonPlatform.of(
           InternalFlavor.of("py3"),
-          new PythonEnvironment(
-              Paths.get("python3"),
-              PythonVersion.of("CPython", "3.5"),
-              Optional.empty()),
+          new PythonEnvironment(Paths.get("python3"), PythonVersion.of("CPython", "3.5")),
           Optional.of(PYTHON3_DEP_TARGET));
 
   @Rule

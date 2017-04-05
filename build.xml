@@ -405,9 +405,6 @@
       </fileset>
     </copy>
 
-    <mkdir dir="${classes.dir}/com/facebook/buck/python"/>
-    <copy file="src/com/facebook/buck/python/detect_python_build_config.py"
-          toFile="${classes.dir}/com/facebook/buck/python/detect_python_build_config.py"/>
   </target>
 
   <target name="compile"

@@ -250,10 +250,7 @@ public class PythonUtil {
       for (Map.Entry<BuildTarget, OmnibusRoot> root : libraries.getRoots().entrySet()) {
         CxxPythonExtension extension = extensions.get(root.getKey());
         if (extension != null) {
-          allComponents.addModule(
-              extension.getModule(pythonPlatform),
-              root.getValue().getPath(),
-              root.getKey());
+          allComponents.addModule(extension.getModule(), root.getValue().getPath(), root.getKey());
         } else {
           NativeLinkTarget target =
               Preconditions.checkNotNull(

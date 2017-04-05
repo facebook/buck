@@ -29,20 +29,14 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.util.Optional;
 
 public class PythonEnvironment implements RuleKeyAppendable, Tool {
   private final Path pythonPath;
   private final PythonVersion pythonVersion;
-  private final Optional<PythonBuildConfig> pythonBuildConfig;
 
-  public PythonEnvironment(
-      Path pythonPath,
-      PythonVersion pythonVersion,
-      Optional<PythonBuildConfig> pythonBuildConfig) {
+  public PythonEnvironment(Path pythonPath, PythonVersion pythonVersion) {
     this.pythonPath = pythonPath;
     this.pythonVersion = pythonVersion;
-    this.pythonBuildConfig = pythonBuildConfig;
   }
 
   public Path getPythonPath() {
@@ -51,10 +45,6 @@ public class PythonEnvironment implements RuleKeyAppendable, Tool {
 
   public PythonVersion getPythonVersion() {
     return pythonVersion;
-  }
-
-  public Optional<PythonBuildConfig> getPythonBuildConfig() {
-    return pythonBuildConfig;
   }
 
   @Override

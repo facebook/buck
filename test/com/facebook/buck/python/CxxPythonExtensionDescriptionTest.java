@@ -74,10 +74,7 @@ public class CxxPythonExtensionDescriptionTest {
   private static final PythonPlatform PY2 =
       PythonPlatform.of(
           InternalFlavor.of("py2"),
-          new PythonEnvironment(
-              Paths.get("python2"),
-              PythonVersion.of("CPython", "2.6"),
-              Optional.empty()),
+          new PythonEnvironment(Paths.get("python2"), PythonVersion.of("CPython", "2.6")),
           Optional.empty());
 
   private static final BuildTarget PYTHON3_DEP_TARGET =
@@ -85,10 +82,7 @@ public class CxxPythonExtensionDescriptionTest {
   private static final PythonPlatform PY3 =
       PythonPlatform.of(
           InternalFlavor.of("py3"),
-          new PythonEnvironment(
-              Paths.get("python3"),
-              PythonVersion.of("CPython", "3.5"),
-              Optional.empty()),
+          new PythonEnvironment(Paths.get("python3"), PythonVersion.of("CPython", "3.5")),
           Optional.empty());
 
   @Test
@@ -117,10 +111,7 @@ public class CxxPythonExtensionDescriptionTest {
     assertEquals(
         ImmutableSet.of(
             target.getBasePath()
-                .resolve(
-                    CxxPythonExtensionDescription.getExtensionName(
-                        target.getShortName(),
-                        Optional.empty()))),
+                .resolve(CxxPythonExtensionDescription.getExtensionName(target.getShortName()))),
         normalComps.getModules().keySet());
 
     // Verify that explicitly setting works.
@@ -144,9 +135,7 @@ public class CxxPythonExtensionDescriptionTest {
     assertEquals(
         ImmutableSet.of(
             Paths.get(name)
-                .resolve(CxxPythonExtensionDescription.getExtensionName(
-                             target2.getShortName(),
-                             Optional.empty()))),
+                .resolve(CxxPythonExtensionDescription.getExtensionName(target2.getShortName()))),
         baseModuleComps.getModules().keySet());
   }
 
@@ -236,9 +225,7 @@ public class CxxPythonExtensionDescriptionTest {
     PythonPackageComponents expectedComponents = PythonPackageComponents.of(
         ImmutableMap.of(
             target.getBasePath()
-                .resolve(CxxPythonExtensionDescription.getExtensionName(
-                             target.getShortName(),
-                             Optional.empty())),
+                .resolve(CxxPythonExtensionDescription.getExtensionName(target.getShortName())),
             rule.getSourcePathToOutput()),
         ImmutableMap.of(),
         ImmutableMap.of(),
@@ -559,48 +546,8 @@ public class CxxPythonExtensionDescriptionTest {
             .setModuleName("blah")
             .build(resolver);
     assertThat(
-        cxxPythonExtension.getModule(PY2).toString(),
-        Matchers.endsWith(
-            CxxPythonExtensionDescription.getExtensionName(
-                "blah",
-                Optional.empty())));
+        cxxPythonExtension.getModule().toString(),
+        Matchers.endsWith(CxxPythonExtensionDescription.getExtensionName("blah")));
   }
 
-  @Test
-  public void platformWithBuildConfigAddsLinkerFlagsFromEnvironment() throws Exception {
-    PythonPlatform pythonPlatform = PythonPlatform.of(
-          InternalFlavor.of("py-default"),
-          new PythonEnvironment(
-              Paths.get("python"),
-              PythonVersion.of("CPython", "3.1415"),
-              Optional.of(
-                  PythonBuildConfig.of(
-                      ImmutableList.of("-I/path/to/python3.1415", "-DPYTHON"),
-                      ImmutableList.of("-g", "-O3"),
-                      ImmutableList.of("-L/path/to/python3.1415", "-lpython3.1415"),
-                      ".so"
-                  )
-              )),
-          Optional.empty());
-    CxxPythonExtensionBuilder cxxPythonExtensionBuilder =
-        new CxxPythonExtensionBuilder(
-            BuildTargetFactory.newInstance("//:ext"),
-            FlavorDomain.of("Python Platform", pythonPlatform),
-            new CxxBuckConfig(FakeBuckConfig.builder().build()),
-            CxxTestBuilder.createDefaultPlatforms())
-            .setModuleName("blah");
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(
-            TargetGraphFactory.newInstance(
-                cxxPythonExtensionBuilder.build()),
-            new DefaultTargetNodeToBuildRuleTransformer());
-    CxxPythonExtension cxxPythonExtension = cxxPythonExtensionBuilder.build(resolver);
-    CxxLink pythonExtensionLinkRule = (CxxLink) cxxPythonExtension.getExtension(
-        pythonPlatform,
-        CxxPlatformUtils.DEFAULT_PLATFORM);
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    assertThat(
-        Arg.stringify(pythonExtensionLinkRule.getArgs(), pathResolver),
-        Matchers.hasItem("-lpython3.1415"));
-  }
 }

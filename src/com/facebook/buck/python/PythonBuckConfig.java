@@ -20,7 +20,6 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.NativeLinkStrategy;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -35,33 +34,26 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PackagedResource;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.ObjectMappers;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Resources;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.Optional;
-import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nonnull;
 
 public class PythonBuckConfig {
 
   public static final Flavor DEFAULT_PYTHON_PLATFORM = InternalFlavor.of("py-default");
-
-  private static final Logger LOG = Logger.get(PythonBuckConfig.class);
 
   private static final String SECTION = "python";
   private static final String PYTHON_PLATFORM_SECTION_PREFIX = "python#";
@@ -99,8 +91,7 @@ public class PythonBuckConfig {
   }
 
   @VisibleForTesting
-  protected PythonPlatform getDefaultPythonPlatform(
-      ProcessExecutor executor)
+  protected PythonPlatform getDefaultPythonPlatform(ProcessExecutor executor)
       throws InterruptedException {
     return getPythonPlatform(
         executor,
@@ -200,24 +191,11 @@ public class PythonBuckConfig {
       Optional<String> configPath)
       throws InterruptedException {
     Path pythonPath = Paths.get(getPythonInterpreter(configPath));
-    PythonBuildConfigAndVersion pythonBuildConfigAndVersion =
-        getPythonBuildConfigAndVersion(
-            processExecutor,
-            pythonPath);
-    Optional<PythonBuildConfig> buildConfig;
-    if (shouldDiscoverBuildConfig()) {
-      buildConfig = Optional.of(pythonBuildConfigAndVersion.getPythonBuildConfig());
-    } else {
-      buildConfig = Optional.empty();
-    }
-    return new PythonEnvironment(
-        pythonPath,
-        pythonBuildConfigAndVersion.getPythonVersion(),
-        buildConfig);
+    PythonVersion pythonVersion = getPythonVersion(processExecutor, pythonPath);
+    return new PythonEnvironment(pythonPath, pythonVersion);
   }
 
-  public PythonEnvironment getPythonEnvironment(
-      ProcessExecutor processExecutor)
+  public PythonEnvironment getPythonEnvironment(ProcessExecutor processExecutor)
       throws InterruptedException {
     Optional<String> configPath = delegate.getValue(SECTION, "interpreter");
     return getPythonEnvironment(processExecutor, configPath);
@@ -271,71 +249,65 @@ public class PythonBuckConfig {
     return delegate.getValue(SECTION, "pex_extension").orElse(".pex");
   }
 
-  private static PythonBuildConfigAndVersion getPythonBuildConfigAndVersion(
-      ProcessExecutor processExecutor,
-      Path pythonPath)
+  private static PythonVersion getPythonVersion(ProcessExecutor processExecutor, Path pythonPath)
       throws InterruptedException {
     try {
-      String python = Resources.toString(
-          Resources.getResource("com/facebook/buck/python/detect_python_build_config.py"),
-          StandardCharsets.UTF_8);
+      // Taken from pex's interpreter.py.
+      String versionId = "import sys\n" +
+          "\n" +
+          "if hasattr(sys, 'pypy_version_info'):\n" +
+          "  subversion = 'PyPy'\n" +
+          "elif sys.platform.startswith('java'):\n" +
+          "  subversion = 'Jython'\n" +
+          "else:\n" +
+          "  subversion = 'CPython'\n" +
+          "\n" +
+          "print('%s %s %s' % (subversion, sys.version_info[0], " +
+          "sys.version_info[1]))\n";
+
       ProcessExecutor.Result versionResult = processExecutor.launchAndExecute(
           ProcessExecutorParams.builder().addCommand(pythonPath.toString(), "-").build(),
           EnumSet.of(
               ProcessExecutor.Option.EXPECTING_STD_OUT,
               ProcessExecutor.Option.EXPECTING_STD_ERR),
-          Optional.of(python),
+          Optional.of(versionId),
           /* timeOutMs */ Optional.empty(),
           /* timeoutHandler */ Optional.empty());
-      if (versionResult.getExitCode() != 0) {
-        throw new HumanReadableException(
-            "Could not get Python build config, error %d\n",
-            versionResult.getExitCode());
-      }
-      PythonBuildConfigAndVersion result =
-          extractPythonBuildConfigAndVersion(versionResult.getStdout().get());
-      LOG.debug("Discovered Python build config and version: %s", result);
-      return result;
+      return extractPythonVersion(pythonPath, versionResult);
     } catch (IOException e) {
-      throw new HumanReadableException(e, "Could not get python build config");
+      throw new HumanReadableException(
+          e,
+          "Could not run \"%s - < [code]\": %s",
+          pythonPath,
+          e.getMessage());
     }
   }
 
   @VisibleForTesting
-  @SuppressWarnings("unchecked")
-  static PythonBuildConfigAndVersion extractPythonBuildConfigAndVersion(
-      String output) throws IOException {
-    Map<String, Object> result = ObjectMappers.readValue(
-        output,
-        new TypeReference<Map<String, Object>>() { });
+  static PythonVersion extractPythonVersion(
+      Path pythonPath,
+      ProcessExecutor.Result versionResult) {
+    if (versionResult.getExitCode() == 0) {
+      String versionString = CharMatcher.whitespace().trimFrom(
+          CharMatcher.whitespace().trimFrom(versionResult.getStderr().get()) +
+              CharMatcher.whitespace().trimFrom(versionResult.getStdout().get())
+                  .replaceAll("\u001B\\[[;\\d]*m", ""));
+      String[] versionLines = versionString.split("\\r?\\n");
 
-    String interpreterName = (String) result.get("interpreter_name");
-    String versionString = (String) result.get("version_string");
-    List<String> preprocessorFlags =
-        (List<String>) result.get("preprocessor_flags");
-    List<String> compilerFlags =
-        (List<String>) result.get("compiler_flags");
-    List<String> linkerFlags =
-        (List<String>) result.get("linker_flags");
-    String extensionSuffix =
-        (String) result.get("extension_suffix");
-    if (interpreterName == null ||
-        versionString == null ||
-        preprocessorFlags == null ||
-        compilerFlags == null ||
-        linkerFlags == null ||
-        extensionSuffix == null) {
-      throw new HumanReadableException(
-          "Could not parse Python build config %s",
-          output);
+      String[] compatibilityVersion = versionLines[0].split(" ");
+      if (compatibilityVersion.length != 3) {
+        throw new HumanReadableException(
+            "`%s - < [code]` returned an invalid version string %s",
+            pythonPath,
+            versionString);
+      }
+
+      return PythonVersion.of(
+          compatibilityVersion[0],
+          compatibilityVersion[1] + "." + compatibilityVersion[2]);
+    } else {
+      throw new HumanReadableException(versionResult.getStderr().get());
     }
-    return PythonBuildConfigAndVersion.of(
-        PythonVersion.of(interpreterName, versionString),
-        PythonBuildConfig.of(
-            preprocessorFlags,
-            compilerFlags,
-            linkerFlags,
-            extensionSuffix));
   }
 
   public boolean shouldCacheBinaries() {
@@ -344,10 +316,6 @@ public class PythonBuckConfig {
 
   public boolean legacyOutputPath() {
     return delegate.getBooleanValue(SECTION, "legacy_output_path", false);
-  }
-
-  public boolean shouldDiscoverBuildConfig() {
-    return delegate.getBooleanValue(SECTION, "discover_build_config", true);
   }
 
   public PackageStyle getPackageStyle() {
