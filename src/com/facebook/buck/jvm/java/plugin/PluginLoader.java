@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java.plugin;
 
 import com.facebook.buck.jvm.java.plugin.api.PluginClassLoader;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
@@ -34,7 +33,7 @@ import javax.tools.JavaCompiler;
 
 /**
  * Loads the Buck javac plugin JAR using the {@link ClassLoader} of a particular compiler instance.
- *
+ * <p>
  * {@link com.sun.source.tree} and {@link com.sun.source.util} packages are public APIs whose
  * implementation is packaged with javac rather than in the Java runtime jar. Code that needs
  * to work with these must be loaded using the same {@link ClassLoader} as the instance of javac
@@ -42,24 +41,19 @@ import javax.tools.JavaCompiler;
  */
 public final class PluginLoader implements PluginClassLoader {
   private static final String JAVAC_PLUGIN_JAR_RESOURCE_PATH = "javac-plugin.jar";
-  @Nullable
   private static final URL JAVAC_PLUGIN_JAR_URL = extractJavacPluginJar();
-  private static final Logger LOG = Logger.get(PluginLoader.class);
 
-  @Nullable
   private final ClassLoader classLoader;
 
   /**
    * Extracts the jar containing the Buck javac plugin and returns a URL that can be given
    * to a {@link java.net.URLClassLoader} to load it.
    */
-  @Nullable
   private static URL extractJavacPluginJar() {
     @Nullable final URL resourceURL =
         PluginLoader.class.getResource(JAVAC_PLUGIN_JAR_RESOURCE_PATH);
     if (resourceURL == null) {
-      LOG.warn("Could not find javac plugin jar");
-      return null;
+      throw new RuntimeException("Could not find javac plugin jar; Buck may be corrupted.");
     } else if ("file".equals(resourceURL.getProtocol())) {
       // When Buck is running from the repo, the jar is actually already on disk, so no extraction
       // is necessary
@@ -75,39 +69,33 @@ public final class PluginLoader implements PluginClassLoader {
           return tempFile.toURI().toURL();
         }
       } catch (IOException e) {
-        LOG.warn(e, "Failed to extract javac plugin jar");
-        return null;
+        throw new RuntimeException("Failed to extract javac plugin jar; cannot continue", e);
       }
     }
   }
 
-  /** Returns a class loader that can be used to load classes from the compiler plugin jar. */
-  @Nullable
+  /**
+   * Returns a class loader that can be used to load classes from the compiler plugin jar.
+   */
   public static ClassLoader getPluginClassLoader(
       ClassLoaderCache classLoaderCache,
       JavaCompiler.CompilationTask compiler) {
-    if (JAVAC_PLUGIN_JAR_URL == null) {
-      return null;
-    }
-
     final ClassLoader compilerClassLoader = compiler.getClass().getClassLoader();
     return classLoaderCache.getClassLoaderForClassPath(
         compilerClassLoader,
         ImmutableList.of(JAVAC_PLUGIN_JAR_URL));
   }
 
-  @Nullable
   public static PluginLoader newInstance(
       ClassLoaderCache classLoaderCache,
       JavaCompiler.CompilationTask compiler) {
     return new PluginLoader(getPluginClassLoader(classLoaderCache, compiler));
   }
 
-  private PluginLoader(@Nullable ClassLoader classLoader) {
+  private PluginLoader(ClassLoader classLoader) {
     this.classLoader = classLoader;
   }
 
-  @Nullable
   @Override
   public <T> Class<? extends T> loadClass(String name, Class<T> superclass) {
     if (classLoader == null) {
@@ -118,12 +106,7 @@ public final class PluginLoader implements PluginClassLoader {
     try {
       return Class.forName(name, false, classLoader).asSubclass(superclass);
     } catch (ClassNotFoundException e) {
-      // Deliberately eat the stack trace to avoid log spam.
-      LOG.warn(
-          "Failed loading %s: %s. Perhaps that class is not compatible with this version of javac?",
-          name,
-          e.getMessage());
-      return null;
+      throw new RuntimeException(String.format("Failed loading %s", name), e);
     }
   }
 }
