@@ -17,6 +17,8 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.jvm.java.testutil.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
@@ -50,6 +52,40 @@ public class TreeBackedElementsTest extends CompilerTreeApiParameterizedTest {
     assertEquals(
         "com.facebook.foo.Foo$Inner",
         elements.getBinaryName(elements.getTypeElement("com.facebook.foo.Foo.Inner")).toString());
+  }
 
+  @Test
+  public void testGetDocComment() throws IOException {
+    compile(Joiner.on('\n').join(
+        "package com.facebook.foo;",
+        "/** I am a doc comment. */",
+        "class Foo { }"));
+
+    assertEquals(
+        "I am a doc comment. ",
+        elements.getDocComment(elements.getTypeElement("com.facebook.foo.Foo")));
+  }
+
+  @Test
+  public void testIsDeprecated() throws IOException {
+    compile(Joiner.on('\n').join(
+        "package com.facebook.foo;",
+        "@Deprecated",
+        "class Foo { }"));
+
+    assertTrue(
+        elements.isDeprecated(elements.getTypeElement("com.facebook.foo.Foo")));
+  }
+
+  @Test
+  public void testGetPackageOf() throws IOException {
+    compile(Joiner.on('\n').join(
+        "package com.facebook.foo;",
+        "@Deprecated",
+        "class Foo { }"));
+
+    assertSame(
+        elements.getPackageElement("com.facebook.foo"),
+        elements.getPackageOf(elements.getTypeElement("com.facebook.foo.Foo")));
   }
 }

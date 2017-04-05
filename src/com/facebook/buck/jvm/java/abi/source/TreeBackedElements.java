@@ -163,6 +163,11 @@ class TreeBackedElements implements Elements {
   }
 
   @Nullable
+  /* package */ PackageElement getCanonicalElement(@Nullable PackageElement element) {
+    return (PackageElement) getCanonicalElement((Element) element);
+  }
+
+  @Nullable
   /* package */ TypeElement getCanonicalElement(@Nullable TypeElement element) {
     return (TypeElement) getCanonicalElement((Element) element);
   }
@@ -256,13 +261,14 @@ class TreeBackedElements implements Elements {
   }
 
   @Override
+  @Nullable
   public String getDocComment(Element e) {
-    throw new UnsupportedOperationException();
+    return javacElements.getDocComment(getJavacElement(e));
   }
 
   @Override
   public boolean isDeprecated(Element e) {
-    throw new UnsupportedOperationException();
+    return javacElements.isDeprecated(getJavacElement(e));
   }
 
   @Override
@@ -272,7 +278,8 @@ class TreeBackedElements implements Elements {
 
   @Override
   public PackageElement getPackageOf(Element type) {
-    throw new UnsupportedOperationException();
+    return Preconditions.checkNotNull(
+        getCanonicalElement(javacElements.getPackageOf(getJavacElement(type))));
   }
 
   @Override
@@ -298,7 +305,7 @@ class TreeBackedElements implements Elements {
 
   @Override
   public String getConstantExpression(Object value) {
-    throw new UnsupportedOperationException();
+    return javacElements.getConstantExpression(value);
   }
 
   @Override
