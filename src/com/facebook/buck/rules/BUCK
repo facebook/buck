@@ -299,6 +299,7 @@ java_library(
         "//src/com/facebook/buck/model:model",
         "//third-party/java/guava:guava",
     ],
+    visibility = ["PUBLIC"],
 )
 
 java_library(

@@ -10,6 +10,8 @@ prebuilt_jar(
     binary_jar = "eden.jar",
     visibility = [
         "//src/com/facebook/buck/eden/...",
+        "//src/com/facebook/buck/io:ProjectFilesystemDelegateFactory",
+        "//test/com/facebook/buck/eden/...",
     ],
     deps = [
         ":java-thrift",
@@ -28,6 +30,8 @@ prebuilt_jar(
     binary_jar = "java-thrift-dependencies.jar",
     visibility = [
         "//src/com/facebook/buck/eden/...",
+        "//src/com/facebook/buck/io:ProjectFilesystemDelegateFactory",
+        "//test/com/facebook/buck/eden/...",
     ],
     deps = [
         "//third-party/java/slf4j:slf4j-api",
