@@ -70,11 +70,25 @@ public class ChooseTargetContributor implements ChooseByNameContributor {
       return Collections.emptyList();
     }
     List<String> names = new ArrayList<>();
+    names.addAll(getAllBuildTargetsUnderDirectory(project, currentInputText.buildDir));
     names.addAll(getNameSuggestionUnderPath(project, currentInputText.buildDir));
     if (!currentInputText.hasBuildRule) {
       names.addAll(
           getNameSuggestionUnderPath(project, getParentDir(currentInputText.buildDir)));
     }
+    return names;
+  }
+
+  private List<String> getAllBuildTargetsUnderDirectory(Project project, String buildDir) {
+    List<String> names = new ArrayList<>();
+    // Try to get the relative path to the current input folder
+    VirtualFile baseDir = project.getBaseDir().findFileByRelativePath(
+        appendSuffixIfNotEmpty(buildDir, File.separator));
+    if (baseDir == null) {
+      return names;
+    }
+
+    names.add("//" + appendSuffixIfNotEmpty(buildDir, BUILD_DIR_SEPARATOR) + "...");
     return names;
   }
 
@@ -153,7 +167,9 @@ public class ChooseTargetContributor implements ChooseByNameContributor {
   }
 
   private List<String> getBuildTargetFromBuildProjectFile(Project project, String buildDir) {
-    return
+    List<String> names = new ArrayList<>();
+    names.add(getAllBuildTargetsInSameDirectory(buildDir));
+    names.addAll(
         BuckQueryAction.execute(
             project,
             "//" + buildDir + TARGET_NAME_SEPARATOR,
@@ -177,7 +193,13 @@ public class ChooseTargetContributor implements ChooseByNameContributor {
                 return null;
               }
             }
-        );
+        )
+    );
+    return names;
+  }
+
+  private String getAllBuildTargetsInSameDirectory(String buildDir) {
+    return "//" + buildDir + TARGET_NAME_SEPARATOR;
   }
 
   @Override

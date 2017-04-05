@@ -76,8 +76,9 @@ public class ChooseTargetAction extends GotoActionBase implements DumbAware {
         }
 
         ChooseTargetItem item = (ChooseTargetItem) element;
-        // if the target selected isn't an alias, then it has to have :
-        if (item.getName().contains("//") && !item.getName().contains(":")) {
+        // if the target selected isn't an alias, then it has to have : or end with /...
+        if (item.getName().contains("//") && !item.getName().contains(":") &&
+            !item.getName().endsWith("/...")) {
           return;
         }
 
