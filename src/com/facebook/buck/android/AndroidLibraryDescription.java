@@ -42,17 +42,20 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.DependencyMode;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class AndroidLibraryDescription
     implements Description<AndroidLibraryDescription.Arg>, Flavored,
@@ -106,29 +109,27 @@ public class AndroidLibraryDescription
         args
     );
 
-    final ImmutableSet.Builder<BuildRule> queriedDepsBuilder = ImmutableSet.builder();
-    if (args.depsQuery.isPresent()) {
-      queriedDepsBuilder.addAll(
-          QueryUtils.resolveDepQuery(
-              params.getBuildTarget(),
-              args.depsQuery.get(),
-              resolver,
-              cellRoots,
-              targetGraph,
-              args.deps)
-              .collect(Collectors.toList()));
+    final Supplier<ImmutableList<BuildRule>> queriedDepsSupplier = args.depsQuery.isPresent() ?
+        Suppliers.memoize(() -> QueryUtils.resolveDepQuery(
+            params.getBuildTarget(),
+            args.depsQuery.get(),
+            resolver,
+            cellRoots,
+            targetGraph,
+            args.deps)
+            .collect(MoreCollectors.toImmutableList()))
+        : ImmutableList::of;
 
-    }
-    final ImmutableSet<BuildRule> queriedDeps = queriedDepsBuilder.build();
+    final Supplier<ImmutableList<BuildRule>> exportedDepsSupplier = Suppliers.memoize(
+        () -> resolver.getAllRulesStream(args.exportedDeps)
+            .collect(MoreCollectors.toImmutableList()));
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         params.getBuildTarget(),
         params.copyReplacingExtraDeps(
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(queriedDeps)
-                    .addAll(resolver.getAllRules(args.exportedDeps))
-                    .build())),
+            () -> ImmutableSortedSet.copyOf(Iterables.concat(
+                queriedDepsSupplier.get(),
+                exportedDepsSupplier.get()))),
         JavacFactory.create(ruleFinder, javaBuckConfig, args),
         javacOptions,
         DependencyMode.FIRST_ORDER,
@@ -158,15 +159,15 @@ public class AndroidLibraryDescription
     if (hasDummyRDotJavaFlavor) {
       return dummyRDotJava.get();
     } else {
-      RichStream<BuildRule> declaredDepsStream =
-          RichStream
-              .fromSupplierOfIterable(params.getDeclaredDeps())
+      ImmutableSortedSet<BuildRule> declaredDeps = RichStream
+          .fromSupplierOfIterable(params.getDeclaredDeps())
           .concat(RichStream.from(dummyRDotJava))
-          .concat(queriedDeps.stream());
+          .concat(RichStream.fromSupplierOfIterable(queriedDepsSupplier))
+          .toImmutableSortedSet(Ordering.natural());
 
       BuildRuleParams androidLibraryParams =
           params.copyReplacingDeclaredAndExtraDeps(
-              Suppliers.ofInstance(declaredDepsStream.toImmutableSortedSet(Ordering.natural())),
+              Suppliers.ofInstance(declaredDeps),
               params.getExtraDeps());
 
       ImmutableSortedSet.Builder<BuildTarget> providedDepsTargetsBuilder =

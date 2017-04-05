@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -29,6 +30,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -205,11 +207,11 @@ public class BuildRuleResolver {
   }
 
   public ImmutableSortedSet<BuildRule> getAllRules(Iterable<BuildTarget> targets) {
-    ImmutableSortedSet.Builder<BuildRule> rules = ImmutableSortedSet.naturalOrder();
-    for (BuildTarget target : targets) {
-      rules.add(getRule(target));
-    }
-    return rules.build();
+    return getAllRulesStream(targets).toImmutableSortedSet(Ordering.natural());
+  }
+
+  public RichStream<BuildRule> getAllRulesStream(Iterable<BuildTarget> targets) {
+    return RichStream.from(targets).map(this::getRule);
   }
 
   /**
