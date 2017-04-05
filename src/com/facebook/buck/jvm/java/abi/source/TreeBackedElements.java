@@ -21,6 +21,7 @@ import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.util.Trees;
 
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -183,6 +184,12 @@ class TreeBackedElements implements Elements {
     }
 
     return result;
+  }
+
+  /* package */ Element[] getJavacElements(Element[] elements) {
+    return Arrays.stream(elements)
+        .map(this::getJavacElement)
+        .toArray(Element[]::new);
   }
 
   /* package */ TypeElement getJavacElement(TypeElement element) {

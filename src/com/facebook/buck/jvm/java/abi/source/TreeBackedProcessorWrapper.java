@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.Locale;
 import java.util.Map;
@@ -37,6 +38,9 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
+import javax.tools.FileObject;
+import javax.tools.JavaFileManager;
+import javax.tools.JavaFileObject;
 
 /**
  * Wraps an annotation processor to ensure that it always sees canonical elements -- that is,
@@ -107,7 +111,7 @@ class TreeBackedProcessorWrapper implements Processor {
 
       @Override
       public Filer getFiler() {
-        return javacProcessingEnvironment.getFiler();
+        return wrap(javacProcessingEnvironment.getFiler());
       }
 
       @Override
@@ -194,6 +198,43 @@ class TreeBackedProcessorWrapper implements Processor {
           AnnotationMirror a,
           AnnotationValue v) {
         throw new UnsupportedOperationException("Annotations NYI");
+      }
+    };
+  }
+
+  private Filer wrap(Filer javacFiler) {
+    return new Filer() {
+      @Override
+      public JavaFileObject createSourceFile(
+          CharSequence name, Element... originatingElements) throws IOException {
+        return javacFiler.createSourceFile(name, elements.getJavacElements(originatingElements));
+      }
+
+      @Override
+      public JavaFileObject createClassFile(
+          CharSequence name, Element... originatingElements) throws IOException {
+        return javacFiler.createClassFile(name, elements.getJavacElements(originatingElements));
+      }
+
+      @Override
+      public FileObject createResource(
+          JavaFileManager.Location location,
+          CharSequence pkg,
+          CharSequence relativeName,
+          Element... originatingElements) throws IOException {
+        return javacFiler.createResource(
+            location,
+            pkg,
+            relativeName,
+            elements.getJavacElements(originatingElements));
+      }
+
+      @Override
+      public FileObject getResource(
+          JavaFileManager.Location location,
+          CharSequence pkg,
+          CharSequence relativeName) throws IOException {
+        return javacFiler.getResource(location, pkg, relativeName);
       }
     };
   }
