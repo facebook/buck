@@ -152,6 +152,7 @@ public class AndroidBinary
   enum ExopackageMode {
     SECONDARY_DEX(1),
     NATIVE_LIBRARY(2),
+    RESOURCES(4),
     ;
 
     private final int code;
@@ -166,6 +167,10 @@ public class AndroidBinary
 
     public static boolean enabledForNativeLibraries(EnumSet<ExopackageMode> modes) {
       return modes.contains(NATIVE_LIBRARY);
+    }
+
+    public static boolean enabledForResources(EnumSet<ExopackageMode> modes) {
+      return modes.contains(RESOURCES);
     }
 
     public static int toBitmask(EnumSet<ExopackageMode> modes) {
@@ -1328,6 +1333,15 @@ public class AndroidBinary
               copyNativeLibraries.getPathToMetadataTxt(),
               copyNativeLibraries.getPathToAllLibsDir()));
       shouldInstall = true;
+    }
+
+    if (ExopackageMode.enabledForResources(exopackageModes)) {
+      Preconditions.checkState(!enhancementResult.getExoResources().isEmpty());
+      builder.setResourcesInfo(
+          ExopackageInfo.ResourcesInfo.of(enhancementResult.getExoResources()));
+      shouldInstall = true;
+    } else {
+      Preconditions.checkState(enhancementResult.getExoResources().isEmpty());
     }
 
     if (!shouldInstall) {
