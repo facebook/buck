@@ -16,32 +16,17 @@
 
 package com.facebook.buck.ide.intellij;
 
-import com.facebook.buck.android.AndroidBinaryDescription;
-import com.facebook.buck.android.AndroidLibraryDescription;
-import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
-import com.facebook.buck.android.AndroidPrebuiltAar;
-import com.facebook.buck.android.AndroidResourceDescription;
-import com.facebook.buck.android.DummyRDotJava;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.JavaFileParser;
-import com.facebook.buck.jvm.java.JavaLibrary;
-import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraphAndTargets;
-import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.OptionalCompat;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Optional;
 
 /**
  * Top-level class for IntelliJ project generation.
@@ -84,116 +69,19 @@ public class IjProject {
   public ImmutableSet<BuildTarget> write() throws IOException {
     final ImmutableSet.Builder<BuildTarget> requiredBuildTargets = ImmutableSet.builder();
     IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(
-        new IjLibraryFactoryResolver() {
-          @Override
-          public Path getPath(SourcePath path) {
-            Optional<BuildRule> rule = ruleFinder.getRule(path);
-            if (rule.isPresent()) {
-              requiredBuildTargets.add(rule.get().getBuildTarget());
-            }
-            return projectFilesystem.getRootPath().relativize(
-                sourcePathResolver.getAbsolutePath(path));
-          }
-
-          @Override
-          public Optional<SourcePath> getPathIfJavaLibrary(TargetNode<?, ?> targetNode) {
-            BuildRule rule = buildRuleResolver.getRule(targetNode.getBuildTarget());
-            if (!(rule instanceof JavaLibrary)) {
-              return Optional.empty();
-            }
-            if (rule instanceof AndroidPrebuiltAar) {
-              AndroidPrebuiltAar aarRule = (AndroidPrebuiltAar) rule;
-              return Optional.ofNullable(aarRule.getBinaryJar());
-            }
-            requiredBuildTargets.add(rule.getBuildTarget());
-            return Optional.ofNullable(rule.getSourcePathToOutput());
-          }
-        });
-    IjModuleFactoryResolver moduleFactoryResolver =
-        new IjModuleFactoryResolver() {
-
-          @Override
-          public Optional<Path> getDummyRDotJavaPath(TargetNode<?, ?> targetNode) {
-            BuildTarget dummyRDotJavaTarget = AndroidLibraryGraphEnhancer.getDummyRDotJavaTarget(
-                targetNode.getBuildTarget());
-            Optional<BuildRule> dummyRDotJavaRule =
-                buildRuleResolver.getRuleOptional(dummyRDotJavaTarget);
-            if (dummyRDotJavaRule.isPresent()) {
-              requiredBuildTargets.add(dummyRDotJavaTarget);
-              return Optional.of(
-                  DummyRDotJava.getRDotJavaBinFolder(dummyRDotJavaTarget, projectFilesystem));
-            }
-            return Optional.empty();
-          }
-
-          @Override
-          public Path getAndroidManifestPath(
-              TargetNode<AndroidBinaryDescription.Arg, ?> targetNode) {
-            return sourcePathResolver.getAbsolutePath(targetNode.getConstructorArg().manifest);
-          }
-
-          @Override
-          public Optional<Path> getLibraryAndroidManifestPath(
-              TargetNode<AndroidLibraryDescription.Arg, ?> targetNode) {
-            Optional<SourcePath> manifestPath = targetNode.getConstructorArg().manifest;
-            Optional<Path> defaultAndroidManifestPath = projectConfig.getAndroidManifest()
-                .map(Path::toAbsolutePath);
-            return manifestPath.map(sourcePathResolver::getAbsolutePath)
-                .map(Optional::of)
-                .orElse(defaultAndroidManifestPath);
-          }
-
-          @Override
-          public Optional<Path> getProguardConfigPath(
-              TargetNode<AndroidBinaryDescription.Arg, ?> targetNode) {
-            return targetNode
-                .getConstructorArg()
-                .proguardConfig.map(this::getRelativePathAndRecordRule);
-          }
-
-          @Override
-          public Optional<Path> getAndroidResourcePath(
-              TargetNode<AndroidResourceDescription.Arg, ?> targetNode) {
-            return AndroidResourceDescription.getResDirectoryForProject(
-                buildRuleResolver,
-                targetNode)
-                .map(this::getRelativePathAndRecordRule);
-          }
-
-          @Override
-          public Optional<Path> getAssetsPath(
-              TargetNode<AndroidResourceDescription.Arg, ?> targetNode) {
-            return AndroidResourceDescription.getAssetsDirectoryForProject(
-                buildRuleResolver,
-                targetNode)
-                .map(this::getRelativePathAndRecordRule);
-          }
-
-          @Override
-          public Optional<Path> getAnnotationOutputPath(
-              TargetNode<? extends JvmLibraryArg, ?> targetNode) {
-            AnnotationProcessingParams annotationProcessingParams =
-                targetNode
-                .getConstructorArg()
-                .buildAnnotationProcessingParams(
-                    targetNode.getBuildTarget(),
-                    projectFilesystem,
-                    buildRuleResolver,
-                    ImmutableSet.of());
-            if (annotationProcessingParams == null || annotationProcessingParams.isEmpty()) {
-              return Optional.empty();
-            }
-
-            return Optional.ofNullable(annotationProcessingParams.getGeneratedSourceFolderName());
-          }
-
-          private Path getRelativePathAndRecordRule(SourcePath sourcePath) {
-            requiredBuildTargets.addAll(
-                OptionalCompat.asSet(ruleFinder.getRule(sourcePath)
-                    .map(BuildRule::getBuildTarget)));
-            return sourcePathResolver.getRelativePath(sourcePath);
-          }
-        };
+        new DefaultIjLibraryFactoryResolver(
+            projectFilesystem,
+            sourcePathResolver,
+            buildRuleResolver,
+            ruleFinder,
+            requiredBuildTargets));
+    IjModuleFactoryResolver moduleFactoryResolver = new DefaultIjModuleFactoryResolver(
+        buildRuleResolver,
+        sourcePathResolver,
+        ruleFinder,
+        projectFilesystem,
+        projectConfig,
+        requiredBuildTargets);
     IjModuleGraph moduleGraph = IjModuleGraphFactory.from(
         projectConfig,
         targetGraphAndTargets.getTargetGraph(),
