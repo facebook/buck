@@ -53,6 +53,8 @@ class AndroidBinaryResourcesGraphEnhancer {
       InternalFlavor.of("package_string_assets");
   private static final Flavor MERGE_ASSETS_FLAVOR =
       InternalFlavor.of("merge_assets");
+  static final Flavor GENERATE_RDOT_JAVA_FLAVOR =
+      InternalFlavor.of("generate_rdot_java");
 
   private final SourcePathRuleFinder ruleFinder;
   private final FilterResourcesStep.ResourceFilter resourceFilter;
@@ -194,11 +196,22 @@ class AndroidBinaryResourcesGraphEnhancer {
     ruleResolver.addToIndex(mergeAssets);
     enhancedDeps.add(mergeAssets);
 
+    Optional<GenerateRDotJava> generateRDotJava = Optional.empty();
+    if (filteredResourcesProvider.hasResources()) {
+      generateRDotJava = Optional.of(createGenerateRDotJava(
+          aaptOutputInfo.getPathToRDotTxt(),
+          getTargetsAsRules(resourceDetails.getResourcesWithNonEmptyResDir()),
+          filteredResourcesProvider));
+      ruleResolver.addToIndex(generateRDotJava.get());
+      enhancedDeps.add(generateRDotJava.get());
+    }
+
     return AndroidBinaryResourcesGraphEnhancementResult.builder()
         .setAaptGeneratedProguardConfigFile(aaptOutputInfo.getAaptGeneratedProguardConfigFile())
         .setAndroidManifestXml(aaptOutputInfo.getAndroidManifestXml())
         .setPathToRDotTxt(aaptOutputInfo.getPathToRDotTxt())
-        .setRDotJavaDir(aaptOutputInfo.getRDotJavaDir())
+        .setRDotJavaDir(
+            generateRDotJava.map(GenerateRDotJava::getSourcePathToGeneratedRDotJavaSrcFiles))
         .setPrimaryResourcesApkPath(mergeAssets.getSourcePathToOutput())
         .setPackageStringAssets(packageStringAssets)
         .setEnhancedDeps(enhancedDeps.build())
@@ -222,9 +235,26 @@ class AndroidBinaryResourcesGraphEnhancer {
         compileListBuilder.build(),
         getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
         manifest,
-        manifestEntries,
+        manifestEntries
+    );
+  }
+
+  private GenerateRDotJava createGenerateRDotJava(
+      SourcePath pathToRDotTxtFile,
+      ImmutableSortedSet<BuildRule> resourceDeps,
+      FilteredResourcesProvider resourcesProvider) {
+    return new GenerateRDotJava(
+        buildRuleParams.withAppendedFlavor(GENERATE_RDOT_JAVA_FLAVOR)
+            .copyReplacingDeclaredAndExtraDeps(
+                ImmutableSortedSet::of,
+                ImmutableSortedSet::of),
+        ruleFinder,
+        bannedDuplicateResourceTypes,
+        pathToRDotTxtFile,
         resourceUnionPackage,
-        bannedDuplicateResourceTypes);
+        shouldBuildStringSourceMap,
+        resourceDeps,
+        resourcesProvider);
   }
 
   private ResourcesFilter createResourcesFilter(
@@ -262,11 +292,8 @@ class AndroidBinaryResourcesGraphEnhancer {
         manifest,
         filteredResourcesProvider,
         getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
-        resourceUnionPackage,
-        shouldBuildStringSourceMap,
         skipCrunchPngs,
         includesVectorDrawables,
-        bannedDuplicateResourceTypes,
         manifestEntries);
   }
 

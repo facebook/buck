@@ -21,8 +21,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
 import org.immutables.value.Value;
 
-import java.util.Optional;
-
 /**
  * Encapsulates information about a rule that runs "aapt",
  * for consumption by downstream rules.
@@ -33,7 +31,6 @@ import java.util.Optional;
 @BuckStyleImmutable
 abstract class AbstractAaptOutputInfo {
   public abstract SourcePath getPathToRDotTxt();
-  public abstract Optional<SourcePath> getRDotJavaDir();
   public abstract SourcePath getPrimaryResourcesApkPath();
   public abstract SourcePath getAndroidManifestXml();
   public abstract SourcePath getAaptGeneratedProguardConfigFile();

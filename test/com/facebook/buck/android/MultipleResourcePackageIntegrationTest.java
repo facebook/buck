@@ -51,9 +51,10 @@ public class MultipleResourcePackageIntegrationTest {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace.runBuckBuild("//apps/sample:app_with_multiple_rdot_java_packages").assertSuccess();
 
-    Path uberRDotJavaDir = AaptPackageResources.getPathToGeneratedRDotJavaSrcFiles(
+    Path uberRDotJavaDir = GenerateRDotJava.getPathToGeneratedRDotJavaSrcFiles(
         BuildTargetFactory.newInstance(
-            "//apps/sample:app_with_multiple_rdot_java_packages#aapt_package"),
+            "//apps/sample:app_with_multiple_rdot_java_packages")
+        .withFlavors(AndroidBinaryResourcesGraphEnhancer.GENERATE_RDOT_JAVA_FLAVOR),
         filesystem);
 
     String sampleRJava = workspace.getFileContents(
