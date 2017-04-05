@@ -19,6 +19,7 @@ import com.facebook.buck.cxx.CxxFlags;
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.HasSystemFrameworkAndLibraries;
 import com.facebook.buck.cxx.NativeLinkable;
+import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
@@ -69,6 +70,7 @@ public class PrebuiltAppleFrameworkDescription implements
         .filter(flavor -> !appleCxxPlatformsFlavorDomain.getFlavors().contains(flavor))
         .filter(flavor -> !AppleDebugFormat.FLAVOR_DOMAIN.getFlavors().contains(flavor))
         .filter(flavor -> !AppleDescriptions.INCLUDE_FRAMEWORKS.getFlavors().contains(flavor))
+        .filter(flavor -> !StripStyle.FLAVOR_DOMAIN.getFlavors().contains(flavor))
         .count() == 0;
   }
 
@@ -77,7 +79,8 @@ public class PrebuiltAppleFrameworkDescription implements
     return Optional.of(ImmutableSet.of(
         appleCxxPlatformsFlavorDomain,
         AppleDebugFormat.FLAVOR_DOMAIN,
-        AppleDescriptions.INCLUDE_FRAMEWORKS));
+        AppleDescriptions.INCLUDE_FRAMEWORKS,
+        StripStyle.FLAVOR_DOMAIN));
   }
 
   @Override
