@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -65,8 +66,13 @@ public interface RichStream<T> extends Stream<T> {
         StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, 0), false));
   }
 
-  static <T> RichStream<T> from(Optional<T> optional) {
+  static <T> RichStream<T> from(Optional<? extends T> optional) {
     return optional.isPresent() ? of(optional.get()) : empty();
+  }
+
+  static <T> RichStream<T> fromSupplierOfIterable(Supplier<? extends Iterable<T>> supplier) {
+    return new RichStreamImpl<>(
+        StreamSupport.stream(() -> supplier.get().spliterator(), 0, false));
   }
 
   static <T> RichStream<T> from(Stream<T> stream) {

@@ -42,12 +42,14 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.DependencyMode;
+import com.facebook.buck.util.RichStream;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -156,27 +158,16 @@ public class AndroidLibraryDescription
     if (hasDummyRDotJavaFlavor) {
       return dummyRDotJava.get();
     } else {
-      if (dummyRDotJava.isPresent()) {
-        ImmutableSortedSet<BuildRule> newDeclaredDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(params.getDeclaredDeps().get())
-            .add(dummyRDotJava.get())
-            .build();
-        params = params.copyReplacingDeclaredAndExtraDeps(
-            Suppliers.ofInstance(newDeclaredDeps),
-            params.getExtraDeps());
-      }
-
-      ImmutableSortedSet.Builder<BuildRule> declaredDepsBuilder =
-          ImmutableSortedSet.<BuildRule>naturalOrder()
-              .addAll(params.getDeclaredDeps().get())
-              .addAll(queriedDeps);
-
-      ImmutableSortedSet<BuildRule> declaredDeps = declaredDepsBuilder.build();
+      RichStream<BuildRule> declaredDepsStream =
+          RichStream
+              .fromSupplierOfIterable(params.getDeclaredDeps())
+          .concat(RichStream.from(dummyRDotJava))
+          .concat(queriedDeps.stream());
 
       BuildRuleParams androidLibraryParams =
           params.copyReplacingDeclaredAndExtraDeps(
-            Suppliers.ofInstance(declaredDeps),
-            params.getExtraDeps());
+              Suppliers.ofInstance(declaredDepsStream.toImmutableSortedSet(Ordering.natural())),
+              params.getExtraDeps());
 
       ImmutableSortedSet.Builder<BuildTarget> providedDepsTargetsBuilder =
           ImmutableSortedSet.<BuildTarget>naturalOrder()

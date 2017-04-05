@@ -113,4 +113,13 @@ public class RichStreamTest {
         ImmutableList.of("a", "b"),
         RichStream.from(ImmutableList.of("a", "b").iterator()).collect(Collectors.toList()));
   }
+
+  @Test
+  public void fromSupplierOfIterable() {
+    Assert.assertEquals(
+        ImmutableList.of("a", "b"),
+        RichStream.fromSupplierOfIterable(() -> ImmutableList.of(
+            "a",
+            "b")).collect(Collectors.toList()));
+  }
 }
