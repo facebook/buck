@@ -259,10 +259,6 @@ public class AndroidBinaryGraphEnhancer {
 
     AndroidBinaryResourcesGraphEnhancementResult resourcesEnhancementResult =
         androidBinaryResourcesGraphEnhancer.enhance(packageableCollection);
-    AaptOutputInfo aaptOutputInfo = resourcesEnhancementResult.getAaptOutputInfo();
-    Optional<PackageStringAssets> packageStringAssets =
-        resourcesEnhancementResult.getPackageStringAssets();
-    MergeAssets mergeAssets = resourcesEnhancementResult.getMergeAssets();
     enhancedDeps.addAll(resourcesEnhancementResult.getEnhancedDeps());
 
     // BuildConfig deps should not be added for instrumented APKs because BuildConfig.class has
@@ -301,13 +297,14 @@ public class AndroidBinaryGraphEnhancer {
         .withAppendedFlavor(TRIM_UBER_R_DOT_JAVA_FLAVOR)
         .copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(ruleFinder.filterBuildRuleInputs(aaptOutputInfo.getRDotJavaDir()))
+                .addAll(
+                    ruleFinder.filterBuildRuleInputs(resourcesEnhancementResult.getRDotJavaDir()))
                 .addAll(preDexedLibrariesForResourceIdFiltering)
                 .build()),
             Suppliers.ofInstance(ImmutableSortedSet.of()));
     TrimUberRDotJava trimUberRDotJava = new TrimUberRDotJava(
         paramsForTrimUberRDotJava,
-        aaptOutputInfo.getRDotJavaDir(),
+        resourcesEnhancementResult.getRDotJavaDir(),
         preDexedLibrariesForResourceIdFiltering,
         keepResourcePattern);
     ruleResolver.addToIndex(trimUberRDotJava);
@@ -374,13 +371,13 @@ public class AndroidBinaryGraphEnhancer {
 
     return AndroidGraphEnhancementResult.builder()
         .setPackageableCollection(packageableCollection)
-        .setPrimaryResourcesApkPath(mergeAssets.getSourcePathToOutput())
-        .setAndroidManifestPath(aaptOutputInfo.getAndroidManifestXml())
+        .setPrimaryResourcesApkPath(resourcesEnhancementResult.getPrimaryResourcesApkPath())
+        .setAndroidManifestPath(resourcesEnhancementResult.getAndroidManifestXml())
         .setSourcePathToAaptGeneratedProguardConfigFile(
-            aaptOutputInfo.getAaptGeneratedProguardConfigFile())
+            resourcesEnhancementResult.getAaptGeneratedProguardConfigFile())
         .setCompiledUberRDotJava(compileUberRDotJava)
         .setCopyNativeLibraries(copyNativeLibraries)
-        .setPackageStringAssets(packageStringAssets)
+        .setPackageStringAssets(resourcesEnhancementResult.getPackageStringAssets())
         .setPreDexMerge(preDexMerge)
         .setComputeExopackageDepsAbi(computeExopackageDepsAbi)
         .setClasspathEntriesToDex(

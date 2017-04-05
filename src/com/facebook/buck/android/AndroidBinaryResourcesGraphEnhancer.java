@@ -107,9 +107,12 @@ class AndroidBinaryResourcesGraphEnhancer {
   @Value.Immutable
   @BuckStyleImmutable
   interface AbstractAndroidBinaryResourcesGraphEnhancementResult {
-    AaptOutputInfo getAaptOutputInfo();
+    SourcePath getPathToRDotTxt();
+    SourcePath getRDotJavaDir();
+    SourcePath getPrimaryResourcesApkPath();
+    SourcePath getAndroidManifestXml();
+    SourcePath getAaptGeneratedProguardConfigFile();
     Optional<PackageStringAssets> getPackageStringAssets();
-    MergeAssets getMergeAssets();
     ImmutableList<BuildRule> getEnhancedDeps();
   }
 
@@ -192,9 +195,12 @@ class AndroidBinaryResourcesGraphEnhancer {
     enhancedDeps.add(mergeAssets);
 
     return AndroidBinaryResourcesGraphEnhancementResult.builder()
-        .setAaptOutputInfo(aaptOutputInfo)
+        .setAaptGeneratedProguardConfigFile(aaptOutputInfo.getAaptGeneratedProguardConfigFile())
+        .setAndroidManifestXml(aaptOutputInfo.getAndroidManifestXml())
+        .setPathToRDotTxt(aaptOutputInfo.getPathToRDotTxt())
+        .setRDotJavaDir(aaptOutputInfo.getRDotJavaDir())
+        .setPrimaryResourcesApkPath(mergeAssets.getSourcePathToOutput())
         .setPackageStringAssets(packageStringAssets)
-        .setMergeAssets(mergeAssets)
         .setEnhancedDeps(enhancedDeps.build())
         .build();
   }
