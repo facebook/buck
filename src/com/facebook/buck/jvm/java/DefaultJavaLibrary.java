@@ -107,6 +107,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   @AddToRuleKey
   private final Optional<String> mavenCoords;
   private final Optional<Path> outputJar;
+  private final BuildTarget abiJar;
   @AddToRuleKey
   private final Optional<SourcePath> proguardConfig;
   @AddToRuleKey
@@ -170,6 +171,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
       ImmutableSortedSet<BuildRule> compileTimeClasspathDeps,
       ImmutableSortedSet<SourcePath> abiInputs,
+      BuildTarget abiJar,
       boolean trackClassUsage,
       CompileToJarStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
@@ -192,6 +194,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         compileTimeClasspathDeps,
         trackClassUsage,
         new JarArchiveDependencySupplier(abiInputs),
+        abiJar,
         compileStepFactory,
         resourcesRoot,
         manifestFile,
@@ -215,6 +218,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       ImmutableSortedSet<BuildRule> compileTimeClasspathDeps,
       boolean trackClassUsage,
       final JarArchiveDependencySupplier abiClasspath,
+      BuildTarget abiJar,
       CompileToJarStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
       Optional<SourcePath> manifestFile,
@@ -258,6 +262,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     } else {
       this.outputJar = Optional.empty();
     }
+    this.abiJar = abiJar;
 
     this.outputClasspathEntriesSupplier =
         Suppliers.memoize(() -> JavaLibraryClasspathProvider.getOutputClasspathJars(
@@ -530,7 +535,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
 
   @Override
   public final Optional<BuildTarget> getAbiJar() {
-    return outputJar.isPresent() ? JavaLibrary.super.getAbiJar() : Optional.empty();
+    return outputJar.isPresent() ? Optional.of(abiJar) : Optional.empty();
   }
 
   @Override

@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -67,6 +68,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         /* providedDeps */ ImmutableSortedSet.of(),
         /* compileTimeClasspathDeps */ ImmutableSortedSet.of(androidBuildConfig),
         abiInputs,
+        HasJavaAbi.getClassAbiJar(params.getBuildTarget()),
         /* trackClassUsage */ javacOptions.trackClassUsage(),
         new JavacToJarStepFactory(
             javac,

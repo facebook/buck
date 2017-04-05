@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.model.BuildTarget;
@@ -69,6 +70,7 @@ public class AndroidPrebuiltAar
         /* providedDeps */ ImmutableSortedSet.of(),
         /* compileTimeClasspathDeps */ ImmutableSortedSet.of(prebuiltJar),
         abiInputs,
+        HasJavaAbi.getClassAbiJar(androidLibraryParams.getBuildTarget()),
         javacOptions,
         /* trackClassUsage */ false,
         compileStepFactory,

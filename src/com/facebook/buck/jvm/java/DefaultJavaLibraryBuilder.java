@@ -226,6 +226,8 @@ public class DefaultJavaLibraryBuilder {
     private ImmutableSortedSet<SourcePath> abiInputs;
     @Nullable
     private CompileToJarStepFactory compileStepFactory;
+    @Nullable
+    private BuildTarget abiJar;
 
     protected DefaultJavaLibrary build() throws NoSuchBuildTargetException {
       return new DefaultJavaLibrary(
@@ -242,6 +244,7 @@ public class DefaultJavaLibraryBuilder {
           fullJarProvidedDeps,
           getFinalCompileTimeClasspathDeps(),
           getAbiInputs(),
+          getAbiJar(),
           trackClassUsage,
           getCompileStepFactory(),
           resourcesRoot,
@@ -249,6 +252,20 @@ public class DefaultJavaLibraryBuilder {
           mavenCoords,
           tests,
           classesToRemoveFromJar);
+    }
+
+    protected BuildTarget getAbiJar() {
+      if (abiJar == null) {
+        abiJar = shouldBuildAbiFromSource()
+            ? HasJavaAbi.getSourceAbiJar(params.getBuildTarget())
+            : HasJavaAbi.getClassAbiJar(params.getBuildTarget());
+      }
+
+      return abiJar;
+    }
+
+    private boolean shouldBuildAbiFromSource() {
+      return false;
     }
 
     protected BuildRule buildAbi() throws NoSuchBuildTargetException {
