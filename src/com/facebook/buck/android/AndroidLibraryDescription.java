@@ -119,22 +119,6 @@ public class AndroidLibraryDescription
     }
     final ImmutableSet<BuildRule> queriedDeps = queriedDepsBuilder.build();
 
-    ImmutableSortedSet.Builder<BuildRule> providedDepsBuilder =
-        ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(resolver.getAllRules(args.providedDeps));
-
-    if (args.providedDepsQuery.isPresent()) {
-      providedDepsBuilder.addAll(
-          QueryUtils.resolveDepQuery(
-              params.getBuildTarget(),
-              args.providedDepsQuery.get(),
-              resolver,
-              cellRoots,
-              targetGraph,
-              args.providedDeps)
-              .collect(Collectors.toList()));
-    }
-
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         params.getBuildTarget(),
         params.copyReplacingExtraDeps(
@@ -172,8 +156,6 @@ public class AndroidLibraryDescription
     if (hasDummyRDotJavaFlavor) {
       return dummyRDotJava.get();
     } else {
-      final ImmutableSortedSet<BuildRule> providedDeps = providedDepsBuilder.build();
-
       if (dummyRDotJava.isPresent()) {
         ImmutableSortedSet<BuildRule> newDeclaredDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
             .addAll(params.getDeclaredDeps().get())
@@ -195,9 +177,22 @@ public class AndroidLibraryDescription
           params.copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(declaredDeps),
             params.getExtraDeps());
+
       ImmutableSortedSet.Builder<BuildTarget> providedDepsTargetsBuilder =
-          ImmutableSortedSet.naturalOrder();
-      providedDeps.forEach(dep -> providedDepsTargetsBuilder.add(dep.getBuildTarget()));
+          ImmutableSortedSet.<BuildTarget>naturalOrder()
+              .addAll(args.providedDeps);
+      if (args.providedDepsQuery.isPresent()) {
+        QueryUtils.resolveDepQuery(
+            params.getBuildTarget(),
+            args.providedDepsQuery.get(),
+            resolver,
+            cellRoots,
+            targetGraph,
+            args.providedDeps)
+            .map(BuildRule::getBuildTarget)
+            .forEach(providedDepsTargetsBuilder::add);
+      }
+
       return AndroidLibrary.builder(
           androidLibraryParams,
           resolver,
