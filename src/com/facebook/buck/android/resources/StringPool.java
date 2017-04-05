@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.util.List;
 
@@ -221,12 +222,30 @@ public class StringPool extends ResChunk {
     return decodeString(offset, length);
   }
 
+  private String getStringForDump(int id) {
+    return getStringAtOffset(getEncodedStringOffset(id), true);
+  }
+
   private String decodeString(int start, int utf16Length) {
     byte[] data = new byte[utf16Length];
     stringData.position(start);
     stringData.get(data);
     stringData.position(0);
     return new String(data, utf8 ? Charsets.UTF_8 : Charsets.UTF_16LE);
+  }
+
+  public void dump(PrintStream out) {
+    out.format(
+        "String pool of %d unique %s %s strings, %d entries and %d styles using %d bytes:\n",
+        stringCount,
+        utf8 ? "UTF-8" : "UTF-16",
+        sorted ? "sorted" : "non-sorted",
+        stringCount,
+        styleCount,
+        getChunkSize());
+    for (int i = 0; i < stringCount; i++) {
+      out.format("String #%d: %s\n", i, getStringForDump(i));
+    }
   }
 
   public int getStringCount() {

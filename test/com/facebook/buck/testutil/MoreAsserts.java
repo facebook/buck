@@ -25,6 +25,7 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -286,6 +287,32 @@ public final class MoreAsserts {
         }
       }
     }
+  }
+
+  /**
+   * Asserts that two strings are equal, but compares them in chunks so that Intellij will show the
+   * diffs when the assertion fails.
+   */
+  public static void assertLargeStringsEqual(String expected, String content) {
+    List<String> expectedChunks = chunkify(expected);
+    List<String> contentChunks = chunkify(content);
+
+    for (int i = 0; i < Math.min(expectedChunks.size(), contentChunks.size()); i++) {
+      assertEquals("Failed at index: " + i, expectedChunks.get(i), contentChunks.get(i));
+    }
+    // We could check this first, but it's usually more useful to see the first difference than to
+    // just see that the two strings are different length.
+    assertEquals(expectedChunks.size(), contentChunks.size());
+  }
+
+  private static List<String> chunkify(String data) {
+    return RichStream
+        .from(
+            Iterables.partition(
+                Arrays.asList(data.split("\\n")),
+                1000))
+        .map((l) -> Joiner.on("\n").join(l))
+        .toImmutableList();
   }
 
   private static String prefixWithUserMessage(

@@ -19,6 +19,7 @@ package com.facebook.buck.android.resources;
 
 import com.google.common.base.Preconditions;
 
+import java.io.PrintStream;
 import java.nio.ByteBuffer;
 
 /**
@@ -86,5 +87,9 @@ public class ResourceTable extends ResChunk {
 
   public ResTablePackage getPackage() {
     return resPackage;
+  }
+
+  public void dumpStrings(PrintStream out) {
+    strings.dump(out);
   }
 }

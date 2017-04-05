@@ -20,16 +20,21 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -124,6 +129,26 @@ public class StringPoolTest {
 
         assertArrayEquals(expected, actual);
       }
+    }
+  }
+
+  @Test
+  public void testAaptDumpStrings() throws Exception {
+    try (ZipFile apkZip = new ZipFile(apkPath.toFile())) {
+      ByteBuffer buf = ResChunk.wrap(
+          ByteStreams.toByteArray(
+              apkZip.getInputStream(apkZip.getEntry("resources.arsc"))));
+      ResourceTable resourceTable = ResourceTable.get(buf);
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+      resourceTable.dumpStrings(new PrintStream(baos));
+
+      String content = new String(baos.toByteArray(), Charsets.UTF_8);
+
+      Path stringsOutput = filesystem.resolve(filesystem.getPath(APK_NAME + ".strings"));
+      String expected = new String(Files.readAllBytes(stringsOutput));
+
+      MoreAsserts.assertLargeStringsEqual(expected, content);
     }
   }
 }
