@@ -207,11 +207,31 @@ public class IjProject {
         projectFilesystem,
         IjProjectTemplateDataPreparer.createPackageLookupPathSet(moduleGraph),
         javaPackageFinder);
+    IjProjectTemplateDataPreparer templateDataPreparer = new IjProjectTemplateDataPreparer(
+        parsingJavaPackageFinder,
+        moduleGraph,
+        projectFilesystem);
     IjProjectWriter writer = new IjProjectWriter(
-        new IjProjectTemplateDataPreparer(parsingJavaPackageFinder, moduleGraph, projectFilesystem),
+        templateDataPreparer,
         projectConfig,
         projectFilesystem);
-    writer.write();
+
+    IJProjectCleaner cleaner = new IJProjectCleaner(projectFilesystem);
+
+    writer.write(cleaner);
+
+    PregeneratedCodeWriter pregeneratedCodeWriter = new PregeneratedCodeWriter(
+        templateDataPreparer,
+        projectConfig,
+        projectFilesystem);
+    pregeneratedCodeWriter.write(cleaner);
+
+    cleaner.clean(
+        projectConfig.getBuckConfig(),
+        IjProjectPaths.LIBRARIES_DIR,
+        projectConfig.isCleanerEnabled(),
+        projectConfig.isRemovingUnusedLibrariesEnabled());
+
     return requiredBuildTargets.build();
   }
 }

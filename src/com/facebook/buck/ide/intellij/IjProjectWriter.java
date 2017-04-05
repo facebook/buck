@@ -26,8 +26,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
-import javax.annotation.Nullable;
-
 /**
  * Writes the serialized representations of IntelliJ project components to disk.
  */
@@ -46,22 +44,14 @@ public class IjProjectWriter {
     this.projectFilesystem = projectFilesystem;
   }
 
-  public void write() throws IOException {
-    IJProjectCleaner cleaner = new IJProjectCleaner(projectFilesystem);
-
+  public void write(IJProjectCleaner cleaner) throws IOException {
     projectFilesystem.mkdirs(IjProjectPaths.IDEA_CONFIG_DIR);
 
     writeProjectSettings(cleaner, projectConfig);
 
-    boolean generateClasses = !projectConfig.isAutogenerateAndroidFacetSourcesEnabled();
-
     for (IjModule module : projectDataPreparer.getModulesToBeWritten()) {
       Path generatedModuleFile = writeModule(module);
       cleaner.doNotDelete(generatedModuleFile);
-
-      if (generateClasses) {
-        writeClassesGeneratedByIdea(module, cleaner);
-      }
     }
     for (IjLibrary library : projectDataPreparer.getLibrariesToBeWritten()) {
       Path generatedLibraryFile = writeLibrary(library);
@@ -69,12 +59,6 @@ public class IjProjectWriter {
     }
     Path indexFile = writeModulesIndex();
     cleaner.doNotDelete(indexFile);
-
-    cleaner.clean(
-        projectConfig.getBuckConfig(),
-        IjProjectPaths.LIBRARIES_DIR,
-        projectConfig.isCleanerEnabled(),
-        projectConfig.isRemovingUnusedLibrariesEnabled());
   }
 
   private Path writeModule(IjModule module) throws IOException {
@@ -194,72 +178,5 @@ public class IjProjectWriter {
 
     StringTemplateFile.writeToFile(projectFilesystem, moduleIndexContents, path);
     return path;
-  }
-
-  private void writeClassesGeneratedByIdea(
-      IjModule module,
-      IJProjectCleaner cleaner) throws IOException {
-    Optional<IjModuleAndroidFacet> androidFacet = module.getAndroidFacet();
-    if (!androidFacet.isPresent()) {
-      return;
-    }
-
-    Optional<String> packageName = getResourcePackage(module, androidFacet.get());
-    if (!packageName.isPresent()) {
-      return;
-    }
-
-    writeGeneratedByIdeaClassToFile(
-        androidFacet.get(),
-        cleaner,
-        packageName.get(),
-        "BuildConfig",
-        "  public final static boolean DEBUG = Boolean.parseBoolean(null);");
-
-    writeGeneratedByIdeaClassToFile(
-        androidFacet.get(),
-        cleaner,
-        packageName.get(),
-        "R",
-        null);
-
-    writeGeneratedByIdeaClassToFile(
-        androidFacet.get(),
-        cleaner,
-        packageName.get(),
-        "Manifest",
-        null);
-  }
-
-  private void writeGeneratedByIdeaClassToFile(
-      IjModuleAndroidFacet androidFacet,
-      IJProjectCleaner cleaner,
-      String packageName,
-      String className,
-      @Nullable String content) throws IOException {
-
-    ST contents = StringTemplateFile.GENERATED_BY_IDEA_CLASS.getST()
-        .add("package", packageName)
-        .add("className", className)
-        .add("content", content);
-
-    Path fileToWrite = androidFacet
-        .getGeneratedSourcePath()
-        .resolve(packageName.replace(".", "/"))
-        .resolve(className + ".java");
-
-    cleaner.doNotDelete(fileToWrite);
-
-    StringTemplateFile.writeToFile(projectFilesystem, contents, fileToWrite);
-  }
-
-  private Optional<String> getResourcePackage(
-      IjModule module,
-      IjModuleAndroidFacet androidFacet) {
-    Optional<String> packageName = androidFacet.getPackageName();
-    if (!packageName.isPresent()) {
-      packageName = projectDataPreparer.getFirstResourcePackageFromDependencies(module);
-    }
-    return packageName;
   }
 }
