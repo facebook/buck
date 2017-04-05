@@ -112,7 +112,7 @@ public class AppleToolchainDiscovery {
     }
 
     if (!addedToolchain) {
-      LOG.error(
+      LOG.debug(
           "Failed to resolve info about toolchain %s from plist files %s",
           toolchainDir.toString(),
           Arrays.toString(potentialPlistNames));
