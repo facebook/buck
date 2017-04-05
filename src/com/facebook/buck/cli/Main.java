@@ -38,6 +38,7 @@ import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.DaemonEvent;
 import com.facebook.buck.event.DefaultBuckEventBus;
+import com.facebook.buck.event.FileHashCacheEvent;
 import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.event.listener.CacheRateStatsListener;
@@ -379,7 +380,6 @@ public final class Main {
               cell.getFilesystem().getBuckPaths().getBuckOut()));
       this.hashCaches = hashCachesBuilder.build();
 
-
       this.broadcastEventListener = new BroadcastEventListener();
       this.actionGraphCache = new ActionGraphCache(broadcastEventListener);
       this.versionedTargetGraphCache = new VersionedTargetGraphCache();
@@ -549,9 +549,17 @@ public final class Main {
       synchronized (parser) {
         parser.recordParseStartTime(eventBus);
         fileEventBus.post(commandEvent);
-        watchmanWatcher.postEvents(
-            eventBus,
-            watchmanFreshInstanceAction);
+        // Track the file hash cache invalidation run time.
+        FileHashCacheEvent.InvalidationStarted started = FileHashCacheEvent.invalidationStarted();
+        eventBus.post(started);
+        try {
+          watchmanWatcher.postEvents(
+              eventBus,
+              watchmanFreshInstanceAction
+          );
+        } finally {
+          eventBus.post(FileHashCacheEvent.invalidationFinished(started));
+        }
       }
     }
 
