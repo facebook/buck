@@ -78,6 +78,8 @@ public class AndroidBinaryGraphEnhancer {
       InternalFlavor.of("generate_native_lib_merge_map_generated_code");
   private static final Flavor COMPILE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR =
       InternalFlavor.of("compile_native_lib_merge_map_generated_code");
+  public static final Flavor NATIVE_LIBRARY_PROGUARD_FLAVOR =
+      InternalFlavor.of("generate_proguard_config_from_native_libs");
 
   private final BuildTarget originalBuildTarget;
   private final ImmutableSortedSet<BuildRule> originalDeps;
@@ -215,6 +217,8 @@ public class AndroidBinaryGraphEnhancer {
     collector.addPackageables(AndroidPackageableCollector.getPackageableRules(originalDeps));
     AndroidPackageableCollection packageableCollection = collector.build();
 
+    ImmutableList.Builder<SourcePath> proguardConfigsBuilder = ImmutableList.builder();
+    proguardConfigsBuilder.addAll(packageableCollection.getProguardConfigs());
 
     AndroidNativeLibsGraphEnhancementResult nativeLibsEnhancementResult =
         nativeLibsEnhancer.enhance(packageableCollection);
@@ -225,7 +229,17 @@ public class AndroidBinaryGraphEnhancer {
       enhancedDeps.addAll(copyNativeLibraries.get().values());
     }
 
-    nativeLibraryProguardConfigGenerator.isPresent();
+    if (nativeLibraryProguardConfigGenerator.isPresent() && packageType.isBuildWithObfuscation()) {
+      NativeLibraryProguardGenerator nativeLibraryProguardGenerator =
+          createNativeLibraryProguardGenerator(
+              copyNativeLibraries.get().values().stream()
+                  .map(CopyNativeLibraries::getSourcePathToAllLibsDir)
+                  .collect(MoreCollectors.toImmutableList()));
+
+      ruleResolver.addToIndex(nativeLibraryProguardGenerator);
+      enhancedDeps.add(nativeLibraryProguardGenerator);
+      proguardConfigsBuilder.add(nativeLibraryProguardGenerator.getSourcePathToOutput());
+    }
 
     Optional<ImmutableSortedMap<String, String>> sonameMergeMap =
         nativeLibsEnhancementResult.getSonameMergeMap();
@@ -375,9 +389,6 @@ public class AndroidBinaryGraphEnhancer {
       enhancedDeps.add(computeExopackageDepsAbi.get());
     }
 
-    ImmutableList.Builder<SourcePath> proguardConfigsBuilder = ImmutableList.builder();
-    proguardConfigsBuilder.addAll(packageableCollection.getProguardConfigs());
-
     return AndroidGraphEnhancementResult.builder()
         .setPackageableCollection(packageableCollection)
         .setPrimaryResourcesApkPath(resourcesEnhancementResult.getPrimaryResourcesApkPath())
@@ -403,6 +414,21 @@ public class AndroidBinaryGraphEnhancer {
         .setFinalDeps(enhancedDeps.build())
         .setAPKModuleGraph(apkModuleGraph)
         .build();
+  }
+
+  private NativeLibraryProguardGenerator createNativeLibraryProguardGenerator(
+      ImmutableList<SourcePath> nativeLibsDirs) throws NoSuchBuildTargetException {
+    BuildRuleParams paramsForNativeLibraryProguardGenerator = buildRuleParams
+        .withAppendedFlavor(NATIVE_LIBRARY_PROGUARD_FLAVOR)
+        .copyReplacingDeclaredAndExtraDeps(
+            ImmutableSortedSet::of,
+            ImmutableSortedSet::of);
+
+    return new NativeLibraryProguardGenerator(
+        paramsForNativeLibraryProguardGenerator,
+        ruleFinder,
+        nativeLibsDirs,
+        ruleResolver.requireRule(nativeLibraryProguardConfigGenerator.get()));
   }
 
   /**

@@ -26,6 +26,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
@@ -109,6 +110,10 @@ public class CopyNativeLibraries extends AbstractBuildRule {
    */
   public Path getPathToAllLibsDir() {
     return getBinPath();
+  }
+
+  public SourcePath getSourcePathToAllLibsDir() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToAllLibsDir());
   }
 
   public Path getPathToMetadataTxt() {

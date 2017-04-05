@@ -231,6 +231,24 @@ android_binary(
 )
 
 android_binary(
+  name = 'app_with_native_lib_proguard',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  package_type = 'release',
+  proguard_config = 'dontobfuscate.pro',
+  cpu_filters = [
+    'arm',
+    'armv7',
+    'x86',
+  ],
+  native_library_proguard_config_generator = '//native/proguard_gen:generator',
+  deps = [
+    '//res/com/sample/base:base',
+    '//native/cxx:lib',
+  ],
+)
+
+android_binary(
   name = 'app_cxx_lib_asset',
   manifest = 'AndroidManifest.xml',
   keystore = '//keystores:debug',

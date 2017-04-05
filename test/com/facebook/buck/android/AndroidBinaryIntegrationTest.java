@@ -943,6 +943,33 @@ public class AndroidBinaryIntegrationTest {
   }
 
   @Test
+  public void testNativeLibGeneratedProguardConfigIsUsedByProguard() throws IOException {
+    String target = "//apps/sample:app_with_native_lib_proguard";
+    workspace.runBuckBuild(target).assertSuccess();
+
+    Path generatedConfig = workspace.getPath(
+        BuildTargets.getGenPath(
+            filesystem,
+            BuildTargetFactory.newInstance(target)
+                .withFlavors(AndroidBinaryGraphEnhancer.NATIVE_LIBRARY_PROGUARD_FLAVOR),
+            NativeLibraryProguardGenerator.OUTPUT_FORMAT));
+
+    Path proguardDir = workspace.getPath(
+        BuildTargets.getGenPath(
+            filesystem,
+            BuildTargetFactory.newInstance(target),
+            "%s/proguard"));
+
+    Path proguardCommandLine = proguardDir.resolve("command-line.txt");
+    // Check that the proguard command line references the native lib proguard config.
+    assertTrue(
+        workspace.getFileContents(proguardCommandLine).contains(generatedConfig.toString()));
+    assertEquals(
+        workspace.getFileContents("native/proguard_gen/expected.pro"),
+        workspace.getFileContents(generatedConfig));
+  }
+
+  @Test
   public void testReDexIsCalledAppropriatelyFromAndroidBinary() throws IOException {
     Path apk = workspace.buildAndReturnOutput(APP_REDEX_TARGET);
     Path unzippedApk = unzip(apk.getParent(), apk, "app_redex");
