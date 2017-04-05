@@ -19,22 +19,11 @@ package com.facebook.buck.ide.intellij;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.sha1.Sha1HashCode;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.hash.Hashing;
-import com.google.common.io.Resources;
 
-import org.stringtemplate.v4.AutoIndentWriter;
 import org.stringtemplate.v4.ST;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.StringWriter;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
@@ -43,27 +32,6 @@ import javax.annotation.Nullable;
  * Writes the serialized representations of IntelliJ project components to disk.
  */
 public class IjProjectWriter {
-
-  public static final char DELIMITER = '%';
-  public static final Path IDEA_CONFIG_DIR_PREFIX = Paths.get(".idea");
-  public static final Path LIBRARIES_PREFIX = IDEA_CONFIG_DIR_PREFIX.resolve("libraries");
-
-  private enum StringTemplateFile {
-    MODULE_TEMPLATE("ij-module.st"),
-    MODULE_INDEX_TEMPLATE("ij-module-index.st"),
-    MISC_TEMPLATE("ij-misc.st"),
-    LIBRARY_TEMPLATE("ij-library.st"),
-    GENERATED_BY_IDEA_CLASS("GeneratedByIdeaClass.st");
-
-    private final String fileName;
-    StringTemplateFile(String fileName) {
-      this.fileName = fileName;
-    }
-
-    public String getFileName() {
-      return fileName;
-    }
-  }
 
   private IjProjectTemplateDataPreparer projectDataPreparer;
   private IjProjectConfig projectConfig;
@@ -81,7 +49,7 @@ public class IjProjectWriter {
   public void write() throws IOException {
     IJProjectCleaner cleaner = new IJProjectCleaner(projectFilesystem);
 
-    projectFilesystem.mkdirs(IDEA_CONFIG_DIR_PREFIX);
+    projectFilesystem.mkdirs(IjProjectPaths.IDEA_CONFIG_DIR);
 
     writeProjectSettings(cleaner, projectConfig);
 
@@ -104,7 +72,7 @@ public class IjProjectWriter {
 
     cleaner.clean(
         projectConfig.getBuckConfig(),
-        LIBRARIES_PREFIX,
+        IjProjectPaths.LIBRARIES_DIR,
         projectConfig.isCleanerEnabled(),
         projectConfig.isRemovingUnusedLibrariesEnabled());
   }
@@ -112,7 +80,7 @@ public class IjProjectWriter {
   private Path writeModule(IjModule module) throws IOException {
     Path path = module.getModuleImlFilePath();
 
-    ST moduleContents = getST(StringTemplateFile.MODULE_TEMPLATE);
+    ST moduleContents = StringTemplateFile.MODULE_TEMPLATE.getST();
 
     moduleContents.add(
         "contentRoot",
@@ -145,7 +113,7 @@ public class IjProjectWriter {
             .map((dir) -> module.getModuleBasePath().relativize(dir))
             .orElse(null));
 
-    writeToFile(moduleContents, path);
+    StringTemplateFile.writeToFile(projectFilesystem, moduleContents, path);
     return path;
   }
 
@@ -160,9 +128,9 @@ public class IjProjectWriter {
       return;
     }
 
-    Path path = IDEA_CONFIG_DIR_PREFIX.resolve("misc.xml");
+    Path path = IjProjectPaths.IDEA_CONFIG_DIR.resolve("misc.xml");
 
-    ST contents = getST(StringTemplateFile.MISC_TEMPLATE);
+    ST contents = StringTemplateFile.MISC_TEMPLATE.getST();
 
     String languageLevelInIjFormat = getLanguageLevelFromConfig();
 
@@ -171,7 +139,7 @@ public class IjProjectWriter {
     contents.add("jdkName", sdkName.get());
     contents.add("jdkType", sdkType.get());
 
-    writeToFile(contents, path);
+    StringTemplateFile.writeToFile(projectFilesystem, contents, path);
 
     cleaner.doNotDelete(path);
   }
@@ -195,9 +163,9 @@ public class IjProjectWriter {
   }
 
   private Path writeLibrary(IjLibrary library) throws IOException {
-    Path path = LIBRARIES_PREFIX.resolve(library.getName() + ".xml");
+    Path path = IjProjectPaths.LIBRARIES_DIR.resolve(library.getName() + ".xml");
 
-    ST contents = getST(StringTemplateFile.LIBRARY_TEMPLATE);
+    ST contents = StringTemplateFile.LIBRARY_TEMPLATE.getST();
     contents.add("name", library.getName());
     contents.add(
         "binaryJar",
@@ -213,18 +181,18 @@ public class IjProjectWriter {
     contents.add("javadocUrl", library.getJavadocUrl().orElse(null));
     //TODO(mkosiba): support res and assets for aar.
 
-    writeToFile(contents, path);
+    StringTemplateFile.writeToFile(projectFilesystem, contents, path);
     return path;
   }
 
   private Path writeModulesIndex() throws IOException {
-    projectFilesystem.mkdirs(IDEA_CONFIG_DIR_PREFIX);
-    Path path = IDEA_CONFIG_DIR_PREFIX.resolve("modules.xml");
+    projectFilesystem.mkdirs(IjProjectPaths.IDEA_CONFIG_DIR);
+    Path path = IjProjectPaths.IDEA_CONFIG_DIR.resolve("modules.xml");
 
-    ST moduleIndexContents = getST(StringTemplateFile.MODULE_INDEX_TEMPLATE);
+    ST moduleIndexContents = StringTemplateFile.MODULE_INDEX_TEMPLATE.getST();
     moduleIndexContents.add("modules", projectDataPreparer.getModuleIndexEntries());
 
-    writeToFile(moduleIndexContents, path);
+    StringTemplateFile.writeToFile(projectFilesystem, moduleIndexContents, path);
     return path;
   }
 
@@ -270,7 +238,7 @@ public class IjProjectWriter {
       String className,
       @Nullable String content) throws IOException {
 
-    ST contents = getST(StringTemplateFile.GENERATED_BY_IDEA_CLASS)
+    ST contents = StringTemplateFile.GENERATED_BY_IDEA_CLASS.getST()
         .add("package", packageName)
         .add("className", className)
         .add("content", content);
@@ -282,7 +250,7 @@ public class IjProjectWriter {
 
     cleaner.doNotDelete(fileToWrite);
 
-    writeToFile(contents, fileToWrite);
+    StringTemplateFile.writeToFile(projectFilesystem, contents, fileToWrite);
   }
 
   private Optional<String> getResourcePackage(
@@ -293,46 +261,5 @@ public class IjProjectWriter {
       packageName = projectDataPreparer.getFirstResourcePackageFromDependencies(module);
     }
     return packageName;
-  }
-
-  private static ST getST(StringTemplateFile file) throws IOException {
-    URL templateUrl = Resources.getResource(IjProjectWriter.class, file.getFileName());
-    String template = Resources.toString(templateUrl, StandardCharsets.UTF_8);
-    return new ST(template, DELIMITER, DELIMITER);
-  }
-
-  @VisibleForTesting
-  protected void writeToFile(ST contents, Path path) throws IOException {
-    StringWriter stringWriter = new StringWriter();
-    AutoIndentWriter noIndentWriter = new AutoIndentWriter(stringWriter);
-    contents.write(noIndentWriter);
-    byte[] renderedContentsBytes = noIndentWriter.toString().getBytes(StandardCharsets.UTF_8);
-    if (projectFilesystem.exists(path)) {
-      Sha1HashCode fileSha1 = projectFilesystem.computeSha1(path);
-      Sha1HashCode contentsSha1 = Sha1HashCode.fromHashCode(Hashing.sha1()
-          .hashBytes(renderedContentsBytes));
-      if (fileSha1.equals(contentsSha1)) {
-        return;
-      }
-    }
-
-    boolean danglingTempFile = false;
-    Path tempFile = projectFilesystem.createTempFile(
-        IDEA_CONFIG_DIR_PREFIX,
-        path.getFileName().toString(),
-        ".tmp");
-    try {
-      danglingTempFile = true;
-      try (OutputStream outputStream = projectFilesystem.newFileOutputStream(tempFile)) {
-        outputStream.write(contents.render().getBytes());
-      }
-      projectFilesystem.createParentDirs(path);
-      projectFilesystem.move(tempFile, path, StandardCopyOption.REPLACE_EXISTING);
-      danglingTempFile = false;
-    } finally {
-      if (danglingTempFile) {
-        projectFilesystem.deleteFileAtPath(tempFile);
-      }
-    }
   }
 }

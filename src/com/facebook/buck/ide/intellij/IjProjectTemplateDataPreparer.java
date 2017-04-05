@@ -110,7 +110,7 @@ public class IjProjectTemplateDataPreparer {
     return Stream
         .concat(
             modules.stream().map(IjModule::getModuleBasePath),
-            Stream.of(IjProjectWriter.IDEA_CONFIG_DIR_PREFIX))
+            Stream.of(IjProjectPaths.IDEA_CONFIG_DIR))
         .collect(MoreCollectors.toImmutableSet());
   }
 
