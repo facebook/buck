@@ -37,10 +37,10 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExopackageInfo;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -262,6 +262,8 @@ public class AndroidBinary
   private SourcePath aaptGeneratedProguardConfigFile;
   @AddToRuleKey
   private Optional<String> dxMaxHeapSize;
+  @AddToRuleKey
+  private ImmutableList<SourcePath> proguardConfigs;
 
   @AddToRuleKey
   @Nullable
@@ -348,6 +350,8 @@ public class AndroidBinary
     this.aaptGeneratedProguardConfigFile =
         enhancementResult.getSourcePathToAaptGeneratedProguardConfigFile();
     this.dxMaxHeapSize = dxMaxHeapSize;
+    this.proguardConfigs = enhancementResult.getProguardConfigs();
+
 
     if (exopackageModes.isEmpty()) {
       this.abiPath = null;
@@ -865,7 +869,7 @@ public class AndroidBinary
     if (packageType.isBuildWithObfuscation()) {
       classpathEntriesToDex = addProguardCommands(
           classpathEntriesToDex,
-          packageableCollection.getProguardConfigs().stream()
+          proguardConfigs.stream()
               .map(resolver::getAbsolutePath)
               .collect(MoreCollectors.toImmutableSet()),
           skipProguard,

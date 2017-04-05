@@ -370,6 +370,9 @@ public class AndroidBinaryGraphEnhancer {
       enhancedDeps.add(computeExopackageDepsAbi.get());
     }
 
+    ImmutableList.Builder<SourcePath> proguardConfigsBuilder = ImmutableList.builder();
+    proguardConfigsBuilder.addAll(packageableCollection.getProguardConfigs());
+
     return AndroidGraphEnhancementResult.builder()
         .setPackageableCollection(packageableCollection)
         .setPrimaryResourcesApkPath(resourcesEnhancementResult.getPrimaryResourcesApkPath())
@@ -378,6 +381,7 @@ public class AndroidBinaryGraphEnhancer {
         .setAndroidManifestPath(resourcesEnhancementResult.getAndroidManifestXml())
         .setSourcePathToAaptGeneratedProguardConfigFile(
             resourcesEnhancementResult.getAaptGeneratedProguardConfigFile())
+        .setProguardConfigs(proguardConfigsBuilder.build())
         .setCompiledUberRDotJava(compileUberRDotJava)
         .setCopyNativeLibraries(copyNativeLibraries)
         .setPackageStringAssets(resourcesEnhancementResult.getPackageStringAssets())
