@@ -93,21 +93,21 @@ class TreeBackedProcessorWrapper implements Processor {
         wrap(roundEnv));
   }
 
-  private ProcessingEnvironment wrap(ProcessingEnvironment inner) {
+  private ProcessingEnvironment wrap(ProcessingEnvironment javacProcessingEnvironment) {
     return new ProcessingEnvironment() {
       @Override
       public Map<String, String> getOptions() {
-        return inner.getOptions();
+        return javacProcessingEnvironment.getOptions();
       }
 
       @Override
       public Messager getMessager() {
-        return wrap(inner.getMessager());
+        return wrap(javacProcessingEnvironment.getMessager());
       }
 
       @Override
       public Filer getFiler() {
-        return inner.getFiler();
+        return javacProcessingEnvironment.getFiler();
       }
 
       @Override
@@ -122,62 +122,62 @@ class TreeBackedProcessorWrapper implements Processor {
 
       @Override
       public SourceVersion getSourceVersion() {
-        return inner.getSourceVersion();
+        return javacProcessingEnvironment.getSourceVersion();
       }
 
       @Override
       public Locale getLocale() {
-        return inner.getLocale();
+        return javacProcessingEnvironment.getLocale();
       }
     };
   }
 
-  private RoundEnvironment wrap(RoundEnvironment inner) {
+  private RoundEnvironment wrap(RoundEnvironment javacRoundEnvironment) {
     return new RoundEnvironment() {
       @Override
       public boolean processingOver() {
-        return inner.processingOver();
+        return javacRoundEnvironment.processingOver();
       }
 
       @Override
       public boolean errorRaised() {
-        return inner.errorRaised();
+        return javacRoundEnvironment.errorRaised();
       }
 
       @Override
       public Set<? extends Element> getRootElements() {
-        return inner.getRootElements().stream()
+        return javacRoundEnvironment.getRootElements().stream()
             .map(elements::getCanonicalElement)
             .collect(Collectors.toSet());
       }
 
       @Override
       public Set<? extends Element> getElementsAnnotatedWith(TypeElement a) {
-        return inner.getElementsAnnotatedWith(elements.getJavacElement(a)).stream()
+        return javacRoundEnvironment.getElementsAnnotatedWith(elements.getJavacElement(a)).stream()
             .map(elements::getCanonicalElement)
             .collect(Collectors.toSet());
       }
 
       @Override
       public Set<? extends Element> getElementsAnnotatedWith(Class<? extends Annotation> a) {
-        return inner.getElementsAnnotatedWith(a).stream()
+        return javacRoundEnvironment.getElementsAnnotatedWith(a).stream()
             .map(elements::getCanonicalElement)
             .collect(Collectors.toSet());
       }
     };
   }
 
-  private Messager wrap(Messager inner) {
+  private Messager wrap(Messager javacMessager) {
     return new Messager() {
       @Override
       public void printMessage(Diagnostic.Kind kind, CharSequence msg) {
-        inner.printMessage(kind, msg);
+        javacMessager.printMessage(kind, msg);
       }
 
       @Override
       public void printMessage(
           Diagnostic.Kind kind, CharSequence msg, Element e) {
-        inner.printMessage(kind, msg, elements.getJavacElement(e));
+        javacMessager.printMessage(kind, msg, elements.getJavacElement(e));
       }
 
       @Override
