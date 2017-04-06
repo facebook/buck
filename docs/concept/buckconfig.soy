@@ -751,8 +751,9 @@ $ buck targets --resolve-alias app#src_jar
   {param name: 'dir_mode' /}
   {param example_value: 'readwrite' /}
   {param description}
-    Dictates if the cache is <code>readonly</code> or <code>readwrite</code> (default) when using
-    directory-based caching ({call buckconfig.cache_mode /} must contain <code>dir</code>).
+    Dictates if the cache is <code>readonly</code>, <code>passthrough</code> or
+    {sp}<code>readwrite</code> (default) when using directory-based caching
+    {sp}({call buckconfig.cache_mode /} must contain <code>dir</code>).
   {/param}
 {/call}
 
@@ -883,27 +884,6 @@ $ buck targets --resolve-alias app#src_jar
   {param example_value: '5000000' /}
   {param description}
     The max size in bytes that an artifact can be to get pushed to an http cache.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'cache' /}
-  {param name: 'http_local_backing_cache' /}
-  {param description}
-    The name of a named dircache where artifacts stored from this remote cache will be written to.
-    This is used to enable a scenario where you want to cache remote artifacts locally without
-    writing locally built artifacts to the same local cache.
-  {/param}
-  {param raw_example}
-{literal}<pre class="prettyprint lang-ini">
-[cache]
-    mode = http
-    http_local_backing_cache = http_backing_cache
-
-[cache#http_backing_cache]
-    dir = ~/.local/http_backing_cache/
-    dir_mode = readwrite
-</pre>{/literal}
   {/param}
 {/call}
 

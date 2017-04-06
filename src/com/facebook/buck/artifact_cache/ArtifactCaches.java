@@ -274,11 +274,9 @@ public class ArtifactCaches implements ArtifactCacheFactory {
         return new RemoteArtifactsInLocalCacheArtifactCache(multiDirCache, multiRemoteCache);
       } else {
         buckEventBus.post(DirCacheExperimentEvent.readWrite());
-        return new MultiArtifactCache(artifactCaches);
       }
-    } else {
-      return new MultiArtifactCache(artifactCaches);
     }
+    return new MultiArtifactCache(artifactCaches);
   }
 
   private static void initializeDirCaches(
@@ -447,7 +445,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
     }
 
     String cacheName = cacheDescription.getName().map(input -> "http-" + input).orElse("http");
-    ArtifactCache result = factory.newInstance(
+    return factory.newInstance(
         NetworkCacheArgs.builder()
             .setThriftEndpointPath(config.getHybridThriftEndpoint())
             .setCacheName(cacheName)
@@ -462,16 +460,6 @@ public class ArtifactCaches implements ArtifactCacheFactory {
             .setErrorTextTemplate(cacheDescription.getErrorMessageFormat())
             .setDistributedBuildModeEnabled(distributedBuildModeEnabled)
             .build());
-
-    if (cacheDescription.getLocalBackingCache().isPresent()) {
-      ArtifactCache localBackingCache = createDirArtifactCache(
-          Optional.of(buckEventBus),
-          cacheDescription.getLocalBackingCache().get(),
-          projectFilesystem);
-      result = new RemoteArtifactsInLocalCacheArtifactCache(localBackingCache, result);
-    }
-
-    return result;
   }
 
   private static boolean checkArtifactCacheClass(

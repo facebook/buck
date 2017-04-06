@@ -20,7 +20,6 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.base.Joiner;
@@ -30,7 +29,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
 import org.immutables.value.Value;
 
@@ -59,7 +57,6 @@ public class ArtifactCacheBuckConfig {
   private static final String HTTP_READ_HEADERS_FIELD_NAME = "http_read_headers";
   private static final String HTTP_WRITE_HEADERS_FIELD_NAME = "http_write_headers";
   private static final String HTTP_CACHE_ERROR_MESSAGE_NAME = "http_error_message_format";
-  private static final String HTTP_LOCAL_BACKING_CACHE = "http_local_backing_cache";
   private static final String HTTP_MAX_STORE_SIZE = "http_max_store_size";
   private static final String HTTP_THREAD_POOL_SIZE = "http_thread_pool_size";
   private static final String HTTP_THREAD_POOL_KEEP_ALIVE_DURATION_MILLIS =
@@ -223,13 +220,9 @@ public class ArtifactCacheBuckConfig {
     Predicate<DirCacheEntry> isDirCacheEntryWriteable =
         dirCache -> dirCache.getCacheReadMode().isWritable();
 
-    ImmutableSet<DirCacheEntry> localBackingCaches = httpCacheEntries.stream()
-        .flatMap(httpCache -> Optionals.toStream(httpCache.getLocalBackingCache()))
-        .collect(MoreCollectors.toImmutableSet());
-
     // Enforce some sanity checks on the config:
     //  - we don't want multiple writeable dir caches pointing to the same directory
-    Sets.union(dirCacheEntries, localBackingCaches)
+    dirCacheEntries
         .stream()
         .filter(isDirCacheEntryWriteable)
         .collect(Collectors.groupingBy(dirCache -> dirCache.getCacheDir()))
@@ -240,18 +233,6 @@ public class ArtifactCacheBuckConfig {
                 path);
           }
         });
-
-    // Enforce some sanity checks on the config:
-    //  - if we have a local backing cache, then having a writeable dircache is probably a mistake
-    if (!localBackingCaches.isEmpty()) {
-      Optional<DirCacheEntry> writeableDirCache =
-          dirCacheEntries.stream().filter(isDirCacheEntryWriteable).findAny();
-      if (writeableDirCache.isPresent()) {
-        throw new HumanReadableException("You're using a local_backing_cache and a writeable " +
-            "dir cache. This will result in remote artifacts being written to both caches is " +
-            "equivalent to just having the dir cache and most likely not what you want.");
-      }
-    }
 
     return ArtifactCacheEntries.builder()
         .setDirCacheEntries(dirCacheEntries)
@@ -433,18 +414,6 @@ public class ArtifactCacheBuckConfig {
             DEFAULT_HTTP_CACHE_ERROR_MESSAGE));
     builder.setMaxStoreSize(buckConfig.getLong(section, HTTP_MAX_STORE_SIZE));
 
-    Optional<DirCacheEntry> localBackingCache =
-        buckConfig.getValue(section, HTTP_LOCAL_BACKING_CACHE)
-            .map(name -> obtainDirEntryForName(Optional.of(name)));
-    localBackingCache.ifPresent(cache -> {
-      if (!cache.getCacheReadMode().isWritable()) {
-        throw new HumanReadableException(
-            "Local backing cache of %s should be read-write.",
-            cacheName);
-      }
-    });
-    builder.setLocalBackingCache(localBackingCache);
-
     return builder.build();
   }
 
@@ -511,7 +480,6 @@ public class ArtifactCacheBuckConfig {
     protected abstract ImmutableSet<String> getBlacklistedWifiSsids();
     public abstract String getErrorMessageFormat();
     public abstract Optional<Long> getMaxStoreSize();
-    public abstract Optional<DirCacheEntry> getLocalBackingCache();
 
     public boolean isWifiUsableForDistributedCache(Optional<String> currentWifiSsid) {
       if (currentWifiSsid.isPresent() &&
