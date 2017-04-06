@@ -1,7 +1,0 @@
-java_library(
-  name = 'foo',
-  srcs = [
-    'Foo.java',
-  ],
-  autodeps = True,
-)

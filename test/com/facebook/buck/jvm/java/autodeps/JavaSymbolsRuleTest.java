@@ -91,9 +91,7 @@ public class JavaSymbolsRuleTest {
     JavaSymbolsRule javaSymbolsRule = new JavaSymbolsRule(
         buildTarget,
         symbolsFinder,
-        /* generatedSymbols */ ImmutableSortedSet.of("com.example.generated.Example"),
-        projectFilesystem
-    );
+        projectFilesystem);
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     resolver.addToIndex(javaSymbolsRule);
@@ -121,8 +119,7 @@ public class JavaSymbolsRuleTest {
       assertEquals(
           ImmutableSet.of(
               "com.example.Example1",
-              "com.example.Example2",
-              "com.example.generated.Example"),
+              "com.example.Example2"),
           StreamSupport.stream(jsonNode.get("provided").spliterator(), false)
               .map(JsonNode::textValue)
               .collect(MoreCollectors.toImmutableSet()));

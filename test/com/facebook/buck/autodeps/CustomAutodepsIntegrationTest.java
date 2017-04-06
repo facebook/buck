@@ -56,15 +56,4 @@ public class CustomAutodepsIntegrationTest {
         result.getStdout().trim());
   }
 
-  @Test
-  public void ensureBuckAutodepsCommandIgnoresRulesForWhichItCannotGenerateTheDeps()
-      throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "custom_autodeps", tmpFolder);
-    workspace.setUp();
-
-    workspace.runBuckCommand("autodeps").assertSuccess(
-        "'buck autodeps' should not complain when it sees autodeps=True for a python_library() " +
-        "even though it does not know how to generate dependencies for Python rules.");
-  }
 }

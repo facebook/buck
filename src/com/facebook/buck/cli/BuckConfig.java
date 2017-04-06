@@ -1097,10 +1097,6 @@ public class BuckConfig implements ConfigPathGetter {
     return getBooleanValue("build", "rule_key_caching", false);
   }
 
-  public boolean isAutodepsCommandEnabled() {
-    return getBooleanValue("project", "autodeps_command_enabled", false);
-  }
-
   public ImmutableList<String> getCleanAdditionalPaths() {
     return getListWithoutComments("clean", "additional_paths");
   }

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
 import org.junit.Rule;
@@ -46,7 +46,6 @@ public class SuggestPartitionIntegrationTest {
         this, "suggest_java_partition", tmp);
     workspace.setUp();
 
-    workspace.runBuckCommand("autodeps").assertSuccess();
     workspace.runBuckBuild("//app:app").assertSuccess();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("suggest", "//lib:lib");
@@ -59,7 +58,6 @@ public class SuggestPartitionIntegrationTest {
     workspace.runBuckBuild("//app:app").assertSuccess(
         "//app:app should still build even though lib/BUCK has been overwritten");
 
-    workspace.runBuckCommand("autodeps").assertSuccess();
     workspace.verify(Paths.get("app"));
     workspace.runBuckBuild("//app:app").assertSuccess(
         "//app:app should still build with more fine-grained autodeps");

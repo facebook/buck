@@ -41,7 +41,6 @@ import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -62,9 +61,6 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
   @AddToRuleKey
   private final SymbolsFinder symbolsFinder;
 
-  @AddToRuleKey
-  private final ImmutableSortedSet<String> generatedSymbols;
-
   private final ProjectFilesystem projectFilesystem;
   private final Path outputPath;
   private final BuildOutputInitializer<Symbols> outputInitializer;
@@ -72,11 +68,9 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
   JavaSymbolsRule(
       BuildTarget javaLibraryBuildTarget,
       SymbolsFinder symbolsFinder,
-      ImmutableSortedSet<String> generatedSymbols,
       ProjectFilesystem projectFilesystem) {
     this.buildTarget = javaLibraryBuildTarget.withFlavors(JAVA_SYMBOLS);
     this.symbolsFinder = symbolsFinder;
-    this.generatedSymbols = generatedSymbols;
     this.projectFilesystem = projectFilesystem;
     this.outputPath = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "__%s__.json");
     this.outputInitializer = new BuildOutputInitializer<>(buildTarget, this);
@@ -106,20 +100,8 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
     Step extractSymbolsStep = new AbstractExecutionStep("java-symbols") {
       @Override
       public StepExecutionResult execute(ExecutionContext context) throws IOException {
-        Symbols symbols = symbolsFinder.extractSymbols();
-
-        Symbols symbolsToSerialize;
-        if (generatedSymbols.isEmpty()) {
-          symbolsToSerialize = symbols;
-        } else {
-          symbolsToSerialize = new Symbols(
-              Iterables.concat(symbols.provided, generatedSymbols),
-              symbols.required,
-              symbols.exported);
-        }
-
         try (OutputStream output = getProjectFilesystem().newFileOutputStream(outputPath)) {
-          ObjectMappers.WRITER.writeValue(output, symbolsToSerialize);
+          ObjectMappers.WRITER.writeValue(output, symbolsFinder.extractSymbols());
         }
 
         return StepExecutionResult.SUCCESS;

@@ -208,7 +208,6 @@ public class JavaLibraryDescription implements
     public Optional<SourcePath> mavenPomTemplate;
 
     public Optional<Boolean> autodeps;
-    public ImmutableSortedSet<String> generatedSymbols = ImmutableSortedSet.of();
     public ImmutableSortedSet<BuildTarget> providedDeps = ImmutableSortedSet.of();
     public ImmutableSortedSet<BuildTarget> exportedDeps = ImmutableSortedSet.of();
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();

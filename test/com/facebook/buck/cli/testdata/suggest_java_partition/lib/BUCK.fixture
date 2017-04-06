@@ -1,7 +1,7 @@
 java_library(
   name = 'lib',
   srcs = glob(['*.java']),
-  autodeps = True,
+  deps = ['//third-party:third-party'],
   visibility = [
     'PUBLIC',
   ],

@@ -158,9 +158,7 @@ public class JavaLibrarySymbolsFinderTest {
           JavaSymbolsRule javaSymbolsRule = new JavaSymbolsRule(
               BuildTargetFactory.newInstance("//foo:rule"),
               finder,
-              /* generatedSymbols */ ImmutableSortedSet.of(),
-              projectFilesystem
-          );
+              projectFilesystem);
           return ruleKeyFactory.build(javaSymbolsRule);
         };
 

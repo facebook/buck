@@ -35,7 +35,6 @@ public class BuckCommand extends AbstractContainerCommand {
       metaVar = "subcommand")
   @SubCommands({
       @SubCommand(name = "audit", impl = AuditCommand.class),
-      @SubCommand(name = "autodeps", impl = AutodepsCommand.class),
       @SubCommand(name = "build", impl = BuildCommand.class),
       @SubCommand(name = "cache", impl = CacheCommand.class),
       @SubCommand(name = "clean", impl = CleanCommand.class),
