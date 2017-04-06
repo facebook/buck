@@ -306,6 +306,58 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testFrameworkHeadersInHeadersBuildPhase() throws IOException {
+    BuildTarget bundleTarget = BuildTarget.builder(rootPath, "//foo", "framework").build();
+    BuildTarget libTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+
+    String exportedHeaderName = "bar.h";
+
+    TargetNode<?, ?> libNode = AppleLibraryBuilder
+        .createBuilder(libTarget)
+        .setSrcs(ImmutableSortedSet.of())
+        .setHeaders(
+            ImmutableSortedSet.of(
+                new FakeSourcePath("HeaderGroup1/foo.h"),
+                new FakeSourcePath("HeaderGroup2/baz.h")))
+        .setExportedHeaders(
+            ImmutableSortedSet.of(
+                new FakeSourcePath("HeaderGroup1/" + exportedHeaderName)))
+        .build();
+
+    TargetNode<?, ?> frameworkNode = AppleBundleBuilder
+        .createBuilder(bundleTarget)
+        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setInfoPlist(new FakeSourcePath("Info.plist"))
+        .setBinary(libTarget)
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(
+            libNode,
+            frameworkNode),
+        ImmutableSet.of(
+            ProjectGenerator.Option.FRAMEWORK_HEADERS_ENABLED));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXTarget target =  assertTargetExistsAndReturnTarget(project, "//foo:framework");
+
+    List<PBXBuildPhase > headersPhases = target.getBuildPhases();
+
+    headersPhases.removeIf(input -> !(input instanceof PBXHeadersBuildPhase));
+    assertEquals(1, headersPhases.size());
+
+    PBXHeadersBuildPhase headersPhase = (PBXHeadersBuildPhase) headersPhases.get(0);
+    List<PBXBuildFile> headers = headersPhase.getFiles();
+    assertEquals(1, headers.size());
+
+    PBXFileReference headerReference = (PBXFileReference) headers.get(0).getFileRef();
+    assertNotNull(headerReference);
+    assertEquals(headerReference.getName(), exportedHeaderName);
+  }
+
+  @Test
   public void testAppleLibraryHeaderGroupsWithHeaderSymlinkTrees() throws IOException {
     BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?, ?> node = AppleLibraryBuilder
