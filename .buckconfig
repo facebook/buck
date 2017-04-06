@@ -14,9 +14,6 @@
     hmaptool = //src/com/facebook/buck/apple/clang:hmaptool
     ideabuck = //src/com/facebook/buck/intellij/ideabuck:ideabuck
     maven-importer = //src/com/facebook/buck/maven:resolver
-[autodeps]
-   include_signature = false
-   java-package-mappings = com.google.caliper => //third-party/java/caliper:caliper,com.google.errorprone.annotations => //third-party/java/errorprone:error-prone-annotations
 [buildfile]
     includes = //DEFS
 [log]
@@ -50,9 +47,6 @@
     ; cache every time it encounters one.
     allow_symlinks = forbid
     watchman_cursor = clock_id
-    ; This is intentionally disabled to test how the workflow would be without
-    ; autodeps in the Buck project.
-    autodeps_command_enabled = false
 [test]
     ; Maximum timeout of 1 minute per test.
     timeout = 60000

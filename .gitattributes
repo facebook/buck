@@ -1,3 +1,2 @@
 * text=auto
-BUCK.autodeps eol=lf
 *.bat eol=crlf

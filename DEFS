@@ -1,20 +1,7 @@
 with allow_unsafe_import():
     from sys import platform as os_platform
 
-def java_immutables_library(
-    name,
-    # These must be relative to the package implied by the path to the BUCK file.
-    immutable_types=None,
-    **kwargs
-    ):
-    if not immutable_types:
-        build_target = '//%s:%s' % (get_base_path(), name)
-        raise Exception(('%s is a java_immutables_library(), ' +
-                         'but does not specify any immutable_types.') % build_target)
-
-    generated_symbols = map(fully_qualified_name_for_immutable_type, immutable_types)
-    all_generated_symbols = generated_symbols + kwargs.get('generated_symbols', [])
-
+def java_immutables_library(name, **kwargs):
     deps = kwargs.get('deps', [])
     needed_deps = [
       '//src/com/facebook/buck/util/immutables:immutables',
@@ -42,7 +29,7 @@ def java_immutables_library(
       'plugins',
       'deps',
       'exported_deps',
-      'generated_symbols',
+      'immutable_types',
     ]
     args = {}
     for k in kwargs:
@@ -50,26 +37,10 @@ def java_immutables_library(
         args[k] = kwargs[k]
     return java_library(
       name,
-      generated_symbols=all_generated_symbols,
       deps=deps,
       plugins=plugins,
       exported_deps=exported_deps,
       **args)
-
-
-def fully_qualified_name_for_immutable_type(immutable_type):
-    base_path = get_base_path()
-
-    # Strip off src/ or test/ prefix, as appropriate, from base_path.
-    if base_path.startswith('src/'):
-        base_path = base_path[len('src/'):]
-    elif base_path.startswith('test/'):
-        base_path = base_path[len('test/'):]
-    else:
-        raise Exception(src + ' must start with src/ or test/')
-
-    package_name = base_path.replace('/', '.')
-    return package_name + '.' + immutable_type
 
 
 original_java_test = java_test
@@ -140,7 +111,6 @@ def standard_java_library(
     tests = None,
     resources = None,
 
-    # May need to include things `buck autodeps` misses for Java 8.
     deps = None,
     exported_deps = None,
 
@@ -152,7 +122,6 @@ def standard_java_library(
     java_library(
       name = <DIRECTORY_NAME>,
       srcs = glob(['*.java']),
-      autodeps = True,
       deps = deps,
       exported_deps = exported_deps,
       visibility = [
@@ -176,7 +145,6 @@ def standard_java_library(
     kwargs = {}
     if immutable_types:
         build_rule = java_immutables_library
-        kwargs['immutable_types'] = immutable_types
     else:
         build_rule = java_library
 
@@ -185,7 +153,6 @@ def standard_java_library(
         srcs = srcs,
         resources = resources,
         tests = tests,
-        autodeps = True,
         deps = deps or [],
         exported_deps = exported_deps or [],
         provided_deps = provided_deps,
@@ -215,7 +182,6 @@ def standard_java_test(
         java_test(
           name = name,
           srcs = test_srcs,
-          autodeps = True,
           resources = glob(['testdata/**'], include_dotfiles=True),
           deps = deps or [],
           exported_deps = exported_deps or [],
@@ -237,7 +203,6 @@ def standard_java_testutil(name, deps = None, exported_deps = None, provided_dep
         java_library(
           name = name,
           srcs = testutil_srcs,
-          autodeps = True,
           deps = deps or [],
           exported_deps = exported_deps or [],
           provided_deps = provided_deps or [],
