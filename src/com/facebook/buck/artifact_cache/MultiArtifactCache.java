@@ -44,7 +44,7 @@ public class MultiArtifactCache implements ArtifactCache {
   public MultiArtifactCache(ImmutableList<ArtifactCache> artifactCaches) {
     this.artifactCaches = artifactCaches;
     this.writableArtifactCaches = artifactCaches.stream()
-        .filter(c -> c.getCacheReadMode().equals(CacheReadMode.readwrite))
+        .filter(c -> c.getCacheReadMode().equals(CacheReadMode.READWRITE))
         .collect(MoreCollectors.toImmutableList());
     this.isStoreSupported = this.writableArtifactCaches.size() > 0;
   }
@@ -114,8 +114,8 @@ public class MultiArtifactCache implements ArtifactCache {
   @Override
   public CacheReadMode getCacheReadMode() {
     return isStoreSupported ?
-        CacheReadMode.readwrite :
-        CacheReadMode.readonly;
+        CacheReadMode.READWRITE :
+        CacheReadMode.READONLY;
   }
 
   @Override

@@ -49,7 +49,7 @@ public class DummyArtifactCache extends NoopArtifactCache {
 
   @Override
   public CacheReadMode getCacheReadMode() {
-    return CacheReadMode.readwrite;
+    return CacheReadMode.READWRITE;
   }
 
 }

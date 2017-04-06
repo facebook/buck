@@ -76,7 +76,7 @@ public class AbstractNetworkCacheTest {
             .setScheduleType("some_schedule_type")
             .setFetchClient(EasyMock.createMock(HttpService.class))
             .setStoreClient(EasyMock.createMock(HttpService.class))
-            .setCacheReadMode(CacheReadMode.readwrite)
+            .setCacheReadMode(CacheReadMode.READWRITE)
             .setProjectFilesystem(filesystem)
             .setBuckEventBus(EasyMock.createMock(BuckEventBus.class))
             .setHttpWriteExecutorService(service)

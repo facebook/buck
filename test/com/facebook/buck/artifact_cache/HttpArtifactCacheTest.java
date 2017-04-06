@@ -139,7 +139,7 @@ public class HttpArtifactCacheTest {
         .setScheduleType("some_schedule")
         .setFetchClient(withMakeRequest((a, b) -> null))
         .setStoreClient(withMakeRequest((a, b) -> null))
-        .setCacheReadMode(CacheReadMode.readwrite)
+        .setCacheReadMode(CacheReadMode.READWRITE)
         .setProjectFilesystem(new FakeProjectFilesystem())
         .setBuckEventBus(BUCK_EVENT_BUS)
         .setHttpWriteExecutorService(DIRECT_EXECUTOR_SERVICE)

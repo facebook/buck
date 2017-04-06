@@ -104,13 +104,13 @@ public class ArtifactCachesTest {
     assertThat(dir1.getCacheDir(), Matchers.equalTo(Paths.get("dir1").toAbsolutePath()));
     assertThat(
         dir1.getCacheReadMode(),
-        Matchers.equalTo(CacheReadMode.readwrite));
+        Matchers.equalTo(CacheReadMode.READWRITE));
 
     DirArtifactCache dir2 = (DirArtifactCache) c2;
     assertThat(dir2.getCacheDir(), Matchers.equalTo(Paths.get("dir2").toAbsolutePath()));
     assertThat(
         dir2.getCacheReadMode(),
-        Matchers.equalTo(CacheReadMode.readonly));
+        Matchers.equalTo(CacheReadMode.READONLY));
   }
 
   @Test

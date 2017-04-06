@@ -101,7 +101,7 @@ public class MultiArtifactCacheTest {
     DummyArtifactCache dummyArtifactCache1 = new DummyArtifactCache() {
       @Override
       public CacheReadMode getCacheReadMode() {
-        return CacheReadMode.passthrough;
+        return CacheReadMode.PASSTHROUGH;
       }
     };
     DummyArtifactCache dummyArtifactCache2 = new DummyArtifactCache();
@@ -110,7 +110,7 @@ public class MultiArtifactCacheTest {
         dummyArtifactCache2));
 
     assertEquals(
-        CacheReadMode.readwrite,
+        CacheReadMode.READWRITE,
         multiArtifactCache.getCacheReadMode());
 
     multiArtifactCache.store(
@@ -118,7 +118,7 @@ public class MultiArtifactCacheTest {
         BorrowablePath.notBorrowablePath(dummyFile.get())).get();
 
     assertEquals(
-        "This cache is passthrough, store on the mulit-cache should not write to it",
+        "This cache is PASSTHROUGH, store on the mulit-cache should not write to it",
         CacheResultType.MISS,
         dummyArtifactCache1.fetch(dummyRuleKey, dummyFile).getType());
     assertEquals(
@@ -134,7 +134,7 @@ public class MultiArtifactCacheTest {
     DummyArtifactCache dummyArtifactCache1 = new DummyArtifactCache() {
       @Override
       public CacheReadMode getCacheReadMode() {
-        return CacheReadMode.passthrough;
+        return CacheReadMode.PASSTHROUGH;
       }
     };
     DummyArtifactCache dummyArtifactCache2 = new DummyArtifactCache();
@@ -221,7 +221,7 @@ public class MultiArtifactCacheTest {
 
     @Override
     public CacheReadMode getCacheReadMode() {
-      return CacheReadMode.readwrite;
+      return CacheReadMode.READWRITE;
     }
 
     @Override
@@ -239,7 +239,7 @@ public class MultiArtifactCacheTest {
     SimpleArtifactCache fakeReadOnlyCache = new SimpleArtifactCache(filesystem) {
       @Override
       public CacheReadMode getCacheReadMode() {
-        return CacheReadMode.readonly;
+        return CacheReadMode.READONLY;
       }
     };
     MultiArtifactCache multiArtifactCache = new MultiArtifactCache(ImmutableList.of(

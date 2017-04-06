@@ -33,7 +33,7 @@ public class TestArtifactCaches {
         "dir",
         new ProjectFilesystem(filesystemRoot),
         cacheDir,
-        CacheReadMode.readwrite,
+        CacheReadMode.READWRITE,
         Optional.empty());
   }
 }

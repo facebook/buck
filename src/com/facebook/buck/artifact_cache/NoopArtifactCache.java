@@ -39,7 +39,7 @@ public class NoopArtifactCache implements ArtifactCache {
 
   @Override
   public CacheReadMode getCacheReadMode() {
-    return CacheReadMode.readonly;
+    return CacheReadMode.READONLY;
   }
 
   @Override

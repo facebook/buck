@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
 public class ArtifactCacheBuckConfig {
   private static final String CACHE_SECTION_NAME = "cache";
 
-  private static final String DEFAULT_DIR_CACHE_MODE = CacheReadMode.readwrite.name();
+  private static final String DEFAULT_DIR_CACHE_MODE = CacheReadMode.READWRITE.name();
 
   // Names of the fields in a [cache*] section that describe a single HTTP cache.
   private static final String HTTP_URL_FIELD_NAME = "http_url";
@@ -86,7 +86,7 @@ public class ArtifactCacheBuckConfig {
       DIR_MAX_SIZE_FIELD);
 
   private static final URI DEFAULT_HTTP_URL = URI.create("http://localhost:8080/");
-  private static final String DEFAULT_HTTP_CACHE_MODE = CacheReadMode.readwrite.name();
+  private static final String DEFAULT_HTTP_CACHE_MODE = CacheReadMode.READWRITE.name();
   private static final long DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS = 3L;
   private static final String DEFAULT_HTTP_MAX_CONCURRENT_WRITES = "1";
   private static final String DEFAULT_HTTP_WRITE_SHUTDOWN_TIMEOUT_SECONDS = "1800"; // 30 minutes
@@ -95,7 +95,7 @@ public class ArtifactCacheBuckConfig {
   private static final int DEFAULT_HTTP_MAX_FETCH_RETRIES = 2;
 
   private static final String SERVED_CACHE_ENABLED_FIELD_NAME = "serve_local_cache";
-  private static final String DEFAULT_SERVED_CACHE_MODE = CacheReadMode.readonly.name();
+  private static final String DEFAULT_SERVED_CACHE_MODE = CacheReadMode.READONLY.name();
   private static final String SERVED_CACHE_READ_MODE_FIELD_NAME = "served_local_cache_mode";
   private static final String LOAD_BALANCING_TYPE = "load_balancing_type";
   private static final LoadBalancingType DEFAULT_LOAD_BALANCING_TYPE =
@@ -175,7 +175,7 @@ public class ArtifactCacheBuckConfig {
 
   public boolean hasAtLeastOneWriteableCache() {
     return FluentIterable.from(getHttpCacheEntries()).anyMatch(
-        input -> input.getCacheReadMode().equals(CacheReadMode.readwrite));
+        input -> input.getCacheReadMode().equals(CacheReadMode.READWRITE));
   }
 
   public String getHostToReportToRemoteCacheServer() {
@@ -326,7 +326,7 @@ public class ArtifactCacheBuckConfig {
     String cacheMode = buckConfig.getValue(section, fieldName).orElse(defaultValue);
     final CacheReadMode result;
     try {
-      result = CacheReadMode.valueOf(cacheMode);
+      result = CacheReadMode.valueOf(cacheMode.toUpperCase());
     } catch (IllegalArgumentException e) {
       throw new HumanReadableException("Unusable cache.%s: '%s'", fieldName, cacheMode);
     }

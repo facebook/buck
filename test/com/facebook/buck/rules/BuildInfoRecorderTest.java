@@ -190,7 +190,7 @@ public class BuildInfoRecorderTest {
         new NoopArtifactCache() {
           @Override
           public CacheReadMode getCacheReadMode() {
-            return CacheReadMode.readwrite;
+            return CacheReadMode.READWRITE;
           }
 
           @Override

@@ -82,7 +82,7 @@ public class InMemoryArtifactCache implements ArtifactCache {
 
   @Override
   public CacheReadMode getCacheReadMode() {
-    return CacheReadMode.readwrite;
+    return CacheReadMode.READWRITE;
   }
 
   @Override

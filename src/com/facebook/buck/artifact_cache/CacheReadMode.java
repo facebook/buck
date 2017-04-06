@@ -21,11 +21,11 @@ package com.facebook.buck.artifact_cache;
  */
 public enum CacheReadMode {
   // No stores allowed.
-  readonly(false),
+  READONLY(false),
   // "Depends who's asking". Stores allowed, however only from prior caches.
-  passthrough(true),
+  PASSTHROUGH(true),
   // All stores allowed.
-  readwrite(true),
+  READWRITE(true),
   ;
 
   private final boolean writable;

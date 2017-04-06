@@ -326,7 +326,7 @@ public class ServedCacheIntegrationTest {
 
       @Override
       public CacheReadMode getCacheReadMode() {
-        return CacheReadMode.readwrite;
+        return CacheReadMode.READWRITE;
       }
 
       @Override

@@ -50,7 +50,7 @@ public class LocalFsContentsProvider implements FileContentsProvider {
         CACHE_NAME,
         new ProjectFilesystem(cacheDirAbsPath),
         Paths.get(CACHE_NAME),
-        CacheReadMode.readwrite,
+        CacheReadMode.READWRITE,
         Optional.empty());
   }
 
